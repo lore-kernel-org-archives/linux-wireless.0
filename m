@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:60712 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750756AbdJEEiC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36740 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750932AbdJRUuR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 00:38:02 -0400
-Date: Wed, 04 Oct 2017 21:37:58 -0700 (PDT)
-Message-Id: <20171004.213758.2210486785503998906.davem@davemloft.net> (sfid-20171005_063806_626682_505FC3AE)
-To: herbert@gondor.apana.org.au
-Cc: marcelo.leitner@gmail.com, luto@kernel.org, baijiaju1990@163.com,
-        nhorman@tuxdriver.com, vyasevich@gmail.com, kvalo@codeaurora.org,
-        linux-crypto@vger.kernel.org, netdev@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] Fix a sleep-in-atomic bug in shash_setkey_unaligned
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20171005034054.GB31996@gondor.apana.org.au>
-References: <20171003052643.GB22750@gondor.apana.org.au>
-        <20171003224505.GE19750@localhost.localdomain>
-        <20171005034054.GB31996@gondor.apana.org.au>
+        Wed, 18 Oct 2017 16:50:17 -0400
+Message-ID: <1508359811.2674.56.camel@sipsolutions.net> (sfid-20171018_225058_380821_5766D11E)
+Subject: Re: [PATCH] mac80211: aggregation: Convert timers to use
+ timer_setup()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Date: Wed, 18 Oct 2017 22:50:11 +0200
+In-Reply-To: <CAGXu5jKY5rTuR_w=zj5Bz06f9OrW35eD4sYfkai2Gac_edG4ag@mail.gmail.com> (sfid-20171018_161904_357172_FABB3367)
+References: <20171017202545.GA115810@beast>
+         <1508322566.2674.17.camel@sipsolutions.net>
+         <CAGXu5jKY5rTuR_w=zj5Bz06f9OrW35eD4sYfkai2Gac_edG4ag@mail.gmail.com>
+         (sfid-20171018_161904_357172_FABB3367)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Thu, 5 Oct 2017 11:40:54 +0800
-
-> On Tue, Oct 03, 2017 at 07:45:06PM -0300, Marcelo Ricardo Leitner wrote:
->>
->> > Usually if you're invoking setkey from a non-sleeping code-path
->> > you're probably doing something wrong.
->> 
->> Usually but not always. There are 3 calls to that function on SCTP
->> code:
->> - pack a cookie, which is sent on an INIT_ACK packet to the client
->> - unpack the cookie above, after it is sent back by the client on a
->>   COOKIE_ECHO packet
->> - send a chunk authenticated by a hash
+On Wed, 2017-10-18 at 07:19 -0700, Kees Cook wrote:
+> On Wed, Oct 18, 2017 at 3:29 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > > This has been the least trivial timer conversion yet. Given the use of
+> > > RCU and other things I may not even know about, I'd love to get a close
+> > > look at this. I *think* this is correct, as it will re-lookup the tid
+> > > entries when firing the timer.
+> > 
+> > I'm not really sure why you're doing the lookup again? That seems
+> > pointless, since you already have the right structure, and already rely
+> > on it being valid. You can't really get a new struct assigned to the
+> > same TID without the old one being destroyed.
 > 
-> I'm not talking about the code-path in question.  I'm talking
-> about the function which generates the secret key in the first
-> place.  AFAICS that's only called in GFP_KERNEL context.  What
-> am I missing?
+> I couldn't tell what the lifetime expectation was, so I left the
+> re-lookup. I assumed it was possible to have a timer fire after the
+> structure had been removed from the station structure.
 
-The setkey happens in functions like sctp_pack_cookie() and
-sctp_unpack_cookie(), which seems to run from software interrupts.
+Oh, right, I guess that would've been possible in theory. It's not
+actually possible though since the aggregation sessions can't live on
+without a station, so I've already made a follow-up patch to remove the
+indirection.
+
+johannes
