@@ -1,127 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0073.outbound.protection.outlook.com ([104.47.1.73]:3227
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S935580AbdJQMIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 08:08:00 -0400
-From: Vanessa Maegima <vanessa.maegima@nxp.com>
-To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "van.ayumi@gmail.com" <van.ayumi@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "embed3d@gmail.com" <embed3d@gmail.com>,
-        "joerg.krause@embedded.rocks" <joerg.krause@embedded.rocks>
-Subject: Re: AP6335 with mainline kernel
-Date: Tue, 17 Oct 2017 12:07:56 +0000
-Message-ID: <1508242029.3656.1.camel@nxp.com> (sfid-20171017_140805_138645_AE5DA498)
-References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
-         <e9fe560a-fba3-aaa8-8c0a-b3c6f5ce1a74@broadcom.com>
-         <CABACg+wyKfFNyZurY7vVMHS+AG-tcih6uZTZM=d5TUPjOM9Qcw@mail.gmail.com>
-In-Reply-To: <CABACg+wyKfFNyZurY7vVMHS+AG-tcih6uZTZM=d5TUPjOM9Qcw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.63.242]:36260 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751572AbdJRUec (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Oct 2017 16:34:32 -0400
+Message-ID: <1508358869.2674.55.camel@sipsolutions.net> (sfid-20171018_223449_539233_592E9BDE)
+Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
+ mask if not usable"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Oleksij Rempel <linux@rempel-privat.de>,
+        Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>, kirtika@google.com
+Date: Wed, 18 Oct 2017 22:34:29 +0200
+In-Reply-To: <8c2e0e98-f3f4-6e0c-1bf0-43dfa6e97275@rempel-privat.de> (sfid-20171018_195626_878094_461B764D)
+References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
+         <1507708948.1998.15.camel@sipsolutions.net>
+         <2c293255-aa79-75a0-1c28-994f864cddf4@candelatech.com>
+         <1508312033.2674.9.camel@sipsolutions.net>
+         <2ad42671-59c4-80ed-4bca-f874eb53d653@candelatech.com>
+         <8c2e0e98-f3f4-6e0c-1bf0-43dfa6e97275@rempel-privat.de>
+         (sfid-20171018_195626_878094_461B764D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQXJlbmQsDQoNCk9uIFF1aSwgMjAxNy0wOS0yMSBhdCAxMjozMCAtMDMwMCwgVmFuZXNzYSBB
-eXVtaSBNYWVnaW1hIHdyb3RlOg0KPiBIaSBBcmVuZCwNCj4gDQo+IE9uIFRodSwgU2VwIDIxLCAy
-MDE3IGF0IDQ6MjYgQU0sIEFyZW5kIHZhbiBTcHJpZWwNCj4gPGFyZW5kLnZhbnNwcmllbEBicm9h
-ZGNvbS5jb20+IHdyb3RlOg0KPiA+IA0KPiA+IE9uIDIwLTA5LTE3IDIxOjMzLCBWYW5lc3NhIEF5
-dW1pIE1hZWdpbWEgd3JvdGU6DQo+ID4gPiANCj4gPiA+IA0KPiA+ID4gSGksDQo+ID4gPiANCj4g
-PiA+IEkgYW0gdHJ5aW5nIHRvIGVuYWJsZSBXaWZpIG9uIGlteDdkLXBpY28gdXNpbmcgbWFpbmxp
-bmUga2VybmVsLg0KPiA+ID4gaW14N2QtcGljbw0KPiA+ID4gaGFzIGFuIEFQNjMzNSBjaGlwLg0K
-PiA+ID4gDQo+ID4gPiBJIGFtIGZhY2luZyBzb21lIGlzc3VlcyByZWxhdGVkIHRvIHRoZSBudnJh
-bSBmaWxlLiBJIGFtIHVzaW5nIHRoZQ0KPiA+ID4gZmlybXdhcmUNCj4gPiA+IHByb3ZpZGVkIGJ5
-IEJ1aWxkcm9vdCAoYnJjbWZtYWM0MzM5LXNkaW8uYmluKS4gSSBnZXQgdGhlDQo+ID4gPiBmb2xs
-b3dpbmcgZXJyb3I6DQo+ID4gPiANCj4gPiA+IFvCoMKgwqDCoDguNjMwMzgwXSBicmNtZm1hYzog
-YnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91dA0KPiA+ID4gKDEwMDAwMDApOg0KPiA+
-ID4gY2xrY3RsIDB4NTANCj4gPiA+IA0KPiA+ID4gSSBoYXZlIHRyaWVkIHRvIHVzZSB0aGUgZmly
-bXdhcmUgYW5kIG52cmFtIHByb3ZpZGVkIGJ5IFRlY2hOZXhpb24NCj4gPiA+IGJ1dCBJDQo+ID4g
-PiBnZXQNCj4gPiA+IHRoZSBzYW1lIGVycm9yLg0KPiA+ID4gDQo+ID4gPiBJcyB0aGVyZSBhbnlv
-bmUgdGhhdCBjb3VsZCBlbmFibGUgV2lmaSBvbiBBUDYzMzUgdXNpbmcga2VybmVsDQo+ID4gPiBt
-YWlubGluZT8NCj4gPiA+IFdoYXQgbnZyYW0gZmlsZSB3YXMgdXNlZD8NCj4gPiA+IA0KPiA+ID4g
-SSBhbSBhYmxlIHRvIHVzZSBXaWZpIG9uIHRoZSBib2FyZCBpZiBJIHVzZSB0aGUgZmlybXdhcmUs
-IG52cmFtDQo+ID4gPiBmaWxlIGFuZA0KPiA+ID4ga2VybmVsDQo+ID4gPiBwcm92aWRlZCBieSBU
-ZWNoTmV4aW9uLiBUaGV5IHVzZSBhIDQuMSBrZXJuZWwgZnJvbSBOWFAgd2l0aCB0aGUNCj4gPiA+
-IGJjbWRoZA0KPiA+ID4gZHJpdmVyLg0KPiA+ID4gDQo+ID4gPiBTbyBJIGtub3cgdGhhdCB0aGUg
-aGFyZHdhcmUgaXMgZnVuY3Rpb25hbC4NCj4gPiA+IA0KPiA+ID4gQW55IHN1Z2dlc3Rpb25zIGFz
-IGhvdyB0byBnZXQgaXQgd29ya2luZyB3aXRoIGEgNC4xMyBhbmQgYnJjbWZtYWMNCj4gPiA+IGRy
-aXZlcg0KPiA+ID4gaXMNCj4gPiA+IGFwcHJlY2lhdGVkLg0KPiA+IA0KPiA+IFNvIHRoZSBudnJh
-bSBmaWxlIGlzIHNwZWNpZmljIHRvIHRoZSB3aWZpIGNoaXBzZXQgb24geW91ciBwbGF0Zm9ybQ0K
-PiA+IHNvIGJlc3QNCj4gPiB0byBzdGljayB3aXRoIHRoZSBwcm92aWRlZCBvbmUuIFRoZSAiSFQg
-QXZhaWwgdGltZW91dCIgbW9zdCBvZnRlbg0KPiA+IGlzIGFuDQo+ID4gaW5kaWNhdGlvbiB0aGF0
-IHRoZSBmaXJtd2FyZSBjcmFzaGVkLiBTbyBnZXR0aW5nIG1vcmUgZGVidWcgb3V0cHV0DQo+ID4g
-d291bGQNCj4gPiBoZWxwIHVzIHVuZGVyc3RhbmQgaG93IGl0IGVuZGVkIHVwIGxpa2UgdGhhdC4g
-Q2FuIHlvdSBidWlsZCB0aGUNCj4gPiBicmNtZm1hYw0KPiA+IHdpdGggQ09ORklHX0JSQ01EQkcg
-YW5kIGxvYWQgdGhlIGRyaXZlciB1c2luZzoNCj4gPiANCj4gPiAkIGluc21vZCBicmNtZm1hYy5r
-byBkZWJ1Zz0weDE0MTYNCj4gVGhhbmtzIGZvciB0aGUgcmVwbHkhDQo+IA0KPiBIZXJlIGlzIHRo
-ZSBsb2cgKHVzaW5nIDQuMTQtcmMxKToNCj4gDQo+ICMgZG1lc2cgfCBncmVwIGJyY21mbWFjDQo+
-IFvCoMKgwqAxOS4yOTcyMDZdIGJyY21mbWFjOiBicmNtZm1hY19tb2R1bGVfaW5pdCBObyBwbGF0
-Zm9ybSBkYXRhDQo+IGF2YWlsYWJsZS4NCj4gW8KgwqDCoDE5LjMwNzA3NV0gYnJjbWZtYWM6IGJy
-Y21mX3NkaW9fcHJvYmUgRW50ZXINCj4gW8KgwqDCoDE5LjMwODM4NF0gYnJjbWZtYWM6IEYxIHNp
-Z25hdHVyZSByZWFkIEAweDE4MDAwMDAwPTB4MTYyMjQzMzUNCj4gW8KgwqDCoDE5LjMwOTAyNl0g
-YnJjbWZtYWM6IGJyY21mX2NoaXBfcmVjb2duaXRpb24gZm91bmQgQVhJIGNoaXA6DQo+IEJDTTQz
-MzksIHJldj0yDQo+IFvCoMKgwqAxOS4zMTcxMTVdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVz
-X2NoZWNrwqDCoFsxIF0gY29yZSAweDgwMDo0Ng0KPiBiYXNlIDB4MTgwMDAwMDAgd3JhcCAweDE4
-MTAwMDAwDQo+IFvCoMKgwqAxOS4zMTcxNDFdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2No
-ZWNrwqDCoFsyIF0gY29yZSAweDgxMjo0Ng0KPiBiYXNlIDB4MTgwMDEwMDAgd3JhcCAweDE4MTAx
-MDAwDQo+IFvCoMKgwqAxOS4zMTcxNjVdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2NoZWNr
-wqDCoFszIF0gY29yZSAweDgzZTo0DQo+IGJhc2UgMHgxODAwMjAwMCB3cmFwIDB4MTgxMDIwMDAN
-Cj4gW8KgwqDCoDE5LjMxNzE4OF0gYnJjbWZtYWM6IGJyY21mX2NoaXBfY29yZXNfY2hlY2vCoMKg
-WzQgXSBjb3JlIDB4ODNjOjQNCj4gYmFzZSAweDE4MDAzMDAwIHdyYXAgMHgxODEwMzAwMA0KPiBb
-wqDCoMKgMTkuMzE3MjEwXSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVja8KgwqBbNSBd
-IGNvcmUgMHg4MWE6MjANCj4gYmFzZSAweDE4MDA0MDAwIHdyYXAgMHgxODEwNDAwMA0KPiBbwqDC
-oMKgMTkuMzE3MjMzXSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVja8KgwqBbNiBdIGNv
-cmUgMHg4Mjk6MjENCj4gYmFzZSAweDE4MDA1MDAwIHdyYXAgMHgxODEwNTAwMA0KPiBbwqDCoMKg
-MTkuMzE3MjU2XSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVja8KgwqBbNyBdIGNvcmUg
-MHgxMzU6MA0KPiBiYXNlIDB4MDAwMDAwMDAgd3JhcCAweDE4MTA5MDAwDQo+IFvCoMKgwqAxOS4z
-MTcyNzldIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2NoZWNrwqDCoFs4IF0gY29yZSAweDI0
-MDowDQo+IGJhc2UgMHgwMDAwMDAwMCB3cmFwIDB4MDAwMDAwMDANCj4gW8KgwqDCoDE5LjMxNzI5
-OF0gYnJjbWZtYWM6IGJyY21mX2NoaXBfc2V0X3Bhc3NpdmUgRW50ZXINCj4gW8KgwqDCoDE5LjMy
-MjIzMl0gYnJjbWZtYWM6IGJyY21mX2NoaXBfZ2V0X3JhbWluZm8gUkFNOiBiYXNlPTB4MTgwMDAw
-DQo+IHNpemU9Nzg2NDMyICgweGMwMDAwKSBzcj0wICgweDApDQo+IFvCoMKgwqAxOS4zMjI0NTdd
-IGJyY21mbWFjOiBicmNtZl9jaGlwX3NldHVwIGNjcmV2PTQ2LCBwbXVyZXY9MjMsDQo+IHBtdWNh
-cHM9MHgzOWNjNWYxNw0KPiBbwqDCoMKgMTkuMzIyNDgxXSBicmNtZm1hYzogYnJjbWZfZ2V0X21v
-ZHVsZV9wYXJhbSBFbnRlciwgYnVzPTAsDQo+IGNoaXA9MTcyMDksIHJldj0yDQo+IFvCoMKgwqAx
-OS4zMjI1MDRdIGJyY21mbWFjOiBicmNtZl9zZGlvZF9zZ3RhYmxlX2FsbG9jIG5lbnRzPTM1DQo+
-IFvCoMKgwqAxOS4zMjI1MzFdIGJyY21mbWFjOiBicmNtZl9zZGlvX2tzb19pbml0IEVudGVyDQo+
-IFvCoMKgwqAxOS4zMjI2MThdIGJyY21mbWFjOiBicmNtZl9zZGlvX2RyaXZlc3RyZW5ndGhpbml0
-IE5vIFNESU8gZHJpdmVyDQo+IHN0cmVuZ3RoIGluaXQgbmVlZGVkIGZvciBjaGlwIDQzDQo+IDM5
-IHJldiAyIHBtdXJldiAyMw0KPiBbwqDCoMKgMTkuMzIzMjM1XSBicmNtZm1hYzogYnJjbWZfYXR0
-YWNoIEVudGVyDQo+IFvCoMKgwqAxOS4zMjM3MjVdIGJyY21mbWFjOiBicmNtZl9wcm90b19hdHRh
-Y2ggRW50ZXINCj4gW8KgwqDCoDE5LjMyMzc2OV0gYnJjbWZtYWM6IGJyY21mX2Z3ZWhfcmVnaXN0
-ZXIgZXZlbnQgaGFuZGxlciByZWdpc3RlcmVkDQo+IGZvciBQU01fV0FUQ0hET0cNCj4gW8KgwqDC
-oDE5LjMyNDMwNl0gYnJjbWZtYWM6IGJyY21mX3NkaW9fcHJvYmUgY29tcGxldGVkISENCj4gW8Kg
-wqDCoDE5LjMyNDMzN10gYnJjbWZtYWM6IGJyY21mX2Z3X21hcF9jaGlwX3RvX25hbWU6IHVzaW5n
-DQo+IGJyY20vYnJjbWZtYWM0MzM5LXNkaW8uYmluIGZvciBjaGlwIDB4MDA0MzMNCj4gOSgxNzIw
-OSkgcmV2IDB4MDAwMDAyDQo+IFvCoMKgwqAxOS4zMzUzNTNdIGJyY21mbWFjOiBicmNtZl9md19n
-ZXRfZmlybXdhcmVzX3BjaWUgZW50ZXI6DQo+IGRldj1tbWMwOjAwMDE6MQ0KPiBbwqDCoMKgMTku
-MzUxNzg3XSBicmNtZm1hYzogYnJjbWZfZndfcmVxdWVzdF9jb2RlX2RvbmUgZW50ZXI6DQo+IGRl
-dj1tbWMwOjAwMDE6MQ0KPiBbwqDCoMKgMTkuMzUzMjAyXSBicmNtZm1hYzogYnJjbWZfZndfcmVx
-dWVzdF9udnJhbV9kb25lIGVudGVyOg0KPiBkZXY9bW1jMDowMDAxOjENCj4gW8KgwqDCoDE5LjM1
-MzQyNF0gYnJjbWZtYWM6IGJyY21mX3NkaW9fZmlybXdhcmVfY2FsbGJhY2sgRW50ZXI6DQo+IGRl
-dj1tbWMwOjAwMDE6MSwgZXJyPTANCj4gW8KgwqDCoDE5LjM1MzgxNF0gYnJjbWZtYWM6IGJyY21m
-X3NkaW9fZG93bmxvYWRfY29kZV9maWxlIEVudGVyDQo+IFvCoMKgwqAxOS4zODg1ODZdIGJyY21m
-bWFjOiBicmNtZl9zZGlvX3ZlcmlmeW1lbW9yeSBDb21wYXJlIFJBTSBkbCAmIHVsDQo+IGF0IDB4
-MDAxODAwMDA7IHNpemU9NDkzNTk5DQo+IFvCoMKgwqAxOS41NDY2NzVdIGJyY21mbWFjOiBicmNt
-Zl9zZGlvX2Rvd25sb2FkX252cmFtIEVudGVyDQo+IFvCoMKgwqAxOS41NDc0MzJdIGJyY21mbWFj
-OiBicmNtZl9zZGlvX3ZlcmlmeW1lbW9yeSBDb21wYXJlIFJBTSBkbCAmIHVsDQo+IGF0IDB4MDAy
-M2Y3MzA7IHNpemU9MjI1Ng0KPiBbwqDCoMKgMTkuNTQ4NjY1XSBicmNtZm1hYzogYnJjbWZfY2hp
-cF9zZXRfYWN0aXZlIEVudGVyDQo+IFvCoMKgwqAyMC41NjI5NzRdIGJyY21mbWFjOiBicmNtZl9z
-ZGlvX2h0Y2xrOiBIVCBBdmFpbCB0aW1lb3V0DQo+ICgxMDAwMDAwKToNCj4gY2xrY3RsIDB4NTAN
-Cj4gW8KgwqDCoDIwLjU3MDQ5MF0gYnJjbWZtYWM6IGJyY21mX3NkaW9fZmlybXdhcmVfY2FsbGJh
-Y2sgZmFpbGVkOg0KPiBkZXY9bW1jMDowMDAxOjEsIGVycj0wDQo+IFvCoMKgwqAyMC41NzA3Mzld
-IGJyY21mbWFjOiBicmNtZl9zZGlvX3JlbW92ZSBFbnRlcg0KPiBbwqDCoMKgMjAuNTcwNzc1XSBi
-cmNtZm1hYzogYnJjbWZfZGV0YWNoIEVudGVyDQo+IFvCoMKgwqAyMC42MTA0MTRdIGJyY21mbWFj
-OiBicmNtZl9idXNfY2hhbmdlX3N0YXRlIDAgLT4gMA0KPiBbwqDCoMKgMjAuNjEwNDQxXSBicmNt
-Zm1hYzogYnJjbWZfc2Rpb19idXNfc3RvcCBFbnRlcg0KPiBbwqDCoMKgMjEuNjIyNDc3XSBicmNt
-Zm1hYzogYnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91dA0KPiAoMTAwMDAwMCk6DQo+
-IGNsa2N0bCAweDUwDQo+IFvCoMKgwqAyMS42MzA5MTJdIGJyY21mbWFjOiBicmNtZl9wcm90b19k
-ZXRhY2ggRW50ZXINCj4gW8KgwqDCoDIxLjYzMDk2N10gYnJjbWZtYWM6IGJyY21mX2Z3ZWhfdW5y
-ZWdpc3RlciBldmVudCBoYW5kbGVyIGNsZWFyZWQNCj4gZm9yIFBTTV9XQVRDSERPRw0KPiBbwqDC
-oMKgMjIuNjQyNDU3XSBicmNtZm1hYzogYnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91
-dA0KPiAoMTAwMDAwMCk6DQo+IGNsa2N0bCAweDUwDQo+IFvCoMKgwqAyMi42ODAxMzFdIGJyY21m
-bWFjOiBicmNtZl9jaGlwX3NldF9wYXNzaXZlIEVudGVyDQo+IFvCoMKgwqAyMi42ODI1ODBdIGJy
-Y21mbWFjOiBicmNtZl9zZGlvX3JlbW92ZSBEaXNjb25uZWN0ZWQNCj4gDQo+ID4gDQo+ID4gDQo+
-ID4gUmVnYXJkcywNCj4gPiBBcmVuZA0KPiA+ID4gDQo+ID4gPiANCj4gPiA+IFRoYW5rcyENCj4g
-PiA+IA0KPiA+ID4gUmVnYXJkcywNCj4gPiA+IFZhbmVzc2ENCj4gPiA+IA0KDQpEbyB5b3UgaGF2
-ZSBhbnkgY29tbWVudHM/DQoNClRoYW5rcyENClZhbmVzc2E=
+Hi,
+
+On Wed, 2017-10-18 at 19:56 +0200, Oleksij Rempel wrote:
+> 
+> > People trying to do regulatory testing want this feature, and other people
+> > that are not me also like to test with specific rates.  Still a 
+> > small-ish set of people, but bigger than just me at least.
+> 
+> Till now i was interviewing different people who was asking for this for 
+> ath9k-htc. So I would say we have:
+> - academical researchers
+> - testers
+> - R&D
+> - exploit and penetration testers
+> - HAM
+> - just hackers
+> 
+> As for me, it sounds a s lot.
+
+Making (literally) millions of devices in the field hit a WARN_ON() is
+not really acceptable either though.
+
+You can argue that this introduced a regression, but putting the old
+behaviour back would equally be a regression, for more systems by a few
+orders of magnitude.
+
+In any case, I've already suggested a way to fix this, but you've both
+completely ignored that part of my email. All I've been reading is that
+you're demanding that I fix this, and arguments about how much people
+are allowed to shoot themselves in the foot, none of which is very
+constructive.
+
+I might even fix it myself eventually, if only to appease the people
+who say we have a zero tolerance no regressions rule, but it's not
+exactly the most important thing I'm doing right now (also, I'll be
+going on vacation for a few days, and you can probably implement my
+suggestion in that time, and then I can review it when I get back on
+Monday.)
+
+Let's just say that I think we're discussing the wrong thing here - we
+ought to be discussing how it can be fixed, and perhaps you can even be
+constructive in suggesting (and testing, which I can't really do)
+changes.
+
+johannes
