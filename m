@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58726 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751319AbdJEHXm (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:53896 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932583AbdJRKNq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 03:23:42 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: amitkarwar@gmail.com, nishants@marvell.com, gbhat@marvell.com,
-        huxm@marvell.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mwifiex: Use put_unaligned_le32
-References: <1507141686-5178-1-git-send-email-himanshujha199640@gmail.com>
-Date: Thu, 05 Oct 2017 10:23:37 +0300
-In-Reply-To: <1507141686-5178-1-git-send-email-himanshujha199640@gmail.com>
-        (Himanshu Jha's message of "Wed, 4 Oct 2017 23:58:06 +0530")
-Message-ID: <874lre5a86.fsf@codeaurora.org> (sfid-20171005_092437_773563_982D8A18)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 18 Oct 2017 06:13:46 -0400
+Message-ID: <1508321623.2674.11.camel@sipsolutions.net> (sfid-20171018_121350_415193_4AA01D17)
+Subject: Re: [PATCH] wil6210: disallow changing RSN in beacon change
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>, Jouni Malinen <j@w1.fi>
+Date: Wed, 18 Oct 2017 12:13:43 +0200
+In-Reply-To: <18712cc3-3c69-ff9a-e64b-a988463d1965@codeaurora.org>
+References: <20171017194253.10212-1-johannes@sipsolutions.net>
+         <18712cc3-3c69-ff9a-e64b-a988463d1965@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Himanshu Jha <himanshujha199640@gmail.com> writes:
+Hi,
 
-> Use put_unaligned_le32 rather than using byte ordering function and
-> memcpy which makes code clear.
-> Also, add the header file where it is declared.
->
-> Done using Coccinelle and semantic patch used is :
->
-> @ rule1 @
-> identifier tmp; expression ptr,x; type T;
-> @@
->
-> - tmp = cpu_to_le32(x);
->
->   <+... when != tmp
-> - memcpy(ptr, (T)&tmp, ...);
-> + put_unaligned_le32(x,ptr);
->   ...+>
->
-> @ depends on rule1 @
-> type j; identifier tmp;
-> @@
->
-> - j tmp;
->   ...when != tmp
->
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/cmdevt.c | 10 ++++------
->  1 file changed, 4 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> index 0edc5d6..e28e119 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> @@ -17,6 +17,7 @@
->   * this warranty disclaimer.
->   */
->  
-> +#include <linux/unaligned/access_ok.h>
+> This is not dead code, we reach it in several scenarios, mainly WPS
+> tests.
 
-I don't think this is correct. Should it be asm/unaligned.h?
+Interesting.
 
--- 
-Kalle Valo
+> hostapd uses change_beacon to change the security of the AP so this
+> needs to be supported. 
+
+I didn't think this made sense - Jouni? Does hostapd kick off all
+stations in this case?
+
+> We do need to restart the AP in this case which will
+> disconnect existing clients, but this cannot be helped...
+
+Why not restart the AP entirely then from userspace? Hmm. I wonder what
+would happen with mac80211 - I guess keys would have to removed etc?
+Does this just work by accident because mac80211 removes the keys with
+stations? What about GTK(s) though?
+
+> As a side note, hostapd can also use change_beacon to change the
+> SSID.
+
+When does that happen?
+
+> It does so by updating the SSID IE in the probe response frame. We
+> have a pending patch that detects this and updates the FW but we also
+> need to update wdev->ssid otherwise the wireless_dev will be out of
+> date (not sure if it will cause any problems...)
+
+Logic-wise it won't, but we do expose this to userspace and that'd be
+confusing, so we have to update it I guess.
+
+johannes
