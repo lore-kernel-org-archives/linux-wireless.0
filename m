@@ -1,115 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:37101 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750866AbdJDPyA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39326 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965804AbdJRFpC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 11:54:00 -0400
-Received: by mail-lf0-f68.google.com with SMTP id q132so4910749lfe.4
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 08:53:59 -0700 (PDT)
-Subject: Re: [PATCH 00/11] SDIO support for ath10k
-To: Alagu Sankar <alagusankar@silex-india.com>, silexcommon@gmail.com,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
- <b4bbf022-77d7-f907-f35b-7afacfc227e5@gmail.com>
- <59D47E1B.5000009@silex-india.com>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <045fef88-855e-0590-eec6-488762b3cfd6@gmail.com> (sfid-20171004_175405_525679_61B4ACFC)
-Date: Wed, 4 Oct 2017 17:53:56 +0200
+        Wed, 18 Oct 2017 01:45:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Network Development <netdev@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/58] networking: Convert timers to use timer_setup()
+References: <1508200182-104605-1-git-send-email-keescook@chromium.org>
+        <87mv4pvowa.fsf@purkki.adurom.net>
+        <CAGXu5j+fcARk=yWh9Bbkn0C-4PHd+pKSPGV+5qPx88H6prvUoA@mail.gmail.com>
+Date: Wed, 18 Oct 2017 08:44:57 +0300
+In-Reply-To: <CAGXu5j+fcARk=yWh9Bbkn0C-4PHd+pKSPGV+5qPx88H6prvUoA@mail.gmail.com>
+        (Kees Cook's message of "Tue, 17 Oct 2017 12:47:26 -0700")
+Message-ID: <87h8ux2ena.fsf@codeaurora.org> (sfid-20171018_074529_480053_C08CEBB3)
 MIME-Version: 1.0
-In-Reply-To: <59D47E1B.5000009@silex-india.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Kees Cook <keescook@chromium.org> writes:
 
+> On Tue, Oct 17, 2017 at 7:18 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> + linux-wireless
+>>
+>> Hi Kees,
+>>
+>> Kees Cook <keescook@chromium.org> writes:
+>>
+>>> This is the current set of outstanding networking patches to perform
+>>> conversions to the new timer interface (rebased to -next). This is not
+>>> all expected conversions, but it contains everything needed in networking
+>>> to eliminate init_timer(), and all the non-standard setup_*_timer() uses.
+>>
+>> So this also includes patches which I had queued for
+>> wireless-drivers-next:
+>>
+>> https://patchwork.kernel.org/patch/9986253/
+>> https://patchwork.kernel.org/patch/9986245/
+>>
+>> And looking at patchwork[1] I have even more timer_setup() related
+>> patches from you. It would be really helpful if you could clearly
+>> document to which tree you want the patches to be applied. I don't care
+>
+> Hi! Sorry about that. It's been a bit tricky to juggle everything.
 
-On 2017-10-04 08:22, Alagu Sankar wrote:
-> Hi Erik,
-> 
-> We will work to have this support mainlined as soon as possible. Would appreciate your support
-> in making sure that the patches do not affect the USB high latency path.
-> 
-I have added the patches in my own ath-repo and I have tested with the
-WUSB6100M without any problems.
+Yeah, I understand.
 
-> On 02-10-2017 14:32, Erik Stromdahl wrote:
->> Hi Alagu,
+>> if it's net-next or wireless-drivers-next as long as it's not the both
+>> (meaning that both Dave and me apply the same patch, which would be
+>> bad). The thing is that I really do not have time to figure out for
+>> every patch via which tree it's supposed to go.
+>
+> Which split is preferred? I had been trying to separate wireless from
+> the rest of net (but missed some cases).
+
+So what we try to follow is that I apply all patches for
+drivers/net/wireless to my wireless-drivers trees, with exception of
+Johannes taking mac80211_hwsim.c patches to his mac80211 trees. And
+Johannes of course takes all patches for net/wireless and net/mac80211.
+
+So in general I prefer that I take all drivers/net/wireless patches and
+make it obvious for Dave that he can ignore those patches (not mix
+wireless-drivers and net patches into same set etc). But like I said,
+it's ok to push API changes like these via Dave's net trees as well if
+you want (and if Dave is ok with that). The chances of conflicts is low,
+and if there are be any those would be easy to fix either by me or Dave.
+
+>> For now I'll just drop all your timer_setup() related patches from my
+>> queue and I'll assume Dave will take those. Ok?
 >>
->> It is great to see that we are finally about have fully working
->> mainline support for QCA9377 SDIO chipsets!
->>
->> Great job!
->>
->> On 2017-09-30 19:37, silexcommon@gmail.com wrote:
->>> From: Alagu Sankar <alagusankar@silex-india.com>
->>>
->>> This patchset, generated against master-pending branch, enables a fully
->>> functional SDIO interface driver for ath10k.  Patches have been verified on
->>> QCA9377-3 WB396 and Silex's SX-SDCAC reference cards with Station, Access Point
->>> and P2P modes.
->>>
->>> The driver is verified with the firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1
->>> with the board data from respective SDIO card vendors. Receive performance
->>> matches the QCA reference driver when used with SDIO3.0 enabled platforms.
->>> iperf tests indicate a downlink UDP of 275Mbit/s and TCP of 150Mbit/s
->>>
->> Can you share any scripts etc. (wrapping hostapd and wpa_supplicant stuff)
->> or provide some more info about you test setup?
->>
-> I am not using any specific scripts for this. The standard ones from the ath10k configuration page
-> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/configuration works just fine with the
-> NL80211 path.
->> I made a quick socat based test on an old laptop (I don't think it has SDIO
->> 3.0 support) and I did unfortunately not get the same figures as you did :(
->>
-> If it is SDIO v1.x, then the max bus speed is only 100Mbit/s.  With v2.x it is 200Mbit/s and 3.x it is
-> 832 Mbit/s.  Throughput primarily depends on it. We used i.MX6 SoloX Sabre SDB platform
-> which supports SDIO3.x and could see the maximum performance.
->>> This patchset differs from the previous high latency patches, specific to SDIO.
->>> HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET is enabled for HI_ACS. This instructs the
->>> firmware to use HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing packets. Without
->>> this flag, the management frames are not sent out by the firmware. Possibility
->>> of management frames being sent via WMI and data frames through the reduced Tx
->>> completion needs to be probed further.
->>>
->> Ah, so that explains why I couldn't see any messages in the air.
->>
->>> Further improvements can be done on the transmit path by implementing packet
->>> bundle. Scatter Gather is another area of improvement for both Transmit and
->>> Receive, but may not work on all platforms
->>>
->>> Known issues: Surprise removal of the card, when the device is in connected
->>> state, delays sdio function remove due to delayed WMI command failures.
->>> Existing ath10k framework can not differentiate between a kernel module
->>> removal and the surprise removal of teh card.
->>>
->>> Alagu Sankar (11):
->>>    ath10k_sdio: sdio htt data transfer fixes
->>>    ath10k_sdio: wb396 reference card fix
->>>    ath10k_sdio: DMA bounce buffers for read write
->>>    ath10k_sdio: reduce transmit msdu count
->>>    ath10k_sdio: use clean packet headers
->>>    ath10k_sdio: high latency fixes for beacon buffer
->>>    ath10k_sdio: fix rssi indication
->>>    ath10k_sdio: common read write
->>>    ath10k_sdio: virtual scatter gather for receive
->>>    ath10k_sdio: enable firmware crash dump
->>>    ath10k_sdio: hif start once addition
->>>
->>>   drivers/net/wireless/ath/ath10k/core.c    |  35 ++-
->>>   drivers/net/wireless/ath/ath10k/debug.c   |   3 +
->>>   drivers/net/wireless/ath/ath10k/htc.c     |   4 +-
->>>   drivers/net/wireless/ath/ath10k/htc.h     |   1 +
->>>   drivers/net/wireless/ath/ath10k/htt_rx.c  |  19 +-
->>>   drivers/net/wireless/ath/ath10k/htt_tx.c  |  24 +-
->>>   drivers/net/wireless/ath/ath10k/hw.c      |   2 +
->>>   drivers/net/wireless/ath/ath10k/hw.h      |   1 +
->>>   drivers/net/wireless/ath/ath10k/mac.c     |  31 ++-
->>>   drivers/net/wireless/ath/ath10k/sdio.c    | 398 ++++++++++++++++++++++--------
->>>   drivers/net/wireless/ath/ath10k/sdio.h    |  10 +-
->>>   drivers/net/wireless/ath/ath10k/wmi-tlv.c |   2 +-
->>>   12 files changed, 403 insertions(+), 127 deletions(-)
->>>
->>
-> 
+>> [1] https://patchwork.kernel.org/project/linux-wireless/list/
+>
+> I guess I'll wait to see what Dave says.
+
+Ok, I don't drop the patches from my queue quite yet then.
+
+-- 
+Kalle Valo
