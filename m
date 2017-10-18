@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29766 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755590AbdJJHxi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:55038 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753817AbdJRLbf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 03:53:38 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k-ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/5] Add TDLS feature for ath10k
-Date: Tue, 10 Oct 2017 15:55:20 +0800
-Message-ID: <1507622125-8841-2-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_095341_260928_D7FB55E5)
-In-Reply-To: <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patch V4>
- <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 18 Oct 2017 07:31:35 -0400
+Message-ID: <1508326291.2674.21.camel@sipsolutions.net> (sfid-20171018_133153_823764_C25288EB)
+Subject: Re: [PATCH] mac80211: aggregation: Convert timers to use
+ timer_setup()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kees Cook <keescook@chromium.org>, linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 18 Oct 2017 13:31:31 +0200
+In-Reply-To: <1508322566.2674.17.camel@sipsolutions.net> (sfid-20171018_122945_123971_5A96CA64)
+References: <20171017202545.GA115810@beast>
+         (sfid-20171017_222550_315925_34B26DDB) <1508322566.2674.17.camel@sipsolutions.net>
+         (sfid-20171018_122945_123971_5A96CA64)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+On Wed, 2017-10-18 at 12:29 +0200, Johannes Berg wrote:
 
-This patchset is for Rome PCIE chip, it will not affect other hardware
+> Anyway, the change here looks correct to me, so I'll apply it and then
+> perhaps clean up more. I've only changed "u16 tid" to "u8 tid" since
+> the valid range is 0-15 (in theory, in practice 0-7).
 
-Yingying Tang (5):
-  mac80211: Enable TDLS peer buffer STA feature
-  ath10k: Enable TDLS peer buffer STA feature
-  ath10k: Enable TDLS peer inactivity detection
-  ath10k: Avoid to set WEP key for TDLS peer
-  ath10k: Fix TDLS peer TX data failure issue on encryped AP
+Well, I guess I'm clearly wrong - it's crashing our test suite left and
+right.
 
- drivers/net/wireless/ath/ath10k/mac.c     |    9 ++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |   55 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |   23 ++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
- include/net/cfg80211.h                    |    3 ++
- net/mac80211/tdls.c                       |    5 ++-
- 6 files changed, 94 insertions(+), 2 deletions(-)
+I'll dig a little bit, but I don't have much time today, and will be
+out for a few days starting tomorrow.
 
--- 
-1.7.9.5
+johannes
