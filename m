@@ -1,137 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:50240 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751791AbdJXJ3j (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52212 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752542AbdJRHgz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 05:29:39 -0400
-Received: by mail-pf0-f196.google.com with SMTP id b6so19254227pfh.7
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Oct 2017 02:29:39 -0700 (PDT)
-Date: Tue, 24 Oct 2017 02:29:37 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers/wireless: iwlwifi/mvm: Convert timers to use
- timer_setup()
-Message-ID: <20171024092937.GA47262@beast> (sfid-20171024_113003_218948_EA7FC10A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 18 Oct 2017 03:36:55 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: validate user rate mask before configuring driver
+Date: Wed, 18 Oct 2017 09:36:51 +0200
+Message-Id: <20171018073651.4725-1-johannes@sipsolutions.net> (sfid-20171018_093658_342007_73E02FE0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The RCU lifetime on baid_data is unclear, so this adds a direct copy of the
-rcu_ptr passed to the original callback. It may be possible to improve this
-to just use baid_data->mvm->baid_map[baid_data->baid] instead.
+Ben reported that when the user rate mask is rejected for not
+matching any basic rate, the driver had already been configured.
+This is clearly an oversight in my original change, fix this by
+doing the validation before calling the driver.
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Sara Sharon <sara.sharon@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
+Reported-by: Ben Greear <greearb@candelatech.com>
+Fixes: e8e4f5280ddd ("mac80211: reject/clear user rate mask if not usable")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 18 +++++++++---------
- 3 files changed, 13 insertions(+), 12 deletions(-)
+ net/mac80211/cfg.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index bf25c3ce7c95..a22c0ecff324 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -636,6 +636,7 @@ struct iwl_mvm_baid_data {
- 	u16 timeout;
- 	unsigned long last_rx;
- 	struct timer_list session_timer;
-+	struct iwl_mvm_baid_data __rcu **rcu_ptr;
- 	struct iwl_mvm *mvm;
- 	struct iwl_mvm_reorder_buffer reorder_buf[];
- };
-@@ -1829,7 +1830,7 @@ void iwl_mvm_tdls_ch_switch_work(struct work_struct *work);
- void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 				     struct iwl_mvm_internal_rxq_notif *notif,
- 				     u32 size);
--void iwl_mvm_reorder_timer_expired(unsigned long data);
-+void iwl_mvm_reorder_timer_expired(struct timer_list *t);
- struct ieee80211_vif *iwl_mvm_get_bss_vif(struct iwl_mvm *mvm);
- bool iwl_mvm_is_vif_assoc(struct iwl_mvm *mvm);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a354f1939e49..fb15d3b97cb2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2727,12 +2727,6 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return -ENETDOWN;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 5e679859f948..53485dc096b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -456,9 +456,9 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+-	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
+-		ret = drv_set_bitrate_mask(local, sdata, mask);
+-		if (ret)
+-			return ret;
+-	}
+-
+ 	/*
+ 	 * If active validate the setting and reject it if it doesn't leave
+ 	 * at least one basic rate usable, since we really have to be able
+@@ -2748,6 +2742,12 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 			return -EINVAL;
  	}
- }
  
--void iwl_mvm_reorder_timer_expired(unsigned long data)
-+void iwl_mvm_reorder_timer_expired(struct timer_list *t)
- {
--	struct iwl_mvm_reorder_buffer *buf = (void *)data;
-+	struct iwl_mvm_reorder_buffer *buf = from_timer(buf, t, reorder_timer);
- 	int i;
- 	u16 sn = 0, index = 0;
- 	bool expired = false;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 282424f40c43..b95b24a03959 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -252,9 +252,11 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	return ret;
- }
- 
--static void iwl_mvm_rx_agg_session_expired(unsigned long data)
-+static void iwl_mvm_rx_agg_session_expired(struct timer_list *t)
- {
--	struct iwl_mvm_baid_data __rcu **rcu_ptr = (void *)data;
-+	struct iwl_mvm_baid_data *data =
-+		from_timer(data, t, session_timer);
-+	struct iwl_mvm_baid_data __rcu **rcu_ptr = data->rcu_ptr;
- 	struct iwl_mvm_baid_data *ba_data;
- 	struct ieee80211_sta *sta;
- 	struct iwl_mvm_sta *mvm_sta;
-@@ -2150,10 +2152,8 @@ static void iwl_mvm_init_reorder_buffer(struct iwl_mvm *mvm,
- 		reorder_buf->head_sn = ssn;
- 		reorder_buf->buf_size = buf_size;
- 		/* rx reorder timer */
--		reorder_buf->reorder_timer.function =
--			iwl_mvm_reorder_timer_expired;
--		reorder_buf->reorder_timer.data = (unsigned long)reorder_buf;
--		init_timer(&reorder_buf->reorder_timer);
-+		timer_setup(&reorder_buf->reorder_timer,
-+			    iwl_mvm_reorder_timer_expired, 0);
- 		spin_lock_init(&reorder_buf->lock);
- 		reorder_buf->mvm = mvm;
- 		reorder_buf->queue = i;
-@@ -2250,9 +2250,9 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		baid_data->baid = baid;
- 		baid_data->timeout = timeout;
- 		baid_data->last_rx = jiffies;
--		setup_timer(&baid_data->session_timer,
--			    iwl_mvm_rx_agg_session_expired,
--			    (unsigned long)&mvm->baid_map[baid]);
-+		baid_data->rcu_ptr = &mvm->baid_map[baid];
-+		timer_setup(&baid_data->session_timer,
-+			    iwl_mvm_rx_agg_session_expired, 0);
- 		baid_data->mvm = mvm;
- 		baid_data->tid = tid;
- 		baid_data->sta_id = mvm_sta->sta_id;
++	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
++		ret = drv_set_bitrate_mask(local, sdata, mask);
++		if (ret)
++			return ret;
++	}
++
+ 	for (i = 0; i < NUM_NL80211_BANDS; i++) {
+ 		struct ieee80211_supported_band *sband = wiphy->bands[i];
+ 		int j;
 -- 
-2.7.4
-
-
--- 
-Kees Cook
-Pixel Security
+2.14.2
