@@ -1,247 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42320 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751415AbdJ2M2f (ORCPT
+Received: from smtprelay0027.hostedemail.com ([216.40.44.27]:41229 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750975AbdJRWyg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 08:28:35 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 29 Oct 2017 14:28:06 +0200
-Message-Id: <20171029122816.8802-8-luca@coelho.fi> (sfid-20171029_132849_791889_56787D0B)
-In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
-References: <20171029122816.8802-1-luca@coelho.fi>
-Subject: [PATCH 07/17] iwlwifi: remove host assisted paging
+        Wed, 18 Oct 2017 18:54:36 -0400
+Message-ID: <1508367271.6806.25.camel@perches.com> (sfid-20171019_005455_948690_D9BC540B)
+Subject: Re: [PATCH] staging: wilc1000: replace redundant computations with 0
+From: Joe Perches <joe@perches.com>
+To: Colin King <colin.king@canonical.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 18 Oct 2017 15:54:31 -0700
+In-Reply-To: <20171010140548.18016-1-colin.king@canonical.com>
+References: <20171010140548.18016-1-colin.king@canonical.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 2017-10-10 at 15:05 +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Shifting and masking strHostIfSetMulti->enabled is redundant since
+> enabled is a bool and so all the shifted and masked values will be
+> zero. Replace them with zero to simplify the code.
+> 
+> Detected by CoverityScan, CID#1339458 ("Bad shift operation") and
+> CID#1339506 ("Operands don't affect result").
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 7b620658ec38..94477dd08c85 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -2417,9 +2417,9 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+>  
+>  	pu8CurrByte = wid.val;
+>  	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
+> -	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 8) & 0xFF);
+> -	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 16) & 0xFF);
+> -	*pu8CurrByte++ = ((strHostIfSetMulti->enabled >> 24) & 0xFF);
+> +	*pu8CurrByte++ = 0;
+> +	*pu8CurrByte++ = 0;
+> +	*pu8CurrByte++ = 0;
 
-This was used for internal devices that are now deprecated.
-All the currently existing devices can do paging without
-any help from the host.
+This might be more an indication of another defect
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/paging.h |  24 -----
- drivers/net/wireless/intel/iwlwifi/fw/paging.c     | 103 +++------------------
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  14 ---
- 3 files changed, 12 insertions(+), 129 deletions(-)
+Perhaps this is just supposed to be
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/paging.h b/drivers/net/wireless/intel/iwlwifi/fw/api/paging.h
-index e76f9cd4473d..721b9fed7201 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/paging.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/paging.h
-@@ -81,28 +81,4 @@ struct iwl_fw_paging_cmd {
- 	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
- } __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
- 
--/**
-- * enum iwl_fw_item_id - FW item IDs
-- *
-- * @IWL_FW_ITEM_ID_PAGING: Address of the pages that the FW will upload
-- *	download
-- */
--enum iwl_fw_item_id {
--	IWL_FW_ITEM_ID_PAGING = 3,
--};
--
--/**
-- * struct iwl_fw_get_item_cmd - get an item from the fw
-- * @item_id: ID of item to obtain, see &enum iwl_fw_item_id
-- */
--struct iwl_fw_get_item_cmd {
--	__le32 item_id;
--} __packed; /* FW_GET_ITEM_CMD_API_S_VER_1 */
--
--struct iwl_fw_get_item_resp {
--	__le32 item_id;
--	__le32 item_byte_cnt;
--	__le32 item_val;
--} __packed; /* FW_GET_ITEM_RSP_S_VER_1 */
--
- #endif /* __iwl_fw_api_paging_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/paging.c b/drivers/net/wireless/intel/iwlwifi/fw/paging.c
-index 1610722b8099..1fec8e3a6b35 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/paging.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/paging.c
-@@ -87,9 +87,6 @@ void iwl_free_fw_paging(struct iwl_fw_runtime *fwrt)
- 			     get_order(paging->fw_paging_size));
- 		paging->fw_paging_block = NULL;
- 	}
--	kfree(fwrt->trans->paging_download_buf);
--	fwrt->trans->paging_download_buf = NULL;
--	fwrt->trans->paging_db = NULL;
- 
- 	memset(fwrt->fw_paging_db, 0, sizeof(fwrt->fw_paging_db));
- }
-@@ -100,13 +97,11 @@ static int iwl_alloc_fw_paging_mem(struct iwl_fw_runtime *fwrt,
- {
- 	struct page *block;
- 	dma_addr_t phys = 0;
--	int blk_idx, order, num_of_pages, size, dma_enabled;
-+	int blk_idx, order, num_of_pages, size;
- 
- 	if (fwrt->fw_paging_db[0].fw_paging_block)
- 		return 0;
- 
--	dma_enabled = is_device_dma_capable(fwrt->trans->dev);
--
- 	/* ensure BLOCK_2_EXP_SIZE is power of 2 of PAGING_BLOCK_SIZE */
- 	BUILD_BUG_ON(BIT(BLOCK_2_EXP_SIZE) != PAGING_BLOCK_SIZE);
- 
-@@ -139,24 +134,18 @@ static int iwl_alloc_fw_paging_mem(struct iwl_fw_runtime *fwrt,
- 		fwrt->fw_paging_db[blk_idx].fw_paging_block = block;
- 		fwrt->fw_paging_db[blk_idx].fw_paging_size = size;
- 
--		if (dma_enabled) {
--			phys = dma_map_page(fwrt->trans->dev, block, 0,
--					    PAGE_SIZE << order,
--					    DMA_BIDIRECTIONAL);
--			if (dma_mapping_error(fwrt->trans->dev, phys)) {
--				/*
--				 * free the previous pages and the current one
--				 * since we failed to map_page.
--				 */
--				iwl_free_fw_paging(fwrt);
--				return -ENOMEM;
--			}
--			fwrt->fw_paging_db[blk_idx].fw_paging_phys = phys;
--		} else {
--			fwrt->fw_paging_db[blk_idx].fw_paging_phys =
--				PAGING_ADDR_SIG |
--				blk_idx << BLOCK_2_EXP_SIZE;
-+		phys = dma_map_page(fwrt->trans->dev, block, 0,
-+				    PAGE_SIZE << order,
-+				    DMA_BIDIRECTIONAL);
-+		if (dma_mapping_error(fwrt->trans->dev, phys)) {
-+			/*
-+			 * free the previous pages and the current one
-+			 * since we failed to map_page.
-+			 */
-+			iwl_free_fw_paging(fwrt);
-+			return -ENOMEM;
- 		}
-+		fwrt->fw_paging_db[blk_idx].fw_paging_phys = phys;
- 
- 		if (!blk_idx)
- 			IWL_DEBUG_FW(fwrt,
-@@ -312,60 +301,6 @@ static int iwl_send_paging_cmd(struct iwl_fw_runtime *fwrt,
- 	return iwl_trans_send_cmd(fwrt->trans, &hcmd);
- }
- 
--/*
-- * Send paging item cmd to FW in case CPU2 has paging image
-- */
--static int iwl_trans_get_paging_item(struct iwl_fw_runtime *fwrt)
--{
--	int ret;
--	struct iwl_fw_get_item_cmd fw_get_item_cmd = {
--		.item_id = cpu_to_le32(IWL_FW_ITEM_ID_PAGING),
--	};
--	struct iwl_fw_get_item_resp *item_resp;
--	struct iwl_host_cmd cmd = {
--		.id = iwl_cmd_id(FW_GET_ITEM_CMD, IWL_ALWAYS_LONG_GROUP, 0),
--		.flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
--		.data = { &fw_get_item_cmd, },
--		.len = { sizeof(fw_get_item_cmd), },
--	};
--
--	ret = iwl_trans_send_cmd(fwrt->trans, &cmd);
--	if (ret) {
--		IWL_ERR(fwrt,
--			"Paging: Failed to send FW_GET_ITEM_CMD cmd (err = %d)\n",
--			ret);
--		return ret;
--	}
--
--	item_resp = (void *)((struct iwl_rx_packet *)cmd.resp_pkt)->data;
--	if (item_resp->item_id != cpu_to_le32(IWL_FW_ITEM_ID_PAGING)) {
--		IWL_ERR(fwrt,
--			"Paging: got wrong item in FW_GET_ITEM_CMD resp (item_id = %u)\n",
--			le32_to_cpu(item_resp->item_id));
--		ret = -EIO;
--		goto exit;
--	}
--
--	/* Add an extra page for headers */
--	fwrt->trans->paging_download_buf = kzalloc(PAGING_BLOCK_SIZE +
--						  FW_PAGING_SIZE,
--						  GFP_KERNEL);
--	if (!fwrt->trans->paging_download_buf) {
--		ret = -ENOMEM;
--		goto exit;
--	}
--	fwrt->trans->paging_req_addr = le32_to_cpu(item_resp->item_val);
--	fwrt->trans->paging_db = fwrt->fw_paging_db;
--	IWL_DEBUG_FW(fwrt,
--		     "Paging: got paging request address (paging_req_addr 0x%08x)\n",
--		     fwrt->trans->paging_req_addr);
--
--exit:
--	iwl_free_resp(&cmd);
--
--	return ret;
--}
--
- int iwl_init_paging(struct iwl_fw_runtime *fwrt, enum iwl_ucode_type type)
- {
- 	const struct fw_img *fw = &fwrt->fw->img[type];
-@@ -382,20 +317,6 @@ int iwl_init_paging(struct iwl_fw_runtime *fwrt, enum iwl_ucode_type type)
- 	if (!fw->paging_mem_size)
- 		return 0;
- 
--	/*
--	 * When dma is not enabled, the driver needs to copy / write
--	 * the downloaded / uploaded page to / from the smem.
--	 * This gets the location of the place were the pages are
--	 * stored.
--	 */
--	if (!is_device_dma_capable(fwrt->trans->dev)) {
--		ret = iwl_trans_get_paging_item(fwrt);
--		if (ret) {
--			IWL_ERR(fwrt, "failed to get FW paging item\n");
--			return ret;
--		}
--	}
--
- 	ret = iwl_save_fw_paging(fwrt, fw);
- 	if (ret) {
- 		IWL_ERR(fwrt, "failed to save the FW paging image\n");
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 10d330603886..3138f637ab2a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -694,12 +694,6 @@ enum iwl_plat_pm_mode {
-  * @dbg_conf_tlv: array of pointers to configuration TLVs for debug
-  * @dbg_trigger_tlv: array of pointers to triggers TLVs for debug
-  * @dbg_dest_reg_num: num of reg_ops in %dbg_dest_tlv
-- * @paging_req_addr: The location were the FW will upload / download the pages
-- *	from. The address is set by the opmode
-- * @paging_db: Pointer to the opmode paging data base, the pointer is set by
-- *	the opmode.
-- * @paging_download_buf: Buffer used for copying all of the pages before
-- *	downloading them to the FW. The buffer is allocated in the opmode
-  * @system_pm_mode: the system-wide power management mode in use.
-  *	This mode is set dynamically, depending on the WoWLAN values
-  *	configured from the userspace at runtime.
-@@ -748,14 +742,6 @@ struct iwl_trans {
- 	struct iwl_fw_dbg_trigger_tlv * const *dbg_trigger_tlv;
- 	u8 dbg_dest_reg_num;
- 
--	/*
--	 * Paging parameters - All of the parameters should be set by the
--	 * opmode when paging is enabled
--	 */
--	u32 paging_req_addr;
--	struct iwl_fw_paging *paging_db;
--	void *paging_download_buf;
--
- 	enum iwl_plat_pm_mode system_pm_mode;
- 	enum iwl_plat_pm_mode runtime_pm_mode;
- 	bool suspending;
--- 
-2.14.2
+	*pu8CurrByte++ = strHostIfSetMulti->enabled;
+
+without the three byte sets to zero after that.
+
+>  	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
+>  	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
