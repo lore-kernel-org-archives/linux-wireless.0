@@ -1,126 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53996 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1759106AbdJRKaH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 06:30:07 -0400
-Message-ID: <1508322604.5497.156.camel@coelho.fi> (sfid-20171018_123010_535596_2BAC968E)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
-Date: Wed, 18 Oct 2017 13:30:04 +0300
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-2fuVNpcuIrESSbC9o8jD"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi-next 2017-10-18
+Received: from store.laptop.org ([18.85.44.157]:52044 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750932AbdJRWd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Oct 2017 18:33:29 -0400
+Received: from esk.lan (pa49-180-99-110.pa.nsw.optusnet.com.au [49.180.99.110])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by swan.laptop.org (Postfix) with ESMTPSA id 4F1C94C0332
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Oct 2017 18:33:28 -0400 (EDT)
+Date: Thu, 19 Oct 2017 09:33:20 +1100
+From: James Cameron <quozl@laptop.org>
+To: linux-wireless@vger.kernel.org
+Subject: Re: rtlwifi oops
+Message-ID: <20171018223320.GB641@us.netrek.org> (sfid-20171019_003333_163004_812A9D8C)
+References: <cf61cfda-1e32-3ec3-d558-b508c3b923b6@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cf61cfda-1e32-3ec3-d558-b508c3b923b6@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 19, 2017 at 01:31:43AM +0300, nirinA wrote:
+> hello there,
+> i got the oops below with a rtl8192cu:0bda:8178 and kernel 4.13.6, but
+> cannot reproduce it.
+> i use this device since 4.3 or so without noticing any issue.
+> 
+> nirinA
+> 
+> [  239.338040] usb 2-1.3: new high-speed USB device number 4 using ehci-pci
+> [  239.417728] usb 2-1.3: New USB device found, idVendor=0bda,
+> idProduct=8178
+> [  239.417730] usb 2-1.3: New USB device strings: Mfr=1, Product=2,
+> SerialNumber=3
+> [  239.417731] usb 2-1.3: Product: 802.11n WLAN Adapter
+> [  239.417732] usb 2-1.3: Manufacturer: Realtek
+> [  239.417733] usb 2-1.3: SerialNumber: 00e04c000001
+> [  239.578100] rtl8192cu: Chip version 0x11
+> [  239.678225] usb 2-1-port3: disabled by hub (EMI?), re-enabling...
 
---=-2fuVNpcuIrESSbC9o8jD
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Just prior to the oops, your USB hub disabled the port being used by
+the wireless device.
 
-Hi Kalle,
+While the response of the driver seems wrong, it is a difficult
+condition to reproduce; one must either force or forge the disabling
+by the hub.
 
-Here's the second batch of patches intended for v4.15.  It contains the
-last patch set I send out with v2 of the lq_color patch.
+> [  239.678230] usb 2-1.3: USB disconnect, device number 4
+> [  239.679128] rtl_usb: reg 0x30, usbctrl_vendorreq TimeOut!
+> status:0xffffffed value=0x0
+> [  239.679131] rtl_usb: reg 0x32, usbctrl_vendorreq TimeOut!
+> status:0xffffffed value=0x20
+> [  239.679133] rtl_usb: reg 0x33, usbctrl_vendorreq TimeOut!
+> status:0xffffffed value=0x80
+> [  239.679134] rtl_usb: reg 0x30, usbctrl_vendorreq TimeOut!
+> status:0xffffffed value=0x80206f30
+> [  239.700640] rtl_usb: rx_max_size 15360, rx_urb_num 8, in_ep 1
+> [  239.700648] BUG: unable to handle kernel NULL pointer dereference at
+> (null)
+> [  239.700682] IP: rtl_deinit_core+0x2e/0x90 [rtlwifi]
+> [  239.700693] PGD 1c5d5d067
+> [  239.700694] P4D 1c5d5d067
+> [  239.700701] PUD 1c5d9b067
+> [  239.700708] PMD 0
+> 
+> [  239.700727] Oops: 0000 [#1] SMP
+> [  239.700735] Modules linked in: rtl8192cu(+) rtl_usb rtl8192c_common
+> rtlwifi mac80211 cfg80211 rfkill appletalk ipx p8023 p8022 psnap llc nct6775
+> hwmon_vid ipv6 hid_generic usbhid hid coretemp hwmon x86_pkg_temp_thermal
+> intel_powerclamp snd_hda_codec_hdmi snd_hda_codec_realtek
+> snd_hda_codec_generic kvm_intel i915 kvm drm_kms_helper evdev i2c_dev
+> irqbypass syscopyarea sysfillrect sysimgblt r8169 crc32_pclmul serio_raw
+> crc32c_intel mii snd_pcsp fb_sys_fops drm fan thermal button battery 8250
+> 8250_base serial_core mei_me snd_hda_intel mei intel_gtt snd_hda_codec video
+> agpgart ehci_pci ehci_hcd lpc_ich snd_hwdep snd_hda_core snd_pcm
+> i2c_algo_bit snd_timer i2c_i801 i2c_core snd soundcore fuse
+> [  239.700875] CPU: 0 PID: 1174 Comm: udevd Not tainted 4.13.6.20171012 #1
+> [  239.700889] Hardware name: To be filled by O.E.M. To be filled by
+> O.E.M./ONDA H61V Ver:4.01, BIOS 4.6.5 01/07/2013
+> [  239.700909] task: ffff8801c5fbc980 task.stack: ffffc900009a0000
+> [  239.700924] RIP: 0010:rtl_deinit_core+0x2e/0x90 [rtlwifi]
+> [  239.700936] RSP: 0000:ffffc900009a3b40 EFLAGS: 00010207
+> [  239.700947] RAX: 0000000000000282 RBX: ffff8801b9440780 RCX:
+> 00000000ffffffea
+> [  239.700962] RDX: 0000000000000001 RSI: 0000000000000282 RDI:
+> 0000000000000000
+> [  239.700977] RBP: ffff8801b944b070 R08: 0000000000000001 R09:
+> 00000000000002b0
+> [  239.700991] R10: ffffea0008473480 R11: 0000000000000000 R12:
+> ffff8801b9441560
+> [  239.701006] R13: ffff8801b944b880 R14: 0000000000000000 R15:
+> ffff8801b9441560
+> [  239.701021] FS:  00007f3eb636e7c0(0000) GS:ffff88021f200000(0000)
+> knlGS:0000000000000000
+> [  239.701037] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  239.701050] CR2: 0000000000000000 CR3: 00000001c5d99000 CR4:
+> 00000000001406f0
+> [  239.701064] Call Trace:
+> [  239.701074]  ? rtl_usb_probe+0x6b6/0xc50 [rtl_usb]
+> [  239.701088]  ? usb_probe_interface+0xe2/0x2a0
+> [  239.701100]  ? driver_probe_device+0x21d/0x2d0
+> [  239.701111]  ? __driver_attach+0x8a/0x90
+> [  239.701121]  ? driver_probe_device+0x2d0/0x2d0
+> [  239.701133]  ? bus_for_each_dev+0x5c/0x90
+> [  239.701143]  ? bus_add_driver+0x196/0x220
+> [  239.701154]  ? driver_register+0x57/0xc0
+> [  239.701165]  ? usb_register_driver+0x7c/0x140
+> [  239.701175]  ? 0xffffffffa064e000
+> [  239.701185]  ? do_one_initcall+0x4b/0x190
+> [  239.701197]  ? kmem_cache_alloc_trace+0xe4/0x1c0
+> [  239.701208]  ? do_init_module+0x22/0x1e1
+> [  239.701219]  ? do_init_module+0x5b/0x1e1
+> [  239.701229]  ? load_module+0x21ff/0x2760
+> [  239.701239]  ? SYSC_finit_module+0x90/0xb0
+> [  239.701249]  ? SYSC_finit_module+0x90/0xb0
+> [  239.701261]  ? entry_SYSCALL_64_fastpath+0x1a/0xa5
+> [  239.701272] Code: 00 00 41 57 31 f6 41 56 41 55 41 54 55 53 48 89 fb e8
+> e7 fe ff ff 4c 8b 7b 48 49 8b bf 10 9b 00 00 49 8d af 10 9b 00 00 48 39 ef
+> <48> 8b 1f 74 44 49 bd 00 01 00 00 00 00 ad de 49 89 de 49 bc 00
+> [  239.701327] RIP: rtl_deinit_core+0x2e/0x90 [rtlwifi] RSP:
+> ffffc900009a3b40
+> [  239.702028] CR2: 0000000000000000
+> [  239.705370] ---[ end trace 6ec9029c0d9c0e13 ]---
+> [  239.706311] udevd[528]: worker [1174] failed while handling
+> '/devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.3/2-1.3:1.0'
+> 
 
-I have sent this out before and kbuildbot reported success.
-
-Please let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit 66cc044249603e12e1dbba347f03bdbc9f171fdf=
-:
-
-  bcma: use bcma_debug and pr_cont in MIPS driver (2017-10-17 17:22:07 +030=
-0)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
-gs/iwlwifi-next-for-kalle-2017-10-18
-
-for you to fetch changes up to 3c798a45318e098e9937b0fee1e0cf986174fbbe:
-
-  iwlwifi: pcie: remove set but not used variable tcph (2017-10-18 13:02:01=
- +0300)
-
-----------------------------------------------------------------
-Second batch of iwlwifi patches for 4.15
-
-* Allocate reorder buffer dynamically to save memory;
-* Fix a FW dump problem in the A000 family;
-* Fix for a statistics gathering issue (v2);
-* Sort the list of 9000 devices to make it easier to find entries;
-* A couple of cleanups in the FW dump code;
-* Remove some unnecessary variables and fields and calculations;
-
-----------------------------------------------------------------
-Beni Lev (1):
-      iwlwifi: mvm: allow reading UMAC error data from SMEM in A000 devices
-
-Johannes Berg (3):
-      iwlwifi: mvm: allocate reorder buffer according to need
-      iwlwifi: mvm: pass baid_data to iwl_mvm_release_frames()
-      iwlwifi: pcie: remove set but not used variable tcph
-
-Liad Kaufman (1):
-      iwlwifi: mvm: add missing lq_color
-
-Luca Coelho (3):
-      iwlwifi: mvm: move umac_error_event_table validity check to where it'=
-s set
-      iwlwifi: define minimum valid address for umac_error_event_table in c=
-fg
-      iwlwifi: pcie: sort IDs for the 9000 series for easier comparisons
-
-Sara Sharon (1):
-      iwlwifi: mvm: remove duplicated fields in mvm reorder buffer
-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c     |  3 ++-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c     |  3 ++-
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c     |  3 ++-
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    |  4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-config.h   |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 20 +++++++++++++++++--=
--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 43 +++++++++++++++++++=
-+++++++++++++++---------
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 49 +++++++++++++++++++=
-++++++++++++------------------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 44 +++++++++++++++++++=
-+++++++++++++++++--------
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 10 ++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c    | 17 ++++-------------
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c     | 84 +++++++++++++++++++=
-+++++++++++++++++++++++------------------------------------------
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  5 +----
- 13 files changed, 184 insertions(+), 102 deletions(-)
---=-2fuVNpcuIrESSbC9o8jD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlnnLSwACgkQoUecoho8
-xfq1Kw//be4RA5BBR+YVNH1KfuSqjjdnbzY14cr97pZBXmTKPnaX/58IV2IlMLP0
-PK3EGLxGB0470SqjQNExRtGK2QjLpvGRBJ0l0sMH7roJsS9y0Rj7T2Pj3z4y30S0
-LT2+a9jCLZbeCFuJLGyAvK5+P/Y94IP9X2SpEa1ol42Aw73mIi/aR8x8NZ8lhOQJ
-onk+Enh/nZLEdVkWjXAILi+LG6zo4C8vjIZhfVShAHUSXG92+I11SJKTNTFVblhV
-EOEJVyZm17gTzFyp0hYfXr0ZaIFe4UCRtPdTMHqR0UyCld5+f2NHiKsf2j/+aGpY
-QeqcK9ipjexqp4ZmS88c0lHZNC0j2tXoTi4eTZl1G418NLggAAN8c3eC9lT9cX7Q
-3gCU0KaQxTbFWELpUtYxx6k9EiXG6I2aPheiyf1P/hzX+VLHVzhdEZ8s+decda0/
-rckzGVKkcZe9mxsXuoKZx4y2qv1IaCMl/8AemCr5UhsRYmDI8RhL/28C4hzryY1E
-E5zmdfYuOUBu/J24TYFYc6R3nf2BXekcIdcqrNTK5xrbEG7d1Byn8E10XErTVMTi
-Vk7pAc0Ab3Gm2E7fcK6SSlM7lsm902FhqNC4x/ArjFCWEwr22zjCo/I3IgBGrJk5
-zhG84qRya78u5adJGDK8Rtz3VF904Z2icrfIV6kMBN/LXK4LKAY=
-=K66S
------END PGP SIGNATURE-----
-
---=-2fuVNpcuIrESSbC9o8jD--
+-- 
+James Cameron
+http://quozl.netrek.org/
