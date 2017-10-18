@@ -1,101 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45094 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:54130 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756899AbdJKIpF (ORCPT
+        with ESMTP id S1763193AbdJRK3b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 04:45:05 -0400
-Message-ID: <1507711498.1998.18.camel@sipsolutions.net> (sfid-20171011_104519_784439_FFD77093)
-Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
+        Wed, 18 Oct 2017 06:29:31 -0400
+Message-ID: <1508322566.2674.17.camel@sipsolutions.net> (sfid-20171018_122945_123971_5A96CA64)
+Subject: Re: [PATCH] mac80211: aggregation: Convert timers to use
+ timer_setup()
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Wed, 11 Oct 2017 10:44:58 +0200
-In-Reply-To: <87fuaq7ubo.fsf@toke.dk>
-References: <20171010140208.1515-1-toke@toke.dk>
-         <1507651555.26041.81.camel@sipsolutions.net> <87fuaq7ubo.fsf@toke.dk>
+To: Kees Cook <keescook@chromium.org>, linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 18 Oct 2017 12:29:26 +0200
+In-Reply-To: <20171017202545.GA115810@beast> (sfid-20171017_222550_315925_34B26DDB)
+References: <20171017202545.GA115810@beast>
+         (sfid-20171017_222550_315925_34B26DDB)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-> Well I was trying to do The Right Thing(tm), obviously ;)
+[quoting your other email:]
 
-:-)
+> This has been the least trivial timer conversion yet. Given the use of
+> RCU and other things I may not even know about, I'd love to get a close
+> look at this. I *think* this is correct, as it will re-lookup the tid
+> entries when firing the timer.
 
-> The driver_buffered field comes from the previous behaviour of ath9k:
-> It would basically set the station_buffered flag if there was
-> something in the retry queue at the time it goes to sleep. And on
-> wakeup, it will reschedule the txq if it has anything in the retry
-> queue. And, well, it just seemed odd that there was this duplicated
-> logic in the driver and mac80211, if the driver could just signal to
-> mac80211 to reschedule for it...
+I'm not really sure why you're doing the lookup again? That seems
+pointless, since you already have the right structure, and already rely
+on it being valid. You can't really get a new struct assigned to the
+same TID without the old one being destroyed.
 
-Ok. I'm not sure what ath9k does, but mac80211 makes a distinction
-between "do I have something buffered" and "does the driver have
-something buffered".
+> -static void sta_rx_agg_session_timer_expired(unsigned long data)
+> +static void sta_rx_agg_session_timer_expired(struct timer_list *t)
+>  {
+> -	/* not an elegant detour, but there is no choice as the timer passes
+> -	 * only one argument, and various sta_info are needed here, so init
+> -	 * flow in sta_info_create gives the TID as data, while the timer_to_id
+> -	 * array gives the sta through container_of */
+> -	u8 *ptid = (u8 *)data;
+> -	u8 *timer_to_id = ptid - *ptid;
+> -	struct sta_info *sta = container_of(timer_to_id, struct sta_info,
+> -					 timer_to_tid[0]);
+> +	struct tid_ampdu_rx *tid_rx_timer =
+> +		from_timer(tid_rx_timer, t, session_timer);
+> +	struct sta_info *sta = tid_rx_timer->sta;
+> +	u16 tid = tid_rx_timer->tid;
+>  	struct tid_ampdu_rx *tid_rx;
+>  	unsigned long timeout;
+>  
+>  	rcu_read_lock();
+> -	tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[*ptid]);
+> +	tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
+>  	if (!tid_rx) {
+>  		rcu_read_unlock();
 
-When the station wakes up it's pretty easy, we tell the driver and it
-just has to send its own frames first.
+So through all of this, I'm pretty sure we can just use tid_rx_timer
+instead of tid_rx.
 
-But when we get a PS-Poll/U-APSD it's more complicated, and we have to
-tell the driver "please release N frames you have buffered" or we may
-have to tell it "please allow me to send N frames that I have buffered"
-which is why we need the distinction of whether or not the driver has
-something buffered.
+(Same for TX)
 
-Ultimately, with TXQs, I hope this distinction can go away because the
-driver wouldn't buffer all by itself.
-
-> But I guess I was really just getting ahead of myself there; so the
-> right thing to do for now is to keep the old behaviour, and then fix
-> it properly afterwards?
-
-I guess that'd be easier.
-
-> Yes, this makes sense. Each sleep period is pretty short, right? 
-
-Not necessarily.
-
-> I.e., we don't need to deal with interactions between CoDel and the
-> queue being stopped for a long period of time?
-
-I don't know enough about the possible interactions to answer that.
-Sleep periods may be long, though typically if there's traffic for
-stations then they want to retrieve that and will wake up relatively
-soon, but "relatively soon" may still be on the order of hundreds of
-milliseconds (or even seconds) because sometimes clients will only
-listen to DTIM beacons (DTIM period * beacon interval), and e.g. with
-WNM sleep mode it becomes even longer.
-
-> > For the deliver-while-sleeping (PS-Poll/U-APSD) scenario, I think
-> > the
-> > driver should still pull frames, after calling something like
-> > drv_release_buffered_frames(). We want this to be scheduled pretty
-> > much
-> > immediately, so we shouldn't just put the TXQ into the normal
-> > rotation,
-> > but otherwise it should work similarly - except limited to a
-> > certain
-> > number of frames [**].
-> > In this case the driver probably needs to pull the frames using a
-> > different function so that we can
-> >  a) tag the packets properly (more-data, EOSP)
-> >  b) generate nulldata as EOSP container where needed
-> > Thus, it seems likely that we'll want a separate function, "pull
-> > for PS
-> > delivery" rather than the normal ieee80211_tx_dequeue().
-> 
-> I was envisioning that next_txq() could also make those kinds of
-> decisions (i.e., preempt the normal scheduling algorithm when a
-> "special" TXQ needs to be scheduled immediately). But not sure if
-> that is enough for this case?
-
-Hmm, not sure. We really want this to be scheduled pretty much
-immediately because the other side will be waiting for the frames, and
-if we don't get an answer out quickly it'll have to assume we're
-broken. I don't know what the limit here is for our firmware, but we
-should really get this out as soon as possible in this case.
+Anyway, the change here looks correct to me, so I'll apply it and then
+perhaps clean up more. I've only changed "u16 tid" to "u8 tid" since
+the valid range is 0-15 (in theory, in practice 0-7).
 
 johannes
