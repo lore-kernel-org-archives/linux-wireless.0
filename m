@@ -1,47 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58352 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751997AbdJ0Hrf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 03:47:35 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.kernel.org ([198.145.29.99]:59008 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757812AbdJRCCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Oct 2017 22:02:50 -0400
 MIME-Version: 1.0
-Subject: Re: drivers/wireless: rsi: Convert timers to use timer_setup()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171024092909.GA47160@beast>
-References: <20171024092909.GA47160@beast>
-To: Kees Cook <keescook@chromium.org>
-Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20171027074734.6F50260314@smtp.codeaurora.org> (sfid-20171027_094758_835977_86FDF19A)
-Date: Fri, 27 Oct 2017 07:47:34 +0000 (UTC)
+In-Reply-To: <1589476.LyXlx7DqTg@debian64>
+References: <20171006110249.31013-1-nbd@nbd.name> <20171013190749.lzzw4zjzt7fkp3hs@rob-hp-laptop>
+ <3828919b-d634-9f03-22ad-1515219c31d4@nbd.name> <1589476.LyXlx7DqTg@debian64>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 17 Oct 2017 21:02:28 -0500
+Message-ID: <CAL_JsqLNhA2ZjMCKP1FJ1UG_VdMhJYfdyG6CX=3HYZ+k9_HROA@mail.gmail.com> (sfid-20171018_040256_034213_A51EE238)
+Subject: Re: [PATCH v6 1/3] dt-bindings: net: add mt76 wireless device binding
+To: Christian Lamparter <chunkeey@gmail.com>
+Cc: Felix Fietkau <nbd@nbd.name>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kees Cook <keescook@chromium.org> wrote:
+On Sat, Oct 14, 2017 at 10:43 AM, Christian Lamparter
+<chunkeey@gmail.com> wrote:
+> On Saturday, October 14, 2017 9:20:46 AM CEST Felix Fietkau wrote:
+>> On 2017-10-13 21:07, Rob Herring wrote:
+>> > On Fri, Oct 06, 2017 at 01:02:47PM +0200, Felix Fietkau wrote:
+>> >> Add documentation describing how device tree can be used to configure
+>> >> wireless chips supported by the mt76 driver.
+>> >>
+>> >> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+>> >> ---
+>> >>  .../bindings/net/wireless/mediatek,mt76.txt        | 24 ++++++++++++++++++++++
+>> >>  1 file changed, 24 insertions(+)
+>> >>  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+>> >>
+>> >> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+>> >> new file mode 100644
+>> >> index 000000000000..19522ab97d62
+>> >> --- /dev/null
+>> >> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+>> >> @@ -0,0 +1,24 @@
+>> >> +* MediaTek mt76xx devices
+>> >> +
+>> >> +This node provides properties for configuring the MediaTek mt76xx wireless
+>> >> +device. The node is expected to be specified as a child node of the PCI
+>> >> +controller to which the wireless chip is connected.
+>> >> +
+>> >> +Optional properties:
+>> >> +
+>> >> +- mac-address: See ethernet.txt in the parent directory
+>> >> +- local-mac-address: See ethernet.txt in the parent directory
+>> >> +- ieee80211-freq-limit: See ieee80211.txt
+>> >> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
+>> >
+>> > MTD is a Linuxism. And is an EEPROM the only supported device? I'd
+>> > suggest naming if after what the data contains.
+>> PCI cards with this kind of wireless chip usually come with some form of
+>> EEPROM or use the on-chip OTP ROM.
+>> This property is for the case where the chip is built into an embedded
+>> device and the data that would otherwise be on an EEPROM is stored on a
+>> MTD partition instead.
+>> The EEPROM data itself contains multiple things: calibration data,
+>> hardware capabilities, MAC address, etc.
+>> I couldn't think of a better name for it, do you have any suggestions?
 
-> In preparation for unconditionally passing the struct timer_list pointer to
-> all timer callbacks, switch to using the new timer_setup() and from_timer()
-> to pass the timer pointer explicitly.
-> 
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-> Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Cc: Pavani Muthyala <pavani.muthyala@redpinesignals.com>
-> Cc: Karun Eagalapati <karun256@gmail.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+Naming is hard.
 
-Patch applied to wireless-drivers-next.git, thanks.
+> This sort of reminds me of the failed ath9k nvmem patches:
+> https://patchwork.kernel.org/patch/9622127/
+>
+> Which uses the nvmem system.
+>
+> https://github.com/torvalds/linux/blob/master/Documentation/nvmem/nvmem.txt
+>
+> Rob, would this be acceptable?
 
-dfefb9f8d082 drivers/wireless: rsi: Convert timers to use timer_setup()
+Yeah, alignment with other drivers is a good thing.
 
--- 
-https://patchwork.kernel.org/patch/10023815/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Rob
