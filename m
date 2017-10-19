@@ -1,52 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56314 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750865AbdJCWdP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Oct 2017 18:33:15 -0400
-Date: Tue, 3 Oct 2017 19:33:08 -0300
-From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: davem@davemloft.net, herbert@gondor.apana.org.au,
-        nhorman@tuxdriver.com, vyasevich@gmail.com, luto@kernel.org,
-        kvalo@codeaurora.org, linux-crypto@vger.kernel.org,
-        netdev@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] Fix a sleep-in-atomic bug in shash_setkey_unaligned
-Message-ID: <20171003223308.GD19750@localhost.localdomain> (sfid-20171004_003323_699784_A8FBE603)
-References: <1506997522-26684-1-git-send-email-baijiaju1990@163.com>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:47754 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750926AbdJSBbg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Oct 2017 21:31:36 -0400
+Received: by mail-wr0-f196.google.com with SMTP id y39so6741910wrd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Oct 2017 18:31:35 -0700 (PDT)
+Subject: Re: rtlwifi oops
+To: James Cameron <quozl@laptop.org>, linux-wireless@vger.kernel.org
+References: <cf61cfda-1e32-3ec3-d558-b508c3b923b6@gmail.com>
+ <20171018223320.GB641@us.netrek.org>
+ <c13aa975-6339-2f5a-20bb-0a82656a2271@gmail.com>
+ <fcf4b761-d7bd-7956-fa98-07fd8b2f8c3b@lwfinger.net>
+From: nirinA <nirina.raseliarison@gmail.com>
+Message-ID: <b86480bd-49b9-f7ac-5dc5-6f6f83942727@gmail.com> (sfid-20171019_033237_678753_7F416E94)
+Date: Thu, 19 Oct 2017 04:40:22 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506997522-26684-1-git-send-email-baijiaju1990@163.com>
+In-Reply-To: <fcf4b761-d7bd-7956-fa98-07fd8b2f8c3b@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 03, 2017 at 10:25:22AM +0800, Jia-Ju Bai wrote:
-> The SCTP program may sleep under a spinlock, and the function call path is:
-> sctp_generate_t3_rtx_event (acquire the spinlock)
->   sctp_do_sm
->     sctp_side_effects
->       sctp_cmd_interpreter
->         sctp_make_init_ack
->           sctp_pack_cookie
->             crypto_shash_setkey
->               shash_setkey_unaligned
->                 kmalloc(GFP_KERNEL)
+i checked my dmesg and have this similar log, i think when i unplugged 
+the device.
 
-Are you sure this can happen?
-The host is not supposed to store any information when replying to an
-INIT packet (which generated the INIT_ACK listed above). That said,
-it's weird to see the timer function triggering so.
+[ 5640.100541] usb 2-1.4: USB disconnect, device number 5
+[ 5640.104108] rtl_usb: reg 0x102, usbctrl_vendorreq TimeOut! 
+status:0xffffffed value=0x0
+[ 5640.104110] rtl_usb: reg 0x422, usbctrl_vendorreq TimeOut! 
+status:0xffffffed value=0x0
+[ 5640.104113] rtl_usb: reg 0x542, usbctrl_vendorreq TimeOut! 
+status:0xffffffed value=0x0
+[ 5640.104127] rtl_usb: reg 0x102, usbctrl_vendorreq TimeOut! 
+status:0xffffffed value=0xd38000
 
-Checking now, that code is dead actually:
-$ git grep -A 2 SCTP_CMD_GEN_INIT_ACK
-sm_sideeffect.c:                case SCTP_CMD_GEN_INIT_ACK:
-sm_sideeffect.c-                        /* Generate an INIT ACK chunk.
-*/
-sm_sideeffect.c-                        new_obj =
-sctp_make_init_ack(asoc, chunk, GFP_ATOMIC,
+i will apply the patch and will see if i still get this.
 
-Nobody is triggering a call to sctp_cmd_interpreter with
-SCTP_CMD_GEN_INIT_ACK command, which would generate the callstack
-above.
+thanks,
 
-  Marcelo
+-- 
+nirinA Larry Finger wrote:
+> On 10/18/2017 06:18 PM, nirinA wrote:
+>> not really a rtlwifi oops then. maybe issue with udev as that also 
+>> disabled the usb mouse.
+>> but i have no problem since. i will report if i will catch it again.
+>>
+>> thanks,
+>>
+>> -- 
+>> nirinA
+>>
+>> James Cameron wrote:
+>>> On Thu, Oct 19, 2017 at 01:31:43AM +0300, nirinA wrote:
+>>>> hello there,
+>>>> i got the oops below with a rtl8192cu:0bda:8178 and kernel 4.13.6, but
+>>>> cannot reproduce it.
+>>>> i use this device since 4.3 or so without noticing any issue.
+>>>>
+>>>> nirinA
+>>>>
+>>>> [  239.338040] usb 2-1.3: new high-speed USB device number 4 using 
+>>>> ehci-pci
+>>>> [  239.417728] usb 2-1.3: New USB device found, idVendor=0bda,
+>>>> idProduct=8178
+>>>> [  239.417730] usb 2-1.3: New USB device strings: Mfr=1, Product=2,
+>>>> SerialNumber=3
+>>>> [  239.417731] usb 2-1.3: Product: 802.11n WLAN Adapter
+>>>> [  239.417732] usb 2-1.3: Manufacturer: Realtek
+>>>> [  239.417733] usb 2-1.3: SerialNumber: 00e04c000001
+>>>> [  239.578100] rtl8192cu: Chip version 0x11
+>>>> [  239.678225] usb 2-1-port3: disabled by hub (EMI?), re-enabling...
+>>> Just prior to the oops, your USB hub disabled the port being used by
+>>> the wireless device.
+>>>
+>>> While the response of the driver seems wrong, it is a difficult
+>>> condition to reproduce; one must either force or forge the disabling
+>>> by the hub.
+>>>
+>>>> [  239.678230] usb 2-1.3: USB disconnect, device number 4
+>>>> [  239.679128] rtl_usb: reg 0x30, usbctrl_vendorreq TimeOut!
+>>>> status:0xffffffed value=0x0
+>
+> This sequence of events is unusual. A driver should be able to trust 
+> that the platform is behaving correctly and normally.
+>
+> In reviewing the USB probe routine, the only thing I could see is that 
+> one returned value is not being checked. If the problem happens again, 
+> please try the following patch:
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c 
+> b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> index 5590d07d0918..092cd2da15f6 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> @@ -1082,6 +1082,8 @@ int rtl_usb_probe(struct usb_interface *intf,
+> init_completion(&rtlpriv->firmware_loading_complete);
+>         SET_IEEE80211_DEV(hw, &intf->dev);
+>         udev = interface_to_usbdev(intf);
+> +       if (!udev)
+> +               return -ENODEV;
+>         usb_get_dev(udev);
+>         usb_priv = rtl_usbpriv(hw);
+>         memset(usb_priv, 0, sizeof(*usb_priv));
+>
+> I will test and push this patch because that value should be checked, 
+> but I'm not sure it would correct your problem.
+>
+> Larry
+>
+>
+>
