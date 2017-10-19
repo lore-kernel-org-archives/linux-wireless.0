@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33808 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755165AbdJJLoK (ORCPT
+Received: from smtprelay0205.hostedemail.com ([216.40.44.205]:50594 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751468AbdJSFpa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 07:44:10 -0400
-Received: by mail-pf0-f194.google.com with SMTP id b85so14672017pfj.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Oct 2017 04:44:10 -0700 (PDT)
-Received: from himanshu-Vostro-3559 ([103.254.204.108])
-        by smtp.gmail.com with ESMTPSA id t71sm18123664pgb.84.2017.10.10.04.44.06
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 10 Oct 2017 04:44:07 -0700 (PDT)
-Date: Tue, 10 Oct 2017 17:14:02 +0530
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Contributing to Linux-wireless drivers.
-Message-ID: <20171010114402.GA3370@himanshu-Vostro-3559> (sfid-20171010_134429_573941_E0072390)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 19 Oct 2017 01:45:30 -0400
+From: Joe Perches <joe@perches.com>
+To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH V2] bcma: Use bcma_debug and not pr_cont in MIPS driver
+Date: Wed, 18 Oct 2017 22:45:27 -0700
+Message-Id: <d0155fd60408cebf8e32c523582d71e1240e40ec.1508391860.git.joe@perches.com> (sfid-20171019_074544_938895_09EFBBA4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone,
+Commit 66cc04424960 ("bcma: use bcma_debug and pr_cont in MIPS driver")
+converted a printk(KERN_DEBUG to bcma_debug.
 
-Apologies for that forwarded email which I hurriedly sent without
-editing here!
+bcma_debug is guarded by a #define DEBUG via pr_debug.
 
-I am an undergraduate student in ECE(3rd year) and wish to contribute to linux-wireless
-drivers. I am familiar with the kernel development process and have many
-patches accepted in the past 2 months with variety of tools used such as
-coccinelle, Kasan, smatch, sparse and checkpatch.
+This means that the bcma_debug will generally not be emitted
+but any pr_cont following the bcma_debug will be emitted.
 
-My past contributions can be found here:
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/log/?qt=grep&q=Himanshu+Jha
+Correct this by removing the uses of pr_cont by using a temporary.
 
-Also, James Cameron suggested me to *not self promot* and other useful
-stuff. But I'm not self promoting and the purpose is to avoid the
-initial steps that you generally recommend to a newbie like reading the
-conding guideline, submitting patches, learn Git etc.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
 
-I have basic knowledge of Linux kernel internals and competent C skills,
-also planning to learn Device Drivers in future. 
+v2: Fix whitespace damage
+    I hear there's this checkpatch tool...
+    
+ drivers/bcma/driver_mips.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-Also, since I am beginner is there any small project that I could work on
-to enhance my knowledge. 
-For eg:
-https://wireless.wiki.kernel.org/en/developers/gsoc/2010/wifi-test-nl80211
-It is an excellent page for a beginner like me that states what should
-you follow and what documenation to read and other useful stuffs.
-
-Please share any links to Documentation/tutorials which I can follow and
-help the community.
-
-Lastly, I will next year surely apply for GSoC under Linux-wireless and
-I don't seem to find any participation since 2012. Could someone please
-explain ? Also, will Linux-wireless participate next year ?
-
-Basically, I want to be prepared beforehand so that I could contribute
-successfully! 
-
-
-Thanks 
-Eagerly awaiting your response,
-Himanshu Jha
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 5904ef1aa624..f040aba48d50 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -184,11 +184,14 @@ static void bcma_core_mips_print_irq(struct bcma_device *dev, unsigned int irq)
+ {
+ 	int i;
+ 	static const char *irq_name[] = {"2(S)", "3", "4", "5", "6", "D", "I"};
++	char interrupts[20];
++	char *ints = interrupts;
+ 
+-	bcma_debug(dev->bus, "core 0x%04x, irq :", dev->id.id);
+-	for (i = 0; i <= 6; i++)
+-		pr_cont(" %s%s", irq_name[i], i == irq ? "*" : " ");
+-	pr_cont("\n");
++	for (i = 0; i < ARRAY_SIZE(irq_name); i++)
++		ints += sprintf(ints, " %s%c",
++				irq_name[i], i == irq ? '*' : ' ');
++
++	bcma_debug(dev->bus, "core 0x%04x, irq:%s\n", dev->id.id, interrupts);
+ }
+ 
+ static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
+-- 
+2.10.0.rc2.1.g053435c
