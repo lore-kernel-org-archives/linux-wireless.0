@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57488 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751389AbdJPNDI (ORCPT
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:56431 "EHLO
+        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751091AbdJSCAE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 09:03:08 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Pkshih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Souptick Joarder <jrdr.linux@gmail.com>,
-        "devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kernel-janitors\@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: Two rtlwifi drivers?
-References: <20170824100832.lcmbwcjhzwlgozeh@mwanda>
-        <87h8wxw4bq.fsf@kamboji.qca.qualcomm.com>
-        <652d42ad-a077-530b-743f-d38ddf3ff677@lwfinger.net>
-        <87k202qcjr.fsf@kamboji.qca.qualcomm.com>
-        <20171011131310.GF32250@kroah.com>
-        <87h8v4pxqp.fsf@kamboji.qca.qualcomm.com>
-        <20171012103450.GA24647@kroah.com>
-        <5B2DA6FDDF928F4E855344EE0A5C39D10581FF70@RTITMBSV07.realtek.com.tw>
-        <20171016074516.4irgvbid6p5zwqjg@mwanda>
-Date: Mon, 16 Oct 2017 16:03:02 +0300
-In-Reply-To: <20171016074516.4irgvbid6p5zwqjg@mwanda> (Dan Carpenter's message
-        of "Mon, 16 Oct 2017 10:45:16 +0300")
-Message-ID: <87k1zvmeih.fsf@kamboji.qca.qualcomm.com> (sfid-20171016_150312_057319_9EFE724A)
+        Wed, 18 Oct 2017 22:00:04 -0400
+Received: by mail-oi0-f48.google.com with SMTP id v9so12195524oif.13
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Oct 2017 19:00:04 -0700 (PDT)
+Subject: Re: rtlwifi oops
+To: nirinA <nirina.raseliarison@gmail.com>,
+        James Cameron <quozl@laptop.org>,
+        linux-wireless@vger.kernel.org
+References: <cf61cfda-1e32-3ec3-d558-b508c3b923b6@gmail.com>
+ <20171018223320.GB641@us.netrek.org>
+ <c13aa975-6339-2f5a-20bb-0a82656a2271@gmail.com>
+ <fcf4b761-d7bd-7956-fa98-07fd8b2f8c3b@lwfinger.net>
+ <b86480bd-49b9-f7ac-5dc5-6f6f83942727@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <d65baa01-c842-0d14-5760-bbc1c754b1e6@lwfinger.net> (sfid-20171019_040008_208852_E18CD1B1)
+Date: Wed, 18 Oct 2017 21:00:02 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <b86480bd-49b9-f7ac-5dc5-6f6f83942727@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+On 10/18/2017 08:40 PM, nirinA wrote:
+> i checked my dmesg and have this similar log, i think when i unplugged the device.
+> 
+> [ 5640.100541] usb 2-1.4: USB disconnect, device number 5
+> [ 5640.104108] rtl_usb: reg 0x102, usbctrl_vendorreq TimeOut! status:0xffffffed 
+> value=0x0
+> [ 5640.104110] rtl_usb: reg 0x422, usbctrl_vendorreq TimeOut! status:0xffffffed 
+> value=0x0
+> [ 5640.104113] rtl_usb: reg 0x542, usbctrl_vendorreq TimeOut! status:0xffffffed 
+> value=0x0
+> [ 5640.104127] rtl_usb: reg 0x102, usbctrl_vendorreq TimeOut! status:0xffffffed 
+> value=0xd38000
+> 
+> i will apply the patch and will see if i still get this.
 
-> On Mon, Oct 16, 2017 at 02:41:38AM +0000, Pkshih wrote:
->> 2) The rtlwifi in staging
->>    In staging, the module phydm v13 contains bugs, so I want to upgrade
->>    to v21 (Realtek internal version number). This upgrade contains a
->>    big patch that the difference between v13 and v21, and there are 
->>    40+ patches to support this upgrade. I have three options, and
->>    I want to know which one is prefer.
->
-> We can't discuss patches we haven't seend.  Please just send them right
-> away without any delay to both lists, and we can decide from there.
->
-> 40 patches is a medium size set, patch that we are used to dealing with
-> every day.
+As I said in the response to your private message:
 
-I review every patch I commit and 40 patches is just pure pain to dig
-through. So when submitting patches to me please keep the size more
-reasonable, like 10-12 patches per set. I think Dave also has a similar
-rule for net patches.
+No, that is a different error. You need to check for the USB disconnect when 
+starting, but no rtl_usb errors.
 
-I wrote a FAQ entry about this:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#too_many_patches
-
--- 
-Kalle Valo
+Larry
