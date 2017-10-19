@@ -1,93 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:63202 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751000AbdJ1JHZ (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:47141 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752499AbdJSRM2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Oct 2017 05:07:25 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, Xinming Hu <huxm@marvell.com>,
-        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-acpi@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Len Brown <lenb@kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Caesar Wang <wxt@rock-chips.com>,
-        Klaus Goger <klaus.goger@theobroma-systems.com>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [RFC PATCH v10 0/7] PCI: rockchip: Move PCIe WAKE# handling into pci core
-Date: Sat, 28 Oct 2017 11:07:30 +0200
-Message-ID: <1872710.P2f02irZl9@aspire.rjw.lan> (sfid-20171028_110756_885669_BFEEF616)
-In-Reply-To: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
-References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+        Thu, 19 Oct 2017 13:12:28 -0400
+Received: by mail-it0-f66.google.com with SMTP id p138so11057761itp.2
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2017 10:12:28 -0700 (PDT)
+Date: Thu, 19 Oct 2017 10:12:25 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Grant Grundler <grundler@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: Re: ath10k: fix core PCI suspend when WoWLAN is supported but
+ disabled
+Message-ID: <20171019171224.GA46096@google.com> (sfid-20171019_191246_876155_711F5A70)
+References: <20170919232416.108247-1-briannorris@chromium.org>
+ <2809b2cf512d4c198d3cef3f5e468c3c@euamsexm01e.eu.qualcomm.com>
+ <87vajbgqcz.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87vajbgqcz.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, October 27, 2017 9:26:05 AM CEST Jeffy Chen wrote:
-> 
-> Currently we are handling wake irq in mrvl wifi driver. Move it into
-> pci core.
-> 
-> Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
-> 
-> 
-> Changes in v10:
-> Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
-> since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
-> 
-> Changes in v9:
-> Add section for PCI devices and rewrite the commit message.
-> Rewrite the commit message.
-> Fix check error in .cleanup().
-> Move dedicated wakeirq setup to setup() callback and use
-> device_set_wakeup_enable() to enable/disable.
-> 
-> Changes in v8:
-> Add optional "pci", and rewrite commit message.
-> Rewrite the commit message.
-> Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-> 
-> Changes in v7:
-> Move PCIE_WAKE handling into pci core.
-> 
-> Changes in v6:
-> Fix device_init_wake error handling, and add some comments.
-> 
-> Changes in v5:
-> Move to pci.txt
-> Use "wakeup" instead of "wake"
-> Rebase.
-> 
-> Changes in v3:
-> Fix error handling.
-> 
-> Changes in v2:
-> Use dev_pm_set_dedicated_wake_irq.
-> 
-> Jeffy Chen (7):
->   dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
->   of/irq: Adjust of_pci_irq parsing for multiple interrupts
->   mwifiex: Disable wakeup irq handling for pcie
->   arm64: dts: rockchip: Move PCIe WAKE# irq to pcie driver for Gru
->   PCI: Make pci_platform_pm_ops's callbacks optional
->   PCI / PM: Move acpi wakeup code to pci core
->   PCI / PM: Add support for the PCIe WAKE# signal for OF
++ Arnd
 
-Overall, I don't quite like the direction this is going into, but I need to
-have a deeper look.  Which may take some time, so please bear with me.
+On Thu, Oct 19, 2017 at 02:32:45PM +0000, Kalle Valo wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+> 
+> > Brian Norris <briannorris@chromium.org> wrote:
+> >
+> >> For devices where the FW supports WoWLAN but user-space has not
+> >> configured it, we don't do any PCI-specific suspend/resume operations,
+> >> because mac80211 doesn't call drv_suspend() when !wowlan. This has
+> >> particularly bad effects for some platforms, because we don't stop the
+> >> power-save timer, and if this timer goes off after the PCI controller
+> >> has suspended the link, Bad Things will happen.
+> >> 
+> >> Commit 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
+> >> got some of this right, in that it understood there was a problem on
+> >> non-WoWLAN firmware. But it forgot the $subject case.
+> >> 
+> >> Fix this by moving all the PCI driver suspend/resume logic exclusively
+> >> into the driver PM hooks. This shouldn't affect WoWLAN support much
+> >> (this just gets executed later on).
+> >> 
+> >> I would just as well kill the entirety of ath10k_hif_suspend(), as it's
+> >> not even implemented on the USB or SDIO drivers. I expect that we don't
+> >> need the callback, except to return "supported" (i.e., 0) or "not
+> >> supported" (i.e., -EOPNOTSUPP).
+> >> 
+> >> Fixes: 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops")
+> >> Fixes: 77258d409ce4 ("ath10k: enable pci soc powersaving")
+> >> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> >> Cc: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+> >> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> >> Cc: Michal Kazior <michal.kazior@tieto.com>
+> >> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> >
+> > Patch applied to ath-next branch of ath.git, thanks.
+> >
+> > 96378bd2c6cd ath10k: fix core PCI suspend when WoWLAN is supported but disabled
+> 
+> Kbuild found a build problem, I suspect it's caused by this patch:
 
-Thanks,
-Rafael
+Actually, it's the interaction of this patch and Arnd's patch:
+
+6af1de2e4ec4 ath10k: mark PM functions as __maybe_unused
+
+I see that's now in these branches:
+
+  ath/ath-current
+  ath/ath-qca
+  ath/master
+  ath/master-pending
+  wireless-drivers-next/master
+  wireless-drivers-next/pending
+
+Whereas mine got applied to:
+
+  ath/ath-next
+
+So technically, the problem is in your merge here :)
+
+096ad2a15fd8 Merge branch 'ath-next'
+
+> drivers/net/wireless/ath/ath10k/pci.c:3416:8: error: implicit
+> declaration of function 'ath10k_pci_suspend'
+> [-Werror=implicit-function-declaration]
+> 
+> drivers/net/wireless/ath/ath10k/pci.c:3428:8: error: implicit
+> declaration of function 'ath10k_pci_resume'
+> [-Werror=implicit-function-declaration]
+> 
+> http://lists.infradead.org/pipermail/ath10k/2017-October/010269.html
+> 
+> The .config.gz there doesn't have CONFIG_PM set, maybe that's the
+> problem?
+
+Yes, indirectly that's also the problem.
+
+The solution would seem to be either to kill the #ifdefs around
+ath10k_pci_{suspend,resume}() and friends (and use __maybe_unused
+instead, to further extend Arnd's patch), or else revert Arnd's stuff
+and go with CONFIG_PM_SLEEP everywhere, which would resolve the original
+warning (promoted to error) that Arnd was resolving.
+
+I can send out one of these if you'd like.
+
+Brian
