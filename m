@@ -1,67 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:56488 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751446AbdJaPHk (ORCPT
+Received: from mail-it0-f44.google.com ([209.85.214.44]:43807 "EHLO
+        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752420AbdJSI0H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Oct 2017 11:07:40 -0400
-Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
- <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
- <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
- <52655c07-aba1-525e-8c81-e420eafc329f@dd-wrt.com>
- <8760av1hx8.fsf@kamboji.qca.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <5903661f-1276-5cca-7894-b489e062b78d@dd-wrt.com> (sfid-20171031_160744_613216_108577F8)
-Date: Tue, 31 Oct 2017 16:07:37 +0100
+        Thu, 19 Oct 2017 04:26:07 -0400
+Received: by mail-it0-f44.google.com with SMTP id k70so9982874itk.0
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2017 01:26:07 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <8760av1hx8.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CACT4Y+YB7PTCFCjeqwJeGpSxxAh_U6F6UsDKaN4XAx6uL8+pZw@mail.gmail.com>
+References: <CAAeHK+yUNrrNU3Jqrfs7XAT809eyF4nv673cSL8RppbLrDtWNA@mail.gmail.com>
+ <20171012072529.GB2686@redhat.com> <CACT4Y+YLM-u7bMfRB=eu_pz1M9iDrY-Qmnho7Hw_Lh3M=LSeMQ@mail.gmail.com>
+ <20171016094024.GD2553@redhat.com> <CACT4Y+YB7PTCFCjeqwJeGpSxxAh_U6F6UsDKaN4XAx6uL8+pZw@mail.gmail.com>
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Thu, 19 Oct 2017 10:25:46 +0200
+Message-ID: <CACT4Y+b4axLm++jwFnUgABvqE7DUN_sD-HG2dVC7_LfptKVgYg@mail.gmail.com> (sfid-20171019_102636_029374_058E58DD)
+Subject: Re: usb/net/rt2x00: warning in rt2800_eeprom_word_index
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Andrey Konovalov <andreyknvl@google.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Kostya Serebryany <kcc@google.com>,
+        syzkaller <syzkaller@googlegroups.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 31.10.2017 um 16:00 schrieb Kalle Valo:
-> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
->
->> the following patchlines in the v3 patch look wrong
+On Mon, Oct 16, 2017 at 2:19 PM, Dmitry Vyukov <dvyukov@google.com> wrote:
+> On Mon, Oct 16, 2017 at 11:40 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> Hi Dmitry
 >>
->> +               /* ICV */
->> +               if (status->flag & RX_FLAG_ICV_STRIPPED &&
->> +                   enctype != HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
->> +                       skb_trim(msdu, msdu->len -
->> +                                ath10k_htt_rx_crypto_tail_len(ar,
->> enctype));
+>> On Sat, Oct 14, 2017 at 04:38:03PM +0200, Dmitry Vyukov wrote:
+>>> On Thu, Oct 12, 2017 at 9:25 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>>> > Hi
+>>> >
+>>> > On Mon, Oct 09, 2017 at 07:50:53PM +0200, Andrey Konovalov wrote:
+>>> >> I've got the following report while fuzzing the kernel with syzkaller.
+>>> >>
+>>> >> On commit 8a5776a5f49812d29fe4b2d0a2d71675c3facf3f (4.14-rc4).
+>>> >>
+>>> >> I'm not sure whether this is a bug in the driver, or just a way to
+>>> >> report misbehaving device. In the latter case this shouldn't be a
+>>> >> WARN() call, since WARN() means bug in the kernel.
+>>> >
+>>> > This is about wrong EEPROM, which reported 3 tx streams on
+>>> > non 3 antenna device. I think WARN() is justified and thanks
+>>> > to the call trace I was actually able to to understand what
+>>> > happened.
+>>> >
+>>> > In general I do not think WARN() only means a kernel bug, it
+>>> > can be F/W or H/W bug too.
+>>>
+>>> Hi Stanislaw,
+>>>
+>>> Printing messages is fine. Printing stacks is fine. Just please make
+>>> them distinguishable from kernel bugs and don't kill the whole
+>>> possibility of automated Linux kernel testing. That's an important
+>>> capability.
 >>
+>> We do not distinguish between bugs and other problems when WARN() is
+>> used in (wireless) drivers, what I think is correct, taking comment from
+>> include/asm-generic/bug.h :
 >>
->> the enctype != wpa2 isnt enough since it also belongs to ccmp-256,
->> gcmp modes etc.
-> 4.14 doesn't support CCMP-256 nor GCMP modes yet. Did you check the
-> separate patch for 4.15:
-
-for me ccmp-256 and gcmp works but my current tree is based on a very 
-recent mac80211 version
-
-but did not check if this support is included in 4.14 since i'm 
-developing embedded wireless firmwares on different kernel versions 
-using wireless backports based on recent mac80211 /ath10k etc. versions
-
+>> /*
+>>  * WARN(), WARN_ON(), WARN_ON_ONCE, and so on can be used to report
+>>  * significant issues that need prompt attention if they should ever
+>>  * appear at runtime.  Use the versions with printk format strings
+>>  * to provide better diagnostics.
+>>  */
+>>
+>> Historically we have BUG() to mark the bugs, but usage if it is not
+>> recommended as it can kill the system, so for anything that can
+>> be recovered in runtime - WARN() is recommended.
+>>
+>> Perhaps we can introduce another helper like PROBLEM() for marking
+>> situations when something is wrong, but it is not a bug. However I'm
+>> not even sure at what extent it can be used, since for many cases
+>> if not the most, driver author can not tell apriori if the problem
+>> is a bug in the driver or HW/FW misbehaviour (or maybe particular
+>> issue can happen because of both).
 >
-> https://patchwork.kernel.org/patch/10029097/
-thanks for notifying me. havent seen it
->
+> I will write a separate email to LKML.
 
--- 
-Mit freundlichen Grüssen / Regards
 
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Sent a mail titled "Distinguishing kernel bugs from invalid inputs" to
+LKML. Here is a copy:
+https://groups.google.com/forum/#!topic/syzkaller/dGh7qtbu14Q
