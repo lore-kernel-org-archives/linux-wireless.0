@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:48852 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751086AbdJKOey (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:45255 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753139AbdJSVii (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 10:34:54 -0400
-Message-ID: <1507732491.1998.39.camel@sipsolutions.net> (sfid-20171011_163628_809756_63E24AA4)
-Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Wed, 11 Oct 2017 16:34:51 +0200
-In-Reply-To: <87fuapbvws.fsf@toke.dk>
-References: <20171010140208.1515-1-toke@toke.dk>
-         <1507651555.26041.81.camel@sipsolutions.net> <87fuaq7ubo.fsf@toke.dk>
-         <1507711498.1998.18.camel@sipsolutions.net> <87tvz5pymm.fsf@toke.dk>
-         <1507731344.1998.36.camel@sipsolutions.net> <87fuapbvws.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 19 Oct 2017 17:38:38 -0400
+Received: from mail-it0-f72.google.com ([209.85.214.72])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1e5IWT-0007XO-Gk
+        for linux-wireless@vger.kernel.org; Thu, 19 Oct 2017 21:38:37 +0000
+Received: by mail-it0-f72.google.com with SMTP id p138so8628908itp.12
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2017 14:38:37 -0700 (PDT)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?=D0=90=D0=BD=D0=B4=D1=80=D0=B5=D0=B9=20=D0=98=D0=B2=D0=B0=D0=BD=D0=BE=D0=B2?=
+        <wowz89@mail.ru>
+Subject: [PATCH] wireless-regdb: Add 5 Ghz rules for Kazakhstan (KZ)
+Date: Thu, 19 Oct 2017 16:38:34 -0500
+Message-Id: <20171019213834.23127-1-seth.forshee@canonical.com> (sfid-20171019_233841_226525_31783EB1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-10-11 at 16:29 +0200, Toke Høiland-Jørgensen wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > On Wed, 2017-10-11 at 16:06 +0200, Toke Høiland-Jørgensen wrote:
-> > 
-> > > > Hmm, not sure. We really want this to be scheduled pretty much
-> > > > immediately because the other side will be waiting for the
-> > > > frames,
-> > > > and
-> > > > if we don't get an answer out quickly it'll have to assume
-> > > > we're
-> > > > broken. I don't know what the limit here is for our firmware,
-> > > > but
-> > > > we
-> > > > should really get this out as soon as possible in this case.
-> > > 
-> > > OK. But presumably it can't preempt packets already pushed to the
-> > > hardware, right? 
-> > 
-> > True. If there are still packets scheduled then it needs even more
-> > driver tricks to drop those back to tx_pending first ...
-> 
-> Only for packets to the same station, right?
+Add rules for 5150-5250 MHz, 5250-5350 MHz, and 5470-5725 Mhz
+based on the documents at [1] and [2].
 
-Yes, but they need to be somehow taken off the queue to avoid
-reordering. Usually the firmware will filter them, but synchronisation
-is difficult, since what might happen is that some frames are already
-filtered, others aren't, and then the later ones actually need to go
-out while the earlier ones don't ... if that's not done, you get
-reordering and the state machines get out of sync.
+[1] http://mic.gov.kz/sites/default/files/pages/pravila_prisvoeniya_polos_chastot_no34.pdf
+[2] http://adilet.zan.kz/rus/docs/P000001379_
 
-> What part of the standard do I have to read to learn how this is
-> supposed to work, BTW? Or even better, is there a resource that
-> describes how PS works that is more accessible than the standard
-> itself?
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ db.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Hmm. I don't think the standard will actually help you much here, it
-just describes the over-the-air behaviour.
-
-Most of the complexity here comes from having to deal with driver
-buffering, mac80211 buffering, addressing the reordering problem
-(described above) from queuing frames for multiple stations on the same
-hw queue.
-
-johannes
+diff --git a/db.txt b/db.txt
+index e48f9a619651..96d8fda44284 100644
+--- a/db.txt
++++ b/db.txt
+@@ -689,8 +689,14 @@ country KY: DFS-FCC
+ 	(5490 - 5730 @ 160), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
++# Source:
++# http://mic.gov.kz/sites/default/files/pages/pravila_prisvoeniya_polos_chastot_no34.pdf
++# http://adilet.zan.kz/rus/docs/P000001379_
+ country KZ:
+ 	(2402 - 2482 @ 40), (20)
++	(5150 - 5250 @ 80), (20), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
++	(5470 - 5725 @ 80), (20), NO-OUTDOOR, DFS
+ 
+ country LB: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-- 
+2.14.1
