@@ -1,92 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:52980
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751275AbdJEBiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 21:38:22 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 4/8] qtnfmac: get rid of QTNF_STATE_AP_CONFIG
-Date: Wed,  4 Oct 2017 18:38:09 -0700
-Message-Id: <20171005013813.13332-5-igor.mitsyanko.os@quantenna.com> (sfid-20171005_033842_730907_08999794)
-In-Reply-To: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
-References: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtprelay0116.hostedemail.com ([216.40.44.116]:41662 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751038AbdJSBiP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Oct 2017 21:38:15 -0400
+Message-ID: <1508377091.6806.32.camel@perches.com> (sfid-20171019_033820_107585_FE810CFC)
+Subject: Re: [PATCH] bcma: use bcma_debug and pr_cont in MIPS driver
+From: Joe Perches <joe@perches.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Date: Wed, 18 Oct 2017 18:38:11 -0700
+In-Reply-To: <50b62ff7-40c2-6980-27f8-4776b059800c@hauke-m.de>
+References: <20171016125432.11655-1-zajec5@gmail.com>
+         <50b62ff7-40c2-6980-27f8-4776b059800c@hauke-m.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+On Mon, 2017-10-16 at 23:21 +0200, Hauke Mehrtens wrote:
+> On 10/16/2017 02:54 PM, Rafał Miłecki wrote:
+> > From: Rafał Miłecki <rafal@milecki.pl>
+> > 
+> > Using bcma_debug gives a device-specific prefix for messages and pr_cont
+> > is a common helper for continuing a line.
+> > 
+> > Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Acked-By: Hauke Mehrtens <hauke@hauke-m.de>
+> 
+> > ---
+> >  drivers/bcma/driver_mips.c | 7 ++++---
+> >  1 file changed, 4 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+> > index 89af807cf29c..5904ef1aa624 100644
+> > --- a/drivers/bcma/driver_mips.c
+> > +++ b/drivers/bcma/driver_mips.c
+> > @@ -184,10 +184,11 @@ static void bcma_core_mips_print_irq(struct bcma_device *dev, unsigned int irq)
+> >  {
+> >  	int i;
+> >  	static const char *irq_name[] = {"2(S)", "3", "4", "5", "6", "D", "I"};
+> > -	printk(KERN_DEBUG KBUILD_MODNAME ": core 0x%04x, irq :", dev->id.id);
+> > +
+> > +	bcma_debug(dev->bus, "core 0x%04x, irq :", dev->id.id);
+> >  	for (i = 0; i <= 6; i++)
+> > -		printk(" %s%s", irq_name[i], i == irq ? "*" : " ");
+> > -	printk("\n");
+> > +		pr_cont(" %s%s", irq_name[i], i == irq ? "*" : " ");
+> > +	pr_cont("\n");
+> >  }
+> >  
+> >  static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
+> > 
 
-QTNF_STATE_AP_CONFIG is redundant and its usage can be safely removed.
+This isn't the same code as it depends on #define DEBUG
+and will not output the first line in most cases.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 8 --------
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 3 ---
- drivers/net/wireless/quantenna/qtnfmac/core.h     | 1 -
- 3 files changed, 12 deletions(-)
+I'd suggest a nack.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 056018e..c660846 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -275,13 +275,6 @@ static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 		goto out;
- 	}
- 
--	if (!(vif->bss_status & QTNF_STATE_AP_CONFIG)) {
--		pr_err("VIF%u.%u: AP config failed in FW\n", vif->mac->macid,
--		       vif->vifid);
--		ret = -EFAULT;
--		goto out;
--	}
--
- 	ret = qtnf_mgmt_set_appie(vif, &settings->beacon);
- 	if (ret) {
- 		pr_err("VIF%u.%u: failed to add IEs to beacon\n",
-@@ -316,7 +309,6 @@ static int qtnf_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		pr_err("VIF%u.%u: failed to stop AP operation in FW\n",
- 		       vif->mac->macid, vif->vifid);
- 		vif->bss_status &= ~QTNF_STATE_AP_START;
--		vif->bss_status &= ~QTNF_STATE_AP_CONFIG;
- 
- 		netif_carrier_off(vif->netdev);
- 	}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index f5bc43b..59ca6ca 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -256,8 +256,6 @@ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
- 		goto out;
- 	}
- 
--	vif->bss_status |= QTNF_STATE_AP_CONFIG;
--
- out:
- 	qtnf_bus_unlock(vif->mac->bus);
- 	return ret;
-@@ -290,7 +288,6 @@ int qtnf_cmd_send_stop_ap(struct qtnf_vif *vif)
- 	}
- 
- 	vif->bss_status &= ~QTNF_STATE_AP_START;
--	vif->bss_status &= ~QTNF_STATE_AP_CONFIG;
- 
- 	netif_carrier_off(vif->netdev);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index 2cd0150..f8165a7 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -52,7 +52,6 @@
- #define QTNF_DEF_WDOG_TIMEOUT		5
- #define QTNF_TX_TIMEOUT_TRSHLD		100
- 
--#define QTNF_STATE_AP_CONFIG		BIT(2)
- #define QTNF_STATE_AP_START		BIT(1)
- 
- extern const struct net_device_ops qtnf_netdev_ops;
--- 
-2.9.5
+Perhaps it'd be better to use a temporary and avoid the
+pr_cont uses like:
+
+{
+	int i;
+	static const char *irq_name[] = {"2(S)", "3", "4", "5", "6", "D", "I"};
+	char interrupts[20];
+	char *ints = interrupts;
+
+	for (i = 0; i < ARRAY_SIZE(irq_name), i++)
+		ints += sprintf(ints, " %s%c", irq_name[i], i == irq ? '*' : ' ');
+
+	bcma_debug(dev->bus, "core 0x04x, irq: %s\n", dev->id.id, interrupts);
+}
+
+		
