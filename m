@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:44728 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757047AbdJKIHS (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:45974 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752342AbdJSWXY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 04:07:18 -0400
-Message-ID: <1507709235.1998.17.camel@sipsolutions.net> (sfid-20171011_100844_724095_8447CA1A)
-Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
- mask if not usable"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>, kirtika@google.com,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Wed, 11 Oct 2017 10:07:15 +0200
-In-Reply-To: <1507708948.1998.15.camel@sipsolutions.net>
-References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
-         (sfid-20171010_225427_620459_2849A16B) <1507708948.1998.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 19 Oct 2017 18:23:24 -0400
+Received: from mail-io0-f200.google.com ([209.85.223.200])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1e5JDn-0001Dt-6H
+        for linux-wireless@vger.kernel.org; Thu, 19 Oct 2017 22:23:23 +0000
+Received: by mail-io0-f200.google.com with SMTP id 189so9004266iow.8
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2017 15:23:23 -0700 (PDT)
+Date: Thu, 19 Oct 2017 17:23:20 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [PATCH] wireless-regdb: add Short Range Devices (SRD) (ETSI EN
+ 300 440) for Spain
+Message-ID: <20171019222320.zz2qprjzxn3pyrf5@ubuntu-hedt> (sfid-20171020_002327_805161_38B7CFDB)
+References: <20171015134637.2760-1-xose.vazquez@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171015134637.2760-1-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-10-11 at 10:02 +0200, Johannes Berg wrote:
+On Sun, Oct 15, 2017 at 03:46:37PM +0200, Xose Vazquez Perez wrote:
+> UN - 130 Dispositivos de corto alcance en 5 GHz :
+> https://www.boe.es/buscar/act.php?id=BOE-A-2013-4845&tn=1&p=20150410
+> 
+> Cc: Seth Forshee <seth.forshee@canonical.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: wireless-regdb@lists.infradead.org
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-> Overall, this isn't very well defined for AP mode...
-
-No, that's not really correct. It *is* well defined (set the rate for
-all clients to the same fixed rate), but that definition isn't very
-good because if that rate isn't a basic rate, clients can connect that
-don't support this rate...
-
-johannes
+Applied, thanks!
