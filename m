@@ -1,66 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.laptop.org ([18.85.44.157]:41336 "EHLO swan.laptop.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750828AbdJ0E5X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 00:57:23 -0400
-Date: Fri, 27 Oct 2017 15:57:16 +1100
-From: James Cameron <quozl@laptop.org>
-To: nirinA raseliarison <nirina.raseliarison@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: rtlwifi oops
-Message-ID: <20171027045716.GH9888@us.netrek.org> (sfid-20171027_065749_377431_ADB33922)
-References: <cf61cfda-1e32-3ec3-d558-b508c3b923b6@gmail.com>
- <20171018223320.GB641@us.netrek.org>
- <c13aa975-6339-2f5a-20bb-0a82656a2271@gmail.com>
- <fcf4b761-d7bd-7956-fa98-07fd8b2f8c3b@lwfinger.net>
- <b86480bd-49b9-f7ac-5dc5-6f6f83942727@gmail.com>
- <d65baa01-c842-0d14-5760-bbc1c754b1e6@lwfinger.net>
- <d9e6052f-cc92-813b-6cd6-9907f5bd82be@gmail.com>
- <a1ca0a52-c033-205a-8b3e-e6879016728c@gmail.com>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:5602 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750927AbdJTGYx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Oct 2017 02:24:53 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Grant Grundler <grundler@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: Re: ath10k: fix core PCI suspend when WoWLAN is supported but
+ disabled
+Date: Fri, 20 Oct 2017 06:24:31 +0000
+Message-ID: <87infafiao.fsf@kamboji.qca.qualcomm.com> (sfid-20171020_082511_986179_3FF3A103)
+References: <20170919232416.108247-1-briannorris@chromium.org>
+        <2809b2cf512d4c198d3cef3f5e468c3c@euamsexm01e.eu.qualcomm.com>
+        <87vajbgqcz.fsf@kamboji.qca.qualcomm.com>       <20171019171224.GA46096@google.com>
+In-Reply-To: <20171019171224.GA46096@google.com> (Brian Norris's message of
+        "Thu, 19 Oct 2017 10:12:25 -0700")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a1ca0a52-c033-205a-8b3e-e6879016728c@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 27, 2017 at 04:08:48AM +0300, nirinA raseliarison wrote:
-> hi all,
-> i applied the patch against 4.13.8. i still got some trouble, dmesg
-> is below.
+Brian Norris <briannorris@chromium.org> writes:
 
-As this new event does not have "disabled by hub (EMI?)", it is a
-different problem to your 19th October post, so I don't think the
-patch is relevant.
+> + Arnd
+>
+> On Thu, Oct 19, 2017 at 02:32:45PM +0000, Kalle Valo wrote:
+>> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>>=20
+>> > Brian Norris <briannorris@chromium.org> wrote:
+>> >
+>> >> For devices where the FW supports WoWLAN but user-space has not
+>> >> configured it, we don't do any PCI-specific suspend/resume operations=
+,
+>> >> because mac80211 doesn't call drv_suspend() when !wowlan. This has
+>> >> particularly bad effects for some platforms, because we don't stop th=
+e
+>> >> power-save timer, and if this timer goes off after the PCI controller
+>> >> has suspended the link, Bad Things will happen.
+>> >>=20
+>> >> Commit 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops"=
+)
+>> >> got some of this right, in that it understood there was a problem on
+>> >> non-WoWLAN firmware. But it forgot the $subject case.
+>> >>=20
+>> >> Fix this by moving all the PCI driver suspend/resume logic exclusivel=
+y
+>> >> into the driver PM hooks. This shouldn't affect WoWLAN support much
+>> >> (this just gets executed later on).
+>> >>=20
+>> >> I would just as well kill the entirety of ath10k_hif_suspend(), as it=
+'s
+>> >> not even implemented on the USB or SDIO drivers. I expect that we don=
+'t
+>> >> need the callback, except to return "supported" (i.e., 0) or "not
+>> >> supported" (i.e., -EOPNOTSUPP).
+>> >>=20
+>> >> Fixes: 32faa3f0ee50 ("ath10k: add the PCI PM core suspend/resume ops"=
+)
+>> >> Fixes: 77258d409ce4 ("ath10k: enable pci soc powersaving")
+>> >> Signed-off-by: Brian Norris <briannorris@chromium.org>
+>> >> Cc: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+>> >> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+>> >> Cc: Michal Kazior <michal.kazior@tieto.com>
+>> >> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>> >
+>> > Patch applied to ath-next branch of ath.git, thanks.
+>> >
+>> > 96378bd2c6cd ath10k: fix core PCI suspend when WoWLAN is supported but=
+ disabled
+>>=20
+>> Kbuild found a build problem, I suspect it's caused by this patch:
+>
+> Actually, it's the interaction of this patch and Arnd's patch:
+>
+> 6af1de2e4ec4 ath10k: mark PM functions as __maybe_unused
+>
+> I see that's now in these branches:
+>
+>   ath/ath-current
+>   ath/ath-qca
+>   ath/master
+>   ath/master-pending
+>   wireless-drivers-next/master
+>   wireless-drivers-next/pending
+>
+> Whereas mine got applied to:
+>
+>   ath/ath-next
+>
+> So technically, the problem is in your merge here :)
+>
+> 096ad2a15fd8 Merge branch 'ath-next'
 
-> after i plugged the device, it seems to be detected and all modules
-> loaded, but when i tried to connect to an access point, by using
-> wicd, it halted after a while. at this point, all usb ports are
-> broken, there was no more log in dmesg,
+Ah, that's why kbuild bot didn't report about this problem while your
+patch was in my pending branch. And I was also really puzzled why it
+claimed that my merge was at fault :) Thanks for the good explanation.
 
-If the other USB ports are not responding, then your problem is
-probably wider than the wireless device, and the wireless device
-is acting as the "canary in the mine"; failing first because it is
-the most active.
+Just to clarify: ath-current is for patches going to 4.14 and ath-next
+to 4.15, that's why they were applied to a different branch.
 
-Can you test to exclude possibility of damaged USB host controller or
-hub?
+>> drivers/net/wireless/ath/ath10k/pci.c:3416:8: error: implicit
+>> declaration of function 'ath10k_pci_suspend'
+>> [-Werror=3Dimplicit-function-declaration]
+>>=20
+>> drivers/net/wireless/ath/ath10k/pci.c:3428:8: error: implicit
+>> declaration of function 'ath10k_pci_resume'
+>> [-Werror=3Dimplicit-function-declaration]
+>>=20
+>> http://lists.infradead.org/pipermail/ath10k/2017-October/010269.html
+>>=20
+>> The .config.gz there doesn't have CONFIG_PM set, maybe that's the
+>> problem?
+>
+> Yes, indirectly that's also the problem.
+>
+> The solution would seem to be either to kill the #ifdefs around
+> ath10k_pci_{suspend,resume}() and friends (and use __maybe_unused
+> instead, to further extend Arnd's patch), or else revert Arnd's stuff
+> and go with CONFIG_PM_SLEEP everywhere, which would resolve the original
+> warning (promoted to error) that Arnd was resolving.
+>
+> I can send out one of these if you'd like.
 
-> lsusb still showed the device even after being unplugged. it got
-> even worse as reboot failed.
+I see that you already sent the patch, thanks!
 
-Yes, once a USB host controller is failed, organised reboot can be
-difficult.  lsusb not updated confirms host controller not responding.
-
-> i cannot really trace the error as right now all thing works fine.
-
-Your dmesg looks like you removed and reinserted the wireless device
-several times.  Did you do that, or did the system do it without any
-physical action?
-
-A full dmesg from boot may be interesting, at least to better
-understand the USB host controller.
-
--- 
-James Cameron
-http://quozl.netrek.org/
+--=20
+Kalle Valo=
