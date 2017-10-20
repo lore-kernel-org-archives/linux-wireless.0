@@ -1,67 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:45367 "EHLO
-        mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753303AbdJUKWY (ORCPT
+Received: from gateway31.websitewelcome.com ([192.185.143.5]:26655 "EHLO
+        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753539AbdJTRpB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Oct 2017 06:22:24 -0400
-Date: Sat, 21 Oct 2017 03:22:07 -0700
-From: Marc MERLIN <marc@merlins.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        linuxwifi@intel.com
-Subject: Re: After upgrading to 4.11.1, wifi driver refuses to load after
- being unloaded once.
-Message-ID: <20171021102207.jvber4zgag5i75ej@merlins.org> (sfid-20171021_122227_799392_D2703312)
-References: <20170816233844.qtigfurckdr44awa@merlins.org>
- <20171017094440.25tpkoeyfm6q2lqw@merlins.org>
- <1508249157.5497.103.camel@coelho.fi>
- <20171017212319.eranorcigrmgcpyo@merlins.org>
- <1508276099.5497.122.camel@coelho.fi>
- <87infduk4b.fsf@purkki.adurom.net>
- <1508307368.5497.125.camel@coelho.fi>
- <87bml4iy40.fsf@kamboji.qca.qualcomm.com>
- <1508322176.5497.152.camel@coelho.fi>
- <20171021005038.mykrmhyrhxhzyztw@merlins.org>
+        Fri, 20 Oct 2017 13:45:01 -0400
+Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
+        by gateway31.websitewelcome.com (Postfix) with ESMTP id 08690141AE
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Oct 2017 12:21:47 -0500 (CDT)
+Date: Fri, 20 Oct 2017 12:21:45 -0500
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] net: wireless: mark expected switch fall-throughs
+Message-ID: <20171020172145.GA5366@embeddedor.com> (sfid-20171020_194509_531153_024A3D79)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171021005038.mykrmhyrhxhzyztw@merlins.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 20, 2017 at 05:50:38PM -0700, Marc MERLIN wrote:
-> Mmmh, still seem to have a problem when I reload the module
-> 
-> what now?
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-I've entered bug https://bugzilla.kernel.org/show_bug.cgi?id=197341
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+---
+This code was tested by compilation only (GCC 7.2.0 was used).
+Please, verify if the actual intention of the code is to fall through.
 
-But I'm still curious what firmware I'm supposed to use:
+ net/wireless/chan.c        |  2 ++
+ net/wireless/nl80211.c     | 10 ++++++++++
+ net/wireless/scan.c        |  3 ++-
+ net/wireless/wext-compat.c |  2 ++
+ 4 files changed, 16 insertions(+), 1 deletion(-)
 
--rw-rw-r-- 1 merlin merlin 1745176 Jun 18  2015 /lib/firmware/iwlwifi-8000C-13.ucode
--rw-r--r-- 1 root   root   2345768 Dec  6  2015 /lib/firmware/iwlwifi-8000C-14.ucode
--rw-r--r-- 1 root   root   2351636 Dec  6  2015 /lib/firmware/iwlwifi-8000C-16.ucode
--rw-r--r-- 1 root   root   2390004 Feb 12  2016 /lib/firmware/iwlwifi-8000C-17.ucode
--rw-r--r-- 1 merlin merlin 2382972 Feb 25  2016 /lib/firmware/iwlwifi-8000C-19.ucode
--rw-r--r-- 1 merlin merlin 2227284 Jun  3 09:46 /lib/firmware/iwlwifi-8000C-27.ucode
-
-https://www.intel.com/content/www/us/en/support/articles/000005511/network-and-i-o/wireless-networking.html
-still says to install
-iwlwifi-8000-ucode-25.30.13.0.tgz
-which in turn installs
-iwlwifi-8000C-13.ucode
-while the driver looks for iwlwifi-8000C-30.ucode iwlwifi-8000C-29.ucode iwlwifi-8000C-28.ucode
-before loading iwlwifi-8000C-27.ucode
-
-Do I have the right firmware?
-loaded firmware version 27.455470.0 op_mode iwlmvm
-
-I'm still getting
-[95473.169147] iwlwifi 0000:04:00.0: Refused to change power state, currently in D3
-[95473.185656] Timeout waiting for hardware access (CSR_GP_CNTRL 0xffffffff)
-
-Marc
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index eb82427..6072613 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -741,6 +741,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 	case NL80211_CHAN_WIDTH_20:
+ 		if (!ht_cap->ht_supported)
+ 			return false;
++		/* fall through */
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 		prohibited_flags |= IEEE80211_CHAN_NO_20MHZ;
+ 		width = 20;
+@@ -763,6 +764,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
+ 		if (cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
+ 			return false;
++		/* fall through */
+ 	case NL80211_CHAN_WIDTH_80:
+ 		if (!vht_cap->vht_supported)
+ 			return false;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fce2cbe..a8bbb6c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1509,6 +1509,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		state->split_start++;
+ 		if (state->split)
+ 			break;
++		/* fall through */
+ 	case 1:
+ 		if (nla_put(msg, NL80211_ATTR_CIPHER_SUITES,
+ 			    sizeof(u32) * rdev->wiphy.n_cipher_suites,
+@@ -1555,6 +1556,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		state->split_start++;
+ 		if (state->split)
+ 			break;
++		/* fall through */
+ 	case 2:
+ 		if (nl80211_put_iftypes(msg, NL80211_ATTR_SUPPORTED_IFTYPES,
+ 					rdev->wiphy.interface_modes))
+@@ -1562,6 +1564,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		state->split_start++;
+ 		if (state->split)
+ 			break;
++		/* fall through */
+ 	case 3:
+ 		nl_bands = nla_nest_start(msg, NL80211_ATTR_WIPHY_BANDS);
+ 		if (!nl_bands)
+@@ -1587,6 +1590,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 				state->chan_start++;
+ 				if (state->split)
+ 					break;
++				/* fall through */
+ 			default:
+ 				/* add frequencies */
+ 				nl_freqs = nla_nest_start(
+@@ -1640,6 +1644,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 			state->split_start++;
+ 		if (state->split)
+ 			break;
++		/* fall through */
+ 	case 4:
+ 		nl_cmds = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_COMMANDS);
+ 		if (!nl_cmds)
+@@ -1666,6 +1671,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		state->split_start++;
+ 		if (state->split)
+ 			break;
++		/* fall through */
+ 	case 5:
+ 		if (rdev->ops->remain_on_channel &&
+ 		    (rdev->wiphy.flags & WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL) &&
+@@ -1683,6 +1689,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		state->split_start++;
+ 		if (state->split)
+ 			break;
++		/* fall through */
+ 	case 6:
+ #ifdef CONFIG_PM
+ 		if (nl80211_send_wowlan(msg, rdev, state->split))
+@@ -1693,6 +1700,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ #else
+ 		state->split_start++;
+ #endif
++		/* fall through */
+ 	case 7:
+ 		if (nl80211_put_iftypes(msg, NL80211_ATTR_SOFTWARE_IFTYPES,
+ 					rdev->wiphy.software_iftypes))
+@@ -1705,6 +1713,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		state->split_start++;
+ 		if (state->split)
+ 			break;
++		/* fall through */
+ 	case 8:
+ 		if ((rdev->wiphy.flags & WIPHY_FLAG_HAVE_AP_SME) &&
+ 		    nla_put_u32(msg, NL80211_ATTR_DEVICE_AP_SME,
+@@ -4192,6 +4201,7 @@ static int parse_station_flags(struct genl_info *info,
+ 		params->sta_flags_mask = BIT(NL80211_STA_FLAG_AUTHENTICATED) |
+ 					 BIT(NL80211_STA_FLAG_MFP) |
+ 					 BIT(NL80211_STA_FLAG_AUTHORIZED);
++		/* fall through */
+ 	default:
+ 		return -EINVAL;
+ 	}
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 9f0901f..ebfb6d8 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1139,7 +1139,8 @@ cfg80211_inform_bss_data(struct wiphy *wiphy,
+ 	switch (ftype) {
+ 	case CFG80211_BSS_FTYPE_BEACON:
+ 		ies->from_beacon = true;
+-		/* fall through to assign */
++		/* to assign */
++		/* fall through */
+ 	case CFG80211_BSS_FTYPE_UNKNOWN:
+ 		rcu_assign_pointer(tmp.pub.beacon_ies, ies);
+ 		break;
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 5d4a02c..a8d96e7 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1333,6 +1333,7 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
+ 			wstats.qual.qual = sig + 110;
+ 			break;
+ 		}
++		/* fall through */
+ 	case CFG80211_SIGNAL_TYPE_UNSPEC:
+ 		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL)) {
+ 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
+@@ -1341,6 +1342,7 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
+ 			wstats.qual.qual = sinfo.signal;
+ 			break;
+ 		}
++		/* fall through */
+ 	default:
+ 		wstats.qual.updated |= IW_QUAL_LEVEL_INVALID;
+ 		wstats.qual.updated |= IW_QUAL_QUAL_INVALID;
 -- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
+2.7.4
