@@ -1,187 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751820AbdJYNOS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51604 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751154AbdJTMvV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 09:14:18 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 03/12] wil6210: refresh FW capabilities during interface up
-Date: Wed, 25 Oct 2017 16:13:58 +0300
-Message-Id: <1508937247-11890-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151422_733674_EB7CC628)
-In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 20 Oct 2017 08:51:21 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
+Subject: Re: pull-request: iwlwifi-next 2017-10-18
+References: <1508322604.5497.156.camel@coelho.fi>
+Date: Fri, 20 Oct 2017 15:51:16 +0300
+In-Reply-To: <1508322604.5497.156.camel@coelho.fi> (Luca Coelho's message of
+        "Wed, 18 Oct 2017 13:30:04 +0300")
+Message-ID: <87vajadltn.fsf@kamboji.qca.qualcomm.com> (sfid-20171020_145126_481889_E80E0E1B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+Luca Coelho <luca@coelho.fi> writes:
 
-FW capabilities are currently retrieved only during module
-initialization, but userspace can replace the firmware while
-interface is down, so refresh the FW capabilities when
-interface is up (after FW is loaded) to ensure driver
-functionality matches the loaded FW.
+> Hi Kalle,
+>
+> Here's the second batch of patches intended for v4.15.  It contains the
+> last patch set I send out with v2 of the lq_color patch.
+>
+> I have sent this out before and kbuildbot reported success.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 66cc044249603e12e1dbba347f03bdbc9f171fdf:
+>
+>   bcma: use bcma_debug and pr_cont in MIPS driver (2017-10-17 17:22:07 +0300)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2017-10-18
+>
+> for you to fetch changes up to 3c798a45318e098e9937b0fee1e0cf986174fbbe:
+>
+>   iwlwifi: pcie: remove set but not used variable tcph (2017-10-18 13:02:01 +0300)
+>
+> ----------------------------------------------------------------
+> Second batch of iwlwifi patches for 4.15
+>
+> * Allocate reorder buffer dynamically to save memory;
+> * Fix a FW dump problem in the A000 family;
+> * Fix for a statistics gathering issue (v2);
+> * Sort the list of 9000 devices to make it easier to find entries;
+> * A couple of cleanups in the FW dump code;
+> * Remove some unnecessary variables and fields and calculations;
+>
+> ----------------------------------------------------------------
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/fw_inc.c   | 21 ++++++++-------------
- drivers/net/wireless/ath/wil6210/main.c     | 25 +++++++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 13 +------------
- drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
- 4 files changed, 33 insertions(+), 27 deletions(-)
+Pulled, thanks.
 
-diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
-index e01acac..7a33792 100644
---- a/drivers/net/wireless/ath/wil6210/fw_inc.c
-+++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
-@@ -124,24 +124,19 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
- 	return 0;
- }
- 
--static int fw_handle_comment(struct wil6210_priv *wil, const void *data,
--			     size_t size)
--{
--	wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1, data, size, true);
--
--	return 0;
--}
--
- static int
--fw_handle_capabilities(struct wil6210_priv *wil, const void *data,
--		       size_t size)
-+fw_handle_comment(struct wil6210_priv *wil, const void *data,
-+		  size_t size)
- {
- 	const struct wil_fw_record_capabilities *rec = data;
- 	size_t capa_size;
- 
- 	if (size < sizeof(*rec) ||
--	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC)
-+	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC) {
-+		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
-+				data, size, true);
- 		return 0;
-+	}
- 
- 	capa_size = size - offsetof(struct wil_fw_record_capabilities,
- 				    capabilities);
-@@ -422,7 +417,7 @@ static int fw_handle_gateway_data4(struct wil6210_priv *wil, const void *data,
- 	int (*parse_handler)(struct wil6210_priv *wil, const void *data,
- 			     size_t size);
- } wil_fw_handlers[] = {
--	{wil_fw_type_comment, fw_handle_comment, fw_handle_capabilities},
-+	{wil_fw_type_comment, fw_handle_comment, fw_handle_comment},
- 	{wil_fw_type_data, fw_handle_data, fw_ignore_section},
- 	{wil_fw_type_fill, fw_handle_fill, fw_ignore_section},
- 	/* wil_fw_type_action */
-@@ -517,7 +512,7 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
- 
- 	rc = request_firmware(&fw, name, wil_to_dev(wil));
- 	if (rc) {
--		wil_err_fw(wil, "Failed to load firmware %s\n", name);
-+		wil_err_fw(wil, "Failed to load firmware %s rc %d\n", name, rc);
- 		return rc;
- 	}
- 	wil_dbg_fw(wil, "Loading <%s>, %zu bytes\n", name, fw->size);
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index bac829a..ad1f9f8 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -761,6 +761,8 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
- 	u8 retry_short;
- 	int rc;
- 
-+	wil_refresh_fw_capabilities(wil);
-+
- 	rc = wmi_get_mgmt_retry(wil, &retry_short);
- 	if (!rc) {
- 		wiphy->retry_short = retry_short;
-@@ -768,6 +770,25 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
- 	}
- }
- 
-+void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
-+{
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
-+
-+	wil->keep_radio_on_during_sleep =
-+		wil->platform_ops.keep_radio_on_during_sleep &&
-+		wil->platform_ops.keep_radio_on_during_sleep(
-+			wil->platform_handle) &&
-+		test_bit(WMI_FW_CAPABILITY_D3_SUSPEND, wil->fw_capabilities);
-+
-+	wil_info(wil, "keep_radio_on_during_sleep (%d)\n",
-+		 wil->keep_radio_on_during_sleep);
-+
-+	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
-+		wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
-+	else
-+		wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
-+}
-+
- void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
- {
- 	le32_to_cpus(&r->base);
-@@ -1072,11 +1093,11 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 			return rc;
- 		}
- 
-+		wil_collect_fw_info(wil);
-+
- 		if (wil->ps_profile != WMI_PS_PROFILE_TYPE_DEFAULT)
- 			wil_ps_update(wil, wil->ps_profile);
- 
--		wil_collect_fw_info(wil);
--
- 		if (wil->platform_ops.notify) {
- 			rc = wil->platform_ops.notify(wil->platform_handle,
- 						      WIL_PLATFORM_EVT_FW_RDY);
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 9cc97da..659c32c 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -85,9 +85,7 @@ void wil_set_capabilities(struct wil6210_priv *wil)
- 
- 	/* extract FW capabilities from file without loading the FW */
- 	wil_request_firmware(wil, wil->wil_fw_name, false);
--
--	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
--		wil_to_wiphy(wil)->signal_type = CFG80211_SIGNAL_TYPE_MBM;
-+	wil_refresh_fw_capabilities(wil);
- }
- 
- void wil_disable_irq(struct wil6210_priv *wil)
-@@ -297,15 +295,6 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	wil_set_capabilities(wil);
- 	wil6210_clear_irq(wil);
- 
--	wil->keep_radio_on_during_sleep =
--		wil->platform_ops.keep_radio_on_during_sleep &&
--		wil->platform_ops.keep_radio_on_during_sleep(
--			wil->platform_handle) &&
--		test_bit(WMI_FW_CAPABILITY_D3_SUSPEND, wil->fw_capabilities);
--
--	wil_info(wil, "keep_radio_on_during_sleep (%d)\n",
--		 wil->keep_radio_on_during_sleep);
--
- 	/* FW should raise IRQ when ready */
- 	rc = wil_if_pcie_enable(wil);
- 	if (rc) {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index ad40a5a..8dfb4a7 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -872,6 +872,7 @@ int wil_ps_update(struct wil6210_priv *wil,
- int __wil_up(struct wil6210_priv *wil);
- int wil_down(struct wil6210_priv *wil);
- int __wil_down(struct wil6210_priv *wil);
-+void wil_refresh_fw_capabilities(struct wil6210_priv *wil);
- void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r);
- int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
- void wil_set_ethtoolops(struct net_device *ndev);
 -- 
-1.9.1
+Kalle Valo
