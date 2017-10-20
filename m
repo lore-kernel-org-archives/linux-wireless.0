@@ -1,51 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:53670 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752546AbdJPMyq (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:23214 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751061AbdJTG3Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 08:54:46 -0400
-Received: by mail-lf0-f68.google.com with SMTP id l23so16869637lfk.10
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 05:54:45 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] bcma: use bcma_debug and pr_cont in MIPS driver
-Date: Mon, 16 Oct 2017 14:54:32 +0200
-Message-Id: <20171016125432.11655-1-zajec5@gmail.com> (sfid-20171016_145451_454211_7F477762)
+        Fri, 20 Oct 2017 02:29:24 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Grant Grundler <grundler@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] ath10k: fix build errors with !CONFIG_PM
+Date: Fri, 20 Oct 2017 06:29:21 +0000
+Message-ID: <87efpyfi2n.fsf@kamboji.qca.qualcomm.com> (sfid-20171020_082940_526723_B6005457)
+References: <20170919232416.108247-1-briannorris@chromium.org>
+        <2809b2cf512d4c198d3cef3f5e468c3c@euamsexm01e.eu.qualcomm.com>
+        <87vajbgqcz.fsf@kamboji.qca.qualcomm.com>       <20171019171224.GA46096@google.com>
+        <20171019184517.GA76422@google.com>
+In-Reply-To: <20171019184517.GA76422@google.com> (Brian Norris's message of
+        "Thu, 19 Oct 2017 11:45:19 -0700")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+Brian Norris <briannorris@chromium.org> writes:
 
-Using bcma_debug gives a device-specific prefix for messages and pr_cont
-is a common helper for continuing a line.
+> Build errors have been reported with CONFIG_PM=3Dn:
+>
+> drivers/net/wireless/ath/ath10k/pci.c:3416:8: error: implicit
+> declaration of function 'ath10k_pci_suspend'
+> [-Werror=3Dimplicit-function-declaration]
+>
+> drivers/net/wireless/ath/ath10k/pci.c:3428:8: error: implicit
+> declaration of function 'ath10k_pci_resume'
+> [-Werror=3Dimplicit-function-declaration]
+>
+> These are caused by the combination of the following two commits:
+>
+> 6af1de2e4ec4 ("ath10k: mark PM functions as __maybe_unused")
+> 96378bd2c6cd ("ath10k: fix core PCI suspend when WoWLAN is supported but
+> disabled")
+>
+> Both build fine on their own.
+>
+> But now that ath10k_pci_pm_{suspend,resume}() is compiled
+> unconditionally, we should also compile ath10k_pci_{suspend,resume}()
+> unconditionally.
+>
+> And drop the #ifdef around ath10k_pci_hif_{suspend,resume}() too; they
+> are trivial (empty), so we're not saving much space by compiling them
+> out. And the alternatives would be to sprinkle more __maybe_unused, or
+> spread the #ifdef's further.
+>
+> Build tested with the following combinations:
+> CONFIG_PM=3Dy && CONFIG_PM_SLEEP=3Dy
+> CONFIG_PM=3Dy && CONFIG_PM_SLEEP=3Dn
+> CONFIG_PM=3Dn
+>
+> Fixes: 96378bd2c6cd ("ath10k: fix core PCI suspend when WoWLAN is
+> supported but disabled")
+> Fixes: 096ad2a15fd8 ("Merge branch 'ath-next'")
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/pci.c | 5 -----
+>  1 file changed, 5 deletions(-)
+>
+> On Thu, Oct 19, 2017 at 10:12:25AM -0700, Brian Norris wrote:
+>> The solution would seem to be either to kill the #ifdefs around
+>> ath10k_pci_{suspend,resume}() and friends (and use __maybe_unused
+>> instead, to further extend Arnd's patch), or else revert Arnd's stuff
+>> and go with CONFIG_PM_SLEEP everywhere, which would resolve the original
+>> warning (promoted to error) that Arnd was resolving.
+>>=20
+>> I can send out one of these if you'd like.
+>
+> Here you go :)
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/bcma/driver_mips.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Thanks! As this an unusual merge problem between two branches I applied
+this manually to ath.git master-pending branch for now. Let's see if
+kbuild bot is happy now.
 
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 89af807cf29c..5904ef1aa624 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -184,10 +184,11 @@ static void bcma_core_mips_print_irq(struct bcma_device *dev, unsigned int irq)
- {
- 	int i;
- 	static const char *irq_name[] = {"2(S)", "3", "4", "5", "6", "D", "I"};
--	printk(KERN_DEBUG KBUILD_MODNAME ": core 0x%04x, irq :", dev->id.id);
-+
-+	bcma_debug(dev->bus, "core 0x%04x, irq :", dev->id.id);
- 	for (i = 0; i <= 6; i++)
--		printk(" %s%s", irq_name[i], i == irq ? "*" : " ");
--	printk("\n");
-+		pr_cont(" %s%s", irq_name[i], i == irq ? "*" : " ");
-+	pr_cont("\n");
- }
- 
- static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
--- 
-2.11.0
+--=20
+Kalle Valo=
