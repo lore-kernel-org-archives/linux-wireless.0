@@ -1,78 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:15471 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755637AbdJJHxl (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:34040 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752059AbdJTHiA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 03:53:41 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k-ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/5] mac80211: Enable TDLS peer buffer STA feature
-Date: Tue, 10 Oct 2017 15:55:21 +0800
-Message-ID: <1507622125-8841-3-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_095345_602749_365B3164)
-In-Reply-To: <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
-References: <TDLS for ath10k patch V4>
- <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 20 Oct 2017 03:38:00 -0400
+Date: Fri, 20 Oct 2017 08:37:56 +0100 (WEST)
+Message-Id: <20171020.083756.2180225986266045663.davem@davemloft.net> (sfid-20171020_093826_013964_AF7CE0CB)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2017-10-18
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87fuagiygo.fsf@kamboji.qca.qualcomm.com>
+References: <87fuagiygo.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Wed, 18 Oct 2017 12:42:31 +0300
 
-Enable TDLS peer buffer STA feature.
-Set extended capability bit to enable buffer STA when driver
-support it.
+> this for 4.15 stream to net-next tree. Please let me know if there are
+> any problems.
 
-Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
----
- include/net/cfg80211.h |    3 +++
- net/mac80211/tdls.c    |    5 ++++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f12fa52..edefc25 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3249,6 +3249,8 @@ struct cfg80211_ops {
-  *	beaconing mode (AP, IBSS, Mesh, ...).
-  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
-  *	before connection.
-+ * @WIPHY_FLAG_SUPPORT_TDLS_BUFFER_ST: Device support buffer STA when TDLS is
-+ *	established.
-  */
- enum wiphy_flags {
- 	/* use hole at 0 */
-@@ -3275,6 +3277,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_SUPPORTS_5_10_MHZ		= BIT(22),
- 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
- 	WIPHY_FLAG_HAS_STATIC_WEP		= BIT(24),
-+	WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA      = BIT(25),
- };
- 
- /**
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 91093d4..f99e379 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -49,6 +49,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
- 			  !ifmgd->tdls_wider_bw_prohibited;
- 	struct ieee80211_supported_band *sband = ieee80211_get_sband(sdata);
- 	bool vht = sband && sband->vht_cap.vht_supported;
-+	bool buffer_sta =
-+		local->hw.wiphy->flags & WIPHY_FLAG_SUPPORT_TDLS_BUFFER_STA;
- 	u8 *pos = skb_put(skb, 10);
- 
- 	*pos++ = WLAN_EID_EXT_CAPABILITY;
-@@ -56,7 +58,8 @@ static void ieee80211_tdls_add_ext_capab(struct ieee80211_sub_if_data *sdata,
- 	*pos++ = 0x0;
- 	*pos++ = 0x0;
- 	*pos++ = 0x0;
--	*pos++ = chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0;
-+	*pos++ = (chan_switch ? WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH : 0) |
-+		 (buffer_sta ? WLAN_EXT_CAPA4_TDLS_BUFFER_STA : 0);
- 	*pos++ = WLAN_EXT_CAPA5_TDLS_ENABLED;
- 	*pos++ = 0;
- 	*pos++ = 0;
--- 
-1.7.9.5
+Pulled, thanks Kalle.
