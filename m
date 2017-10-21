@@ -1,142 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:53330 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751323AbdJERjM (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:39350 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751538AbdJUH6K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 13:39:12 -0400
-Received: by mail-pf0-f182.google.com with SMTP id n73so1596611pfg.10
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Oct 2017 10:39:12 -0700 (PDT)
-Date: Thu, 5 Oct 2017 10:39:10 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] net/mac80211/mesh_plink: Convert timers to use
- timer_setup()
-Message-ID: <20171005173910.GA72335@beast> (sfid-20171005_193936_671244_FB3BF479)
+        Sat, 21 Oct 2017 03:58:10 -0400
+Subject: Re: [PATCH] ath10k: rebuild crypto header in RX data frames
+To: Kalle Valo <kvalo@qca.qualcomm.com>, Jasmine Strong <jas@eero.com>
+Cc: ath10k <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <150851690590.5158.11970481736247725763.stgit@potku.adurom.net>
+ <c9bdd915-0667-eee0-3b52-1fdf15abf249@dd-wrt.com>
+ <CAGyitvP0wquoo_8_ma3rcj+riJ5Wgfo7+pmbUOx9pQRwFcQHYA@mail.gmail.com>
+ <877evpdscc.fsf@kamboji.qca.qualcomm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <1564413e-41d7-1ad9-261e-38515382b059@dd-wrt.com> (sfid-20171021_095840_143151_89C5AE40)
+Date: Sat, 21 Oct 2017 09:58:04 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <877evpdscc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly. This requires adding a pointer back
-to the sta_info since container_of() can't resolve the sta_info.
+even if he used my patch. my patch should have no influence to wpa2 
+ccmp. it just adds the new ccmp 256 + gcmp modes
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
-This requires commit 686fef928bba ("timer: Prepare to change timer
-callback argument type") in v4.14-rc3, but should be otherwise
-stand-alone.
-
-v2:
-- make mesh_plink_timer non-static and use it in timer_setup() call directly.
----
- net/mac80211/mesh.h       |  1 +
- net/mac80211/mesh_plink.c | 10 ++++------
- net/mac80211/sta_info.c   |  4 +++-
- net/mac80211/sta_info.h   |  2 ++
- 4 files changed, 10 insertions(+), 7 deletions(-)
-
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 7e5f271e3c30..465b7853edc0 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -275,6 +275,7 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
- 			   u8 *hw_addr, struct ieee802_11_elems *ie);
- bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
- u32 mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
-+void mesh_plink_timer(struct timer_list *t);
- void mesh_plink_broken(struct sta_info *sta);
- u32 mesh_plink_deactivate(struct sta_info *sta);
- u32 mesh_plink_open(struct sta_info *sta);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index f69c6c38ca43..e79adb4164f3 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -604,8 +604,9 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_mbss_info_change_notify(sdata, changed);
- }
- 
--static void mesh_plink_timer(unsigned long data)
-+void mesh_plink_timer(struct timer_list *t)
- {
-+	struct mesh_sta *mesh = from_timer(mesh, t, plink_timer);
- 	struct sta_info *sta;
- 	u16 reason = 0;
- 	struct ieee80211_sub_if_data *sdata;
-@@ -617,7 +618,7 @@ static void mesh_plink_timer(unsigned long data)
- 	 * del_timer_sync() this timer after having made sure
- 	 * it cannot be readded (by deleting the plink.)
- 	 */
--	sta = (struct sta_info *) data;
-+	sta = mesh->plink_sta;
- 
- 	if (sta->sdata->local->quiescing)
- 		return;
-@@ -697,11 +698,8 @@ static void mesh_plink_timer(unsigned long data)
- 
- static inline void mesh_plink_timer_set(struct sta_info *sta, u32 timeout)
- {
--	sta->mesh->plink_timer.expires = jiffies + msecs_to_jiffies(timeout);
--	sta->mesh->plink_timer.data = (unsigned long) sta;
--	sta->mesh->plink_timer.function = mesh_plink_timer;
- 	sta->mesh->plink_timeout = timeout;
--	add_timer(&sta->mesh->plink_timer);
-+	mod_timer(&sta->mesh->plink_timer, jiffies + msecs_to_jiffies(timeout));
- }
- 
- static bool llid_in_use(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 69615016d5bf..6c254a9d5f11 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -329,10 +329,12 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 		sta->mesh = kzalloc(sizeof(*sta->mesh), gfp);
- 		if (!sta->mesh)
- 			goto free;
-+		sta->mesh->plink_sta = sta;
- 		spin_lock_init(&sta->mesh->plink_lock);
- 		if (ieee80211_vif_is_mesh(&sdata->vif) &&
- 		    !sdata->u.mesh.user_mpm)
--			init_timer(&sta->mesh->plink_timer);
-+			timer_setup(&sta->mesh->plink_timer, mesh_plink_timer,
-+				    0);
- 		sta->mesh->nonpeer_pm = NL80211_MESH_POWER_ACTIVE;
- 	}
- #endif
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 3acbdfa9f649..21d9760ce5c3 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -344,6 +344,7 @@ DECLARE_EWMA(mesh_fail_avg, 20, 8)
-  * @plink_state: peer link state
-  * @plink_timeout: timeout of peer link
-  * @plink_timer: peer link watch timer
-+ * @plink_sta: peer link watch timer's sta_info
-  * @t_offset: timing offset relative to this host
-  * @t_offset_setpoint: reference timing offset of this sta to be used when
-  * 	calculating clockdrift
-@@ -356,6 +357,7 @@ DECLARE_EWMA(mesh_fail_avg, 20, 8)
-  */
- struct mesh_sta {
- 	struct timer_list plink_timer;
-+	struct sta_info *plink_sta;
- 
- 	s64 t_offset;
- 	s64 t_offset_setpoint;
--- 
-2.7.4
-
+Am 21.10.2017 um 06:42 schrieb Kalle Valo:
+> Jasmine Strong <jas@eero.com> writes:
+>
+>> When we tried this patch, it completely broke all wpa2-ccmp-aes
+>> traffic.
+> Which patch, Vasanth's or Sebastian's? I even tested myself, with both
+> CCMP and TKIP on both AP and client modes, and didn't see see any
+> problems. What kind of setup you have?
+>
+> I tested on a x86 laptop and current ath.git master branch:
+>
+> ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
+> ath10k_pci 0000:02:00.0: qca988x hw2.0 target 0x4100016c chip_id 0x043202ff sub 0000:0000
+> ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 1 testmode 1
+> ath10k_pci 0000:02:00.0: firmware ver 10.2.4.70.66 api 5 features no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 c2dd2ad5
+> ath10k_pci 0000:02:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
+>
+> And my hostapd.conf:
+>
+> driver=nl80211
+> hw_mode=a
+> channel=36
+> ieee80211n=1
+> interface=wlan0
+> ctrl_interface=/var/run/hostapd
+> ctrl_interface_group=adm
+> ssid=test-psk
+> wpa=2
+> wpa_key_mgmt=WPA-PSK
+> wpa_pairwise=CCMP
+> wpa_passphrase=12345678
+>
+>
 
 -- 
-Kees Cook
-Pixel Security
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
