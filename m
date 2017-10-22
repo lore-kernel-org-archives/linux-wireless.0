@@ -1,58 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:33136 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751062AbdJBNHi (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:45735 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932438AbdJVVne (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 09:07:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
-References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr> <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Mon, 2 Oct 2017 16:07:36 +0300
-Message-ID: <CAHp75VfC2e+h8GCiB-1Rbe=_z3siBBo0WfqEf3qz8yWh8Cm3RQ@mail.gmail.com> (sfid-20171002_150607_025199_9C0182DC)
-Subject: Re: [PATCH 05/18] net: use ARRAY_SIZE
-To: =?UTF-8?B?SsOpcsOpbXkgTGVmYXVyZQ==?= <jeremy.lefaure@lse.epita.fr>
-Cc: Sathya Perla <sathya.perla@broadcom.com>,
-        Ajit Khaparde <ajit.khaparde@broadcom.com>,
-        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
-        Somnath Kotur <somnath.kotur@broadcom.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
+        Sun, 22 Oct 2017 17:43:34 -0400
+Message-Id: <20171022214053.576969587@linutronix.de> (sfid-20171022_234524_818913_C69D2AA4)
+Date: Sun, 22 Oct 2017 23:40:09 +0200
+From: Anna-Maria Gleixner <anna-maria@linutronix.de>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
+        Christoph Hellwig <hch@lst.de>,
+        John Stultz <john.stultz@linaro.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        netdev <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        intel-wired-lan@lists.osuosl.org, USB <linux-usb@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list@cypress.com
-Content-Type: text/plain; charset="UTF-8"
+        linux-wireless@vger.kernel.org
+Subject: [PATCH v2 31/37] mac80211_hwsim: Replace hrtimer tasklet with softirq
+ hrtimer
+References: <20171022213938.940451689@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 1, 2017 at 10:30 PM, J=C3=A9r=C3=A9my Lefaure
-<jeremy.lefaure@lse.epita.fr> wrote:
-> Using the ARRAY_SIZE macro improves the readability of the code. Also,
-> it is not always useful to use a variable to store this constant
-> calculated at compile time.
->
+From: Thomas Gleixner <tglx@linutronix.de>
 
-> +       {&gainctrl_lut_core0_rev0, ARRAY_SIZE(gainctrl_lut_core0_rev0), 2=
-6, 192,
-> +        32},
+Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
+callback in softirq context and remove the hrtimer_tasklet.
 
-For all such cases I would rather put on one line disregard checkpatch
-warning for better readability.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
 
---=20
-With Best Regards,
-Andy Shevchenko
+---
+ drivers/net/wireless/mac80211_hwsim.c |   44 +++++++++++++++-------------------
+ 1 file changed, 20 insertions(+), 24 deletions(-)
+
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -537,7 +537,7 @@ struct mac80211_hwsim_data {
+ 	unsigned int rx_filter;
+ 	bool started, idle, scanning;
+ 	struct mutex mutex;
+-	struct tasklet_hrtimer beacon_timer;
++	struct hrtimer beacon_timer;
+ 	enum ps_mode {
+ 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
+ 	} ps;
+@@ -1418,7 +1418,7 @@ static void mac80211_hwsim_stop(struct i
+ {
+ 	struct mac80211_hwsim_data *data = hw->priv;
+ 	data->started = false;
+-	tasklet_hrtimer_cancel(&data->beacon_timer);
++	hrtimer_cancel(&data->beacon_timer);
+ 	wiphy_debug(hw->wiphy, "%s\n", __func__);
+ }
+ 
+@@ -1541,14 +1541,12 @@ static enum hrtimer_restart
+ mac80211_hwsim_beacon(struct hrtimer *timer)
+ {
+ 	struct mac80211_hwsim_data *data =
+-		container_of(timer, struct mac80211_hwsim_data,
+-			     beacon_timer.timer);
++		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
+ 	struct ieee80211_hw *hw = data->hw;
+ 	u64 bcn_int = data->beacon_int;
+-	ktime_t next_bcn;
+ 
+ 	if (!data->started)
+-		goto out;
++		return HRTIMER_NORESTART;
+ 
+ 	ieee80211_iterate_active_interfaces_atomic(
+ 		hw, IEEE80211_IFACE_ITER_NORMAL,
+@@ -1560,11 +1558,9 @@ mac80211_hwsim_beacon(struct hrtimer *ti
+ 		data->bcn_delta = 0;
+ 	}
+ 
+-	next_bcn = ktime_add(hrtimer_get_expires(timer),
+-			     ns_to_ktime(bcn_int * 1000));
+-	tasklet_hrtimer_start(&data->beacon_timer, next_bcn, HRTIMER_MODE_ABS);
+-out:
+-	return HRTIMER_NORESTART;
++	hrtimer_forward(&data->beacon_timer, hrtimer_get_expires(timer),
++			ns_to_ktime(bcn_int * NSEC_PER_USEC));
++	return HRTIMER_RESTART;
+ }
+ 
+ static const char * const hwsim_chanwidths[] = {
+@@ -1638,15 +1634,15 @@ static int mac80211_hwsim_config(struct
+ 	mutex_unlock(&data->mutex);
+ 
+ 	if (!data->started || !data->beacon_int)
+-		tasklet_hrtimer_cancel(&data->beacon_timer);
+-	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
++		hrtimer_cancel(&data->beacon_timer);
++	else if (!hrtimer_is_queued(&data->beacon_timer)) {
+ 		u64 tsf = mac80211_hwsim_get_tsf(hw, NULL);
+ 		u32 bcn_int = data->beacon_int;
+ 		u64 until_tbtt = bcn_int - do_div(tsf, bcn_int);
+ 
+-		tasklet_hrtimer_start(&data->beacon_timer,
+-				      ns_to_ktime(until_tbtt * 1000),
+-				      HRTIMER_MODE_REL);
++		hrtimer_start(&data->beacon_timer,
++			      ns_to_ktime(until_tbtt * 1000),
++			      HRTIMER_MODE_REL_SOFT);
+ 	}
+ 
+ 	return 0;
+@@ -1709,7 +1705,7 @@ static void mac80211_hwsim_bss_info_chan
+ 			    info->enable_beacon, info->beacon_int);
+ 		vp->bcn_en = info->enable_beacon;
+ 		if (data->started &&
+-		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
++		    !hrtimer_is_queued(&data->beacon_timer) &&
+ 		    info->enable_beacon) {
+ 			u64 tsf, until_tbtt;
+ 			u32 bcn_int;
+@@ -1717,9 +1713,9 @@ static void mac80211_hwsim_bss_info_chan
+ 			tsf = mac80211_hwsim_get_tsf(hw, vif);
+ 			bcn_int = data->beacon_int;
+ 			until_tbtt = bcn_int - do_div(tsf, bcn_int);
+-			tasklet_hrtimer_start(&data->beacon_timer,
+-					      ns_to_ktime(until_tbtt * 1000),
+-					      HRTIMER_MODE_REL);
++			hrtimer_start(&data->beacon_timer,
++				      ns_to_ktime(until_tbtt * 1000),
++				      HRTIMER_MODE_REL_SOFT);
+ 		} else if (!info->enable_beacon) {
+ 			unsigned int count = 0;
+ 			ieee80211_iterate_active_interfaces_atomic(
+@@ -1728,7 +1724,7 @@ static void mac80211_hwsim_bss_info_chan
+ 			wiphy_debug(hw->wiphy, "  beaconing vifs remaining: %u",
+ 				    count);
+ 			if (count == 0) {
+-				tasklet_hrtimer_cancel(&data->beacon_timer);
++				hrtimer_cancel(&data->beacon_timer);
+ 				data->beacon_int = 0;
+ 			}
+ 		}
+@@ -2720,9 +2716,9 @@ static int mac80211_hwsim_new_radio(stru
+ 				    data->debugfs,
+ 				    data, &hwsim_simulate_radar);
+ 
+-	tasklet_hrtimer_init(&data->beacon_timer,
+-			     mac80211_hwsim_beacon,
+-			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
++	hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
++		     HRTIMER_MODE_ABS_SOFT);
++	data->beacon_timer.function = mac80211_hwsim_beacon;
+ 
+ 	spin_lock_bh(&hwsim_radio_lock);
+ 	list_add_tail(&data->list, &hwsim_radios);
