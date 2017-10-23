@@ -1,74 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:55462 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932095AbdJJH6C (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56402 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932148AbdJWRyh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 03:58:02 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] MAINTAINERS: update Johannes Berg's entries
-Date: Tue, 10 Oct 2017 09:57:59 +0200
-Message-Id: <20171010075759.28377-1-johannes@sipsolutions.net> (sfid-20171010_095820_481512_C0F97D0A)
+        Mon, 23 Oct 2017 13:54:37 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id 457B240A5CB
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Oct 2017 10:54:35 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: A good way to get CSI info to user-space?
+Message-ID: <6f9182c4-cff9-066c-173a-00d09af7c903@candelatech.com> (sfid-20171023_195440_976958_B20E3A62)
+Date: Mon, 23 Oct 2017 10:54:35 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello,
 
-Update my MAINTAINERS file entries to list all the right files.
-Since I'm also the de-facto wireless extensions maintainer,
-there's little point in excluding those.
+I have been poking at ath10k to get some CSI reporting working.
+The CSI reports are a bit over 2k bytes in length, and they could
+happen quite often.  As far as I can tell, there is no good way in
+the kernel to make this available.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- MAINTAINERS | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+I was thinking maybe a callback into the mac80211 stack, which would
+then send a netlink event might be a useful way to implement this?
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f0c37be4e04a..e90cdecd7b5d 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3329,17 +3329,22 @@ S:	Maintained
- F:	drivers/auxdisplay/cfag12864bfb.c
- F:	include/linux/cfag12864b.h
- 
--CFG80211 and NL80211
-+802.11 (including CFG80211/NL80211)
- M:	Johannes Berg <johannes@sipsolutions.net>
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org/
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
- S:	Maintained
-+F:	net/wireless/
- F:	include/uapi/linux/nl80211.h
-+F:	include/linux/ieee80211.h
-+F:	include/net/wext.h
- F:	include/net/cfg80211.h
--F:	net/wireless/*
--X:	net/wireless/wext*
-+F:	include/net/iw_handler.h
-+F:	include/net/ieee80211_radiotap.h
-+F:	Documentation/driver-api/80211/cfg80211.rst
-+F:	Documentation/networking/regulatory.txt
- 
- CHAR and MISC DRIVERS
- M:	Arnd Bergmann <arnd@arndb.de>
-@@ -8207,6 +8212,7 @@ F:	Documentation/networking/mac80211-injection.txt
- F:	include/net/mac80211.h
- F:	net/mac80211/
- F:	drivers/net/wireless/mac80211_hwsim.[ch]
-+F:	Documentation/networking/mac80211_hwsim/README
- 
- MAILBOX API
- M:	Jassi Brar <jassisinghbrar@gmail.com>
-@@ -11491,6 +11497,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
- S:	Maintained
- F:	Documentation/rfkill.txt
-+F:	Documentation/ABI/stable/sysfs-class-rfkill
- F:	net/rfkill/
- 
- RHASHTABLE
+Any other suggestions on this?
+
+Thanks,
+Ben
+
 -- 
-2.14.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
