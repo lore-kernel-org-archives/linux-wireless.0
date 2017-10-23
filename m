@@ -1,130 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:52364 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751215AbdJDX1y (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 19:27:54 -0400
-Received: by mail-pf0-f182.google.com with SMTP id a1so3809305pfj.9
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:27:54 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kees Cook <keescook@chromium.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Harish Patil <harish.patil@cavium.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <len.brown@intel.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Mark Gross <mark.gross@intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>, Pavel Machek <pavel@ucw.cz>,
-        Petr Mladek <pmladek@suse.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@codeaurora.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Tejun Heo <tj@kernel.org>,
-        Ursula Braun <ubraun@linux.vnet.ibm.com>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 02/13] timer: Remove init_timer_pinned_deferrable() in favor of timer_setup()
-Date: Wed,  4 Oct 2017 16:26:56 -0700
-Message-Id: <1507159627-127660-3-git-send-email-keescook@chromium.org> (sfid-20171005_013206_750819_581F7078)
-In-Reply-To: <1507159627-127660-1-git-send-email-keescook@chromium.org>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+Received: from mout.gmx.net ([212.227.15.19]:52027 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751304AbdJWSKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Oct 2017 14:10:05 -0400
+Received: from [10.8.0.6] ([88.99.225.23]) by mail.gmx.com (mrgmx002
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 0MQ2zr-1eAo2K36w7-005I7I for
+ <linux-wireless@vger.kernel.org>; Mon, 23 Oct 2017 20:10:03 +0200
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Oleksij Rempel <linux@rempel-privat.de>
+Subject: elce linux conference 2017
+Message-ID: <d17d0b61-7d3e-28b5-606e-998e773f0039@rempel-privat.de> (sfid-20171023_201008_746040_148C20E0)
+Date: Mon, 23 Oct 2017 20:09:45 +0200
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="TgQek82wtM7MmlkRkheC7ur7tWsXW2tuQ"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This refactors the only user of init_timer_pinned_deferrable() to use the
-new timer_setup() and from_timer(). Adds a pointer back to the policy,
-and drops the definition of init_timer_pinned_deferrable().
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--TgQek82wtM7MmlkRkheC7ur7tWsXW2tuQ
+Content-Type: multipart/mixed; boundary="mMdf5gXgGfOJXIDfpUfBT6oWXtpihr9Wh";
+ protected-headers="v1"
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Message-ID: <d17d0b61-7d3e-28b5-606e-998e773f0039@rempel-privat.de>
+Subject: elce linux conference 2017
 
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: linux-pm@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/cpufreq/powernv-cpufreq.c | 13 +++++++------
- include/linux/timer.h             |  2 --
- 2 files changed, 7 insertions(+), 8 deletions(-)
+--mMdf5gXgGfOJXIDfpUfBT6oWXtpihr9Wh
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/cpufreq/powernv-cpufreq.c b/drivers/cpufreq/powernv-cpufreq.c
-index 3ff5160451b4..b6d7c4c98d0a 100644
---- a/drivers/cpufreq/powernv-cpufreq.c
-+++ b/drivers/cpufreq/powernv-cpufreq.c
-@@ -90,6 +90,7 @@ struct global_pstate_info {
- 	int last_gpstate_idx;
- 	spinlock_t gpstate_lock;
- 	struct timer_list timer;
-+	struct cpufreq_policy *policy;
- };
- 
- static struct cpufreq_frequency_table powernv_freqs[POWERNV_MAX_PSTATES+1];
-@@ -625,10 +626,10 @@ static inline void  queue_gpstate_timer(struct global_pstate_info *gpstates)
-  * according quadratic equation. Queues a new timer if it is still not equal
-  * to local pstate
-  */
--void gpstate_timer_handler(unsigned long data)
-+void gpstate_timer_handler(struct timer_list *t)
- {
--	struct cpufreq_policy *policy = (struct cpufreq_policy *)data;
--	struct global_pstate_info *gpstates = policy->driver_data;
-+	struct global_pstate_info *gpstates = from_timer(gpstates, t, timer);
-+	struct cpufreq_policy *policy = gpstates->policy;
- 	int gpstate_idx, lpstate_idx;
- 	unsigned long val;
- 	unsigned int time_diff = jiffies_to_msecs(jiffies)
-@@ -800,9 +801,9 @@ static int powernv_cpufreq_cpu_init(struct cpufreq_policy *policy)
- 	policy->driver_data = gpstates;
- 
- 	/* initialize timer */
--	init_timer_pinned_deferrable(&gpstates->timer);
--	gpstates->timer.data = (unsigned long)policy;
--	gpstates->timer.function = gpstate_timer_handler;
-+	gpstates->policy = policy;
-+	timer_setup(&gpstates->timer, gpstate_timer_handler,
-+		    TIMER_PINNED | TIMER_DEFERRABLE);
- 	gpstates->timer.expires = jiffies +
- 				msecs_to_jiffies(GPSTATE_TIMER_INTERVAL);
- 	spin_lock_init(&gpstates->gpstate_lock);
-diff --git a/include/linux/timer.h b/include/linux/timer.h
-index 5ef5c9e41a09..d11e819a86e2 100644
---- a/include/linux/timer.h
-+++ b/include/linux/timer.h
-@@ -132,8 +132,6 @@ static inline void init_timer_on_stack_key(struct timer_list *timer,
- 	__init_timer((timer), TIMER_PINNED)
- #define init_timer_deferrable(timer)					\
- 	__init_timer((timer), TIMER_DEFERRABLE)
--#define init_timer_pinned_deferrable(timer)				\
--	__init_timer((timer), TIMER_DEFERRABLE | TIMER_PINNED)
- #define init_timer_on_stack(timer)					\
- 	__init_timer_on_stack((timer), 0)
- 
--- 
-2.7.4
+Hi all,
+
+are there any one of WiFi devs on ELCE?
+Will be good to meet you. For example:
+Table 1 - Networking Area, Level LL, Outside Roma.
+
+Please contact me if you are here :)
+--=20
+Regards,
+Oleksij
+
+
+--mMdf5gXgGfOJXIDfpUfBT6oWXtpihr9Wh--
+
+--TgQek82wtM7MmlkRkheC7ur7tWsXW2tuQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF4EAREIAAYFAlnuMHEACgkQHwImuRkmbWnemAD/aTwGYyYHXv4y+MMkrnAFxGq7
+G2e/HsP2uLjeim0EFsAA/RUJVqQNfBSwdeDtfg1TXXfq+U/VfCCszMNWrwiOu1Wa
+=cwBE
+-----END PGP SIGNATURE-----
+
+--TgQek82wtM7MmlkRkheC7ur7tWsXW2tuQ--
