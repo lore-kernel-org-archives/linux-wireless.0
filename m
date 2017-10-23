@@ -1,127 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:57996 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751198AbdJDKLu (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:46384 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751150AbdJWKmw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 06:11:50 -0400
-Date: Wed, 4 Oct 2017 12:11:45 +0200
-From: Maxime Ripard <maxime.ripard@free-electrons.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Icenowy Zheng <icenowy@aosc.io>, Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh+dt@kernel.org>, Chen-Yu Tsai <wens@csie.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com
-Subject: Re: [PATCH v3 1/2] dt-bindings: add device tree binding for
- Allwinner XR819 SDIO Wi-Fi
-Message-ID: <20171004101145.kgjufpcktodppuy3@flea> (sfid-20171004_121222_134025_E380B8C8)
-References: <20171003165944.13056-1-icenowy@aosc.io>
- <20171003165944.13056-2-icenowy@aosc.io>
- <871smjxp46.fsf@kamboji.qca.qualcomm.com>
- <E46F3A20-294A-497E-AF71-C77A67AFDB8C@aosc.io>
- <59D4B1C8.8020105@broadcom.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="z5ahan4c2wuj2t6k"
-In-Reply-To: <59D4B1C8.8020105@broadcom.com>
+        Mon, 23 Oct 2017 06:42:52 -0400
+Message-ID: <1508755364.2639.19.camel@sipsolutions.net> (sfid-20171023_124315_029605_AF820EA1)
+Subject: Re: [PATCH v2 31/37] mac80211_hwsim: Replace hrtimer tasklet with
+ softirq hrtimer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
+        Christoph Hellwig <hch@lst.de>,
+        John Stultz <john.stultz@linaro.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Date: Mon, 23 Oct 2017 12:42:44 +0200
+In-Reply-To: <alpine.DEB.2.20.1710231227050.4241@nanos>
+References: <20171022213938.940451689@linutronix.de>
+           <20171022214053.576969587@linutronix.de>
+          <1508753691.2639.10.camel@sipsolutions.net>
+          <alpine.DEB.2.20.1710231221520.4241@nanos>
+         <1508754350.2639.12.camel@sipsolutions.net>
+         <alpine.DEB.2.20.1710231227050.4241@nanos>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---z5ahan4c2wuj2t6k
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> > I guess you mean you *can* build it? Surely you're introducing the new
+> > HR timer modes in some patch that I didn't see? :-)
+> 
+> Sorry, we did not want to expose you to 30 patches fiddling with the core
+> code. They are on LKML though.
 
-On Wed, Oct 04, 2017 at 10:02:48AM +0000, Arend van Spriel wrote:
-> On 10/4/2017 11:03 AM, Icenowy Zheng wrote:
-> >=20
-> >=20
-> > =E4=BA=8E 2017=E5=B9=B410=E6=9C=884=E6=97=A5 GMT+08:00 =E4=B8=8B=E5=8D=
-=885:02:17, Kalle Valo <kvalo@codeaurora.org> =E5=86=99=E5=88=B0:
-> > > Icenowy Zheng <icenowy@aosc.io> writes:
-> > >=20
-> > > > Allwinner XR819 is a SDIO Wi-Fi chip, which has the functionality to
-> > > use
-> > > > an out-of-band interrupt pin instead of SDIO in-band interrupt.
-> > > >=20
-> > > > Add the device tree binding of this chip, in order to make it
-> > > possible
-> > > > to add this interrupt pin to device trees.
-> > > >=20
-> > > > Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
-> > > > Acked-by: Rob Herring <robh@kernel.org>
-> > > > ---
-> > > > Changes in v3:
-> > > > - Renames the node name.
-> > > > - Adds ACK from Rob.
-> > > > Changes in v2:
-> > > > - Removed status property in example.
-> > > > - Added required property reg.
-> > > >=20
-> > > >   .../bindings/net/wireless/allwinner,xr819.txt      | 38
-> > > ++++++++++++++++++++++
-> > > >   1 file changed, 38 insertions(+)
-> > > >   create mode 100644
-> > > Documentation/devicetree/bindings/net/wireless/allwinner,xr819.txt
-> > >=20
-> > > Like I asked already last time, AFAICS there is no upstream xr819
-> > > wireless driver in drivers/net/wireless directory. Do we still accept
-> > > bindings like this for out-of-tree drivers?
-> >=20
-> > See esp8089.
-> >=20
-> > There's also no in-tree driver for it.
->=20
-> The question is whether we should. The above might be a precedent, but it
-> may not necessarily be the way to go. The commit message for esp8089 seems
-> to hint that there is intent to have an in-tree driver:
->=20
-> """
->     Note that at this point there only is an out of tree driver for this
->     hardware, there is no clear timeline / path for merging this. Still
->     I believe it would be good to specify the binding for this in tree
->     now, so that any future migration to an in tree driver will not cause
->     compatiblity issues.
->=20
->     Cc: Icenowy Zheng <icenowy@aosc.xyz>
->     Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->     Signed-off-by: Rob Herring <robh@kernel.org>
-> """
->=20
-> Regardless the bindings are in principle independent of the kernel and ju=
-st
-> describing hardware. I think there have been discussions to move the
-> bindings to their own repository, but apparently it was decided otherwise.
+Sure, no worries. I just didn't even realize I shouldn't be applying
+the patch (myself) :-)
 
-Yeah, I guess especially how it could be merged with the cw1200 driver
-would be very relevant to that commit log.
+> > Right. Then again, why even pass it to init() and start()? Can you
+> > start without going through start()?
+> 
+> There is a subtle magic with CLOCK_REALTIME timers.
+> 
+> CLOCK_REALTIME timers differentiate between ABS and REL modes. ABS timers
+> are exposed to clock modifications (settimeofday() ...), REL timers are
+> not. We solve that by associating them to different clock bases, which has
+> to be done at init time, but the start function needs the REL/ABS
+> information as well.
+> 
+> For CLOCK_MONOTONIC this is not really required, but the function is used
+> for all clock bases, so we require the mode bits for all.
 
-Maxime
+Hmm. Couldn't you just store that then from init to use in start?
 
---=20
-Maxime Ripard, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+If you don't store it, yet don't verify that you passed the same 
+thing, do you at least check that it's compatible? Sounds like
+something will totally go wrong if I pass CLOCK_REALTIME/ABS first and
+then use REL for start, or vice versa?
 
---z5ahan4c2wuj2t6k
-Content-Type: application/pgp-signature; name="signature.asc"
+Also, in the code I see only checking
 
------BEGIN PGP SIGNATURE-----
+if (mode != HRTIMER_MODE_ABS) {
+	// change clock ID:
+	// realtime -> monotonic
+	// realtime_soft -> monotonic_soft
+}
 
-iQIcBAEBAgAGBQJZ1LPhAAoJEBx+YmzsjxAg2YUQAJMxy9OzeXuAwzmK4xUR24Jo
-Qa/0A+F6F6LzksbVJKLywrRFSEsJ6i++SUzZYygz6jMwwQl7OApg4Dj/qd+2jK/Q
-LpgzeyXzgkcpOz2SHGeZZGiGn4YHVt/o1xSEkp2TWarL0iJ1Ckyt51Rs/fq2suoE
-qJr/dgyIDR3ZW3ek2Z2JcANCJ3y0q4KdD9lYCiB9ZBSHDs02ksleD5K/7gBArX7B
-tk+j+RK6r4A+UhnIC4T1GjWmcJRIkqAjjuaxFE4cFuKa2UvT2yKfoty9KHGfjgrU
-Sd71nqBe654ADx3f7nAgH3RehgNlY+JV/2LAW0WWCv+vgB4rFlMZicKNm1XQXFsZ
-/qM++w6bzAVyfiRXosOVtBOx7ocTHA2gNkyZT/Eh7PMn9Yt6ftMROL98S23eaXhE
-ONjFoIt6HyCU+wu5Kka1L9YizE0dHT4l/hBu4m3j7OEgZaTg+wJflDlNvemuA/AD
-jdOcM85UJM1azqjO7MmaaCF8UKQYgAHfiyh3j8vhPNjJ4TvNaMXri622a2ZojWJE
-aj0Za2DzNmHSwrlU9CuItNS6WSwphtH3t65LLi/2uxsZUOr0hYdV5uNE1A1n6g1X
-m9YAaDshKu4fBYpT9c9guWrET18OKcgxq+SZT3WrXgriVqYtEB6dxEe/gbp9c+lW
-mJZBjzQkNFJepMq8fggE
-=FjDQ
------END PGP SIGNATURE-----
+but you're passing HRTIMER_MODE_ABS_SOFT too, isn't that considered an
+ABS mode?
 
---z5ahan4c2wuj2t6k--
+But then, looking at the code again, I don't even see
+HRTIMER_MODE_ABS_SOFT existing, it sounds like it should be
+
+hrtimer_init(..., CLOCK_REALTIME_SOFT, HRTIMER_MODE_REL);
+
+then?
+
+At least then the code I mentioned above makes sense, but it still
+feels pretty dangerous to not just store the mode and use it in start,
+but to require passing it again. You even just introduced the same bug,
+it just happened to not matter in this case since the clock isn't
+realtime.
+
+Or am I completely confused now?
+
+johannes
