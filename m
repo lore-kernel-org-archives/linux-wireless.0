@@ -1,79 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0229.hostedemail.com ([216.40.44.229]:35232 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750966AbdJDQ0t (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:47389 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932121AbdJWKdl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 12:26:49 -0400
-Message-ID: <1507134405.4434.10.camel@perches.com> (sfid-20171004_182728_735040_753AA614)
-Subject: Re: [PATCH 1/3] wireless: iwlwifi: use bool instead of int
-From: Joe Perches <joe@perches.com>
-To: Christoph =?ISO-8859-1?Q?B=F6hmwalder?=
-        <christoph@boehmwalder.at>, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, luciano.coelho@intel.com,
-        kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 04 Oct 2017 09:26:45 -0700
-In-Reply-To: <20171004155700.18048-2-christoph@boehmwalder.at>
-References: <20171004155700.18048-1-christoph@boehmwalder.at>
-         <20171004155700.18048-2-christoph@boehmwalder.at>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Mon, 23 Oct 2017 06:33:41 -0400
+Date: Mon, 23 Oct 2017 12:33:31 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
+        Christoph Hellwig <hch@lst.de>,
+        John Stultz <john.stultz@linaro.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 31/37] mac80211_hwsim: Replace hrtimer tasklet with
+ softirq hrtimer
+In-Reply-To: <1508754350.2639.12.camel@sipsolutions.net>
+Message-ID: <alpine.DEB.2.20.1710231227050.4241@nanos> (sfid-20171023_123356_469312_4009999F)
+References: <20171022213938.940451689@linutronix.de>   <20171022214053.576969587@linutronix.de>  <1508753691.2639.10.camel@sipsolutions.net>  <alpine.DEB.2.20.1710231221520.4241@nanos> <1508754350.2639.12.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-10-04 at 17:56 +0200, Christoph Böhmwalder wrote:
-> Change a usage of int in a boolean context to use the bool type instead, as it
-> makes the intent of the function clearer and helps clarify its semantics.
+On Mon, 23 Oct 2017, Johannes Berg wrote:
+> On Mon, 2017-10-23 at 12:23 +0200, Thomas Gleixner wrote:
+> > On Mon, 23 Oct 2017, Johannes Berg wrote:
+> > 
+> > > On Sun, 2017-10-22 at 23:40 +0200, Anna-Maria Gleixner wrote:
+> > > > From: Thomas Gleixner <tglx@linutronix.de>
+> > > > 
+> > > > Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
+> > > > callback in softirq context and remove the hrtimer_tasklet.
+> > 
+> > I can't build as its part of the whole hrtimer rework series.
 > 
-> Also eliminate the if/else and just return the boolean result directly,
-> making the code more readable.
+> I guess you mean you *can* build it? Surely you're introducing the new
+> HR timer modes in some patch that I didn't see? :-)
+
+Sorry, we did not want to expose you to 30 patches fiddling with the core
+code. They are on LKML though.
+
+> > > > +       hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
+> > > > +                    HRTIMER_MODE_ABS_SOFT);
+> > 
+> > Sure, though it does not matter in that case. Will fix that up.
 > 
-> Signed-off-by: Christoph Böhmwalder <christoph@boehmwalder.at>
-> ---
->  drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 12 +++++-------
->  1 file changed, 5 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> index b7cd813ba70f..0eb815ae97e8 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> @@ -267,14 +267,12 @@ int iwl_phy_db_set_section(struct iwl_phy_db *phy_db,
->  }
->  IWL_EXPORT_SYMBOL(iwl_phy_db_set_section);
->  
-> -static int is_valid_channel(u16 ch_id)
-> +static bool is_valid_channel(u16 ch_id)
->  {
-> -	if (ch_id <= 14 ||
-> -	    (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
-> -	    (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
-> -	    (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1))
-> -		return 1;
-> -	return 0;
-> +	return (ch_id <= 14 ||
-> +	       (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
-> +	       (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
-> +	       (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1));
->  }
+> Right. Then again, why even pass it to init() and start()? Can you
+> start without going through start()?
 
-This might be more intelligble as separate tests
+There is a subtle magic with CLOCK_REALTIME timers.
 
-static bool is_valid_channel(u16 ch_id)
-{
-	if (ch_id <= 14)
-		return true;
+CLOCK_REALTIME timers differentiate between ABS and REL modes. ABS timers
+are exposed to clock modifications (settimeofday() ...), REL timers are
+not. We solve that by associating them to different clock bases, which has
+to be done at init time, but the start function needs the REL/ABS
+information as well.
 
-	if ((ch_id % 4 == 0) &&
-	    ((ch_id >= 36 && ch_id <= 64) ||
-	     (ch_id >= 100 && ch_id <= 140)))
-		return true;
+For CLOCK_MONOTONIC this is not really required, but the function is used
+for all clock bases, so we require the mode bits for all.
 
-	if ((ch_id % 4 == 1) &&
-	    (chid >= 145 && ch_id <= 165))
-		return true;
+Thanks,
 
-	return false;
-}
-
-The compiler should produce the same object code.
+	tglx
