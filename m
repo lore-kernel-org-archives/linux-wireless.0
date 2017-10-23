@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0076.hostedemail.com ([216.40.44.76]:42974 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751280AbdJEMTL (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:47329 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751150AbdJWKXX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 08:19:11 -0400
-Message-ID: <1507205947.4434.23.camel@perches.com> (sfid-20171005_141939_188830_02606220)
-Subject: Re: [PATCH] rsi: fix integer overflow warning
-From: Joe Perches <joe@perches.com>
-To: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Cc: Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Thu, 05 Oct 2017 05:19:07 -0700
-In-Reply-To: <20171005120547.328687-1-arnd@arndb.de>
-References: <20171005120547.328687-1-arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Mon, 23 Oct 2017 06:23:23 -0400
+Date: Mon, 23 Oct 2017 12:23:13 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
+        Christoph Hellwig <hch@lst.de>,
+        John Stultz <john.stultz@linaro.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 31/37] mac80211_hwsim: Replace hrtimer tasklet with
+ softirq hrtimer
+In-Reply-To: <1508753691.2639.10.camel@sipsolutions.net>
+Message-ID: <alpine.DEB.2.20.1710231221520.4241@nanos> (sfid-20171023_122341_241227_7098C84B)
+References: <20171022213938.940451689@linutronix.de>  <20171022214053.576969587@linutronix.de> <1508753691.2639.10.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-10-05 at 14:05 +0200, Arnd Bergmann wrote:
-> gcc produces a harmless warning about a recently introduced
-> signed integer overflow:
+On Mon, 23 Oct 2017, Johannes Berg wrote:
+
+> On Sun, 2017-10-22 at 23:40 +0200, Anna-Maria Gleixner wrote:
+> > From: Thomas Gleixner <tglx@linutronix.de>
+> > 
+> > Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
+> > callback in softirq context and remove the hrtimer_tasklet.
+
+I can't build as its part of the whole hrtimer rework series.
+
+> This doesn't build on my tree, due to HRTIMER_MODE_REL_SOFT not
+> existing. Neither does HRTIMER_MODE_SOFT mentioned above, but that's
+> just a commit log mistake.
+
+Oops.
+
+> (It also didn't apply on my tree, but that was a trivial context
+> change.)
 > 
-> drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_prepare_mgmt_desc':
-> include/uapi/linux/swab.h:13:15: error: integer overflow in expression [-Werror=overflow]
->   (((__u16)(x) & (__u16)0x00ffU) << 8) |   \
->    ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
-> include/uapi/linux/swab.h:104:2: note: in expansion of macro '___constant_swab16'
->   ___constant_swab16(x) :   \
->   ^~~~~~~~~~~~~~~~~~
-> include/uapi/linux/byteorder/big_endian.h:34:43: note: in expansion of macro '__swab16'
->  #define __cpu_to_le16(x) ((__force __le16)__swab16((x)))
+> I don't understand why you initialize it with HRTIMER_MODE_ABS_SOFT
+> either though:
+> 
+> > +       hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
+> > +                    HRTIMER_MODE_ABS_SOFT);
 
-[]
+Sure, though it does not matter in that case. Will fix that up.
 
-> The problem is that the 'mask' value is a signed integer that gets
-> turned into a negative number when truncated to 16 bits. Making it
-> an unsigned constant avoids this.
+Thanks,
 
-I would expect there are more of these.
-
-Perhaps this define in include/uapi/linux/swab.h:
-
-#define __swab16(x)				\
-	(__builtin_constant_p((__u16)(x)) ?	\
-	___constant_swab16(x) :			\
-	__fswab16(x))
-
-should be
-
-#define __swab16(x)				\
-	(__builtin_c
-onstant_p((__u16)(x)) ?	\
-	___constant_swab16((__u16)(x)) :
-		\
-	__fswab16((__u16)(x)))
+	tglx
