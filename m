@@ -1,40 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0061.outbound.protection.outlook.com ([104.47.37.61]:26304
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752487AbdJ3JpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 05:45:12 -0400
-Date: Mon, 30 Oct 2017 12:45:00 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:54860 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751884AbdJXJ2k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Oct 2017 05:28:40 -0400
+Received: by mail-pg0-f68.google.com with SMTP id l24so14040434pgu.11
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Oct 2017 02:28:39 -0700 (PDT)
+Date: Tue, 24 Oct 2017 02:28:37 -0700
+From: Kees Cook <keescook@chromium.org>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
         Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: Re: [1/5] qtnfmac: modify full Tx queue error reporting
-Message-ID: <20171030094459.kj6nnrrc52wj2bsp@bars> (sfid-20171030_104516_824844_0EADA82A)
-References: <20171015205327.9966-2-sergey.matyukevich.os@quantenna.com>
- <20171027084814.B3FCB60314@smtp.codeaurora.org>
- <20171029153211.4ynfo6wrh7q76efd@bars>
- <87a8093vy7.fsf@kamboji.qca.qualcomm.com>
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers/wireless: qtnfmac: Convert timers to use
+ timer_setup()
+Message-ID: <20171024092837.GA47040@beast> (sfid-20171024_113508_010375_32C2E64E)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87a8093vy7.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > My assumption is that by default all the patches should cleanly apply
-> > to wireless-drivers-next. I could apply the patch in question to
-> > wireless-drivers-next without any issues.
-> 
-> Odd. How did you apply it? My script uses 'git am -s -3' individually
-> for each patch in the series, but to my knowledge that shouldn't cause
-> any problems.
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-It turns out I mechanically rebased my branch on top of w-d-n before writing
-the previous email. Now I could reproduce the same failure when using this
-command for the original patches downloaded from patchwork. The problem
-was in conflict with qtnfmac fixes pulled to w-d-n from w-d.
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Igor Mitsyanko <imitsyanko@quantenna.com>
+Cc: Avinash Patil <avinashp@quantenna.com>
+Cc: Sergey Matyukevich <smatyukevich@quantenna.com>
+Cc: Kamlesh Rath <krath@quantenna.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 7 +++----
+ drivers/net/wireless/quantenna/qtnfmac/core.c     | 2 +-
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-Regards,
-Sergey
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 32bf72c0399f..ac1b9bd5ed90 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -581,9 +581,9 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ }
+ 
+-static void qtnf_scan_timeout(unsigned long data)
++static void qtnf_scan_timeout(struct timer_list *t)
+ {
+-	struct qtnf_wmac *mac = (struct qtnf_wmac *)data;
++	struct qtnf_wmac *mac = from_timer(mac, t, scan_timeout);
+ 
+ 	pr_warn("mac%d scan timed out\n", mac->macid);
+ 	qtnf_scan_done(mac, true);
+@@ -602,8 +602,7 @@ qtnf_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 		return -EFAULT;
+ 	}
+ 
+-	mac->scan_timeout.data = (unsigned long)mac;
+-	mac->scan_timeout.function = qtnf_scan_timeout;
++	mac->scan_timeout.function = (TIMER_FUNC_TYPE)qtnf_scan_timeout;
+ 	mod_timer(&mac->scan_timeout,
+ 		  jiffies + QTNF_SCAN_TIMEOUT_SEC * HZ);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index 5e60180482d1..aa7f146278a7 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -289,7 +289,7 @@ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
+ 		mac->iflist[i].vifid = i;
+ 		qtnf_sta_list_init(&mac->iflist[i].sta_list);
+ 		mutex_init(&mac->mac_lock);
+-		init_timer(&mac->scan_timeout);
++		setup_timer(&mac->scan_timeout, NULL, 0);
+ 	}
+ 
+ 	qtnf_mac_init_primary_intf(mac);
+-- 
+2.7.4
+
+
+-- 
+Kees Cook
+Pixel Security
