@@ -1,158 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from up.icubehost.com ([185.62.36.194]:54852 "EHLO up.icubehost.com"
+Received: from mx2.mailbox.org ([80.241.60.215]:33721 "EHLO mx2.mailbox.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751330AbdJERYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 13:24:36 -0400
-Subject: Re: [PATCH 00/11] SDIO support for ath10k
-To: Gary Bisson <gary.bisson@boundarydevices.com>,
-        silexcommon@gmail.com
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
- <20171005151205.cymirl4wikuw4f7q@t450s.lan>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        erik.stromdahl@gmail.com
-From: Alagu Sankar <alagusankar@silex-india.com>
-Message-ID: <59D66ACA.60801@silex-india.com> (sfid-20171005_192445_988895_EB10F265)
-Date: Thu, 5 Oct 2017 22:54:26 +0530
+        id S933587AbdJXNZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Oct 2017 09:25:30 -0400
+To: linux-wireless@vger.kernel.org,
+        driverdev-devel@linuxdriverproject.org
+From: "txt.file" <txt.file@txtfile.eu>
+Subject: Searching help for Linux support for RTL8812AU
+Message-ID: <8a62a06d-8a80-6df7-4f30-160a0231dac9@txtfile.eu> (sfid-20171024_152537_302156_6BE239F4)
+Date: Tue, 24 Oct 2017 13:24:00 +0000
 MIME-Version: 1.0
-In-Reply-To: <20171005151205.cymirl4wikuw4f7q@t450s.lan>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="VBUMsHFjxU4tBKX2EVcOFl4ejobuv2qsW"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gary,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--VBUMsHFjxU4tBKX2EVcOFl4ejobuv2qsW
+Content-Type: multipart/mixed; boundary="OVCgPGRNwsqiGGbRRfhvih9nsUvX6dGqg";
+ protected-headers="v1"
+From: "txt.file" <txt.file@txtfile.eu>
+To: linux-wireless@vger.kernel.org, driverdev-devel@linuxdriverproject.org
+Message-ID: <8a62a06d-8a80-6df7-4f30-160a0231dac9@txtfile.eu>
+Subject: Searching help for Linux support for RTL8812AU
 
-On 05-10-2017 20:42, Gary Bisson wrote:
-> Hi Alagu,
->
-> First of all, thank you for sharing your patches, this will be a very
-> nice improvement to have SDIO QCA9377 working with ath10k.
->
-> I've tried your series with Nitrogen7 [1] platform which is supported in
-> mainline already. It uses BD-SDMAC [2] which uses the same module as the
-> SX-SDMAC.
->
-> Below are some questions/remarks I have after the testing.
->
-> On Sat, Sep 30, 2017 at 11:07:37PM +0530, silexcommon at gmail.com wrote:
->> From: Alagu Sankar <alagusankar at silex-india.com>
->>
->> This patchset, generated against master-pending branch, enables a fully
->> functional SDIO interface driver for ath10k.  Patches have been verified on
->> QCA9377-3 WB396 and Silex's SX-SDCAC reference cards with Station, Access Point
->> and P2P modes.
->>
->> The driver is verified with the firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1
-> Quick question on the firmware, is it the one from Kalle's repository?[3]
->
-> If so, where does this firmware comes from? Is 00061 the firmware
-> version? So far I've only seen up to v0.0.0.60, see qcacld-2.0 output:
-> Host SW:4.5.20.037, FW:0.0.0.60, HW:QCA9377_REV1_1
-Yes, it is from 
-https://github.com/kvalo/ath10k-firmware/tree/master/QCA9377/hw1.0/untested. 
-I have also used custom firmware from QCA/Silex as used in qcacld-2.0 
-driver without any issue. You need to use the firmware merger tool from 
-https://github.com/erstrom/linux-ath/wiki/Firmware to combine the 
-qwlan30.bin and otp30.bin to generate the firmware-sdio.bin.
->> with the board data from respective SDIO card vendors.
-> About the board-sdio.bin, is it just a copy of your bdwlan30.bin?
-Yes board-sdio.bin is a copy of bdwlan30.bin
->> Receive performance
->> matches the QCA reference driver when used with SDIO3.0 enabled platforms.
->> iperf tests indicate a downlink UDP of 275Mbit/s and TCP of 150Mbit/s
-> Nice performances. Unfortunately I don't get better than 30Mbits/s in TX
-> and 50Mbits/s in RX:
-> # iperf -c 192.168.1.1
-> ------------------------------------------------------------
-> Client connecting to 192.168.1.1, TCP port 5001
-> TCP window size: 43.8 KByte (default)
-> ------------------------------------------------------------
-> [  3] local 192.168.1.115 port 41354 connected with 192.168.1.1 port
-> 5001
-> [ ID] Interval       Transfer     Bandwidth
-> [  3]  0.0-10.0 sec  34.9 MBytes  29.2 Mbits/sec
-> # iperf -s
-> ------------------------------------------------------------
-> Server listening on TCP port 5001
-> TCP window size: 85.3 KByte (default)
-> ------------------------------------------------------------
-> [  4] local 192.168.1.115 port 5001 connected with 192.168.1.1 port
-> 50646
-> [ ID] Interval       Transfer     Bandwidth
-> [  4]  0.0-10.0 sec  63.1 MBytes  52.7 Mbits/sec
->
-> Do you have any idea why? Note that qcacld-2.0 driver on that same
-> platform (same OS) gives the performances you advertize (150Mbits/s).
-For some reason, if I use the imx_v6_v7_defconfig as is, performance is 
-very poor. In fact, the firmware download itself will take about 6 
-seconds. This can also be seen when you up/down the wlan0 interface. For 
-the i.MX6 SoloX board, I used the configuration of 4.1.15 as provided by 
-the BSP from NXP/Freescale.  This improved the performance quite a bit. 
-I haven't had a chance to spend time on this to figure out the 
-difference and reason. Another difference is that the default device 
-tree for SoloX did not have the correct settings to support SDIO3.x.  
-Had to modify them, but did not include the device tree patches here as 
-it is not meant for this group.
->> This patchset differs from the previous high latency patches, specific to SDIO.
->> HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET is enabled for HI_ACS. This instructs the
->> firmware to use HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing packets. Without
->> this flag, the management frames are not sent out by the firmware. Possibility
->> of management frames being sent via WMI and data frames through the reduced Tx
->> completion needs to be probed further.
->>
->> Further improvements can be done on the transmit path by implementing packet
->> bundle. Scatter Gather is another area of improvement for both Transmit and
->> Receive, but may not work on all platforms
->>
->> Known issues: Surprise removal of the card, when the device is in connected
->> state, delays sdio function remove due to delayed WMI command failures.
->> Existing ath10k framework can not differentiate between a kernel module
->> removae and the surprise removal of teh card.
-> Here are some questions:
-> - Is it normal to see a warning about board-2.bin, shouldn't it look for
->    board-sdio.bin only?
-> [   14.696704] ath10k_sdio mmc1:0001:1: Direct firmware load for
-> ath10k/QCA9377/hw1.0/board-2.bin failed with error -2
-This was only noticed in the latest update. Like the different firmware 
-versions, the driver also looks for the board-2.bin now. I have only 
-tested with the board-sdio.bin
-> - Did you have pre-cal and/or cal binaries for your testing?
-> [   14.067159] ath10k_sdio mmc1:0001:1: Direct firmware load for
-> ath10k/pre-cal-sdio-mmc1:0001:1.bin failed with error -2
-> [   14.149257] ath10k_sdio mmc1:0001:1: Direct firmware load for
-> ath10k/cal-sdio-mmc1:0001:1.bin failed with error -2
-No. I did not use the pre-cal and cal binaries.
-> Also noticed that the "tx bitrate" output of 'iw link' is wrong in my
-> case:
-> # iw wlan0 link
-> Connected to 00:00:00:00:00:b0 (on wlan0)
-> 	SSID: TPLINK_AC_5G
-> 	freq: 5180
-> 	RX: 72072365 bytes (67934 packets)
-> 	TX: 79084128 bytes (73649 packets)
-> 	signal: -35 dBm
-> 	tx bitrate: 6.0 MBit/s
->
-> 	bss flags:	short-slot-time
-> 	dtim period:	2
-> 	beacon int:	100
->
-> When connecting using qcacld driver it shows 433MBit/s as expected. Is
-> it working properly in your case?
-Tx rate is not updated properly.  I will include it in the list of known 
-issues.
-> As a FYI, I've built Erik's tree[4] for this testing, should I use
-> another tree instead?
-I use the Kalle's ath10k tree, but when I last looked, they were pretty 
-much the same, so it should not be a problem.
-> Let me know your thoughts.
->
-> Regards,
-> Gary
->
-> [1] https://boundarydevices.com/product/nitrogen7/
-> [2] https://boundarydevices.com/product/bd_sdmac_wifi/
-> [3] https://github.com/kvalo/ath10k-firmware/tree/master/QCA9377/hw1.0/untested
-> [4] https://github.com/erstrom/linux-ath
->
-Regards,
-Alagu
+--OVCgPGRNwsqiGGbRRfhvih9nsUvX6dGqg
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+
+Hey Linux wireless list,
+
+A while ago I bought an ALFA Network AWUS036AC[0] which does not yet
+seem to be supported in Linux mainline. I would like to get it supported.=
+
+
+The problem is that I have not that much experience doing software
+development.
+
+kind regards
+txt.file
+
+PS: Please keep me in CC as I am not subscribed to the lists.
+
+[0] https://wikidevi.com/wiki/ALFA_Network_AWUS036AC
+
+
+--OVCgPGRNwsqiGGbRRfhvih9nsUvX6dGqg--
+
+--VBUMsHFjxU4tBKX2EVcOFl4ejobuv2qsW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEE1NOunmXPptEkFyWqOb+C9VkIZegFAlnvPx8ACgkQOb+C9VkI
+Zeg/HA/8CcQNCbtM/rewg43kTX5hzM8SQjQIqdRtTd9aPR2qfLW3kEUmAvXaOv/q
+Qx8a1uJY1rooFFWzphOCpccT+nxfvkbY4vN/7pzLwEY9KzigoBrPVl5RNYwN4+Jt
+kshW4koEJ3n+aJqJZJlVS7exsnL/oFkrgpX1C3zkiB+CRJQZirrTW4YpCeDhCrvB
+PY76JymuClrpE0AEQziCRIi6jZ6xgK3rdFg5mlRUR9B01RF72iDKR7HBb814nVNf
+MqueRBaoIphwC41vGJKlg63wuKhNjk5qR6G3NEJkbQrK1ix9+HquUQ2PsFqsWhOG
++m4wlYQ5HvWiZ453JD8IUlvmnLDJJQxEMQVHJXa1xpMSr+Nw9aPp+STZpUsrMHF/
+YVtxUOKHJzM+zCvY840NvDaDZD6sYLdgJlqR8erog9FVPocW18EZbTZa1TRdDYVP
+pxlJyqKyZEpEkAyMkHBeakzJvspk0Gqk6eXMJtYbU/yPviebeyhHp01URgzgUOrF
+02P8QvOfbTtjr6WtZcywXOm0VPzfUgvi9ltr6nA3EuyzuBMA5XwWiqrgFrnPy7y6
+EZTo4GM9VCpc16EtjnVlhSj+BPoEwGejb9zx71LiKoE0ZjWm7Y5x1NKLBen1OrL0
++740R7JuFTGtsMCo8gj00o45HYwZJFJcy/CdfDuxQB2DNFWbe+Q=
+=Ujdm
+-----END PGP SIGNATURE-----
+
+--VBUMsHFjxU4tBKX2EVcOFl4ejobuv2qsW--
