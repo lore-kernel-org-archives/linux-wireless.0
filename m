@@ -1,212 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0066.outbound.protection.outlook.com ([104.47.33.66]:21536
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750973AbdJNVCY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Oct 2017 17:02:24 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:47972 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751336AbdJXNuc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Oct 2017 09:50:32 -0400
+Subject: Re: A good way to get CSI info to user-space?
 To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH] iw: add command to register and capture mgmt frames
-Date: Sun, 15 Oct 2017 00:00:36 +0300
-Message-Id: <20171014210036.29556-1-sergey.matyukevich.os@quantenna.com> (sfid-20171014_230318_416688_A24AC9E0)
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <6f9182c4-cff9-066c-173a-00d09af7c903@candelatech.com>
+ <1508790635.2639.24.camel@sipsolutions.net>
+ <76d6a1ad-2dc4-0542-808f-4be459c3508a@candelatech.com>
+ <1508824462.2639.25.camel@sipsolutions.net>
+ <d1746cd6-d889-a253-3638-8011d1ebd4fb@candelatech.com>
+ <1508852310.2639.29.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <b52bbc61-f0b5-5e9a-cce3-011fd43e6c8d@candelatech.com> (sfid-20171024_155035_401801_942F7DD4)
+Date: Tue, 24 Oct 2017 06:50:24 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1508852310.2639.29.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new command to register for receiving multiple mgmt frames,
-capture and print them. Frames are selected by their type and
-pattern containing their the first several bytes of the frame
-that should match.
 
-Format:
-$ iw dev <devname> frame <type> <pattern> [frame <type> <pattern>]* [count <frames>]
 
-Example:
-$ iw dev wlan0 mgmt capture frame 40 00 frame 40 01:02 count 10
+On 10/24/2017 06:38 AM, Johannes Berg wrote:
+> On Tue, 2017-10-24 at 06:36 -0700, Ben Greear wrote:
+>>
+>> On 10/23/2017 10:54 PM, Johannes Berg wrote:
+>>> On Mon, 2017-10-23 at 13:59 -0700, Ben Greear wrote:
+>>>
+>>>>> The CSI data has variable length [1] but it's fundamentally always tied
+>>>>> to a specific frame and as such we've always attached it to that frame
+>>>>> using a radiotap vendor namespace.
+>>>>>
+>>>>> You can easily implement that in a mac80211 driver since it has support
+>>>>> for that via RX_FLAG_RADIOTAP_VENDOR_DATA and the associated struct
+>>>>> ieee80211_vendor_radiotap that you put into the skb's head.
+>>>>>
+>>>>> Why should anything else be needed?
+>>>>
+>>>> So this would only show up in user-space in something like a pkt-capture?
+>>>
+>>> Sure. But since you can easily add virtual monitor interfaces at any
+>>> time, that doesn't really mean anything.
+>>
+>> Adding a monitor device is a pretty big hammer on ath10k, at least, and
+>> probably not something one would want running continuously in a production
+>> environment.
+>
+> We keep having this discussion. You need to fix this, it should be
+> really simple to fix this - just remove all checks for CONF_MONITOR
+> from ath10k and make it use WANT_MONITOR_VIF instead if it doesn't
+> already.
 
-Frame type is supplied as hex w/o leading 0x. Frame pattern is supplied
-as hex pattern of the form aa:bb:cc w/o leading 0x as well.
-Count is a number of frames to capture.
+I don't recall having this discussion, but even if you can do a
+non-promiscuous monitor mode, you would have to end up having a bpf
+socket filter and packet socket, right?
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- Makefile |   2 +-
- mgmt.c   | 149 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 150 insertions(+), 1 deletion(-)
- create mode 100644 mgmt.c
+Wouldn't that have a noticeable effect on performance on modest sized
+AP hardware?
 
-diff --git a/Makefile b/Makefile
-index e61825e..38d782d 100644
---- a/Makefile
-+++ b/Makefile
-@@ -17,7 +17,7 @@ OBJS = iw.o genl.o event.o info.o phy.o \
- 	interface.o ibss.o station.o survey.o util.o ocb.o \
- 	mesh.o mpath.o mpp.o scan.o reg.o version.o \
- 	reason.o status.o connect.o link.o offch.o ps.o cqm.o \
--	bitrate.o wowlan.o coalesce.o roc.o p2p.o vendor.o
-+	bitrate.o wowlan.o coalesce.o roc.o p2p.o vendor.o mgmt.o
- OBJS += sections.o
- 
- OBJS-$(HWSIM) += hwsim.o
-diff --git a/mgmt.c b/mgmt.c
-new file mode 100644
-index 0000000..c42d802
---- /dev/null
-+++ b/mgmt.c
-@@ -0,0 +1,149 @@
-+#include <string.h>
-+#include <errno.h>
-+
-+#include <netlink/genl/genl.h>
-+#include <netlink/genl/family.h>
-+#include <netlink/genl/ctrl.h>
-+#include <netlink/msg.h>
-+#include <netlink/attr.h>
-+
-+#include "nl80211.h"
-+#include "iw.h"
-+
-+SECTION(mgmt);
-+
-+static int seq_handler(struct nl_msg *msg, void *arg)
-+{
-+	return NL_OK;
-+}
-+
-+static int dump_mgmt_frame(struct nl_msg *msg, void *arg)
-+{
-+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-+	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
-+
-+	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-+		  genlmsg_attrlen(gnlh, 0), NULL);
-+
-+	if (tb_msg[NL80211_ATTR_WIPHY_FREQ]) {
-+		uint32_t freq = nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_FREQ]);
-+		printf("freq %u MHz\n", freq);
-+	}
-+
-+	if (tb_msg[NL80211_ATTR_RX_SIGNAL_DBM]) {
-+		uint32_t dbm = nla_get_u32(tb_msg[NL80211_ATTR_RX_SIGNAL_DBM]);
-+		printf("signal %u dbm\n", dbm);
-+	}
-+
-+	if (tb_msg[NL80211_ATTR_FRAME]) {
-+		int len = nla_len(tb_msg[NL80211_ATTR_FRAME]);
-+		uint8_t *data = nla_data(tb_msg[NL80211_ATTR_FRAME]);
-+		iw_hexdump("mgmt frame", data, len);
-+	}
-+
-+	return 0;
-+}
-+
-+static int register_mgmt_frame(struct nl80211_state *state,
-+			       struct nl_msg *msg, int argc, char **argv,
-+			       enum id_input id)
-+{
-+	unsigned int type;
-+	unsigned char *match;
-+	size_t match_len;
-+	int ret;
-+
-+	ret = sscanf(argv[0], "%x", &type);
-+	if (ret != 1) {
-+		printf("invalid frame type: %s\n", argv[0]);
-+		return 2;
-+	}
-+
-+	match = parse_hex(argv[1], &match_len);
-+	if (!match) {
-+		printf("invalid frame pattern: %s\n", argv[1]);
-+		return 2;
-+	}
-+
-+	NLA_PUT_U16(msg, NL80211_ATTR_FRAME_TYPE, type);
-+	NLA_PUT(msg, NL80211_ATTR_FRAME_MATCH, match_len, match);
-+
-+	return 0;
-+
-+nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
-+static int handle_mgmt_reg(struct nl80211_state *state,
-+				    struct nl_msg *msg, int argc,
-+				    char **argv, enum id_input id)
-+{
-+	return register_mgmt_frame(state, msg, argc, argv, id);
-+}
-+
-+HIDDEN(mgmt, reg, "", NL80211_CMD_REGISTER_FRAME, 0, CIB_NETDEV, handle_mgmt_reg);
-+
-+static int handle_mgmt_capture(struct nl80211_state *state,
-+			       struct nl_msg *msg, int argc,
-+			       char **argv, enum id_input id)
-+{
-+	struct nl_cb *mgmt_cb;
-+	char *ndev = argv[0];
-+	int mgmt_argc = 5;
-+	char **mgmt_argv;
-+	unsigned int count = 0;
-+	int err = 0;
-+	int i;
-+
-+	mgmt_argv = calloc(mgmt_argc, sizeof(char*));
-+	if (!mgmt_argv)
-+		return -ENOMEM;
-+
-+	mgmt_argv[0] = ndev;
-+	mgmt_argv[1] = "mgmt";
-+	mgmt_argv[2] = "reg";
-+
-+	for (i = 3; i < argc; i += 3) {
-+		if (strcmp(argv[i], "count") == 0) {
-+			count = 1 + atoi(argv[i + 1]);
-+			break;
-+		}
-+
-+		if (strcmp(argv[i], "frame") != 0) {
-+			err = 1;
-+			goto out;
-+		}
-+
-+		mgmt_argv[3] = argv[i + 1];
-+		mgmt_argv[4] = argv[i + 2];
-+
-+		err = handle_cmd(state, II_NETDEV, mgmt_argc, mgmt_argv);
-+		if (err)
-+			goto out;
-+	}
-+
-+	mgmt_cb = nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_DEFAULT);
-+	if (!mgmt_cb) {
-+		err = 1;
-+		goto out;
-+	}
-+
-+	/* need to turn off sequence number checking */
-+	nl_cb_set(mgmt_cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, seq_handler, NULL);
-+	nl_cb_set(mgmt_cb, NL_CB_VALID, NL_CB_CUSTOM, dump_mgmt_frame, NULL);
-+
-+	while (--count)
-+		nl_recvmsgs(state->nl_sock, mgmt_cb);
-+
-+	nl_cb_put(mgmt_cb);
-+out:
-+	free(mgmt_argv);
-+	return err;
-+}
-+
-+COMMAND(mgmt, capture, "frame <type as hex ab> <pattern as hex ab:cd:..> [frame <type> <pattern>]* [count <frames>]",
-+	0, 0, CIB_NETDEV, handle_mgmt_capture,
-+	"Register for receiving certain mgmt frames, capture and print them.\n"
-+	"Frames are selected by their type and pattern containing\n"
-+	"the first several bytes of the frame that should match.\n\n"
-+	"Example: iw dev wlan0 mgmt capture frame 40 00 frame 40 01:02 count 10\n");
+>> The CSI data is one part, but tx-beamforming is another area of interest.
+>>
+>> If I get a chance, I'll try to add a way to pass some of this opaque
+>> info up through netlink events.  I'm thinking something like:
+>>
+>> mac80211_nl_send_opaque_event(mac80211-handle, int data-type, u8* data, int data_len);
+>
+> I will not accept this upstream.
+
+Thanks for letting me know up front, at least.
+
+Anyone know if there is a useful way to stream events from debugfs and/or sysfs w/out having to busy-poll
+on it?
+
+Thanks,
+Ben
+
 -- 
-2.11.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
