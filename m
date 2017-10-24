@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48846 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752417AbdJKTwk (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:59415 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751821AbdJXItF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 15:52:40 -0400
-Subject: Re: [PATCH] [net-next]NFC: Convert timers to use timer_setup()
-To: davem@davemloft.net
-References: <1507718024-2134-1-git-send-email-allen.pais@oracle.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        keescook@chromium.org
-From: Allen <allen.pais@oracle.com>
-Message-ID: <59DE767F.2020304@oracle.com> (sfid-20171011_215309_030695_231CA20F)
-Date: Thu, 12 Oct 2017 01:22:31 +0530
+        Tue, 24 Oct 2017 04:49:05 -0400
+From: <yintang@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v7 0/5] Add TDLS feature for ath10k
+Date: Tue, 24 Oct 2017 16:51:09 +0800
+Message-ID: <1508835074-3384-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20171024_104957_271890_745E86E2)
+In-Reply-To: <TDLS for ath10k patch v7>
+References: <TDLS for ath10k patch v7>
 MIME-Version: 1.0
-In-Reply-To: <1507718024-2134-1-git-send-email-allen.pais@oracle.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Switch to using the new timer_setup() and from_timer()
-> for net/nfc/*
->
-> Signed-off-by: Allen Pais <allen.pais@oracle.com>
-> ---
-> ---
->   net/nfc/core.c          |  8 +++-----
->   net/nfc/hci/core.c      |  7 +++----
->   net/nfc/hci/llc_shdlc.c | 23 +++++++++--------------
->   net/nfc/llcp_core.c     | 14 ++++++--------
->   4 files changed, 21 insertions(+), 31 deletions(-)
->
+From: Yingying Tang <yintang@qti.qualcomm.com>
 
-  My bad, I missed the Reviewed-by.
+This patchset is for Rome PCIE chip, it will not affect other hardware
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+Yingying Tang (5):
+  mac80211: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer buffer STA feature
+  ath10k: Enable TDLS peer inactivity detection
+  ath10k: Avoid to set WEP key for TDLS peer
+  ath10k: Fix TDLS peer TX data failure issue on encryped AP
 
-- Allen
+ drivers/net/wireless/ath/ath10k/mac.c     |    9 ++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |   55 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |    9 +++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
+ include/net/mac80211.h                    |    4 +++
+ net/mac80211/debugfs.c                    |    1 +
+ net/mac80211/tdls.c                       |    5 ++-
+ 7 files changed, 82 insertions(+), 2 deletions(-)
+
+-- 
+1.7.9.5
