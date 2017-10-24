@@ -1,100 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wp227.webpack.hosteurope.de ([80.237.132.234]:41556 "EHLO
-        wp227.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751295AbdJaPrW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Oct 2017 11:47:22 -0400
-Subject: Re: ath10k: Wifi slow on the XPS13 (9360) (QCA6174)
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
- <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
- <74a979dc-f06d-be9d-7c3f-359cd481d16c@leemhuis.info>
- <87tvyi4dnv.fsf_-_@kamboji.qca.qualcomm.com>
-From: Thorsten Leemhuis <linux@leemhuis.info>
-Message-ID: <94b4b903-afeb-439b-2b96-81835ab6ebef@leemhuis.info> (sfid-20171031_164821_005394_404D3E32)
-Date: Tue, 31 Oct 2017 16:47:18 +0100
+Received: from mail-eopbgr30086.outbound.protection.outlook.com ([40.107.3.86]:45024
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751566AbdJXJDL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Oct 2017 05:03:11 -0400
+To: <wireless-regdb@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>
+From: Per Mejdal Rasmussen <pmr@its.aau.dk>
+Subject: Update regulatory rules for Denmark (DK) on 2.4 and 5GHz
+Message-ID: <25548470-bf47-3827-6aa3-de4684d66f12@its.aau.dk> (sfid-20171024_110316_376981_59A63CD4)
+Date: Tue, 24 Oct 2017 11:03:06 +0200
 MIME-Version: 1.0
-In-Reply-To: <87tvyi4dnv.fsf_-_@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lo! On 29.10.2017 08:27, Kalle Valo wrote:
-> [..]
-> sorry for the late reply, I'm having problems keeping up with all the
-> email. 
+Hi
 
-No worries, this problem is nothing new, I just thought it might be good
-to finally bring this to ath10k, as I got the impressions it had not
-gotten proper attention there yet.
+The content of db.txt for Denmark (DK) is wrong. The 5GHz is from some 
+where between 2002-2006, and the 2.4GHz has never been correct.
 
-> Thorsten Leemhuis <linux@leemhuis.info> writes:
->> On 03.10.2017 01:40, Ryan Hsu wrote:
->>> On 10/01/2017 01:59 AM, Thorsten Leemhuis wrote:
->>>>> ath10k_pci 0000:3a:00.0: Direct firmware load for
->>>>> ath10k/pre-cal-pci-0000:3a:00.0.bin failed with error -2
->>>>> ath10k_pci 0000:3a:00.0: Direct firmware load for
->>>>> ath10k/cal-pci-0000:3a:00.0.bin failed with error -2
->>>> Do they have anything to do with this? Hardware is
->>> This error message is confusing since QCA6174 is not supporting
->>> pre-calibration feature, this reminds me that we need to clean this up.
->> I guess that would be good to avoid confusion. But while at it: If you
->> have a minute, could you please explain to me how to properly set up the
->> wifi firmware files for my Dell XPS13 (9360)? The reasons why I'm
->> asking: Sending data via wifi is really slow on my laptop (scp copies
->> only get 2 to 5 MByte/s on networks that are known to be a lot faster).
->> I wonder if the firmware files or the calibration data is part of the
->> reason wifi Tx is slow. The machine is normally shipped with a slightly
->> enhanced Ubuntu 16.04. That among others contains a package with the
->> machine specific files board.bin and board-2.bin that replace the files
->> normally installed in /lib/firmware/ath10k/QCA6174/hw3.0/ Are those
->> machine specific files crucial to have or are the one from the
->> linux-firmware repo good enoguh? I'm using Fedora and could copy the
->> ones from Ubuntu over, but obviously they will get overwritten every
->> time Fedora ships a new linux-firmware package – IOW: every few weeks :-/
-> Yes, the board file can affect throughtput, _both_ TCP and UDP. I don't
-> know what board files Ubuntu is shipping but we should try to get those
-> into upstream.
+Current content of db.txt:
+--------------------------
+country DK: DFS-ETSI
+	(2402 - 2482 @ 40), (20)
+	(5170 - 5250 @ 80), (20), AUTO-BW
+	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+	(5490 - 5710 @ 160), (27), DFS
+	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+	(57000 - 66000 @ 2160), (40)
 
-Out of curiosity (don't spend time answering this is you are busy): Is
-there even a mechanism for this? Kind of "take
-firmwaredir/board-Dell_Inc.-XPS_13_9360.bin if it exists and
-firmwaredir/board.bin otherwise? Or can one file serve all machines?
 
->> Side note: You find a lot of reports about slow wifi is you search the
->> net with terms like "9360 wifi slow linux". Ubuntu fixed that a few
->> months ago with this patch:
->> http://kernel.ubuntu.com/git/ubuntu/ubuntu-xenial.git/commit/?id=9690f19f07fee2acb2b04ea5eaa5db184ee175d5
->> Some bugs about this:
->> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1692836
->> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1670041
-> But this again about interraction between ath10k and TCP stack. And it
-> _only_ affects TCP, UDP should be unaffected.
+Current free channels Denmark:
+------------------------------
+2400,0-2483,5 MHz
+5150,0-5350,0 MHz
+5470,0-5725,0 MHz
+5725,0-5875,0 MHz
+57-66 GHz
 
-Ahh, sorry, missed that. Seems I didn't properly read the second
-launchpad link above. Sorry.
 
-> So whenever testing
-> throughput please always measure both TCP and UDP because then it's
-> easier to pinpoint the reason.
+I suggest to copy the rules for Germany (DE) to Denmark (DK):
+-------------------------------------------------------------
+country DK: DFS-ETSI
+	(2400 - 2483.5 @ 40), (100 mW)
+	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW
+	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
+	(5470 - 5725 @ 160), (500 mW), DFS
+	# short range devices (ETSI EN 300 440-1)
+	(5725 - 5875 @ 80), (25 mW)
+	# 60 GHz band channels 1-4 (ETSI EN 302 567)
+	(57000 - 66000 @ 2160), (40)
 
-Is there any data I could provide that might help getting this soled
-once and for all?
 
->> But from what I gathered by searching the net and asking on #ath10k I
->> got the impression that patch is a massive ugly hack and no way
->> acceptable upstream.  Is that correct?
-> Yes, it's a horrible hack and I cannot apply that. And like you said
-> #1692836, also Eric Dumazet (one of TCP maintainers) agrees with that
-Ahh, had missed that, sorry.
+History of free channels Denmark:
+---------------------------------
 
->> If yes: is there maybe a proper fix out there somewhere?
-> Unfortunately there still is no good solution. In a week there's Netdev
-> 2.2 and we have Linux Wireless summit there. We should bring up this
-> topic there.
+ From 1999-09-07:
+2400,0-2483,5 MHz
+5150,0-5250,0 MHz
 
-Thx for picking this up, much appreciated! Ciao, Thorsten
+ From 2000-03-30
+2400,0-2483,5 MHz
+5150,0-5350,0 MHz
+
+ From 2002-12-10
+2400,0-2483,5 MHz
+5150,0-5350,0 MHz
+5470,0-5725,0 MHz
+17,1-17,3 GHz
+
+ From 2006-11-07
+2400,0-2483,5 MHz
+5150,0-5350,0 MHz
+5470,0-5725,0 MHz
+5725,0-5925,0 MHz
+17,1-17,3 GHz
+
+ From 2007-09-20
+2400,0-2483,5 MHz
+5150,0-5350,0 MHz
+5470,0-5725,0 MHz
+5725,0-5875,0 MHz
+17,1-17,3 GHz
+
+ From 2008-06-11
+2400,0-2483,5 MHz
+5150,0-5350,0 MHz
+5470,0-5725,0 MHz
+5725,0-5875,0 MHz
+
+ From 2009-11-27 (current)
+2400,0-2483,5 MHz
+5150,0-5350,0 MHz
+5470,0-5725,0 MHz
+5725,0-5875,0 MHz
+57-66 GHz
+
+Source (search for "RLAN"):
+https://www.retsinformation.dk/Forms/R0710.aspx?id=189932
+
+
+
+-- 
+Per Mejdal Rasmussen
+http://personprofil.aau.dk/109070
