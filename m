@@ -1,301 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751712AbdJYNOQ (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:43531 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751897AbdJXRy0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 09:14:16 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 02/12] wil6210: print human readable names of WMI commands and events
-Date: Wed, 25 Oct 2017 16:13:57 +0300
-Message-Id: <1508937247-11890-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151420_660844_792E3ADC)
-In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Tue, 24 Oct 2017 13:54:26 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH v2] ath10k: rebuild crypto header in Rx data frames
+Date: Tue, 24 Oct 2017 20:54:12 +0300
+Message-ID: <1508867652-16199-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20171024_195652_895140_779D21B1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 
-Upon sending/receiving WMI commands/events, print human readable
-names in addition to id for easier debugging.
+Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
+HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
+on host (mac80211) rather than firmware. Rebuild cipher header
+in every received data frames (that are notified through those
+HTT interfaces) from the rx_hdr_status tlv available in the
+rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
+flag for the packets which requires mac80211 PN/TSC check support
+and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
+QCA9887, QCA99X0, QCA9984, QCA9888 and QCA4019 currently need the
+rebuilding of cipher header to perform PN/TSC check for replay
+attack.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Tested-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 237 ++++++++++++++++++++++++++++++++-
- 1 file changed, 232 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index ffdd2fa..8a780f2 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -198,6 +198,232 @@ int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
- 	return 0;
+v2:
+
+* Construct cipher header from rx_hdr_status tlv rather than from
+  the msdu_start and mpdu_start tlvs. This fixes connection
+  issues, also reduces the amount of code change.
+
+* Make sure the frame is qos data before clearing AMSDU_PRESENT
+  bit of qos control field.
+
+* Fix traffic issue with QCA988X and QCA9887 hw by taking care of
+  padding bytes added for 4-byte alignment before the cipher
+  header.
+
+TODO:
+
+* CCMP-256 and GCMP/GCMP-256 are not yet supported 
+
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 91 ++++++++++++++++++++++++++------
+ 1 file changed, 74 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index a3f5dc78353f..aae4f0ea9360 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1050,8 +1050,14 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
+ 
+ 	hdr = (void *)msdu->data;
+ 
+-	/* Tail */
+-	if (status->flag & RX_FLAG_IV_STRIPPED)
++	/* MIC */
++	if ((status->flag & RX_FLAG_MIC_STRIPPED) &&
++	    enctype == HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
++		skb_trim(msdu, msdu->len - 8);
++
++	/* ICV */
++	if (status->flag & RX_FLAG_ICV_STRIPPED &&
++	    enctype != HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
+ 		skb_trim(msdu, msdu->len -
+ 			 ath10k_htt_rx_crypto_tail_len(ar, enctype));
+ 
+@@ -1075,7 +1081,8 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
+ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
+ 					  struct sk_buff *msdu,
+ 					  struct ieee80211_rx_status *status,
+-					  const u8 first_hdr[64])
++					  const u8 first_hdr[64],
++					  enum htt_rx_mpdu_encrypt_type enctype)
+ {
+ 	struct ieee80211_hdr *hdr;
+ 	struct htt_rx_desc *rxd;
+@@ -1083,6 +1090,7 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
+ 	u8 da[ETH_ALEN];
+ 	u8 sa[ETH_ALEN];
+ 	int l3_pad_bytes;
++	int bytes_aligned = ar->hw_params.decap_align_bytes;
+ 
+ 	/* Delivered decapped frame:
+ 	 * [nwifi 802.11 header] <-- replaced with 802.11 hdr
+@@ -1111,6 +1119,14 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
+ 	/* push original 802.11 header */
+ 	hdr = (struct ieee80211_hdr *)first_hdr;
+ 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
++
++	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
++		memcpy(skb_push(msdu,
++				ath10k_htt_rx_crypto_param_len(ar, enctype)),
++		       (void *)hdr + round_up(hdr_len, bytes_aligned),
++			ath10k_htt_rx_crypto_param_len(ar, enctype));
++	}
++
+ 	memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
+ 
+ 	/* original 802.11 header has a different DA and in
+@@ -1171,6 +1187,7 @@ static void ath10k_htt_rx_h_undecap_eth(struct ath10k *ar,
+ 	u8 sa[ETH_ALEN];
+ 	int l3_pad_bytes;
+ 	struct htt_rx_desc *rxd;
++	int bytes_aligned = ar->hw_params.decap_align_bytes;
+ 
+ 	/* Delivered decapped frame:
+ 	 * [eth header] <-- replaced with 802.11 hdr & rfc1042/llc
+@@ -1199,6 +1216,14 @@ static void ath10k_htt_rx_h_undecap_eth(struct ath10k *ar,
+ 	/* push original 802.11 header */
+ 	hdr = (struct ieee80211_hdr *)first_hdr;
+ 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
++
++	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
++		memcpy(skb_push(msdu,
++				ath10k_htt_rx_crypto_param_len(ar, enctype)),
++		       (void *)hdr + round_up(hdr_len, bytes_aligned),
++			ath10k_htt_rx_crypto_param_len(ar, enctype));
++	}
++
+ 	memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
+ 
+ 	/* original 802.11 header has a different DA and in
+@@ -1212,12 +1237,14 @@ static void ath10k_htt_rx_h_undecap_eth(struct ath10k *ar,
+ static void ath10k_htt_rx_h_undecap_snap(struct ath10k *ar,
+ 					 struct sk_buff *msdu,
+ 					 struct ieee80211_rx_status *status,
+-					 const u8 first_hdr[64])
++					 const u8 first_hdr[64],
++					 enum htt_rx_mpdu_encrypt_type enctype)
+ {
+ 	struct ieee80211_hdr *hdr;
+ 	size_t hdr_len;
+ 	int l3_pad_bytes;
+ 	struct htt_rx_desc *rxd;
++	int bytes_aligned = ar->hw_params.decap_align_bytes;
+ 
+ 	/* Delivered decapped frame:
+ 	 * [amsdu header] <-- replaced with 802.11 hdr
+@@ -1233,6 +1260,14 @@ static void ath10k_htt_rx_h_undecap_snap(struct ath10k *ar,
+ 
+ 	hdr = (struct ieee80211_hdr *)first_hdr;
+ 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
++
++	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
++		memcpy(skb_push(msdu,
++				ath10k_htt_rx_crypto_param_len(ar, enctype)),
++		       (void *)hdr + round_up(hdr_len, bytes_aligned),
++			ath10k_htt_rx_crypto_param_len(ar, enctype));
++	}
++
+ 	memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
  }
  
-+static const char *cmdid2name(u16 cmdid)
-+{
-+	switch (cmdid) {
-+	case WMI_NOTIFY_REQ_CMDID:
-+		return "WMI_NOTIFY_REQ_CMD";
-+	case WMI_START_SCAN_CMDID:
-+		return "WMI_START_SCAN_CMD";
-+	case WMI_CONNECT_CMDID:
-+		return "WMI_CONNECT_CMD";
-+	case WMI_DISCONNECT_CMDID:
-+		return "WMI_DISCONNECT_CMD";
-+	case WMI_SW_TX_REQ_CMDID:
-+		return "WMI_SW_TX_REQ_CMD";
-+	case WMI_GET_RF_SECTOR_PARAMS_CMDID:
-+		return "WMI_GET_RF_SECTOR_PARAMS_CMD";
-+	case WMI_SET_RF_SECTOR_PARAMS_CMDID:
-+		return "WMI_SET_RF_SECTOR_PARAMS_CMD";
-+	case WMI_GET_SELECTED_RF_SECTOR_INDEX_CMDID:
-+		return "WMI_GET_SELECTED_RF_SECTOR_INDEX_CMD";
-+	case WMI_SET_SELECTED_RF_SECTOR_INDEX_CMDID:
-+		return "WMI_SET_SELECTED_RF_SECTOR_INDEX_CMD";
-+	case WMI_BRP_SET_ANT_LIMIT_CMDID:
-+		return "WMI_BRP_SET_ANT_LIMIT_CMD";
-+	case WMI_TOF_SESSION_START_CMDID:
-+		return "WMI_TOF_SESSION_START_CMD";
-+	case WMI_AOA_MEAS_CMDID:
-+		return "WMI_AOA_MEAS_CMD";
-+	case WMI_PMC_CMDID:
-+		return "WMI_PMC_CMD";
-+	case WMI_TOF_GET_TX_RX_OFFSET_CMDID:
-+		return "WMI_TOF_GET_TX_RX_OFFSET_CMD";
-+	case WMI_TOF_SET_TX_RX_OFFSET_CMDID:
-+		return "WMI_TOF_SET_TX_RX_OFFSET_CMD";
-+	case WMI_VRING_CFG_CMDID:
-+		return "WMI_VRING_CFG_CMD";
-+	case WMI_BCAST_VRING_CFG_CMDID:
-+		return "WMI_BCAST_VRING_CFG_CMD";
-+	case WMI_TRAFFIC_SUSPEND_CMDID:
-+		return "WMI_TRAFFIC_SUSPEND_CMD";
-+	case WMI_TRAFFIC_RESUME_CMDID:
-+		return "WMI_TRAFFIC_RESUME_CMD";
-+	case WMI_ECHO_CMDID:
-+		return "WMI_ECHO_CMD";
-+	case WMI_SET_MAC_ADDRESS_CMDID:
-+		return "WMI_SET_MAC_ADDRESS_CMD";
-+	case WMI_LED_CFG_CMDID:
-+		return "WMI_LED_CFG_CMD";
-+	case WMI_PCP_START_CMDID:
-+		return "WMI_PCP_START_CMD";
-+	case WMI_PCP_STOP_CMDID:
-+		return "WMI_PCP_STOP_CMD";
-+	case WMI_SET_SSID_CMDID:
-+		return "WMI_SET_SSID_CMD";
-+	case WMI_GET_SSID_CMDID:
-+		return "WMI_GET_SSID_CMD";
-+	case WMI_SET_PCP_CHANNEL_CMDID:
-+		return "WMI_SET_PCP_CHANNEL_CMD";
-+	case WMI_GET_PCP_CHANNEL_CMDID:
-+		return "WMI_GET_PCP_CHANNEL_CMD";
-+	case WMI_P2P_CFG_CMDID:
-+		return "WMI_P2P_CFG_CMD";
-+	case WMI_START_LISTEN_CMDID:
-+		return "WMI_START_LISTEN_CMD";
-+	case WMI_START_SEARCH_CMDID:
-+		return "WMI_START_SEARCH_CMD";
-+	case WMI_DISCOVERY_STOP_CMDID:
-+		return "WMI_DISCOVERY_STOP_CMD";
-+	case WMI_DELETE_CIPHER_KEY_CMDID:
-+		return "WMI_DELETE_CIPHER_KEY_CMD";
-+	case WMI_ADD_CIPHER_KEY_CMDID:
-+		return "WMI_ADD_CIPHER_KEY_CMD";
-+	case WMI_SET_APPIE_CMDID:
-+		return "WMI_SET_APPIE_CMD";
-+	case WMI_CFG_RX_CHAIN_CMDID:
-+		return "WMI_CFG_RX_CHAIN_CMD";
-+	case WMI_TEMP_SENSE_CMDID:
-+		return "WMI_TEMP_SENSE_CMD";
-+	case WMI_DEL_STA_CMDID:
-+		return "WMI_DEL_STA_CMD";
-+	case WMI_DISCONNECT_STA_CMDID:
-+		return "WMI_DISCONNECT_STA_CMD";
-+	case WMI_VRING_BA_EN_CMDID:
-+		return "WMI_VRING_BA_EN_CMD";
-+	case WMI_VRING_BA_DIS_CMDID:
-+		return "WMI_VRING_BA_DIS_CMD";
-+	case WMI_RCP_DELBA_CMDID:
-+		return "WMI_RCP_DELBA_CMD";
-+	case WMI_RCP_ADDBA_RESP_CMDID:
-+		return "WMI_RCP_ADDBA_RESP_CMD";
-+	case WMI_PS_DEV_PROFILE_CFG_CMDID:
-+		return "WMI_PS_DEV_PROFILE_CFG_CMD";
-+	case WMI_SET_MGMT_RETRY_LIMIT_CMDID:
-+		return "WMI_SET_MGMT_RETRY_LIMIT_CMD";
-+	case WMI_GET_MGMT_RETRY_LIMIT_CMDID:
-+		return "WMI_GET_MGMT_RETRY_LIMIT_CMD";
-+	case WMI_ABORT_SCAN_CMDID:
-+		return "WMI_ABORT_SCAN_CMD";
-+	case WMI_NEW_STA_CMDID:
-+		return "WMI_NEW_STA_CMD";
-+	case WMI_SET_THERMAL_THROTTLING_CFG_CMDID:
-+		return "WMI_SET_THERMAL_THROTTLING_CFG_CMD";
-+	case WMI_GET_THERMAL_THROTTLING_CFG_CMDID:
-+		return "WMI_GET_THERMAL_THROTTLING_CFG_CMD";
-+	case WMI_LINK_MAINTAIN_CFG_WRITE_CMDID:
-+		return "WMI_LINK_MAINTAIN_CFG_WRITE_CMD";
-+	case WMI_LO_POWER_CALIB_FROM_OTP_CMDID:
-+		return "WMI_LO_POWER_CALIB_FROM_OTP_CMD";
-+	default:
-+		return "Untracked CMD";
-+	}
-+}
-+
-+static const char *eventid2name(u16 eventid)
-+{
-+	switch (eventid) {
-+	case WMI_NOTIFY_REQ_DONE_EVENTID:
-+		return "WMI_NOTIFY_REQ_DONE_EVENT";
-+	case WMI_DISCONNECT_EVENTID:
-+		return "WMI_DISCONNECT_EVENT";
-+	case WMI_SW_TX_COMPLETE_EVENTID:
-+		return "WMI_SW_TX_COMPLETE_EVENT";
-+	case WMI_GET_RF_SECTOR_PARAMS_DONE_EVENTID:
-+		return "WMI_GET_RF_SECTOR_PARAMS_DONE_EVENT";
-+	case WMI_SET_RF_SECTOR_PARAMS_DONE_EVENTID:
-+		return "WMI_SET_RF_SECTOR_PARAMS_DONE_EVENT";
-+	case WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID:
-+		return "WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT";
-+	case WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID:
-+		return "WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT";
-+	case WMI_BRP_SET_ANT_LIMIT_EVENTID:
-+		return "WMI_BRP_SET_ANT_LIMIT_EVENT";
-+	case WMI_FW_READY_EVENTID:
-+		return "WMI_FW_READY_EVENT";
-+	case WMI_TRAFFIC_RESUME_EVENTID:
-+		return "WMI_TRAFFIC_RESUME_EVENT";
-+	case WMI_TOF_GET_TX_RX_OFFSET_EVENTID:
-+		return "WMI_TOF_GET_TX_RX_OFFSET_EVENT";
-+	case WMI_TOF_SET_TX_RX_OFFSET_EVENTID:
-+		return "WMI_TOF_SET_TX_RX_OFFSET_EVENT";
-+	case WMI_VRING_CFG_DONE_EVENTID:
-+		return "WMI_VRING_CFG_DONE_EVENT";
-+	case WMI_READY_EVENTID:
-+		return "WMI_READY_EVENT";
-+	case WMI_RX_MGMT_PACKET_EVENTID:
-+		return "WMI_RX_MGMT_PACKET_EVENT";
-+	case WMI_TX_MGMT_PACKET_EVENTID:
-+		return "WMI_TX_MGMT_PACKET_EVENT";
-+	case WMI_SCAN_COMPLETE_EVENTID:
-+		return "WMI_SCAN_COMPLETE_EVENT";
-+	case WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID:
-+		return "WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENT";
-+	case WMI_CONNECT_EVENTID:
-+		return "WMI_CONNECT_EVENT";
-+	case WMI_EAPOL_RX_EVENTID:
-+		return "WMI_EAPOL_RX_EVENT";
-+	case WMI_BA_STATUS_EVENTID:
-+		return "WMI_BA_STATUS_EVENT";
-+	case WMI_RCP_ADDBA_REQ_EVENTID:
-+		return "WMI_RCP_ADDBA_REQ_EVENT";
-+	case WMI_DELBA_EVENTID:
-+		return "WMI_DELBA_EVENT";
-+	case WMI_VRING_EN_EVENTID:
-+		return "WMI_VRING_EN_EVENT";
-+	case WMI_DATA_PORT_OPEN_EVENTID:
-+		return "WMI_DATA_PORT_OPEN_EVENT";
-+	case WMI_AOA_MEAS_EVENTID:
-+		return "WMI_AOA_MEAS_EVENT";
-+	case WMI_TOF_SESSION_END_EVENTID:
-+		return "WMI_TOF_SESSION_END_EVENT";
-+	case WMI_TOF_GET_CAPABILITIES_EVENTID:
-+		return "WMI_TOF_GET_CAPABILITIES_EVENT";
-+	case WMI_TOF_SET_LCR_EVENTID:
-+		return "WMI_TOF_SET_LCR_EVENT";
-+	case WMI_TOF_SET_LCI_EVENTID:
-+		return "WMI_TOF_SET_LCI_EVENT";
-+	case WMI_TOF_FTM_PER_DEST_RES_EVENTID:
-+		return "WMI_TOF_FTM_PER_DEST_RES_EVENT";
-+	case WMI_TOF_CHANNEL_INFO_EVENTID:
-+		return "WMI_TOF_CHANNEL_INFO_EVENT";
-+	case WMI_TRAFFIC_SUSPEND_EVENTID:
-+		return "WMI_TRAFFIC_SUSPEND_EVENT";
-+	case WMI_ECHO_RSP_EVENTID:
-+		return "WMI_ECHO_RSP_EVENT";
-+	case WMI_LED_CFG_DONE_EVENTID:
-+		return "WMI_LED_CFG_DONE_EVENT";
-+	case WMI_PCP_STARTED_EVENTID:
-+		return "WMI_PCP_STARTED_EVENT";
-+	case WMI_PCP_STOPPED_EVENTID:
-+		return "WMI_PCP_STOPPED_EVENT";
-+	case WMI_GET_SSID_EVENTID:
-+		return "WMI_GET_SSID_EVENT";
-+	case WMI_GET_PCP_CHANNEL_EVENTID:
-+		return "WMI_GET_PCP_CHANNEL_EVENT";
-+	case WMI_P2P_CFG_DONE_EVENTID:
-+		return "WMI_P2P_CFG_DONE_EVENT";
-+	case WMI_LISTEN_STARTED_EVENTID:
-+		return "WMI_LISTEN_STARTED_EVENT";
-+	case WMI_SEARCH_STARTED_EVENTID:
-+		return "WMI_SEARCH_STARTED_EVENT";
-+	case WMI_DISCOVERY_STOPPED_EVENTID:
-+		return "WMI_DISCOVERY_STOPPED_EVENT";
-+	case WMI_CFG_RX_CHAIN_DONE_EVENTID:
-+		return "WMI_CFG_RX_CHAIN_DONE_EVENT";
-+	case WMI_TEMP_SENSE_DONE_EVENTID:
-+		return "WMI_TEMP_SENSE_DONE_EVENT";
-+	case WMI_RCP_ADDBA_RESP_SENT_EVENTID:
-+		return "WMI_RCP_ADDBA_RESP_SENT_EVENT";
-+	case WMI_PS_DEV_PROFILE_CFG_EVENTID:
-+		return "WMI_PS_DEV_PROFILE_CFG_EVENT";
-+	case WMI_SET_MGMT_RETRY_LIMIT_EVENTID:
-+		return "WMI_SET_MGMT_RETRY_LIMIT_EVENT";
-+	case WMI_GET_MGMT_RETRY_LIMIT_EVENTID:
-+		return "WMI_GET_MGMT_RETRY_LIMIT_EVENT";
-+	case WMI_SET_THERMAL_THROTTLING_CFG_EVENTID:
-+		return "WMI_SET_THERMAL_THROTTLING_CFG_EVENT";
-+	case WMI_GET_THERMAL_THROTTLING_CFG_EVENTID:
-+		return "WMI_GET_THERMAL_THROTTLING_CFG_EVENT";
-+	case WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENTID:
-+		return "WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENT";
-+	case WMI_LO_POWER_CALIB_FROM_OTP_EVENTID:
-+		return "WMI_LO_POWER_CALIB_FROM_OTP_EVENT";
-+	default:
-+		return "Untracked EVENT";
-+	}
-+}
-+
- static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
- {
- 	struct {
-@@ -294,7 +520,8 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+@@ -1267,13 +1302,15 @@ static void ath10k_htt_rx_h_undecap(struct ath10k *ar,
+ 					    is_decrypted);
+ 		break;
+ 	case RX_MSDU_DECAP_NATIVE_WIFI:
+-		ath10k_htt_rx_h_undecap_nwifi(ar, msdu, status, first_hdr);
++		ath10k_htt_rx_h_undecap_nwifi(ar, msdu, status, first_hdr,
++					      enctype);
+ 		break;
+ 	case RX_MSDU_DECAP_ETHERNET2_DIX:
+ 		ath10k_htt_rx_h_undecap_eth(ar, msdu, status, first_hdr, enctype);
+ 		break;
+ 	case RX_MSDU_DECAP_8023_SNAP_LLC:
+-		ath10k_htt_rx_h_undecap_snap(ar, msdu, status, first_hdr);
++		ath10k_htt_rx_h_undecap_snap(ar, msdu, status, first_hdr,
++					     enctype);
+ 		break;
  	}
- 	cmd.hdr.seq = cpu_to_le16(++wil->wmi_seq);
- 	/* set command */
--	wil_dbg_wmi(wil, "WMI command 0x%04x [%d]\n", cmdid, len);
-+	wil_dbg_wmi(wil, "sending %s (0x%04x) [%d]\n",
-+		    cmdid2name(cmdid), cmdid, len);
- 	wil_hex_dump_wmi("Cmd ", DUMP_PREFIX_OFFSET, 16, 1, &cmd,
- 			 sizeof(cmd), true);
- 	wil_hex_dump_wmi("cmd ", DUMP_PREFIX_OFFSET, 16, 1, buf,
-@@ -963,8 +1190,8 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
- 			}
- 			spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
+ }
+@@ -1316,7 +1353,8 @@ static void ath10k_htt_rx_h_csum_offload(struct sk_buff *msdu)
  
--			wil_dbg_wmi(wil, "WMI event 0x%04x MID %d @%d msec\n",
--				    id, wmi->mid, tstamp);
-+			wil_dbg_wmi(wil, "recv %s (0x%04x) MID %d @%d msec\n",
-+				    eventid2name(id), id, wmi->mid, tstamp);
- 			trace_wil6210_wmi_event(wmi, &wmi[1],
- 						len - sizeof(*wmi));
- 		}
-@@ -1906,8 +2133,8 @@ static void wmi_event_handle(struct wil6210_priv *wil,
- 		void *evt_data = (void *)(&wmi[1]);
- 		u16 id = le16_to_cpu(wmi->command_id);
+ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 				 struct sk_buff_head *amsdu,
+-				 struct ieee80211_rx_status *status)
++				 struct ieee80211_rx_status *status,
++				 bool fill_crypt_header)
+ {
+ 	struct sk_buff *first;
+ 	struct sk_buff *last;
+@@ -1326,7 +1364,6 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 	enum htt_rx_mpdu_encrypt_type enctype;
+ 	u8 first_hdr[64];
+ 	u8 *qos;
+-	size_t hdr_len;
+ 	bool has_fcs_err;
+ 	bool has_crypto_err;
+ 	bool has_tkip_err;
+@@ -1351,15 +1388,17 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 	 * decapped header. It'll be used for undecapping of each MSDU.
+ 	 */
+ 	hdr = (void *)rxd->rx_hdr_status;
+-	hdr_len = ieee80211_hdrlen(hdr->frame_control);
+-	memcpy(first_hdr, hdr, hdr_len);
++	memcpy(first_hdr, hdr, RX_HTT_HDR_STATUS_LEN);
  
--		wil_dbg_wmi(wil, "Handle WMI 0x%04x (reply_id 0x%04x)\n",
--			    id, wil->reply_id);
-+		wil_dbg_wmi(wil, "Handle %s (0x%04x) (reply_id 0x%04x)\n",
-+			    eventid2name(id), id, wil->reply_id);
- 		/* check if someone waits for this event */
- 		if (wil->reply_id && wil->reply_id == id) {
- 			WARN_ON(wil->reply_buf);
+ 	/* Each A-MSDU subframe will use the original header as the base and be
+ 	 * reported as a separate MSDU so strip the A-MSDU bit from QoS Ctl.
+ 	 */
+ 	hdr = (void *)first_hdr;
+-	qos = ieee80211_get_qos_ctl(hdr);
+-	qos[0] &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
++		qos = ieee80211_get_qos_ctl(hdr);
++		qos[0] &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++	}
+ 
+ 	/* Some attention flags are valid only in the last MSDU. */
+ 	last = skb_peek_tail(amsdu);
+@@ -1406,9 +1445,14 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 		status->flag |= RX_FLAG_DECRYPTED;
+ 
+ 		if (likely(!is_mgmt))
+-			status->flag |= RX_FLAG_IV_STRIPPED |
+-					RX_FLAG_MMIC_STRIPPED;
+-}
++			status->flag |= RX_FLAG_MMIC_STRIPPED;
++
++		if (fill_crypt_header)
++			status->flag |= RX_FLAG_MIC_STRIPPED |
++					RX_FLAG_ICV_STRIPPED;
++		else
++			status->flag |= RX_FLAG_IV_STRIPPED;
++	}
+ 
+ 	skb_queue_walk(amsdu, msdu) {
+ 		ath10k_htt_rx_h_csum_offload(msdu);
+@@ -1424,6 +1468,9 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 		if (is_mgmt)
+ 			continue;
+ 
++		if (fill_crypt_header)
++			continue;
++
+ 		hdr = (void *)msdu->data;
+ 		hdr->frame_control &= ~__cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+ 	}
+@@ -1434,6 +1481,9 @@ static void ath10k_htt_rx_h_deliver(struct ath10k *ar,
+ 				    struct ieee80211_rx_status *status)
+ {
+ 	struct sk_buff *msdu;
++	struct sk_buff *first_subframe;
++
++	first_subframe = skb_peek(amsdu);
+ 
+ 	while ((msdu = __skb_dequeue(amsdu))) {
+ 		/* Setup per-MSDU flags */
+@@ -1442,6 +1492,13 @@ static void ath10k_htt_rx_h_deliver(struct ath10k *ar,
+ 		else
+ 			status->flag |= RX_FLAG_AMSDU_MORE;
+ 
++		if (msdu == first_subframe) {
++			first_subframe = NULL;
++			status->flag &= ~RX_FLAG_ALLOW_SAME_PN;
++		} else {
++			status->flag |= RX_FLAG_ALLOW_SAME_PN;
++		}
++
+ 		ath10k_process_rx(ar, status, msdu);
+ 	}
+ }
+@@ -1584,7 +1641,7 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
+ 		ath10k_htt_rx_h_unchain(ar, &amsdu);
+ 
+ 	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
+-	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
++	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status, true);
+ 	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
+ 
+ 	return num_msdus;
+@@ -1923,7 +1980,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb,
+ 			budget_left -= skb_queue_len(&amsdu);
+ 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
+ 			ath10k_htt_rx_h_filter(ar, &amsdu, status);
+-			ath10k_htt_rx_h_mpdu(ar, &amsdu, status);
++			ath10k_htt_rx_h_mpdu(ar, &amsdu, status, false);
+ 			ath10k_htt_rx_h_deliver(ar, &amsdu, status);
+ 			break;
+ 		case -EAGAIN:
 -- 
-1.9.1
+2.7.4
