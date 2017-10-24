@@ -1,59 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:47878 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751083AbdJEPJL (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:57146 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932362AbdJXJ3b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 11:09:11 -0400
-Received: by mail-pf0-f171.google.com with SMTP id u12so8074934pfl.4
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Oct 2017 08:09:11 -0700 (PDT)
-Date: Thu, 5 Oct 2017 08:09:02 -0700
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Colin King <colin.king@canonical.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "David S . Miller" <davem@davemloft.net>,
+        Tue, 24 Oct 2017 05:29:31 -0400
+Received: by mail-pg0-f65.google.com with SMTP id m18so14040623pgd.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Oct 2017 02:29:31 -0700 (PDT)
+Date: Tue, 24 Oct 2017 02:29:28 -0700
+From: Kees Cook <keescook@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Ingo Molnar <mingo@kernel.org>,
         Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: fdp: make struct nci_ops static
-Message-ID: <20171005080902.30b95db3@xeon-e3> (sfid-20171005_170931_290990_21CA89C3)
-In-Reply-To: <20171005094712.28627-1-colin.king@canonical.com>
-References: <20171005094712.28627-1-colin.king@canonical.com>
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers/wireless: marvell/libertas: Convert timers to use
+ timer_setup()
+Message-ID: <20171024092928.GA47234@beast> (sfid-20171024_113002_847706_A2970435)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu,  5 Oct 2017 10:47:12 +0100
-Colin King <colin.king@canonical.com> wrote:
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The structure nci_ops is local to the source and does not need to
-> be in global scope, so make it static.
-> 
-> Cleans up sparse warning:
-> symbol 'nci_ops' was not declared. Should it be static?
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/nfc/fdp/fdp.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
-> index ec50027b0d8b..d5784a47fc13 100644
-> --- a/drivers/nfc/fdp/fdp.c
-> +++ b/drivers/nfc/fdp/fdp.c
-> @@ -726,7 +726,7 @@ static struct nci_driver_ops fdp_prop_ops[] = {
->  	},
->  };
->  
-> -struct nci_ops nci_ops = {
-> +static struct nci_ops nci_ops = {
->  	.open = fdp_nci_open,
->  	.close = fdp_nci_close,
->  	.send = fdp_nci_send,
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/net/wireless/marvell/libertas/if_usb.c    |  6 +++---
+ drivers/net/wireless/marvell/libertas/main.c      | 21 +++++++++------------
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c |  6 +++---
+ drivers/net/wireless/marvell/libertas_tf/main.c   |  7 +++----
+ 4 files changed, 18 insertions(+), 22 deletions(-)
 
-Why not static const?
+diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
+index 16e54c757dd0..ffea610f67e2 100644
+--- a/drivers/net/wireless/marvell/libertas/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+@@ -161,9 +161,9 @@ static void if_usb_setup_firmware(struct lbs_private *priv)
+ 	}
+ }
+ 
+-static void if_usb_fw_timeo(unsigned long priv)
++static void if_usb_fw_timeo(struct timer_list *t)
+ {
+-	struct if_usb_card *cardp = (void *)priv;
++	struct if_usb_card *cardp = from_timer(cardp, t, fw_timeout);
+ 
+ 	if (cardp->fwdnldover) {
+ 		lbs_deb_usb("Download complete, no event. Assuming success\n");
+@@ -205,7 +205,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	if (!cardp)
+ 		goto error;
+ 
+-	setup_timer(&cardp->fw_timeout, if_usb_fw_timeo, (unsigned long)cardp);
++	timer_setup(&cardp->fw_timeout, if_usb_fw_timeo, 0);
+ 	init_waitqueue_head(&cardp->fw_wq);
+ 
+ 	cardp->udev = udev;
+diff --git a/drivers/net/wireless/marvell/libertas/main.c b/drivers/net/wireless/marvell/libertas/main.c
+index aefa88f4f29c..f22e1c220cba 100644
+--- a/drivers/net/wireless/marvell/libertas/main.c
++++ b/drivers/net/wireless/marvell/libertas/main.c
+@@ -722,9 +722,9 @@ EXPORT_SYMBOL_GPL(lbs_resume);
+  *
+  * @data: &struct lbs_private pointer
+  */
+-static void lbs_cmd_timeout_handler(unsigned long data)
++static void lbs_cmd_timeout_handler(struct timer_list *t)
+ {
+-	struct lbs_private *priv = (struct lbs_private *)data;
++	struct lbs_private *priv = from_timer(priv, t, command_timer);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+@@ -756,9 +756,9 @@ static void lbs_cmd_timeout_handler(unsigned long data)
+  *
+  * @data: &struct lbs_private pointer
+  */
+-static void lbs_tx_lockup_handler(unsigned long data)
++static void lbs_tx_lockup_handler(struct timer_list *t)
+ {
+-	struct lbs_private *priv = (struct lbs_private *)data;
++	struct lbs_private *priv = from_timer(priv, t, tx_lockup_timer);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+@@ -779,9 +779,9 @@ static void lbs_tx_lockup_handler(unsigned long data)
+  * @data:	&struct lbs_private pointer
+  * returns:	N/A
+  */
+-static void auto_deepsleep_timer_fn(unsigned long data)
++static void auto_deepsleep_timer_fn(struct timer_list *t)
+ {
+-	struct lbs_private *priv = (struct lbs_private *)data;
++	struct lbs_private *priv = from_timer(priv, t, auto_deepsleep_timer);
+ 
+ 	if (priv->is_activity_detected) {
+ 		priv->is_activity_detected = 0;
+@@ -847,12 +847,9 @@ static int lbs_init_adapter(struct lbs_private *priv)
+ 	init_waitqueue_head(&priv->fw_waitq);
+ 	mutex_init(&priv->lock);
+ 
+-	setup_timer(&priv->command_timer, lbs_cmd_timeout_handler,
+-		(unsigned long)priv);
+-	setup_timer(&priv->tx_lockup_timer, lbs_tx_lockup_handler,
+-		(unsigned long)priv);
+-	setup_timer(&priv->auto_deepsleep_timer, auto_deepsleep_timer_fn,
+-			(unsigned long)priv);
++	timer_setup(&priv->command_timer, lbs_cmd_timeout_handler, 0);
++	timer_setup(&priv->tx_lockup_timer, lbs_tx_lockup_handler, 0);
++	timer_setup(&priv->auto_deepsleep_timer, auto_deepsleep_timer_fn, 0);
+ 
+ 	INIT_LIST_HEAD(&priv->cmdfreeq);
+ 	INIT_LIST_HEAD(&priv->cmdpendingq);
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index e9104eca327b..5153922e7ce1 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -115,9 +115,9 @@ static void if_usb_setup_firmware(struct lbtf_private *priv)
+ 	lbtf_deb_leave(LBTF_DEB_USB);
+ }
+ 
+-static void if_usb_fw_timeo(unsigned long priv)
++static void if_usb_fw_timeo(struct timer_list *t)
+ {
+-	struct if_usb_card *cardp = (void *)priv;
++	struct if_usb_card *cardp = from_timer(cardp, t, fw_timeout);
+ 
+ 	lbtf_deb_enter(LBTF_DEB_USB);
+ 	if (!cardp->fwdnldover) {
+@@ -156,7 +156,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	if (!cardp)
+ 		goto error;
+ 
+-	setup_timer(&cardp->fw_timeout, if_usb_fw_timeo, (unsigned long)cardp);
++	timer_setup(&cardp->fw_timeout, if_usb_fw_timeo, 0);
+ 	init_waitqueue_head(&cardp->fw_wq);
+ 
+ 	cardp->udev = udev;
+diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
+index 81228bf73043..1d45da187b9b 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/main.c
++++ b/drivers/net/wireless/marvell/libertas_tf/main.c
+@@ -165,9 +165,9 @@ static int lbtf_setup_firmware(struct lbtf_private *priv)
+  *  This function handles the timeout of command sending.
+  *  It will re-send the same command again.
+  */
+-static void command_timer_fn(unsigned long data)
++static void command_timer_fn(struct timer_list *t)
+ {
+-	struct lbtf_private *priv = (struct lbtf_private *)data;
++	struct lbtf_private *priv = from_timer(priv, t, command_timer);
+ 	unsigned long flags;
+ 	lbtf_deb_enter(LBTF_DEB_CMD);
+ 
+@@ -196,8 +196,7 @@ static int lbtf_init_adapter(struct lbtf_private *priv)
+ 	mutex_init(&priv->lock);
+ 
+ 	priv->vif = NULL;
+-	setup_timer(&priv->command_timer, command_timer_fn,
+-		(unsigned long)priv);
++	timer_setup(&priv->command_timer, command_timer_fn, 0);
+ 
+ 	INIT_LIST_HEAD(&priv->cmdfreeq);
+ 	INIT_LIST_HEAD(&priv->cmdpendingq);
+-- 
+2.7.4
 
-Yes this goes deeper. NFC needs to make all nfc ops const.
+
+-- 
+Kees Cook
+Pixel Security
