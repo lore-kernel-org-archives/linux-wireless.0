@@ -1,98 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53184 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758191AbdJMNZT (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36136 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751525AbdJXNic (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 09:25:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Oct 2017 16:24:58 +0300
-Message-Id: <20171013132502.10473-6-luca@coelho.fi> (sfid-20171013_152606_269992_EBAF0C70)
-In-Reply-To: <20171013132502.10473-1-luca@coelho.fi>
-References: <20171013132502.10473-1-luca@coelho.fi>
-Subject: [PATCH 5/9] iwlwifi: mvm: move umac_error_event_table validity check to where it's set
+        Tue, 24 Oct 2017 09:38:32 -0400
+Message-ID: <1508852310.2639.29.camel@sipsolutions.net> (sfid-20171024_153836_879156_07C31C24)
+Subject: Re: A good way to get CSI info to user-space?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 24 Oct 2017 15:38:30 +0200
+In-Reply-To: <d1746cd6-d889-a253-3638-8011d1ebd4fb@candelatech.com>
+References: <6f9182c4-cff9-066c-173a-00d09af7c903@candelatech.com>
+         <1508790635.2639.24.camel@sipsolutions.net>
+         <76d6a1ad-2dc4-0542-808f-4be459c3508a@candelatech.com>
+         <1508824462.2639.25.camel@sipsolutions.net>
+         <d1746cd6-d889-a253-3638-8011d1ebd4fb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Tue, 2017-10-24 at 06:36 -0700, Ben Greear wrote:
+> 
+> On 10/23/2017 10:54 PM, Johannes Berg wrote:
+> > On Mon, 2017-10-23 at 13:59 -0700, Ben Greear wrote:
+> > 
+> > > > The CSI data has variable length [1] but it's fundamentally always tied
+> > > > to a specific frame and as such we've always attached it to that frame
+> > > > using a radiotap vendor namespace.
+> > > > 
+> > > > You can easily implement that in a mac80211 driver since it has support
+> > > > for that via RX_FLAG_RADIOTAP_VENDOR_DATA and the associated struct
+> > > > ieee80211_vendor_radiotap that you put into the skb's head.
+> > > > 
+> > > > Why should anything else be needed?
+> > > 
+> > > So this would only show up in user-space in something like a pkt-capture?
+> > 
+> > Sure. But since you can easily add virtual monitor interfaces at any
+> > time, that doesn't really mean anything.
+> 
+> Adding a monitor device is a pretty big hammer on ath10k, at least, and
+> probably not something one would want running continuously in a production
+> environment.
 
-There's no point in checking the validity of the
-umac_error_event_table pointer every time we generate a dump.  It's
-cleaner to do so when we read the value, namely when we receive the
-alive data.
+We keep having this discussion. You need to fix this, it should be
+really simple to fix this - just remove all checks for CONF_MONITOR
+from ath10k and make it use WANT_MONITOR_VIF instead if it doesn't
+already.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c    | 13 +++++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 18 ++++--------------
- 2 files changed, 15 insertions(+), 16 deletions(-)
+> The CSI data is one part, but tx-beamforming is another area of interest.
+> 
+> If I get a chance, I'll try to add a way to pass some of this opaque
+> info up through netlink events.  I'm thinking something like:
+> 
+> mac80211_nl_send_opaque_event(mac80211-handle, int data-type, u8* data, int data_len);
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index f476882291ae..70d0505a176e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -200,10 +200,19 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
- 
- 	mvm->umac_error_event_table = le32_to_cpu(umac->error_info_addr);
- 
-+	if (mvm->umac_error_event_table <
-+	    (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000 ?
-+	     0x400000 : 0x800000))
-+		IWL_ERR(mvm,
-+			"Not valid error log pointer 0x%08X for %s uCode\n",
-+			mvm->umac_error_event_table,
-+			(mvm->fwrt.cur_fw_img == IWL_UCODE_INIT) ?
-+			"Init" : "RT");
-+	else
-+		mvm->support_umac_log = true;
-+
- 	alive_data->scd_base_addr = le32_to_cpu(lmac1->scd_base_ptr);
- 	alive_data->valid = status == IWL_ALIVE_STATUS_OK;
--	if (mvm->umac_error_event_table)
--		mvm->support_umac_log = true;
- 
- 	IWL_DEBUG_FW(mvm,
- 		     "Alive ucode status 0x%04x revision 0x%01X 0x%01X\n",
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 4ade688db63b..d46115e2d69e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -455,21 +455,12 @@ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
- {
- 	struct iwl_trans *trans = mvm->trans;
- 	struct iwl_umac_error_event_table table;
--	u32 base;
- 
--	base = mvm->umac_error_event_table;
--
--	if (base < (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000 ?
--		    0x400000 : 0x800000)) {
--		IWL_ERR(mvm,
--			"Not valid error log pointer 0x%08X for %s uCode\n",
--			base,
--			(mvm->fwrt.cur_fw_img == IWL_UCODE_INIT)
--			? "Init" : "RT");
-+	if (!mvm->support_umac_log)
- 		return;
--	}
- 
--	iwl_trans_read_mem_bytes(trans, base, &table, sizeof(table));
-+	iwl_trans_read_mem_bytes(trans, mvm->umac_error_event_table, &table,
-+				 sizeof(table));
- 
- 	if (ERROR_START_OFFSET <= table.valid * ERROR_ELEM_SIZE) {
- 		IWL_ERR(trans, "Start IWL Error Log Dump:\n");
-@@ -609,8 +600,7 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- 	if (mvm->error_event_table[1])
- 		iwl_mvm_dump_lmac_error_log(mvm, mvm->error_event_table[1]);
- 
--	if (mvm->support_umac_log)
--		iwl_mvm_dump_umac_error_log(mvm);
-+	iwl_mvm_dump_umac_error_log(mvm);
- }
- 
- int iwl_mvm_find_free_queue(struct iwl_mvm *mvm, u8 sta_id, u8 minq, u8 maxq)
--- 
-2.14.2
+I will not accept this upstream.
+
+johannes
