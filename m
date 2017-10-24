@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:60924 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750851AbdJ0Npt (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64632 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750791AbdJXEvE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 09:45:49 -0400
-Message-ID: <1509111947.2283.0.camel@sipsolutions.net> (sfid-20171027_154623_672002_EBD82B98)
-Subject: Re: wil6210: disallow changing RSN in beacon change
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Date: Fri, 27 Oct 2017 15:45:47 +0200
-In-Reply-To: <f48cbfcf31204a839d345927f712227f@euamsexm01a.eu.qualcomm.com>
-References: <20171017194253.10212-1-johannes@sipsolutions.net>
-         <f48cbfcf31204a839d345927f712227f@euamsexm01a.eu.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 24 Oct 2017 00:51:04 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Jasmine Strong <jas@eero.com>
+CC: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        ath10k <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: rebuild crypto header in RX data frames
+Date: Tue, 24 Oct 2017 04:50:56 +0000
+Message-ID: <8760b5cfnz.fsf@kamboji.qca.qualcomm.com> (sfid-20171024_065109_943972_74793CBB)
+References: <150851690590.5158.11970481736247725763.stgit@potku.adurom.net>
+        <c9bdd915-0667-eee0-3b52-1fdf15abf249@dd-wrt.com>
+        <CAGyitvP0wquoo_8_ma3rcj+riJ5Wgfo7+pmbUOx9pQRwFcQHYA@mail.gmail.com>
+        <87376dds5e.fsf@kamboji.qca.qualcomm.com>
+        <9407ed1f-2bd9-3fd0-981d-1a20452e8ba9@dd-wrt.com>
+        <CAGyitvNj+74HafQ9Aps1HTmknTxa0ZUgV7hao1A8mJ4rV7cibw@mail.gmail.com>
+In-Reply-To: <CAGyitvNj+74HafQ9Aps1HTmknTxa0ZUgV7hao1A8mJ4rV7cibw@mail.gmail.com>       (Jasmine
+ Strong's message of "Mon, 23 Oct 2017 11:28:18 -0700")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-10-27 at 15:42 +0200, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> > This is a code path that will never really get hit anyway, since
-> > it's nonsense to change the beacon of an existing BSS to suddenly
-> > include or no longer include the RSN IE. Reject this instead of
-> > having the dead code, and get rid of accessing wdev->ssid/_len by
-> > way of that.
-> > 
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> 
-> What's the conclusion, should I take this patch or drop it?
+Jasmine Strong <jas@eero.com> writes:
 
-Drop, at least for now. I need to look into this and probably do things
-in cfg80211.
+> That's what I saw.  A bcom client was able to associate and not pass
+> any traffic.  This is on all three of 9882, 9888 and 4019.
 
-johannes
+Thanks for the report, we'll investigate it. And I see that your email
+was now succesfully delivered to the list:
+
+http://lists.infradead.org/pipermail/ath10k/2017-October/010325.html
+
+--=20
+Kalle Valo=
