@@ -1,81 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:44966 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756656AbdJKIcM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 04:32:12 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Cc: Peng Xu <pxu@qti.qualcomm.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v4.9] nl80211: Define policy for packet pattern attributes
-Date: Wed, 11 Oct 2017 10:32:09 +0200
-Message-Id: <20171011083209.10969-1-johannes@sipsolutions.net> (sfid-20171011_103302_238245_3DF4C9B1)
+Received: from eggs.gnu.org ([208.118.235.92]:41183 "EHLO eggs.gnu.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751226AbdJXBtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Oct 2017 21:49:42 -0400
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+        (envelope-from <nikolas@gnu.org>)
+        id 1e6oLd-0006NW-DS
+        for linux-wireless@vger.kernel.org; Mon, 23 Oct 2017 21:49:42 -0400
+From: Nik Nyby <nikolas@gnu.org>
+To: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        trivial@kernel.org
+Cc: Nik Nyby <nikolas@gnu.org>
+Subject: [PATCH] rtlwifi: rtl8821ae: Fix typo in variable name
+Date: Mon, 23 Oct 2017 21:49:09 -0400
+Message-Id: <20171024014909.7347-1-nikolas@gnu.org> (sfid-20171024_034946_103079_81A7FDBE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Peng Xu <pxu@qti.qualcomm.com>
+In _rtl8821ae_dbi_write(), wrtie_addr should be write_addr.
 
-Upstream commit ad670233c9e1d5feb365d870e30083ef1b889177.
-
-Define a policy for packet pattern attributes in order to fix a
-potential read over the end of the buffer during nla_get_u32()
-of the NL80211_PKTPAT_OFFSET attribute.
-
-Note that the data there can always be read due to SKB allocation
-(with alignment and struct skb_shared_info at the end), but the
-data might be uninitialized. This could be used to leak some data
-from uninitialized vmalloc() memory, but most drivers don't allow
-an offset (so you'd just get -EINVAL if the data is non-zero) or
-just allow it with a fixed value - 100 or 128 bytes, so anything
-above that would get -EINVAL. With brcmfmac the limit is 1500 so
-(at least) one byte could be obtained.
-
-Cc: stable@kernel.org
-Signed-off-by: Peng Xu <pxu@qti.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
-[rewrite description based on SKB allocation knowledge]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Nik Nyby <nikolas@gnu.org>
 ---
- net/wireless/nl80211.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ece0fbc08607..c626f679e1c8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -541,6 +541,14 @@ nl80211_nan_srf_policy[NL80211_NAN_SRF_ATTR_MAX + 1] = {
- 	[NL80211_NAN_SRF_MAC_ADDRS] = { .type = NLA_NESTED },
- };
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 1d431d4bf6d2..6a9d8ee0ae9f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -1130,13 +1130,13 @@ static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
+ static void _rtl8821ae_dbi_write(struct rtl_priv *rtlpriv, u16 addr, u8 data)
+ {
+ 	u8 tmp = 0, count = 0;
+-	u16 wrtie_addr, remainder = addr % 4;
++	u16 write_addr, remainder = addr % 4;
  
-+/* policy for packet pattern attributes */
-+static const struct nla_policy
-+nl80211_packet_pattern_policy[MAX_NL80211_PKTPAT + 1] = {
-+	[NL80211_PKTPAT_MASK] = { .type = NLA_BINARY, },
-+	[NL80211_PKTPAT_PATTERN] = { .type = NLA_BINARY, },
-+	[NL80211_PKTPAT_OFFSET] = { .type = NLA_U32 },
-+};
-+
- static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
- 				     struct netlink_callback *cb,
- 				     struct cfg80211_registered_device **rdev,
-@@ -10009,7 +10017,7 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 			u8 *mask_pat;
+-	wrtie_addr = REG_DBI_WDATA + remainder;
+-	rtl_write_byte(rtlpriv, wrtie_addr, data);
++	write_addr = REG_DBI_WDATA + remainder;
++	rtl_write_byte(rtlpriv, write_addr, data);
  
- 			nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
--				  nla_len(pat), NULL);
-+				  nla_len(pat), nl80211_packet_pattern_policy);
- 			err = -EINVAL;
- 			if (!pat_tb[NL80211_PKTPAT_MASK] ||
- 			    !pat_tb[NL80211_PKTPAT_PATTERN])
-@@ -10259,7 +10267,7 @@ static int nl80211_parse_coalesce_rule(struct cfg80211_registered_device *rdev,
- 		u8 *mask_pat;
+-	wrtie_addr = (addr & 0xfffc) | (BIT(0) << (remainder + 12));
+-	rtl_write_word(rtlpriv, REG_DBI_ADDR, wrtie_addr);
++	write_addr = (addr & 0xfffc) | (BIT(0) << (remainder + 12));
++	rtl_write_word(rtlpriv, REG_DBI_ADDR, write_addr);
  
- 		nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
--			  nla_len(pat), NULL);
-+			  nla_len(pat), nl80211_packet_pattern_policy);
- 		if (!pat_tb[NL80211_PKTPAT_MASK] ||
- 		    !pat_tb[NL80211_PKTPAT_PATTERN])
- 			return -EINVAL;
+ 	rtl_write_byte(rtlpriv, REG_DBI_FLAG, 0x1);
+ 
 -- 
 2.14.2
