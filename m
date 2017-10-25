@@ -1,81 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:36817 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752099AbdJJTfM (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751863AbdJYNO0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 15:35:12 -0400
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] rtl8xxxu: mark expected switch fall-throughs
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20171010193027.GA23108@embeddedor.com>
-Message-ID: <5f5f0f54-d901-90be-9025-0a1c4b909368@gmail.com> (sfid-20171010_213535_796754_0FBCF93E)
-Date: Tue, 10 Oct 2017 15:35:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <20171010193027.GA23108@embeddedor.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 25 Oct 2017 09:14:26 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 07/12] wil6210: missing length check in wmi_set_ie
+Date: Wed, 25 Oct 2017 16:14:02 +0300
+Message-Id: <1508937247-11890-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151430_526236_A912A077)
+In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/10/2017 03:30 PM, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-While this isn't harmful, to me this looks like pointless patch churn 
-for zero gain and it's just ugly.
+Add a length check in wmi_set_ie to detect unsigned integer
+overflow.
 
-Jes
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-
-> Cc: Jes Sorensen <Jes.Sorensen@gmail.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
-> ---
->   drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 5 +++++
->   1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> index 7806a4d..e66be05 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> @@ -1153,6 +1153,7 @@ void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
->   	switch (hw->conf.chandef.width) {
->   	case NL80211_CHAN_WIDTH_20_NOHT:
->   		ht = false;
-> +		/* fall through */
->   	case NL80211_CHAN_WIDTH_20:
->   		opmode |= BW_OPMODE_20MHZ;
->   		rtl8xxxu_write8(priv, REG_BW_OPMODE, opmode);
-> @@ -1280,6 +1281,7 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw)
->   	switch (hw->conf.chandef.width) {
->   	case NL80211_CHAN_WIDTH_20_NOHT:
->   		ht = false;
-> +		/* fall through */
->   	case NL80211_CHAN_WIDTH_20:
->   		rf_mode_bw |= WMAC_TRXPTCL_CTL_BW_20;
->   		subchannel = 0;
-> @@ -1748,9 +1750,11 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
->   		case 3:
->   			priv->ep_tx_low_queue = 1;
->   			priv->ep_tx_count++;
-> +			/* fall through */
->   		case 2:
->   			priv->ep_tx_normal_queue = 1;
->   			priv->ep_tx_count++;
-> +			/* fall through */
->   		case 1:
->   			priv->ep_tx_high_queue = 1;
->   			priv->ep_tx_count++;
-> @@ -5691,6 +5695,7 @@ static int rtl8xxxu_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->   		break;
->   	case WLAN_CIPHER_SUITE_TKIP:
->   		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-> +		/* fall through */
->   	default:
->   		return -EOPNOTSUPP;
->   	}
-> 
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 16aa624..dd25f63 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1616,8 +1616,14 @@ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie)
+ 	};
+ 	int rc;
+ 	u16 len = sizeof(struct wmi_set_appie_cmd) + ie_len;
+-	struct wmi_set_appie_cmd *cmd = kzalloc(len, GFP_KERNEL);
++	struct wmi_set_appie_cmd *cmd;
+ 
++	if (len < ie_len) {
++		rc = -EINVAL;
++		goto out;
++	}
++
++	cmd = kzalloc(len, GFP_KERNEL);
+ 	if (!cmd) {
+ 		rc = -ENOMEM;
+ 		goto out;
+-- 
+1.9.1
