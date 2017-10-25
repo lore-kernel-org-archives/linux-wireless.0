@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:49149 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750950AbdJJGFM (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751665AbdJYNOU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 02:05:12 -0400
-Received: by mail-pf0-f177.google.com with SMTP id b79so3892421pfk.5
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Oct 2017 23:05:12 -0700 (PDT)
-Received: from himanshu-Vostro-3559 ([106.222.85.12])
-        by smtp.gmail.com with ESMTPSA id l28sm10331269pgu.38.2017.10.09.23.05.09
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 09 Oct 2017 23:05:10 -0700 (PDT)
-Date: Tue, 10 Oct 2017 11:35:04 +0530
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Contributing to Linux-wireless drivers.
-Message-ID: <20171010060504.GA3130@himanshu-Vostro-3559> (sfid-20171010_080517_115691_454C8713)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Wed, 25 Oct 2017 09:14:20 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 04/12] wil6210: abort properly in cfg suspend
+Date: Wed, 25 Oct 2017 16:13:59 +0300
+Message-Id: <1508937247-11890-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151426_040877_32DF2DB7)
+In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------ Forwarded message from Himanshu Jha <himanshujha199640@gmail.com> -----
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-Date: Fri, 6 Oct 2017 02:05:39 +0530
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: kvalo@codeaurora.org
-Subject: Contributing to Linux-wireless drivers.
-User-Agent: Mutt/1.5.24 (2015-08-30)
+On-going operations were not aborted properly
+and required locks were not taken.
 
-Hi Kalle,
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-
-I am an undergraduate student in ECE(3rd year) and wish to contribute to linux-wireless
-drivers. I am familiar with the kernel development process and have many
-patches accepted in the past 2 months with variety of tools used such as
-coccinelle,Kasan,smatch,sparse and checkpatch.
-
-I have basic knowledge of Linux kernel internals and competent C skills,
-also planning to learn Device Drivers in future. 
-
-The wiki page https://wireless.wiki.kernel.org/ is not working
-correctly, for every page it shows 
-
-"This topic does not exist yet
-You've followed a link to a topic that doesn't exist yet. If permissions
-allow, you may create it by clicking on “Create this page”.
-Earlier I used to visit this without any issues, don't know what is the
-problem now ?
-
-Also, since I am beginner is there any small project that I could work on
-to enhance my knowledge. Please provide me any links to
-Documentation/tutorials which I can follow and help the community.
-Lastly, I will next year surely apply for GSoC under Linux-wireless and
-I don't seem to find any participation since 2012. Also, if there is
-any project that someone didn't try and is open then please let me know!
-
-I am really sorry for this direct email to you but nobody helped me on
-IRC channel.
-
-Thanks
-Himanshu Jha
-
------ End forwarded message -----
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 85d5c04..c3d3c0c 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1727,9 +1727,12 @@ static int wil_cfg80211_suspend(struct wiphy *wiphy,
+ 
+ 	wil_dbg_pm(wil, "suspending\n");
+ 
+-	wil_p2p_stop_discovery(wil);
+-
++	mutex_lock(&wil->mutex);
++	mutex_lock(&wil->p2p_wdev_mutex);
++	wil_p2p_stop_radio_operations(wil);
+ 	wil_abort_scan(wil, true);
++	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->mutex);
+ 
+ out:
+ 	return rc;
+-- 
+1.9.1
