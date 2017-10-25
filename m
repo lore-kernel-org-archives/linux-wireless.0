@@ -1,79 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53148 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758036AbdJMNZP (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751820AbdJYNOS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 09:25:15 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Oct 2017 16:24:53 +0300
-Message-Id: <20171013132502.10473-1-luca@coelho.fi> (sfid-20171013_152605_019145_55443064)
-Subject: [PATCH 0/9] ] iwlwifi: updates intended for v4.15 2017-10-13
+        Wed, 25 Oct 2017 09:14:18 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 03/12] wil6210: refresh FW capabilities during interface up
+Date: Wed, 25 Oct 2017 16:13:58 +0300
+Message-Id: <1508937247-11890-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151422_733674_EB7CC628)
+In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-Hi,
+FW capabilities are currently retrieved only during module
+initialization, but userspace can replace the firmware while
+interface is down, so refresh the FW capabilities when
+interface is up (after FW is loaded) to ensure driver
+functionality matches the loaded FW.
 
-Here's the third set of patches intended for 4.15.  A few small fixes,
-but mostly just code cleanups.
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/fw_inc.c   | 21 ++++++++-------------
+ drivers/net/wireless/ath/wil6210/main.c     | 25 +++++++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 13 +------------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
+ 4 files changed, 33 insertions(+), 27 deletions(-)
 
-These are the changes:
-
-* Allocate reorder buffer dynamically to save memory;
-* Fix a FW dump problem in the A000 family;
-* Fix for a statistics gathering issue;
-* Sort the list of 9000 devices to make it easier to find entries;
-* A couple of cleanups in the FW dump code;
-* Remove some unnecessary variables and fields and calculations;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Beni Lev (1):
-  iwlwifi: mvm: allow reading UMAC error data from SMEM in A000 devices
-
-Johannes Berg (3):
-  iwlwifi: mvm: allocate reorder buffer according to need
-  iwlwifi: mvm: pass baid_data to iwl_mvm_release_frames()
-  iwlwifi: pcie: remove set but not used variable tcph
-
-Liad Kaufman (1):
-  iwlwifi: mvm: add missing lq_color
-
-Luca Coelho (3):
-  iwlwifi: mvm: move umac_error_event_table validity check to where it's
-    set
-  iwlwifi: define minimum valid address for umac_error_event_table in
-    cfg
-  iwlwifi: pcie: sort IDs for the 9000 series for easier comparisons
-
-Sara Sharon (1):
-  iwlwifi: mvm: remove duplicated fields in mvm reorder buffer
-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c     |  3 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c     |  3 +-
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c     |  3 +-
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    |  4 +-
- drivers/net/wireless/intel/iwlwifi/iwl-config.h   |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 20 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 43 +++++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 49 ++++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 44 +++++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       |  3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c    | 17 ++---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c     | 84 +++++++++++------------
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  5 +-
- 13 files changed, 176 insertions(+), 103 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
+index e01acac..7a33792 100644
+--- a/drivers/net/wireless/ath/wil6210/fw_inc.c
++++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
+@@ -124,24 +124,19 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
+ 	return 0;
+ }
+ 
+-static int fw_handle_comment(struct wil6210_priv *wil, const void *data,
+-			     size_t size)
+-{
+-	wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1, data, size, true);
+-
+-	return 0;
+-}
+-
+ static int
+-fw_handle_capabilities(struct wil6210_priv *wil, const void *data,
+-		       size_t size)
++fw_handle_comment(struct wil6210_priv *wil, const void *data,
++		  size_t size)
+ {
+ 	const struct wil_fw_record_capabilities *rec = data;
+ 	size_t capa_size;
+ 
+ 	if (size < sizeof(*rec) ||
+-	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC)
++	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC) {
++		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
++				data, size, true);
+ 		return 0;
++	}
+ 
+ 	capa_size = size - offsetof(struct wil_fw_record_capabilities,
+ 				    capabilities);
+@@ -422,7 +417,7 @@ static int fw_handle_gateway_data4(struct wil6210_priv *wil, const void *data,
+ 	int (*parse_handler)(struct wil6210_priv *wil, const void *data,
+ 			     size_t size);
+ } wil_fw_handlers[] = {
+-	{wil_fw_type_comment, fw_handle_comment, fw_handle_capabilities},
++	{wil_fw_type_comment, fw_handle_comment, fw_handle_comment},
+ 	{wil_fw_type_data, fw_handle_data, fw_ignore_section},
+ 	{wil_fw_type_fill, fw_handle_fill, fw_ignore_section},
+ 	/* wil_fw_type_action */
+@@ -517,7 +512,7 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
+ 
+ 	rc = request_firmware(&fw, name, wil_to_dev(wil));
+ 	if (rc) {
+-		wil_err_fw(wil, "Failed to load firmware %s\n", name);
++		wil_err_fw(wil, "Failed to load firmware %s rc %d\n", name, rc);
+ 		return rc;
+ 	}
+ 	wil_dbg_fw(wil, "Loading <%s>, %zu bytes\n", name, fw->size);
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index bac829a..ad1f9f8 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -761,6 +761,8 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
+ 	u8 retry_short;
+ 	int rc;
+ 
++	wil_refresh_fw_capabilities(wil);
++
+ 	rc = wmi_get_mgmt_retry(wil, &retry_short);
+ 	if (!rc) {
+ 		wiphy->retry_short = retry_short;
+@@ -768,6 +770,25 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
+ 	}
+ }
+ 
++void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
++{
++	struct wiphy *wiphy = wil_to_wiphy(wil);
++
++	wil->keep_radio_on_during_sleep =
++		wil->platform_ops.keep_radio_on_during_sleep &&
++		wil->platform_ops.keep_radio_on_during_sleep(
++			wil->platform_handle) &&
++		test_bit(WMI_FW_CAPABILITY_D3_SUSPEND, wil->fw_capabilities);
++
++	wil_info(wil, "keep_radio_on_during_sleep (%d)\n",
++		 wil->keep_radio_on_during_sleep);
++
++	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
++		wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
++	else
++		wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
++}
++
+ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
+ {
+ 	le32_to_cpus(&r->base);
+@@ -1072,11 +1093,11 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 			return rc;
+ 		}
+ 
++		wil_collect_fw_info(wil);
++
+ 		if (wil->ps_profile != WMI_PS_PROFILE_TYPE_DEFAULT)
+ 			wil_ps_update(wil, wil->ps_profile);
+ 
+-		wil_collect_fw_info(wil);
+-
+ 		if (wil->platform_ops.notify) {
+ 			rc = wil->platform_ops.notify(wil->platform_handle,
+ 						      WIL_PLATFORM_EVT_FW_RDY);
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 9cc97da..659c32c 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -85,9 +85,7 @@ void wil_set_capabilities(struct wil6210_priv *wil)
+ 
+ 	/* extract FW capabilities from file without loading the FW */
+ 	wil_request_firmware(wil, wil->wil_fw_name, false);
+-
+-	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
+-		wil_to_wiphy(wil)->signal_type = CFG80211_SIGNAL_TYPE_MBM;
++	wil_refresh_fw_capabilities(wil);
+ }
+ 
+ void wil_disable_irq(struct wil6210_priv *wil)
+@@ -297,15 +295,6 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	wil_set_capabilities(wil);
+ 	wil6210_clear_irq(wil);
+ 
+-	wil->keep_radio_on_during_sleep =
+-		wil->platform_ops.keep_radio_on_during_sleep &&
+-		wil->platform_ops.keep_radio_on_during_sleep(
+-			wil->platform_handle) &&
+-		test_bit(WMI_FW_CAPABILITY_D3_SUSPEND, wil->fw_capabilities);
+-
+-	wil_info(wil, "keep_radio_on_during_sleep (%d)\n",
+-		 wil->keep_radio_on_during_sleep);
+-
+ 	/* FW should raise IRQ when ready */
+ 	rc = wil_if_pcie_enable(wil);
+ 	if (rc) {
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index ad40a5a..8dfb4a7 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -872,6 +872,7 @@ int wil_ps_update(struct wil6210_priv *wil,
+ int __wil_up(struct wil6210_priv *wil);
+ int wil_down(struct wil6210_priv *wil);
+ int __wil_down(struct wil6210_priv *wil);
++void wil_refresh_fw_capabilities(struct wil6210_priv *wil);
+ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r);
+ int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
+ void wil_set_ethtoolops(struct net_device *ndev);
 -- 
-2.14.2
+1.9.1
