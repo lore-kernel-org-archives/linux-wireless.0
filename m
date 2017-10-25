@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:59732 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751736AbdJDIuP (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41648 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750949AbdJYFdx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 04:50:15 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        svp <s.pooheer@gmail.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: QCA988x and kernel 4.13
-Date: Wed, 4 Oct 2017 08:50:10 +0000
-Message-ID: <87d163xpoe.fsf@kamboji.qca.qualcomm.com> (sfid-20171004_105022_147600_9F539D43)
-References: <c6294832-ff1e-595c-da8b-dac59b12a976@gmail.com>
-        <7549b77b-3619-f8a5-48d6-eb7e330ba80e@dd-wrt.com>
-        <48aebea8-9231-b41e-cbaa-d592d8540c53@candelatech.com>
-In-Reply-To: <48aebea8-9231-b41e-cbaa-d592d8540c53@candelatech.com> (Ben
-        Greear's message of "Mon, 2 Oct 2017 10:24:14 -0700")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Wed, 25 Oct 2017 01:33:53 -0400
+Message-ID: <1508909627.4135.27.camel@coelho.fi> (sfid-20171025_073417_255125_03D223AE)
+From: Luca Coelho <luca@coelho.fi>
+To: Kees Cook <keescook@chromium.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 25 Oct 2017 08:33:47 +0300
+In-Reply-To: <20171024092937.GA47262@beast>
+References: <20171024092937.GA47262@beast>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] drivers/wireless: iwlwifi/mvm: Convert timers to use
+ timer_setup()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+On Tue, 2017-10-24 at 02:29 -0700, Kees Cook wrote:
+> In preparation for unconditionally passing the struct timer_list
+> pointer to
+> all timer callbacks, switch to using the new timer_setup() and
+> from_timer()
+> to pass the timer pointer explicitly.
+> 
+> The RCU lifetime on baid_data is unclear, so this adds a direct copy
+> of the
+> rcu_ptr passed to the original callback. It may be possible to
+> improve this
+> to just use baid_data->mvm->baid_map[baid_data->baid] instead.
+> 
+> Cc: Johannes Berg <johannes.berg@intel.com>
+> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Cc: Luca Coelho <luciano.coelho@intel.com>
+> Cc: Intel Linux Wireless <linuxwifi@intel.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: Sara Sharon <sara.sharon@intel.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
 
-> On 10/01/2017 07:06 AM, Sebastian Gottschall wrote:
->> you have to update to the latest mac80211 code. there is a well
->> known bug in mac80211 which causes a deadlock with ath10k
->
-> Do you have a pointer to the patch that fixes this?  I'd like to check if=
- it has
-> made it into 4.13 stable yet...
+Thanks, Kees.  I'm taking this for review on our internal tree.  If all
+our checks pass, I'll apply it and it will reach the mainline following
+our usual upstreaming process.
 
-I think it's this one:
-
-mac80211: fix deadlock in driver-managed RX BA session start
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?=
-id=3Dbde59c475e0883e4c4294bcd9b9c7e08ae18c828
-
-Adding linux-wireless so that someone can correct me in case I'm wrong.
-
---=20
-Kalle Valo=
+--
+Cheers,
+Luca.
