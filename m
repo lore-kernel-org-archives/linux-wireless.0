@@ -1,222 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:55458 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750970AbdJFNzh (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48206 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751036AbdJYQNT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 09:55:37 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/4] cfg80211: support reloading regulatory database
-Date: Fri,  6 Oct 2017 15:55:30 +0200
-Message-Id: <20171006135532.29550-3-johannes@sipsolutions.net> (sfid-20171006_155550_340003_1277863E)
-In-Reply-To: <20171006135532.29550-1-johannes@sipsolutions.net>
-References: <20171006135532.29550-1-johannes@sipsolutions.net>
+        Wed, 25 Oct 2017 12:13:19 -0400
+Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
+ mask if not usable"
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Oleksij Rempel <linux@rempel-privat.de>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>, kirtika@google.com
+References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
+ <1507708948.1998.15.camel@sipsolutions.net>
+ <2c293255-aa79-75a0-1c28-994f864cddf4@candelatech.com>
+ <1508312033.2674.9.camel@sipsolutions.net>
+ <2ad42671-59c4-80ed-4bca-f874eb53d653@candelatech.com>
+ <8c2e0e98-f3f4-6e0c-1bf0-43dfa6e97275@rempel-privat.de>
+ <1508358869.2674.55.camel@sipsolutions.net>
+ <9791c86a-a15f-4c99-ab84-ce00b242d70f@candelatech.com>
+ <1508360527.2674.61.camel@sipsolutions.net>
+ <0bfb289d-a9fa-03d9-f9c7-cc0d01b0bd43@candelatech.com>
+ <1508944670.2421.49.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <db23762d-3e65-7707-ca78-ad7e7bc7dfa6@candelatech.com> (sfid-20171025_181322_710785_5B6F0F22)
+Date: Wed, 25 Oct 2017 09:13:07 -0700
+MIME-Version: 1.0
+In-Reply-To: <1508944670.2421.49.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-If the regulatory database is loaded, and then updated, it may
-be necessary to reload it. Add an nl80211 command to do this.
 
-Note that this just reloads the database, it doesn't re-apply
-the rules from it immediately.
+On 10/25/2017 08:17 AM, Johannes Berg wrote:
+> Hi,
+>
+> So I fixed the part about the rate setting calling into the driver
+> before rejecting.
+>
+>> If a user specifies a specific rate or rate-set, then I do not think we
+>> should quietly change it out from under them.  So, we could check at the
+>> time the rate-set is applied (all current peers).  We can reject the change
+>> at that point if one of the peers does not support any common rates.
+>> And, whenever a peer tries to be associated, we can check that there is some common rateset
+>> in place.  If there is no common rateset, then reject the association
+>> one way or another.
+>
+> It's not trivial to do in the kernel, but if we reject adding the
+> station then hostapd will turn around and reject the association. This
+> might not end up being done nicely, but I think it does still happen
+> before the association response, so a negative one would result.
+>
+>>> We'll need to be a little careful what happens with client-mode
+>>> interfaces, which is where we actually observed hitting the WARN_ON()
+>>> about not having any rates at all, but I think I already put a reset of
+>>> the rates there anyway if they're not compatible with the AP. At least
+>>> that's easier because there's only one client.
+>>
+>> It would be easy to configure a station to do VHT MCS 8 only, and then
+>> it would never be able to associate with an HT AP, for instance.  I don't
+>> think this should be a WARN_ON event, just a failure.
+>
+> Well it resulted in a WARN_ON because if the AP didn't have those
+> rates, we'd not find any usable rates while trying to transmit a frame,
+> and then ended up warning and falling down to the lowest possible rate.
+>
+> I don't think I agree that configuring this should reject the
+> association, and I've already implemented the behaviour of dropping the
+> user's rate set in this case in the patch we're discussing.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/uapi/linux/nl80211.h |  4 +++
- net/wireless/nl80211.c       | 11 ++++++
- net/wireless/reg.c           | 80 +++++++++++++++++++++++++++++++++-----------
- net/wireless/reg.h           |  6 ++++
- 4 files changed, 81 insertions(+), 20 deletions(-)
+So, as long as we are associating to a VHT AP, then we could still set the
+tx-rateset to (only) VHT MCS 8 and allow association, even if there are no additional
+rates set.  There is at least one common rate, so theoretically, the
+station and AP can communicate.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 95832ce03a44..f882fe1f9709 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -990,6 +990,8 @@
-  *	&NL80211_CMD_CONNECT or &NL80211_CMD_ROAM. If the 4 way handshake failed
-  *	&NL80211_CMD_DISCONNECT should be indicated instead.
-  *
-+ * @NL80211_CMD_RELOAD_REGDB: Request that the regdb firmware file is reloaded.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1194,6 +1196,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_PORT_AUTHORIZED,
- 
-+	NL80211_CMD_RELOAD_REGDB,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5129342151e6..67a03f2885a4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5678,6 +5678,11 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	}
- }
- 
-+static int nl80211_reload_regdb(struct sk_buff *skb, struct genl_info *info)
-+{
-+	return reg_reload_regdb();
-+}
-+
- static int nl80211_get_mesh_config(struct sk_buff *skb,
- 				   struct genl_info *info)
- {
-@@ -12708,6 +12713,12 @@ static const struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
-+	{
-+		.cmd = NL80211_CMD_RELOAD_REGDB,
-+		.doit = nl80211_reload_regdb,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
- 	{
- 		.cmd = NL80211_CMD_GET_MESH_CONFIG,
- 		.doit = nl80211_get_mesh_config,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c67ce7cedc77..0516ba089746 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -758,6 +758,8 @@ static int query_regdb(const char *alpha2)
- 	const struct fwdb_header *hdr = regdb;
- 	const struct fwdb_country *country;
- 
-+	ASSERT_RTNL();
-+
- 	if (IS_ERR(regdb))
- 		return PTR_ERR(regdb);
- 
-@@ -773,42 +775,48 @@ static int query_regdb(const char *alpha2)
- 
- static void regdb_fw_cb(const struct firmware *fw, void *context)
- {
-+	int set_error = 0;
-+	bool restore = true;
- 	void *db;
- 
- 	if (!fw) {
- 		pr_info("failed to load regulatory.db\n");
- 		if (fwregdb_attempts-- == 0)
--			regdb = ERR_PTR(-ENODATA);
--		goto restore;
--	}
--
--	if (!valid_regdb(fw->data, fw->size)) {
-+			set_error = -ENODATA;
-+	} else if (!valid_regdb(fw->data, fw->size)) {
- 		pr_info("loaded regulatory.db is malformed\n");
--		release_firmware(fw);
--		regdb = ERR_PTR(-EINVAL);
--		goto restore;
-+		set_error = -EINVAL;
- 	}
- 
--	db = kmemdup(fw->data, fw->size, GFP_KERNEL);
--	release_firmware(fw);
-+	rtnl_lock();
-+	if (WARN_ON(regdb && !IS_ERR(regdb))) {
-+		/* just restore and free new db */
-+	} else if (set_error) {
-+		regdb = ERR_PTR(set_error);
-+	} else if (fw) {
-+		db = kmemdup(fw->data, fw->size, GFP_KERNEL);
-+		if (db) {
-+			regdb = db;
-+			restore = context && query_regdb(context);
-+		} else {
-+			restore = true;
-+		}
-+	}
- 
--	if (!db)
--		goto restore;
--	regdb = db;
-+	if (restore)
-+		restore_regulatory_settings(true);
- 
--	if (query_regdb(context))
--		goto restore;
--	goto free;
-- restore:
--	rtnl_lock();
--	restore_regulatory_settings(true);
- 	rtnl_unlock();
-- free:
-+
- 	kfree(context);
-+
-+	release_firmware(fw);
- }
- 
- static int query_regdb_file(const char *alpha2)
- {
-+	ASSERT_RTNL();
-+
- 	if (regdb)
- 		return query_regdb(alpha2);
- 
-@@ -821,6 +829,38 @@ static int query_regdb_file(const char *alpha2)
- 				       (void *)alpha2, regdb_fw_cb);
- }
- 
-+int reg_reload_regdb(void)
-+{
-+	const struct firmware *fw;
-+	void *db;
-+	int err;
-+
-+	err = request_firmware(&fw, "regulatory.db", &reg_pdev->dev);
-+	if (err)
-+		return err;
-+
-+	if (!valid_regdb(fw->data, fw->size)) {
-+		err = -ENODATA;
-+		goto out;
-+	}
-+
-+	db = kmemdup(fw->data, fw->size, GFP_KERNEL);
-+	if (!db) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	rtnl_lock();
-+	if (!IS_ERR_OR_NULL(regdb))
-+		kfree(regdb);
-+	regdb = db;
-+	rtnl_unlock();
-+
-+ out:
-+	release_firmware(fw);
-+	return err;
-+}
-+
- static bool reg_query_database(struct regulatory_request *request)
- {
- 	/* query internal regulatory database (if it exists) */
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index ca7fedf2e7a1..9529c522611a 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -179,4 +179,10 @@ void regulatory_propagate_dfs_state(struct wiphy *wiphy,
-  * @wiphy2 - wiphy it's dfs_region to be checked against that of wiphy1
-  */
- bool reg_dfs_domain_same(struct wiphy *wiphy1, struct wiphy *wiphy2);
-+
-+/**
-+ * reg_reload_regdb - reload the regulatory.db firmware file
-+ */
-+int reg_reload_regdb(void);
-+
- #endif  /* __NET_WIRELESS_REG_H */
+If we tried to associate this same station to an HT AP, then your work-around
+code could kick in and throw away the user's rateset configuration, preferably
+with a fairly noticeable warning message since you are overriding the user's
+preferred tx rateset?
+
+
+>> It would be great
+>> if we could get a useful error message back to the caller, but I am not
+>> sure how feasible that is with the current netlink and mac80211 code.
+>
+> If we reject the user setting, then we can easily more useful return
+> error messages now that we have generic netlink extack support. The
+> more "interesting" case is when the user set this and then reconnects.
+>
+> This kind of problem is why I absolutely dislike out-of-band state that
+> affects the connection, rather than giving it in the connection
+> command(s) (connect, auth, associate, whatever). We're stuck with it
+> now, and needed to redefine that this selection may be dropped if not
+> usable.
+
+You could start allowing the user to configure the full advertised and
+transmit rateset for each of these actions (and probe too), and user-space can add the fields
+to their netlink commands.  At least going forward, this might help
+make the behaviour more as expected.  If you would like to implement at
+least the basics in cfg/mac80211, I would be happy to work on the supplicant
+end of things.
+
+>
+>> If your main concern is hitting a WARN_ON, maybe just change it to a
+>> quieter error message or remove it entirely and just return a failure
+>> code?
+>
+> No, the warning serves a useful purpose, it's not useful to fall back
+> to the lowest rate, even if the user selected something completely
+> unusable. Arguably we should simply reject transmitting in that case,
+> but that's not really better either ...
+>
+> johannes
+
+
+Thanks,
+Ben
+
+
 -- 
-2.14.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
