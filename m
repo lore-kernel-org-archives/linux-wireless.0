@@ -1,85 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:47348 "EHLO
-        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752383AbdJPMTy (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750903AbdJYNOe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 08:19:54 -0400
-Received: by mail-io0-f173.google.com with SMTP id h70so15847891ioi.4
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Oct 2017 05:19:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20171016094024.GD2553@redhat.com>
-References: <CAAeHK+yUNrrNU3Jqrfs7XAT809eyF4nv673cSL8RppbLrDtWNA@mail.gmail.com>
- <20171012072529.GB2686@redhat.com> <CACT4Y+YLM-u7bMfRB=eu_pz1M9iDrY-Qmnho7Hw_Lh3M=LSeMQ@mail.gmail.com>
- <20171016094024.GD2553@redhat.com>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Mon, 16 Oct 2017 14:19:33 +0200
-Message-ID: <CACT4Y+YB7PTCFCjeqwJeGpSxxAh_U6F6UsDKaN4XAx6uL8+pZw@mail.gmail.com> (sfid-20171016_142049_333869_CA63758A)
-Subject: Re: usb/net/rt2x00: warning in rt2800_eeprom_word_index
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Andrey Konovalov <andreyknvl@google.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 25 Oct 2017 09:14:34 -0400
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 11/12] wil6210: remove suspend time statistics
+Date: Wed, 25 Oct 2017 16:14:06 +0300
+Message-Id: <1508937247-11890-12-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151442_413377_9796F250)
+In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 16, 2017 at 11:40 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Hi Dmitry
->
-> On Sat, Oct 14, 2017 at 04:38:03PM +0200, Dmitry Vyukov wrote:
->> On Thu, Oct 12, 2017 at 9:25 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> > Hi
->> >
->> > On Mon, Oct 09, 2017 at 07:50:53PM +0200, Andrey Konovalov wrote:
->> >> I've got the following report while fuzzing the kernel with syzkaller.
->> >>
->> >> On commit 8a5776a5f49812d29fe4b2d0a2d71675c3facf3f (4.14-rc4).
->> >>
->> >> I'm not sure whether this is a bug in the driver, or just a way to
->> >> report misbehaving device. In the latter case this shouldn't be a
->> >> WARN() call, since WARN() means bug in the kernel.
->> >
->> > This is about wrong EEPROM, which reported 3 tx streams on
->> > non 3 antenna device. I think WARN() is justified and thanks
->> > to the call trace I was actually able to to understand what
->> > happened.
->> >
->> > In general I do not think WARN() only means a kernel bug, it
->> > can be F/W or H/W bug too.
->>
->> Hi Stanislaw,
->>
->> Printing messages is fine. Printing stacks is fine. Just please make
->> them distinguishable from kernel bugs and don't kill the whole
->> possibility of automated Linux kernel testing. That's an important
->> capability.
->
-> We do not distinguish between bugs and other problems when WARN() is
-> used in (wireless) drivers, what I think is correct, taking comment from
-> include/asm-generic/bug.h :
->
-> /*
->  * WARN(), WARN_ON(), WARN_ON_ONCE, and so on can be used to report
->  * significant issues that need prompt attention if they should ever
->  * appear at runtime.  Use the versions with printk format strings
->  * to provide better diagnostics.
->  */
->
-> Historically we have BUG() to mark the bugs, but usage if it is not
-> recommended as it can kill the system, so for anything that can
-> be recovered in runtime - WARN() is recommended.
->
-> Perhaps we can introduce another helper like PROBLEM() for marking
-> situations when something is wrong, but it is not a bug. However I'm
-> not even sure at what extent it can be used, since for many cases
-> if not the most, driver author can not tell apriori if the problem
-> is a bug in the driver or HW/FW misbehaviour (or maybe particular
-> issue can happen because of both).
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-I will write a separate email to LKML.
+Currently suspend time statistics are showed through debugfs.
+Remove time statistics in suspend state since the timing may
+not be accurate in that state.
 
-Thanks
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 17 ++---------------
+ drivers/net/wireless/ath/wil6210/main.c    |  1 -
+ drivers/net/wireless/ath/wil6210/pm.c      | 20 ++------------------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  5 -----
+ 4 files changed, 4 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 2634650..03d17ea 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1676,8 +1676,6 @@ static ssize_t wil_write_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
+-	wil->suspend_stats.min_suspend_time = ULONG_MAX;
+-	wil->suspend_stats.collection_start = ktime_get();
+ 
+ 	return len;
+ }
+@@ -1689,27 +1687,18 @@ static ssize_t wil_read_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 	static char text[400];
+ 	int n;
+-	unsigned long long stats_collection_time =
+-		ktime_to_us(ktime_sub(ktime_get(),
+-				      wil->suspend_stats.collection_start));
+ 
+ 	n = snprintf(text, sizeof(text),
+ 		     "Suspend statistics:\n"
+ 		     "successful suspends:%ld failed suspends:%ld\n"
+ 		     "successful resumes:%ld failed resumes:%ld\n"
+-		     "rejected by host:%ld rejected by device:%ld\n"
+-		     "total suspend time:%lld min suspend time:%lld\n"
+-		     "max suspend time:%lld stats collection time: %lld\n",
++		     "rejected by host:%ld rejected by device:%ld\n",
+ 		     wil->suspend_stats.successful_suspends,
+ 		     wil->suspend_stats.failed_suspends,
+ 		     wil->suspend_stats.successful_resumes,
+ 		     wil->suspend_stats.failed_resumes,
+ 		     wil->suspend_stats.rejected_by_host,
+-		     wil->suspend_stats.rejected_by_device,
+-		     wil->suspend_stats.total_suspend_time,
+-		     wil->suspend_stats.min_suspend_time,
+-		     wil->suspend_stats.max_suspend_time,
+-		     stats_collection_time);
++		     wil->suspend_stats.rejected_by_device);
+ 
+ 	n = min_t(int, n, sizeof(text));
+ 
+@@ -1881,8 +1870,6 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 
+ 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
+ 
+-	wil->suspend_stats.collection_start = ktime_get();
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index ad1f9f8..9b3726d 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -580,7 +580,6 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
+ 			      WMI_WAKEUP_TRIGGER_BCAST;
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
+-	wil->suspend_stats.min_suspend_time = ULONG_MAX;
+ 	wil->vring_idle_trsh = 16;
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index ce4f546..48ec186 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -319,16 +319,12 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ 	wil_dbg_pm(wil, "suspend: %s => %d\n",
+ 		   is_runtime ? "runtime" : "system", rc);
+ 
+-	if (!rc)
+-		wil->suspend_stats.suspend_start_time = ktime_get();
+-
+ 	return rc;
+ }
+ 
+ int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ {
+ 	int rc = 0;
+-	unsigned long long suspend_time_usec = 0;
+ 
+ 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
+ 
+@@ -346,21 +342,9 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ 	else
+ 		rc = wil_resume_radio_off(wil);
+ 
+-	if (rc)
+-		goto out;
+-
+-	suspend_time_usec =
+-		ktime_to_us(ktime_sub(ktime_get(),
+-				      wil->suspend_stats.suspend_start_time));
+-	wil->suspend_stats.total_suspend_time += suspend_time_usec;
+-	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
+-		wil->suspend_stats.min_suspend_time = suspend_time_usec;
+-	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
+-		wil->suspend_stats.max_suspend_time = suspend_time_usec;
+-
+ out:
+-	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
+-		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
++	wil_dbg_pm(wil, "resume: %s => %d\n", is_runtime ? "runtime" : "system",
++		   rc);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index b7509f3..0d8457e 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -89,11 +89,6 @@ struct wil_suspend_stats {
+ 	unsigned long failed_resumes;
+ 	unsigned long rejected_by_device;
+ 	unsigned long rejected_by_host;
+-	unsigned long long total_suspend_time;
+-	unsigned long long min_suspend_time;
+-	unsigned long long max_suspend_time;
+-	ktime_t collection_start;
+-	ktime_t suspend_start_time;
+ };
+ 
+ /* Calculate MAC buffer size for the firmware. It includes all overhead,
+-- 
+1.9.1
