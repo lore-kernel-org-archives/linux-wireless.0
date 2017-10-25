@@ -1,72 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:36566 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751773AbdJAWrU (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751918AbdJYNOc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Oct 2017 18:47:20 -0400
-Received: by mail-wr0-f195.google.com with SMTP id k10so2738163wrk.3
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Oct 2017 15:47:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1506793068-27445-3-git-send-email-alagusankar@silex-india.com>
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com> <1506793068-27445-3-git-send-email-alagusankar@silex-india.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Sun, 1 Oct 2017 15:47:18 -0700
-Message-ID: <CALLGbR+-G6pKcSPZo=xxJ66iQ0aMJo9xWWq8raSTt5rSASrM=w@mail.gmail.com> (sfid-20171002_004552_595687_1EADD2BC)
-Subject: Re: [PATCH 02/11] ath10k_sdio: wb396 reference card fix
-To: silexcommon@gmail.com
-Cc: ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Alagu Sankar <alagusankar@silex-india.com>
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 25 Oct 2017 09:14:32 -0400
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 10/12] wil6210: fix PCIe bus mastering in case of interface down
+Date: Wed, 25 Oct 2017 16:14:05 +0300
+Message-Id: <1508937247-11890-11-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151437_376323_DD5C520D)
+In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alagu,
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
+In case of interface down, radio is turned off but PCIe mastering is
+not cleared.
+This can cause unexpected PCIe access to the shutdown device.
+Fix this by clearing PCIe mastering also in case interface is down
 
-On Sat, Sep 30, 2017 at 10:37 AM, <silexcommon@gmail.com> wrote:
->
-> From: Alagu Sankar <alagusankar@silex-india.com>
->
-> The QCA9377-3 WB396 sdio reference card does not get initialized
-> due to the conflict in uart gpio pins. This fix is not required
-> for other QCA9377 sdio cards.
->
-> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index b4f66cd..86247c8 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -1708,8 +1708,15 @@ static int ath10k_init_uart(struct ath10k *ar)
->                 return ret;
->         }
->
-> -       if (!uart_print)
-> +       if (!uart_print) {
-> +               /* Hack: override dbg TX pin to avoid side effects of default
-> +                * GPIO_6 in QCA9377 WB396 reference card
-> +                */
-> +               if (ar->hif.bus == ATH10K_BUS_SDIO)
-> +                       ath10k_bmi_write32(ar, hi_dbg_uart_txpin,
-> +                                          ar->hw_params.uart_pin);
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 24 +++++++++++++++---------
+ drivers/net/wireless/ath/wil6210/pm.c       | 10 ++--------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  4 ++--
+ 3 files changed, 19 insertions(+), 19 deletions(-)
 
-If it is indeed a "hack", then I don't think the maintainer should
-accept this upstream. If you want it upstream you need a clean enough
-implementation that doesn't need to be labeled a "hack".
-
-Your commit message states that this is only needed for a very
-specific card and not for other QCA9377 sdio cards. Yet, you're doing
-this for all ATH10K_BUS_SDIO devices. Not good. I think that it's a
-quirk and it's limited to a particular implementation of the device.
-My suggestion: if it can be automatically determined, then do so
-explicitly. If not, then it needs to be a DT setting or a module
-parameter or something like that so the platform maker can decide to
-do it. Having it affect all users of a SDIO QCA9377 when it doesn't
-apply doesn't seem like a good idea to me.
-
-
-- Steve
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 659c32c..07a44d3 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -386,6 +386,9 @@ static int wil6210_suspend(struct device *dev, bool is_runtime)
+ 	int rc = 0;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct wil6210_priv *wil = pci_get_drvdata(pdev);
++	struct net_device *ndev = wil_to_ndev(wil);
++	bool keep_radio_on = ndev->flags & IFF_UP &&
++			     wil->keep_radio_on_during_sleep;
+ 
+ 	wil_dbg_pm(wil, "suspend: %s\n", is_runtime ? "runtime" : "system");
+ 
+@@ -393,14 +396,14 @@ static int wil6210_suspend(struct device *dev, bool is_runtime)
+ 	if (rc)
+ 		goto out;
+ 
+-	rc = wil_suspend(wil, is_runtime);
++	rc = wil_suspend(wil, is_runtime, keep_radio_on);
+ 	if (!rc) {
+ 		wil->suspend_stats.successful_suspends++;
+ 
+-		/* If platform device supports keep_radio_on_during_sleep
+-		 * it will control PCIe master
++		/* In case radio stays on, platform device will control
++		 * PCIe master
+ 		 */
+-		if (!wil->keep_radio_on_during_sleep)
++		if (!keep_radio_on)
+ 			/* disable bus mastering */
+ 			pci_clear_master(pdev);
+ 	}
+@@ -413,20 +416,23 @@ static int wil6210_resume(struct device *dev, bool is_runtime)
+ 	int rc = 0;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct wil6210_priv *wil = pci_get_drvdata(pdev);
++	struct net_device *ndev = wil_to_ndev(wil);
++	bool keep_radio_on = ndev->flags & IFF_UP &&
++			     wil->keep_radio_on_during_sleep;
+ 
+ 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
+ 
+-	/* If platform device supports keep_radio_on_during_sleep it will
+-	 * control PCIe master
++	/* In case radio stays on, platform device will control
++	 * PCIe master
+ 	 */
+-	if (!wil->keep_radio_on_during_sleep)
++	if (!keep_radio_on)
+ 		/* allow master */
+ 		pci_set_master(pdev);
+-	rc = wil_resume(wil, is_runtime);
++	rc = wil_resume(wil, is_runtime, keep_radio_on);
+ 	if (rc) {
+ 		wil_err(wil, "device failed to resume (%d)\n", rc);
+ 		wil->suspend_stats.failed_resumes++;
+-		if (!wil->keep_radio_on_during_sleep)
++		if (!keep_radio_on)
+ 			pci_clear_master(pdev);
+ 	} else {
+ 		wil->suspend_stats.successful_resumes++;
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 2ef2f34..ce4f546 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -300,12 +300,9 @@ static int wil_resume_radio_off(struct wil6210_priv *wil)
+ 	return rc;
+ }
+ 
+-int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
++int wil_suspend(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ {
+ 	int rc = 0;
+-	struct net_device *ndev = wil_to_ndev(wil);
+-	bool keep_radio_on = ndev->flags & IFF_UP &&
+-			     wil->keep_radio_on_during_sleep;
+ 
+ 	wil_dbg_pm(wil, "suspend: %s\n", is_runtime ? "runtime" : "system");
+ 
+@@ -328,12 +325,9 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime)
+ 	return rc;
+ }
+ 
+-int wil_resume(struct wil6210_priv *wil, bool is_runtime)
++int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ {
+ 	int rc = 0;
+-	struct net_device *ndev = wil_to_ndev(wil);
+-	bool keep_radio_on = ndev->flags & IFF_UP &&
+-			     wil->keep_radio_on_during_sleep;
+ 	unsigned long long suspend_time_usec = 0;
+ 
+ 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 6b09998..b7509f3 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -1018,8 +1018,8 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
+ void wil_pm_runtime_put(struct wil6210_priv *wil);
+ 
+ int wil_can_suspend(struct wil6210_priv *wil, bool is_runtime);
+-int wil_suspend(struct wil6210_priv *wil, bool is_runtime);
+-int wil_resume(struct wil6210_priv *wil, bool is_runtime);
++int wil_suspend(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on);
++int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on);
+ bool wil_is_wmi_idle(struct wil6210_priv *wil);
+ int wmi_resume(struct wil6210_priv *wil);
+ int wmi_suspend(struct wil6210_priv *wil);
+-- 
+1.9.1
