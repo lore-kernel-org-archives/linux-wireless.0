@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:18948 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750962AbdJ0Nse (ORCPT
+Received: from mail-ua0-f170.google.com ([209.85.217.170]:52572 "EHLO
+        mail-ua0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932206AbdJYSn5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 09:48:34 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 25 Oct 2017 14:43:57 -0400
+Received: by mail-ua0-f170.google.com with SMTP id i35so721364uah.9
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Oct 2017 11:43:56 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: ath10k: fix sending wmi cmd during the tdls teardown
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1507183926-711-1-git-send-email-akolli@qti.qualcomm.com>
-References: <1507183926-711-1-git-send-email-akolli@qti.qualcomm.com>
-To: <akolli@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <akolli@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>
-Message-ID: <d0abf2d53d544745b0e845314e13e045@euamsexm01a.eu.qualcomm.com> (sfid-20171027_154837_131650_06030E49)
-Date: Fri, 27 Oct 2017 15:48:27 +0200
+From: David Ashley <dashxdr@gmail.com>
+Date: Wed, 25 Oct 2017 13:43:55 -0500
+Message-ID: <CABkE59DHPoLD5PGRHpKMAwy0w3vR9M_qoHEQ1AkK-ELDcUXD9Q@mail.gmail.com> (sfid-20171025_204401_104346_1D83767E)
+Subject: RTL usb adapter question
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-akolli@qti.qualcomm.com wrote:
+I'm trying to understand how the linux kernel loads RTL8188CUS firmware
+rtlwifi: Loading alternative firmware rtlwifi/rtl8192cufw.bin
+when that file isn't available anywhere in my embedded system's filesystem.
 
-> The current firmware 10.4-3.5.1-00035 on QCA9888 supports
-> TDLS explicit mode, it expects WMI_TDLS_ENABLE_PASSIVE
-> for tdls setup and WMI_TDLS_DISABLE for tdls teardown.
-> 
-> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Basically I'm trying to understand the theory. We have a product that
+is making use of the device
 
-Patch applied to ath-next branch of ath.git, thanks.
+Bus 001 Device 007: ID 7392:7811 Edimax Technology Co., Ltd
+EW-7811Un802.11n Wireless Adapter [Realtek RTL8188CUS]
 
-e5b6853e9922 ath10k: fix sending wmi cmd during the tdls teardown
+It has not been especially reliable. I've never provided firmware
+files for the device in the root filesystem. I've started to pay
+attention to the kernel error messages. Now the kernel drivers seem to
+be loading the rtlwifi/rtl8192cufw_TMSC.bin file and I'm trying to
+understand if this is actually working, if it makes any difference in
+reliability...
 
--- 
-https://patchwork.kernel.org/patch/9986455/
+It's like I can't figure out how the usb dongle even worked without
+its firmware file...
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+My working theory is that the usb dongle comes from the factory with a
+hardcoded firmware file (rtlwifi/rtl8192cufw.bin) but it is buggy or
+inferior. And the performance and reliability can be improved if the
+driver successfully manages to load the rtl8192cufw_TMSC.bin file. I
+don't know if the firmware load persists across a power cycle (my
+assumption is it doesn't).
+
+Thanks for any insight anyone can provide.
+
+-Dave
