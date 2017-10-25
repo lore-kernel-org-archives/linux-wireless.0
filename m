@@ -1,94 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0051.outbound.protection.outlook.com ([104.47.33.51]:36001
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751660AbdJOUxy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Oct 2017 16:53:54 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Received: from snoopy.schmut.com ([185.37.248.246]:60550 "EHLO
+        snoopy.schmut.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751998AbdJYHIZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Oct 2017 03:08:25 -0400
+Subject: Re: iwlwifi crash with hostapd
 To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: [PATCH 5/5] qtnfmac: advertise support of inactivity timeout
-Date: Sun, 15 Oct 2017 23:53:27 +0300
-Message-Id: <20171015205327.9966-6-sergey.matyukevich.os@quantenna.com> (sfid-20171015_225420_735501_D641876F)
-In-Reply-To: <20171015205327.9966-1-sergey.matyukevich.os@quantenna.com>
-References: <20171015205327.9966-1-sergey.matyukevich.os@quantenna.com>
+References: <6e51916a-6178-5620-8f45-54705c1b4d98@schmut.com>
+ <20171012212454.GB4362@us.netrek.org>
+ <b985bbb0-ec49-0506-871e-b65837b05be2@schmut.com>
+ <20171016033727.GB13209@us.netrek.org>
+ <2f83cea3-1760-1557-c0ff-0d40ab20f9e8@schmut.com>
+ <20171017233558.GD6841@us.netrek.org> <20171018213337.GA5595@us.netrek.org>
+ <bc6a9aa0-8f13-4e8e-0c40-c19246ad2934@schmut.com>
+ <20171019205933.GB7281@us.netrek.org>
+ <8b961054-0b13-771b-387e-b47837c493ca@schmut.com>
+ <20171024210157.GA19317@us.netrek.org>
+From: Mario Theodoridis <mario@schmut.com>
+Message-ID: <cd09974a-fb0d-2e38-95ce-31dcb6ed10d3@schmut.com> (sfid-20171025_090842_260400_1714A4B1)
+Date: Wed, 25 Oct 2017 09:08:17 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20171024210157.GA19317@us.netrek.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+On 24/10/17 23:01, James Cameron wrote:
+> Summary: WARN_ON(iwl_mvm_is_dqa_supported(mvm)) in
+> iwl_mvm_rx_tx_cmd_single with v4.13, but code is since changed.
+> 
+> On Tue, Oct 24, 2017 at 09:56:31PM +0200, Mario Theodoridis wrote:
+>> Sorry for skipping the list one the last one.
+> 
+> Sorry, that was my fault.  It was a private message you replied to.
+> 
+>> On 19.10.2017 22:59, James Cameron wrote:
+>> [...]
+> 
+> You didn't say virtualbox was essential for reproducing the problem,
+> so I'm continuing to exclude it from thought.  If it is essential for
+> reproducing, then you might contact them.
+> 
+> Please do make sure you can exclude virtualbox as a cause.
 
-Wireless device may implement a logic to kick-out STA due to inactivity
-for a certain period of time. This feature needs to be advertised to
-higher layers if supported. Timeout value is still taken from
-parameters to START_AP command, nothing changes here.
+Let me clarify the virtualbox thing. The machine in question is a VM 
+host. It hosts several machines, one of which is my mail server, and 
+another (openbsd) which acts as a gateway to the internet for all machines.
+If i run this machine without virtualbox, then my entire network 
+topology is off-line. While one could argue, that this is bad design, 
+the alternative would be to use openbsd as a virtual host, but i haven't 
+seen many tutorials on that. I also would like to run just one machine 
+24/7 to keep a tap on the electricity consumption.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |  5 ++++-
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  5 +++--
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 11 ++++++++++-
- 3 files changed, 17 insertions(+), 4 deletions(-)
+This machine also bridges several interfaces and acts as a hotspot for 
+my wlan.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index b4c2fa7934fd..b9841c0d952f 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -955,7 +955,10 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
- 
- 	ether_addr_copy(wiphy->perm_addr, mac->macaddr);
- 
--	if (hw_info->hw_capab & QLINK_HW_SUPPORTS_REG_UPDATE) {
-+	if (hw_info->hw_capab & QLINK_HW_CAPAB_STA_INACT_TIMEOUT)
-+		wiphy->features |= NL80211_FEATURE_INACTIVITY_TIMER;
-+
-+	if (hw_info->hw_capab & QLINK_HW_CAPAB_REG_UPDATE) {
- 		wiphy->regulatory_flags |= REGULATORY_STRICT_REG |
- 			REGULATORY_CUSTOM_REG;
- 		wiphy->reg_notifier = qtnf_cfg80211_reg_notifier;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index babdc600c193..b81f81bd1411 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -975,10 +975,11 @@ qtnf_cmd_resp_proc_hw_info(struct qtnf_bus *bus,
- 		return -EINVAL;
- 	}
- 
--	pr_info("fw_version=%d, MACs map %#x, alpha2=\"%c%c\", chains Tx=%u Rx=%u\n",
-+	pr_info("fw_version=%d, MACs map %#x, alpha2=\"%c%c\", chains Tx=%u Rx=%u, capab=0x%x\n",
- 		hwinfo->fw_ver, hwinfo->mac_bitmap,
- 		hwinfo->rd->alpha2[0], hwinfo->rd->alpha2[1],
--		hwinfo->total_tx_chain, hwinfo->total_rx_chain);
-+		hwinfo->total_tx_chain, hwinfo->total_rx_chain,
-+		hwinfo->hw_capab);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 7b313d38c30b..0f582782682f 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -61,8 +61,17 @@ struct qlink_msg_header {
- /* Generic definitions of data and information carried in QLINK messages
-  */
- 
-+/**
-+ * enum qlink_hw_capab - device capabilities.
-+ *
-+ * @QLINK_HW_CAPAB_REG_UPDATE: device can update it's regulatory region.
-+ * @QLINK_HW_CAPAB_STA_INACT_TIMEOUT: device implements a logic to kick-out
-+ *	associated STAs due to inactivity. Inactivity timeout period is taken
-+ *	from QLINK_CMD_START_AP parameters.
-+ */
- enum qlink_hw_capab {
--	QLINK_HW_SUPPORTS_REG_UPDATE	= BIT(0),
-+	QLINK_HW_CAPAB_REG_UPDATE = BIT(0),
-+	QLINK_HW_CAPAB_STA_INACT_TIMEOUT = BIT(1),
- };
- 
- enum qlink_phy_mode {
+So i don't know whether virtualbox is responsible, but not running 
+virtualbox is simply not an option.
+
+>> This one pretty quickly loads my syslog with new error stacks. I
+>> haven't tested actual behavior yet, but the logs don't look so hot.
+> 
+> Do connections frequently keep dying as before?
+> 
+>> I ran another wireless-info (attached) and appended some of the
+>> syslog stuff to it.
+> 
+> Thanks, you identified a line of code and cause; a WARN_ON in
+> iwl_mvm_rx_tx_cmd_single;
+> 
+> 		case TX_STATUS_FAIL_DEST_PS:
+> 			/* In DQA, the FW should have stopped the queue and not
+> 			 * return this status
+> 			 */
+> 			WARN_ON(iwl_mvm_is_dqa_supported(mvm));
+> 			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+> 			break;
+> 
+> But it is only a warning.  If connections aren't dying, it may not be
+> important to you.
+> 
+> Please check you are using the most recent linux-firmware?
+
+I'm running
+ii  linux-firmware   1.169         all
+from artful.
+No difference to the xenial version.
+
+> 
+>>> Several methods, though by far the most common seems to be personal
+>>> experience with offsets.
+>>>
+>>> When you don't have that personal experience, the methods are;
+>>>
+>>> 1.  using GDB against the .o file,
+>>>
+>>> 2.  using binutils objdump to disassemble .o file or vmlinuz,
+>>>
+>>> 3.  using GCC to generate assembly listings,
+>>>
+>>> See https://wiki.ubuntu.com/Kernel/KernelDebuggingTricks right down
+>>> the end of page for the GDB method.
+>>
+>> I have gotten around to that part, yet, as i was busy with the
+>> above, but it seems later versions have issues, too.
+> 
+> However, you're still testing old source code.
+> 
+> Several changes made since are worth testing, please either
+> cherry-pick the patches or test a 4.14 rc kernel, and without
+> involving dkms or virtualbox.
+
+Then i'd have to patch those files so they build for 4.14 first.
+I've seen patches, but still need to figure out how to get them applied 
+in the build process.
+
 -- 
-2.11.0
+Mit freundlichen Grüßen/Best Regards
+
+Mario Theodoridis
