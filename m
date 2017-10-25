@@ -1,73 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18563 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751755AbdJ3Gyk (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751863AbdJYNOa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 02:54:40 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Lior David <liord@codeaurora.org>
-CC: qca_merez <qca_merez@qca.qualcomm.com>,
-        qca_liord <qca_liord@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        wil6210 <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH 03/12] wil6210: refresh FW capabilities during interface
- up
-Date: Mon, 30 Oct 2017 06:54:35 +0000
-Message-ID: <87lgjt3z2t.fsf@kamboji.qca.qualcomm.com> (sfid-20171030_075444_405348_B6E8F4FE)
+        Wed, 25 Oct 2017 09:14:30 -0400
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 09/12] wil6210: get suspend reject reason and resume triggers from FW
+Date: Wed, 25 Oct 2017 16:14:04 +0300
+Message-Id: <1508937247-11890-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151436_987875_B03A7975)
+In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
 References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
-        <1508937247-11890-4-git-send-email-qca_merez@qca.qualcomm.com>
-        <87o9ors4ef.fsf@purkki.adurom.net>
-        <17994ee8-0d84-2e67-c290-5f1a2f18e0a1@codeaurora.org>
-In-Reply-To: <17994ee8-0d84-2e67-c290-5f1a2f18e0a1@codeaurora.org> (Lior
-        David's message of "Sat, 28 Oct 2017 18:25:59 +0300")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lior David <liord@codeaurora.org> writes:
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-> On 10/28/2017 6:01 PM, Kalle Valo wrote:
->> Maya Erez <qca_merez@qca.qualcomm.com> writes:
->>=20
->>> From: Lior David <qca_liord@qca.qualcomm.com>
->>>
->>> FW capabilities are currently retrieved only during module
->>> initialization, but userspace can replace the firmware while
->>> interface is down, so refresh the FW capabilities when
->>> interface is up (after FW is loaded) to ensure driver
->>> functionality matches the loaded FW.
->>=20
->> I think usually the firmware is loaded only once during probe() and I
->> think it's quite special that you retrieve it during interface up. Being
->> able to change the firmware version runtime like that can lead to
->> problems eventually, for example cfg80211 might not allow changing
->> already registered configuration etc.
->>=20
-> Yes you are right, it is not perfect.
-> We shutdown our chip in interface down so the FW is lost, we have to load=
- it
-> every interface up. We could request_firmware only once at insmod and sto=
-re it
-> so the same FW will be used every time but this is a big waste of memory =
-(FW
-> size is ~400KB and may be larger with future chips). We only touch one or=
- two
-> very simple fields in struct wiphy that are not validated in wiphy_regist=
-er. The
-> behavior is not 100% proof but good enough, and we recommend to our users=
- to
-> always rmmod/insmod when replacing FW (replacing FW at runtime is usually=
- not
-> done in production systems, this is only for debugging).
-> However, if we do not refresh the capabilities we will have larger proble=
-ms -
-> the driver can try to access features not supported by FW and cause FW/ho=
-st crashes.
+Upon receiving suspend reject, print reject reason.
+Upon receiving resume event, print resume triggers.
 
-Yes, I agree that this patch does improve things and should be applied.
-But I think in the long run you should consider changing this and do the
-same as other drivers do (load the firmware only on probe()).
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 46 +++++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/wil6210/wmi.h | 17 ++++++++++---
+ 2 files changed, 57 insertions(+), 6 deletions(-)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index dd25f63..8ace618 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -2043,6 +2043,16 @@ void wmi_event_flush(struct wil6210_priv *wil)
+ 	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
+ }
+ 
++static const char *suspend_status2name(u8 status)
++{
++	switch (status) {
++	case WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE:
++		return "LINK_NOT_IDLE";
++	default:
++		return "Untracked status";
++	}
++}
++
+ int wmi_suspend(struct wil6210_priv *wil)
+ {
+ 	int rc;
+@@ -2058,7 +2068,7 @@ int wmi_suspend(struct wil6210_priv *wil)
+ 	wil->suspend_resp_rcvd = false;
+ 	wil->suspend_resp_comp = false;
+ 
+-	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED;
++	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE;
+ 
+ 	rc = wmi_call(wil, WMI_TRAFFIC_SUSPEND_CMDID, &cmd, sizeof(cmd),
+ 		      WMI_TRAFFIC_SUSPEND_EVENTID, &reply, sizeof(reply),
+@@ -2090,8 +2100,9 @@ int wmi_suspend(struct wil6210_priv *wil)
+ 	}
+ 
+ 	wil_dbg_wmi(wil, "suspend_response_completed rcvd\n");
+-	if (reply.evt.status == WMI_TRAFFIC_SUSPEND_REJECTED) {
+-		wil_dbg_pm(wil, "device rejected the suspend\n");
++	if (reply.evt.status != WMI_TRAFFIC_SUSPEND_APPROVED) {
++		wil_dbg_pm(wil, "device rejected the suspend, %s\n",
++			   suspend_status2name(reply.evt.status));
+ 		wil->suspend_stats.rejected_by_device++;
+ 	}
+ 	rc = reply.evt.status;
+@@ -2103,21 +2114,50 @@ int wmi_suspend(struct wil6210_priv *wil)
+ 	return rc;
+ }
+ 
++static void resume_triggers2string(u32 triggers, char *string, int str_size)
++{
++	string[0] = '\0';
++
++	if (!triggers) {
++		strlcat(string, " UNKNOWN", str_size);
++		return;
++	}
++
++	if (triggers & WMI_RESUME_TRIGGER_HOST)
++		strlcat(string, " HOST", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_UCAST_RX)
++		strlcat(string, " UCAST_RX", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_BCAST_RX)
++		strlcat(string, " BCAST_RX", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_WMI_EVT)
++		strlcat(string, " WMI_EVT", str_size);
++}
++
+ int wmi_resume(struct wil6210_priv *wil)
+ {
+ 	int rc;
++	char string[100];
+ 	struct {
+ 		struct wmi_cmd_hdr wmi;
+ 		struct wmi_traffic_resume_event evt;
+ 	} __packed reply;
+ 
+ 	reply.evt.status = WMI_TRAFFIC_RESUME_FAILED;
++	reply.evt.resume_triggers = WMI_RESUME_TRIGGER_UNKNOWN;
+ 
+ 	rc = wmi_call(wil, WMI_TRAFFIC_RESUME_CMDID, NULL, 0,
+ 		      WMI_TRAFFIC_RESUME_EVENTID, &reply, sizeof(reply),
+ 		      WIL_WAIT_FOR_SUSPEND_RESUME_COMP);
+ 	if (rc)
+ 		return rc;
++	resume_triggers2string(le32_to_cpu(reply.evt.resume_triggers), string,
++			       sizeof(string));
++	wil_dbg_pm(wil, "device resume %s, resume triggers:%s (0x%x)\n",
++		   reply.evt.status ? "failed" : "passed", string,
++		   le32_to_cpu(reply.evt.resume_triggers));
+ 
+ 	return reply.evt.status;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 5263ee7..d9e220a 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -2267,8 +2267,8 @@ struct wmi_link_maintain_cfg_read_done_event {
+ } __packed;
+ 
+ enum wmi_traffic_suspend_status {
+-	WMI_TRAFFIC_SUSPEND_APPROVED	= 0x0,
+-	WMI_TRAFFIC_SUSPEND_REJECTED	= 0x1,
++	WMI_TRAFFIC_SUSPEND_APPROVED			= 0x0,
++	WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE	= 0x1,
+ };
+ 
+ /* WMI_TRAFFIC_SUSPEND_EVENTID */
+@@ -2282,10 +2282,21 @@ enum wmi_traffic_resume_status {
+ 	WMI_TRAFFIC_RESUME_FAILED	= 0x1,
+ };
+ 
++enum wmi_resume_trigger {
++	WMI_RESUME_TRIGGER_UNKNOWN	= 0x0,
++	WMI_RESUME_TRIGGER_HOST		= 0x1,
++	WMI_RESUME_TRIGGER_UCAST_RX	= 0x2,
++	WMI_RESUME_TRIGGER_BCAST_RX	= 0x4,
++	WMI_RESUME_TRIGGER_WMI_EVT	= 0x8,
++};
++
+ /* WMI_TRAFFIC_RESUME_EVENTID */
+ struct wmi_traffic_resume_event {
+-	/* enum wmi_traffic_resume_status_e */
++	/* enum wmi_traffic_resume_status */
+ 	u8 status;
++	u8 reserved[3];
++	/* enum wmi_resume_trigger bitmap */
++	__le32 resume_triggers;
+ } __packed;
+ 
+ /* Power Save command completion status codes */
+-- 
+1.9.1
