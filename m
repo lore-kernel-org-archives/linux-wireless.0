@@ -1,109 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42210 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751931AbdJ2JvT (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:57124 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750780AbdJYErc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 05:51:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 29 Oct 2017 11:51:08 +0200
-Message-Id: <20171029095111.17078-3-luca@coelho.fi> (sfid-20171029_105208_837634_690FD969)
-In-Reply-To: <20171029095111.17078-1-luca@coelho.fi>
-References: <20171029095111.17078-1-luca@coelho.fi>
-Subject: [PATCH 2/5] mac80211: call synchronize_net once in the restart flow
+        Wed, 25 Oct 2017 00:47:32 -0400
+Received: by mail-pg0-f66.google.com with SMTP id m18so16347368pgd.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Oct 2017 21:47:31 -0700 (PDT)
+From: Ryan Mounce <ryan@mounce.com.au>
+To: seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Ryan Mounce <ryan@mounce.com.au>
+Subject: [PATCH] wireless-regdb: convert remaining values in mW to equivalent dBm
+Date: Wed, 25 Oct 2017 15:15:39 +1030
+Message-Id: <20171025044539.17877-1-ryan@mounce.com.au> (sfid-20171025_064738_336787_9E6D9F12)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+This patch converts the few remaining rules specified in mW to directly
+equivalent rules in dBm, to improve consistency of the regdb.
 
-Currently the restart flow enables RX back, and then proceeds
-to tear down RX and TX aggregations.
-The TX aggregation tear down calls synchronize_net(), which
-waits for packet receiving to be done.
-This is done for every session, while RX processing is already
-active, and in some reproductions it takes up to 3 seconds.
-Add a call once in the restart_work, before we have traffic
-active again, and remove the subsequent calls when tearing
-down the aggregation.
-This requires to move down the code that turns off the
-reconfig flag in order to be able to test it in
-_ieee80211_stop_tx_ba_session().
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ryan Mounce <ryan@mounce.com.au>
 ---
- net/mac80211/agg-tx.c |  3 ++-
- net/mac80211/main.c   |  3 +++
- net/mac80211/util.c   | 19 ++++++++++---------
- 3 files changed, 15 insertions(+), 10 deletions(-)
+ db.txt | 64 ++++++++++++++++++++++++++++++++--------------------------------
+ 1 file changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 1d0bf857a3b5..96d1013d277d 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -387,7 +387,8 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 	 * telling the driver. New packets will not go through since
- 	 * the aggregation session is no longer OPERATIONAL.
- 	 */
--	synchronize_net();
-+	if (!local->in_reconfig)
-+		synchronize_net();
+diff --git a/db.txt b/db.txt
+index 9d129f2..8ea5a66 100644
+--- a/db.txt
++++ b/db.txt
+@@ -305,7 +305,7 @@ country CR: DFS-FCC
+ # - Redes Informáticas
+ # Resolución 127, 2011 - Reglamento Banda 2,4 GHz.
+ country CU: DFS-FCC
+-	(2400 - 2483.5 @ 40), (200 mW)
++	(2400 - 2483.5 @ 40), (23)
  
- 	tid_tx->stop_initiator = reason == AGG_STOP_PEER_REQUEST ?
- 					WLAN_BACK_RECIPIENT :
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index e054a2fd8d38..0785d04a80bc 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -263,6 +263,9 @@ static void ieee80211_restart_work(struct work_struct *work)
- 	flush_delayed_work(&local->roc_work);
- 	flush_work(&local->hw_roc_done);
+ country CX: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+@@ -327,10 +327,10 @@ country CY: DFS-ETSI
+ # Power at 5250 - 5350 MHz and 5470 - 5725 MHz can be doubled if TPC is
+ # implemented.
+ country CZ: DFS-ETSI
+-	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
+-	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
+-	(5470 - 5725 @ 160), (500 mW), DFS
++	(2400 - 2483.5 @ 40), (20)
++	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
++	(5470 - 5725 @ 160), (27), DFS
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
  
-+	/* wait for all packet processing to be done */
-+	synchronize_net();
-+
- 	ieee80211_reconfig(local);
- 	rtnl_unlock();
- }
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index d57e5f6bd8b6..1f82191ce601 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2110,15 +2110,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy, 0);
+@@ -362,12 +362,12 @@ country CZ: DFS-ETSI
+ # https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2011_08_MGWS_pdf.pdf
  
-  wake_up:
--	if (local->in_reconfig) {
--		local->in_reconfig = false;
--		barrier();
--
--		/* Restart deferred ROCs */
--		mutex_lock(&local->mtx);
--		ieee80211_start_next_roc(local);
--		mutex_unlock(&local->mtx);
--	}
+ country DE: DFS-ETSI
+-	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW
+-	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
+-	(5470 - 5725 @ 160), (500 mW), DFS
++	(2400 - 2483.5 @ 40), (20)
++	(5150 - 5250 @ 80), (20), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
++	(5470 - 5725 @ 160), (27), DFS
+ 	# short range devices (ETSI EN 300 440-1)
+-	(5725 - 5875 @ 80), (25 mW)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4 (ETSI EN 302 567)
+ 	(57000 - 66000 @ 2160), (40)
  
- 	if (local->monitors == local->open_count && local->monitors > 0)
- 		ieee80211_add_virtual_monitor(local);
-@@ -2146,6 +2137,16 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		mutex_unlock(&local->sta_mtx);
- 	}
+@@ -427,12 +427,12 @@ country EG: DFS-ETSI
+ # http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
  
-+	if (local->in_reconfig) {
-+		local->in_reconfig = false;
-+		barrier();
-+
-+		/* Restart deferred ROCs */
-+		mutex_lock(&local->mtx);
-+		ieee80211_start_next_roc(local);
-+		mutex_unlock(&local->mtx);
-+	}
-+
- 	ieee80211_wake_queues_by_reason(hw, IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_SUSPEND,
- 					false);
+ country ES: DFS-ETSI
+-	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
+-	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
+-	(5470 - 5725 @ 160), (500 mW), DFS
++	(2400 - 2483.5 @ 40), (20)
++	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
++	(5470 - 5725 @ 160), (27), DFS
+ 	# Short Range Devices (SRD) (ETSI EN 300 440)
+-	(5725 - 5875 @ 80), (25 mW)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -589,8 +589,8 @@ country IE: DFS-ETSI
+ 
+ country IL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
+-	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR, DFS, AUTO-BW
++	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
++	(5250 - 5350 @ 80), (23), NO-OUTDOOR, DFS, AUTO-BW
+ 
+ country IN:
+ 	(2402 - 2482 @ 40), (20)
+@@ -639,7 +639,7 @@ country JP: DFS-JP
+ 	(5490 - 5710 @ 160), (23), DFS
+ 	# 60 GHz band channels 2-4 at 10mW,
+ 	# ref: http://www.arib.or.jp/english/html/overview/doc/1-STD-T74v1_1.pdf
+-	(59000 - 66000 @ 2160), (10 mW)
++	(59000 - 66000 @ 2160), (10)
+ 
+ country KE: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+@@ -856,10 +856,10 @@ country MU: DFS-FCC
+ # Source:
+ # http://www.cam.gov.mv/docs/tech_standards/TAM-TS-100-2004-WLAN.pdf
+ country MV: DFS-ETSI
+-	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5250 @ 80), (200 mW), AUTO-BW
+-	(5250 - 5350 @ 80), (100 mW), DFS, AUTO-BW
+-	(5725 - 5850 @ 80), (100 mW)
++	(2400 - 2483.5 @ 40), (20)
++	(5150 - 5250 @ 80), (23), AUTO-BW
++	(5250 - 5350 @ 80), (20), DFS, AUTO-BW
++	(5725 - 5850 @ 80), (20)
+ 
+ country MW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+@@ -904,7 +904,7 @@ country NL: DFS-ETSI
+ 	(5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
+ 	# short range devices (ETSI EN 300 440-1)
+-	(5725 - 5875 @ 80), (25 mW)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -914,12 +914,12 @@ country NL: DFS-ETSI
+ # Up to 2W (or 4W with TPC) is allowed in the 5725 – 5795 MHz band
+ # which has been merged with 5470 - 5725 MHz to allow wide channels
+ country NO: DFS-ETSI
+-	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5250 @ 80), (200 mW), AUTO-BW
+-	(5250 - 5350 @ 80), (100 mW), DFS, AUTO-BW
+-	(5470 - 5795 @ 160), (500 mW), DFS
+-	(5815 - 5850 @ 35), (2000 mW), DFS
+-	(17100 - 17300 @ 200), (100 mW)
++	(2400 - 2483.5 @ 40), (20)
++	(5150 - 5250 @ 80), (23), AUTO-BW
++	(5250 - 5350 @ 80), (20), DFS, AUTO-BW
++	(5470 - 5795 @ 160), (27), DFS
++	(5815 - 5850 @ 35), (33), DFS
++	(17100 - 17300 @ 200), (20)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -1044,9 +1044,9 @@ country RO: DFS-ETSI
+ # Source:
+ # http://www.ratel.rs/upload/documents/Plan_namene/Plan_namene-sl_glasnik.pdf
+ country RS: DFS-ETSI
+-	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5350 @ 40), (200 mW), NO-OUTDOOR
+-	(5470 - 5725 @ 20), (1000 mW), DFS
++	(2400 - 2483.5 @ 40), (20)
++	(5150 - 5350 @ 40), (23), NO-OUTDOOR
++	(5470 - 5725 @ 20), (30), DFS
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
 -- 
-2.14.2
+2.13.5 (Apple Git-94)
