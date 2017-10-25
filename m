@@ -1,128 +1,301 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752898AbdJaBFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 21:05:08 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 5/9] qtnfmac: SCAN results: retreive frame type information from "IE set" TLV
-Date: Mon, 30 Oct 2017 18:04:51 -0700
-Message-Id: <20171031010455.27772-6-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020519_870462_DB000BBB)
-In-Reply-To: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
-References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751712AbdJYNOQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Oct 2017 09:14:16 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 02/12] wil6210: print human readable names of WMI commands and events
+Date: Wed, 25 Oct 2017 16:13:57 +0300
+Message-Id: <1508937247-11890-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151420_660844_792E3ADC)
+In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-"IE set" TLV carries the same information as
-qlink_event_scan_result::frame_type. Convert the event to make use of
-TLV and drop frame_type member.
-While at it, make qlink_event_scan_result structure alignement-safe.
+Upon sending/receiving WMI commands/events, print human readable
+names in addition to id for easier debugging.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/event.c | 25 ++++++++++++-------------
- drivers/net/wireless/quantenna/qtnfmac/qlink.h | 11 ++---------
- 2 files changed, 14 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/wil6210/wmi.c | 237 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 232 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index b67a082..4abc6d9 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -252,13 +252,12 @@ qtnf_event_handle_scan_results(struct qtnf_vif *vif,
- 	struct cfg80211_bss *bss;
- 	struct ieee80211_channel *channel;
- 	struct wiphy *wiphy = priv_to_wiphy(vif->mac);
--	enum cfg80211_bss_frame_type frame_type;
-+	enum cfg80211_bss_frame_type frame_type = CFG80211_BSS_FTYPE_UNKNOWN;
- 	size_t payload_len;
- 	u16 tlv_type;
- 	u16 tlv_value_len;
- 	size_t tlv_full_len;
- 	const struct qlink_tlv_hdr *tlv;
--
- 	const u8 *ies = NULL;
- 	size_t ies_len = 0;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index ffdd2fa..8a780f2 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -198,6 +198,232 @@ int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
+ 	return 0;
+ }
  
-@@ -275,17 +274,6 @@ qtnf_event_handle_scan_results(struct qtnf_vif *vif,
- 		return -EINVAL;
- 	}
- 
--	switch (sr->frame_type) {
--	case QLINK_BSS_FTYPE_BEACON:
--		frame_type = CFG80211_BSS_FTYPE_BEACON;
--		break;
--	case QLINK_BSS_FTYPE_PRESP:
--		frame_type = CFG80211_BSS_FTYPE_PRESP;
--		break;
--	default:
--		frame_type = CFG80211_BSS_FTYPE_UNKNOWN;
--	}
--
- 	payload_len = len - sizeof(*sr);
- 	tlv = (struct qlink_tlv_hdr *)sr->payload;
- 
-@@ -308,6 +296,17 @@ qtnf_event_handle_scan_results(struct qtnf_vif *vif,
- 			ie_len = tlv_value_len -
- 				(sizeof(*ie_set) - sizeof(ie_set->hdr));
- 
-+			switch (ie_set->type) {
-+			case QLINK_IE_SET_BEACON_IES:
-+				frame_type = CFG80211_BSS_FTYPE_BEACON;
-+				break;
-+			case QLINK_IE_SET_PROBE_RESP_IES:
-+				frame_type = CFG80211_BSS_FTYPE_PRESP;
-+				break;
-+			default:
-+				frame_type = CFG80211_BSS_FTYPE_UNKNOWN;
-+			}
++static const char *cmdid2name(u16 cmdid)
++{
++	switch (cmdid) {
++	case WMI_NOTIFY_REQ_CMDID:
++		return "WMI_NOTIFY_REQ_CMD";
++	case WMI_START_SCAN_CMDID:
++		return "WMI_START_SCAN_CMD";
++	case WMI_CONNECT_CMDID:
++		return "WMI_CONNECT_CMD";
++	case WMI_DISCONNECT_CMDID:
++		return "WMI_DISCONNECT_CMD";
++	case WMI_SW_TX_REQ_CMDID:
++		return "WMI_SW_TX_REQ_CMD";
++	case WMI_GET_RF_SECTOR_PARAMS_CMDID:
++		return "WMI_GET_RF_SECTOR_PARAMS_CMD";
++	case WMI_SET_RF_SECTOR_PARAMS_CMDID:
++		return "WMI_SET_RF_SECTOR_PARAMS_CMD";
++	case WMI_GET_SELECTED_RF_SECTOR_INDEX_CMDID:
++		return "WMI_GET_SELECTED_RF_SECTOR_INDEX_CMD";
++	case WMI_SET_SELECTED_RF_SECTOR_INDEX_CMDID:
++		return "WMI_SET_SELECTED_RF_SECTOR_INDEX_CMD";
++	case WMI_BRP_SET_ANT_LIMIT_CMDID:
++		return "WMI_BRP_SET_ANT_LIMIT_CMD";
++	case WMI_TOF_SESSION_START_CMDID:
++		return "WMI_TOF_SESSION_START_CMD";
++	case WMI_AOA_MEAS_CMDID:
++		return "WMI_AOA_MEAS_CMD";
++	case WMI_PMC_CMDID:
++		return "WMI_PMC_CMD";
++	case WMI_TOF_GET_TX_RX_OFFSET_CMDID:
++		return "WMI_TOF_GET_TX_RX_OFFSET_CMD";
++	case WMI_TOF_SET_TX_RX_OFFSET_CMDID:
++		return "WMI_TOF_SET_TX_RX_OFFSET_CMD";
++	case WMI_VRING_CFG_CMDID:
++		return "WMI_VRING_CFG_CMD";
++	case WMI_BCAST_VRING_CFG_CMDID:
++		return "WMI_BCAST_VRING_CFG_CMD";
++	case WMI_TRAFFIC_SUSPEND_CMDID:
++		return "WMI_TRAFFIC_SUSPEND_CMD";
++	case WMI_TRAFFIC_RESUME_CMDID:
++		return "WMI_TRAFFIC_RESUME_CMD";
++	case WMI_ECHO_CMDID:
++		return "WMI_ECHO_CMD";
++	case WMI_SET_MAC_ADDRESS_CMDID:
++		return "WMI_SET_MAC_ADDRESS_CMD";
++	case WMI_LED_CFG_CMDID:
++		return "WMI_LED_CFG_CMD";
++	case WMI_PCP_START_CMDID:
++		return "WMI_PCP_START_CMD";
++	case WMI_PCP_STOP_CMDID:
++		return "WMI_PCP_STOP_CMD";
++	case WMI_SET_SSID_CMDID:
++		return "WMI_SET_SSID_CMD";
++	case WMI_GET_SSID_CMDID:
++		return "WMI_GET_SSID_CMD";
++	case WMI_SET_PCP_CHANNEL_CMDID:
++		return "WMI_SET_PCP_CHANNEL_CMD";
++	case WMI_GET_PCP_CHANNEL_CMDID:
++		return "WMI_GET_PCP_CHANNEL_CMD";
++	case WMI_P2P_CFG_CMDID:
++		return "WMI_P2P_CFG_CMD";
++	case WMI_START_LISTEN_CMDID:
++		return "WMI_START_LISTEN_CMD";
++	case WMI_START_SEARCH_CMDID:
++		return "WMI_START_SEARCH_CMD";
++	case WMI_DISCOVERY_STOP_CMDID:
++		return "WMI_DISCOVERY_STOP_CMD";
++	case WMI_DELETE_CIPHER_KEY_CMDID:
++		return "WMI_DELETE_CIPHER_KEY_CMD";
++	case WMI_ADD_CIPHER_KEY_CMDID:
++		return "WMI_ADD_CIPHER_KEY_CMD";
++	case WMI_SET_APPIE_CMDID:
++		return "WMI_SET_APPIE_CMD";
++	case WMI_CFG_RX_CHAIN_CMDID:
++		return "WMI_CFG_RX_CHAIN_CMD";
++	case WMI_TEMP_SENSE_CMDID:
++		return "WMI_TEMP_SENSE_CMD";
++	case WMI_DEL_STA_CMDID:
++		return "WMI_DEL_STA_CMD";
++	case WMI_DISCONNECT_STA_CMDID:
++		return "WMI_DISCONNECT_STA_CMD";
++	case WMI_VRING_BA_EN_CMDID:
++		return "WMI_VRING_BA_EN_CMD";
++	case WMI_VRING_BA_DIS_CMDID:
++		return "WMI_VRING_BA_DIS_CMD";
++	case WMI_RCP_DELBA_CMDID:
++		return "WMI_RCP_DELBA_CMD";
++	case WMI_RCP_ADDBA_RESP_CMDID:
++		return "WMI_RCP_ADDBA_RESP_CMD";
++	case WMI_PS_DEV_PROFILE_CFG_CMDID:
++		return "WMI_PS_DEV_PROFILE_CFG_CMD";
++	case WMI_SET_MGMT_RETRY_LIMIT_CMDID:
++		return "WMI_SET_MGMT_RETRY_LIMIT_CMD";
++	case WMI_GET_MGMT_RETRY_LIMIT_CMDID:
++		return "WMI_GET_MGMT_RETRY_LIMIT_CMD";
++	case WMI_ABORT_SCAN_CMDID:
++		return "WMI_ABORT_SCAN_CMD";
++	case WMI_NEW_STA_CMDID:
++		return "WMI_NEW_STA_CMD";
++	case WMI_SET_THERMAL_THROTTLING_CFG_CMDID:
++		return "WMI_SET_THERMAL_THROTTLING_CFG_CMD";
++	case WMI_GET_THERMAL_THROTTLING_CFG_CMDID:
++		return "WMI_GET_THERMAL_THROTTLING_CFG_CMD";
++	case WMI_LINK_MAINTAIN_CFG_WRITE_CMDID:
++		return "WMI_LINK_MAINTAIN_CFG_WRITE_CMD";
++	case WMI_LO_POWER_CALIB_FROM_OTP_CMDID:
++		return "WMI_LO_POWER_CALIB_FROM_OTP_CMD";
++	default:
++		return "Untracked CMD";
++	}
++}
 +
- 			if (ie_len) {
- 				ies = ie_set->ie_data;
- 				ies_len = ie_len;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index f491942..81effd2 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -881,12 +881,6 @@ struct qlink_event_rxmgmt {
- 	u8 frame_data[0];
- } __packed;
++static const char *eventid2name(u16 eventid)
++{
++	switch (eventid) {
++	case WMI_NOTIFY_REQ_DONE_EVENTID:
++		return "WMI_NOTIFY_REQ_DONE_EVENT";
++	case WMI_DISCONNECT_EVENTID:
++		return "WMI_DISCONNECT_EVENT";
++	case WMI_SW_TX_COMPLETE_EVENTID:
++		return "WMI_SW_TX_COMPLETE_EVENT";
++	case WMI_GET_RF_SECTOR_PARAMS_DONE_EVENTID:
++		return "WMI_GET_RF_SECTOR_PARAMS_DONE_EVENT";
++	case WMI_SET_RF_SECTOR_PARAMS_DONE_EVENTID:
++		return "WMI_SET_RF_SECTOR_PARAMS_DONE_EVENT";
++	case WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID:
++		return "WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT";
++	case WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID:
++		return "WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT";
++	case WMI_BRP_SET_ANT_LIMIT_EVENTID:
++		return "WMI_BRP_SET_ANT_LIMIT_EVENT";
++	case WMI_FW_READY_EVENTID:
++		return "WMI_FW_READY_EVENT";
++	case WMI_TRAFFIC_RESUME_EVENTID:
++		return "WMI_TRAFFIC_RESUME_EVENT";
++	case WMI_TOF_GET_TX_RX_OFFSET_EVENTID:
++		return "WMI_TOF_GET_TX_RX_OFFSET_EVENT";
++	case WMI_TOF_SET_TX_RX_OFFSET_EVENTID:
++		return "WMI_TOF_SET_TX_RX_OFFSET_EVENT";
++	case WMI_VRING_CFG_DONE_EVENTID:
++		return "WMI_VRING_CFG_DONE_EVENT";
++	case WMI_READY_EVENTID:
++		return "WMI_READY_EVENT";
++	case WMI_RX_MGMT_PACKET_EVENTID:
++		return "WMI_RX_MGMT_PACKET_EVENT";
++	case WMI_TX_MGMT_PACKET_EVENTID:
++		return "WMI_TX_MGMT_PACKET_EVENT";
++	case WMI_SCAN_COMPLETE_EVENTID:
++		return "WMI_SCAN_COMPLETE_EVENT";
++	case WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID:
++		return "WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENT";
++	case WMI_CONNECT_EVENTID:
++		return "WMI_CONNECT_EVENT";
++	case WMI_EAPOL_RX_EVENTID:
++		return "WMI_EAPOL_RX_EVENT";
++	case WMI_BA_STATUS_EVENTID:
++		return "WMI_BA_STATUS_EVENT";
++	case WMI_RCP_ADDBA_REQ_EVENTID:
++		return "WMI_RCP_ADDBA_REQ_EVENT";
++	case WMI_DELBA_EVENTID:
++		return "WMI_DELBA_EVENT";
++	case WMI_VRING_EN_EVENTID:
++		return "WMI_VRING_EN_EVENT";
++	case WMI_DATA_PORT_OPEN_EVENTID:
++		return "WMI_DATA_PORT_OPEN_EVENT";
++	case WMI_AOA_MEAS_EVENTID:
++		return "WMI_AOA_MEAS_EVENT";
++	case WMI_TOF_SESSION_END_EVENTID:
++		return "WMI_TOF_SESSION_END_EVENT";
++	case WMI_TOF_GET_CAPABILITIES_EVENTID:
++		return "WMI_TOF_GET_CAPABILITIES_EVENT";
++	case WMI_TOF_SET_LCR_EVENTID:
++		return "WMI_TOF_SET_LCR_EVENT";
++	case WMI_TOF_SET_LCI_EVENTID:
++		return "WMI_TOF_SET_LCI_EVENT";
++	case WMI_TOF_FTM_PER_DEST_RES_EVENTID:
++		return "WMI_TOF_FTM_PER_DEST_RES_EVENT";
++	case WMI_TOF_CHANNEL_INFO_EVENTID:
++		return "WMI_TOF_CHANNEL_INFO_EVENT";
++	case WMI_TRAFFIC_SUSPEND_EVENTID:
++		return "WMI_TRAFFIC_SUSPEND_EVENT";
++	case WMI_ECHO_RSP_EVENTID:
++		return "WMI_ECHO_RSP_EVENT";
++	case WMI_LED_CFG_DONE_EVENTID:
++		return "WMI_LED_CFG_DONE_EVENT";
++	case WMI_PCP_STARTED_EVENTID:
++		return "WMI_PCP_STARTED_EVENT";
++	case WMI_PCP_STOPPED_EVENTID:
++		return "WMI_PCP_STOPPED_EVENT";
++	case WMI_GET_SSID_EVENTID:
++		return "WMI_GET_SSID_EVENT";
++	case WMI_GET_PCP_CHANNEL_EVENTID:
++		return "WMI_GET_PCP_CHANNEL_EVENT";
++	case WMI_P2P_CFG_DONE_EVENTID:
++		return "WMI_P2P_CFG_DONE_EVENT";
++	case WMI_LISTEN_STARTED_EVENTID:
++		return "WMI_LISTEN_STARTED_EVENT";
++	case WMI_SEARCH_STARTED_EVENTID:
++		return "WMI_SEARCH_STARTED_EVENT";
++	case WMI_DISCOVERY_STOPPED_EVENTID:
++		return "WMI_DISCOVERY_STOPPED_EVENT";
++	case WMI_CFG_RX_CHAIN_DONE_EVENTID:
++		return "WMI_CFG_RX_CHAIN_DONE_EVENT";
++	case WMI_TEMP_SENSE_DONE_EVENTID:
++		return "WMI_TEMP_SENSE_DONE_EVENT";
++	case WMI_RCP_ADDBA_RESP_SENT_EVENTID:
++		return "WMI_RCP_ADDBA_RESP_SENT_EVENT";
++	case WMI_PS_DEV_PROFILE_CFG_EVENTID:
++		return "WMI_PS_DEV_PROFILE_CFG_EVENT";
++	case WMI_SET_MGMT_RETRY_LIMIT_EVENTID:
++		return "WMI_SET_MGMT_RETRY_LIMIT_EVENT";
++	case WMI_GET_MGMT_RETRY_LIMIT_EVENTID:
++		return "WMI_GET_MGMT_RETRY_LIMIT_EVENT";
++	case WMI_SET_THERMAL_THROTTLING_CFG_EVENTID:
++		return "WMI_SET_THERMAL_THROTTLING_CFG_EVENT";
++	case WMI_GET_THERMAL_THROTTLING_CFG_EVENTID:
++		return "WMI_GET_THERMAL_THROTTLING_CFG_EVENT";
++	case WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENTID:
++		return "WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENT";
++	case WMI_LO_POWER_CALIB_FROM_OTP_EVENTID:
++		return "WMI_LO_POWER_CALIB_FROM_OTP_EVENT";
++	default:
++		return "Untracked EVENT";
++	}
++}
++
+ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ {
+ 	struct {
+@@ -294,7 +520,8 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ 	}
+ 	cmd.hdr.seq = cpu_to_le16(++wil->wmi_seq);
+ 	/* set command */
+-	wil_dbg_wmi(wil, "WMI command 0x%04x [%d]\n", cmdid, len);
++	wil_dbg_wmi(wil, "sending %s (0x%04x) [%d]\n",
++		    cmdid2name(cmdid), cmdid, len);
+ 	wil_hex_dump_wmi("Cmd ", DUMP_PREFIX_OFFSET, 16, 1, &cmd,
+ 			 sizeof(cmd), true);
+ 	wil_hex_dump_wmi("cmd ", DUMP_PREFIX_OFFSET, 16, 1, buf,
+@@ -963,8 +1190,8 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 			}
+ 			spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
  
--enum qlink_frame_type {
--	QLINK_BSS_FTYPE_UNKNOWN,
--	QLINK_BSS_FTYPE_BEACON,
--	QLINK_BSS_FTYPE_PRESP,
--};
--
- /**
-  * struct qlink_event_scan_result - data for QLINK_EVENT_SCAN_RESULTS event
-  *
-@@ -896,7 +890,6 @@ enum qlink_frame_type {
-  * @capab: capabilities field.
-  * @bintval: beacon interval announced by discovered BSS.
-  * @signal: signal strength.
-- * @frame_type: frame type used to get scan result, see &enum qlink_frame_type.
-  * @bssid: BSSID announced by discovered BSS.
-  * @ssid_len: length of SSID announced by BSS.
-  * @ssid: SSID announced by discovered BSS.
-@@ -909,10 +902,10 @@ struct qlink_event_scan_result {
- 	__le16 capab;
- 	__le16 bintval;
- 	s8 signal;
--	u8 frame_type;
--	u8 bssid[ETH_ALEN];
- 	u8 ssid_len;
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
-+	u8 bssid[ETH_ALEN];
-+	u8 rsvd[2];
- 	u8 payload[0];
- } __packed;
+-			wil_dbg_wmi(wil, "WMI event 0x%04x MID %d @%d msec\n",
+-				    id, wmi->mid, tstamp);
++			wil_dbg_wmi(wil, "recv %s (0x%04x) MID %d @%d msec\n",
++				    eventid2name(id), id, wmi->mid, tstamp);
+ 			trace_wil6210_wmi_event(wmi, &wmi[1],
+ 						len - sizeof(*wmi));
+ 		}
+@@ -1906,8 +2133,8 @@ static void wmi_event_handle(struct wil6210_priv *wil,
+ 		void *evt_data = (void *)(&wmi[1]);
+ 		u16 id = le16_to_cpu(wmi->command_id);
  
+-		wil_dbg_wmi(wil, "Handle WMI 0x%04x (reply_id 0x%04x)\n",
+-			    id, wil->reply_id);
++		wil_dbg_wmi(wil, "Handle %s (0x%04x) (reply_id 0x%04x)\n",
++			    eventid2name(id), id, wil->reply_id);
+ 		/* check if someone waits for this event */
+ 		if (wil->reply_id && wil->reply_id == id) {
+ 			WARN_ON(wil->reply_buf);
 -- 
-2.9.5
+1.9.1
