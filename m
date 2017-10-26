@@ -1,76 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54454 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756656AbdJKIih (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 04:38:37 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
-Subject: Re: pull-request: iwlwifi-next 2017-10-06-2
-References: <1507293175.908.134.camel@coelho.fi>
-Date: Wed, 11 Oct 2017 11:38:28 +0300
-In-Reply-To: <1507293175.908.134.camel@coelho.fi> (Luca Coelho's message of
-        "Fri, 06 Oct 2017 15:32:55 +0300")
-Message-ID: <87sheqqdtn.fsf@kamboji.qca.qualcomm.com> (sfid-20171011_103843_474152_3555A257)
+Received: from swan.media.mit.edu ([18.85.44.157]:54087 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932326AbdJZWAU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Oct 2017 18:00:20 -0400
+Date: Fri, 27 Oct 2017 09:00:13 +1100
+From: James Cameron <quozl@laptop.org>
+To: David Ashley <dashxdr@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: RTL usb adapter question
+Message-ID: <20171026220013.GC9888@us.netrek.org> (sfid-20171027_000024_312450_DCCC2EC0)
+References: <CABkE59DHPoLD5PGRHpKMAwy0w3vR9M_qoHEQ1AkK-ELDcUXD9Q@mail.gmail.com>
+ <5f907d16-b889-f7c0-0873-880e5c812ab9@lwfinger.net>
+ <CABkE59A2Cr5mx3W_rkHj+qDtu6t-MQ2V_sJPfuuqF4vbJ7YfmQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CABkE59A2Cr5mx3W_rkHj+qDtu6t-MQ2V_sJPfuuqF4vbJ7YfmQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Base on your evidence, I'd say the device is different to others and
+has firmware included.
 
-> Here's the second version of my first pull-request intended for
-> v4.15.  It contains the last two patch sets I sent out with v2 of the
-> pci dump patch.
->
-> In v2 we have fixed a potential kernel oops when our driver is used
-> with qemu, for instance.  In that case, the root port is NULL and we
-> were trying to access it without checing.
->
-> I have sent this out before and kbuildbot reported success.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit a7c9acc452b21b56c99dd7dfe0ab542f7baa6563:
->
->   brcmfmac: Delete redundant length check (2017-10-02 17:07:00 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2017-10-06-2
->
-> for you to fetch changes up to f2abcfa6c86e503b352846ace9d6ab9b02ade0ab:
->
->   iwlwifi: remove dflt_pwr_limit from the transport (2017-10-06 15:22:34 +0300)
->
-> ----------------------------------------------------------------
-> First batch of iwlwifi patches for 4.15 (v2)
->
-> * Cleanups: - remove an unused value that we read from the NVM;
->             - remove link quality measurement code that was never used;
-> * One FW command API update;
-> * A fix and an addition for PCI devices for the A000 family;
-> * Tiny refactor of ref/unref code used by runtime-PM;
-> * Some debugging improvements;
-> * Implementation of a more flexible way to define command queue sizes;
-> * ACPI code refactoring;
-> * Some coding-style fixes;
-> * Avoid redundant command to the firmware;
-> * Add a struct with the format of one FW command;
-> * Change an error log to a warning when the FW API is not aligned with
->   the driver (important during development);
-> * Change a WARN_ON to WARN_ONCE to make it more descriptive and less
->   noisy (i.e. no repeated warnings on a firmware triggered error);
-> * Dump PCI registers when an error occurs, to make it easier to debug;
->
-> ----------------------------------------------------------------
-
-Pulled, thanks.
+On Thu, Oct 26, 2017 at 04:45:54PM -0500, David Ashley wrote:
+> OK I'm completely baffled.
+> 
+> I have explicitly removed all rtlwifi/ firmware files from the root
+> filesystem and yet the usb dongle still works, even after a power
+> cycle. How can it possibly be getting its firmware file????????
+> 
+> Here are the relevant kernel messages. There is no file
+> rtl8192cufw.bin anywhere for the kernel to find...
+> root@30046:~# ls -l /lib/firmware/rtlwifi/
+> total 0
+> 
+> I have ensured there is no *OTHER* route to the internet such that the
+> driver (or udev) can magically get the firmware file from the
+> internet...
+> 
+> Here's other info that may be useful...
+> 
+> root@30046:~# zcat /proc/config.gz | grep FIRM
+> CONFIG_PREVENT_FIRMWARE_BUILD=y
+> CONFIG_FIRMWARE_IN_KERNEL=y
+> CONFIG_EXTRA_FIRMWARE="am335x-pm-firmware.elf
+> am335x-bone-scale-data.bin am335x-evm-scale-data.bin
+> am43x-evm-scale-data.bin"
+> CONFIG_EXTRA_FIRMWARE_DIR="firmware"
+> # CONFIG_LIBERTAS_THINFIRM is not set
+> # CONFIG_FIRMWARE_MEMMAP is not set
+> # CONFIG_TEST_FIRMWARE is not set
+> root@30046:~# cat /proc/version
+> Linux version 4.1.19-bone20 (dash@DaveDesktop) (gcc version 5.4.0
+> 20160609 (Ubuntu/Linaro 5.4.0-6ubuntu1~16.04.4) ) #2 Tue Oct 3
+> 17:25:35 CDT 2017
+> root@30046:~# lsusb
+> Bus 001 Device 002: ID 7392:7811 Edimax Technology Co., Ltd EW-7811Un
+> 802.11n Wireless Adapter [Realtek RTL8188CUS]
+> 
+> ... ifconfig
+> wlan0     Link encap:Ethernet  HWaddr 74:da:38:61:f1:2c
+>           inet addr:192.168.10.31  Bcast:192.168.10.255  Mask:255.255.255.0
+>           inet6 addr: fe80::76da:38ff:fe61:f12c/64 Scope:Link
+>           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>           RX packets:509 errors:0 dropped:0 overruns:0 frame:0
+>           TX packets:146 errors:0 dropped:0 overruns:0 carrier:0
+>           collisions:0 txqueuelen:1000
+>           RX bytes:60812 (59.3 KiB)  TX bytes:16365 (15.9 KiB)
+> 
+> 
+> 
+> 
+> [    9.663796] rtl8192cu: Chip version 0x10
+> [    9.745394] cfg80211: Calling CRDA to update world regulatory domain
+> [    9.844311] random: nonblocking pool is initialized
+> [    9.877851] rtl8192cu: MAC address: 74:da:38:61:f1:2c
+> [    9.877883] rtl8192cu: Board Type 0
+> [    9.877989] rtl_usb: rx_max_size 15360, rx_urb_num 8, in_ep 1
+> [    9.878098] rtl8192cu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
+> [    9.878249] usb 1-1: Direct firmware load for
+> rtlwifi/rtl8192cufw_TMSC.bin failed with error -2
+> [    9.889781] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+> [    9.890862] usbcore: registered new interface driver rtl8192cu
+> [    9.897667] usb 1-1: Direct firmware load for
+> rtlwifi/rtl8192cufw.bin failed with error -2
+> [    9.906030] rtlwifi: Loading alternative firmware rtlwifi/rtl8192cufw.bin
+> [    9.906037] rtlwifi: Firmware rtlwifi/rtl8192cufw_TMSC.bin not available
+> [   11.316476] rtl8192cu: MAC auto ON okay!
+> [   11.333847] rtl8192cu: Tx queue select: 0x05
+> [   12.364722] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [   12.905367] cfg80211: Calling CRDA to update world regulatory domain
+> [   13.413043] rtl8192cu: MAC auto ON okay!
+> [   13.430371] rtl8192cu: Tx queue select: 0x05
+> [   15.795679] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [   16.065356] cfg80211: Calling CRDA to update world regulatory domain
+> [   19.225333] cfg80211: Calling CRDA to update world regulatory domain
+> [   21.582749] wlan0: authenticate with 70:4d:7b:1d:91:40
+> [   21.600676] wlan0: send auth to 70:4d:7b:1d:91:40 (try 1/3)
+> [   21.605390] wlan0: authenticated
+> [   21.615431] wlan0: associate with 70:4d:7b:1d:91:40 (try 1/3)
+> [   21.667523] wlan0: RX AssocResp from 70:4d:7b:1d:91:40 (capab=0x411
+> status=0 aid=5)
+> [   21.669000] wlan0: associated
+> [   21.669671] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> [   22.385320] cfg80211: Calling CRDA to update world regulatory domain
+> [   25.545336] cfg80211: Calling CRDA to update world regulatory domain
+> [   28.705312] cfg80211: Calling CRDA to update world regulatory domain
+> [   31.865335] cfg80211: Calling CRDA to update world regulatory domain
+> [   35.025348] cfg80211: Exceeded CRDA call max attempts. Not calling CRDA
+> 
+> 
+> Thanks!!!!!!
+> -Dave
+> 
+> On 10/25/17, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> > On 10/25/2017 01:43 PM, David Ashley wrote:
+> >> I'm trying to understand how the linux kernel loads RTL8188CUS firmware
+> >> rtlwifi: Loading alternative firmware rtlwifi/rtl8192cufw.bin
+> >> when that file isn't available anywhere in my embedded system's
+> >> filesystem.
+> >>
+> >> Basically I'm trying to understand the theory. We have a product that
+> >> is making use of the device
+> >>
+> >> Bus 001 Device 007: ID 7392:7811 Edimax Technology Co., Ltd
+> >> EW-7811Un802.11n Wireless Adapter [Realtek RTL8188CUS]
+> >>
+> >> It has not been especially reliable. I've never provided firmware
+> >> files for the device in the root filesystem. I've started to pay
+> >> attention to the kernel error messages. Now the kernel drivers seem to
+> >> be loading the rtlwifi/rtl8192cufw_TMSC.bin file and I'm trying to
+> >> understand if this is actually working, if it makes any difference in
+> >> reliability...
+> >>
+> >> It's like I can't figure out how the usb dongle even worked without
+> >> its firmware file...
+> >>
+> >> My working theory is that the usb dongle comes from the factory with a
+> >> hardcoded firmware file (rtlwifi/rtl8192cufw.bin) but it is buggy or
+> >> inferior. And the performance and reliability can be improved if the
+> >> driver successfully manages to load the rtl8192cufw_TMSC.bin file. I
+> >> don't know if the firmware load persists across a power cycle (my
+> >> assumption is it doesn't).
+> >
+> > There is NO firmware coded by the factory in the device. It only has enough
+> >
+> > intelligence to load the real firmware. The exact file that it loads is
+> > determined by the model. If you provide the appropriate section of the
+> > output of
+> > dmesg where the above firmware messages occur, and a file listing of
+> > /lib/firmware/rtlwifi/, I can tell you what firmware is being loaded.
+> >
+> > No, firmware will not persist across a power failure.
+> >
+> > The driver has never been particularly reliable, and the USB group at
+> > Realtek
+> > seems not to care. You might try their other driver, but you will be on your
+> >
+> > own, as I will not support that particular piece of ****.
+> >
+> > Please reply to all on any followups.
+> >
+> > Larry
+> >
+> >
 
 -- 
-Kalle Valo
+James Cameron
+http://quozl.netrek.org/
