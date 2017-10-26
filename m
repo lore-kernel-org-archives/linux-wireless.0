@@ -1,69 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:48036 "EHLO
-        mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751267AbdJXTTW (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:38896 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751160AbdJZJ2D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 15:19:22 -0400
-Received: by mail-lf0-f48.google.com with SMTP id k40so25221223lfi.4
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Oct 2017 12:19:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <59EF65AE.8060803@candelatech.com>
-References: <150851690590.5158.11970481736247725763.stgit@potku.adurom.net>
- <c9bdd915-0667-eee0-3b52-1fdf15abf249@dd-wrt.com> <CAGyitvP0wquoo_8_ma3rcj+riJ5Wgfo7+pmbUOx9pQRwFcQHYA@mail.gmail.com>
- <87376dds5e.fsf@kamboji.qca.qualcomm.com> <9407ed1f-2bd9-3fd0-981d-1a20452e8ba9@dd-wrt.com>
- <CAGyitvNj+74HafQ9Aps1HTmknTxa0ZUgV7hao1A8mJ4rV7cibw@mail.gmail.com>
- <8760b5cfnz.fsf@kamboji.qca.qualcomm.com> <59EF65AE.8060803@candelatech.com>
-From: Jasmine Strong <jas@eero.com>
-Date: Tue, 24 Oct 2017 12:19:00 -0700
-Message-ID: <CAGyitvOjxws3=pSp6pLH2mwxCC7bcGVFc7GA90+6aH40-AwW7A@mail.gmail.com> (sfid-20171024_211943_615174_0F5E4F5C)
-Subject: Re: [PATCH] ath10k: rebuild crypto header in RX data frames
-To: Ben Greear <greearb@candelatech.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 26 Oct 2017 05:28:03 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: initialize regulatory keys/database later
+Date: Thu, 26 Oct 2017 11:28:00 +0200
+Message-Id: <20171026092800.11598-1-johannes@sipsolutions.net> (sfid-20171026_112806_807624_A729D9C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That can't be the case here, since we see it break the mesh too (where
-the clients are other QCA radios.)
+From: Johannes Berg <johannes.berg@intel.com>
 
-We're now seeing very slow mesh peering with a 9882 leaf to a 4019
-gateway, with the second version of this patch.
-It took more than five minutes for one of the leaves to successfully
-peer (and the other 9882 leaf, despite achieving
-peering, never managed to get DHCP, implying that something is broken
-with data frames and this patch on qca9882.)
+When cfg80211 is built as a module, everything is fine, and we
+can keep the code as is; in fact, we have to, because there can
+only be a single module_init().
 
-On Tue, Oct 24, 2017 at 9:09 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/23/2017 09:50 PM, Kalle Valo wrote:
->>
->> Jasmine Strong <jas@eero.com> writes:
->>
->>> That's what I saw.  A bcom client was able to associate and not pass
->>> any traffic.  This is on all three of 9882, 9888 and 4019.
->>
->>
->> Thanks for the report, we'll investigate it. And I see that your email
->> was now succesfully delivered to the list:
->>
->> http://lists.infradead.org/pipermail/ath10k/2017-October/010325.html
->
->
->
-> I'm not sure if this is helpful or not, but in the transition from 10.1 to
-> 10.2 firmware,
-> there was some tricky re-work of the PN counter logic in the firmware
-> source.  It had
-> specific impact on the broadcom driver interaction.
->
-> Possibly a similar issue is being seen with this driver patch?
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
+When cfg80211 is built-in, however, it needs to initialize
+before drivers (device_initcall/module_init), and thus used to
+be at subsys_initcall(). I'd moved it to fs_initcall() earlier,
+where it can remain. However, this is still too early because at
+that point the key infrastructure hasn't been initialized yet,
+so X.509 certificates can't be parsed yet.
+
+To work around this problem, load the regdb keys only later in
+a late_initcall(), at which point the necessary infrastructure
+has been initialized.
+
+Fixes: 90a53e4432b1 ("cfg80211: implement regdb signature checking")
+Reported-by: Xiaolong Ye <xiaolong.ye@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 42 +++++++++++++++++++++++++++---------------
+ 1 file changed, 27 insertions(+), 15 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3871998059de..78e71b0390be 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -3644,27 +3644,14 @@ void regulatory_propagate_dfs_state(struct wiphy *wiphy,
+ 	}
+ }
+ 
+-int __init regulatory_init(void)
++static int __init regulatory_init_db(void)
+ {
+-	int err = 0;
++	int err;
+ 
+ 	err = load_builtin_regdb_keys();
+ 	if (err)
+ 		return err;
+ 
+-	reg_pdev = platform_device_register_simple("regulatory", 0, NULL, 0);
+-	if (IS_ERR(reg_pdev))
+-		return PTR_ERR(reg_pdev);
+-
+-	spin_lock_init(&reg_requests_lock);
+-	spin_lock_init(&reg_pending_beacons_lock);
+-	spin_lock_init(&reg_indoor_lock);
+-
+-	rcu_assign_pointer(cfg80211_regdomain, cfg80211_world_regdom);
+-
+-	user_alpha2[0] = '9';
+-	user_alpha2[1] = '7';
+-
+ 	/* We always try to get an update for the static regdomain */
+ 	err = regulatory_hint_core(cfg80211_world_regdom->alpha2);
+ 	if (err) {
+@@ -3692,6 +3679,31 @@ int __init regulatory_init(void)
+ 
+ 	return 0;
+ }
++#ifndef MODULE
++late_initcall(regulatory_init_db);
++#endif
++
++int __init regulatory_init(void)
++{
++	reg_pdev = platform_device_register_simple("regulatory", 0, NULL, 0);
++	if (IS_ERR(reg_pdev))
++		return PTR_ERR(reg_pdev);
++
++	spin_lock_init(&reg_requests_lock);
++	spin_lock_init(&reg_pending_beacons_lock);
++	spin_lock_init(&reg_indoor_lock);
++
++	rcu_assign_pointer(cfg80211_regdomain, cfg80211_world_regdom);
++
++	user_alpha2[0] = '9';
++	user_alpha2[1] = '7';
++
++#ifdef MODULE
++	return regulatory_init_db();
++#else
++	return 0;
++#endif
++}
+ 
+ void regulatory_exit(void)
+ {
+-- 
+2.14.2
