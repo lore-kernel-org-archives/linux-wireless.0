@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42270 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750915AbdJ2M23 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33186 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752199AbdJ0HtR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 08:28:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 29 Oct 2017 14:28:00 +0200
-Message-Id: <20171029122816.8802-2-luca@coelho.fi> (sfid-20171029_132848_749124_82301DFF)
-In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
-References: <20171029122816.8802-1-luca@coelho.fi>
-Subject: [PATCH 01/17] iwlwifi: mvm: use RS macro instead of duplicating the code
+        Fri, 27 Oct 2017 03:49:17 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: libertas: Convert timers to use timer_setup()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171024092928.GA47234@beast>
+References: <20171024092928.GA47234@beast>
+To: Kees Cook <keescook@chromium.org>
+Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Ingo Molnar <mingo@kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20171027074916.B582E601DA@smtp.codeaurora.org> (sfid-20171027_094942_028556_1ED710AA)
+Date: Fri, 27 Oct 2017 07:49:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Kees Cook <keescook@chromium.org> wrote:
 
-There is a macro for converting TX response rate to a
-rate scale value, use it.
+> In preparation for unconditionally passing the struct timer_list pointer to
+> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> to pass the timer pointer explicitly.
+> 
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> Cc: Ingo Molnar <mingo@kernel.org>
+> Cc: Johannes Berg <johannes.berg@intel.com>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Andrew Zaborowski <andrew.zaborowski@intel.com>
+> Cc: libertas-dev@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 00a0efab20e3..d88c3685a6dd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1594,8 +1594,7 @@ static void iwl_mvm_rx_tx_cmd_agg(struct iwl_mvm *mvm,
- 		mvmsta->tid_data[tid].tx_time =
- 			le16_to_cpu(tx_resp->wireless_media_time);
- 		mvmsta->tid_data[tid].lq_color =
--			(tx_resp->tlc_info & TX_RES_RATE_TABLE_COLOR_MSK) >>
--			TX_RES_RATE_TABLE_COLOR_POS;
-+			TX_RES_RATE_TABLE_COL_GET(tx_resp->tlc_info);
- 	}
- 
- 	rcu_read_unlock();
+78ce6a9083c4 libertas: Convert timers to use timer_setup()
+
 -- 
-2.14.2
+https://patchwork.kernel.org/patch/10023823/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
