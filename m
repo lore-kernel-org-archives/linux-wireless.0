@@ -1,158 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53152 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751334AbdJFJxh (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:53586 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932346AbdJ0LdN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 05:53:37 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Micha=C5=82=20Kazior?= <kazikcz@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] fq: support filtering a given tin
-Date: Fri,  6 Oct 2017 11:53:32 +0200
-Message-Id: <20171006095333.26335-1-johannes@sipsolutions.net> (sfid-20171006_115430_582055_647B19EF)
+        Fri, 27 Oct 2017 07:33:13 -0400
+Received: by mail-pg0-f67.google.com with SMTP id s2so5070251pge.10
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Oct 2017 04:33:13 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>
+Subject: [v3 3/3] rsi: sdio: Add WOWLAN support for S5 shutdown state
+Date: Fri, 27 Oct 2017 16:55:57 +0530
+Message-Id: <1509103557-6215-4-git-send-email-amitkarwar@gmail.com> (sfid-20171027_133318_563146_187BC46D)
+In-Reply-To: <1509103557-6215-1-git-send-email-amitkarwar@gmail.com>
+References: <1509103557-6215-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Karun Eagalapati <karun256@gmail.com>
 
-Add to the FQ API a way to filter a given tin, in order to
-remove frames that fulfil certain criteria according to a
-filter function.
+Unlike other power states, WoWLAN configuration does not come from
+mac80211 for shutdown. Hence configuring the WoWLAN from shut down
+callback it self. Remaining steps of disabling SDIO interrupts,
+setting 'MMC_PM_KEEP_POWER' flag are same as other power states.
 
-This will be used by mac80211 to remove frames belonging to
-an AP VLAN interface that's being removed.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Karun Eagalapati <karun256@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- include/net/fq.h      |  7 +++++
- include/net/fq_impl.h | 72 ++++++++++++++++++++++++++++++++++++++++++++-------
- 2 files changed, 69 insertions(+), 10 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |  1 +
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 31 +++++++++++++++++++++++++----
+ 2 files changed, 28 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/fq.h b/include/net/fq.h
-index 6d8521a30c5c..ac944a686840 100644
---- a/include/net/fq.h
-+++ b/include/net/fq.h
-@@ -90,6 +90,13 @@ typedef void fq_skb_free_t(struct fq *,
- 			   struct fq_flow *,
- 			   struct sk_buff *);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 95eb5e6..36c63e9 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -1822,6 +1822,7 @@ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan)
  
-+/* Return %true to filter (drop) the frame. */
-+typedef bool fq_skb_filter_t(struct fq *,
-+			     struct fq_tin *,
-+			     struct fq_flow *,
-+			     struct sk_buff *,
-+			     void *);
+ 	return 0;
+ }
++EXPORT_SYMBOL(rsi_config_wowlan);
+ 
+ #ifdef CONFIG_PM
+ static int rsi_mac80211_suspend(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 3f683d8..3288fb6 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -1218,12 +1218,11 @@ static int rsi_freeze(struct device *dev)
+ 	common = adapter->priv;
+ 	sdev = (struct rsi_91x_sdiodev *)adapter->rsi_dev;
+ 
+-#ifdef CONFIG_RSI_WOW
+ 	if ((common->wow_flags & RSI_WOW_ENABLED) &&
+ 	    (common->wow_flags & RSI_WOW_NO_CONNECTION))
+ 		rsi_dbg(ERR_ZONE,
+ 			"##### Device can not wake up through WLAN\n");
+-#endif
 +
- typedef struct fq_flow *fq_flow_get_default_t(struct fq *,
- 					      struct fq_tin *,
- 					      int idx,
-diff --git a/include/net/fq_impl.h b/include/net/fq_impl.h
-index 4e6131cd3f43..8b237e4afee6 100644
---- a/include/net/fq_impl.h
-+++ b/include/net/fq_impl.h
-@@ -12,24 +12,22 @@
+ 	ret = rsi_sdio_disable_interrupts(pfunction);
  
- /* functions that are embedded into includer */
+ 	if (sdev->write_fail)
+@@ -1257,6 +1256,31 @@ static int rsi_thaw(struct device *dev)
+ 	return 0;
+ }
  
--static struct sk_buff *fq_flow_dequeue(struct fq *fq,
--				       struct fq_flow *flow)
-+static void fq_adjust_removal(struct fq *fq,
-+			      struct fq_flow *flow,
-+			      struct sk_buff *skb)
++static void rsi_shutdown(struct device *dev)
++{
++	struct sdio_func *pfunction = dev_to_sdio_func(dev);
++	struct rsi_hw *adapter = sdio_get_drvdata(pfunction);
++	struct rsi_91x_sdiodev *sdev =
++		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
++	struct ieee80211_hw *hw = adapter->hw;
++	struct cfg80211_wowlan *wowlan = hw->wiphy->wowlan_config;
++
++	rsi_dbg(ERR_ZONE, "SDIO Bus shutdown =====>\n");
++
++	if (rsi_config_wowlan(adapter, wowlan))
++		rsi_dbg(ERR_ZONE, "Failed to configure WoWLAN\n");
++
++	rsi_sdio_disable_interrupts(sdev->pfunction);
++
++	if (sdev->write_fail)
++		rsi_dbg(INFO_ZONE, "###### Device is not ready #######\n");
++
++	if (rsi_set_sdio_pm_caps(adapter))
++		rsi_dbg(INFO_ZONE, "Setting power management caps failed\n");
++
++	rsi_dbg(INFO_ZONE, "***** RSI module shut down *****\n");
++}
++
+ int rsi_sdio_reinit_device(struct rsi_hw *adapter)
  {
- 	struct fq_tin *tin = flow->tin;
--	struct fq_flow *i;
--	struct sk_buff *skb;
--
--	lockdep_assert_held(&fq->lock);
--
--	skb = __skb_dequeue(&flow->queue);
--	if (!skb)
--		return NULL;
+ 	struct rsi_91x_sdiodev *sdev = adapter->rsi_dev;
+@@ -1297,9 +1321,7 @@ static int rsi_restore(struct device *dev)
+ 	adapter->sc_nvifs = 0;
+ 	ieee80211_restart_hw(adapter->hw);
  
- 	tin->backlog_bytes -= skb->len;
- 	tin->backlog_packets--;
- 	flow->backlog -= skb->len;
- 	fq->backlog--;
- 	fq->memory_usage -= skb->truesize;
-+}
-+
-+static void fq_rejigger_backlog(struct fq *fq, struct fq_flow *flow)
-+{
-+	struct fq_flow *i;
+-#ifdef CONFIG_RSI_WOW
+ 	common->wow_flags = 0;
+-#endif
+ 	common->iface_down = false;
  
- 	if (flow->backlog == 0) {
- 		list_del_init(&flow->backlogchain);
-@@ -43,6 +41,21 @@ static struct sk_buff *fq_flow_dequeue(struct fq *fq,
- 		list_move_tail(&flow->backlogchain,
- 			       &i->backlogchain);
+ 	rsi_dbg(INFO_ZONE, "RSI module restored\n");
+@@ -1331,6 +1353,7 @@ static struct sdio_driver rsi_driver = {
+ #ifdef CONFIG_PM
+ 	.drv = {
+ 		.pm = &rsi_pm_ops,
++		.shutdown   = rsi_shutdown,
  	}
-+}
-+
-+static struct sk_buff *fq_flow_dequeue(struct fq *fq,
-+				       struct fq_flow *flow)
-+{
-+	struct sk_buff *skb;
-+
-+	lockdep_assert_held(&fq->lock);
-+
-+	skb = __skb_dequeue(&flow->queue);
-+	if (!skb)
-+		return NULL;
-+
-+	fq_adjust_removal(fq, flow, skb);
-+	fq_rejigger_backlog(fq, flow);
- 
- 	return skb;
- }
-@@ -188,6 +201,45 @@ static void fq_tin_enqueue(struct fq *fq,
- 	}
- }
- 
-+static void fq_flow_filter(struct fq *fq,
-+			   struct fq_flow *flow,
-+			   fq_skb_filter_t filter_func,
-+			   void *filter_data,
-+			   fq_skb_free_t free_func)
-+{
-+	struct fq_tin *tin = flow->tin;
-+	struct sk_buff *skb, *tmp;
-+
-+	lockdep_assert_held(&fq->lock);
-+
-+	skb_queue_walk_safe(&flow->queue, skb, tmp) {
-+		if (!filter_func(fq, tin, flow, skb, filter_data))
-+			continue;
-+
-+		__skb_unlink(skb, &flow->queue);
-+		fq_adjust_removal(fq, flow, skb);
-+		free_func(fq, tin, flow, skb);
-+	}
-+
-+	fq_rejigger_backlog(fq, flow);
-+}
-+
-+static void fq_tin_filter(struct fq *fq,
-+			  struct fq_tin *tin,
-+			  fq_skb_filter_t filter_func,
-+			  void *filter_data,
-+			  fq_skb_free_t free_func)
-+{
-+	struct fq_flow *flow;
-+
-+	lockdep_assert_held(&fq->lock);
-+
-+	list_for_each_entry(flow, &tin->new_flows, flowchain)
-+		fq_flow_filter(fq, flow, filter_func, filter_data, free_func);
-+	list_for_each_entry(flow, &tin->old_flows, flowchain)
-+		fq_flow_filter(fq, flow, filter_func, filter_data, free_func);
-+}
-+
- static void fq_flow_reset(struct fq *fq,
- 			  struct fq_flow *flow,
- 			  fq_skb_free_t free_func)
+ #endif
+ };
 -- 
-2.14.2
+2.7.4
