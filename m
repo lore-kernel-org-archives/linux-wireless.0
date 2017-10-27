@@ -1,84 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44814 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:47486 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750957AbdJBNql (ORCPT
+        with ESMTP id S1752052AbdJ0NNr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 09:46:41 -0400
+        Fri, 27 Oct 2017 09:13:47 -0400
+Received: from x230.qca.qualcomm.com (a88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A132460112
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Oct 2017 13:13:46 +0000 (UTC)
 From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
-Cc: Sathya Perla <sathya.perla@broadcom.com>,
-        Ajit Khaparde <ajit.khaparde@broadcom.com>,
-        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
-        Somnath Kotur <somnath.kotur@broadcom.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: Re: [PATCH 05/18] net: use ARRAY_SIZE
-References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
-        <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
-Date: Mon, 02 Oct 2017 16:46:29 +0300
-In-Reply-To: <20171001193101.8898-6-jeremy.lefaure@lse.epita.fr>
- (=?utf-8?B?IkrDqXLDqW15?=
-        Lefaure"'s message of "Sun, 1 Oct 2017 15:30:43 -0400")
-Message-ID: <87h8vh64sq.fsf@codeaurora.org> (sfid-20171002_154704_411222_BA4B32E6)
+To: linux-wireless@vger.kernel.org
+Subject: Submit patches for v4.15 now
+Date: Fri, 27 Oct 2017 16:13:43 +0300
+Message-ID: <87y3nwlomw.fsf@codeaurora.org> (sfid-20171027_151421_718693_762AA164)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-J=C3=A9r=C3=A9my Lefaure <jeremy.lefaure@lse.epita.fr> writes:
+Hi,
 
-> Using the ARRAY_SIZE macro improves the readability of the code. Also,
-> it is not always useful to use a variable to store this constant
-> calculated at compile time.
->
-> Found with Coccinelle with the following semantic patch:
-> @r depends on (org || report)@
-> type T;
-> T[] E;
-> position p;
-> @@
-> (
->  (sizeof(E)@p /sizeof(*E))
-> |
->  (sizeof(E)@p /sizeof(E[...]))
-> |
->  (sizeof(E)@p /sizeof(T))
-> )
->
-> Signed-off-by: J=C3=A9r=C3=A9my Lefaure <jeremy.lefaure@lse.epita.fr>
-> ---
->  drivers/net/ethernet/emulex/benet/be_cmds.c        |   4 +-
->  drivers/net/ethernet/intel/i40e/i40e_adminq.h      |   3 +-
->  drivers/net/ethernet/intel/i40evf/i40e_adminq.h    |   3 +-
->  drivers/net/ethernet/intel/ixgbe/ixgbe_x550.c      |   3 +-
->  drivers/net/ethernet/intel/ixgbevf/vf.c            |  17 +-
->  drivers/net/usb/kalmia.c                           |   9 +-
->  .../broadcom/brcm80211/brcmsmac/phy/phytbl_n.c     | 473 ++++++---------=
-------
->  .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   9 +-
->  .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   |  12 +-
->  .../net/wireless/realtek/rtlwifi/rtl8723be/table.c |  14 +-
->  .../net/wireless/realtek/rtlwifi/rtl8821ae/table.c |  34 +-
->  include/net/bond_3ad.h                             |   3 +-
->  net/ipv6/seg6_local.c                              |   6 +-
->  13 files changed, 177 insertions(+), 413 deletions(-)
+merge window is getting closer, most like it will open in 1-2 weeks. If
+there's anything you want to have in v4.15 submit them now so that
+there's enough time to get everything ready.
 
-We have a tree for wireless so usually it's better to submit wireless
-changes on their own but here I assume Dave will apply this to his tree.
-If not, please resubmit the wireless part in a separate patch.
-
---=20
+-- 
 Kalle Valo
