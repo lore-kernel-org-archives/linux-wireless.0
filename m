@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:53202 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758195AbdJMNZU (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:11312 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752311AbdJ0JZz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Oct 2017 09:25:20 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Oct 2017 16:25:00 +0300
-Message-Id: <20171013132502.10473-8-luca@coelho.fi> (sfid-20171013_152607_707956_918CD07C)
-In-Reply-To: <20171013132502.10473-1-luca@coelho.fi>
-References: <20171013132502.10473-1-luca@coelho.fi>
-Subject: [PATCH 7/9] iwlwifi: mvm: add missing lq_color
+        Fri, 27 Oct 2017 05:25:55 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v7,2/5] ath10k: Enable TDLS peer buffer STA feature
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1508835074-3384-3-git-send-email-yintang@qti.qualcomm.com>
+References: <1508835074-3384-3-git-send-email-yintang@qti.qualcomm.com>
+To: <yintang@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <1e51ea390a67441faf15f5696e0afea8@euamsexm01a.eu.qualcomm.com> (sfid-20171027_112612_601578_26137AFF)
+Date: Fri, 27 Oct 2017 11:25:49 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+yintang@qti.qualcomm.com wrote:
 
-In the compressed BA notif, the driver didn't parse out
-the LQ color, so statistics for the rates tried were
-always thrown out. Add it so it gets correctly used.
+> From: Yingying Tang <yintang@qti.qualcomm.com>
+> 
+> Enable TDLS peer buffer STA feature.
+> QCA6174 firmware(version: WLAN.RM.4.4) support TDLS peer buffer STA,
+> it reports this capability through wmi service map in wmi service ready
+> event. Set related parameter in TDLS WMI command to enable this feature.
+> 
+> Signed-off-by: Yingying Tang <yintang@qti.qualcomm.com>
 
-While at it, fix the name of the relevant field in the
-struct.
+Depends on:
 
-Fixes: c46e7724bfe9 ("iwlwifi: mvm: support new BA notification response")
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c    | 3 ++-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+a9cd27b34d66 mac80211: enable TDLS peer buffer STA feature
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 14ad9fb895f9..f5d5ba7e37ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -710,7 +710,7 @@ enum iwl_mvm_ba_resp_flags {
-  * @reduced_txp: power reduced according to TPC. This is the actual value and
-  *	not a copy from the LQ command. Thus, if not the first rate was used
-  *	for Tx-ing then this value will be set to 0 by FW.
-- * @initial_rate: TLC rate info, initial rate index, TLC table color
-+ * @tlc_rate_info: TLC rate info, initial rate index, TLC table color
-  * @retry_cnt: retry count
-  * @query_byte_cnt: SCD query byte count
-  * @query_frame_cnt: SCD query frame count
-@@ -730,7 +730,7 @@ struct iwl_mvm_compressed_ba_notif {
- 	__le32 flags;
- 	u8 sta_id;
- 	u8 reduced_txp;
--	u8 initial_rate;
-+	u8 tlc_rate_info;
- 	u8 retry_cnt;
- 	__le32 query_byte_cnt;
- 	__le16 query_frame_cnt;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 172b5e63d3fb..df3c21c5f722 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1746,6 +1746,7 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
- 		struct iwl_mvm_compressed_ba_notif *ba_res =
- 			(void *)pkt->data;
-+		u8 lq_color = TX_RES_RATE_TABLE_COL_GET(ba_res->tlc_rate_info);
- 		int i;
- 
- 		sta_id = ba_res->sta_id;
-@@ -1754,7 +1755,7 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		ba_info.status.tx_time =
- 			(u16)le32_to_cpu(ba_res->wireless_time);
- 		ba_info.status.status_driver_data[0] =
--			(void *)(uintptr_t)ba_res->reduced_txp;
-+			RS_DRV_DATA_PACK(lq_color, ba_res->reduced_txp);
- 
- 		if (!le16_to_cpu(ba_res->tfd_cnt))
- 			goto out;
+Currently in mac80211-next.
+
+4 patches set to Awaiting Upstream.
+
+10023753 [v7,2/5] ath10k: Enable TDLS peer buffer STA feature
+10023743 [v7,3/5] ath10k: Enable TDLS peer inactivity detection
+10023725 [v7,4/5] ath10k: Avoid to set WEP key for TDLS peer
+10023737 [v7,5/5] ath10k: Fix TDLS peer TX data failure issue on encryped AP
+
 -- 
-2.14.2
+https://patchwork.kernel.org/patch/10023753/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
