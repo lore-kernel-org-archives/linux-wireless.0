@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:47389 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932121AbdJWKdl (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48094 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751070AbdJ0JkX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2017 06:33:41 -0400
-Date: Mon, 23 Oct 2017 12:33:31 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
-        Christoph Hellwig <hch@lst.de>,
-        John Stultz <john.stultz@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 31/37] mac80211_hwsim: Replace hrtimer tasklet with
- softirq hrtimer
-In-Reply-To: <1508754350.2639.12.camel@sipsolutions.net>
-Message-ID: <alpine.DEB.2.20.1710231227050.4241@nanos> (sfid-20171023_123356_469312_4009999F)
-References: <20171022213938.940451689@linutronix.de>   <20171022214053.576969587@linutronix.de>  <1508753691.2639.10.camel@sipsolutions.net>  <alpine.DEB.2.20.1710231221520.4241@nanos> <1508754350.2639.12.camel@sipsolutions.net>
+        Fri, 27 Oct 2017 05:40:23 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Thorsten Leemhuis <linux@leemhuis.info>
+CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k-regression due to "ath10k: fix napi_poll budget overflow"
+ c9353bf483d3
+Date: Fri, 27 Oct 2017 09:40:19 +0000
+Message-ID: <877evh53p8.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20171027_114142_760326_3403BC82)
+References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
+        <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
+        <fa6e3ee2-91b5-a54b-afe3-87f30aac7a48@leemhuis.info>
+In-Reply-To: <fa6e3ee2-91b5-a54b-afe3-87f30aac7a48@leemhuis.info> (Thorsten
+        Leemhuis's message of "Sun, 8 Oct 2017 10:27:35 +0200")
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 23 Oct 2017, Johannes Berg wrote:
-> On Mon, 2017-10-23 at 12:23 +0200, Thomas Gleixner wrote:
-> > On Mon, 23 Oct 2017, Johannes Berg wrote:
-> > 
-> > > On Sun, 2017-10-22 at 23:40 +0200, Anna-Maria Gleixner wrote:
-> > > > From: Thomas Gleixner <tglx@linutronix.de>
-> > > > 
-> > > > Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
-> > > > callback in softirq context and remove the hrtimer_tasklet.
-> > 
-> > I can't build as its part of the whole hrtimer rework series.
-> 
-> I guess you mean you *can* build it? Surely you're introducing the new
-> HR timer modes in some patch that I didn't see? :-)
-
-Sorry, we did not want to expose you to 30 patches fiddling with the core
-code. They are on LKML though.
-
-> > > > +       hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
-> > > > +                    HRTIMER_MODE_ABS_SOFT);
-> > 
-> > Sure, though it does not matter in that case. Will fix that up.
-> 
-> Right. Then again, why even pass it to init() and start()? Can you
-> start without going through start()?
-
-There is a subtle magic with CLOCK_REALTIME timers.
-
-CLOCK_REALTIME timers differentiate between ABS and REL modes. ABS timers
-are exposed to clock modifications (settimeofday() ...), REL timers are
-not. We solve that by associating them to different clock bases, which has
-to be done at init time, but the start function needs the REL/ABS
-information as well.
-
-For CLOCK_MONOTONIC this is not really required, but the function is used
-for all clock bases, so we require the mode bits for all.
-
-Thanks,
-
-	tglx
+KyBsaW51eC13aXJlbGVzcw0KDQpUaG9yc3RlbiBMZWVtaHVpcyA8bGludXhAbGVlbWh1aXMuaW5m
+bz4gd3JpdGVzOg0KDQo+IExvISBPbiAwMy4xMC4yMDE3IDAxOjQwLCBSeWFuIEhzdSB3cm90ZToN
+Cj4+IE9uIDEwLzAxLzIwMTcgMDE6NTkgQU0sIFRob3JzdGVuIExlZW1odWlzIHdyb3RlOg0KPj4+
+IExvISBUaGUgd2lmaSBjb25uZWN0aW9uIG9mIG15IERlbGwgWFBTMTMgKDkzNjApIHdpdGggaXRz
+IFFDQTYxNzQNCj4+PiBzb21ldGltZXMgc3VkZGVubHkgc3RvcHMgd29ya2luZyBzaW5jZSBJIHN3
+aXRjaGVkIHRvIDQuMTQtcmMyKy4gRXZlcnkNCj4+PiB0aW1lIGl0IGhhcHBlbnMsIHRoZXJlIGlz
+IHRoaXMgZXJyb3IgbWVzc2FnZSBpbiBkbWVzZzoNCj4+Pj4gYXRoMTBrX3BjaSAwMDAwOjNhOjAw
+LjA6IGZhaWxlZCB0byBleHRyYWN0IGFtc2R1OiAtMTENCj4+PiBJIGhhdmUgdG8gc3dpdGNoIHdp
+Zmkgb2ZmIGFuZCBvbiB3aXRoIHRoZSBob3RrZXkgdG8gcmVjb25uZWN0LiBJIGNhbg0KPj4+IHRy
+aWdnZXIgdGhlIGFib3J0cyBieSBzdGFydGluZyBhIGJpZyBkb3dubG9hZCBhbmQgd2FpdGluZyBh
+IGZldyBtaW51dGVzLg0KPj4+IFNvbWV0aW1lcyB0aGUgY29ubmVjdGlvbnMgYWJvcnRzIGR1cmlu
+ZyBub3JtYWwgbG9hZC4gSW5zdGFsbGluZyB0aGUNCj4+PiBsYXRlc3QgZmlybXdhcmUgZGlkbid0
+IGhlbHAuIFRoZSB3aWZpIHdvcmtzIGp1c3QgZmluZSB3aXRoIDQuMTMuMy4gV2hpbGUNCj4+PiBp
+bnZlc3RpZ2F0aW5nIHRoaXMgSSBub3RpY2VkIGEgZmV3IG1lc3NhZ2VzIGluIGRtZXNnIHRoYXQg
+b25seSBhcHBlYXIgaW4NCj4+PiA0LjE0LXJjIChJIHVzZWQgMzVkYmJhMzFiZTUyKToNCj4+IFlv
+dSBkbyBydW4gdGhlIDQuMTMuMyB2LnMgNC4xNC1yYyB3aXRoIHRoZSBzYW1lIFFDQTYxNzQgZmly
+bXdyYWUsIHJpZ2h0Pw0KPj4gSnVzdCB3YW50IHRvIHVuZGVyc3RhbmQgdGhlIHRlc3Qgc2V0dXAg
+aGVyZSBzbyB0aGF0IEkgY291bGQgZ2l2ZSBpdA0KPj4gYSB0cnkgbXlzZWxmLCBhbmQgaW4gMTFh
+YyBvciAxMW4gbW9kZSB5b3UncmUgdGVzdGluZz8NCj4NCj4gWXVwLCBzYW1lIGZpcm13YXJlIChy
+ZXByb2R1Y2VkIGl0IHdpdGgNCj4gZmlybXdhcmUtNi5iaW5fV0xBTi5STS40LjQuMS0wMDA1OC1R
+Q0FSTVNXUC0xIGJlZm9yZSBiaXNlY3RpbmcpLiBBbmQgdGhlDQo+IHByb2JsZW0gc2hvd2VkIHVw
+IHdpdGggMmcgYW5kIDVnIG5ldHdvcmtzLiBCdXQgd2hpbGUgaW52ZXN0aWdhdGluZyBpdCBJDQo+
+IG5vdGljZWQgdGhlIHByb2JsZW0gZG9lcyBub3Qgc2hvdyB1cCB3aXRoIGFsbCB3aWZpIHJvdXRl
+cnMuIEl0IGhhcHBlbnMNCj4gd2l0aCBteSBGcml0eiFCb3ggNjQ5MCBDYWJsZSBhbmQgYW5vdGhl
+ciBGcml0eiFCb3ggSSB0cmllZCwgYnV0IG5vdCB3aXRoDQo+IHRoZSB3aWZpIG5ldHdvcmsgYXQg
+d29yayAobm8gaWRlYSB3aGF0IGtpbmQgb2Ygcm91dGVycyBhcmUgaW5zdGFsbGVkDQo+IHRoZXJl
+OyBJIGNhbiB0cnkgdG8gZmluZCBvdXQgaWYgaXQgbWF0dGVycykuDQo+DQo+Pj4+IDNhOjAwLjAg
+TmV0d29yayBjb250cm9sbGVyIFswMjgwXTogUXVhbGNvbW0gQXRoZXJvcyBRQ0E2MTc0DQo+Pj4+
+IDgwMi4xMWFjIFdpcmVsZXNzIE5ldHdvcmsgQWRhcHRlciBbMTY4YzowMDNlXSAocmV2IDMyKQ0K
+Pj4gW+KApl0gV291bGQgeW91IG1pbmQgZG8gYSBiaXNlY3QgdG8gbG9jYXRlIHRoZSBmYWlsdXJl
+LCBwbGVhc2U/DQo+DQo+IERpZCB0aGF0IHllc3RlcmRheSBhbmQgaXQgdHVybmVkIG91dCBpdCdz
+IGR1ZSB0byBjb21taXQgYzkzNTNiZjQ4M2QzDQo+IChhdGgxMGs6IGZpeCBuYXBpX3BvbGwgYnVk
+Z2V0IG92ZXJmbG93KS4gUmV2ZXJ0aW5nIGl0IG9uIHRvcCBvZiBsaW51eA0KPiBtYXN0ZXIgZnJv
+bSB5ZXN0ZXJkYXkgbWFkZSB0aGUgd2lmaSBjb25uZWN0aW9uIHN0YWJsZSBhZ2FpbiBmb3IgbWUu
+DQoNClNvcnJ5LCBJIGhhdmUgbm90IGJlZW4gYWJsZSB0byBmb2xsb3cgdGhpcyBkaXNjdXNzaW9u
+IHZlcnkgY2xvc2VseSBidXQNCndhcyB0aGUgY29uY2x1c2lvbj8gU2hvdWxkIHdlIHNob3VsZCBy
+ZXZlcnQgYzkzNTNiZjQ4M2QzIGZvciA0LjE0IG9yDQp3aGF0PyBJIHNob3VsZCBzdGlsbCBoYXZl
+IHRpbWUgdG8gZG8gdGhhdCwgYnV0IG5vdCBtdWNoLg0KDQotLSANCkthbGxlIFZhbG8=
