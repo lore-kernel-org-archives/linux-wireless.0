@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:34704 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751257AbdJIHkX (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:38958 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752489AbdJ0NdS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 03:40:23 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-10-09
-Date: Mon,  9 Oct 2017 09:40:12 +0200
-Message-Id: <20171009074013.1979-1-johannes@sipsolutions.net> (sfid-20171009_094035_519875_46EB4367)
+        Fri, 27 Oct 2017 09:33:18 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [01/12] wil6210: run-time PM when interface down
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1508937247-11890-2-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1508937247-11890-2-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-ID: <589009024f344a718e1616b30dd3edd0@euamsexm01a.eu.qualcomm.com> (sfid-20171027_153322_187004_413BCDA8)
+Date: Fri, 27 Oct 2017 15:33:09 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
 
-The QCA folks found another netlink problem - we were missing validation
-of some attributes. It's not super problematic since one can only read a
-few bytes beyond the message (and that memory must exist), but here's the
-fix for it.
+> Allow run-time suspend when interface is down, keep card alive when
+> interface is up.
+> If driver is in wmi only or debug_fw mode run-time PM won't suspend.
+> 
+> Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+> 	pcie_bus.c
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-I thought perhaps we can make nla_parse_nested() require a policy, but
-given the two-stage validation/parsing in regular netlink that won't work.
+Kbuild bot found problems:
 
-Please pull and let me know if there's any problem.
+   drivers/net//wireless/ath/wil6210/pcie_bus.c: In function 'wil6210_pm_runtime_resume':
+>> drivers/net//wireless/ath/wil6210/pcie_bus.c:511:2: error: implicit
+>> declaration of function 'wil6210_resume'
+>> [-Werror=implicit-function-declaration]
+     return wil6210_resume(dev, true);
+     ^
+   drivers/net//wireless/ath/wil6210/pcie_bus.c: In function
+'wil6210_pm_runtime_suspend':
+>> drivers/net//wireless/ath/wil6210/pcie_bus.c:524:2: error: implicit
+>> declaration of function 'wil6210_suspend'
+>> [-Werror=implicit-function-declaration]
+     return wil6210_suspend(dev, true);
+     ^
 
-Thanks,
-johannes
+-- 
+https://patchwork.kernel.org/patch/10026675/
 
-
-
-The following changes since commit 9f775ead5e570e7e19015b9e4e2f3dd6e71a5935:
-
-  l2tp: fix l2tp_eth module loading (2017-10-01 22:35:07 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-10-09
-
-for you to fetch changes up to ad670233c9e1d5feb365d870e30083ef1b889177:
-
-  nl80211: Define policy for packet pattern attributes (2017-10-04 14:39:21 +0200)
-
-----------------------------------------------------------------
-Just a single fix for a missing netlink attribute validation.
-
-----------------------------------------------------------------
-Peng Xu (1):
-      nl80211: Define policy for packet pattern attributes
-
- net/wireless/nl80211.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
