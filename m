@@ -1,110 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41768 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751772AbdJTGfl (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:14142 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750795AbdJ0Ejb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Oct 2017 02:35:41 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Marc MERLIN <marc@merlins.org>, linux-wireless@vger.kernel.org,
-        linuxwifi@intel.com
-Subject: Re: After upgrading to 4.11.1, wifi driver refuses to load after being unloaded once.
-References: <20170526024826.3qjx7pe3kz44klk3@merlins.org>
-        <1496396575.9478.54.camel@coelho.fi>
-        <20170603165950.GC29546@merlins.org>
-        <20170816233844.qtigfurckdr44awa@merlins.org>
-        <20171017094440.25tpkoeyfm6q2lqw@merlins.org>
-        <1508249157.5497.103.camel@coelho.fi>
-        <20171017212319.eranorcigrmgcpyo@merlins.org>
-        <1508276099.5497.122.camel@coelho.fi>
-        <87infduk4b.fsf@purkki.adurom.net>
-        <1508307368.5497.125.camel@coelho.fi>
-        <87bml4iy40.fsf@kamboji.qca.qualcomm.com>
-        <1508322176.5497.152.camel@coelho.fi>
-Date: Fri, 20 Oct 2017 09:35:37 +0300
-In-Reply-To: <1508322176.5497.152.camel@coelho.fi> (Luca Coelho's message of
-        "Wed, 18 Oct 2017 13:22:56 +0300")
-Message-ID: <8760bafhs6.fsf@kamboji.qca.qualcomm.com> (sfid-20171020_083555_586612_E9917D99)
+        Fri, 27 Oct 2017 00:39:31 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix data rx for CCMP-256, GCMP and GCMP-256 in raw mode
+Date: Fri, 27 Oct 2017 10:09:14 +0530
+Message-ID: <1509079154-22759-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20171027_063944_859700_DCFBFB6A)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Make sure 16-byte mic is removed from the rx data packet
+tail when CCMP-256, GCMP and GCMP-256 ciphers are used
+in raw decap mode. This fixed rx traffic failures in those
+ciphers in raw mode. Split the helper returning crypto
+tail length into two, one to get the ICV length and other
+to get the mic lengh for the cipher to make it clean.
 
-> On Wed, 2017-10-18 at 12:50 +0300, Kalle Valo wrote:
->> Luca Coelho <luca@coelho.fi> writes:
->> 
->> > On Wed, 2017-10-18 at 07:59 +0300, Kalle Valo wrote:
->> > > Luca Coelho <luca@coelho.fi> writes:
->> > > 
->> > > > On Tue, 2017-10-17 at 14:23 -0700, Marc MERLIN wrote:
->> > > > 
->> > > > > I don't know how or why, but I seem to:
->> > > > > saruman:~# grep IWLWIFI /boot/config-4.12.10-amd64-preempt-
->> > > > > sysrq-
->> > > > > 20170406 
->> > > > > CONFIG_IWLWIFI=m
->> > > > > CONFIG_IWLWIFI_LEDS=y
->> > > > > CONFIG_IWLWIFI_OPMODE_MODULAR=y
->> > > > > # CONFIG_IWLWIFI_BCAST_FILTERING is not set
->> > > > > CONFIG_IWLWIFI_PCIE_RTPM=y
->> > > > > CONFIG_IWLWIFI_DEBUG=y
->> > > > > CONFIG_IWLWIFI_DEVICE_TRACING=y
->> > > > > 
->> > > > > I'll remove that, thanks.
->> > > > 
->> > > > Cool, I think that might help.  If it doesn't, please report a
->> > > > bug
->> > > > in
->> > > > buzilla. ;)
->> > > 
->> > > But a Kconfig option should never break functionality, so IMHO
->> > > this
->> > > still sounds like a bug in iwlwifi.
->> > 
->> > The problem is that to get this to work, some changes need to be
->> > made
->> > in the platform side.  In this case, the rootport is not configured
->> > properly so it won't work.
->> 
->> Yeah, but users or distros might accidentally enable this Kconfig
->> option and break the driver unintentionally. And subtle bugs like
->> this
->> are even worse as the user will not realise that it's because of a
->> new
->> Kconfig option.
->> 
->> So I guess you can't automatically detect it the platform supports
->> RTPM,
->> right? Maybe there should be a module parameter which has to be set
->> to
->> enable this? And at least a big fat warning to the user that RTPM is
->> enabled, bugs are likely and the user has to know what she's doing.
->
-> I thought this was what EXPERT was used for:
->
-> menuconfig EXPERT
->         bool "Configure standard kernel features (expert users)"
->         # Unhide debug options, to make the on-by-default options visible
->         select DEBUG_KERNEL
->         help
->           This option allows certain base kernel options and settings
->           to be disabled or tweaked. This is for specialized
->           environments which can tolerate a "non-standard" kernel.
->           Only use this if you really know what you are doing.
->
->
-> But it seems that it's widely used even by people/distros who don't
-> know what they are doing. :(
+Fixes: 2ea9f12cefe4 ("ath10k: add new cipher suite support")
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
 
-Yeah, people seem to just blindly enable kconfig options. I don't blame
-them, there are so many options and difficult to know what to choose.
+This patch depends on https://patchwork.kernel.org/patch/10028621/
 
-> Would it be okay if we just add a printk(KERN_ERR, ...)?
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 51 ++++++++++++++++++++++++--------
+ 1 file changed, 38 insertions(+), 13 deletions(-)
 
-I think we at least we should do that, preferably even something else to
-prevent accidental use if the feature is so fragile.
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 5beb6ee0f091..656385f80929 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -566,18 +566,16 @@ static int ath10k_htt_rx_crypto_param_len(struct ath10k *ar,
+ 
+ #define MICHAEL_MIC_LEN 8
+ 
+-static int ath10k_htt_rx_crypto_tail_len(struct ath10k *ar,
+-					 enum htt_rx_mpdu_encrypt_type type)
++static int ath10k_htt_rx_crypto_mic_len(struct ath10k *ar,
++					enum htt_rx_mpdu_encrypt_type type)
+ {
+ 	switch (type) {
+ 	case HTT_RX_MPDU_ENCRYPT_NONE:
+-		return 0;
+ 	case HTT_RX_MPDU_ENCRYPT_WEP40:
+ 	case HTT_RX_MPDU_ENCRYPT_WEP104:
+-		return IEEE80211_WEP_ICV_LEN;
+ 	case HTT_RX_MPDU_ENCRYPT_TKIP_WITHOUT_MIC:
+ 	case HTT_RX_MPDU_ENCRYPT_TKIP_WPA:
+-		return IEEE80211_TKIP_ICV_LEN;
++		return 0;
+ 	case HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2:
+ 		return IEEE80211_CCMP_MIC_LEN;
+ 	case HTT_RX_MPDU_ENCRYPT_AES_CCM256_WPA2:
+@@ -594,6 +592,31 @@ static int ath10k_htt_rx_crypto_tail_len(struct ath10k *ar,
+ 	return 0;
+ }
+ 
++static int ath10k_htt_rx_crypto_icv_len(struct ath10k *ar,
++					enum htt_rx_mpdu_encrypt_type type)
++{
++	switch (type) {
++	case HTT_RX_MPDU_ENCRYPT_NONE:
++	case HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2:
++	case HTT_RX_MPDU_ENCRYPT_AES_CCM256_WPA2:
++	case HTT_RX_MPDU_ENCRYPT_AES_GCMP_WPA2:
++	case HTT_RX_MPDU_ENCRYPT_AES_GCMP256_WPA2:
++		return 0;
++	case HTT_RX_MPDU_ENCRYPT_WEP40:
++	case HTT_RX_MPDU_ENCRYPT_WEP104:
++		return IEEE80211_WEP_ICV_LEN;
++	case HTT_RX_MPDU_ENCRYPT_TKIP_WITHOUT_MIC:
++	case HTT_RX_MPDU_ENCRYPT_TKIP_WPA:
++		return IEEE80211_TKIP_ICV_LEN;
++	case HTT_RX_MPDU_ENCRYPT_WEP128:
++	case HTT_RX_MPDU_ENCRYPT_WAPI:
++		break;
++	}
++
++	ath10k_warn(ar, "unsupported encryption type %d\n", type);
++	return 0;
++}
++
+ struct amsdu_subframe_hdr {
+ 	u8 dst[ETH_ALEN];
+ 	u8 src[ETH_ALEN];
+@@ -1063,25 +1086,27 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
+ 	/* Tail */
+ 	if (status->flag & RX_FLAG_IV_STRIPPED) {
+ 		skb_trim(msdu, msdu->len -
+-			 ath10k_htt_rx_crypto_tail_len(ar, enctype));
++			 ath10k_htt_rx_crypto_mic_len(ar, enctype));
++
++		skb_trim(msdu, msdu->len -
++			 ath10k_htt_rx_crypto_icv_len(ar, enctype));
+ 	} else {
+ 		/* MIC */
+-		if ((status->flag & RX_FLAG_MIC_STRIPPED) &&
+-		    enctype == HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
+-			skb_trim(msdu, msdu->len - 8);
++		if (status->flag & RX_FLAG_MIC_STRIPPED)
++			skb_trim(msdu, msdu->len -
++				 ath10k_htt_rx_crypto_mic_len(ar, enctype));
+ 
+ 		/* ICV */
+-		if (status->flag & RX_FLAG_ICV_STRIPPED &&
+-		    enctype != HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
++		if (status->flag & RX_FLAG_ICV_STRIPPED)
+ 			skb_trim(msdu, msdu->len -
+-				 ath10k_htt_rx_crypto_tail_len(ar, enctype));
++				 ath10k_htt_rx_crypto_icv_len(ar, enctype));
+ 	}
+ 
+ 	/* MMIC */
+ 	if ((status->flag & RX_FLAG_MMIC_STRIPPED) &&
+ 	    !ieee80211_has_morefrags(hdr->frame_control) &&
+ 	    enctype == HTT_RX_MPDU_ENCRYPT_TKIP_WPA)
+-		skb_trim(msdu, msdu->len - 8);
++		skb_trim(msdu, msdu->len - MICHAEL_MIC_LEN);
+ 
+ 	/* Head */
+ 	if (status->flag & RX_FLAG_IV_STRIPPED) {
 -- 
-Kalle Valo
+1.9.1
