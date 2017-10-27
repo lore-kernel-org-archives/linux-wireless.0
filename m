@@ -1,344 +1,284 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:54267 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751661AbdJXVPo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 17:15:44 -0400
-Received: by mail-lf0-f66.google.com with SMTP id l23so25557277lfk.10
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Oct 2017 14:15:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <720ce165-4a06-1d6e-6158-7983d75eea8a@dd-wrt.com>
-References: <1508867652-16199-1-git-send-email-kvalo@qca.qualcomm.com> <720ce165-4a06-1d6e-6158-7983d75eea8a@dd-wrt.com>
-From: Jasmine Strong <jas@eero.com>
-Date: Tue, 24 Oct 2017 14:15:22 -0700
-Message-ID: <CAGyitvNvCFAfuRg=uKLvZeZVzxsQ14GeXR702FHwu+RLLE_WAQ@mail.gmail.com> (sfid-20171024_231548_954850_6C4D7249)
-Subject: Re: [PATCH v2] ath10k: rebuild crypto header in Rx data frames
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        ath10k <ath10k@lists.infradead.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+Received: from mail.toke.dk ([52.28.52.200]:55691 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751152AbdJ0OPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Oct 2017 10:15:21 -0400
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: make-wifi-fast@lists.bufferbloat.net,
         linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Subject: [PATCH v2 3/3] ath9k: Switch to mac80211 airtime API
+Date: Fri, 27 Oct 2017 16:14:51 +0200
+Message-Id: <20171027141451.22768-3-toke@toke.dk> (sfid-20171027_161617_910642_B8AD27D9)
+In-Reply-To: <20171027141451.22768-1-toke@toke.dk>
+References: <20171027141451.22768-1-toke@toke.dk>
+In-Reply-To: <20171016160902.8970-1-toke@toke.dk>
+References: <20171016160902.8970-1-toke@toke.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seems to work okay on mixed networks of 9882, 4019 and 9888.
+This removes the in-driver airtime fairness scheduling from ath9k and
+switches the driver to use the API introduced in mac80211 in the
+previous commit.
 
-On Tue, Oct 24, 2017 at 1:41 PM, Sebastian Gottschall
-<s.gottschall@dd-wrt.com> wrote:
-> patch works. tested in sta and ap mode so far on 9984
->
-> Am 24.10.2017 um 19:54 schrieb Kalle Valo:
->>
->> From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->>
->> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
->> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
->> on host (mac80211) rather than firmware. Rebuild cipher header
->> in every received data frames (that are notified through those
->> HTT interfaces) from the rx_hdr_status tlv available in the
->> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
->> flag for the packets which requires mac80211 PN/TSC check support
->> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
->> QCA9887, QCA99X0, QCA9984, QCA9888 and QCA4019 currently need the
->> rebuilding of cipher header to perform PN/TSC check for replay
->> attack.
->>
->> Tested-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
->> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->> ---
->>
->> v2:
->>
->> * Construct cipher header from rx_hdr_status tlv rather than from
->>    the msdu_start and mpdu_start tlvs. This fixes connection
->>    issues, also reduces the amount of code change.
->>
->> * Make sure the frame is qos data before clearing AMSDU_PRESENT
->>    bit of qos control field.
->>
->> * Fix traffic issue with QCA988X and QCA9887 hw by taking care of
->>    padding bytes added for 4-byte alignment before the cipher
->>    header.
->>
->> TODO:
->>
->> * CCMP-256 and GCMP/GCMP-256 are not yet supported
->>
->>   drivers/net/wireless/ath/ath10k/htt_rx.c | 91
->> ++++++++++++++++++++++++++------
->>   1 file changed, 74 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c
->> b/drivers/net/wireless/ath/ath10k/htt_rx.c
->> index a3f5dc78353f..aae4f0ea9360 100644
->> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
->> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
->> @@ -1050,8 +1050,14 @@ static void ath10k_htt_rx_h_undecap_raw(struct
->> ath10k *ar,
->>         hdr =3D (void *)msdu->data;
->>   -     /* Tail */
->> -       if (status->flag & RX_FLAG_IV_STRIPPED)
->> +       /* MIC */
->> +       if ((status->flag & RX_FLAG_MIC_STRIPPED) &&
->> +           enctype =3D=3D HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
->> +               skb_trim(msdu, msdu->len - 8);
->> +
->> +       /* ICV */
->> +       if (status->flag & RX_FLAG_ICV_STRIPPED &&
->> +           enctype !=3D HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
->>                 skb_trim(msdu, msdu->len -
->>                          ath10k_htt_rx_crypto_tail_len(ar, enctype));
->>   @@ -1075,7 +1081,8 @@ static void ath10k_htt_rx_h_undecap_raw(struct
->> ath10k *ar,
->>   static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
->>                                           struct sk_buff *msdu,
->>                                           struct ieee80211_rx_status
->> *status,
->> -                                         const u8 first_hdr[64])
->> +                                         const u8 first_hdr[64],
->> +                                         enum htt_rx_mpdu_encrypt_type
->> enctype)
->>   {
->>         struct ieee80211_hdr *hdr;
->>         struct htt_rx_desc *rxd;
->> @@ -1083,6 +1090,7 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct
->> ath10k *ar,
->>         u8 da[ETH_ALEN];
->>         u8 sa[ETH_ALEN];
->>         int l3_pad_bytes;
->> +       int bytes_aligned =3D ar->hw_params.decap_align_bytes;
->>         /* Delivered decapped frame:
->>          * [nwifi 802.11 header] <-- replaced with 802.11 hdr
->> @@ -1111,6 +1119,14 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct
->> ath10k *ar,
->>         /* push original 802.11 header */
->>         hdr =3D (struct ieee80211_hdr *)first_hdr;
->>         hdr_len =3D ieee80211_hdrlen(hdr->frame_control);
->> +
->> +       if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
->> +               memcpy(skb_push(msdu,
->> +                               ath10k_htt_rx_crypto_param_len(ar,
->> enctype)),
->> +                      (void *)hdr + round_up(hdr_len, bytes_aligned),
->> +                       ath10k_htt_rx_crypto_param_len(ar, enctype));
->> +       }
->> +
->>         memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
->>         /* original 802.11 header has a different DA and in
->> @@ -1171,6 +1187,7 @@ static void ath10k_htt_rx_h_undecap_eth(struct
->> ath10k *ar,
->>         u8 sa[ETH_ALEN];
->>         int l3_pad_bytes;
->>         struct htt_rx_desc *rxd;
->> +       int bytes_aligned =3D ar->hw_params.decap_align_bytes;
->>         /* Delivered decapped frame:
->>          * [eth header] <-- replaced with 802.11 hdr & rfc1042/llc
->> @@ -1199,6 +1216,14 @@ static void ath10k_htt_rx_h_undecap_eth(struct
->> ath10k *ar,
->>         /* push original 802.11 header */
->>         hdr =3D (struct ieee80211_hdr *)first_hdr;
->>         hdr_len =3D ieee80211_hdrlen(hdr->frame_control);
->> +
->> +       if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
->> +               memcpy(skb_push(msdu,
->> +                               ath10k_htt_rx_crypto_param_len(ar,
->> enctype)),
->> +                      (void *)hdr + round_up(hdr_len, bytes_aligned),
->> +                       ath10k_htt_rx_crypto_param_len(ar, enctype));
->> +       }
->> +
->>         memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
->>         /* original 802.11 header has a different DA and in
->> @@ -1212,12 +1237,14 @@ static void ath10k_htt_rx_h_undecap_eth(struct
->> ath10k *ar,
->>   static void ath10k_htt_rx_h_undecap_snap(struct ath10k *ar,
->>                                          struct sk_buff *msdu,
->>                                          struct ieee80211_rx_status
->> *status,
->> -                                        const u8 first_hdr[64])
->> +                                        const u8 first_hdr[64],
->> +                                        enum htt_rx_mpdu_encrypt_type
->> enctype)
->>   {
->>         struct ieee80211_hdr *hdr;
->>         size_t hdr_len;
->>         int l3_pad_bytes;
->>         struct htt_rx_desc *rxd;
->> +       int bytes_aligned =3D ar->hw_params.decap_align_bytes;
->>         /* Delivered decapped frame:
->>          * [amsdu header] <-- replaced with 802.11 hdr
->> @@ -1233,6 +1260,14 @@ static void ath10k_htt_rx_h_undecap_snap(struct
->> ath10k *ar,
->>         hdr =3D (struct ieee80211_hdr *)first_hdr;
->>         hdr_len =3D ieee80211_hdrlen(hdr->frame_control);
->> +
->> +       if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
->> +               memcpy(skb_push(msdu,
->> +                               ath10k_htt_rx_crypto_param_len(ar,
->> enctype)),
->> +                      (void *)hdr + round_up(hdr_len, bytes_aligned),
->> +                       ath10k_htt_rx_crypto_param_len(ar, enctype));
->> +       }
->> +
->>         memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
->>   }
->>   @@ -1267,13 +1302,15 @@ static void ath10k_htt_rx_h_undecap(struct
->> ath10k *ar,
->>                                             is_decrypted);
->>                 break;
->>         case RX_MSDU_DECAP_NATIVE_WIFI:
->> -               ath10k_htt_rx_h_undecap_nwifi(ar, msdu, status,
->> first_hdr);
->> +               ath10k_htt_rx_h_undecap_nwifi(ar, msdu, status, first_hd=
-r,
->> +                                             enctype);
->>                 break;
->>         case RX_MSDU_DECAP_ETHERNET2_DIX:
->>                 ath10k_htt_rx_h_undecap_eth(ar, msdu, status, first_hdr,
->> enctype);
->>                 break;
->>         case RX_MSDU_DECAP_8023_SNAP_LLC:
->> -               ath10k_htt_rx_h_undecap_snap(ar, msdu, status, first_hdr=
-);
->> +               ath10k_htt_rx_h_undecap_snap(ar, msdu, status, first_hdr=
-,
->> +                                            enctype);
->>                 break;
->>         }
->>   }
->> @@ -1316,7 +1353,8 @@ static void ath10k_htt_rx_h_csum_offload(struct
->> sk_buff *msdu)
->>     static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
->>                                  struct sk_buff_head *amsdu,
->> -                                struct ieee80211_rx_status *status)
->> +                                struct ieee80211_rx_status *status,
->> +                                bool fill_crypt_header)
->>   {
->>         struct sk_buff *first;
->>         struct sk_buff *last;
->> @@ -1326,7 +1364,6 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar=
-,
->>         enum htt_rx_mpdu_encrypt_type enctype;
->>         u8 first_hdr[64];
->>         u8 *qos;
->> -       size_t hdr_len;
->>         bool has_fcs_err;
->>         bool has_crypto_err;
->>         bool has_tkip_err;
->> @@ -1351,15 +1388,17 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k
->> *ar,
->>          * decapped header. It'll be used for undecapping of each MSDU.
->>          */
->>         hdr =3D (void *)rxd->rx_hdr_status;
->> -       hdr_len =3D ieee80211_hdrlen(hdr->frame_control);
->> -       memcpy(first_hdr, hdr, hdr_len);
->> +       memcpy(first_hdr, hdr, RX_HTT_HDR_STATUS_LEN);
->>         /* Each A-MSDU subframe will use the original header as the base
->> and be
->>          * reported as a separate MSDU so strip the A-MSDU bit from QoS
->> Ctl.
->>          */
->>         hdr =3D (void *)first_hdr;
->> -       qos =3D ieee80211_get_qos_ctl(hdr);
->> -       qos[0] &=3D ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
->> +
->> +       if (ieee80211_is_data_qos(hdr->frame_control)) {
->> +               qos =3D ieee80211_get_qos_ctl(hdr);
->> +               qos[0] &=3D ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
->> +       }
->>         /* Some attention flags are valid only in the last MSDU. */
->>         last =3D skb_peek_tail(amsdu);
->> @@ -1406,9 +1445,14 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *a=
-r,
->>                 status->flag |=3D RX_FLAG_DECRYPTED;
->>                 if (likely(!is_mgmt))
->> -                       status->flag |=3D RX_FLAG_IV_STRIPPED |
->> -                                       RX_FLAG_MMIC_STRIPPED;
->> -}
->> +                       status->flag |=3D RX_FLAG_MMIC_STRIPPED;
->> +
->> +               if (fill_crypt_header)
->> +                       status->flag |=3D RX_FLAG_MIC_STRIPPED |
->> +                                       RX_FLAG_ICV_STRIPPED;
->> +               else
->> +                       status->flag |=3D RX_FLAG_IV_STRIPPED;
->> +       }
->>         skb_queue_walk(amsdu, msdu) {
->>                 ath10k_htt_rx_h_csum_offload(msdu);
->> @@ -1424,6 +1468,9 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar=
-,
->>                 if (is_mgmt)
->>                         continue;
->>   +             if (fill_crypt_header)
->> +                       continue;
->> +
->>                 hdr =3D (void *)msdu->data;
->>                 hdr->frame_control &=3D
->> ~__cpu_to_le16(IEEE80211_FCTL_PROTECTED);
->>         }
->> @@ -1434,6 +1481,9 @@ static void ath10k_htt_rx_h_deliver(struct ath10k
->> *ar,
->>                                     struct ieee80211_rx_status *status)
->>   {
->>         struct sk_buff *msdu;
->> +       struct sk_buff *first_subframe;
->> +
->> +       first_subframe =3D skb_peek(amsdu);
->>         while ((msdu =3D __skb_dequeue(amsdu))) {
->>                 /* Setup per-MSDU flags */
->> @@ -1442,6 +1492,13 @@ static void ath10k_htt_rx_h_deliver(struct ath10k
->> *ar,
->>                 else
->>                         status->flag |=3D RX_FLAG_AMSDU_MORE;
->>   +             if (msdu =3D=3D first_subframe) {
->> +                       first_subframe =3D NULL;
->> +                       status->flag &=3D ~RX_FLAG_ALLOW_SAME_PN;
->> +               } else {
->> +                       status->flag |=3D RX_FLAG_ALLOW_SAME_PN;
->> +               }
->> +
->>                 ath10k_process_rx(ar, status, msdu);
->>         }
->>   }
->> @@ -1584,7 +1641,7 @@ static int ath10k_htt_rx_handle_amsdu(struct
->> ath10k_htt *htt)
->>                 ath10k_htt_rx_h_unchain(ar, &amsdu);
->>         ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
->> -       ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
->> +       ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status, true);
->>         ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
->>         return num_msdus;
->> @@ -1923,7 +1980,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k
->> *ar, struct sk_buff *skb,
->>                         budget_left -=3D skb_queue_len(&amsdu);
->>                         ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id=
-);
->>                         ath10k_htt_rx_h_filter(ar, &amsdu, status);
->> -                       ath10k_htt_rx_h_mpdu(ar, &amsdu, status);
->> +                       ath10k_htt_rx_h_mpdu(ar, &amsdu, status, false);
->>                         ath10k_htt_rx_h_deliver(ar, &amsdu, status);
->>                         break;
->>                 case -EAGAIN:
->
->
->
-> --
-> Mit freundlichen Gr=C3=BCssen / Regards
->
-> Sebastian Gottschall / CTO
->
-> NewMedia-NET GmbH - DD-WRT
-> Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-> Registergericht: Amtsgericht Darmstadt, HRB 25473
-> Gesch=C3=A4ftsf=C3=BChrer: Peter Steinh=C3=A4user, Christian Scheele
-> http://www.dd-wrt.com
-> email: s.gottschall@dd-wrt.com
-> Tel.: +496251-582650 / Fax: +496251-5826565
->
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+---
+Changes since v1:
+- Split out ath9k changes into separate patch
+
+ drivers/net/wireless/ath/ath9k/ath9k.h     |  7 +---
+ drivers/net/wireless/ath/ath9k/debug.h     |  8 -----
+ drivers/net/wireless/ath/ath9k/debug_sta.c | 54 ------------------------------
+ drivers/net/wireless/ath/ath9k/init.c      |  4 +--
+ drivers/net/wireless/ath/ath9k/recv.c      | 11 ++----
+ drivers/net/wireless/ath/ath9k/xmit.c      | 21 ++++--------
+ 6 files changed, 12 insertions(+), 93 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index f6c53df78856..f6e8f9b1b984 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -112,8 +112,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ #define ATH_TXFIFO_DEPTH           8
+ #define ATH_TX_ERROR               0x01
+ 
+-#define ATH_AIRTIME_QUANTUM        300 /* usec */
+-
+ /* Stop tx traffic 1ms before the GO goes away */
+ #define ATH_P2P_PS_STOP_TIME       1000
+ 
+@@ -215,6 +213,7 @@ struct ath_buf_state {
+ 	bool stale;
+ 	u16 seqno;
+ 	unsigned long bfs_paprd_timestamp;
++	u32 airtime;
+ };
+ 
+ struct ath_buf {
+@@ -262,12 +261,9 @@ struct ath_node {
+ 
+ 	bool sleeping;
+ 	bool no_ps_filter;
+-	s64 airtime_deficit[IEEE80211_NUM_ACS];
+-	u32 airtime_rx_start;
+ 
+ #ifdef CONFIG_ATH9K_STATION_STATISTICS
+ 	struct ath_rx_rate_stats rx_rate_stats;
+-	struct ath_airtime_stats airtime_stats;
+ #endif
+ 	u8 key_idx[4];
+ 
+@@ -986,7 +982,6 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
+ 
+ #define AIRTIME_USE_TX		BIT(0)
+ #define AIRTIME_USE_RX		BIT(1)
+-#define AIRTIME_USE_NEW_QUEUES	BIT(2)
+ #define AIRTIME_ACTIVE(flags) (!!(flags & (AIRTIME_USE_TX|AIRTIME_USE_RX)))
+ 
+ struct ath_softc {
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 249f8141cd00..559d9628f280 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -319,20 +319,12 @@ ath9k_debug_sync_cause(struct ath_softc *sc, u32 sync_cause)
+ void ath_debug_rate_stats(struct ath_softc *sc,
+ 			  struct ath_rx_status *rs,
+ 			  struct sk_buff *skb);
+-void ath_debug_airtime(struct ath_softc *sc,
+-		       struct ath_node *an,
+-		       u32 rx, u32 tx);
+ #else
+ static inline void ath_debug_rate_stats(struct ath_softc *sc,
+ 					struct ath_rx_status *rs,
+ 					struct sk_buff *skb)
+ {
+ }
+-static inline void ath_debug_airtime(struct ath_softc *sc,
+-			      struct ath_node *an,
+-			      u32 rx, u32 tx)
+-{
+-}
+ #endif /* CONFIG_ATH9K_STATION_STATISTICS */
+ 
+ #endif /* DEBUG_H */
+diff --git a/drivers/net/wireless/ath/ath9k/debug_sta.c b/drivers/net/wireless/ath/ath9k/debug_sta.c
+index efc692ee67d4..89ba95287a8b 100644
+--- a/drivers/net/wireless/ath/ath9k/debug_sta.c
++++ b/drivers/net/wireless/ath/ath9k/debug_sta.c
+@@ -242,59 +242,6 @@ static const struct file_operations fops_node_recv = {
+ 	.llseek = default_llseek,
+ };
+ 
+-void ath_debug_airtime(struct ath_softc *sc,
+-		struct ath_node *an,
+-		u32 rx,
+-		u32 tx)
+-{
+-	struct ath_airtime_stats *astats = &an->airtime_stats;
+-
+-	astats->rx_airtime += rx;
+-	astats->tx_airtime += tx;
+-}
+-
+-static ssize_t read_airtime(struct file *file, char __user *user_buf,
+-			size_t count, loff_t *ppos)
+-{
+-	struct ath_node *an = file->private_data;
+-	struct ath_airtime_stats *astats;
+-	static const char *qname[4] = {
+-		"VO", "VI", "BE", "BK"
+-	};
+-	u32 len = 0, size = 256;
+-	char *buf;
+-	size_t retval;
+-	int i;
+-
+-	buf = kzalloc(size, GFP_KERNEL);
+-	if (buf == NULL)
+-		return -ENOMEM;
+-
+-	astats = &an->airtime_stats;
+-
+-	len += scnprintf(buf + len, size - len, "RX: %u us\n", astats->rx_airtime);
+-	len += scnprintf(buf + len, size - len, "TX: %u us\n", astats->tx_airtime);
+-	len += scnprintf(buf + len, size - len, "Deficit: ");
+-	for (i = 0; i < 4; i++)
+-		len += scnprintf(buf+len, size - len, "%s: %lld us ", qname[i], an->airtime_deficit[i]);
+-	if (len < size)
+-		buf[len++] = '\n';
+-
+-	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	kfree(buf);
+-
+-	return retval;
+-}
+-
+-
+-static const struct file_operations fops_airtime = {
+-	.read = read_airtime,
+-	.open = simple_open,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-
+-
+ void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
+ 			   struct ieee80211_vif *vif,
+ 			   struct ieee80211_sta *sta,
+@@ -304,5 +251,4 @@ void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
+ 
+ 	debugfs_create_file("node_aggr", S_IRUGO, dir, an, &fops_node_aggr);
+ 	debugfs_create_file("node_recv", S_IRUGO, dir, an, &fops_node_recv);
+-	debugfs_create_file("airtime", S_IRUGO, dir, an, &fops_airtime);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index bb7936090b91..b4c6fc49b19e 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -620,8 +620,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 
+ 	/* Will be cleared in ath9k_start() */
+ 	set_bit(ATH_OP_INVALID, &common->op_flags);
+-	sc->airtime_flags = (AIRTIME_USE_TX | AIRTIME_USE_RX |
+-			     AIRTIME_USE_NEW_QUEUES);
++	sc->airtime_flags = (AIRTIME_USE_TX | AIRTIME_USE_RX);
+ 
+ 	sc->sc_ah = ah;
+ 	sc->dfs_detector = dfs_pattern_detector_init(common, NL80211_DFS_UNSET);
+@@ -873,6 +872,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
+ 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+ 	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
++	ieee80211_hw_set(hw, AIRTIME_ACCOUNTING);
+ 
+ 	if (ath9k_ps_enable)
+ 		ieee80211_hw_set(hw, SUPPORTS_PS);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 2197aee2bb72..69a4ba5d4013 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1054,14 +1054,9 @@ static void ath_rx_count_airtime(struct ath_softc *sc,
+ 						len, rxs->rate_idx, is_sp);
+ 	}
+ 
+- 	if (!!(sc->airtime_flags & AIRTIME_USE_RX)) {
+-		spin_lock_bh(&acq->lock);
+-		an->airtime_deficit[acno] -= airtime;
+-		if (an->airtime_deficit[acno] <= 0)
+-			__ath_tx_queue_tid(sc, ATH_AN_2_TID(an, tidno));
+-		spin_unlock_bh(&acq->lock);
+-	}
+-	ath_debug_airtime(sc, an, airtime, 0);
++	if (!!(sc->airtime_flags & AIRTIME_USE_RX))
++		rxs->airtime = airtime;
++
+ exit:
+ 	rcu_read_unlock();
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index bd438062a6db..5ffd44a4b3de 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -640,11 +640,9 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
+     return bf_isampdu(bf) && !(info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE);
+ }
+ 
+-static void ath_tx_count_airtime(struct ath_softc *sc, struct ath_node *an,
+-				 struct ath_atx_tid *tid, struct ath_buf *bf,
++static void ath_tx_count_airtime(struct ath_softc *sc, struct ath_buf *bf,
+ 				 struct ath_tx_status *ts)
+ {
+-	struct ath_txq *txq = tid->txq;
+ 	u32 airtime = 0;
+ 	int i;
+ 
+@@ -654,15 +652,9 @@ static void ath_tx_count_airtime(struct ath_softc *sc, struct ath_node *an,
+ 		airtime += rate_dur * bf->rates[i].count;
+ 	}
+ 
+-	if (sc->airtime_flags & AIRTIME_USE_TX) {
+-		int q = txq->mac80211_qnum;
+-		struct ath_acq *acq = &sc->cur_chan->acq[q];
++	if (sc->airtime_flags & AIRTIME_USE_TX)
++		bf->bf_state.airtime = airtime;
+ 
+-		spin_lock_bh(&acq->lock);
+-		an->airtime_deficit[q] -= airtime;
+-		spin_unlock_bh(&acq->lock);
+-	}
+-	ath_debug_airtime(sc, an, 0, airtime);
+ }
+ 
+ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+@@ -692,7 +684,7 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 	if (sta) {
+ 		struct ath_node *an = (struct ath_node *)sta->drv_priv;
+ 		tid = ath_get_skb_tid(sc, an, bf->bf_mpdu);
+-		ath_tx_count_airtime(sc, an, tid, bf, ts);
++		ath_tx_count_airtime(sc, bf, ts);
+ 		if (ts->ts_status & (ATH9K_TXERR_FILT | ATH9K_TXERR_XRETRY))
+ 			tid->clear_ps_filter = true;
+ 	}
+@@ -2428,6 +2420,8 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 	if (ts->ts_status & ATH9K_TXERR_FILT)
+ 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+ 
++	tx_info->status.tx_time = min_t(u32, 0xffff, bf->bf_state.airtime);
++
+ 	dma_unmap_single(sc->dev, bf->bf_buf_addr, skb->len, DMA_TO_DEVICE);
+ 	bf->bf_buf_addr = 0;
+ 	if (sc->tx99_state)
+@@ -2754,9 +2748,6 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
+ 	struct ath_atx_tid *tid;
+ 	int tidno, acno;
+ 
+-	for (acno = 0; acno < IEEE80211_NUM_ACS; acno++)
+-		an->airtime_deficit[acno] = ATH_AIRTIME_QUANTUM;
+-
+ 	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
+ 		tid = ath_node_to_tid(an, tidno);
+ 		tid->an        = an;
+-- 
+2.14.2
