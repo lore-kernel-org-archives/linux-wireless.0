@@ -1,96 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:30489 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750966AbdJDQjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 12:39:24 -0400
-Message-ID: <1507135159.908.96.camel@intel.com> (sfid-20171004_184047_887852_629EE3B1)
-Subject: Re: [PATCH 1/3] wireless: iwlwifi: use bool instead of int
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Joe Perches <joe@perches.com>,
-        Christoph =?ISO-8859-1?Q?B=F6hmwalder?=
-        <christoph@boehmwalder.at>, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 04 Oct 2017 19:39:19 +0300
-In-Reply-To: <1507134405.4434.10.camel@perches.com>
-References: <20171004155700.18048-1-christoph@boehmwalder.at>
-         <20171004155700.18048-2-christoph@boehmwalder.at>
-         <1507134405.4434.10.camel@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:59810 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751068AbdJ0Hsd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Oct 2017 03:48:33 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: Convert timers to use timer_setup()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171024092919.GA47203@beast>
+References: <20171024092919.GA47203@beast>
+To: Kees Cook <keescook@chromium.org>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Ingo Molnar <mingo@kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20171027074832.9CD3360314@smtp.codeaurora.org> (sfid-20171027_094941_654985_5F67D1C3)
+Date: Fri, 27 Oct 2017 07:48:32 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-10-04 at 09:26 -0700, Joe Perches wrote:
-> On Wed, 2017-10-04 at 17:56 +0200, Christoph Böhmwalder wrote:
-> > Change a usage of int in a boolean context to use the bool type
-> > instead, as it
-> > makes the intent of the function clearer and helps clarify its
-> > semantics.
-> > 
-> > Also eliminate the if/else and just return the boolean result
-> > directly,
-> > making the code more readable.
-> > 
-> > Signed-off-by: Christoph Böhmwalder <christoph@boehmwalder.at>
-> > ---
-> >  drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 12 +++++-------
-> >  1 file changed, 5 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> > b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> > index b7cd813ba70f..0eb815ae97e8 100644
-> > --- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> > @@ -267,14 +267,12 @@ int iwl_phy_db_set_section(struct iwl_phy_db
-> > *phy_db,
-> >  }
-> >  IWL_EXPORT_SYMBOL(iwl_phy_db_set_section);
-> >  
-> > -static int is_valid_channel(u16 ch_id)
-> > +static bool is_valid_channel(u16 ch_id)
-> >  {
-> > -	if (ch_id <= 14 ||
-> > -	    (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
-> > -	    (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
-> > -	    (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1))
-> > -		return 1;
-> > -	return 0;
-> > +	return (ch_id <= 14 ||
-> > +	       (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
-> > +	       (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
-> > +	       (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1));
-> >  }
-> 
-> This might be more intelligble as separate tests
-> 
-> static bool is_valid_channel(u16 ch_id)
-> {
-> 	if (ch_id <= 14)
-> 		return true;
-> 
-> 	if ((ch_id % 4 == 0) &&
-> 	    ((ch_id >= 36 && ch_id <= 64) ||
-> 	     (ch_id >= 100 && ch_id <= 140)))
-> 		return true;
-> 
-> 	if ((ch_id % 4 == 1) &&
-> 	    (chid >= 145 && ch_id <= 165))
-> 		return true;
-> 
-> 	return false;
-> }
-> 
-> The compiler should produce the same object code.
+Kees Cook <keescook@chromium.org> wrote:
 
-Yeah, it may be a bit easier to read, but I don't want to start getting
-"fixes" to working and reasonable code.  There's nothing wrong with the
-existing function (except maybe for the int vs. boolean) so let's not
-change it.
+> In preparation for unconditionally passing the struct timer_list pointer to
+> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> to pass the timer pointer explicitly.
+> 
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+> Cc: Nishant Sarmukadam <nishants@marvell.com>
+> Cc: Ganapathi Bhat <gbhat@marvell.com>
+> Cc: Xinming Hu <huxm@marvell.com>
+> Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> Cc: Ingo Molnar <mingo@kernel.org>
+> Cc: Johannes Berg <johannes.berg@intel.com>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Andrew Zaborowski <andrew.zaborowski@intel.com>
+> Cc: libertas-dev@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-A good time to change this would be the next time someone adds yet
-another range of valid channels here. ;)
+Patch applied to wireless-drivers-next.git, thanks.
 
---
-Luca.
+08c2eb8ec800 mwifiex: Convert timers to use timer_setup()
+
+-- 
+https://patchwork.kernel.org/patch/10023837/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
