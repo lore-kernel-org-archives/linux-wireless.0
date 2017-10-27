@@ -1,118 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:57803 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750800AbdJRR4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 13:56:55 -0400
-Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
- mask if not usable"
-To: Ben Greear <greearb@candelatech.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>, kirtika@google.com
-References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
- <1507708948.1998.15.camel@sipsolutions.net>
- <2c293255-aa79-75a0-1c28-994f864cddf4@candelatech.com>
- <1508312033.2674.9.camel@sipsolutions.net>
- <2ad42671-59c4-80ed-4bca-f874eb53d653@candelatech.com>
-From: Oleksij Rempel <linux@rempel-privat.de>
-Message-ID: <8c2e0e98-f3f4-6e0c-1bf0-43dfa6e97275@rempel-privat.de> (sfid-20171018_195717_918897_D9A0F5BE)
-Date: Wed, 18 Oct 2017 19:56:16 +0200
+Received: from smtp.codeaurora.org ([198.145.29.96]:33826 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751599AbdJ0HvK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Oct 2017 03:51:10 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <2ad42671-59c4-80ed-4bca-f874eb53d653@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [v4,2/9] brcmsmac: split up wlc_phy_workarounds_nphy
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170922212930.620249-3-arnd@arndb.de>
+References: <20170922212930.620249-3-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Jiri Pirko <jiri@resnulli.us>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        Alexander Potapenko <glider@google.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Michal Marek <mmarek@suse.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, kasan-dev@googlegroups.com,
+        linux-kbuild@vger.kernel.org, Jakub Jelinek <jakub@gcc.gnu.org>,
+        =?UTF-8?q?Martin=20Li=C5=A1ka?= <marxin@gcc.gnu.org>
+Message-Id: <20171027075109.6D3CE605A8@smtp.codeaurora.org> (sfid-20171027_095140_518612_60F01178)
+Date: Fri, 27 Oct 2017 07:51:09 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 18.10.2017 um 16:50 schrieb Ben Greear:
-> 
-> 
-> On 10/18/2017 12:33 AM, Johannes Berg wrote:
->> Hi,
->>
->>> The call to set the rate in the driver comes before the error
->>> check.
->>>
->>>     if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
->>>         ret = drv_set_bitrate_mask(local, sdata, mask);
->>>         if (ret) {
->>>             pr_err("%s: drv-set-bitrate-mask had error
->>> return: %d\n",
->>>                    sdata->dev->name, ret);
->>>             return ret;
->>>         }
->>>     }
->>>
->>>     /*
->>>      * If active validate the setting and reject it if it doesn't
->>> leave
->>>      * at least one basic rate usable, since we really have to be
->>> able
->>>      * to send something, and if we're an AP we have to be able to
->>> do
->>>      * so at a basic rate so that all clients can receive it.
->>>      */
->>>     if (rcu_access_pointer(sdata->vif.chanctx_conf) &&
->>>         sdata->vif.bss_conf.chandef.chan) {
->>>         u32 basic_rates = sdata->vif.bss_conf.basic_rates;
->>>         enum nl80211_band band = sdata-
->>>> vif.bss_conf.chandef.chan->band;
->>>
->>>         if (!(mask->control[band].legacy & basic_rates)) {
->>>             #### I changed this code so I could set a
->>> single rate... --Ben
->>>             pr_err("%s:  WARNING: no legacy rates for
->>> band[%d] in set-bitrate-mask.\n",
->>>                    sdata->dev->name, band);
->>>         }
->>>     }
->>
->> Heh, that's just dumb. I guess I'll fix that by putting the test first,
->> no idea how that happened.
->>
->>>>
->>>>> So, I think we should relax this check, at least for ath10k.
->>>>
->>>> Well, yes and no. I don't think we should make ath10k special here,
->>>> and
->>>> this fixes a real problem - namely that you can set up the system
->>>> so
->>>> that you have no usable rates at all, and then you just get a
->>>> WARN_ON
->>>> and start using the lowest possible rate...
->>>
->>> Well, there are a million ways to set up a broken system,
->>
->> True, but this one actually happened in practice, for some reason, and
->> stopping the user from constantly shooting themselves in the foot seems
->> like a good idea to me. Especially if the user (or application) can't
->> really even know what they're getting into.
->>
->> Now, the case in question was _client_ mode, but still.
->>
->>> and setting a single rate has a useful purpose, especially with
->>> ath10k since it has such limited rate-setting capabilities.
->>
->> You're stretching the definition of "useful purpose" a bit here though,
->> you're about the only one who's ever going to need to set a single
->> rate.
-> 
-> People trying to do regulatory testing want this feature, and other people
-> that are not me also like to test with specific rates.  Still a 
-> small-ish set
-> of people, but bigger than just me at least.
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-Till now i was interviewing different people who was asking for this for 
-ath9k-htc. So I would say we have:
-- academical researchers
-- testers
-- R&D
-- exploit and penetration testers
-- HAM
-- just hackers
+> The stack consumption in this driver is still relatively high, with one
+> remaining warning if the warning level is lowered to 1536 bytes:
+> 
+> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c:17135:1: error: the frame size of 1880 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
+> 
+> The affected function is actually a collection of three separate implementations,
+> and each of them is fairly large by itself. Splitting them up is done easily
+> and improves readability at the same time.
+> 
+> I'm leaving the original indentation to make the review easier.
+> 
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-As for me, it sounds a s lot.
+2 patches applied to wireless-drivers-next.git, thanks.
 
+0425f079590c brcmsmac: split up wlc_phy_workarounds_nphy
+ad1987d67392 brcmsmac: reindent split functions
 
 -- 
-Regards,
-Oleksij
+https://patchwork.kernel.org/patch/9967141/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
