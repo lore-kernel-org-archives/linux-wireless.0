@@ -1,133 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:55936 "EHLO
-        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751274AbdJJAKg (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:49414 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751834AbdJ0J3K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 20:10:36 -0400
-Received: by mail-pf0-f170.google.com with SMTP id 17so7042733pfn.12
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Oct 2017 17:10:36 -0700 (PDT)
-Date: Mon, 9 Oct 2017 17:10:32 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Krzysztof Halasa <khc@pm.waw.pl>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jens Axboe <axboe@fb.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] timer: Remove meaningless .data/.function assignments
-Message-ID: <20171010001032.GA119829@beast> (sfid-20171010_021349_004674_A44C9DB4)
+        Fri, 27 Oct 2017 05:29:10 -0400
+Received: by mail-io0-f196.google.com with SMTP id n137so11405581iod.6
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Oct 2017 02:29:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <df4525f9d784450fabe4bf685af6992e@euamsexm01a.eu.qualcomm.com>
+References: <20171024092954.GA47365@beast> <df4525f9d784450fabe4bf685af6992e@euamsexm01a.eu.qualcomm.com>
+From: Kees Cook <keescook@chromium.org>
+Date: Fri, 27 Oct 2017 11:29:08 +0200
+Message-ID: <CAGXu5jLY0nUOXThRUa_q7h2JRSBp_YSFQGF19+EhZ4Q_kFLqQg@mail.gmail.com> (sfid-20171027_113039_212121_946C32FC)
+Subject: Re: drivers/wireless: ath: Convert timers to use timer_setup()
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several timer users needlessly reset their .function/.data fields during
-their timer callback, but nothing else changes them. Some users do not
-use their .data field at all. Each instance is removed here.
+On Fri, Oct 27, 2017 at 11:18 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Kees Cook <keescook@chromium.org> wrote:
+>
+>> In preparation for unconditionally passing the struct timer_list pointer to
+>> all timer callbacks, switch to using the new timer_setup() and from_timer()
+>> to pass the timer pointer explicitly.
+>>
+>> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: netdev@vger.kernel.org
+>> Signed-off-by: Kees Cook <keescook@chromium.org>
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>
+> There were some conflicts but luckily 3-way merge was able to automatically
+> solve them. But please do check the patch from my pending branch:
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=master-pending&id=dd08329d31a4c150f8aab8274033901baaf3e923
 
-Cc: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: Aditya Shankar <aditya.shankar@microchip.com>
-Cc: Ganesh Krishna <ganesh.krishna@microchip.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@driverdev.osuosl.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org> # for staging
-Acked-by: Krzysztof Halasa <khc@pm.waw.pl> # for wan/hdlc*
-Acked-by: Jens Axboe <axboe@kernel.dk> # for amiflop
----
-This should go via the timer/core tree, please. It's been acked by each
-of the maintainers. Thanks!
----
- drivers/block/amiflop.c                           | 3 +--
- drivers/net/wan/hdlc_cisco.c                      | 2 --
- drivers/net/wan/hdlc_fr.c                         | 2 --
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +---
- 4 files changed, 2 insertions(+), 9 deletions(-)
+This looks correct to me, thanks for merging!
 
-diff --git a/drivers/block/amiflop.c b/drivers/block/amiflop.c
-index 49908c74bfcb..4e3fb9f104af 100644
---- a/drivers/block/amiflop.c
-+++ b/drivers/block/amiflop.c
-@@ -323,7 +323,7 @@ static void fd_deselect (int drive)
- 
- }
- 
--static void motor_on_callback(unsigned long nr)
-+static void motor_on_callback(unsigned long ignored)
- {
- 	if (!(ciaa.pra & DSKRDY) || --on_attempts == 0) {
- 		complete_all(&motor_on_completion);
-@@ -344,7 +344,6 @@ static int fd_motor_on(int nr)
- 		fd_select(nr);
- 
- 		reinit_completion(&motor_on_completion);
--		motor_on_timer.data = nr;
- 		mod_timer(&motor_on_timer, jiffies + HZ/2);
- 
- 		on_attempts = 10;
-diff --git a/drivers/net/wan/hdlc_cisco.c b/drivers/net/wan/hdlc_cisco.c
-index a408abc25512..f4b0ab34f048 100644
---- a/drivers/net/wan/hdlc_cisco.c
-+++ b/drivers/net/wan/hdlc_cisco.c
-@@ -276,8 +276,6 @@ static void cisco_timer(unsigned long arg)
- 	spin_unlock(&st->lock);
- 
- 	st->timer.expires = jiffies + st->settings.interval * HZ;
--	st->timer.function = cisco_timer;
--	st->timer.data = arg;
- 	add_timer(&st->timer);
- }
- 
-diff --git a/drivers/net/wan/hdlc_fr.c b/drivers/net/wan/hdlc_fr.c
-index 78596e42a3f3..07f265fa2826 100644
---- a/drivers/net/wan/hdlc_fr.c
-+++ b/drivers/net/wan/hdlc_fr.c
-@@ -644,8 +644,6 @@ static void fr_timer(unsigned long arg)
- 			state(hdlc)->settings.t391 * HZ;
- 	}
- 
--	state(hdlc)->timer.function = fr_timer;
--	state(hdlc)->timer.data = arg;
- 	add_timer(&state(hdlc)->timer);
- }
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index ac5aaafa461c..60f088babf27 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -266,7 +266,7 @@ static void update_scan_time(void)
- 		last_scanned_shadow[i].time_scan = jiffies;
- }
- 
--static void remove_network_from_shadow(unsigned long arg)
-+static void remove_network_from_shadow(unsigned long unused)
- {
- 	unsigned long now = jiffies;
- 	int i, j;
-@@ -287,7 +287,6 @@ static void remove_network_from_shadow(unsigned long arg)
- 	}
- 
- 	if (last_scanned_cnt != 0) {
--		hAgingTimer.data = arg;
- 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
- 	}
- }
-@@ -304,7 +303,6 @@ static int is_network_in_shadow(struct network_info *pstrNetworkInfo,
- 	int i;
- 
- 	if (last_scanned_cnt == 0) {
--		hAgingTimer.data = (unsigned long)user_void;
- 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
- 		state = -1;
- 	} else {
--- 
-2.7.4
-
+-Kees
 
 -- 
 Kees Cook
