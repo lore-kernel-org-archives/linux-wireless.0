@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0047.outbound.protection.outlook.com ([104.47.34.47]:38944
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750835AbdJWXCr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2017 19:02:47 -0400
-Date: Tue, 24 Oct 2017 02:02:28 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: elce linux conference 2017
-Message-ID: <20171023230227.xpgfro6kfjo742mv@bars> (sfid-20171024_010251_397552_24962418)
-References: <d17d0b61-7d3e-28b5-606e-998e773f0039@rempel-privat.de>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:2635 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752489AbdJ0Nmp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Oct 2017 09:42:45 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d17d0b61-7d3e-28b5-606e-998e773f0039@rempel-privat.de>
+Subject: Re: wil6210: disallow changing RSN in beacon change
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20171017194253.10212-1-johannes@sipsolutions.net>
+References: <20171017194253.10212-1-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Maya Erez <qca_merez@qca.qualcomm.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Message-ID: <f48cbfcf31204a839d345927f712227f@euamsexm01a.eu.qualcomm.com> (sfid-20171027_154253_166974_FB71CF72)
+Date: Fri, 27 Oct 2017 15:42:37 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi all,
+Johannes Berg <johannes@sipsolutions.net> wrote:
+
+> This is a code path that will never really get hit anyway, since
+> it's nonsense to change the beacon of an existing BSS to suddenly
+> include or no longer include the RSN IE. Reject this instead of
+> having the dead code, and get rid of accessing wdev->ssid/_len by
+> way of that.
 > 
-> are there any one of WiFi devs on ELCE?
-> Will be good to meet you. For example:
-> Table 1 - Networking Area, Level LL, Outside Roma.
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
+What's the conclusion, should I take this patch or drop it?
 
-Hello Oleksij,
+-- 
+https://patchwork.kernel.org/patch/10012789/
 
-I am here on ELCE till Wednesday evening. Feel free to ping me via conferenece
-app or email.
-
-Regards,
-Sergey
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
