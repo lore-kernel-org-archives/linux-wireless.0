@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0086.outbound.protection.outlook.com ([104.47.32.86]:32780
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751625AbdJBPek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 11:34:40 -0400
-Date: Mon, 2 Oct 2017 18:34:29 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: look for HT/VHT capabilities in beacon's tail
-Message-ID: <20171002153428.dhh47qlza7agrru4@bars> (sfid-20171002_173451_505508_D23935DF)
-References: <20170830205225.17228-1-igor.mitsyanko.os@quantenna.com>
+Received: from mail.savoirfairelinux.com ([208.88.110.44]:60502 "EHLO
+        mail.savoirfairelinux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751145AbdJ0PzL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Oct 2017 11:55:11 -0400
+Date: Fri, 27 Oct 2017 11:55:09 -0400
+From: Damien Riegel <damien.riegel@savoirfairelinux.com>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        wcn36xx@lists.infradead.org
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: wcn36xx: connection monitoring issue
+Message-ID: <20171027155509.bbtcmvxyerlovzsq@workotop.localdomain> (sfid-20171027_175530_013032_BFFE2046)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170830205225.17228-1-igor.mitsyanko.os@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 01:52:25PM -0700, igor.mitsyanko.os@quantenna.com wrote:
+Hi,
 
-> There are no HT/VHT capabilities in cfg80211_ap_settings::beacon_ies,
-> these should be looked for in beacon's tail instead.
-> 
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> ---
-> 
-> This is true for hostapd (at least the one in mainline): it does not
-> include HT/VHT caps and WLAN_EID_SUPP_RATES into beacon_ies.
-> But worth noting that there is no clear documentation that I could find
-> on what IEs could and could not be included into beacon_ies.
-> 
->  net/wireless/nl80211.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
 
-Hello Johannes,
+I'm working on a board derived from the DragonBoard-410c (apq8016 +
+wcn3620) and noticed an issue with WiFi connection monitoring. When I
+get out of the range of the access point, the device stays associated,
+no matter how far I go or how long I wait.
 
-Any comments on this change ?
+The chip on this board is the WCN3620, and the driver sets
+IEEE80211_HW_CONNECTION_MONITOR at drivers/net/wireless/ath/wcn36xx/main.c:1127, 
+so the hardware is supposed to do the monitoring, but it looks like it
+doesn't. If I comment out this flag (snippet at the end of the email),
+the correct behaviour is observed.
 
-Regards,
-Sergey
+Has anyone else noticed that issue?
+
+
+Thanks,
+Damien
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 35bd50bcbbd5..2aa1643d15bf 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -1124,7 +1124,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+
+        ieee80211_hw_set(wcn->hw, TIMING_BEACON_ONLY);
+        ieee80211_hw_set(wcn->hw, AMPDU_AGGREGATION);
+-       ieee80211_hw_set(wcn->hw, CONNECTION_MONITOR);
+        ieee80211_hw_set(wcn->hw, SUPPORTS_PS);
+        ieee80211_hw_set(wcn->hw, SIGNAL_DBM);
+        ieee80211_hw_set(wcn->hw, HAS_RATE_CONTROL);
