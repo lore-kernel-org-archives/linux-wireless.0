@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40064 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:50822 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750930AbdJ0ICl (ORCPT
+        with ESMTP id S1751283AbdJ0HbX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 04:02:41 -0400
+        Fri, 27 Oct 2017 03:31:23 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8821ae: Fix typo in variable name
+Subject: Re: [08/58] net/wireless/ray_cs: Convert timers to use timer_setup()
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171024014909.7347-1-nikolas@gnu.org>
-References: <20171024014909.7347-1-nikolas@gnu.org>
-To: Nik Nyby <nikolas@gnu.org>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, trivial@kernel.org,
-        Nik Nyby <nikolas@gnu.org>
-Message-Id: <20171027080241.175AF60116@smtp.codeaurora.org> (sfid-20171027_100249_505223_B81924DF)
-Date: Fri, 27 Oct 2017 08:02:41 +0000 (UTC)
+In-Reply-To: <1508200182-104605-9-git-send-email-keescook@chromium.org>
+References: <1508200182-104605-9-git-send-email-keescook@chromium.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Kees Cook <keescook@chromium.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-kernel@vger.kernel.org
+Message-Id: <20171027073122.A4935600ED@smtp.codeaurora.org> (sfid-20171027_093245_400206_808F7A86)
+Date: Fri, 27 Oct 2017 07:31:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nik Nyby <nikolas@gnu.org> wrote:
+Kees Cook <keescook@chromium.org> wrote:
 
-> In _rtl8821ae_dbi_write(), wrtie_addr should be write_addr.
+> In preparation for unconditionally passing the struct timer_list pointer to
+> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> to pass the timer pointer explicitly.
 > 
-> Signed-off-by: Nik Nyby <nikolas@gnu.org>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
+I see that Dave already applied this so dropping it from my queue.
 
-62689167261d rtlwifi: rtl8821ae: Fix typo in variable name
+Patch set to Not Applicable.
 
 -- 
-https://patchwork.kernel.org/patch/10023407/
+https://patchwork.kernel.org/patch/10010421/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
