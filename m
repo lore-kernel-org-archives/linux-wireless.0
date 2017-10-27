@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57820 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751264AbdJSGHw (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:47609 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751593AbdJ0Nuv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Oct 2017 02:07:52 -0400
-Subject: Re: [PATCH] wil6210: disallow changing RSN in beacon change
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>, Jouni Malinen <j@w1.fi>
-References: <20171017194253.10212-1-johannes@sipsolutions.net>
- <18712cc3-3c69-ff9a-e64b-a988463d1965@codeaurora.org>
- <1508321623.2674.11.camel@sipsolutions.net>
-From: Lior David <liord@codeaurora.org>
-Message-ID: <a13235cf-a738-7d9f-38a7-cac61b322215@codeaurora.org> (sfid-20171019_080756_056117_1E221D78)
-Date: Thu, 19 Oct 2017 09:07:47 +0300
+        Fri, 27 Oct 2017 09:50:51 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1508321623.2674.11.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: ath9k: debug: Remove redundant check
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1507974371-7419-1-git-send-email-chris.gekas@gmail.com>
+References: <1507974371-7419-1-git-send-email-chris.gekas@gmail.com>
+To: Christos Gkekas <chris.gekas@gmail.com>
+CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Christos Gkekas <chris.gekas@gmail.com>
+Message-ID: <950220104459484c9610cd0fc7ac3ca6@euamsexm01a.eu.qualcomm.com> (sfid-20171027_155236_804769_49117F0D)
+Date: Fri, 27 Oct 2017 15:50:43 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Christos Gkekas <chris.gekas@gmail.com> wrote:
 
+> Variable val is unsigned, so checking whether it is less than zero is
+> redundant.
+> 
+> Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-On 10/18/2017 1:13 PM, Johannes Berg wrote:
-....
->> hostapd uses change_beacon to change the security of the AP so this
->> needs to be supported. 
-> 
-> I didn't think this made sense - Jouni? Does hostapd kick off all
-> stations in this case?
-> 
->> We do need to restart the AP in this case which will
->> disconnect existing clients, but this cannot be helped...
-> 
-> Why not restart the AP entirely then from userspace? Hmm. I wonder what
-> would happen with mac80211 - I guess keys would have to removed etc?
-> Does this just work by accident because mac80211 removes the keys with
-> stations? What about GTK(s) though?
-> 
-Not sure what happens when the privacy stays the same (secure) but keys
-change, maybe Jouni can comment.
+Patch applied to ath-next branch of ath.git, thanks.
 
->> As a side note, hostapd can also use change_beacon to change the
->> SSID.
-> 
-> When does that happen?
-By chance I worked on a WPS certification test last week which used
-a shell script to perform various operations. The AP started secure
-but the script could change its configuration to unsecure. It used
-the wps_config CLI command to change both the security and
-SSID and hostapd used change_beacon to perform this operation.
-We got this script from WIFI team so there is good chance it
-is in use by existing certification test beds.
+9d414949a306 ath9k: debug: Remove redundant check
+
+-- 
+https://patchwork.kernel.org/patch/10006341/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
