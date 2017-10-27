@@ -1,28 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:34806 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752477AbdJPU3o (ORCPT
+Received: from regular1.263xmail.com ([211.150.99.138]:51356 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752116AbdJ0H07 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 16:29:44 -0400
-Date: Mon, 16 Oct 2017 21:29:42 +0100 (WEST)
-Message-Id: <20171016.212942.961172874932869985.davem@davemloft.net> (sfid-20171016_222953_121570_95AC6D7F)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2017-10-16
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20171016134618.30810-1-johannes@sipsolutions.net>
-References: <20171016134618.30810-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Fri, 27 Oct 2017 03:26:59 -0400
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev@vger.kernel.org
+Subject: [RFC PATCH v10 3/7] mwifiex: Disable wakeup irq handling for pcie
+Date: Fri, 27 Oct 2017 15:26:08 +0800
+Message-Id: <20171027072612.26565-4-jeffy.chen@rock-chips.com> (sfid-20171027_092817_984940_A4B3249F)
+In-Reply-To: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 16 Oct 2017 15:46:17 +0200
+We are going to handle the wakeup irq in the pci core.
 
-> Here's a fix, for a small part of the "KRACK" announced today
-> (krackattacks.com).
-> 
-> Please pull and let me know if there's any problem.
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-Pulled.
+Changes in v10: None
+Changes in v9: None
+Changes in v8: None
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/net/wireless/marvell/mwifiex/main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index ee40b739b289..ba081c16f85c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1568,6 +1568,10 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
+ 		goto err_exit;
+ 
+ 	adapter->dt_node = dev->of_node;
++
++	if (adapter->iface_type != MWIFIEX_PCIE)
++		goto err_exit;
++
+ 	adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
+ 	if (!adapter->irq_wakeup) {
+ 		dev_dbg(dev, "fail to parse irq_wakeup from device tree\n");
+-- 
+2.11.0
