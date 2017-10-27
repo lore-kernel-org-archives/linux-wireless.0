@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45134 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752289AbdJDPNq (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33431 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752039AbdJ0Pox (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 11:13:46 -0400
-Subject: Re: QCA988x and kernel 4.13
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-References: <c6294832-ff1e-595c-da8b-dac59b12a976@gmail.com>
- <7549b77b-3619-f8a5-48d6-eb7e330ba80e@dd-wrt.com>
- <48aebea8-9231-b41e-cbaa-d592d8540c53@candelatech.com>
- <87d163xpoe.fsf@kamboji.qca.qualcomm.com>
-Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        svp <s.pooheer@gmail.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <78f5383d-0187-628e-cf56-de6234fdb9b0@candelatech.com> (sfid-20171004_171350_772632_A4D64E0B)
-Date: Wed, 4 Oct 2017 08:13:43 -0700
+        Fri, 27 Oct 2017 11:44:53 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87d163xpoe.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Message-ID: <00ba42fe21dc4c8f9befeb2ee2cdb3ec@euamsexm01a.eu.qualcomm.com> (sfid-20171027_174457_879543_6F313D1C)
+Date: Fri, 27 Oct 2017 17:44:44 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Kalle Valo <kvalo@qca.qualcomm.com> wrote:
 
+> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
+> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
+> on host (mac80211) rather than firmware. Rebuild cipher header
+> in every received data frames (that are notified through those
+> HTT interfaces) from the rx_hdr_status tlv available in the
+> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
+> flag for the packets which requires mac80211 PN/TSC check support
+> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
+> QCA9887, QCA99X0, QCA9984, QCA9888 and QCA4019 currently need the
+> rebuilding of cipher header to perform PN/TSC check for replay
+> attack.
+> 
+> Please note that removing crypto tail for CCMP-256, GCMP and GCMP-256 ciphers
+> in raw mode needs to be fixed. Since Rx with these ciphers in raw
+> mode does not work in the current form even without this patch and
+> removing crypto tail for these chipers needs clean up, raw mode related
+> issues in CCMP-256, GCMP and GCMP-256 can be addressed in follow up
+> patches.
+> 
+> Tested-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-On 10/04/2017 01:50 AM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> On 10/01/2017 07:06 AM, Sebastian Gottschall wrote:
->>> you have to update to the latest mac80211 code. there is a well
->>> known bug in mac80211 which causes a deadlock with ath10k
->>
->> Do you have a pointer to the patch that fixes this?  I'd like to check if it has
->> made it into 4.13 stable yet...
->
-> I think it's this one:
->
-> mac80211: fix deadlock in driver-managed RX BA session start
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bde59c475e0883e4c4294bcd9b9c7e08ae18c828
->
-> Adding linux-wireless so that someone can correct me in case I'm wrong.
-
-That did seem to fix my problems...
-
-Thanks,
-ben
+Any comments or feedback about this? I'm hoping to apply this during the
+weekend so that it will make it to v4.14 in time. So if there are any issues
+with this patch please let me know ASAP.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+https://patchwork.kernel.org/patch/10028621/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
