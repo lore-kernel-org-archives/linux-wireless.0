@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35230 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932517AbdJQOSd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 10:18:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Kees Cook <keescook@chromium.org>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/58] networking: Convert timers to use timer_setup()
-References: <1508200182-104605-1-git-send-email-keescook@chromium.org>
-Date: Tue, 17 Oct 2017 17:18:29 +0300
-In-Reply-To: <1508200182-104605-1-git-send-email-keescook@chromium.org> (Kees
-        Cook's message of "Mon, 16 Oct 2017 17:28:44 -0700")
-Message-ID: <87mv4pvowa.fsf@purkki.adurom.net> (sfid-20171017_161922_237638_DD1D24D0)
+Received: from lists.laptop.org ([18.85.44.157]:41336 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750828AbdJ0E5X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Oct 2017 00:57:23 -0400
+Date: Fri, 27 Oct 2017 15:57:16 +1100
+From: James Cameron <quozl@laptop.org>
+To: nirinA raseliarison <nirina.raseliarison@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: rtlwifi oops
+Message-ID: <20171027045716.GH9888@us.netrek.org> (sfid-20171027_065749_377431_ADB33922)
+References: <cf61cfda-1e32-3ec3-d558-b508c3b923b6@gmail.com>
+ <20171018223320.GB641@us.netrek.org>
+ <c13aa975-6339-2f5a-20bb-0a82656a2271@gmail.com>
+ <fcf4b761-d7bd-7956-fa98-07fd8b2f8c3b@lwfinger.net>
+ <b86480bd-49b9-f7ac-5dc5-6f6f83942727@gmail.com>
+ <d65baa01-c842-0d14-5760-bbc1c754b1e6@lwfinger.net>
+ <d9e6052f-cc92-813b-6cd6-9907f5bd82be@gmail.com>
+ <a1ca0a52-c033-205a-8b3e-e6879016728c@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a1ca0a52-c033-205a-8b3e-e6879016728c@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ linux-wireless
+On Fri, Oct 27, 2017 at 04:08:48AM +0300, nirinA raseliarison wrote:
+> hi all,
+> i applied the patch against 4.13.8. i still got some trouble, dmesg
+> is below.
 
-Hi Kees,
+As this new event does not have "disabled by hub (EMI?)", it is a
+different problem to your 19th October post, so I don't think the
+patch is relevant.
 
-Kees Cook <keescook@chromium.org> writes:
+> after i plugged the device, it seems to be detected and all modules
+> loaded, but when i tried to connect to an access point, by using
+> wicd, it halted after a while. at this point, all usb ports are
+> broken, there was no more log in dmesg,
 
-> This is the current set of outstanding networking patches to perform
-> conversions to the new timer interface (rebased to -next). This is not
-> all expected conversions, but it contains everything needed in networking
-> to eliminate init_timer(), and all the non-standard setup_*_timer() uses.
+If the other USB ports are not responding, then your problem is
+probably wider than the wireless device, and the wireless device
+is acting as the "canary in the mine"; failing first because it is
+the most active.
 
-So this also includes patches which I had queued for
-wireless-drivers-next:
+Can you test to exclude possibility of damaged USB host controller or
+hub?
 
-https://patchwork.kernel.org/patch/9986253/
-https://patchwork.kernel.org/patch/9986245/
+> lsusb still showed the device even after being unplugged. it got
+> even worse as reboot failed.
 
-And looking at patchwork[1] I have even more timer_setup() related
-patches from you. It would be really helpful if you could clearly
-document to which tree you want the patches to be applied. I don't care
-if it's net-next or wireless-drivers-next as long as it's not the both
-(meaning that both Dave and me apply the same patch, which would be
-bad). The thing is that I really do not have time to figure out for
-every patch via which tree it's supposed to go.
+Yes, once a USB host controller is failed, organised reboot can be
+difficult.  lsusb not updated confirms host controller not responding.
 
-For now I'll just drop all your timer_setup() related patches from my
-queue and I'll assume Dave will take those. Ok?
+> i cannot really trace the error as right now all thing works fine.
 
-[1] https://patchwork.kernel.org/project/linux-wireless/list/
+Your dmesg looks like you removed and reinserted the wireless device
+several times.  Did you do that, or did the system do it without any
+physical action?
+
+A full dmesg from boot may be interesting, at least to better
+understand the USB host controller.
 
 -- 
-Kalle Valo
+James Cameron
+http://quozl.netrek.org/
