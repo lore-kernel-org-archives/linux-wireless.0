@@ -1,66 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0159.hostedemail.com ([216.40.44.159]:51844 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750951AbdJDRz0 (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:15733 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751145AbdJ0TBm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 13:55:26 -0400
-Message-ID: <1507139722.4434.12.camel@perches.com> (sfid-20171004_195550_140651_4F3CAE83)
-Subject: Re: [PATCH 1/3] wireless: iwlwifi: use bool instead of int
-From: Joe Perches <joe@perches.com>
-To: Luciano Coelho <luciano.coelho@intel.com>,
-        Christoph =?ISO-8859-1?Q?B=F6hmwalder?=
-        <christoph@boehmwalder.at>, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 04 Oct 2017 10:55:22 -0700
-In-Reply-To: <1507135159.908.96.camel@intel.com>
-References: <20171004155700.18048-1-christoph@boehmwalder.at>
-         <20171004155700.18048-2-christoph@boehmwalder.at>
-         <1507134405.4434.10.camel@perches.com> <1507135159.908.96.camel@intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Fri, 27 Oct 2017 15:01:42 -0400
+From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Thorsten Leemhuis <linux@leemhuis.info>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k-regression due to "ath10k: fix napi_poll budget overflow"
+ c9353bf483d3
+Date: Fri, 27 Oct 2017 19:01:32 +0000
+Message-ID: <72e73df5-c261-cb1a-7fba-b1a3a9019fea@qti.qualcomm.com> (sfid-20171027_210254_698603_6BE600E1)
+References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
+ <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
+ <fa6e3ee2-91b5-a54b-afe3-87f30aac7a48@leemhuis.info>
+ <877evh53p8.fsf_-_@kamboji.qca.qualcomm.com>
+In-Reply-To: <877evh53p8.fsf_-_@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-10-04 at 19:39 +0300, Luciano Coelho wrote:
-> On Wed, 2017-10-04 at 09:26 -0700, Joe Perches wrote:
-[]
-> > This might be more intelligble as separate tests
-> > 
-> > static bool is_valid_channel(u16 ch_id)
-> > {
-> > 	if (ch_id <= 14)
-> > 		return true;
-> > 
-> > 	if ((ch_id % 4 == 0) &&
-> > 	    ((ch_id >= 36 && ch_id <= 64) ||
-> > 	     (ch_id >= 100 && ch_id <= 140)))
-> > 		return true;
-> > 
-> > 	if ((ch_id % 4 == 1) &&
-> > 	    (chid >= 145 && ch_id <= 165))
-> > 		return true;
-> > 
-> > 	return false;
-> > }
-> > 
-> > The compiler should produce the same object code.
-> 
-> Yeah, it may be a bit easier to read, but I don't want to start getting
-> "fixes" to working and reasonable code.  There's nothing wrong with the
-> existing function (except maybe for the int vs. boolean) so let's not
-> change it.
-> 
-> A good time to change this would be the next time someone adds yet
-> another range of valid channels here. ;)
-
-<shrug>  Your choice.
-
-I like code I can read and understand at a glance.
-
-At case somebody needs to add channels, likely nobody
-would do the change suggested but would just add
-another test to the already odd looking block.
-
-And constants should be on the right side of the tests.
+T24gMTAvMjcvMjAxNyAwMjo0MCBBTSwgS2FsbGUgVmFsbyB3cm90ZToNCg0KPiArIGxpbnV4LXdp
+cmVsZXNzDQo+DQo+IFNvcnJ5LCBJIGhhdmUgbm90IGJlZW4gYWJsZSB0byBmb2xsb3cgdGhpcyBk
+aXNjdXNzaW9uIHZlcnkgY2xvc2VseSBidXQNCj4gd2FzIHRoZSBjb25jbHVzaW9uPyBTaG91bGQg
+d2Ugc2hvdWxkIHJldmVydCBjOTM1M2JmNDgzZDMgZm9yIDQuMTQgb3INCj4gd2hhdD8gSSBzaG91
+bGQgc3RpbGwgaGF2ZSB0aW1lIHRvIGRvIHRoYXQsIGJ1dCBub3QgbXVjaC4NCg0KS2FsbGUsIEkg
+ZG9uJ3QgdGhpbmsgSSBoYXZlIGVub3VnaCB0aW1lIHRvIGxvb2sgaW50byB0aGUgaXNzdWUsIHNp
+bmNlIG9yaWdpbmFsIGNoYW5nZSBpcyB0byBhdm9pZCB0aGUgd2FybmluZywgYnV0IG5vdyBpcyBo
+YXZpbmcgcmVncmVzc2lvbi4NCkxldCdzIHRyeSB0byByZXZlcnQgYzkzNTNiZjQ4M2QzIGZvciA0
+LjE0LCBhbmQgSSdsbCBsb29rIGludG8gdGhpcyBsYXRlci4NCg0KLS0gDQpSeWFuIEhzdQ0K
