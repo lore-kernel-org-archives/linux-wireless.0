@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:44184 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932700AbdJ3Trf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41704 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751189AbdJ1PS6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 15:47:35 -0400
-Received: by mail-io0-f193.google.com with SMTP id m16so29888236iod.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Oct 2017 12:47:35 -0700 (PDT)
-Received: from mail-io0-f174.google.com (mail-io0-f174.google.com. [209.85.223.174])
-        by smtp.gmail.com with ESMTPSA id q94sm6513143ioi.18.2017.10.30.12.47.33
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 30 Oct 2017 12:47:33 -0700 (PDT)
-Received: by mail-io0-f174.google.com with SMTP id 97so29875857iok.7
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Oct 2017 12:47:33 -0700 (PDT)
+        Sat, 28 Oct 2017 11:18:58 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 12/12] wil6210: update statistics for suspend
+References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+        <1508937247-11890-13-git-send-email-qca_merez@qca.qualcomm.com>
+Date: Sat, 28 Oct 2017 18:18:54 +0300
+In-Reply-To: <1508937247-11890-13-git-send-email-qca_merez@qca.qualcomm.com>
+        (Maya Erez's message of "Wed, 25 Oct 2017 16:14:07 +0300")
+Message-ID: <87k1zfs3kx.fsf@purkki.adurom.net> (sfid-20171028_171918_140556_F60E9ABE)
 MIME-Version: 1.0
-In-Reply-To: <b2af992abc624cdb8ae5a4c1d2d94090@SC-EXCH02.marvell.com>
-References: <9370b3238604464b85bf0c4f8ac79c71@SC-EXCH02.marvell.com>
- <20171030170308.GA80479@google.com> <fb8d8eece601415c83167c500d80ff2f@SC-EXCH02.marvell.com>
- <20171030185043.GA100626@google.com> <b2af992abc624cdb8ae5a4c1d2d94090@SC-EXCH02.marvell.com>
-From: Brian Norris <briannorris@chromium.org>
-Date: Mon, 30 Oct 2017 12:47:32 -0700
-Message-ID: <CA+ASDXPXwW9OWpNreiE+3uoH5_w+tiZD4Yh9+oAO5Rb8cWb4iw@mail.gmail.com> (sfid-20171030_204738_776639_2FA2DE67)
-Subject: Re: [EXT] Re: pull-request mwifiex-firmware 2017-10-30
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        James Cao <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 30, 2017 at 12:02 PM, Ganapathi Bhat <gbhat@marvell.com> wrote:
-> Ok, prepared the follow up patch.  Let me also know if we can send a merge request while previous one is pending?
-> If that is not the case I will send it as soon as the current request is merged.
+Maya Erez <qca_merez@qca.qualcomm.com> writes:
 
-That's not up to me. I'm sure the maintainer will let you know if they
-need something, eventually. It's so trivial, I don't see why they
-couldn't just pull it in without any more fuss.
+> From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+>
+> Currently the statistics show how many successful/failed
+> suspend/resume operations the system had.
+> Update the statistics by splitting each successful/failed
+> suspend/resume operations to radio on/off.
+>
+> Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/wil6210/debugfs.c  | 27 ++++++++++++++++++---------
+>  drivers/net/wireless/ath/wil6210/pcie_bus.c | 20 ++++++++++++++------
+>  drivers/net/wireless/ath/wil6210/pm.c       |  8 +++++---
+>  drivers/net/wireless/ath/wil6210/wil6210.h  | 11 ++++++++---
+>  4 files changed, 45 insertions(+), 21 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+> index 03d17ea..9164855 100644
+> --- a/drivers/net/wireless/ath/wil6210/debugfs.c
+> +++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+> @@ -1685,20 +1685,29 @@ static ssize_t wil_read_suspend_stats(struct file *file,
+>  				      size_t count, loff_t *ppos)
+>  {
+>  	struct wil6210_priv *wil = file->private_data;
+> -	static char text[400];
+> +	static char text[500];
+
+I was first about to mention about excessive stack usage but only then I
+noticed the static keyword. That again is problematic when you have two
+(or more) devices as then they would be accessing the same buffer,
+right?
+
+As this from debugfs interface I admit that it's a very theoretical
+issue but still something which should be fixed. I can still take this
+patch, but please fix the static usage in a followup patch.
+
+-- 
+Kalle Valo
