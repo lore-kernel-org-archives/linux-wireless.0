@@ -1,79 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57354 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751352AbdJTMie (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42416 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750848AbdJ2M3G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Oct 2017 08:38:34 -0400
-Received: from mail-io0-f198.google.com ([209.85.223.198])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1e5WZN-0007lu-4C
-        for linux-wireless@vger.kernel.org; Fri, 20 Oct 2017 12:38:33 +0000
-Received: by mail-io0-f198.google.com with SMTP id d66so10586846ioe.23
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Oct 2017 05:38:33 -0700 (PDT)
-Date: Fri, 20 Oct 2017 07:38:30 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Ryan Mounce <ryan@mounce.com.au>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-        =?utf-8?B?0JDQvdC00YDQtdC5INCY0LLQsNC90L7Qsg==?= <wowz89@mail.ru>
-Subject: Re: [wireless-regdb] [PATCH] wireless-regdb: Add 5 Ghz rules for
- Kazakhstan (KZ)
-Message-ID: <20171020123830.rrv3ldmqpmjp4zpr@ubuntu-xps13> (sfid-20171020_143845_721797_49477259)
-References: <20171019213834.23127-1-seth.forshee@canonical.com>
- <CAN+fvRZo6UtqDZN2Mhukx8EOiO+JcpSBvbM3RRka4kzscWjLDA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAN+fvRZo6UtqDZN2Mhukx8EOiO+JcpSBvbM3RRka4kzscWjLDA@mail.gmail.com>
+        Sun, 29 Oct 2017 08:29:06 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Kees Cook <keescook@chromium.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>, netdev@vger.kernel.org
+Date: Sun, 29 Oct 2017 14:28:12 +0200
+Message-Id: <20171029122816.8802-14-luca@coelho.fi> (sfid-20171029_132916_831800_C9F42E5B)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 13/17] iwlwifi: mvm: Convert timers to use timer_setup()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 20, 2017 at 09:48:25AM +1030, Ryan Mounce wrote:
-> This is missing the DFS domain, which is almost certainly DFS-ETSI as
-> KZ is in ITU region 1.
+From: Kees Cook <keescook@chromium.org>
 
-D'oh, I did forget that, good catch. I'll send out an update.
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-> 
-> Regards,
-> Ryan Mounce
-> 
-> On 20 October 2017 at 08:08, Seth Forshee <seth.forshee@canonical.com> wrote:
-> > Add rules for 5150-5250 MHz, 5250-5350 MHz, and 5470-5725 Mhz
-> > based on the documents at [1] and [2].
-> >
-> > [1] http://mic.gov.kz/sites/default/files/pages/pravila_prisvoeniya_polos_chastot_no34.pdf
-> > [2] http://adilet.zan.kz/rus/docs/P000001379_
-> >
-> > Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> > ---
-> >  db.txt | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> >
-> > diff --git a/db.txt b/db.txt
-> > index e48f9a619651..96d8fda44284 100644
-> > --- a/db.txt
-> > +++ b/db.txt
-> > @@ -689,8 +689,14 @@ country KY: DFS-FCC
-> >         (5490 - 5730 @ 160), (24), DFS
-> >         (5735 - 5835 @ 80), (30)
-> >
-> > +# Source:
-> > +# http://mic.gov.kz/sites/default/files/pages/pravila_prisvoeniya_polos_chastot_no34.pdf
-> > +# http://adilet.zan.kz/rus/docs/P000001379_
-> >  country KZ:
-> >         (2402 - 2482 @ 40), (20)
-> > +       (5150 - 5250 @ 80), (20), NO-OUTDOOR, AUTO-BW
-> > +       (5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
-> > +       (5470 - 5725 @ 80), (20), NO-OUTDOOR, DFS
-> >
-> >  country LB: DFS-FCC
-> >         (2402 - 2482 @ 40), (20)
-> > --
-> > 2.14.1
-> >
-> >
-> > _______________________________________________
-> > wireless-regdb mailing list
-> > wireless-regdb@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/wireless-regdb
+The RCU lifetime on baid_data is unclear, so this adds a direct copy of the
+rcu_ptr passed to the original callback. It may be possible to improve this
+to just use baid_data->mvm->baid_map[baid_data->baid] instead.
+
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Sara Sharon <sara.sharon@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 18 +++++++++---------
+ 3 files changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 2f3d5bef4b9e..0e18c5066f04 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -652,6 +652,7 @@ struct iwl_mvm_baid_data {
+ 	u16 entries_per_queue;
+ 	unsigned long last_rx;
+ 	struct timer_list session_timer;
++	struct iwl_mvm_baid_data __rcu **rcu_ptr;
+ 	struct iwl_mvm *mvm;
+ 	struct iwl_mvm_reorder_buffer reorder_buf[IWL_MAX_RX_HW_QUEUES];
+ 	struct iwl_mvm_reorder_buf_entry entries[];
+@@ -1853,7 +1854,7 @@ void iwl_mvm_tdls_ch_switch_work(struct work_struct *work);
+ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
+ 				     struct iwl_mvm_internal_rxq_notif *notif,
+ 				     u32 size);
+-void iwl_mvm_reorder_timer_expired(unsigned long data);
++void iwl_mvm_reorder_timer_expired(struct timer_list *t);
+ struct ieee80211_vif *iwl_mvm_get_bss_vif(struct iwl_mvm *mvm);
+ bool iwl_mvm_is_vif_assoc(struct iwl_mvm *mvm);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 9852a4d62337..343bdc4266cd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -460,9 +460,9 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ 	}
+ }
+ 
+-void iwl_mvm_reorder_timer_expired(unsigned long data)
++void iwl_mvm_reorder_timer_expired(struct timer_list *t)
+ {
+-	struct iwl_mvm_reorder_buffer *buf = (void *)data;
++	struct iwl_mvm_reorder_buffer *buf = from_timer(buf, t, reorder_timer);
+ 	struct iwl_mvm_baid_data *baid_data =
+ 		iwl_mvm_baid_data_from_reorder_buf(buf);
+ 	struct iwl_mvm_reorder_buf_entry *entries =
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 039efcd2735d..c19f98489d4e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -252,9 +252,11 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	return ret;
+ }
+ 
+-static void iwl_mvm_rx_agg_session_expired(unsigned long data)
++static void iwl_mvm_rx_agg_session_expired(struct timer_list *t)
+ {
+-	struct iwl_mvm_baid_data __rcu **rcu_ptr = (void *)data;
++	struct iwl_mvm_baid_data *data =
++		from_timer(data, t, session_timer);
++	struct iwl_mvm_baid_data __rcu **rcu_ptr = data->rcu_ptr;
+ 	struct iwl_mvm_baid_data *ba_data;
+ 	struct ieee80211_sta *sta;
+ 	struct iwl_mvm_sta *mvm_sta;
+@@ -2160,10 +2162,8 @@ static void iwl_mvm_init_reorder_buffer(struct iwl_mvm *mvm,
+ 		reorder_buf->head_sn = ssn;
+ 		reorder_buf->buf_size = buf_size;
+ 		/* rx reorder timer */
+-		reorder_buf->reorder_timer.function =
+-			iwl_mvm_reorder_timer_expired;
+-		reorder_buf->reorder_timer.data = (unsigned long)reorder_buf;
+-		init_timer(&reorder_buf->reorder_timer);
++		timer_setup(&reorder_buf->reorder_timer,
++			    iwl_mvm_reorder_timer_expired, 0);
+ 		spin_lock_init(&reorder_buf->lock);
+ 		reorder_buf->mvm = mvm;
+ 		reorder_buf->queue = i;
+@@ -2286,9 +2286,9 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		baid_data->baid = baid;
+ 		baid_data->timeout = timeout;
+ 		baid_data->last_rx = jiffies;
+-		setup_timer(&baid_data->session_timer,
+-			    iwl_mvm_rx_agg_session_expired,
+-			    (unsigned long)&mvm->baid_map[baid]);
++		baid_data->rcu_ptr = &mvm->baid_map[baid];
++		timer_setup(&baid_data->session_timer,
++			    iwl_mvm_rx_agg_session_expired, 0);
+ 		baid_data->mvm = mvm;
+ 		baid_data->tid = tid;
+ 		baid_data->sta_id = mvm_sta->sta_id;
+-- 
+2.14.2
