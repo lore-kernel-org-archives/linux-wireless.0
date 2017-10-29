@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53122 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750863AbdJFJtH (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42404 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751519AbdJ2M3A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 05:49:07 -0400
-Message-ID: <1507283341.19300.7.camel@sipsolutions.net> (sfid-20171006_114929_383923_913A41D6)
-Subject: Re: [PATCH v2] net/mac80211/mesh_plink: Convert timers to use
- timer_setup()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kees Cook <keescook@chromium.org>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-kernel@vger.kernel.org
-Date: Fri, 06 Oct 2017 11:49:01 +0200
-In-Reply-To: <20171005173910.GA72335@beast> (sfid-20171005_193914_221837_94F6B621)
-References: <20171005173910.GA72335@beast>
-         (sfid-20171005_193914_221837_94F6B621)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sun, 29 Oct 2017 08:29:00 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Ihab Zhaika <ihab.zhaika@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 29 Oct 2017 14:28:14 +0200
+Message-Id: <20171029122816.8802-16-luca@coelho.fi> (sfid-20171029_132903_593355_F6CB988F)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 15/17] iwlwifi: add new cards for 8260 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-10-05 at 10:39 -0700, Kees Cook wrote:
-> In preparation for unconditionally passing the struct timer_list
-> pointer to
-> all timer callbacks, switch to using the new timer_setup() and
-> from_timer()
-> to pass the timer pointer explicitly. This requires adding a pointer
-> back
-> to the sta_info since container_of() can't resolve the sta_info.
-> 
-Applied, thanks. (The change did land in net-next, and I merged that in
-to merge this)
+From: Ihab Zhaika <ihab.zhaika@intel.com>
 
-johannes
+add three new PCI ID'S for 8260 series
+
+Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index aa3c07192624..a988f41125e0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -467,6 +467,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24F3, 0x9110, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x8030, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x9030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F4, 0xC030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F4, 0xD030, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x8130, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x9130, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x8132, iwl8260_2ac_cfg)},
+@@ -485,6 +487,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0950, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0930, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0000, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x4010, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x0010, iwl8265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x0110, iwl8265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x1110, iwl8265_2ac_cfg)},
+-- 
+2.14.2
