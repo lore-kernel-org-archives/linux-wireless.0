@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:38958 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752489AbdJ0NdS (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42394 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750848AbdJ2M25 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 09:33:18 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [01/12] wil6210: run-time PM when interface down
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1508937247-11890-2-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1508937247-11890-2-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Message-ID: <589009024f344a718e1616b30dd3edd0@euamsexm01a.eu.qualcomm.com> (sfid-20171027_153322_187004_413BCDA8)
-Date: Fri, 27 Oct 2017 15:33:09 +0200
+        Sun, 29 Oct 2017 08:28:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 29 Oct 2017 14:28:13 +0200
+Message-Id: <20171029122816.8802-15-luca@coelho.fi> (sfid-20171029_132859_949477_5173D2B3)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 14/17] iwlwifi: drop RX frames during hardware restart
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-> Allow run-time suspend when interface is down, keep card alive when
-> interface is up.
-> If driver is in wmi only or debug_fw mode run-time PM won't suspend.
-> 
-> Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-> 	pcie_bus.c
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+In case of a hardware restart the BA session data in HW is lost
+so the reorder buffer simply passes the frames to mac80211 as is
+as there is no NSSN set. Instead, we will drop these frames
+before they reach the reorder buffer. mac80211 drops such frames anyway,
+but we shouldn't rely on that. In addition it saves some
+processing time
 
-Kbuild bot found problems:
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-   drivers/net//wireless/ath/wil6210/pcie_bus.c: In function 'wil6210_pm_runtime_resume':
->> drivers/net//wireless/ath/wil6210/pcie_bus.c:511:2: error: implicit
->> declaration of function 'wil6210_resume'
->> [-Werror=implicit-function-declaration]
-     return wil6210_resume(dev, true);
-     ^
-   drivers/net//wireless/ath/wil6210/pcie_bus.c: In function
-'wil6210_pm_runtime_suspend':
->> drivers/net//wireless/ath/wil6210/pcie_bus.c:524:2: error: implicit
->> declaration of function 'wil6210_suspend'
->> [-Werror=implicit-function-declaration]
-     return wil6210_suspend(dev, true);
-     ^
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 343bdc4266cd..76dc58381e1c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -834,6 +834,9 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct sk_buff *skb;
+ 	u8 crypt_len = 0;
+ 
++	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
++		return;
++
+ 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
+ 	 * ieee80211_hdr pulled.
+ 	 */
 -- 
-https://patchwork.kernel.org/patch/10026675/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.2
