@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:42670 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752623AbdJ3IsX (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42376 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750915AbdJ2M2t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 04:48:23 -0400
-Message-ID: <1509353300.2637.2.camel@sipsolutions.net> (sfid-20171030_094826_579518_15395D53)
-Subject: Re: [PATCH 1/5] mac80211: always update the PM state of a peer on
- MGMT / DATA frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
+        Sun, 29 Oct 2017 08:28:49 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Ihab Zhaika <ihab.zhaika@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 30 Oct 2017 09:48:20 +0100
-In-Reply-To: <20171029095111.17078-2-luca@coelho.fi>
-References: <20171029095111.17078-1-luca@coelho.fi>
-         <20171029095111.17078-2-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Date: Sun, 29 Oct 2017 14:28:16 +0200
+Message-Id: <20171029122816.8802-18-luca@coelho.fi> (sfid-20171029_132853_377153_09D9FBE3)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 17/17] iwlwifi: add new cards for a000 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2017-10-29 at 11:51 +0200, Luca Coelho wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> 
-> The 2016 version of the spec is more generic about when the
-> AP should update the power management state of the peer:
-> the AP shall update the state based on any management or
-> data frames. This means that even non-bufferable management
-> frames should be looked at to update to maintain the power
-> management state of the peer.
-> 
-> This can avoid problematic cases for example if a station
-> disappears while being asleep and then re-appears. The AP
-> would remember it as in power save, but the Authentication
-> frame couldn't be used to set the peer as awake again.
-> Note that this issues wasn't really critical since at some
-> point (after the association) we would have removed the
-> station and created another one with all the states cleared.
+From: Ihab Zhaika <ihab.zhaika@intel.com>
 
-IIRC this caused a hwsim test failure - is that addressed yet?
+add four new PCI ID'S for a000 series
 
-johannes
+Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index efa2fbb926cc..4a21c12276d7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -586,6 +586,11 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x2720, 0x0070, iwla000_2ac_cfg_hr_cdb)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x0030, iwla000_2ac_cfg_hr_cdb)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x1080, iwla000_2ax_cfg_hr)},
++	{IWL_PCI_DEVICE(0x2720, 0x0090, iwla000_2ac_cfg_hr_cdb)},
++	{IWL_PCI_DEVICE(0x2720, 0x0310, iwla000_2ac_cfg_hr_cdb)},
++	{IWL_PCI_DEVICE(0x40C0, 0x0000, iwla000_2ax_cfg_hr)},
++	{IWL_PCI_DEVICE(0x40C0, 0x0A10, iwla000_2ax_cfg_hr)},
++
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
+-- 
+2.14.2
