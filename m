@@ -1,96 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0056.outbound.protection.outlook.com ([104.47.41.56]:56000
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750914AbdJPIsZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Oct 2017 04:48:25 -0400
-Date: Mon, 16 Oct 2017 11:48:11 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Steve deRosier <derosier@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH] iw: add command to register and capture mgmt frames
-Message-ID: <20171016084810.plzog2dtzakra4ae@bars> (sfid-20171016_104829_759154_3699AAE7)
-References: <20171014210036.29556-1-sergey.matyukevich.os@quantenna.com>
- <CALLGbR+DonvXRDysZGx3fJ0wGQsmnWNW3db7mv9KObwTcicnOg@mail.gmail.com>
- <20171015095133.prxuuukv6osx52td@bars>
- <1508138777.10607.14.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1508138777.10607.14.camel@sipsolutions.net>
+Received: from paleale.coelho.fi ([176.9.41.70]:42228 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751969AbdJ2JvV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 29 Oct 2017 05:51:21 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tova Mussai <tova.mussai@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 29 Oct 2017 11:51:11 +0200
+Message-Id: <20171029095111.17078-6-luca@coelho.fi> (sfid-20171029_105207_062088_D894A467)
+In-Reply-To: <20171029095111.17078-1-luca@coelho.fi>
+References: <20171029095111.17078-1-luca@coelho.fi>
+Subject: [PATCH 5/5] cfg80211: IBSS: Add support for static WEP in driver for IBSS
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes and all,
+From: Tova Mussai <tova.mussai@intel.com>
 
-> So first, I'll say that I have no objection in principle to the patch,
-> as a debugging aid.
-> 
-> However, the story is more complicated.
-> 
-> > IIUC tshark and other specific capture tools need wireless netdevice
-> > to be in monitor mode.
-> 
-> This is correct, but shouldn't be a problem.
-> 
-> > This particular iw command is based on
-> > NL80211_CMD_REGISTER_FRAME
-> > and related cfg80211 ops. In fact, this command can be used to
-> > subscribe
-> > to mgmt frames when wireless device is up and running in AP or STA
-> > mode.
-> > That can be convenient for monitor and debug purposes. There is a
-> > limitation though: currently cfg80211 core allows only one subscriber
-> > for each particular frame/pattern.
-> 
-> If you're looking for a tool to actually do something like sniffer,
-> this API isn't the right thing to do.
-> 
-> That's why I also don't think it should be added to tshark.
-> 
-> Remember that with the use of this API also come certain obligations.
-> For example, if you subscribe to (certain) action frames and then don't
-> actually process them as described by the spec, then the subscriber
-> MUST generate responses with the 0x80 bit ORed into the action code,
-> returning the frame as not understood. Clearly, this isn't something
-> that iw does and can implement.
-> 
-> Additionally, as you noted, and it's for this exact reason because
-> otherwise responsibilities wouldn't be clearly defined, there can only
-> be a single subscriber to a certain set of frames, as specified by the
-> subtype and match prefix, so using it as a type of sniffer or debug
-> tool may affect other functional operation.
-> 
-> 
-> In mac80211, it's _always_ possible to add a monitor interface, and
-> given no special flags (which may or may not be supported by a given
-> driver anyway) this monitor interface is a pure software construct and
-> will in no way affect device operation - apart from sending all
-> received frames to the monitor interface at the beginning of mac80211's
-> operation.
-> 
-> I see no reason, other than needing a little bit of coding, that this
-> couldn't similarly be supported in qtnfmac.
+Add support for drivers that implement static WEP internally for IBSS.
+Add the WEP keys to the IBSS params struct, that will allow the driver
+to use the keys in the join flow, and not only after the connection.
 
-Well, monitor mode support in qtnfmac is in our todo list for sure. Meanwhile
-the purpose of the patch was not to implement a full-fledged mgmt packet
-capture. We have monitor mode and mature capture tools for that.
+Signed-off-by: Tova Mussai <tova.mussai@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/cfg80211.h | 5 +++++
+ net/wireless/ibss.c    | 5 +++++
+ 2 files changed, 10 insertions(+)
 
-Nevertheless in certain cases it is handy to dump selected types of mgmt frames
-while system is up and running without adding the whole monitor overhead. The
-idea was that NL80211_CMD_REGISTER_FRAME and iw are the right tools for that
-task. Anyway, iw is something like a 'swiss-army-knife' tool for various tasks
-related to mac80211/cfg80211 reporting and troubleshooting.
-
-Speaking of the patch, you mentioned that you have no objection in principle.
-Let me know if you have any objections to implementation details :)
-Then I will resubmit it addressing all the comments. Besides I am going
-to change command name from 'capture' to 'dump' to avoid confusion.
-Finally, I will update commit message adding information about unicast
-nature of those registrations.
-
-Regards,
-Sergey
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8b8118a7fadb..698cebf2de2a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2021,6 +2021,9 @@ struct cfg80211_disassoc_request {
+  * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
+  *	will be used in ht_capa.  Un-supported values will be ignored.
+  * @ht_capa_mask:  The bits of ht_capa which are to be used.
++ * @wep_keys: static WEP keys, if not NULL points to an array of
++ * 	CFG80211_MAX_WEP_KEYS WEP keys
++ * @wep_tx_key: key index (0..3) of the default TX static WEP key
+  */
+ struct cfg80211_ibss_params {
+ 	const u8 *ssid;
+@@ -2037,6 +2040,8 @@ struct cfg80211_ibss_params {
+ 	int mcast_rate[NUM_NL80211_BANDS];
+ 	struct ieee80211_ht_cap ht_capa;
+ 	struct ieee80211_ht_cap ht_capa_mask;
++	struct key_params *wep_keys;
++	int wep_tx_key;
+ };
+ 
+ /**
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 10bf040a0982..6a4ad21174d5 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -125,6 +125,11 @@ static int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 	wdev->ibss_fixed = params->channel_fixed;
+ 	wdev->ibss_dfs_possible = params->userspace_handles_dfs;
+ 	wdev->chandef = params->chandef;
++	if (connkeys) {
++		params->wep_keys = connkeys->params;
++		params->wep_tx_key = connkeys->def;
++	}
++
+ #ifdef CONFIG_CFG80211_WEXT
+ 	wdev->wext.ibss.chandef = params->chandef;
+ #endif
+-- 
+2.14.2
