@@ -1,297 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:30120 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751415AbdJKKSY (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42328 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751437AbdJ2M2g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 06:18:24 -0400
-From: Russell Hu <rhu@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <rhu@qti.qualcomm.com>, <ryanhsu@qti.qualcomm.com>,
-        <rwchang@qti.qualcomm.com>, <aeolus@qti.qualcomm.com>,
-        <kvalo@qca.qualcomm.com>
-Subject: [PATCH v2] ath9k: add MSI support
-Date: Wed, 11 Oct 2017 18:18:06 +0800
-Message-ID: <20171011101806.6295-1-rhu@qti.qualcomm.com> (sfid-20171011_121835_798926_7B1F776D)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 29 Oct 2017 08:28:36 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Kirtika Ruchandani <kirtika@chromium.org>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 29 Oct 2017 14:28:07 +0200
+Message-Id: <20171029122816.8802-9-luca@coelho.fi> (sfid-20171029_132850_418929_1F7F9C1C)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 08/17] iwlwifi: Add more call-sites for pcie reg dumper
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On new Intel platforms like ApolloLake, legacy interrupt mechanism
-(INTx) is not supported, so WLAN modules are not working because
-interrupts are missing, therefore this patch is to add MSI support to
-ath9k.  With module paremeter "use_msi=1", ath9k driver would try to
-use MSI instead of INTx.
+From: Kirtika Ruchandani <kirtika@chromium.org>
 
-Signed-off-by: Russell Hu <rhu@qti.qualcomm.com>
+Commit a6d24fad00d9 ("iwlwifi: pcie: dump registers when HW becomes
+inaccessible") added a function to dump pcie config registers and
+memory mapped registers on a failure. It is currently only accessible
+within trans.c. Add it to struct iwl_trans_ops, so that failure cases
+in other files can call it.  While there, add a call to this function
+from iwl_pcie_load_firmware_chunk in pcie/tx.c, since this is a common
+failure case seen on some platforms.
+
+Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
+[modified the commit message slightly]
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c   | 33 ++++++++++++++++++------
- drivers/net/wireless/ath/ath9k/hw.h   |  3 +++
- drivers/net/wireless/ath/ath9k/init.c |  4 +++
- drivers/net/wireless/ath/ath9k/mac.c  | 47 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/pci.c  | 21 +++++++++++++++-
- drivers/net/wireless/ath/ath9k/reg.h  | 15 +++++++++++
- 6 files changed, 115 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h  | 11 +++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  7 ++++---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c    |  1 +
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8c5c2dd8fa7f..cd0f023ccf77 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -922,6 +922,7 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 		AR_IMR_RXERR |
- 		AR_IMR_RXORN |
- 		AR_IMR_BCNMISC;
-+	u32 msi_cfg = 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 3138f637ab2a..ca0b5536a8a6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -520,6 +520,9 @@ struct iwl_trans_txq_scd_cfg {
+  * @dump_data: return a vmalloc'ed buffer with debug data, maybe containing last
+  *	TX'ed commands and similar. The buffer will be vfree'd by the caller.
+  *	Note that the transport must fill in the proper file headers.
++ * @dump_regs: dump using IWL_ERR configuration space and memory mapped
++ *	registers of the device to diagnose failure, e.g., when HW becomes
++ *	inaccessible.
+  */
+ struct iwl_trans_ops {
  
- 	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
- 	    AR_SREV_9561(ah))
-@@ -929,22 +930,30 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		imr_reg |= AR_IMR_RXOK_HP;
--		if (ah->config.rx_intr_mitigation)
-+		if (ah->config.rx_intr_mitigation) {
- 			imr_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
--		else
-+			msi_cfg |= AR_INTCFG_MSI_RXINTM | AR_INTCFG_MSI_RXMINTR;
-+		} else {
- 			imr_reg |= AR_IMR_RXOK_LP;
--
-+			msi_cfg |= AR_INTCFG_MSI_RXOK;
-+		}
- 	} else {
--		if (ah->config.rx_intr_mitigation)
-+		if (ah->config.rx_intr_mitigation) {
- 			imr_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
--		else
-+			msi_cfg |= AR_INTCFG_MSI_RXINTM | AR_INTCFG_MSI_RXMINTR;
-+		} else {
- 			imr_reg |= AR_IMR_RXOK;
-+			msi_cfg |= AR_INTCFG_MSI_RXOK;
-+		}
- 	}
- 
--	if (ah->config.tx_intr_mitigation)
-+	if (ah->config.tx_intr_mitigation) {
- 		imr_reg |= AR_IMR_TXINTM | AR_IMR_TXMINTR;
--	else
-+		msi_cfg |= AR_INTCFG_MSI_TXINTM | AR_INTCFG_MSI_TXMINTR;
-+	} else {
- 		imr_reg |= AR_IMR_TXOK;
-+		msi_cfg |= AR_INTCFG_MSI_TXOK;
-+	}
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
-@@ -952,6 +961,16 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 	ah->imrs2_reg |= AR_IMR_S2_GTT;
- 	REG_WRITE(ah, AR_IMR_S2, ah->imrs2_reg);
- 
-+	if (ah->msi_enabled) {
-+		ah->msi_reg = REG_READ(ah, AR_PCIE_MSI);
-+		ah->msi_reg |= AR_PCIE_MSI_HW_DBI_WR_EN;
-+		ah->msi_reg &= AR_PCIE_MSI_HW_INT_PENDING_ADDR_MSI_64;
-+		REG_WRITE(ah, AR_INTCFG, msi_cfg);
-+		ath_dbg(ath9k_hw_common(ah), ANY,
-+			"value of AR_INTCFG=0x%X, msi_cfg=0x%X\n",
-+			REG_READ(ah, AR_INTCFG), msi_cfg);
-+	}
+@@ -587,6 +590,8 @@ struct iwl_trans_ops {
+ 	struct iwl_trans_dump_data *(*dump_data)(struct iwl_trans *trans,
+ 						 const struct iwl_fw_dbg_trigger_tlv
+ 						 *trigger);
 +
- 	if (!AR_SREV_9100(ah)) {
- 		REG_WRITE(ah, AR_INTR_SYNC_CAUSE, 0xFFFFFFFF);
- 		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, sync_default);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 4ac70827d142..0d6c07c77372 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -977,6 +977,9 @@ struct ath_hw {
- 	bool tpc_enabled;
- 	u8 tx_power[Ar5416RateSize];
- 	u8 tx_power_stbc[Ar5416RateSize];
-+	bool msi_enabled;
-+	u32 msi_mask;
-+	u32 msi_reg;
++	void (*dump_regs)(struct iwl_trans *trans);
  };
  
- struct ath_bus_ops {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index bb7936090b91..b6b7a353fea4 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -75,6 +75,10 @@ MODULE_PARM_DESC(use_chanctx, "Enable channel context for concurrency");
- 
- #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
- 
-+int ath9k_use_msi;
-+module_param_named(use_msi, ath9k_use_msi, int, 0444);
-+MODULE_PARM_DESC(use_msi, "Use MSI instead of INTx if possible");
-+
- bool is_ath9k_unloaded;
- 
- #ifdef CONFIG_MAC80211_LEDS
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 77c94f9e7b61..58d02c19b6d0 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -832,6 +832,43 @@ static void __ath9k_hw_enable_interrupts(struct ath_hw *ah)
- 	}
- 	ath_dbg(common, INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
- 		REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
-+
-+	if (ah->msi_enabled) {
-+		u32 _msi_reg = 0;
-+		u32 i = 0;
-+		u32 msi_pend_addr_mask = AR_PCIE_MSI_HW_INT_PENDING_ADDR_MSI_64;
-+
-+		ath_dbg(ath9k_hw_common(ah), INTERRUPT,
-+			"Enabling MSI, msi_mask=0x%X\n", ah->msi_mask);
-+
-+		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_ENABLE, ah->msi_mask);
-+		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_MASK, ah->msi_mask);
-+		ath_dbg(ath9k_hw_common(ah), INTERRUPT,
-+			"AR_INTR_PRIO_ASYNC_ENABLE=0x%X, AR_INTR_PRIO_ASYNC_MASK=0x%X\n",
-+			REG_READ(ah, AR_INTR_PRIO_ASYNC_ENABLE),
-+			REG_READ(ah, AR_INTR_PRIO_ASYNC_MASK));
-+
-+		if (ah->msi_reg == 0)
-+			ah->msi_reg = REG_READ(ah, AR_PCIE_MSI);
-+
-+		ath_dbg(ath9k_hw_common(ah), INTERRUPT,
-+			"AR_PCIE_MSI=0x%X, ah->msi_reg = 0x%X\n",
-+			AR_PCIE_MSI, ah->msi_reg);
-+
-+		i = 0;
-+		do {
-+			REG_WRITE(ah, AR_PCIE_MSI,
-+				  (ah->msi_reg | AR_PCIE_MSI_ENABLE)
-+				  & msi_pend_addr_mask);
-+			_msi_reg = REG_READ(ah, AR_PCIE_MSI);
-+			i++;
-+		} while ((_msi_reg & AR_PCIE_MSI_ENABLE) == 0 && i < 200);
-+
-+		if (i >= 200)
-+			ath_err(ath9k_hw_common(ah),
-+				"%s: _msi_reg = 0x%X\n",
-+				__func__, _msi_reg);
-+	}
+ /**
+@@ -865,6 +870,12 @@ iwl_trans_dump_data(struct iwl_trans *trans,
+ 	return trans->ops->dump_data(trans, trigger);
  }
  
- void ath9k_hw_resume_interrupts(struct ath_hw *ah)
-@@ -878,12 +915,21 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah)
- 	if (!(ints & ATH9K_INT_GLOBAL))
- 		ath9k_hw_disable_interrupts(ah);
- 
-+	if (ah->msi_enabled) {
-+		ath_dbg(common, INTERRUPT, "Clearing AR_INTR_PRIO_ASYNC_ENABLE\n");
++static inline void iwl_trans_dump_regs(struct iwl_trans *trans)
++{
++	if (trans->ops->dump_regs)
++		trans->ops->dump_regs(trans);
++}
 +
-+		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_ENABLE, 0);
-+		REG_READ(ah, AR_INTR_PRIO_ASYNC_ENABLE);
-+	}
-+
- 	ath_dbg(common, INTERRUPT, "New interrupt mask 0x%x\n", ints);
+ static inline struct iwl_device_cmd *
+ iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 0008ea323be3..8d992d5ba064 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -88,7 +88,7 @@
+ #define IWL_FW_MEM_EXTENDED_START	0x40000
+ #define IWL_FW_MEM_EXTENDED_END		0x57FFF
  
- 	mask = ints & ATH9K_INT_COMMON;
- 	mask2 = 0;
- 
-+	ah->msi_mask = 0;
- 	if (ints & ATH9K_INT_TX) {
-+		ah->msi_mask |= AR_INTR_PRIO_TX;
- 		if (ah->config.tx_intr_mitigation)
- 			mask |= AR_IMR_TXMINTR | AR_IMR_TXINTM;
- 		else {
-@@ -898,6 +944,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah)
- 			mask |= AR_IMR_TXEOL;
- 	}
- 	if (ints & ATH9K_INT_RX) {
-+		ah->msi_mask |= AR_INTR_PRIO_RXLP | AR_INTR_PRIO_RXHP;
- 		if (AR_SREV_9300_20_OR_LATER(ah)) {
- 			mask |= AR_IMR_RXERR | AR_IMR_RXOK_HP;
- 			if (ah->config.rx_intr_mitigation) {
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 223606311261..645f0fbd9179 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -22,6 +22,8 @@
- #include <linux/module.h>
- #include "ath9k.h"
- 
-+extern int ath9k_use_msi;
-+
- static const struct pci_device_id ath_pci_id_table[] = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0023) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
-@@ -889,6 +891,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	u32 val;
- 	int ret = 0;
- 	char hw_name[64];
-+	int msi_enabled = 0;
- 
- 	if (pcim_enable_device(pdev))
- 		return -EIO;
-@@ -960,7 +963,20 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->mem = pcim_iomap_table(pdev)[0];
- 	sc->driver_data = id->driver_data;
- 
--	ret = request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
-+	if (ath9k_use_msi) {
-+		if (pci_enable_msi(pdev) == 0) {
-+			msi_enabled = 1;
-+			dev_err(&pdev->dev, "Using MSI\n");
-+		} else {
-+			dev_err(&pdev->dev, "Using INTx\n");
-+		}
-+	}
-+
-+	if (!msi_enabled)
-+		ret = request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
-+	else
-+		ret = request_irq(pdev->irq, ath_isr, 0, "ath9k", sc);
-+
- 	if (ret) {
- 		dev_err(&pdev->dev, "request_irq failed\n");
- 		goto err_irq;
-@@ -974,6 +990,9 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto err_init;
+-static void iwl_trans_pcie_err_dump(struct iwl_trans *trans)
++static void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
+ {
+ #define PCI_DUMP_SIZE	64
+ #define PREFIX_LEN	32
+@@ -736,7 +736,7 @@ static int iwl_pcie_load_firmware_chunk(struct iwl_trans *trans,
+ 				 trans_pcie->ucode_write_complete, 5 * HZ);
+ 	if (!ret) {
+ 		IWL_ERR(trans, "Failed to load firmware chunk!\n");
+-		iwl_trans_pcie_err_dump(trans);
++		iwl_trans_pcie_dump_regs(trans);
+ 		return -ETIMEDOUT;
  	}
  
-+	sc->sc_ah->msi_enabled = msi_enabled;
-+	sc->sc_ah->msi_reg = 0;
-+
- 	ath9k_hw_name(sc->sc_ah, hw_name, sizeof(hw_name));
- 	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
- 		   hw_name, (unsigned long)sc->mem, pdev->irq);
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 80ff69f99229..653e79611830 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -146,6 +146,14 @@
- #define AR_MACMISC_MISC_OBS_BUS_MSB_S   15
- #define AR_MACMISC_MISC_OBS_BUS_1       1
+@@ -1956,7 +1956,7 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+ 			   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
+ 			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
+ 	if (unlikely(ret < 0)) {
+-		iwl_trans_pcie_err_dump(trans);
++		iwl_trans_pcie_dump_regs(trans);
+ 		iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_FORCE_NMI);
+ 		WARN_ONCE(1,
+ 			  "Timeout waiting for hardware access (CSR_GP_CNTRL 0x%08x)\n",
+@@ -3021,6 +3021,7 @@ static void iwl_trans_pcie_resume(struct iwl_trans *trans)
+ 	.ref = iwl_trans_pcie_ref,					\
+ 	.unref = iwl_trans_pcie_unref,					\
+ 	.dump_data = iwl_trans_pcie_dump_data,				\
++	.dump_regs = iwl_trans_pcie_dump_regs,				\
+ 	.d3_suspend = iwl_trans_pcie_d3_suspend,			\
+ 	.d3_resume = iwl_trans_pcie_d3_resume
  
-+#define AR_INTCFG               0x005C
-+#define AR_INTCFG_MSI_RXOK      0x00000000
-+#define AR_INTCFG_MSI_RXINTM    0x00000004
-+#define AR_INTCFG_MSI_RXMINTR   0x00000006
-+#define AR_INTCFG_MSI_TXOK      0x00000000
-+#define AR_INTCFG_MSI_TXINTM    0x00000010
-+#define AR_INTCFG_MSI_TXMINTR   0x00000018
-+
- #define AR_DATABUF_SIZE		0x0060
- #define AR_DATABUF_SIZE_MASK	0x00000FFF
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index e93c471ef9bf..b5c459cd70ce 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1909,6 +1909,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
+ 	}
  
-@@ -1256,6 +1264,13 @@ enum {
- #define AR_PCIE_MSI                             (AR_SREV_9340(ah) ? 0x40d8 : \
- 						 (AR_SREV_9300_20_OR_LATER(ah) ? 0x40a4 : 0x4094))
- #define AR_PCIE_MSI_ENABLE                       0x00000001
-+#define AR_PCIE_MSI_HW_DBI_WR_EN                 0x02000000
-+#define AR_PCIE_MSI_HW_INT_PENDING_ADDR          0xFFA0C1FF /* bits 8..11: value must be 0x5060 */
-+#define AR_PCIE_MSI_HW_INT_PENDING_ADDR_MSI_64   0xFFA0C9FF /* bits 8..11: value must be 0x5064 */
-+
-+#define AR_INTR_PRIO_TX               0x00000001
-+#define AR_INTR_PRIO_RXLP             0x00000002
-+#define AR_INTR_PRIO_RXHP             0x00000004
- 
- #define AR_INTR_PRIO_SYNC_ENABLE  (AR_SREV_9340(ah) ? 0x4088 : 0x40c4)
- #define AR_INTR_PRIO_ASYNC_MASK   (AR_SREV_9340(ah) ? 0x408c : 0x40c8)
+ 	if (test_bit(STATUS_FW_ERROR, &trans->status)) {
++		iwl_trans_dump_regs(trans);
+ 		IWL_ERR(trans, "FW error in SYNC CMD %s\n",
+ 			iwl_get_cmd_string(trans, cmd->id));
+ 		dump_stack();
 -- 
-2.11.0
+2.14.2
