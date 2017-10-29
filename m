@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from heliosphere.sirena.org.uk ([172.104.155.198]:46508 "EHLO
-        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752452AbdJLTMZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42292 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750848AbdJ2M2c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Oct 2017 15:12:25 -0400
-Date: Thu, 12 Oct 2017 20:12:15 +0100
-From: Mark Brown <broonie@kernel.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Wireless <linux-wireless@vger.kernel.org>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with
- the wireless-drivers tree
-Message-ID: <20171012191215.hstb7oapb7gcemsf@sirena.co.uk> (sfid-20171012_211259_766937_618D4A44)
-References: <20171012172512.tlsdjhppfz2hu4vr@sirena.co.uk>
- <1507832979.5497.4.camel@coelho.fi>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="mmucsx4ii4livhqa"
-In-Reply-To: <1507832979.5497.4.camel@coelho.fi>
+        Sun, 29 Oct 2017 08:28:32 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 29 Oct 2017 14:28:03 +0200
+Message-Id: <20171029122816.8802-5-luca@coelho.fi> (sfid-20171029_132852_268816_ADECD955)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 04/17] iwlwifi: mvm: rs: remove the ANT C from the toogle antenna logic
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---mmucsx4ii4livhqa
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+We don't plan to have products with 3 antennas in the near
+future. All the rest of the code follows the same
+assumption as well.
+Remove the support for antenna C from rs_toggle_ant.
+When trying to toggle from ANT_B, this avoids to go through
+ANT_C, discover that it doesn't exist and continue to ANT_A.
+In MIMO, this avoids to do ANT_AB -> ANT_BC -> ANT_AC and
+back to ANT_AB.
 
-On Thu, Oct 12, 2017 at 09:29:39PM +0300, Luca Coelho wrote:
-> On Thu, 2017-10-12 at 18:25 +0100, Mark Brown wrote:
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-> > @@@ -382,7 -371,9 +384,8 @@@ struct iwl_cfg=20
-> >   	    use_tfh:1,
-> >   	    gen2:1,
-> >   	    cdb:1,
-> >  -	    ext_nvm:1,
-
-> nvm_type seems to be missing from here?
-
-Oh bother.  Either my error or git's...  but it does seem to be
-building so I'm a bit confused about what's going on there.
-
---mmucsx4ii4livhqa
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAlnfvo4ACgkQJNaLcl1U
-h9BJ8wf/ZXUID+Vz81/XckoSgZCc15JQqd2rTmIy8IPcb/BNam6fmle6Z0zT9sZf
-4580E2jIePjzHT+k2D874e9FMkEZ/mFOzzvcf1E2BxUeEglOgdux5UR6w71lQu5h
-lATnbBInyzB53z7FuF7dtr570Xzx74sOxu7zzLXBGegcE1bbH6r1faqMHHVpPqP2
-nOowtvNlJaVZVFHueQmU4Uj5n46mYPCituCHBUc/l95bok5L/1e+uVGG6x4q4Ir8
-2RJ91MaVF5N1qH1ODbJFWvSHddA5rstnC+2IxpLx96FJbOkXl3+RbXXOmMFWycLT
-5APpSuk+/atc/Qmzb5shG8sXRWyfcA==
-=3k+x
------END PGP SIGNATURE-----
-
---mmucsx4ii4livhqa--
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 0fe723ca844e..c69515ed72df 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -67,12 +67,8 @@ static u8 rs_ht_to_legacy[] = {
+ static const u8 ant_toggle_lookup[] = {
+ 	[ANT_NONE] = ANT_NONE,
+ 	[ANT_A] = ANT_B,
+-	[ANT_B] = ANT_C,
+-	[ANT_AB] = ANT_BC,
+-	[ANT_C] = ANT_A,
+-	[ANT_AC] = ANT_AB,
+-	[ANT_BC] = ANT_AC,
+-	[ANT_ABC] = ANT_ABC,
++	[ANT_B] = ANT_A,
++	[ANT_AB] = ANT_AB,
+ };
+ 
+ #define IWL_DECLARE_RATE_INFO(r, s, rp, rn)			      \
+@@ -975,7 +971,7 @@ static int rs_toggle_antenna(u32 valid_ant, struct rs_rate *rate)
+ {
+ 	u8 new_ant_type;
+ 
+-	if (!rate->ant || rate->ant > ANT_ABC)
++	if (!rate->ant || WARN_ON_ONCE(rate->ant & ANT_C))
+ 		return 0;
+ 
+ 	if (!rs_is_valid_ant(valid_ant, rate->ant))
+-- 
+2.14.2
