@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45756 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751150AbdJWKPE (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:45965 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750928AbdJ2Hoa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2017 06:15:04 -0400
-Message-ID: <1508753691.2639.10.camel@sipsolutions.net> (sfid-20171023_121532_382776_F790FAE0)
-Subject: Re: [PATCH v2 31/37] mac80211_hwsim: Replace hrtimer tasklet with
- softirq hrtimer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
-        Christoph Hellwig <hch@lst.de>,
-        John Stultz <john.stultz@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Date: Mon, 23 Oct 2017 12:14:51 +0200
-In-Reply-To: <20171022214053.576969587@linutronix.de>
-References: <20171022213938.940451689@linutronix.de>
-         <20171022214053.576969587@linutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sun, 29 Oct 2017 03:44:30 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+CC: Thorsten Leemhuis <linux@leemhuis.info>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: ath10k-regression due to "ath10k: fix napi_poll budget overflow"
+ c9353bf483d3
+Date: Sun, 29 Oct 2017 07:44:20 +0000
+Message-ID: <87po964cvg.fsf@kamboji.qca.qualcomm.com> (sfid-20171029_084439_939103_4BB6607F)
+References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
+        <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
+        <fa6e3ee2-91b5-a54b-afe3-87f30aac7a48@leemhuis.info>
+        <877evh53p8.fsf_-_@kamboji.qca.qualcomm.com>
+        <72e73df5-c261-cb1a-7fba-b1a3a9019fea@qti.qualcomm.com>
+In-Reply-To: <72e73df5-c261-cb1a-7fba-b1a3a9019fea@qti.qualcomm.com> (Ryan
+        Hsu's message of "Fri, 27 Oct 2017 19:01:32 +0000")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2017-10-22 at 23:40 +0200, Anna-Maria Gleixner wrote:
-> From: Thomas Gleixner <tglx@linutronix.de>
-> 
-> Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
-> callback in softirq context and remove the hrtimer_tasklet.
+Ryan Hsu <ryanhsu@qti.qualcomm.com> writes:
 
-This doesn't build on my tree, due to HRTIMER_MODE_REL_SOFT not
-existing. Neither does HRTIMER_MODE_SOFT mentioned above, but that's
-just a commit log mistake.
+> On 10/27/2017 02:40 AM, Kalle Valo wrote:
+>
+>> + linux-wireless
+>>
+>> Sorry, I have not been able to follow this discussion very closely but
+>> was the conclusion? Should we should revert c9353bf483d3 for 4.14 or
+>> what? I should still have time to do that, but not much.
+>
+> Kalle, I don't think I have enough time to look into the issue, since
+> original change is to avoid the warning, but now is having regression.
+> Let's try to revert c9353bf483d3 for 4.14, and I'll look into this later.
 
-(It also didn't apply on my tree, but that was a trivial context
-change.)
+Great, thanks Ryan.
 
-I don't understand why you initialize it with HRTIMER_MODE_ABS_SOFT
-either though:
+I now submitted the revert and I'll try to get it to 4.14:
 
-> +       hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
-> +                    HRTIMER_MODE_ABS_SOFT);
+https://patchwork.kernel.org/patch/10031233/
 
-shouldn't that already be REL?
-
-johannes
+--=20
+Kalle Valo=
