@@ -1,172 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:47562 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751991AbdJKMgR (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:44421 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbdJ2H1a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 08:36:17 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2017-10-11
-Date: Wed, 11 Oct 2017 14:36:12 +0200
-Message-Id: <20171011123613.28890-1-johannes@sipsolutions.net> (sfid-20171011_143634_480505_BF45D6FF)
+        Sun, 29 Oct 2017 03:27:30 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Thorsten Leemhuis <linux@leemhuis.info>
+CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath10k: Wifi slow on the XPS13 (9360) (QCA6174)
+Date: Sun, 29 Oct 2017 07:27:18 +0000
+Message-ID: <87tvyi4dnv.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20171029_082734_325055_67266E81)
+References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
+        <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
+        <74a979dc-f06d-be9d-7c3f-359cd481d16c@leemhuis.info>
+In-Reply-To: <74a979dc-f06d-be9d-7c3f-359cd481d16c@leemhuis.info> (Thorsten
+        Leemhuis's message of "Sun, 8 Oct 2017 11:39:04 +0200")
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
-
-Here's a -next pull request. The only bigger thing here is the
-addition of the regulatory database as firmware, which will
-allow us to - over time - get rid of CRDA, as well as having
-the option of adding more fields to the database where needed,
-this would've been extremely complex with CRDA because it had
-not been built with extensibility in mind.
-
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit cc71b7b071192ac1c288e272fdc3f3877eb96663:
-
-  net/ipv6: remove unused err variable on icmpv6_push_pending_frames (2017-10-05 21:56:26 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2017-10-11
-
-for you to fetch changes up to 90a53e4432b12288316efaa5f308adafb8d304b0:
-
-  cfg80211: implement regdb signature checking (2017-10-11 14:24:24 +0200)
-
-----------------------------------------------------------------
-Work continues in various areas:
- * port authorized event for 4-way-HS offload (Avi)
- * enable MFP optional for such devices (Emmanuel)
- * Kees's timer setup patch for mac80211 mesh
-   (the part that isn't trivially scripted)
- * improve VLAN vs. TXQ handling (myself)
- * load regulatory database as firmware file (myself)
- * with various other small improvements and cleanups
-
-I merged net-next once in the meantime to allow Kees's
-timer setup patch to go in.
-
-----------------------------------------------------------------
-Avraham Stern (2):
-      ieee80211: Add WFA TPC report element OUI type
-      cfg80211/nl80211: add a port authorized event
-
-Emmanuel Grumbach (1):
-      nl80211: add an option to allow MFP without requiring it
-
-Gregory Greenman (1):
-      mac80211: recalculate some sta parameters after insertion
-
-Ilan peer (1):
-      mac80211: Simplify locking in ieee80211_sta_tear_down_BA_sessions()
-
-Johannes Berg (12):
-      mac80211: avoid allocating TXQs that won't be used
-      mac80211: simplify and clarify IE splitting
-      mac80211: use offsetofend()
-      cfg80211: remove unused function ieee80211_data_from_8023()
-      Merge remote-tracking branch 'net-next/master' into mac80211-next
-      MAINTAINERS: update Johannes Berg's entries
-      fq: support filtering a given tin
-      mac80211: only remove AP VLAN frames from TXQ
-      cfg80211: support loading regulatory database as firmware file
-      cfg80211: support reloading regulatory database
-      cfg80211: reg: remove support for built-in regdb
-      cfg80211: implement regdb signature checking
-
-Kees Cook (1):
-      net/mac80211/mesh_plink: Convert timers to use timer_setup()
-
-Liad Kaufman (1):
-      mac80211: extend ieee80211_ie_split to support EXTENSION
-
-Lubomir Rintel (1):
-      mac80211_hwsim: use dyndbg for debug messages
-
-Luca Coelho (1):
-      mac80211: add documentation to ieee80211_rx_ba_offl()
-
-Manikanta Pubbisetty (1):
-      mac80211: fix bandwidth computation for TDLS peers
-
-Richard Schütz (1):
-      wireless: set correct mandatory rate flags
-
-Roee Zamir (2):
-      nl80211: add OCE scan and capability flags
-      mac80211: oce: enable receiving of bcast probe resp
-
-Stanislaw Gruszka (1):
-      mac80211: fix STA_SLOW_THRESHOLD htmldocs failure
-
-Tova Mussai (1):
-      nl80211: return error for invalid center_freq in 40 MHz
-
-Xiang Gao (1):
-      mac80211: aead api to reduce redundancy
-
- Documentation/driver-api/80211/cfg80211.rst |   3 -
- Documentation/networking/regulatory.txt     |  30 +-
- MAINTAINERS                                 |  13 +-
- drivers/net/wireless/mac80211_hwsim.c       | 192 ++++++------
- include/linux/ieee80211.h                   |   1 +
- include/net/cfg80211.h                      |  40 +--
- include/net/fq.h                            |   7 +
- include/net/fq_impl.h                       |  72 ++++-
- include/net/mac80211.h                      |   8 +-
- include/uapi/linux/nl80211.h                |  82 +++--
- net/mac80211/Makefile                       |   3 +-
- net/mac80211/{aes_ccm.c => aead_api.c}      |  40 +--
- net/mac80211/aead_api.h                     |  27 ++
- net/mac80211/aes_ccm.h                      |  42 ++-
- net/mac80211/aes_gcm.c                      | 109 -------
- net/mac80211/aes_gcm.h                      |  38 ++-
- net/mac80211/agg-rx.c                       |   4 +-
- net/mac80211/ht.c                           |  12 +-
- net/mac80211/ieee80211_i.h                  |   2 +
- net/mac80211/iface.c                        |  29 +-
- net/mac80211/mesh.c                         |   3 +-
- net/mac80211/mesh.h                         |   1 +
- net/mac80211/mesh_hwmp.c                    |   8 +-
- net/mac80211/mesh_plink.c                   |  13 +-
- net/mac80211/mlme.c                         |  19 +-
- net/mac80211/scan.c                         |  37 ++-
- net/mac80211/sta_info.c                     |  61 ++--
- net/mac80211/sta_info.h                     |   4 +-
- net/mac80211/tx.c                           |  34 +++
- net/mac80211/util.c                         |  25 +-
- net/mac80211/vht.c                          |  10 +
- net/mac80211/wpa.c                          |   4 +-
- net/wireless/.gitignore                     |   3 +-
- net/wireless/Kconfig                        |  58 ++--
- net/wireless/Makefile                       |  24 +-
- net/wireless/certs/sforshee.x509            | Bin 0 -> 680 bytes
- net/wireless/core.c                         |   2 +-
- net/wireless/core.h                         |   5 +
- net/wireless/db.txt                         |  17 --
- net/wireless/genregdb.awk                   | 158 ----------
- net/wireless/nl80211.c                      | 199 ++++++++----
- net/wireless/nl80211.h                      |   2 +
- net/wireless/reg.c                          | 452 +++++++++++++++++++++++++---
- net/wireless/reg.h                          |  14 +
- net/wireless/regdb.h                        |  23 --
- net/wireless/sme.c                          |  45 ++-
- net/wireless/util.c                         | 202 ++++---------
- 47 files changed, 1278 insertions(+), 899 deletions(-)
- rename net/mac80211/{aes_ccm.c => aead_api.c} (67%)
- create mode 100644 net/mac80211/aead_api.h
- delete mode 100644 net/mac80211/aes_gcm.c
- create mode 100644 net/wireless/certs/sforshee.x509
- delete mode 100644 net/wireless/db.txt
- delete mode 100644 net/wireless/genregdb.awk
- delete mode 100644 net/wireless/regdb.h
+KyBsaW51eC13aXJlbGVzcyBhbmQgY2xlYW5pbmcgdGhlIHN1YmplY3QNCg0KSGkgVGhvcnN0ZW4s
+DQoNCnNvcnJ5IGZvciB0aGUgbGF0ZSByZXBseSwgSSdtIGhhdmluZyBwcm9ibGVtcyBrZWVwaW5n
+IHVwIHdpdGggYWxsIHRoZQ0KZW1haWwuIEkganVzdCBkbyBhIHF1aWNrIHJlcGx5IG5vdyB0byBw
+b2ludCBvdXQgdGhhdCB5b3UgYXJlIHRhbGtpbmcNCmFib3V0IHR3byBkaWZmZXJlbnQgcHJvYmxl
+bXMuIFRvIGtlZXAgdGhlIGRpc2N1c3Npb24gc2ltcGxlIEkgcmVjb21tZW5kDQprZWVwaW5nIHRo
+ZSB0d28gaXNzdWVzIGNvbXBsZXRlIHNlcGFyYXRlLg0KDQpUaG9yc3RlbiBMZWVtaHVpcyA8bGlu
+dXhAbGVlbWh1aXMuaW5mbz4gd3JpdGVzOg0KDQo+IExvISBTcGxpdHRpbmcgdGhpcyB0aHJlYWQg
+dG8gZm9jdXMgb24gYSBpc3N1ZSB0aGF0IGhhcyBub3RoaW5nIHRvIGRvDQo+IHdpdGggdGhlIHJl
+Z3Jlc3Npb24gaW4gNC4xNCBJIHJlcG9ydGVkOg0KPg0KPiBPbiAwMy4xMC4yMDE3IDAxOjQwLCBS
+eWFuIEhzdSB3cm90ZToNCj4+IE9uIDEwLzAxLzIwMTcgMDE6NTkgQU0sIFRob3JzdGVuIExlZW1o
+dWlzIHdyb3RlOg0KPj4+PiBhdGgxMGtfcGNpIDAwMDA6M2E6MDAuMDogRGlyZWN0IGZpcm13YXJl
+IGxvYWQgZm9yDQo+Pj4+IGF0aDEway9wcmUtY2FsLXBjaS0wMDAwOjNhOjAwLjAuYmluIGZhaWxl
+ZCB3aXRoIGVycm9yIC0yDQo+Pj4+IGF0aDEwa19wY2kgMDAwMDozYTowMC4wOiBEaXJlY3QgZmly
+bXdhcmUgbG9hZCBmb3INCj4+Pj4gYXRoMTBrL2NhbC1wY2ktMDAwMDozYTowMC4wLmJpbiBmYWls
+ZWQgd2l0aCBlcnJvciAtMg0KPj4+IERvIHRoZXkgaGF2ZSBhbnl0aGluZyB0byBkbyB3aXRoIHRo
+aXM/IEhhcmR3YXJlIGlzDQo+PiBUaGlzIGVycm9yIG1lc3NhZ2UgaXMgY29uZnVzaW5nIHNpbmNl
+IFFDQTYxNzQgaXMgbm90IHN1cHBvcnRpbmcNCj4+IHByZS1jYWxpYnJhdGlvbiBmZWF0dXJlLCB0
+aGlzIHJlbWluZHMgbWUgdGhhdCB3ZSBuZWVkIHRvIGNsZWFuIHRoaXMgdXAuDQo+DQo+IEkgZ3Vl
+c3MgdGhhdCB3b3VsZCBiZSBnb29kIHRvIGF2b2lkIGNvbmZ1c2lvbi4gQnV0IHdoaWxlIGF0IGl0
+OiBJZiB5b3UNCj4gaGF2ZSBhIG1pbnV0ZSwgY291bGQgeW91IHBsZWFzZSBleHBsYWluIHRvIG1l
+IGhvdyB0byBwcm9wZXJseSBzZXQgdXAgdGhlDQo+IHdpZmkgZmlybXdhcmUgZmlsZXMgZm9yIG15
+IERlbGwgWFBTMTMgKDkzNjApPyBUaGUgcmVhc29ucyB3aHkgSSdtDQo+IGFza2luZzogU2VuZGlu
+ZyBkYXRhIHZpYSB3aWZpIGlzIHJlYWxseSBzbG93IG9uIG15IGxhcHRvcCAoc2NwIGNvcGllcw0K
+PiBvbmx5IGdldCAyIHRvIDUgTUJ5dGUvcyBvbiBuZXR3b3JrcyB0aGF0IGFyZSBrbm93biB0byBi
+ZSBhIGxvdCBmYXN0ZXIpLg0KPiBJIHdvbmRlciBpZiB0aGUgZmlybXdhcmUgZmlsZXMgb3IgdGhl
+IGNhbGlicmF0aW9uIGRhdGEgaXMgcGFydCBvZiB0aGUNCj4gcmVhc29uIHdpZmkgVHggaXMgc2xv
+dy4gVGhlIG1hY2hpbmUgaXMgbm9ybWFsbHkgc2hpcHBlZCB3aXRoIGEgc2xpZ2h0bHkNCj4gZW5o
+YW5jZWQgVWJ1bnR1IDE2LjA0LiBUaGF0IGFtb25nIG90aGVycyBjb250YWlucyBhIHBhY2thZ2Ug
+d2l0aCB0aGUNCj4gbWFjaGluZSBzcGVjaWZpYyBmaWxlcyBib2FyZC5iaW4gYW5kIGJvYXJkLTIu
+YmluIHRoYXQgcmVwbGFjZSB0aGUgZmlsZXMNCj4gbm9ybWFsbHkgaW5zdGFsbGVkIGluIC9saWIv
+ZmlybXdhcmUvYXRoMTBrL1FDQTYxNzQvaHczLjAvIEFyZSB0aG9zZQ0KPiBtYWNoaW5lIHNwZWNp
+ZmljIGZpbGVzIGNydWNpYWwgdG8gaGF2ZSBvciBhcmUgdGhlIG9uZSBmcm9tIHRoZQ0KPiBsaW51
+eC1maXJtd2FyZSByZXBvIGdvb2QgZW5vZ3VoPyBJJ20gdXNpbmcgRmVkb3JhIGFuZCBjb3VsZCBj
+b3B5IHRoZQ0KPiBvbmVzIGZyb20gVWJ1bnR1IG92ZXIsIGJ1dCBvYnZpb3VzbHkgdGhleSB3aWxs
+IGdldCBvdmVyd3JpdHRlbiBldmVyeQ0KPiB0aW1lIEZlZG9yYSBzaGlwcyBhIG5ldyBsaW51eC1m
+aXJtd2FyZSBwYWNrYWdlIOKAkyBJT1c6IGV2ZXJ5IGZldyB3ZWVrcyA6LS8NCg0KWWVzLCB0aGUg
+Ym9hcmQgZmlsZSBjYW4gYWZmZWN0IHRocm91Z2h0cHV0LCBfYm90aF8gVENQIGFuZCBVRFAuIEkg
+ZG9uJ3QNCmtub3cgd2hhdCBib2FyZCBmaWxlcyBVYnVudHUgaXMgc2hpcHBpbmcgYnV0IHdlIHNo
+b3VsZCB0cnkgdG8gZ2V0IHRob3NlDQppbnRvIHVwc3RyZWFtLg0KDQo+IFNpZGUgbm90ZTogWW91
+IGZpbmQgYSBsb3Qgb2YgcmVwb3J0cyBhYm91dCBzbG93IHdpZmkgaXMgeW91IHNlYXJjaCB0aGUN
+Cj4gbmV0IHdpdGggdGVybXMgbGlrZSAiOTM2MCB3aWZpIHNsb3cgbGludXgiLiBVYnVudHUgZml4
+ZWQgdGhhdCBhIGZldw0KPiBtb250aHMgYWdvIHdpdGggdGhpcyBwYXRjaDoNCj4gaHR0cDovL2tl
+cm5lbC51YnVudHUuY29tL2dpdC91YnVudHUvdWJ1bnR1LXhlbmlhbC5naXQvY29tbWl0Lz9pZD05
+NjkwZjE5ZjA3ZmVlMmFjYjJiMDRlYTVlYWE1ZGIxODRlZTE3NWQ1DQo+DQo+IFNvbWUgYnVncyBh
+Ym91dCB0aGlzOg0KPiBodHRwczovL2J1Z3MubGF1bmNocGFkLm5ldC91YnVudHUvK3NvdXJjZS9s
+aW51eC8rYnVnLzE2OTI4MzYNCj4gaHR0cHM6Ly9idWdzLmxhdW5jaHBhZC5uZXQvdWJ1bnR1Lytz
+b3VyY2UvbGludXgvK2J1Zy8xNjcwMDQxDQoNCkJ1dCB0aGlzIGFnYWluIGFib3V0IGludGVycmFj
+dGlvbiBiZXR3ZWVuIGF0aDEwayBhbmQgVENQIHN0YWNrLiBBbmQgaXQNCl9vbmx5XyBhZmZlY3Rz
+IFRDUCwgVURQIHNob3VsZCBiZSB1bmFmZmVjdGVkLiBTbyB3aGVuZXZlciB0ZXN0aW5nDQp0aHJv
+dWdocHV0IHBsZWFzZSBhbHdheXMgbWVhc3VyZSBib3RoIFRDUCBhbmQgVURQIGJlY2F1c2UgdGhl
+biBpdCdzDQplYXNpZXIgdG8gcGlucG9pbnQgdGhlIHJlYXNvbi4NCg0KPiBCdXQgZnJvbSB3aGF0
+IEkgZ2F0aGVyZWQgYnkgc2VhcmNoaW5nIHRoZSBuZXQgYW5kIGFza2luZyBvbiAjYXRoMTBrIEkN
+Cj4gZ290IHRoZSBpbXByZXNzaW9uIHRoYXQgcGF0Y2ggaXMgYSBtYXNzaXZlIHVnbHkgaGFjayBh
+bmQgbm8gd2F5DQo+IGFjY2VwdGFibGUgdXBzdHJlYW0uICBJcyB0aGF0IGNvcnJlY3Q/DQoNClll
+cywgaXQncyBhIGhvcnJpYmxlIGhhY2sgYW5kIEkgY2Fubm90IGFwcGx5IHRoYXQuIEFuZCBsaWtl
+IHlvdSBzYWlkDQojMTY5MjgzNiwgYWxzbyBFcmljIER1bWF6ZXQgKG9uZSBvZiBUQ1AgbWFpbnRh
+aW5lcnMpIGFncmVlcyB3aXRoIHRoYXQuDQoNCj4gSWYgeWVzOiBpcyB0aGVyZSBtYXliZSBhIHBy
+b3BlciBmaXggb3V0IHRoZXJlIHNvbWV3aGVyZT8NCg0KVW5mb3J0dW5hdGVseSB0aGVyZSBzdGls
+bCBpcyBubyBnb29kIHNvbHV0aW9uLiBJbiBhIHdlZWsgdGhlcmUncyBOZXRkZXYNCjIuMiBhbmQg
+d2UgaGF2ZSBMaW51eCBXaXJlbGVzcyBzdW1taXQgdGhlcmUuIFdlIHNob3VsZCBicmluZyB1cCB0
+aGlzDQp0b3BpYyB0aGVyZS4NCg0KLS0gDQpLYWxsZSBWYWxv
