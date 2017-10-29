@@ -1,95 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from james.theweblords.de ([217.11.55.87]:41605 "EHLO
-        james.theweblords.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932190AbdJ0Vts (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42434 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751588AbdJ2M3P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2017 17:49:48 -0400
-From: =?UTF-8?q?Peter=20Gro=C3=9Fe?= <pegro@friiks.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/1] ocb: Use common freqchan helper for setting the operating channel
-Date: Fri, 27 Oct 2017 23:43:02 +0200
-Message-Id: <20171027214302.4059-1-pegro@friiks.de> (sfid-20171027_234951_614097_424C518F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Sun, 29 Oct 2017 08:29:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 29 Oct 2017 14:28:09 +0200
+Message-Id: <20171029122816.8802-11-luca@coelho.fi> (sfid-20171029_132920_640846_C5E9E82C)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 10/17] iwlwifi: mvm: refactor iwl_mvm_flush_no_vif
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify code by using the helper which has been introduced earlier.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Peter Große <pegro@friiks.de>
+This function is very indented and hard to read.
+Refactor it.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- ocb.c | 50 ++++++++------------------------------------------
- 1 file changed, 8 insertions(+), 42 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 40 +++++++++++------------
+ 1 file changed, 19 insertions(+), 21 deletions(-)
 
-diff --git a/ocb.c b/ocb.c
-index bcf0474..dfdaf59 100644
---- a/ocb.c
-+++ b/ocb.c
-@@ -10,56 +10,22 @@ static int join_ocb(struct nl80211_state *state,
- 		    struct nl_msg *msg, int argc, char **argv,
- 		    enum id_input id)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 26caea62df9b..941dbdebe143 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4002,6 +4002,8 @@ static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
+ 
+ static void iwl_mvm_flush_no_vif(struct iwl_mvm *mvm, u32 queues, bool drop)
  {
--	unsigned long freq;
--	char *end;
--	unsigned int i;
--	const struct chanmode *chanmode_selected = NULL;
--	static const struct chanmode chanmode[] = {
--		{ .name = "5MHz",
--		  .width = NL80211_CHAN_WIDTH_5,
--		  .freq1_diff = 0,
--		  .chantype = -1 },
--		{ .name = "10MHz",
--		  .width = NL80211_CHAN_WIDTH_10,
--		  .freq1_diff = 0,
--		  .chantype = -1 },
--	};
-+	struct chandef chandef;
-+	int err, parsed;
- 
- 	if (argc < 2)
- 		return 1;
- 
--	/* freq */
--	freq = strtoul(argv[0], &end, 10);
--	if (*end != '\0')
--		return 1;
--
--	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
--	argv++;
--	argc--;
-+	err = parse_freqchan(&chandef, false, argc, argv, &parsed);
- 
--	/* channel width */
--	for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
--		if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
--			chanmode_selected = &chanmode[i];
--			break;
--		}
--	}
--	if (chanmode_selected) {
--		NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
--			    chanmode_selected->width);
--		NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
--			    get_cf1(chanmode_selected, freq));
-+	if (err)
-+		return err;
- 
--		argv++;
--		argc--;
++	int i;
++
+ 	if (drop) {
+ 		if (iwl_mvm_has_new_tx_api(mvm))
+ 			/* TODO new tx api */
+@@ -4009,32 +4011,28 @@ static void iwl_mvm_flush_no_vif(struct iwl_mvm *mvm, u32 queues, bool drop)
+ 				  "Need to implement flush TX queue\n");
+ 		else
+ 			iwl_mvm_flush_tx_path(mvm,
+-				iwl_mvm_flushable_queues(mvm) & queues,
+-				0);
 -	} else {
--		return 1;
--	}
-+	put_chandef(msg, &chandef);
-+	if (err)
-+		return err;
+-		if (iwl_mvm_has_new_tx_api(mvm)) {
+-			struct ieee80211_sta *sta;
+-			int i;
++				iwl_mvm_flushable_queues(mvm) & queues, 0);
++		return;
++	}
  
- 	return 0;
--
--nla_put_failure:
--	return -ENOBUFS;
+-			mutex_lock(&mvm->mutex);
++	if (!iwl_mvm_has_new_tx_api(mvm)) {
++		iwl_trans_wait_tx_queues_empty(mvm->trans, queues);
++		return;
++	}
+ 
+-			for (i = 0; i < ARRAY_SIZE(mvm->fw_id_to_mac_id); i++) {
+-				sta = rcu_dereference_protected(
+-						mvm->fw_id_to_mac_id[i],
+-						lockdep_is_held(&mvm->mutex));
+-				if (IS_ERR_OR_NULL(sta))
+-					continue;
++	mutex_lock(&mvm->mutex);
++	for (i = 0; i < ARRAY_SIZE(mvm->fw_id_to_mac_id); i++) {
++		struct ieee80211_sta *sta;
+ 
+-				iwl_mvm_wait_sta_queues_empty(mvm,
+-						iwl_mvm_sta_from_mac80211(sta));
+-			}
++		sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[i],
++						lockdep_is_held(&mvm->mutex));
++		if (IS_ERR_OR_NULL(sta))
++			continue;
+ 
+-			mutex_unlock(&mvm->mutex);
+-		} else {
+-			iwl_trans_wait_tx_queues_empty(mvm->trans,
+-						       queues);
+-		}
++		iwl_mvm_wait_sta_queues_empty(mvm,
++					      iwl_mvm_sta_from_mac80211(sta));
+ 	}
++	mutex_unlock(&mvm->mutex);
  }
- COMMAND(ocb, join, "<freq in MHz> <5MHz|10MHz>",
- 	NL80211_CMD_JOIN_OCB, 0, CIB_NETDEV, join_ocb,
+ 
+ static void iwl_mvm_mac_flush(struct ieee80211_hw *hw,
 -- 
-2.13.6
+2.14.2
