@@ -1,83 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from snoopy.schmut.com ([185.37.248.246]:49138 "EHLO
-        snoopy.schmut.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932641AbdJaTZd (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:43769 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750741AbdJ2HG5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Oct 2017 15:25:33 -0400
-Subject: Re: iwlwifi crash with hostapd
-Cc: linux-wireless@vger.kernel.org
-References: <6e51916a-6178-5620-8f45-54705c1b4d98@schmut.com>
- <20171012212454.GB4362@us.netrek.org>
- <b985bbb0-ec49-0506-871e-b65837b05be2@schmut.com>
- <20171016033727.GB13209@us.netrek.org>
- <2f83cea3-1760-1557-c0ff-0d40ab20f9e8@schmut.com>
- <20171017233558.GD6841@us.netrek.org> <20171018213337.GA5595@us.netrek.org>
- <bc6a9aa0-8f13-4e8e-0c40-c19246ad2934@schmut.com>
- <20171019205933.GB7281@us.netrek.org>
- <8b961054-0b13-771b-387e-b47837c493ca@schmut.com>
- <20171024210157.GA19317@us.netrek.org>
-From: Mario Theodoridis <mario@schmut.com>
-Message-ID: <b6155f5b-4319-ba12-6b32-47d014304570@schmut.com> (sfid-20171031_202556_829265_06EC162A)
-Date: Tue, 31 Oct 2017 20:25:25 +0100
+        Sun, 29 Oct 2017 03:06:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+CC: Thorsten Leemhuis <linux@leemhuis.info>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k-regression in 4.14: Connections aborts with "failed to
+ extract amsdu: -11"
+Date: Sun, 29 Oct 2017 07:06:43 +0000
+Message-ID: <87y3nu4em6.fsf@kamboji.qca.qualcomm.com> (sfid-20171029_082017_818361_62FFD14B)
+References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
+        <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
+In-Reply-To: <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com> (Ryan
+        Hsu's message of "Mon, 2 Oct 2017 23:40:31 +0000")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20171024210157.GA19317@us.netrek.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi James,
++ linux-wireless
 
+Ryan Hsu <ryanhsu@qti.qualcomm.com> writes:
 
-On 24.10.2017 23:01, James Cameron wrote:
-> But it is only a warning.  If connections aren't dying, it may not be
-> important to you.
+>>> ath10k_pci 0000:3a:00.0: Direct firmware load for
+>>> ath10k/pre-cal-pci-0000:3a:00.0.bin failed with error -2
+>>> ath10k_pci 0000:3a:00.0: Direct firmware load for
+>>> ath10k/cal-pci-0000:3a:00.0.bin failed with error -2
+>> Do they have anything to do with this? Hardware is
+>
+> This error message is confusing since QCA6174 is not supporting
+> pre-calibration feature, this reminds me that we need to clean this
+> up.
 
-Regarding whether wifi hangs, it's usually takes a while to get going 
-and then disappears. Sunday night i ended up rebooting into the 4.4-79 
-kernel because the 4.13 just got too ridiculous.
-I.e. Wlan off, wlan on no longer worked.
+These warnings come up again because of this commit:
 
+c0cc00f250e1 ath10k: activate user space firmware loading again
 
-> Please check you are using the most recent linux-firmware?
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=3Da=
+th-next&id=3Dc0cc00f250e19c717fc9cdbdb7f55aaa569c7498
 
-Just in case i haven't answered that it's at 1.169
+We really need a function like request_firmware_nowarn() which would not
+print a warning everytime a file is not found. It just confuses the
+users and make them falsely believe that's the reason of their problems.
 
-
->>> Several methods, though by far the most common seems to be personal
->>> experience with offsets.
->>>
->>> When you don't have that personal experience, the methods are;
->>>
->>> 1.  using GDB against the .o file,
->>>
->>> 2.  using binutils objdump to disassemble .o file or vmlinuz,
->>>
->>> 3.  using GCC to generate assembly listings,
->>>
->>> See https://wiki.ubuntu.com/Kernel/KernelDebuggingTricks right down
->>> the end of page for the GDB method.
->>
->> I have gotten around to that part, yet, as i was busy with the
->> above, but it seems later versions have issues, too.
-> 
-> However, you're still testing old source code.
-> 
-> Several changes made since are worth testing, please either
-> cherry-pick the patches or test a 4.14 rc kernel, and without
-> involving dkms or virtualbox.
-> 
-> Or, if new firmware fixes the problem, go with that instead.
-
-I just managed to patch the 5.1.30 dkms package so i wouldn't need to 
-update to virtualbox-5.2.
-
-
-Here are the results with the 4.14-rc7 kernel.
-As last time i appended what fills my syslog now.
-
-
--- 
-Mit freundlichen Grüßen/Best regards
-
-Mario Theodoridis
+--=20
+Kalle Valo=
