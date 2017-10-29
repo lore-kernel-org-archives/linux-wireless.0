@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:55680 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751616AbdJFOHQ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42270 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750915AbdJ2M23 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 10:07:16 -0400
-Message-ID: <1507298832.19300.20.camel@sipsolutions.net> (sfid-20171006_160745_679783_7E6099A3)
-Subject: Re: [RFC] mac80211: Add airtime fairness accounting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Fri, 06 Oct 2017 16:07:12 +0200
-In-Reply-To: <20171006115232.28688-1-toke@toke.dk> (sfid-20171006_135301_379557_9AE74A5E)
-References: <20171006115232.28688-1-toke@toke.dk>
-         (sfid-20171006_135301_379557_9AE74A5E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sun, 29 Oct 2017 08:28:29 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 29 Oct 2017 14:28:00 +0200
+Message-Id: <20171029122816.8802-2-luca@coelho.fi> (sfid-20171029_132848_749124_82301DFF)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 01/17] iwlwifi: mvm: use RS macro instead of duplicating the code
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-10-06 at 13:52 +0200, Toke Høiland-Jørgensen wrote:
-> This adds accounting of each station's airtime usage to mac80211. On
-> the RX side, airtime is calculated from the packet length and
-> duration.
+From: Sara Sharon <sara.sharon@intel.com>
 
-I think you should probably try to get something here from the driver?
-Doing the calculations is really awkward, because you have to take into
-account aggregation, etc.
+There is a macro for converting TX response rate to a
+rate scale value, use it.
 
-However, I'm not even sure that you _want_ to use RX airtime at all? I
-guess this is a fairly fundamental philosophical question, but there's
-no way to feed back "you're sending too much" to a station, so if it
-starts consuming a lot of airtime with (what we see as) RX, and we
-throttle sending to it, then I'm not sure that will have much effect?
-Maybe with TCP, but not really with anything else.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-You also can't really know what AC this was on, and it doesn't make all
-that much sense?
-
-Then again, I'm not even sure yet why you care about the AC at all?
-Should fairness really be something that's within an AC?
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 00a0efab20e3..d88c3685a6dd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1594,8 +1594,7 @@ static void iwl_mvm_rx_tx_cmd_agg(struct iwl_mvm *mvm,
+ 		mvmsta->tid_data[tid].tx_time =
+ 			le16_to_cpu(tx_resp->wireless_media_time);
+ 		mvmsta->tid_data[tid].lq_color =
+-			(tx_resp->tlc_info & TX_RES_RATE_TABLE_COLOR_MSK) >>
+-			TX_RES_RATE_TABLE_COLOR_POS;
++			TX_RES_RATE_TABLE_COL_GET(tx_resp->tlc_info);
+ 	}
+ 
+ 	rcu_read_unlock();
+-- 
+2.14.2
