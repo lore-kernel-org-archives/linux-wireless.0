@@ -1,164 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:35612 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751863AbdJYNOa (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42320 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751415AbdJ2M2f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 09:14:30 -0400
-Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 09/12] wil6210: get suspend reject reason and resume triggers from FW
-Date: Wed, 25 Oct 2017 16:14:04 +0300
-Message-Id: <1508937247-11890-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171025_151436_987875_B03A7975)
-In-Reply-To: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1508937247-11890-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Sun, 29 Oct 2017 08:28:35 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 29 Oct 2017 14:28:06 +0200
+Message-Id: <20171029122816.8802-8-luca@coelho.fi> (sfid-20171029_132849_791889_56787D0B)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 07/17] iwlwifi: remove host assisted paging
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Upon receiving suspend reject, print reject reason.
-Upon receiving resume event, print resume triggers.
+This was used for internal devices that are now deprecated.
+All the currently existing devices can do paging without
+any help from the host.
 
-Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 46 +++++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/wil6210/wmi.h | 17 ++++++++++---
- 2 files changed, 57 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/paging.h |  24 -----
+ drivers/net/wireless/intel/iwlwifi/fw/paging.c     | 103 +++------------------
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  14 ---
+ 3 files changed, 12 insertions(+), 129 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index dd25f63..8ace618 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -2043,6 +2043,16 @@ void wmi_event_flush(struct wil6210_priv *wil)
- 	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/paging.h b/drivers/net/wireless/intel/iwlwifi/fw/api/paging.h
+index e76f9cd4473d..721b9fed7201 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/paging.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/paging.h
+@@ -81,28 +81,4 @@ struct iwl_fw_paging_cmd {
+ 	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
+ } __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
  
-+static const char *suspend_status2name(u8 status)
-+{
-+	switch (status) {
-+	case WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE:
-+		return "LINK_NOT_IDLE";
-+	default:
-+		return "Untracked status";
-+	}
-+}
-+
- int wmi_suspend(struct wil6210_priv *wil)
- {
- 	int rc;
-@@ -2058,7 +2068,7 @@ int wmi_suspend(struct wil6210_priv *wil)
- 	wil->suspend_resp_rcvd = false;
- 	wil->suspend_resp_comp = false;
- 
--	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED;
-+	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE;
- 
- 	rc = wmi_call(wil, WMI_TRAFFIC_SUSPEND_CMDID, &cmd, sizeof(cmd),
- 		      WMI_TRAFFIC_SUSPEND_EVENTID, &reply, sizeof(reply),
-@@ -2090,8 +2100,9 @@ int wmi_suspend(struct wil6210_priv *wil)
+-/**
+- * enum iwl_fw_item_id - FW item IDs
+- *
+- * @IWL_FW_ITEM_ID_PAGING: Address of the pages that the FW will upload
+- *	download
+- */
+-enum iwl_fw_item_id {
+-	IWL_FW_ITEM_ID_PAGING = 3,
+-};
+-
+-/**
+- * struct iwl_fw_get_item_cmd - get an item from the fw
+- * @item_id: ID of item to obtain, see &enum iwl_fw_item_id
+- */
+-struct iwl_fw_get_item_cmd {
+-	__le32 item_id;
+-} __packed; /* FW_GET_ITEM_CMD_API_S_VER_1 */
+-
+-struct iwl_fw_get_item_resp {
+-	__le32 item_id;
+-	__le32 item_byte_cnt;
+-	__le32 item_val;
+-} __packed; /* FW_GET_ITEM_RSP_S_VER_1 */
+-
+ #endif /* __iwl_fw_api_paging_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/paging.c b/drivers/net/wireless/intel/iwlwifi/fw/paging.c
+index 1610722b8099..1fec8e3a6b35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/paging.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/paging.c
+@@ -87,9 +87,6 @@ void iwl_free_fw_paging(struct iwl_fw_runtime *fwrt)
+ 			     get_order(paging->fw_paging_size));
+ 		paging->fw_paging_block = NULL;
  	}
+-	kfree(fwrt->trans->paging_download_buf);
+-	fwrt->trans->paging_download_buf = NULL;
+-	fwrt->trans->paging_db = NULL;
  
- 	wil_dbg_wmi(wil, "suspend_response_completed rcvd\n");
--	if (reply.evt.status == WMI_TRAFFIC_SUSPEND_REJECTED) {
--		wil_dbg_pm(wil, "device rejected the suspend\n");
-+	if (reply.evt.status != WMI_TRAFFIC_SUSPEND_APPROVED) {
-+		wil_dbg_pm(wil, "device rejected the suspend, %s\n",
-+			   suspend_status2name(reply.evt.status));
- 		wil->suspend_stats.rejected_by_device++;
- 	}
- 	rc = reply.evt.status;
-@@ -2103,21 +2114,50 @@ int wmi_suspend(struct wil6210_priv *wil)
- 	return rc;
+ 	memset(fwrt->fw_paging_db, 0, sizeof(fwrt->fw_paging_db));
  }
- 
-+static void resume_triggers2string(u32 triggers, char *string, int str_size)
-+{
-+	string[0] = '\0';
-+
-+	if (!triggers) {
-+		strlcat(string, " UNKNOWN", str_size);
-+		return;
-+	}
-+
-+	if (triggers & WMI_RESUME_TRIGGER_HOST)
-+		strlcat(string, " HOST", str_size);
-+
-+	if (triggers & WMI_RESUME_TRIGGER_UCAST_RX)
-+		strlcat(string, " UCAST_RX", str_size);
-+
-+	if (triggers & WMI_RESUME_TRIGGER_BCAST_RX)
-+		strlcat(string, " BCAST_RX", str_size);
-+
-+	if (triggers & WMI_RESUME_TRIGGER_WMI_EVT)
-+		strlcat(string, " WMI_EVT", str_size);
-+}
-+
- int wmi_resume(struct wil6210_priv *wil)
+@@ -100,13 +97,11 @@ static int iwl_alloc_fw_paging_mem(struct iwl_fw_runtime *fwrt,
  {
- 	int rc;
-+	char string[100];
- 	struct {
- 		struct wmi_cmd_hdr wmi;
- 		struct wmi_traffic_resume_event evt;
- 	} __packed reply;
+ 	struct page *block;
+ 	dma_addr_t phys = 0;
+-	int blk_idx, order, num_of_pages, size, dma_enabled;
++	int blk_idx, order, num_of_pages, size;
  
- 	reply.evt.status = WMI_TRAFFIC_RESUME_FAILED;
-+	reply.evt.resume_triggers = WMI_RESUME_TRIGGER_UNKNOWN;
+ 	if (fwrt->fw_paging_db[0].fw_paging_block)
+ 		return 0;
  
- 	rc = wmi_call(wil, WMI_TRAFFIC_RESUME_CMDID, NULL, 0,
- 		      WMI_TRAFFIC_RESUME_EVENTID, &reply, sizeof(reply),
- 		      WIL_WAIT_FOR_SUSPEND_RESUME_COMP);
- 	if (rc)
- 		return rc;
-+	resume_triggers2string(le32_to_cpu(reply.evt.resume_triggers), string,
-+			       sizeof(string));
-+	wil_dbg_pm(wil, "device resume %s, resume triggers:%s (0x%x)\n",
-+		   reply.evt.status ? "failed" : "passed", string,
-+		   le32_to_cpu(reply.evt.resume_triggers));
+-	dma_enabled = is_device_dma_capable(fwrt->trans->dev);
+-
+ 	/* ensure BLOCK_2_EXP_SIZE is power of 2 of PAGING_BLOCK_SIZE */
+ 	BUILD_BUG_ON(BIT(BLOCK_2_EXP_SIZE) != PAGING_BLOCK_SIZE);
  
- 	return reply.evt.status;
+@@ -139,24 +134,18 @@ static int iwl_alloc_fw_paging_mem(struct iwl_fw_runtime *fwrt,
+ 		fwrt->fw_paging_db[blk_idx].fw_paging_block = block;
+ 		fwrt->fw_paging_db[blk_idx].fw_paging_size = size;
+ 
+-		if (dma_enabled) {
+-			phys = dma_map_page(fwrt->trans->dev, block, 0,
+-					    PAGE_SIZE << order,
+-					    DMA_BIDIRECTIONAL);
+-			if (dma_mapping_error(fwrt->trans->dev, phys)) {
+-				/*
+-				 * free the previous pages and the current one
+-				 * since we failed to map_page.
+-				 */
+-				iwl_free_fw_paging(fwrt);
+-				return -ENOMEM;
+-			}
+-			fwrt->fw_paging_db[blk_idx].fw_paging_phys = phys;
+-		} else {
+-			fwrt->fw_paging_db[blk_idx].fw_paging_phys =
+-				PAGING_ADDR_SIG |
+-				blk_idx << BLOCK_2_EXP_SIZE;
++		phys = dma_map_page(fwrt->trans->dev, block, 0,
++				    PAGE_SIZE << order,
++				    DMA_BIDIRECTIONAL);
++		if (dma_mapping_error(fwrt->trans->dev, phys)) {
++			/*
++			 * free the previous pages and the current one
++			 * since we failed to map_page.
++			 */
++			iwl_free_fw_paging(fwrt);
++			return -ENOMEM;
+ 		}
++		fwrt->fw_paging_db[blk_idx].fw_paging_phys = phys;
+ 
+ 		if (!blk_idx)
+ 			IWL_DEBUG_FW(fwrt,
+@@ -312,60 +301,6 @@ static int iwl_send_paging_cmd(struct iwl_fw_runtime *fwrt,
+ 	return iwl_trans_send_cmd(fwrt->trans, &hcmd);
  }
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 5263ee7..d9e220a 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -2267,8 +2267,8 @@ struct wmi_link_maintain_cfg_read_done_event {
- } __packed;
  
- enum wmi_traffic_suspend_status {
--	WMI_TRAFFIC_SUSPEND_APPROVED	= 0x0,
--	WMI_TRAFFIC_SUSPEND_REJECTED	= 0x1,
-+	WMI_TRAFFIC_SUSPEND_APPROVED			= 0x0,
-+	WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE	= 0x1,
- };
+-/*
+- * Send paging item cmd to FW in case CPU2 has paging image
+- */
+-static int iwl_trans_get_paging_item(struct iwl_fw_runtime *fwrt)
+-{
+-	int ret;
+-	struct iwl_fw_get_item_cmd fw_get_item_cmd = {
+-		.item_id = cpu_to_le32(IWL_FW_ITEM_ID_PAGING),
+-	};
+-	struct iwl_fw_get_item_resp *item_resp;
+-	struct iwl_host_cmd cmd = {
+-		.id = iwl_cmd_id(FW_GET_ITEM_CMD, IWL_ALWAYS_LONG_GROUP, 0),
+-		.flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
+-		.data = { &fw_get_item_cmd, },
+-		.len = { sizeof(fw_get_item_cmd), },
+-	};
+-
+-	ret = iwl_trans_send_cmd(fwrt->trans, &cmd);
+-	if (ret) {
+-		IWL_ERR(fwrt,
+-			"Paging: Failed to send FW_GET_ITEM_CMD cmd (err = %d)\n",
+-			ret);
+-		return ret;
+-	}
+-
+-	item_resp = (void *)((struct iwl_rx_packet *)cmd.resp_pkt)->data;
+-	if (item_resp->item_id != cpu_to_le32(IWL_FW_ITEM_ID_PAGING)) {
+-		IWL_ERR(fwrt,
+-			"Paging: got wrong item in FW_GET_ITEM_CMD resp (item_id = %u)\n",
+-			le32_to_cpu(item_resp->item_id));
+-		ret = -EIO;
+-		goto exit;
+-	}
+-
+-	/* Add an extra page for headers */
+-	fwrt->trans->paging_download_buf = kzalloc(PAGING_BLOCK_SIZE +
+-						  FW_PAGING_SIZE,
+-						  GFP_KERNEL);
+-	if (!fwrt->trans->paging_download_buf) {
+-		ret = -ENOMEM;
+-		goto exit;
+-	}
+-	fwrt->trans->paging_req_addr = le32_to_cpu(item_resp->item_val);
+-	fwrt->trans->paging_db = fwrt->fw_paging_db;
+-	IWL_DEBUG_FW(fwrt,
+-		     "Paging: got paging request address (paging_req_addr 0x%08x)\n",
+-		     fwrt->trans->paging_req_addr);
+-
+-exit:
+-	iwl_free_resp(&cmd);
+-
+-	return ret;
+-}
+-
+ int iwl_init_paging(struct iwl_fw_runtime *fwrt, enum iwl_ucode_type type)
+ {
+ 	const struct fw_img *fw = &fwrt->fw->img[type];
+@@ -382,20 +317,6 @@ int iwl_init_paging(struct iwl_fw_runtime *fwrt, enum iwl_ucode_type type)
+ 	if (!fw->paging_mem_size)
+ 		return 0;
  
- /* WMI_TRAFFIC_SUSPEND_EVENTID */
-@@ -2282,10 +2282,21 @@ enum wmi_traffic_resume_status {
- 	WMI_TRAFFIC_RESUME_FAILED	= 0x1,
- };
+-	/*
+-	 * When dma is not enabled, the driver needs to copy / write
+-	 * the downloaded / uploaded page to / from the smem.
+-	 * This gets the location of the place were the pages are
+-	 * stored.
+-	 */
+-	if (!is_device_dma_capable(fwrt->trans->dev)) {
+-		ret = iwl_trans_get_paging_item(fwrt);
+-		if (ret) {
+-			IWL_ERR(fwrt, "failed to get FW paging item\n");
+-			return ret;
+-		}
+-	}
+-
+ 	ret = iwl_save_fw_paging(fwrt, fw);
+ 	if (ret) {
+ 		IWL_ERR(fwrt, "failed to save the FW paging image\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 10d330603886..3138f637ab2a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -694,12 +694,6 @@ enum iwl_plat_pm_mode {
+  * @dbg_conf_tlv: array of pointers to configuration TLVs for debug
+  * @dbg_trigger_tlv: array of pointers to triggers TLVs for debug
+  * @dbg_dest_reg_num: num of reg_ops in %dbg_dest_tlv
+- * @paging_req_addr: The location were the FW will upload / download the pages
+- *	from. The address is set by the opmode
+- * @paging_db: Pointer to the opmode paging data base, the pointer is set by
+- *	the opmode.
+- * @paging_download_buf: Buffer used for copying all of the pages before
+- *	downloading them to the FW. The buffer is allocated in the opmode
+  * @system_pm_mode: the system-wide power management mode in use.
+  *	This mode is set dynamically, depending on the WoWLAN values
+  *	configured from the userspace at runtime.
+@@ -748,14 +742,6 @@ struct iwl_trans {
+ 	struct iwl_fw_dbg_trigger_tlv * const *dbg_trigger_tlv;
+ 	u8 dbg_dest_reg_num;
  
-+enum wmi_resume_trigger {
-+	WMI_RESUME_TRIGGER_UNKNOWN	= 0x0,
-+	WMI_RESUME_TRIGGER_HOST		= 0x1,
-+	WMI_RESUME_TRIGGER_UCAST_RX	= 0x2,
-+	WMI_RESUME_TRIGGER_BCAST_RX	= 0x4,
-+	WMI_RESUME_TRIGGER_WMI_EVT	= 0x8,
-+};
-+
- /* WMI_TRAFFIC_RESUME_EVENTID */
- struct wmi_traffic_resume_event {
--	/* enum wmi_traffic_resume_status_e */
-+	/* enum wmi_traffic_resume_status */
- 	u8 status;
-+	u8 reserved[3];
-+	/* enum wmi_resume_trigger bitmap */
-+	__le32 resume_triggers;
- } __packed;
- 
- /* Power Save command completion status codes */
+-	/*
+-	 * Paging parameters - All of the parameters should be set by the
+-	 * opmode when paging is enabled
+-	 */
+-	u32 paging_req_addr;
+-	struct iwl_fw_paging *paging_db;
+-	void *paging_download_buf;
+-
+ 	enum iwl_plat_pm_mode system_pm_mode;
+ 	enum iwl_plat_pm_mode runtime_pm_mode;
+ 	bool suspending;
 -- 
-1.9.1
+2.14.2
