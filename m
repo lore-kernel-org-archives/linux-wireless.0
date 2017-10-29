@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51141 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750849AbdJFLCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Oct 2017 07:02:54 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, devicetree@vger.kernel.org,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v6 1/3] dt-bindings: net: add mt76 wireless device binding
-Date: Fri,  6 Oct 2017 13:02:47 +0200
-Message-Id: <20171006110249.31013-2-nbd@nbd.name> (sfid-20171006_130303_868789_4124CA70)
-In-Reply-To: <20171006110249.31013-1-nbd@nbd.name>
-References: <20171006110249.31013-1-nbd@nbd.name>
+Received: from paleale.coelho.fi ([176.9.41.70]:42420 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751557AbdJ2M3H (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 29 Oct 2017 08:29:07 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Ihab Zhaika <ihab.zhaika@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 29 Oct 2017 14:28:15 +0200
+Message-Id: <20171029122816.8802-17-luca@coelho.fi> (sfid-20171029_132917_646067_CA240EEA)
+In-Reply-To: <20171029122816.8802-1-luca@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi>
+Subject: [PATCH 16/17] iwlwifi: add new cards for 8265 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation describing how device tree can be used to configure
-wireless chips supported by the mt76 driver.
+From: Ihab Zhaika <ihab.zhaika@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+add two new PCI ID'S for 8265 series
+
+Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../bindings/net/wireless/mediatek,mt76.txt        | 24 ++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-new file mode 100644
-index 000000000000..19522ab97d62
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-@@ -0,0 +1,24 @@
-+* MediaTek mt76xx devices
-+
-+This node provides properties for configuring the MediaTek mt76xx wireless
-+device. The node is expected to be specified as a child node of the PCI
-+controller to which the wireless chip is connected.
-+
-+Optional properties:
-+
-+- mac-address: See ethernet.txt in the parent directory
-+- local-mac-address: See ethernet.txt in the parent directory
-+- ieee80211-freq-limit: See ieee80211.txt
-+- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
-+
-+&pcie {
-+	status = "okay";
-+
-+	pcie0 {
-+		wifi@0,0 {
-+			reg = <0x0000 0 0 0 0>;
-+			ieee80211-freq-limit = <5000000 6000000>;
-+			mediatek,mtd-eeprom = <&factory 0x8000>;
-+		};
-+	};
-+};
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index a988f41125e0..efa2fbb926cc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -513,6 +513,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24FD, 0x3E01, iwl8275_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x1012, iwl8275_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x0012, iwl8275_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x0014, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x9074, iwl8265_2ac_cfg)},
+ 
+ /* 9000 Series */
+ 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
 -- 
 2.14.2
