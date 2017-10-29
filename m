@@ -1,27 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:34040 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752059AbdJTHiA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Oct 2017 03:38:00 -0400
-Date: Fri, 20 Oct 2017 08:37:56 +0100 (WEST)
-Message-Id: <20171020.083756.2180225986266045663.davem@davemloft.net> (sfid-20171020_093826_013964_AF7CE0CB)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2017-10-18
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87fuagiygo.fsf@kamboji.qca.qualcomm.com>
-References: <87fuagiygo.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mout.web.de ([212.227.15.14]:64978 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751315AbdJ2UN5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 29 Oct 2017 16:13:57 -0400
+Subject: [PATCH 3/5] wlcore: Return directly after a failed
+ ieee80211_beacon_get() in wlcore_set_beacon_template()
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Eyal Reizer <eyalr@ti.com>, Iain Hunter <drhunter95@gmail.com>,
+        James Minor <james.minor@ni.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+References: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
+Message-ID: <6ea50cb4-8871-6752-6275-50da266f0e7d@users.sourceforge.net> (sfid-20171029_211415_651273_E0902081)
+Date: Sun, 29 Oct 2017 21:13:44 +0100
+MIME-Version: 1.0
+In-Reply-To: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Wed, 18 Oct 2017 12:42:31 +0300
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sun, 29 Oct 2017 20:00:41 +0100
 
-> this for 4.15 stream to net-next tree. Please let me know if there are
-> any problems.
+Return directly after a call of the function "ieee80211_beacon_get"
+failed at the beginning.
 
-Pulled, thanks Kalle.
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index efea811c1c83..0365b5e40a8d 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4018,10 +4018,8 @@ static int wlcore_set_beacon_template(struct wl1271 *wl,
+ 	struct sk_buff *beacon = ieee80211_beacon_get(wl->hw, vif);
+ 	u16 tmpl_id;
+ 
+-	if (!beacon) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	if (!beacon)
++		return -EINVAL;
+ 
+ 	wl1271_debug(DEBUG_MASTER, "beacon updated");
+ 
+-- 
+2.14.3
