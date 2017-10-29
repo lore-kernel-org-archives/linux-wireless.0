@@ -1,57 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:56843 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751365AbdJJTJc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 15:09:32 -0400
-Received: by mail-wm0-f47.google.com with SMTP id l68so8134059wmd.5
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Oct 2017 12:09:32 -0700 (PDT)
+Received: from mout.web.de ([212.227.15.3]:61202 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751665AbdJ2UL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 29 Oct 2017 16:11:58 -0400
+Subject: [PATCH 1/5] wlcore: Use common error handling code in wlcore_nvs_cb()
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Eyal Reizer <eyalr@ti.com>, Iain Hunter <drhunter95@gmail.com>,
+        James Minor <james.minor@ni.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+References: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
+Message-ID: <7b40d50f-cdac-bd47-5070-894140f7ceb3@users.sourceforge.net> (sfid-20171029_211215_090330_D8C6BBD3)
+Date: Sun, 29 Oct 2017 21:11:39 +0100
 MIME-Version: 1.0
-In-Reply-To: <e99d4daa-fdc2-ce26-8ffb-bd3cf131e87c@candelatech.com>
-References: <e99d4daa-fdc2-ce26-8ffb-bd3cf131e87c@candelatech.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Tue, 10 Oct 2017 12:09:30 -0700
-Message-ID: <CAJ-Vmok9rNij_hErSfArrf9A6U8wCaZZWhOEPphCODKnj5Xjog@mail.gmail.com> (sfid-20171010_210935_863492_60694A38)
-Subject: Re: What should setting rate on 'AP' interface mean?
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sun, 29 Oct 2017 18:38:04 +0100
 
-IIRC, I think it's the drivers job to determine per-peer fixed rate.
+Add a jump target so that a bit of exception handling can be better reused
+at the end of this function.
 
+This issue was detected by using the Coccinelle software.
 
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
--adrian
-
-
-On 10 October 2017 at 11:34, Ben Greear <greearb@candelatech.com> wrote:
-> I was trying to use 'iw' to set rates on an AP interface, hoping it would
-> set tx-rates on all of the stations (peers) to the same thing.
->
-> It appears that the ath10k driver will set ratesets on all stations if
-> we specify more than one rate, but if we specify a single rate, it does
-> not iterate through all stations, and just sets the 'vdev' fixed rate.
->
-> So, should the driver somehow attempt to set single rate on all the stations
-> when
-> using a single rate?
->
-> Or, do we need an API to force rates for individual stations (peers) and
-> leave
-> the driver in the current configuration?
->
-> Or is it the firmware's responsibility to set the rate for all peers when
-> we set the vdev fixed rate on an AP vdev?
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index c346c021b999..48380d48ef09 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -6496,16 +6496,14 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+ 	ret = wl12xx_get_hw_info(wl);
+ 	if (ret < 0) {
+ 		wl1271_error("couldn't get hw info");
+-		wl1271_power_off(wl);
+-		goto out_free_nvs;
++		goto power_off;
+ 	}
+ 
+ 	ret = request_threaded_irq(wl->irq, hardirq_fn, wlcore_irq,
+ 				   wl->irq_flags, pdev->name, wl);
+ 	if (ret < 0) {
+ 		wl1271_error("interrupt configuration failed");
+-		wl1271_power_off(wl);
+-		goto out_free_nvs;
++		goto power_off;
+ 	}
+ 
+ #ifdef CONFIG_PM
+@@ -6551,6 +6549,11 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+ out:
+ 	release_firmware(fw);
+ 	complete_all(&wl->nvs_loading_complete);
++	return;
++
++power_off:
++	wl1271_power_off(wl);
++	goto out_free_nvs;
+ }
+ 
+ int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
+-- 
+2.14.3
