@@ -1,121 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:47496 "EHLO
-        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751526AbdJDX2G (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:49185 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752447AbdJ3IjX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 19:28:06 -0400
-Received: by mail-pf0-f179.google.com with SMTP id u12so7044982pfl.4
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 16:28:06 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kees Cook <keescook@chromium.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Harish Patil <harish.patil@cavium.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Julian Wiedmann <jwi@linux.vnet.ibm.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <len.brown@intel.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Mark Gross <mark.gross@intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michael Reed <mdr@sgi.com>, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>,
-        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
-        Petr Mladek <pmladek@suse.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@codeaurora.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Tejun Heo <tj@kernel.org>,
-        Ursula Braun <ubraun@linux.vnet.ibm.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        linux1394-devel@lists.sourceforge.net, linux-mips@linux-mips.org,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 11/13] timer: Remove expires argument from __TIMER_INITIALIZER()
-Date: Wed,  4 Oct 2017 16:27:05 -0700
-Message-Id: <1507159627-127660-12-git-send-email-keescook@chromium.org> (sfid-20171005_012938_470975_90447375)
-In-Reply-To: <1507159627-127660-1-git-send-email-keescook@chromium.org>
-References: <1507159627-127660-1-git-send-email-keescook@chromium.org>
+        Mon, 30 Oct 2017 04:39:23 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Message-ID: <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com> (sfid-20171030_093931_832947_D0061DAF)
+Date: Mon, 30 Oct 2017 09:39:16 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The expires field is normally initialized during the first mod_timer()
-call. It was unused by all callers, so remove it from the macro.
+Kalle Valo <kvalo@qca.qualcomm.com> wrote:
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- include/linux/kthread.h   | 2 +-
- include/linux/timer.h     | 5 ++---
- include/linux/workqueue.h | 2 +-
- 3 files changed, 4 insertions(+), 5 deletions(-)
+> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
+> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
+> on host (mac80211) rather than firmware. Rebuild cipher header
+> in every received data frames (that are notified through those
+> HTT interfaces) from the rx_hdr_status tlv available in the
+> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
+> flag for the packets which requires mac80211 PN/TSC check support
+> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
+> QCA9887, QCA99X0, QCA9984, QCA9888 and QCA4019 currently need the
+> rebuilding of cipher header to perform PN/TSC check for replay
+> attack.
+> 
+> Please note that removing crypto tail for CCMP-256, GCMP and GCMP-256 ciphers
+> in raw mode needs to be fixed. Since Rx with these ciphers in raw
+> mode does not work in the current form even without this patch and
+> removing crypto tail for these chipers needs clean up, raw mode related
+> issues in CCMP-256, GCMP and GCMP-256 can be addressed in follow up
+> patches.
+> 
+> Tested-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-diff --git a/include/linux/kthread.h b/include/linux/kthread.h
-index 82e197eeac91..0d622b350d3f 100644
---- a/include/linux/kthread.h
-+++ b/include/linux/kthread.h
-@@ -117,7 +117,7 @@ struct kthread_delayed_work {
- #define KTHREAD_DELAYED_WORK_INIT(dwork, fn) {				\
- 	.work = KTHREAD_WORK_INIT((dwork).work, (fn)),			\
- 	.timer = __TIMER_INITIALIZER(kthread_delayed_work_timer_fn,	\
--				     0, (unsigned long)&(dwork),	\
-+				     (unsigned long)&(dwork),		\
- 				     TIMER_IRQSAFE),			\
- 	}
- 
-diff --git a/include/linux/timer.h b/include/linux/timer.h
-index 91e5a2cc81b5..10685c33e679 100644
---- a/include/linux/timer.h
-+++ b/include/linux/timer.h
-@@ -63,10 +63,9 @@ struct timer_list {
- 
- #define TIMER_TRACE_FLAGMASK	(TIMER_MIGRATING | TIMER_DEFERRABLE | TIMER_PINNED | TIMER_IRQSAFE)
- 
--#define __TIMER_INITIALIZER(_function, _expires, _data, _flags) { \
-+#define __TIMER_INITIALIZER(_function, _data, _flags) {		\
- 		.entry = { .next = TIMER_ENTRY_STATIC },	\
- 		.function = (_function),			\
--		.expires = (_expires),				\
- 		.data = (_data),				\
- 		.flags = (_flags),				\
- 		__TIMER_LOCKDEP_MAP_INITIALIZER(		\
-@@ -75,7 +74,7 @@ struct timer_list {
- 
- #define DEFINE_TIMER(_name, _function)				\
- 	struct timer_list _name =				\
--		__TIMER_INITIALIZER(_function, 0, 0, 0)
-+		__TIMER_INITIALIZER(_function, 0, 0)
- 
- void init_timer_key(struct timer_list *timer, unsigned int flags,
- 		    const char *name, struct lock_class_key *key);
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index 1c49431f3121..f4960260feaf 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -176,7 +176,7 @@ struct execute_work {
- #define __DELAYED_WORK_INITIALIZER(n, f, tflags) {			\
- 	.work = __WORK_INITIALIZER((n).work, (f)),			\
- 	.timer = __TIMER_INITIALIZER(delayed_work_timer_fn,		\
--				     0, (unsigned long)&(n),		\
-+				     (unsigned long)&(n),		\
- 				     (tflags) | TIMER_IRQSAFE),		\
- 	}
- 
+Patch applied to ath-current branch of ath.git, thanks.
+
+7eccb738fce5 ath10k: rebuild crypto header in rx data frames
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10028621/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
