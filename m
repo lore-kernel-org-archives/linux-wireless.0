@@ -1,40 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:29766 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755342AbdJJHxf (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:47611 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751837AbdJ3Nkm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Oct 2017 03:53:35 -0400
-From: <yintang@qti.qualcomm.com>
-To: <ath10k-ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/5] Add TDLS feature for ath10k
-Date: Tue, 10 Oct 2017 15:55:19 +0800
-Message-ID: <1507622125-8841-1-git-send-email-yintang@qti.qualcomm.com> (sfid-20171010_095341_003530_761152A6)
-In-Reply-To: <TDLS for ath10k patch V4>
-References: <TDLS for ath10k patch V4>
+        Mon, 30 Oct 2017 09:40:42 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5c4844e8-b519-888d-c772-4f925a4f2a66@users.sourceforge.net>
+References: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net> <5c4844e8-b519-888d-c772-4f925a4f2a66@users.sourceforge.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 31 Oct 2017 00:40:20 +1100
+Message-ID: <CAGRGNgUt05VmCEAiZwv4y7bQz_X_8F39irsQhgfJJh+dapYEZw@mail.gmail.com> (sfid-20171030_144129_390994_175C7EA1)
+Subject: Re: [PATCH 5/5] wlcore: Use common error handling code in wl1271_op_suspend()
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Eyal Reizer <eyalr@ti.com>, Iain Hunter <drhunter95@gmail.com>,
+        James Minor <james.minor@ni.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors <kernel-janitors@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yingying Tang <yintang@qti.qualcomm.com>
+Hi Markus,
 
-This patchset is for Rome PCIE chip, it will not affect other hardware
+On Mon, Oct 30, 2017 at 7:16 AM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sun, 29 Oct 2017 20:36:39 +0100
+>
+> Add a jump target so that a specific error message is stored only once
+> at the end of this function implementation.
+> Replace two calls of the macro "wl1271_warning" by goto statements.
+>
+> This issue was detected by using the Coccinelle software.
+>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-Yingying Tang (5):
-  mac80211: Enable TDLS peer buffer STA feature
-  ath10k: Enable TDLS peer buffer STA feature
-  ath10k: Enable TDLS peer inactivity detection
-  ath10k: Avoid to set WEP key for TDLS peer
-  ath10k: Fix TDLS peer TX data failure issue on encryped AP
+This patch is bogus, moving error messages around like this is just bizarre.
 
- drivers/net/wireless/ath/ath10k/mac.c     |    9 ++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |   55 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |   23 ++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |    1 +
- include/net/cfg80211.h                    |    3 ++
- net/mac80211/tdls.c                       |    5 ++-
- 6 files changed, 94 insertions(+), 2 deletions(-)
+These are both reporting different failures, so the error messages
+should be different.
+
+> ---
+>  drivers/net/wireless/ti/wlcore/main.c | 13 +++++++------
+>  1 file changed, 7 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index 12a9d6509382..a110f61110d5 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -1732,8 +1732,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
+>                 ret = wl1271_configure_suspend(wl, wlvif, wow);
+>                 if (ret < 0) {
+>                         mutex_unlock(&wl->mutex);
+> -                       wl1271_warning("couldn't prepare device to suspend");
+
+"couldn't configure device for suspend"?
+
+> -                       return ret;
+> +                       goto report_preparation_failure;
+>                 }
+>         }
+>
+> @@ -1752,10 +1751,8 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
+>         wl1271_ps_elp_sleep(wl);
+>         mutex_unlock(&wl->mutex);
+>
+> -       if (ret < 0) {
+> -               wl1271_warning("couldn't prepare device to suspend");
+
+"couldn't enable power saving"?
+
+> -               return ret;
+> -       }
+> +       if (ret < 0)
+> +               goto report_preparation_failure;
+>
+>         /* flush any remaining work */
+>         wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
+
+Thanks,
 
 -- 
-1.7.9.5
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
