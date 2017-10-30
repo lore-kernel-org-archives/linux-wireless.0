@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:52980
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751201AbdJEBiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 21:38:19 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, avinashp@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 0/8] qtnfmac: get rid of redundant state caching in driver
-Date: Wed,  4 Oct 2017 18:38:05 -0700
-Message-Id: <20171005013813.13332-1-igor.mitsyanko.os@quantenna.com> (sfid-20171005_033829_761413_59AB5172)
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:44094 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752573AbdJ3IkW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 04:40:22 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: Revert "ath10k: fix napi_poll budget overflow"
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1509262876-10944-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1509262876-10944-1-git-send-email-kvalo@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <84b6d93b325741f7a6d24d1252f93149@euamsexm01a.eu.qualcomm.com> (sfid-20171030_094049_515149_6E70E507)
+Date: Mon, 30 Oct 2017 09:40:16 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Kalle Valo <kvalo@qca.qualcomm.com> wrote:
 
-In many cases qtnfmac driver stores state info (like current channel,
-interface state) in driver's internal state that is either unused or
-duplicates information that is available elsewhere. Cleanup driver
-to get rid of not needed cached data.
+> Thorsten reported on <fa6e3ee2-91b5-a54b-afe3-87f30aac7a48@leemhuis.info> that
+> commit c9353bf483d3 made ath10k unstable with QCA6174 on his Dell XPS13 (9360)
+> with an error message:
+> 
+> ath10k_pci 0000:3a:00.0: failed to extract amsdu: -11
+> 
+> It only seemed to happen with certain APs, not all, but when it happened the
+> only way to get ath10k working was to switch the wifi off and on with a hotkey.
+> 
+> As this commit made things even worse (a warning vs breaking the whole
+> connection) let's revert the commit for now and while the issue is being fixed.
+> 
+> Link: http://lists.infradead.org/pipermail/ath10k/2017-October/010227.html
+> Reported-by: Thorsten Leemhuis <linux@leemhuis.info>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-It was part of bigger changeset when it was V1.
+Patch applied to ath-current branch of ath.git, thanks.
 
-Changelist V1->V2:
-PATCH 3:
-  - add missing cpu_to_le16() to CMD len field initialization.
-
-Igor Mitsyanko (8):
-  qtnfmac: do not cache AP settings in driver structures
-  qtnfmac: pass all AP settings to wireless card for processing
-  qtnfmac: pass channel definition to WiFi card on START_AP command
-  qtnfmac: get rid of QTNF_STATE_AP_CONFIG
-  qtnfmac: get rid of QTNF_STATE_AP_START flag
-  qtnfmac: do not cache BSS state in per-VIF structure
-  qtnfmac: make encryption info a part of CONNECT command.
-  qtnfmac: do not cache current channel info in driver's state
-
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c  | 110 ++------------
- drivers/net/wireless/quantenna/qtnfmac/commands.c  | 163 +++++++++++----------
- drivers/net/wireless/quantenna/qtnfmac/commands.h  |   3 +-
- drivers/net/wireless/quantenna/qtnfmac/core.h      |  24 +--
- drivers/net/wireless/quantenna/qtnfmac/event.c     |  14 --
- drivers/net/wireless/quantenna/qtnfmac/qlink.h     |  92 +++++++++---
- .../net/wireless/quantenna/qtnfmac/qlink_util.c    |  45 ++++++
- .../net/wireless/quantenna/qtnfmac/qlink_util.h    |   3 +
- 8 files changed, 224 insertions(+), 230 deletions(-)
+e48e9c429a95 Revert "ath10k: fix napi_poll budget overflow"
 
 -- 
-2.9.5
+https://patchwork.kernel.org/patch/10031233/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
