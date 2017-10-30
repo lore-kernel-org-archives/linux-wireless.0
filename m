@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:38238 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751895AbdJONql (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Oct 2017 09:46:41 -0400
-Received: by mail-wm0-f65.google.com with SMTP id q124so5772841wmb.5
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Oct 2017 06:46:41 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: [PATCH] wireless-regdb: add Short Range Devices (SRD) (ETSI EN 300 440) for Spain
-Date: Sun, 15 Oct 2017 15:46:37 +0200
-Message-Id: <20171015134637.2760-1-xose.vazquez@gmail.com> (sfid-20171015_154827_706859_0050AC81)
-To: unlisted-recipients:; (no To-header on input)
+Received: from mga04.intel.com ([192.55.52.120]:51798 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751936AbdJ3UhQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 16:37:16 -0400
+Date: Mon, 30 Oct 2017 21:37:10 +0100
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Network Development <netdev@vger.kernel.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [run_timer_softirq] BUG: unable to handle kernel paging request
+ at 0000000000010007
+Message-ID: <20171030203710.mk2t7hqgjjabu6wy@wfg-t540p.sh.intel.com> (sfid-20171030_213922_389410_7A9EBE69)
+References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
+ <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com>
+ <20171029234820.nzwavupqlv2iqo3m@wfg-t540p.sh.intel.com>
+ <CA+55aFxA=+iO1cysMnLZz1iNd4W+gEf4Ys9FGoWM+zmuST2KOQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <CA+55aFxA=+iO1cysMnLZz1iNd4W+gEf4Ys9FGoWM+zmuST2KOQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-UN - 130 Dispositivos de corto alcance en 5 GHz :
-https://www.boe.es/buscar/act.php?id=BOE-A-2013-4845&tn=1&p=20150410
+On Mon, Oct 30, 2017 at 12:29:47PM -0700, Linus Torvalds wrote:
+>On Sun, Oct 29, 2017 at 4:48 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+>>
+>> Here are 3 dmesgs related to wireless and 1 from ethernet.
+>
+>Fengguang, these would be lovelier still _if_ you have DEBUG_INFO
+>enabled on the kernel, and your script were to find things like
+>"symbol+0xhex/0xhex", and run "./scripts/faddr2line" on them.
+>
+>So
+>
+>> [  235.425464] BUG: unable to handle kernel paging request at 0000000000010007
+>> [  235.425470] IP: run_timer_softirq+0x13a/0x470
+>
+>would also then have
+>
+>   run_timer_softirq at timer.c:XYZ
+>
+>which would make it easier to see exactly _what_ it is that faults. As
+>it is, I think there's a fair number of inlining that makes it hard to
+>see the cause, but that faddrtoline would make very obvious.
 
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Good idea and tips! It'll definitely help debug the issues where
+bisect cannot help.
 
----
- db.txt | 2 ++
- 1 file changed, 2 insertions(+)
+>Finding that "symbol+xyz/abc" pattern should be fairly easy to
+>automate, and should fit the 0day model fairly well. No?
 
-diff --git a/db.txt b/db.txt
-index e48f9a6..1509491 100644
---- a/db.txt
-+++ b/db.txt
-@@ -431,6 +431,8 @@ country ES: DFS-ETSI
- 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
- 	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
- 	(5470 - 5725 @ 160), (500 mW), DFS
-+	# Short Range Devices (SRD) (ETSI EN 300 440)
-+	(5725 - 5875 @ 80), (25 mW)
- 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
- 	(57000 - 66000 @ 2160), (40)
- 
--- 
-2.14.2
+Sure. We'll add DEBUG_INFO and automate faddr2line.
+
+Regards,
+Fengguang
