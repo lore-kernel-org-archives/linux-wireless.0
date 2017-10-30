@@ -1,71 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:43493 "EHLO
-        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763782AbdJQTr2 (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:48617 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932252AbdJ3RDM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2017 15:47:28 -0400
-Received: by mail-io0-f170.google.com with SMTP id 134so3568915ioo.0
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Oct 2017 12:47:28 -0700 (PDT)
+        Mon, 30 Oct 2017 13:03:12 -0400
+Received: by mail-io0-f178.google.com with SMTP id j17so28736246iod.5
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Oct 2017 10:03:12 -0700 (PDT)
+Date: Mon, 30 Oct 2017 10:03:08 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        James Cao <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
+Subject: Re: pull-request mwifiex-firmware 2017-10-30
+Message-ID: <20171030170308.GA80479@google.com> (sfid-20171030_180325_412126_5DC9CE9C)
+References: <9370b3238604464b85bf0c4f8ac79c71@SC-EXCH02.marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <87mv4pvowa.fsf@purkki.adurom.net>
-References: <1508200182-104605-1-git-send-email-keescook@chromium.org> <87mv4pvowa.fsf@purkki.adurom.net>
-From: Kees Cook <keescook@chromium.org>
-Date: Tue, 17 Oct 2017 12:47:26 -0700
-Message-ID: <CAGXu5j+fcARk=yWh9Bbkn0C-4PHd+pKSPGV+5qPx88H6prvUoA@mail.gmail.com> (sfid-20171017_214741_464637_6678AF0D)
-Subject: Re: [PATCH 00/58] networking: Convert timers to use timer_setup()
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Network Development <netdev@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9370b3238604464b85bf0c4f8ac79c71@SC-EXCH02.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 7:18 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> + linux-wireless
->
-> Hi Kees,
->
-> Kees Cook <keescook@chromium.org> writes:
->
->> This is the current set of outstanding networking patches to perform
->> conversions to the new timer interface (rebased to -next). This is not
->> all expected conversions, but it contains everything needed in networking
->> to eliminate init_timer(), and all the non-standard setup_*_timer() uses.
->
-> So this also includes patches which I had queued for
-> wireless-drivers-next:
->
-> https://patchwork.kernel.org/patch/9986253/
-> https://patchwork.kernel.org/patch/9986245/
->
-> And looking at patchwork[1] I have even more timer_setup() related
-> patches from you. It would be really helpful if you could clearly
-> document to which tree you want the patches to be applied. I don't care
+On Mon, Oct 30, 2017 at 02:13:31PM +0000, Ganapathi Bhat wrote:
+> The following changes since commit e0494e95192ac5329989f4d128cf95c417d618cc:
+> 
+>   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-08-01 23:55:30 +0530)
+> 
+> are available in the git repository at:
+> 
+>   git://git.marvell.com/mwifiex-firmware.git
+> 
+> for you to fetch changes up to c5bed1294f6cf6bf6cbef612204f96361a3c2539:
+> 
+>   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-10-30 19:23:05 +0530)
 
-Hi! Sorry about that. It's been a bit tricky to juggle everything.
+Hooray, your git server is working again! And FWIW:
 
-> if it's net-next or wireless-drivers-next as long as it's not the both
-> (meaning that both Dave and me apply the same patch, which would be
-> bad). The thing is that I really do not have time to figure out for
-> every patch via which tree it's supposed to go.
+Tested-by: Brian Norris <briannorris@chromium.org>
 
-Which split is preferred? I had been trying to separate wireless from
-the rest of net (but missed some cases).
+But quoting your patch...
 
-> For now I'll just drop all your timer_setup() related patches from my
-> queue and I'll assume Dave will take those. Ok?
->
-> [1] https://patchwork.kernel.org/project/linux-wireless/list/
+> --- a/WHENCE
+> +++ b/WHENCE
+> @@ -757,7 +757,7 @@ File: mrvl/pcieuart8997_combo_v4.bin
+>  Version: 16.68.1.p70
+>  
+>  File: mrvl/pcieusb8997_combo_v4.bin
+> -Version: 16.68.1.p133
+> +Version: 16.68.1.p40
 
-I guess I'll wait to see what Dave says.
+This says .p40, whereas the commit message (and the version tag within the
+firmware) says p140. I think you're missing a "1".
 
-Thanks!
+>  
+>  File: mrvl/pcie8997_wlan_v4.bin
+>  Version: 16.68.1.p97
 
--Kees
 
--- 
-Kees Cook
-Pixel Security
+Brian
+
+> 
+> ----------------------------------------------------------------
+> Ganapathi Bhat (1):
+>       linux-firmware: update Marvell PCIe-USB8997 firmware image
+> 
+> WHENCE                        |   2 +-
+> mrvl/pcieusb8997_combo_v4.bin | Bin 620800 -> 622532 bytes
+> 2 files changed, 1 insertion(+), 1 deletion(-)
