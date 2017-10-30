@@ -1,153 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:56617 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751952AbdJXJ2r (ORCPT
+Received: from mail-wr0-f176.google.com ([209.85.128.176]:46472 "EHLO
+        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752140AbdJ3NeN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Oct 2017 05:28:47 -0400
-Received: by mail-pf0-f194.google.com with SMTP id b85so19236455pfj.13
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Oct 2017 02:28:47 -0700 (PDT)
-Date: Tue, 24 Oct 2017 02:28:45 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers/wireless: iwlegacy: Convert timers to use
- timer_setup()
-Message-ID: <20171024092845.GA47078@beast> (sfid-20171024_113508_414344_F0227640)
+        Mon, 30 Oct 2017 09:34:13 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f50c8edf-834d-9003-5a3c-dc83ec4016ce@users.sourceforge.net>
+References: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net> <f50c8edf-834d-9003-5a3c-dc83ec4016ce@users.sourceforge.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 31 Oct 2017 00:33:51 +1100
+Message-ID: <CAGRGNgUEFpva3ct-idAzip97eVgoDDTeEArAPcjvf90VSORA2g@mail.gmail.com> (sfid-20171030_143511_518967_AE500A0B)
+Subject: Re: [PATCH 4/5] wlcore: Use common error handling code in wlcore_set_beacon_template()
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Eyal Reizer <eyalr@ti.com>, Iain Hunter <drhunter95@gmail.com>,
+        James Minor <james.minor@ni.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors <kernel-janitors@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+Hi Markus,
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/net/wireless/intel/iwlegacy/3945-mac.c |  2 +-
- drivers/net/wireless/intel/iwlegacy/3945-rs.c  | 10 +++-------
- drivers/net/wireless/intel/iwlegacy/4965-mac.c |  9 ++++-----
- drivers/net/wireless/intel/iwlegacy/common.c   |  4 ++--
- drivers/net/wireless/intel/iwlegacy/common.h   |  2 +-
- 5 files changed, 11 insertions(+), 16 deletions(-)
+On Mon, Oct 30, 2017 at 7:14 AM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sun, 29 Oct 2017 20:16:22 +0100
+>
+> Adjust jump targets so that a bit of exception handling can be better
+> reused at the end of this function.
+>
+> This issue was detected by using the Coccinelle software.
+>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 329f3a63dadd..4b53ebf00c7f 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -3429,7 +3429,7 @@ il3945_setup_deferred_work(struct il_priv *il)
- 
- 	il3945_hw_setup_deferred_work(il);
- 
--	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
-+	timer_setup(&il->watchdog, il_bg_watchdog, 0);
- 
- 	tasklet_init(&il->irq_tasklet,
- 		     (void (*)(unsigned long))il3945_irq_tasklet,
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-rs.c b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-index b2f35dfbc01b..e8983c6a2b7b 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-@@ -181,9 +181,9 @@ il3945_rate_scale_flush_wins(struct il3945_rs_sta *rs_sta)
- #define IL_AVERAGE_PACKETS             1500
- 
- static void
--il3945_bg_rate_scale_flush(unsigned long data)
-+il3945_bg_rate_scale_flush(struct timer_list *t)
- {
--	struct il3945_rs_sta *rs_sta = (void *)data;
-+	struct il3945_rs_sta *rs_sta = from_timer(rs_sta, t, rate_scale_flush);
- 	struct il_priv *il __maybe_unused = rs_sta->il;
- 	int unflushed = 0;
- 	unsigned long flags;
-@@ -360,9 +360,6 @@ il3945_rs_rate_init(struct il_priv *il, struct ieee80211_sta *sta, u8 sta_id)
- 	rs_sta->flush_time = RATE_FLUSH;
- 	rs_sta->last_tx_packets = 0;
- 
--	rs_sta->rate_scale_flush.data = (unsigned long)rs_sta;
--	rs_sta->rate_scale_flush.function = il3945_bg_rate_scale_flush;
--
- 	for (i = 0; i < RATE_COUNT_3945; i++)
- 		il3945_clear_win(&rs_sta->win[i]);
- 
-@@ -415,8 +412,7 @@ il3945_rs_alloc_sta(void *il_priv, struct ieee80211_sta *sta, gfp_t gfp)
- 	rs_sta = &psta->rs_sta;
- 
- 	spin_lock_init(&rs_sta->lock);
--	init_timer(&rs_sta->rate_scale_flush);
--
-+	timer_setup(&rs_sta->rate_scale_flush, il3945_bg_rate_scale_flush, 0);
- 	D_RATE("leave\n");
- 
- 	return rs_sta;
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 65eba2c24292..de63f2518f23 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -4074,9 +4074,9 @@ il4965_hdl_alive(struct il_priv *il, struct il_rx_buf *rxb)
-  * used for calibrating the TXPOWER.
-  */
- static void
--il4965_bg_stats_periodic(unsigned long data)
-+il4965_bg_stats_periodic(struct timer_list *t)
- {
--	struct il_priv *il = (struct il_priv *)data;
-+	struct il_priv *il = from_timer(il, t, stats_periodic);
- 
- 	if (test_bit(S_EXIT_PENDING, &il->status))
- 		return;
-@@ -6258,10 +6258,9 @@ il4965_setup_deferred_work(struct il_priv *il)
- 
- 	INIT_WORK(&il->txpower_work, il4965_bg_txpower_work);
- 
--	setup_timer(&il->stats_periodic, il4965_bg_stats_periodic,
--		    (unsigned long)il);
-+	timer_setup(&il->stats_periodic, il4965_bg_stats_periodic, 0);
- 
--	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
-+	timer_setup(&il->watchdog, il_bg_watchdog, 0);
- 
- 	tasklet_init(&il->irq_tasklet,
- 		     (void (*)(unsigned long))il4965_irq_tasklet,
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index 8d5acda92a9b..558bb16bfd46 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -4844,9 +4844,9 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
-  * we reset the firmware. If everything is fine just rearm the timer.
-  */
- void
--il_bg_watchdog(unsigned long data)
-+il_bg_watchdog(struct timer_list *t)
- {
--	struct il_priv *il = (struct il_priv *)data;
-+	struct il_priv *il = from_timer(il, t, watchdog);
- 	int cnt;
- 	unsigned long timeout;
- 
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
-index 18c60c92e3a3..dc6a74a05983 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.h
-+++ b/drivers/net/wireless/intel/iwlegacy/common.h
-@@ -1832,7 +1832,7 @@ int il_enqueue_hcmd(struct il_priv *il, struct il_host_cmd *cmd);
-  * PCI						     *
-  *****************************************************/
- 
--void il_bg_watchdog(unsigned long data);
-+void il_bg_watchdog(struct timer_list *t);
- u32 il_usecs_to_beacons(struct il_priv *il, u32 usec, u32 beacon_interval);
- __le32 il_add_beacon_time(struct il_priv *il, u32 base, u32 addon,
- 			  u32 beacon_interval);
--- 
-2.7.4
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
+However,
+
+> ---
+>  drivers/net/wireless/ti/wlcore/main.c | 18 +++++++-----------
+>  1 file changed, 7 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index 0365b5e40a8d..12a9d6509382 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -4081,9 +4078,8 @@ static int wlcore_set_beacon_template(struct wl1271 *wl,
+>                                               beacon->data,
+>                                               beacon->len, 0,
+>                                               min_rate);
+> -end_bcn:
+> +free_skb:
+
+Why rename the label?
+
+Thanks,
 
 -- 
-Kees Cook
-Pixel Security
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
