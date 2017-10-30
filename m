@@ -1,82 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0157.hostedemail.com ([216.40.44.157]:48945 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750991AbdJRT1h (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 15:27:37 -0400
-Message-ID: <1508354852.6806.23.camel@perches.com> (sfid-20171018_212743_243456_31D0DC81)
-Subject: Re: [PATCH] MAINTAINERS: update Johannes Berg's entries
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Date: Wed, 18 Oct 2017 12:27:32 -0700
-In-Reply-To: <20171010075759.28377-1-johannes@sipsolutions.net>
-References: <20171010075759.28377-1-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-bl2nam02on0070.outbound.protection.outlook.com ([104.47.38.70]:2209
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752554AbdJ3KOL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 06:14:11 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 1/5] qtnfmac: modify full Tx queue error reporting
+Date: Mon, 30 Oct 2017 13:13:46 +0300
+Message-Id: <20171030101350.21251-2-sergey.matyukevich.os@quantenna.com> (sfid-20171030_111419_808196_653F2FBA)
+In-Reply-To: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
+References: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-10-10 at 09:57 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Update my MAINTAINERS file entries to list all the right files.
-> Since I'm also the de-facto wireless extensions maintainer,
-> there's little point in excluding those.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  MAINTAINERS | 13 ++++++++++---
->  1 file changed, 10 insertions(+), 3 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index f0c37be4e04a..e90cdecd7b5d 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -3329,17 +3329,22 @@ S:	Maintained
->  F:	drivers/auxdisplay/cfag12864bfb.c
->  F:	include/linux/cfag12864b.h
->  
-> -CFG80211 and NL80211
-> +802.11 (including CFG80211/NL80211)
+Under heavy load it is normal that h/w Tx queue is almost full all the time
+and reclaim should be done before transmitting next packet. Warning still
+should be reported as well as s/w Tx queues should be stopped in the
+case when reclaim failed.
 
-You should also move this block in MAINTAINERS to
-the appropriate alphabetic order location.
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  M:	Johannes Berg <johannes@sipsolutions.net>
->  L:	linux-wireless@vger.kernel.org
->  W:	http://wireless.kernel.org/
->  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
->  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
->  S:	Maintained
-> +F:	net/wireless/
->  F:	include/uapi/linux/nl80211.h
-> +F:	include/linux/ieee80211.h
-> +F:	include/net/wext.h
->  F:	include/net/cfg80211.h
-> -F:	net/wireless/*
-> -X:	net/wireless/wext*
-> +F:	include/net/iw_handler.h
-> +F:	include/net/ieee80211_radiotap.h
-> +F:	Documentation/driver-api/80211/cfg80211.rst
-> +F:	Documentation/networking/regulatory.txt
->  
->  CHAR and MISC DRIVERS
->  M:	Arnd Bergmann <arnd@arndb.de>
-> @@ -8207,6 +8212,7 @@ F:	Documentation/networking/mac80211-injection.txt
->  F:	include/net/mac80211.h
->  F:	net/mac80211/
->  F:	drivers/net/wireless/mac80211_hwsim.[ch]
-> +F:	Documentation/networking/mac80211_hwsim/README
->  
->  MAILBOX API
->  M:	Jassi Brar <jassisinghbrar@gmail.com>
-> @@ -11491,6 +11497,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
->  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
->  S:	Maintained
->  F:	Documentation/rfkill.txt
-> +F:	Documentation/ABI/stable/sysfs-class-rfkill
->  F:	net/rfkill/
->  
->  RHASHTABLE
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index 69131965a298..146e42a132e7 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -643,11 +643,11 @@ static int qtnf_tx_queue_ready(struct qtnf_pcie_bus_priv *priv)
+ {
+ 	if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
+ 			priv->tx_bd_num)) {
+-		pr_err_ratelimited("reclaim full Tx queue\n");
+ 		qtnf_pcie_data_tx_reclaim(priv);
+ 
+ 		if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
+ 				priv->tx_bd_num)) {
++			pr_warn_ratelimited("reclaim full Tx queue\n");
+ 			priv->tx_full_count++;
+ 			return 0;
+ 		}
+-- 
+2.11.0
