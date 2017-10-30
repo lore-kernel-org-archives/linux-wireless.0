@@ -1,85 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:8326 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751312AbdJYPfw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 11:35:52 -0400
-Subject: Re: A good way to get CSI info to user-space?
-To: Ben Greear <greearb@candelatech.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <6f9182c4-cff9-066c-173a-00d09af7c903@candelatech.com>
- <1508790635.2639.24.camel@sipsolutions.net>
- <76d6a1ad-2dc4-0542-808f-4be459c3508a@candelatech.com>
- <1508824462.2639.25.camel@sipsolutions.net>
- <d1746cd6-d889-a253-3638-8011d1ebd4fb@candelatech.com>
- <1508852310.2639.29.camel@sipsolutions.net>
- <b52bbc61-f0b5-5e9a-cce3-011fd43e6c8d@candelatech.com>
- <1508853316.2639.31.camel@sipsolutions.net>
- <4e1f9cc5-5689-93fb-0c02-115e03268c1d@neratec.com>
- <73fbd13f-50bb-b8c1-657b-ab2cfe015dc8@candelatech.com>
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Message-ID: <8269f77a-7b63-3e2a-48ec-48630670545d@neratec.com> (sfid-20171025_173556_598002_47FA9A91)
-Date: Wed, 25 Oct 2017 17:35:49 +0200
+Received: from mail-bl2nam02on0063.outbound.protection.outlook.com ([104.47.38.63]:27360
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932549AbdJ3KON (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 06:14:13 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 2/5] qtnfmac: enable registration of more mgmt frames
+Date: Mon, 30 Oct 2017 13:13:47 +0300
+Message-Id: <20171030101350.21251-3-sergey.matyukevich.os@quantenna.com> (sfid-20171030_111417_783674_7F8EC3A7)
+In-Reply-To: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
+References: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <73fbd13f-50bb-b8c1-657b-ab2cfe015dc8@candelatech.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/25/2017 04:43 PM, Ben Greear wrote:
-> 
-> 
-> On 10/25/2017 07:30 AM, Zefir Kurtisi wrote:
->> Hi Ben,
->>
->> On 10/24/2017 03:55 PM, Johannes Berg wrote:
->>> On Tue, 2017-10-24 at 06:50 -0700, Ben Greear wrote:
->>> [...]
->>>> Anyone know if there is a useful way to stream events from debugfs
->>>> and/or sysfs w/out having to busy-poll on it?
->>>
->>> There's relayfs, which is kinda built for that. You could even use
->>> netlink vendor events, but I don't really think netlink is appropriate
->>> here.
->>>
->> This is what I would also suggest, alas it is not clear if the events need to be
->> processed realtime.
->>
->> The relayfs is used to stream the spectral data from ath9k (and afaik also from
->> ath10k) to userspace. Very easy to implement: kernel pushes TLVs into the relayfs,
->> userspace pulls them.
->>
->> It is 'realtime-enough' to display realtime spectral graphs, but since you are
->> reading the stream in buffer-slices, you have to wait for a slice to fill up
->> before it is available at userspace (or you flush every TLV at kernel side, which
->> kills efficiency).
->>
->> That is: if you need to immediately process events, relayfs is maybe not the right
->> choice, if you can process them in bulk, that's the most efficient way to go.
-> 
-> The netlink vendor API seems to do exactly what I was hoping for earlier,
-> so I have started poking at that.
-> 
-> There is at least one other set of 'per-peer tx-beamforming' data that might be worth
-> exporting via the same mechanism.
-> 
-> Any particular reason why relayfs would be better than netlink?
-> 
-> 
+Support registration for more mgmt frame types
+for debug and monitoring purposes.
 
-'Better' depends on type of the data. relayfs is better for continuous and
-high-bandwidth data. With spectral there are up to 80k measurements per second
-with each TLV holding ~70-150 bytes (depending on HT20/40) - that won't be doable
-as netlink events.
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-If the netlink vendor API suffices for the CSI data, no need to change.
-
-Aside from data type dependency, relayfs has at least some noteworthy positive
-aspects:
-* works lock-free at kernel side
-* independent of any API at userspace
-  => just open the file from {C, python, shell, ...} and process the data
-
-
-Cheers,
-Zefir
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 63a540d1216e..64db4082c9d2 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -73,7 +73,10 @@ qtnf_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+ 	[NL80211_IFTYPE_AP] = {
+ 		.tx = BIT(IEEE80211_STYPE_ACTION >> 4),
+ 		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+-		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_AUTH >> 4),
+ 	},
+ };
+ 
+@@ -353,6 +356,13 @@ qtnf_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		return;
+ 
+ 	switch (frame_type & IEEE80211_FCTL_STYPE) {
++	case IEEE80211_STYPE_REASSOC_REQ:
++	case IEEE80211_STYPE_ASSOC_REQ:
++		qlink_frame_type = QLINK_MGMT_FRAME_ASSOC_REQ;
++		break;
++	case IEEE80211_STYPE_AUTH:
++		qlink_frame_type = QLINK_MGMT_FRAME_AUTH;
++		break;
+ 	case IEEE80211_STYPE_PROBE_REQ:
+ 		qlink_frame_type = QLINK_MGMT_FRAME_PROBE_REQ;
+ 		break;
+-- 
+2.11.0
