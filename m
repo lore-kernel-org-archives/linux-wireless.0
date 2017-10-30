@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47302 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:57338 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752480AbdJKJN3 (ORCPT
+        with ESMTP id S1751981AbdJ3Ktl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 05:13:29 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: Re: [PATCH 4/8] rsi: handle peer connection and disconnection in p2p mode
-References: <1504085908-2163-1-git-send-email-amitkarwar@gmail.com>
-        <1504085908-2163-5-git-send-email-amitkarwar@gmail.com>
-Date: Wed, 11 Oct 2017 12:13:24 +0300
-In-Reply-To: <1504085908-2163-5-git-send-email-amitkarwar@gmail.com>
-        (Amitkumar Karwar's message of "Wed, 30 Aug 2017 15:08:24 +0530")
-Message-ID: <87tvz6vyh7.fsf@purkki.adurom.net> (sfid-20171011_111334_850860_59F1EC63)
+        Mon, 30 Oct 2017 06:49:41 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: mwifiex: do not transmit in 11N rates when connected in TKIP
+ security
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1509098569-19307-1-git-send-email-gbhat@marvell.com>
+References: <1509098569-19307-1-git-send-email-gbhat@marvell.com>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Message-Id: <20171030104940.A79C0605A4@smtp.codeaurora.org> (sfid-20171030_114943_942430_930EF102)
+Date: Mon, 30 Oct 2017 10:49:40 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+Ganapathi Bhat <gbhat@marvell.com> wrote:
 
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->
-> Parameter 'vif' is passed to inform_bss_status function to
-> check the type of vif and to get vap_id.
->
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> Driver is transmitting in 11N rates, when connected to an AP in
+> TKIP security mode. Add a check to disable_11n to fix the issue.
+> 
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-Kbuild bot reported that this added a new warning, I suspect this is from sparse:
+Patch applied to wireless-drivers-next.git, thanks.
 
->> drivers/net//wireless/rsi/rsi_91x_hal.c:136:3: note: in expansion of
->> macro 'cpu_to_le16'
-      cpu_to_le16((tx_params->vap_id << RSI_DESC_VAP_ID_OFST) &
-
-Please fix.
+c6c65a8411cf mwifiex: do not transmit in 11N rates when connected in TKIP security
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10029519/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
