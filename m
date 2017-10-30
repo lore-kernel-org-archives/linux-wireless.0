@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36740 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750932AbdJRUuR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 16:50:17 -0400
-Message-ID: <1508359811.2674.56.camel@sipsolutions.net> (sfid-20171018_225058_380821_5766D11E)
-Subject: Re: [PATCH] mac80211: aggregation: Convert timers to use
- timer_setup()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Date: Wed, 18 Oct 2017 22:50:11 +0200
-In-Reply-To: <CAGXu5jKY5rTuR_w=zj5Bz06f9OrW35eD4sYfkai2Gac_edG4ag@mail.gmail.com> (sfid-20171018_161904_357172_FABB3367)
-References: <20171017202545.GA115810@beast>
-         <1508322566.2674.17.camel@sipsolutions.net>
-         <CAGXu5jKY5rTuR_w=zj5Bz06f9OrW35eD4sYfkai2Gac_edG4ag@mail.gmail.com>
-         (sfid-20171018_161904_357172_FABB3367)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-cys01nam02on0061.outbound.protection.outlook.com ([104.47.37.61]:26304
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752487AbdJ3JpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 05:45:12 -0400
+Date: Mon, 30 Oct 2017 12:45:00 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>
+Subject: Re: [1/5] qtnfmac: modify full Tx queue error reporting
+Message-ID: <20171030094459.kj6nnrrc52wj2bsp@bars> (sfid-20171030_104516_824844_0EADA82A)
+References: <20171015205327.9966-2-sergey.matyukevich.os@quantenna.com>
+ <20171027084814.B3FCB60314@smtp.codeaurora.org>
+ <20171029153211.4ynfo6wrh7q76efd@bars>
+ <87a8093vy7.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87a8093vy7.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-10-18 at 07:19 -0700, Kees Cook wrote:
-> On Wed, Oct 18, 2017 at 3:29 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > > This has been the least trivial timer conversion yet. Given the use of
-> > > RCU and other things I may not even know about, I'd love to get a close
-> > > look at this. I *think* this is correct, as it will re-lookup the tid
-> > > entries when firing the timer.
-> > 
-> > I'm not really sure why you're doing the lookup again? That seems
-> > pointless, since you already have the right structure, and already rely
-> > on it being valid. You can't really get a new struct assigned to the
-> > same TID without the old one being destroyed.
+> > My assumption is that by default all the patches should cleanly apply
+> > to wireless-drivers-next. I could apply the patch in question to
+> > wireless-drivers-next without any issues.
 > 
-> I couldn't tell what the lifetime expectation was, so I left the
-> re-lookup. I assumed it was possible to have a timer fire after the
-> structure had been removed from the station structure.
+> Odd. How did you apply it? My script uses 'git am -s -3' individually
+> for each patch in the series, but to my knowledge that shouldn't cause
+> any problems.
 
-Oh, right, I guess that would've been possible in theory. It's not
-actually possible though since the aggregation sessions can't live on
-without a station, so I've already made a follow-up patch to remove the
-indirection.
+It turns out I mechanically rebased my branch on top of w-d-n before writing
+the previous email. Now I could reproduce the same failure when using this
+command for the original patches downloaded from patchwork. The problem
+was in conflict with qtnfmac fixes pulled to w-d-n from w-d.
 
-johannes
+Regards,
+Sergey
