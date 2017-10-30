@@ -1,278 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36456 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753864AbdJIJvB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 05:51:01 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-bl2nam02on0069.outbound.protection.outlook.com ([104.47.38.69]:1922
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932549AbdJ3KOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 06:14:17 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To: linux-wireless@vger.kernel.org
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] regdb: write firmware file format (version code 20)
-Date: Mon,  9 Oct 2017 11:50:57 +0200
-Message-Id: <20171009095057.5449-1-johannes@sipsolutions.net> (sfid-20171009_115107_925064_60751F87)
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 4/5] qtnfmac: modify full Tx queue recovery
+Date: Mon, 30 Oct 2017 13:13:49 +0300
+Message-Id: <20171030101350.21251-5-sergey.matyukevich.os@quantenna.com> (sfid-20171030_111427_263789_2403774E)
+In-Reply-To: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
+References: <20171030101350.21251-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Current recovery approach is to wake s/w Tx queues for skb->dev netdevice.
+However this approach doesn't cover the case when h/w queue is full of
+packets from a single wireless interface. Suppose xmit attempt from the
+second wireless interface fails due to failed reclaim. Then the second
+interface will not have a chance to recover even if subsequent reclaims
+succeed. Possible solution is to attempt to wake all the s/w queues
+belonging to driver interfaces.
 
-TODO: clean up the Makefile stuff ...
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- Makefile |  53 ++++++++++++-------------
- README   |   4 +-
- db2fw.py | 133 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 160 insertions(+), 30 deletions(-)
- create mode 100755 db2fw.py
+ drivers/net/wireless/quantenna/qtnfmac/core.c      | 27 ++++++++++++++++++++++
+ drivers/net/wireless/quantenna/qtnfmac/core.h      |  1 +
+ .../net/wireless/quantenna/qtnfmac/pearl/pcie.c    | 13 +++++++----
+ .../quantenna/qtnfmac/pearl/pcie_bus_priv.h        |  1 +
+ 4 files changed, 37 insertions(+), 5 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 907ff282fc92..e708982a453d 100644
---- a/Makefile
-+++ b/Makefile
-@@ -1,7 +1,5 @@
- # Install prefix
- PREFIX ?= /usr
--CRDA_PATH ?= $(PREFIX)/lib/crda
--CRDA_KEY_PATH ?= $(CRDA_PATH)/pubkeys
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index aa7f146278a7..6a6e5ffb0348 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -618,6 +618,33 @@ struct net_device *qtnf_classify_skb(struct qtnf_bus *bus, struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL_GPL(qtnf_classify_skb);
  
- MANDIR ?= $(PREFIX)/share/man/
++void qtnf_wake_all_queues(struct net_device *ndev)
++{
++	struct qtnf_vif *vif = qtnf_netdev_get_priv(ndev);
++	struct qtnf_wmac *mac;
++	struct qtnf_bus *bus;
++	int macid;
++	int i;
++
++	if (unlikely(!vif || !vif->mac || !vif->mac->bus))
++		return;
++
++	bus = vif->mac->bus;
++
++	for (macid = 0; macid < QTNF_MAX_MAC; macid++) {
++		if (!(bus->hw_info.mac_bitmap & BIT(macid)))
++			continue;
++
++		mac = bus->mac[macid];
++		for (i = 0; i < QTNF_MAX_INTF; i++) {
++			vif = &mac->iflist[i];
++			if (vif->netdev && netif_queue_stopped(vif->netdev))
++				netif_tx_wake_all_queues(vif->netdev);
++		}
++	}
++}
++EXPORT_SYMBOL_GPL(qtnf_wake_all_queues);
++
+ MODULE_AUTHOR("Quantenna Communications");
+ MODULE_DESCRIPTION("Quantenna 802.11 wireless LAN FullMAC driver.");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 49ae700f66f0..da2c24e2271d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -153,6 +153,7 @@ int qtnf_cmd_send_get_phy_params(struct qtnf_wmac *mac);
  
-@@ -30,39 +28,47 @@ REGDB_AUTHOR ?= $(shell if [ -f $(DISTRO_PRIVKEY) ]; then \
- 		fi)
+ struct qtnf_wmac *qtnf_core_get_mac(const struct qtnf_bus *bus, u8 macid);
+ struct net_device *qtnf_classify_skb(struct qtnf_bus *bus, struct sk_buff *skb);
++void qtnf_wake_all_queues(struct net_device *ndev);
+ void qtnf_virtual_intf_cleanup(struct net_device *ndev);
  
- REGDB_PRIVKEY ?= ~/.wireless-regdb-$(REGDB_AUTHOR).key.priv.pem
--REGDB_PUBKEY ?= $(REGDB_AUTHOR).key.pub.pem
+ void qtnf_netdev_updown(struct net_device *ndev, bool up);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index 146e42a132e7..7e487622d87d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -617,9 +617,10 @@ static void qtnf_pcie_data_tx_reclaim(struct qtnf_pcie_bus_priv *priv)
+ 			if (skb->dev) {
+ 				skb->dev->stats.tx_packets++;
+ 				skb->dev->stats.tx_bytes += skb->len;
 -
--REGDB_UPSTREAM_PUBKEY ?= sforshee.key.pub.pem
-+REGDB_PUBCERT ?= $(REGDB_AUTHOR).x509.pem
+-				if (netif_queue_stopped(skb->dev))
+-					netif_wake_queue(skb->dev);
++				if (unlikely(priv->tx_stopped)) {
++					qtnf_wake_all_queues(skb->dev);
++					priv->tx_stopped = 0;
++				}
+ 			}
  
- REGDB_CHANGED = $(shell $(SHA1SUM) -c --status sha1sum.txt >/dev/null 2>&1; \
-         if [ $$? -ne 0 ]; then \
--                echo maintainer-clean $(REGDB_PUBKEY); \
-+                echo maintainer-clean $(REGDB_PUBCERT); \
-         fi)
+ 			dev_kfree_skb_any(skb);
+@@ -669,8 +670,10 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
+ 	spin_lock_irqsave(&priv->tx0_lock, flags);
  
- .PHONY: all clean mrproper install maintainer-clean install-distro-key
+ 	if (!qtnf_tx_queue_ready(priv)) {
+-		if (skb->dev)
+-			netif_stop_queue(skb->dev);
++		if (skb->dev) {
++			netif_tx_stop_all_queues(skb->dev);
++			priv->tx_stopped = 1;
++		}
  
--all: $(REGDB_CHANGED) regulatory.bin sha1sum.txt
-+all: $(REGDB_CHANGED) regulatory.db.p7s sha1sum.txt
+ 		spin_unlock_irqrestore(&priv->tx0_lock, flags);
+ 		return NETDEV_TX_BUSY;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
+index 86ac1ccedb52..397875a50fc2 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
+@@ -37,6 +37,7 @@ struct qtnf_pcie_bus_priv {
+ 	/* lock for tx0 operations */
+ 	spinlock_t tx0_lock;
+ 	u8 msi_enabled;
++	u8 tx_stopped;
+ 	int mps;
  
- clean:
- 	@rm -f *.pyc *.gz
- 
- maintainer-clean: clean
--	@rm -f regulatory.bin
-+	@rm -f regulatory.db regulatory.db.p7s
- 
- mrproper: clean maintainer-clean
--	@echo Removed public key, regulatory.bin and compresed man pages
--	@rm -f $(REGDB_PUBKEY) .custom
-+	@echo Removed public key, regulatory.db* and compressed man pages
-+	@rm -f $(REGDB_PUBCERT) .custom
-+
-+regulatory.db: db.txt db2fw.py
-+	@echo "Generating $@"
-+	./db2fw.py regulatory.db db.txt
- 
--regulatory.bin: db.txt $(REGDB_PRIVKEY) $(REGDB_PUBKEY)
--	@echo Generating $@ digitally signed by $(REGDB_AUTHOR)...
--	./db2bin.py regulatory.bin db.txt $(REGDB_PRIVKEY)
-+regulatory.db.p7s: regulatory.db $(REGDB_PRIVKEY) $(REGDB_PUBCERT)
-+	@echo "Signing regulatory.db (by $(REGDB_AUTHOR))..."
-+	@openssl smime -sign \
-+		-signer $(REGDB_PUBCERT) \
-+		-inkey $(REGDB_PRIVKEY) \
-+		-in $< -nosmimecap -binary \
-+		-outform DER -out $@
- 
- sha1sum.txt: db.txt
- 	sha1sum $< > $@
- 
--$(REGDB_PUBKEY): $(REGDB_PRIVKEY)
--	@echo "Generating public key for $(REGDB_AUTHOR)..."
--	openssl rsa -in $(REGDB_PRIVKEY) -out $(REGDB_PUBKEY) -pubout -outform PEM
-+$(REGDB_PUBCERT): $(REGDB_PRIVKEY)
-+	@echo "Generating certificate for $(REGDB_AUTHOR)..."
-+	@openssl req -config regulatory.openssl.conf \
-+		-key $(REGDB_PRIVKEY) -days 36500 -utf8 -nodes -batch \
-+		-x509 -outform PEM -out $(REGDB_PUBCERT)
- 	@echo $(REGDB_PUBKEY) > .custom
- 
- 
-@@ -97,16 +103,7 @@ install-distro-key: maintainer-clean $(DISTRO_PRIVKEY)
- #	make maintainer-clean
- #	make
- #	sudo make install
--install: regulatory.bin.5.gz
--	install -m 755 -d $(DESTDIR)/$(CRDA_PATH)
--	install -m 755 -d $(DESTDIR)/$(CRDA_KEY_PATH)
--	if [ -f .custom ]; then \
--		install -m 644 -t $(DESTDIR)/$(CRDA_KEY_PATH)/ $(shell cat .custom); \
--	fi
--	install -m 644 -t $(DESTDIR)/$(CRDA_KEY_PATH)/ $(REGDB_UPSTREAM_PUBKEY)
--	install -m 644 -t $(DESTDIR)/$(CRDA_PATH)/ regulatory.bin
-+install: regulatory.db.5.gz
-+	install -m 644 -t $(DESTDIR)/$(CRDA_PATH)/ regulatory.db
- 	install -m 755 -d $(DESTDIR)/$(MANDIR)/man5/
--	install -m 644 -t $(DESTDIR)/$(MANDIR)/man5/ regulatory.bin.5.gz
--
--uninstall:
--	rm -rf $(DESTDIR)/$(CRDA_PATH)/
-+	install -m 644 -t $(DESTDIR)/$(MANDIR)/man5/ regulatory.db.5.gz
-diff --git a/README b/README
-index 065b67241c41..4028223725da 100644
---- a/README
-+++ b/README
-@@ -18,8 +18,8 @@ python module is used by the web viewer (Regulatory.py) which is
- implemented as a MoinMoin macro (and used on http://wireless.kernel.org)
- to allow viewing the database for verification.
- 
--The dbparse module is also used by db2bin.py, the `compiler', which
--compiles and signs the binary database.
-+The dbparse module is also used by db2bin.py and db2fw.py, the `compilers'
-+that compile the database to its binary formats.
- 
- For more information, please see the CRDA git repository:
- 
-diff --git a/db2fw.py b/db2fw.py
-new file mode 100755
-index 000000000000..7b2b14151e69
---- /dev/null
-+++ b/db2fw.py
-@@ -0,0 +1,133 @@
-+#!/usr/bin/env python
-+
-+from cStringIO import StringIO
-+import struct
-+import hashlib
-+from dbparse import DBParser
-+import sys
-+
-+MAGIC = 0x52474442
-+VERSION = 20
-+
-+if len(sys.argv) < 3:
-+    print 'Usage: %s output-file input-file' % sys.argv[0]
-+    sys.exit(2)
-+
-+def create_rules(countries):
-+    result = {}
-+    for c in countries.itervalues():
-+        for rule in c.permissions:
-+            result[rule] = 1
-+    return result.keys()
-+
-+def create_collections(countries):
-+    result = {}
-+    for c in countries.itervalues():
-+        result[(c.permissions, c.dfs_region)] = 1
-+    return result.keys()
-+
-+
-+def be32(output, val):
-+    output.write(struct.pack('>I', val))
-+def be16(output, val):
-+    output.write(struct.pack('>H', val))
-+
-+class PTR(object):
-+    def __init__(self, output):
-+        self._output = output
-+        self._pos = output.tell()
-+        be16(output, 0)
-+        self._written = False
-+
-+    def set(self, val=None):
-+        if val is None:
-+            val = self._output.tell()
-+        assert val & 3 == 0
-+        self._offset = val
-+        pos = self._output.tell()
-+        self._output.seek(self._pos)
-+        be16(self._output, val >> 2)
-+        self._output.seek(pos)
-+        self._written = True
-+
-+    def get(self):
-+        return self._offset
-+
-+    @property
-+    def written(self):
-+        return self._written
-+
-+p = DBParser()
-+countries = p.parse(file(sys.argv[2]))
-+rules = create_rules(countries)
-+rules.sort(cmp=lambda x, y: cmp(x.freqband, y.freqband))
-+collections = create_collections(countries)
-+collections.sort(cmp=lambda x, y: cmp(x[0][0].freqband, y[0][0].freqband))
-+
-+output = StringIO()
-+
-+# struct regdb_file_header
-+be32(output, MAGIC)
-+be32(output, VERSION)
-+
-+country_ptrs = {}
-+countrynames = countries.keys()
-+countrynames.sort()
-+for alpha2 in countrynames:
-+    coll = countries[alpha2]
-+    output.write(struct.pack('>cc', str(alpha2[0]), str(alpha2[1])))
-+    country_ptrs[alpha2] = PTR(output)
-+output.write('\x00' * 4)
-+
-+reg_rules = {}
-+flags = 0
-+for reg_rule in rules:
-+    freq_range, power_rule = reg_rule.freqband, reg_rule.power
-+    reg_rules[reg_rule] = output.tell()
-+    assert power_rule.max_ant_gain == 0
-+    flags = 0
-+    # convert to new rule flags
-+    assert reg_rule.flags & ~0x899 == 0
-+    if reg_rule.flags & 1<<0:
-+        flags |= 1<<0
-+    if reg_rule.flags & 1<<3:
-+        flags |= 1<<1
-+    if reg_rule.flags & 1<<4:
-+        flags |= 1<<2
-+    if reg_rule.flags & 1<<7:
-+        flags |= 1<<3
-+    if reg_rule.flags & 1<<11:
-+        flags |= 1<<4
-+    rule_len = 16
-+    cac_timeout = 0 # TODO
-+    if not (flags & 1<<2):
-+        cac_timeout = 0
-+    if cac_timeout:
-+        rule_len += 2
-+    output.write(struct.pack('>BBHIII', rule_len, flags, power_rule.max_eirp * 100,
-+                             freq_range.start * 1000, freq_range.end * 1000, freq_range.maxbw * 1000,
-+                             ))
-+    if cac_timeout:
-+        output.write(struct.pack('>H', cac_timeout))
-+    while rule_len % 4:
-+        output.write('\0')
-+        rule_len += 1
-+
-+for coll in collections:
-+    for alpha2 in countrynames:
-+        if (countries[alpha2].permissions, countries[alpha2].dfs_region) == coll:
-+            assert not country_ptrs[alpha2].written
-+            country_ptrs[alpha2].set()
-+    slen = 3
-+    output.write(struct.pack('>BBBx', slen, len(list(coll[0])), coll[1]))
-+    coll = list(coll[0])
-+    for regrule in coll:
-+        be16(output, reg_rules[regrule] >> 2)
-+    if len(coll) % 2:
-+        be16(output, 0)
-+
-+for alpha2 in countrynames:
-+    assert country_ptrs[alpha2].written
-+
-+outfile = open(sys.argv[1], 'w')
-+outfile.write(output.getvalue())
+ 	struct workqueue_struct *workqueue;
 -- 
-2.14.2
+2.11.0
