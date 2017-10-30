@@ -1,63 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:47215 "EHLO
-        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751712AbdJYTfi (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35354 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932356AbdJ3SsC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 15:35:38 -0400
-Received: by mail-oi0-f46.google.com with SMTP id h200so1940123oib.4
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Oct 2017 12:35:37 -0700 (PDT)
-Subject: Re: RTL usb adapter question
-To: David Ashley <dashxdr@gmail.com>, linux-wireless@vger.kernel.org
-References: <CABkE59DHPoLD5PGRHpKMAwy0w3vR9M_qoHEQ1AkK-ELDcUXD9Q@mail.gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5f907d16-b889-f7c0-0873-880e5c812ab9@lwfinger.net> (sfid-20171025_213549_211974_215C1A83)
-Date: Wed, 25 Oct 2017 14:35:35 -0500
+        Mon, 30 Oct 2017 14:48:02 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        James Cao <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
+Subject: RE: [EXT] Re: pull-request mwifiex-firmware 2017-10-30
+Date: Mon, 30 Oct 2017 18:47:58 +0000
+Message-ID: <fb8d8eece601415c83167c500d80ff2f@SC-EXCH02.marvell.com> (sfid-20171030_194805_871589_E7219A8B)
+References: <9370b3238604464b85bf0c4f8ac79c71@SC-EXCH02.marvell.com>
+ <20171030170308.GA80479@google.com>
+In-Reply-To: <20171030170308.GA80479@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CABkE59DHPoLD5PGRHpKMAwy0w3vR9M_qoHEQ1AkK-ELDcUXD9Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/25/2017 01:43 PM, David Ashley wrote:
-> I'm trying to understand how the linux kernel loads RTL8188CUS firmware
-> rtlwifi: Loading alternative firmware rtlwifi/rtl8192cufw.bin
-> when that file isn't available anywhere in my embedded system's filesystem.
-> 
-> Basically I'm trying to understand the theory. We have a product that
-> is making use of the device
-> 
-> Bus 001 Device 007: ID 7392:7811 Edimax Technology Co., Ltd
-> EW-7811Un802.11n Wireless Adapter [Realtek RTL8188CUS]
-> 
-> It has not been especially reliable. I've never provided firmware
-> files for the device in the root filesystem. I've started to pay
-> attention to the kernel error messages. Now the kernel drivers seem to
-> be loading the rtlwifi/rtl8192cufw_TMSC.bin file and I'm trying to
-> understand if this is actually working, if it makes any difference in
-> reliability...
-> 
-> It's like I can't figure out how the usb dongle even worked without
-> its firmware file...
-> 
-> My working theory is that the usb dongle comes from the factory with a
-> hardcoded firmware file (rtlwifi/rtl8192cufw.bin) but it is buggy or
-> inferior. And the performance and reliability can be improved if the
-> driver successfully manages to load the rtl8192cufw_TMSC.bin file. I
-> don't know if the firmware load persists across a power cycle (my
-> assumption is it doesn't).
+Hi Brian,
 
-There is NO firmware coded by the factory in the device. It only has enough 
-intelligence to load the real firmware. The exact file that it loads is 
-determined by the model. If you provide the appropriate section of the output of 
-dmesg where the above firmware messages occur, and a file listing of 
-/lib/firmware/rtlwifi/, I can tell you what firmware is being loaded.
+>
+> ----------------------------------------------------------------------
+> On Mon, Oct 30, 2017 at 02:13:31PM +0000, Ganapathi Bhat wrote:
+> > The following changes since commit
+> e0494e95192ac5329989f4d128cf95c417d618cc:
+> >
+> >   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-08-01
+> 23:55:30 +0530)
+> >
+> > are available in the git repository at:
+> >
+> >   git://git.marvell.com/mwifiex-firmware.git
+> >
+> > for you to fetch changes up to
+> c5bed1294f6cf6bf6cbef612204f96361a3c2539:
+> >
+> >   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-10-30
+> 19:23:05 +0530)
+>
+> Hooray, your git server is working again! And FWIW:
+>
+> Tested-by: Brian Norris <briannorris@chromium.org>
+>
+> But quoting your patch...
+>
+> > --- a/WHENCE
+> > +++ b/WHENCE
+> > @@ -757,7 +757,7 @@ File: mrvl/pcieuart8997_combo_v4.bin
+> >  Version: 16.68.1.p70
+> >
+> >  File: mrvl/pcieusb8997_combo_v4.bin
+> > -Version: 16.68.1.p133
+> > +Version: 16.68.1.p40
+>
+> This says .p40, whereas the commit message (and the version tag within the
+> firmware) says p140. I think you're missing a "1".
+ I did miss this.  Will it make sense to trigger another pull request with just the version change?
+>
+> >
+> >  File: mrvl/pcie8997_wlan_v4.bin
+> >  Version: 16.68.1.p97
+>
+>
+> Brian
+>
+> >
+> > ----------------------------------------------------------------
+> > Ganapathi Bhat (1):
+> >       linux-firmware: update Marvell PCIe-USB8997 firmware image
+> >
+> > WHENCE                        |   2 +-
+> > mrvl/pcieusb8997_combo_v4.bin | Bin 620800 -> 622532 bytes
+> > 2 files changed, 1 insertion(+), 1 deletion(-)
 
-No, firmware will not persist across a power failure.
-
-The driver has never been particularly reliable, and the USB group at Realtek 
-seems not to care. You might try their other driver, but you will be on your 
-own, as I will not support that particular piece of ****.
-
-Please reply to all on any followups.
-
-Larry
+Regards,
+Ganapathi
