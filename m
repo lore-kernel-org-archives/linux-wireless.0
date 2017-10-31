@@ -1,89 +1,351 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46644 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750797AbdJCSRl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Oct 2017 14:17:41 -0400
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 2E04740A5A2
-        for <linux-wireless@vger.kernel.org>; Tue,  3 Oct 2017 11:17:41 -0700 (PDT)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: lockdep splat on 4.13.3 (plus hacks)
-Message-ID: <c54e3dd0-8e6e-41f2-cd0f-960cb623e8fa@candelatech.com> (sfid-20171003_201745_437567_75BD2C4F)
-Date: Tue, 3 Oct 2017 11:17:40 -0700
+Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751937AbdJaBFD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 21:05:03 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 1/9] qtnfmac: use per-band HT/VHT info from wireless device
+Date: Mon, 30 Oct 2017 18:04:47 -0700
+Message-Id: <20171031010455.27772-2-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020518_164172_3BB91706)
+In-Reply-To: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
+References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are seeing deadlocks related to wifi in our 4.13.3+ kernels,
-so I enabled lockdep and immediately saw this.  Anyone know if this
-is a known issue?  Otherwise, I guess it could be related to some local
-patch I have added...
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
+HT/VHT capabilities must be reported per each band supported by a radio,
+not for all bands on a radio. Furthermore, driver better not assume
+any capabilities and just use whetever is reported by device itself.
 
-[  476.172823] ============================================
-[  476.176863] WARNING: possible recursive locking detected
-[  476.180895] 4.13.3+ #1 Not tainted
-[  476.183025] --------------------------------------------
-[  476.187053] kworker/u8:2/281 is trying to acquire lock:
-[  476.190993]  (&sta->ampdu_mlme.mtx){+.+...}, at: [<ffffffffa09cd4e8>] __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
-[  476.201004]
-                but task is already holding lock:
-[  476.204270]  (&sta->ampdu_mlme.mtx){+.+...}, at: [<ffffffffa09c93a6>] ieee80211_ba_session_work+0x46/0x2b0 [mac80211]
-[  476.213645]
-                other info that might help us debug this:
-[  476.217587]  Possible unsafe locking scenario:
+To support this, convert "get channels" command into "get band info"
+command. Difference is that it may also carry HT/VHT capabilities along
+with channels information.
 
-[  476.220930]        CPU0
-[  476.222082]        ----
-[  476.223236]   lock(&sta->ampdu_mlme.mtx);
-[  476.225957]   lock(&sta->ampdu_mlme.mtx);
-[  476.228673]
-                 *** DEADLOCK ***
+While at it, also add "num_bitrates" field to "get band info" command,
+for future use.
 
-[  476.230689]  May be due to missing lock nesting notation
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 30 +--------
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 77 +++++++++++++++++++----
+ drivers/net/wireless/quantenna/qtnfmac/commands.h |  4 +-
+ drivers/net/wireless/quantenna/qtnfmac/core.c     |  3 +-
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 29 +++++----
+ 5 files changed, 84 insertions(+), 59 deletions(-)
 
-[  476.234879] 3 locks held by kworker/u8:2/281:
-[  476.237941]  #0:  ("%s"wiphy_name(local->hw.wiphy)){++++.+}, at: [<ffffffff8113df8f>] process_one_work+0x14f/0x6a0
-[  476.247033]  #1:  ((&sta->ampdu_mlme.work)){+.+...}, at: [<ffffffff8113df8f>] process_one_work+0x14f/0x6a0
-[  476.255393]  #2:  (&sta->ampdu_mlme.mtx){+.+...}, at: [<ffffffffa09c93a6>] ieee80211_ba_session_work+0x46/0x2b0 [mac80211]
-[  476.265170]
-                stack backtrace:
-[  476.266928] CPU: 0 PID: 281 Comm: kworker/u8:2 Not tainted 4.13.3+ #1
-[  476.272073] Hardware name: _ _/ , BIOS 5.11 08/26/2016
-[  476.275927] Workqueue: phy1 ieee80211_ba_session_work [mac80211]
-[  476.280640] Call Trace:
-[  476.281792]  dump_stack+0x85/0xc7
-[  476.283811]  __lock_acquire+0x14ba/0x1520
-[  476.286526]  ? __save_stack_trace+0x6e/0xd0
-[  476.289412]  ? ret_from_fork+0x2a/0x40
-[  476.291867]  lock_acquire+0xac/0x200
-[  476.294145]  ? lock_acquire+0xac/0x200
-[  476.296610]  ? __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
-[  476.301766]  ? __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
-[  476.306910]  __mutex_lock+0x69/0x930
-[  476.309194]  ? __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
-[  476.314343]  ? rcu_read_lock_sched_held+0x6d/0x80
-[  476.317766]  ? __sdata_dbg+0x14a/0x1a0 [mac80211]
-[  476.321181]  mutex_lock_nested+0x16/0x20
-[  476.323810]  ? mutex_lock_nested+0x16/0x20
-[  476.326626]  __ieee80211_start_rx_ba_session+0x178/0x670 [mac80211]
-[  476.331627]  ieee80211_ba_session_work+0x157/0x2b0 [mac80211]
-[  476.336078]  ? process_one_work+0x14f/0x6a0
-[  476.338985]  process_one_work+0x1ce/0x6a0
-[  476.341696]  worker_thread+0x46/0x400
-[  476.344061]  kthread+0x10f/0x150
-[  476.346001]  ? process_one_work+0x6a0/0x6a0
-[  476.348886]  ? kthread_create_on_node+0x40/0x40
-[  476.352122]  ret_from_fork+0x2a/0x40
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index e70f5bd..2f60331 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -823,8 +823,7 @@ static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
+ 			if (!wiphy->bands[band])
+ 				continue;
+ 
+-			ret = qtnf_cmd_get_mac_chan_info(mac,
+-							 wiphy->bands[band]);
++			ret = qtnf_cmd_band_info_get(mac, wiphy->bands[band]);
+ 			if (ret)
+ 				pr_err("failed to get chan info for mac %u band %u\n",
+ 				       mac_idx, band);
+@@ -832,33 +831,6 @@ static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
+ 	}
+ }
+ 
+-void qtnf_band_setup_htvht_caps(struct qtnf_mac_info *macinfo,
+-				struct ieee80211_supported_band *band)
+-{
+-	struct ieee80211_sta_ht_cap *ht_cap;
+-	struct ieee80211_sta_vht_cap *vht_cap;
+-
+-	ht_cap = &band->ht_cap;
+-	ht_cap->ht_supported = true;
+-	memcpy(&ht_cap->cap, &macinfo->ht_cap.cap_info,
+-	       sizeof(u16));
+-	ht_cap->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+-	ht_cap->ampdu_density = IEEE80211_HT_MPDU_DENSITY_NONE;
+-	memcpy(&ht_cap->mcs, &macinfo->ht_cap.mcs,
+-	       sizeof(ht_cap->mcs));
+-
+-	if (macinfo->phymode_cap & QLINK_PHYMODE_AC) {
+-		vht_cap = &band->vht_cap;
+-		vht_cap->vht_supported = true;
+-		memcpy(&vht_cap->cap,
+-		       &macinfo->vht_cap.vht_cap_info, sizeof(u32));
+-		/* Update MCS support for VHT */
+-		memcpy(&vht_cap->vht_mcs,
+-		       &macinfo->vht_cap.supp_mcs,
+-		       sizeof(struct ieee80211_vht_mcs_info));
+-	}
+-}
+-
+ struct wiphy *qtnf_wiphy_allocate(struct qtnf_bus *bus)
+ {
+ 	struct wiphy *wiphy;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index b81f81b..a7422c5 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -1115,19 +1115,50 @@ qtnf_cmd_resp_proc_mac_info(struct qtnf_wmac *mac,
+ 	       sizeof(mac_info->vht_cap));
+ }
+ 
++static void qtnf_cmd_resp_band_fill_htcap(const u8 *info,
++					  struct ieee80211_sta_ht_cap *bcap)
++{
++	const struct ieee80211_ht_cap *ht_cap =
++		(const struct ieee80211_ht_cap *)info;
++
++	bcap->ht_supported = true;
++	bcap->cap = le16_to_cpu(ht_cap->cap_info);
++	bcap->ampdu_factor =
++		ht_cap->ampdu_params_info & IEEE80211_HT_AMPDU_PARM_FACTOR;
++	bcap->ampdu_density =
++		(ht_cap->ampdu_params_info & IEEE80211_HT_AMPDU_PARM_DENSITY) >>
++		IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT;
++	memcpy(&bcap->mcs, &ht_cap->mcs, sizeof(bcap->mcs));
++}
++
++static void qtnf_cmd_resp_band_fill_vhtcap(const u8 *info,
++					   struct ieee80211_sta_vht_cap *bcap)
++{
++	const struct ieee80211_vht_cap *vht_cap =
++		(const struct ieee80211_vht_cap *)info;
++
++	bcap->vht_supported = true;
++	bcap->cap = le32_to_cpu(vht_cap->vht_cap_info);
++	memcpy(&bcap->vht_mcs, &vht_cap->supp_mcs, sizeof(bcap->vht_mcs));
++}
++
+ static int
+-qtnf_cmd_resp_fill_channels_info(struct ieee80211_supported_band *band,
+-				 struct qlink_resp_get_chan_info *resp,
+-				 size_t payload_len)
++qtnf_cmd_resp_fill_band_info(struct ieee80211_supported_band *band,
++			     struct qlink_resp_band_info_get *resp,
++			     size_t payload_len)
+ {
+ 	u16 tlv_type;
+ 	size_t tlv_len;
++	size_t tlv_dlen;
+ 	const struct qlink_tlv_hdr *tlv;
+ 	const struct qlink_tlv_channel *qchan;
+ 	struct ieee80211_channel *chan;
+ 	unsigned int chidx = 0;
+ 	u32 qflags;
+ 
++	memset(&band->ht_cap, 0, sizeof(band->ht_cap));
++	memset(&band->vht_cap, 0, sizeof(band->vht_cap));
++
+ 	if (band->channels) {
+ 		if (band->n_channels == resp->num_chans) {
+ 			memset(band->channels, 0,
+@@ -1155,7 +1186,8 @@ qtnf_cmd_resp_fill_channels_info(struct ieee80211_supported_band *band,
+ 
+ 	while (payload_len >= sizeof(*tlv)) {
+ 		tlv_type = le16_to_cpu(tlv->type);
+-		tlv_len = le16_to_cpu(tlv->len) + sizeof(*tlv);
++		tlv_dlen = le16_to_cpu(tlv->len);
++		tlv_len = tlv_dlen + sizeof(*tlv);
+ 
+ 		if (tlv_len > payload_len) {
+ 			pr_warn("malformed TLV 0x%.2X; LEN: %zu\n",
+@@ -1241,13 +1273,32 @@ qtnf_cmd_resp_fill_channels_info(struct ieee80211_supported_band *band,
+ 				 chan->hw_value, chan->flags, chan->max_power,
+ 				 chan->max_reg_power);
+ 			break;
++		case WLAN_EID_HT_CAPABILITY:
++			if (unlikely(tlv_dlen !=
++				     sizeof(struct ieee80211_ht_cap))) {
++				pr_err("bad HTCAP TLV len %zu\n", tlv_dlen);
++				goto error_ret;
++			}
++
++			qtnf_cmd_resp_band_fill_htcap(tlv->val, &band->ht_cap);
++			break;
++		case WLAN_EID_VHT_CAPABILITY:
++			if (unlikely(tlv_dlen !=
++				     sizeof(struct ieee80211_vht_cap))) {
++				pr_err("bad VHTCAP TLV len %zu\n", tlv_dlen);
++				goto error_ret;
++			}
++
++			qtnf_cmd_resp_band_fill_vhtcap(tlv->val,
++						       &band->vht_cap);
++			break;
+ 		default:
+ 			pr_warn("unknown TLV type: %#x\n", tlv_type);
+ 			break;
+ 		}
+ 
+ 		payload_len -= tlv_len;
+-		tlv = (struct qlink_tlv_hdr *)((u8 *)tlv + tlv_len);
++		tlv = (struct qlink_tlv_hdr *)(tlv->val + tlv_dlen);
+ 	}
+ 
+ 	if (payload_len) {
+@@ -1469,13 +1520,13 @@ int qtnf_cmd_get_hw_info(struct qtnf_bus *bus)
+ 	return ret;
+ }
+ 
+-int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
+-			       struct ieee80211_supported_band *band)
++int qtnf_cmd_band_info_get(struct qtnf_wmac *mac,
++			   struct ieee80211_supported_band *band)
+ {
+ 	struct sk_buff *cmd_skb, *resp_skb = NULL;
+ 	size_t info_len;
+-	struct qlink_cmd_chans_info_get *cmd;
+-	struct qlink_resp_get_chan_info *resp;
++	struct qlink_cmd_band_info_get *cmd;
++	struct qlink_resp_band_info_get *resp;
+ 	u16 res_code = QLINK_CMD_RESULT_OK;
+ 	int ret = 0;
+ 	u8 qband;
+@@ -1495,12 +1546,12 @@ int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
+ 	}
+ 
+ 	cmd_skb = qtnf_cmd_alloc_new_cmdskb(mac->macid, 0,
+-					    QLINK_CMD_CHANS_INFO_GET,
++					    QLINK_CMD_BAND_INFO_GET,
+ 					    sizeof(*cmd));
+ 	if (!cmd_skb)
+ 		return -ENOMEM;
+ 
+-	cmd = (struct qlink_cmd_chans_info_get *)cmd_skb->data;
++	cmd = (struct qlink_cmd_band_info_get *)cmd_skb->data;
+ 	cmd->band = qband;
+ 
+ 	qtnf_bus_lock(mac->bus);
+@@ -1517,7 +1568,7 @@ int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
+ 		goto out;
+ 	}
+ 
+-	resp = (struct qlink_resp_get_chan_info *)resp_skb->data;
++	resp = (struct qlink_resp_band_info_get *)resp_skb->data;
+ 	if (resp->band != qband) {
+ 		pr_err("MAC%u: reply band %u != cmd band %u\n", mac->macid,
+ 		       resp->band, qband);
+@@ -1525,7 +1576,7 @@ int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
+ 		goto out;
+ 	}
+ 
+-	ret = qtnf_cmd_resp_fill_channels_info(band, resp, info_len);
++	ret = qtnf_cmd_resp_fill_band_info(band, resp, info_len);
+ 
+ out:
+ 	qtnf_bus_unlock(mac->bus);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
+index e87c4a4..d6fe3cc 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
+@@ -30,8 +30,8 @@ int qtnf_cmd_send_add_intf(struct qtnf_vif *vif, enum nl80211_iftype iftype,
+ int qtnf_cmd_send_change_intf_type(struct qtnf_vif *vif,
+ 				   enum nl80211_iftype iftype, u8 *mac_addr);
+ int qtnf_cmd_send_del_intf(struct qtnf_vif *vif);
+-int qtnf_cmd_get_mac_chan_info(struct qtnf_wmac *mac,
+-			       struct ieee80211_supported_band *band);
++int qtnf_cmd_band_info_get(struct qtnf_wmac *mac,
++			   struct ieee80211_supported_band *band);
+ int qtnf_cmd_send_regulatory_config(struct qtnf_wmac *mac, const char *alpha2);
+ int qtnf_cmd_send_config_ap(struct qtnf_vif *vif,
+ 			    const struct cfg80211_ap_settings *s);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index 6a6e5ff..2d2c1ea 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -171,7 +171,7 @@ static int qtnf_mac_init_single_band(struct wiphy *wiphy,
+ 
+ 	wiphy->bands[band]->band = band;
+ 
+-	ret = qtnf_cmd_get_mac_chan_info(mac, wiphy->bands[band]);
++	ret = qtnf_cmd_band_info_get(mac, wiphy->bands[band]);
+ 	if (ret) {
+ 		pr_err("MAC%u: band %u: failed to get chans info: %d\n",
+ 		       mac->macid, band, ret);
+@@ -179,7 +179,6 @@ static int qtnf_mac_init_single_band(struct wiphy *wiphy,
+ 	}
+ 
+ 	qtnf_band_init_rates(wiphy->bands[band]);
+-	qtnf_band_setup_htvht_caps(&mac->macinfo, wiphy->bands[band]);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index 0f58278..dfef7fa 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -168,11 +168,12 @@ struct qlink_auth_encr {
+  * Commands are QLINK messages of type @QLINK_MSG_TYPE_CMD, sent by driver to
+  * wireless network device for processing. Device is expected to send back a
+  * reply message of type &QLINK_MSG_TYPE_CMDRSP, containing at least command
+- * execution status (one of &enum qlink_cmd_result) at least. Reply message
++ * execution status (one of &enum qlink_cmd_result). Reply message
+  * may also contain data payload specific to the command type.
+  *
+- * @QLINK_CMD_CHANS_INFO_GET: for the specified MAC and specified band, get
+- *	number of operational channels and information on each of the channel.
++ * @QLINK_CMD_BAND_INFO_GET: for the specified MAC and specified band, get
++ *	the band's description including number of operational channels and
++ *	info on each channel, HT/VHT capabilities, supported rates etc.
+  *	This command is generic to a specified MAC, interface index must be set
+  *	to QLINK_VIFID_RSVD in command header.
+  * @QLINK_CMD_REG_NOTIFY: notify device about regulatory domain change. This
+@@ -194,7 +195,7 @@ enum qlink_cmd_type {
+ 	QLINK_CMD_CHANGE_INTF		= 0x0017,
+ 	QLINK_CMD_UPDOWN_INTF		= 0x0018,
+ 	QLINK_CMD_REG_NOTIFY		= 0x0019,
+-	QLINK_CMD_CHANS_INFO_GET	= 0x001A,
++	QLINK_CMD_BAND_INFO_GET		= 0x001A,
+ 	QLINK_CMD_CHAN_SWITCH		= 0x001B,
+ 	QLINK_CMD_CHAN_GET		= 0x001C,
+ 	QLINK_CMD_CONFIG_AP		= 0x0020,
+@@ -477,11 +478,11 @@ enum qlink_band {
+ };
+ 
+ /**
+- * struct qlink_cmd_chans_info_get - data for QLINK_CMD_CHANS_INFO_GET command
++ * struct qlink_cmd_band_info_get - data for QLINK_CMD_BAND_INFO_GET command
+  *
+- * @band: a PHY band for which channels info is needed, one of @enum qlink_band
++ * @band: a PHY band for which information is queried, one of @enum qlink_band
+  */
+-struct qlink_cmd_chans_info_get {
++struct qlink_cmd_band_info_get {
+ 	struct qlink_cmd chdr;
+ 	u8 band;
+ } __packed;
+@@ -730,17 +731,19 @@ struct qlink_resp_get_sta_info {
+ } __packed;
+ 
+ /**
+- * struct qlink_resp_get_chan_info - response for QLINK_CMD_CHANS_INFO_GET cmd
++ * struct qlink_resp_band_info_get - response for QLINK_CMD_BAND_INFO_GET cmd
+  *
+- * @band: frequency band to which channels belong to, one of @enum qlink_band.
+- * @num_chans: total number of channels info data contained in reply data.
+- * @info: variable-length channels info.
++ * @band: frequency band that the response describes, one of @enum qlink_band.
++ * @num_chans: total number of channels info TLVs contained in reply.
++ * @num_bitrates: total number of bitrate TLVs contained in reply.
++ * @info: variable-length info portion.
+  */
+-struct qlink_resp_get_chan_info {
++struct qlink_resp_band_info_get {
+ 	struct qlink_resp rhdr;
+ 	u8 band;
+ 	u8 num_chans;
+-	u8 rsvd[2];
++	u8 num_bitrates;
++	u8 rsvd[1];
+ 	u8 info[0];
+ } __packed;
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.9.5
