@@ -1,103 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:27184 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbdJ2Hl1 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46700 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750978AbdJaJqH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 03:41:27 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] Revert "ath10k: fix napi_poll budget overflow"
-Date: Sun, 29 Oct 2017 09:41:16 +0200
-Message-ID: <1509262876-10944-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20171029_084439_684198_16437164)
+        Tue, 31 Oct 2017 05:46:07 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 0/3] mwifiex: fix usage issues with spinlocks
+Date: Tue, 31 Oct 2017 15:12:44 +0530
+Message-ID: <1509442967-14149-1-git-send-email-gbhat@marvell.com> (sfid-20171031_104611_806928_AFBF846A)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thorsten reported on <fa6e3ee2-91b5-a54b-afe3-87f30aac7a48@leemhuis.info> that
-commit c9353bf483d3 made ath10k unstable with QCA6174 on his Dell XPS13 (9360)
-with an error message:
+This patch series fixes issues with usage of few of the spinlocks
+used by the driver. To summarise it fixes below issues:
 
-ath10k_pci 0000:3a:00.0: failed to extract amsdu: -11
+1. Driver does access the elements returned by the list, without
+acquiring the lock.
 
-It only seemed to happen with certain APs, not all, but when it happened the
-only way to get ath10k working was to switch the wifi off and on with a hotkey.
+2. Driver release the lock during iteration of the list and hold
+it back before starting the next iteration.
 
-As this commit made things even worse (a warning vs breaking the whole
-connection) let's revert the commit for now and while the issue is being fixed.
+3. Driver release the lock while the element is still in process.
 
-Link: http://lists.infradead.org/pipermail/ath10k/2017-October/010227.html
-Reported-by: Thorsten Leemhuis <linux@leemhuis.info>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+Karthik Ananthapadmanabha (3):
+  mwifiex: cleanup rx_pkt_lock usage in 11n_rxreorder.c
+  mwifiex: cleanup tx_ba_stream_tbl_lock usage
+  mwifiex: cleanup rx_reorder_tbl_lock usage
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index f068376ec565..7ae3926f4995 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1745,8 +1745,7 @@ static void ath10k_htt_rx_delba(struct ath10k *ar, struct htt_resp *resp)
- }
- 
- static int ath10k_htt_rx_extract_amsdu(struct sk_buff_head *list,
--				       struct sk_buff_head *amsdu,
--				       int budget_left)
-+				       struct sk_buff_head *amsdu)
- {
- 	struct sk_buff *msdu;
- 	struct htt_rx_desc *rxd;
-@@ -1757,9 +1756,8 @@ static int ath10k_htt_rx_extract_amsdu(struct sk_buff_head *list,
- 	if (WARN_ON(!skb_queue_empty(amsdu)))
- 		return -EINVAL;
- 
--	while ((msdu = __skb_dequeue(list)) && budget_left) {
-+	while ((msdu = __skb_dequeue(list))) {
- 		__skb_queue_tail(amsdu, msdu);
--		budget_left--;
- 
- 		rxd = (void *)msdu->data - sizeof(*rxd);
- 		if (rxd->msdu_end.common.info0 &
-@@ -1850,8 +1848,7 @@ static int ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
- 	return num_msdu;
- }
- 
--static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb,
--				    int budget_left)
-+static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct ath10k_htt *htt = &ar->htt;
- 	struct htt_resp *resp = (void *)skb->data;
-@@ -1908,9 +1905,9 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb,
- 	if (offload)
- 		num_msdus = ath10k_htt_rx_h_rx_offload(ar, &list);
- 
--	while (!skb_queue_empty(&list) && budget_left) {
-+	while (!skb_queue_empty(&list)) {
- 		__skb_queue_head_init(&amsdu);
--		ret = ath10k_htt_rx_extract_amsdu(&list, &amsdu, budget_left);
-+		ret = ath10k_htt_rx_extract_amsdu(&list, &amsdu);
- 		switch (ret) {
- 		case 0:
- 			/* Note: The in-order indication may report interleaved
-@@ -1920,7 +1917,6 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb,
- 			 * should still give an idea about rx rate to the user.
- 			 */
- 			num_msdus += skb_queue_len(&amsdu);
--			budget_left -= skb_queue_len(&amsdu);
- 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
- 			ath10k_htt_rx_h_filter(ar, &amsdu, status);
- 			ath10k_htt_rx_h_mpdu(ar, &amsdu, status);
-@@ -2563,8 +2559,7 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
- 		}
- 
- 		spin_lock_bh(&htt->rx_ring.lock);
--		num_rx_msdus = ath10k_htt_rx_in_ord_ind(ar, skb,
--							(budget - quota));
-+		num_rx_msdus = ath10k_htt_rx_in_ord_ind(ar, skb);
- 		spin_unlock_bh(&htt->rx_ring.lock);
- 		if (num_rx_msdus < 0) {
- 			resched_napi = true;
+ drivers/net/wireless/marvell/mwifiex/11n.c         | 45 +++++++++++++---------
+ .../net/wireless/marvell/mwifiex/11n_rxreorder.c   | 42 +++++++++++++-------
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c    |  3 ++
+ 3 files changed, 58 insertions(+), 32 deletions(-)
+
 -- 
-2.7.4
+1.9.1
