@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.14]:64978 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751315AbdJ2UN5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 16:13:57 -0400
-Subject: [PATCH 3/5] wlcore: Return directly after a failed
- ieee80211_beacon_get() in wlcore_set_beacon_template()
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Eyal Reizer <eyalr@ti.com>, Iain Hunter <drhunter95@gmail.com>,
-        James Minor <james.minor@ni.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
-Message-ID: <6ea50cb4-8871-6752-6275-50da266f0e7d@users.sourceforge.net> (sfid-20171029_211415_651273_E0902081)
-Date: Sun, 29 Oct 2017 21:13:44 +0100
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35882 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750978AbdJaJqJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Oct 2017 05:46:09 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        Karthik Ananthapadmanabha <karthida@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 1/3] mwifiex: cleanup rx_pkt_lock usage in 11n_rxreorder.c
+Date: Tue, 31 Oct 2017 15:12:45 +0530
+Message-ID: <1509442967-14149-2-git-send-email-gbhat@marvell.com> (sfid-20171031_104613_624972_14DC6088)
+In-Reply-To: <1509442967-14149-1-git-send-email-gbhat@marvell.com>
+References: <1509442967-14149-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <dc2b8a7c-b4a9-2f92-12b4-a1d0d6911d7c@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 29 Oct 2017 20:00:41 +0100
+From: Karthik Ananthapadmanabha <karthida@marvell.com>
 
-Return directly after a call of the function "ieee80211_beacon_get"
-failed at the beginning.
+Fix the incorrect usage of rx_pkt_lock spinlock. Realsing the
+spinlock while the element is still in process is unsafe. The
+lock must be released only after the element processing is
+complete.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index efea811c1c83..0365b5e40a8d 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4018,10 +4018,8 @@ static int wlcore_set_beacon_template(struct wl1271 *wl,
- 	struct sk_buff *beacon = ieee80211_beacon_get(wl->hw, vif);
- 	u16 tmpl_id;
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+index 1edcdda..0149c4a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+@@ -124,9 +124,10 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 			rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+ 			tbl->rx_reorder_ptr[i] = NULL;
+ 		}
+-		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+ 		if (rx_tmp_ptr)
+ 			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
++
++		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+ 	}
  
--	if (!beacon) {
--		ret = -EINVAL;
--		goto out;
--	}
-+	if (!beacon)
-+		return -EINVAL;
+ 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+@@ -167,8 +168,8 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 		}
+ 		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+ 		tbl->rx_reorder_ptr[i] = NULL;
+-		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+ 		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
++		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+ 	}
  
- 	wl1271_debug(DEBUG_MASTER, "beacon updated");
- 
+ 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
 -- 
-2.14.3
+1.9.1
