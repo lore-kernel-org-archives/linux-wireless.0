@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:51653 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751583AbdJROTD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 10:19:03 -0400
-Received: by mail-it0-f66.google.com with SMTP id o135so6130650itb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Oct 2017 07:19:03 -0700 (PDT)
+Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751776AbdJaBFC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 21:05:02 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 0/9] qtnfmac: allow to configure channel, BW, HT/VHT caps
+Date: Mon, 30 Oct 2017 18:04:46 -0700
+Message-Id: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020517_783548_4962A090)
 MIME-Version: 1.0
-In-Reply-To: <1508322566.2674.17.camel@sipsolutions.net>
-References: <20171017202545.GA115810@beast> <1508322566.2674.17.camel@sipsolutions.net>
-From: Kees Cook <keescook@chromium.org>
-Date: Wed, 18 Oct 2017 07:19:01 -0700
-Message-ID: <CAGXu5jKY5rTuR_w=zj5Bz06f9OrW35eD4sYfkai2Gac_edG4ag@mail.gmail.com> (sfid-20171018_161923_563369_0F3AFE71)
-Subject: Re: [PATCH] mac80211: aggregation: Convert timers to use timer_setup()
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 18, 2017 at 3:29 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> This has been the least trivial timer conversion yet. Given the use of
->> RCU and other things I may not even know about, I'd love to get a close
->> look at this. I *think* this is correct, as it will re-lookup the tid
->> entries when firing the timer.
->
-> I'm not really sure why you're doing the lookup again? That seems
-> pointless, since you already have the right structure, and already rely
-> on it being valid. You can't really get a new struct assigned to the
-> same TID without the old one being destroyed.
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-I couldn't tell what the lifetime expectation was, so I left the
-re-lookup. I assumed it was possible to have a timer fire after the
-structure had been removed from the station structure.
+This patchset has a goal to make operational parameters (channel, BW,
+HT/VHT capabilities) configuration possible for qtnfmac driver.
 
--Kees
+It was part of bigger changeset when it was V1, rest are already applied.
+
+Changelist V1->V2:
+PATCH 8:
+  - fix a typo causing initialization of HT capabilities with VHT data.
+
+Igor Mitsyanko (9):
+  qtnfmac: use per-band HT/VHT info from wireless device
+  qtnfmac: initialize HT/VHT caps "can override" masks
+  qtnfmac: get rid of PHYMODE capabilities flags
+  qtnfmac: extend "IE set" TLV to include frame type info
+  qtnfmac: SCAN results: retreive frame type information from "IE set"
+    TLV
+  qtnfmac: convert "Append IEs" command to QTN_TLV_ID_IE_SET usage
+  qtnfmac: configure and start AP interface with a single command
+  qtnfmac: include HTCAP and VHTCAP into config AP command
+  qtnfmac: pass all CONNECT cmd params to wireless card for processing
+
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |  64 +----
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 276 +++++++++++++++-------
+ drivers/net/wireless/quantenna/qtnfmac/commands.h |   9 +-
+ drivers/net/wireless/quantenna/qtnfmac/core.c     |   3 +-
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |   5 +-
+ drivers/net/wireless/quantenna/qtnfmac/event.c    |  83 ++++---
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 138 ++++++-----
+ 7 files changed, 330 insertions(+), 248 deletions(-)
 
 -- 
-Kees Cook
-Pixel Security
+2.9.5
