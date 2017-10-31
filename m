@@ -1,69 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3852 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751114AbdJDQPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2017 12:15:34 -0400
-Message-ID: <1507133714.908.90.camel@intel.com> (sfid-20171004_181622_307275_B7C30C82)
-Subject: Re: [PATCH 1/3] wireless: iwlwifi: use bool instead of int
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Christoph =?ISO-8859-1?Q?B=F6hmwalder?=
-        <christoph@boehmwalder.at>, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 04 Oct 2017 19:15:14 +0300
-In-Reply-To: <20171004155700.18048-2-christoph@boehmwalder.at>
-References: <20171004155700.18048-1-christoph@boehmwalder.at>
-         <20171004155700.18048-2-christoph@boehmwalder.at>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751776AbdJaBFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 21:05:05 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 2/9] qtnfmac: initialize HT/VHT caps "can override" masks
+Date: Mon, 30 Oct 2017 18:04:48 -0700
+Message-Id: <20171031010455.27772-3-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020519_366268_237D0170)
+In-Reply-To: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
+References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-10-04 at 17:56 +0200, Christoph Böhmwalder wrote:
-> Change a usage of int in a boolean context to use the bool type
-> instead, as it
-> makes the intent of the function clearer and helps clarify its
-> semantics.
-> 
-> Also eliminate the if/else and just return the boolean result
-> directly,
-> making the code more readable.
-> 
-> Signed-off-by: Christoph Böhmwalder <christoph@boehmwalder.at>
-> ---
->  drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 12 +++++-------
->  1 file changed, 5 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> index b7cd813ba70f..0eb815ae97e8 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
-> @@ -267,14 +267,12 @@ int iwl_phy_db_set_section(struct iwl_phy_db
-> *phy_db,
->  }
->  IWL_EXPORT_SYMBOL(iwl_phy_db_set_section);
->  
-> -static int is_valid_channel(u16 ch_id)
-> +static bool is_valid_channel(u16 ch_id)
->  {
-> -	if (ch_id <= 14 ||
-> -	    (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
-> -	    (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
-> -	    (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1))
-> -		return 1;
-> -	return 0;
-> +	return (ch_id <= 14 ||
-> +	       (36 <= ch_id && ch_id <= 64 && ch_id % 4 == 0) ||
-> +	       (100 <= ch_id && ch_id <= 140 && ch_id % 4 == 0) ||
-> +	       (145 <= ch_id && ch_id <= 165 && ch_id % 4 == 1));
->  }
->  
->  static u8 ch_id_to_ch_index(u16 ch_id)
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-This actually makes some sense, and I would probably apply it if it
-were part of a patchset that actually does something useful.
+Information on which HT/VHT capabilities can be overridden is reported
+per-MAC by wireless device.
 
---
-Luca.
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 2 ++
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 7 ++++---
+ drivers/net/wireless/quantenna/qtnfmac/core.h     | 4 ++--
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 8 ++++----
+ 4 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 2f60331..b6a2540 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -925,6 +925,8 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
+ 	wiphy->available_antennas_rx = mac->macinfo.num_rx_chain;
+ 
+ 	wiphy->max_ap_assoc_sta = mac->macinfo.max_ap_assoc_sta;
++	wiphy->ht_capa_mod_mask = &mac->macinfo.ht_cap_mod_mask;
++	wiphy->vht_capa_mod_mask = &mac->macinfo.vht_cap_mod_mask;
+ 
+ 	ether_addr_copy(wiphy->perm_addr, mac->macaddr);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index a7422c5..35ff7e8 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -1110,9 +1110,10 @@ qtnf_cmd_resp_proc_mac_info(struct qtnf_wmac *mac,
+ 			qlink_chan_width_mask_to_nl(le16_to_cpu(
+ 					resp_info->radar_detect_widths));
+ 
+-	memcpy(&mac_info->ht_cap, &resp_info->ht_cap, sizeof(mac_info->ht_cap));
+-	memcpy(&mac_info->vht_cap, &resp_info->vht_cap,
+-	       sizeof(mac_info->vht_cap));
++	memcpy(&mac_info->ht_cap_mod_mask, &resp_info->ht_cap_mod_mask,
++	       sizeof(mac_info->ht_cap_mod_mask));
++	memcpy(&mac_info->vht_cap_mod_mask, &resp_info->vht_cap_mod_mask,
++	       sizeof(mac_info->vht_cap_mod_mask));
+ }
+ 
+ static void qtnf_cmd_resp_band_fill_htcap(const u8 *info,
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index da2c24e..74b94ce 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -103,8 +103,8 @@ struct qtnf_mac_info {
+ 	u8 sretry_limit;
+ 	u8 coverage_class;
+ 	u8 radar_detect_widths;
+-	struct ieee80211_ht_cap ht_cap;
+-	struct ieee80211_vht_cap vht_cap;
++	struct ieee80211_ht_cap ht_cap_mod_mask;
++	struct ieee80211_vht_cap vht_cap_mod_mask;
+ 	struct ieee80211_iface_limit *limits;
+ 	size_t n_limits;
+ };
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index dfef7fa..b2c4e27 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -636,8 +636,8 @@ struct qlink_resp {
+  *	specified WMAC).
+  * @num_tx_chain: Number of transmit chains used by WMAC.
+  * @num_rx_chain: Number of receive chains used by WMAC.
+- * @vht_cap: VHT capabilities.
+- * @ht_cap: HT capabilities.
++ * @vht_cap_mod_mask: mask specifying which VHT capabilities can be altered.
++ * @ht_cap_mod_mask: mask specifying which HT capabilities can be altered.
+  * @bands_cap: wireless bands WMAC can operate in, bitmap of &enum qlink_band.
+  * @phymode_cap: PHY modes WMAC can operate in, bitmap of &enum qlink_phy_mode.
+  * @max_ap_assoc_sta: Maximum number of associations supported by WMAC.
+@@ -649,8 +649,8 @@ struct qlink_resp_get_mac_info {
+ 	u8 dev_mac[ETH_ALEN];
+ 	u8 num_tx_chain;
+ 	u8 num_rx_chain;
+-	struct ieee80211_vht_cap vht_cap;
+-	struct ieee80211_ht_cap ht_cap;
++	struct ieee80211_vht_cap vht_cap_mod_mask;
++	struct ieee80211_ht_cap ht_cap_mod_mask;
+ 	u8 bands_cap;
+ 	u8 phymode_cap;
+ 	__le16 max_ap_assoc_sta;
+-- 
+2.9.5
