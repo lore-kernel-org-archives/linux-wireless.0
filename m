@@ -1,75 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:48709 "EHLO
-        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750962AbdJBEV6 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39370 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751366AbdJaPek (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Oct 2017 00:21:58 -0400
-Received: by mail-oi0-f50.google.com with SMTP id 125so7290782oie.5
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Oct 2017 21:21:58 -0700 (PDT)
+        Tue, 31 Oct 2017 11:34:40 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "James Cao" <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: pull-request mwifiex-firmware 2017-10-31
+Date: Tue, 31 Oct 2017 15:34:34 +0000
+Message-ID: <99832be6bb804911a374c85d1865d0b2@SC-EXCH02.marvell.com> (sfid-20171031_163443_135416_AE328D42)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAFv23Qn4OMuHaSA6UG+Q7L1sTt+ZO8T-JYVaBM1FxZtGNxOhdQ@mail.gmail.com>
-References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
- <1506408099-18488-2-git-send-email-acelan.kao@canonical.com>
- <20170926064456.GA28611@infradead.org> <CAFv23Qm9kZLSqJ_BP1D7mWCxekq0nt3S8onT1ckH-AoHDBUDzw@mail.gmail.com>
- <20170926140413.GA19977@infradead.org> <878th14kde.fsf@kamboji.qca.qualcomm.com>
- <CAFv23Qn4OMuHaSA6UG+Q7L1sTt+ZO8T-JYVaBM1FxZtGNxOhdQ@mail.gmail.com>
-From: Daniel Drake <drake@endlessm.com>
-Date: Mon, 2 Oct 2017 12:21:57 +0800
-Message-ID: <CAD8Lp46mdgbfCGY_i=N7FB1rMfL0KA0VFQxJESxshe4Cn6k4+Q@mail.gmail.com> (sfid-20171002_062036_885348_628B8FD7)
-Subject: Re: [PATCH 2/6] ath9k: add a quirk to set use_msi automatically
-To: AceLan Kao <acelan.kao@canonical.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi AceLan,
-
-On Thu, Sep 28, 2017 at 4:28 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
-> Hi Daniel,
->
-> I've tried your patch, but it doesn't work for me.
-> Wifi can scan AP, but can't get connected.
-
-Can you please clarify which patch(es) you have tried?
-
-This is the base patch which adds the infrastructure to request
-specific MSI IRQ vectors:
-https://marc.info/?l=linux-wireless&m=150631274108016&w=2
-
-This is the ath9k MSI patch which makes use of that:
-https://github.com/endlessm/linux/commit/739c7a924db8f4434a9617657
-
-If you were already able to use ath9k MSI interrupts without specific
-consideration for which MSI vector numbers were used, these are the
-possible explanations that spring to mind:
-
-1. You got lucky and it picked a vector number that is 4-aligned. You
-can check this in the "lspci -vvv" output. You'll see something like:
-Capabilities: [50] MSI: Enable+ Count=1/4 Maskable+ 64bit+
-        Address: 00000000fee0300c  Data: 4142
-The lower number is the vector number. In my example here 0x42 (66) is
-not 4-aligned so the failure condition will be hit.
-
-2. You are using interrupt remapping, which I suspect may provide a
-high likelihood of MSI interrupt vectors being 4-aligned. See if
-/proc/interrupts shows the IRQ type as IR-PCI-MSI
-Unfortunately interrupt remapping is not available here,
-https://lists.linuxfoundation.org/pipermail/iommu/2017-August/023717.html
-
-3. My assumption that all ath9k hardware corrupts the MSI vector
-number could wrong. However we've seen this on different wifi modules
-in laptops produced by different OEMs and ODMs, so it seems to be a
-somewhat widespread problem at least.
-
-4. My assumption that ath9k hardware is corrupting the MSI vector
-number could be wrong; maybe another component is to blame, could it
-be a BIOS issue? Admittedly I don't really know how I can debug the
-layers inbetween seeing the MSI Message Data value disagree with the
-vector number being handled inside do_IRQ().
-
-Daniel
+VGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCBlMDQ5NGU5NTE5MmFjNTMyOTk4OWY0
+ZDEyOGNmOTVjNDE3ZDYxOGNjOg0KDQogIGxpbnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQ
+Q0llLVVTQjg5OTcgZmlybXdhcmUgaW1hZ2UgKDIwMTctMDgtMDEgMjM6NTU6MzAgKzA1MzApDQoN
+CmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KDQogIGdpdDovL2dpdC5t
+YXJ2ZWxsLmNvbS9td2lmaWV4LWZpcm13YXJlLmdpdA0KDQpmb3IgeW91IHRvIGZldGNoIGNoYW5n
+ZXMgdXAgdG8gZGIzZTE4NTVlYTQ2YmMxYTIyYjhiYmVjYjQwMGMyOTA5YzU1MWNmNToNCg0KICBs
+aW51eC1maXJtd2FyZTogdXBkYXRlIE1hcnZlbGwgUENJZS1VU0I4OTk3IGZpcm13YXJlIGltYWdl
+ICgyMDE3LTEwLTMxIDIwOjQ5OjUzICswNTMwKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQpHYW5hcGF0aGkgQmhhdCAo
+MSk6DQogICAgICBsaW51eC1maXJtd2FyZTogdXBkYXRlIE1hcnZlbGwgUENJZS1VU0I4OTk3IGZp
+cm13YXJlIGltYWdlDQoNCiBXSEVOQ0UgICAgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQ0K
+IG1ydmwvcGNpZXVzYjg5OTdfY29tYm9fdjQuYmluIHwgQmluIDYyMDgwMCAtPiA2MjI1MzIgYnl0
+ZXMNCiAyIGZpbGVzIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo=
