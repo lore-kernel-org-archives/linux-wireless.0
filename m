@@ -1,111 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752728AbdJaBFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2017 21:05:06 -0400
-From: igor.mitsyanko.os@quantenna.com
-To: linux-wireless@vger.kernel.org
-Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
-        johannes@sipsolutions.net
-Subject: [PATCH V2 3/9] qtnfmac: get rid of PHYMODE capabilities flags
-Date: Mon, 30 Oct 2017 18:04:49 -0700
-Message-Id: <20171031010455.27772-4-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020520_280475_BF7D7CB2)
-In-Reply-To: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
-References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35890 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751691AbdJaJqL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Oct 2017 05:46:11 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        Karthik Ananthapadmanabha <karthida@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 2/3] mwifiex: cleanup tx_ba_stream_tbl_lock usage
+Date: Tue, 31 Oct 2017 15:12:46 +0530
+Message-ID: <1509442967-14149-3-git-send-email-gbhat@marvell.com> (sfid-20171031_104618_026012_06FA1F07)
+In-Reply-To: <1509442967-14149-1-git-send-email-gbhat@marvell.com>
+References: <1509442967-14149-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+From: Karthik Ananthapadmanabha <karthida@marvell.com>
 
-Supported WiFi operation modes are now identified per-band based on
-HT/VHT capabilities of each band.
+Fix the incorrect usage of tx_ba_stream_tbl_lock spinlock:
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+1. We shouldn't access the fields of the elements returned by
+mwifiex_get_ba_status() and mwifiex_get_ba_tbl(), after we have
+released the spin lock. To fix this, aquire the spinlock before
+calling these functions and release the lock only after
+processing the correspnding element is complete.
+
+2. Move tx_ba_stream_tbl_lock out of mwifiex_del_ba_tbl(), to
+avoid recursive spinlock. Acquire the spinlock explicitly, before
+calling mwifiex_del_ba_tbl().
+
+Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |  3 ---
- drivers/net/wireless/quantenna/qtnfmac/commands.c |  1 -
- drivers/net/wireless/quantenna/qtnfmac/core.h     |  1 -
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 11 ++---------
- 4 files changed, 2 insertions(+), 14 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/11n.c         | 45 +++++++++++++---------
+ .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |  3 --
+ 2 files changed, 26 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index b6a2540..1a0c538 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -891,9 +891,6 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
- 	if (ret)
- 		goto out;
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
+index 8772e39..38d7b48 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n.c
+@@ -77,24 +77,19 @@ int mwifiex_fill_cap_info(struct mwifiex_private *priv, u8 radio_type,
  
--	pr_info("MAC%u: phymode=%#x radar=%#x\n", mac->macid,
--		mac->macinfo.phymode_cap, mac->macinfo.radar_detect_widths);
--
- 	wiphy->frag_threshold = mac->macinfo.frag_thr;
- 	wiphy->rts_threshold = mac->macinfo.rts_thr;
- 	wiphy->retry_short = mac->macinfo.sretry_limit;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 35ff7e8..503187a 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -1090,7 +1090,6 @@ qtnf_cmd_resp_proc_mac_info(struct qtnf_wmac *mac,
- 	mac_info = &mac->macinfo;
+ /*
+  * This function returns the pointer to an entry in BA Stream
+- * table which matches the requested BA status.
++ * table which matches the requested BA status. The caller
++ * must hold tx_ba_stream_tbl_lock before calling this function.
+  */
+ static struct mwifiex_tx_ba_stream_tbl *
+ mwifiex_get_ba_status(struct mwifiex_private *priv,
+ 		      enum mwifiex_ba_status ba_status)
+ {
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tsr_tbl;
+-	unsigned long flags;
  
- 	mac_info->bands_cap = resp_info->bands_cap;
--	mac_info->phymode_cap = resp_info->phymode_cap;
- 	memcpy(&mac_info->dev_mac, &resp_info->dev_mac,
- 	       sizeof(mac_info->dev_mac));
+-	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 	list_for_each_entry(tx_ba_tsr_tbl, &priv->tx_ba_stream_tbl_ptr, list) {
+-		if (tx_ba_tsr_tbl->ba_status == ba_status) {
+-			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
+-					       flags);
++		if (tx_ba_tsr_tbl->ba_status == ba_status)
+ 			return tx_ba_tsr_tbl;
+-		}
+ 	}
+-	spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
+ 	return NULL;
+ }
  
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index 74b94ce..1b7bc03 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -92,7 +92,6 @@ struct qtnf_vif {
+@@ -114,9 +109,11 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tbl;
+ 	struct host_cmd_ds_11n_delba *del_ba = &resp->params.del_ba;
+ 	uint16_t del_ba_param_set = le16_to_cpu(del_ba->del_ba_param_set);
++	unsigned long flags;
  
- struct qtnf_mac_info {
- 	u8 bands_cap;
--	u8 phymode_cap;
- 	u8 dev_mac[ETH_ALEN];
- 	u8 num_tx_chain;
- 	u8 num_rx_chain;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index b2c4e27..c558d81 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -74,12 +74,6 @@ enum qlink_hw_capab {
- 	QLINK_HW_CAPAB_STA_INACT_TIMEOUT = BIT(1),
- };
+ 	tid = del_ba_param_set >> DELBA_TID_POS;
+ 	if (del_ba->del_result == BA_RESULT_SUCCESS) {
++		spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 		mwifiex_del_ba_tbl(priv, tid, del_ba->peer_mac_addr,
+ 				   TYPE_DELBA_SENT,
+ 				   INITIATOR_BIT(del_ba_param_set));
+@@ -125,6 +122,7 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
+ 		if (tx_ba_tbl)
+ 			mwifiex_send_addba(priv, tx_ba_tbl->tid,
+ 					   tx_ba_tbl->ra);
++		spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
+ 	} else { /*
+ 		  * In case of failure, recreate the deleted stream in case
+ 		  * we initiated the ADDBA
+@@ -135,11 +133,13 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
+ 		mwifiex_create_ba_tbl(priv, del_ba->peer_mac_addr, tid,
+ 				      BA_SETUP_INPROGRESS);
  
--enum qlink_phy_mode {
--	QLINK_PHYMODE_BGN	= BIT(0),
--	QLINK_PHYMODE_AN	= BIT(1),
--	QLINK_PHYMODE_AC	= BIT(2),
--};
--
- enum qlink_iface_type {
- 	QLINK_IFTYPE_AP		= 1,
- 	QLINK_IFTYPE_STATION	= 2,
-@@ -639,7 +633,6 @@ struct qlink_resp {
-  * @vht_cap_mod_mask: mask specifying which VHT capabilities can be altered.
-  * @ht_cap_mod_mask: mask specifying which HT capabilities can be altered.
-  * @bands_cap: wireless bands WMAC can operate in, bitmap of &enum qlink_band.
-- * @phymode_cap: PHY modes WMAC can operate in, bitmap of &enum qlink_phy_mode.
-  * @max_ap_assoc_sta: Maximum number of associations supported by WMAC.
-  * @radar_detect_widths: bitmask of channels BW for which WMAC can detect radar.
-  * @var_info: variable-length WMAC info data.
-@@ -651,10 +644,10 @@ struct qlink_resp_get_mac_info {
- 	u8 num_rx_chain;
- 	struct ieee80211_vht_cap vht_cap_mod_mask;
- 	struct ieee80211_ht_cap ht_cap_mod_mask;
--	u8 bands_cap;
--	u8 phymode_cap;
- 	__le16 max_ap_assoc_sta;
- 	__le16 radar_detect_widths;
-+	u8 bands_cap;
-+	u8 rsvd[1];
- 	u8 var_info[0];
- } __packed;
++		spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 		tx_ba_tbl = mwifiex_get_ba_status(priv, BA_SETUP_INPROGRESS);
+ 
+ 		if (tx_ba_tbl)
+ 			mwifiex_del_ba_tbl(priv, tx_ba_tbl->tid, tx_ba_tbl->ra,
+ 					   TYPE_DELBA_SENT, true);
++		spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
+ 	}
+ 
+ 	return 0;
+@@ -160,6 +160,7 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &resp->params.add_ba_rsp;
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tbl;
+ 	struct mwifiex_ra_list_tbl *ra_list;
++	unsigned long flags;
+ 	u16 block_ack_param_set = le16_to_cpu(add_ba_rsp->block_ack_param_set);
+ 
+ 	add_ba_rsp->ssn = cpu_to_le16((le16_to_cpu(add_ba_rsp->ssn))
+@@ -176,14 +177,17 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 			ra_list->ba_status = BA_SETUP_NONE;
+ 			ra_list->amsdu_in_ampdu = false;
+ 		}
++		spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 		mwifiex_del_ba_tbl(priv, tid, add_ba_rsp->peer_mac_addr,
+ 				   TYPE_DELBA_SENT, true);
++		spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
+ 		if (add_ba_rsp->add_rsp_result != BA_RESULT_TIMEOUT)
+ 			priv->aggr_prio_tbl[tid].ampdu_ap =
+ 				BA_STREAM_NOT_ALLOWED;
+ 		return 0;
+ 	}
+ 
++	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 	tx_ba_tbl = mwifiex_get_ba_tbl(priv, tid, add_ba_rsp->peer_mac_addr);
+ 	if (tx_ba_tbl) {
+ 		mwifiex_dbg(priv->adapter, EVENT, "info: BA stream complete\n");
+@@ -201,6 +205,7 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 	} else {
+ 		mwifiex_dbg(priv->adapter, ERROR, "BA stream not created\n");
+ 	}
++	spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
+ 
+ 	return 0;
+ }
+@@ -501,24 +506,20 @@ void mwifiex_11n_delete_all_tx_ba_stream_tbl(struct mwifiex_private *priv)
+ 
+ /*
+  * This function returns the pointer to an entry in BA Stream
+- * table which matches the given RA/TID pair.
++ * table which matches the given RA/TID pair. The caller must
++ * hold tx_ba_stream_tbl_lock before calling this function.
+  */
+ struct mwifiex_tx_ba_stream_tbl *
+ mwifiex_get_ba_tbl(struct mwifiex_private *priv, int tid, u8 *ra)
+ {
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tsr_tbl;
+-	unsigned long flags;
+ 
+-	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 	list_for_each_entry(tx_ba_tsr_tbl, &priv->tx_ba_stream_tbl_ptr, list) {
+ 		if (ether_addr_equal_unaligned(tx_ba_tsr_tbl->ra, ra) &&
+-		    tx_ba_tsr_tbl->tid == tid) {
+-			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
+-					       flags);
++		    tx_ba_tsr_tbl->tid == tid)
+ 			return tx_ba_tsr_tbl;
+-		}
+ 	}
+-	spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
++
+ 	return NULL;
+ }
+ 
+@@ -534,11 +535,15 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
+ 	unsigned long flags;
+ 	int tid_down;
+ 
++	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 	if (!mwifiex_get_ba_tbl(priv, tid, ra)) {
+ 		new_node = kzalloc(sizeof(struct mwifiex_tx_ba_stream_tbl),
+ 				   GFP_ATOMIC);
+-		if (!new_node)
++		if (!new_node) {
++			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
++					       flags);
+ 			return;
++		}
+ 
+ 		tid_down = mwifiex_wmm_downgrade_tid(priv, tid);
+ 		ra_list = mwifiex_wmm_get_ralist_node(priv, tid_down, ra);
+@@ -552,10 +557,9 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
+ 		new_node->ba_status = ba_status;
+ 		memcpy(new_node->ra, ra, ETH_ALEN);
+ 
+-		spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 		list_add_tail(&new_node->list, &priv->tx_ba_stream_tbl_ptr);
+-		spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
+ 	}
++	spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
+ }
+ 
+ /*
+@@ -680,11 +684,14 @@ void mwifiex_11n_delete_ba_stream(struct mwifiex_private *priv, u8 *del_ba)
+ 		(struct host_cmd_ds_11n_delba *) del_ba;
+ 	uint16_t del_ba_param_set = le16_to_cpu(cmd_del_ba->del_ba_param_set);
+ 	int tid;
++	unsigned long flags;
+ 
+ 	tid = del_ba_param_set >> DELBA_TID_POS;
+ 
++	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 	mwifiex_del_ba_tbl(priv, tid, cmd_del_ba->peer_mac_addr,
+ 			   TYPE_DELBA_RECEIVE, INITIATOR_BIT(del_ba_param_set));
++	spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+index 0149c4a..4631bc2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+@@ -682,7 +682,6 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 	struct mwifiex_tx_ba_stream_tbl *ptx_tbl;
+ 	struct mwifiex_ra_list_tbl *ra_list;
+ 	u8 cleanup_rx_reorder_tbl;
+-	unsigned long flags;
+ 	int tid_down;
+ 
+ 	if (type == TYPE_DELBA_RECEIVE)
+@@ -716,9 +715,7 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 			ra_list->amsdu_in_ampdu = false;
+ 			ra_list->ba_status = BA_SETUP_NONE;
+ 		}
+-		spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 		mwifiex_11n_delete_tx_ba_stream_tbl_entry(priv, ptx_tbl);
+-		spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
+ 	}
+ }
  
 -- 
-2.9.5
+1.9.1
