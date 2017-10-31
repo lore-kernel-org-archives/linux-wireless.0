@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60406 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750835AbdJWU7E (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:41645 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752126AbdJaA3J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2017 16:59:04 -0400
-Subject: Re: A good way to get CSI info to user-space?
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <6f9182c4-cff9-066c-173a-00d09af7c903@candelatech.com>
- <1508790635.2639.24.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <76d6a1ad-2dc4-0542-808f-4be459c3508a@candelatech.com> (sfid-20171023_225931_900811_EBCCB811)
-Date: Mon, 23 Oct 2017 13:59:01 -0700
+        Mon, 30 Oct 2017 20:29:09 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] mac80211: Update last_ack status for all except probing frames
+Date: Mon, 30 Oct 2017 17:29:06 -0700
+Message-ID: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20171031_012913_483741_62CBEDD5)
 MIME-Version: 1.0
-In-Reply-To: <1508790635.2639.24.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/23/2017 01:30 PM, Johannes Berg wrote:
-> Hi,
->
->> I have been poking at ath10k to get some CSI reporting working.
->> The CSI reports are a bit over 2k bytes in length, and they could
->> happen quite often.  As far as I can tell, there is no good way in
->> the kernel to make this available.
->>
->> I was thinking maybe a callback into the mac80211 stack, which would
->> then send a netlink event might be a useful way to implement this?
->
-> The CSI data has variable length [1] but it's fundamentally always tied
-> to a specific frame and as such we've always attached it to that frame
-> using a radiotap vendor namespace.
->
-> You can easily implement that in a mac80211 driver since it has support
-> for that via RX_FLAG_RADIOTAP_VENDOR_DATA and the associated struct
-> ieee80211_vendor_radiotap that you put into the skb's head.
->
-> Why should anything else be needed?
+Update last_ack status for all except station probing frames
+(i.e null data). Otherwise the station inactivity duration is
+cleared whenever AP is checking presence of idle stations by sending
+null data frame for every inactive threshold (ap_max_inactivity).
+Though the station is idle for longer period, the inactive
+time in station dump is restricted ap_max_inactivity threshold.
 
-So this would only show up in user-space in something like a pkt-capture?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ net/mac80211/status.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-Thanks,
-Ben
-
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index da7427a41529..24ce416f74cd 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -185,10 +185,21 @@ static void ieee80211_check_pending_bar(struct sta_info *sta, u8 *addr, u8 tid)
+ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ {
+ 	struct ieee80211_mgmt *mgmt = (void *) skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
+-	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++	/* Update last_ack status for all except station probing frames
++	 * (i.e null data). Otherwise the station inactivity duration is cleared
++	 * whenever AP is checking presence of idle stations by sending
++	 * null data frame for every inactive threshold (ap_max_inactivity).
++	 * Though the station is idle for longer period, the inactive time in
++	 * station dump is restricted ap_max_inactivity threshold.
++	 */
++	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS) &&
++	    !((info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) &&
++	      (ieee80211_is_nullfunc(mgmt->frame_control) ||
++	       ieee80211_is_qos_nullfunc(mgmt->frame_control))))
+ 		sta->status_stats.last_ack = jiffies;
+ 
+ 	if (ieee80211_is_data_qos(mgmt->frame_control)) {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
