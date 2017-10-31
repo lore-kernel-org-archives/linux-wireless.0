@@ -1,60 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:51480 "EHLO
-        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751609AbdJRVCR (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:50825 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751564AbdJaH3u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2017 17:02:17 -0400
-Received: by mail-io0-f169.google.com with SMTP id b186so7712178iof.8
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Oct 2017 14:02:17 -0700 (PDT)
+        Tue, 31 Oct 2017 03:29:50 -0400
+Received: by mail-wm0-f41.google.com with SMTP id s66so20214530wmf.5
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Oct 2017 00:29:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1508359811.2674.56.camel@sipsolutions.net>
-References: <20171017202545.GA115810@beast> <1508322566.2674.17.camel@sipsolutions.net>
- <CAGXu5jKY5rTuR_w=zj5Bz06f9OrW35eD4sYfkai2Gac_edG4ag@mail.gmail.com> <1508359811.2674.56.camel@sipsolutions.net>
-From: Kees Cook <keescook@chromium.org>
-Date: Wed, 18 Oct 2017 14:02:15 -0700
-Message-ID: <CAGXu5jLC4FAXvHxn+N1d_6nSz-MnBAPMeNFKbt4W+fERAxTHZg@mail.gmail.com> (sfid-20171018_230305_014291_0365D149)
-Subject: Re: [PATCH] mac80211: aggregation: Convert timers to use timer_setup()
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <1509434718.4492.195.camel@coelho.fi>
+References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
+ <1509434718.4492.195.camel@coelho.fi>
+From: Chris Chiu <chiu@endlessm.com>
+Date: Tue, 31 Oct 2017 15:29:48 +0800
+Message-ID: <CAB4CAwd1yQFmE6fFa5d5NiAj1-aty=w-etTkBBYGUqrcByk2ow@mail.gmail.com> (sfid-20171031_082956_526209_14437E45)
+Subject: Re: Need support for Intel new wifi module 9462NGW
+To: Luca Coelho <luca@coelho.fi>
+Cc: johannes.berg@intel.com, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org,
+        Linux Upstreaming Team <linux@endlessm.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 18, 2017 at 1:50 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2017-10-18 at 07:19 -0700, Kees Cook wrote:
->> On Wed, Oct 18, 2017 at 3:29 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > > This has been the least trivial timer conversion yet. Given the use of
->> > > RCU and other things I may not even know about, I'd love to get a close
->> > > look at this. I *think* this is correct, as it will re-lookup the tid
->> > > entries when firing the timer.
->> >
->> > I'm not really sure why you're doing the lookup again? That seems
->> > pointless, since you already have the right structure, and already rely
->> > on it being valid. You can't really get a new struct assigned to the
->> > same TID without the old one being destroyed.
->>
->> I couldn't tell what the lifetime expectation was, so I left the
->> re-lookup. I assumed it was possible to have a timer fire after the
->> structure had been removed from the station structure.
+Great. Thanks.
+
+On Tue, Oct 31, 2017 at 3:25 PM, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2017-10-31 at 12:13 +0800, Chris Chiu wrote:
+>> Hi,
 >
-> Oh, right, I guess that would've been possible in theory. It's not
-> actually possible though since the aggregation sessions can't live on
-> without a station, so I've already made a follow-up patch to remove the
-> indirection.
-
-Okay, cool, thanks.
-
-It seems like I have a similar case in the iwlwifi driver too, but
-it's different enough that I'm not sure about that one either. I'll
-send that when I've got it ready.
-
--Kees
-
--- 
-Kees Cook
-Pixel Security
+> Hi Chris,
+>
+>
+>>     We just have the Intel new WiFi module 9462NGW from Acer and
+>> tried
+>> to verify if it works on the latest linux kernel. Unfortunately it
+>> seems not even detected because the PCI ID seems unknown to the
+>> iwlwifi driver. Then I add the following line to
+>> drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+>> iwl_hw_card_ids
+>> {IWL_PCI_DEVICE(0x31DC, 0x02A4, iwl9460_2ac_cfg)},
+>>
+>> dmesg shows the following
+>>
+>> [   12.994422] iwlwifi 0000:00:0c.0: Direct firmware load for
+>> iwlwifi-9260-th-b0-jf-b0-33.ucode failed with error -2
+>> [   12.994442] iwlwifi 0000:00:0c.0: Direct firmware load for
+>> iwlwifi-9260-th-b0-jf-b0-32.ucode failed with error -2
+>> [   12.994456] iwlwifi 0000:00:0c.0: Direct firmware load for
+>> iwlwifi-9260-th-b0-jf-b0-31.ucode failed with error -2
+>> [   12.994470] iwlwifi 0000:00:0c.0: Direct firmware load for
+>> iwlwifi-9260-th-b0-jf-b0-30.ucode failed with error -2
+>> [   12.994473] iwlwifi 0000:00:0c.0: no suitable firmware found!
+>> [   12.994477] iwlwifi 0000:00:0c.0: minimum version required:
+>> iwlwifi-9260-th-b0-jf-b0-30
+>> [   12.994479] iwlwifi 0000:00:0c.0: maximum version supported:
+>> iwlwifi-9260-th-b0-jf-b0-33
+>>
+>>
+>>
+>> I'm not able to find these missing files in linux-firmware.git and
+>> any
+>> other possible place. What's the status of supporting this 9462NGW?
+>> Please let me know if any more information required. Thanks
+>
+> Unfortunately we have not published the firmware for this NIC yet.
+> I'll try to get an approval to publish it today (or latest by the end
+> of the week) and I'll let you know.
+>
+> --
+> Cheers,
+> Luca.
