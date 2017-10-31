@@ -1,67 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52544 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751477AbdJYODt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2017 10:03:49 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-10-25
-Date: Wed, 25 Oct 2017 16:03:42 +0200
-Message-Id: <20171025140343.21477-1-johannes@sipsolutions.net> (sfid-20171025_160506_488020_A7D659C8)
+Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751937AbdJaBFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 21:05:07 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 4/9] qtnfmac: extend "IE set" TLV to include frame type info
+Date: Mon, 30 Oct 2017 18:04:50 -0700
+Message-Id: <20171031010455.27772-5-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020519_312271_9FB8F372)
+In-Reply-To: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
+References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Here are a few more fixes for net, we started comprehensive testing
-for the security issues and found that the problem wasn't addressed
-in TKIP, so that's included, along with a handful other fixes.
+Specifying frame type for "IE set" TLV will allow to use several
+TLVs in a single message.
+Modify users accordingly.
 
-Please pull and let me know if there's any problem.
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 25 +++++++---
+ drivers/net/wireless/quantenna/qtnfmac/event.c    | 58 +++++++++++++----------
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 27 +++++++++++
+ 3 files changed, 80 insertions(+), 30 deletions(-)
 
-Thanks,
-johannes
-
-
-
-The following changes since commit 1b72bf5a0777d7cec6c2d857ac15599022b3c123:
-
-  Merge tag 'mac80211-for-davem-2017-10-16' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2017-10-16 21:27:16 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-10-25
-
-for you to fetch changes up to cfbb0d90a7abb289edc91833d0905931f8805f12:
-
-  mac80211: don't compare TKIP TX MIC key in reinstall prevention (2017-10-25 11:04:45 +0200)
-
-----------------------------------------------------------------
-Here are:
- * follow-up fixes for the WoWLAN security issue, to fix a
-   partial TKIP key material problem and to use crypto_memneq()
- * a change for better enforcement of FQ's memory limit
- * a disconnect/connect handling fix, and
- * a user rate mask validation fix
-
-----------------------------------------------------------------
-Jason A. Donenfeld (1):
-      mac80211: use constant time comparison with keys
-
-Johannes Berg (3):
-      cfg80211: fix connect/disconnect edge cases
-      mac80211: validate user rate mask before configuring driver
-      mac80211: don't compare TKIP TX MIC key in reinstall prevention
-
-Toke Høiland-Jørgensen (1):
-      fq_impl: Properly enforce memory limit
-
- include/net/fq_impl.h |  9 ++++++---
- net/mac80211/cfg.c    | 12 ++++++------
- net/mac80211/key.c    | 37 +++++++++++++++++++++++++++++++++++--
- net/wireless/sme.c    | 50 +++++++++++++++++++++++++++++++++++++++++---------
- 4 files changed, 88 insertions(+), 20 deletions(-)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 503187a..8d3cdba 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -147,6 +147,21 @@ static struct sk_buff *qtnf_cmd_alloc_new_cmdskb(u8 macid, u8 vifid, u16 cmd_no,
+ 	return cmd_skb;
+ }
+ 
++static void qtnf_cmd_tlv_ie_set_add(struct sk_buff *cmd_skb, u8 frame_type,
++				    const u8 *buf, size_t len)
++{
++	struct qlink_tlv_ie_set *tlv;
++
++	tlv = (struct qlink_tlv_ie_set *)skb_put(cmd_skb, sizeof(*tlv) + len);
++	tlv->hdr.type = cpu_to_le16(QTN_TLV_ID_IE_SET);
++	tlv->hdr.len = cpu_to_le16(len + sizeof(*tlv) - sizeof(tlv->hdr));
++	tlv->type = frame_type;
++	tlv->flags = 0;
++
++	if (len && buf)
++		memcpy(tlv->ie_data, buf, len);
++}
++
+ int qtnf_cmd_send_start_ap(struct qtnf_vif *vif)
+ {
+ 	struct sk_buff *cmd_skb;
+@@ -2028,9 +2043,8 @@ int qtnf_cmd_send_scan(struct qtnf_wmac *mac)
+ 	}
+ 
+ 	if (scan_req->ie_len != 0)
+-		qtnf_cmd_skb_put_tlv_arr(cmd_skb, QTN_TLV_ID_IE_SET,
+-					 scan_req->ie,
+-					 scan_req->ie_len);
++		qtnf_cmd_tlv_ie_set_add(cmd_skb, QLINK_IE_SET_PROBE_REQ,
++					scan_req->ie, scan_req->ie_len);
+ 
+ 	if (scan_req->n_channels) {
+ 		n_channels = scan_req->n_channels;
+@@ -2154,9 +2168,8 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 				 sme->ssid_len);
+ 
+ 	if (sme->ie_len != 0)
+-		qtnf_cmd_skb_put_tlv_arr(cmd_skb, QTN_TLV_ID_IE_SET,
+-					 sme->ie,
+-					 sme->ie_len);
++		qtnf_cmd_tlv_ie_set_add(cmd_skb, QLINK_IE_SET_ASSOC_REQ,
++					sme->ie, sme->ie_len);
+ 
+ 	qtnf_bus_lock(vif->mac->bus);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index 4b29f9f..b67a082 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -65,34 +65,39 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+ 	sinfo.assoc_req_ies_len = 0;
+ 
+ 	payload_len = len - sizeof(*sta_assoc);
+-	tlv = (struct qlink_tlv_hdr *)sta_assoc->ies;
++	tlv = (const struct qlink_tlv_hdr *)sta_assoc->ies;
+ 
+-	while (payload_len >= sizeof(struct qlink_tlv_hdr)) {
++	while (payload_len >= sizeof(*tlv)) {
+ 		tlv_type = le16_to_cpu(tlv->type);
+ 		tlv_value_len = le16_to_cpu(tlv->len);
+ 		tlv_full_len = tlv_value_len + sizeof(struct qlink_tlv_hdr);
+ 
+-		if (tlv_full_len > payload_len) {
+-			pr_warn("VIF%u.%u: malformed TLV 0x%.2X; LEN: %u\n",
+-				mac->macid, vif->vifid, tlv_type,
+-				tlv_value_len);
++		if (tlv_full_len > payload_len)
+ 			return -EINVAL;
+-		}
+ 
+ 		if (tlv_type == QTN_TLV_ID_IE_SET) {
+-			sinfo.assoc_req_ies = tlv->val;
+-			sinfo.assoc_req_ies_len = tlv_value_len;
++			const struct qlink_tlv_ie_set *ie_set;
++			unsigned int ie_len;
++
++			if (payload_len < sizeof(*ie_set))
++				return -EINVAL;
++
++			ie_set = (const struct qlink_tlv_ie_set *)tlv;
++			ie_len = tlv_value_len -
++				(sizeof(*ie_set) - sizeof(ie_set->hdr));
++
++			if (ie_set->type == QLINK_IE_SET_ASSOC_REQ && ie_len) {
++				sinfo.assoc_req_ies = ie_set->ie_data;
++				sinfo.assoc_req_ies_len = ie_len;
++			}
+ 		}
+ 
+ 		payload_len -= tlv_full_len;
+ 		tlv = (struct qlink_tlv_hdr *)(tlv->val + tlv_value_len);
+ 	}
+ 
+-	if (payload_len) {
+-		pr_warn("VIF%u.%u: malformed TLV buf; bytes left: %zu\n",
+-			mac->macid, vif->vifid, payload_len);
++	if (payload_len)
+ 		return -EINVAL;
+-	}
+ 
+ 	cfg80211_new_sta(vif->netdev, sta_assoc->sta_addr, &sinfo,
+ 			 GFP_KERNEL);
+@@ -289,27 +294,32 @@ qtnf_event_handle_scan_results(struct qtnf_vif *vif,
+ 		tlv_value_len = le16_to_cpu(tlv->len);
+ 		tlv_full_len = tlv_value_len + sizeof(struct qlink_tlv_hdr);
+ 
+-		if (tlv_full_len > payload_len) {
+-			pr_warn("VIF%u.%u: malformed TLV 0x%.2X; LEN: %u\n",
+-				vif->mac->macid, vif->vifid, tlv_type,
+-				tlv_value_len);
++		if (tlv_full_len > payload_len)
+ 			return -EINVAL;
+-		}
+ 
+ 		if (tlv_type == QTN_TLV_ID_IE_SET) {
+-			ies = tlv->val;
+-			ies_len = tlv_value_len;
++			const struct qlink_tlv_ie_set *ie_set;
++			unsigned int ie_len;
++
++			if (payload_len < sizeof(*ie_set))
++				return -EINVAL;
++
++			ie_set = (const struct qlink_tlv_ie_set *)tlv;
++			ie_len = tlv_value_len -
++				(sizeof(*ie_set) - sizeof(ie_set->hdr));
++
++			if (ie_len) {
++				ies = ie_set->ie_data;
++				ies_len = ie_len;
++			}
+ 		}
+ 
+ 		payload_len -= tlv_full_len;
+ 		tlv = (struct qlink_tlv_hdr *)(tlv->val + tlv_value_len);
+ 	}
+ 
+-	if (payload_len) {
+-		pr_warn("VIF%u.%u: malformed TLV buf; bytes left: %zu\n",
+-			vif->mac->macid, vif->vifid, payload_len);
++	if (payload_len)
+ 		return -EINVAL;
+-	}
+ 
+ 	bss = cfg80211_inform_bss(wiphy, channel, frame_type,
+ 				  sr->bssid, get_unaligned_le64(&sr->tsf),
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index c558d81..f491942 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -1147,6 +1147,33 @@ struct qlink_tlv_chandef {
+ 	struct qlink_chandef chan;
+ } __packed;
+ 
++enum qlink_ie_set_type {
++	QLINK_IE_SET_UNKNOWN,
++	QLINK_IE_SET_ASSOC_REQ,
++	QLINK_IE_SET_ASSOC_RESP,
++	QLINK_IE_SET_PROBE_REQ,
++	QLINK_IE_SET_SCAN,
++	QLINK_IE_SET_BEACON_HEAD,
++	QLINK_IE_SET_BEACON_TAIL,
++	QLINK_IE_SET_BEACON_IES,
++	QLINK_IE_SET_PROBE_RESP,
++	QLINK_IE_SET_PROBE_RESP_IES,
++};
++
++/**
++ * struct qlink_tlv_ie_set - data for QTN_TLV_ID_IE_SET
++ *
++ * @type: type of MGMT frame IEs belong to, one of &enum qlink_ie_set_type.
++ * @flags: for future use.
++ * @ie_data: IEs data.
++ */
++struct qlink_tlv_ie_set {
++	struct qlink_tlv_hdr hdr;
++	u8 type;
++	u8 flags;
++	u8 ie_data[0];
++} __packed;
++
+ struct qlink_chan_stats {
+ 	__le32 chan_num;
+ 	__le32 cca_tx;
+-- 
+2.9.5
