@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42200 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750915AbdJ2JvT (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:43709 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753311AbdJaPAa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Oct 2017 05:51:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 29 Oct 2017 11:51:06 +0200
-Message-Id: <20171029095111.17078-1-luca@coelho.fi> (sfid-20171029_105209_073254_93EC69C7)
-Subject: [PATCH 0/5] cfg80211/mac80211 patches from our internal tree 2017-10-29
+        Tue, 31 Oct 2017 11:00:30 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
+Date: Tue, 31 Oct 2017 15:00:21 +0000
+Message-ID: <8760av1hx8.fsf@kamboji.qca.qualcomm.com> (sfid-20171031_160032_854210_B7DA74DF)
+References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
+        <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
+        <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
+        <52655c07-aba1-525e-8c81-e420eafc329f@dd-wrt.com>
+In-Reply-To: <52655c07-aba1-525e-8c81-e420eafc329f@dd-wrt.com> (Sebastian
+        Gottschall's message of "Tue, 31 Oct 2017 15:52:15 +0100")
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
-
-Hi,
-
-Here are some cfg80211/mac80211 patches from our internal tree.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Emmanuel Grumbach (1):
-  mac80211: always update the PM state of a peer on MGMT / DATA frames
-
-Luca Coelho (1):
-  mac80211: remove BUG() when interface type is invalid
-
-Sara Sharon (2):
-  mac80211: call synchronize_net once in the restart flow
-  mac80211: tear down RX aggregations first
-
-Tova Mussai (1):
-  cfg80211: IBSS: Add support for static WEP in driver for IBSS
-
- include/net/cfg80211.h |  5 +++++
- net/mac80211/agg-tx.c  |  3 ++-
- net/mac80211/ht.c      |  4 +++-
- net/mac80211/iface.c   |  2 +-
- net/mac80211/main.c    |  3 +++
- net/mac80211/rx.c      | 17 +++++------------
- net/mac80211/util.c    | 19 ++++++++++---------
- net/wireless/ibss.c    |  5 +++++
- 8 files changed, 34 insertions(+), 24 deletions(-)
-
--- 
-2.14.2
+U2ViYXN0aWFuIEdvdHRzY2hhbGwgPHMuZ290dHNjaGFsbEBkZC13cnQuY29tPiB3cml0ZXM6DQoN
+Cj4gdGhlIGZvbGxvd2luZyBwYXRjaGxpbmVzIGluIHRoZSB2MyBwYXRjaCBsb29rIHdyb25nDQo+
+DQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIC8qIElDViAqLw0KPiArwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAoc3RhdHVzLT5mbGFnICYgUlhfRkxBR19JQ1ZfU1RSSVBQ
+RUQgJiYNCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBlbmN0eXBlICE9
+IEhUVF9SWF9NUERVX0VOQ1JZUFRfQUVTX0NDTV9XUEEyKQ0KPiArwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgc2tiX3RyaW0obXNkdSwgbXNkdS0+bGVuIC0NCj4g
+K8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgIGF0aDEwa19odHRfcnhfY3J5cHRvX3RhaWxfbGVuKGFyLA0KPiBlbmN0eXBlKSk7DQo+
+DQo+DQo+IHRoZSBlbmN0eXBlICE9IHdwYTIgaXNudCBlbm91Z2ggc2luY2UgaXQgYWxzbyBiZWxv
+bmdzIHRvIGNjbXAtMjU2LA0KPiBnY21wIG1vZGVzIGV0Yy4NCg0KNC4xNCBkb2Vzbid0IHN1cHBv
+cnQgQ0NNUC0yNTYgbm9yIEdDTVAgbW9kZXMgeWV0LiBEaWQgeW91IGNoZWNrIHRoZQ0Kc2VwYXJh
+dGUgcGF0Y2ggZm9yIDQuMTU6DQoNCmh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gv
+MTAwMjkwOTcvDQoNCi0tIA0KS2FsbGUgVmFsbw0K
