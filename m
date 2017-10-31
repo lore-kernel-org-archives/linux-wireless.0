@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:54444 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757497AbdJKTly (ORCPT
+Received: from fallback14.m.smailru.net ([94.100.179.44]:51094 "EHLO
+        fallback.mail.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753718AbdJaRju (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 15:41:54 -0400
-Received: by mail-pf0-f180.google.com with SMTP id m28so1786911pfi.11
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2017 12:41:54 -0700 (PDT)
-Date: Wed, 11 Oct 2017 12:41:50 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Karthik Ananthapadmanabha <karthida@marvell.com>
-Subject: Re: [PATCH] mwifiex: Random MAC address during scanning
-Message-ID: <20171011194148.GA84547@google.com> (sfid-20171011_214231_282764_38B8825E)
-References: <1506682390-27716-1-git-send-email-gbhat@marvell.com>
+        Tue, 31 Oct 2017 13:39:50 -0400
+Received: from [10.161.64.47] (port=58880 helo=smtp39.i.mail.ru)
+        by fallback14.m.smailru.net with esmtp (envelope-from <wowz89@mail.ru>)
+        id 1e9aVu-00086z-VS
+        for linux-wireless@vger.kernel.org; Tue, 31 Oct 2017 20:39:47 +0300
+Date: Tue, 31 Oct 2017 23:39:13 +0600
+From: WoWz89 <wowz89@mail.ru>
+Reply-To: =?windows-1251?B?yOLg7e7iIMDt5PDl6SDC6Ory7vDu4uj3?=
+          <wowz89@mail.ru>
+Message-ID: <493073613.20171031233913@mail.ru> (sfid-20171031_183954_109997_52C9BE8A)
+To: Seth Forshee <seth.forshee@canonical.com>,
+        wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] wireless-regdb: Add 5 Ghz rules for Kazakhstan (KZ)
+In-Reply-To: <20171020150651.32424-1-seth.forshee@canonical.com>
+References: <20171020150651.32424-1-seth.forshee@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506682390-27716-1-git-send-email-gbhat@marvell.com>
+Content-Type: text/plain; charset=windows-1251
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 29, 2017 at 04:23:10PM +0530, Ganapathi Bhat wrote:
-> From: Karthik Ananthapadmanabha <karthida@marvell.com>
-> 
-> Driver will advertise RANDOM_MAC support only if the device
-> supports this feature.
-> 
-> Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+=C7=E4=F0=E0=E2=F1=F2=E2=F3=E9=F2=E5, Seth.
 
-I'd just like to point out that this is a very bad commit subject:
+=C2=FB =EF=E8=F1=E0=EB=E8 20 =EE=EA=F2=FF=E1=F0=FF 2017 =E3., 21:06:51:
 
-"[PATCH] mwifiex: Random MAC address during scanning"
+> Add rules for 5150-5250 MHz, 5250-5350 MHz, and 5470-5725 Mhz
+> based on the documents at [1] and [2].
 
-It's borderline wrong, really. "Random MAC address during scanning" is
-already supported. This patch is just adding a feature-flag check for
-it, since some firmwares in the wild don't support it. A more accurate
-description would be something like:
+> v2: Also add DFS region
+Good afternoon, when will the update ?
+> [1]
+> http://mic.gov.kz/sites/default/files/pages/pravila_prisvoeniya_polos_cha=
+stot_no34.pdf
+> [2] http://adilet.zan.kz/rus/docs/P000001379_
 
-"[PATCH] mwifiex: Add feature flag support for MAC randomization"
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>  db.txt | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
 
-The patch is already applied, so I'd only worry about it for future
-submissions (no need to resend).
+> diff --git a/db.txt b/db.txt
+> index 9d129f2e542b..10c84ee1ca5d 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -691,8 +691,14 @@ country KY: DFS-FCC
+>         (5490 - 5730 @ 160), (24), DFS
+>         (5735 - 5835 @ 80), (30)
+> =20
+> -country KZ:
+> +# Source:
+> +#
+> http://mic.gov.kz/sites/default/files/pages/pravila_prisvoeniya_polos_cha=
+stot_no34.pdf
+> +# http://adilet.zan.kz/rus/docs/P000001379_
+> +country KZ: DFS-ETSI
+>         (2402 - 2482 @ 40), (20)
+> +       (5150 - 5250 @ 80), (20), NO-OUTDOOR, AUTO-BW
+> +       (5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
+> +       (5470 - 5725 @ 80), (20), NO-OUTDOOR, DFS
+> =20
+>  country LB: DFS-FCC
+>         (2402 - 2482 @ 40), (20)
 
-Brian
+
+
+--=20
+=D1 =F3=E2=E0=E6=E5=ED=E8=E5=EC,
+ WoWz89                          mailto:wowz89@mail.ru
