@@ -1,95 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:60189 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751221AbdJEGjP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2017 02:39:15 -0400
-Received: from mail-wm0-f69.google.com ([74.125.82.69])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <chia-lin.kao@canonical.com>)
-        id 1dzzoP-0005B5-Ux
-        for linux-wireless@vger.kernel.org; Thu, 05 Oct 2017 06:39:13 +0000
-Received: by mail-wm0-f69.google.com with SMTP id i124so2230795wmf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Oct 2017 23:39:13 -0700 (PDT)
+Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:45504
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752898AbdJaBFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Oct 2017 21:05:08 -0400
+From: igor.mitsyanko.os@quantenna.com
+To: linux-wireless@vger.kernel.org
+Cc: sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
+        johannes@sipsolutions.net
+Subject: [PATCH V2 5/9] qtnfmac: SCAN results: retreive frame type information from "IE set" TLV
+Date: Mon, 30 Oct 2017 18:04:51 -0700
+Message-Id: <20171031010455.27772-6-igor.mitsyanko.os@quantenna.com> (sfid-20171031_020519_870462_DB000BBB)
+In-Reply-To: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
+References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <CAD8Lp46mdgbfCGY_i=N7FB1rMfL0KA0VFQxJESxshe4Cn6k4+Q@mail.gmail.com>
-References: <1506408099-18488-1-git-send-email-acelan.kao@canonical.com>
- <1506408099-18488-2-git-send-email-acelan.kao@canonical.com>
- <20170926064456.GA28611@infradead.org> <CAFv23Qm9kZLSqJ_BP1D7mWCxekq0nt3S8onT1ckH-AoHDBUDzw@mail.gmail.com>
- <20170926140413.GA19977@infradead.org> <878th14kde.fsf@kamboji.qca.qualcomm.com>
- <CAFv23Qn4OMuHaSA6UG+Q7L1sTt+ZO8T-JYVaBM1FxZtGNxOhdQ@mail.gmail.com> <CAD8Lp46mdgbfCGY_i=N7FB1rMfL0KA0VFQxJESxshe4Cn6k4+Q@mail.gmail.com>
-From: AceLan Kao <acelan.kao@canonical.com>
-Date: Thu, 5 Oct 2017 14:39:12 +0800
-Message-ID: <CAFv23QkLJ0m112Y8iAGv+6DyFT52Hqnxq5Fy=ryWTWxu8oTXdw@mail.gmail.com> (sfid-20171005_083932_362588_8564362F)
-Subject: Re: [PATCH 2/6] ath9k: add a quirk to set use_msi automatically
-To: Daniel Drake <drake@endlessm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Please drop my patches, Qualcomm is working internally and will submit
-the MSI patch by themselves.
-Thanks.
+"IE set" TLV carries the same information as
+qlink_event_scan_result::frame_type. Convert the event to make use of
+TLV and drop frame_type member.
+While at it, make qlink_event_scan_result structure alignement-safe.
 
-Hi Daniel,
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/event.c | 25 ++++++++++++-------------
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h | 11 ++---------
+ 2 files changed, 14 insertions(+), 22 deletions(-)
 
-I'll try your patches tomorrow.
-
-Best regards,
-AceLan Kao.
-
-2017-10-02 12:21 GMT+08:00 Daniel Drake <drake@endlessm.com>:
-> Hi AceLan,
->
-> On Thu, Sep 28, 2017 at 4:28 PM, AceLan Kao <acelan.kao@canonical.com> wrote:
->> Hi Daniel,
->>
->> I've tried your patch, but it doesn't work for me.
->> Wifi can scan AP, but can't get connected.
->
-> Can you please clarify which patch(es) you have tried?
->
-> This is the base patch which adds the infrastructure to request
-> specific MSI IRQ vectors:
-> https://marc.info/?l=linux-wireless&m=150631274108016&w=2
->
-> This is the ath9k MSI patch which makes use of that:
-> https://github.com/endlessm/linux/commit/739c7a924db8f4434a9617657
->
-> If you were already able to use ath9k MSI interrupts without specific
-> consideration for which MSI vector numbers were used, these are the
-> possible explanations that spring to mind:
->
-> 1. You got lucky and it picked a vector number that is 4-aligned. You
-> can check this in the "lspci -vvv" output. You'll see something like:
-> Capabilities: [50] MSI: Enable+ Count=1/4 Maskable+ 64bit+
->         Address: 00000000fee0300c  Data: 4142
-> The lower number is the vector number. In my example here 0x42 (66) is
-> not 4-aligned so the failure condition will be hit.
->
-> 2. You are using interrupt remapping, which I suspect may provide a
-> high likelihood of MSI interrupt vectors being 4-aligned. See if
-> /proc/interrupts shows the IRQ type as IR-PCI-MSI
-> Unfortunately interrupt remapping is not available here,
-> https://lists.linuxfoundation.org/pipermail/iommu/2017-August/023717.html
->
-> 3. My assumption that all ath9k hardware corrupts the MSI vector
-> number could wrong. However we've seen this on different wifi modules
-> in laptops produced by different OEMs and ODMs, so it seems to be a
-> somewhat widespread problem at least.
->
-> 4. My assumption that ath9k hardware is corrupting the MSI vector
-> number could be wrong; maybe another component is to blame, could it
-> be a BIOS issue? Admittedly I don't really know how I can debug the
-> layers inbetween seeing the MSI Message Data value disagree with the
-> vector number being handled inside do_IRQ().
->
-> Daniel
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index b67a082..4abc6d9 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -252,13 +252,12 @@ qtnf_event_handle_scan_results(struct qtnf_vif *vif,
+ 	struct cfg80211_bss *bss;
+ 	struct ieee80211_channel *channel;
+ 	struct wiphy *wiphy = priv_to_wiphy(vif->mac);
+-	enum cfg80211_bss_frame_type frame_type;
++	enum cfg80211_bss_frame_type frame_type = CFG80211_BSS_FTYPE_UNKNOWN;
+ 	size_t payload_len;
+ 	u16 tlv_type;
+ 	u16 tlv_value_len;
+ 	size_t tlv_full_len;
+ 	const struct qlink_tlv_hdr *tlv;
+-
+ 	const u8 *ies = NULL;
+ 	size_t ies_len = 0;
+ 
+@@ -275,17 +274,6 @@ qtnf_event_handle_scan_results(struct qtnf_vif *vif,
+ 		return -EINVAL;
+ 	}
+ 
+-	switch (sr->frame_type) {
+-	case QLINK_BSS_FTYPE_BEACON:
+-		frame_type = CFG80211_BSS_FTYPE_BEACON;
+-		break;
+-	case QLINK_BSS_FTYPE_PRESP:
+-		frame_type = CFG80211_BSS_FTYPE_PRESP;
+-		break;
+-	default:
+-		frame_type = CFG80211_BSS_FTYPE_UNKNOWN;
+-	}
+-
+ 	payload_len = len - sizeof(*sr);
+ 	tlv = (struct qlink_tlv_hdr *)sr->payload;
+ 
+@@ -308,6 +296,17 @@ qtnf_event_handle_scan_results(struct qtnf_vif *vif,
+ 			ie_len = tlv_value_len -
+ 				(sizeof(*ie_set) - sizeof(ie_set->hdr));
+ 
++			switch (ie_set->type) {
++			case QLINK_IE_SET_BEACON_IES:
++				frame_type = CFG80211_BSS_FTYPE_BEACON;
++				break;
++			case QLINK_IE_SET_PROBE_RESP_IES:
++				frame_type = CFG80211_BSS_FTYPE_PRESP;
++				break;
++			default:
++				frame_type = CFG80211_BSS_FTYPE_UNKNOWN;
++			}
++
+ 			if (ie_len) {
+ 				ies = ie_set->ie_data;
+ 				ies_len = ie_len;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index f491942..81effd2 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -881,12 +881,6 @@ struct qlink_event_rxmgmt {
+ 	u8 frame_data[0];
+ } __packed;
+ 
+-enum qlink_frame_type {
+-	QLINK_BSS_FTYPE_UNKNOWN,
+-	QLINK_BSS_FTYPE_BEACON,
+-	QLINK_BSS_FTYPE_PRESP,
+-};
+-
+ /**
+  * struct qlink_event_scan_result - data for QLINK_EVENT_SCAN_RESULTS event
+  *
+@@ -896,7 +890,6 @@ enum qlink_frame_type {
+  * @capab: capabilities field.
+  * @bintval: beacon interval announced by discovered BSS.
+  * @signal: signal strength.
+- * @frame_type: frame type used to get scan result, see &enum qlink_frame_type.
+  * @bssid: BSSID announced by discovered BSS.
+  * @ssid_len: length of SSID announced by BSS.
+  * @ssid: SSID announced by discovered BSS.
+@@ -909,10 +902,10 @@ struct qlink_event_scan_result {
+ 	__le16 capab;
+ 	__le16 bintval;
+ 	s8 signal;
+-	u8 frame_type;
+-	u8 bssid[ETH_ALEN];
+ 	u8 ssid_len;
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
++	u8 bssid[ETH_ALEN];
++	u8 rsvd[2];
+ 	u8 payload[0];
+ } __packed;
+ 
+-- 
+2.9.5
