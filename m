@@ -1,96 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:44419 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751776AbdJKOGq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2017 10:06:46 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/3] mac80211: Add TXQ scheduling API
-In-Reply-To: <1507711498.1998.18.camel@sipsolutions.net>
-References: <20171010140208.1515-1-toke@toke.dk> <1507651555.26041.81.camel@sipsolutions.net> <87fuaq7ubo.fsf@toke.dk> <1507711498.1998.18.camel@sipsolutions.net>
-Date: Wed, 11 Oct 2017 16:06:41 +0200
-Message-ID: <87tvz5pymm.fsf@toke.dk> (sfid-20171011_160744_727358_62455488)
+Received: from smtps.newmedia-net.de ([185.84.6.167]:56488 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751446AbdJaPHk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Oct 2017 11:07:40 -0400
+Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
+ <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
+ <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
+ <52655c07-aba1-525e-8c81-e420eafc329f@dd-wrt.com>
+ <8760av1hx8.fsf@kamboji.qca.qualcomm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <5903661f-1276-5cca-7894-b489e062b78d@dd-wrt.com> (sfid-20171031_160744_613216_108577F8)
+Date: Tue, 31 Oct 2017 16:07:37 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <8760av1hx8.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Am 31.10.2017 um 16:00 schrieb Kalle Valo:
+> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+>
+>> the following patchlines in the v3 patch look wrong
+>>
+>> +               /* ICV */
+>> +               if (status->flag & RX_FLAG_ICV_STRIPPED &&
+>> +                   enctype != HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
+>> +                       skb_trim(msdu, msdu->len -
+>> +                                ath10k_htt_rx_crypto_tail_len(ar,
+>> enctype));
+>>
+>>
+>> the enctype != wpa2 isnt enough since it also belongs to ccmp-256,
+>> gcmp modes etc.
+> 4.14 doesn't support CCMP-256 nor GCMP modes yet. Did you check the
+> separate patch for 4.15:
 
->> Well I was trying to do The Right Thing(tm), obviously ;)
->
-> :-)
->
->> The driver_buffered field comes from the previous behaviour of ath9k:
->> It would basically set the station_buffered flag if there was
->> something in the retry queue at the time it goes to sleep. And on
->> wakeup, it will reschedule the txq if it has anything in the retry
->> queue. And, well, it just seemed odd that there was this duplicated
->> logic in the driver and mac80211, if the driver could just signal to
->> mac80211 to reschedule for it...
->
-> Ok. I'm not sure what ath9k does, but mac80211 makes a distinction
-> between "do I have something buffered" and "does the driver have
-> something buffered".
->
-> When the station wakes up it's pretty easy, we tell the driver and it
-> just has to send its own frames first.
->
-> But when we get a PS-Poll/U-APSD it's more complicated, and we have to
-> tell the driver "please release N frames you have buffered" or we may
-> have to tell it "please allow me to send N frames that I have buffered"
-> which is why we need the distinction of whether or not the driver has
-> something buffered.
->
-> Ultimately, with TXQs, I hope this distinction can go away because the
-> driver wouldn't buffer all by itself.
+for me ccmp-256 and gcmp works but my current tree is based on a very 
+recent mac80211 version
 
-Yes, that would be good. Okay, I'll keep PS buffering the way it works
-now.
+but did not check if this support is included in 4.14 since i'm 
+developing embedded wireless firmwares on different kernel versions 
+using wireless backports based on recent mac80211 /ath10k etc. versions
 
->> But I guess I was really just getting ahead of myself there; so the
->> right thing to do for now is to keep the old behaviour, and then fix
->> it properly afterwards?
 >
-> I guess that'd be easier.
+> https://patchwork.kernel.org/patch/10029097/
+thanks for notifying me. havent seen it
 >
->> Yes, this makes sense. Each sleep period is pretty short, right? 
->
-> Not necessarily.
->
->> I.e., we don't need to deal with interactions between CoDel and the
->> queue being stopped for a long period of time?
->
-> I don't know enough about the possible interactions to answer that.
-> Sleep periods may be long, though typically if there's traffic for
-> stations then they want to retrieve that and will wake up relatively
-> soon, but "relatively soon" may still be on the order of hundreds of
-> milliseconds (or even seconds) because sometimes clients will only
-> listen to DTIM beacons (DTIM period * beacon interval), and e.g. with
-> WNM sleep mode it becomes even longer.
 
-Ah. Right. Well, guess we'll have to cross that bridge once we get
-there. Not sure what the right thing to do from the point of view of an
-AQM in this instance. But at least making sure it doesn't drop the
-packet at the head of every queue at wakeup would probably be good.
+-- 
+Mit freundlichen Grüssen / Regards
 
->> I was envisioning that next_txq() could also make those kinds of
->> decisions (i.e., preempt the normal scheduling algorithm when a
->> "special" TXQ needs to be scheduled immediately). But not sure if
->> that is enough for this case?
->
-> Hmm, not sure. We really want this to be scheduled pretty much
-> immediately because the other side will be waiting for the frames, and
-> if we don't get an answer out quickly it'll have to assume we're
-> broken. I don't know what the limit here is for our firmware, but we
-> should really get this out as soon as possible in this case.
+Sebastian Gottschall / CTO
 
-OK. But presumably it can't preempt packets already pushed to the
-hardware, right? So telling the driver to immediately schedule a packet,
-and making sure that the txq it gets from next_txq() is the right one
-should do the trick? But I guess it's a bit of a roundabout way, which
-may not be worth it to avoid an extra callback...
-
--Toke
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
