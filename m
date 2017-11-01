@@ -1,57 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:33284 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbdKUVNj (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932376AbdKATXf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 16:13:39 -0500
-From: Guilherme Tadashi Maeoka <gui.maeoka@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Guilherme Tadashi Maeoka <gui.maeoka@gmail.com>
-Subject: [PATCH 2/2] Net: wireless: nl80211: fix coding style
-Date: Tue, 21 Nov 2017 19:13:32 -0200
-Message-Id: <20171121211332.3066-1-gui.maeoka@gmail.com> (sfid-20171121_221608_248155_D9AE3175)
+        Wed, 1 Nov 2017 15:23:35 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 05/12] wil6210: fix length check in __wmi_send
+Date: Wed,  1 Nov 2017 21:23:15 +0200
+Message-Id: <1509564202-30078-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202340_444053_E2F5ECAC)
+In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix some coding styles.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-Signed-off-by: Guilherme Tadashi Maeoka <gui.maeoka@gmail.com>
+The current length check:
+sizeof(cmd) + len > r->entry_size
+will allow very large values of len (> U16_MAX - sizeof(cmd))
+and can cause a buffer overflow. Fix the check to cover this case.
+In addition, ensure the mailbox entry_size is not too small,
+since this can also bypass the above check.
+
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- net/wireless/nl80211.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/interrupt.c | 22 +++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/wmi.c       |  2 +-
+ 2 files changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b1ac23ca20c8..0d7e77e03db5 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13994,7 +13994,7 @@ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 59def4f..5cf3417 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -358,6 +358,25 @@ static void wil_cache_mbox_regs(struct wil6210_priv *wil)
+ 	wil_mbox_ring_le2cpus(&wil->mbox_ctl.tx);
  }
  
- void cfg80211_notify_new_peer_candidate(struct net_device *dev, const u8 *addr,
--					const u8* ie, u8 ie_len, gfp_t gfp)
-+					const u8 *ie, u8 ie_len, gfp_t gfp)
++static bool wil_validate_mbox_regs(struct wil6210_priv *wil)
++{
++	size_t min_size = sizeof(struct wil6210_mbox_hdr) +
++		sizeof(struct wmi_cmd_hdr);
++
++	if (wil->mbox_ctl.rx.entry_size < min_size) {
++		wil_err(wil, "rx mbox entry too small (%d)\n",
++			wil->mbox_ctl.rx.entry_size);
++		return false;
++	}
++	if (wil->mbox_ctl.tx.entry_size < min_size) {
++		wil_err(wil, "tx mbox entry too small (%d)\n",
++			wil->mbox_ctl.tx.entry_size);
++		return false;
++	}
++
++	return true;
++}
++
+ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
  {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-@@ -14020,7 +14020,7 @@ void cfg80211_notify_new_peer_candidate(struct net_device *dev, const u8 *addr,
- 	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
- 	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
- 	    (ie_len && ie &&
--	     nla_put(msg, NL80211_ATTR_IE, ie_len , ie)))
-+	     nla_put(msg, NL80211_ATTR_IE, ie_len, ie)))
- 		goto nla_put_failure;
+ 	struct wil6210_priv *wil = cookie;
+@@ -393,7 +412,8 @@ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
+ 	if (isr & ISR_MISC_FW_READY) {
+ 		wil_dbg_irq(wil, "IRQ: FW ready\n");
+ 		wil_cache_mbox_regs(wil);
+-		set_bit(wil_status_mbox_ready, wil->status);
++		if (wil_validate_mbox_regs(wil))
++			set_bit(wil_status_mbox_ready, wil->status);
+ 		/**
+ 		 * Actual FW ready indicated by the
+ 		 * WMI_FW_READY_EVENTID
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 8a780f2..dbdf71d 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -448,7 +448,7 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ 	uint retry;
+ 	int rc = 0;
  
- 	genlmsg_end(msg, hdr);
-@@ -15158,7 +15158,7 @@ void cfg80211_tdls_oper_request(struct net_device *dev, const u8 *peer,
- }
- EXPORT_SYMBOL(cfg80211_tdls_oper_request);
- 
--static int nl80211_netlink_notify(struct notifier_block * nb,
-+static int nl80211_netlink_notify(struct notifier_block *nb,
- 				  unsigned long state,
- 				  void *_notify)
- {
+-	if (sizeof(cmd) + len > r->entry_size) {
++	if (len > r->entry_size - sizeof(cmd)) {
+ 		wil_err(wil, "WMI size too large: %d bytes, max is %d\n",
+ 			(int)(sizeof(cmd) + len), r->entry_size);
+ 		return -ERANGE;
 -- 
-2.15.0
+1.9.1
