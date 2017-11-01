@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54746 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750772AbdKUSyG (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:44546 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754593AbdKAP3i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 13:54:06 -0500
-Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
- <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
- <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <e98b52a7-ac14-81da-1fab-0c66befcf6d2@candelatech.com> (sfid-20171121_195415_403959_277DB45E)
-Date: Tue, 21 Nov 2017 10:54:03 -0800
-MIME-Version: 1.0
-In-Reply-To: <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 1 Nov 2017 11:29:38 -0400
+Received: by mail-oi0-f67.google.com with SMTP id v132so5036852oie.1
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Nov 2017 08:29:37 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 06/11] rtlwifi: rtl_pci: Add ID for 8822BE
+Date: Wed,  1 Nov 2017 10:29:21 -0500
+Message-Id: <20171101152926.24971-7-Larry.Finger@lwfinger.net> (sfid-20171101_162958_582787_5D3FF648)
+In-Reply-To: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
+References: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is this patch destined for stable?
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-I was expecting to see it show up in the older stable releases,
-but it has not so far as far as I can tell.
+When the driver for the RTL8822BE is added, it will need an ID for
+further use.
 
-Thanks,
-Ben
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 5 +++++
+ drivers/net/wireless/realtek/rtlwifi/pci.h | 1 +
+ 2 files changed, 6 insertions(+)
 
-On 10/30/2017 02:32 AM, Sebastian Gottschall wrote:
-> will check it tomorrow including gcmp-256, ccmp-256. was out for weekend :-)
->
-> Am 30.10.2017 um 09:39 schrieb Kalle Valo:
->> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>
->>> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
->>> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
->>> on host (mac80211) rather than firmware. Rebuild cipher header
->>> in every received data frames (that are notified through those
->>> HTT interfaces) from the rx_hdr_status tlv available in the
->>> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
->>> flag for the packets which requires mac80211 PN/TSC check support
->>> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
->>> QCA9887, QCA99X0, QCA9984, QCA9888 and QCA4019 currently need the
->>> rebuilding of cipher header to perform PN/TSC check for replay
->>> attack.
->>>
->>> Please note that removing crypto tail for CCMP-256, GCMP and GCMP-256 ciphers
->>> in raw mode needs to be fixed. Since Rx with these ciphers in raw
->>> mode does not work in the current form even without this patch and
->>> removing crypto tail for these chipers needs clean up, raw mode related
->>> issues in CCMP-256, GCMP and GCMP-256 can be addressed in follow up
->>> patches.
->>>
->>> Tested-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
->>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->> Patch applied to ath-current branch of ath.git, thanks.
->>
->> 7eccb738fce5 ath10k: rebuild crypto header in rx data frames
->>
->
-
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index 0c30f4bf657b..874e1e593da9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -1967,6 +1967,11 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
+ 		rtlhal->hw_type = HARDWARE_TYPE_RTL8812AE;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 			 "Find adapter, Hardware type is 8812AE\n");
++	} else if (deviceid == RTL_PCI_8822BE_DID) {
++		rtlhal->hw_type = HARDWARE_TYPE_RTL8822BE;
++		rtlhal->bandset = BAND_ON_BOTH;
++		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
++			 "Find adapter, Hardware type is 8822BE\n");
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+ 			 "Err: Unknown device - vid/did=%x/%x\n",
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.h b/drivers/net/wireless/realtek/rtlwifi/pci.h
+index 6bf346ec4616..ce33fe7bc7c4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.h
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.h
+@@ -109,6 +109,7 @@
+ #define RTL_PCI_8192EE_DID	0x818B	/*8192ee*/
+ #define RTL_PCI_8821AE_DID	0x8821	/*8821ae*/
+ #define RTL_PCI_8812AE_DID	0x8812	/*8812ae*/
++#define RTL_PCI_8822BE_DID	0xB822	/*8822be*/
+ 
+ /*8192 support 16 pages of IO registers*/
+ #define RTL_MEM_MAPPED_IO_RANGE_8190PCI		0x1000
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.14.3
