@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933147AbdKATXj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 15:23:39 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH v2 07/12] wil6210: missing length check in wmi_set_ie
-Date: Wed,  1 Nov 2017 21:23:17 +0200
-Message-Id: <1509564202-30078-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202345_630160_960A6E31)
-In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from mail-bn3nam01on0081.outbound.protection.outlook.com ([104.47.33.81]:46056
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932210AbdKACbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Oct 2017 22:31:41 -0400
+Subject: Re: [PATCH] mac80211: Update last_ack status for all except probing
+ frames
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
+References: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <46362ff1-acfb-701c-5f71-7d117d223e1a@quantenna.com> (sfid-20171101_033146_493487_6EFC96E2)
+Date: Tue, 31 Oct 2017 19:31:33 -0700
+MIME-Version: 1.0
+In-Reply-To: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+On 10/30/2017 05:29 PM, Rajkumar Manoharan wrote:
+> 
+> Update last_ack status for all except station probing frames
+> (i.e null data). Otherwise the station inactivity duration is
+> cleared whenever AP is checking presence of idle stations by sending
+> null data frame for every inactive threshold (ap_max_inactivity).
+> Though the station is idle for longer period, the inactive
+> time in station dump is restricted ap_max_inactivity threshold.
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
 
-Add a length check in wmi_set_ie to detect unsigned integer
-overflow.
-
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 16aa624..dd25f63 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1616,8 +1616,14 @@ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie)
- 	};
- 	int rc;
- 	u16 len = sizeof(struct wmi_set_appie_cmd) + ie_len;
--	struct wmi_set_appie_cmd *cmd = kzalloc(len, GFP_KERNEL);
-+	struct wmi_set_appie_cmd *cmd;
- 
-+	if (len < ie_len) {
-+		rc = -EINVAL;
-+		goto out;
-+	}
-+
-+	cmd = kzalloc(len, GFP_KERNEL);
- 	if (!cmd) {
- 		rc = -ENOMEM;
- 		goto out;
--- 
-1.9.1
+To clarify: wouldn't it break hostapd's "inactivity timeot kick-out" 
+logic in hostapd? As hostapd generates NULL frames to idle stations to 
+reset their inactivity time, otherwise it will disassociate a station, 
+after an ap_max_inactivity period.
