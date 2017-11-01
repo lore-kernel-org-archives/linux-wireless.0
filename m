@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:54520 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751567AbdKULba (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751587AbdKATX1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 06:31:30 -0500
-Date: Tue, 21 Nov 2017 20:31:27 +0900 (KST)
-Message-Id: <20171121.203127.1032715998803915402.davem@davemloft.net> (sfid-20171121_123148_136294_88A7B547)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2017-11-20
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1511263472.2030.48.camel@sipsolutions.net>
-References: <20171120160645.21074-1-johannes@sipsolutions.net>
-        <20171121.201722.1123390949587944979.davem@davemloft.net>
-        <1511263472.2030.48.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Wed, 1 Nov 2017 15:23:27 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 00/12] wil6210 patches
+Date: Wed,  1 Nov 2017 21:23:10 +0200
+Message-Id: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202332_100883_4781B2CE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 21 Nov 2017 12:24:32 +0100
+Changes from v1:
+- Fix static buffer allocation in "wil6210: update statistics for suspend"
+- Fix kbuild bot error on "wil6210: run-time PM when interface down"
 
-> On Tue, 2017-11-21 at 20:17 +0900, David Miller wrote:
->> From: Johannes Berg <johannes@sipsolutions.net>
->> Date: Mon, 20 Nov 2017 17:06:44 +0100
->> 
->> >   ssh://korg/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-11-20
->> 
->> That's an awesome URL, but I don't think I'll be able to pull
->> from it :-)
-> 
-> Huh. That's what I get for following Konstantin's advice to use
-> insteadOf in git configuration ...
-> 
-> Should be
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-11-20
-> 
-> (or https if you prefer)
+The following patches include:
+- Bug fixes
+- run-time PM when interface down
 
-That works better, pulled, thanks!
+Dedy Lansky (1):
+  wil6210: print human readable names of WMI commands and events
+
+Hamad Kadmany (1):
+  wil6210: abort properly in cfg suspend
+
+Lazar Alexei (5):
+  wil6210: run-time PM when interface down
+  wil6210: get suspend reject reason and resume triggers from FW
+  wil6210: fix PCIe bus mastering in case of interface down
+  wil6210: remove suspend time statistics
+  wil6210: update statistics for suspend
+
+Lior David (5):
+  wil6210: refresh FW capabilities during interface up
+  wil6210: fix length check in __wmi_send
+  wil6210: add block size checks during FW load
+  wil6210: missing length check in wmi_set_ie
+  wil6210: missing length check in wil_cfg80211_mgmt_tx
+
+ drivers/net/wireless/ath/wil6210/cfg80211.c  |  17 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c   | 150 ++++++++++---
+ drivers/net/wireless/ath/wil6210/ethtool.c   |  15 ++
+ drivers/net/wireless/ath/wil6210/fw_inc.c    |  79 ++++---
+ drivers/net/wireless/ath/wil6210/interrupt.c |  22 +-
+ drivers/net/wireless/ath/wil6210/main.c      |  26 ++-
+ drivers/net/wireless/ath/wil6210/netdev.c    |  18 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c  |  89 +++++---
+ drivers/net/wireless/ath/wil6210/pm.c        | 100 ++++++---
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  38 +++-
+ drivers/net/wireless/ath/wil6210/wmi.c       | 304 ++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/wmi.h       |  17 +-
+ 12 files changed, 718 insertions(+), 157 deletions(-)
+
+-- 
+1.9.1
