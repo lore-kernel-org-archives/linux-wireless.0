@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:47651 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751733AbdKDTiG (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:17704 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751653AbdKAK61 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Nov 2017 15:38:06 -0400
-From: Colin King <colin.king@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: remove redundant initialization to cfg_cmd
-Date: Sat,  4 Nov 2017 19:37:59 +0000
-Message-Id: <20171104193759.919-1-colin.king@canonical.com> (sfid-20171104_203824_438513_DB77627F)
+        Wed, 1 Nov 2017 06:58:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: ath: Incorrect regDomainPairs/allCountries settings
+Date: Wed, 1 Nov 2017 10:58:22 +0000
+Message-ID: <87k1zaxo36.fsf@kamboji.qca.qualcomm.com> (sfid-20171101_115830_828689_E9D25014)
+References: <1693831.JqVThioVz9@bentobox>
+In-Reply-To: <1693831.JqVThioVz9@bentobox> (Sven Eckelmann's message of "Tue,
+        08 Aug 2017 11:45:38 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Sven Eckelmann <sven.eckelmann@openmesh.com> writes:
 
-cfg_cmd is initialized to zero and this value is never read, instead
-it is over-written in the start of a do-while loop. Remove the
-redundant initialization. Cleans up clang warning:
+> I just had two inquiries from Vietnam and Singapore regarding the used CT=
+L=20
+> limits by Atheros based chips. I've checked through the code and noticed =
+that=20
+> regd_common.h assigns SG to APL6_WORLD and VN to NULL1_WORLD.
+>
+>  * SG: APL6_WORLD
+>    - 2.4GHz: CTL_ETSI
+>    -   5GHz: CTL_ETSI
+>  * VN: NULL1_WORLD
+>    - 2.4GHz: CTL_ETSI
+>    -   5GHz: NO_CTL
+>
+> But I personally would have expected that both countries would be assigne=
+d to=20
+> FCC3_WORLD.
+>
+>  * FCC3_WORLD
+>    - 2.4GHz: CTL_ETSI
+>    -   5GHz: CTL_FCC
+>
+> Maybe someone from QCA can check with their internal driver.
 
-drivers/net/wireless/realtek/rtlwifi/core.c:1750:22: warning: Value
-stored to 'cfg_cmd' during its initialization is never read
+I asked around and got this answer:
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+"Correct, internal code base assigns SG and VN to FCC3_WORLD regdomain,
+CTL limits are assigned accordingly as he mentioned."
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 1147327e6f52..7a17cc20c57e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -1748,7 +1748,7 @@ bool rtl_hal_pwrseqcmdparsing(struct rtl_priv *rtlpriv, u8 cut_version,
- 			      u8 faversion, u8 interface_type,
- 			      struct wlan_pwr_cfg pwrcfgcmd[])
- {
--	struct wlan_pwr_cfg cfg_cmd = {0};
-+	struct wlan_pwr_cfg cfg_cmd;
- 	bool polling_bit = false;
- 	u32 ary_idx = 0;
- 	u8 value = 0;
--- 
-2.14.1
+--=20
+Kalle Valo=
