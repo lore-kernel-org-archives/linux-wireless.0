@@ -1,39 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f46.google.com ([74.125.83.46]:33887 "EHLO
-        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753536AbdKRFGv (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:49530 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754560AbdKAP3g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Nov 2017 00:06:51 -0500
-Received: by mail-pg0-f46.google.com with SMTP id 4so3462888pge.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Nov 2017 21:06:51 -0800 (PST)
-Message-ID: <1510981609.5145.0.camel@gmail.com> (sfid-20171118_060656_802004_386EDE85)
-Subject: Re: rtl8723be on Fedora27
-From: rosenp@gmail.com
-To: =?ISO-8859-1?Q?R=E1kosi?= Gergely <rakosi.gergely@gmail.com>,
-        linux-wireless@vger.kernel.org
-Date: Fri, 17 Nov 2017 21:06:49 -0800
-In-Reply-To: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
-References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 1 Nov 2017 11:29:36 -0400
+Received: by mail-oi0-f65.google.com with SMTP id w197so5013980oif.6
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Nov 2017 08:29:35 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 04/11] rtlwifi: rtl_pci: Add support for 8822be TX/RX BD
+Date: Wed,  1 Nov 2017 10:29:19 -0500
+Message-Id: <20171101152926.24971-5-Larry.Finger@lwfinger.net> (sfid-20171101_162943_255899_3922C6C2)
+In-Reply-To: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
+References: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-11-17 at 09:16 +0100, Rákosi Gergely wrote:
-> Hello,
-> 
-> I'm trying to use rtl8723be wifi on Fedora27 but I still get
-> continuosly
-> disconnection. The error in the dmesg is "Init MAC failed"
-> I tried with the following module options too : "fwlps=0 swlps=0" and
-> the variant of "ant_sel=1 or 2 or 0"
-> I downloaded the git files from your repo, and do the usual make,make
-> install, and modprobe stuffs, and then restart the notebook, but I
-> get
-> the same result.
-> 
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Could try blacklisting rtlwifi. That way it uses rtl8xxxu.
-> Thanks your help,
-> Regards,
-> Gergely
+The number of TX/RX BD desc for 8822BE is 512.
+The TX/RX BD architecture of 8822BE is the same as 8192EE.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 14 +++++++++++---
+ drivers/net/wireless/realtek/rtlwifi/pci.h |  1 +
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index 01c65c807126..e8c8ce601229 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -1140,6 +1140,8 @@ static void _rtl_pci_init_trx_var(struct ieee80211_hw *hw)
+ 
+ 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192EE)
+ 		desc_num = TX_DESC_NUM_92E;
++	else if (rtlhal->hw_type == HARDWARE_TYPE_RTL8822BE)
++		desc_num = TX_DESC_NUM_8822B;
+ 	else
+ 		desc_num = RT_TXDESC_NUM;
+ 
+@@ -1981,11 +1983,17 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
+ 		}
+ 	}
+ 
+-	/* 92ee use new trx flow */
+-	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192EE)
++	switch (rtlhal->hw_type) {
++	case HARDWARE_TYPE_RTL8192EE:
++	case HARDWARE_TYPE_RTL8822BE:
++		/* use new trx flow */
+ 		rtlpriv->use_new_trx_flow = true;
+-	else
++		break;
++
++	default:
+ 		rtlpriv->use_new_trx_flow = false;
++		break;
++	}
+ 
+ 	/*find bus info */
+ 	pcipriv->ndis_adapter.busnumber = pdev->bus->number;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.h b/drivers/net/wireless/realtek/rtlwifi/pci.h
+index e331f5a3b35f..0f1a0f8585b6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.h
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.h
+@@ -39,6 +39,7 @@
+ 
+ #define RT_TXDESC_NUM				128
+ #define TX_DESC_NUM_92E				512
++#define TX_DESC_NUM_8822B			512
+ #define RT_TXDESC_NUM_BE_QUEUE			256
+ 
+ #define BK_QUEUE				0
+-- 
+2.14.3
