@@ -1,88 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:49215 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752436AbdKHNbQ (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933218AbdKATXr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 08:31:16 -0500
-Date: Thu, 9 Nov 2017 00:31:07 +1100
-From: Simon Shields <simon@lineageos.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, devicetree@vger.kernel.org,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Stefan Wahren <stefan.wahren@i2se.com>
-Subject: Re: [PATCH] brcmfmac: add support for external 32khz clock
-Message-ID: <20171108133105.GA15990@lineageos.org> (sfid-20171108_143121_090938_50C4D2AB)
-References: <20171104132421.GA1541@archbox.home>
- <5A004099.90200@broadcom.com>
- <20171106112726.GA25134@lineageos.org>
- <5A019463.9060701@broadcom.com>
- <20171107133112.GA1323@lineageos.org>
- <5A02DE93.8030502@broadcom.com>
- <20171108114302.GA1291@lineageos.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171108114302.GA1291@lineageos.org>
+        Wed, 1 Nov 2017 15:23:47 -0400
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 12/12] wil6210: update statistics for suspend
+Date: Wed,  1 Nov 2017 21:23:22 +0200
+Message-Id: <1509564202-30078-13-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202355_945256_C3813005)
+In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 08, 2017 at 10:43:05PM +1100, Simon Shields wrote:
-> Hi Arend,
-> 
-> On Wed, Nov 08, 2017 at 11:38:11AM +0100, Arend van Spriel wrote:
-> > + Stefan
-> > 
-> > On 11/7/2017 2:31 PM, Simon Shields wrote:
-> > > Hi Arend,
-> > > 
-> > > On Tue, Nov 07, 2017 at 12:09:23PM +0100, Arend van Spriel wrote:
-> > > > On 11/6/2017 12:27 PM, Simon Shields wrote:
-> > > > > On Mon, Nov 06, 2017 at 11:59:37AM +0100, Arend van Spriel wrote:
-> > > > > > On 11/4/2017 2:24 PM, Simon Shields wrote:
-> > > > > > > Some boards use an external 32khz clock for low-power
-> > > > > > > mode timing. Make sure the clock is powered on while the chipset
-> > > > > > > is active.
-> > > > > > 
-> > > > > > Do you have such a board? With the little documentation I can get my hands
-> > > > > > on here I wonder whether the clock needs to be enabled before the device is
-> > > > > > powered. If you have the hardware I would like to check some registers in
-> > > > > > the device.
-> > > > > > 
-> > > > > 
-> > > > > Yes. Trats2 (exynos4412-based) has such a setup. The BCM4334 works fine
-> > > > > with this patch and one more that enables the WL_REG_EN pin when
-> > > > > brcmfmac is probed.
-> > > > 
-> > > > Ok. So this is exactly the thing I was wondering about. So it makes me
-> > > > curious how the WL_REG_EN patch looks like. Can you provide that?
-> > > > 
-> > > 
-> > > Here[0] is a link to the patch in its current state. Obviously, it's not
-> > > ready at all for mainlining :-)
-> > > 
-> > > [0]: https://github.com/fourkbomb/linux/commit/436e59e58b44d856c186fc4767560cecbcbc0c59.patch
-> > 
-> > Thanks. Indeed doing it in module_init of brcmfmac is not going to fly.
-> > Actually the MMC stack has a mechanism to power the SDIO device. This can be
-> > configured through the device tree [1]. I just checked and it actually
-> > includes specifying the external clock as well.
-> > 
-> 
-> It looks like mmc-pwrseq-simple would handle the clock case, but it
-> doesn't handle the regulator properly: it sets the GPIO to high before
-> powering on, then lowers it immediately after powering it on.
-> 
-> I guess a simpler approach here would be to extend pwrseq-simple to behave
-> as we need it to.
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-I missed something really obvious... All that's needed is to invert the
-GPIO, like this[0]. Thanks for the pointer :)
+Currently the statistics show how many successful/failed
+suspend/resume operations the system had.
+Update the statistics by splitting each successful/failed
+suspend/resume operations to radio on/off.
 
-Cheers,
-Simon
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c  | 47 ++++++++++++++++++++---------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 20 ++++++++----
+ drivers/net/wireless/ath/wil6210/pm.c       |  8 +++--
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 11 +++++--
+ 4 files changed, 59 insertions(+), 27 deletions(-)
 
-[0]: https://patchwork.kernel.org/patch/10048501/
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index edaab0f..4475937 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1641,24 +1641,41 @@ static ssize_t wil_read_suspend_stats(struct file *file,
+ 				      size_t count, loff_t *ppos)
+ {
+ 	struct wil6210_priv *wil = file->private_data;
+-	static char text[400];
+-	int n;
++	char *text;
++	int n, ret, text_size = 500;
++
++	text = kmalloc(text_size, GFP_KERNEL);
++	if (!text)
++		return -ENOMEM;
+ 
+-	n = snprintf(text, sizeof(text),
+-		     "Suspend statistics:\n"
++	n = snprintf(text, text_size,
++		     "Radio on suspend statistics:\n"
+ 		     "successful suspends:%ld failed suspends:%ld\n"
+ 		     "successful resumes:%ld failed resumes:%ld\n"
+-		     "rejected by host:%ld rejected by device:%ld\n",
+-		     wil->suspend_stats.successful_suspends,
+-		     wil->suspend_stats.failed_suspends,
+-		     wil->suspend_stats.successful_resumes,
+-		     wil->suspend_stats.failed_resumes,
+-		     wil->suspend_stats.rejected_by_host,
+-		     wil->suspend_stats.rejected_by_device);
+-
+-	n = min_t(int, n, sizeof(text));
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, text, n);
++		     "rejected by device:%ld\n"
++		     "Radio off suspend statistics:\n"
++		     "successful suspends:%ld failed suspends:%ld\n"
++		     "successful resumes:%ld failed resumes:%ld\n"
++		     "General statistics:\n"
++		     "rejected by host:%ld\n",
++		     wil->suspend_stats.r_on.successful_suspends,
++		     wil->suspend_stats.r_on.failed_suspends,
++		     wil->suspend_stats.r_on.successful_resumes,
++		     wil->suspend_stats.r_on.failed_resumes,
++		     wil->suspend_stats.rejected_by_device,
++		     wil->suspend_stats.r_off.successful_suspends,
++		     wil->suspend_stats.r_off.failed_suspends,
++		     wil->suspend_stats.r_off.successful_resumes,
++		     wil->suspend_stats.r_off.failed_resumes,
++		     wil->suspend_stats.rejected_by_host);
++
++	n = min_t(int, n, text_size);
++
++	ret = simple_read_from_buffer(user_buf, count, ppos, text, n);
++
++	kfree(text);
++
++	return ret;
+ }
+ 
+ static const struct file_operations fops_suspend_stats = {
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index af062fc..53e8e60 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -397,14 +397,16 @@ static int wil6210_suspend(struct device *dev, bool is_runtime)
+ 
+ 	rc = wil_suspend(wil, is_runtime, keep_radio_on);
+ 	if (!rc) {
+-		wil->suspend_stats.successful_suspends++;
+-
+ 		/* In case radio stays on, platform device will control
+ 		 * PCIe master
+ 		 */
+-		if (!keep_radio_on)
++		if (!keep_radio_on) {
+ 			/* disable bus mastering */
+ 			pci_clear_master(pdev);
++			wil->suspend_stats.r_off.successful_suspends++;
++		} else {
++			wil->suspend_stats.r_on.successful_suspends++;
++		}
+ 	}
+ out:
+ 	return rc;
+@@ -430,11 +432,17 @@ static int wil6210_resume(struct device *dev, bool is_runtime)
+ 	rc = wil_resume(wil, is_runtime, keep_radio_on);
+ 	if (rc) {
+ 		wil_err(wil, "device failed to resume (%d)\n", rc);
+-		wil->suspend_stats.failed_resumes++;
+-		if (!keep_radio_on)
++		if (!keep_radio_on) {
+ 			pci_clear_master(pdev);
++			wil->suspend_stats.r_off.failed_resumes++;
++		} else {
++			wil->suspend_stats.r_on.failed_resumes++;
++		}
+ 	} else {
+-		wil->suspend_stats.successful_resumes++;
++		if (keep_radio_on)
++			wil->suspend_stats.r_on.successful_resumes++;
++		else
++			wil->suspend_stats.r_off.successful_resumes++;
+ 	}
+ 
+ 	return rc;
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 48ec186..ec39ac7 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -179,7 +179,7 @@ static int wil_suspend_keep_radio_on(struct wil6210_priv *wil)
+ 					break;
+ 				wil_err(wil,
+ 					"TO waiting for idle RX, suspend failed\n");
+-				wil->suspend_stats.failed_suspends++;
++				wil->suspend_stats.r_on.failed_suspends++;
+ 				goto resume_after_fail;
+ 			}
+ 			wil_dbg_ratelimited(wil, "rx vring is not empty -> NAPI\n");
+@@ -195,7 +195,7 @@ static int wil_suspend_keep_radio_on(struct wil6210_priv *wil)
+ 	 */
+ 	if (!wil_is_wmi_idle(wil)) {
+ 		wil_err(wil, "suspend failed due to pending WMI events\n");
+-		wil->suspend_stats.failed_suspends++;
++		wil->suspend_stats.r_on.failed_suspends++;
+ 		goto resume_after_fail;
+ 	}
+ 
+@@ -209,7 +209,7 @@ static int wil_suspend_keep_radio_on(struct wil6210_priv *wil)
+ 		if (rc) {
+ 			wil_err(wil, "platform device failed to suspend (%d)\n",
+ 				rc);
+-			wil->suspend_stats.failed_suspends++;
++			wil->suspend_stats.r_on.failed_suspends++;
+ 			wil_c(wil, RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
+ 			wil_unmask_irq(wil);
+ 			goto resume_after_fail;
+@@ -256,6 +256,7 @@ static int wil_suspend_radio_off(struct wil6210_priv *wil)
+ 		rc = wil_down(wil);
+ 		if (rc) {
+ 			wil_err(wil, "wil_down : %d\n", rc);
++			wil->suspend_stats.r_off.failed_suspends++;
+ 			goto out;
+ 		}
+ 	}
+@@ -268,6 +269,7 @@ static int wil_suspend_radio_off(struct wil6210_priv *wil)
+ 		rc = wil->platform_ops.suspend(wil->platform_handle, false);
+ 		if (rc) {
+ 			wil_enable_irq(wil);
++			wil->suspend_stats.r_off.failed_suspends++;
+ 			goto out;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 0ae2415..54b96ae 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -82,12 +82,17 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+  */
+ #define WIL_MAX_MPDU_OVERHEAD	(62)
+ 
+-struct wil_suspend_stats {
++struct wil_suspend_count_stats {
+ 	unsigned long successful_suspends;
+-	unsigned long failed_suspends;
+ 	unsigned long successful_resumes;
++	unsigned long failed_suspends;
+ 	unsigned long failed_resumes;
+-	unsigned long rejected_by_device;
++};
++
++struct wil_suspend_stats {
++	struct wil_suspend_count_stats r_off;
++	struct wil_suspend_count_stats r_on;
++	unsigned long rejected_by_device; /* only radio on */
+ 	unsigned long rejected_by_host;
+ };
+ 
+-- 
+1.9.1
