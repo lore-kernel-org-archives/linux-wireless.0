@@ -1,76 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from civicrm.laptop.org ([18.85.44.157]:45111 "EHLO swan.laptop.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751298AbdKUIEP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 03:04:15 -0500
-Date: Tue, 21 Nov 2017 19:04:08 +1100
-From: James Cameron <quozl@laptop.org>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>
-Subject: Re: [PATCH] mwifiex: do not support change AP interface to station
- mode
-Message-ID: <20171121080408.GH19252@us.netrek.org> (sfid-20171121_090419_205565_20490588)
-References: <1511249043-21404-1-git-send-email-huxm@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1511249043-21404-1-git-send-email-huxm@marvell.com>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933147AbdKATXm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Nov 2017 15:23:42 -0400
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 09/12] wil6210: get suspend reject reason and resume triggers from FW
+Date: Wed,  1 Nov 2017 21:23:19 +0200
+Message-Id: <1509564202-30078-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202355_562261_29351FBE)
+In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 21, 2017 at 03:24:03PM +0800, Xinming Hu wrote:
-> Firmware do not support change interface from micro-ap mode to
-> station mode, forbidden this operation in driver accordingly.
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-All firmware or specific versions?
+Upon receiving suspend reject, print reject reason.
+Upon receiving resume event, print resume triggers.
 
-> 
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index 6e0d9a9..a87758f 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -1181,6 +1181,12 @@ static int mwifiex_deinit_priv_params(struct mwifiex_private *priv)
->  		switch (type) {
->  		case NL80211_IFTYPE_ADHOC:
->  		case NL80211_IFTYPE_STATION:
-> +			if (mwifiex_get_priv_by_id(priv->adapter, priv->bss_num,
-> +						   MWIFIEX_BSS_TYPE_STA)){
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 46 +++++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/wil6210/wmi.h | 17 ++++++++++---
+ 2 files changed, 57 insertions(+), 6 deletions(-)
 
-Is this test necessary?
-
-dev->ieee80211_ptr->iftype is always NL80211_IFTYPE_AP at this point.
-
-> +				mwifiex_dbg(priv->adapter, INFO,
-> +					    "Skip change virtual interface\n");
-
-Is this message easy to understand?  Other messages in the same
-function seem easier; e.g. "%s: changing to %d not supported\n"
-
-> +				return 0;
-
-Should this be -EOPNOTSUPP rather than 0?
-
-> +			}
->  			return mwifiex_change_vif_to_sta_adhoc(dev, curr_iftype,
->  							       type, params);
->  			break;
-> -- 
-> 1.9.1
-> 
-
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index dd25f63..8ace618 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -2043,6 +2043,16 @@ void wmi_event_flush(struct wil6210_priv *wil)
+ 	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
+ }
+ 
++static const char *suspend_status2name(u8 status)
++{
++	switch (status) {
++	case WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE:
++		return "LINK_NOT_IDLE";
++	default:
++		return "Untracked status";
++	}
++}
++
+ int wmi_suspend(struct wil6210_priv *wil)
+ {
+ 	int rc;
+@@ -2058,7 +2068,7 @@ int wmi_suspend(struct wil6210_priv *wil)
+ 	wil->suspend_resp_rcvd = false;
+ 	wil->suspend_resp_comp = false;
+ 
+-	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED;
++	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE;
+ 
+ 	rc = wmi_call(wil, WMI_TRAFFIC_SUSPEND_CMDID, &cmd, sizeof(cmd),
+ 		      WMI_TRAFFIC_SUSPEND_EVENTID, &reply, sizeof(reply),
+@@ -2090,8 +2100,9 @@ int wmi_suspend(struct wil6210_priv *wil)
+ 	}
+ 
+ 	wil_dbg_wmi(wil, "suspend_response_completed rcvd\n");
+-	if (reply.evt.status == WMI_TRAFFIC_SUSPEND_REJECTED) {
+-		wil_dbg_pm(wil, "device rejected the suspend\n");
++	if (reply.evt.status != WMI_TRAFFIC_SUSPEND_APPROVED) {
++		wil_dbg_pm(wil, "device rejected the suspend, %s\n",
++			   suspend_status2name(reply.evt.status));
+ 		wil->suspend_stats.rejected_by_device++;
+ 	}
+ 	rc = reply.evt.status;
+@@ -2103,21 +2114,50 @@ int wmi_suspend(struct wil6210_priv *wil)
+ 	return rc;
+ }
+ 
++static void resume_triggers2string(u32 triggers, char *string, int str_size)
++{
++	string[0] = '\0';
++
++	if (!triggers) {
++		strlcat(string, " UNKNOWN", str_size);
++		return;
++	}
++
++	if (triggers & WMI_RESUME_TRIGGER_HOST)
++		strlcat(string, " HOST", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_UCAST_RX)
++		strlcat(string, " UCAST_RX", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_BCAST_RX)
++		strlcat(string, " BCAST_RX", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_WMI_EVT)
++		strlcat(string, " WMI_EVT", str_size);
++}
++
+ int wmi_resume(struct wil6210_priv *wil)
+ {
+ 	int rc;
++	char string[100];
+ 	struct {
+ 		struct wmi_cmd_hdr wmi;
+ 		struct wmi_traffic_resume_event evt;
+ 	} __packed reply;
+ 
+ 	reply.evt.status = WMI_TRAFFIC_RESUME_FAILED;
++	reply.evt.resume_triggers = WMI_RESUME_TRIGGER_UNKNOWN;
+ 
+ 	rc = wmi_call(wil, WMI_TRAFFIC_RESUME_CMDID, NULL, 0,
+ 		      WMI_TRAFFIC_RESUME_EVENTID, &reply, sizeof(reply),
+ 		      WIL_WAIT_FOR_SUSPEND_RESUME_COMP);
+ 	if (rc)
+ 		return rc;
++	resume_triggers2string(le32_to_cpu(reply.evt.resume_triggers), string,
++			       sizeof(string));
++	wil_dbg_pm(wil, "device resume %s, resume triggers:%s (0x%x)\n",
++		   reply.evt.status ? "failed" : "passed", string,
++		   le32_to_cpu(reply.evt.resume_triggers));
+ 
+ 	return reply.evt.status;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 5263ee7..d9e220a 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -2267,8 +2267,8 @@ struct wmi_link_maintain_cfg_read_done_event {
+ } __packed;
+ 
+ enum wmi_traffic_suspend_status {
+-	WMI_TRAFFIC_SUSPEND_APPROVED	= 0x0,
+-	WMI_TRAFFIC_SUSPEND_REJECTED	= 0x1,
++	WMI_TRAFFIC_SUSPEND_APPROVED			= 0x0,
++	WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE	= 0x1,
+ };
+ 
+ /* WMI_TRAFFIC_SUSPEND_EVENTID */
+@@ -2282,10 +2282,21 @@ enum wmi_traffic_resume_status {
+ 	WMI_TRAFFIC_RESUME_FAILED	= 0x1,
+ };
+ 
++enum wmi_resume_trigger {
++	WMI_RESUME_TRIGGER_UNKNOWN	= 0x0,
++	WMI_RESUME_TRIGGER_HOST		= 0x1,
++	WMI_RESUME_TRIGGER_UCAST_RX	= 0x2,
++	WMI_RESUME_TRIGGER_BCAST_RX	= 0x4,
++	WMI_RESUME_TRIGGER_WMI_EVT	= 0x8,
++};
++
+ /* WMI_TRAFFIC_RESUME_EVENTID */
+ struct wmi_traffic_resume_event {
+-	/* enum wmi_traffic_resume_status_e */
++	/* enum wmi_traffic_resume_status */
+ 	u8 status;
++	u8 reserved[3];
++	/* enum wmi_resume_trigger bitmap */
++	__le32 resume_triggers;
+ } __packed;
+ 
+ /* Power Save command completion status codes */
 -- 
-James Cameron
-http://quozl.netrek.org/
+1.9.1
