@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:52417 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755248AbdKIXis (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932376AbdKATXe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 18:38:48 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 1/6] wl1251: Update wl->nvs_len after wl->nvs is valid
-Date: Fri, 10 Nov 2017 00:38:23 +0100
-Message-Id: <1510270708-14377-2-git-send-email-pali.rohar@gmail.com> (sfid-20171110_004108_246368_A6F66D6E)
-In-Reply-To: <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Wed, 1 Nov 2017 15:23:34 -0400
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 04/12] wil6210: abort properly in cfg suspend
+Date: Wed,  1 Nov 2017 21:23:14 +0200
+Message-Id: <1509564202-30078-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202340_208004_D6AC2FD2)
+In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If kmemdup fails, then wl->nvs_len will contain invalid non-zero size.
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-Acked-by: Pavel Machek <pavel@ucw.cz>
+On-going operations were not aborted properly
+and required locks were not taken.
+
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wl1251/main.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 9915d83..8929bb3 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -122,8 +122,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 85d5c04..c3d3c0c 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1727,9 +1727,12 @@ static int wil_cfg80211_suspend(struct wiphy *wiphy,
  
--	wl->nvs_len = fw->size;
--	wl->nvs = kmemdup(fw->data, wl->nvs_len, GFP_KERNEL);
-+	wl->nvs = kmemdup(fw->data, fw->size, GFP_KERNEL);
+ 	wil_dbg_pm(wil, "suspending\n");
  
- 	if (!wl->nvs) {
- 		wl1251_error("could not allocate memory for the nvs file");
-@@ -131,6 +130,8 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
- 		goto out;
- 	}
- 
-+	wl->nvs_len = fw->size;
-+
- 	ret = 0;
+-	wil_p2p_stop_discovery(wil);
+-
++	mutex_lock(&wil->mutex);
++	mutex_lock(&wil->p2p_wdev_mutex);
++	wil_p2p_stop_radio_operations(wil);
+ 	wil_abort_scan(wil, true);
++	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->mutex);
  
  out:
+ 	return rc;
 -- 
-1.7.9.5
+1.9.1
