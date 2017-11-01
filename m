@@ -1,74 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:34762 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932966AbdKQEvE (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754865AbdKATXc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Nov 2017 23:51:04 -0500
-Received: by mail-wm0-f42.google.com with SMTP id y82so2018429wmg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Nov 2017 20:51:03 -0800 (PST)
-MIME-Version: 1.0
-From: John Stultz <john.stultz@linaro.org>
-Date: Thu, 16 Nov 2017 20:51:02 -0800
-Message-ID: <CALAqxLV953NFSZEg5Rd0N0K6JerBqf9d5AUC52E4AjLH0d6RMQ@mail.gmail.com> (sfid-20171117_055206_003987_50F93066)
-Subject: wlcore: wl18xx: Trouble suspending caused by wifi being enabled?
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Maxim Altshul <maxim.altshul@ti.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 1 Nov 2017 15:23:32 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 03/12] wil6210: refresh FW capabilities during interface up
+Date: Wed,  1 Nov 2017 21:23:13 +0200
+Message-Id: <1509564202-30078-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202339_961129_AA236F6D)
+In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Folks,
-  So, for awhile recently, I've noticed my HiKey board (which uses the
-TI WL1835MOD chip for wifi) has had trouble when it tries to suspend.
-Basically it keeps on waking up while suspending, and then
-re-suspending over and over until it lucks out in whatever race is
-going on and manages to suspend before the wifi wakes it up.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-Here's an example suspend-immediate-wake cycle:
+FW capabilities are currently retrieved only during module
+initialization, but userspace can replace the firmware while
+interface is down, so refresh the FW capabilities when
+interface is up (after FW is loaded) to ensure driver
+functionality matches the loaded FW.
 
-[  241.975754] PM: suspend entry (deep)
-[  241.979590] PM: Syncing filesystems ... done.
-[  241.997363] Freezing user space processes ... (elapsed 0.003 seconds) done.
-[  242.007903] OOM killer disabled.
-[  242.011157] Freezing remaining freezable tasks ... (elapsed 0.002
-seconds) done.
-[  242.020715] Suspending console(s) (use no_console_suspend to debug)
-[  242.028155] wlan0: deauthenticating from 70:3a:cb:12:90:28 by local
-choice (Reason: 3=DEAUTH_LEAVING)
-[  242.029797] dwc2 f72c0000.usb: suspending usb gadget configfs-gadget
-[  242.029885] dwc2 f72c0000.usb: dwc2_hsotg_ep_disable: called for ep0
-[  242.029893] dwc2 f72c0000.usb: dwc2_hsotg_ep_disable: called for ep0
-[  242.071475] wlcore: down
-[  242.071795] queueing ieee80211 work while going to suspend
-[  242.071808] wlcore: down
-[  242.072120] queueing ieee80211 work while going to suspend
-[  242.073796] PM: Wakeup pending, aborting suspend
-[  242.073810] PM: Some devices failed to suspend, or early wake event detected
-[  242.091277] mmc_host mmc2: Bus speed (slot 0) = 24800000Hz (slot
-req 400000Hz, actual 400000HZ div = 31)
-[  242.128593] mmc_host mmc2: Bus speed (slot 0) = 24800000Hz (slot
-req 25000000Hz, actual 24800000HZ div = 0)
-[  242.129197] dwc2 f72c0000.usb: resuming usb gadget configfs-gadget
-[  242.337364] dwc2 f72c0000.usb: new device is high-speed
-[  242.413119] dwc2 f72c0000.usb: new device is high-speed
-[  242.452173] wlcore: PHY firmware version: Rev 8.2.0.0.237
-[  242.484959] dwc2 f72c0000.usb: new address 8
-[  242.499012] wlcore: firmware booted (Rev 8.9.0.0.70)
-[  242.506240] configfs-gadget gadget: high-speed config #1: b
-[  242.627752] OOM killer enabled.
-[  242.630899] Restarting tasks ... done.
-[  242.647180] PM: suspend exit
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/fw_inc.c   | 21 ++++++++-------------
+ drivers/net/wireless/ath/wil6210/main.c     | 25 +++++++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 13 +------------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
+ 4 files changed, 33 insertions(+), 27 deletions(-)
 
-Eventually it will luck out and manage to suspend itself, but it can
-take close to a minute.  If I disable wifi the system reliably
-suspends every time.
-
-This used to not be the case, but its been so long, I'm not really
-sure when this issue cropped up.
-
-I wanted to see if anyone else had similar trouble or maybe had ideas
-how to chase this down?
-
-thanks
--john
+diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
+index e01acac..7a33792 100644
+--- a/drivers/net/wireless/ath/wil6210/fw_inc.c
++++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
+@@ -124,24 +124,19 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
+ 	return 0;
+ }
+ 
+-static int fw_handle_comment(struct wil6210_priv *wil, const void *data,
+-			     size_t size)
+-{
+-	wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1, data, size, true);
+-
+-	return 0;
+-}
+-
+ static int
+-fw_handle_capabilities(struct wil6210_priv *wil, const void *data,
+-		       size_t size)
++fw_handle_comment(struct wil6210_priv *wil, const void *data,
++		  size_t size)
+ {
+ 	const struct wil_fw_record_capabilities *rec = data;
+ 	size_t capa_size;
+ 
+ 	if (size < sizeof(*rec) ||
+-	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC)
++	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC) {
++		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
++				data, size, true);
+ 		return 0;
++	}
+ 
+ 	capa_size = size - offsetof(struct wil_fw_record_capabilities,
+ 				    capabilities);
+@@ -422,7 +417,7 @@ static int fw_handle_gateway_data4(struct wil6210_priv *wil, const void *data,
+ 	int (*parse_handler)(struct wil6210_priv *wil, const void *data,
+ 			     size_t size);
+ } wil_fw_handlers[] = {
+-	{wil_fw_type_comment, fw_handle_comment, fw_handle_capabilities},
++	{wil_fw_type_comment, fw_handle_comment, fw_handle_comment},
+ 	{wil_fw_type_data, fw_handle_data, fw_ignore_section},
+ 	{wil_fw_type_fill, fw_handle_fill, fw_ignore_section},
+ 	/* wil_fw_type_action */
+@@ -517,7 +512,7 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
+ 
+ 	rc = request_firmware(&fw, name, wil_to_dev(wil));
+ 	if (rc) {
+-		wil_err_fw(wil, "Failed to load firmware %s\n", name);
++		wil_err_fw(wil, "Failed to load firmware %s rc %d\n", name, rc);
+ 		return rc;
+ 	}
+ 	wil_dbg_fw(wil, "Loading <%s>, %zu bytes\n", name, fw->size);
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 885924a..e92fd35 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -760,6 +760,8 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
+ 	u8 retry_short;
+ 	int rc;
+ 
++	wil_refresh_fw_capabilities(wil);
++
+ 	rc = wmi_get_mgmt_retry(wil, &retry_short);
+ 	if (!rc) {
+ 		wiphy->retry_short = retry_short;
+@@ -767,6 +769,25 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
+ 	}
+ }
+ 
++void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
++{
++	struct wiphy *wiphy = wil_to_wiphy(wil);
++
++	wil->keep_radio_on_during_sleep =
++		wil->platform_ops.keep_radio_on_during_sleep &&
++		wil->platform_ops.keep_radio_on_during_sleep(
++			wil->platform_handle) &&
++		test_bit(WMI_FW_CAPABILITY_D3_SUSPEND, wil->fw_capabilities);
++
++	wil_info(wil, "keep_radio_on_during_sleep (%d)\n",
++		 wil->keep_radio_on_during_sleep);
++
++	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
++		wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
++	else
++		wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
++}
++
+ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
+ {
+ 	le32_to_cpus(&r->base);
+@@ -1071,11 +1092,11 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 			return rc;
+ 		}
+ 
++		wil_collect_fw_info(wil);
++
+ 		if (wil->ps_profile != WMI_PS_PROFILE_TYPE_DEFAULT)
+ 			wil_ps_update(wil, wil->ps_profile);
+ 
+-		wil_collect_fw_info(wil);
+-
+ 		if (wil->platform_ops.notify) {
+ 			rc = wil->platform_ops.notify(wil->platform_handle,
+ 						      WIL_PLATFORM_EVT_FW_RDY);
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index ba35b32..b4de001 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -85,9 +85,7 @@ void wil_set_capabilities(struct wil6210_priv *wil)
+ 
+ 	/* extract FW capabilities from file without loading the FW */
+ 	wil_request_firmware(wil, wil->wil_fw_name, false);
+-
+-	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
+-		wil_to_wiphy(wil)->signal_type = CFG80211_SIGNAL_TYPE_MBM;
++	wil_refresh_fw_capabilities(wil);
+ }
+ 
+ void wil_disable_irq(struct wil6210_priv *wil)
+@@ -297,15 +295,6 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	wil_set_capabilities(wil);
+ 	wil6210_clear_irq(wil);
+ 
+-	wil->keep_radio_on_during_sleep =
+-		wil->platform_ops.keep_radio_on_during_sleep &&
+-		wil->platform_ops.keep_radio_on_during_sleep(
+-			wil->platform_handle) &&
+-		test_bit(WMI_FW_CAPABILITY_D3_SUSPEND, wil->fw_capabilities);
+-
+-	wil_info(wil, "keep_radio_on_during_sleep (%d)\n",
+-		 wil->keep_radio_on_during_sleep);
+-
+ 	/* FW should raise IRQ when ready */
+ 	rc = wil_if_pcie_enable(wil);
+ 	if (rc) {
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 90dbdcb..fc8cbb0 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -872,6 +872,7 @@ int wil_ps_update(struct wil6210_priv *wil,
+ int __wil_up(struct wil6210_priv *wil);
+ int wil_down(struct wil6210_priv *wil);
+ int __wil_down(struct wil6210_priv *wil);
++void wil_refresh_fw_capabilities(struct wil6210_priv *wil);
+ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r);
+ int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
+ void wil_set_ethtoolops(struct net_device *ndev);
+-- 
+1.9.1
