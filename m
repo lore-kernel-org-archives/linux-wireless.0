@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:10081 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751071AbdKTL5Y (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:45346 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751738AbdKAP3b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 06:57:24 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Christian Lamparter <chunkeey@gmail.com>
-CC: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix recent bandwidth conversion bug
-Date: Mon, 20 Nov 2017 11:57:21 +0000
-Message-ID: <87tvxpf9i8.fsf@kamboji.qca.qualcomm.com> (sfid-20171120_125738_297305_02024DC5)
-References: <20171101200157.27096-1-chunkeey@gmail.com>
-        <224e2890-3775-967b-d4ce-4297574c0642@dd-wrt.com>
-        <1666282.PC3nhpCf9f@debian64>
-In-Reply-To: <1666282.PC3nhpCf9f@debian64> (Christian Lamparter's message of
-        "Thu, 02 Nov 2017 20:34:06 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Wed, 1 Nov 2017 11:29:31 -0400
+Received: by mail-oi0-f67.google.com with SMTP id f66so5041592oib.2
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Nov 2017 08:29:31 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 00/11] rtlwifi: rtl_pci: Update mini driver for RTL8822BE
+Date: Wed,  1 Nov 2017 10:29:15 -0500
+Message-Id: <20171101152926.24971-1-Larry.Finger@lwfinger.net> (sfid-20171101_162936_003846_38FFD505)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@gmail.com> writes:
+These changes are for the 4.15 stream.
 
-> On Wednesday, November 1, 2017 9:37:53 PM CET Sebastian Gottschall wrote:
->> a additional array bounds check would be good
->
-> Ah, about that:
->
-> the bw variable in ath10k_htt_rx_h_rates() is extracted from info2
-> in the following way [0]:
-> |	bw =3D info2 & 3;
->
-> the txrate.bw variable in ath10k_update_per_peer_tx_stats() is set by [1]=
-:
-> |	txrate.bw =3D ATH10K_HW_BW(peer_stats->flags);
->
-> ATH10K_HW_BW is a macro defined as [2]:
-> |	#define ATH10K_HW_BW(flags)		(((flags) >> 3) & 0x3)
->
-> In both cases the bandwidth values already are limited to 0-3 by
-> the "and 3" operation.
+The modifications implement nearly all the changes needed to allow the
+RTL8822BE in staging to use rtl_pci in the wireless tree. The only
+exceptions are related to BT coexistence, which will be added once btcoex
+is updated.
 
-Until someone changes that part of the code (and the firmware
-interface). IMHO a switch is safer as there we don't have any risk of
-out of bands access.
+Once these patches reach mainline, I will submit a patch to staging that
+changes r8822be to use the standard rtl_pci, and deletes the duplicated
+code.
 
---=20
-Kalle Valo=
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+
+Larry Finger (3):
+  rtlwifi: rtl_pci: Fix formatting errors in pci.h
+  rtlwifi: rtl_pci: Fix formatting problems in pci.c
+  rtlwifi: rtl_pci: Simplify some code be eliminating extraneous
+    variables
+
+Ping-Ke Shih (5):
+  rtlwifi: rtl_pci: Add support for 8822be TX/RX BD
+  rtlwifi: rtl_pci: Add fill_tx_special_desc to issue H2C data, and
+    process TXOK in interrupt.
+  rtlwifi: rtl_pci: Add ID for 8822BE
+  rtlwifi: rtl_pci: Extend recognized interrupt parameters from two to
+    four ISR
+  rtlwifi: rtl_pci: 8822BE puts broadcast and multicast packet to HIQ
+
+Steven Ting (1):
+  rtlwifi: rtl_pci: Refactor TX/RX flow
+
+Tsang-Shian Lin (2):
+  rtlwifi: Add beacon check mechanism to check if AP settings changed.
+  rtlwifi: rtl_pci: Fix the bug when inactiveps is enabled.
+
+ drivers/net/wireless/realtek/rtlwifi/base.c        | 178 ++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/base.h        |   3 +-
+ drivers/net/wireless/realtek/rtlwifi/core.c        |  48 ++++
+ drivers/net/wireless/realtek/rtlwifi/pci.c         | 305 +++++++++++----------
+ drivers/net/wireless/realtek/rtlwifi/pci.h         |  36 +--
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |  57 +---
+ .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    |   2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.h    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |   3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.h    |   3 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  20 +-
+ 23 files changed, 460 insertions(+), 234 deletions(-)
+
+-- 
+2.12.3
