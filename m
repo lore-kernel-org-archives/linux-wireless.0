@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54358 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755314AbdKNNZz (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:44467 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753706AbdKAAvd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 08:25:55 -0500
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 04/12] wil6210: abort properly in cfg suspend
-Date: Tue, 14 Nov 2017 15:25:36 +0200
-Message-Id: <1510665944-30198-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142603_337091_0CF5BCD8)
-In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Tue, 31 Oct 2017 20:51:33 -0400
+Received: by mail-wr0-f194.google.com with SMTP id z55so640015wrz.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Oct 2017 17:51:32 -0700 (PDT)
+From: nirinA raseliarison <nirina.raseliarison@gmail.com>
+Subject: Re: rtlwifi oops
+To: Barry Day <briselec@gmail.com>, James Cameron <quozl@laptop.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org
+References: <c13aa975-6339-2f5a-20bb-0a82656a2271@gmail.com>
+ <fcf4b761-d7bd-7956-fa98-07fd8b2f8c3b@lwfinger.net>
+ <b86480bd-49b9-f7ac-5dc5-6f6f83942727@gmail.com>
+ <d65baa01-c842-0d14-5760-bbc1c754b1e6@lwfinger.net>
+ <d9e6052f-cc92-813b-6cd6-9907f5bd82be@gmail.com>
+ <a1ca0a52-c033-205a-8b3e-e6879016728c@gmail.com>
+ <20171027045716.GH9888@us.netrek.org>
+ <7532bb89-9f58-f2e2-e9c3-baa4be24da81@gmail.com>
+ <20171027225701.GB8920@us.netrek.org>
+ <bd5a4917-96e7-c9ef-909a-e8e4f34b0ef1@gmail.com>
+ <20171031031110.GA4627@darkstar.home.org>
+Message-ID: <bfa02605-dc37-c425-ff1e-0bd43d8c9754@gmail.com> (sfid-20171101_015327_648454_7A8EDEAE)
+Date: Wed, 1 Nov 2017 03:51:14 +0300
+MIME-Version: 1.0
+In-Reply-To: <20171031031110.GA4627@darkstar.home.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+On 10/31/2017 06:11 AM, Barry Day wrote:
+> On Sun, Oct 29, 2017 at 01:08:24AM +0300, nirinA raseliarison wrote:
+>> [  145.966016] usb 2-1.4: new high-speed USB device number 4 using ehci-pci
+>> [  146.045808] usb 2-1.4: New USB device found, idVendor=0bda,
+>> idProduct=8178
+>> [  146.045811] usb 2-1.4: New USB device strings: Mfr=1, Product=2,
+>> SerialNumber=3
+>> [  146.045812] usb 2-1.4: Product: 802.11n WLAN Adapter
+>> [  146.045813] usb 2-1.4: Manufacturer: Realtek
+>> [  146.045814] usb 2-1.4: SerialNumber: 00e04c000001
+>> [  146.202043] rtl8192cu: Chip version 0x11
+>> [  146.278549] rtl8192cu: Board Type 0
+>> [  146.278790] rtl_usb: rx_max_size 15360, rx_urb_num 8, in_ep 1
+>> [  146.278823] rtl8192cu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
+>> [  146.278938] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+>> [  146.279113] usbcore: registered new interface driver rtl8192cu
+>> [  146.281706] usbcore: registered new interface driver rtl8xxxu
+>> --
+>> nirinA
+>
+> It appears that both rtl8192cu and rtl8xxxu are being loaded for the
+> one device.
+>
+> Try blacklisting one of them.
 
-On-going operations were not aborted properly
-and required locks were not taken.
+both seem to work fine; i'll use rtl8192cu and blacklist rtl8xxxu.
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+thanks,
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 85d5c04..c3d3c0c 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1727,9 +1727,12 @@ static int wil_cfg80211_suspend(struct wiphy *wiphy,
- 
- 	wil_dbg_pm(wil, "suspending\n");
- 
--	wil_p2p_stop_discovery(wil);
--
-+	mutex_lock(&wil->mutex);
-+	mutex_lock(&wil->p2p_wdev_mutex);
-+	wil_p2p_stop_radio_operations(wil);
- 	wil_abort_scan(wil, true);
-+	mutex_unlock(&wil->p2p_wdev_mutex);
-+	mutex_unlock(&wil->mutex);
- 
- out:
- 	return rc;
--- 
-1.9.1
+> Barry
+>
+--
+nirinA
