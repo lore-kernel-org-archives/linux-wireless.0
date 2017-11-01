@@ -1,97 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:56188 "EHLO
-        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753688AbdKGLNv (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:52230 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754695AbdKAP3l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2017 06:13:51 -0500
-Message-ID: <1510053227.24015.3.camel@gmail.com> (sfid-20171107_121542_814615_D21C0429)
-Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
-From: Richard Genoud <richard.genoud@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 07 Nov 2017 12:13:47 +0100
-In-Reply-To: <20171107101320.GA12140@redhat.com>
-References: <1509983829.10974.2.camel@gmail.com>
-         <20171107085327.GA11380@redhat.com>
-         <CACQ1gAi6XtjCHPji3BP71jDG7srg+BshesviasXiSqnw2zs9_Q@mail.gmail.com>
-         <20171107101320.GA12140@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 1 Nov 2017 11:29:41 -0400
+Received: by mail-oi0-f68.google.com with SMTP id c202so5001562oih.9
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Nov 2017 08:29:41 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: [PATCH 09/11] rtlwifi: rtl_pci: 8822BE puts broadcast and multicast packet to HIQ
+Date: Wed,  1 Nov 2017 10:29:24 -0500
+Message-Id: <20171101152926.24971-10-Larry.Finger@lwfinger.net> (sfid-20171101_162949_087419_AF3CB04E)
+In-Reply-To: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
+References: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mardi 07 novembre 2017 à 11:13 +0100, Stanislaw Gruszka a écrit :
-> On Tue, Nov 07, 2017 at 11:06:39AM +0100, Richard Genoud wrote:
-> > > 3 short articles how to configure and use ftrace are here:
-> > > https://lwn.net/Articles/365835/
-> > > https://lwn.net/Articles/366796/
-> > > https://lwn.net/Articles/370423/
-> > > 
-> > 
-> > I tried with ftrace, but I don't think there's a way to dump the
-> > trace
-> > when there's a soft lock-up
-> > (I can't do anything after the unbind, even the heartbeat led
-> > stopped blinking).
-> > I saw the /proc/sys/kernel/ftrace_dump_on_oops file, but there's no
-> > /proc/sys/kernel/ftrace_dump_on_soft_lock-up file :)
-> 
-> You should configure function trace with rt2x* functions. After that
-> start tracing, unbind the device, then stop tracing and provide trace
-> output.
-Here is another trace, with rt2* as function filter.
-(sorry for the noise)
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Dumping ftrace buffer:
----------------------------------
-CPU:0 [LOST 3606923 EVENTS]
- 0)   0.000 us    |      } /* rt2x00usb_clear_entry */
- 0)   0.000 us    |    } /* rt2x00lib_rxdone */
- 0)   0.000 us    |    rt2x00queue_get_entry();
- 0)               |    rt2x00lib_rxdone() {
- 0)   0.000 us    |      rt2x00queue_index_inc();
- 0)               |      rt2x00usb_clear_entry() {
- 0)               |        rt2x00usb_kick_rx_entry() {
- 0)               |          rt2x00lib_dmastart() {
- 0)   0.000 us    |            rt2x00queue_index_inc();
- 0)   0.000 us    |          }
- 0)               |          rt2x00lib_dmadone() {
- 0)   0.000 us    |            rt2x00queue_index_inc();
- 0)   0.000 us    |          }
- 0)   0.000 us    |        }
- 0)   0.000 us    |      }
- 0)   0.000 us    |    }
- 0)   0.000 us    |    rt2x00queue_get_entry();
- 0)               |    rt2x00lib_rxdone() {
- 0)   0.000 us    |      rt2x00queue_index_inc();
- 0)               |      rt2x00usb_clear_entry() {
- 0)               |        rt2x00usb_kick_rx_entry() {
- 0)               |          rt2x00lib_dmastart() {
- 0)   0.000 us    |            rt2x00queue_index_inc();
- 0)   0.000 us    |          }
- 0)               |          rt2x00lib_dmadone() {
- 0)   0.000 us    |            rt2x00queue_index_inc();
- 0)   0.000 us    |          }
- 0)   0.000 us    |        }
- 0)   0.000 us    |      }
- 0)   0.000 us    |    }
- 0)   0.000 us    |    rt2x00queue_get_entry();
- 0)               |    rt2x00lib_rxdone() {
- 0)   0.000 us    |      rt2x00queue_index_inc();
- 0)               |      rt2x00usb_clear_entry() {
- 0)               |        rt2x00usb_kick_rx_entry() {
- 0)               |          rt2x00lib_dmastart() {
- 0)   0.000 us    |            rt2x00queue_index_inc();
- 0)   0.000 us    |          }
- 0)               |          rt2x00lib_dmadone() {
- 0)   0.000 us    |            rt2x00queue_index_inc();
- 0)   0.000 us    |          }
- 0)   0.000 us    |        }
- 0)   0.000 us    |      }
- 0)   0.000 us    |    }
+HIQ has higher priority to transmit after TBTT or beacon.
 
-> 
-> Thanks
-> Stanislaw
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Birming Chiu <birming@realtek.com>
+Cc: Shaofu <shaofu@realtek.com>
+Cc: Steven Ting <steventing@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index e544f4bcfae9..0a2766385ca2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -59,6 +59,7 @@ static u8 _rtl_mac_to_hwqueue(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	__le16 fc = rtl_get_fc(skb);
+ 	u8 queue_index = skb_get_queue_mapping(skb);
++	struct ieee80211_hdr *hdr;
+ 
+ 	if (unlikely(ieee80211_is_beacon(fc)))
+ 		return BEACON_QUEUE;
+@@ -67,6 +68,13 @@ static u8 _rtl_mac_to_hwqueue(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
+ 		if (ieee80211_is_nullfunc(fc))
+ 			return HIGH_QUEUE;
++	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8822BE) {
++		hdr = rtl_get_hdr(skb);
++
++		if (is_multicast_ether_addr(hdr->addr1) ||
++		    is_broadcast_ether_addr(hdr->addr1))
++			return HIGH_QUEUE;
++	}
+ 
+ 	return ac_to_hwq[queue_index];
+ }
+-- 
+2.14.3
