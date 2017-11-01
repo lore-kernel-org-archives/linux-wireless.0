@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:36681 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752663AbdKHNgp (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:65325 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754244AbdKAKtv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 08:36:45 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 0/7] brcmfmac: firmware halt and scan cleanup
-Date: Wed,  8 Nov 2017 14:36:30 +0100
-Message-Id: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171108_143654_439299_576032C8)
+        Wed, 1 Nov 2017 06:49:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/6] ath10k: add memory dump support for QCA6174/QCA9377
+Date: Wed, 1 Nov 2017 10:49:46 +0000
+Message-ID: <87wp3axohi.fsf@kamboji.qca.qualcomm.com> (sfid-20171101_114955_563645_3CF21714)
+References: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net>
+        <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
+In-Reply-To: <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
+        (Kalle Valo's message of "Tue, 15 Aug 2017 11:23:46 +0300")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series is a resubmission. No changes were being made compared
-to the previous series.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-  * handling firmware halt indication.
-  * cleanup scan related code.
+> From: Alan Liu <alanliu@qca.qualcomm.com>
+>
+> Add memory dump to the firmware crash data file which is provided to user=
+ space
+> via devcoredump interface. This makes it easier for firmware engineers to=
+ debug
+> firmware crashes.
+>
+> Due to increased memory consumption the memory dump is disabled by defaul=
+t. To
+> enable it make sure that bit 3 is set in coredump_mask module parameter:
+>
+> modprobe ath10k_core coredump_mask=3D0xffffffff
+>
+> When RAMDUMP is enabled a buffer for the dump is allocated with vmalloc d=
+uring
+> device probe. The actual memory layout is different in hardware versions =
+and
+> the layouts are defined in coredump.c. The memory is split to regions and=
+, to
+> get even finegrained control of what to copy, the region can split to sma=
+ller
+> sections as not all registers are readable (which could cause the whole s=
+ystem
+> to stall).
+>
+> Signed-off-by: Alan Liu <alanliu@qca.qualcomm.com>
+> [kvalo@qca.qualcomm.com: refactoring and cleanup]
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-The series applies to the master branch of the wireless-drivers-next
-repository and is intended for v4.15 kernel.
+[...]
 
-Arend Van Spriel (6):
-  brcmfmac: handle FWHALT mailbox indication
-  brcmfmac: cleanup brcmf_cfg80211_escan() function
-  brcmfmac: use msecs_to_jiffies() instead of calculation using HZ
-  brcmfmac: get rid of brcmf_cfg80211_escan() function
-  brcmfmac: get rid of struct brcmf_cfg80211_info::active_scan field
-  brcmfmac: move configuration of probe request IEs
+> +		/* To get IRAM dump, the host driver needs to switch target
+> +		 * ram config from DRAM to IRAM.
+> +		 */
+> +		if (current_region->type =3D=3D ATH10K_MEM_REGION_TYPE_IRAM1 ||
+> +		    current_region->type =3D=3D ATH10K_MEM_REGION_TYPE_IRAM2) {
+> +			shift =3D current_region->start >> 20;
+> +
+> +			ret =3D ath10k_pci_set_ram_config(ar, shift);
+> +			if (!ret) {
+> +				ath10k_warn(ar, "failed to switch ram config to IRAM for section %s:=
+ %d\n",
+> +					    current_region->name, ret);
 
-Franky Lin (1):
-  brcmfmac: disable packet filtering in promiscuous mode
+A colleague noticed that there's a bug here, it should be "if (ret)".
+I'll fix that in the next version.
 
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 162 ++++-----------------
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   2 -
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  38 +++++
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   1 +
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |  11 +-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  14 +-
- 6 files changed, 77 insertions(+), 151 deletions(-)
-
--- 
-1.9.1
+--=20
+Kalle Valo=
