@@ -1,42 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:41122 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751387AbdKTQJH (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933191AbdKATXq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 11:09:07 -0500
-Message-ID: <1511194141.2030.46.camel@sipsolutions.net> (sfid-20171120_170915_958809_0B630156)
-Subject: Re: [PATCH] mac80211: Update last_ack status for all except probing
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
-Date: Mon, 20 Nov 2017 17:09:01 +0100
-In-Reply-To: <839c3938efae497e9058391fd4be4817@NALASEXR01H.na.qualcomm.com>
-References: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com>
-         <1509964164.2669.0.camel@sipsolutions.net>
-         <8bb232d231884f9595c81f945a5eef4f@NALASEXR01H.na.qualcomm.com>
-         <49241af7-a50f-5758-0c7e-77f2fae5d93d@quantenna.com>
-         <96799d352b7347a8a9092bb37f1cd8d9@NALASEXR01H.na.qualcomm.com>
-         <1510565141.30497.6.camel@sipsolutions.net>
-         <839c3938efae497e9058391fd4be4817@NALASEXR01H.na.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 1 Nov 2017 15:23:46 -0400
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 11/12] wil6210: remove suspend time statistics
+Date: Wed,  1 Nov 2017 21:23:21 +0200
+Message-Id: <1509564202-30078-12-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202356_196933_E3BFA5FB)
+In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-11-15 at 19:21 +0000, Rajkumar Manoharan wrote:
-> > 
-> Hmm.. But polling TX/RX counters will not give exact activity time. 
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-Yeah but if you do it every minute, you'll know if it was idle for
-roughly 5 minutes, or so... dunno, things could be done.
+Currently suspend time statistics are showed through debugfs.
+Remove time statistics in suspend state since the timing may
+not be accurate in that state.
 
-> Moreover
-> It will be useful if STA's last data activity tstamp is logged in station dump. No?
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 17 ++---------------
+ drivers/net/wireless/ath/wil6210/main.c    |  1 -
+ drivers/net/wireless/ath/wil6210/pm.c      | 20 ++------------------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  5 -----
+ 4 files changed, 4 insertions(+), 39 deletions(-)
 
-I don't object to adding that, though we should be careful with adding
-things and see if we _really_ need them, since they all have a cost.
-
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 06b9c56..edaab0f 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1632,8 +1632,6 @@ static ssize_t wil_write_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
+-	wil->suspend_stats.min_suspend_time = ULONG_MAX;
+-	wil->suspend_stats.collection_start = ktime_get();
+ 
+ 	return len;
+ }
+@@ -1645,27 +1643,18 @@ static ssize_t wil_read_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 	static char text[400];
+ 	int n;
+-	unsigned long long stats_collection_time =
+-		ktime_to_us(ktime_sub(ktime_get(),
+-				      wil->suspend_stats.collection_start));
+ 
+ 	n = snprintf(text, sizeof(text),
+ 		     "Suspend statistics:\n"
+ 		     "successful suspends:%ld failed suspends:%ld\n"
+ 		     "successful resumes:%ld failed resumes:%ld\n"
+-		     "rejected by host:%ld rejected by device:%ld\n"
+-		     "total suspend time:%lld min suspend time:%lld\n"
+-		     "max suspend time:%lld stats collection time: %lld\n",
++		     "rejected by host:%ld rejected by device:%ld\n",
+ 		     wil->suspend_stats.successful_suspends,
+ 		     wil->suspend_stats.failed_suspends,
+ 		     wil->suspend_stats.successful_resumes,
+ 		     wil->suspend_stats.failed_resumes,
+ 		     wil->suspend_stats.rejected_by_host,
+-		     wil->suspend_stats.rejected_by_device,
+-		     wil->suspend_stats.total_suspend_time,
+-		     wil->suspend_stats.min_suspend_time,
+-		     wil->suspend_stats.max_suspend_time,
+-		     stats_collection_time);
++		     wil->suspend_stats.rejected_by_device);
+ 
+ 	n = min_t(int, n, sizeof(text));
+ 
+@@ -1836,8 +1825,6 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 
+ 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
+ 
+-	wil->suspend_stats.collection_start = ktime_get();
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e92fd35..1b53cd3 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -579,7 +579,6 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
+ 			      WMI_WAKEUP_TRIGGER_BCAST;
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
+-	wil->suspend_stats.min_suspend_time = ULONG_MAX;
+ 	wil->vring_idle_trsh = 16;
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index ce4f546..48ec186 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -319,16 +319,12 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ 	wil_dbg_pm(wil, "suspend: %s => %d\n",
+ 		   is_runtime ? "runtime" : "system", rc);
+ 
+-	if (!rc)
+-		wil->suspend_stats.suspend_start_time = ktime_get();
+-
+ 	return rc;
+ }
+ 
+ int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ {
+ 	int rc = 0;
+-	unsigned long long suspend_time_usec = 0;
+ 
+ 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
+ 
+@@ -346,21 +342,9 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ 	else
+ 		rc = wil_resume_radio_off(wil);
+ 
+-	if (rc)
+-		goto out;
+-
+-	suspend_time_usec =
+-		ktime_to_us(ktime_sub(ktime_get(),
+-				      wil->suspend_stats.suspend_start_time));
+-	wil->suspend_stats.total_suspend_time += suspend_time_usec;
+-	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
+-		wil->suspend_stats.min_suspend_time = suspend_time_usec;
+-	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
+-		wil->suspend_stats.max_suspend_time = suspend_time_usec;
+-
+ out:
+-	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
+-		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
++	wil_dbg_pm(wil, "resume: %s => %d\n", is_runtime ? "runtime" : "system",
++		   rc);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 2441818..0ae2415 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -89,11 +89,6 @@ struct wil_suspend_stats {
+ 	unsigned long failed_resumes;
+ 	unsigned long rejected_by_device;
+ 	unsigned long rejected_by_host;
+-	unsigned long long total_suspend_time;
+-	unsigned long long min_suspend_time;
+-	unsigned long long max_suspend_time;
+-	ktime_t collection_start;
+-	ktime_t suspend_start_time;
+ };
+ 
+ /* Calculate MAC buffer size for the firmware. It includes all overhead,
+-- 
+1.9.1
