@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0126.outbound.protection.outlook.com ([104.47.37.126]:56808
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752982AbdKCI1b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Nov 2017 04:27:31 -0400
-Date: Fri, 3 Nov 2017 03:27:25 -0500
-From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
-        chi-hsien.lin@cypress.com, wright.feng@cypress.com
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, stanley.hsu@cypress.com
-Subject: Re: [PATCH v6] brcmfmac: add CLM download support
-Message-ID: <20171103082725.GB25372@aremote01.aus.cypress.com> (sfid-20171103_092739_675568_EC23D633)
-References: <1507188678-24985-1-git-send-email-wright.feng@cypress.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1507188678-24985-1-git-send-email-wright.feng@cypress.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:55383 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751587AbdKAUCB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Nov 2017 16:02:01 -0400
+Received: by mail-wm0-f67.google.com with SMTP id y83so6988814wmc.4
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Nov 2017 13:02:00 -0700 (PDT)
+From: Christian Lamparter <chunkeey@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH] ath10k: fix recent bandwidth conversion bug
+Date: Wed,  1 Nov 2017 21:01:57 +0100
+Message-Id: <20171101200157.27096-1-chunkeey@gmail.com> (sfid-20171101_210204_431516_219DA7A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 05, 2017 at 03:31:18PM +0800, Wright Feng wrote:
-> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-> 
-> The firmware for brcmfmac devices includes information regarding
-> regulatory constraints. For certain devices this information is kept
-> separately in a binary form that needs to be downloaded to the device.
-> This patch adds support to download this so-called CLM blob file. It
-> uses the same naming scheme as the other firmware files with extension
-> of .clm_blob.
-> 
-> The CLM blob file is optional. If the file does not exist, the download
-> process will be bypassed. It will not affect the driver loading.
-> 
-> Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-> ---
-> v2: Revise commit message to describe in more detail
-> v3: Add error handling in brcmf_c_get_clm_name function
-> v4: Correct the length of dload_buf in brcmf_c_download function
-> v5: Remove unnecessary cast and alignment
-> v6: Add debug log for the case of no CLM file present
-> ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  10 ++
->  .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 162 +++++++++++++++++++++
->  .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   2 +
->  .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
->  .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  31 ++++
->  .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  19 +++
->  .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  19 +++
->  .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  18 +++
->  8 files changed, 263 insertions(+)
+The commit "cfg80211: make RATE_INFO_BW_20 the default" changed
+the index of RATE_INFO_BW_20, but the updates to ath10k missed
+the special bandwidth calculation case in
+ath10k_update_per_peer_tx_stats().
 
-Any comments or feedback about this? I'm hoping to have it in v4.15.
+Fixes: 842be75c77cb ("cfg80211: make RATE_INFO_BW_20 the default")
+Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 23 +++++------------------
+ 1 file changed, 5 insertions(+), 18 deletions(-)
 
-Regards,
-Chung-Hsien
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index a3f5dc78353f..26b0d201a698 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -592,6 +592,9 @@ struct amsdu_subframe_hdr {
+ 
+ #define GROUP_ID_IS_SU_MIMO(x) ((x) == 0 || (x) == 63)
+ 
++static const u8 ath10k_bw_to_mac80211[] = { RATE_INFO_BW_20, RATE_INFO_BW_40,
++	RATE_INFO_BW_80, RATE_INFO_BW_160 };
++
+ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+ 				  struct ieee80211_rx_status *status,
+ 				  struct htt_rx_desc *rxd)
+@@ -694,23 +697,7 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+ 		if (sgi)
+ 			status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
+ 
+-		switch (bw) {
+-		/* 20MHZ */
+-		case 0:
+-			break;
+-		/* 40MHZ */
+-		case 1:
+-			status->bw = RATE_INFO_BW_40;
+-			break;
+-		/* 80MHZ */
+-		case 2:
+-			status->bw = RATE_INFO_BW_80;
+-			break;
+-		case 3:
+-			status->bw = RATE_INFO_BW_160;
+-			break;
+-		}
+-
++		status->bw = ath10k_bw_to_mac80211[bw];
+ 		status->encoding = RX_ENC_VHT;
+ 		break;
+ 	default:
+@@ -2297,7 +2284,7 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
+ 		arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 
+ 	arsta->txrate.nss = txrate.nss;
+-	arsta->txrate.bw = txrate.bw + RATE_INFO_BW_20;
++	arsta->txrate.bw = ath10k_bw_to_mac80211[txrate.bw];
+ }
+ 
+ static void ath10k_htt_fetch_peer_stats(struct ath10k *ar,
+-- 
+2.15.0
