@@ -1,321 +1,301 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45946 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758805AbdKPIrb (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754803AbdKATXa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Nov 2017 03:47:31 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
-Date: Thu, 16 Nov 2017 10:47:21 +0200
-Message-Id: <20171116084721.14601-1-luca@coelho.fi> (sfid-20171116_094845_274611_485F2E16)
-In-Reply-To: <20171115165242.21675-3-luca@coelho.fi>
-References: <20171115165242.21675-3-luca@coelho.fi>
-Subject: [PATCH v2 2/3] iwlwifi: fix PCI IDs and configuration mapping for 9000 series
+        Wed, 1 Nov 2017 15:23:30 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 02/12] wil6210: print human readable names of WMI commands and events
+Date: Wed,  1 Nov 2017 21:23:12 +0200
+Message-Id: <1509564202-30078-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202339_728522_021F07DF)
+In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-A lot of PCI IDs were missing and there were some problems with the
-configuration and firmware selection for devices on the 9000 series.
-Fix the firmware selection by adding files for the B-steps; add
-configuration for some integrated devices; and add a bunch of PCI IDs
-(mostly for integrated devices) that were missing from the driver's
-list.
+Upon sending/receiving WMI commands/events, print human readable
+names in addition to id for easier debugging.
 
-Without this patch, a lot of devices will not be recognized or will
-try to load the wrong firmware file.
-
-Cc: stable@vger.kernel.org # 4.13
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/wil6210/wmi.c | 237 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 232 insertions(+), 5 deletions(-)
 
-In v2:
-  * include the changes to iwl-config.h that were missing.
-
-
-drivers/net/wireless/intel/iwlwifi/cfg/9000.c   |  67 +++++++++++-
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |   5 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 132 ++++++++++++++++++------
- 3 files changed, 170 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index af7c4f36b66f..b6990400042f 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -72,12 +72,15 @@
- #define IWL9000_SMEM_OFFSET		0x400000
- #define IWL9000_SMEM_LEN		0x68000
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index ffdd2fa..8a780f2 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -198,6 +198,232 @@ int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
+ 	return 0;
+ }
  
--#define  IWL9000_FW_PRE "iwlwifi-9000-pu-a0-jf-a0-"
-+#define  IWL9000A_FW_PRE "iwlwifi-9000-pu-a0-jf-a0-"
-+#define  IWL9000B_FW_PRE "iwlwifi-9000-pu-b0-jf-b0-"
- #define  IWL9000RFB_FW_PRE "iwlwifi-9000-pu-a0-jf-b0-"
- #define  IWL9260A_FW_PRE "iwlwifi-9260-th-a0-jf-a0-"
- #define  IWL9260B_FW_PRE "iwlwifi-9260-th-b0-jf-b0-"
--#define IWL9000_MODULE_FIRMWARE(api) \
--	IWL9000_FW_PRE "-" __stringify(api) ".ucode"
-+#define IWL9000A_MODULE_FIRMWARE(api) \
-+	IWL9000A_FW_PRE __stringify(api) ".ucode"
-+#define IWL9000B_MODULE_FIRMWARE(api) \
-+	IWL9000B_FW_PRE __stringify(api) ".ucode"
- #define IWL9000RFB_MODULE_FIRMWARE(api) \
- 	IWL9000RFB_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL9260A_MODULE_FIRMWARE(api) \
-@@ -194,7 +197,48 @@ const struct iwl_cfg iwl9460_2ac_cfg = {
- 	.nvm_ver = IWL9000_NVM_VERSION,
- 	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
- 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+};
++static const char *cmdid2name(u16 cmdid)
++{
++	switch (cmdid) {
++	case WMI_NOTIFY_REQ_CMDID:
++		return "WMI_NOTIFY_REQ_CMD";
++	case WMI_START_SCAN_CMDID:
++		return "WMI_START_SCAN_CMD";
++	case WMI_CONNECT_CMDID:
++		return "WMI_CONNECT_CMD";
++	case WMI_DISCONNECT_CMDID:
++		return "WMI_DISCONNECT_CMD";
++	case WMI_SW_TX_REQ_CMDID:
++		return "WMI_SW_TX_REQ_CMD";
++	case WMI_GET_RF_SECTOR_PARAMS_CMDID:
++		return "WMI_GET_RF_SECTOR_PARAMS_CMD";
++	case WMI_SET_RF_SECTOR_PARAMS_CMDID:
++		return "WMI_SET_RF_SECTOR_PARAMS_CMD";
++	case WMI_GET_SELECTED_RF_SECTOR_INDEX_CMDID:
++		return "WMI_GET_SELECTED_RF_SECTOR_INDEX_CMD";
++	case WMI_SET_SELECTED_RF_SECTOR_INDEX_CMDID:
++		return "WMI_SET_SELECTED_RF_SECTOR_INDEX_CMD";
++	case WMI_BRP_SET_ANT_LIMIT_CMDID:
++		return "WMI_BRP_SET_ANT_LIMIT_CMD";
++	case WMI_TOF_SESSION_START_CMDID:
++		return "WMI_TOF_SESSION_START_CMD";
++	case WMI_AOA_MEAS_CMDID:
++		return "WMI_AOA_MEAS_CMD";
++	case WMI_PMC_CMDID:
++		return "WMI_PMC_CMD";
++	case WMI_TOF_GET_TX_RX_OFFSET_CMDID:
++		return "WMI_TOF_GET_TX_RX_OFFSET_CMD";
++	case WMI_TOF_SET_TX_RX_OFFSET_CMDID:
++		return "WMI_TOF_SET_TX_RX_OFFSET_CMD";
++	case WMI_VRING_CFG_CMDID:
++		return "WMI_VRING_CFG_CMD";
++	case WMI_BCAST_VRING_CFG_CMDID:
++		return "WMI_BCAST_VRING_CFG_CMD";
++	case WMI_TRAFFIC_SUSPEND_CMDID:
++		return "WMI_TRAFFIC_SUSPEND_CMD";
++	case WMI_TRAFFIC_RESUME_CMDID:
++		return "WMI_TRAFFIC_RESUME_CMD";
++	case WMI_ECHO_CMDID:
++		return "WMI_ECHO_CMD";
++	case WMI_SET_MAC_ADDRESS_CMDID:
++		return "WMI_SET_MAC_ADDRESS_CMD";
++	case WMI_LED_CFG_CMDID:
++		return "WMI_LED_CFG_CMD";
++	case WMI_PCP_START_CMDID:
++		return "WMI_PCP_START_CMD";
++	case WMI_PCP_STOP_CMDID:
++		return "WMI_PCP_STOP_CMD";
++	case WMI_SET_SSID_CMDID:
++		return "WMI_SET_SSID_CMD";
++	case WMI_GET_SSID_CMDID:
++		return "WMI_GET_SSID_CMD";
++	case WMI_SET_PCP_CHANNEL_CMDID:
++		return "WMI_SET_PCP_CHANNEL_CMD";
++	case WMI_GET_PCP_CHANNEL_CMDID:
++		return "WMI_GET_PCP_CHANNEL_CMD";
++	case WMI_P2P_CFG_CMDID:
++		return "WMI_P2P_CFG_CMD";
++	case WMI_START_LISTEN_CMDID:
++		return "WMI_START_LISTEN_CMD";
++	case WMI_START_SEARCH_CMDID:
++		return "WMI_START_SEARCH_CMD";
++	case WMI_DISCOVERY_STOP_CMDID:
++		return "WMI_DISCOVERY_STOP_CMD";
++	case WMI_DELETE_CIPHER_KEY_CMDID:
++		return "WMI_DELETE_CIPHER_KEY_CMD";
++	case WMI_ADD_CIPHER_KEY_CMDID:
++		return "WMI_ADD_CIPHER_KEY_CMD";
++	case WMI_SET_APPIE_CMDID:
++		return "WMI_SET_APPIE_CMD";
++	case WMI_CFG_RX_CHAIN_CMDID:
++		return "WMI_CFG_RX_CHAIN_CMD";
++	case WMI_TEMP_SENSE_CMDID:
++		return "WMI_TEMP_SENSE_CMD";
++	case WMI_DEL_STA_CMDID:
++		return "WMI_DEL_STA_CMD";
++	case WMI_DISCONNECT_STA_CMDID:
++		return "WMI_DISCONNECT_STA_CMD";
++	case WMI_VRING_BA_EN_CMDID:
++		return "WMI_VRING_BA_EN_CMD";
++	case WMI_VRING_BA_DIS_CMDID:
++		return "WMI_VRING_BA_DIS_CMD";
++	case WMI_RCP_DELBA_CMDID:
++		return "WMI_RCP_DELBA_CMD";
++	case WMI_RCP_ADDBA_RESP_CMDID:
++		return "WMI_RCP_ADDBA_RESP_CMD";
++	case WMI_PS_DEV_PROFILE_CFG_CMDID:
++		return "WMI_PS_DEV_PROFILE_CFG_CMD";
++	case WMI_SET_MGMT_RETRY_LIMIT_CMDID:
++		return "WMI_SET_MGMT_RETRY_LIMIT_CMD";
++	case WMI_GET_MGMT_RETRY_LIMIT_CMDID:
++		return "WMI_GET_MGMT_RETRY_LIMIT_CMD";
++	case WMI_ABORT_SCAN_CMDID:
++		return "WMI_ABORT_SCAN_CMD";
++	case WMI_NEW_STA_CMDID:
++		return "WMI_NEW_STA_CMD";
++	case WMI_SET_THERMAL_THROTTLING_CFG_CMDID:
++		return "WMI_SET_THERMAL_THROTTLING_CFG_CMD";
++	case WMI_GET_THERMAL_THROTTLING_CFG_CMDID:
++		return "WMI_GET_THERMAL_THROTTLING_CFG_CMD";
++	case WMI_LINK_MAINTAIN_CFG_WRITE_CMDID:
++		return "WMI_LINK_MAINTAIN_CFG_WRITE_CMD";
++	case WMI_LO_POWER_CALIB_FROM_OTP_CMDID:
++		return "WMI_LO_POWER_CALIB_FROM_OTP_CMD";
++	default:
++		return "Untracked CMD";
++	}
++}
 +
-+const struct iwl_cfg iwl9460_2ac_cfg_soc = {
-+	.name = "Intel(R) Dual Band Wireless AC 9460",
-+	.fw_name_pre = IWL9000A_FW_PRE,
-+	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
- 	.integrated = true,
-+	.soc_latency = 5000,
-+};
++static const char *eventid2name(u16 eventid)
++{
++	switch (eventid) {
++	case WMI_NOTIFY_REQ_DONE_EVENTID:
++		return "WMI_NOTIFY_REQ_DONE_EVENT";
++	case WMI_DISCONNECT_EVENTID:
++		return "WMI_DISCONNECT_EVENT";
++	case WMI_SW_TX_COMPLETE_EVENTID:
++		return "WMI_SW_TX_COMPLETE_EVENT";
++	case WMI_GET_RF_SECTOR_PARAMS_DONE_EVENTID:
++		return "WMI_GET_RF_SECTOR_PARAMS_DONE_EVENT";
++	case WMI_SET_RF_SECTOR_PARAMS_DONE_EVENTID:
++		return "WMI_SET_RF_SECTOR_PARAMS_DONE_EVENT";
++	case WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID:
++		return "WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT";
++	case WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID:
++		return "WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT";
++	case WMI_BRP_SET_ANT_LIMIT_EVENTID:
++		return "WMI_BRP_SET_ANT_LIMIT_EVENT";
++	case WMI_FW_READY_EVENTID:
++		return "WMI_FW_READY_EVENT";
++	case WMI_TRAFFIC_RESUME_EVENTID:
++		return "WMI_TRAFFIC_RESUME_EVENT";
++	case WMI_TOF_GET_TX_RX_OFFSET_EVENTID:
++		return "WMI_TOF_GET_TX_RX_OFFSET_EVENT";
++	case WMI_TOF_SET_TX_RX_OFFSET_EVENTID:
++		return "WMI_TOF_SET_TX_RX_OFFSET_EVENT";
++	case WMI_VRING_CFG_DONE_EVENTID:
++		return "WMI_VRING_CFG_DONE_EVENT";
++	case WMI_READY_EVENTID:
++		return "WMI_READY_EVENT";
++	case WMI_RX_MGMT_PACKET_EVENTID:
++		return "WMI_RX_MGMT_PACKET_EVENT";
++	case WMI_TX_MGMT_PACKET_EVENTID:
++		return "WMI_TX_MGMT_PACKET_EVENT";
++	case WMI_SCAN_COMPLETE_EVENTID:
++		return "WMI_SCAN_COMPLETE_EVENT";
++	case WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID:
++		return "WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENT";
++	case WMI_CONNECT_EVENTID:
++		return "WMI_CONNECT_EVENT";
++	case WMI_EAPOL_RX_EVENTID:
++		return "WMI_EAPOL_RX_EVENT";
++	case WMI_BA_STATUS_EVENTID:
++		return "WMI_BA_STATUS_EVENT";
++	case WMI_RCP_ADDBA_REQ_EVENTID:
++		return "WMI_RCP_ADDBA_REQ_EVENT";
++	case WMI_DELBA_EVENTID:
++		return "WMI_DELBA_EVENT";
++	case WMI_VRING_EN_EVENTID:
++		return "WMI_VRING_EN_EVENT";
++	case WMI_DATA_PORT_OPEN_EVENTID:
++		return "WMI_DATA_PORT_OPEN_EVENT";
++	case WMI_AOA_MEAS_EVENTID:
++		return "WMI_AOA_MEAS_EVENT";
++	case WMI_TOF_SESSION_END_EVENTID:
++		return "WMI_TOF_SESSION_END_EVENT";
++	case WMI_TOF_GET_CAPABILITIES_EVENTID:
++		return "WMI_TOF_GET_CAPABILITIES_EVENT";
++	case WMI_TOF_SET_LCR_EVENTID:
++		return "WMI_TOF_SET_LCR_EVENT";
++	case WMI_TOF_SET_LCI_EVENTID:
++		return "WMI_TOF_SET_LCI_EVENT";
++	case WMI_TOF_FTM_PER_DEST_RES_EVENTID:
++		return "WMI_TOF_FTM_PER_DEST_RES_EVENT";
++	case WMI_TOF_CHANNEL_INFO_EVENTID:
++		return "WMI_TOF_CHANNEL_INFO_EVENT";
++	case WMI_TRAFFIC_SUSPEND_EVENTID:
++		return "WMI_TRAFFIC_SUSPEND_EVENT";
++	case WMI_ECHO_RSP_EVENTID:
++		return "WMI_ECHO_RSP_EVENT";
++	case WMI_LED_CFG_DONE_EVENTID:
++		return "WMI_LED_CFG_DONE_EVENT";
++	case WMI_PCP_STARTED_EVENTID:
++		return "WMI_PCP_STARTED_EVENT";
++	case WMI_PCP_STOPPED_EVENTID:
++		return "WMI_PCP_STOPPED_EVENT";
++	case WMI_GET_SSID_EVENTID:
++		return "WMI_GET_SSID_EVENT";
++	case WMI_GET_PCP_CHANNEL_EVENTID:
++		return "WMI_GET_PCP_CHANNEL_EVENT";
++	case WMI_P2P_CFG_DONE_EVENTID:
++		return "WMI_P2P_CFG_DONE_EVENT";
++	case WMI_LISTEN_STARTED_EVENTID:
++		return "WMI_LISTEN_STARTED_EVENT";
++	case WMI_SEARCH_STARTED_EVENTID:
++		return "WMI_SEARCH_STARTED_EVENT";
++	case WMI_DISCOVERY_STOPPED_EVENTID:
++		return "WMI_DISCOVERY_STOPPED_EVENT";
++	case WMI_CFG_RX_CHAIN_DONE_EVENTID:
++		return "WMI_CFG_RX_CHAIN_DONE_EVENT";
++	case WMI_TEMP_SENSE_DONE_EVENTID:
++		return "WMI_TEMP_SENSE_DONE_EVENT";
++	case WMI_RCP_ADDBA_RESP_SENT_EVENTID:
++		return "WMI_RCP_ADDBA_RESP_SENT_EVENT";
++	case WMI_PS_DEV_PROFILE_CFG_EVENTID:
++		return "WMI_PS_DEV_PROFILE_CFG_EVENT";
++	case WMI_SET_MGMT_RETRY_LIMIT_EVENTID:
++		return "WMI_SET_MGMT_RETRY_LIMIT_EVENT";
++	case WMI_GET_MGMT_RETRY_LIMIT_EVENTID:
++		return "WMI_GET_MGMT_RETRY_LIMIT_EVENT";
++	case WMI_SET_THERMAL_THROTTLING_CFG_EVENTID:
++		return "WMI_SET_THERMAL_THROTTLING_CFG_EVENT";
++	case WMI_GET_THERMAL_THROTTLING_CFG_EVENTID:
++		return "WMI_GET_THERMAL_THROTTLING_CFG_EVENT";
++	case WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENTID:
++		return "WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENT";
++	case WMI_LO_POWER_CALIB_FROM_OTP_EVENTID:
++		return "WMI_LO_POWER_CALIB_FROM_OTP_EVENT";
++	default:
++		return "Untracked EVENT";
++	}
++}
 +
-+const struct iwl_cfg iwl9461_2ac_cfg_soc = {
-+		.name = "Intel(R) Dual Band Wireless AC 9461",
-+		.fw_name_pre = IWL9000A_FW_PRE,
-+		.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+		.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+		IWL_DEVICE_9000,
-+		.ht_params = &iwl9000_ht_params,
-+		.nvm_ver = IWL9000_NVM_VERSION,
-+		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+		.integrated = true,
-+		.soc_latency = 5000,
-+};
-+
-+const struct iwl_cfg iwl9462_2ac_cfg_soc = {
-+		.name = "Intel(R) Dual Band Wireless AC 9462",
-+		.fw_name_pre = IWL9000A_FW_PRE,
-+		.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+		.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+		IWL_DEVICE_9000,
-+		.ht_params = &iwl9000_ht_params,
-+		.nvm_ver = IWL9000_NVM_VERSION,
-+		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+		.integrated = true,
-+		.soc_latency = 5000,
- };
+ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ {
+ 	struct {
+@@ -294,7 +520,8 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ 	}
+ 	cmd.hdr.seq = cpu_to_le16(++wil->wmi_seq);
+ 	/* set command */
+-	wil_dbg_wmi(wil, "WMI command 0x%04x [%d]\n", cmdid, len);
++	wil_dbg_wmi(wil, "sending %s (0x%04x) [%d]\n",
++		    cmdid2name(cmdid), cmdid, len);
+ 	wil_hex_dump_wmi("Cmd ", DUMP_PREFIX_OFFSET, 16, 1, &cmd,
+ 			 sizeof(cmd), true);
+ 	wil_hex_dump_wmi("cmd ", DUMP_PREFIX_OFFSET, 16, 1, buf,
+@@ -963,8 +1190,8 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 			}
+ 			spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
  
- const struct iwl_cfg iwl9560_2ac_cfg = {
-@@ -206,10 +250,23 @@ const struct iwl_cfg iwl9560_2ac_cfg = {
- 	.nvm_ver = IWL9000_NVM_VERSION,
- 	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
- 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
--	.integrated = true,
- };
+-			wil_dbg_wmi(wil, "WMI event 0x%04x MID %d @%d msec\n",
+-				    id, wmi->mid, tstamp);
++			wil_dbg_wmi(wil, "recv %s (0x%04x) MID %d @%d msec\n",
++				    eventid2name(id), id, wmi->mid, tstamp);
+ 			trace_wil6210_wmi_event(wmi, &wmi[1],
+ 						len - sizeof(*wmi));
+ 		}
+@@ -1906,8 +2133,8 @@ static void wmi_event_handle(struct wil6210_priv *wil,
+ 		void *evt_data = (void *)(&wmi[1]);
+ 		u16 id = le16_to_cpu(wmi->command_id);
  
--MODULE_FIRMWARE(IWL9000_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
-+const struct iwl_cfg iwl9560_2ac_cfg_soc = {
-+	.name = "Intel(R) Dual Band Wireless AC 9560",
-+	.fw_name_pre = IWL9000A_FW_PRE,
-+	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	.integrated = true,
-+	.soc_latency = 5000,
-+};
-+MODULE_FIRMWARE(IWL9000A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL9000B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL9000RFB_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL9260A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL9260B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index d1263a554420..e21e46cf6f9a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -366,6 +366,7 @@ struct iwl_cfg {
- 	u32 dccm2_len;
- 	u32 smem_offset;
- 	u32 smem_len;
-+	u32 soc_latency;
- 	u16 nvm_ver;
- 	u16 nvm_calib_ver;
- 	u16 rx_with_siso_diversity:1,
-@@ -472,6 +473,10 @@ extern const struct iwl_cfg iwl9260_2ac_cfg;
- extern const struct iwl_cfg iwl9270_2ac_cfg;
- extern const struct iwl_cfg iwl9460_2ac_cfg;
- extern const struct iwl_cfg iwl9560_2ac_cfg;
-+extern const struct iwl_cfg iwl9460_2ac_cfg_soc;
-+extern const struct iwl_cfg iwl9461_2ac_cfg_soc;
-+extern const struct iwl_cfg iwl9462_2ac_cfg_soc;
-+extern const struct iwl_cfg iwl9560_2ac_cfg_soc;
- extern const struct iwl_cfg iwla000_2ac_cfg_hr;
- extern const struct iwl_cfg iwla000_2ac_cfg_hr_cdb;
- extern const struct iwl_cfg iwla000_2ac_cfg_jf;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 4a21c12276d7..f21fe59faccf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -535,47 +535,121 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x2526, 0x0238, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x023C, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0260, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0264, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x2526, 0x02A0, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x02A4, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1010, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x1030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1210, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x2526, 0x1610, iwl9270_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x4010, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x4030, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x40A4, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0xA014, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x42A4, iwl9462_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0034, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0038, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x003C, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x0034, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x0038, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x003C, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x271B, 0x0214, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0034, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0038, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x003C, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0060, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0230, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0234, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0238, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x023C, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x4030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x40A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0230, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0238, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x4030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x4034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x40A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0038, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x003C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0230, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0238, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x4030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x4034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x40A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0038, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x003C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0230, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0238, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x4030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x4034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x40A4, iwl9462_2ac_cfg_soc)},
- 
- /* a000 Series */
- 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr_cdb)},
+-		wil_dbg_wmi(wil, "Handle WMI 0x%04x (reply_id 0x%04x)\n",
+-			    id, wil->reply_id);
++		wil_dbg_wmi(wil, "Handle %s (0x%04x) (reply_id 0x%04x)\n",
++			    eventid2name(id), id, wil->reply_id);
+ 		/* check if someone waits for this event */
+ 		if (wil->reply_id && wil->reply_id == id) {
+ 			WARN_ON(wil->reply_buf);
 -- 
-2.15.0
+1.9.1
