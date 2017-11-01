@@ -1,51 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25022 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752204AbdKWP5J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Nov 2017 10:57:09 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1] brcmfmac: Avoid build error with make W=1
-Date: Thu, 23 Nov 2017 17:57:04 +0200
-Message-Id: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com> (sfid-20171123_165718_644768_5FA8B558)
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933147AbdKATXh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Nov 2017 15:23:37 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 06/12] wil6210: add block size checks during FW load
+Date: Wed,  1 Nov 2017 21:23:16 +0200
+Message-Id: <1509564202-30078-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202345_374384_6D7B73ED)
+In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When I run make W=1 on gcc (Debian 7.2.0-16) 7.2.0 I got an error for
-the first run, all next ones are okay.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-  CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:2078: error: Cannot parse struct or union!
-scripts/Makefile.build:310: recipe for target 'drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o' failed
+When loading FW from file add block size checks to ensure a
+corrupted FW file will not cause the driver to write outside
+the device memory.
 
-Seems like something happened with W=1 and wrong kernel doc format.
-As a quick fix remove dubious /** in the code.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/fw_inc.c  | 58 +++++++++++++++++++-----------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
+ drivers/net/wireless/ath/wil6210/wmi.c     | 11 +++++-
+ 3 files changed, 49 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index e3495ea95553..870e00cea29c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -2070,7 +2070,7 @@ static int brcmf_sdio_txpkt_hdalign(struct brcmf_sdio *bus, struct sk_buff *pkt)
- 	return head_pad;
+diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
+index 7a33792..77d1902 100644
+--- a/drivers/net/wireless/ath/wil6210/fw_inc.c
++++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
+@@ -26,14 +26,17 @@
+ 					     prefix_type, rowsize,	\
+ 					     groupsize, buf, len, ascii)
+ 
+-#define FW_ADDR_CHECK(ioaddr, val, msg) do { \
+-		ioaddr = wmi_buffer(wil, val); \
+-		if (!ioaddr) { \
+-			wil_err_fw(wil, "bad " msg ": 0x%08x\n", \
+-				   le32_to_cpu(val)); \
+-			return -EINVAL; \
+-		} \
+-	} while (0)
++static bool wil_fw_addr_check(struct wil6210_priv *wil,
++			      void __iomem **ioaddr, __le32 val,
++			      u32 size, const char *msg)
++{
++	*ioaddr = wmi_buffer_block(wil, val, size);
++	if (!(*ioaddr)) {
++		wil_err_fw(wil, "bad %s: 0x%08x\n", msg, le32_to_cpu(val));
++		return false;
++	}
++	return true;
++}
+ 
+ /**
+  * wil_fw_verify - verify firmware file validity
+@@ -160,7 +163,8 @@ static int fw_handle_data(struct wil6210_priv *wil, const void *data,
+ 		return -EINVAL;
+ 	}
+ 
+-	FW_ADDR_CHECK(dst, d->addr, "address");
++	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
++		return -EINVAL;
+ 	wil_dbg_fw(wil, "write [0x%08x] <== %zu bytes\n", le32_to_cpu(d->addr),
+ 		   s);
+ 	wil_memcpy_toio_32(dst, d->data, s);
+@@ -192,7 +196,8 @@ static int fw_handle_fill(struct wil6210_priv *wil, const void *data,
+ 		return -EINVAL;
+ 	}
+ 
+-	FW_ADDR_CHECK(dst, d->addr, "address");
++	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
++		return -EINVAL;
+ 
+ 	v = le32_to_cpu(d->value);
+ 	wil_dbg_fw(wil, "fill [0x%08x] <== 0x%08x, %zu bytes\n",
+@@ -248,7 +253,8 @@ static int fw_handle_direct_write(struct wil6210_priv *wil, const void *data,
+ 		u32 v = le32_to_cpu(block[i].value);
+ 		u32 x, y;
+ 
+-		FW_ADDR_CHECK(dst, block[i].addr, "address");
++		if (!wil_fw_addr_check(wil, &dst, block[i].addr, 0, "address"))
++			return -EINVAL;
+ 
+ 		x = readl(dst);
+ 		y = (x & m) | (v & ~m);
+@@ -314,10 +320,15 @@ static int fw_handle_gateway_data(struct wil6210_priv *wil, const void *data,
+ 	wil_dbg_fw(wil, "gw write record [%3d] blocks, cmd 0x%08x\n",
+ 		   n, gw_cmd);
+ 
+-	FW_ADDR_CHECK(gwa_addr, d->gateway_addr_addr, "gateway_addr_addr");
+-	FW_ADDR_CHECK(gwa_val, d->gateway_value_addr, "gateway_value_addr");
+-	FW_ADDR_CHECK(gwa_cmd, d->gateway_cmd_addr, "gateway_cmd_addr");
+-	FW_ADDR_CHECK(gwa_ctl, d->gateway_ctrl_address, "gateway_ctrl_address");
++	if (!wil_fw_addr_check(wil, &gwa_addr, d->gateway_addr_addr, 0,
++			       "gateway_addr_addr") ||
++	    !wil_fw_addr_check(wil, &gwa_val, d->gateway_value_addr, 0,
++			       "gateway_value_addr") ||
++	    !wil_fw_addr_check(wil, &gwa_cmd, d->gateway_cmd_addr, 0,
++			       "gateway_cmd_addr") ||
++	    !wil_fw_addr_check(wil, &gwa_ctl, d->gateway_ctrl_address, 0,
++			       "gateway_ctrl_address"))
++		return -EINVAL;
+ 
+ 	wil_dbg_fw(wil, "gw addresses: addr 0x%08x val 0x%08x"
+ 		   " cmd 0x%08x ctl 0x%08x\n",
+@@ -373,12 +384,19 @@ static int fw_handle_gateway_data4(struct wil6210_priv *wil, const void *data,
+ 	wil_dbg_fw(wil, "gw4 write record [%3d] blocks, cmd 0x%08x\n",
+ 		   n, gw_cmd);
+ 
+-	FW_ADDR_CHECK(gwa_addr, d->gateway_addr_addr, "gateway_addr_addr");
++	if (!wil_fw_addr_check(wil, &gwa_addr, d->gateway_addr_addr, 0,
++			       "gateway_addr_addr"))
++		return -EINVAL;
+ 	for (k = 0; k < ARRAY_SIZE(block->value); k++)
+-		FW_ADDR_CHECK(gwa_val[k], d->gateway_value_addr[k],
+-			      "gateway_value_addr");
+-	FW_ADDR_CHECK(gwa_cmd, d->gateway_cmd_addr, "gateway_cmd_addr");
+-	FW_ADDR_CHECK(gwa_ctl, d->gateway_ctrl_address, "gateway_ctrl_address");
++		if (!wil_fw_addr_check(wil, &gwa_val[k],
++				       d->gateway_value_addr[k],
++				       0, "gateway_value_addr"))
++			return -EINVAL;
++	if (!wil_fw_addr_check(wil, &gwa_cmd, d->gateway_cmd_addr, 0,
++			       "gateway_cmd_addr") ||
++	    !wil_fw_addr_check(wil, &gwa_ctl, d->gateway_ctrl_address, 0,
++			       "gateway_ctrl_address"))
++		return -EINVAL;
+ 
+ 	wil_dbg_fw(wil, "gw4 addresses: addr 0x%08x cmd 0x%08x ctl 0x%08x\n",
+ 		   le32_to_cpu(d->gateway_addr_addr),
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index fc8cbb0..2521c7d 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -877,6 +877,7 @@ int wil_ps_update(struct wil6210_priv *wil,
+ int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
+ void wil_set_ethtoolops(struct net_device *ndev);
+ 
++void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr, u32 size);
+ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr);
+ void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr);
+ int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index dbdf71d..16aa624 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -140,13 +140,15 @@ static u32 wmi_addr_remap(u32 x)
+ /**
+  * Check address validity for WMI buffer; remap if needed
+  * @ptr - internal (linker) fw/ucode address
++ * @size - if non zero, validate the block does not
++ *  exceed the device memory (bar)
+  *
+  * Valid buffer should be DWORD aligned
+  *
+  * return address for accessing buffer from the host;
+  * if buffer is not valid, return NULL.
+  */
+-void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
++void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr_, u32 size)
+ {
+ 	u32 off;
+ 	u32 ptr = le32_to_cpu(ptr_);
+@@ -161,10 +163,17 @@ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
+ 	off = HOSTADDR(ptr);
+ 	if (off > wil->bar_size - 4)
+ 		return NULL;
++	if (size && ((off + size > wil->bar_size) || (off + size < off)))
++		return NULL;
+ 
+ 	return wil->csr + off;
  }
  
--/**
-+/*
-  * struct brcmf_skbuff_cb reserves first two bytes in sk_buff::cb for
-  * bus layer usage.
++void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
++{
++	return wmi_buffer_block(wil, ptr_, 0);
++}
++
+ /**
+  * Check address validity
   */
 -- 
-2.15.0
+1.9.1
