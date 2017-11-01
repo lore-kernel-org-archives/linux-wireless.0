@@ -1,149 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:36686 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752664AbdKHNgp (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:60192 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755025AbdKAUgL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 08:36:45 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 3/7] brcmfmac: cleanup brcmf_cfg80211_escan() function
-Date: Wed,  8 Nov 2017 14:36:33 +0100
-Message-Id: <1510148197-17851-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171108_143703_885970_E98E23B1)
-In-Reply-To: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
+        Wed, 1 Nov 2017 16:36:11 -0400
+Subject: Re: [PATCH] ath10k: fix recent bandwidth conversion bug
+To: Christian Lamparter <chunkeey@gmail.com>,
+        linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+References: <20171101200157.27096-1-chunkeey@gmail.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <da7b4efe-f0e6-b5b7-b56b-f8747de9e16d@dd-wrt.com> (sfid-20171101_213615_353640_8808ABD0)
+Date: Wed, 1 Nov 2017 21:36:08 +0100
+MIME-Version: 1.0
+In-Reply-To: <20171101200157.27096-1-chunkeey@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+true. good finding.
 
-The function brcmf_cfg80211_escan() was always called with a non-null
-request parameter and null pointer for this_ssid parameter. Clean up
-the function removing the dead code path.
+Am 01.11.2017 um 21:01 schrieb Christian Lamparter:
+> The commit "cfg80211: make RATE_INFO_BW_20 the default" changed
+> the index of RATE_INFO_BW_20, but the updates to ath10k missed
+> the special bandwidth calculation case in
+> ath10k_update_per_peer_tx_stats().
+>
+> Fixes: 842be75c77cb ("cfg80211: make RATE_INFO_BW_20 the default")
+> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/htt_rx.c | 23 +++++------------------
+>   1 file changed, 5 insertions(+), 18 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> index a3f5dc78353f..26b0d201a698 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -592,6 +592,9 @@ struct amsdu_subframe_hdr {
+>   
+>   #define GROUP_ID_IS_SU_MIMO(x) ((x) == 0 || (x) == 63)
+>   
+> +static const u8 ath10k_bw_to_mac80211[] = { RATE_INFO_BW_20, RATE_INFO_BW_40,
+> +	RATE_INFO_BW_80, RATE_INFO_BW_160 };
+> +
+>   static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+>   				  struct ieee80211_rx_status *status,
+>   				  struct htt_rx_desc *rxd)
+> @@ -694,23 +697,7 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+>   		if (sgi)
+>   			status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
+>   
+> -		switch (bw) {
+> -		/* 20MHZ */
+> -		case 0:
+> -			break;
+> -		/* 40MHZ */
+> -		case 1:
+> -			status->bw = RATE_INFO_BW_40;
+> -			break;
+> -		/* 80MHZ */
+> -		case 2:
+> -			status->bw = RATE_INFO_BW_80;
+> -			break;
+> -		case 3:
+> -			status->bw = RATE_INFO_BW_160;
+> -			break;
+> -		}
+> -
+> +		status->bw = ath10k_bw_to_mac80211[bw];
+>   		status->encoding = RX_ENC_VHT;
+>   		break;
+>   	default:
+> @@ -2297,7 +2284,7 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
+>   		arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+>   
+>   	arsta->txrate.nss = txrate.nss;
+> -	arsta->txrate.bw = txrate.bw + RATE_INFO_BW_20;
+> +	arsta->txrate.bw = ath10k_bw_to_mac80211[txrate.bw];
+>   }
+>   
+>   static void ath10k_htt_fetch_peer_stats(struct ath10k *ar,
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 76 ++++------------------
- 1 file changed, 11 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 051d51d..1283798 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1072,18 +1072,10 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 
- static s32
- brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
--		     struct cfg80211_scan_request *request,
--		     struct cfg80211_ssid *this_ssid)
-+		     struct cfg80211_scan_request *request)
- {
--	struct brcmf_if *ifp = vif->ifp;
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
--	struct cfg80211_ssid *ssids;
--	u32 passive_scan;
--	bool escan_req;
--	bool spec_scan;
- 	s32 err;
--	struct brcmf_ssid_le ssid_le;
--	u32 SSID_len;
- 
- 	brcmf_dbg(SCAN, "START ESCAN\n");
- 
-@@ -1101,8 +1093,8 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 			  cfg->scan_status);
- 		return -EAGAIN;
- 	}
--	if (test_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state)) {
--		brcmf_err("Connecting: status (%lu)\n", ifp->vif->sme_state);
-+	if (test_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state)) {
-+		brcmf_err("Connecting: status (%lu)\n", vif->sme_state);
- 		return -EAGAIN;
- 	}
- 
-@@ -1110,63 +1102,17 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 	if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
- 		vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif;
- 
--	escan_req = false;
--	if (request) {
--		/* scan bss */
--		ssids = request->ssids;
--		escan_req = true;
--	} else {
--		/* scan in ibss */
--		/* we don't do escan in ibss */
--		ssids = this_ssid;
--	}
--
- 	cfg->scan_request = request;
- 	set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
--	if (escan_req) {
--		cfg->escan_info.run = brcmf_run_escan;
--		err = brcmf_p2p_scan_prep(wiphy, request, vif);
--		if (err)
--			goto scan_out;
--
--		err = brcmf_do_escan(vif->ifp, request);
--		if (err)
--			goto scan_out;
--	} else {
--		brcmf_dbg(SCAN, "ssid \"%s\", ssid_len (%d)\n",
--			  ssids->ssid, ssids->ssid_len);
--		memset(&ssid_le, 0, sizeof(ssid_le));
--		SSID_len = min_t(u8, sizeof(ssid_le.SSID), ssids->ssid_len);
--		ssid_le.SSID_len = cpu_to_le32(0);
--		spec_scan = false;
--		if (SSID_len) {
--			memcpy(ssid_le.SSID, ssids->ssid, SSID_len);
--			ssid_le.SSID_len = cpu_to_le32(SSID_len);
--			spec_scan = true;
--		} else
--			brcmf_dbg(SCAN, "Broadcast scan\n");
- 
--		passive_scan = cfg->active_scan ? 0 : 1;
--		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
--					    passive_scan);
--		if (err) {
--			brcmf_err("WLC_SET_PASSIVE_SCAN error (%d)\n", err);
--			goto scan_out;
--		}
--		brcmf_scan_config_mpc(ifp, 0);
--		err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCAN, &ssid_le,
--					     sizeof(ssid_le));
--		if (err) {
--			if (err == -EBUSY)
--				brcmf_dbg(INFO, "BUSY: scan for \"%s\" canceled\n",
--					  ssid_le.SSID);
--			else
--				brcmf_err("WLC_SCAN error (%d)\n", err);
-+	cfg->escan_info.run = brcmf_run_escan;
-+	err = brcmf_p2p_scan_prep(wiphy, request, vif);
-+	if (err)
-+		goto scan_out;
- 
--			brcmf_scan_config_mpc(ifp, 1);
--			goto scan_out;
--		}
--	}
-+	err = brcmf_do_escan(vif->ifp, request);
-+	if (err)
-+		goto scan_out;
- 
- 	/* Arm scan timeout timer */
- 	mod_timer(&cfg->escan_timeout, jiffies +
-@@ -1191,7 +1137,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 	if (!check_vif_up(vif))
- 		return -EIO;
- 
--	err = brcmf_cfg80211_escan(wiphy, vif, request, NULL);
-+	err = brcmf_cfg80211_escan(wiphy, vif, request);
- 
- 	if (err)
- 		brcmf_err("scan error (%d)\n", err);
 -- 
-1.9.1
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
