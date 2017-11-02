@@ -1,60 +1,324 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:48913 "EHLO mail.toke.dk"
+Received: from mx1.redhat.com ([209.132.183.28]:50374 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755136AbdKJAs4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 19:48:56 -0500
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH v2] ath10k: Re-enable TXQs for all devices
-Date: Fri, 10 Nov 2017 09:48:39 +0900
-Message-Id: <20171110004839.7478-1-toke@toke.dk> (sfid-20171110_014859_782032_9897BF7A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        id S933071AbdKBJaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Nov 2017 05:30:21 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        stable@vger.kernel.org, Ivan Safonov <insafonov@gmail.com>
+Subject: [PATCH 3/3] staging: r8188eu: Revert 4 commits breaking ARP
+Date: Thu,  2 Nov 2017 10:30:13 +0100
+Message-Id: <20171102093013.10745-3-hdegoede@redhat.com> (sfid-20171102_103026_188133_C9EBD2CD)
+In-Reply-To: <20171102093013.10745-1-hdegoede@redhat.com>
+References: <20171102093013.10745-1-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 4ca1807815aa6801aaced7fdefa9edacc2521767 disables the use of the
-mac80211 TXQs for some devices because of a theoretical throughput
-regression. The original regression report[1] was related to fq_codel
-qdisc drop performance, which was fixed in
-9d18562a227874289fda8ca5d117d8f503f1dcca. Since then, we have not seen
-the TXQ-related regression, so it should be safe to re-enable TXQs.
+Commit 2ba8444c97b1 ("staging:r8188eu: move IV/ICV trimming into
+decrypt() and also place it after rtl88eu_mon_recv_hook()") breaks ARP.
 
-[1] http://lists.infradead.org/pipermail/ath10k/2016-April/007266.html
+After this commit ssh-ing to a laptop with r8188eu wifi no longer works
+if the machine connecting has never communicated with the laptop before.
+This is 100% reproducable using "arp -d <ipv4> && ssh <ipv4>" to ssh to
+a laptop with r8188eu wifi.
 
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+This commit reverts 4 commits in total:
+
+1. Commit 79650ffde38e ("staging:r8188eu: trim IV/ICV fields in
+   validate_recv_data_frame()")
+This commit depends on 2 of the other commits being reverted.
+
+2. Commit 02b19b4c4920 ("staging:r8188eu: inline unprotect_frame() in
+   mon_recv_decrypted_recv()")
+The inline code is wrong the un-inlined version contains:
+	if (skb->len < hdr_len + iv_len + icv_len)
+		return;
+	...
+Where as the inline-ed code introduced by this commit does:
+	if (skb->len < hdr_len + iv_len + icv_len) {
+		...
+Note the same check, but now to actually continue doing ... instead
+of to not do it, so this commit is no good.
+
+3. Commit d86e16da6a5d ("staging:r8188eu: use different mon_recv_decrypted()
+   inside rtl88eu_mon_recv_hook() and rtl88eu_mon_xmit_hook().")
+This commit introduced a 1:1 copy of a function so that one of the
+2 copies can be modified in the 2 commits we're already reverting.
+
+4. Commit 2ba8444c97b1 ("staging:r8188eu: move IV/ICV trimming into
+   decrypt() and also place it after rtl88eu_mon_recv_hook()")
+This is the commit actually breaking ARP.
+
+Note this commit is a straight-forward squash of the revert of these
+4 commits, without any changes.
+
+Cc: stable@vger.kernel.org
+Cc: Ivan Safonov <insafonov@gmail.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
-This has been in LEDE trunk for a couple of months now with good
-results.
+ drivers/staging/rtl8188eu/core/rtw_recv.c | 83 +++++++++++++++++++------------
+ drivers/staging/rtl8188eu/os_dep/mon.c    | 34 ++-----------
+ 2 files changed, 55 insertions(+), 62 deletions(-)
 
-Changes since v1:
-- Update commit message to refer to original report and the fix for it.
-- Add ath10k list to cc
-
- drivers/net/wireless/ath/ath10k/mac.c | 9 ---------
- 1 file changed, 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0a947eef348d..ca596ecd2d64 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8329,15 +8329,6 @@ int ath10k_mac_register(struct ath10k *ar)
- 			ath10k_warn(ar, "failed to initialise DFS pattern detector\n");
+diff --git a/drivers/staging/rtl8188eu/core/rtw_recv.c b/drivers/staging/rtl8188eu/core/rtw_recv.c
+index 2f0341689e2f..6506a1587df0 100644
+--- a/drivers/staging/rtl8188eu/core/rtw_recv.c
++++ b/drivers/staging/rtl8188eu/core/rtw_recv.c
+@@ -264,10 +264,12 @@ static int recvframe_chkmic(struct adapter *adapter,
+ 			}
+ 
+ 			/* icv_len included the mic code */
+-			datalen = precvframe->pkt->len-prxattrib->hdrlen - 8;
++			datalen = precvframe->pkt->len-prxattrib->hdrlen -
++				  prxattrib->iv_len-prxattrib->icv_len-8;
+ 			pframe = precvframe->pkt->data;
+-			payload = pframe+prxattrib->hdrlen;
++			payload = pframe+prxattrib->hdrlen+prxattrib->iv_len;
+ 
++			RT_TRACE(_module_rtl871x_recv_c_, _drv_info_, ("\n prxattrib->iv_len=%d prxattrib->icv_len=%d\n", prxattrib->iv_len, prxattrib->icv_len));
+ 			rtw_seccalctkipmic(mickey, pframe, payload, datalen, &miccode[0],
+ 					   (unsigned char)prxattrib->priority); /* care the length of the data */
+ 
+@@ -413,15 +415,9 @@ static struct recv_frame *decryptor(struct adapter *padapter,
+ 		default:
+ 			break;
+ 		}
+-		if (res != _FAIL) {
+-			memmove(precv_frame->pkt->data + precv_frame->attrib.iv_len, precv_frame->pkt->data, precv_frame->attrib.hdrlen);
+-			skb_pull(precv_frame->pkt, precv_frame->attrib.iv_len);
+-			skb_trim(precv_frame->pkt, precv_frame->pkt->len - precv_frame->attrib.icv_len);
+-		}
+ 	} else if (prxattrib->bdecrypted == 1 && prxattrib->encrypt > 0 &&
+-		   (psecuritypriv->busetkipkey == 1 || prxattrib->encrypt != _TKIP_)) {
+-		psecuritypriv->hw_decrypted = true;
+-	}
++		   (psecuritypriv->busetkipkey == 1 || prxattrib->encrypt != _TKIP_))
++			psecuritypriv->hw_decrypted = true;
+ 
+ 	if (res == _FAIL) {
+ 		rtw_free_recvframe(return_packet, &padapter->recvpriv.free_recv_queue);
+@@ -462,7 +458,7 @@ static struct recv_frame *portctrl(struct adapter *adapter,
+ 
+ 	if (auth_alg == 2) {
+ 		/* get ether_type */
+-		ptr = ptr + pfhdr->attrib.hdrlen + LLC_HEADER_SIZE;
++		ptr = ptr + pfhdr->attrib.hdrlen + LLC_HEADER_SIZE + pfhdr->attrib.iv_len;
+ 		memcpy(&be_tmp, ptr, 2);
+ 		ether_type = ntohs(be_tmp);
+ 
+@@ -1145,8 +1141,6 @@ static int validate_recv_data_frame(struct adapter *adapter,
  	}
  
--	/* Current wake_tx_queue implementation imposes a significant
--	 * performance penalty in some setups. The tx scheduling code needs
--	 * more work anyway so disable the wake_tx_queue unless firmware
--	 * supports the pull-push mechanism.
--	 */
--	if (!test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL,
--		      ar->running_fw->fw_file.fw_features))
--		ar->ops->wake_tx_queue = NULL;
+ 	if (pattrib->privacy) {
+-		struct sk_buff *skb = precv_frame->pkt;
 -
- 	ret = ath10k_mac_init_rd(ar);
- 	if (ret) {
- 		ath10k_err(ar, "failed to derive regdom: %d\n", ret);
+ 		RT_TRACE(_module_rtl871x_recv_c_, _drv_info_, ("validate_recv_data_frame:pattrib->privacy=%x\n", pattrib->privacy));
+ 		RT_TRACE(_module_rtl871x_recv_c_, _drv_info_, ("\n ^^^^^^^^^^^IS_MCAST(pattrib->ra(0x%02x))=%d^^^^^^^^^^^^^^^6\n", pattrib->ra[0], IS_MCAST(pattrib->ra)));
+ 
+@@ -1155,13 +1149,6 @@ static int validate_recv_data_frame(struct adapter *adapter,
+ 		RT_TRACE(_module_rtl871x_recv_c_, _drv_info_, ("\n pattrib->encrypt=%d\n", pattrib->encrypt));
+ 
+ 		SET_ICE_IV_LEN(pattrib->iv_len, pattrib->icv_len, pattrib->encrypt);
+-
+-		if (pattrib->bdecrypted == 1 && pattrib->encrypt > 0) {
+-			memmove(skb->data + pattrib->iv_len,
+-				skb->data, pattrib->hdrlen);
+-			skb_pull(skb, pattrib->iv_len);
+-			skb_trim(skb, skb->len - pattrib->icv_len);
+-		}
+ 	} else {
+ 		pattrib->encrypt = 0;
+ 		pattrib->iv_len = 0;
+@@ -1281,7 +1268,6 @@ static int validate_recv_frame(struct adapter *adapter,
+ 	 * Hence forward the frame to the monitor anyway to preserve the order
+ 	 * in which frames were received.
+ 	 */
+-
+ 	rtl88eu_mon_recv_hook(adapter->pmondev, precv_frame);
+ 
+ exit:
+@@ -1303,8 +1289,11 @@ static int wlanhdr_to_ethhdr(struct recv_frame *precvframe)
+ 	u8 *ptr = precvframe->pkt->data;
+ 	struct rx_pkt_attrib *pattrib = &precvframe->attrib;
+ 
+-	psnap = (struct ieee80211_snap_hdr *)(ptr+pattrib->hdrlen);
+-	psnap_type = ptr+pattrib->hdrlen + SNAP_SIZE;
++	if (pattrib->encrypt)
++		skb_trim(precvframe->pkt, precvframe->pkt->len - pattrib->icv_len);
++
++	psnap = (struct ieee80211_snap_hdr *)(ptr+pattrib->hdrlen + pattrib->iv_len);
++	psnap_type = ptr+pattrib->hdrlen + pattrib->iv_len+SNAP_SIZE;
+ 	/* convert hdr + possible LLC headers into Ethernet header */
+ 	if ((!memcmp(psnap, rtw_rfc1042_header, SNAP_SIZE) &&
+ 	     (!memcmp(psnap_type, SNAP_ETH_TYPE_IPX, 2) == false) &&
+@@ -1317,9 +1306,12 @@ static int wlanhdr_to_ethhdr(struct recv_frame *precvframe)
+ 		bsnaphdr = false;
+ 	}
+ 
+-	rmv_len = pattrib->hdrlen + (bsnaphdr ? SNAP_SIZE : 0);
++	rmv_len = pattrib->hdrlen + pattrib->iv_len + (bsnaphdr ? SNAP_SIZE : 0);
+ 	len = precvframe->pkt->len - rmv_len;
+ 
++	RT_TRACE(_module_rtl871x_recv_c_, _drv_info_,
++		 ("\n===pattrib->hdrlen: %x,  pattrib->iv_len:%x===\n\n", pattrib->hdrlen,  pattrib->iv_len));
++
+ 	memcpy(&be_tmp, ptr+rmv_len, 2);
+ 	eth_type = ntohs(be_tmp); /* pattrib->ether_type */
+ 	pattrib->eth_type = eth_type;
+@@ -1344,6 +1336,7 @@ static struct recv_frame *recvframe_defrag(struct adapter *adapter,
+ 					   struct __queue *defrag_q)
+ {
+ 	struct list_head *plist, *phead;
++	u8 wlanhdr_offset;
+ 	u8	curfragnum;
+ 	struct recv_frame *pfhdr, *pnfhdr;
+ 	struct recv_frame *prframe, *pnextrframe;
+@@ -1392,7 +1385,12 @@ static struct recv_frame *recvframe_defrag(struct adapter *adapter,
+ 		/* copy the 2nd~n fragment frame's payload to the first fragment */
+ 		/* get the 2nd~last fragment frame's payload */
+ 
+-		skb_pull(pnextrframe->pkt, pnfhdr->attrib.hdrlen);
++		wlanhdr_offset = pnfhdr->attrib.hdrlen + pnfhdr->attrib.iv_len;
++
++		skb_pull(pnextrframe->pkt, wlanhdr_offset);
++
++		/* append  to first fragment frame's tail (if privacy frame, pull the ICV) */
++		skb_trim(prframe->pkt, prframe->pkt->len - pfhdr->attrib.icv_len);
+ 
+ 		/* memcpy */
+ 		memcpy(skb_tail_pointer(pfhdr->pkt), pnfhdr->pkt->data,
+@@ -1400,7 +1398,7 @@ static struct recv_frame *recvframe_defrag(struct adapter *adapter,
+ 
+ 		skb_put(prframe->pkt, pnfhdr->pkt->len);
+ 
+-		pfhdr->attrib.icv_len = 0;
++		pfhdr->attrib.icv_len = pnfhdr->attrib.icv_len;
+ 		plist = plist->next;
+ 	}
+ 
+@@ -1526,6 +1524,11 @@ static int amsdu_to_msdu(struct adapter *padapter, struct recv_frame *prframe)
+ 	nr_subframes = 0;
+ 	pattrib = &prframe->attrib;
+ 
++	skb_pull(prframe->pkt, prframe->attrib.hdrlen);
++
++	if (prframe->attrib.iv_len > 0)
++		skb_pull(prframe->pkt, prframe->attrib.iv_len);
++
+ 	a_len = prframe->pkt->len;
+ 
+ 	pdata = prframe->pkt->data;
+@@ -1895,6 +1898,24 @@ static int process_recv_indicatepkts(struct adapter *padapter,
+ 	return retval;
+ }
+ 
++static int recv_func_prehandle(struct adapter *padapter,
++			       struct recv_frame *rframe)
++{
++	int ret = _SUCCESS;
++	struct __queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
++
++	/* check the frame crtl field and decache */
++	ret = validate_recv_frame(padapter, rframe);
++	if (ret != _SUCCESS) {
++		RT_TRACE(_module_rtl871x_recv_c_, _drv_info_, ("recv_func: validate_recv_frame fail! drop pkt\n"));
++		rtw_free_recvframe(rframe, pfree_recv_queue);/* free this recv_frame */
++		goto exit;
++	}
++
++exit:
++	return ret;
++}
++
+ static int recv_func_posthandle(struct adapter *padapter,
+ 				struct recv_frame *prframe)
+ {
+@@ -1947,7 +1968,6 @@ static int recv_func(struct adapter *padapter, struct recv_frame *rframe)
+ 	struct rx_pkt_attrib *prxattrib = &rframe->attrib;
+ 	struct security_priv *psecuritypriv = &padapter->securitypriv;
+ 	struct mlme_priv *mlmepriv = &padapter->mlmepriv;
+-	struct __queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
+ 
+ 	/* check if need to handle uc_swdec_pending_queue*/
+ 	if (check_fwstate(mlmepriv, WIFI_STATION_STATE) && psecuritypriv->busetkipkey) {
+@@ -1959,12 +1979,9 @@ static int recv_func(struct adapter *padapter, struct recv_frame *rframe)
+ 		}
+ 	}
+ 
+-	/* check the frame crtl field and decache */
+-	ret = validate_recv_frame(padapter, rframe);
+-	if (ret != _SUCCESS) {
+-		RT_TRACE(_module_rtl871x_recv_c_, _drv_info_, ("recv_func: validate_recv_frame fail! drop pkt\n"));
+-		rtw_free_recvframe(rframe, pfree_recv_queue);/* free this recv_frame */
+-	} else {
++	ret = recv_func_prehandle(padapter, rframe);
++
++	if (ret == _SUCCESS) {
+ 		/* check if need to enqueue into uc_swdec_pending_queue*/
+ 		if (check_fwstate(mlmepriv, WIFI_STATION_STATE) &&
+ 		    !IS_MCAST(prxattrib->ra) && prxattrib->encrypt > 0 &&
+diff --git a/drivers/staging/rtl8188eu/os_dep/mon.c b/drivers/staging/rtl8188eu/os_dep/mon.c
+index 37fd52d7364f..225c23fc69dc 100644
+--- a/drivers/staging/rtl8188eu/os_dep/mon.c
++++ b/drivers/staging/rtl8188eu/os_dep/mon.c
+@@ -66,34 +66,6 @@ static void mon_recv_decrypted(struct net_device *dev, const u8 *data,
+ 	netif_rx(skb);
+ }
+ 
+-static void mon_recv_decrypted_recv(struct net_device *dev, const u8 *data,
+-				    int data_len)
+-{
+-	struct sk_buff *skb;
+-	struct ieee80211_hdr *hdr;
+-	int hdr_len;
+-
+-	skb = netdev_alloc_skb(dev, data_len);
+-	if (!skb)
+-		return;
+-	memcpy(skb_put(skb, data_len), data, data_len);
+-
+-	/*
+-	 * Frame data is not encrypted. Strip off protection so
+-	 * userspace doesn't think that it is.
+-	 */
+-
+-	hdr = (struct ieee80211_hdr *)skb->data;
+-	hdr_len = ieee80211_hdrlen(hdr->frame_control);
+-
+-	if (ieee80211_has_protected(hdr->frame_control))
+-		hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+-
+-	skb->ip_summed = CHECKSUM_UNNECESSARY;
+-	skb->protocol = eth_type_trans(skb, dev);
+-	netif_rx(skb);
+-}
+-
+ static void mon_recv_encrypted(struct net_device *dev, const u8 *data,
+ 			       int data_len)
+ {
+@@ -110,6 +82,7 @@ static void mon_recv_encrypted(struct net_device *dev, const u8 *data,
+ void rtl88eu_mon_recv_hook(struct net_device *dev, struct recv_frame *frame)
+ {
+ 	struct rx_pkt_attrib *attr;
++	int iv_len, icv_len;
+ 	int data_len;
+ 	u8 *data;
+ 
+@@ -122,8 +95,11 @@ void rtl88eu_mon_recv_hook(struct net_device *dev, struct recv_frame *frame)
+ 	data = frame->pkt->data;
+ 	data_len = frame->pkt->len;
+ 
++	/* Broadcast and multicast frames don't have attr->{iv,icv}_len set */
++	SET_ICE_IV_LEN(iv_len, icv_len, attr->encrypt);
++
+ 	if (attr->bdecrypted)
+-		mon_recv_decrypted_recv(dev, data, data_len);
++		mon_recv_decrypted(dev, data, data_len, iv_len, icv_len);
+ 	else
+ 		mon_recv_encrypted(dev, data, data_len);
+ }
 -- 
-2.15.0
+2.14.2
