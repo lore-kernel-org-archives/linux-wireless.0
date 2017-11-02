@@ -1,74 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:47606 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754110AbdKNXHc (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:49354 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932724AbdKBPK0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 18:07:32 -0500
-Date: Tue, 14 Nov 2017 23:07:24 +0000
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: Re: AP mode with Broadcom 4330
-Message-ID: <20171114230723.GB31757@n2100.armlinux.org.uk> (sfid-20171115_000738_403216_B0982FCE)
-References: <20170728141503.GU31807@n2100.armlinux.org.uk>
- <20170728174930.GA3313@n2100.armlinux.org.uk>
- <2c5d4ef0-9b87-0084-c032-c5614275dd56@broadcom.com>
- <20170731125902.GW31807@n2100.armlinux.org.uk>
- <6f701504-0315-a49a-58d9-5cc9292d7d77@broadcom.com>
+        Thu, 2 Nov 2017 11:10:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6f701504-0315-a49a-58d9-5cc9292d7d77@broadcom.com>
+In-Reply-To: <87r2tglod5.fsf@codeaurora.org>
+References: <20171102142827.773188-1-arnd@arndb.de> <87r2tglod5.fsf@codeaurora.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 2 Nov 2017 16:10:24 +0100
+Message-ID: <CAK8P3a0KkpkseMUy6ddYC2EbWKepKgRQG=U99SqVLG2yL8wW7w@mail.gmail.com> (sfid-20171102_161049_574235_9D87467A)
+Subject: Re: [PATCH] rsi: sdio: fix building without CONFIG_PM
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend,
+On Thu, Nov 2, 2017 at 3:57 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Arnd Bergmann <arnd@arndb.de> writes:
+>
+>> The addition of the WoWLAN support has caused a number of new
+>> build errors when CONFIG_PM is disabled, including:
+>>
+>> drivers/net/wireless/rsi/rsi_91x_mac80211.c: In function 'rsi_wow_map_triggers':
+>> drivers/net/wireless/rsi/rsi_91x_mac80211.c:1773:19: error: 'RSI_WOW_ANY' undeclared (first use in this function); did you mean 'RSI_WEP_KEY'?
+>> drivers/net/wireless/rsi/rsi_91x_mac80211.c: In function 'rsi_mac80211_attach':
+>> drivers/net/wireless/rsi/rsi_91x_mac80211.c:1980:7: error: 'struct wiphy' has no member named 'wowlan'
+>>
+>> This adds more #ifdef CONFIG_PM guards around the code that otherwise
+>> fails to build and that we know is not used without CONFIG_PM.
+>>
+>> Fixes: f3ac4e7394a1 ("rsi: sdio: add WOWLAN support for S3 suspend state")
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>
+> Amit already submitted two patches to fix this problem:
+>
+> https://patchwork.kernel.org/patch/10036297/
+>
+> https://patchwork.kernel.org/patch/10036299/
+>
+> I applied them to my pending branch yesterday, and at least buildbot
+> seems to be happy, so I'm planning take apply those instead. Please let
+> me know if that's a problem.
 
-Did this bug ever get fixed, or are 4330's still ending up advertising
-BCRM_TEST_SSID when they're put into AP mode with mainline kernels?
+Looks good: the first patch is identical to mine, the second one appears to
+be something I missed.
 
-It would be good to know whether I can drop my patch for this from my
-kernel tree and still have working AP mode.
-
-Thanks.
-
-On Mon, Jul 31, 2017 at 10:28:50PM +0200, Arend van Spriel wrote:
-> On 31-07-17 14:59, Russell King - ARM Linux wrote:
-> > On Fri, Jul 28, 2017 at 09:50:21PM +0200, Arend van Spriel wrote:
-> >> I was going to agree with you, but having second thoughts. There are
-> >> actually two use-cases that need to be handled properly. The regular AP
-> >> case and the MBSS case. In case of MBSS the initial AP interface will
-> >> have mbss set to false and subsequent AP interfaces will have mbss set
-> >> to true, but in firmware this has to be configured inverted. That is
-> >> what the code above is doing. However, this indeed breaks the regular AP
-> >> case for firmwares that abuse that setting for testing purposes (no idea
-> >> why that is in a released firmware).
-> > 
-> > Maybe detect the BCRM_TEST_SSID string in the firmware file (as it's
-> > broken up amongst other data, it's not trivial) and disable mbss for
-> > such firmware?  Alternatively, maybe blacklist mbss for some firmware
-> > versions?
-> 
-> Well. It seem 43362 chip also had this and we disabled mbss for that
-> chipset. So we may do that for 4330 as well.
-> 
-> > Do the firmware versions that include this "abuse" actually have
-> > functional mbss?
-> 
-> Digging through our internal bug database I found a remark that
-> BRCM_TEST_SSID showing up means mbss is not functional.
-> 
-> > There's also the obvious question: which firmware is recommended for
-> > the 4330?
-> 
-> We tend to rely on what is released to AOSP as our team does not have
-> the bandwidth to go through the release process. I checked and it is
-> still the same so matches what is in linux-firmware.
-> 
-> Regards,
-> Arend
-
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
-According to speedtest.net: 8.21Mbps down 510kbps up
+      Arnd
