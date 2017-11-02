@@ -1,227 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47384 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751730AbdKYPfd (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59306 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932350AbdKBKa2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Nov 2017 10:35:33 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 25 Nov 2017 17:35:08 +0200
-Message-Id: <20171125153510.25359-5-luca@coelho.fi> (sfid-20171125_163537_304724_ED4A306C)
-In-Reply-To: <20171125153510.25359-1-luca@coelho.fi>
-References: <20171125153510.25359-1-luca@coelho.fi>
-Subject: [PATCH 4/6] iwlwifi: mvm: fix packet injection
+        Thu, 2 Nov 2017 06:30:28 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        "Karthik Doddayennegere Ananthapadmanabha" <karthida@marvell.com>
+Subject: RE: [EXT] Re: [PATCH 1/3] mwifiex: cleanup rx_pkt_lock usage in
+ 11n_rxreorder.c
+Date: Thu, 2 Nov 2017 10:30:25 +0000
+Message-ID: <cb98c452aa344fc0b501a776cfa8708a@SC-EXCH02.marvell.com> (sfid-20171102_113032_298002_5409CD1D)
+References: <1509442967-14149-1-git-send-email-gbhat@marvell.com>
+ <1509442967-14149-2-git-send-email-gbhat@marvell.com>
+ <20171101212853.GA89416@google.com>
+In-Reply-To: <20171101212853.GA89416@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi Brian,
 
-We need to have a station and a queue for the monitor
-interface to be able to inject traffic. We used to have
-this traffic routed to the auxiliary queue, but this queue
-isn't scheduled for the station we had linked to the
-monitor vif.
+> On Tue, Oct 31, 2017 at 03:12:45PM +0530, Ganapathi Bhat wrote:
+> > From: Karthik Ananthapadmanabha <karthida@marvell.com>
+> >
+> > Fix the incorrect usage of rx_pkt_lock spinlock. Realsing the spinlock
+> > while the element is still in process is unsafe. The lock must be
+> > released only after the element processing is complete.
+> >
+> > Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
+> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> > ---
+> >  drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> > b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> > index 1edcdda..0149c4a 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> > @@ -124,9 +124,10 @@ static int mwifiex_11n_dispatch_pkt(struct
+> mwifiex_private *priv, void *payload)
+> >                     rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+> >                     tbl->rx_reorder_ptr[i] = NULL;
+> >             }
+> > -           spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+>
+> So, what is this lock protecting? Is it for protecting the packet itself, or for
+> protecting the ring buffer?
 
-Allocate a new queue, link it to the monitor vif's station
-and make that queue use the BE fifo.
+This lock is protecting the ring buffer but with the current change, we are trying also to protect the packet too.
 
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=196715
+> As I read it, it's just the latter, since once we've
+> removed it from the ring buffer (and are about to dispatch it up toward the
+> networking layer), it's handled only by a single context (or else, protected via
+> some other common lock(s)).
+>
+> If I'm correct above, then I think the current code here is actually safe, since
+> it holds the lock while removing from the ring buffer -- after it's removed
+> from the ring, there's no way another thread can find this payload, and so we
+> can release the lock.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/txq.h   |  4 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 53 +++++++++++++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       |  3 +-
- 6 files changed, 49 insertions(+), 15 deletions(-)
+There are cases where the ring buffer is iterated by cfg80211 thread:
+mwifiex_cfg80211_tdls_oper => mwifiex_tdls_oper => mwifiex_tdls_process_disable_link => mwifiex_11n_cleanup_reorder_tbl => mwifiex_del_rx_reorder_entry => mwifiex_11n_dispatch_pkt_until_start_win => {iterates the ring buffer}
+So, at worst case we can have two threads (main & cfg80211) running mwifiex_11n_dispatch_pkt_until_start_win(), iterating the ring buffer.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
-index 87b4434224a1..dfa111bb411e 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
-@@ -68,6 +68,9 @@
-  * @IWL_MVM_DQA_CMD_QUEUE: a queue reserved for sending HCMDs to the FW
-  * @IWL_MVM_DQA_AUX_QUEUE: a queue reserved for aux frames
-  * @IWL_MVM_DQA_P2P_DEVICE_QUEUE: a queue reserved for P2P device frames
-+ * @IWL_MVM_DQA_INJECT_MONITOR_QUEUE: a queue reserved for injection using
-+ *	monitor mode. Note this queue is the same as the queue for P2P device
-+ *	but we can't have active monitor mode along with P2P device anyway.
-  * @IWL_MVM_DQA_GCAST_QUEUE: a queue reserved for P2P GO/SoftAP GCAST frames
-  * @IWL_MVM_DQA_BSS_CLIENT_QUEUE: a queue reserved for BSS activity, to ensure
-  *	that we are never left without the possibility to connect to an AP.
-@@ -87,6 +90,7 @@ enum iwl_mvm_dqa_txq {
- 	IWL_MVM_DQA_CMD_QUEUE = 0,
- 	IWL_MVM_DQA_AUX_QUEUE = 1,
- 	IWL_MVM_DQA_P2P_DEVICE_QUEUE = 2,
-+	IWL_MVM_DQA_INJECT_MONITOR_QUEUE = 2,
- 	IWL_MVM_DQA_GCAST_QUEUE = 3,
- 	IWL_MVM_DQA_BSS_CLIENT_QUEUE = 4,
- 	IWL_MVM_DQA_MIN_MGMT_QUEUE = 5,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index a2bf530eeae4..2f22e14e00fe 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -787,7 +787,7 @@ static int iwl_mvm_mac_ctxt_cmd_listener(struct iwl_mvm *mvm,
- 					 u32 action)
- {
- 	struct iwl_mac_ctx_cmd cmd = {};
--	u32 tfd_queue_msk = 0;
-+	u32 tfd_queue_msk = BIT(mvm->snif_queue);
- 	int ret;
- 
- 	WARN_ON(vif->type != NL80211_IFTYPE_MONITOR);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 4575595ab022..6a9a25beab3f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -972,6 +972,7 @@ struct iwl_mvm {
- 
- 	/* Tx queues */
- 	u16 aux_queue;
-+	u16 snif_queue;
- 	u16 probe_queue;
- 	u16 p2p_dev_queue;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 7078b7e458be..45470b6b351a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -624,6 +624,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	mvm->fw_restart = iwlwifi_mod_params.fw_restart ? -1 : 0;
- 
- 	mvm->aux_queue = IWL_MVM_DQA_AUX_QUEUE;
-+	mvm->snif_queue = IWL_MVM_DQA_INJECT_MONITOR_QUEUE;
- 	mvm->probe_queue = IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
- 	mvm->p2p_dev_queue = IWL_MVM_DQA_P2P_DEVICE_QUEUE;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index c19f98489d4e..1add5615fc3a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1709,29 +1709,29 @@ void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta)
- 	sta->sta_id = IWL_MVM_INVALID_STA;
- }
- 
--static void iwl_mvm_enable_aux_queue(struct iwl_mvm *mvm)
-+static void iwl_mvm_enable_aux_snif_queue(struct iwl_mvm *mvm, u16 *queue,
-+					  u8 sta_id, u8 fifo)
- {
- 	unsigned int wdg_timeout = iwlmvm_mod_params.tfd_q_hang_detect ?
- 					mvm->cfg->base_params->wd_timeout :
- 					IWL_WATCHDOG_DISABLED;
- 
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
--		int queue = iwl_mvm_tvqm_enable_txq(mvm, mvm->aux_queue,
--						    mvm->aux_sta.sta_id,
--						    IWL_MAX_TID_COUNT,
--						    wdg_timeout);
--		mvm->aux_queue = queue;
-+		int tvqm_queue =
-+			iwl_mvm_tvqm_enable_txq(mvm, *queue, sta_id,
-+						IWL_MAX_TID_COUNT,
-+						wdg_timeout);
-+		*queue = tvqm_queue;
- 	} else {
- 		struct iwl_trans_txq_scd_cfg cfg = {
--			.fifo = IWL_MVM_TX_FIFO_MCAST,
--			.sta_id = mvm->aux_sta.sta_id,
-+			.fifo = fifo,
-+			.sta_id = sta_id,
- 			.tid = IWL_MAX_TID_COUNT,
- 			.aggregate = false,
- 			.frame_limit = IWL_FRAME_LIMIT,
- 		};
- 
--		iwl_mvm_enable_txq(mvm, mvm->aux_queue, mvm->aux_queue, 0, &cfg,
--				   wdg_timeout);
-+		iwl_mvm_enable_txq(mvm, *queue, *queue, 0, &cfg, wdg_timeout);
- 	}
- }
- 
-@@ -1750,7 +1750,9 @@ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
- 
- 	/* Map Aux queue to fifo - needs to happen before adding Aux station */
- 	if (!iwl_mvm_has_new_tx_api(mvm))
--		iwl_mvm_enable_aux_queue(mvm);
-+		iwl_mvm_enable_aux_snif_queue(mvm, &mvm->aux_queue,
-+					      mvm->aux_sta.sta_id,
-+					      IWL_MVM_TX_FIFO_MCAST);
- 
- 	ret = iwl_mvm_add_int_sta_common(mvm, &mvm->aux_sta, NULL,
- 					 MAC_INDEX_AUX, 0);
-@@ -1764,7 +1766,9 @@ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
- 	 * to firmware so enable queue here - after the station was added
- 	 */
- 	if (iwl_mvm_has_new_tx_api(mvm))
--		iwl_mvm_enable_aux_queue(mvm);
-+		iwl_mvm_enable_aux_snif_queue(mvm, &mvm->aux_queue,
-+					      mvm->aux_sta.sta_id,
-+					      IWL_MVM_TX_FIFO_MCAST);
- 
- 	return 0;
- }
-@@ -1772,10 +1776,31 @@ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
- int iwl_mvm_add_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	int ret;
- 
- 	lockdep_assert_held(&mvm->mutex);
--	return iwl_mvm_add_int_sta_common(mvm, &mvm->snif_sta, vif->addr,
-+
-+	/* Map snif queue to fifo - must happen before adding snif station */
-+	if (!iwl_mvm_has_new_tx_api(mvm))
-+		iwl_mvm_enable_aux_snif_queue(mvm, &mvm->snif_queue,
-+					      mvm->snif_sta.sta_id,
-+					      IWL_MVM_TX_FIFO_BE);
-+
-+	ret = iwl_mvm_add_int_sta_common(mvm, &mvm->snif_sta, vif->addr,
- 					 mvmvif->id, 0);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * For 22000 firmware and on we cannot add queue to a station unknown
-+	 * to firmware so enable queue here - after the station was added
-+	 */
-+	if (iwl_mvm_has_new_tx_api(mvm))
-+		iwl_mvm_enable_aux_snif_queue(mvm, &mvm->snif_queue,
-+					      mvm->snif_sta.sta_id,
-+					      IWL_MVM_TX_FIFO_BE);
-+
-+	return 0;
- }
- 
- int iwl_mvm_rm_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-@@ -1784,6 +1809,8 @@ int iwl_mvm_rm_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	iwl_mvm_disable_txq(mvm, mvm->snif_queue, mvm->snif_queue,
-+			    IWL_MAX_TID_COUNT, 0);
- 	ret = iwl_mvm_rm_sta_common(mvm, mvm->snif_sta.sta_id);
- 	if (ret)
- 		IWL_WARN(mvm, "Failed sending remove station\n");
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 593b7f97b29c..333bcb75b8af 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -657,7 +657,8 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 			if (ap_sta_id != IWL_MVM_INVALID_STA)
- 				sta_id = ap_sta_id;
- 		} else if (info.control.vif->type == NL80211_IFTYPE_MONITOR) {
--			queue = mvm->aux_queue;
-+			queue = mvm->snif_queue;
-+			sta_id = mvm->snif_sta.sta_id;
- 		}
- 	}
- 
--- 
-2.15.0
+>
+> On a related note: I don't actually see the ring buffer *insertion* being
+> protected by this rx_pkt_lock, so is it really useful? See
+> mwifiex_11n_rx_reorder_pkt(). Perhaps the correct lock is actually
+> rx_reorder_tbl_lock()? Except that serves multiple purposes it seems...
+
+Right, ring buffer insertion is not protected.  I think we should be using both rx_reorder_tbl_lock(which is already present) and rx_pkt_lock(we need to add) during insertion (mwifiex_11n_rx_reorder_pkt()).
+
+Also, we should be using rx_pkt_lock instead of rx_reorder_tbl_lock in mwifiex_11n_find_last_seq_num().
+>
+> Another thought: from what I can tell, all of these operations are
+> *only* performed on the main thread, so there's actually no concurrency
+> involved at all. So we also could probably drop this lock entirely...
+
+Let us know your inputs on above observations.
+>
+> I guess the real point is: can you explain better what you intend this lock to
+> do? Then we can review whether you're accomplishing your intention, or
+> whether we should improve the usage of this lock in some other way, or
+> perhaps even kill it entirely.
+>
+> Thanks,
+> Brian
+>
+> >             if (rx_tmp_ptr)
+> >                     mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+> > +
+> > +           spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+> >     }
+> >
+> >     spin_lock_irqsave(&priv->rx_pkt_lock, flags); @@ -167,8 +168,8 @@
+> > static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void
+> *payload)
+> >             }
+> >             rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+> >             tbl->rx_reorder_ptr[i] = NULL;
+> > -           spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+> >             mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+> > +           spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+> >     }
+> >
+> >     spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+> > --
+> > 1.9.1
+> >
+
+Regards,
+Ganapathi
