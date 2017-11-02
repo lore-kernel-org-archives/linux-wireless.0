@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47890 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933071AbdKBJaR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Nov 2017 05:30:17 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Juliana Rodrigues <juliana.orod@gmail.com>
-Subject: [PATCH 1/3] staging: rtl8188eu: Revert part of "staging: rtl8188eu: fix comments with lines over 80 characters"
-Date: Thu,  2 Nov 2017 10:30:11 +0100
-Message-Id: <20171102093013.10745-1-hdegoede@redhat.com> (sfid-20171102_103021_390195_392BFE4A)
+Received: from mout.kundenserver.de ([217.72.192.74]:61691 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755842AbdKBLJp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Nov 2017 07:09:45 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Govind Singh <govinds@qti.qualcomm.com>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        Ben Greear <greearb@candelatech.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Colin Ian King <colin.king@canonical.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: move pci suspend/resume functions
+Date: Thu,  2 Nov 2017 12:08:53 +0100
+Message-Id: <20171102110903.2886660-1-arnd@arndb.de> (sfid-20171102_121018_477855_465949EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 74e1e498e84e ("staging: rtl8188eu: fix comments with lines over 80
-characters") not only changed comments but also changed an if check:
+The combination of two patches has led to a build failure:
 
--if (pmlmepriv->cur_network.join_res != true) {
-+if (!(pmlmepriv->cur_network.join_res)) {
+drivers/net/wireless/ath/ath10k/pci.c: In function 'ath10k_pci_pm_suspend':
+drivers/net/wireless/ath/ath10k/pci.c:3416:8: error: implicit declaration of function 'ath10k_pci_suspend'; did you mean 'ath10k_pci_pm_suspend'? [-Werror=implicit-function-declaration]
+drivers/net/wireless/ath/ath10k/pci.c: In function 'ath10k_pci_pm_resume':
+drivers/net/wireless/ath/ath10k/pci.c:3428:8: error: implicit declaration of function 'ath10k_pci_resume'; did you mean 'ath10k_pci_pm_resume'? [-Werror=implicit-function-declaration]
 
-This is not equivalent as join_res is an int and can have values such
-as -2 and -3.
+This moves the functions outside of the now incorrect #ifdef.
 
-Note for the next time, please only make one type of changes in a single
-clean-up commit.
-
-Fixes: 74e1e498e84e ("staging: rtl8188eu: fix comments with lines over 80 ...")
-Cc: Juliana Rodrigues <juliana.orod@gmail.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Fixes: 96378bd2c6cd ("ath10k: fix core PCI suspend when WoWLAN is supported but disabled")
+Fixes: 6af1de2e4ec4 ("ath10k: mark PM functions as __maybe_unused")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/staging/rtl8188eu/core/rtw_ap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/rtl8188eu/core/rtw_ap.c b/drivers/staging/rtl8188eu/core/rtw_ap.c
-index 32a483769975..fa611455109a 100644
---- a/drivers/staging/rtl8188eu/core/rtw_ap.c
-+++ b/drivers/staging/rtl8188eu/core/rtw_ap.c
-@@ -754,7 +754,7 @@ static void start_bss_network(struct adapter *padapter, u8 *pbuf)
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index b18a9b690df4..6513edbd86e6 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2585,6 +2585,13 @@ static int ath10k_pci_hif_suspend(struct ath10k *ar)
+ 	return 0;
+ }
  
- 	/* setting only at  first time */
--	if (!(pmlmepriv->cur_network.join_res)) {
-+	if (pmlmepriv->cur_network.join_res != true) {
- 		/* WEP Key will be set before this function, do not
- 		 * clear CAM.
- 		 */
++static int ath10k_pci_hif_resume(struct ath10k *ar)
++{
++	/* Nothing to do; the important stuff is in the driver resume. */
++	return 0;
++}
++#endif
++
+ static int ath10k_pci_suspend(struct ath10k *ar)
+ {
+ 	/* The grace timer can still be counting down and ar->ps_awake be true.
+@@ -2597,12 +2604,6 @@ static int ath10k_pci_suspend(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static int ath10k_pci_hif_resume(struct ath10k *ar)
+-{
+-	/* Nothing to do; the important stuff is in the driver resume. */
+-	return 0;
+-}
+-
+ static int ath10k_pci_resume(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+@@ -2627,7 +2628,6 @@ static int ath10k_pci_resume(struct ath10k *ar)
+ 
+ 	return ret;
+ }
+-#endif
+ 
+ static bool ath10k_pci_validate_cal(void *data, size_t size)
+ {
 -- 
-2.14.2
+2.9.0
