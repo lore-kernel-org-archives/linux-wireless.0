@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45852 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932443AbdKORqC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 12:46:02 -0500
-Message-ID: <1510767958.4011.123.camel@coelho.fi> (sfid-20171115_184605_399769_9B0096C8)
-From: Luca Coelho <luca@coelho.fi>
-To: Kyle McMartin <kyle@infradead.org>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>,
-        linux-firmware@kernel.org,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Date: Wed, 15 Nov 2017 19:45:58 +0200
-In-Reply-To: <1509704342.4492.353.camel@coelho.fi>
-References: <1509704342.4492.353.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: pull-request: iwlwifi firmwares update 2017-10-13
+Received: from mx1.redhat.com ([209.132.183.28]:57060 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933071AbdKBJaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Nov 2017 05:30:19 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Kees Cook <keescook@chromium.org>
+Subject: [PATCH 2/3] staging: rtl8188eu: Fix bug introduced by convert timers to use timer_setup()
+Date: Thu,  2 Nov 2017 10:30:12 +0100
+Message-Id: <20171102093013.10745-2-hdegoede@redhat.com> (sfid-20171102_103023_263852_1F8D7334)
+In-Reply-To: <20171102093013.10745-1-hdegoede@redhat.com>
+References: <20171102093013.10745-1-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-11-03 at 12:19 +0200, Luca Coelho wrote:
-> Hi Kyle,
-> 
-> I have updated the firmwares for the 3160, 3168, 7260, 7265D, 8000C
-> and
-> 8265 devices and added new FW versions for 8000C, 8265 and the new
-> 9000
-> series.
-> 
-> Please pull or let me know if there are any issues.
+Commit b7749656e946 ("staging: rtl8188eu: Convert timers to use
+timer_setup()") introduces a copy and paste error which causes the
+rtl8188eu driver to no longer function. This commit fixes this.
 
-Please ignore this request.  I'm going to send a new one with one more
-patch in a second.
+Fixes: b7749656e946 ("staging: rtl8188eu: Convert timers to use timer_setup()")
+Cc: Kees Cook <keescook@chromium.org>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/staging/rtl8188eu/core/rtw_mlme_ext.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---
-Cheers,
-Luca.
+diff --git a/drivers/staging/rtl8188eu/core/rtw_mlme_ext.c b/drivers/staging/rtl8188eu/core/rtw_mlme_ext.c
+index d717046a6c2f..d73e9bdc80cc 100644
+--- a/drivers/staging/rtl8188eu/core/rtw_mlme_ext.c
++++ b/drivers/staging/rtl8188eu/core/rtw_mlme_ext.c
+@@ -4806,7 +4806,7 @@ void linked_status_chk(struct adapter *padapter)
+ void survey_timer_hdl(struct timer_list *t)
+ {
+ 	struct adapter *padapter = from_timer(padapter, t,
+-					    mlmeextpriv.link_timer);
++					      mlmeextpriv.survey_timer);
+ 	struct cmd_obj	*ph2c;
+ 	struct sitesurvey_parm	*psurveyPara;
+ 	struct cmd_priv					*pcmdpriv = &padapter->cmdpriv;
+-- 
+2.14.2
