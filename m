@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40626 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751150AbdKLOWM (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:19808 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754083AbdKCV0q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Nov 2017 09:22:12 -0500
-From: Ramon Fried <rfried@codeaurora.org>
-To: kvalo@codeaurora.org
-Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bjorn.andersson@linaro.org,
-        nicolas.dechesne@linaro.org, Eyal Ilsar <eilsar@codeaurora.org>,
-        Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH] wcn36xx: Set BTLE coexistence related configuration values to defaults
-Date: Sun, 12 Nov 2017 16:21:46 +0200
-Message-Id: <1510496506-4428-1-git-send-email-rfried@codeaurora.org> (sfid-20171112_152233_093861_7EC6D19C)
+        Fri, 3 Nov 2017 17:26:46 -0400
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ganesh.krishna@microchip.com>, <gregkh@linuxfoundation.org>,
+        <devel@driverdev.osuosl.org>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        <stable@vger.kernel.org>,
+        Aditya Shankar <Aditya.Shankar@microchip.com>
+Subject: [PATCH] staging: wilc1000: Fix bssid buffer offset in Txq
+Date: Fri, 3 Nov 2017 14:26:27 +0530
+Message-ID: <1509699387-6916-1-git-send-email-aditya.shankar@microchip.com> (sfid-20171103_222652_394824_6C28D1D9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Ilsar <eilsar@codeaurora.org>
+Commit 46949b48568b ("staging: wilc1000: New cfg packet
+format in handle_set_wfi_drv_handler") updated the frame
+format sent from host to the firmware. The code to update
+the bssid offset in the new frame was part of a second
+patch in the series which did not make it in and thus
+causes connection problems after associating to an AP.
 
-If the value for the firmware configuration parameters BTC_STATIC_LEN_LE_BT
-and BTC_STATIC_LEN_LE_WLAN are not set the duty cycle between BT and WLAN
-is such that if BT (including BLE) is active WLAN gets 0 bandwidth.
-When tuning these parameters having a too high value for WLAN means that BLE performance degrades.
-The "sweet" point of roughly half of the maximal values was empirically found to achieve
-a balance between BLE and Wi-Fi coexistence performance.
+This fix adds the proper offset of the bssid value in the
+Tx queue buffer to fix the connection issues.
 
-Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+Fixes: Commit 46949b48568b ("staging: wilc1000: New cfg packet format in handle_set_wfi_drv_handler")
+Cc: stable@vger.kernel.org
+Signed-off-by: Aditya Shankar <Aditya.Shankar@microchip.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 9c6590d..1c75987 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -72,8 +72,10 @@ struct wcn36xx_cfg_val {
- 	WCN36XX_CFG_VAL(DYNAMIC_PS_POLL_VALUE, 0),
- 	WCN36XX_CFG_VAL(TX_PWR_CTRL_ENABLE, 1),
- 	WCN36XX_CFG_VAL(ENABLE_CLOSE_LOOP, 1),
--	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
-+	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_BT, 120000),
-+	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_WLAN, 30000),
- 	WCN36XX_CFG_VAL(MAX_ASSOC_LIMIT, 10),
-+	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
- 	WCN36XX_CFG_VAL(ENABLE_MCC_ADAPTIVE_SCHEDULER, 0),
- };
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 9addef1..f49dfa8 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -714,7 +714,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 					char *bssid = ((struct tx_complete_data *)(tqe->priv))->bssid;
  
+ 					buffer_offset = ETH_ETHERNET_HDR_OFFSET;
+-					memcpy(&txb[offset + 4], bssid, 6);
++					memcpy(&txb[offset + 8], bssid, 6);
+ 				} else {
+ 					buffer_offset = HOST_HDR_OFFSET;
+ 				}
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.7.4
