@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42438 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752281AbdKHMpR (ORCPT
+Received: from mail-ot0-f177.google.com ([74.125.82.177]:52209 "EHLO
+        mail-ot0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965027AbdKCC5N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 07:45:17 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 2 Nov 2017 22:57:13 -0400
+Received: by mail-ot0-f177.google.com with SMTP id n74so1337406ota.8
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Nov 2017 19:57:13 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: rtlwifi: remove redundant initialization to cfg_cmd
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171104193759.919-1-colin.king@canonical.com>
-References: <20171104193759.919-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20171108124517.3D1E2607A4@smtp.codeaurora.org> (sfid-20171108_134537_972318_6EFC95A0)
-Date: Wed,  8 Nov 2017 12:45:17 +0000 (UTC)
+From: Daniel Drake <drake@endlessm.com>
+Date: Fri, 3 Nov 2017 10:57:11 +0800
+Message-ID: <CAD8Lp47N8ENCPp0ELd5_H8efEna9FGemM-vvi0kf7=coG5tNXA@mail.gmail.com> (sfid-20171103_035731_142220_74AA0715)
+Subject: ath9k disconnects in 4.13 with reason=4 locally_generated=1
+To: linux-wireless@vger.kernel.org,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+Hi,
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> cfg_cmd is initialized to zero and this value is never read, instead
-> it is over-written in the start of a do-while loop. Remove the
-> redundant initialization. Cleans up clang warning:
-> 
-> drivers/net/wireless/realtek/rtlwifi/core.c:1750:22: warning: Value
-> stored to 'cfg_cmd' during its initialization is never read
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Endless OS recently upgraded from Linux 4.11 to Linux 4.13, and we now
+have a few reports of issues with ath9k wireless becoming unusable.
 
-Patch applied to wireless-drivers-next.git, thanks.
+In the logs we can see that it authenticates, associates and completes
+the WPA 4 way handshake, before then being disconnected with:
 
-f80ead1cd5fa rtlwifi: remove redundant initialization to cfg_cmd
+ wlp2s0: CTRL-EVENT-DISCONNECTED bssid=74:26:ac:68:2f:c0 reason=4
+locally_generated=1
 
--- 
-https://patchwork.kernel.org/patch/10041685/
+The cycle then repeats with it connecting again before being swiftly
+disconnected, etc.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+More logs: https://gist.github.com/dsd/49f263c67c2859838ce168628ab043e0
+
+At the same time that we upgraded the kernel, we also upgraded many
+other components (e.g. NetworkManager and wpa_supplicant), however the
+same problem has been reported on Arch Linux and a user there reports
+that he narrowed it down to a kernel regression between 4.12 and 4.13:
+https://bbs.archlinux.org/viewtopic.php?id=225199
+
+Unfortunately we can not reproduce this in our office, so can't offer
+much more info yet, but we are continuing to investigate. I have not
+found any codepaths in userspace that generate disconnect reason 4, so
+I think it must be something in the kernel causing the disconnection,
+but I did not see any suspicious changes in recent commit history.
+
+It would be good to hear from anyone who has heard of this or has any
+ideas about causes or solutions.
+
+Thanks
+Daniel
