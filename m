@@ -1,56 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47360 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751631AbdKYPfa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53486 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755972AbdKCNku (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Nov 2017 10:35:30 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 25 Nov 2017 17:35:05 +0200
-Message-Id: <20171125153510.25359-2-luca@coelho.fi> (sfid-20171125_163533_786674_351B2735)
-In-Reply-To: <20171125153510.25359-1-luca@coelho.fi>
-References: <20171125153510.25359-1-luca@coelho.fi>
-Subject: [PATCH 1/6] iwlwifi: mvm: set correct chains in Rx status
+        Fri, 3 Nov 2017 09:40:50 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: Re: [PATCH v6] brcmfmac: add CLM download support
+References: <1507188678-24985-1-git-send-email-wright.feng@cypress.com>
+        <20171103082725.GB25372@aremote01.aus.cypress.com>
+        <9773ee9a-90d3-a303-54b0-9893503190f9@broadcom.com>
+        <20171103094016.GA51515@aremote01.aus.cypress.com>
+Date: Fri, 03 Nov 2017 15:40:45 +0200
+In-Reply-To: <20171103094016.GA51515@aremote01.aus.cypress.com> (Chung-Hsien
+        Hsu's message of "Fri, 3 Nov 2017 04:40:17 -0500")
+Message-ID: <87efpflbtu.fsf@codeaurora.org> (sfid-20171103_144053_817516_27E8FC5D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+Chung-Hsien Hsu <stanley.hsu@cypress.com> writes:
 
-ieee80211_rx_status::chains was always set to zero.
-That caused rate scaling to always start with the
-lowest rate possible (rs_get_initial_rate).
-Set it correctly according to the MPDU response.
+> On Fri, Nov 03, 2017 at 10:20:07AM +0100, Arend van Spriel wrote:
+>> On 03-11-17 09:27, Chung-Hsien Hsu wrote:
+>> >On Thu, Oct 05, 2017 at 03:31:18PM +0800, Wright Feng wrote:
+>> >>From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+>> >>
+>> >>The firmware for brcmfmac devices includes information regarding
+>> >>regulatory constraints. For certain devices this information is kept
+>> >>separately in a binary form that needs to be downloaded to the device.
+>> >>This patch adds support to download this so-called CLM blob file. It
+>> >>uses the same naming scheme as the other firmware files with extension
+>> >>of .clm_blob.
+>> >>
+>> >>The CLM blob file is optional. If the file does not exist, the download
+>> >>process will be bypassed. It will not affect the driver loading.
+>> >>
+>> >>Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+>> >>---
+>> >>v2: Revise commit message to describe in more detail
+>> >>v3: Add error handling in brcmf_c_get_clm_name function
+>> >>v4: Correct the length of dload_buf in brcmf_c_download function
+>> >>v5: Remove unnecessary cast and alignment
+>> >>v6: Add debug log for the case of no CLM file present
+>> >>---
+>> >>  .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  10 ++
+>> >>  .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 162 +++++++++++++++++++++
+>> >>  .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   2 +
+>> >>  .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
+>> >>  .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  31 ++++
+>> >>  .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  19 +++
+>> >>  .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  19 +++
+>> >>  .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  18 +++
+>> >>  8 files changed, 263 insertions(+)
+>> >
+>> >Any comments or feedback about this? I'm hoping to have it in v4.15.
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+This might not necessary make it to v4.15, it depends if Linus releases
+the final v4.14 on Sunday or not.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 76dc58381e1c..20fe23fbf040 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -213,6 +213,7 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
- 					struct ieee80211_rx_status *rx_status)
- {
- 	int energy_a, energy_b, max_energy;
-+	u32 rate_flags = le32_to_cpu(desc->rate_n_flags);
- 
- 	energy_a = desc->energy_a;
- 	energy_a = energy_a ? -energy_a : S8_MIN;
-@@ -224,7 +225,8 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
- 			energy_a, energy_b, max_energy);
- 
- 	rx_status->signal = max_energy;
--	rx_status->chains = 0; /* TODO: phy info */
-+	rx_status->chains =
-+		(rate_flags & RATE_MCS_ANT_AB_MSK) >> RATE_MCS_ANT_POS;
- 	rx_status->chain_signal[0] = energy_a;
- 	rx_status->chain_signal[1] = energy_b;
- 	rx_status->chain_signal[2] = S8_MIN;
+>> Sorry for not following up. The change log for v6 made me wonder if
+>> all my comments on v5 were addressed. I just checked and it looks
+>> fine to me. Kalle has set this patch to Deferred state in patchwork
+>> maybe awaiting my response.
+
+Yup, I was waiting your comments.
+
+>> I already gave my "Reviewed-by:" on v5 so you may add that for v6,
+>> but I am sure Kalle can do that.
+>> 
+>> Regards,
+>> Arend
+>
+> Hi Arend,
+>
+> Thanks for the confirmation and quick reply. How can I know the state of
+> a patch, e.g., a patch is set to Deferred state?
+
+I have documented this in the wiki:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#checking_state_of_patches_from_patchwork
+
+> Could you please help to add Arend's "Reviewed-by:" on v6? Or should I
+> add it and resend v6?
+
+Sure, I can add it. No need to resend.
+
+And actually Arend should be able to add the tag automatically by
+replying to the patch with his tag, patchwork would then pick it up and
+add it when I apply the patch. To my knowledge patchwork supports
+Acked-by, Reviewed-by and Tested-by tags.
+
 -- 
-2.15.0
+Kalle Valo
