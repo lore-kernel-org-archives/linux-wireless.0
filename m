@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57060 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933071AbdKBJaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Nov 2017 05:30:19 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Kees Cook <keescook@chromium.org>
-Subject: [PATCH 2/3] staging: rtl8188eu: Fix bug introduced by convert timers to use timer_setup()
-Date: Thu,  2 Nov 2017 10:30:12 +0100
-Message-Id: <20171102093013.10745-2-hdegoede@redhat.com> (sfid-20171102_103023_263852_1F8D7334)
-In-Reply-To: <20171102093013.10745-1-hdegoede@redhat.com>
-References: <20171102093013.10745-1-hdegoede@redhat.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23835 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750857AbdKCJva (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Nov 2017 05:51:30 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Daniel Drake <drake@endlessm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        Linux Upstreaming Team <linux@endlessm.com>
+Subject: Re: ath9k disconnects in 4.13 with reason=4 locally_generated=1
+Date: Fri, 3 Nov 2017 09:51:19 +0000
+Message-ID: <20171103095112.GA14915@jouni.qca.qualcomm.com> (sfid-20171103_105135_163956_FB139568)
+References: <CAD8Lp47N8ENCPp0ELd5_H8efEna9FGemM-vvi0kf7=coG5tNXA@mail.gmail.com>
+In-Reply-To: <CAD8Lp47N8ENCPp0ELd5_H8efEna9FGemM-vvi0kf7=coG5tNXA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit b7749656e946 ("staging: rtl8188eu: Convert timers to use
-timer_setup()") introduces a copy and paste error which causes the
-rtl8188eu driver to no longer function. This commit fixes this.
+On Fri, Nov 03, 2017 at 10:57:11AM +0800, Daniel Drake wrote:
+> Endless OS recently upgraded from Linux 4.11 to Linux 4.13, and we now
+> have a few reports of issues with ath9k wireless becoming unusable.
+>=20
+> In the logs we can see that it authenticates, associates and completes
+> the WPA 4 way handshake, before then being disconnected with:
+>=20
+>  wlp2s0: CTRL-EVENT-DISCONNECTED bssid=3D74:26:ac:68:2f:c0 reason=3D4
+> locally_generated=3D1
 
-Fixes: b7749656e946 ("staging: rtl8188eu: Convert timers to use timer_setup()")
-Cc: Kees Cook <keescook@chromium.org>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/staging/rtl8188eu/core/rtw_mlme_ext.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+reason=3D4 is WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY. I'd expect the most
+likely source of this to be one of the mac80211 code paths in mlme.c
+where disconnection is triggered if the current AP become unreachable.
+Getting a debug log from mac80211 might help in figuring out what is
+causing this (there seem to be number of mlme_dbg() calls before most,
+but not necessarily all, places where
+WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY is used).
 
-diff --git a/drivers/staging/rtl8188eu/core/rtw_mlme_ext.c b/drivers/staging/rtl8188eu/core/rtw_mlme_ext.c
-index d717046a6c2f..d73e9bdc80cc 100644
---- a/drivers/staging/rtl8188eu/core/rtw_mlme_ext.c
-+++ b/drivers/staging/rtl8188eu/core/rtw_mlme_ext.c
-@@ -4806,7 +4806,7 @@ void linked_status_chk(struct adapter *padapter)
- void survey_timer_hdl(struct timer_list *t)
- {
- 	struct adapter *padapter = from_timer(padapter, t,
--					    mlmeextpriv.link_timer);
-+					      mlmeextpriv.survey_timer);
- 	struct cmd_obj	*ph2c;
- 	struct sitesurvey_parm	*psurveyPara;
- 	struct cmd_priv					*pcmdpriv = &padapter->cmdpriv;
--- 
-2.14.2
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
