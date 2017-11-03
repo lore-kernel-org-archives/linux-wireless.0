@@ -1,143 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:38375 "EHLO
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:49154 "EHLO
         mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751379AbdKVB1D (ORCPT
+        with ESMTP id S1751944AbdKCJUM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 20:27:03 -0500
-Received: by mail-qk0-f193.google.com with SMTP id a142so14740796qkb.5
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Nov 2017 17:27:03 -0800 (PST)
-From: Li Jin <li.jin@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Wright Feng <wright.feng@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        brcm80211-dev-list@cypress.com,
-        brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, Jason Uy <jason.uy@broadcom.com>,
-        Li Jin <li.jin@broadcom.com>
-Subject: [PATCH INTERNAL V2 1/1] brcmfmac: add console log support with configurable read size
-Date: Tue, 21 Nov 2017 17:26:30 -0800
-Message-Id: <1511313990-19334-1-git-send-email-li.jin@broadcom.com> (sfid-20171122_022736_042775_E761C997)
+        Fri, 3 Nov 2017 05:20:12 -0400
+Received: by mail-qk0-f193.google.com with SMTP id q83so2413744qke.6
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Nov 2017 02:20:12 -0700 (PDT)
+Subject: Re: [PATCH v6] brcmfmac: add CLM download support
+To: Chung-Hsien Hsu <stanley.hsu@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1507188678-24985-1-git-send-email-wright.feng@cypress.com>
+ <20171103082725.GB25372@aremote01.aus.cypress.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <9773ee9a-90d3-a303-54b0-9893503190f9@broadcom.com> (sfid-20171103_102016_658010_B9F39BB7)
+Date: Fri, 3 Nov 2017 10:20:07 +0100
+MIME-Version: 1.0
+In-Reply-To: <20171103082725.GB25372@aremote01.aus.cypress.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jason Uy <jason.uy@broadcom.com>
+On 03-11-17 09:27, Chung-Hsien Hsu wrote:
+> On Thu, Oct 05, 2017 at 03:31:18PM +0800, Wright Feng wrote:
+>> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+>>
+>> The firmware for brcmfmac devices includes information regarding
+>> regulatory constraints. For certain devices this information is kept
+>> separately in a binary form that needs to be downloaded to the device.
+>> This patch adds support to download this so-called CLM blob file. It
+>> uses the same naming scheme as the other firmware files with extension
+>> of .clm_blob.
+>>
+>> The CLM blob file is optional. If the file does not exist, the download
+>> process will be bypassed. It will not affect the driver loading.
+>>
+>> Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+>> ---
+>> v2: Revise commit message to describe in more detail
+>> v3: Add error handling in brcmf_c_get_clm_name function
+>> v4: Correct the length of dload_buf in brcmf_c_download function
+>> v5: Remove unnecessary cast and alignment
+>> v6: Add debug log for the case of no CLM file present
+>> ---
+>>   .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  10 ++
+>>   .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 162 +++++++++++++++++++++
+>>   .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   2 +
+>>   .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
+>>   .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  31 ++++
+>>   .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  19 +++
+>>   .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  19 +++
+>>   .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  18 +++
+>>   8 files changed, 263 insertions(+)
+> 
+> Any comments or feedback about this? I'm hoping to have it in v4.15.
 
-Add support for configurable read size so that older wifi
-chips that have size restrictions can be supported.
+Hi Chung-Hsien,
 
-Signed-off-by: Jason Uy <jason.uy@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-Signed-off-by: Li Jin <li.jin@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  5 +++
- .../wireless/broadcom/brcm80211/brcmfmac/common.h  |  2 ++
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 39 ++++++++++++++++++++--
- 3 files changed, 43 insertions(+), 3 deletions(-)
+Sorry for not following up. The change log for v6 made me wonder if all 
+my comments on v5 were addressed. I just checked and it looks fine to 
+me. Kalle has set this patch to Deferred state in patchwork maybe 
+awaiting my response. I already gave my "Reviewed-by:" on v5 so you may 
+add that for v6, but I am sure Kalle can do that.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 7a2b495..e1bfcaa 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -52,6 +52,10 @@ int brcmf_msg_level;
- module_param_named(debug, brcmf_msg_level, int, S_IRUSR | S_IWUSR);
- MODULE_PARM_DESC(debug, "Level of debug output");
- 
-+static unsigned int brcmf_log_size;
-+module_param_named(logsize, brcmf_log_size, int, 0000);
-+MODULE_PARM_DESC(logsize, "Size of log output to read each time");
-+
- static int brcmf_p2p_enable;
- module_param_named(p2pon, brcmf_p2p_enable, int, 0);
- MODULE_PARM_DESC(p2pon, "Enable legacy p2p management functionality");
-@@ -287,6 +291,7 @@ struct brcmf_mp_device *brcmf_get_module_param(struct device *dev,
- 	settings->feature_disable = brcmf_feature_disable;
- 	settings->fcmode = brcmf_fcmode;
- 	settings->roamoff = !!brcmf_roamoff;
-+	settings->log_size = brcmf_log_size;
- #ifdef DEBUG
- 	settings->ignore_probe_fail = !!brcmf_ignore_probe_fail;
- #endif
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index a62f8e7..f3eab04 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -51,6 +51,7 @@ extern struct brcmf_mp_global_t brcmf_mp_global;
-  * @roamoff: Firmware roaming off?
-  * @ignore_probe_fail: Ignore probe failure.
-  * @country_codes: If available, pointer to struct for translating country codes
-+ * @log_size: limit the read size when accessing log from wifi chip
-  * @bus: Bus specific platform data. Only SDIO at the mmoment.
-  */
- struct brcmf_mp_device {
-@@ -60,6 +61,7 @@ struct brcmf_mp_device {
- 	bool		roamoff;
- 	bool		ignore_probe_fail;
- 	struct brcmfmac_pd_cc *country_codes;
-+	unsigned int	log_size;
- 	union {
- 		struct brcmfmac_sdio_pd sdio;
- 	} bus;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 613caca..71ba680 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -2790,6 +2790,10 @@ static int brcmf_sdio_readconsole(struct brcmf_sdio *bus)
- 	u8 line[CONSOLE_LINE_MAX], ch;
- 	u32 n, idx, addr;
- 	int rv;
-+	unsigned int left_to_read;
-+	unsigned int offset;
-+	unsigned int cur_read_size;
-+	unsigned int log_size = bus->sdiodev->settings->log_size;
- 
- 	/* Don't do anything until FWREADY updates console address */
- 	if (bus->console_addr == 0)
-@@ -2823,9 +2827,38 @@ static int brcmf_sdio_readconsole(struct brcmf_sdio *bus)
- 
- 	/* Read the console buffer */
- 	addr = le32_to_cpu(c->log_le.buf);
--	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, addr, c->buf, c->bufsize);
--	if (rv < 0)
--		return rv;
-+
-+	if (log_size > 0) {
-+		/* limit the amount of data to read in case wifi chip has
-+		 * restrictions
-+		 */
-+		left_to_read = c->bufsize;
-+		offset = 0;
-+		while (left_to_read) {
-+			cur_read_size = (left_to_read > log_size) ?
-+					 log_size :
-+					 left_to_read;
-+
-+			rv = brcmf_sdiod_ramrw(bus->sdiodev,
-+					       false,
-+					       addr + offset,
-+					       c->buf + offset,
-+					       cur_read_size);
-+			if (rv < 0)
-+				return rv;
-+
-+			left_to_read -= cur_read_size;
-+			offset += cur_read_size;
-+		}
-+	} else {
-+		rv = brcmf_sdiod_ramrw(bus->sdiodev,
-+				       false,
-+				       addr,
-+				       c->buf,
-+				       c->bufsize);
-+		if (rv < 0)
-+			return rv;
-+	}
- 
- 	while (c->last != idx) {
- 		for (n = 0; n < CONSOLE_LINE_MAX - 2; n++) {
--- 
-2.7.4
+Regards,
+Arend
