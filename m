@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51026 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753831AbdKQA2D (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:56664 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756003AbdKCNpa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Nov 2017 19:28:03 -0500
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 0A52B40A5ED
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Nov 2017 16:28:01 -0800 (PST)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: What would it take to get WDS working with channel contexts?
-Message-ID: <24f85baf-5e19-a2c9-517d-9b69a47860d9@candelatech.com> (sfid-20171117_012807_810321_F19CD790)
-Date: Thu, 16 Nov 2017 16:28:00 -0800
+        Fri, 3 Nov 2017 09:45:30 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] orinoco_usb: remove redundant pointer dev
+Date: Fri,  3 Nov 2017 13:45:28 +0000
+Message-Id: <20171103134528.8415-1-colin.king@canonical.com> (sfid-20171103_144548_841423_3DDECC7A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a user interested in getting WDS working on ath10k, but evidently
-this is not supported since ath10k uses channel-contexts:
+From: Colin Ian King <colin.king@canonical.com>
 
- From net/mac80211/main.c:
+The pointer dev is assigned but never read, hence it is redundant
+and can be removed. Cleans up clang warning:
 
-		/*
-		 * WDS is currently prohibited when channel contexts are used
-		 * because there's no clear definition of which channel WDS
-		 * type interfaces use
-		 */
+drivers/net/wireless/intersil/orinoco/orinoco_usb.c:1468:2: warning:
+Value stored to 'dev' is never read
 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Anyone have any suggestions as to how this could be made to work?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+index 56f6e3b71f48..501180584b4b 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+@@ -1457,7 +1457,6 @@ static void ezusb_bulk_in_callback(struct urb *urb)
+ 
+ static inline void ezusb_delete(struct ezusb_priv *upriv)
+ {
+-	struct net_device *dev;
+ 	struct list_head *item;
+ 	struct list_head *tmp_item;
+ 	unsigned long flags;
+@@ -1465,7 +1464,6 @@ static inline void ezusb_delete(struct ezusb_priv *upriv)
+ 	BUG_ON(in_interrupt());
+ 	BUG_ON(!upriv);
+ 
+-	dev = upriv->dev;
+ 	mutex_lock(&upriv->mtx);
+ 
+ 	upriv->udev = NULL;	/* No timer will be rearmed from here */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.14.1
