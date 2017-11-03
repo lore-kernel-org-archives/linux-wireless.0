@@ -1,94 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:33153 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbdKUUwU (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:43800 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754593AbdKCKCs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 15:52:20 -0500
-Received: by mail-wr0-f180.google.com with SMTP id 4so12543564wrt.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Nov 2017 12:52:20 -0800 (PST)
-Subject: Re: rtl8723be on Fedora27
-To: James Cameron <quozl@laptop.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org
-References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
- <3a1fc541-9104-2d13-409f-c8e64845a86d@lwfinger.net>
- <c6662534-db2f-61dc-142e-8015984c6813@gmail.com>
- <2524fe93-9d8a-523e-3256-2b495c951eb0@lwfinger.net>
- <d4ba5178-3d60-76b0-3819-e70e3e173fac@gmail.com>
- <20171121203746.GC5400@us.netrek.org>
-From: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>
-Message-ID: <e639e8df-7cea-87c5-add9-cea1c5e57a8a@gmail.com> (sfid-20171121_215237_538624_D68D90AF)
-Date: Tue, 21 Nov 2017 21:52:12 +0100
-MIME-Version: 1.0
-In-Reply-To: <20171121203746.GC5400@us.netrek.org>
-Content-Type: text/plain; charset=iso-8859-2
+        Fri, 3 Nov 2017 06:02:48 -0400
+Message-ID: <1509703364.4492.350.camel@coelho.fi> (sfid-20171103_110308_461074_4EBA067C)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
+Date: Fri, 03 Nov 2017 12:02:44 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-INNn6a456rVJM7SU2P70"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2017-11-03
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2017-11-21 21:37 keltezéssel, James Cameron írta:
-> On Tue, Nov 21, 2017 at 03:08:16PM +0100, Rákosi Gergely wrote:
->> 2017-11-18 16:52 keltezéssel, Larry Finger írta:
->>> On 11/17/2017 06:22 PM, Rákosi Gergely wrote:
->>>> Hello Larry,
->>>>
->>>> First of all, thanks your help.
->>>> Lets see...here is the kernel version: 4.13.12-300
->>>> The machine is an Asus ROG 553VE
->>>>
->>>> The firmware which loading in the dmesg is : rtlwifi/rtl8723befw_36.bin
->>>> The output of md5sum is : 1850c1308fbcd95e9f6a7f58ede1e35f
->>> [...]
->>> sudo iw dev wlan0 scan | egrep "SSID|signal"
->>>
->>> Post that output. In addition, copy the dmesg output to some pastebin
->>> and post the link as well.
->>>
->>> Larry
->>>
->> Hello Larry,
->>
->> I hope this email post format is good, and fit to the rules.
->> Here is the output:
->>
->> root@skynet-x2 ~]# iw dev wlp2s0 scan | egrep "SSID|signal"
->>         signal: -46.00 dBm
->>         SSID: SKYNET-X2
->> [...]
->> [root@skynet-x2 ~]#
-> Scan results seem normal.  Was this scan before disconnect?
-> - Yes, this command output taken while the connection was OK
->> And the dmesg output:
->>
->> https://pastebin.com/iqQSu2hD
-> Is now v4.13.13.
-> - Yes, thats the upgraded kernel
-> This is interesting, an H2C command was dropped, but no idea which.
->
-> [    9.848052] rtl8723be: error H2C cmd because of Fw download fail!!!
->
-> Disconnection happened at boot+440 seconds, associate+429 seconds;
->
-> [  439.871033] rtlwifi: AP off, try to reconnect now
-> [  439.871093] wlp2s0: Connection to AP 4c:5e:0c:c7:fa:e3 lost
->
-> I cannot tell what causes disconnect.  I wonder if the same
-> timing of the problem happens always, or if the timing varies.
->
-> - The timing always changing, never is the same. And I dont realize the cause at now...
-> Init MAC failed was another 30 seconds later;
->
-> [  468.600670] IPv6: ADDRCONF(NETDEV_UP): wlp2s0: link is not ready
-> [  469.618926] rtl8723be: Init MAC failed
->
-> Looking at _rtl8723be_init_mac, there are two false returns; hardware
-> power on fail, and llt write fail.
->
-> Sorry, I don't have rtl8723be hardware.
->
-> Rákosi, did any older kernel keep connection?
->
-> - The oldest kernel is 4.13.9-300.fc27.x86_64 in Fedora 27 installation, but did the same.
-If you can give advise how, and what I do, then I'll try it.
 
-Thanks,
-Gergely
+--=-INNn6a456rVJM7SU2P70
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Kalle,
+
+Here's the final set of patches intended for v4.15.  It's not too
+important to get them into v4.15 if there is no time anymore.  There
+are a few new PCI IDs that can be added in the rc series or stable
+(they need to go to other stable releases anyway).  And there's also
+one bugfix that I could also send to rc.  The rest are just cleanups,
+improvements or related to the A000 series.  Let me know how it goes
+and I'll adapt if needed.
+
+I have sent this out before and kbuildbot reported success.
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit e226fb5affccca98c405de80527180224d93d251=
+:
+
+  Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/a=
+th.git (2017-11-02 19:48:25 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2017-11-03
+
+for you to fetch changes up to 57b36f7fcb39c5eae8c1f463699f747af69643ba:
+
+  iwlwifi: add new cards for a000 series (2017-11-03 11:56:10 +0200)
+
+----------------------------------------------------------------
+iwlwifi updates
+
+* Some new PCI IDs;
+* A bunch of cleanups;
+* The timers update by Kees;
+* Add more register dump call-sites;
+* A fix for a locking issue in the TX flush code;
+* Actual implementation of the TX flush code for A000;
+* An optimization to drop RX frames during restart to avoid BA issues;
+
+----------------------------------------------------------------
+Emmanuel Grumbach (3):
+      iwlwifi: mvm: rs: remove the ANT C from the toogle antenna logic
+      iwlwifi: remove dead code for internal devices only
+      iwlwifi: remove host assisted paging
+
+Ihab Zhaika (3):
+      iwlwifi: add new cards for 8260 series
+      iwlwifi: add new cards for 8265 series
+      iwlwifi: add new cards for a000 series
+
+Kees Cook (1):
+      iwlwifi: mvm: Convert timers to use timer_setup()
+
+Kirtika Ruchandani (1):
+      iwlwifi: Add more call-sites for pcie reg dumper
+
+Liad Kaufman (1):
+      iwlwifi: mvm: reset seq num after restart
+
+Luca Coelho (1):
+      iwlwifi: mvm: hold mutex when flushing in iwl_mvm_flush_no_vif()
+
+Sara Sharon (6):
+      iwlwifi: mvm: use RS macro instead of duplicating the code
+      iwlwifi: mvm: cleanup references to aggregation count limit
+      iwlwifi: mvm: improve latency when there is a reorder timeout
+      iwlwifi: fix multi queue notification for a000 devices
+      iwlwifi: mvm: refactor iwl_mvm_flush_no_vif
+      iwlwifi: mvm: add missing implementation of flush for a000 devices
+
+Shahar S Matityahu (1):
+      iwlwifi: drop RX frames during hardware restart
+
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |  51 -----------------=
+--------------------------------
+ drivers/net/wireless/intel/iwlwifi/fw/api/paging.h |  24 -----------------=
+------
+ drivers/net/wireless/intel/iwlwifi/fw/file.h       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/img.h        |   8 --------
+ drivers/net/wireless/intel/iwlwifi/fw/paging.c     | 103 ++++++++++++-----=
+---------------------------------------------------------------------------=
+-------
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |   3 ---
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h       |   2 --
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |   6 ------
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  42 +++++++++++------=
+-----------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  15 ---------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  62 +++++++++++++++++=
++++++++++++++-----------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |  10 +++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  23 +++++++++++++++++=
++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  50 +++++++++++++++++=
++++++++++++--------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   3 +--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  10 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |   7 ++++---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |   1 +
+ 20 files changed, 127 insertions(+), 300 deletions(-)
+--=-INNn6a456rVJM7SU2P70
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAln8PsQACgkQoUecoho8
+xfp9fQ//WQ0OxRc6g3ujjNkX0Ge7fOnvliruiI7FPcoehEuNb8Y8OsE8BYPxvkTt
+E81aYc0s1d8anjcDK9EUjSd18/Vg9gvtDY1vHkNw0NlOSza1cYuhaDzYzYHQ+Zwf
+FjeQqT8vqDJDnvFcQGpLJzwZM5K77/gcJ+5L9E0NMImBT2VeSsoOEVzj9gUZ4JNg
+N05EojCayUA1pRNvcl/sZGh3BXoB/akopHdlcqEmymIeVNcq0QI/EL0UuSE9XfgI
+AJ/lE9T1Pn2/T5PiqMq+g3JofcD1f/p9+DeLd/XIOJTbha6MkmLp2Es/SKA3oknl
+bWbOwU0AQ4bv8IsP96kuHCoRO5atBHqTY0j6Q57/jybt8ZooD1b+Sa/2IH7PEtLA
+CYnpOyKOOvtgiPK8SrcdDk8oanU4UTXS8G/goJZmU+46dNLqELd/1LbBPFRNvsFt
+igkbyu+VI5h0L2sK8dWsKFor2Mk8r0GjdXfEeFunCK56qLtraLXUhEpk5zS7GLcA
+/XjXhVpVMc/2XHO83ecUaOFp5ZuUSCNqLMfgEpLKW6MVjIqWy6Zx2Q4LJa9OSv7U
+vmojIUSug/oewMSeVmUBLY/WVX85hgLVY+wtSy/iRIZXlnxrpHokHYMlP/WIIzT5
+dY7lWJGpTQN4HlIyqsFnVc6CaKTDfpdAllrRvtLX+IGlgUpKVyo=
+=Ylw7
+-----END PGP SIGNATURE-----
+
+--=-INNn6a456rVJM7SU2P70--
