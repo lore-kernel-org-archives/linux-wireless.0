@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f46.google.com ([74.125.83.46]:56658 "EHLO
-        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752193AbdKFL1y (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 06:27:54 -0500
-Date: Mon, 6 Nov 2017 22:27:29 +1100
-From: Simon Shields <simon@lineageos.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, devicetree@vger.kernel.org,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Subject: Re: [PATCH] brcmfmac: add support for external 32khz clock
-Message-ID: <20171106112726.GA25134@lineageos.org> (sfid-20171106_122757_249384_5A9416BE)
-References: <20171104132421.GA1541@archbox.home>
- <5A004099.90200@broadcom.com>
+Received: from eggs.gnu.org ([208.118.235.92]:56093 "EHLO eggs.gnu.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751612AbdKDX2M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 4 Nov 2017 19:28:12 -0400
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+        (envelope-from <nikolas@gnu.org>)
+        id 1eB7rH-0003I3-8u
+        for linux-wireless@vger.kernel.org; Sat, 04 Nov 2017 19:28:12 -0400
+To: linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        Larry.Finger@lwfinger.net
+From: Nik Nyby <nikolas@gnu.org>
+Subject: rtl8821ae dbi read question
+Message-ID: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org> (sfid-20171105_002815_907786_38010B28)
+Date: Sat, 4 Nov 2017 19:27:52 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5A004099.90200@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 06, 2017 at 11:59:37AM +0100, Arend van Spriel wrote:
-> On 11/4/2017 2:24 PM, Simon Shields wrote:
-> > Some boards use an external 32khz clock for low-power
-> > mode timing. Make sure the clock is powered on while the chipset
-> > is active.
-> 
-> Do you have such a board? With the little documentation I can get my hands
-> on here I wonder whether the clock needs to be enabled before the device is
-> powered. If you have the hardware I would like to check some registers in
-> the device.
-> 
+In drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c, we have this 
+function:
 
-Yes. Trats2 (exynos4412-based) has such a setup. The BCM4334 works fine
-with this patch and one more that enables the WL_REG_EN pin when
-brcmfmac is probed.
+  static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
+  {
+      u16 read_addr = addr & 0xfffc;
+      u8 tmp = 0, count = 0, ret = 0;
 
-Without this patch (and only enabling WL_REG_EN), the chip is detected but
-attempting to initialise it fails with a bunch of timeouts.
+      rtl_write_word(rtlpriv, REG_DBI_ADDR, read_addr);
+      rtl_write_byte(rtlpriv, REG_DBI_FLAG, 0x2);
+      tmp = rtl_read_byte(rtlpriv, REG_DBI_FLAG);
+      count = 0;
+      while (tmp && count < 20) {
+          udelay(10);
+          tmp = rtl_read_byte(rtlpriv, REG_DBI_FLAG);
+          count++;
+      }
+      if (0 == tmp) {
+          read_addr = REG_DBI_RDATA + addr % 4;
+          ret = rtl_read_word(rtlpriv, read_addr);
+      }
+      return ret;
+  }
 
-> Regards,
-> Arend
+Near the end of the function, in this line:
 
-Cheers,
-Simon
+   ret = rtl_read_word(rtlpriv, read_addr);
+
+rtl_read_word() returns a u16, but "ret" is declared as a u8. Is that a 
+problem, or is this code correct?
+
+What's prompting this question is that I'm getting frequent disconnects 
+from my access point with my rtl8821ae device. I've experienced this 
+behavior both before and after the recent change to this function in 
+commit b8b8b16352cd90c6083033fd4487f04fae935c18.
