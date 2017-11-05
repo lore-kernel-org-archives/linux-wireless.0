@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52102 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755185AbdKMUgC (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:42209 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751930AbdKEJWb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 15:36:02 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 00/10] brcmfmac: restructuring sdio access functions
-Date: Mon, 13 Nov 2017 21:35:37 +0100
-Message-Id: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213623_562182_537EDE55)
+        Sun, 5 Nov 2017 04:22:31 -0500
+Subject: Re: ath10k: Fix reported HT MCS rates with NSS > 1
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: ath10k@lists.infradead.org, akolli@qti.qualcomm.com,
+        linux-wireless@vger.kernel.org
+References: <20170511090930.18205-1-sven.eckelmann@openmesh.com>
+ <0a29ec25ec374a12adbc222af9a7dda1@euamsexm01a.eu.qualcomm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <94091927-c8a1-2918-749a-dc289686c268@dd-wrt.com> (sfid-20171105_102303_494732_4D620DC0)
+Date: Sun, 5 Nov 2017 10:22:22 +0100
+MIME-Version: 1.0
+In-Reply-To: <0a29ec25ec374a12adbc222af9a7dda1@euamsexm01a.eu.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches were originally submitted by Ian Molton a while ago so decided
-to resubmit them. This is a first series of 10 patches. Tested using BCM4354
-device which showed no regression.
+the assumption made in this patch is obviously wrong (at least for more 
+recent firmwares and 9984)
+my log is flooded with messages like
+[208802.803537] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
+[208805.108515] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
+[208821.747621] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
+[208822.516599] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
+[208841.257780] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
 
-It is intended for 4.16 (no rush ;-) ) and applies to the master branch of
-the wireless-drivers-next repository.
 
-Ian Molton (10):
-  brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
-  brcmfmac: Register sizes on hardware are not dependent on compiler
-    types
-  brcmfmac: Split brcmf_sdiod_regrw_helper() up.
-  brcmfmac: Clean up brcmf_sdiod_set_sbaddr_window()
-  brcmfmac: Remove dead IO code
-  brcmfmac: Remove bandaid for SleepCSR
-  brcmfmac: Remove brcmf_sdiod_request_data()
-  brcmfmac: Fix asymmetric IO functions.
-  brcmfmac: Remove noisy debugging.
-  brcmfmac: Rename bcmerror to err
+i tested this with the 10.4.3.5-0038 firmware which isnt official 
+published but made from athwlan.bin i got from qca chipcode
 
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 280 +++++++++------------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |   5 +-
- 2 files changed, 114 insertions(+), 171 deletions(-)
+Am 23.05.2017 um 17:28 schrieb Kalle Valo:
+> Sven Eckelmann <sven.eckelmann@openmesh.com> wrote:
+>> The QCA4019 firmware 10.4-3.2.1-00050 reports only HT MCS rates between
+>> 0-9. But 802.11n MCS rates can be larger than that. For example a 2x2
+>> device can send with up to MCS 15.
+>>
+>> The firmware encodes the higher MCS rates using the NSS field. The actual
+>> calculation is not documented by QCA but it seems like the NSS field can be
+>> mapped for HT rates to following MCS offsets:
+>>
+>>   * NSS 1: 0
+>>   * NSS 2: 8
+>>   * NSS 3: 16
+>>   * NSS 4: 24
+>>
+>> This offset therefore has to be added for HT rates before they are stored
+>> in the rate_info struct.
+>>
+>> Fixes: cec17c382140 ("ath10k: add per peer htt tx stats support for 10.4")
+>> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+> Patch applied to ath-next branch of ath.git, thanks.
+>
+> c1dd8016ae02 ath10k: fix reported HT MCS rates with NSS > 1
+>
 
---
-1.9.1
+-- 
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
