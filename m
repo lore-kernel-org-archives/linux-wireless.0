@@ -1,84 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46082 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933367AbdKQGqu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Nov 2017 01:46:50 -0500
-Message-ID: <1510901207.4011.197.camel@coelho.fi> (sfid-20171117_074703_476184_7E05D870)
-From: Luca Coelho <luca@coelho.fi>
-To: Chris Chiu <chiu@endlessm.com>
-Cc: johannes.berg@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>
-Date: Fri, 17 Nov 2017 08:46:47 +0200
-In-Reply-To: <CAB4CAwfg73wRoNca2GBaMn4eN04vf+uR3xdzYO0UWG1Nmaqo=w@mail.gmail.com>
-References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
-         <1509434718.4492.195.camel@coelho.fi>
-         <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
-         <1509952948.4492.360.camel@coelho.fi>
-         <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
-         <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
-         <1510825750.4011.179.camel@coelho.fi>
-         <CAB4CAwfg73wRoNca2GBaMn4eN04vf+uR3xdzYO0UWG1Nmaqo=w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Need support for Intel new wifi module 9462NGW
+Received: from eggs.gnu.org ([208.118.235.92]:33746 "EHLO eggs.gnu.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750724AbdKEUxT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Nov 2017 15:53:19 -0500
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+        (envelope-from <nikolas@gnu.org>)
+        id 1eBRuu-0001W5-Bf
+        for linux-wireless@vger.kernel.org; Sun, 05 Nov 2017 15:53:17 -0500
+Subject: Re: rtl8821ae dbi read question
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, pkshih@realtek.com
+References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
+ <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
+From: Nik Nyby <nikolas@gnu.org>
+Message-ID: <6155a30b-ca6d-e27d-701e-9e1876a982ff@gnu.org> (sfid-20171105_215329_868070_5F32F172)
+Date: Sun, 5 Nov 2017 15:53:06 -0500
+MIME-Version: 1.0
+In-Reply-To: <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-11-17 at 14:39 +0800, Chris Chiu wrote:
-> On Thu, Nov 16, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi> wrote:
-> > Hi Chris,
-> > 
-> > On Thu, 2017-11-09 at 11:11 +0800, Chris Chiu wrote:
-> > > Hi Luca,
-> > >     Any suggestion for the "Failed to start INIT ucode: -110"
-> > > issue
-> > > for the firmware?
-> > 
-> > There were a few problems which should now be fixed.  We published
-> > new
-> > firmwares in our linux-firmware.git tree[1] and also made some
-> > fixes in
-> > the driver[2].  Please update your system accordingly and let me
-> > know
-> > if it works for you.
-> > 
-> > Thanks!
-> > 
-> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-f
-> > irmware.git/
-> > [2] https://patchwork.kernel.org/patch/10059871/
-> >     https://patchwork.kernel.org/patch/10059875/
-> >     https://patchwork.kernel.org/patch/10059873/
-> > 
-> > --
-> > Cheers,
-> > Luca.
+On 11/05/2017 11:50 AM, Larry Finger wrote:
 > 
-> Hi Luca,
+> If you read the commit message for commit b8b8b16352cd, you will find 
+> that we do not understand why using a byte read causes failure, but 
+> reverting the change so that it is a word read made it function again. 
+> The "fix" was found by a user doing bisection, and verified on my 
+> system, where the RTL8821AE has stable connections. The transfer rates 
+> take wild swings, but the connection is not dropped.
+> 
+> If you NIC behaves differently, then you will need to help us debug the 
+> problem. If you had a kernel that worked, then you might try bisection. 
 
-Hi Chris,
+I just tested on kernels 4.12 and 4.13 - my connection gets dropped on 
+those kernels as well. Right now I'm using 4.14-rc7.
 
+> If that is not possible, you might try various combinations of module 
+> parameters aspm, int_clear, and msi
+Thanks for these suggestions. Disabling ASPM solves my connection 
+dropping issue! Previously, I was getting disconnected around 10 seconds 
+after starting "git clone" on a large git repository. Now, I haven't 
+seen the connection drop once.
 
->     Thanks for your patch and updated firmware. The driver can
-> initialize w/o error now. However, it always fails on ip-config after
-> 4-way handshake complete. I have to mention that I removed the field
-> ".soc_latency" in all new iwl_cfg you added in
-> https://patchwork.kernel.org/patch/10059875/ to remove compile error
-> based on the linux mainline 4.14.
->     I don't know whether if this causes the problem. Do you need me
-> to
-> do anything for more information?
+I can help debug the issue. I'm using a Lenovo Ideapad 320-15ABR laptop. 
+Here's the lspci -vv info for my NIC:
 
-That was my fault, I forgot to include one file in my commit.  I have
-sent v2 of the two last patches to solve the problem.  Can you try
-them?
-
-The problem you're seeing could be related to that, because we use a
-bit longer wait period for HW stabilization with integrated devices. 
-And if you remove it, you may encounter random problems...
-
---
-Cheers,
-Luca.
+01:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821AE 
+802.11ac PCIe Wireless Network Adapter
+         Subsystem: Lenovo RTL8821AE 802.11ac PCIe Wireless Network Adapter
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+ParErr- Stepping- SERR- FastB2B- DisINTx+
+         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+         Latency: 0, Cache Line Size: 32 bytes
+         Interrupt: pin A routed to IRQ 33
+         Region 0: I/O ports at 2000 [size=256]
+         Region 2: Memory at f0b00000 (64-bit, non-prefetchable) [size=16K]
+         Capabilities: <access denied>
+         Kernel driver in use: rtl8821ae
