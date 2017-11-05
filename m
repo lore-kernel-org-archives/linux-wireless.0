@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35180 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752760AbdK2MxK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 07:53:10 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org
-Subject: [v2 0/8] rsi: add bluetooth and coex support  
-Date: Wed, 29 Nov 2017 18:15:05 +0530
-Message-Id: <1511959513-3902-1-git-send-email-amitkarwar@gmail.com> (sfid-20171129_135315_497827_C1D91F0D)
+Received: from store.laptop.org ([18.85.44.157]:48639 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750724AbdKEV3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Nov 2017 16:29:54 -0500
+Date: Mon, 6 Nov 2017 08:29:47 +1100
+From: James Cameron <quozl@laptop.org>
+To: Nik Nyby <nikolas@gnu.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, pkshih@realtek.com
+Subject: Re: rtl8821ae dbi read question
+Message-ID: <20171105212947.GB26699@us.netrek.org> (sfid-20171105_223025_736380_C4F27076)
+References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
+ <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
+ <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+On Sun, Nov 05, 2017 at 04:15:36PM -0500, Nik Nyby wrote:
+> I also want to note that adding rtl8821ae.aspm=0 to my grub kernel
+> boot command doesn't fix my problem. (I'm building this driver into
+> the kernel, not as a module). My connection dropping problem is
+> fixed only if I comment out the aspm init code in the driver, per
+> this patch:
+>   https://patchwork.kernel.org/patch/9951511/
 
-This patch series adds new bluetooth driver and coex enhancments
-in existing wlan driver for RSI chipsets.
-As per our architecture, both wlan and bluetooth drivers talk
-over same SDIO interface to device. Separate endpoint will be
-used in case of USB interface.
+Interesting; that patch was for testing, and did more than just aspm=0.
 
-Changes since v1:
-2/8, 5/8 and 6/8 patches are modified
+Check for a BIOS update from your vendor.  Device registers can be
+configured and persist despite warm reboot, which implies there is no
+register reset in driver start or device reset, which further implies
+that the BIOS can easily affect the outcome.
 
-Prameela Rani Garnepudi (6):
-  rsi: add rx control block to handle rx packets in USB
-  rsi: add header file rsi_header
-  rsi: add coex support
-  Bluetooth: btrsi: add new rsi bluetooth driver
-  rsi: add module parameter operating mode
-  rsi: sdio changes to support BT
+Check also for different behaviour after cold reboot; that is a power
+down for 30 seconds then power up.
 
-Siva Rebbagondla (2):
-  rsi: add bluetooth rx endpoint
-  rsi: handle BT traffic in driver
-
- drivers/bluetooth/Kconfig                   |  11 ++
- drivers/bluetooth/Makefile                  |   2 +
- drivers/bluetooth/btrsi.c                   | 216 ++++++++++++++++++++++++++++
- drivers/bluetooth/rsi_hci.h                 |  40 ++++++
- drivers/net/wireless/rsi/Kconfig            |   2 +-
- drivers/net/wireless/rsi/Makefile           |   1 +
- drivers/net/wireless/rsi/rsi_91x_coex.c     | 184 ++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_core.c     |  16 ++-
- drivers/net/wireless/rsi/rsi_91x_hal.c      |  56 ++++++--
- drivers/net/wireless/rsi/rsi_91x_main.c     | 127 +++++++++++++++-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   2 +-
- drivers/net/wireless/rsi/rsi_91x_sdio.c     |  13 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |   5 +-
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 124 +++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  35 +++--
- drivers/net/wireless/rsi/rsi_coex.h         |  38 +++++
- drivers/net/wireless/rsi/rsi_common.h       |   5 +-
- drivers/net/wireless/rsi/rsi_hal.h          |  21 +++
- drivers/net/wireless/rsi/rsi_main.h         |  22 +--
- drivers/net/wireless/rsi/rsi_mgmt.h         |   3 +
- drivers/net/wireless/rsi/rsi_usb.h          |  16 ++-
- include/linux/rsi_header.h                  |  58 ++++++++
- 22 files changed, 914 insertions(+), 83 deletions(-)
- create mode 100644 drivers/bluetooth/btrsi.c
- create mode 100644 drivers/bluetooth/rsi_hci.h
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
- create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
- create mode 100644 include/linux/rsi_header.h
+Do you yet have a known working kernel to bisect against?
 
 -- 
-2.7.4
+James Cameron
+http://quozl.netrek.org/
