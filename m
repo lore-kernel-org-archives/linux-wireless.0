@@ -1,41 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37354 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752680AbdKWNXt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Nov 2017 08:23:49 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "James Cao" <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>,
-        Brian Norris <briannorris@chromium.org>,
-        "Ben Hutchings" <ben@decadent.org.uk>
-Subject: pull-request mwifiex-firmware 2017-11-23
-Date: Thu, 23 Nov 2017 13:23:39 +0000
-Message-ID: <178d86c104de49e589a6ac10930d1b27@SC-EXCH02.marvell.com> (sfid-20171123_142352_614131_27F0C17C)
-Content-Type: text/plain; charset="utf-8"
+Received: from eggs.gnu.org ([208.118.235.92]:38141 "EHLO eggs.gnu.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750750AbdKEVP7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Nov 2017 16:15:59 -0500
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+        (envelope-from <nikolas@gnu.org>)
+        id 1eBSGn-0003T4-K5
+        for linux-wireless@vger.kernel.org; Sun, 05 Nov 2017 16:15:58 -0500
+Subject: Re: rtl8821ae dbi read question
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, pkshih@realtek.com
+References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
+ <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
+From: Nik Nyby <nikolas@gnu.org>
+Message-ID: <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org> (sfid-20171105_221602_655276_509255BE)
+Date: Sun, 5 Nov 2017 16:15:36 -0500
 MIME-Version: 1.0
+In-Reply-To: <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCA0N2FmZDk5NTBmYmNhZGViN2NlZmMw
-OTNiMjFkNjEyM2JkYzc2Zjc5Og0KDQogIGxpbnV4LWZpcm13YXJlOiBhZGQgTWFydmVsbCBVU0I4
-OTk3IGZpcm13YXJlIGltYWdlICgyMDE3LTA1LTAyIDEyOjI4OjM0ICswNTMwKQ0KDQphcmUgYXZh
-aWxhYmxlIGluIHRoZSBnaXQgcmVwb3NpdG9yeSBhdDoNCg0KICBnaXQ6Ly9naXQubWFydmVsbC5j
-b20vbXdpZmlleC1maXJtd2FyZS5naXQgbWFzdGVyDQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdl
-cyB1cCB0byBkYjNlMTg1NWVhNDZiYzFhMjJiOGJiZWNiNDAwYzI5MDljNTUxY2Y1Og0KDQogIGxp
-bnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQQ0llLVVTQjg5OTcgZmlybXdhcmUgaW1hZ2Ug
-KDIwMTctMTAtMzEgMjA6NDk6NTMgKzA1MzApDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkdhbmFwYXRoaSBCaGF0ICgy
-KToNCiAgICAgIGxpbnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQQ0llLVVTQjg5OTcgZmly
-bXdhcmUgaW1hZ2UNCiAgICAgIGxpbnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQQ0llLVVT
-Qjg5OTcgZmlybXdhcmUgaW1hZ2UNCg0KWGlubWluZyBIdSAoMSk6DQogICAgICBsaW51eC1maXJt
-d2FyZTogdXBkYXRlIE1hcnZlbGwgUENJZS1VU0I4ODk3LUEyIGZpcm13YXJlIGltYWdlDQoNCiBX
-SEVOQ0UgICAgICAgICAgICAgICAgICAgICAgICB8ICAgNCArKy0tDQogbXJ2bC9wY2llODg5N191
-YXBzdGEuYmluICAgICAgfCBCaW4gODIwMjEyIC0+IDgzNjU0MCBieXRlcw0KIG1ydmwvcGNpZXVz
-Yjg5OTdfY29tYm9fdjQuYmluIHwgQmluIDU5NzEzNiAtPiA2MjI1MzIgYnl0ZXMNCiAzIGZpbGVz
-IGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCg==
+I also want to note that adding rtl8821ae.aspm=0 to my grub kernel boot 
+command doesn't fix my problem. (I'm building this driver into the 
+kernel, not as a module). My connection dropping problem is fixed only 
+if I comment out the aspm init code in the driver, per this patch:
+   https://patchwork.kernel.org/patch/9951511/
