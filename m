@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48812 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755635AbdKJCg4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 21:36:56 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mga04.intel.com ([192.55.52.120]:27174 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750769AbdKEXyS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Nov 2017 18:54:18 -0500
+Date: Mon, 6 Nov 2017 00:54:14 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Johan Hovold <johan@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] NFC: fix device-allocation error return
+Message-ID: <20171105235414.GA27831@zurbaran.ger.intel.com> (sfid-20171106_005428_065974_45995B85)
+References: <20170709110858.20331-1-johan@kernel.org>
 MIME-Version: 1.0
-Subject: Re: rsi: rsi_91x_ps: remove redundant code in str_psstate
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171106215321.GA25539@embeddedor.com>
-References: <20171106215321.GA25539@embeddedor.com>
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Message-Id: <20171110023656.2C103601D1@smtp.codeaurora.org> (sfid-20171110_033717_153540_1556A97F)
-Date: Fri, 10 Nov 2017 02:36:56 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170709110858.20331-1-johan@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gustavo A. R. Silva" <garsilva@embeddedor.com> wrote:
+Hi Johan,
 
-> "INVALID_STATE" is already being returned in the default case and this
-> code cannot be reached.
+On Sun, Jul 09, 2017 at 01:08:58PM +0200, Johan Hovold wrote:
+> A recent change fixing NFC device allocation itself introduced an
+> error-handling bug by returning an error pointer in case device-id
+> allocation failed. This is clearly broken as the callers still expected
+> NULL to be returned on errors as detected by Dan's static checker.
 > 
-> Addresses-Coverity-ID: 1398384
-> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+> Fix this up by returning NULL in the event that we've run out of memory
+> when allocating a new device id.
+> 
+> Note that the offending commit is marked for stable (3.8) so this fix
+> needs to be backported along with it.
+> 
+> Fixes: 20777bc57c34 ("NFC: fix broken device allocation")
+> Cc: stable <stable@vger.kernel.org>	# 3.8
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Signed-off-by: Johan Hovold <johan@kernel.org>
+> ---
+>  net/nfc/core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+Applied, thanks for the fix.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-4775ae7afec6 rsi: rsi_91x_ps: remove redundant code in str_psstate
-
--- 
-https://patchwork.kernel.org/patch/10044571/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Cheers,
+Samuel.
