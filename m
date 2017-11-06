@@ -1,103 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:21612 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750808AbdKAH0B (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:44266 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750922AbdKFTs4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 03:26:01 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Thorsten Leemhuis <linux@leemhuis.info>
-CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k: Wifi slow on the XPS13 (9360) (QCA6174)
-Date: Wed, 1 Nov 2017 07:25:57 +0000
-Message-ID: <87wp3azchn.fsf@kamboji.qca.qualcomm.com> (sfid-20171101_082605_115296_C3248B05)
-References: <5a4860eb-3734-7587-d81f-9c3de6ff11c8@leemhuis.info>
-        <46f918c5-b07d-e397-2f3d-8136c7c1a8f3@qti.qualcomm.com>
-        <74a979dc-f06d-be9d-7c3f-359cd481d16c@leemhuis.info>
-        <87tvyi4dnv.fsf_-_@kamboji.qca.qualcomm.com>
-        <94b4b903-afeb-439b-2b96-81835ab6ebef@leemhuis.info>
-In-Reply-To: <94b4b903-afeb-439b-2b96-81835ab6ebef@leemhuis.info> (Thorsten
-        Leemhuis's message of "Tue, 31 Oct 2017 16:47:18 +0100")
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Mon, 6 Nov 2017 14:48:56 -0500
+Message-ID: <1509997730.4492.422.camel@coelho.fi> (sfid-20171106_204902_962794_D6BF1C25)
+From: Luca Coelho <luca@coelho.fi>
+To: Kees Cook <keescook@chromium.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Network Development <netdev@vger.kernel.org>
+Date: Mon, 06 Nov 2017 21:48:50 +0200
+In-Reply-To: <CAGXu5jLhCxwR1zntTYS_5X72kp-H8h++8PH-p5aKTC5oU-OaLw@mail.gmail.com>
+References: <20171029122816.8802-1-luca@coelho.fi>
+         <20171029122816.8802-14-luca@coelho.fi>
+         <CAGXu5jLhCxwR1zntTYS_5X72kp-H8h++8PH-p5aKTC5oU-OaLw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 13/17] iwlwifi: mvm: Convert timers to use timer_setup()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhvcnN0ZW4gTGVlbWh1aXMgPGxpbnV4QGxlZW1odWlzLmluZm8+IHdyaXRlczoNCg0KPiBMbyEg
-T24gMjkuMTAuMjAxNyAwODoyNywgS2FsbGUgVmFsbyB3cm90ZToNCj4+IFRob3JzdGVuIExlZW1o
-dWlzIDxsaW51eEBsZWVtaHVpcy5pbmZvPiB3cml0ZXM6DQo+Pj4gT24gMDMuMTAuMjAxNyAwMTo0
-MCwgUnlhbiBIc3Ugd3JvdGU6DQo+Pj4+IE9uIDEwLzAxLzIwMTcgMDE6NTkgQU0sIFRob3JzdGVu
-IExlZW1odWlzIHdyb3RlOg0KPj4+Pj4+IGF0aDEwa19wY2kgMDAwMDozYTowMC4wOiBEaXJlY3Qg
-ZmlybXdhcmUgbG9hZCBmb3INCj4+Pj4+PiBhdGgxMGsvcHJlLWNhbC1wY2ktMDAwMDozYTowMC4w
-LmJpbiBmYWlsZWQgd2l0aCBlcnJvciAtMg0KPj4+Pj4+IGF0aDEwa19wY2kgMDAwMDozYTowMC4w
-OiBEaXJlY3QgZmlybXdhcmUgbG9hZCBmb3INCj4+Pj4+PiBhdGgxMGsvY2FsLXBjaS0wMDAwOjNh
-OjAwLjAuYmluIGZhaWxlZCB3aXRoIGVycm9yIC0yDQo+Pj4+PiBEbyB0aGV5IGhhdmUgYW55dGhp
-bmcgdG8gZG8gd2l0aCB0aGlzPyBIYXJkd2FyZSBpcw0KPj4+PiBUaGlzIGVycm9yIG1lc3NhZ2Ug
-aXMgY29uZnVzaW5nIHNpbmNlIFFDQTYxNzQgaXMgbm90IHN1cHBvcnRpbmcNCj4+Pj4gcHJlLWNh
-bGlicmF0aW9uIGZlYXR1cmUsIHRoaXMgcmVtaW5kcyBtZSB0aGF0IHdlIG5lZWQgdG8gY2xlYW4g
-dGhpcyB1cC4NCj4+PiBJIGd1ZXNzIHRoYXQgd291bGQgYmUgZ29vZCB0byBhdm9pZCBjb25mdXNp
-b24uIEJ1dCB3aGlsZSBhdCBpdDogSWYgeW91DQo+Pj4gaGF2ZSBhIG1pbnV0ZSwgY291bGQgeW91
-IHBsZWFzZSBleHBsYWluIHRvIG1lIGhvdyB0byBwcm9wZXJseSBzZXQgdXAgdGhlDQo+Pj4gd2lm
-aSBmaXJtd2FyZSBmaWxlcyBmb3IgbXkgRGVsbCBYUFMxMyAoOTM2MCk/IFRoZSByZWFzb25zIHdo
-eSBJJ20NCj4+PiBhc2tpbmc6IFNlbmRpbmcgZGF0YSB2aWEgd2lmaSBpcyByZWFsbHkgc2xvdyBv
-biBteSBsYXB0b3AgKHNjcCBjb3BpZXMNCj4+PiBvbmx5IGdldCAyIHRvIDUgTUJ5dGUvcyBvbiBu
-ZXR3b3JrcyB0aGF0IGFyZSBrbm93biB0byBiZSBhIGxvdCBmYXN0ZXIpLg0KPj4+IEkgd29uZGVy
-IGlmIHRoZSBmaXJtd2FyZSBmaWxlcyBvciB0aGUgY2FsaWJyYXRpb24gZGF0YSBpcyBwYXJ0IG9m
-IHRoZQ0KPj4+IHJlYXNvbiB3aWZpIFR4IGlzIHNsb3cuIFRoZSBtYWNoaW5lIGlzIG5vcm1hbGx5
-IHNoaXBwZWQgd2l0aCBhIHNsaWdodGx5DQo+Pj4gZW5oYW5jZWQgVWJ1bnR1IDE2LjA0LiBUaGF0
-IGFtb25nIG90aGVycyBjb250YWlucyBhIHBhY2thZ2Ugd2l0aCB0aGUNCj4+PiBtYWNoaW5lIHNw
-ZWNpZmljIGZpbGVzIGJvYXJkLmJpbiBhbmQgYm9hcmQtMi5iaW4gdGhhdCByZXBsYWNlIHRoZSBm
-aWxlcw0KPj4+IG5vcm1hbGx5IGluc3RhbGxlZCBpbiAvbGliL2Zpcm13YXJlL2F0aDEway9RQ0E2
-MTc0L2h3My4wLyBBcmUgdGhvc2UNCj4+PiBtYWNoaW5lIHNwZWNpZmljIGZpbGVzIGNydWNpYWwg
-dG8gaGF2ZSBvciBhcmUgdGhlIG9uZSBmcm9tIHRoZQ0KPj4+IGxpbnV4LWZpcm13YXJlIHJlcG8g
-Z29vZCBlbm9ndWg/IEknbSB1c2luZyBGZWRvcmEgYW5kIGNvdWxkIGNvcHkgdGhlDQo+Pj4gb25l
-cyBmcm9tIFVidW50dSBvdmVyLCBidXQgb2J2aW91c2x5IHRoZXkgd2lsbCBnZXQgb3ZlcndyaXR0
-ZW4gZXZlcnkNCj4+PiB0aW1lIEZlZG9yYSBzaGlwcyBhIG5ldyBsaW51eC1maXJtd2FyZSBwYWNr
-YWdlIOKAkyBJT1c6IGV2ZXJ5IGZldyB3ZWVrcyA6LS8NCj4+IFllcywgdGhlIGJvYXJkIGZpbGUg
-Y2FuIGFmZmVjdCB0aHJvdWdodHB1dCwgX2JvdGhfIFRDUCBhbmQgVURQLiBJIGRvbid0DQo+PiBr
-bm93IHdoYXQgYm9hcmQgZmlsZXMgVWJ1bnR1IGlzIHNoaXBwaW5nIGJ1dCB3ZSBzaG91bGQgdHJ5
-IHRvIGdldCB0aG9zZQ0KPj4gaW50byB1cHN0cmVhbS4NCj4NCj4gT3V0IG9mIGN1cmlvc2l0eSAo
-ZG9uJ3Qgc3BlbmQgdGltZSBhbnN3ZXJpbmcgdGhpcyBpcyB5b3UgYXJlIGJ1c3kpOiBJcw0KPiB0
-aGVyZSBldmVuIGEgbWVjaGFuaXNtIGZvciB0aGlzPyBLaW5kIG9mICJ0YWtlDQo+IGZpcm13YXJl
-ZGlyL2JvYXJkLURlbGxfSW5jLi1YUFNfMTNfOTM2MC5iaW4gaWYgaXQgZXhpc3RzIGFuZA0KPiBm
-aXJtd2FyZWRpci9ib2FyZC5iaW4gb3RoZXJ3aXNlPyBPciBjYW4gb25lIGZpbGUgc2VydmUgYWxs
-IG1hY2hpbmVzPw0KDQpKdXN0IHRvIGEgcXVpY2sgc2hvcnQgYW5zd2VyOg0KDQpib2FyZC5iaW4g
-Y29udGFpbnMganVzdCBvbmUgYm9hcmQgZmlsZSBidXQgYm9hcmQtMi5iaW4gaXMgaW4gcHJhY3Rp
-c2UgYQ0KY29udGFpbmVyIGZvcm1hdCB3aGljaCBoYXMgbXVsdGlwbGUgYm9hcmQgZmlsZXMgKG9y
-ICJpbWFnZXMiKS4gRWFjaA0KaW1hZ2UgaGFzIGEgbmFtZSBhc3NvY2lhdGVkIHRvIGl0IHdoaWNo
-IGF0aDEwayB1c2VzIHRvIGZpbmQgdGhlIGNvcnJlY3QNCmltYWdlLiBFeGFtcGxlOg0KDQpidXM9
-cGNpLHZlbmRvcj0xNjhjLGRldmljZT0wMDNlLHN1YnN5c3RlbS12ZW5kb3I9MTQ0ZCxzdWJzeXN0
-ZW0tZGV2aWNlPWMxNGYsdmFyaWFudD1LDQoNClNvIHllcywgd2UgaGF2ZSBpbmZyYXN0cnVjdHVy
-ZSByZWFkeSB0byBwcm92aWRlIG11bHRpcGxlIGJvYXJkIGZpbGVzLg0KQnV0IHVzdWFsbHkgdGhl
-IGNoYWxsZW5nZSBpcyBob3cgdG8gbWFrZSBhdGgxMGsgY29ycmVjdGx5IGRldGVjdCB3aGF0DQpi
-b2FyZCBmaWxlIGEgcGFydGljdWxhciBzeXN0ZW0gbmVlZHMuDQoNCj4+PiBTaWRlIG5vdGU6IFlv
-dSBmaW5kIGEgbG90IG9mIHJlcG9ydHMgYWJvdXQgc2xvdyB3aWZpIGlzIHlvdSBzZWFyY2ggdGhl
-DQo+Pj4gbmV0IHdpdGggdGVybXMgbGlrZSAiOTM2MCB3aWZpIHNsb3cgbGludXgiLiBVYnVudHUg
-Zml4ZWQgdGhhdCBhIGZldw0KPj4+IG1vbnRocyBhZ28gd2l0aCB0aGlzIHBhdGNoOg0KPj4+IGh0
-dHA6Ly9rZXJuZWwudWJ1bnR1LmNvbS9naXQvdWJ1bnR1L3VidW50dS14ZW5pYWwuZ2l0L2NvbW1p
-dC8/aWQ9OTY5MGYxOWYwN2ZlZTJhY2IyYjA0ZWE1ZWFhNWRiMTg0ZWUxNzVkNQ0KPj4+IFNvbWUg
-YnVncyBhYm91dCB0aGlzOg0KPj4+IGh0dHBzOi8vYnVncy5sYXVuY2hwYWQubmV0L3VidW50dS8r
-c291cmNlL2xpbnV4LytidWcvMTY5MjgzNg0KPj4+IGh0dHBzOi8vYnVncy5sYXVuY2hwYWQubmV0
-L3VidW50dS8rc291cmNlL2xpbnV4LytidWcvMTY3MDA0MQ0KPj4gQnV0IHRoaXMgYWdhaW4gYWJv
-dXQgaW50ZXJyYWN0aW9uIGJldHdlZW4gYXRoMTBrIGFuZCBUQ1Agc3RhY2suIEFuZCBpdA0KPj4g
-X29ubHlfIGFmZmVjdHMgVENQLCBVRFAgc2hvdWxkIGJlIHVuYWZmZWN0ZWQuDQo+DQo+IEFoaCwg
-c29ycnksIG1pc3NlZCB0aGF0LiBTZWVtcyBJIGRpZG4ndCBwcm9wZXJseSByZWFkIHRoZSBzZWNv
-bmQNCj4gbGF1bmNocGFkIGxpbmsgYWJvdmUuIFNvcnJ5Lg0KPg0KPj4gU28gd2hlbmV2ZXIgdGVz
-dGluZw0KPj4gdGhyb3VnaHB1dCBwbGVhc2UgYWx3YXlzIG1lYXN1cmUgYm90aCBUQ1AgYW5kIFVE
-UCBiZWNhdXNlIHRoZW4gaXQncw0KPj4gZWFzaWVyIHRvIHBpbnBvaW50IHRoZSByZWFzb24uDQo+
-DQo+IElzIHRoZXJlIGFueSBkYXRhIEkgY291bGQgcHJvdmlkZSB0aGF0IG1pZ2h0IGhlbHAgZ2V0
-dGluZyB0aGlzIHNvbGVkDQo+IG9uY2UgYW5kIGZvciBhbGw/DQoNCldpdGggInRoaXMiIHlvdSBt
-ZWFuIFRDUCB0cmFuc21pdCB0aHJvdWdocHV0IHByb2JsZW0gd2l0aCBhdGgxMGs/IEkNCmRvbid0
-IHRoaW5rIHRoZXJlJ3MgYW55IGVhc3kgc29sdXRpb24sIHdlIGp1c3QgbmVlZCB0byBzdGFydCBh
-IHNlcmlvdXMNCmRpc2N1c3Npb24gd2l0aCB0aGUgVENQIG1haW50YWluZXJzIGhvdyB0byBzb2x2
-ZSB0aGlzLiBJSVJDIGF0aDEwaw0KZGlkbid0IGhhdmUgdGhpcyBwcm9ibGVtIHVudGlsIHNvbWV0
-aGluZyBjaGFuZ2VkIGluIHRoZSBUQ1Agc3RhY2ssIHNvIGluDQp0aGVvcnkgdGhpcyBjb3VsZCBi
-ZSBjbGFzc2lmaWVkIGFzIGEgcmVncmVzc2lvbiBpbiB0aGUgVENQIHN0YWNrLiBCdXQNCkknbSBu
-b3Qgc3VyZSBhYm91dCB0aGF0IGFuZCBuZWVkIHRvIGNoZWNrIHRoZSBoaXN0b3J5Lg0KDQpCdXQg
-d2hhdCB3b3VsZCBiZSBoZWxwZnVsIHRvIGhhdmUgYSBkZXRhaWxlZCBzdW1tYXJ5IG9mIHRoZSBp
-c3N1ZSwNCnBvaW50ZXJzIHRvIHBhc3QgZGlzY3Vzc2lvbnMgYW5kIGlkZW50aWZ5IHRoZSBUQ1Ag
-Y29tbWl0IHdoaWNoIHN0YXJ0ZWQNCmFsbCB0aGlzIGV0Yy4gSSdsbCB0cnkgdG8gZG8gdGhhdCBi
-ZWZvcmUgdGhlIE5ldGRldiAyLjIgYnV0IGxldCdzIHNlZSBpZg0KSSBjYW4gbWFrZSBpdC4gSGVs
-cCB3aXRoIHRoYXQgaXMgcmVhbGx5IHdlbGNvbWUuDQoNCi0tIA0KS2FsbGUgVmFsbw==
+On Mon, 2017-11-06 at 11:45 -0800, Kees Cook wrote:
+> On Sun, Oct 29, 2017 at 5:28 AM, Luca Coelho <luca@coelho.fi> wrote:
+> > From: Kees Cook <keescook@chromium.org>
+> > 
+> > In preparation for unconditionally passing the struct timer_list
+> > pointer to
+> > all timer callbacks, switch to using the new timer_setup() and
+> > from_timer()
+> > to pass the timer pointer explicitly.
+> > 
+> > The RCU lifetime on baid_data is unclear, so this adds a direct
+> > copy of the
+> > rcu_ptr passed to the original callback. It may be possible to
+> > improve this
+> > to just use baid_data->mvm->baid_map[baid_data->baid] instead.
+> > 
+> > Cc: Johannes Berg <johannes.berg@intel.com>
+> > Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > Cc: Luca Coelho <luciano.coelho@intel.com>
+> > Cc: Intel Linux Wireless <linuxwifi@intel.com>
+> > Cc: Kalle Valo <kvalo@codeaurora.org>
+> > Cc: Sara Sharon <sara.sharon@intel.com>
+> > Cc: linux-wireless@vger.kernel.org
+> > Cc: netdev@vger.kernel.org
+> > Signed-off-by: Kees Cook <keescook@chromium.org>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> > ---
+> >  drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 ++-
+> >  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  4 ++--
+> >  drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 18 +++++++++----
+> > -----
+> >  3 files changed, 13 insertions(+), 12 deletions(-)
+> 
+> Hi,
+> 
+> Thanks for taking this! I had a question on timing: is this expected
+> to land for 4.15? If not, I would like to take this via the timers
+> tree, since it is one of the few remaining conversions.
+
+Hi Kees,
+
+Yes, this should land for 4.15.  Kalle just pulled my pull-request
+(which includes this) to wireless-drivers-next.  He told me he'll send
+a pull-request for 4.15 during this week and hopefully Dave will pull
+from him too.
+
+I'll let you know if something doesn't go as planned.
+
+--
+Cheers,
+Luca.
