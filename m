@@ -1,91 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:33647 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751929AbdK3QdA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Nov 2017 11:33:00 -0500
-Received: by mail-io0-f195.google.com with SMTP id t196so8176255iof.0
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Nov 2017 08:33:00 -0800 (PST)
-Date: Thu, 30 Nov 2017 08:32:56 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        James Cao <jcao@marvell.com>
-Subject: Re: Re: [PATCH 3/3] mwifiex: debugfs: trigger device dump for usb
- interface
-Message-ID: <20171130163254.GA87129@google.com> (sfid-20171130_173304_898375_97CA35AF)
-References: <a14a1d7b6c0a4c91a85be955a813ee14@SC-EXCH02.marvell.com>
+Received: from eggs.gnu.org ([208.118.235.92]:56017 "EHLO eggs.gnu.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750817AbdKFEJ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Nov 2017 23:09:29 -0500
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+        (envelope-from <nikolas@gnu.org>)
+        id 1eBYj0-0005tM-4W
+        for linux-wireless@vger.kernel.org; Sun, 05 Nov 2017 23:09:26 -0500
+Subject: Re: rtl8821ae dbi read question
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, pkshih@realtek.com
+References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
+ <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
+ <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org>
+ <702e4270-dcf3-5916-daee-f2265e0da907@lwfinger.net>
+From: Nik Nyby <nikolas@gnu.org>
+Message-ID: <ca520364-0d18-54c2-e6bc-b8245f8408ea@gnu.org> (sfid-20171106_050941_485634_E2AF2078)
+Date: Sun, 5 Nov 2017 23:09:15 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a14a1d7b6c0a4c91a85be955a813ee14@SC-EXCH02.marvell.com>
+In-Reply-To: <702e4270-dcf3-5916-daee-f2265e0da907@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Simon,
-
-On Wed, Nov 15, 2017 at 11:31:05AM +0000, Xinming Hu wrote:
-> > -----Original Message-----
-> > From: Brian Norris [mailto:briannorris@chromium.org]
-> > 
-> > On Mon, Aug 14, 2017 at 12:19:03PM +0000, Xinming Hu wrote:
-> > > diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c
-> > > b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-> > > index 6f4239b..5d476de 100644
-> > > --- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
-> > > +++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-> > > @@ -168,10 +168,11 @@
-> > >  {
-> > >  	struct mwifiex_private *priv = file->private_data;
-> > >
-> > > -	if (!priv->adapter->if_ops.device_dump)
-> > > -		return -EIO;
-> > > -
-> > > -	priv->adapter->if_ops.device_dump(priv->adapter);
-> > > +	if (priv->adapter->iface_type == MWIFIEX_USB)
-> > > +		mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT,
-> > > +				 HostCmd_ACT_GEN_SET, 0, NULL, true);
-> > 
-> > Why couldn't you just implement the device_dump() callback?
+On 11/05/2017 09:09 PM, Larry Finger wrote:
+> Disabling all of _rtl8821ae_enable_aspm_back_door() may not be wise. We 
+> tried that patch as part of debugging.
 > 
-> Currently mwifiex_send_cmd function is not exported to external modules, it is designed for module mwifiex internal use.
-
-If you really don't want to export mwifiex_send_cmd(), you can export
-some other wrapper which does the logic for you. The point is that
-there's a well defined point for determining how to dump the firmware
-based on which interface you're using. You should use it.
-
-> If we export mwifiex_send_cmd, and call it in mwifiex_usb. There will be a loop,
-
-So? There are all sorts of interdependencies between mwifiex.ko and
-mwifiex_usb.ko (or in your words, "loops").
-
-> .Device_dump (module mwifiex_usb)  -->  mwifiex_send_cmd(module mwifiex)  --> .host_to_card (module mwifiex_usb)
+> That routine consists of two mdio r/w sequences, and 3 dbi r/w 
+> sequences. The third one of the latter is only used for RTL8812AE, thus 
+> it can be ignored.
 > 
-> This seems not an elegant design, right?
+> What happens if you try disabling those r/w pairs one at a time? It is 
+> possible that one, or more of them, should be disabled when aspm is 
+> zero. 
 
-No less elegant than scattering:
+I first tried disabling only the mdio sequences, then the dbi sequences. 
+I was able to reproduce my problem in both cases. But I have found that 
+my problem is resolved by only removing the enable_aspm() call, and 
+leaving the call to _rtl8821ae_enable_aspm_back_door() intact.
 
-	if (!USB)
-		driver->this();
-	else
-		that();
+If removing rtlpriv->intf_ops->enable_aspm(hw) is the same as setting 
+aspm=0, then it's possible I'm not setting the option correctly. But as 
+far as I can see right now, removing enable_aspm() is necessary for my 
+stable connection.
 
-all over the place.
+> It should not matter whether the driver is built in, or loaded as 
+> a module. Please note that I never build that code in as I always want 
+> the option of refreshing the driver without rebooting.
 
-> Regards,
-> Simon
-> > 
-> > > +	else
-> > > +		priv->adapter->if_ops.device_dump(priv->adapter);
-> > >
-> > >  	return 0;
-> > >  }
-
-Brian
+Thanks for the info - I'll do the same.
