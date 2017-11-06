@@ -1,89 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34938 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750794AbdKUGNi (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:51724 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750778AbdKFDXB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 01:13:38 -0500
+        Sun, 5 Nov 2017 22:23:01 -0500
+Received: by mail-wm0-f51.google.com with SMTP id b9so11354670wmh.0
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Nov 2017 19:23:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 21 Nov 2017 11:43:36 +0530
-From: akolli@codeaurora.org
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Peter Oh <peter.oh@bowerswilkins.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        ath10k@lists.infradead.org,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>,
+In-Reply-To: <1509434718.4492.195.camel@coelho.fi>
+References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
+ <1509434718.4492.195.camel@coelho.fi>
+From: Chris Chiu <chiu@endlessm.com>
+Date: Mon, 6 Nov 2017 11:22:59 +0800
+Message-ID: <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com> (sfid-20171106_042305_136566_37A6E9DF)
+Subject: Re: Need support for Intel new wifi module 9462NGW
+To: Luca Coelho <luca@coelho.fi>
+Cc: johannes.berg@intel.com, linuxwifi@intel.com,
         linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: ath10k: Fix reported HT MCS rates with NSS > 1
-In-Reply-To: <87po8df8wc.fsf@kamboji.qca.qualcomm.com>
-References: <20170511090930.18205-1-sven.eckelmann@openmesh.com>
- <1728147.6Xy77nSgBU@bentobox>
- <d27a10b1-6323-ebf0-5c2d-4a9c3b8d978d@dd-wrt.com>
- <1960925.hkIbv4gX65@bentobox>
- <bfcfa3eb-fb45-cb8d-ad87-a5fe6dc96fe3@bowerswilkins.com>
- <87po8df8wc.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <bcebd30e279840a62b53043865d4db29@codeaurora.org> (sfid-20171121_071341_520905_7AA590F9)
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-11-20 17:40, Kalle Valo wrote:
-> Peter Oh <peter.oh@bowerswilkins.com> writes:
-> 
->> On 11/06/2017 01:02 AM, Sven Eckelmann wrote:
->>> On Montag, 6. November 2017 09:28:42 CET Sebastian Gottschall wrote:
->>>> Am 06.11.2017 um 09:23 schrieb Sven Eckelmann:
->>>>> On Sonntag, 5. November 2017 10:22:22 CET Sebastian Gottschall 
->>>>> wrote:
->>>>>> the assumption made in this patch is obviously wrong (at least for 
->>>>>> more
->>>>>> recent firmwares and 9984)
->>>>>> my log is flooded with messages like
->>>>>> [208802.803537] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer 
->>>>>> stats
->>>>>> [208805.108515] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer 
->>>>>> stats
->>>>>> [208821.747621] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer 
->>>>>> stats
->>>>>> [208822.516599] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer 
->>>>>> stats
->>>>>> [208841.257780] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer 
->>>>>> stats
->>> [...]
->>>>> This patch only splits WMI_RATE_PREAMBLE_HT & 
->>>>> WMI_RATE_PREAMBLE_VHT. And for
->>>>> WMI_RATE_PREAMBLE_HT (*not VHT*), it uses a slightly different 
->>>>> approach. But
->>>>> the WMI_RATE_PREAMBLE_VHT part (which you see in your logs) is 
->>>>> basically
->>>>> untouched.
->>>> then a question follows up. is this check really neccessary?
->>> Until we find out what the heck VHT MCS 15 should mean in this 
->>> context - maybe.
->>> But to the message - no, the message is most likely not necessary for 
->>> each
->>> received "invalid" peer tx stat.
->> 
->> This validation check expects peer tx stat packets from FW contain
->> reasonable values and gives warning if values are different from
->> expectation. The problem comes from the assumption that "it always
->> contains reasonable stat value" which is wrong at least based on my
->> results. For instance, the reason MCS == 15 is because all 4 bits of
->> mcs potion set to 1, not because FW really sets it to 15
->> intentionally. when the mcs potion bits are set to all 1s, the other
->> bits such as nss are also set to all 1s.
->> Hence it looks FW passed totally invalid stat info to me.
->> 
->> I don't have preference on whether it's better to split VHT and HT
->> check or not, but it is more appropriate to change that warning level
->> to debug level.
-> 
-> I think we should add a special case to not print the warning if mcs ==
-> 15 until we figure out what it means.
+Hi Luca,
+    Any update for the firmware approval?
 
-Fix identified in Firmware and will push ASAP.
+Chris
 
---
-Anil.
+On Tue, Oct 31, 2017 at 3:25 PM, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2017-10-31 at 12:13 +0800, Chris Chiu wrote:
+>> Hi,
+>
+> Hi Chris,
+>
+>
+>>     We just have the Intel new WiFi module 9462NGW from Acer and
+>> tried
+>> to verify if it works on the latest linux kernel. Unfortunately it
+>> seems not even detected because the PCI ID seems unknown to the
+>> iwlwifi driver. Then I add the following line to
+>> drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+>> iwl_hw_card_ids
+>> {IWL_PCI_DEVICE(0x31DC, 0x02A4, iwl9460_2ac_cfg)},
+>>
+>> dmesg shows the following
+>>
+>> [   12.994422] iwlwifi 0000:00:0c.0: Direct firmware load for
+>> iwlwifi-9260-th-b0-jf-b0-33.ucode failed with error -2
+>> [   12.994442] iwlwifi 0000:00:0c.0: Direct firmware load for
+>> iwlwifi-9260-th-b0-jf-b0-32.ucode failed with error -2
+>> [   12.994456] iwlwifi 0000:00:0c.0: Direct firmware load for
+>> iwlwifi-9260-th-b0-jf-b0-31.ucode failed with error -2
+>> [   12.994470] iwlwifi 0000:00:0c.0: Direct firmware load for
+>> iwlwifi-9260-th-b0-jf-b0-30.ucode failed with error -2
+>> [   12.994473] iwlwifi 0000:00:0c.0: no suitable firmware found!
+>> [   12.994477] iwlwifi 0000:00:0c.0: minimum version required:
+>> iwlwifi-9260-th-b0-jf-b0-30
+>> [   12.994479] iwlwifi 0000:00:0c.0: maximum version supported:
+>> iwlwifi-9260-th-b0-jf-b0-33
+>>
+>>
+>>
+>> I'm not able to find these missing files in linux-firmware.git and
+>> any
+>> other possible place. What's the status of supporting this 9462NGW?
+>> Please let me know if any more information required. Thanks
+>
+> Unfortunately we have not published the firmware for this NIC yet.
+> I'll try to get an approval to publish it today (or latest by the end
+> of the week) and I'll let you know.
+>
+> --
+> Cheers,
+> Luca.
