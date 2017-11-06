@@ -1,90 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:48688 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755199AbdKNPUR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44780 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750729AbdKFKiO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 10:20:17 -0500
-Received: by mail-pf0-f194.google.com with SMTP id r62so2052638pfd.5
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Nov 2017 07:20:17 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] mac80211: fix the update of path metric for RANN frame
-Date: Tue, 14 Nov 2017 23:20:05 +0800
-Message-Id: <1510672805-32594-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20171114_162020_781664_38D2C7BB)
+        Mon, 6 Nov 2017 05:38:14 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
+Subject: Re: pull-request: iwlwifi-next 2017-11-03
+References: <1509703364.4492.350.camel@coelho.fi>
+Date: Mon, 06 Nov 2017 12:38:10 +0200
+In-Reply-To: <1509703364.4492.350.camel@coelho.fi> (Luca Coelho's message of
+        "Fri, 03 Nov 2017 12:02:44 +0200")
+Message-ID: <87k1z3k7zh.fsf@codeaurora.org> (sfid-20171106_113818_247973_345CA4E2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous path metric update from RANN frame has not considered
-the own link metric toward the transmitting mesh STA. Fix this.
+Luca Coelho <luca@coelho.fi> writes:
 
-Reported-by: Michael65535
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- net/mac80211/mesh_hwmp.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+> Here's the final set of patches intended for v4.15.  It's not too
+> important to get them into v4.15 if there is no time anymore.  There
+> are a few new PCI IDs that can be added in the rc series or stable
+> (they need to go to other stable releases anyway).  And there's also
+> one bugfix that I could also send to rc.  The rest are just cleanups,
+> improvements or related to the A000 series.  Let me know how it goes
+> and I'll adapt if needed.
+>
+> I have sent this out before and kbuildbot reported success.
+>
+> Please let me know if there are any issues.
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index c1d1b86..35ad398 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -797,7 +797,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 	struct mesh_path *mpath;
- 	u8 ttl, flags, hopcount;
- 	const u8 *orig_addr;
--	u32 orig_sn, metric, metric_txsta, interval;
-+	u32 orig_sn, new_metric, orig_metric, last_hop_metric, interval;
- 	bool root_is_gate;
- 
- 	ttl = rann->rann_ttl;
-@@ -808,7 +808,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 	interval = le32_to_cpu(rann->rann_interval);
- 	hopcount = rann->rann_hopcount;
- 	hopcount++;
--	metric = le32_to_cpu(rann->rann_metric);
-+	orig_metric = le32_to_cpu(rann->rann_metric);
- 
- 	/*  Ignore our own RANNs */
- 	if (ether_addr_equal(orig_addr, sdata->vif.addr))
-@@ -825,7 +825,10 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
- 
--	metric_txsta = airtime_link_metric_get(local, sta);
-+	last_hop_metric = airtime_link_metric_get(local, sta);
-+	new_metric = orig_metric + last_hop_metric;
-+	if (new_metric < orig_metric)
-+		new_metric = MAX_METRIC;
- 
- 	mpath = mesh_path_lookup(sdata, orig_addr);
- 	if (!mpath) {
-@@ -838,7 +841,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (!(SN_LT(mpath->sn, orig_sn)) &&
--	    !(mpath->sn == orig_sn && metric < mpath->rann_metric)) {
-+	    !(mpath->sn == orig_sn && new_metric < mpath->rann_metric)) {
- 		rcu_read_unlock();
- 		return;
- 	}
-@@ -856,7 +859,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	mpath->sn = orig_sn;
--	mpath->rann_metric = metric + metric_txsta;
-+	mpath->rann_metric = new_metric;
- 	mpath->is_root = true;
- 	/* Recording RANNs sender address to send individually
- 	 * addressed PREQs destined for root mesh STA */
-@@ -876,7 +879,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
- 				       orig_sn, 0, NULL, 0, broadcast_addr,
- 				       hopcount, ttl, interval,
--				       metric + metric_txsta, 0, sdata);
-+				       new_metric, 0, sdata);
- 	}
- 
- 	rcu_read_unlock();
+As you know we got one more week before the merge window starts, so I
+should get this to v4.15.
+
+> The following changes since commit e226fb5affccca98c405de80527180224d93d251:
+>
+>   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2017-11-02 19:48:25 +0200)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2017-11-03
+>
+> for you to fetch changes up to 57b36f7fcb39c5eae8c1f463699f747af69643ba:
+>
+>   iwlwifi: add new cards for a000 series (2017-11-03 11:56:10 +0200)
+>
+> ----------------------------------------------------------------
+> iwlwifi updates
+>
+> * Some new PCI IDs;
+> * A bunch of cleanups;
+> * The timers update by Kees;
+> * Add more register dump call-sites;
+> * A fix for a locking issue in the TX flush code;
+> * Actual implementation of the TX flush code for A000;
+> * An optimization to drop RX frames during restart to avoid BA issues;
+>
+> ----------------------------------------------------------------
+> Emmanuel Grumbach (3):
+>       iwlwifi: mvm: rs: remove the ANT C from the toogle antenna logic
+>       iwlwifi: remove dead code for internal devices only
+>       iwlwifi: remove host assisted paging
+>
+> Ihab Zhaika (3):
+>       iwlwifi: add new cards for 8260 series
+>       iwlwifi: add new cards for 8265 series
+>       iwlwifi: add new cards for a000 series
+>
+> Kees Cook (1):
+>       iwlwifi: mvm: Convert timers to use timer_setup()
+>
+> Kirtika Ruchandani (1):
+>       iwlwifi: Add more call-sites for pcie reg dumper
+>
+> Liad Kaufman (1):
+>       iwlwifi: mvm: reset seq num after restart
+>
+> Luca Coelho (1):
+>       iwlwifi: mvm: hold mutex when flushing in iwl_mvm_flush_no_vif()
+>
+> Sara Sharon (6):
+>       iwlwifi: mvm: use RS macro instead of duplicating the code
+>       iwlwifi: mvm: cleanup references to aggregation count limit
+>       iwlwifi: mvm: improve latency when there is a reorder timeout
+>       iwlwifi: fix multi queue notification for a000 devices
+>       iwlwifi: mvm: refactor iwl_mvm_flush_no_vif
+>       iwlwifi: mvm: add missing implementation of flush for a000 devices
+>
+> Shahar S Matityahu (1):
+>       iwlwifi: drop RX frames during hardware restart
+
+Pulled, thanks.
+
 -- 
-2.3.0
+Kalle Valo
