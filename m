@@ -1,73 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:65325 "EHLO
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:1026 "EHLO
         alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754244AbdKAKtv (ORCPT
+        with ESMTP id S1750760AbdKFIKm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 06:49:51 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/6] ath10k: add memory dump support for QCA6174/QCA9377
-Date: Wed, 1 Nov 2017 10:49:46 +0000
-Message-ID: <87wp3axohi.fsf@kamboji.qca.qualcomm.com> (sfid-20171101_114955_563645_3CF21714)
-References: <150278532045.22482.14490702801292107536.stgit@potku.adurom.net>
-        <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
-In-Reply-To: <150278542590.22482.1613614809483892010.stgit@potku.adurom.net>
-        (Kalle Valo's message of "Tue, 15 Aug 2017 11:23:46 +0300")
-Content-Type: text/plain; charset="iso-8859-1"
+        Mon, 6 Nov 2017 03:10:42 -0500
+From: <mpubbise@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+Subject: [PATCHv2 2/2] ath10k: handle tdls peer events
+Date: Mon, 6 Nov 2017 13:39:32 +0530
+Message-ID: <1509955772-4941-3-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20171106_091045_450340_F9F7DC60)
+In-Reply-To: <1509955772-4941-1-git-send-email-mpubbise@qti.qualcomm.com>
+References: <1509955772-4941-1-git-send-email-mpubbise@qti.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
 
-> From: Alan Liu <alanliu@qca.qualcomm.com>
->
-> Add memory dump to the firmware crash data file which is provided to user=
- space
-> via devcoredump interface. This makes it easier for firmware engineers to=
- debug
-> firmware crashes.
->
-> Due to increased memory consumption the memory dump is disabled by defaul=
-t. To
-> enable it make sure that bit 3 is set in coredump_mask module parameter:
->
-> modprobe ath10k_core coredump_mask=3D0xffffffff
->
-> When RAMDUMP is enabled a buffer for the dump is allocated with vmalloc d=
-uring
-> device probe. The actual memory layout is different in hardware versions =
-and
-> the layouts are defined in coredump.c. The memory is split to regions and=
-, to
-> get even finegrained control of what to copy, the region can split to sma=
-ller
-> sections as not all registers are readable (which could cause the whole s=
-ystem
-> to stall).
->
-> Signed-off-by: Alan Liu <alanliu@qca.qualcomm.com>
-> [kvalo@qca.qualcomm.com: refactoring and cleanup]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Handle tdls peer events from the target. TDLS events for the peer
+could be discover, teardown, etc. As of now, adding the logic to
+handle tdls teardown events alone.
 
-[...]
+Teardown due to peer traffic indication(PTR) timeout is one such
+teardown event from the target.
 
-> +		/* To get IRAM dump, the host driver needs to switch target
-> +		 * ram config from DRAM to IRAM.
-> +		 */
-> +		if (current_region->type =3D=3D ATH10K_MEM_REGION_TYPE_IRAM1 ||
-> +		    current_region->type =3D=3D ATH10K_MEM_REGION_TYPE_IRAM2) {
-> +			shift =3D current_region->start >> 20;
-> +
-> +			ret =3D ath10k_pci_set_ram_config(ar, shift);
-> +			if (!ret) {
-> +				ath10k_warn(ar, "failed to switch ram config to IRAM for section %s:=
- %d\n",
-> +					    current_region->name, ret);
+Tested this change on QCA9888 with 10.4-3.5.1-00018 fw version.
 
-A colleague noticed that there's a bug here, it should be "if (ret)".
-I'll fix that in the next version.
+Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |   72 +++++++++++++++++++++++++++++++++
+ 1 file changed, 72 insertions(+)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index cad2e42..b6cbc02 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -29,6 +29,7 @@
+ #include "p2p.h"
+ #include "hw.h"
+ #include "hif.h"
++#include "txrx.h"
+ 
+ #define ATH10K_WMI_BARRIER_ECHO_ID 0xBA991E9
+ #define ATH10K_WMI_BARRIER_TIMEOUT_HZ (3 * HZ)
+@@ -4456,6 +4457,74 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
+ 		   __le32_to_cpu(ev->rate_max));
+ }
+ 
++static void
++ath10k_wmi_handle_tdls_peer_event(struct ath10k *ar, struct sk_buff *skb)
++{
++	struct wmi_tdls_peer_event *ev;
++	struct ath10k_peer *peer;
++	struct ath10k_vif *arvif;
++	int vdev_id;
++	int peer_status;
++	int peer_reason;
++	u8 reason;
++
++	if (skb->len < sizeof(*ev)) {
++		ath10k_err(ar, "received tdls peer event with invalid size (%d bytes)\n",
++			   skb->len);
++		return;
++	}
++
++	ev = (struct wmi_tdls_peer_event *)skb->data;
++	vdev_id = __le32_to_cpu(ev->vdev_id);
++	peer_status = __le32_to_cpu(ev->peer_status);
++	peer_reason = __le32_to_cpu(ev->peer_reason);
++
++	spin_lock_bh(&ar->data_lock);
++	peer = ath10k_peer_find(ar, vdev_id, ev->peer_macaddr.addr);
++	spin_unlock_bh(&ar->data_lock);
++
++	if (!peer) {
++		ath10k_warn(ar, "failed to find peer entry for %pM\n",
++			    ev->peer_macaddr.addr);
++		return;
++	}
++
++	switch (peer_status) {
++	case WMI_TDLS_SHOULD_TEARDOWN:
++		switch (peer_reason) {
++		case WMI_TDLS_TEARDOWN_REASON_PTR_TIMEOUT:
++		case WMI_TDLS_TEARDOWN_REASON_NO_RESPONSE:
++		case WMI_TDLS_TEARDOWN_REASON_RSSI:
++			reason = WLAN_REASON_TDLS_TEARDOWN_UNREACHABLE;
++			break;
++		default:
++			reason = WLAN_REASON_TDLS_TEARDOWN_UNSPECIFIED;
++			break;
++		}
++
++		arvif = ath10k_get_arvif(ar, vdev_id);
++		if (!arvif) {
++			ath10k_warn(ar, "received tdls peer event for invalid vdev id %u\n",
++				    vdev_id);
++			return;
++		}
++
++		ieee80211_tdls_oper_request(arvif->vif, ev->peer_macaddr.addr,
++					    NL80211_TDLS_TEARDOWN, reason,
++					    GFP_ATOMIC);
++
++		ath10k_dbg(ar, ATH10K_DBG_WMI,
++			   "received tdls teardown event for peer %pM reason %u\n",
++			   ev->peer_macaddr.addr, peer_reason);
++		break;
++	default:
++		ath10k_dbg(ar, ATH10K_DBG_WMI,
++			   "received unknown tdls peer event %u\n",
++			   peer_status);
++		break;
++	}
++}
++
+ void ath10k_wmi_event_pdev_ftm_intg(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_PDEV_FTM_INTG_EVENTID\n");
+@@ -5477,6 +5546,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_10_4_PDEV_TPC_CONFIG_EVENTID:
+ 		ath10k_wmi_event_pdev_tpc_config(ar, skb);
+ 		break;
++	case WMI_10_4_TDLS_PEER_EVENTID:
++		ath10k_wmi_handle_tdls_peer_event(ar, skb);
++		break;
+ 	default:
+ 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
+ 		break;
+-- 
+1.7.9.5
