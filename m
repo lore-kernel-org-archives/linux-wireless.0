@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:49110 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750752AbdKKNig (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:42464 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753534AbdKFUUv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Nov 2017 08:38:36 -0500
-Date: Sat, 11 Nov 2017 22:38:32 +0900 (KST)
-Message-Id: <20171111.223832.2216321055833169803.davem@davemloft.net> (sfid-20171111_143853_112739_9C60DF97)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2017-11-11
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87o9o9vugd.fsf@kamboji.qca.qualcomm.com>
-References: <87o9o9vugd.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 6 Nov 2017 15:20:51 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
+Subject: RE: [PATCH] mac80211: Update last_ack status for all except probing
+ frames
+Date: Mon, 6 Nov 2017 20:20:49 +0000
+Message-ID: <96799d352b7347a8a9092bb37f1cd8d9@NALASEXR01H.na.qualcomm.com> (sfid-20171106_212054_862896_5A9C2B5D)
+References: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <1509964164.2669.0.camel@sipsolutions.net>
+ <8bb232d231884f9595c81f945a5eef4f@NALASEXR01H.na.qualcomm.com>
+ <49241af7-a50f-5758-0c7e-77f2fae5d93d@quantenna.com>
+In-Reply-To: <49241af7-a50f-5758-0c7e-77f2fae5d93d@quantenna.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Sat, 11 Nov 2017 15:03:14 +0200
-
-> some more patches to net-next for v4.15. Even though I applied the last
-> patch only on Saturday morning, all these have been tested by kbuild bot
-> and most of them should also be in linux-next. Please let me know if
-> there are any problems.
-
-Pulled, but looking at your merge commit message:
-
-> Major changes:
-> 
-> iwlwifi
-> 
-> * some new PCI IDs
-
-I doubt this was the only major change in here :-)))
+PiA+Pj4gVXBkYXRlIGxhc3RfYWNrIHN0YXR1cyBmb3IgYWxsIGV4Y2VwdCBzdGF0aW9uIHByb2Jp
+bmcgZnJhbWVzIChpLmUNCj4gPj4+IG51bGwgZGF0YSkuIE90aGVyd2lzZSB0aGUgc3RhdGlvbiBp
+bmFjdGl2aXR5IGR1cmF0aW9uIGlzIGNsZWFyZWQNCj4gPj4+IHdoZW5ldmVyIEFQIGlzIGNoZWNr
+aW5nIHByZXNlbmNlIG9mIGlkbGUgc3RhdGlvbnMgYnkgc2VuZGluZyBudWxsDQo+ID4+PiBkYXRh
+IGZyYW1lIGZvciBldmVyeSBpbmFjdGl2ZSB0aHJlc2hvbGQgKGFwX21heF9pbmFjdGl2aXR5KS4N
+Cj4gPj4NCj4gPj4gWW91IG1ha2UgaXQgc291bmQgbGlrZSB0aGlzIGlzIGEgcHJvYmxlbSwgYnV0
+IGRvbid0IGV4cGxhaW4gd2h5IGl0DQo+ID4+IHdvdWxkIGJlPyBJIGRvbid0IHJlYWxseSBzZWUg
+aXQgYW55d2F5Lg0KPiA+Pg0KPiA+IEZvciBzdGVlcmluZyBhbiBpZGxlIHN0YXRpb24gZnJvbSBv
+bmUgQlNTIHRvIGFub3RoZXIsIHRoZSBzdGVlcmluZw0KPiA+IGFwcGxpY2F0aW9uIGhhcyB0byBr
+bm93IHRoZSBhY3R1YWwgc3RhdGlvbiBpZGxlIHBlcmlvZC4gQnV0IGlmIHRoZQ0KPiA+IGlkbGUg
+cGVyaW9kIGlzIGNsZWFyZWQgYnkgYXBfbWF4X2luYWN0aXZpdHksIHRoZSBzdGVlcmluZyBhcHBs
+aWNhdGlvbg0KPiA+IGNhbm5vdCBzdGVlciB0aGUgc3RhdGlvbiBldmVuIHRob3VnaCB0aGUgc3Rh
+dGlvbiBpcyBub3Qgc2VuZGluZyBvciByZWNlaXZpbmcNCj4gYW55IGRhdGEgb3IgbWdtdC4gZnJh
+bWUuDQo+ID4NCj4gPiBUaG91Z2gga2VlcGluZyBsb25nZXIgaWRsZSB0aHJlc2hvbGQgKGFwX21h
+eF9pbmFjdGl2aXR5KSB0aGFuIHN0ZWVyaW5nDQo+ID4gYXBwbGljYXRpb24gbGltaXQgbWF5IGhl
+bHAgdG8gaWRlbnRpZnkgaWRsZSBzdGF0aW9uLCBpdCB3aWxsIGRpZmZlciByZW1vdmluZyB0aGUN
+Cj4gc3RhdGlvbnMgdGhhdCBsZWZ0IEJTUy4NCj4gPg0KPiBIaSBSYWprdW1hciwgdGhpcyB3aWxs
+IG5vdCBoZWxwIGluIGFsbCB0aGUgY2FzZXMgYXMgc29tZSBkcml2ZXJzIG1heSBjaG9vc2UgdG8N
+Cj4gaW1wbGVtZW50ICJpbmFjdGl2aXR5IiBsb2dpYyBpbiBmaXJtd2FyZSBhbmQgZmlybXdhcmUg
+d2lsbCBzZW5kIHByb2JpbmcgZnJhbWVzDQo+IGl0c2VsZiBpZiByZXF1aXJlZCwgcmVzZXR0aW5n
+IGluYWN0aXZpdHkgcGVyaW9kLg0KPg0KSW4gb2ZmbG9hZCBhcHByb2FjaCwgbm8gbmVlZCB0byBy
+ZXBvcnQgdHhfYWNrIGZvciBmaXJtd2FyZSBnZW5lcmF0ZWQgZnJhbWVzLiBubz8NCg0KPiBCZXNp
+ZGVzLCBhdCB0aGlzIGxldmVsIHdlIGRvIG5vdCBrbm93IHdobyBzZW50IE5VTEwgZnJhbWVzIGFu
+ZCBmb3Igd2hpY2gNCj4gcHVycG9zZSwgaXQgZG9lc24ndCBsb29rIGxpa2UgYSBnb29kIGlkZWEg
+dG8ganVzdCBpZ25vcmUgaXQuDQo+DQpJIGhhZCB0aGUgc2FtZSBkb3VidC4gQnV0IEFGQUlLLCBw
+cm9iZV9jbGllbnQgbmV0bGluayBjb21tYW5kIGlzIHVzZWQgYnkNCkhvc3RhcGQgb25seS4gVGhh
+dOKAmXMgd2h5IEkgYWRkZWQgY29tbWVudCBzZWN0aW9uIGJlZm9yZSB0aGUgY2hhbmdlLg0KIA0K
+PiBJIHRoaW5rIHRoYXQgZm9yIHdoYXQgaXQgd2FzIHN1cHBvc2VkIHRvIGJlLCBpbmFjdGl2aXR5
+X21zIHdvcmtzIGFzIGV4cGVjdGVkIGFuZA0KPiBpdCBjYW4gYmUgdXNlZCB0byBpZGVudGlmeSAi
+ZGVhZCIgc3RhdGlvbnMuIFdoYXQgeW91IHByb2JhYmx5IG5lZWQgaXMgc29tZXRoaW5nDQo+IGRp
+ZmZlcmVudCwgY2FsbGVkIGZvciBleGFtcGxlICJyeF9pZGxlX3RpbWUiDQo+IHRoYXQgd2lsbCBr
+ZWVwIHRyYWNrIG9mIGhvdyBsb25nIFNUQSBpdHNlbGYgZGlkIG5vdCBzZW5kIGFueSBmcmFtZXMg
+KGlnbm9yaW5nDQo+IEFDS3MpLg0KPg0KSG1tLi4gInJ4X2lkbGVfdGltZSIgb25seSBub3QgZW5v
+dWdoIHRvIGRldGVybWluZSBhY3RpdmUgc3RhdGUuIEJlY2F1c2UgYSBzdGF0aW9uDQpjYW4gcmVj
+ZWl2ZSB1bmktZGlyZWN0aW9uIGRhdGEgdHJhZmZpYy4gRm9yIGV4YW1wbGUsIElmIHRoZSBzdGF0
+aW9uIGlzIGNvbm5lY3RlZCBhbmQNCmlkbGUgZm9yIGhhbGYgYW4gaG91ciBidXQgd2l0aGluIEJT
+UywgdGhlbiBib3RoICJpbmFjdGl2aXR5X21zIiBhbmQgImNvbm5lY3RlZF90aW1lIiANCnNob3Vs
+ZCBiZSAzMCBtaW5zLiBJc24ndCBpdD8uDQoNCi1SYWprdW1hcg0K
