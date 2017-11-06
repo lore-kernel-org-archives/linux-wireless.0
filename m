@@ -1,85 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59160 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751826AbdKHLfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 06:35:24 -0500
-Date: Wed, 8 Nov 2017 12:35:22 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Richard Genoud <richard.genoud@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
-Message-ID: <20171108113521.GD2641@redhat.com> (sfid-20171108_123539_232799_F3CAB122)
-References: <1509983829.10974.2.camel@gmail.com>
- <20171107085327.GA11380@redhat.com>
- <CACQ1gAi6XtjCHPji3BP71jDG7srg+BshesviasXiSqnw2zs9_Q@mail.gmail.com>
- <20171107101320.GA12140@redhat.com>
- <1510052483.24015.1.camel@gmail.com>
- <20171108103729.GA2641@redhat.com>
- <1510139235.10467.1.camel@gmail.com>
+Received: from mail-it0-f66.google.com ([209.85.214.66]:45619 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932442AbdKFUkM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Nov 2017 15:40:12 -0500
+Received: by mail-it0-f66.google.com with SMTP id n195so6996464itg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Nov 2017 12:40:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1510139235.10467.1.camel@gmail.com>
+In-Reply-To: <1509997730.4492.422.camel@coelho.fi>
+References: <20171029122816.8802-1-luca@coelho.fi> <20171029122816.8802-14-luca@coelho.fi>
+ <CAGXu5jLhCxwR1zntTYS_5X72kp-H8h++8PH-p5aKTC5oU-OaLw@mail.gmail.com> <1509997730.4492.422.camel@coelho.fi>
+From: Kees Cook <keescook@chromium.org>
+Date: Mon, 6 Nov 2017 12:40:11 -0800
+Message-ID: <CAGXu5j+X1Pyfhv9f+==EVdMjOi8ks+pzXEe2=uQVHtJjKLAEaA@mail.gmail.com> (sfid-20171106_214021_140437_B91FA5FE)
+Subject: Re: [PATCH 13/17] iwlwifi: mvm: Convert timers to use timer_setup()
+To: Luca Coelho <luca@coelho.fi>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 08, 2017 at 12:07:15PM +0100, Richard Genoud wrote:
-> > No, that not I wanted you to do. Please remove those options and just
-> > do
-> > below on tracing directory.
-> > 
-> > echo 0 > tracing_on 
-> > cat trace >  /dev/null
-> > echo "function_graph" > current_tracer 
-> > echo "rt2*" > set_ftrace_filter 
-> > echo 1 > tracing_on
-> > echo 1-2.2 > /sys/bus/usb/drivers/usb/unbind
-> > echo 0 > tracing_on
-> > cat trace > ~/trace.txt
-> 
-> Well, there's clearly a misunderstanding here :
-> After the command "echo 1-2.2 > /sys/bus/usb/drivers/usb/unbind"
-> I can't type *anything*
-> The only thing I can do is plug off the board.
-> This command never returns, so I can't stop the tracing...
-> 
-> Or I missed something ?
-> 
-> (maybe if there was more than one CPU on the board, I could do
-> something, but that's not the case)
+On Mon, Nov 6, 2017 at 11:48 AM, Luca Coelho <luca@coelho.fi> wrote:
+> On Mon, 2017-11-06 at 11:45 -0800, Kees Cook wrote:
+>> On Sun, Oct 29, 2017 at 5:28 AM, Luca Coelho <luca@coelho.fi> wrote:
+>> > From: Kees Cook <keescook@chromium.org>
+>> >
+>> > In preparation for unconditionally passing the struct timer_list
+>> > pointer to
+>> > all timer callbacks, switch to using the new timer_setup() and
+>> > from_timer()
+>> > to pass the timer pointer explicitly.
+>> >
+>> > The RCU lifetime on baid_data is unclear, so this adds a direct
+>> > copy of the
+>> > rcu_ptr passed to the original callback. It may be possible to
+>> > improve this
+>> > to just use baid_data->mvm->baid_map[baid_data->baid] instead.
+>> >
+>> > Cc: Johannes Berg <johannes.berg@intel.com>
+>> > Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> > Cc: Luca Coelho <luciano.coelho@intel.com>
+>> > Cc: Intel Linux Wireless <linuxwifi@intel.com>
+>> > Cc: Kalle Valo <kvalo@codeaurora.org>
+>> > Cc: Sara Sharon <sara.sharon@intel.com>
+>> > Cc: linux-wireless@vger.kernel.org
+>> > Cc: netdev@vger.kernel.org
+>> > Signed-off-by: Kees Cook <keescook@chromium.org>
+>> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+>> > ---
+>> >  drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 ++-
+>> >  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  4 ++--
+>> >  drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 18 +++++++++----
+>> > -----
+>> >  3 files changed, 13 insertions(+), 12 deletions(-)
+>>
+>> Hi,
+>>
+>> Thanks for taking this! I had a question on timing: is this expected
+>> to land for 4.15? If not, I would like to take this via the timers
+>> tree, since it is one of the few remaining conversions.
+>
+> Hi Kees,
+>
+> Yes, this should land for 4.15.  Kalle just pulled my pull-request
+> (which includes this) to wireless-drivers-next.  He told me he'll send
+> a pull-request for 4.15 during this week and hopefully Dave will pull
+> from him too.
+>
+> I'll let you know if something doesn't go as planned.
 
-I was not aware that soft-lock up can hung the system.
+Awesome, thanks very much!
 
-Below patch should prevent/help with the issue. This is
-not right fix, it's for futher debugging.
+-Kees
 
-Regards
-Stanislaw 
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index e2f4f5778267..d76ca608c722 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -321,8 +321,8 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
- 
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
--		if (status == -ENODEV)
--			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
-+		printk("submit TX urb ERROR %d\n", status);
-+		clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
- 		rt2x00lib_dmadone(entry);
- 	}
-@@ -410,8 +410,8 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
- 
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
--		if (status == -ENODEV)
--			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
-+		printk("submit RX urb ERROR %d\n", status);
-+		clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
- 		rt2x00lib_dmadone(entry);
- 	}
+-- 
+Kees Cook
+Pixel Security
