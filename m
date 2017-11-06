@@ -1,71 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37032 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752168AbdK0LnP (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:48439 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751092AbdKFIXT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Nov 2017 06:43:15 -0500
-Message-ID: <1511782993.5456.6.camel@sipsolutions.net> (sfid-20171127_124324_810293_BCFF416D)
-Subject: Re: Setting TX power on a monitoring interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter =?ISO-8859-1?Q?Gro=DFe?= <pegro@friiks.de>,
-        linux-wireless@vger.kernel.org
-Date: Mon, 27 Nov 2017 12:43:13 +0100
-In-Reply-To: <20171120173415.1ae44829@fem-net.de> (sfid-20171120_173430_381441_284E75CE)
-References: <20171120173415.1ae44829@fem-net.de>
-         (sfid-20171120_173430_381441_284E75CE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 6 Nov 2017 03:23:19 -0500
+Received: by mail-qk0-f176.google.com with SMTP id a142so1148850qkb.5
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Nov 2017 00:23:19 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        akolli@qti.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: ath10k: Fix reported HT MCS rates with NSS > 1
+Date: Mon, 06 Nov 2017 09:23:13 +0100
+Message-ID: <1728147.6Xy77nSgBU@bentobox> (sfid-20171106_092323_462516_23114937)
+In-Reply-To: <94091927-c8a1-2918-749a-dc289686c268@dd-wrt.com>
+References: <20170511090930.18205-1-sven.eckelmann@openmesh.com> <0a29ec25ec374a12adbc222af9a7dda1@euamsexm01a.eu.qualcomm.com> <94091927-c8a1-2918-749a-dc289686c268@dd-wrt.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart6482983.QmbLQlt97p"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-11-20 at 17:34 +0100, Peter Große wrote:
-> Hi everyone.
-> 
-> The iw tool allows to set TX power settings on network interfaces.
-> 
-> If I try to set the TX power level on a _monitor_ interface, I get
-> a kernel warning:
-> 
->  ------------[ cut here ]------------
->  WARNING: CPU: 0 PID: 2193 at net/mac80211/driver-ops.h:167
->  ieee80211_bss_info_change_notify+0x111/0x190 Modules linked in: uvcvideo
->  videobuf2_vmalloc videobuf2_memops videobuf2_v4l2 videobuf2_core 
-> rndis_host cdc_ether usbnet mii tp_smapi(O) thinkpad_ec(O) ohci_hcd vboxpci(O)
->  vboxnetadp(O) vboxnetflt(O) v boxdrv(O) x86_pkg_temp_thermal kvm_intel kvm
->  irqbypass iwldvm iwlwifi ehci_pci ehci_hcd tpm_tis tpm_tis_core tpm CPU: 0
->  PID: 2193 Comm: iw Tainted: G           O    4.12.12-gentoo #2 task:
->  ffff880186fd5cc0 task.stack: ffffc90001b54000 RIP:
->  0010:ieee80211_bss_info_change_notify+0x111/0x190 RSP: 0018:ffffc90001b57a10
->  EFLAGS: 00010246 RAX: 0000000000000006 RBX: ffff8801052ce840 RCX:
->  0000000000000064 RDX: 00000000fffffffc RSI: 0000000000040000 RDI:
->  ffff8801052ce840 RBP: ffffc90001b57a38 R08: 0000000000000062 R09:
->  0000000000000000 R10: ffff8802144b5000 R11: ffff880049dc4614 R12:
->  0000000000040000 R13: 0000000000000064 R14: ffff8802105f0760 R15:
->  ffffc90001b57b48 FS:  00007f92644b4580(0000) GS:ffff88021e200000(0000)
->  knlGS:0000000000000000 CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->  CR2: 00007f9263c109f0 CR3: 00000001df850000 CR4: 00000000000406f0
->  Call Trace:
->   ieee80211_recalc_txpower+0x33/0x40
->   ieee80211_set_tx_power+0x40/0x180
->   nl80211_set_wiphy+0x32e/0x950
-> 
-> Steps to reproduce:
-> 
->   iw dev wlan0 interface add mon0 type monitor
->   ip link set dev mon0 up
->   iw dev mon0 set txpower fixed 100
-> 
-> Is that a bug to be fixed?
+--nextPart6482983.QmbLQlt97p
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Yeah, it's a bug.
+On Sonntag, 5. November 2017 10:22:22 CET Sebastian Gottschall wrote:
+> the assumption made in this patch is obviously wrong (at least for more 
+> recent firmwares and 9984)
+> my log is flooded with messages like
+> [208802.803537] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
+> [208805.108515] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
+> [208821.747621] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
+> [208822.516599] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
+> [208841.257780] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stats
+> 
+> 
+> i tested this with the 10.4.3.5-0038 firmware which isnt official 
+> published but made from athwlan.bin i got from qca chipcode
 
-> What would be the correct way of fixing it? Maybe I can provide a patch.
+Hm, yes there is most likely something wrong. But not sure whether this patch 
+is actually the culprit. It looks to me like this would also be reported the 
+same way without the patch. cec17c382140 ("ath10k: add per peer htt tx stats 
+support for 10.4") seems to be your problem, right?
 
-That's a really good question :-)
+This patch only splits WMI_RATE_PREAMBLE_HT & WMI_RATE_PREAMBLE_VHT. And for 
+WMI_RATE_PREAMBLE_HT (*not VHT*), it uses a slightly different approach. But 
+the WMI_RATE_PREAMBLE_VHT part (which you see in your logs) is basically 
+untouched.
 
-I think if the driver has WANT_MONITOR_VIF, then we can pass that
-through and let the driver sort it out.
+Kind regards,
+	Sven
 
-But if not, we probably just have to reject the configuration?
+--nextPart6482983.QmbLQlt97p
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-johannes
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAloAG/EACgkQXYcKB8Em
+e0YPCBAAicvm6yibKn0b+LVu2oPiz3ca7xTVsaxLqudAu9dPCWPhWmm+9jNRwqMY
+l3rll7Q0BYWDteRqYK9NvTzqeiFNETfdtYszfdR3z3OQ1Yj3IHLhmMIfjIQiNCyT
+v8frzJdsPQs4wb0yzdUAqsHL1kKZ38XlD6YWvVIkYnkoI2TnF1ONpjSwkpOFWS4o
+o8fum65Wtd+wplwHEopcIfM2WxDjHDVu6Yfk9ATJ2Od5RnmUwD9yzBk3RE86jV56
+2ndCWP+0l9GKvmUq/txjqVToF4HZ/TCZWUdnYA2Bd3if0ruSvsnJNG/pXct45Sqi
+XmZfkwVtmRlTLkh8EG2sonvj8tIXrwdYotFDNIDKUBtrXcjtpbEi2BGqLFd5ekRa
+4cZY6c8E5YNJW/vG2suQwJHVCLoMQdF5iC+hHl0FAcR/bkL6XHGZEp/p2ggOJTUP
+tXK6RRCpxJfxZslVYT6JVvr0hMUjah0tKHEYstjPlfamvdXU8tXx1VABXRRtXCbA
+A6Q18NVly9gK9q0XePeDbaIzkiQxchBd3TZnrLIuNGGZDAewNfaSp4yOpfkFEtXy
+t2dgi8hZ5Mn46lR+b/t/bjpxeKo9o+WsGNzyAqxNU212ZAlhb3IDIY4S0rgWp9BI
+pzSUW7i3iyDIm1Vo5KjEGigNa4hoh5UC0XLywOipkFXxjHZ7lmI=
+=ZukK
+-----END PGP SIGNATURE-----
+
+--nextPart6482983.QmbLQlt97p--
