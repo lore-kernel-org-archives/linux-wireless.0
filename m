@@ -1,120 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:63794 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752891AbdK3M6I (ORCPT
+Received: from mail-ot0-f175.google.com ([74.125.82.175]:47801 "EHLO
+        mail-ot0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751405AbdKFCJE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Nov 2017 07:58:08 -0500
-From: <akolli@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>
-Subject: [PATCH 1/2] ath10k: move pktlog_filter out of ath10k_debug
-Date: Thu, 30 Nov 2017 18:28:20 +0530
-Message-ID: <1512046701-14435-2-git-send-email-akolli@qti.qualcomm.com> (sfid-20171130_135823_930980_ECD174E3)
-In-Reply-To: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
-References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
+        Sun, 5 Nov 2017 21:09:04 -0500
+Received: by mail-ot0-f175.google.com with SMTP id s88so7084015ota.4
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Nov 2017 18:09:04 -0800 (PST)
+Subject: Re: rtl8821ae dbi read question
+To: Nik Nyby <nikolas@gnu.org>, linux-wireless@vger.kernel.org,
+        pkshih@realtek.com
+References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
+ <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
+ <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <702e4270-dcf3-5916-daee-f2265e0da907@lwfinger.net> (sfid-20171106_030908_145253_FAFAE0D0)
+Date: Sun, 5 Nov 2017 20:09:02 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+On 11/05/2017 03:15 PM, Nik Nyby wrote:
+> I also want to note that adding rtl8821ae.aspm=0 to my grub kernel boot command 
+> doesn't fix my problem. (I'm building this driver into the kernel, not as a 
+> module). My connection dropping problem is fixed only if I comment out the aspm 
+> init code in the driver, per this patch:
+>    https://patchwork.kernel.org/patch/9951511/
 
-Move pktlog_filter from struct ath10k_debug to struct ath10k
-so that pktlog can be enabled even when debugfs is not
-enabled, needed to enable peer tx stats for 10.2.4.
+Disabling all of _rtl8821ae_enable_aspm_back_door() may not be wise. We tried 
+that patch as part of debugging.
 
-No changes in functionality.
+That routine consists of two mdio r/w sequences, and 3 dbi r/w sequences. The 
+third one of the latter is only used for RTL8812AE, thus it can be ignored.
 
-Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h  |    2 +-
- drivers/net/wireless/ath/ath10k/debug.c |   16 ++++++++--------
- 2 files changed, 9 insertions(+), 9 deletions(-)
+What happens if you try disabling those r/w pairs one at a time? It is possible 
+that one, or more of them, should be disabled when aspm is zero. It should not 
+matter whether the driver is built in, or loaded as a module. Please note that I 
+never build that code in as I always want the option of refreshing the driver 
+without rebooting.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 643041ef3271..75dbfffe677a 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -488,7 +488,6 @@ struct ath10k_debug {
- 	/* protected by conf_mutex */
- 	u64 fw_dbglog_mask;
- 	u32 fw_dbglog_level;
--	u32 pktlog_filter;
- 	u32 reg_addr;
- 	u32 nf_cal_period;
- 	void *cal_data;
-@@ -963,6 +962,7 @@ struct ath10k {
- 	} spectral;
- #endif
- 
-+	u32 pktlog_filter;
- 	struct {
- 		/* protected by conf_mutex */
- 		struct ath10k_fw_components utf_mode_fw;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index df514507d3f1..e278300b4f14 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1950,14 +1950,14 @@ int ath10k_debug_start(struct ath10k *ar)
- 				    ret);
- 	}
- 
--	if (ar->debug.pktlog_filter) {
-+	if (ar->pktlog_filter) {
- 		ret = ath10k_wmi_pdev_pktlog_enable(ar,
--						    ar->debug.pktlog_filter);
-+						    ar->pktlog_filter);
- 		if (ret)
- 			/* not serious */
- 			ath10k_warn(ar,
- 				    "failed to enable pktlog filter %x: %d\n",
--				    ar->debug.pktlog_filter, ret);
-+				    ar->pktlog_filter, ret);
- 	} else {
- 		ret = ath10k_wmi_pdev_pktlog_disable(ar);
- 		if (ret)
-@@ -2097,12 +2097,12 @@ static ssize_t ath10k_write_pktlog_filter(struct file *file,
- 	mutex_lock(&ar->conf_mutex);
- 
- 	if (ar->state != ATH10K_STATE_ON) {
--		ar->debug.pktlog_filter = filter;
-+		ar->pktlog_filter = filter;
- 		ret = count;
- 		goto out;
- 	}
- 
--	if (filter == ar->debug.pktlog_filter) {
-+	if (filter == ar->pktlog_filter) {
- 		ret = count;
- 		goto out;
- 	}
-@@ -2111,7 +2111,7 @@ static ssize_t ath10k_write_pktlog_filter(struct file *file,
- 		ret = ath10k_wmi_pdev_pktlog_enable(ar, filter);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to enable pktlog filter %x: %d\n",
--				    ar->debug.pktlog_filter, ret);
-+				    ar->pktlog_filter, ret);
- 			goto out;
- 		}
- 	} else {
-@@ -2122,7 +2122,7 @@ static ssize_t ath10k_write_pktlog_filter(struct file *file,
- 		}
- 	}
- 
--	ar->debug.pktlog_filter = filter;
-+	ar->pktlog_filter = filter;
- 	ret = count;
- 
- out:
-@@ -2139,7 +2139,7 @@ static ssize_t ath10k_read_pktlog_filter(struct file *file, char __user *ubuf,
- 
- 	mutex_lock(&ar->conf_mutex);
- 	len = scnprintf(buf, sizeof(buf) - len, "%08x\n",
--			ar->debug.pktlog_filter);
-+			ar->pktlog_filter);
- 	mutex_unlock(&ar->conf_mutex);
- 
- 	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
--- 
-1.7.9.5
+Larry
