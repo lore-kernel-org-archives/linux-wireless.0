@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51490 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751086AbdKTNxK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 08:53:10 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Ellie Reeves <ellierevves@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: RE: [EXT] Marvell Mwifiex wireless driver: mwifiex_pcie broken on
- Marvell ESPRESSOBin
-Date: Mon, 20 Nov 2017 13:53:07 +0000
-Message-ID: <a4233e0d08f1400fa30ef112e0fda464@SC-EXCH02.marvell.com> (sfid-20171120_145317_641675_4E66B584)
-References: <6dc0221c-c7ec-d107-02e8-0ab443807e51@gmail.com>
-In-Reply-To: <6dc0221c-c7ec-d107-02e8-0ab443807e51@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mga02.intel.com ([134.134.136.20]:39832 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750904AbdKFAGY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Nov 2017 19:06:24 -0500
+Date: Mon, 6 Nov 2017 01:06:20 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Colin King <colin.king@canonical.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] NFC: fdp: make struct nci_ops static
+Message-ID: <20171106000620.GD27831@zurbaran.ger.intel.com> (sfid-20171106_010638_698853_7472F791)
+References: <20171005094712.28627-1-colin.king@canonical.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171005094712.28627-1-colin.king@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRWxpZSwNCg0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IEhlbGxvLA0KPiBJIG5vdGljZWQgdGhlIE1h
-cnZlbGwgTXdpZmlleCB3aXJlbGVzcyBkcml2ZXIgZW5kZWQgdXAgYnJva2VuIHNpbmNlIGtlcm5l
-bA0KPiA0LjEzLjAsIGFuZCBpdCBpcyBzdGlsbCB0aGUgY2FzZSB3aXRoIDQuMTQuMCBvbiB0aGUg
-TWFydmVsbCBFU1BSRVNTT0Jpbiwgc29sZWQgYnkNCj4gR2xvYmFsc2NhbGUgVGVjaG5vbG9neS4g
-SSBib3VnaHQgdGhlIG9mZmljaWFsIHdpcmVsZXNzIGNhcmQgZnJvbSB0aGVtIGF0IHRoZQ0KPiBz
-YW1lIHRpbWUgYXMgdGhlIGJvYXJkLiBIb3dldmVyIHNpbmNlIGtlcm5lbCA0LjEzLjAsIHdpZmkg
-YXMgcHJvdmlkZWQgdmlhDQo+IG13aWZpZXhfcGNpZSBtb2R1bGUgc3RvcHBlZCB3b3JraW5nLg0K
-PiBJIGRvbid0IGhhdmUgbXVjaCBpbmZvIG9uIHRoZSB1c2Vyc3BhY2Ugc2lkZSwgYXMgYWxsIHRo
-YXQgaGFwcGVucyBpcyB0aGUNCj4gd2lyZWxlc3MgaW50ZXJmYWNlIGlzIG5ldmVyIGJyb3VnaHQg
-dXAgYW5kIHN0YXlzIGluICdOTy1DQVJSSUVSJz8gc3RhdGUNCj4gYWNjb3JkaW5nIHRvICdpcCBh
-Jy4gSG93ZXZlciBvbiBrZXJuZWwgc2lkZSwgSSBob3BlIEkgaGF2ZSBzb21lIGluZm8gdGhhdCBh
-cmUNCj4gbW9yZSB1c2VmdWwgISA6KSBUaGlzIHdhcyBsb2dnZWQgdmlhIHN5c3RlbWQtam91cm5h
-bGQgd2l0aCBkZWJ1ZyB0dXJuZWQgb24NCj4gaW4gbXdpZmlleCBkcml2ZXIuIEkgYW0gd2lsbGlu
-ZyB0byB0cnkgYW55dGhpbmcgdG8gZ2V0IHRoaXMga2VybmVsIHdvcmtpbmcsIGFzIGl0J3MNCj4g
-YSBsdHMga2VybmVsIGNvbnRyYXJ5IHRvIDQuMTIuMTIgb24gd2hpY2ggSSdtIGZvcmNlZCB0byBy
-dW4gZm9yIG5vdy4NCj4NCj4gaHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9tay0N
-Cj4gZmcvMjdjMjUwNWZkM2JmZmNmMGFmODc3NzdhYWFmYjcxZmUvcmF3L2ZkYTcwZmY5ZjhlYWFi
-MjQ4YTEwNGUwMzkyMjMyDQo+IDNjZjJmNDc1NGJmL3RtcC50eHQNCj4NCj4gSSBob3BlIHRoZXNl
-IGluZm8gd2lsbCBiZSB1c2VmdWwgaW4gZGVidWdnaW5nLiBJJ20gbmV3IHRvIGFsbCB0aGVzZSBr
-ZXJuZWwNCj4gc3R1ZmYsIHNvIEkgbWF5IGhhdmUgcG9zdGVkIHRvIHRoZSB3cm9uZyBwbGFjZSBv
-ciBpbiBhIHdyb25nIHdheSwgaWYgc28sDQo+IHBsZWFzZSBsZXQgbWUga25vdy4NCj4NCj4gVGhh
-bmtzIGluIGFkdmFuY2UNCj4NCg0KVGhhbmtzIGZvciB0aGUgbm90aWZpY2F0aW9uIGFuZCBsb2dz
-LiAgV2UgaGF2ZSBhIGZpeCBmb3IgdGhpcyBpc3N1ZSwgd2hpY2ggd2lsbCBiZSBzZW5kIHVwc3Ry
-ZWFtIHNvb24uDQoNCj4gLS0NCj4gRWxsaWUgUmVldmVzDQoNCg0KUmVnYXJkcywNCkdhbmFwYXRo
-aQ0K
+On Thu, Oct 05, 2017 at 10:47:12AM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> The structure nci_ops is local to the source and does not need to
+> be in global scope, so make it static.
+> 
+> Cleans up sparse warning:
+> symbol 'nci_ops' was not declared. Should it be static?
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/nfc/fdp/fdp.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+Applied as well, thanks.
+
+Cheers,
+Samuel.
