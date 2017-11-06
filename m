@@ -1,219 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45466 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751180AbdK0HJi (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.75]:54538 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752240AbdKFSfD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Nov 2017 02:09:38 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v2 2/3] mwifiex: device dump support for usb interface
-Date: Mon, 27 Nov 2017 15:09:14 +0800
-Message-ID: <1511766555-30780-2-git-send-email-huxm@marvell.com> (sfid-20171127_080942_589243_51E6FAFF)
-In-Reply-To: <1511766555-30780-1-git-send-email-huxm@marvell.com>
-References: <1511766555-30780-1-git-send-email-huxm@marvell.com>
+        Mon, 6 Nov 2017 13:35:03 -0500
+Date: Mon, 6 Nov 2017 19:34:57 +0100 (CET)
+From: Stefan Wahren <stefan.wahren@i2se.com>
+To: Simon Shields <simon@lineageos.org>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list@cypress.com
+Message-ID: <1925563700.5172.1509993297900@email.1und1.de> (sfid-20171106_193507_566783_D1495A3A)
+In-Reply-To: <20171104132421.GA1541@archbox.home>
+References: <20171104132421.GA1541@archbox.home>
+Subject: Re: [PATCH] brcmfmac: add support for external 32khz clock
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware dump on usb interface is different with current
-sdio/pcie chipset, which is based on register operation.
+Hi Simon,
 
-When firmware hang on usb interface, context dump will be
-upload to host using 0x73 firmware debug event.
+> Simon Shields <simon@lineageos.org> hat am 4. November 2017 um 14:24 geschrieben:
+> 
+> 
+> Some boards use an external 32khz clock for low-power
+> mode timing. Make sure the clock is powered on while the chipset
+> is active.
+> 
+> Signed-off-by: Simon Shields <simon@lineageos.org>
+> ---
+>  .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt     |  2 ++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h      |  2 ++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c          |  5 +++++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c        | 10 ++++++++++
+>  4 files changed, 19 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> index b2bd4704f859..37add5e29272 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> @@ -17,6 +17,8 @@ Optional properties:
+>  	When not specified the device will use in-band SDIO interrupts.
+>   - interrupt-names : name of the out-of-band interrupt, which must be set
+>  	to "host-wake".
+> + - clocks : external 32khz clock
+> + - clock-names : name of the external 32khz clock, must be "32khz"
 
-This patch store dump data from debug event and send to
-userspace using device coredump API.
+sorry for the nitpicking, but according to the datasheet [1] it's 32768 Hz. Apart from that i suggest to use a functional name for the clock like "low_power" or something else, which is more flexible and future-proof.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
-v2: Addressed below review comments from Brian Norris
-    a) Check for overflow introduced by invalid event.
-    b) Use end of transmission signal to recognize last event.
----
- drivers/net/wireless/marvell/mwifiex/fw.h        | 10 ++++
- drivers/net/wireless/marvell/mwifiex/init.c      |  9 ++++
- drivers/net/wireless/marvell/mwifiex/main.h      |  2 +
- drivers/net/wireless/marvell/mwifiex/sta_event.c | 61 ++++++++++++++++++++++++
- 4 files changed, 82 insertions(+)
+Btw this binding needs to be a separate patch, which should go to the devicetree guys.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 13cd58e9..4d5e686 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -56,6 +56,15 @@ struct mwifiex_fw_data {
- 	u8 data[1];
- } __packed;
- 
-+struct mwifiex_fw_dump_header {
-+	__le16          seq_num;
-+	__le16          reserved;
-+	__le16          type;
-+	__le16          len;
-+} __packed;
-+
-+#define FW_DUMP_INFO_ENDED 0x0002
-+
- #define MWIFIEX_FW_DNLD_CMD_1 0x1
- #define MWIFIEX_FW_DNLD_CMD_5 0x5
- #define MWIFIEX_FW_DNLD_CMD_6 0x6
-@@ -570,6 +579,7 @@ enum mwifiex_channel_flags {
- #define EVENT_BG_SCAN_STOPPED           0x00000065
- #define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
- #define EVENT_MULTI_CHAN_INFO           0x0000006a
-+#define EVENT_FW_DUMP_INFO		0x00000073
- #define EVENT_TX_STATUS_REPORT		0x00000074
- #define EVENT_BT_COEX_WLAN_PARA_CHANGE	0X00000076
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index b0d3d68..d239e92 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -64,6 +64,13 @@ static void wakeup_timer_fn(struct timer_list *t)
- 		adapter->if_ops.card_reset(adapter);
- }
- 
-+static void fw_dump_timer_fn(struct timer_list *t)
-+{
-+	struct mwifiex_adapter *adapter = from_timer(adapter, t, devdump_timer);
-+
-+	mwifiex_upload_device_dump(adapter);
-+}
-+
- /*
-  * This function initializes the private structure and sets default
-  * values to the members.
-@@ -315,6 +322,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->active_scan_triggered = false;
- 	timer_setup(&adapter->wakeup_timer, wakeup_timer_fn, 0);
- 	adapter->devdump_len = 0;
-+	timer_setup(&adapter->devdump_timer, fw_dump_timer_fn, 0);
- }
- 
- /*
-@@ -397,6 +405,7 @@ static void mwifiex_invalidate_lists(struct mwifiex_adapter *adapter)
- mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
- {
- 	del_timer(&adapter->wakeup_timer);
-+	del_timer_sync(&adapter->devdump_timer);
- 	mwifiex_cancel_all_pending_cmd(adapter);
- 	wake_up_interruptible(&adapter->cmd_wait_q.wait);
- 	wake_up_interruptible(&adapter->hs_activate_wait_q);
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 8b6241a..6b5539b 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1037,6 +1037,7 @@ struct mwifiex_adapter {
- 	/* Device dump data/length */
- 	void *devdump_data;
- 	int devdump_len;
-+	struct timer_list devdump_timer;
- };
- 
- void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
-@@ -1682,6 +1683,7 @@ void mwifiex_process_multi_chan_event(struct mwifiex_private *priv,
- void mwifiex_multi_chan_resync(struct mwifiex_adapter *adapter);
- int mwifiex_set_mac_address(struct mwifiex_private *priv,
- 			    struct net_device *dev);
-+void mwifiex_devdump_tmo_func(unsigned long function_context);
- 
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index d8db412..93dfb76 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -584,6 +584,62 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
- 		adapter->coex_rx_win_size);
- }
- 
-+static void
-+mwifiex_fw_dump_info_event(struct mwifiex_private *priv,
-+			   struct sk_buff *event_skb)
-+{
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	struct mwifiex_fw_dump_header *fw_dump_hdr =
-+				(void *)adapter->event_body;
-+
-+	if (adapter->iface_type != MWIFIEX_USB) {
-+		mwifiex_dbg(adapter, MSG,
-+			    "event is not on usb interface, ignore it\n");
-+		return;
-+	}
-+
-+	if (!adapter->devdump_data) {
-+		/* When receive the first event, allocate device dump
-+		 * buffer, dump driver info.
-+		 */
-+		adapter->devdump_data = vzalloc(MWIFIEX_FW_DUMP_SIZE);
-+		if (!adapter->devdump_data) {
-+			mwifiex_dbg(adapter, ERROR,
-+				    "vzalloc devdump data failure!\n");
-+			return;
-+		}
-+
-+		mwifiex_drv_info_dump(adapter);
-+
-+		/* If no proceeded event arrive in 10s, upload device
-+		 * dump data, this will be useful if the end of
-+		 * transmission event get lost, in this cornel case,
-+		 * user would still get partial of the dump.
-+		 */
-+		mod_timer(&adapter->devdump_timer,
-+			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
-+	}
-+
-+	/* Overflow check */
-+	if (adapter->devdump_len + event_skb->len >= MWIFIEX_FW_DUMP_SIZE)
-+		goto upload_dump;
-+
-+	memmove(adapter->devdump_data + adapter->devdump_len,
-+		adapter->event_skb->data, event_skb->len);
-+	adapter->devdump_len += event_skb->len;
-+
-+	if (le16_to_cpu(fw_dump_hdr->type == FW_DUMP_INFO_ENDED)) {
-+		mwifiex_dbg(adapter, MSG,
-+			    "receive end of transmission flag event!\n");
-+		goto upload_dump;
-+	}
-+	return;
-+
-+upload_dump:
-+	del_timer_sync(&adapter->devdump_timer);
-+	mwifiex_upload_device_dump(adapter);
-+}
-+
- /*
-  * This function handles events generated by firmware.
-  *
-@@ -636,6 +692,7 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
-  *      - EVENT_DELBA
-  *      - EVENT_BA_STREAM_TIEMOUT
-  *      - EVENT_AMSDU_AGGR_CTRL
-+ *      - EVENT_FW_DUMP_INFO
-  */
- int mwifiex_process_sta_event(struct mwifiex_private *priv)
- {
-@@ -1007,6 +1064,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 					    adapter->event_skb->len -
- 					    sizeof(eventcause));
- 		break;
-+	case EVENT_FW_DUMP_INFO:
-+		mwifiex_dbg(adapter, EVENT, "event: firmware debug info\n");
-+		mwifiex_fw_dump_info_event(priv, adapter->event_skb);
-+		break;
- 	/* Debugging event; not used, but let's not print an ERROR for it. */
- 	case EVENT_UNKNOWN_DEBUG:
- 		mwifiex_dbg(adapter, EVENT, "event: debug\n");
--- 
-1.9.1
+[1] - http://www.cypress.com/file/298706/download
+
+>  
+>  Example:
+>  
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
+> index a62f8e70b320..2e7fabae81d3 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
+> @@ -51,6 +51,7 @@ extern struct brcmf_mp_global_t brcmf_mp_global;
+>   * @roamoff: Firmware roaming off?
+>   * @ignore_probe_fail: Ignore probe failure.
+>   * @country_codes: If available, pointer to struct for translating country codes
+> + * @clk: External 32khz clock, if present.
+>   * @bus: Bus specific platform data. Only SDIO at the mmoment.
+>   */
+>  struct brcmf_mp_device {
+> @@ -60,6 +61,7 @@ struct brcmf_mp_device {
+>  	bool		roamoff;
+>  	bool		ignore_probe_fail;
+>  	struct brcmfmac_pd_cc *country_codes;
+> +	struct clk *clk;
+>  	union {
+>  		struct brcmfmac_sdio_pd sdio;
+>  	} bus;
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+> index aee6e5937c41..46f42a2c3d2b 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+> @@ -13,6 +13,7 @@
+>   * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+>   * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+>   */
+> +#include <linux/clk.h>
+>  #include <linux/init.h>
+>  #include <linux/of.h>
+>  #include <linux/of_irq.h>
+> @@ -39,6 +40,10 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+>  	if (of_property_read_u32(np, "brcm,drive-strength", &val) == 0)
+>  		sdio->drive_strength = val;
+>  
+> +	settings->clk = devm_clk_get(dev, "32khz");
+> +	if (IS_ERR(settings->clk))
+> +		settings->clk = NULL;
+
+I cannot recommend this, please look at the thread here [2].
+
+Thanks
+
+[2] - https://marc.info/?l=linux-arm-kernel&m=150980353025665&w=2
+
+> +
+>  	/* make sure there are interrupts defined in the node */
+>  	if (!of_find_property(np, "interrupts", NULL))
+>  		return;
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index 613caca7dc02..f4ceca6dbe74 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -14,6 +14,7 @@
+>   * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+>   */
+>  
+> +#include <linux/clk.h>
+>  #include <linux/types.h>
+>  #include <linux/atomic.h>
+>  #include <linux/kernel.h>
+> @@ -3853,6 +3854,11 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
+>  		brcmf_err("Failed to get device parameters\n");
+>  		goto fail;
+>  	}
+> +
+> +	/* enable external 32khz clock, if present */
+> +	if (sdiodev->settings->clk)
+> +		clk_prepare_enable(sdiodev->settings->clk);
+> +
+>  	/* platform specific configuration:
+>  	 *   alignments must be at least 4 bytes for ADMA
+>  	 */
+> @@ -4270,6 +4276,10 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+>  			}
+>  			brcmf_chip_detach(bus->ci);
+>  		}
+> +
+> +		if (bus->sdiodev->settings->clk)
+> +			clk_disable_unprepare(bus->sdiodev->settings->clk);
+> +
+>  		if (bus->sdiodev->settings)
+>  			brcmf_release_module_param(bus->sdiodev->settings);
+>  
+> -- 
+> 2.15.0
+>
