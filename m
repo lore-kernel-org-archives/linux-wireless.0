@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44652 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752475AbdKHMsR (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.73]:64758 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752859AbdKFN4f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 07:48:17 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [08/11] rtlwifi: rtl_pci: Refactor TX/RX flow
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171101152926.24971-9-Larry.Finger@lwfinger.net>
-References: <20171101152926.24971-9-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Steven Ting <steventing@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>, Shaofu <shaofu@realtek.com>
-Message-Id: <20171108124816.E07E6607B5@smtp.codeaurora.org> (sfid-20171108_134824_665484_9550FC44)
-Date: Wed,  8 Nov 2017 12:48:16 +0000 (UTC)
+        Mon, 6 Nov 2017 08:56:35 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] rtlwifi: fix uninitialized rtlhal->last_suspend_sec time
+Date: Mon,  6 Nov 2017 14:55:35 +0100
+Message-Id: <20171106135619.1248453-1-arnd@arndb.de> (sfid-20171106_145700_878425_7CA5088A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+We set rtlhal->last_suspend_sec to an uninitialized stack variable,
+but unfortunately gcc never warned about this, I only found it
+while working on another patch. I opened a gcc bug for this.
 
-> From: Steven Ting <steventing@realtek.com>
-> 
-> After this refactoring, the variables wp and rp in TX ring can only be
-> updated in OP_TX and TX_OK respectively without protection. The other
-> changes are listed below:
-> 
-> 1. remove avl_desc from TX ring, because it can be calculated by wp and rp.
->    Moreover, we update this variable in op_tx (thread context) and TX_OK
->    (BH context) without protection.
-> 2. extend calc_fifo_space(rp, wp) to calc_fifo_space(rp, wp, size), and fix
->    the caller's parameter 'size'.
-> 3. Get RX remaining counter only if it count down to zero.
-> 4. remove available_desc check from Tx ISR
-> 
-> Signed-off-by: Steven Ting <steventing@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
+Presumably the value of rtlhal->last_suspend_sec is not all that
+important, but it does get used, so we probably want the
+patch backported to stable kernels.
 
-Dropping the rest of the series based on my comments.
+Cc: stable@vger.kernel.org
+Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82839
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-4 patches set to Changes Requested.
-
-10036501 [08/11] rtlwifi: rtl_pci: Refactor TX/RX flow
-10036503 [09/11] rtlwifi: rtl_pci: 8822BE puts broadcast and multicast packet to HIQ
-10036507 [10/11] rtlwifi: Add beacon check mechanism to check if AP settings changed.
-10036505 [11/11] rtlwifi: rtl_pci: Fix the bug when inactiveps is enabled.
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 60c82a5b51cd..20ffe856180e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -1373,6 +1373,7 @@ static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
+ 
+ 	ppsc->wakeup_reason = 0;
+ 
++	do_gettimeofday(&ts);
+ 	rtlhal->last_suspend_sec = ts.tv_sec;
+ 
+ 	switch (fw_reason) {
 -- 
-https://patchwork.kernel.org/patch/10036501/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.9.0
