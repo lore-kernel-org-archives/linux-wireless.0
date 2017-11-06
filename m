@@ -1,87 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:49530 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754560AbdKAP3g (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:52194 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752800AbdKFN5L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 11:29:36 -0400
-Received: by mail-oi0-f65.google.com with SMTP id w197so5013980oif.6
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Nov 2017 08:29:35 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 04/11] rtlwifi: rtl_pci: Add support for 8822be TX/RX BD
-Date: Wed,  1 Nov 2017 10:29:19 -0500
-Message-Id: <20171101152926.24971-5-Larry.Finger@lwfinger.net> (sfid-20171101_162943_255899_3922C6C2)
-In-Reply-To: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
-References: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
+        Mon, 6 Nov 2017 08:57:11 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] rtlwifi: use ktime_get_real_seconds() for suspend time
+Date: Mon,  6 Nov 2017 14:55:36 +0100
+Message-Id: <20171106135619.1248453-2-arnd@arndb.de> (sfid-20171106_145739_240281_1067FF30)
+In-Reply-To: <20171106135619.1248453-1-arnd@arndb.de>
+References: <20171106135619.1248453-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+do_gettimeofday() is deprecated and slower than necessary for the purpose
+of reading the seconds. This changes rtl_op_suspend/resume to use
+ktime_get_real_seconds() instead, which is simpler and avoids confusion
+about whether it is y2038-safe or not.
 
-The number of TX/RX BD desc for 8822BE is 512.
-The TX/RX BD architecture of 8822BE is the same as 8192EE.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/realtek/rtlwifi/pci.c | 14 +++++++++++---
- drivers/net/wireless/realtek/rtlwifi/pci.h |  1 +
- 2 files changed, 12 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/core.c         | 10 ++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c |  3 +--
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         |  2 +-
+ 3 files changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index 01c65c807126..e8c8ce601229 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -1140,6 +1140,8 @@ static void _rtl_pci_init_trx_var(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 1147327e6f52..533e9cc4c84b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -550,15 +550,13 @@ static int rtl_op_suspend(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	struct timeval ts;
  
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192EE)
- 		desc_num = TX_DESC_NUM_92E;
-+	else if (rtlhal->hw_type == HARDWARE_TYPE_RTL8822BE)
-+		desc_num = TX_DESC_NUM_8822B;
- 	else
- 		desc_num = RT_TXDESC_NUM;
+ 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "\n");
+ 	if (WARN_ON(!wow))
+ 		return -EINVAL;
  
-@@ -1981,11 +1983,17 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
- 		}
- 	}
+ 	/* to resolve s4 can not wake up*/
+-	do_gettimeofday(&ts);
+-	rtlhal->last_suspend_sec = ts.tv_sec;
++	rtlhal->last_suspend_sec = ktime_get_real_seconds();
  
--	/* 92ee use new trx flow */
--	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192EE)
-+	switch (rtlhal->hw_type) {
-+	case HARDWARE_TYPE_RTL8192EE:
-+	case HARDWARE_TYPE_RTL8822BE:
-+		/* use new trx flow */
- 		rtlpriv->use_new_trx_flow = true;
--	else
-+		break;
-+
-+	default:
- 		rtlpriv->use_new_trx_flow = false;
-+		break;
-+	}
+ 	if ((ppsc->wo_wlan_mode & WAKE_ON_PATTERN_MATCH) && wow->n_patterns)
+ 		_rtl_add_wowlan_patterns(hw, wow);
+@@ -577,7 +575,7 @@ static int rtl_op_resume(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+-	struct timeval ts;
++	time64_t now;
  
- 	/*find bus info */
- 	pcipriv->ndis_adapter.busnumber = pdev->bus->number;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.h b/drivers/net/wireless/realtek/rtlwifi/pci.h
-index e331f5a3b35f..0f1a0f8585b6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.h
-@@ -39,6 +39,7 @@
+ 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "\n");
+ 	rtlhal->driver_is_goingto_unload = false;
+@@ -585,8 +583,8 @@ static int rtl_op_resume(struct ieee80211_hw *hw)
+ 	rtlhal->wake_from_pnp_sleep = true;
  
- #define RT_TXDESC_NUM				128
- #define TX_DESC_NUM_92E				512
-+#define TX_DESC_NUM_8822B			512
- #define RT_TXDESC_NUM_BE_QUEUE			256
+ 	/* to resovle s4 can not wake up*/
+-	do_gettimeofday(&ts);
+-	if (ts.tv_sec - rtlhal->last_suspend_sec < 5)
++	now = ktime_get_real_seconds();
++	if (now - rtlhal->last_suspend_sec < 5)
+ 		return -1;
  
- #define BK_QUEUE				0
+ 	rtl_op_start(hw);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 20ffe856180e..ad28e188bd04 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -1373,8 +1373,7 @@ static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
+ 
+ 	ppsc->wakeup_reason = 0;
+ 
+-	do_gettimeofday(&ts);
+-	rtlhal->last_suspend_sec = ts.tv_sec;
++	rtlhal->last_suspend_sec = ktime_get_real_seconds();
+ 
+ 	switch (fw_reason) {
+ 	case FW_WOW_V2_PTK_UPDATE_EVENT:
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 22afc14c3da6..6f1b0f4667d9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -1599,7 +1599,7 @@ struct rtl_hal {
+ 	bool enter_pnp_sleep;
+ 	bool wake_from_pnp_sleep;
+ 	bool wow_enabled;
+-	__kernel_time_t last_suspend_sec;
++	time64_t last_suspend_sec;
+ 	u32 wowlan_fwsize;
+ 	u8 *wowlan_firmware;
+ 
 -- 
-2.14.3
+2.9.0
