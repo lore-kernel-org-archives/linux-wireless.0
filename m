@@ -1,63 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54355 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753656AbdKNNZs (ORCPT
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:56188 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753688AbdKGLNv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 08:25:48 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v3 00/12] wil6210 patches
-Date: Tue, 14 Nov 2017 15:25:32 +0200
-Message-Id: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142552_194577_5828BAA2)
+        Tue, 7 Nov 2017 06:13:51 -0500
+Message-ID: <1510053227.24015.3.camel@gmail.com> (sfid-20171107_121542_814615_D21C0429)
+Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
+From: Richard Genoud <richard.genoud@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org
+Date: Tue, 07 Nov 2017 12:13:47 +0100
+In-Reply-To: <20171107101320.GA12140@redhat.com>
+References: <1509983829.10974.2.camel@gmail.com>
+         <20171107085327.GA11380@redhat.com>
+         <CACQ1gAi6XtjCHPji3BP71jDG7srg+BshesviasXiSqnw2zs9_Q@mail.gmail.com>
+         <20171107101320.GA12140@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes from v2:
-- Additional fixes to "wil6210: run-time PM when interface down"
+Le mardi 07 novembre 2017 à 11:13 +0100, Stanislaw Gruszka a écrit :
+> On Tue, Nov 07, 2017 at 11:06:39AM +0100, Richard Genoud wrote:
+> > > 3 short articles how to configure and use ftrace are here:
+> > > https://lwn.net/Articles/365835/
+> > > https://lwn.net/Articles/366796/
+> > > https://lwn.net/Articles/370423/
+> > > 
+> > 
+> > I tried with ftrace, but I don't think there's a way to dump the
+> > trace
+> > when there's a soft lock-up
+> > (I can't do anything after the unbind, even the heartbeat led
+> > stopped blinking).
+> > I saw the /proc/sys/kernel/ftrace_dump_on_oops file, but there's no
+> > /proc/sys/kernel/ftrace_dump_on_soft_lock-up file :)
+> 
+> You should configure function trace with rt2x* functions. After that
+> start tracing, unbind the device, then stop tracing and provide trace
+> output.
+Here is another trace, with rt2* as function filter.
+(sorry for the noise)
 
-Changes from v1:
-- Fix static buffer allocation in "wil6210: update statistics for suspend"
-- Fix kbuild bot error on "wil6210: run-time PM when interface down"
+Dumping ftrace buffer:
+---------------------------------
+CPU:0 [LOST 3606923 EVENTS]
+ 0)   0.000 us    |      } /* rt2x00usb_clear_entry */
+ 0)   0.000 us    |    } /* rt2x00lib_rxdone */
+ 0)   0.000 us    |    rt2x00queue_get_entry();
+ 0)               |    rt2x00lib_rxdone() {
+ 0)   0.000 us    |      rt2x00queue_index_inc();
+ 0)               |      rt2x00usb_clear_entry() {
+ 0)               |        rt2x00usb_kick_rx_entry() {
+ 0)               |          rt2x00lib_dmastart() {
+ 0)   0.000 us    |            rt2x00queue_index_inc();
+ 0)   0.000 us    |          }
+ 0)               |          rt2x00lib_dmadone() {
+ 0)   0.000 us    |            rt2x00queue_index_inc();
+ 0)   0.000 us    |          }
+ 0)   0.000 us    |        }
+ 0)   0.000 us    |      }
+ 0)   0.000 us    |    }
+ 0)   0.000 us    |    rt2x00queue_get_entry();
+ 0)               |    rt2x00lib_rxdone() {
+ 0)   0.000 us    |      rt2x00queue_index_inc();
+ 0)               |      rt2x00usb_clear_entry() {
+ 0)               |        rt2x00usb_kick_rx_entry() {
+ 0)               |          rt2x00lib_dmastart() {
+ 0)   0.000 us    |            rt2x00queue_index_inc();
+ 0)   0.000 us    |          }
+ 0)               |          rt2x00lib_dmadone() {
+ 0)   0.000 us    |            rt2x00queue_index_inc();
+ 0)   0.000 us    |          }
+ 0)   0.000 us    |        }
+ 0)   0.000 us    |      }
+ 0)   0.000 us    |    }
+ 0)   0.000 us    |    rt2x00queue_get_entry();
+ 0)               |    rt2x00lib_rxdone() {
+ 0)   0.000 us    |      rt2x00queue_index_inc();
+ 0)               |      rt2x00usb_clear_entry() {
+ 0)               |        rt2x00usb_kick_rx_entry() {
+ 0)               |          rt2x00lib_dmastart() {
+ 0)   0.000 us    |            rt2x00queue_index_inc();
+ 0)   0.000 us    |          }
+ 0)               |          rt2x00lib_dmadone() {
+ 0)   0.000 us    |            rt2x00queue_index_inc();
+ 0)   0.000 us    |          }
+ 0)   0.000 us    |        }
+ 0)   0.000 us    |      }
+ 0)   0.000 us    |    }
 
-The following patches include:
-- Bug fixes
-- run-time PM when interface down
-
-Dedy Lansky (1):
-  wil6210: print human readable names of WMI commands and events
-
-Hamad Kadmany (1):
-  wil6210: abort properly in cfg suspend
-
-Lazar Alexei (5):
-  wil6210: run-time PM when interface down
-  wil6210: get suspend reject reason and resume triggers from FW
-  wil6210: fix PCIe bus mastering in case of interface down
-  wil6210: remove suspend time statistics
-  wil6210: update statistics for suspend
-
-Lior David (5):
-  wil6210: refresh FW capabilities during interface up
-  wil6210: fix length check in __wmi_send
-  wil6210: add block size checks during FW load
-  wil6210: missing length check in wmi_set_ie
-  wil6210: missing length check in wil_cfg80211_mgmt_tx
-
- drivers/net/wireless/ath/wil6210/cfg80211.c  |  17 +-
- drivers/net/wireless/ath/wil6210/debugfs.c   | 150 ++++++++++---
- drivers/net/wireless/ath/wil6210/ethtool.c   |  15 ++
- drivers/net/wireless/ath/wil6210/fw_inc.c    |  79 ++++---
- drivers/net/wireless/ath/wil6210/interrupt.c |  22 +-
- drivers/net/wireless/ath/wil6210/main.c      |  26 ++-
- drivers/net/wireless/ath/wil6210/netdev.c    |  18 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c  |  97 ++++++---
- drivers/net/wireless/ath/wil6210/pm.c        | 104 ++++++---
- drivers/net/wireless/ath/wil6210/wil6210.h   |  40 ++--
- drivers/net/wireless/ath/wil6210/wmi.c       | 304 ++++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wmi.h       |  17 +-
- 12 files changed, 724 insertions(+), 165 deletions(-)
-
--- 
-1.9.1
+> 
+> Thanks
+> Stanislaw
