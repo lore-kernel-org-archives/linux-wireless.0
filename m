@@ -1,90 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:25068 "EHLO mga07.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43714 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753277AbdKNLum (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 06:50:42 -0500
-Message-ID: <1510660238.4011.92.camel@intel.com> (sfid-20171114_125046_148320_0FA3714D)
-Subject: Re: [PATCH] iwlwifi: fix firmware names for 9xxx and a0 series hw
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Greg KH <greg@kroah.com>
-Cc: Thomas Backlund <tmb@mageia.org>, linux-wireless@vger.kernel.org,
-        stable@vger.kernel.org
-Date: Tue, 14 Nov 2017 13:50:38 +0200
-In-Reply-To: <20171114114824.GA26814@kroah.com>
-References: <20171114103751.7761-1-tmb@mageia.org>
-         <1510656721.4011.87.camel@coelho.fi>
-         <2131d658-8a6e-2f3b-4e44-a3206385af46@mageia.org>
-         <1510659500.4011.90.camel@intel.com> <20171114114824.GA26814@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752620AbdKGIx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Nov 2017 03:53:29 -0500
+Date: Tue, 7 Nov 2017 09:53:28 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Richard Genoud <richard.genoud@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
+Message-ID: <20171107085327.GA11380@redhat.com> (sfid-20171107_095346_610378_6464B82D)
+References: <1509983829.10974.2.camel@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1509983829.10974.2.camel@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-11-14 at 12:48 +0100, Greg KH wrote:
-> On Tue, Nov 14, 2017 at 01:38:20PM +0200, Luciano Coelho wrote:
-> > On Tue, 2017-11-14 at 13:29 +0200, Thomas Backlund wrote:
-> > > Den 14-11-2017 kl. 12:52, skrev Luca Coelho:
-> > > > On Tue, 2017-11-14 at 12:37 +0200, Thomas Backlund wrote:
-> > > > > iwlwifi 9xxx and a0 series hw contains an extra dash in
-> > > > > firmware
-> > > > > file
-> > > > > name
-> > > > > as seeen in modinfo output for kernel 4.14:
-> > > > > 
-> > > > > firmware:       iwlwifi-9260-th-b0-jf-b0--34.ucode
-> > > > > firmware:       iwlwifi-9260-th-a0-jf-a0--34.ucode
-> > > > > firmware:       iwlwifi-9000-pu-a0-jf-b0--34.ucode
-> > > > > firmware:       iwlwifi-9000-pu-a0-jf-a0--34.ucode
-> > > > > firmware:       iwlwifi-QuQnj-a0-hr-a0--34.ucode
-> > > > > firmware:       iwlwifi-QuQnj-a0-jf-b0--34.ucode
-> > > > > firmware:       iwlwifi-QuQnj-f0-hr-a0--34.ucode
-> > > > > firmware:       iwlwifi-Qu-a0-jf-b0--34.ucode
-> > > > > firmware:       iwlwifi-Qu-a0-hr-a0--34.ucode
-> > > > > 
-> > > > > Fix that by dropping the extra adding of '"-"'.
-> > > > > 
-> > > > > Signed-off-by: Thomas Backlund <tmb-odJJhXpcy38dnm+yROfE0A@pu
-> > > > > blic
-> > > > > .gmane.org>
-> > > > > cc: Luca Coelho <luciano.coelho-ral2JQCrhuEAvxtiuMwx3w@public
-> > > > > .gma
-> > > > > ne.org>
-> > > > > cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> > > > > 
-> > > > > ---
-> > > > 
-> > > > Looks good, thanks!
-> > > > 
-> > > > Though I'm not sure this is worth sending to stable... Why do
-> > > > you
-> > > > think
-> > > > it's needed?
-> > > > 
-> > > 
-> > > As 4.14 is a -longterm kernel and afaik atleast 9xxx series hw is
-> > > out 
-> > > there I thought it would be good to have it fixed there...
-> > > 
-> > > but in the end it's your call for upstream stable or not
-> > > 
-> > > I'll add it to the Mageia distrib kernels anyway.
-> > 
-> > Okay, fair enough.  I'll add it to stable, it's a very simple and
-> > not
-> > risky fix anyway.  One can claim that userspace may get confused. 
-> > Actually I think some distros use those values to check which
-> > firmwares
-> > need to be installed, but I don't recall for sure now.
+Hi
+
+On Mon, Nov 06, 2017 at 04:57:09PM +0100, Richard Genoud wrote:
+> I get a soft lock-up while unbinding the USB driver on a TP-Link TL-WN727Nv3 (chipset 5370):
 > 
-> The install scripts use those values, so yes, it would be good to
-> have
-> them be correct.
+> # echo 1-2.2 > /sys/bus/usb/drivers/usb/unbind
+> watchdog: BUG: soft lockup - CPU#0 stuck for 23s! [kworker/u2:3:308]
+...
+> I can trigger this each time.
 
-Right, thanks for confirming my vague recollection. :)
+I can not reproduce this on my system (I'm using 4.14.0-rc6, but I don't
+think it's an issue). I think the problem may be caused by usb
+host controler driver, which can be different on your system.
 
-I've turned that into a "Cc: stable@vger.kernel.org # 4.13", since
-that's the first version that actually supports these HW versions.
+Does ftrace work on your platform ? If so could you use ftrace
+to provide rt2x00 functions trace when the  probllem happen ? 
 
---
-Cheers,
-Luca.
+3 short articles how to configure and use ftrace are here:
+https://lwn.net/Articles/365835/
+https://lwn.net/Articles/366796/
+https://lwn.net/Articles/370423/
+
+Thanks
+Stanislaw
