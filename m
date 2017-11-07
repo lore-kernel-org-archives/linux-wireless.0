@@ -1,89 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:45346 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751738AbdKAP3b (ORCPT
+Received: from mail-ua0-f175.google.com ([209.85.217.175]:54459 "EHLO
+        mail-ua0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933768AbdKGVPK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 11:29:31 -0400
-Received: by mail-oi0-f67.google.com with SMTP id f66so5041592oib.2
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Nov 2017 08:29:31 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 00/11] rtlwifi: rtl_pci: Update mini driver for RTL8822BE
-Date: Wed,  1 Nov 2017 10:29:15 -0500
-Message-Id: <20171101152926.24971-1-Larry.Finger@lwfinger.net> (sfid-20171101_162936_003846_38FFD505)
+        Tue, 7 Nov 2017 16:15:10 -0500
+Received: by mail-ua0-f175.google.com with SMTP id j14so438611uag.11
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Nov 2017 13:15:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <a4c65d325abd4d4eb45d8cb3cd172df3@SC-EXCH02.marvell.com>
+References: <1509442967-14149-1-git-send-email-gbhat@marvell.com>
+ <1509442967-14149-2-git-send-email-gbhat@marvell.com> <20171101212853.GA89416@google.com>
+ <cb98c452aa344fc0b501a776cfa8708a@SC-EXCH02.marvell.com> <CAD=FV=VuxFtDdcMndLNzVYDoid8N3jP46j0sOFXG1D4CzX0=Zw@mail.gmail.com>
+ <20171107022508.GA42502@google.com> <a4c65d325abd4d4eb45d8cb3cd172df3@SC-EXCH02.marvell.com>
+From: Doug Anderson <dianders@chromium.org>
+Date: Tue, 7 Nov 2017 13:15:08 -0800
+Message-ID: <CAD=FV=ViNE5gnDTexYKpMN_Bb1bqZHwnJQ0h64=Rc8x-_1=iFQ@mail.gmail.com> (sfid-20171107_221514_231415_189EC4E4)
+Subject: Re: [EXT] Re: [PATCH 1/3] mwifiex: cleanup rx_pkt_lock usage in 11n_rxreorder.c
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: Brian Norris <briannorris@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These changes are for the 4.15 stream.
+Hi,
 
-The modifications implement nearly all the changes needed to allow the
-RTL8822BE in staging to use rtl_pci in the wireless tree. The only
-exceptions are related to BT coexistence, which will be added once btcoex
-is updated.
+On Tue, Nov 7, 2017 at 8:25 AM, Ganapathi Bhat <gbhat@marvell.com> wrote:
+> Hi Doug/Brian,
+>
+> Thanks a lot for the comments and the discussion. First of all we will abort the change added by this patch as we don't need rx_pkt_lock acquired to protect the deleted item.  Next, we will prepare below changes to address the concerns discussed:
+> 1. Move rx_pkt_lock from mwifiex_private to rx_reorder_tbl
 
-Once these patches reach mainline, I will submit a patch to staging that
-changes r8822be to use the standard rtl_pci, and deletes the duplicated
-code.
+...or, possibly, remove rx_pkt_lock completely.  See my other response...
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
-
-Larry Finger (3):
-  rtlwifi: rtl_pci: Fix formatting errors in pci.h
-  rtlwifi: rtl_pci: Fix formatting problems in pci.c
-  rtlwifi: rtl_pci: Simplify some code be eliminating extraneous
-    variables
-
-Ping-Ke Shih (5):
-  rtlwifi: rtl_pci: Add support for 8822be TX/RX BD
-  rtlwifi: rtl_pci: Add fill_tx_special_desc to issue H2C data, and
-    process TXOK in interrupt.
-  rtlwifi: rtl_pci: Add ID for 8822BE
-  rtlwifi: rtl_pci: Extend recognized interrupt parameters from two to
-    four ISR
-  rtlwifi: rtl_pci: 8822BE puts broadcast and multicast packet to HIQ
-
-Steven Ting (1):
-  rtlwifi: rtl_pci: Refactor TX/RX flow
-
-Tsang-Shian Lin (2):
-  rtlwifi: Add beacon check mechanism to check if AP settings changed.
-  rtlwifi: rtl_pci: Fix the bug when inactiveps is enabled.
-
- drivers/net/wireless/realtek/rtlwifi/base.c        | 178 ++++++++++++
- drivers/net/wireless/realtek/rtlwifi/base.h        |   3 +-
- drivers/net/wireless/realtek/rtlwifi/core.c        |  48 ++++
- drivers/net/wireless/realtek/rtlwifi/pci.c         | 305 +++++++++++----------
- drivers/net/wireless/realtek/rtlwifi/pci.h         |  36 +--
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |  57 +---
- .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    |   2 +-
- .../net/wireless/realtek/rtlwifi/rtl8192se/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.h    |   3 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  20 +-
- 23 files changed, 460 insertions(+), 234 deletions(-)
-
--- 
-2.12.3
+-Doug
