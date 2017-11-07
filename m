@@ -1,60 +1,267 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54226 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750824AbdKNGr6 (ORCPT
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:45067 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752469AbdKGX7s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 01:47:58 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-Cc: Wright Feng <wright.feng@cypress.com>,
-        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH v6] brcmfmac: add CLM download support
-References: <1507188678-24985-1-git-send-email-wright.feng@cypress.com>
-        <87vaiilkw8.fsf@purkki.adurom.net>
-        <20171110090013.GA131667@aremote01.aus.cypress.com>
-Date: Tue, 14 Nov 2017 08:47:52 +0200
-In-Reply-To: <20171110090013.GA131667@aremote01.aus.cypress.com> (Chung-Hsien
-        Hsu's message of "Fri, 10 Nov 2017 03:00:14 -0600")
-Message-ID: <8760adjqzr.fsf@kamboji.qca.qualcomm.com> (sfid-20171114_074806_440137_707DE62A)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 7 Nov 2017 18:59:48 -0500
+Received: by mail-pl0-f68.google.com with SMTP id 30so98064pla.2
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Nov 2017 15:59:48 -0800 (PST)
+From: Ryan Mounce <ryan@mounce.com.au>
+To: seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Ryan Mounce <ryan@mounce.com.au>
+Subject: [RFC] wireless-regdb: apply 5.8GHz SRD rules to EU/EEA countries (ETSI EN 300 440)
+Date: Wed,  8 Nov 2017 10:29:22 +1030
+Message-Id: <20171107235922.43180-1-ryan@mounce.com.au> (sfid-20171108_010026_712055_9A99A4D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chung-Hsien Hsu <stanley.hsu@cypress.com> writes:
+EN 300 440 is a harmonised standard applicable in all EU and EEA countries.
 
-> On Fri, Nov 10, 2017 at 08:15:19AM +0200, Kalle Valo wrote:
->> Wright Feng <wright.feng@cypress.com> writes:
->> 
->> > From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
->> >
->> > The firmware for brcmfmac devices includes information regarding
->> > regulatory constraints. For certain devices this information is kept
->> > separately in a binary form that needs to be downloaded to the device.
->> > This patch adds support to download this so-called CLM blob file. It
->> > uses the same naming scheme as the other firmware files with extension
->> > of .clm_blob.
->> >
->> > The CLM blob file is optional. If the file does not exist, the download
->> > process will be bypassed. It will not affect the driver loading.
->> >
->> > Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
->> 
->> [...]
->> 
->> > +	err = brcmf_fil_iovar_data_get(ifp, "clmver", buf, sizeof(buf));
->> > +	if (err) {
->> > +		if (err == -23) {
->> 
->> No magic numbers, please. Is this supposed to be -ENFILE?
->
-> It indicates "Unsupported". I will remove it since it will not affect
-> the CLM downlaod and driver loading.
+https://ec.europa.eu/growth/single-market/european-standards/harmonised-standards/red_en
 
-BTW you would not have to remove it, adding a define would have been
-just fine. (I was travelling, hence the late reply.)
+Signed-off-by: Ryan Mounce <ryan@mounce.com.au>
+---
+ db.txt | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
+diff --git a/db.txt b/db.txt
+index 10c84ee..ee24749 100644
+--- a/db.txt
++++ b/db.txt
+@@ -82,6 +82,8 @@ country AT: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -134,6 +136,8 @@ country BE: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -319,6 +323,8 @@ country CY: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -331,6 +337,8 @@ country CZ: DFS-ETSI
+ 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
+ 	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
+ 	(5470 - 5725 @ 160), (500 mW), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -376,6 +384,8 @@ country DK: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -411,6 +421,8 @@ country EE: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -447,6 +459,8 @@ country FI: DFS-ETSI
+ 	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
+ 	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
+ 	(5470 - 5725 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -462,6 +476,8 @@ country FR: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -470,6 +486,8 @@ country GB: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -517,6 +535,8 @@ country GR: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -556,6 +576,8 @@ country HR: DFS-ETSI
+ 	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW
+ 	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW
+ 	(5470 - 5725 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -571,6 +593,8 @@ country HU: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -584,6 +608,8 @@ country IE: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -606,6 +632,8 @@ country IS: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -614,6 +642,8 @@ country IT: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -721,6 +751,8 @@ country LI: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 
+ country LK: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+@@ -742,6 +774,8 @@ country LT: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -750,6 +784,8 @@ country LU: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -758,6 +794,8 @@ country LV: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -849,6 +887,8 @@ country MT: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -990,6 +1030,8 @@ country PL: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -1011,6 +1053,8 @@ country PT: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -1043,6 +1087,8 @@ country RO: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -1083,6 +1129,8 @@ country SE: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -1103,6 +1151,8 @@ country SI: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+@@ -1111,6 +1161,8 @@ country SK: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
++	# SRD harmonised in EU/EEA (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (14)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
 -- 
-Kalle Valo
+2.13.6 (Apple Git-96)
