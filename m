@@ -1,62 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:46704 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933418AbdKBPXp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Nov 2017 11:23:45 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Govind Singh <govinds@qti.qualcomm.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        Ben Greear <greearb@candelatech.com>,
-        "Brian Norris" <briannorris@chromium.org>,
-        Colin Ian King <colin.king@canonical.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: move pci suspend/resume functions
-Date: Thu, 2 Nov 2017 15:23:42 +0000
-Message-ID: <87mv44ln5v.fsf@qca.qualcomm.com> (sfid-20171102_162357_643339_372D1884)
-References: <20171102110903.2886660-1-arnd@arndb.de>
-In-Reply-To: <20171102110903.2886660-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Thu, 2 Nov 2017 12:08:53 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mx1.redhat.com ([209.132.183.28]:50626 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751352AbdKHKlj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Nov 2017 05:41:39 -0500
+Date: Wed, 8 Nov 2017 11:41:36 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Richard Genoud <richard.genoud@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
+Message-ID: <20171108104136.GB2641@redhat.com> (sfid-20171108_114206_451956_03DC97A3)
+References: <1509983829.10974.2.camel@gmail.com>
+ <20171107085327.GA11380@redhat.com>
+ <CACQ1gAi6XtjCHPji3BP71jDG7srg+BshesviasXiSqnw2zs9_Q@mail.gmail.com>
+ <20171107101320.GA12140@redhat.com>
+ <1510053227.24015.3.camel@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1510053227.24015.3.camel@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+On Tue, Nov 07, 2017 at 12:13:47PM +0100, Richard Genoud wrote:
+> Le mardi 07 novembre 2017 à 11:13 +0100, Stanislaw Gruszka a écrit :
+> > On Tue, Nov 07, 2017 at 11:06:39AM +0100, Richard Genoud wrote:
+> > > > 3 short articles how to configure and use ftrace are here:
+> > > > https://lwn.net/Articles/365835/
+> > > > https://lwn.net/Articles/366796/
+> > > > https://lwn.net/Articles/370423/
+> > > > 
+> > > 
+> > > I tried with ftrace, but I don't think there's a way to dump the
+> > > trace
+> > > when there's a soft lock-up
+> > > (I can't do anything after the unbind, even the heartbeat led
+> > > stopped blinking).
+> > > I saw the /proc/sys/kernel/ftrace_dump_on_oops file, but there's no
+> > > /proc/sys/kernel/ftrace_dump_on_soft_lock-up file :)
+> > 
+> > You should configure function trace with rt2x* functions. After that
+> > start tracing, unbind the device, then stop tracing and provide trace
+> > output.
+> Here is another trace, with rt2* as function filter.
+> (sorry for the noise)
+> 
+> Dumping ftrace buffer:
+> ---------------------------------
+> CPU:0 [LOST 3606923 EVENTS]
+>  0)   0.000 us    |      } /* rt2x00usb_clear_entry */
+>  0)   0.000 us    |    } /* rt2x00lib_rxdone */
+>  0)   0.000 us    |    rt2x00queue_get_entry();
+>  0)               |    rt2x00lib_rxdone() {
+>  0)   0.000 us    |      rt2x00queue_index_inc();
+>  0)               |      rt2x00usb_clear_entry() {
+>  0)               |        rt2x00usb_kick_rx_entry() {
 
-> The combination of two patches has led to a build failure:
->
-> drivers/net/wireless/ath/ath10k/pci.c: In function 'ath10k_pci_pm_suspend=
-':
-> drivers/net/wireless/ath/ath10k/pci.c:3416:8: error: implicit declaration=
- of function 'ath10k_pci_suspend'; did you mean 'ath10k_pci_pm_suspend'? [-=
-Werror=3Dimplicit-function-declaration]
-> drivers/net/wireless/ath/ath10k/pci.c: In function 'ath10k_pci_pm_resume'=
-:
-> drivers/net/wireless/ath/ath10k/pci.c:3428:8: error: implicit declaration=
- of function 'ath10k_pci_resume'; did you mean 'ath10k_pci_pm_resume'? [-We=
-rror=3Dimplicit-function-declaration]
->
-> This moves the functions outside of the now incorrect #ifdef.
->
-> Fixes: 96378bd2c6cd ("ath10k: fix core PCI suspend when WoWLAN is support=
-ed but disabled")
-> Fixes: 6af1de2e4ec4 ("ath10k: mark PM functions as __maybe_unused")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+We do that only if: 
 
-Brian has already fixed this, please check that:
+        if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
+            test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+                rt2x00dev->ops->lib->clear_entry(entry);
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=3Da=
-th-next&id=3D20665a9076d48e9abd9a2db13d307f58f7ef6647
+so looks like DEVICE_STATE_PRESENT is not cleared. That mean
+usb driver do not call disconnect callback on unbind. That seems
+to be usb driver bug. Anyway please provide requested traces,
+so I will see what happen.
 
-But apparently I forgot to merge ath-next to wireless-drivers-next, will
-do that soon.
-
---=20
-Kalle Valo=
+Stanislaw
