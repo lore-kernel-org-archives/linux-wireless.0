@@ -1,223 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0064.outbound.protection.outlook.com ([104.47.33.64]:50784
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1161947AbdKRSVG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Nov 2017 13:21:06 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2] iw: add command to register and dump mgmt frames
-Date: Sat, 18 Nov 2017 21:20:52 +0300
-Message-Id: <20171118182052.15515-1-sergey.matyukevich.os@quantenna.com> (sfid-20171118_194428_477345_C7425D2C)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:36681 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752663AbdKHNgp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Nov 2017 08:36:45 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 0/7] brcmfmac: firmware halt and scan cleanup
+Date: Wed,  8 Nov 2017 14:36:30 +0100
+Message-Id: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171108_143654_439299_576032C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add debug command to receive and print selected management frames.
-Frames are selected by their type and pattern containing the first
-several bytes of the frame that should match.
+This series is a resubmission. No changes were being made compared
+to the previous series.
 
-Note that Linux wireless core does not support multiple listeners
-for management frames. So this debug command can be used together
-with hostapd or other wireless software only in the case if it
-subscribes for different set of management frames.
+  * handling firmware halt indication.
+  * cleanup scan related code.
 
-Format:
-$ iw dev <devname> frame <type> <pattern> [frame <type> <pattern>]* [count <frames>]
+The series applies to the master branch of the wireless-drivers-next
+repository and is intended for v4.15 kernel.
 
-Example:
-$ iw dev wlan0 mgmt dump frame 40 00 frame 40 01:02 count 10
+Arend Van Spriel (6):
+  brcmfmac: handle FWHALT mailbox indication
+  brcmfmac: cleanup brcmf_cfg80211_escan() function
+  brcmfmac: use msecs_to_jiffies() instead of calculation using HZ
+  brcmfmac: get rid of brcmf_cfg80211_escan() function
+  brcmfmac: get rid of struct brcmf_cfg80211_info::active_scan field
+  brcmfmac: move configuration of probe request IEs
 
-Frame type is supplied as hex w/o leading 0x. Frame pattern is supplied
-as hex pattern of the form aa:bb:cc w/o leading 0x as well.
-Count is a number of frames to receive.
+Franky Lin (1):
+  brcmfmac: disable packet filtering in promiscuous mode
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 162 ++++-----------------
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   2 -
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  38 +++++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   1 +
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |  11 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  14 +-
+ 6 files changed, 77 insertions(+), 151 deletions(-)
 
--------
-
-Changes v1->v2:
-- fix rssi type
-- rename command to avoid confusion: dump rather than capture
-- add note to commit message: multiple mgmt frame listeners are not supported
----
- Makefile |   2 +-
- mgmt.c   | 150 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 151 insertions(+), 1 deletion(-)
- create mode 100644 mgmt.c
-
-diff --git a/Makefile b/Makefile
-index e61825e..38d782d 100644
---- a/Makefile
-+++ b/Makefile
-@@ -17,7 +17,7 @@ OBJS = iw.o genl.o event.o info.o phy.o \
- 	interface.o ibss.o station.o survey.o util.o ocb.o \
- 	mesh.o mpath.o mpp.o scan.o reg.o version.o \
- 	reason.o status.o connect.o link.o offch.o ps.o cqm.o \
--	bitrate.o wowlan.o coalesce.o roc.o p2p.o vendor.o
-+	bitrate.o wowlan.o coalesce.o roc.o p2p.o vendor.o mgmt.o
- OBJS += sections.o
- 
- OBJS-$(HWSIM) += hwsim.o
-diff --git a/mgmt.c b/mgmt.c
-new file mode 100644
-index 0000000..60f544b
---- /dev/null
-+++ b/mgmt.c
-@@ -0,0 +1,150 @@
-+#include <string.h>
-+#include <errno.h>
-+
-+#include <netlink/genl/genl.h>
-+#include <netlink/genl/family.h>
-+#include <netlink/genl/ctrl.h>
-+#include <netlink/msg.h>
-+#include <netlink/attr.h>
-+
-+#include "nl80211.h"
-+#include "iw.h"
-+
-+SECTION(mgmt);
-+
-+static int seq_handler(struct nl_msg *msg, void *arg)
-+{
-+	return NL_OK;
-+}
-+
-+static int dump_mgmt_frame(struct nl_msg *msg, void *arg)
-+{
-+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-+	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
-+
-+	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-+		  genlmsg_attrlen(gnlh, 0), NULL);
-+
-+	if (tb_msg[NL80211_ATTR_WIPHY_FREQ]) {
-+		uint32_t freq = nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_FREQ]);
-+		printf("freq %u MHz\n", freq);
-+	}
-+
-+	if (tb_msg[NL80211_ATTR_RX_SIGNAL_DBM]) {
-+		/* nl80211_send_mgmt sends signed dBm value as u32 */
-+		int dbm = nla_get_u32(tb_msg[NL80211_ATTR_RX_SIGNAL_DBM]);
-+		printf("rssi %d dBm\n", dbm);
-+	}
-+
-+	if (tb_msg[NL80211_ATTR_FRAME]) {
-+		int len = nla_len(tb_msg[NL80211_ATTR_FRAME]);
-+		uint8_t *data = nla_data(tb_msg[NL80211_ATTR_FRAME]);
-+		iw_hexdump("mgmt", data, len);
-+	}
-+
-+	return 0;
-+}
-+
-+static int register_mgmt_frame(struct nl80211_state *state,
-+			       struct nl_msg *msg, int argc, char **argv,
-+			       enum id_input id)
-+{
-+	unsigned int type;
-+	unsigned char *match;
-+	size_t match_len;
-+	int ret;
-+
-+	ret = sscanf(argv[0], "%x", &type);
-+	if (ret != 1) {
-+		printf("invalid frame type: %s\n", argv[0]);
-+		return 2;
-+	}
-+
-+	match = parse_hex(argv[1], &match_len);
-+	if (!match) {
-+		printf("invalid frame pattern: %s\n", argv[1]);
-+		return 2;
-+	}
-+
-+	NLA_PUT_U16(msg, NL80211_ATTR_FRAME_TYPE, type);
-+	NLA_PUT(msg, NL80211_ATTR_FRAME_MATCH, match_len, match);
-+
-+	return 0;
-+
-+nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
-+static int handle_mgmt_reg(struct nl80211_state *state,
-+				    struct nl_msg *msg, int argc,
-+				    char **argv, enum id_input id)
-+{
-+	return register_mgmt_frame(state, msg, argc, argv, id);
-+}
-+
-+HIDDEN(mgmt, reg, "", NL80211_CMD_REGISTER_FRAME, 0, CIB_NETDEV, handle_mgmt_reg);
-+
-+static int handle_mgmt_dump(struct nl80211_state *state,
-+			       struct nl_msg *msg, int argc,
-+			       char **argv, enum id_input id)
-+{
-+	struct nl_cb *mgmt_cb;
-+	char *ndev = argv[0];
-+	int mgmt_argc = 5;
-+	char **mgmt_argv;
-+	unsigned int count = 0;
-+	int err = 0;
-+	int i;
-+
-+	mgmt_argv = calloc(mgmt_argc, sizeof(char*));
-+	if (!mgmt_argv)
-+		return -ENOMEM;
-+
-+	mgmt_argv[0] = ndev;
-+	mgmt_argv[1] = "mgmt";
-+	mgmt_argv[2] = "reg";
-+
-+	for (i = 3; i < argc; i += 3) {
-+		if (strcmp(argv[i], "count") == 0) {
-+			count = 1 + atoi(argv[i + 1]);
-+			break;
-+		}
-+
-+		if (strcmp(argv[i], "frame") != 0) {
-+			err = 1;
-+			goto out;
-+		}
-+
-+		mgmt_argv[3] = argv[i + 1];
-+		mgmt_argv[4] = argv[i + 2];
-+
-+		err = handle_cmd(state, II_NETDEV, mgmt_argc, mgmt_argv);
-+		if (err)
-+			goto out;
-+	}
-+
-+	mgmt_cb = nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_DEFAULT);
-+	if (!mgmt_cb) {
-+		err = 1;
-+		goto out;
-+	}
-+
-+	/* need to turn off sequence number checking */
-+	nl_cb_set(mgmt_cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, seq_handler, NULL);
-+	nl_cb_set(mgmt_cb, NL_CB_VALID, NL_CB_CUSTOM, dump_mgmt_frame, NULL);
-+
-+	while (--count)
-+		nl_recvmsgs(state->nl_sock, mgmt_cb);
-+
-+	nl_cb_put(mgmt_cb);
-+out:
-+	free(mgmt_argv);
-+	return err;
-+}
-+
-+COMMAND(mgmt, dump, "frame <type as hex ab> <pattern as hex ab:cd:..> [frame <type> <pattern>]* [count <frames>]",
-+	0, 0, CIB_NETDEV, handle_mgmt_dump,
-+	"Register for receiving certain mgmt frames and print them.\n"
-+	"Frames are selected by their type and pattern containing\n"
-+	"the first several bytes of the frame that should match.\n\n"
-+	"Example: iw dev wlan0 mgmt dump frame 40 00 frame 40 01:02 count 10\n");
 -- 
-2.11.0
+1.9.1
