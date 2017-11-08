@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from imap1.codethink.co.uk ([176.9.8.82]:55947 "EHLO
-        imap1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753589AbdKJSs4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42106 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751954AbdKHMoC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2017 13:48:56 -0500
-Date: Fri, 10 Nov 2017 18:48:50 +0000
-From: Ben Hutchings <ben.hutchings@codethink.co.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211_hwsim: Fix memory leak in hwsim_new_radio_nl()
-Message-ID: <20171110184850.znghmn7ggw5rwxj6@xylophone.i.decadent.org.uk> (sfid-20171110_194859_620731_ED50E8B7)
+        Wed, 8 Nov 2017 07:44:02 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: rtlwifi: remove redundant pointer tid_data
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171103140922.8926-1-colin.king@canonical.com>
+References: <20171103140922.8926-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20171108124402.6565C60261@smtp.codeaurora.org> (sfid-20171108_134422_441907_A9D19734)
+Date: Wed,  8 Nov 2017 12:44:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hwsim_new_radio_nl() now copies the name attribute in order to add a
-null-terminator.  mac80211_hwsim_new_radio() (indirectly) copies it
-again into the net_device structure, so the first copy is not used or
-freed later.  Free the first copy before returning.
+Colin Ian King <colin.king@canonical.com> wrote:
 
-Fixes: ff4dd73dd2b4 ("mac80211_hwsim: check HWSIM_ATTR_RADIO_NAME length")
-Signed-off-by: Ben Hutchings <ben.hutchings@codethink.co.uk>
----
- drivers/net/wireless/mac80211_hwsim.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> tid_data is assigned but never read, hence it is redundant
+> and can be removed. Cleans up clang warning:
+> 
+> drivers/net/wireless/realtek/rtlwifi/base.c:1581:2: warning: Value
+> stored to 'tid_data' is never read
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 07a49f58070a..a84b0bffc27d 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3108,6 +3108,7 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- {
- 	struct hwsim_new_radio_params param = { 0 };
- 	const char *hwname = NULL;
-+	int ret;
- 
- 	param.reg_strict = info->attrs[HWSIM_ATTR_REG_STRICT_REG];
- 	param.p2p_device = info->attrs[HWSIM_ATTR_SUPPORT_P2P_DEVICE];
-@@ -3147,7 +3148,9 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 		param.regd = hwsim_world_regdom_custom[idx];
- 	}
- 
--	return mac80211_hwsim_new_radio(info, &param);
-+	ret = mac80211_hwsim_new_radio(info, &param);
-+	kfree(hwname);
-+	return ret;
- }
- 
- static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
+Patch applied to wireless-drivers-next.git, thanks.
+
+82e730e521ce rtlwifi: remove redundant pointer tid_data
+
 -- 
-2.15.0.rc0
+https://patchwork.kernel.org/patch/10040293/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
