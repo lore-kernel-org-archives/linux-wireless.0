@@ -1,27 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:45690 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753074AbdKWSHO (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:36682 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752467AbdKHNgp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Nov 2017 13:07:14 -0500
-Date: Fri, 24 Nov 2017 03:07:09 +0900 (KST)
-Message-Id: <20171124.030709.1905183304190055401.davem@davemloft.net> (sfid-20171123_190734_584917_F2D80BAE)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers 2017-11-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87mv3ebag5.fsf@kamboji.qca.qualcomm.com>
-References: <87mv3ebag5.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Wed, 8 Nov 2017 08:36:45 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 6/7] brcmfmac: get rid of struct brcmf_cfg80211_info::active_scan field
+Date: Wed,  8 Nov 2017 14:36:36 +0100
+Message-Id: <1510148197-17851-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171108_143651_176911_96E99E86)
+In-Reply-To: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Wed, 22 Nov 2017 17:27:22 +0200
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
 
-> here's the first pull request to net tree for 4.15. Please let me know
-> if there are any problems.
+The field struct brcmf_cfg80211_info::active_scan is set to true upon
+initializing the driver instance, but it is never changed so simply
+get rid of it.
 
-Pulled, thanks Kalle!
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 10 +---------
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h |  2 --
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      |  5 +----
+ 3 files changed, 2 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 31a80a6..9b334e2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1043,7 +1043,6 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ {
+ 	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
+ 	s32 err;
+-	u32 passive_scan;
+ 	struct brcmf_scan_results *results;
+ 	struct escan_info *escan = &cfg->escan_info;
+ 
+@@ -1051,13 +1050,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 	escan->ifp = ifp;
+ 	escan->wiphy = cfg->wiphy;
+ 	escan->escan_state = WL_ESCAN_STATE_SCANNING;
+-	passive_scan = cfg->active_scan ? 0 : 1;
+-	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
+-				    passive_scan);
+-	if (err) {
+-		brcmf_err("error (%d)\n", err);
+-		return err;
+-	}
++
+ 	brcmf_scan_config_mpc(ifp, 0);
+ 	results = (struct brcmf_scan_results *)cfg->escan_info.escan_buf;
+ 	results->version = 0;
+@@ -5767,7 +5760,6 @@ static s32 wl_init_priv(struct brcmf_cfg80211_info *cfg)
+ 
+ 	cfg->scan_request = NULL;
+ 	cfg->pwr_save = true;
+-	cfg->active_scan = true;	/* we do active scan per default */
+ 	cfg->dongle_up = false;		/* dongle is not up yet */
+ 	err = brcmf_init_priv_mem(cfg);
+ 	if (err)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 7b2835e..b5b5f0f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -283,7 +283,6 @@ struct brcmf_cfg80211_wowl {
+  * @scan_status: scan activity on the dongle.
+  * @pub: common driver information.
+  * @channel: current channel.
+- * @active_scan: current scan mode.
+  * @int_escan_map: bucket map for which internal e-scan is done.
+  * @ibss_starter: indicates this sta is ibss starter.
+  * @pwr_save: indicate whether dongle to support power save mode.
+@@ -316,7 +315,6 @@ struct brcmf_cfg80211_info {
+ 	unsigned long scan_status;
+ 	struct brcmf_pub *pub;
+ 	u32 channel;
+-	bool active_scan;
+ 	u32 int_escan_map;
+ 	bool ibss_starter;
+ 	bool pwr_save;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 1c450c0..c6cccb8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -692,10 +692,7 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+ 
+ 	/* determine the scan engine parameters */
+ 	sparams->bss_type = DOT11_BSSTYPE_ANY;
+-	if (p2p->cfg->active_scan)
+-		sparams->scan_type = 0;
+-	else
+-		sparams->scan_type = 1;
++	sparams->scan_type = BRCMF_SCANTYPE_ACTIVE;
+ 
+ 	eth_broadcast_addr(sparams->bssid);
+ 	sparams->home_time = cpu_to_le32(P2PAPI_SCAN_HOME_TIME_MS);
+-- 
+1.9.1
