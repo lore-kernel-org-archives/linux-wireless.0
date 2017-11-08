@@ -1,114 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.uni-rostock.de ([139.30.22.72]:57400 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751684AbdKUMXX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57054 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751141AbdKHMTg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 07:23:23 -0500
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Subject: [PATCH v2 1/5] mac80211_hwsim: wait for deferred radio deletion on mod unload
-Date: Tue, 21 Nov 2017 13:17:40 +0100
-In-Reply-To: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
-References: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
+        Wed, 8 Nov 2017 07:19:36 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
+Subject: Re: [PATCH 07/11] rtlwifi: rtl_pci: Extend recognized interrupt parameters from two to four ISR
+References: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
+        <20171101152926.24971-8-Larry.Finger@lwfinger.net>
+Date: Wed, 08 Nov 2017 14:19:31 +0200
+In-Reply-To: <20171101152926.24971-8-Larry.Finger@lwfinger.net> (Larry
+        Finger's message of "Wed, 1 Nov 2017 10:29:22 -0500")
+Message-ID: <87r2t9otd8.fsf@purkki.adurom.net> (sfid-20171108_131941_395568_45179465)
 MIME-Version: 1.0
-Content-Type: text/plain
-Message-ID: <3a182eff-3f00-49bb-94ac-ec371ff1c26e@MAIL2.uni-rostock.de> (sfid-20171121_132334_719727_EFD58654)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When closing multiple wmediumd instances with many radios and try to
-unload the mac80211_hwsim module it may happen that the work items live
-longer than the module. This patch does not mitigate completely the
-problem, since we need to delete hwsim_data struct from delete queue
-(since afterwards the reference is not valid anymore) at the beginning of
-the work function and it may be interrupted in between. But this problem
-only occurs for the last (or only) item of the delete list. We could either
-create a dedicated work queue or call flush_scheduled_work, but both
-introduce unnecessary overhead.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+> From: Ping-Ke Shih <pkshih@realtek.com>
+>
+> 8822be checks H2CQ by int_d, so we extend to four ISR.
+> Also, irq_mask is extended to four.
+>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Cc: Birming Chiu <birming@realtek.com>
+> Cc: Shaofu <shaofu@realtek.com>
+> Cc: Steven Ting <steventing@realtek.com>
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ec2f4c31425a..d35dc6b2a733 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -489,6 +489,8 @@ static const struct ieee80211_iface_combination hwsim_if_comb_p2p_dev[] = {
- 
- static spinlock_t hwsim_radio_lock;
- static LIST_HEAD(hwsim_radios);
-+static spinlock_t hwsim_delete_lock;
-+static LIST_HEAD(delete_radios);
- static int hwsim_radio_idx;
- 
- static struct platform_driver mac80211_hwsim_driver = {
-@@ -3326,7 +3328,11 @@ static void destroy_radio(struct work_struct *work)
- 	struct mac80211_hwsim_data *data =
- 		container_of(work, struct mac80211_hwsim_data, destroy_work);
- 
-+	spin_lock_bh(&hwsim_delete_lock);
-+	list_del(&data->list);
-+	spin_unlock_bh(&hwsim_delete_lock);
- 	mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy), NULL);
-+
- }
- 
- static void remove_user_radios(u32 portid)
-@@ -3337,6 +3343,11 @@ static void remove_user_radios(u32 portid)
- 	list_for_each_entry_safe(entry, tmp, &hwsim_radios, list) {
- 		if (entry->destroy_on_close && entry->portid == portid) {
- 			list_del(&entry->list);
-+
-+			spin_lock_bh(&hwsim_delete_lock);
-+			list_add(&entry->list, &delete_radios);
-+			spin_unlock_bh(&hwsim_delete_lock);
-+
- 			INIT_WORK(&entry->destroy_work, destroy_radio);
- 			schedule_work(&entry->destroy_work);
- 		}
-@@ -3412,6 +3423,11 @@ static void __net_exit hwsim_exit_net(struct net *net)
- 			continue;
- 
- 		list_del(&data->list);
-+
-+		spin_lock_bh(&hwsim_delete_lock);
-+		list_add(&data->list, &delete_radios);
-+		spin_unlock_bh(&hwsim_delete_lock);
-+
- 		INIT_WORK(&data->destroy_work, destroy_radio);
- 		schedule_work(&data->destroy_work);
- 	}
-@@ -3444,6 +3460,7 @@ static int __init init_mac80211_hwsim(void)
- 		return -EINVAL;
- 
- 	spin_lock_init(&hwsim_radio_lock);
-+	spin_lock_init(&hwsim_delete_lock);
- 
- 	err = register_pernet_device(&hwsim_net_ops);
- 	if (err)
-@@ -3583,6 +3600,19 @@ static void __exit exit_mac80211_hwsim(void)
- 	hwsim_exit_netlink();
- 
- 	mac80211_hwsim_free();
-+
-+	/*wait for radios with deferred delete*/
-+	spin_lock_bh(&hwsim_delete_lock);
-+	while (!list_empty(&delete_radios)) {
-+		pr_debug("mac80211_hwsim: wait for deferred radio remove\n");
-+		spin_unlock_bh(&hwsim_delete_lock);
-+		flush_work(&list_entry(&delete_radios,
-+				       struct mac80211_hwsim_data, list)
-+			   ->destroy_work);
-+		spin_lock_bh(&hwsim_delete_lock);
-+	}
-+	spin_unlock_bh(&hwsim_delete_lock);
-+
- 	unregister_netdev(hwsim_mon);
- 	platform_driver_unregister(&mac80211_hwsim_driver);
- 	unregister_pernet_device(&hwsim_net_ops);
+[...]
+
+> @@ -936,7 +937,7 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
+>  	rtlpriv->cfg->ops->disable_interrupt(hw);
+>  
+>  	/*read ISR: 4/8bytes */
+> -	rtlpriv->cfg->ops->interrupt_recognized(hw, &inta, &intb);
+> +	rtlpriv->cfg->ops->interrupt_recognized(hw, &inta, &intb, &intc, &intd);
+>  
+>  	/*Shared IRQ or HW disappeared */
+>  	if (!inta || inta == 0xffff)
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.h b/drivers/net/wireless/realtek/rtlwifi/pci.h
+> index ce33fe7bc7c4..e7d070e8da2d 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/pci.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/pci.h
+> @@ -211,7 +211,7 @@ struct rtl_pci {
+>  
+>  	/*irq */
+>  	u8 irq_alloc;
+> -	u32 irq_mask[2];
+> +	u32 irq_mask[4];	/* 0-1: normal, 2: unused, 3: h2c */
+>  	u32 sys_irq_mask;
+>  
+>  	/*Bcn control register setting */
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+> index 2c671364c521..e30a18e64ff5 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+> @@ -1472,7 +1472,8 @@ void rtl88ee_card_disable(struct ieee80211_hw *hw)
+>  }
+>  
+>  void rtl88ee_interrupt_recognized(struct ieee80211_hw *hw,
+> -				  u32 *p_inta, u32 *p_intb)
+> +				  u32 *p_inta, u32 *p_intb,
+> +				  u32 *p_intc, u32 *p_intd)
+>  {
+
+In the future you might want to convert this to a struct which is a lot
+easier to handle. But no need to resend because of this.
+
 -- 
-2.15.0
+Kalle Valo
