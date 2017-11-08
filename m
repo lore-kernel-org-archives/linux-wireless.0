@@ -1,78 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:14039 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751403AbdKMIs1 (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:36699 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752667AbdKHNgr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 03:48:27 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Daniel Drake <drake@endlessm.com>
-CC: Russell Hu <rhu@qti.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Robert Chang <rwchang@qti.qualcomm.com>,
-        Aeolus Yang <aeolus@qti.qualcomm.com>,
-        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        "linux@endlessm.com" <linux@endlessm.com>,
-        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
-        "andy@infradead.org" <andy@infradead.org>
-Subject: Re: [v2] ath9k: add MSI support
-Date: Mon, 13 Nov 2017 08:48:23 +0000
-Message-ID: <87y3na7eei.fsf@qca.qualcomm.com> (sfid-20171113_094831_317623_DAC9DAEA)
-References: <20171110025415.7854-1-drake@endlessm.com>
-In-Reply-To: <20171110025415.7854-1-drake@endlessm.com> (Daniel Drake's
-        message of "Fri, 10 Nov 2017 10:54:15 +0800")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Wed, 8 Nov 2017 08:36:47 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 1/7] brcmfmac: handle FWHALT mailbox indication
+Date: Wed,  8 Nov 2017 14:36:31 +0100
+Message-Id: <1510148197-17851-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171108_143659_107335_F24C05EE)
+In-Reply-To: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Drake <drake@endlessm.com> writes:
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
 
->> On new Intel platforms like ApolloLake, legacy interrupt mechanism
->> (INTx) is not supported
->
-> Could you please share the background on what you are claiming here.
-> I have multiple ApolloLake laptops here with many legacy interrupts
-> being used in /proc/interrupts.
->
-> I do see this ath9k problem on multiple Acer ApolloLake laptops, however
-> I also have an Asus E402NA ApolloLake laptop on hand where the exact same
-> ath9k miniPCIe card is working fine with legacy interrupts.
->
->> With module paremeter "use_msi=3D1", ath9k driver would try to
->> use MSI instead of INTx.
->
-> In the previous patch review it was suggested that MSI should become
-> the default - not a quirk or parameter.
-> https://lkml.org/lkml/2017/9/26/64
+The firmware uses a mailbox to communicate to the host what is going
+on. In the driver we validate the bit received. Various people seen
+the following message:
 
-Enabling MSI by default is just too invasive, ath9k is used in so many
-different enviroments that risk of regressions is high. MSI needs a lot
-of testing before we can even consider enabling it by default.
+ brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
 
-> I have tested your patch on Acer Aspire ES1-432. It does not work -
-> I still can't connect to wifi.
-> /proc/interrupts shows that no MSI interrupts are delivered, the
-> counters are 0.
->
-> lspci -vv shows:
->         Capabilities: [50] MSI: Enable+ Count=3D1/4 Maskable+ 64bit+
->                 Address: 00000000fee0f00c  Data: 4142
->                 Masking: 0000000e  Pending: 00000000
->
-> So MSI is enabled and the vector number is 0x42 (decimal 66).
-> However my kernel log is now totally spammed with:
->   do_IRQ: 0.64 No irq handler for vector
->
-> My assumption here is that the ath9k hardware implementation of
-> MSI is buggy, and it is therefore corrupting the MSI vector number
-> by zeroing out the lower 2 bits (e.g. 66 -> 64).
->
-> It would be very useful if Qualcomm could confirm if this behaviour
-> is really true and if it could potentially be fixed with a new ath9k
-> firmware version.
+Bit 4 is cause of this message, but this actually indicates the firmware
+has halted. Handle this bit by giving a more meaningful error message.
 
-ath9k does not have firmware.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 5adce0e..00de73d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -260,10 +260,11 @@ struct rte_console {
+ #define I_HMB_HOST_INT	I_HMB_SW3	/* Miscellaneous Interrupt */
+ 
+ /* tohostmailboxdata */
+-#define HMB_DATA_NAKHANDLED	1	/* retransmit NAK'd frame */
+-#define HMB_DATA_DEVREADY	2	/* talk to host after enable */
+-#define HMB_DATA_FC		4	/* per prio flowcontrol update flag */
+-#define HMB_DATA_FWREADY	8	/* fw ready for protocol activity */
++#define HMB_DATA_NAKHANDLED	0x0001	/* retransmit NAK'd frame */
++#define HMB_DATA_DEVREADY	0x0002	/* talk to host after enable */
++#define HMB_DATA_FC		0x0004	/* per prio flowcontrol update flag */
++#define HMB_DATA_FWREADY	0x0008	/* fw ready for protocol activity */
++#define HMB_DATA_FWHALT		0x0010	/* firmware halted */
+ 
+ #define HMB_DATA_FCDATA_MASK	0xff000000
+ #define HMB_DATA_FCDATA_SHIFT	24
+@@ -1094,6 +1095,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 			  offsetof(struct sdpcmd_regs, tosbmailbox));
+ 	bus->sdcnt.f1regdata += 2;
+ 
++	/* dongle indicates the firmware has halted/crashed */
++	if (hmb_data & HMB_DATA_FWHALT)
++		brcmf_err("mailbox indicates firmware halted\n");
++
+ 	/* Dongle recomposed rx frames, accept them again */
+ 	if (hmb_data & HMB_DATA_NAKHANDLED) {
+ 		brcmf_dbg(SDIO, "Dongle reports NAK handled, expect rtx of %d\n",
+@@ -1151,6 +1156,7 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 			 HMB_DATA_NAKHANDLED |
+ 			 HMB_DATA_FC |
+ 			 HMB_DATA_FWREADY |
++			 HMB_DATA_FWHALT |
+ 			 HMB_DATA_FCDATA_MASK | HMB_DATA_VERSION_MASK))
+ 		brcmf_err("Unknown mailbox data content: 0x%02x\n",
+ 			  hmb_data);
+-- 
+1.9.1
