@@ -1,78 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:9376 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932159AbdKOK1p (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:36704 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752668AbdKHNgr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 05:27:45 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-CC: Peter Oh <peter.oh@bowerswilkins.com>,
-        "Harms, Hannes" <hannes.harms@tu-bs.de>,
-        Ben Greear <greearb@candelatech.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mesh point and ap mode on same interface
-Date: Wed, 15 Nov 2017 10:27:42 +0000
-Message-ID: <87lgj7hm5e.fsf@kamboji.qca.qualcomm.com> (sfid-20171115_112749_729138_3A0FADDA)
-References: <e6b02c56-38c7-323e-2bc9-e2b4276b654c@tu-bs.de>
-        <cc8baced-bd74-5703-d885-6ec444eb62ce@candelatech.com>
-        <43bf6a27-be58-35e4-26fa-5e6b380353ac@bowerswilkins.com>
-        <7dc592a5-9381-f715-6ea7-0a8b8deee311@tu-bs.de>
-        <CADjYELwdUxEap_z=_HD4DS4FEQ2_2HP3w9cvDU-BTFLoOTDipg@mail.gmail.com>
-        <5c04c7fe-8cf8-ddd8-d6a7-f42629586a63@bowerswilkins.com>
-        <067d234a-59f0-4175-55af-9354617057b9@tu-bs.de>
-        <61192d3b-b4c7-f47e-2ff9-44e17595d6a9@bowerswilkins.com>
-        <fc1993f5-8b83-4e74-7866-2adcf318ff5f@tu-bs.de>
-        <03700343-7b5c-b21e-8b7b-2ac8c7d3258b@bowerswilkins.com>
-        <87po8jhncx.fsf@kamboji.qca.qualcomm.com>       <5A0C133E.8080305@broadcom.com>
-In-Reply-To: <5A0C133E.8080305@broadcom.com> (Arend van Spriel's message of
-        "Wed, 15 Nov 2017 11:13:18 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Wed, 8 Nov 2017 08:36:47 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 2/7] brcmfmac: disable packet filtering in promiscuous mode
+Date: Wed,  8 Nov 2017 14:36:32 +0100
+Message-Id: <1510148197-17851-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171108_143701_705190_608BF1FF)
+In-Reply-To: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Franky Lin <franky.lin@broadcom.com>
 
-> On 11/15/2017 11:01 AM, Kalle Valo wrote:
->> (adding linux-wireless for a cfg80211 question)
->>
->> Peter Oh <peter.oh@bowerswilkins.com> writes:
->>> On 11/08/2017 04:49 AM, Harms, Hannes wrote:
->>>
->>>> I found a solution for the problem:
->>>>
->>>> When joining the mesh with beacon interval  set  to 100
->>>> both  mesh and ap interface are coming up.
->>>>
->>>>> iw mesh0 mesh join my_mesh beacon-interval 100
->>>>
->>>> The default beacon interval is 1000 for mesh interfaces.
->>>> It seems that QCA9880 is not working
->>>> with different beacon intervals for ap + mesh.
->>>
->>> Good to hear that working. But mesh beacon interval 1000 which is
->>> default value should work. Any mesh beacon intervals of multiple of AP
->>> beacon intervals are supposed to work.
->>>
->>> (In other words, mesh beacon intervals that are not aligned by
->>> multiple of AP beacon intervals won't work). These are valid for both
->>> of QCA9880 and QCA4019 as far as I know.
->>
->> It would be nice if ath10k could print a warning if the beacon intervals
->> are not compatible. Or is there a way to enforce the beacon interval
->> with help of cfg80211 or mac80211?
->
-> There is beacon interval checking in utility function
-> cfg80211_check_combinations() ->
-> cfg80211_iter_combinations() -> cfg80211_calculate_bi_data() for that.
+Disable arp and nd offload to allow all packets sending to host.
 
-Nice, that looks useful. Thanks for the tip.
+Reported-by: Phil Elwell <phil@raspberrypi.org>
+Tested-by: Phil Elwell <phil@raspberrypi.org>
+Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 41 ----------------------
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 38 ++++++++++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
+ 3 files changed, 39 insertions(+), 41 deletions(-)
 
-> However, it seems brcmfmac is the only user of that function according
-> to lxr (or elixir).
-
-git-grep says the same.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 4bfd43a..051d51d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -472,47 +472,6 @@ static void convert_key_from_CPU(struct brcmf_wsec_key *key,
+ 	return err;
+ }
+ 
+-static s32
+-brcmf_configure_arp_nd_offload(struct brcmf_if *ifp, bool enable)
+-{
+-	s32 err;
+-	u32 mode;
+-
+-	if (enable)
+-		mode = BRCMF_ARP_OL_AGENT | BRCMF_ARP_OL_PEER_AUTO_REPLY;
+-	else
+-		mode = 0;
+-
+-	/* Try to set and enable ARP offload feature, this may fail, then it  */
+-	/* is simply not supported and err 0 will be returned                 */
+-	err = brcmf_fil_iovar_int_set(ifp, "arp_ol", mode);
+-	if (err) {
+-		brcmf_dbg(TRACE, "failed to set ARP offload mode to 0x%x, err = %d\n",
+-			  mode, err);
+-		err = 0;
+-	} else {
+-		err = brcmf_fil_iovar_int_set(ifp, "arpoe", enable);
+-		if (err) {
+-			brcmf_dbg(TRACE, "failed to configure (%d) ARP offload err = %d\n",
+-				  enable, err);
+-			err = 0;
+-		} else
+-			brcmf_dbg(TRACE, "successfully configured (%d) ARP offload to 0x%x\n",
+-				  enable, mode);
+-	}
+-
+-	err = brcmf_fil_iovar_int_set(ifp, "ndoe", enable);
+-	if (err) {
+-		brcmf_dbg(TRACE, "failed to configure (%d) ND offload err = %d\n",
+-			  enable, err);
+-		err = 0;
+-	} else
+-		brcmf_dbg(TRACE, "successfully configured (%d) ND offload to 0x%x\n",
+-			  enable, mode);
+-
+-	return err;
+-}
+-
+ static void
+ brcmf_cfg80211_update_proto_addr_mode(struct wireless_dev *wdev)
+ {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 5cc3a07..9c7536d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -71,6 +71,43 @@ struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx)
+ 	return ifp;
+ }
+ 
++void brcmf_configure_arp_nd_offload(struct brcmf_if *ifp, bool enable)
++{
++	s32 err;
++	u32 mode;
++
++	if (enable)
++		mode = BRCMF_ARP_OL_AGENT | BRCMF_ARP_OL_PEER_AUTO_REPLY;
++	else
++		mode = 0;
++
++	/* Try to set and enable ARP offload feature, this may fail, then it  */
++	/* is simply not supported and err 0 will be returned                 */
++	err = brcmf_fil_iovar_int_set(ifp, "arp_ol", mode);
++	if (err) {
++		brcmf_dbg(TRACE, "failed to set ARP offload mode to 0x%x, err = %d\n",
++			  mode, err);
++	} else {
++		err = brcmf_fil_iovar_int_set(ifp, "arpoe", enable);
++		if (err) {
++			brcmf_dbg(TRACE, "failed to configure (%d) ARP offload err = %d\n",
++				  enable, err);
++		} else {
++			brcmf_dbg(TRACE, "successfully configured (%d) ARP offload to 0x%x\n",
++				  enable, mode);
++		}
++	}
++
++	err = brcmf_fil_iovar_int_set(ifp, "ndoe", enable);
++	if (err) {
++		brcmf_dbg(TRACE, "failed to configure (%d) ND offload err = %d\n",
++			  enable, err);
++	} else {
++		brcmf_dbg(TRACE, "successfully configured (%d) ND offload to 0x%x\n",
++			  enable, mode);
++	}
++}
++
+ static void _brcmf_set_multicast_list(struct work_struct *work)
+ {
+ 	struct brcmf_if *ifp;
+@@ -134,6 +171,7 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
+ 	if (err < 0)
+ 		brcmf_err("Setting BRCMF_C_SET_PROMISC failed, %d\n",
+ 			  err);
++	brcmf_configure_arp_nd_offload(ifp, !cmd_value);
+ }
+ 
+ #if IS_ENABLED(CONFIG_IPV6)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index a4dd313..1708571 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -203,6 +203,7 @@ struct brcmf_if {
+ /* Return pointer to interface name */
+ char *brcmf_ifname(struct brcmf_if *ifp);
+ struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx);
++void brcmf_configure_arp_nd_offload(struct brcmf_if *ifp, bool enable);
+ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
+ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
+ 			      bool is_p2pdev, const char *name, u8 *mac_addr);
+-- 
+1.9.1
