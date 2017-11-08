@@ -1,52 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36840 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758617AbdKPICR (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:51046 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751931AbdKHLnP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Nov 2017 03:02:17 -0500
-From: Ramon Fried <rfried@codeaurora.org>
-To: kvalo@codeaurora.org
-Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        bjorn.andersson@linaro.org, nicolas.dechesne@linaro.org,
-        Eyal Ilsar <eilsar@codeaurora.org>,
-        Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH v4] wcn36xx: Set default BTLE coexistence config
-Date: Thu, 16 Nov 2017 10:01:26 +0200
-Message-Id: <20171116080126.17239-1-rfried@codeaurora.org> (sfid-20171116_090223_085858_434142DE)
+        Wed, 8 Nov 2017 06:43:15 -0500
+Date: Wed, 8 Nov 2017 22:43:05 +1100
+From: Simon Shields <simon@lineageos.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, devicetree@vger.kernel.org,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Stefan Wahren <stefan.wahren@i2se.com>
+Subject: Re: [PATCH] brcmfmac: add support for external 32khz clock
+Message-ID: <20171108114302.GA1291@lineageos.org> (sfid-20171108_124320_357611_30AB23C7)
+References: <20171104132421.GA1541@archbox.home>
+ <5A004099.90200@broadcom.com>
+ <20171106112726.GA25134@lineageos.org>
+ <5A019463.9060701@broadcom.com>
+ <20171107133112.GA1323@lineageos.org>
+ <5A02DE93.8030502@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5A02DE93.8030502@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Ilsar <eilsar@codeaurora.org>
+Hi Arend,
 
-If the value for the firmware configuration parameters
-BTC_STATIC_LEN_LE_BT and BTC_STATIC_LEN_LE_WLAN are not set the duty
-cycle between BT and WLAN is such that if BT (including BLE) is active
-WLAN gets 0 bandwidth. When tuning these parameters having a too high
-value for WLAN means that BLE performance degrades.
-The "sweet" point of roughly half of the maximal values was empirically
-found to achieve a balance between BLE and Wi-Fi coexistence
-performance.
+On Wed, Nov 08, 2017 at 11:38:11AM +0100, Arend van Spriel wrote:
+> + Stefan
+> 
+> On 11/7/2017 2:31 PM, Simon Shields wrote:
+> > Hi Arend,
+> > 
+> > On Tue, Nov 07, 2017 at 12:09:23PM +0100, Arend van Spriel wrote:
+> > > On 11/6/2017 12:27 PM, Simon Shields wrote:
+> > > > On Mon, Nov 06, 2017 at 11:59:37AM +0100, Arend van Spriel wrote:
+> > > > > On 11/4/2017 2:24 PM, Simon Shields wrote:
+> > > > > > Some boards use an external 32khz clock for low-power
+> > > > > > mode timing. Make sure the clock is powered on while the chipset
+> > > > > > is active.
+> > > > > 
+> > > > > Do you have such a board? With the little documentation I can get my hands
+> > > > > on here I wonder whether the clock needs to be enabled before the device is
+> > > > > powered. If you have the hardware I would like to check some registers in
+> > > > > the device.
+> > > > > 
+> > > > 
+> > > > Yes. Trats2 (exynos4412-based) has such a setup. The BCM4334 works fine
+> > > > with this patch and one more that enables the WL_REG_EN pin when
+> > > > brcmfmac is probed.
+> > > 
+> > > Ok. So this is exactly the thing I was wondering about. So it makes me
+> > > curious how the WL_REG_EN patch looks like. Can you provide that?
+> > > 
+> > 
+> > Here[0] is a link to the patch in its current state. Obviously, it's not
+> > ready at all for mainlining :-)
+> > 
+> > [0]: https://github.com/fourkbomb/linux/commit/436e59e58b44d856c186fc4767560cecbcbc0c59.patch
+> 
+> Thanks. Indeed doing it in module_init of brcmfmac is not going to fly.
+> Actually the MMC stack has a mechanism to power the SDIO device. This can be
+> configured through the device tree [1]. I just checked and it actually
+> includes specifying the external clock as well.
+> 
 
-Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 2 ++
- 1 file changed, 2 insertions(+)
+It looks like mmc-pwrseq-simple would handle the clock case, but it
+doesn't handle the regulator properly: it sets the GPIO to high before
+powering on, then lowers it immediately after powering it on.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 9c6590d5348a..6f1e741acf3e 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -73,6 +73,8 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
- 	WCN36XX_CFG_VAL(TX_PWR_CTRL_ENABLE, 1),
- 	WCN36XX_CFG_VAL(ENABLE_CLOSE_LOOP, 1),
- 	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
-+	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_BT, 120000),
-+	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_WLAN, 30000),
- 	WCN36XX_CFG_VAL(MAX_ASSOC_LIMIT, 10),
- 	WCN36XX_CFG_VAL(ENABLE_MCC_ADAPTIVE_SCHEDULER, 0),
- };
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+I guess a simpler approach here would be to extend pwrseq-simple to behave
+as we need it to.
+
+> Regards,
+> Arend
+> 
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/mmc/mmc-pwrseq-simple.txt
+
+Cheers,
+Simon
