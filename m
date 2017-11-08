@@ -1,50 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51732 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751215AbdKJGPY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2017 01:15:24 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>
-Subject: Re: [PATCH v6] brcmfmac: add CLM download support
-References: <1507188678-24985-1-git-send-email-wright.feng@cypress.com>
-Date: Fri, 10 Nov 2017 08:15:19 +0200
-In-Reply-To: <1507188678-24985-1-git-send-email-wright.feng@cypress.com>
-        (Wright Feng's message of "Thu, 5 Oct 2017 15:31:18 +0800")
-Message-ID: <87vaiilkw8.fsf@purkki.adurom.net> (sfid-20171110_071527_628165_0DE3AEF7)
+Received: from mx1.redhat.com ([209.132.183.28]:59160 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751826AbdKHLfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Nov 2017 06:35:24 -0500
+Date: Wed, 8 Nov 2017 12:35:22 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Richard Genoud <richard.genoud@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
+Message-ID: <20171108113521.GD2641@redhat.com> (sfid-20171108_123539_232799_F3CAB122)
+References: <1509983829.10974.2.camel@gmail.com>
+ <20171107085327.GA11380@redhat.com>
+ <CACQ1gAi6XtjCHPji3BP71jDG7srg+BshesviasXiSqnw2zs9_Q@mail.gmail.com>
+ <20171107101320.GA12140@redhat.com>
+ <1510052483.24015.1.camel@gmail.com>
+ <20171108103729.GA2641@redhat.com>
+ <1510139235.10467.1.camel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1510139235.10467.1.camel@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> writes:
+On Wed, Nov 08, 2017 at 12:07:15PM +0100, Richard Genoud wrote:
+> > No, that not I wanted you to do. Please remove those options and just
+> > do
+> > below on tracing directory.
+> > 
+> > echo 0 > tracing_on 
+> > cat trace >  /dev/null
+> > echo "function_graph" > current_tracer 
+> > echo "rt2*" > set_ftrace_filter 
+> > echo 1 > tracing_on
+> > echo 1-2.2 > /sys/bus/usb/drivers/usb/unbind
+> > echo 0 > tracing_on
+> > cat trace > ~/trace.txt
+> 
+> Well, there's clearly a misunderstanding here :
+> After the command "echo 1-2.2 > /sys/bus/usb/drivers/usb/unbind"
+> I can't type *anything*
+> The only thing I can do is plug off the board.
+> This command never returns, so I can't stop the tracing...
+> 
+> Or I missed something ?
+> 
+> (maybe if there was more than one CPU on the board, I could do
+> something, but that's not the case)
 
-> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
->
-> The firmware for brcmfmac devices includes information regarding
-> regulatory constraints. For certain devices this information is kept
-> separately in a binary form that needs to be downloaded to the device.
-> This patch adds support to download this so-called CLM blob file. It
-> uses the same naming scheme as the other firmware files with extension
-> of .clm_blob.
->
-> The CLM blob file is optional. If the file does not exist, the download
-> process will be bypassed. It will not affect the driver loading.
->
-> Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+I was not aware that soft-lock up can hung the system.
 
-[...]
+Below patch should prevent/help with the issue. This is
+not right fix, it's for futher debugging.
 
-> +	err = brcmf_fil_iovar_data_get(ifp, "clmver", buf, sizeof(buf));
-> +	if (err) {
-> +		if (err == -23) {
+Regards
+Stanislaw 
 
-No magic numbers, please. Is this supposed to be -ENFILE?
-
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+index e2f4f5778267..d76ca608c722 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+@@ -321,8 +321,8 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
+ 
+ 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ 	if (status) {
+-		if (status == -ENODEV)
+-			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
++		printk("submit TX urb ERROR %d\n", status);
++		clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+ 		rt2x00lib_dmadone(entry);
+ 	}
+@@ -410,8 +410,8 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
+ 
+ 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ 	if (status) {
+-		if (status == -ENODEV)
+-			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
++		printk("submit RX urb ERROR %d\n", status);
++		clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+ 		rt2x00lib_dmadone(entry);
+ 	}
