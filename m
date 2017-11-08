@@ -1,122 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52151 "EHLO
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:36686 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755517AbdKMUgD (ORCPT
+        by vger.kernel.org with ESMTP id S1752664AbdKHNgp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 15:36:03 -0500
+        Wed, 8 Nov 2017 08:36:45 -0500
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 02/10] brcmfmac: Register sizes on hardware are not dependent on compiler types
-Date: Mon, 13 Nov 2017 21:35:39 +0100
-Message-Id: <1510605347-7629-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213625_015948_E5D83AF5)
-In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 3/7] brcmfmac: cleanup brcmf_cfg80211_escan() function
+Date: Wed,  8 Nov 2017 14:36:33 +0100
+Message-Id: <1510148197-17851-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171108_143703_885970_E98E23B1)
+In-Reply-To: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
 
-The 4 IO functions in this patch are incorrect as they use compiler types
-to determine how many bytes to send to the hardware.
+The function brcmf_cfg80211_escan() was always called with a non-null
+request parameter and null pointer for this_ssid parameter. Clean up
+the function removing the dead code path.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 76 ++++------------------
+ 1 file changed, 11 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index a8976a76..25b5e9b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -264,7 +264,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 	func = sdiodev->func[fn];
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 051d51d..1283798 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1072,18 +1072,10 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
  
- 	switch (regsz) {
--	case sizeof(u8):
-+	case 1:
- 		if (write) {
- 			if (fn)
- 				sdio_writeb(func, *(u8 *)data, addr, &ret);
-@@ -278,13 +278,13 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
- 		}
- 		break;
--	case sizeof(u16):
-+	case 2:
- 		if (write)
- 			sdio_writew(func, *(u16 *)data, addr, &ret);
- 		else
- 			*(u16 *)data = sdio_readw(func, addr, &ret);
- 		break;
--	case sizeof(u32):
-+	case 4:
- 		if (write)
- 			sdio_writel(func, *(u32 *)data, addr, &ret);
- 		else
-@@ -368,7 +368,7 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	for (i = 0; i < 3; i++) {
- 		err = brcmf_sdiod_regrw_helper(sdiodev,
- 					       SBSDIO_FUNC1_SBADDRLOW + i,
--					       sizeof(u8), &addr[i], true);
-+					       1, &addr[i], true);
- 		if (err) {
- 			brcmf_err("failed at addr: 0x%0x\n",
- 				  SBSDIO_FUNC1_SBADDRLOW + i);
-@@ -407,7 +407,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
+ static s32
+ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+-		     struct cfg80211_scan_request *request,
+-		     struct cfg80211_ssid *this_ssid)
++		     struct cfg80211_scan_request *request)
+ {
+-	struct brcmf_if *ifp = vif->ifp;
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+-	struct cfg80211_ssid *ssids;
+-	u32 passive_scan;
+-	bool escan_req;
+-	bool spec_scan;
+ 	s32 err;
+-	struct brcmf_ssid_le ssid_le;
+-	u32 SSID_len;
  
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
- 					  false);
- 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 	brcmf_dbg(SCAN, "START ESCAN\n");
  
-@@ -423,10 +423,10 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
+@@ -1101,8 +1093,8 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 			  cfg->scan_status);
+ 		return -EAGAIN;
+ 	}
+-	if (test_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state)) {
+-		brcmf_err("Connecting: status (%lu)\n", ifp->vif->sme_state);
++	if (test_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state)) {
++		brcmf_err("Connecting: status (%lu)\n", vif->sme_state);
+ 		return -EAGAIN;
+ 	}
  
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
- 					  false);
- 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
+@@ -1110,63 +1102,17 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 	if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
+ 		vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif;
  
-@@ -443,7 +443,7 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
+-	escan_req = false;
+-	if (request) {
+-		/* scan bss */
+-		ssids = request->ssids;
+-		escan_req = true;
+-	} else {
+-		/* scan in ibss */
+-		/* we don't do escan in ibss */
+-		ssids = this_ssid;
+-	}
+-
+ 	cfg->scan_request = request;
+ 	set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
+-	if (escan_req) {
+-		cfg->escan_info.run = brcmf_run_escan;
+-		err = brcmf_p2p_scan_prep(wiphy, request, vif);
+-		if (err)
+-			goto scan_out;
+-
+-		err = brcmf_do_escan(vif->ifp, request);
+-		if (err)
+-			goto scan_out;
+-	} else {
+-		brcmf_dbg(SCAN, "ssid \"%s\", ssid_len (%d)\n",
+-			  ssids->ssid, ssids->ssid_len);
+-		memset(&ssid_le, 0, sizeof(ssid_le));
+-		SSID_len = min_t(u8, sizeof(ssid_le.SSID), ssids->ssid_len);
+-		ssid_le.SSID_len = cpu_to_le32(0);
+-		spec_scan = false;
+-		if (SSID_len) {
+-			memcpy(ssid_le.SSID, ssids->ssid, SSID_len);
+-			ssid_le.SSID_len = cpu_to_le32(SSID_len);
+-			spec_scan = true;
+-		} else
+-			brcmf_dbg(SCAN, "Broadcast scan\n");
  
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
- 					  true);
- 	if (ret)
- 		*ret = retval;
-@@ -455,10 +455,10 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
+-		passive_scan = cfg->active_scan ? 0 : 1;
+-		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
+-					    passive_scan);
+-		if (err) {
+-			brcmf_err("WLC_SET_PASSIVE_SCAN error (%d)\n", err);
+-			goto scan_out;
+-		}
+-		brcmf_scan_config_mpc(ifp, 0);
+-		err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCAN, &ssid_le,
+-					     sizeof(ssid_le));
+-		if (err) {
+-			if (err == -EBUSY)
+-				brcmf_dbg(INFO, "BUSY: scan for \"%s\" canceled\n",
+-					  ssid_le.SSID);
+-			else
+-				brcmf_err("WLC_SCAN error (%d)\n", err);
++	cfg->escan_info.run = brcmf_run_escan;
++	err = brcmf_p2p_scan_prep(wiphy, request, vif);
++	if (err)
++		goto scan_out;
  
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
--	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
-+	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
- 					  true);
+-			brcmf_scan_config_mpc(ifp, 1);
+-			goto scan_out;
+-		}
+-	}
++	err = brcmf_do_escan(vif->ifp, request);
++	if (err)
++		goto scan_out;
  
- done:
-@@ -876,7 +876,7 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
+ 	/* Arm scan timeout timer */
+ 	mod_timer(&cfg->escan_timeout, jiffies +
+@@ -1191,7 +1137,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+ 	if (!check_vif_up(vif))
+ 		return -EIO;
  
- 	/* issue abort cmd52 command through F0 */
- 	brcmf_sdiod_request_data(sdiodev, SDIO_FUNC_0, SDIO_CCCR_ABORT,
--				 sizeof(t_func), &t_func, true);
-+				 1, &t_func, true);
+-	err = brcmf_cfg80211_escan(wiphy, vif, request, NULL);
++	err = brcmf_cfg80211_escan(wiphy, vif, request);
  
- 	brcmf_dbg(SDIO, "Exit\n");
- 	return 0;
+ 	if (err)
+ 		brcmf_err("scan error (%d)\n", err);
 -- 
 1.9.1
