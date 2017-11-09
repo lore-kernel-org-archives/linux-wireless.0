@@ -1,57 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:53611 "EHLO
-        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753328AbdKJUIG (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:54357 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755248AbdKIXiz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2017 15:08:06 -0500
+        Thu, 9 Nov 2017 18:38:55 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 4/6] wl1251: Set generated MAC address back to NVS data
+Date: Fri, 10 Nov 2017 00:38:26 +0100
+Message-Id: <1510270708-14377-5-git-send-email-pali.rohar@gmail.com> (sfid-20171110_004012_856753_9654A351)
+In-Reply-To: <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171109051905.pdlsyrbzrwlsjbrs@wfg-t540p.sh.intel.com>
-References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
- <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com> <20171029234820.nzwavupqlv2iqo3m@wfg-t540p.sh.intel.com>
- <CA+55aFxA=+iO1cysMnLZz1iNd4W+gEf4Ys9FGoWM+zmuST2KOQ@mail.gmail.com> <20171109051905.pdlsyrbzrwlsjbrs@wfg-t540p.sh.intel.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 10 Nov 2017 12:08:04 -0800
-Message-ID: <CA+55aFxz=_g38OsVXhLBMGXnQyZ3CvFk971e19z9eu+9Pu=4dA@mail.gmail.com> (sfid-20171110_210826_495831_2B663162)
-Subject: Re: [run_timer_softirq] BUG: unable to handle kernel paging request
- at 0000000000010007
-To: Fengguang Wu <fengguang.wu@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc: Network Development <netdev@vger.kernel.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 8, 2017 at 9:19 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
->
-> Yes it's accessing the list. Here is the faddr2line output.
+In case there is no valid MAC address kernel generates random one. This
+patch propagate this generated MAC address back to NVS data which will be
+uploaded to wl1251 chip. So HW would have same MAC address as linux kernel
+uses.
 
-Ok, so it's a corrupted timer list. Which is not a big surprise.
+This should not change any functionality, but it is better to tell wl1251
+correct mac address since beginning of chip usage.
 
-It's
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/main.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-                next->pprev = pprev;
-
-in __hlist_del(), and the trapping instruction decodes as
-
-        mov    %rdx,0x8(%rax)
-
-with %rax having the value dead000000000200,
-
-Which is just LIST_POISON2.
-
-So we've deleted that entry twice - LIST_POISON2 is what hlist_del()
-sets pprev to after already deleting it once.
-
-Although in this case it might not be hlist_del(), because
-detach_timer() also sets entry->next to LIST_POISON2.
-
-Which is pretty bogus, we are supposed to use LIST_POISON1 for the
-"next" pointer. Oh well. Nobody cares, except for the list entry
-debugging code, which isn't run on the hlist cases.
-
-Adding Thomas Gleixner to the cc. It should not be possible to delete
-the same timer twice.
-
-              Linus
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index d497ba5..1f423be 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -1481,6 +1481,21 @@ static int wl1251_read_nvs_mac(struct wl1251 *wl)
+ 	return 0;
+ }
+ 
++static int wl1251_write_nvs_mac(struct wl1251 *wl)
++{
++	int i, ret;
++
++	ret = wl1251_check_nvs_mac(wl);
++	if (ret)
++		return ret;
++
++	/* MAC is stored in reverse order */
++	for (i = 0; i < ETH_ALEN; i++)
++		wl->nvs[NVS_OFF_MAC_DATA + i] = wl->mac_addr[ETH_ALEN - i - 1];
++
++	return 0;
++}
++
+ static int wl1251_register_hw(struct wl1251 *wl)
+ {
+ 	int ret;
+@@ -1546,6 +1561,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ 		static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
+ 		memcpy(wl->mac_addr, nokia_oui, 3);
+ 		get_random_bytes(wl->mac_addr + 3, 3);
++		if (!wl->use_eeprom)
++			wl1251_write_nvs_mac(wl);
+ 		wl1251_warning("MAC address in eeprom or nvs data is not valid");
+ 		wl1251_warning("Setting random MAC address: %pM", wl->mac_addr);
+ 	}
+-- 
+1.7.9.5
