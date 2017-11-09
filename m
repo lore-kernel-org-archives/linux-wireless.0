@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:52437 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755327AbdKIXi5 (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:50864 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755348AbdKIXi7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 18:38:57 -0500
+        Thu, 9 Nov 2017 18:38:59 -0500
 From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
 To: Ming Lei <ming.lei@canonical.com>,
         "Luis R. Rodriguez" <mcgrof@kernel.org>,
@@ -21,9 +21,9 @@ To: Ming Lei <ming.lei@canonical.com>,
 Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org,
         =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 5/6] firmware: Add request_firmware_prefer_user() function
-Date: Fri, 10 Nov 2017 00:38:27 +0100
-Message-Id: <1510270708-14377-6-git-send-email-pali.rohar@gmail.com> (sfid-20171110_004044_017324_77AA6D70)
+Subject: [PATCH v2 6/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
+Date: Fri, 10 Nov 2017 00:38:28 +0100
+Message-Id: <1510270708-14377-7-git-send-email-pali.rohar@gmail.com> (sfid-20171110_003920_772263_1F41AABF)
 In-Reply-To: <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
 References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
  <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
@@ -32,117 +32,62 @@ Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function works pretty much like request_firmware(), but it prefer
-usermode helper. If usermode helper fails then it fallback to direct
-access. Useful for dynamic or model specific firmware data.
+NVS calibration data for wl1251 are model specific. Every one device with
+wl1251 chip has different and calibrated in factory.
+
+Not all wl1251 chips have own EEPROM where are calibration data stored. And
+in that case there is no "standard" place. Every device has stored them on
+different place (some in rootfs file, some in dedicated nand partition,
+some in another proprietary structure).
+
+Kernel wl1251 driver cannot support every one different storage decided by
+device manufacture so it will use request_firmware_prefer_user() call for
+loading NVS calibration data and userspace helper will be responsible to
+prepare correct data.
+
+In case userspace helper fails request_firmware_prefer_user() still try to
+load data file directly from VFS as fallback mechanism.
+
+On Nokia N900 device, which has wl1251 chip, NVS calibration data are
+stored in CAL nand partition. CAL is proprietary Nokia key/value format for
+nand devices.
+
+With this patch it is finally possible to load correct model specific NVS
+calibration data for Nokia N900.
+
+Userspace tool for reading NVS calibration data on Nokia N900 is available
+in git repository at: https://github.com/community-ssu/wl1251-cal
 
 Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 ---
- drivers/base/firmware_class.c |   45 +++++++++++++++++++++++++++++++++++++++--
- include/linux/firmware.h      |    9 +++++++++
- 2 files changed, 52 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+ drivers/net/wireless/ti/wl1251/main.c  |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index 4b57cf5..c3a9fe5 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -195,6 +195,11 @@ static int __fw_state_check(struct fw_state *fw_st, enum fw_status status)
- #endif
- #define FW_OPT_NO_WARN	(1U << 3)
- #define FW_OPT_NOCACHE	(1U << 4)
-+#ifdef CONFIG_FW_LOADER_USER_HELPER
-+#define FW_OPT_PREFER_USER	(1U << 5)
-+#else
-+#define FW_OPT_PREFER_USER	0
-+#endif
+diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
+index 7142ccf..affe154 100644
+--- a/drivers/net/wireless/ti/wl1251/Kconfig
++++ b/drivers/net/wireless/ti/wl1251/Kconfig
+@@ -2,6 +2,7 @@ config WL1251
+ 	tristate "TI wl1251 driver support"
+ 	depends on MAC80211
+ 	select FW_LOADER
++	select FW_LOADER_USER_HELPER
+ 	select CRC7
+ 	---help---
+ 	  This will enable TI wl1251 driver support. The drivers make
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 1f423be..e9d232c 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -108,7 +108,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+ 	struct device *dev = wiphy_dev(wl->hw->wiphy);
+ 	int ret;
  
- struct firmware_cache {
- 	/* firmware_buf instance will be added into the below list */
-@@ -1214,13 +1219,26 @@ static void fw_abort_batch_reqs(struct firmware *fw)
- 	if (ret <= 0) /* error or already assigned */
- 		goto out;
+-	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
++	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
  
--	ret = fw_get_filesystem_firmware(device, fw->priv);
-+	if (opt_flags & FW_OPT_PREFER_USER) {
-+		ret = fw_load_from_user_helper(fw, name, device, opt_flags, timeout);
-+		if (ret && !(opt_flags & FW_OPT_NO_WARN)) {
-+			dev_warn(device,
-+				 "User helper firmware load for %s failed with error %d\n",
-+				 name, ret);
-+			dev_warn(device, "Falling back to direct firmware load\n");
-+		}
-+	} else {
-+		ret = -EINVAL;
-+	}
-+
-+	if (ret)
-+		ret = fw_get_filesystem_firmware(device, fw->priv);
- 	if (ret) {
- 		if (!(opt_flags & FW_OPT_NO_WARN))
- 			dev_warn(device,
- 				 "Direct firmware load for %s failed with error %d\n",
- 				 name, ret);
--		if (opt_flags & FW_OPT_USERHELPER) {
-+		if ((opt_flags & FW_OPT_USERHELPER) && !(opt_flags & FW_OPT_PREFER_USER)) {
- 			dev_warn(device, "Falling back to user helper\n");
- 			ret = fw_load_from_user_helper(fw, name, device,
- 						       opt_flags);
-@@ -1329,6 +1347,29 @@ int request_firmware_direct(const struct firmware **firmware_p,
- EXPORT_SYMBOL(request_firmware_into_buf);
- 
- /**
-+ * request_firmware_prefer_user: - prefer usermode helper for loading firmware
-+ * @firmware_p: pointer to firmware image
-+ * @name: name of firmware file
-+ * @device: device for which firmware is being loaded
-+ *
-+ * This function works pretty much like request_firmware(), but it prefer
-+ * usermode helper. If usermode helper fails then it fallback to direct access.
-+ * Useful for dynamic or model specific firmware data.
-+ **/
-+int request_firmware_prefer_user(const struct firmware **firmware_p,
-+			    const char *name, struct device *device)
-+{
-+	int ret;
-+
-+	__module_get(THIS_MODULE);
-+	ret = _request_firmware(firmware_p, name, device, NULL, 0,
-+				FW_OPT_UEVENT | FW_OPT_PREFER_USER);
-+	module_put(THIS_MODULE);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
-+
-+/**
-  * release_firmware: - release the resource associated with a firmware image
-  * @fw: firmware resource to release
-  **/
-diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-index d450808..8584528 100644
---- a/include/linux/firmware.h
-+++ b/include/linux/firmware.h
-@@ -48,6 +48,8 @@ int request_firmware_nowait(
- 	void (*cont)(const struct firmware *fw, void *context));
- int request_firmware_direct(const struct firmware **fw, const char *name,
- 			    struct device *device);
-+int request_firmware_prefer_user(const struct firmware **fw, const char *name,
-+				 struct device *device);
- int request_firmware_into_buf(const struct firmware **firmware_p,
- 	const char *name, struct device *device, void *buf, size_t size);
- 
-@@ -78,6 +80,13 @@ static inline int request_firmware_direct(const struct firmware **fw,
- 	return -EINVAL;
- }
- 
-+static inline int request_firmware_prefer_user(const struct firmware **fw,
-+					       const char *name,
-+					       struct device *device)
-+{
-+	return -EINVAL;
-+}
-+
- static inline int request_firmware_into_buf(const struct firmware **firmware_p,
- 	const char *name, struct device *device, void *buf, size_t size)
- {
+ 	if (ret < 0) {
+ 		wl1251_error("could not get nvs file: %d", ret);
 -- 
 1.7.9.5
