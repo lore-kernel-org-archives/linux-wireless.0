@@ -1,56 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0057.outbound.protection.outlook.com ([104.47.40.57]:13450
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0049.outbound.protection.outlook.com ([104.47.34.49]:8992
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932674AbdKFTuu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 14:50:50 -0500
-Subject: Re: [PATCH] mac80211: Update last_ack status for all except probing
- frames
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        id S1752902AbdKIJkz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Nov 2017 04:40:55 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org,
         Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
-References: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com>
- <1509964164.2669.0.camel@sipsolutions.net>
- <8bb232d231884f9595c81f945a5eef4f@NALASEXR01H.na.qualcomm.com>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <49241af7-a50f-5758-0c7e-77f2fae5d93d@quantenna.com> (sfid-20171106_205053_948369_19DC1E9A)
-Date: Mon, 6 Nov 2017 11:50:40 -0800
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [RFC PATCH 2/2] nl80211: implement beacon change notifier
+Date: Thu,  9 Nov 2017 12:40:24 +0300
+Message-Id: <20171109094024.9085-2-sergey.matyukevich.os@quantenna.com> (sfid-20171109_104133_108446_DE0B0D27)
+In-Reply-To: <20171109094024.9085-1-sergey.matyukevich.os@quantenna.com>
+References: <20171109094024.9085-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <8bb232d231884f9595c81f945a5eef4f@NALASEXR01H.na.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/06/2017 09:44 AM, Rajkumar Manoharan wrote:
->> On Mon, 2017-10-30 at 17:29 -0700, Rajkumar Manoharan wrote:
->>> Update last_ack status for all except station probing frames (i.e null
->>> data). Otherwise the station inactivity duration is cleared whenever
->>> AP is checking presence of idle stations by sending null data frame
->>> for every inactive threshold (ap_max_inactivity).
->>
->> You make it sound like this is a problem, but don't explain why it would be? I
->> don't really see it anyway.
->>
-> For steering an idle station from one BSS to another, the steering application
-> has to know the actual station idle period. But if the idle period is cleared by
-> ap_max_inactivity, the steering application cannot steer the station even though
-> the station is not sending or receiving any data or mgmt. frame.
-> 
-> Though keeping longer idle threshold (ap_max_inactivity) than steering application
-> limit may help to identify idle station, it will differ removing the stations that left BSS.
-> 
-> -Rajkumar
-> 
+From: Vasily Ulyanov <vulyanov@quantenna.com>
 
-Hi Rajkumar, this will not help in all the cases as some drivers may 
-choose to implement "inactivity" logic in firmware and firmware will 
-send probing frames itself if required, resetting inactivity period. 
-Besides, at this level we do not know who sent NULL frames and for which 
-purpose, it doesn't look like a good idea to just ignore it.
+Notify user-space listeners about beacon data change.
 
-I think that for what it was supposed to be, inactivity_ms works as 
-expected and it can be used to identify "dead" stations. What you 
-probably need is something different, called for example "rx_idle_time" 
-that will keep track of how long STA itself did not send any frames 
-(ignoring ACKs).
+Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
+---
+ net/wireless/nl80211.c | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f03f9989efbc..98e52e5ffc13 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3950,6 +3950,26 @@ static int nl80211_send_beacon(struct sk_buff *msg, u32 portid,
+ 	return -EMSGSIZE;
+ }
+ 
++static void nl80211_notify_beacon_change(struct net_device *dev,
++					 enum nl80211_commands cmd,
++					 struct cfg80211_beacon_data *bcn)
++{
++	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
++	struct sk_buff *msg;
++
++	msg = nlmsg_new(nl80211_beacon_size(bcn), GFP_KERNEL);
++	if (!msg)
++		return;
++
++	if (nl80211_send_beacon(msg, cmd, 0, 0, 0, bcn) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(wiphy), msg, 0,
++				NL80211_MCGRP_MLME, GFP_KERNEL);
++}
++
+ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
+ 					    const u8 *rates)
+ {
+@@ -4250,6 +4270,8 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		wdev->ssid_len = params.ssid_len;
+ 		memcpy(wdev->ssid, params.ssid, wdev->ssid_len);
+ 		nl80211_assign_beacon(&wdev->beacon, &new_bcn);
++		nl80211_notify_beacon_change(dev, NL80211_CMD_START_AP,
++					     &wdev->beacon);
+ 	}
+ 	wdev_unlock(wdev);
+ 
+@@ -4317,8 +4339,11 @@ static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	wdev_lock(wdev);
+ 	err = rdev_change_beacon(rdev, dev, &params);
+-	if (!err)
++	if (!err) {
+ 		nl80211_assign_beacon(&wdev->beacon, &merged_bcn);
++		nl80211_notify_beacon_change(dev, NL80211_CMD_SET_BEACON,
++					     &wdev->beacon);
++	}
+ 	wdev_unlock(wdev);
+ 
+ 	if (err)
+-- 
+2.11.0
