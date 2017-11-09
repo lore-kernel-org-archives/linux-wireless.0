@@ -1,91 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:53247 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753055AbdKFOEi (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:52417 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755248AbdKIXis (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 09:04:38 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] rt2x00: use monotonic timestamps for frame dump
-Date: Mon,  6 Nov 2017 15:03:59 +0100
-Message-Id: <20171106140412.1532617-1-arnd@arndb.de> (sfid-20171106_150506_400794_07E0C355)
+        Thu, 9 Nov 2017 18:38:48 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 1/6] wl1251: Update wl->nvs_len after wl->nvs is valid
+Date: Fri, 10 Nov 2017 00:38:23 +0100
+Message-Id: <1510270708-14377-2-git-send-email-pali.rohar@gmail.com> (sfid-20171110_004108_246368_A6F66D6E)
+In-Reply-To: <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2x00 uses the deprecated do_gettimeofday() function to get a timestamp
-for its debugfs "dump" file interface.
+If kmemdup fails, then wl->nvs_len will contain invalid non-zero size.
 
-The timestamp is using an unsigned 32-bit value, so we could make it
-work until 2106 by using ktime_get_real_ts64(), but it seems better to
-use monotonic times, as we normally want for timestamps.
-
-Since this is an interface change, I'm incrementing the
-DUMP_HEADER_VERSION number, so user space can figure out whether the
-timestamps are monotonic or not. Most likely the tools won't care either
-way.
-
-Generally speaking, ABI version numbers and in particular changing them
-is a bad idea. However since this is in debugfs, we don't put any
-API stability rules on the interface according to
-Documentation/filesystems/debugfs.txt, and we can take the easy way
-out here; anyone using the frame dump feature can probably work out
-the differences here.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Acked-by: Pavel Machek <pavel@ucw.cz>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00debug.c | 7 ++++---
- drivers/net/wireless/ralink/rt2x00/rt2x00dump.h  | 2 +-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ti/wl1251/main.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
-index 51520a0e2138..f4fdad2ed319 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
-@@ -164,13 +164,13 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
- 	struct sk_buff *skbcopy;
- 	struct rt2x00dump_hdr *dump_hdr;
--	struct timeval timestamp;
-+	struct timespec64 timestamp;
- 	u32 data_len;
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 9915d83..8929bb3 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -122,8 +122,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+ 		goto out;
+ 	}
  
- 	if (likely(!test_bit(FRAME_DUMP_FILE_OPEN, &intf->frame_dump_flags)))
- 		return;
+-	wl->nvs_len = fw->size;
+-	wl->nvs = kmemdup(fw->data, wl->nvs_len, GFP_KERNEL);
++	wl->nvs = kmemdup(fw->data, fw->size, GFP_KERNEL);
  
--	do_gettimeofday(&timestamp);
-+	ktime_get_ts64(&timestamp);
+ 	if (!wl->nvs) {
+ 		wl1251_error("could not allocate memory for the nvs file");
+@@ -131,6 +130,8 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+ 		goto out;
+ 	}
  
- 	if (skb_queue_len(&intf->frame_dump_skbqueue) > 20) {
- 		rt2x00_dbg(rt2x00dev, "txrx dump queue length exceeded\n");
-@@ -200,7 +200,8 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 	dump_hdr->queue_index = entry->queue->qid;
- 	dump_hdr->entry_index = entry->entry_idx;
- 	dump_hdr->timestamp_sec = cpu_to_le32(timestamp.tv_sec);
--	dump_hdr->timestamp_usec = cpu_to_le32(timestamp.tv_usec);
-+	dump_hdr->timestamp_usec = cpu_to_le32(timestamp.tv_nsec /
-+					       NSEC_PER_USEC);
++	wl->nvs_len = fw->size;
++
+ 	ret = 0;
  
- 	if (!(skbdesc->flags & SKBDESC_DESC_IN_SKB))
- 		skb_put_data(skbcopy, skbdesc->desc, skbdesc->desc_len);
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dump.h b/drivers/net/wireless/ralink/rt2x00/rt2x00dump.h
-index 4c0e01b5d515..3b14eef0b646 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dump.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dump.h
-@@ -106,7 +106,7 @@ enum rt2x00_dump_type {
-  */
- struct rt2x00dump_hdr {
- 	__le32 version;
--#define DUMP_HEADER_VERSION	2
-+#define DUMP_HEADER_VERSION	3
- 
- 	__le32 header_length;
- 	__le32 desc_length;
+ out:
 -- 
-2.9.0
+1.7.9.5
