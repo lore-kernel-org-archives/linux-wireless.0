@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:54301 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751376AbdKMWkI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 17:40:08 -0500
-Received: by mail-qt0-f182.google.com with SMTP id c36so15439262qtc.11
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Nov 2017 14:40:08 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:58148 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753304AbdKIKyh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Nov 2017 05:54:37 -0500
+Date: Thu, 9 Nov 2017 11:54:36 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Richard Genoud <richard.genoud@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
+Message-ID: <20171109105435.GA2875@redhat.com> (sfid-20171109_115500_553517_6454A1C2)
+References: <1509983829.10974.2.camel@gmail.com>
+ <20171107085327.GA11380@redhat.com>
+ <CACQ1gAi6XtjCHPji3BP71jDG7srg+BshesviasXiSqnw2zs9_Q@mail.gmail.com>
+ <20171107101320.GA12140@redhat.com>
+ <1510052483.24015.1.camel@gmail.com>
+ <20171108103729.GA2641@redhat.com>
+ <1510139235.10467.1.camel@gmail.com>
 MIME-Version: 1.0
-From: Daniel Ghansah <smartwires@gmail.com>
-Date: Mon, 13 Nov 2017 17:40:06 -0500
-Message-ID: <CAL3ir7JHwLpNFRSv0jEED50XeFAWmSz4gXXOs0MpM=VeTGiKnQ@mail.gmail.com> (sfid-20171113_234011_843766_E9ECF45F)
-Subject: PS-Poll not behaving as expected
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1510139235.10467.1.camel@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-       Here is the problem we experience:
+On Wed, Nov 08, 2017 at 12:07:15PM +0100, Richard Genoud wrote:
+> (maybe if there was more than one CPU on the board, I could do
+> something, but that's not the case)
 
-When the station (wifi devices) sends a null QoS frame with power save
-telling our AP that it is going into power save mode. RIght now, our
-problem is that the AP will not stop sending data packets to the
-station. Correct behavior is that the AP will buffer data packets and
-stop sending any data or null packets (WiFi Alliance allows at most 2
-of these packets to be sent by the AP before station sends ps-poll,
-exclude retries) until a PS-Poll packet is sent by the station to
-collect data. The AP should also respond only 1 packet per PS-Poll
-(exclude any retries). Right now, we are also experiencing that the AP
-will, at times, send more than 1 data packet to the station per
-PS-Poll. The first and second problems may be linked together.
+I reproduced the problem with nosmp option. I think we need
+to check also for ENOENT error (not only for ENODEV).
+Will post the fix in a second.
 
-
--- 
-Regards,
-Daniel
+Thanks for reporting and debugging
+Stanislaw 
