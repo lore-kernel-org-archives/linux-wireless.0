@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:48404 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751268AbdKMKJt (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:53166 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751241AbdKIDLE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 05:09:49 -0500
-Message-ID: <1510567783.30497.33.camel@sipsolutions.net> (sfid-20171113_110956_757693_3342F5BA)
-Subject: Re: Setting single rate in ath10k broken by "reject/clear user rate
- mask if not usable"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        Oleksij Rempel <linux@rempel-privat.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>, kirtika@google.com
-Date: Mon, 13 Nov 2017 11:09:43 +0100
-In-Reply-To: <a1adb2ea-44c4-67ae-1044-08c4dc16bb9a@candelatech.com>
-References: <13895fa0-3685-dd2b-583d-2d6469d23cfe@candelatech.com>
-         <1507708948.1998.15.camel@sipsolutions.net>
-         <2c293255-aa79-75a0-1c28-994f864cddf4@candelatech.com>
-         <1508312033.2674.9.camel@sipsolutions.net>
-         <2ad42671-59c4-80ed-4bca-f874eb53d653@candelatech.com>
-         <8c2e0e98-f3f4-6e0c-1bf0-43dfa6e97275@rempel-privat.de>
-         <1508358869.2674.55.camel@sipsolutions.net>
-         <9791c86a-a15f-4c99-ab84-ce00b242d70f@candelatech.com>
-         <1508360527.2674.61.camel@sipsolutions.net>
-         <0bfb289d-a9fa-03d9-f9c7-cc0d01b0bd43@candelatech.com>
-         <1508944670.2421.49.camel@sipsolutions.net>
-         <db23762d-3e65-7707-ca78-ad7e7bc7dfa6@candelatech.com>
-         <1509135311.2283.12.camel@sipsolutions.net>
-         <a1adb2ea-44c4-67ae-1044-08c4dc16bb9a@candelatech.com>
+        Wed, 8 Nov 2017 22:11:04 -0500
+Received: by mail-wm0-f45.google.com with SMTP id t139so14723664wmt.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Nov 2017 19:11:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
+References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
+ <1509434718.4492.195.camel@coelho.fi> <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
+ <1509952948.4492.360.camel@coelho.fi> <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
+From: Chris Chiu <chiu@endlessm.com>
+Date: Thu, 9 Nov 2017 11:11:02 +0800
+Message-ID: <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com> (sfid-20171109_041111_636418_D3B2D6C8)
+Subject: Re: Need support for Intel new wifi module 9462NGW
+To: Luca Coelho <luca@coelho.fi>
+Cc: johannes.berg@intel.com, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org,
+        Linux Upstreaming Team <linux@endlessm.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-10-27 at 13:41 -0700, Ben Greear wrote:
+Hi Luca,
+    Any suggestion for the "Failed to start INIT ucode: -110" issue
+for the firmware?
 
-> ath10k ignores the tx rateset pretty much entirely when sending management
-> frames, so even if you set the tx rateset to have only VHT MCS 8,
-> management frames are still sent with legacy ratesets.
+Chris
 
-So that's a driver bug.
-
-> My end goal about this part is to be able to configure a single tx rate
-> and have that be allowed again, at least with ath10k.
-> 
-> Maybe a new flag for drivers like ath10k that at least somewhat ignore
-> the tx-rateset for management frames, and this flag would allow us to
-> bypass the cannot-set-single-rate check?
-
-What? No, I'm not going to put a driver bug into the API like that!
-
-johannes
+On Tue, Nov 7, 2017 at 12:26 PM, Chris Chiu <chiu@endlessm.com> wrote:
+> Hi Luca,
+>     I just tried the firmware but seems still something wrong. dmesg
+> shows me the following
+>
+> [   17.786041] Intel(R) Wireless WiFi driver for Linux
+> [   17.786042] Copyright(c) 2003- 2015 Intel Corporation
+> [   18.120052] iwlwifi 0000:00:0c.0: loaded firmware version
+> 33.610294.0 op_mode iwlmvm
+> [   20.995731] iwlwifi 0000:00:0c.0: Detected Intel(R) Dual Band
+> Wireless AC 9460, REV=0x318
+> [   22.012109] iwlwifi 0000:00:0c.0: SecBoot CPU1 Status: 0x3, CPU2
+> Status: 0x2339
+> [   22.012115] iwlwifi 0000:00:0c.0: Failed to start INIT ucode: -110
+> [   22.024100] iwlwifi 0000:00:0c.0: Failed to run INIT ucode: -110
+>
+> Any more information you need from me?
+>
+> Chris
+>
+> On Mon, Nov 6, 2017 at 3:22 PM, Luca Coelho <luca@coelho.fi> wrote:
+>> On Mon, 2017-11-06 at 11:22 +0800, Chris Chiu wrote:
+>>> Hi Luca,
+>>
+>> Hi Chris,
+>>
+>>
+>>>     Any update for the firmware approval?
+>>
+>> Yes, I published it last Thursday.  Sorry, I was in such a hurry that I
+>>  forgot to tell you about it.
+>>
+>> You can find it here:
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/plain/iwlwifi-9260-th-b0-jf-b0-33.ucode?id=f132386b542b52ade0416ecb6cb7aef426f5d175
+>>
+>> Let me know how it goes.
+>>
+>> --
+>> Cheers,
+>> Luca.
