@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48986 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753716AbdK2KX7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 05:23:59 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 6/6] iwlwifi: fix access to prph when transport is stopped
-References: <20171125153510.25359-1-luca@coelho.fi>
-        <20171125153510.25359-7-luca@coelho.fi>
-Date: Wed, 29 Nov 2017 12:23:55 +0200
-In-Reply-To: <20171125153510.25359-7-luca@coelho.fi> (Luca Coelho's message of
-        "Sat, 25 Nov 2017 17:35:10 +0200")
-Message-ID: <87mv351iys.fsf@kamboji.qca.qualcomm.com> (sfid-20171129_112421_601160_01067952)
+Received: from mga04.intel.com ([192.55.52.120]:8835 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753004AbdKIXFP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Nov 2017 18:05:15 -0500
+Date: Fri, 10 Nov 2017 00:05:11 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Subject: Re: [PATCH 0/2] NFC: Add deactivate target functionality
+Message-ID: <20171109230511.GA4161@zurbaran.ger.intel.com> (sfid-20171110_000521_412337_DED074D2)
+References: <20170616033422.18484-1-mgreer@animalcreek.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170616033422.18484-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Hi Mark,
 
-> From: Sara Sharon <sara.sharon@intel.com>
->
-> When getting HW rfkill we get stop_device being called from
-> two paths.
-> One path is the IRQ calling stop device, and updating op
-> mode and stack.
-> As a result, cfg80211 is running rfkill sync work that shuts
-> down all devices (second path).
-> In the second path, we eventually get to iwl_mvm_stop_device
-> which calls iwl_fw_dump_conf_clear->iwl_fw_dbg_stop_recording,
-> that access periphery registers.
-> The device may be stopped at this point from the first path,
-> which will result with a failure to access those registers.
-> Simply checking for the trans status is insufficient, since
-> the race will still exist, only minimized.
-> Instead, move the stop from iwl_fw_dump_conf_clear (which is
-> getting called only from stop path) to the transport stop
-> device function, where the access is always safe.
-> This has the added value, of actually stopping dbgc before
-> stopping device even when the stop is initiated from the
-> transport.
->
-> Fixes: 1efc3843a4ee ("iwlwifi: stop dbgc recording before stopping DMA")
-> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+On Thu, Jun 15, 2017 at 08:34:20PM -0700, Mark Greer wrote:
+> There is currently no way for userspace to deactivate an active target.
+> Since the target is active, the adapter cannot be powered down which
+> wastes wastes power when the target has been read and isn't needed
+> anymore (but remains within range).  To solve this, add a way to
+> deactivate a currently active target which will then allow the adapter
+> to be powered down.
+> 
+> To be fully operational, this requires companion patches for neard.
+> Those patches will be submitted shortly.
+> 
+> Mark Greer (2):
+>   NFC: digital: Abort cmd when deactivating target
+>   NFC: Add NFC_CMD_DEACTIVATE_TARGET support
+Both patches applied to nfc-next, thanks.
 
-But no wonder I called gnus-article-fill-cited-article, the commit log
-is just weirdly wrapped. Are you using outlook or how do you get it so
-ugly? :)
-
--- 
-Kalle Valo
+Cheers,
+Samuel.
