@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:52014 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755443AbdKOPXv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 10:23:51 -0500
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 11.1 \(3445.4.7\))
-Subject: Re: [PATCH 2/8] rsi: add bluetooth rx endpoint
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1510730444-3237-3-git-send-email-amitkarwar@gmail.com>
-Date: Wed, 15 Nov 2017 16:23:49 +0100
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Message-Id: <440EED52-0556-4919-9727-078B2A7192D6@holtmann.org> (sfid-20171115_162535_595107_6D341AA4)
-References: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
- <1510730444-3237-3-git-send-email-amitkarwar@gmail.com>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
+Received: from mga05.intel.com ([192.55.52.43]:22490 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755341AbdKIXi6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Nov 2017 18:38:58 -0500
+Date: Fri, 10 Nov 2017 00:38:41 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Subject: Re: [PATCH 0/4] neard: Add support for deactivating tags
+Message-ID: <20171109233841.GC4161@zurbaran.ger.intel.com> (sfid-20171110_003928_600309_CBBE778C)
+References: <20170616035728.19415-1-mgreer@animalcreek.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170616035728.19415-1-mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amitkumar,
+On Thu, Jun 15, 2017 at 08:57:24PM -0700, Mark Greer wrote:
+> This series adds the ability for client apps to deactivate a currently
+> active tag.  Once deactivated, the client can either poll again to
+> reactivate the tag or power the adapter off to save power.  These
+> changes will not work until the Linux kernel commits submitted under
+> the subject, "NFC: Add deactivate target functionality" are committed.
+> Those commits can be viewed here:
+> 
+> 	https://lists.01.org/pipermail/linux-nfc/2017-June/004415.html
+> 
+> The commits are based on the commits submitted previously under the
+> subject, "[PATCH 00/23] neard: Support TI Std & Pro tags, fixups, etc."
+> which can be viewed here:
+> 
+> 	https://lists.01.org/pipermail/linux-nfc/2017-June/004392.html
+> 
+> For convenience, these commits are available in the 'submit/deactivate_tag-v1'
+> branch of this repo on github:
+> 
+> 	https://github.com/animalcreek/neard.git
+> 
+> Mark Greer (4):
+>   adapter: Make adapter_start_poll() global
+>   adapter: Add call indicating whether constant poll is enabled
+>   tag: Add Tag deactivate support
+>   test: Add option to deactivate tag
+All 4 patches applied, thanks.
 
-> USB endpoint 1 is used for WLAN which is presently in use.
-> USB endpoint 2 is introduced for BT Rx traffic. Enumeration
-> of Rx BT endpoint and submitting Rx BT URB are added.
-
-wouldn’t it be good to include the /sys/kernel/debug/usb/devices part here that shows how the USB device’s layout.
-
-Regards
-
-Marcel
+Cheers,
+Samuel.
