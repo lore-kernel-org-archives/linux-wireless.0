@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34741 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750912AbdKAJ00 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41016 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755755AbdKJCbh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 05:26:26 -0400
-From: Colin King <colin.king@canonical.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlegacy: remove redundant pointer sta_priv
-Date: Wed,  1 Nov 2017 09:26:22 +0000
-Message-Id: <20171101092622.16625-1-colin.king@canonical.com> (sfid-20171101_102647_711060_BE38A6BF)
-MIME-Version: 1.0
+        Thu, 9 Nov 2017 21:31:37 -0500
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [V2,1/9] qtnfmac: use per-band HT/VHT info from wireless device
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171031010455.27772-2-igor.mitsyanko.os@quantenna.com>
+References: <20171031010455.27772-2-igor.mitsyanko.os@quantenna.com>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        sergey.matyukevich.os@quantenna.com, vulyanov@quantenna.com,
+        johannes@sipsolutions.net
+Message-Id: <20171110023137.5D098607EA@smtp.codeaurora.org> (sfid-20171110_033141_917390_C10C03B8)
+Date: Fri, 10 Nov 2017 02:31:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> wrote:
 
-Pointer sta_priv is assigned but never read, hence it is redundant
-and can be removed. Cleans up clang warning:
+> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> 
+> HT/VHT capabilities must be reported per each band supported by a radio,
+> not for all bands on a radio. Furthermore, driver better not assume
+> any capabilities and just use whetever is reported by device itself.
+> 
+> To support this, convert "get channels" command into "get band info"
+> command. Difference is that it may also carry HT/VHT capabilities along
+> with channels information.
+> 
+> While at it, also add "num_bitrates" field to "get band info" command,
+> for future use.
+> 
+> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-drivers/net/wireless/intel/iwlegacy/4965-rs.c:2163:2: warning: Value
-stored to 'sta_priv' is never read
+9 patches applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/intel/iwlegacy/4965-rs.c | 2 --
- 1 file changed, 2 deletions(-)
+e294cbfda056 qtnfmac: use per-band HT/VHT info from wireless device
+d42df85f7d85 qtnfmac: initialize HT/VHT caps "can override" masks
+d1398b5b34cc qtnfmac: get rid of PHYMODE capabilities flags
+18b7470f92df qtnfmac: extend "IE set" TLV to include frame type info
+5face518d446 qtnfmac: SCAN results: retreive frame type information from "IE set" TLV
+4d1f0fabdc45 qtnfmac: convert "Append IEs" command to QTN_TLV_ID_IE_SET usage
+17011da0b8f0 qtnfmac: configure and start AP interface with a single command
+a3945f43761c qtnfmac: include HTCAP and VHTCAP into config AP command
+c9889671736c qtnfmac: pass all CONNECT cmd params to wireless card for processing
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-rs.c b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-index c055f6da11c6..365a4187fc37 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-@@ -2154,13 +2154,11 @@ il4965_rs_initialize_lq(struct il_priv *il, struct ieee80211_conf *conf,
- 	u8 use_green;
- 	u8 active_tbl = 0;
- 	u8 valid_tx_ant;
--	struct il_station_priv *sta_priv;
- 
- 	if (!sta || !lq_sta)
- 		return;
- 
- 	use_green = il4965_rs_use_green(il, sta);
--	sta_priv = (void *)sta->drv_priv;
- 
- 	i = lq_sta->last_txrate_idx;
- 
 -- 
-2.14.1
+https://patchwork.kernel.org/patch/10033509/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
