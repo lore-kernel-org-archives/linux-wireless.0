@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45628 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750770AbdKKOOM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Nov 2017 09:14:12 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2017-11-11
-References: <87o9o9vugd.fsf@kamboji.qca.qualcomm.com>
-        <20171111.223832.2216321055833169803.davem@davemloft.net>
-Date: Sat, 11 Nov 2017 16:14:06 +0200
-In-Reply-To: <20171111.223832.2216321055833169803.davem@davemloft.net> (David
-        Miller's message of "Sat, 11 Nov 2017 22:38:32 +0900 (KST)")
-Message-ID: <87bmk89a35.fsf@codeaurora.org> (sfid-20171111_151432_128828_891A6A14)
+Received: from mail.toke.dk ([52.28.52.200]:59283 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754502AbdKJAKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Nov 2017 19:10:16 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        "make-wifi-fast\@lists.bufferbloat.net"
+        <make-wifi-fast@lists.bufferbloat.net>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] ath10k: Re-enable TXQs for all devices
+In-Reply-To: <6112ae948ba2409da27709d01da567eb@NALASEXR01H.na.qualcomm.com>
+References: <20171109071945.11033-1-toke@toke.dk> <6112ae948ba2409da27709d01da567eb@NALASEXR01H.na.qualcomm.com>
+Date: Fri, 10 Nov 2017 09:10:07 +0900
+Message-ID: <87k1yzq9i8.fsf@toke.dk> (sfid-20171110_011020_142002_44F8C9DC)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> writes:
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-> From: Kalle Valo <kvalo@codeaurora.org>
-> Date: Sat, 11 Nov 2017 15:03:14 +0200
->
->> some more patches to net-next for v4.15. Even though I applied the last
->> patch only on Saturday morning, all these have been tested by kbuild bot
->> and most of them should also be in linux-next. Please let me know if
->> there are any problems.
->
-> Pulled, but looking at your merge commit message:
+>> Commit 4ca1807815aa6801aaced7fdefa9edacc2521767 disables the use of the
+>> mac80211 TXQs for some devices because of a theoretical throughput
+>> regression. We have not seen this regression for a while now, so it shou=
+ld be
+>> safe to re-enable TXQs.
+>>=20
+>> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+>> ---
+>> This has been in LEDE trunk for a couple of months now with good results.
+>>
+> Toke,
+>=20=20
+> Good to know that the performance drop is not seen with the chips that do=
+es not
+> have push-pull support. The issue was originally reported with ap152 + qc=
+a988x
+> by community [1]. Hope this combination is also considered in LEDE.
 
-Thanks!
+Ah, was that the original bug report? Thank you, I have not been able to
+find that anywhere!
 
->> Major changes:
->> 
->> iwlwifi
->> 
->> * some new PCI IDs
->
-> I doubt this was the only major change in here :-)))
+The issue that seems to point to has been fixed a while ago; I'll send
+and updated patch with a better commit message (also forgot to cc the
+ath10k list, I see).
 
-Yeah, you're right. I wrote that too hastily. My excuse this time is
-that I tagged it at the airport :) But of course I should have prepared
-it better.
-
--- 
-Kalle Valo
+-Toke
