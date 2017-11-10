@@ -1,53 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f177.google.com ([74.125.82.177]:52209 "EHLO
-        mail-ot0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965027AbdKCC5N (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Nov 2017 22:57:13 -0400
-Received: by mail-ot0-f177.google.com with SMTP id n74so1337406ota.8
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Nov 2017 19:57:13 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:55473 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753141AbdKJU0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Nov 2017 15:26:07 -0500
+Date: Fri, 10 Nov 2017 21:26:01 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH v2 5/6] firmware: Add request_firmware_prefer_user()
+ function
+Message-ID: <20171110202601.GR22894@wotan.suse.de> (sfid-20171110_212628_088322_62EDE5CC)
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
+ <1510270708-14377-6-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-From: Daniel Drake <drake@endlessm.com>
-Date: Fri, 3 Nov 2017 10:57:11 +0800
-Message-ID: <CAD8Lp47N8ENCPp0ELd5_H8efEna9FGemM-vvi0kf7=coG5tNXA@mail.gmail.com> (sfid-20171103_035731_142220_74AA0715)
-Subject: ath9k disconnects in 4.13 with reason=4 locally_generated=1
-To: linux-wireless@vger.kernel.org,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1510270708-14377-6-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Nov 10, 2017 at 12:38:27AM +0100, Pali Rohár wrote:
+> This function works pretty much like request_firmware(), but it prefer
+> usermode helper. If usermode helper fails then it fallback to direct
+> access. Useful for dynamic or model specific firmware data.
+> 
+> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> ---
+>  drivers/base/firmware_class.c |   45 +++++++++++++++++++++++++++++++++++++++--
+>  include/linux/firmware.h      |    9 +++++++++
+>  2 files changed, 52 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+> index 4b57cf5..c3a9fe5 100644
+> --- a/drivers/base/firmware_class.c
+> +++ b/drivers/base/firmware_class.c
+> @@ -195,6 +195,11 @@ static int __fw_state_check(struct fw_state *fw_st, enum fw_status status)
+>  #endif
+>  #define FW_OPT_NO_WARN	(1U << 3)
+>  #define FW_OPT_NOCACHE	(1U << 4)
+> +#ifdef CONFIG_FW_LOADER_USER_HELPER
+> +#define FW_OPT_PREFER_USER	(1U << 5)
+> +#else
+> +#define FW_OPT_PREFER_USER	0
+> +#endif
 
-Endless OS recently upgraded from Linux 4.11 to Linux 4.13, and we now
-have a few reports of issues with ath9k wireless becoming unusable.
+I've been cleaning these up these flags [0], which I'll shortly respin based
+on feedback, so this sort of stuff should be avoided at all costs.
 
-In the logs we can see that it authenticates, associates and completes
-the WPA 4 way handshake, before then being disconnected with:
+Regardless of this even if you *leave* the flag in place and a driver required
+this, but the kernel was compiled without CONFIG_FW_LOADER_USER_HELPER then
+calling fw_load_from_user_helper would just already return -ENOENT, as such it
+would in turn fallback to direct fs loading so the #ifef'ery seems to be not
+needed.
 
- wlp2s0: CTRL-EVENT-DISCONNECTED bssid=74:26:ac:68:2f:c0 reason=4
-locally_generated=1
+[0] https://lkml.kernel.org/r/20170914225422.31034-1-mcgrof@kernel.org
 
-The cycle then repeats with it connecting again before being swiftly
-disconnected, etc.
+>  struct firmware_cache {
+>  	/* firmware_buf instance will be added into the below list */
+> @@ -1214,13 +1219,26 @@ static void fw_abort_batch_reqs(struct firmware *fw)
+>  	if (ret <= 0) /* error or already assigned */
+>  		goto out;
+>  
+> -	ret = fw_get_filesystem_firmware(device, fw->priv);
+> +	if (opt_flags & FW_OPT_PREFER_USER) {
+> +		ret = fw_load_from_user_helper(fw, name, device, opt_flags, timeout);
+> +		if (ret && !(opt_flags & FW_OPT_NO_WARN)) {
+> +			dev_warn(device,
+> +				 "User helper firmware load for %s failed with error %d\n",
+> +				 name, ret);
+> +			dev_warn(device, "Falling back to direct firmware load\n");
 
-More logs: https://gist.github.com/dsd/49f263c67c2859838ce168628ab043e0
+As I had noted before, the usermode helper was really not well designed,
+as such extending further use of it is something we should shy away unless we
+determine its completely necessary.
 
-At the same time that we upgraded the kernel, we also upgraded many
-other components (e.g. NetworkManager and wpa_supplicant), however the
-same problem has been reported on Arch Linux and a user there reports
-that he narrowed it down to a kernel regression between 4.12 and 4.13:
-https://bbs.archlinux.org/viewtopic.php?id=225199
+So what's wrong with this driver failing at direct access, which should be fast,
+and relying on a uevent to then work using the current fallback mechanisms?
 
-Unfortunately we can not reproduce this in our office, so can't offer
-much more info yet, but we are continuing to investigate. I have not
-found any codepaths in userspace that generate disconnect reason 4, so
-I think it must be something in the kernel causing the disconnection,
-but I did not see any suspicious changes in recent commit history.
+The commit log in no way documents any of the justifications for further
+extending use of the usermode helper.
 
-It would be good to hear from anyone who has heard of this or has any
-ideas about causes or solutions.
-
-Thanks
-Daniel
+  Luis
