@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:50157 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753843AbdKXSrw (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48812 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755635AbdKJCg4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Nov 2017 13:47:52 -0500
-Date: Fri, 24 Nov 2017 19:47:42 +0100 (CET)
-From: Stefan Wahren <stefan.wahren@i2se.com>
-To: Franky Lin <franky.lin@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        brcm80211-dev-list@cypress.com
-Message-ID: <1830131626.467184.1511549262573@email.1und1.de> (sfid-20171124_194755_765877_38DF1E3C)
-In-Reply-To: <5A181609.40907@broadcom.com>
-References: <578431614.96494.1510505412682@email.1und1.de>
- <1906631797.229909.1511367617667@email.1und1.de>
- <08b0ba6f-d4e7-576e-18fe-98e8247d2d91@broadcom.com>
- <1736744183.124.1511378235966@email.1und1.de> <5A181609.40907@broadcom.com>
-Subject: Re: brcmfmac: Unable to handle kernel paging request at virtual
- address 726f6674616cd8
+        Thu, 9 Nov 2017 21:36:56 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: rsi: rsi_91x_ps: remove redundant code in str_psstate
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171106215321.GA25539@embeddedor.com>
+References: <20171106215321.GA25539@embeddedor.com>
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Message-Id: <20171110023656.2C103601D1@smtp.codeaurora.org> (sfid-20171110_033717_153540_1556A97F)
+Date: Fri, 10 Nov 2017 02:36:56 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+"Gustavo A. R. Silva" <garsilva@embeddedor.com> wrote:
 
-> Arend van Spriel <arend.vanspriel@broadcom.com> hat am 24. November 2017 um 13:52 geschrieben:
+> "INVALID_STATE" is already being returned in the default case and this
+> code cannot be reached.
 > 
-> 
-> ...
-> 
-> I just realized the remove of sdio func #1 removes everything so we must 
-> first remove sdio func #2. Can you try the patch below.
-> 
-> Regards,
-> Arend
-> ---
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c 
-> b/drivers/n
-> index b2256aa..58fa438 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -4121,8 +4121,8 @@ static void brcmf_sdio_firmware_callback(struct 
-> device *de
->          sdio_release_host(sdiodev->func[1]);
->   fail:
->          brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
-> -       device_release_driver(dev);
->          device_release_driver(&sdiodev->func[2]->dev);
-> +       device_release_driver(dev);
->   }
-> 
->   struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
-> 
->
+> Addresses-Coverity-ID: 1398384
+> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
 
-that's it. The issue disappeared.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Thanks
-Stefan
+4775ae7afec6 rsi: rsi_91x_ps: remove redundant code in str_psstate
+
+-- 
+https://patchwork.kernel.org/patch/10044571/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
