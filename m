@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f171.google.com ([209.85.128.171]:33198 "EHLO
-        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1762096AbdKRFhW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Nov 2017 00:37:22 -0500
-Received: by mail-wr0-f171.google.com with SMTP id 4so3795686wrt.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Nov 2017 21:37:21 -0800 (PST)
+Received: from mail.toke.dk ([52.28.52.200]:48913 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755136AbdKJAs4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Nov 2017 19:48:56 -0500
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Subject: [PATCH v2] ath10k: Re-enable TXQs for all devices
+Date: Fri, 10 Nov 2017 09:48:39 +0900
+Message-Id: <20171110004839.7478-1-toke@toke.dk> (sfid-20171110_014859_782032_9897BF7A)
 MIME-Version: 1.0
-In-Reply-To: <CAK_-F2LuLNCUA9U4AS3A2puLLVWd8Ld66YPAd0NspQUMuUEzGA@mail.gmail.com>
-References: <CAK_-F2LuLNCUA9U4AS3A2puLLVWd8Ld66YPAd0NspQUMuUEzGA@mail.gmail.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Fri, 17 Nov 2017 21:37:20 -0800
-Message-ID: <CALLGbRJXLHeL33UNoNmRdjPJUzoGjajq0hcw2sd=PH4RdWfG7w@mail.gmail.com> (sfid-20171118_063729_185753_EE85F548)
-Subject: Re: ath6kl : intermittent Wi-Fi on Fedora 27 (Linux 4.13.12-300)
-To: Ken Harris <kjh@hokulea.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ken,
+Commit 4ca1807815aa6801aaced7fdefa9edacc2521767 disables the use of the
+mac80211 TXQs for some devices because of a theoretical throughput
+regression. The original regression report[1] was related to fq_codel
+qdisc drop performance, which was fixed in
+9d18562a227874289fda8ca5d117d8f503f1dcca. Since then, we have not seen
+the TXQ-related regression, so it should be safe to re-enable TXQs.
 
-On Fri, Nov 17, 2017 at 11:58 AM, Ken Harris <kjh@hokulea.org> wrote:
-> Yesterday, I installed Fedora 27 on a Dell Venue 8 Pro (5830).
->
-> I installed the ath6kl firmware from https://github.com/qca/ath6kl-firmware/
->
-> The Wi-Fi works for a while, but then stops.  It seems to start up
-> again about 30 minutes later.
->
-> Is this a known problem ? Is there any to fix it ?
+[1] http://lists.infradead.org/pipermail/ath10k/2016-April/007266.html
 
-Hard to know. You've not really given us enough information that would
-be helpful to help you.  Kernel version? dmesg dump? Backports? Which
-chip? SDIO or USB? Network manager or other?  All of this information
-is necessary to help.
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+---
+This has been in LEDE trunk for a couple of months now with good
+results.
 
-Usually your distro would come with the right firmware, and if it
-doesn't, usually the proper place to get it from is
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/
- Though, if you're needing ar6004/hw3.0 it's missing for some reason
-(@Kalle, why isn't that fw in linux-firmware?)
+Changes since v1:
+- Update commit message to refer to original report and the fix for it.
+- Add ath10k list to cc
 
-What I can tell you is I have ath6kl on many kernel versions on both
-6003 and 6004 connected solid for months at a time with 0 noticeable
-drops.
+ drivers/net/wireless/ath/ath10k/mac.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-This might help:
-https://wireless.wiki.kernel.org/en/users/documentation/reporting_bugs
-
->
-> FYI, I added :
->
-> echo options ath6kl_core debug_mask=0x140400 > /etc/modprobe.d/55-ath6k.conf
->
-> ... so I'm getting more debug info.  Are the other debug bits I should try ?
->
-
-Not bad, but I'd also suggest adding the recovery bit.  0x940400 would
-be a good place to start.
-
-Get us a kernel messages dump and maybe we can help more.
-
-- Steve
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0a947eef348d..ca596ecd2d64 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8329,15 +8329,6 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			ath10k_warn(ar, "failed to initialise DFS pattern detector\n");
+ 	}
+ 
+-	/* Current wake_tx_queue implementation imposes a significant
+-	 * performance penalty in some setups. The tx scheduling code needs
+-	 * more work anyway so disable the wake_tx_queue unless firmware
+-	 * supports the pull-push mechanism.
+-	 */
+-	if (!test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL,
+-		      ar->running_fw->fw_file.fw_features))
+-		ar->ops->wake_tx_queue = NULL;
+-
+ 	ret = ath10k_mac_init_rd(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to derive regdom: %d\n", ret);
+-- 
+2.15.0
