@@ -1,66 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:35811 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751071AbdKTMdz (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:56762 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750933AbdKJVaC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 07:33:55 -0500
-Received: by mail-pg0-f65.google.com with SMTP id l19so7284093pgo.2
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2017 04:33:55 -0800 (PST)
-From: venkat.prashanth2498@gmail.com
-To: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
-Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-        Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
-Subject: [PATCH] rtlwifi:rtl8723ae: Fix embedded function names with __func__ Prefer and make it generic by using %s and __func__ to print functions name instead of embedding functions name in print statements 
-Date: Mon, 20 Nov 2017 18:03:19 +0530
-Message-Id: <1511181199-4638-1-git-send-email-venkat.prashanth2498@gmail.com> (sfid-20171120_133359_055753_BB121FBC)
+        Fri, 10 Nov 2017 16:30:02 -0500
+Date: Fri, 10 Nov 2017 22:29:59 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+cc: Fengguang Wu <fengguang.wu@intel.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [run_timer_softirq] BUG: unable to handle kernel paging request
+ at 0000000000010007
+In-Reply-To: <CA+55aFxz=_g38OsVXhLBMGXnQyZ3CvFk971e19z9eu+9Pu=4dA@mail.gmail.com>
+Message-ID: <alpine.DEB.2.20.1711102228030.2288@nanos> (sfid-20171110_223043_427601_CBBC1EF4)
+References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com> <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com> <20171029234820.nzwavupqlv2iqo3m@wfg-t540p.sh.intel.com> <CA+55aFxA=+iO1cysMnLZz1iNd4W+gEf4Ys9FGoWM+zmuST2KOQ@mail.gmail.com>
+ <20171109051905.pdlsyrbzrwlsjbrs@wfg-t540p.sh.intel.com> <CA+55aFxz=_g38OsVXhLBMGXnQyZ3CvFk971e19z9eu+9Pu=4dA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
+On Fri, 10 Nov 2017, Linus Torvalds wrote:
 
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> On Wed, Nov 8, 2017 at 9:19 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+> >
+> > Yes it's accessing the list. Here is the faddr2line output.
+> 
+> Ok, so it's a corrupted timer list. Which is not a big surprise.
+> 
+> It's
+> 
+>                 next->pprev = pprev;
+> 
+> in __hlist_del(), and the trapping instruction decodes as
+> 
+>         mov    %rdx,0x8(%rax)
+> 
+> with %rax having the value dead000000000200,
+> 
+> Which is just LIST_POISON2.
+> 
+> So we've deleted that entry twice - LIST_POISON2 is what hlist_del()
+> sets pprev to after already deleting it once.
+> 
+> Although in this case it might not be hlist_del(), because
+> detach_timer() also sets entry->next to LIST_POISON2.
+> 
+> Which is pretty bogus, we are supposed to use LIST_POISON1 for the
+> "next" pointer. Oh well. Nobody cares, except for the list entry
+> debugging code, which isn't run on the hlist cases.
+> 
+> Adding Thomas Gleixner to the cc. It should not be possible to delete
+> the same timer twice.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-index f713c72..bd56bb6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-@@ -389,7 +389,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
- 
- 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
--			 "DMA mapping error\n");
-+			 "%s():DMA Mapping Error", __func__);
- 		return;
- 	}
- 	if (mac->opmode == NL80211_IFTYPE_STATION) {
-@@ -498,7 +498,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
- 		if (ieee80211_is_data_qos(fc)) {
- 			if (mac->rdg_en) {
- 				RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
--					 "Enable RDG function.\n");
-+			"%s():Enable RDG function.\n", __func__);
- 				SET_TX_DESC_RDG_ENABLE(pdesc, 1);
- 				SET_TX_DESC_HTC(pdesc, 1);
- 			}
-@@ -537,7 +537,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
- 		SET_TX_DESC_BMC(pdesc, 1);
- 	}
- 
--	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "\n");
-+	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "%s():\n", __func__);
- }
- 
- void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
-@@ -557,7 +557,7 @@ void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
- 
- 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
--			 "DMA mapping error\n");
-+			 "%s():DMA Mapping Error", __func__);
- 		return;
- 	}
- 	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
--- 
-1.9.1
+Right, it shouldn't.
+
+Fengguang, can you please enable:
+
+CONFIG_DEBUG_OBJECTS
+CONFIG_DEBUG_OBJECTS_TIMERS
+
+and try to reproduce? Debugobject should catch that hopefully.
+
+Thanks,
+
+	tglx
