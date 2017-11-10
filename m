@@ -1,338 +1,333 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:7362 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753154AbdK2Vdl (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:43012 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755790AbdKJCy3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 16:33:41 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: unify rx processing in napi_poll
-Date: Wed, 29 Nov 2017 13:33:32 -0800
-Message-ID: <1511991212-4837-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20171129_223348_924750_0FDD59A9)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 9 Nov 2017 21:54:29 -0500
+Received: by mail-pf0-f170.google.com with SMTP id a84so833407pfl.0
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Nov 2017 18:54:28 -0800 (PST)
+From: Daniel Drake <drake@endlessm.com>
+To: Russell Hu <rhu@qti.qualcomm.com>, linux-wireless@vger.kernel.org
+Cc: ryanhsu@qti.qualcomm.com, rwchang@qti.qualcomm.com,
+        aeolus@qti.qualcomm.com, kvalo@qca.qualcomm.com,
+        ath9k-devel@qca.qualcomm.com, linux@endlessm.com,
+        rafael.j.wysocki@intel.com, andy@infradead.org
+Subject: Re: [v2] ath9k: add MSI support
+Date: Fri, 10 Nov 2017 10:54:15 +0800
+Message-Id: <20171110025415.7854-1-drake@endlessm.com> (sfid-20171110_035437_061952_6D119A45)
+In-Reply-To: <20171011101806.6295-1-rhu@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With current NAPI implementation, NAPI poll can deliver more frames
-to net core than allotted budget. This may cause warning in napi_poll.
-Remaining quota is not accounted, while processing amsdus in
-rx_in_ord_ind and rx_ind queue. Adding num_msdus at last can not
-prevent delivering more frames to net core. With this change,
-all amdus from both in_ord_ind and rx_ind queues are processed and
-enqueued into common skb list instead of delivering into mac80211.
-Later msdus from common queue are dequeued and delivered depends on
-quota availability. This change also simplifies the rx processing in
-napi poll routine.
+Hi Russell,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h   |   1 -
- drivers/net/wireless/ath/ath10k/htt.h    |   2 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c | 121 ++++++++++++++++---------------
- 3 files changed, 63 insertions(+), 61 deletions(-)
+> On new Intel platforms like ApolloLake, legacy interrupt mechanism
+> (INTx) is not supported
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 643041ef3271..6ecc58811656 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -67,7 +67,6 @@
- 
- /* NAPI poll budget */
- #define ATH10K_NAPI_BUDGET      64
--#define ATH10K_NAPI_QUOTA_LIMIT 60
- 
- /* SMBIOS type containing Board Data File Name Extension */
- #define ATH10K_SMBIOS_BDF_EXT_TYPE 0xF8
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 6305308422c4..7d6143523634 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1695,7 +1695,7 @@ struct ath10k_htt {
- 	/* This is used to group tx/rx completions separately and process them
- 	 * in batches to reduce cache stalls
- 	 */
--	struct sk_buff_head rx_compl_q;
-+	struct sk_buff_head rx_msdus_q;
- 	struct sk_buff_head rx_in_ord_compl_q;
- 	struct sk_buff_head tx_fetch_ind_q;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index e31438541ee1..d82f26dbba44 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -227,7 +227,7 @@ void ath10k_htt_rx_free(struct ath10k_htt *htt)
- {
- 	del_timer_sync(&htt->rx_ring.refill_retry_timer);
- 
--	skb_queue_purge(&htt->rx_compl_q);
-+	skb_queue_purge(&htt->rx_msdus_q);
- 	skb_queue_purge(&htt->rx_in_ord_compl_q);
- 	skb_queue_purge(&htt->tx_fetch_ind_q);
- 
-@@ -515,7 +515,7 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
- 	htt->rx_ring.sw_rd_idx.msdu_payld = 0;
- 	hash_init(htt->rx_ring.skb_table);
- 
--	skb_queue_head_init(&htt->rx_compl_q);
-+	skb_queue_head_init(&htt->rx_msdus_q);
- 	skb_queue_head_init(&htt->rx_in_ord_compl_q);
- 	skb_queue_head_init(&htt->tx_fetch_ind_q);
- 	atomic_set(&htt->num_mpdus_ready, 0);
-@@ -951,16 +951,25 @@ static char *ath10k_get_tid(struct ieee80211_hdr *hdr, char *out, size_t size)
- 	return out;
- }
- 
--static void ath10k_process_rx(struct ath10k *ar,
--			      struct ieee80211_rx_status *rx_status,
--			      struct sk_buff *skb)
-+static void ath10k_htt_rx_h_queue_msdu(struct ath10k *ar,
-+				       struct ieee80211_rx_status *rx_status,
-+				       struct sk_buff *skb)
-+{
-+	struct ieee80211_rx_status *status;
-+
-+	status = IEEE80211_SKB_RXCB(skb);
-+	*status = *rx_status;
-+
-+	__skb_queue_tail(&ar->htt.rx_msdus_q, skb);
-+}
-+
-+static void ath10k_process_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct ieee80211_rx_status *status;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	char tid[32];
- 
- 	status = IEEE80211_SKB_RXCB(skb);
--	*status = *rx_status;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_DATA,
- 		   "rx skb %pK len %u peer %pM %s %s sn %u %s%s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i amsdu-more %i\n",
-@@ -1492,7 +1501,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 	}
- }
- 
--static void ath10k_htt_rx_h_deliver(struct ath10k *ar,
-+static void ath10k_htt_rx_h_enqueue(struct ath10k *ar,
- 				    struct sk_buff_head *amsdu,
- 				    struct ieee80211_rx_status *status)
- {
-@@ -1515,7 +1524,7 @@ static void ath10k_htt_rx_h_deliver(struct ath10k *ar,
- 			status->flag |= RX_FLAG_ALLOW_SAME_PN;
- 		}
- 
--		ath10k_process_rx(ar, status, msdu);
-+		ath10k_htt_rx_h_queue_msdu(ar, status, msdu);
- 	}
- }
- 
-@@ -1627,7 +1636,7 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
- 	struct ath10k *ar = htt->ar;
- 	struct ieee80211_rx_status *rx_status = &htt->rx_status;
- 	struct sk_buff_head amsdu;
--	int ret, num_msdus;
-+	int ret;
- 
- 	__skb_queue_head_init(&amsdu);
- 
-@@ -1649,7 +1658,6 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
- 		return ret;
- 	}
- 
--	num_msdus = skb_queue_len(&amsdu);
- 	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
- 
- 	/* only for ret = 1 indicates chained msdus */
-@@ -1658,9 +1666,9 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
- 
- 	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
- 	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status, true);
--	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
-+	ath10k_htt_rx_h_enqueue(ar, &amsdu, rx_status);
- 
--	return num_msdus;
-+	return 0;
- }
- 
- static void ath10k_htt_rx_proc_rx_ind(struct ath10k_htt *htt,
-@@ -1868,15 +1876,14 @@ static void ath10k_htt_rx_h_rx_offload_prot(struct ieee80211_rx_status *status,
- 			RX_FLAG_MMIC_STRIPPED;
- }
- 
--static int ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
--				      struct sk_buff_head *list)
-+static void ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
-+				       struct sk_buff_head *list)
- {
- 	struct ath10k_htt *htt = &ar->htt;
- 	struct ieee80211_rx_status *status = &htt->rx_status;
- 	struct htt_rx_offload_msdu *rx;
- 	struct sk_buff *msdu;
- 	size_t offset;
--	int num_msdu = 0;
- 
- 	while ((msdu = __skb_dequeue(list))) {
- 		/* Offloaded frames don't have Rx descriptor. Instead they have
-@@ -1915,10 +1922,8 @@ static int ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
- 
- 		ath10k_htt_rx_h_rx_offload_prot(status, msdu);
- 		ath10k_htt_rx_h_channel(ar, status, NULL, rx->vdev_id);
--		ath10k_process_rx(ar, status, msdu);
--		num_msdu++;
-+		ath10k_htt_rx_h_queue_msdu(ar, status, msdu);
- 	}
--	return num_msdu;
- }
- 
- static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
-@@ -1934,7 +1939,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 	u8 tid;
- 	bool offload;
- 	bool frag;
--	int ret, num_msdus = 0;
-+	int ret;
- 
- 	lockdep_assert_held(&htt->rx_ring.lock);
- 
-@@ -1976,7 +1981,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 	 * separately.
- 	 */
- 	if (offload)
--		num_msdus = ath10k_htt_rx_h_rx_offload(ar, &list);
-+		ath10k_htt_rx_h_rx_offload(ar, &list);
- 
- 	while (!skb_queue_empty(&list)) {
- 		__skb_queue_head_init(&amsdu);
-@@ -1989,11 +1994,10 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			 * better to report something than nothing though. This
- 			 * should still give an idea about rx rate to the user.
- 			 */
--			num_msdus += skb_queue_len(&amsdu);
- 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
- 			ath10k_htt_rx_h_filter(ar, &amsdu, status);
- 			ath10k_htt_rx_h_mpdu(ar, &amsdu, status, false);
--			ath10k_htt_rx_h_deliver(ar, &amsdu, status);
-+			ath10k_htt_rx_h_enqueue(ar, &amsdu, status);
- 			break;
- 		case -EAGAIN:
- 			/* fall through */
-@@ -2005,7 +2009,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			return -EIO;
- 		}
- 	}
--	return num_msdus;
-+	return ret;
- }
- 
- static void ath10k_htt_rx_tx_fetch_resp_id_confirm(struct ath10k *ar,
-@@ -2606,6 +2610,24 @@ void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
- }
- EXPORT_SYMBOL(ath10k_htt_rx_pktlog_completion_handler);
- 
-+static int ath10k_htt_rx_deliver_msdu(struct ath10k *ar, int quota, int budget)
-+{
-+	struct sk_buff *skb;
-+
-+	while (quota < budget) {
-+		if (skb_queue_empty(&ar->htt.rx_msdus_q))
-+			break;
-+
-+		skb = __skb_dequeue(&ar->htt.rx_msdus_q);
-+		if (!skb)
-+			break;
-+		ath10k_process_rx(ar, skb);
-+		quota++;
-+	}
-+
-+	return quota;
-+}
-+
- int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
- {
- 	struct ath10k_htt *htt = &ar->htt;
-@@ -2613,63 +2635,44 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
- 	struct sk_buff_head tx_ind_q;
- 	struct sk_buff *skb;
- 	unsigned long flags;
--	int quota = 0, done, num_rx_msdus;
-+	int quota = 0, done, ret;
- 	bool resched_napi = false;
- 
- 	__skb_queue_head_init(&tx_ind_q);
- 
--	/* Since in-ord-ind can deliver more than 1 A-MSDU in single event,
--	 * process it first to utilize full available quota.
-+	/* Process pending frames before dequeuing more data
-+	 * from hardware.
- 	 */
--	while (quota < budget) {
--		if (skb_queue_empty(&htt->rx_in_ord_compl_q))
--			break;
--
--		skb = __skb_dequeue(&htt->rx_in_ord_compl_q);
--		if (!skb) {
--			resched_napi = true;
--			goto exit;
--		}
-+	quota = ath10k_htt_rx_deliver_msdu(ar, quota, budget);
-+	if (quota == budget) {
-+		resched_napi = true;
-+		goto exit;
-+	}
- 
-+	while ((skb = __skb_dequeue(&htt->rx_in_ord_compl_q))) {
- 		spin_lock_bh(&htt->rx_ring.lock);
--		num_rx_msdus = ath10k_htt_rx_in_ord_ind(ar, skb);
-+		ret = ath10k_htt_rx_in_ord_ind(ar, skb);
- 		spin_unlock_bh(&htt->rx_ring.lock);
--		if (num_rx_msdus < 0) {
--			resched_napi = true;
--			goto exit;
--		}
- 
- 		dev_kfree_skb_any(skb);
--		if (num_rx_msdus > 0)
--			quota += num_rx_msdus;
--
--		if ((quota > ATH10K_NAPI_QUOTA_LIMIT) &&
--		    !skb_queue_empty(&htt->rx_in_ord_compl_q)) {
-+		if (ret == -EIO) {
- 			resched_napi = true;
- 			goto exit;
- 		}
- 	}
- 
--	while (quota < budget) {
--		/* no more data to receive */
--		if (!atomic_read(&htt->num_mpdus_ready))
--			break;
--
--		num_rx_msdus = ath10k_htt_rx_handle_amsdu(htt);
--		if (num_rx_msdus < 0) {
-+	while (atomic_read(&htt->num_mpdus_ready)) {
-+		ret = ath10k_htt_rx_handle_amsdu(htt);
-+		if (ret == -EIO) {
- 			resched_napi = true;
- 			goto exit;
- 		}
--
--		quota += num_rx_msdus;
- 		atomic_dec(&htt->num_mpdus_ready);
--		if ((quota > ATH10K_NAPI_QUOTA_LIMIT) &&
--		    atomic_read(&htt->num_mpdus_ready)) {
--			resched_napi = true;
--			goto exit;
--		}
- 	}
- 
-+	/* Deliver received data after processing data from hardware */
-+	quota = ath10k_htt_rx_deliver_msdu(ar, quota, budget);
-+
- 	/* From NAPI documentation:
- 	 *  The napi poll() function may also process TX completions, in which
- 	 *  case if it processes the entire TX ring then it should count that
--- 
-1.9.1
+Could you please share the background on what you are claiming here.
+I have multiple ApolloLake laptops here with many legacy interrupts
+being used in /proc/interrupts.
+
+I do see this ath9k problem on multiple Acer ApolloLake laptops, however
+I also have an Asus E402NA ApolloLake laptop on hand where the exact same
+ath9k miniPCIe card is working fine with legacy interrupts.
+
+> With module paremeter "use_msi=1", ath9k driver would try to
+> use MSI instead of INTx.
+
+In the previous patch review it was suggested that MSI should become
+the default - not a quirk or parameter.
+https://lkml.org/lkml/2017/9/26/64
+
+
+I have tested your patch on Acer Aspire ES1-432. It does not work -
+I still can't connect to wifi.
+/proc/interrupts shows that no MSI interrupts are delivered, the
+counters are 0.
+
+lspci -vv shows:
+        Capabilities: [50] MSI: Enable+ Count=1/4 Maskable+ 64bit+
+                Address: 00000000fee0f00c  Data: 4142
+                Masking: 0000000e  Pending: 00000000
+
+So MSI is enabled and the vector number is 0x42 (decimal 66).
+However my kernel log is now totally spammed with:
+  do_IRQ: 0.64 No irq handler for vector
+
+My assumption here is that the ath9k hardware implementation of
+MSI is buggy, and it is therefore corrupting the MSI vector number
+by zeroing out the lower 2 bits (e.g. 66 -> 64).
+
+It would be very useful if Qualcomm could confirm if this behaviour
+is really true and if it could potentially be fixed with a new ath9k
+firmware version.
+
+For more info please see:
+   https://marc.info/?l=linux-pci&m=150238260826803&w=2
+   https://marc.info/?t=150631283200001&r=1&w=2
+   https://marc.info/?l=linux-pci&m=150831581725596&w=2
+
+Thanks
+Daniel
+
+
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index 8c5c2dd8fa7f..cd0f023ccf77 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -922,6 +922,7 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+>  		AR_IMR_RXERR |
+>  		AR_IMR_RXORN |
+>  		AR_IMR_BCNMISC;
+> +	u32 msi_cfg = 0;
+>  
+>  	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
+>  	    AR_SREV_9561(ah))
+> @@ -929,22 +930,30 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+>  
+>  	if (AR_SREV_9300_20_OR_LATER(ah)) {
+>  		imr_reg |= AR_IMR_RXOK_HP;
+> -		if (ah->config.rx_intr_mitigation)
+> +		if (ah->config.rx_intr_mitigation) {
+>  			imr_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
+> -		else
+> +			msi_cfg |= AR_INTCFG_MSI_RXINTM | AR_INTCFG_MSI_RXMINTR;
+> +		} else {
+>  			imr_reg |= AR_IMR_RXOK_LP;
+> -
+> +			msi_cfg |= AR_INTCFG_MSI_RXOK;
+> +		}
+>  	} else {
+> -		if (ah->config.rx_intr_mitigation)
+> +		if (ah->config.rx_intr_mitigation) {
+>  			imr_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
+> -		else
+> +			msi_cfg |= AR_INTCFG_MSI_RXINTM | AR_INTCFG_MSI_RXMINTR;
+> +		} else {
+>  			imr_reg |= AR_IMR_RXOK;
+> +			msi_cfg |= AR_INTCFG_MSI_RXOK;
+> +		}
+>  	}
+>  
+> -	if (ah->config.tx_intr_mitigation)
+> +	if (ah->config.tx_intr_mitigation) {
+>  		imr_reg |= AR_IMR_TXINTM | AR_IMR_TXMINTR;
+> -	else
+> +		msi_cfg |= AR_INTCFG_MSI_TXINTM | AR_INTCFG_MSI_TXMINTR;
+> +	} else {
+>  		imr_reg |= AR_IMR_TXOK;
+> +		msi_cfg |= AR_INTCFG_MSI_TXOK;
+> +	}
+>  
+>  	ENABLE_REGWRITE_BUFFER(ah);
+>  
+> @@ -952,6 +961,16 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+>  	ah->imrs2_reg |= AR_IMR_S2_GTT;
+>  	REG_WRITE(ah, AR_IMR_S2, ah->imrs2_reg);
+>  
+> +	if (ah->msi_enabled) {
+> +		ah->msi_reg = REG_READ(ah, AR_PCIE_MSI);
+> +		ah->msi_reg |= AR_PCIE_MSI_HW_DBI_WR_EN;
+> +		ah->msi_reg &= AR_PCIE_MSI_HW_INT_PENDING_ADDR_MSI_64;
+> +		REG_WRITE(ah, AR_INTCFG, msi_cfg);
+> +		ath_dbg(ath9k_hw_common(ah), ANY,
+> +			"value of AR_INTCFG=0x%X, msi_cfg=0x%X\n",
+> +			REG_READ(ah, AR_INTCFG), msi_cfg);
+> +	}
+> +
+>  	if (!AR_SREV_9100(ah)) {
+>  		REG_WRITE(ah, AR_INTR_SYNC_CAUSE, 0xFFFFFFFF);
+>  		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, sync_default);
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+> index 4ac70827d142..0d6c07c77372 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.h
+> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> @@ -977,6 +977,9 @@ struct ath_hw {
+>  	bool tpc_enabled;
+>  	u8 tx_power[Ar5416RateSize];
+>  	u8 tx_power_stbc[Ar5416RateSize];
+> +	bool msi_enabled;
+> +	u32 msi_mask;
+> +	u32 msi_reg;
+>  };
+>  
+>  struct ath_bus_ops {
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index bb7936090b91..b6b7a353fea4 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -75,6 +75,10 @@ MODULE_PARM_DESC(use_chanctx, "Enable channel context for concurrency");
+>  
+>  #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
+>  
+> +int ath9k_use_msi;
+> +module_param_named(use_msi, ath9k_use_msi, int, 0444);
+> +MODULE_PARM_DESC(use_msi, "Use MSI instead of INTx if possible");
+> +
+>  bool is_ath9k_unloaded;
+>  
+>  #ifdef CONFIG_MAC80211_LEDS
+> diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+> index 77c94f9e7b61..58d02c19b6d0 100644
+> --- a/drivers/net/wireless/ath/ath9k/mac.c
+> +++ b/drivers/net/wireless/ath/ath9k/mac.c
+> @@ -832,6 +832,43 @@ static void __ath9k_hw_enable_interrupts(struct ath_hw *ah)
+>  	}
+>  	ath_dbg(common, INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
+>  		REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
+> +
+> +	if (ah->msi_enabled) {
+> +		u32 _msi_reg = 0;
+> +		u32 i = 0;
+> +		u32 msi_pend_addr_mask = AR_PCIE_MSI_HW_INT_PENDING_ADDR_MSI_64;
+> +
+> +		ath_dbg(ath9k_hw_common(ah), INTERRUPT,
+> +			"Enabling MSI, msi_mask=0x%X\n", ah->msi_mask);
+> +
+> +		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_ENABLE, ah->msi_mask);
+> +		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_MASK, ah->msi_mask);
+> +		ath_dbg(ath9k_hw_common(ah), INTERRUPT,
+> +			"AR_INTR_PRIO_ASYNC_ENABLE=0x%X, AR_INTR_PRIO_ASYNC_MASK=0x%X\n",
+> +			REG_READ(ah, AR_INTR_PRIO_ASYNC_ENABLE),
+> +			REG_READ(ah, AR_INTR_PRIO_ASYNC_MASK));
+> +
+> +		if (ah->msi_reg == 0)
+> +			ah->msi_reg = REG_READ(ah, AR_PCIE_MSI);
+> +
+> +		ath_dbg(ath9k_hw_common(ah), INTERRUPT,
+> +			"AR_PCIE_MSI=0x%X, ah->msi_reg = 0x%X\n",
+> +			AR_PCIE_MSI, ah->msi_reg);
+> +
+> +		i = 0;
+> +		do {
+> +			REG_WRITE(ah, AR_PCIE_MSI,
+> +				  (ah->msi_reg | AR_PCIE_MSI_ENABLE)
+> +				  & msi_pend_addr_mask);
+> +			_msi_reg = REG_READ(ah, AR_PCIE_MSI);
+> +			i++;
+> +		} while ((_msi_reg & AR_PCIE_MSI_ENABLE) == 0 && i < 200);
+> +
+> +		if (i >= 200)
+> +			ath_err(ath9k_hw_common(ah),
+> +				"%s: _msi_reg = 0x%X\n",
+> +				__func__, _msi_reg);
+> +	}
+>  }
+>  
+>  void ath9k_hw_resume_interrupts(struct ath_hw *ah)
+> @@ -878,12 +915,21 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah)
+>  	if (!(ints & ATH9K_INT_GLOBAL))
+>  		ath9k_hw_disable_interrupts(ah);
+>  
+> +	if (ah->msi_enabled) {
+> +		ath_dbg(common, INTERRUPT, "Clearing AR_INTR_PRIO_ASYNC_ENABLE\n");
+> +
+> +		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_ENABLE, 0);
+> +		REG_READ(ah, AR_INTR_PRIO_ASYNC_ENABLE);
+> +	}
+> +
+>  	ath_dbg(common, INTERRUPT, "New interrupt mask 0x%x\n", ints);
+>  
+>  	mask = ints & ATH9K_INT_COMMON;
+>  	mask2 = 0;
+>  
+> +	ah->msi_mask = 0;
+>  	if (ints & ATH9K_INT_TX) {
+> +		ah->msi_mask |= AR_INTR_PRIO_TX;
+>  		if (ah->config.tx_intr_mitigation)
+>  			mask |= AR_IMR_TXMINTR | AR_IMR_TXINTM;
+>  		else {
+> @@ -898,6 +944,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah)
+>  			mask |= AR_IMR_TXEOL;
+>  	}
+>  	if (ints & ATH9K_INT_RX) {
+> +		ah->msi_mask |= AR_INTR_PRIO_RXLP | AR_INTR_PRIO_RXHP;
+>  		if (AR_SREV_9300_20_OR_LATER(ah)) {
+>  			mask |= AR_IMR_RXERR | AR_IMR_RXOK_HP;
+>  			if (ah->config.rx_intr_mitigation) {
+> diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+> index 223606311261..645f0fbd9179 100644
+> --- a/drivers/net/wireless/ath/ath9k/pci.c
+> +++ b/drivers/net/wireless/ath/ath9k/pci.c
+> @@ -22,6 +22,8 @@
+>  #include <linux/module.h>
+>  #include "ath9k.h"
+>  
+> +extern int ath9k_use_msi;
+> +
+>  static const struct pci_device_id ath_pci_id_table[] = {
+>  	{ PCI_VDEVICE(ATHEROS, 0x0023) }, /* PCI   */
+>  	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
+> @@ -889,6 +891,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	u32 val;
+>  	int ret = 0;
+>  	char hw_name[64];
+> +	int msi_enabled = 0;
+>  
+>  	if (pcim_enable_device(pdev))
+>  		return -EIO;
+> @@ -960,7 +963,20 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	sc->mem = pcim_iomap_table(pdev)[0];
+>  	sc->driver_data = id->driver_data;
+>  
+> -	ret = request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
+> +	if (ath9k_use_msi) {
+> +		if (pci_enable_msi(pdev) == 0) {
+> +			msi_enabled = 1;
+> +			dev_err(&pdev->dev, "Using MSI\n");
+> +		} else {
+> +			dev_err(&pdev->dev, "Using INTx\n");
+> +		}
+> +	}
+> +
+> +	if (!msi_enabled)
+> +		ret = request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
+> +	else
+> +		ret = request_irq(pdev->irq, ath_isr, 0, "ath9k", sc);
+> +
+>  	if (ret) {
+>  		dev_err(&pdev->dev, "request_irq failed\n");
+>  		goto err_irq;
+> @@ -974,6 +990,9 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  		goto err_init;
+>  	}
+>  
+> +	sc->sc_ah->msi_enabled = msi_enabled;
+> +	sc->sc_ah->msi_reg = 0;
+> +
+>  	ath9k_hw_name(sc->sc_ah, hw_name, sizeof(hw_name));
+>  	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
+>  		   hw_name, (unsigned long)sc->mem, pdev->irq);
+> diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+> index 80ff69f99229..653e79611830 100644
+> --- a/drivers/net/wireless/ath/ath9k/reg.h
+> +++ b/drivers/net/wireless/ath/ath9k/reg.h
+> @@ -146,6 +146,14 @@
+>  #define AR_MACMISC_MISC_OBS_BUS_MSB_S   15
+>  #define AR_MACMISC_MISC_OBS_BUS_1       1
+>  
+> +#define AR_INTCFG               0x005C
+> +#define AR_INTCFG_MSI_RXOK      0x00000000
+> +#define AR_INTCFG_MSI_RXINTM    0x00000004
+> +#define AR_INTCFG_MSI_RXMINTR   0x00000006
+> +#define AR_INTCFG_MSI_TXOK      0x00000000
+> +#define AR_INTCFG_MSI_TXINTM    0x00000010
+> +#define AR_INTCFG_MSI_TXMINTR   0x00000018
+> +
+>  #define AR_DATABUF_SIZE		0x0060
+>  #define AR_DATABUF_SIZE_MASK	0x00000FFF
+>  
+> @@ -1256,6 +1264,13 @@ enum {
+>  #define AR_PCIE_MSI                             (AR_SREV_9340(ah) ? 0x40d8 : \
+>  						 (AR_SREV_9300_20_OR_LATER(ah) ? 0x40a4 : 0x4094))
+>  #define AR_PCIE_MSI_ENABLE                       0x00000001
+> +#define AR_PCIE_MSI_HW_DBI_WR_EN                 0x02000000
+> +#define AR_PCIE_MSI_HW_INT_PENDING_ADDR          0xFFA0C1FF /* bits 8..11: value must be 0x5060 */
+> +#define AR_PCIE_MSI_HW_INT_PENDING_ADDR_MSI_64   0xFFA0C9FF /* bits 8..11: value must be 0x5064 */
+> +
+> +#define AR_INTR_PRIO_TX               0x00000001
+> +#define AR_INTR_PRIO_RXLP             0x00000002
+> +#define AR_INTR_PRIO_RXHP             0x00000004
+>  
+>  #define AR_INTR_PRIO_SYNC_ENABLE  (AR_SREV_9340(ah) ? 0x4088 : 0x40c4)
+>  #define AR_INTR_PRIO_ASYNC_MASK   (AR_SREV_9340(ah) ? 0x408c : 0x40c8)
