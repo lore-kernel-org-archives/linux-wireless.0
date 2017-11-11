@@ -1,39 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:53006 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753724AbdKFRoI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 12:44:08 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
-Subject: RE: [PATCH] mac80211: Update last_ack status for all except probing
- frames
-Date: Mon, 6 Nov 2017 17:44:07 +0000
-Message-ID: <8bb232d231884f9595c81f945a5eef4f@NALASEXR01H.na.qualcomm.com> (sfid-20171106_184412_363975_74A5498B)
-References: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com>
- <1509964164.2669.0.camel@sipsolutions.net>
-In-Reply-To: <1509964164.2669.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mga05.intel.com ([192.55.52.43]:37963 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750818AbdKKPfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Nov 2017 10:35:09 -0500
+Date: Sat, 11 Nov 2017 23:35:07 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [run_timer_softirq] BUG: unable to handle kernel paging request
+ at 0000000000010007
+Message-ID: <20171111153507.pwzgyrejlq6aeizi@wfg-t540p.sh.intel.com> (sfid-20171111_163523_743285_C015B75D)
+References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
+ <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com>
+ <20171029234820.nzwavupqlv2iqo3m@wfg-t540p.sh.intel.com>
+ <CA+55aFxA=+iO1cysMnLZz1iNd4W+gEf4Ys9FGoWM+zmuST2KOQ@mail.gmail.com>
+ <20171109051905.pdlsyrbzrwlsjbrs@wfg-t540p.sh.intel.com>
+ <CA+55aFxz=_g38OsVXhLBMGXnQyZ3CvFk971e19z9eu+9Pu=4dA@mail.gmail.com>
+ <alpine.DEB.2.20.1711102228030.2288@nanos>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <alpine.DEB.2.20.1711102228030.2288@nanos>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiBNb24sIDIwMTctMTAtMzAgYXQgMTc6MjkgLTA3MDAsIFJhamt1bWFyIE1hbm9oYXJhbiB3
-cm90ZToNCj4gPiBVcGRhdGUgbGFzdF9hY2sgc3RhdHVzIGZvciBhbGwgZXhjZXB0IHN0YXRpb24g
-cHJvYmluZyBmcmFtZXMgKGkuZSBudWxsDQo+ID4gZGF0YSkuIE90aGVyd2lzZSB0aGUgc3RhdGlv
-biBpbmFjdGl2aXR5IGR1cmF0aW9uIGlzIGNsZWFyZWQgd2hlbmV2ZXINCj4gPiBBUCBpcyBjaGVj
-a2luZyBwcmVzZW5jZSBvZiBpZGxlIHN0YXRpb25zIGJ5IHNlbmRpbmcgbnVsbCBkYXRhIGZyYW1l
-DQo+ID4gZm9yIGV2ZXJ5IGluYWN0aXZlIHRocmVzaG9sZCAoYXBfbWF4X2luYWN0aXZpdHkpLg0K
-PiANCj4gWW91IG1ha2UgaXQgc291bmQgbGlrZSB0aGlzIGlzIGEgcHJvYmxlbSwgYnV0IGRvbid0
-IGV4cGxhaW4gd2h5IGl0IHdvdWxkIGJlPyBJDQo+IGRvbid0IHJlYWxseSBzZWUgaXQgYW55d2F5
-Lg0KPiANCkZvciBzdGVlcmluZyBhbiBpZGxlIHN0YXRpb24gZnJvbSBvbmUgQlNTIHRvIGFub3Ro
-ZXIsIHRoZSBzdGVlcmluZyBhcHBsaWNhdGlvbg0KaGFzIHRvIGtub3cgdGhlIGFjdHVhbCBzdGF0
-aW9uIGlkbGUgcGVyaW9kLiBCdXQgaWYgdGhlIGlkbGUgcGVyaW9kIGlzIGNsZWFyZWQgYnkNCmFw
-X21heF9pbmFjdGl2aXR5LCB0aGUgc3RlZXJpbmcgYXBwbGljYXRpb24gY2Fubm90IHN0ZWVyIHRo
-ZSBzdGF0aW9uIGV2ZW4gdGhvdWdoDQp0aGUgc3RhdGlvbiBpcyBub3Qgc2VuZGluZyBvciByZWNl
-aXZpbmcgYW55IGRhdGEgb3IgbWdtdC4gZnJhbWUuDQoNClRob3VnaCBrZWVwaW5nIGxvbmdlciBp
-ZGxlIHRocmVzaG9sZCAoYXBfbWF4X2luYWN0aXZpdHkpIHRoYW4gc3RlZXJpbmcgYXBwbGljYXRp
-b24NCmxpbWl0IG1heSBoZWxwIHRvIGlkZW50aWZ5IGlkbGUgc3RhdGlvbiwgaXQgd2lsbCBkaWZm
-ZXIgcmVtb3ZpbmcgdGhlIHN0YXRpb25zIHRoYXQgbGVmdCBCU1MuDQoNCi1SYWprdW1hcg0K
+On Fri, Nov 10, 2017 at 10:29:59PM +0100, Thomas Gleixner wrote:
+>On Fri, 10 Nov 2017, Linus Torvalds wrote:
+>
+>> On Wed, Nov 8, 2017 at 9:19 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+>> >
+>> > Yes it's accessing the list. Here is the faddr2line output.
+>>
+>> Ok, so it's a corrupted timer list. Which is not a big surprise.
+>>
+>> It's
+>>
+>>                 next->pprev = pprev;
+>>
+>> in __hlist_del(), and the trapping instruction decodes as
+>>
+>>         mov    %rdx,0x8(%rax)
+>>
+>> with %rax having the value dead000000000200,
+>>
+>> Which is just LIST_POISON2.
+>>
+>> So we've deleted that entry twice - LIST_POISON2 is what hlist_del()
+>> sets pprev to after already deleting it once.
+>>
+>> Although in this case it might not be hlist_del(), because
+>> detach_timer() also sets entry->next to LIST_POISON2.
+>>
+>> Which is pretty bogus, we are supposed to use LIST_POISON1 for the
+>> "next" pointer. Oh well. Nobody cares, except for the list entry
+>> debugging code, which isn't run on the hlist cases.
+>>
+>> Adding Thomas Gleixner to the cc. It should not be possible to delete
+>> the same timer twice.
+>
+>Right, it shouldn't.
+>
+>Fengguang, can you please enable:
+>
+>CONFIG_DEBUG_OBJECTS
+>CONFIG_DEBUG_OBJECTS_TIMERS
+>
+>and try to reproduce? Debugobject should catch that hopefully.
+
+Sure. However I've not got any results until now -- it's rather hard
+to reproduce. I'll check possible results tomorrow.
+
+Regards,
+Fengguang
