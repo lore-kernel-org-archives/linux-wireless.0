@@ -1,28 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eggs.gnu.org ([208.118.235.92]:38141 "EHLO eggs.gnu.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750750AbdKEVP7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Nov 2017 16:15:59 -0500
-Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
-        (envelope-from <nikolas@gnu.org>)
-        id 1eBSGn-0003T4-K5
-        for linux-wireless@vger.kernel.org; Sun, 05 Nov 2017 16:15:58 -0500
-Subject: Re: rtl8821ae dbi read question
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org, pkshih@realtek.com
-References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
- <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
-From: Nik Nyby <nikolas@gnu.org>
-Message-ID: <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org> (sfid-20171105_221602_655276_509255BE)
-Date: Sun, 5 Nov 2017 16:15:36 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:45628 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750770AbdKKOOM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Nov 2017 09:14:12 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2017-11-11
+References: <87o9o9vugd.fsf@kamboji.qca.qualcomm.com>
+        <20171111.223832.2216321055833169803.davem@davemloft.net>
+Date: Sat, 11 Nov 2017 16:14:06 +0200
+In-Reply-To: <20171111.223832.2216321055833169803.davem@davemloft.net> (David
+        Miller's message of "Sat, 11 Nov 2017 22:38:32 +0900 (KST)")
+Message-ID: <87bmk89a35.fsf@codeaurora.org> (sfid-20171111_151432_128828_891A6A14)
 MIME-Version: 1.0
-In-Reply-To: <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I also want to note that adding rtl8821ae.aspm=0 to my grub kernel boot 
-command doesn't fix my problem. (I'm building this driver into the 
-kernel, not as a module). My connection dropping problem is fixed only 
-if I comment out the aspm init code in the driver, per this patch:
-   https://patchwork.kernel.org/patch/9951511/
+David Miller <davem@davemloft.net> writes:
+
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Sat, 11 Nov 2017 15:03:14 +0200
+>
+>> some more patches to net-next for v4.15. Even though I applied the last
+>> patch only on Saturday morning, all these have been tested by kbuild bot
+>> and most of them should also be in linux-next. Please let me know if
+>> there are any problems.
+>
+> Pulled, but looking at your merge commit message:
+
+Thanks!
+
+>> Major changes:
+>> 
+>> iwlwifi
+>> 
+>> * some new PCI IDs
+>
+> I doubt this was the only major change in here :-)))
+
+Yeah, you're right. I wrote that too hastily. My excuse this time is
+that I tagged it at the airport :) But of course I should have prepared
+it better.
+
+-- 
+Kalle Valo
