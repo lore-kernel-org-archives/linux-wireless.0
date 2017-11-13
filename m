@@ -1,36 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:42457 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755869AbdKJCeB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 21:34:01 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-        Dave Taht <dave.taht@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: "make-wifi-fast\@lists.bufferbloat.net"
-        <make-wifi-fast@lists.bufferbloat.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: RE: [Make-wifi-fast] [PATCH] ath10k: Re-enable TXQs for all devices
-In-Reply-To: <a7b75767d01b46ef818f86dbd0c657a8@NALASEXR01H.na.qualcomm.com>
-References: <20171109071945.11033-1-toke@toke.dk> <6112ae948ba2409da27709d01da567eb@NALASEXR01H.na.qualcomm.com> <87k1yzq9i8.fsf@toke.dk> <CAA93jw6yw5=ALMdRaRrGU9uySmov9HwM-mr2npRbzsSxHgSAGw@mail.gmail.com> <a7b75767d01b46ef818f86dbd0c657a8@NALASEXR01H.na.qualcomm.com>
-Date: Fri, 10 Nov 2017 11:33:53 +0900
-Message-ID: <87h8u2rhf2.fsf@toke.dk> (sfid-20171110_033412_062336_37E6C011)
+Received: from rtits2.realtek.com ([211.75.126.72]:40168 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750972AbdKMJl5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Nov 2017 04:41:57 -0500
+From: <pkshih@realtek.com>
+To: <Larry.Finger@lwfinger.net>, <kvalo@codeaurora.org>
+CC: <linux-wireless@vger.kernel.org>, <steventing@realtek.com>,
+        <yhchuang@realtek.com>
+Subject: [PATCH 3/3] rtlwifi: cleanup the code that check whether TX ring is available
+Date: Mon, 13 Nov 2017 17:39:35 +0800
+Message-ID: <20171113093935.20431-4-pkshih@realtek.com> (sfid-20171113_104159_888698_D5918C8A)
+In-Reply-To: <20171113093935.20431-1-pkshih@realtek.com>
+References: <20171113093935.20431-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> Agree.. Even I am not fan of that patch in ath10k. IIRC Michal pushed
-> this change as temp one and planned to revert it once it is fixed in
-> stack or in driver.
->
-> I thought Eric change in fq_codel is meant only for fatty udp flows.
-> Forgive my ignorance.
+Remove the duplicate checking of TX ring's available number, and remove
+the variable to store available number that can be calculated by
+read/write pointers.
 
-It is, mostly. There's a separate possible issue with TCP performance
-that we're looking into, but that is unrelated to TXQs.
+Signed-off-by: Steven Ting <steventing@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |  8 ----
+ drivers/net/wireless/realtek/rtlwifi/pci.h         |  1 -
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   | 51 +++-------------------
+ 3 files changed, 6 insertions(+), 54 deletions(-)
 
--Toke
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index ca3f4716c1b6..e544f4bcfae9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -557,13 +557,6 @@ static void _rtl_pci_tx_isr(struct ieee80211_hw *hw, int prio)
+ 		else
+ 			entry = (u8 *)(&ring->desc[ring->idx]);
+ 
+-		if (rtlpriv->cfg->ops->get_available_desc &&
+-		    rtlpriv->cfg->ops->get_available_desc(hw, prio) <= 1) {
+-			RT_TRACE(rtlpriv, (COMP_INTR | COMP_SEND), DBG_DMESG,
+-				 "no available desc!\n");
+-			return;
+-		}
+-
+ 		if (!rtlpriv->cfg->ops->is_tx_desc_closed(hw, prio, ring->idx))
+ 			return;
+ 		ring->idx = (ring->idx + 1) % ring->entries;
+@@ -1251,7 +1244,6 @@ static int _rtl_pci_init_tx_ring(struct ieee80211_hw *hw,
+ 
+ 		rtlpci->tx_ring[prio].cur_tx_rp = 0;
+ 		rtlpci->tx_ring[prio].cur_tx_wp = 0;
+-		rtlpci->tx_ring[prio].avl_desc = entries;
+ 	}
+ 
+ 	/* alloc dma for this ring */
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.h b/drivers/net/wireless/realtek/rtlwifi/pci.h
+index ed5de1218bd9..3fb56c845a61 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.h
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.h
+@@ -173,7 +173,6 @@ struct rtl8192_tx_ring {
+ 	/*add for new trx flow*/
+ 	struct rtl_tx_buffer_desc *buffer_desc; /*tx buffer descriptor*/
+ 	dma_addr_t buffer_desc_dma; /*tx bufferd desc dma memory*/
+-	u16 avl_desc; /* available_desc_to_write */
+ 	u16 cur_tx_wp; /* current_tx_write_point */
+ 	u16 cur_tx_rp; /* current_tx_read_point */
+ };
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+index bc44d9d912d8..4f7444331b07 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+@@ -549,7 +549,6 @@ static u16 get_desc_addr_fr_q_idx(u16 queue_index)
+ 
+ u16 rtl92ee_get_available_desc(struct ieee80211_hw *hw, u8 q_idx)
+ {
+-	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u16 point_diff = 0;
+ 	u16 current_tx_read_point = 0, current_tx_write_point = 0;
+@@ -564,7 +563,6 @@ u16 rtl92ee_get_available_desc(struct ieee80211_hw *hw, u8 q_idx)
+ 				     current_tx_write_point,
+ 				     TX_DESC_NUM_92E);
+ 
+-	rtlpci->tx_ring[q_idx].avl_desc = point_diff;
+ 	return point_diff;
+ }
+ 
+@@ -909,10 +907,6 @@ void rtl92ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 		      u8 desc_name, u8 *val)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u16 cur_tx_rp = 0;
+-	u16 cur_tx_wp = 0;
+-	static bool over_run;
+-	u32 tmp = 0;
+ 	u8 q_idx = *val;
+ 	bool dma64 = rtlpriv->cfg->mod_params->dma64;
+ 
+@@ -933,38 +927,12 @@ void rtl92ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 				return;
+ 			}
+ 
++			/* make sure tx desc is available by caller */
+ 			ring->cur_tx_wp = ((ring->cur_tx_wp + 1) % max_tx_desc);
+ 
+-			if (over_run) {
+-				ring->cur_tx_wp = 0;
+-				over_run = false;
+-			}
+-			if (ring->avl_desc > 1) {
+-				ring->avl_desc--;
+-
+-				rtl_write_word(rtlpriv,
+-					       get_desc_addr_fr_q_idx(q_idx),
+-					       ring->cur_tx_wp);
+-			}
+-
+-			if (ring->avl_desc < (max_tx_desc - 15)) {
+-				u16 point_diff = 0;
+-
+-				tmp =
+-				  rtl_read_dword(rtlpriv,
+-						 get_desc_addr_fr_q_idx(q_idx));
+-				cur_tx_rp = (u16)((tmp >> 16) & 0x0fff);
+-				cur_tx_wp = (u16)(tmp & 0x0fff);
+-
+-				ring->cur_tx_wp = cur_tx_wp;
+-				ring->cur_tx_rp = cur_tx_rp;
+-				point_diff = ((cur_tx_rp > cur_tx_wp) ?
+-					      (cur_tx_rp - cur_tx_wp) :
+-					      (TX_DESC_NUM_92E - 1 -
+-					       cur_tx_wp + cur_tx_rp));
+-
+-				ring->avl_desc = point_diff;
+-			}
++			rtl_write_word(rtlpriv,
++				       get_desc_addr_fr_q_idx(q_idx),
++				       ring->cur_tx_wp);
+ 		}
+ 		break;
+ 		}
+@@ -1046,13 +1014,12 @@ bool rtl92ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
+ {
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u16 read_point, write_point, available_desc_num;
++	u16 read_point, write_point;
+ 	bool ret = false;
+ 	static u8 stop_report_cnt;
+ 	struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[hw_queue];
+ 
+ 	{
+-		u16 point_diff = 0;
+ 		u16 cur_tx_rp, cur_tx_wp;
+ 		u32 tmpu32 = 0;
+ 
+@@ -1062,18 +1029,12 @@ bool rtl92ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
+ 		cur_tx_rp = (u16)((tmpu32 >> 16) & 0x0fff);
+ 		cur_tx_wp = (u16)(tmpu32 & 0x0fff);
+ 
+-		ring->cur_tx_wp = cur_tx_wp;
++		/* don't need to update ring->cur_tx_wp */
+ 		ring->cur_tx_rp = cur_tx_rp;
+-		point_diff = ((cur_tx_rp > cur_tx_wp) ?
+-			      (cur_tx_rp - cur_tx_wp) :
+-			      (TX_DESC_NUM_92E - cur_tx_wp + cur_tx_rp));
+-
+-		ring->avl_desc = point_diff;
+ 	}
+ 
+ 	read_point = ring->cur_tx_rp;
+ 	write_point = ring->cur_tx_wp;
+-	available_desc_num = ring->avl_desc;
+ 
+ 	if (write_point > read_point) {
+ 		if (index < write_point && index >= read_point)
+-- 
+2.14.1
