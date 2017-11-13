@@ -1,82 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52100 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755418AbdKMUgC (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:50034 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751234AbdKMVac (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 15:36:02 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 04/10] brcmfmac: Clean up brcmf_sdiod_set_sbaddr_window()
-Date: Mon, 13 Nov 2017 21:35:41 +0100
-Message-Id: <1510605347-7629-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213607_656848_6BD1DB2C)
-In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 13 Nov 2017 16:30:32 -0500
+Received: by mail-oi0-f43.google.com with SMTP id r190so3229872oie.6
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Nov 2017 13:30:32 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <3045d677-8f24-b258-0eaf-ee8dae5ecd4c@lwfinger.net>
+References: <CAMRc=Mf92X2t8wjmE+xkXrA0QKY06uFeXhMY-97Ka=_UxuQbjw@mail.gmail.com>
+ <CAMRc=Mf-4HnRXLxoiPrzZVjeCpfY5+Q2Ydmee0GkViejk8nzaQ@mail.gmail.com> <3045d677-8f24-b258-0eaf-ee8dae5ecd4c@lwfinger.net>
+From: Bartosz Golaszewski <brgl@bgdev.pl>
+Date: Mon, 13 Nov 2017 22:30:31 +0100
+Message-ID: <CAMRc=Mf-sy79yoJiyZC8pOtHTo4P7SpHPsTmuHxEBfbc8xa+Uw@mail.gmail.com> (sfid-20171113_223038_305862_85A89108)
+Subject: Re: Fwd: linux v4.14 causes firmware iwlwifi errors on Lenovo
+ Thinkpad T440s
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+2017-11-13 21:45 GMT+01:00 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 11/13/2017 02:22 PM, Bartosz Golaszewski wrote:
+>>
+>> Forwarding here too as I messed up the address the last time.
+>> --
+>>
+>> Hi,
+>>
+>> I noticed my wireless interface can't get up with linux v4.14 and the
+>> kernel log is flooded with firmware errors:
+>>
+>> iwlwifi 0000:03:00.0: Firmware error during reconfiguration - reprobe!
+>> iwlwifi 0000:03:00.0: FW error in SYNC CMD DQA_ENABLE_CMD
+>>
+>> and
+>>
+>> ieee80211 phy63: Hardware restart was requested.
+>>
+>> The wireless controller is: Intel Corporation Wireless 7260 (rev 83)
+>> Firmware used is: iwlwifi-7260-17
+>>
+>> Everything works fine with v4.13.12.
+>>
+>> I didn't have time today to bisect for the offending commit. Full log
+>> uploaded[1].
+>>
+>> Best regards,
+>> Bartosz Golaszewski
+>>
+>> [1] https://pastebin.com/jksqxvS6
+>
+>
+> Your log shows "iwlwifi 0000:03:00.0: loaded firmware version 17.228510.0
+> op_mode iwlmvm"
+>
+> Mine, where the 7260 works, shows "iwlwifi 0000:04:00.0: loaded firmware
+> version 17.459231.0 op_mode iwlmvm".
+>
+> It seems as if you need newer firmware. A detailed file listing shows
+> "-rw-r--r-- 1 root root 1049340 Oct  9 12:03
+> /lib/firmware/iwlwifi-7260-17.ucode". That date is likely when I installed
+> the updated kernel firmware package from my distro. The md5sum for the file
+> is 73a217f55c47d3a70bb5dbbe1d676423.
+>
+> Larry
+>
 
-This function sets the address of the IO window used for
-SDIO accesses onto the backplane of the chip.
+Ok so it seems the version in linux-firmware is outdated. The file
+you're using is available on github[1] and fixed the issue for me.
 
-It currently uses 3 separate masks despite the full mask being
-defined in the code already. Remove the separate masks and clean up.
+Thanks!
+Bartosz Golaszewski
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c   | 17 +++++------------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h |  3 ---
- 2 files changed, 5 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 3acc0ff..1ea42c3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -410,23 +410,16 @@ static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
- brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- {
- 	int err = 0, i;
--	u8 addr[3];
-+	u32 addr;
- 
- 	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
- 		return -ENOMEDIUM;
- 
--	addr[0] = (address >> 8) & SBSDIO_SBADDRLOW_MASK;
--	addr[1] = (address >> 16) & SBSDIO_SBADDRMID_MASK;
--	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
-+	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
- 
--	for (i = 0; i < 3; i++) {
--		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
--				  &err);
--		if (err) {
--			brcmf_err("failed at addr: 0x%0x\n",
--				  SBSDIO_FUNC1_SBADDRLOW + i);
--		}
--	}
-+	for (i = 0 ; i < 3 && !err ; i++, addr >>= 8)
-+		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
-+				  addr & 0xff, &err);
- 
- 	return err;
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index f3da32f..e3b78db 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -133,9 +133,6 @@
- 
- /* valid bits in SBSDIO_FUNC1_SBADDRxxx regs */
- 
--#define SBSDIO_SBADDRLOW_MASK		0x80	/* Valid bits in SBADDRLOW */
--#define SBSDIO_SBADDRMID_MASK		0xff	/* Valid bits in SBADDRMID */
--#define SBSDIO_SBADDRHIGH_MASK		0xffU	/* Valid bits in SBADDRHIGH */
- /* Address bits from SBADDR regs */
- #define SBSDIO_SBWINDOW_MASK		0xffff8000
- 
--- 
-1.9.1
+[1] https://github.com/OpenELEC/iwlwifi-firmware
