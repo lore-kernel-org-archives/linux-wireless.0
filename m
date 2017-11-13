@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41402 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755575AbdKJCcm (ORCPT
+Received: from mail-qt0-f182.google.com ([209.85.216.182]:54301 "EHLO
+        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751376AbdKMWkI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 21:32:42 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 13 Nov 2017 17:40:08 -0500
+Received: by mail-qt0-f182.google.com with SMTP id c36so15439262qtc.11
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Nov 2017 14:40:08 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: rt2x00usb: mark device removed when get ENOENT usb error
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171109105917.GA3206@redhat.com>
-References: <20171109105917.GA3206@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Richard Genoud <richard.genoud@gmail.com>
-Message-Id: <20171110023242.0DBF0601D1@smtp.codeaurora.org> (sfid-20171110_033245_243108_9F7B9941)
-Date: Fri, 10 Nov 2017 02:32:42 +0000 (UTC)
+From: Daniel Ghansah <smartwires@gmail.com>
+Date: Mon, 13 Nov 2017 17:40:06 -0500
+Message-ID: <CAL3ir7JHwLpNFRSv0jEED50XeFAWmSz4gXXOs0MpM=VeTGiKnQ@mail.gmail.com> (sfid-20171113_234011_843766_E9ECF45F)
+Subject: PS-Poll not behaving as expected
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+       Here is the problem we experience:
 
-> ENOENT usb error mean "specified interface or endpoint does not exist or
-> is not enabled". Mark device not present when we encounter this error
-> similar like we do with ENODEV error.
-> 
-> Otherwise we can have infinite loop in rt2x00usb_work_rxdone(), because
-> we remove and put again RX entries to the queue infinitely.
-> 
-> We can have similar situation when submit urb will fail all the time
-> with other error, so we need consider to limit number of entries
-> processed by rxdone work. But for now, since the patch fixes
-> reproducible soft lockup issue on single processor systems
-> and taken ENOENT error meaning, let apply this fix.
-> 
-> Patch adds additional ENOENT check not only in rx kick routine, but
-> also on other places where we check for ENODEV error.
-> 
-> Reported-by: Richard Genoud <richard.genoud@gmail.com>
-> Debugged-by: Richard Genoud <richard.genoud@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> Tested-by: Richard Genoud <richard.genoud@gmail.com>
+When the station (wifi devices) sends a null QoS frame with power save
+telling our AP that it is going into power save mode. RIght now, our
+problem is that the AP will not stop sending data packets to the
+station. Correct behavior is that the AP will buffer data packets and
+stop sending any data or null packets (WiFi Alliance allows at most 2
+of these packets to be sent by the AP before station sends ps-poll,
+exclude retries) until a PS-Poll packet is sent by the station to
+collect data. The AP should also respond only 1 packet per PS-Poll
+(exclude any retries). Right now, we are also experiencing that the AP
+will, at times, send more than 1 data packet to the station per
+PS-Poll. The first and second problems may be linked together.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-bfa62a52cad9 rt2x00usb: mark device removed when get ENOENT usb error
 
 -- 
-https://patchwork.kernel.org/patch/10050781/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Daniel
