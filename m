@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47502 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751869AbdKYQe6 (ORCPT
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:48740 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752710AbdKMSQq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Nov 2017 11:34:58 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 25 Nov 2017 18:34:42 +0200
-Message-Id: <20171125163444.24258-10-luca@coelho.fi> (sfid-20171125_173509_028994_A2121377)
-In-Reply-To: <20171125163444.24258-1-luca@coelho.fi>
-References: <20171125163444.24258-1-luca@coelho.fi>
-Subject: [PATCH 09/11] iwlwifi: fix the ALIVE notification layout
+        Mon, 13 Nov 2017 13:16:46 -0500
+Received: by mail-pg0-f42.google.com with SMTP id s11so7810931pgc.5
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Nov 2017 10:16:46 -0800 (PST)
+Date: Mon, 13 Nov 2017 10:16:42 -0800
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: kvalo@codeaurora.org, k.eugene.e@gmail.com,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        nicolas.dechesne@linaro.org, Eyal Ilsar <eilsar@codeaurora.org>
+Subject: Re: [PATCH] wcn36xx: Set BTLE coexistence related configuration
+ values to defaults
+Message-ID: <20171113181642.GE28761@minitux> (sfid-20171113_191737_668332_3240D2E9)
+References: <1510496506-4428-1-git-send-email-rfried@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1510496506-4428-1-git-send-email-rfried@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Sun 12 Nov 06:21 PST 2017, Ramon Fried wrote:
 
-The ucode_major and ucode_minor were swapped. This has
-no practical consequences since those fields are not used.
-Same goes for umac_major and umac_minor which were only
-printed under certain debug flags.
+> From: Eyal Ilsar <eilsar@codeaurora.org>
+> 
+> If the value for the firmware configuration parameters BTC_STATIC_LEN_LE_BT
+> and BTC_STATIC_LEN_LE_WLAN are not set the duty cycle between BT and WLAN
+> is such that if BT (including BLE) is active WLAN gets 0 bandwidth.
+> When tuning these parameters having a too high value for WLAN means that BLE performance degrades.
+> The "sweet" point of roughly half of the maximal values was empirically found to achieve
+> a balance between BLE and Wi-Fi coexistence performance.
+> 
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/alive.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks for the patch! Just some minor comments.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h b/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h
-index 3684a3e180e5..007bfe7656a4 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h
-@@ -95,8 +95,8 @@ enum {
- #define IWL_ALIVE_FLG_RFKILL	BIT(0)
- 
- struct iwl_lmac_alive {
--	__le32 ucode_minor;
- 	__le32 ucode_major;
-+	__le32 ucode_minor;
- 	u8 ver_subtype;
- 	u8 ver_type;
- 	u8 mac;
-@@ -113,8 +113,8 @@ struct iwl_lmac_alive {
- } __packed; /* UCODE_ALIVE_NTFY_API_S_VER_3 */
- 
- struct iwl_umac_alive {
--	__le32 umac_minor;		/* UMAC version: minor */
- 	__le32 umac_major;		/* UMAC version: major */
-+	__le32 umac_minor;		/* UMAC version: minor */
- 	__le32 error_info_addr;		/* SRAM address for UMAC error log */
- 	__le32 dbg_print_buff_addr;
- } __packed; /* UMAC_ALIVE_DATA_API_S_VER_2 */
--- 
-2.15.0
+Please limit subject to 50 chars and wrap body at 72 chars.
+
+> Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
+> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/smd.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index 9c6590d..1c75987 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> @@ -72,8 +72,10 @@ struct wcn36xx_cfg_val {
+>  	WCN36XX_CFG_VAL(DYNAMIC_PS_POLL_VALUE, 0),
+>  	WCN36XX_CFG_VAL(TX_PWR_CTRL_ENABLE, 1),
+>  	WCN36XX_CFG_VAL(ENABLE_CLOSE_LOOP, 1),
+> -	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
+
+I don't see a need for moving this line.
+
+> +	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_BT, 120000),
+> +	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_WLAN, 30000),
+
+These looks reasonable, are we okay leaving the other coexistence
+properties at their preconfigured values?
+
+>  	WCN36XX_CFG_VAL(MAX_ASSOC_LIMIT, 10),
+> +	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
+>  	WCN36XX_CFG_VAL(ENABLE_MCC_ADAPTIVE_SCHEDULER, 0),
+
+Regards,
+Bjorn
