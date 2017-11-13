@@ -1,337 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45818 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752925AbdKOQw5 (ORCPT
+Received: from mail-ot0-f175.google.com ([74.125.82.175]:46058 "EHLO
+        mail-ot0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751350AbdKMWgh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 11:52:57 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 15 Nov 2017 18:52:40 +0200
-Message-Id: <20171115165242.21675-2-luca@coelho.fi> (sfid-20171115_175305_020634_7A01C1F9)
-In-Reply-To: <20171115165242.21675-1-luca@coelho.fi>
-References: <20171115165242.21675-1-luca@coelho.fi>
-Subject: [PATCH 1/3] iwlwifi: mvm: support version 7 of the SCAN_REQ_UMAC FW command
+        Mon, 13 Nov 2017 17:36:37 -0500
+Received: by mail-ot0-f175.google.com with SMTP id b17so2965646oth.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Nov 2017 14:36:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87y3na7eei.fsf@qca.qualcomm.com>
+References: <20171110025415.7854-1-drake@endlessm.com> <87y3na7eei.fsf@qca.qualcomm.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Tue, 14 Nov 2017 06:36:36 +0800
+Message-ID: <CAD8Lp47uJbB27xZPH3dDqNuJcaNCGEsbpdqfK-h4+nzVLGk1aw@mail.gmail.com> (sfid-20171113_233641_554933_EE7E5D82)
+Subject: Re: [v2] ath9k: add MSI support
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Russell Hu <rhu@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Robert Chang <rwchang@qti.qualcomm.com>,
+        Aeolus Yang <aeolus@qti.qualcomm.com>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux@endlessm.com" <linux@endlessm.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "andy@infradead.org" <andy@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Mon, Nov 13, 2017 at 4:48 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Enabling MSI by default is just too invasive, ath9k is used in so many
+> different enviroments that risk of regressions is high. MSI needs a lot
+> of testing before we can even consider enabling it by default.
 
-Newer firmware versions (such as iwlwifi-8000C-34.ucode) have
-introduced an API change in the SCAN_REQ_UMAC command that is not
-backwards compatible.  The driver needs to detect and use the new API
-format when the firmware reports it, otherwise the scan command will
-not work properly, causing a command timeout.
+And it seems like we already found a regression here - the MSI Message
+Data is being corrupted as described in my last mail. Can't be fixed
+in firmware, but it would be good to have confirmation of the hardware
+behavivour, and maybe some other solution is possible? Are you
+following this up within Qualcomm?
 
-Fix this by adding a TLV that tells the driver that the new API is in
-use and use the correct structures for it.
+>> I have tested your patch on Acer Aspire ES1-432. It does not work -
+>> I still can't connect to wifi.
+>> /proc/interrupts shows that no MSI interrupts are delivered, the
+>> counters are 0.
+>>
+>> lspci -vv shows:
+>>         Capabilities: [50] MSI: Enable+ Count=1/4 Maskable+ 64bit+
+>>                 Address: 00000000fee0f00c  Data: 4142
+>>                 Masking: 0000000e  Pending: 00000000
+>>
+>> So MSI is enabled and the vector number is 0x42 (decimal 66).
+>> However my kernel log is now totally spammed with:
+>>   do_IRQ: 0.64 No irq handler for vector
+>>
+>> My assumption here is that the ath9k hardware implementation of
+>> MSI is buggy, and it is therefore corrupting the MSI vector number
+>> by zeroing out the lower 2 bits (e.g. 66 -> 64).
 
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=197591
-
-Fixes: d7a5b3e9e42e ("iwlwifi: mvm: bump API to 34 for 8000 and up")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/scan.h | 59 ++++++++++++----
- drivers/net/wireless/intel/iwlwifi/fw/file.h     |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  6 ++
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c    | 86 ++++++++++++++++++------
- 4 files changed, 118 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index 5a40092febfb..3bfc657f6b42 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -531,6 +531,8 @@ struct iwl_scan_config_v1 {
- } __packed; /* SCAN_CONFIG_DB_CMD_API_S */
- 
- #define SCAN_TWO_LMACS 2
-+#define SCAN_LB_LMAC_IDX 0
-+#define SCAN_HB_LMAC_IDX 1
- 
- struct iwl_scan_config {
- 	__le32 flags;
-@@ -578,6 +580,7 @@ enum iwl_umac_scan_general_flags {
- 	IWL_UMAC_SCAN_GEN_FLAGS_MATCH			= BIT(9),
- 	IWL_UMAC_SCAN_GEN_FLAGS_EXTENDED_DWELL		= BIT(10),
- 	IWL_UMAC_SCAN_GEN_FLAGS_LMAC2_FRAGMENTED	= BIT(11),
-+	IWL_UMAC_SCAN_GEN_FLAGS_ADAPTIVE_DWELL		= BIT(13),
- };
- 
- /**
-@@ -631,12 +634,17 @@ struct iwl_scan_req_umac_tail {
-  * @uid: scan id, &enum iwl_umac_scan_uid_offsets
-  * @ooc_priority: out of channel priority - &enum iwl_scan_priority
-  * @general_flags: &enum iwl_umac_scan_general_flags
-- * @reserved2: for future use and alignment
-  * @scan_start_mac_id: report the scan start TSF time according to this mac TSF
-  * @extended_dwell: dwell time for channels 1, 6 and 11
-  * @active_dwell: dwell time for active scan
-  * @passive_dwell: dwell time for passive scan
-  * @fragmented_dwell: dwell time for fragmented passive scan
-+ * @adwell_default_n_aps: for adaptive dwell the default number of APs
-+ *	per channel
-+ * @adwell_default_n_aps_social: for adaptive dwell the default
-+ *	number of APs per social (1,6,11) channel
-+ * @adwell_max_budget: for adaptive dwell the maximal budget of TU to be added
-+ *	to total scan time
-  * @max_out_time: max out of serving channel time, per LMAC - for CDB there
-  *	are 2 LMACs
-  * @suspend_time: max suspend time, per LMAC - for CDB there are 2 LMACs
-@@ -644,6 +652,8 @@ struct iwl_scan_req_umac_tail {
-  * @channel_flags: &enum iwl_scan_channel_flags
-  * @n_channels: num of channels in scan request
-  * @reserved: for future use and alignment
-+ * @reserved2: for future use and alignment
-+ * @reserved3: for future use and alignment
-  * @data: &struct iwl_scan_channel_cfg_umac and
-  *	&struct iwl_scan_req_umac_tail
-  */
-@@ -651,41 +661,64 @@ struct iwl_scan_req_umac {
- 	__le32 flags;
- 	__le32 uid;
- 	__le32 ooc_priority;
--	/* SCAN_GENERAL_PARAMS_API_S_VER_4 */
- 	__le16 general_flags;
--	u8 reserved2;
-+	u8 reserved;
- 	u8 scan_start_mac_id;
--	u8 extended_dwell;
--	u8 active_dwell;
--	u8 passive_dwell;
--	u8 fragmented_dwell;
- 	union {
- 		struct {
-+			u8 extended_dwell;
-+			u8 active_dwell;
-+			u8 passive_dwell;
-+			u8 fragmented_dwell;
- 			__le32 max_out_time;
- 			__le32 suspend_time;
- 			__le32 scan_priority;
--			/* SCAN_CHANNEL_PARAMS_API_S_VER_4 */
-+			/* SCAN_CHANNEL_PARAMS_API_S_VER_1 */
- 			u8 channel_flags;
- 			u8 n_channels;
--			__le16 reserved;
-+			__le16 reserved2;
- 			u8 data[];
- 		} v1; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_1 */
- 		struct {
-+			u8 extended_dwell;
-+			u8 active_dwell;
-+			u8 passive_dwell;
-+			u8 fragmented_dwell;
- 			__le32 max_out_time[SCAN_TWO_LMACS];
- 			__le32 suspend_time[SCAN_TWO_LMACS];
- 			__le32 scan_priority;
--			/* SCAN_CHANNEL_PARAMS_API_S_VER_4 */
-+			/* SCAN_CHANNEL_PARAMS_API_S_VER_1 */
- 			u8 channel_flags;
- 			u8 n_channels;
--			__le16 reserved;
-+			__le16 reserved2;
- 			u8 data[];
- 		} v6; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_6 */
-+		struct {
-+			u8 active_dwell;
-+			u8 passive_dwell;
-+			u8 fragmented_dwell;
-+			u8 adwell_default_n_aps;
-+			u8 adwell_default_n_aps_social;
-+			u8 reserved3;
-+			__le16 adwell_max_budget;
-+			__le32 max_out_time[SCAN_TWO_LMACS];
-+			__le32 suspend_time[SCAN_TWO_LMACS];
-+			__le32 scan_priority;
-+			/* SCAN_CHANNEL_PARAMS_API_S_VER_1 */
-+			u8 channel_flags;
-+			u8 n_channels;
-+			__le16 reserved2;
-+			u8 data[];
-+		} v7; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_7 */
- 	};
- } __packed;
- 
--#define IWL_SCAN_REQ_UMAC_SIZE sizeof(struct iwl_scan_req_umac)
-+#define IWL_SCAN_REQ_UMAC_SIZE_V7 sizeof(struct iwl_scan_req_umac)
-+#define IWL_SCAN_REQ_UMAC_SIZE_V6 (sizeof(struct iwl_scan_req_umac) - \
-+				   2 * sizeof(u8) - sizeof(__le16))
- #define IWL_SCAN_REQ_UMAC_SIZE_V1 (sizeof(struct iwl_scan_req_umac) - \
--				   2 * sizeof(__le32))
-+				   2 * sizeof(__le32) - 2 * sizeof(u8) - \
-+				   sizeof(__le16))
- 
- /**
-  * struct iwl_umac_scan_abort
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 740d97093d1c..37a5c5b4eda6 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -264,6 +264,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_STA_TYPE		= (__force iwl_ucode_tlv_api_t)30,
- 	IWL_UCODE_TLV_API_NAN2_VER2		= (__force iwl_ucode_tlv_api_t)31,
- 	/* API Set 1 */
-+	IWL_UCODE_TLV_API_ADAPTIVE_DWELL	= (__force iwl_ucode_tlv_api_t)32,
- 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
- 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
- 	IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL	= (__force iwl_ucode_tlv_api_t)37,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 0e18c5066f04..4575595ab022 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1142,6 +1142,12 @@ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
- 			    IWL_UCODE_TLV_CAPA_D0I3_SUPPORT);
- }
- 
-+static inline bool iwl_mvm_is_adaptive_dwell_supported(struct iwl_mvm *mvm)
-+{
-+	return fw_has_api(&mvm->fw->ucode_capa,
-+			  IWL_UCODE_TLV_API_ADAPTIVE_DWELL);
-+}
-+
- static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
- {
- 	/* For now we only use this mode to differentiate between
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 774122fed454..e4fd476e9ccb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -130,6 +130,19 @@ struct iwl_mvm_scan_params {
- 	u32 measurement_dwell;
- };
- 
-+static inline void *iwl_mvm_get_scan_req_umac_data(struct iwl_mvm *mvm)
-+{
-+	struct iwl_scan_req_umac *cmd = mvm->scan_cmd;
-+
-+	if (iwl_mvm_is_adaptive_dwell_supported(mvm))
-+		return (void *)&cmd->v7.data;
-+
-+	if (iwl_mvm_has_new_tx_api(mvm))
-+		return (void *)&cmd->v6.data;
-+
-+	return (void *)&cmd->v1.data;
-+}
-+
- static u8 iwl_mvm_scan_rx_ant(struct iwl_mvm *mvm)
- {
- 	if (mvm->scan_rx_ant != ANT_NONE)
-@@ -1075,25 +1088,57 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
- {
- 	struct iwl_mvm_scan_timing_params *timing = &scan_timing[params->type];
- 
-+	if (iwl_mvm_is_regular_scan(params))
-+		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
-+	else
-+		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_2);
-+
-+	if (iwl_mvm_is_adaptive_dwell_supported(mvm)) {
-+		if (params->measurement_dwell) {
-+			cmd->v7.active_dwell = params->measurement_dwell;
-+			cmd->v7.passive_dwell = params->measurement_dwell;
-+		} else {
-+			cmd->v7.active_dwell = IWL_SCAN_DWELL_ACTIVE;
-+			cmd->v7.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
-+		}
-+		cmd->v7.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
-+
-+		cmd->v7.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
-+		cmd->v7.max_out_time[SCAN_LB_LMAC_IDX] =
-+			cpu_to_le32(timing->max_out_time);
-+		cmd->v7.suspend_time[SCAN_LB_LMAC_IDX] =
-+			cpu_to_le32(timing->suspend_time);
-+		if (iwl_mvm_is_cdb_supported(mvm)) {
-+			cmd->v7.max_out_time[SCAN_HB_LMAC_IDX] =
-+				cpu_to_le32(timing->max_out_time);
-+			cmd->v7.suspend_time[SCAN_HB_LMAC_IDX] =
-+				cpu_to_le32(timing->suspend_time);
-+		}
-+
-+		return;
-+	}
-+
- 	if (params->measurement_dwell) {
--		cmd->active_dwell = params->measurement_dwell;
--		cmd->passive_dwell = params->measurement_dwell;
--		cmd->extended_dwell = params->measurement_dwell;
-+		cmd->v1.active_dwell = params->measurement_dwell;
-+		cmd->v1.passive_dwell = params->measurement_dwell;
-+		cmd->v1.extended_dwell = params->measurement_dwell;
- 	} else {
--		cmd->active_dwell = IWL_SCAN_DWELL_ACTIVE;
--		cmd->passive_dwell = IWL_SCAN_DWELL_PASSIVE;
--		cmd->extended_dwell = IWL_SCAN_DWELL_EXTENDED;
-+		cmd->v1.active_dwell = IWL_SCAN_DWELL_ACTIVE;
-+		cmd->v1.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
-+		cmd->v1.extended_dwell = IWL_SCAN_DWELL_EXTENDED;
- 	}
--	cmd->fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
-+	cmd->v1.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
- 
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
- 		cmd->v6.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
--		cmd->v6.max_out_time[0] = cpu_to_le32(timing->max_out_time);
--		cmd->v6.suspend_time[0] = cpu_to_le32(timing->suspend_time);
-+		cmd->v6.max_out_time[SCAN_LB_LMAC_IDX] =
-+			cpu_to_le32(timing->max_out_time);
-+		cmd->v6.suspend_time[SCAN_LB_LMAC_IDX] =
-+			cpu_to_le32(timing->suspend_time);
- 		if (iwl_mvm_is_cdb_supported(mvm)) {
--			cmd->v6.max_out_time[1] =
-+			cmd->v6.max_out_time[SCAN_HB_LMAC_IDX] =
- 				cpu_to_le32(timing->max_out_time);
--			cmd->v6.suspend_time[1] =
-+			cmd->v6.suspend_time[SCAN_HB_LMAC_IDX] =
- 				cpu_to_le32(timing->suspend_time);
- 		}
- 	} else {
-@@ -1102,11 +1147,6 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
- 		cmd->v1.scan_priority =
- 			cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
- 	}
--
--	if (iwl_mvm_is_regular_scan(params))
--		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
--	else
--		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_2);
- }
- 
- static void
-@@ -1178,8 +1218,7 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			     int type)
- {
- 	struct iwl_scan_req_umac *cmd = mvm->scan_cmd;
--	void *cmd_data = iwl_mvm_has_new_tx_api(mvm) ?
--			 (void *)&cmd->v6.data : (void *)&cmd->v1.data;
-+	void *cmd_data = iwl_mvm_get_scan_req_umac_data(mvm);
- 	struct iwl_scan_req_umac_tail *sec_part = cmd_data +
- 		sizeof(struct iwl_scan_channel_cfg_umac) *
- 			mvm->fw->ucode_capa.n_scan_channels;
-@@ -1216,7 +1255,10 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
- 				IWL_SCAN_CHANNEL_FLAG_CACHE_ADD;
- 
--	if (iwl_mvm_has_new_tx_api(mvm)) {
-+	if (iwl_mvm_is_adaptive_dwell_supported(mvm)) {
-+		cmd->v7.channel_flags = channel_flags;
-+		cmd->v7.n_channels = params->n_channels;
-+	} else if (iwl_mvm_has_new_tx_api(mvm)) {
- 		cmd->v6.channel_flags = channel_flags;
- 		cmd->v6.n_channels = params->n_channels;
- 	} else {
-@@ -1661,8 +1703,10 @@ int iwl_mvm_scan_size(struct iwl_mvm *mvm)
- {
- 	int base_size = IWL_SCAN_REQ_UMAC_SIZE_V1;
- 
--	if (iwl_mvm_has_new_tx_api(mvm))
--		base_size = IWL_SCAN_REQ_UMAC_SIZE;
-+	if (iwl_mvm_is_adaptive_dwell_supported(mvm))
-+		base_size = IWL_SCAN_REQ_UMAC_SIZE_V7;
-+	else if (iwl_mvm_has_new_tx_api(mvm))
-+		base_size = IWL_SCAN_REQ_UMAC_SIZE_V6;
- 
- 	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN))
- 		return base_size +
--- 
-2.15.0
+Thanks
+Daniel
