@@ -1,104 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:45062 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754087AbdK2KMM (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:40099 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750972AbdKMJk4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 05:12:12 -0500
-From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] ath10k: handling qos at STA side based on AP WMM
- enable/disable
-Date: Wed, 29 Nov 2017 10:12:07 +0000
-Message-ID: <8f027afc7c094e6d84ff4205384eb66d@aptaiexm02b.ap.qualcomm.com> (sfid-20171129_111219_914634_40F54867)
-References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
- <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com>
- <e93273148ad44a54bfb39bc7018bfcc0@aptaiexm02b.ap.qualcomm.com>
- <e84f2a95-178b-dc07-bc6e-9dc779e0db0f@dd-wrt.com>
-In-Reply-To: <e84f2a95-178b-dc07-bc6e-9dc779e0db0f@dd-wrt.com>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 13 Nov 2017 04:40:56 -0500
+From: <pkshih@realtek.com>
+To: <Larry.Finger@lwfinger.net>, <kvalo@codeaurora.org>
+CC: <linux-wireless@vger.kernel.org>, <steventing@realtek.com>,
+        <yhchuang@realtek.com>
+Subject: [PATCH 1/3] rtlwifi: Reduce IO in RX interrupt to boost throughput
+Date: Mon, 13 Nov 2017 17:39:33 +0800
+Message-ID: <20171113093935.20431-2-pkshih@realtek.com> (sfid-20171113_104059_855297_AEB2BAD7)
+In-Reply-To: <20171113093935.20431-1-pkshih@realtek.com>
+References: <20171113093935.20431-1-pkshih@realtek.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pj4gSGkgU2ViYXN0aWFuLA0KPj4NCj4+IElmIEkgYW0gbm90IHdyb25nIHlvdSBhcmUgc2VlaW5n
-IHRoZSBpc3N1ZSB3aXRoIFdSVDMyMDBBQ00gKE1hcnZlbGwgODhXODk2NCkgYXMgY2xpZW50ICsg
-UUNBOTk4NCAoRlcgOiAxMC40LTMuNS4zLTAwMDM4KSBhcyBBUCB3aXRoIGJlbG93IGNoYW5nZSB5
-b3UgYXJlIHNlZWluZyB0aGUgY3Jhc2ggd2hpbGUgcnVubmluZyB0cmFmZmljIGJldHdlZW4gdGhl
-IFdSVDMyMDBBQ00gKyBRQ0E5OTg0ID8NCj4+IERvIHlvdSB1c2VkICBhbnkgb3RoZXIgY2xpZW50
-IGluIHBsYWNlIG9mIFdSVDMyMDBBQ00gPw0KDQo+dGhlcmUgaXMgbm90IG11Y2ggIHRyYWZmaWMg
-cmVxdWlyZWQuIGFzIGl0IHNlZW1zIHRoZSBmaXJtd2FyZSBjcmFzaGVzIGltbWVkaWF0bHkgYWZ0
-ZXIgYXNzb2NpYXRpb24uIHRoZSBpc3N1ZSBpcyBhbHNvIG5vdCBwcmVzZW50IGluIDEwLjQtMy40
-LTAwODJ3dw0KDQpTdGlsbCBteSBxdWVzdGlvbiBpcyBub3QgY2xlYXJlZCwgIGZpcm13YXJlIGNy
-YXNoIGlzIGR1ZSB0byB0aGlzIHBhdGNoID8gQWxzbyBsZXQgbWUga25vdyBkbyB5b3Ugb2JzZXJ2
-ZWQgc2FtZSBiZWhhdmlvciB3aXRoIGFueSBvdGhlciBjaGlwc2V0ID8NCg0KIA0KUmVnYXJkcywN
-CkJhbGFqaS4NCg0KPlNlYmFzdGlhbg0KDQoNCj4+DQo+PiBSZWdhcmRzLA0KPj4gQmFsYWppLg0K
-DQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogU2ViYXN0aWFuIEdvdHRzY2hhbGwg
-W21haWx0bzpzLmdvdHRzY2hhbGxAZGQtd3J0LmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE5vdmVt
-YmVyIDI5LCAyMDE3IDI6MDQgUE0NClRvOiBCYWxhamkgUG90aHVub29yaSA8YnBvdGh1bm9AcXRp
-LnF1YWxjb21tLmNvbT47IGF0aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnDQpDYzogbGludXgtd2ly
-ZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogW1BBVENIXSBhdGgxMGs6IGhhbmRs
-aW5nIHFvcyBhdCBTVEEgc2lkZSBiYXNlZCBvbiBBUCBXTU0gZW5hYmxlL2Rpc2FibGUNCg0KQW0g
-MjkuMTEuMjAxNyB1bSAwNzo1OCBzY2hyaWViIEJhbGFqaSBQb3RodW5vb3JpOg0KPiBIaSBTZWJh
-c3RpYW4sDQo+DQo+IElmIEkgYW0gbm90IHdyb25nIHlvdSBhcmUgc2VlaW5nIHRoZSBpc3N1ZSB3
-aXRoIFdSVDMyMDBBQ00gKE1hcnZlbGwgODhXODk2NCkgYXMgY2xpZW50ICsgUUNBOTk4NCAoRlcg
-OiAxMC40LTMuNS4zLTAwMDM4KSBhcyBBUCB3aXRoIGJlbG93IGNoYW5nZSB5b3UgYXJlIHNlZWlu
-ZyB0aGUgY3Jhc2ggd2hpbGUgcnVubmluZyB0cmFmZmljIGJldHdlZW4gdGhlIFdSVDMyMDBBQ00g
-KyBRQ0E5OTg0ID8NCj4gRG8geW91IHVzZWQgIGFueSBvdGhlciBjbGllbnQgaW4gcGxhY2Ugb2Yg
-V1JUMzIwMEFDTSA/DQoNCnRoZXJlIGlzIG5vdCBtdWNowqAgdHJhZmZpYyByZXF1aXJlZC4gYXMg
-aXQgc2VlbXMgdGhlIGZpcm13YXJlIGNyYXNoZXMgaW1tZWRpYXRseSBhZnRlciBhc3NvY2lhdGlv
-bi4gdGhlIGlzc3VlIGlzIGFsc28gbm90IHByZXNlbnQgaW4gMTAuNC0zLjQtMDA4Mnd3DQoNCj4g
-Q2FuIHlvdSBzaGFyZSB0aGUgbW9yZSBkZXRhaWxzIG9uIGZpcm13YXJlIGNyYXNoID8NCg0Kc28g
-YSBmaXJtd2FyZSBjcmFzaGR1bXAgZnJvbSBsb2c/IGknbGwgdHJ5IHRvIGdldCBpdCB3aXRoaW4g
-dGhlIG5leHQgaG91cnMuIGp1c3QgbmVlZCB0byByZXNldHVwIHRoZSB0ZXN0IHNjZW5hcmlvDQoN
-Cg0KU2ViYXN0aWFuDQoNCg0KPg0KPiBSZWdhcmRzLA0KPiBCYWxhamkuDQo+DQo+IC0tLS0tT3Jp
-Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFNlYmFzdGlhbiBHb3R0c2NoYWxsIFttYWlsdG86
-cy5nb3R0c2NoYWxsQGRkLXdydC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgTm92ZW1iZXIgMjks
-IDIwMTcgODoyOCBBTQ0KPiBUbzogQmFsYWppIFBvdGh1bm9vcmkgPGJwb3RodW5vQHF0aS5xdWFs
-Y29tbS5jb20+OyBhdGgxMGtAbGlzdHMuaW5mcmFkZWFkLm9yZw0KPiBDYzogbGludXgtd2lyZWxl
-c3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIGF0aDEwazogaGFuZGxp
-bmcgcW9zIGF0IFNUQSBzaWRlIGJhc2VkIG9uIEFQIFdNTSBlbmFibGUvZGlzYWJsZQ0KPg0KPiBk
-aWQgeW91IG5vdGljZcKgIHRoYXQgTWFydmVsbCA4OFc4OTY0IGJhc2VkIGNsaWVudHMgd2lsbCBj
-cmFzaCAxMC40LTMuNS4zIGZpcm13YXJlcz/CoCAodGVzdGVkIHdpdGggOTk4NCBhbmQgMTAuNC0z
-LjUuMy0wMDAzOCkgY2xpZW50IGRldmljZSB3YXMgYSBsaW5rc3lzIHdydDMyMDBhY20gcnVubmlu
-ZyBkZC13cnQgZm9yIHRlc3RpbmcNCj4NCj4gQW0gMjguMTEuMjAxNyB1bSAxMTowNyBzY2hyaWVi
-IGJwb3RodW5vQHF0aS5xdWFsY29tbS5jb206DQo+PiBGcm9tOiBCYWxhamkgUG90aHVub29yaSA8
-YnBvdGh1bm9AcXRpLnF1YWxjb21tLmNvbT4NCj4+DQo+PiBEYXRhIHBhY2tldHMgYXJlIG5vdCBz
-ZW50IGJ5IFNUQSBpbiBjYXNlIG9mIFNUQSBqb2luZWQgdG8gbm9uIFFPUyBBUA0KPj4gKFdNTSBk
-aXNhYmxlZCBBUCkuIFRoaXMgaXMgaGFwcGVuaW5nIGJlY2F1c2Ugb2YgU1RBIGlzIHNlbmRpbmcg
-ZGF0YQ0KPj4gcGFja2V0cyB0byBmaXJtd2FyZSBmcm9tIGhvc3Qgd2l0aCBxb3MgZW5hYmxlZCBh
-bG9uZyB3aXRoIG5vbiBxb3MNCj4+IHF1ZXVlIHZhbHVlKFRJRCA9IDE2KS4NCj4+IER1ZSB0byBx
-b3MgZW5hYmxlZCwgZmlybXdhcmUgaXMgZGlzY2FyZGluZyB0aGUgcGFja2V0Lg0KPj4NCj4+IFRo
-aXMgcGF0Y2ggZml4ZXMgdGhpcyBpc3N1ZSBieSB1cGRhdGluZyB0aGUgcW9zIGJhc2VkIG9uIHN0
-YXRpb24gV01FDQo+PiBjYXBhYmlsaXR5IGZpZWxkIGlmIFdNTSBpcyBkaXNhYmxlZCBpbiBBUC4N
-Cj4+DQo+PiBUaGlzIHBhdGNoIGlzIHJlcXVpcmVkIGJ5IDEwLjQgZmFtaWx5IGNoaXBzZXRzIGxp
-a2UNCj4+IFFDQTQwMTkvUUNBOTg4OC9RQ0E5ODg0L1FDQTk5WDAuDQo+PiBGaXJtd2FyZSBWZXJz
-b2luIDogMTAuNC0zLjUuMS0wMDAxOC4NCj4+DQo+PiBGb3IgMTAuMi40IGZhbWlseSBjaGlwc2V0
-cyBRQ0E5ODhYL1FDQTk4ODcgYW5kIFFDQTYxNzQgdGhpcyBwYXRjaCBoYXMNCj4+IG5vIGVmZmVj
-dC4NCj4+DQo+PiBTaWduZWQtb2ZmLWJ5OiBCYWxhamkgUG90aHVub29yaSA8YnBvdGh1bm9AcXRp
-LnF1YWxjb21tLmNvbT4NCj4+IC0tLQ0KPj4gICAgZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0
-aDEway9tYWMuYyB8ICAgIDIgKy0NCj4+ICAgIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigr
-KSwgMSBkZWxldGlvbigtKQ0KPj4NCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9hdGgvYXRoMTBrL21hYy5jDQo+PiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsv
-bWFjLmMNCj4+IGluZGV4IDBhOTQ3ZWUuLjI2MTZiOTkgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJz
-L25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL21hYy5jDQo+PiArKysgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9hdGgvYXRoMTBrL21hYy5jDQo+PiBAQCAtMjU2Myw3ICsyNTYzLDcgQEAgc3RhdGljIHZv
-aWQgYXRoMTBrX3BlZXJfYXNzb2NfaF9xb3Moc3RydWN0IGF0aDEwayAqYXIsDQo+PiAgICAJCX0N
-Cj4+ICAgIAkJYnJlYWs7DQo+PiAgICAJY2FzZSBXTUlfVkRFVl9UWVBFX1NUQToNCj4+IC0JCWlm
-ICh2aWYtPmJzc19jb25mLnFvcykNCj4+ICsJCWlmIChzdGEtPndtZSkNCj4+ICAgIAkJCWFyZy0+
-cGVlcl9mbGFncyB8PSBhcnZpZi0+YXItPndtaS5wZWVyX2ZsYWdzLT5xb3M7DQo+PiAgICAJCWJy
-ZWFrOw0KPj4gICAgCWNhc2UgV01JX1ZERVZfVFlQRV9JQlNTOg0KPg0KPiAtLQ0KPiBNaXQgZnJl
-dW5kbGljaGVuIEdyw7xzc2VuIC8gUmVnYXJkcw0KPg0KPiBTZWJhc3RpYW4gR290dHNjaGFsbCAv
-IENUTw0KPg0KPiBOZXdNZWRpYS1ORVQgR21iSCAtIERELVdSVA0KPiBGaXJtZW5zaXR6OiAgU3R1
-YmVud2FsZGFsbGVlIDIxYSwgNjQ2MjUgQmVuc2hlaW0NCj4gUmVnaXN0ZXJnZXJpY2h0OiBBbXRz
-Z2VyaWNodCBEYXJtc3RhZHQsIEhSQiAyNTQ3Mw0KPiBHZXNjaMOkZnRzZsO8aHJlcjogUGV0ZXIg
-U3RlaW5ow6R1c2VyLCBDaHJpc3RpYW4gU2NoZWVsZSBodHRwOi8vd3d3LmRkLXdydC5jb20NCj4g
-ZW1haWw6IHMuZ290dHNjaGFsbEBkZC13cnQuY29tDQo+IFRlbC46ICs0OTYyNTEtNTgyNjUwIC8g
-RmF4OiArNDk2MjUxLTU4MjY1NjUNCj4NCg0KLS0gDQpNaXQgZnJldW5kbGljaGVuIEdyw7xzc2Vu
-IC8gUmVnYXJkcw0KDQpTZWJhc3RpYW4gR290dHNjaGFsbCAvIENUTw0KDQpOZXdNZWRpYS1ORVQg
-R21iSCAtIERELVdSVA0KRmlybWVuc2l0ejogIFN0dWJlbndhbGRhbGxlZSAyMWEsIDY0NjI1IEJl
-bnNoZWltDQpSZWdpc3RlcmdlcmljaHQ6IEFtdHNnZXJpY2h0IERhcm1zdGFkdCwgSFJCIDI1NDcz
-DQpHZXNjaMOkZnRzZsO8aHJlcjogUGV0ZXIgU3RlaW5ow6R1c2VyLCBDaHJpc3RpYW4gU2NoZWVs
-ZQ0KaHR0cDovL3d3dy5kZC13cnQuY29tDQplbWFpbDogcy5nb3R0c2NoYWxsQGRkLXdydC5jb20N
-ClRlbC46ICs0OTYyNTEtNTgyNjUwIC8gRmF4OiArNDk2MjUxLTU4MjY1NjUNCg0K
+From: Ping-Ke Shih <pkshih@realtek.com>
+
+Check remaining count of RX packets cost a lot of CPU time, so only update
+when the counter decreases to zero. In old flow, the counter was updated
+once a RX packet is received.
+
+Signed-off-by: Steven Ting <steventing@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index c2575b0b9440..ca3f4716c1b6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -747,7 +747,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 	u8 tmp_one;
+ 	bool unicast = false;
+ 	u8 hw_queue = 0;
+-	unsigned int rx_remained_cnt;
++	unsigned int rx_remained_cnt = 0;
+ 	struct rtl_stats stats = {
+ 		.signal = 0,
+ 		.rate = 0,
+@@ -768,7 +768,8 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 		struct sk_buff *new_skb;
+ 
+ 		if (rtlpriv->use_new_trx_flow) {
+-			rx_remained_cnt =
++			if (rx_remained_cnt == 0)
++				rx_remained_cnt =
+ 				rtlpriv->cfg->ops->rx_desc_buff_remained_cnt(hw,
+ 								      hw_queue);
+ 			if (rx_remained_cnt == 0)
+-- 
+2.14.1
