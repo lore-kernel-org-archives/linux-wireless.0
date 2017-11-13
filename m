@@ -1,56 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:65419 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752294AbdK1KHp (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52101 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755356AbdKMUgC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Nov 2017 05:07:45 -0500
-From: <bpothuno@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Balaji Pothunoori <bpothuno@qti.qualcomm.com>
-Subject: [PATCH] ath10k: handling qos at STA side based on AP WMM enable/disable
-Date: Tue, 28 Nov 2017 15:37:30 +0530
-Message-ID: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com> (sfid-20171128_110751_350484_606254B3)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 13 Nov 2017 15:36:02 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 03/10] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
+Date: Mon, 13 Nov 2017 21:35:40 +0100
+Message-Id: <1510605347-7629-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213610_166891_FFCBF189)
+In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+From: Ian Molton <ian@mnementh.co.uk>
 
-Data packets are not sent by STA in case of STA joined to
-non QOS AP (WMM disabled AP). This is happening because of STA
-is sending data packets to firmware from host with qos enabled
-along with non qos queue value(TID = 16).
-Due to qos enabled, firmware is discarding the packet.
+This large function is concealing a LOT of obscure logic about
+how the hardware functions. Time to split it up.
 
-This patch fixes this issue by updating the qos based on station
-WME capability field if WMM is disabled in AP.
+This first patch splits the function into two pieces - read and write,
+doing away with the rw flag in the process.
 
-This patch is required by 10.4 family chipsets like
-QCA4019/QCA9888/QCA9884/QCA99X0.
-Firmware Versoin : 10.4-3.5.1-00018.
-
-For 10.2.4 family chipsets QCA988X/QCA9887 and QCA6174 this patch
-has no effect.
-
-Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 94 +++++++++++++++++-----
+ 1 file changed, 73 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0a947ee..2616b99 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2563,7 +2563,7 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 25b5e9b..3acc0ff 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -302,8 +302,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 	return ret;
+ }
+ 
+-static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+-				   u8 regsz, void *data, bool write)
++static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
++				 u8 regsz, void *data)
+ {
+ 	u8 func;
+ 	s32 retry = 0;
+@@ -324,13 +324,66 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		func = SDIO_FUNC_1;
+ 
+ 	do {
+-		if (!write)
+-			memset(data, 0, regsz);
+ 		/* for retry wait for 1 ms till bus get settled down */
+ 		if (retry)
+ 			usleep_range(1000, 2000);
++
++		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
++					       data, true);
++
++	} while (ret != 0 && ret != -ENOMEDIUM &&
++		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
++
++	if (ret == -ENOMEDIUM) {
++		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
++	} else if (ret != 0) {
++		/*
++		 * SleepCSR register access can fail when
++		 * waking up the device so reduce this noise
++		 * in the logs.
++		 */
++		if (addr != SBSDIO_FUNC1_SLEEPCSR)
++			brcmf_err("failed to write data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
++		else
++			brcmf_dbg(SDIO, "failed to write data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
++	}
++
++	return ret;
++}
++
++static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
++				u8 regsz, void *data)
++{
++	u8 func;
++	s32 retry = 0;
++	int ret;
++
++	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
++		return -ENOMEDIUM;
++
++	/*
++	 * figure out how to read the register based on address range
++	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
++	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
++	 * The rest: function 1 silicon backplane core registers
++	 */
++	if ((addr & ~REG_F0_REG_MASK) == 0)
++		func = SDIO_FUNC_0;
++	else
++		func = SDIO_FUNC_1;
++
++	do {
++		memset(data, 0, regsz);
++
++		/* for retry wait for 1 ms till bus get settled down */
++		if (retry)
++			usleep_range(1000, 2000);
++
+ 		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
+-					       data, write);
++					       data, false);
++
+ 	} while (ret != 0 && ret != -ENOMEDIUM &&
+ 		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
+ 
+@@ -343,12 +396,13 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		 * in the logs.
+ 		 */
+ 		if (addr != SBSDIO_FUNC1_SLEEPCSR)
+-			brcmf_err("failed to %s data F%d@0x%05x, err: %d\n",
+-				  write ? "write" : "read", func, addr, ret);
++			brcmf_err("failed to read data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
+ 		else
+-			brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
+-				  write ? "write" : "read", func, addr, ret);
++			brcmf_dbg(SDIO, "failed to read data F%d@0x%05x, err: %d\n",
++				  func, addr, ret);
+ 	}
++
+ 	return ret;
+ }
+ 
+@@ -366,13 +420,11 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
+ 
+ 	for (i = 0; i < 3; i++) {
+-		err = brcmf_sdiod_regrw_helper(sdiodev,
+-					       SBSDIO_FUNC1_SBADDRLOW + i,
+-					       1, &addr[i], true);
++		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
++				  &err);
+ 		if (err) {
+ 			brcmf_err("failed at addr: 0x%0x\n",
+ 				  SBSDIO_FUNC1_SBADDRLOW + i);
+-			break;
  		}
- 		break;
- 	case WMI_VDEV_TYPE_STA:
--		if (vif->bss_conf.qos)
-+		if (sta->wme)
- 			arg->peer_flags |= arvif->ar->wmi.peer_flags->qos;
- 		break;
- 	case WMI_VDEV_TYPE_IBSS:
+ 	}
+ 
+@@ -407,8 +459,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+-					  false);
++	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
+ 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 
+ 	if (ret)
+@@ -426,8 +477,9 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+-					  false);
++
++	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
++
+ 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
+ 
+ done:
+@@ -443,8 +495,8 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+-					  true);
++	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
++
+ 	if (ret)
+ 		*ret = retval;
+ }
+@@ -458,8 +510,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+-					  true);
++
++	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
+ 
+ done:
+ 	if (ret)
 -- 
-1.7.9.5
+1.9.1
