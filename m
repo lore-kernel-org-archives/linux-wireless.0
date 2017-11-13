@@ -1,96 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:56527 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755173AbdKAUh4 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:47704 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751161AbdKMJZq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 16:37:56 -0400
-Subject: Re: [PATCH] ath10k: fix recent bandwidth conversion bug
-To: Christian Lamparter <chunkeey@gmail.com>,
-        linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-References: <20171101200157.27096-1-chunkeey@gmail.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <224e2890-3775-967b-d4ce-4297574c0642@dd-wrt.com> (sfid-20171101_213759_185668_7EE4BEB8)
-Date: Wed, 1 Nov 2017 21:37:53 +0100
-MIME-Version: 1.0
-In-Reply-To: <20171101200157.27096-1-chunkeey@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 13 Nov 2017 04:25:46 -0500
+Message-ID: <1510565141.30497.6.camel@sipsolutions.net> (sfid-20171113_102745_502374_8FC7C108)
+Subject: Re: [PATCH] mac80211: Update last_ack status for all except probing
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
+Date: Mon, 13 Nov 2017 10:25:41 +0100
+In-Reply-To: <96799d352b7347a8a9092bb37f1cd8d9@NALASEXR01H.na.qualcomm.com>
+References: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com>
+         <1509964164.2669.0.camel@sipsolutions.net>
+         <8bb232d231884f9595c81f945a5eef4f@NALASEXR01H.na.qualcomm.com>
+         <49241af7-a50f-5758-0c7e-77f2fae5d93d@quantenna.com>
+         <96799d352b7347a8a9092bb37f1cd8d9@NALASEXR01H.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-a additional array bounds check would be good
+On Mon, 2017-11-06 at 20:20 +0000, Rajkumar Manoharan wrote:
+> > > For steering an idle station from one BSS to another, the steering
+> > > application has to know the actual station idle period. But if the
+> > > idle period is cleared by ap_max_inactivity, the steering application
+> > > cannot steer the station even though the station is not sending or receiving
+> > 
+> > any data or mgmt. frame.
 
-Am 01.11.2017 um 21:01 schrieb Christian Lamparter:
-> The commit "cfg80211: make RATE_INFO_BW_20 the default" changed
-> the index of RATE_INFO_BW_20, but the updates to ath10k missed
-> the special bandwidth calculation case in
-> ath10k_update_per_peer_tx_stats().
->
-> Fixes: 842be75c77cb ("cfg80211: make RATE_INFO_BW_20 the default")
-> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
-> ---
->   drivers/net/wireless/ath/ath10k/htt_rx.c | 23 +++++------------------
->   1 file changed, 5 insertions(+), 18 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> index a3f5dc78353f..26b0d201a698 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -592,6 +592,9 @@ struct amsdu_subframe_hdr {
->   
->   #define GROUP_ID_IS_SU_MIMO(x) ((x) == 0 || (x) == 63)
->   
-> +static const u8 ath10k_bw_to_mac80211[] = { RATE_INFO_BW_20, RATE_INFO_BW_40,
-> +	RATE_INFO_BW_80, RATE_INFO_BW_160 };
-> +
->   static void ath10k_htt_rx_h_rates(struct ath10k *ar,
->   				  struct ieee80211_rx_status *status,
->   				  struct htt_rx_desc *rxd)
-> @@ -694,23 +697,7 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
->   		if (sgi)
->   			status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
->   
-> -		switch (bw) {
-> -		/* 20MHZ */
-> -		case 0:
-> -			break;
-> -		/* 40MHZ */
-> -		case 1:
-> -			status->bw = RATE_INFO_BW_40;
-> -			break;
-> -		/* 80MHZ */
-> -		case 2:
-> -			status->bw = RATE_INFO_BW_80;
-> -			break;
-> -		case 3:
-> -			status->bw = RATE_INFO_BW_160;
-> -			break;
-> -		}
-> -
-> +		status->bw = ath10k_bw_to_mac80211[bw];
->   		status->encoding = RX_ENC_VHT;
->   		break;
->   	default:
-> @@ -2297,7 +2284,7 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
->   		arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
->   
->   	arsta->txrate.nss = txrate.nss;
-> -	arsta->txrate.bw = txrate.bw + RATE_INFO_BW_20;
-> +	arsta->txrate.bw = ath10k_bw_to_mac80211[txrate.bw];
->   }
->   
->   static void ath10k_htt_fetch_peer_stats(struct ath10k *ar,
+I guess you want something else. Why even consider a station that's
+sending mgmt frames as non-idle?
 
+You can just use the data TX/RX counters to figure out if the station
+has been idle.
 
--- 
-Mit freundlichen Grüssen / Regards
+You've not convinced me that changing the current logic here makes any
+sense.
 
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+johannes
