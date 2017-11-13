@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:60857 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751689AbdK0Lv6 (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:35910 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751638AbdKMIvw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Nov 2017 06:51:58 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>,
-        Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>,
-        Erik Stromdahl <erik.stromdahl@gmail.com>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-        Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com>,
-        Venkateswara Naralasetty <vnaralas@qti.qualcomm.com>,
-        Marcin Rokicki <marcin.rokicki@tieto.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath10k: use 64-bit crash dump timestamps
-Date: Mon, 27 Nov 2017 12:49:51 +0100
-Message-Id: <20171127115113.2831506-1-arnd@arndb.de> (sfid-20171127_125217_522266_54B41D49)
+        Mon, 13 Nov 2017 03:51:52 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Johan Hovold <johan@kernel.org>
+CC: "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
+        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Loic Poulain <loic.poulain@linaro.org>
+Subject: Re: [PATCH] wcn36xx: fix iris child-node lookup
+Date: Mon, 13 Nov 2017 08:51:49 +0000
+Message-ID: <87po8m7e8s.fsf@qca.qualcomm.com> (sfid-20171113_095210_310724_6BC1DFBB)
+References: <20171111170532.6110-1-johan@kernel.org>
+In-Reply-To: <20171111170532.6110-1-johan@kernel.org> (Johan Hovold's message
+        of "Sat, 11 Nov 2017 18:05:32 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The dump format uses 64-bit timestamps already, but calling
-getnstimeofday() only returns a 32-bit number on 32-bit architectures,
-so that will overflow in y2038.
+Johan Hovold <johan@kernel.org> writes:
 
-This changes it to use ktime_get_real_ts64() instead.
+> Fix child-node lookup during probe, which ended up searching the whole
+> device tree depth-first starting at the parent rather than just matching
+> on its children.
+>
+> To make things worse, the parent mmio node was also prematurely freed.
+>
+> Fixes: fd52bdae9ab0 ("wcn36xx: Disable 5GHz for wcn3620")
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/ath/ath10k/core.h  | 2 +-
- drivers/net/wireless/ath/ath10k/debug.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+fd52bdae9ab0 is in net-next right now so the first release for that
+commit should be v4.15-rc1.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 643041ef3271..dd3c6c63aae1 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -463,7 +463,7 @@ struct ath10k_fw_crash_data {
- 	bool crashed_since_read;
- 
- 	guid_t guid;
--	struct timespec timestamp;
-+	struct timespec64 timestamp;
- 	__le32 registers[REG_DUMP_COUNT_QCA988X];
- 	struct ath10k_ce_crash_data ce_crash_data[CE_COUNT_MAX];
- };
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index df514507d3f1..66498e3c0f91 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -720,7 +720,7 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
- 
- 	crash_data->crashed_since_read = true;
- 	guid_gen(&crash_data->guid);
--	getnstimeofday(&crash_data->timestamp);
-+	ktime_get_real_ts64(&crash_data->timestamp);
- 
- 	return crash_data;
- }
--- 
-2.9.0
+> Cc: stable <stable@vger.kernel.org>     # 4.14
+
+As fd52bdae9ab0 is not in v4.14 no need to Cc stable. I'll remove it.
+
+> Cc: Loic Poulain <loic.poulain@linaro.org>
+> Signed-off-by: Johan Hovold <johan@kernel.org>
+
+Thanks, I'll queue this to v4.15.
+
+--=20
+Kalle Valo=
