@@ -1,301 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45838 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932460AbdKOQxA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 11:53:00 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
-Date: Wed, 15 Nov 2017 18:52:41 +0200
-Message-Id: <20171115165242.21675-3-luca@coelho.fi> (sfid-20171115_175311_112043_30784A2E)
-In-Reply-To: <20171115165242.21675-1-luca@coelho.fi>
-References: <20171115165242.21675-1-luca@coelho.fi>
-Subject: [PATCH 2/3] iwlwifi: fix PCI IDs and configuration mapping for 9000 series
+Received: from mail-sn1nam01on0085.outbound.protection.outlook.com ([104.47.32.85]:59533
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752177AbdKMK2l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Nov 2017 05:28:41 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>
+Subject: [PATCH 09/10] qtnfmac: keeping track of "generation" for STA info
+Date: Mon, 13 Nov 2017 13:28:14 +0300
+Message-Id: <20171113102815.11254-10-sergey.matyukevich.os@quantenna.com> (sfid-20171113_113123_206888_4CAE653A)
+In-Reply-To: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
+References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-A lot of PCI IDs were missing and there were some problems with the
-configuration and firmware selection for devices on the 9000 series.
-Fix the firmware selection by adding files for the B-steps; add
-configuration for some integrated devices; and add a bunch of PCI IDs
-(mostly for integrated devices) that were missing from the driver's
-list.
+Keep generation in per-VIF data structure and increment it whenever STA
+list is changed. Use generation value to fill struct station_info when
+required.
 
-Without this patch, a lot of devices will not be recognized or will
-try to load the wrong firmware file.
-
-Cc: stable@vger.kernel.org # 4.13
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  73 ++++++++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 132 ++++++++++++++++++++------
- 2 files changed, 168 insertions(+), 37 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 5 ++++-
+ drivers/net/wireless/quantenna/qtnfmac/core.h     | 1 +
+ drivers/net/wireless/quantenna/qtnfmac/event.c    | 5 +++--
+ drivers/net/wireless/quantenna/qtnfmac/util.c     | 8 ++++++--
+ drivers/net/wireless/quantenna/qtnfmac/util.h     | 4 ++--
+ 5 files changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index af7c4f36b66f..e7e75b458005 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -72,18 +72,21 @@
- #define IWL9000_SMEM_OFFSET		0x400000
- #define IWL9000_SMEM_LEN		0x68000
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index f5eb2cdefae2..452def343ad3 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -418,6 +418,7 @@ qtnf_get_station(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
  
--#define  IWL9000_FW_PRE "iwlwifi-9000-pu-a0-jf-a0-"
-+#define  IWL9000A_FW_PRE "iwlwifi-9000-pu-a0-jf-a0-"
-+#define  IWL9000B_FW_PRE "iwlwifi-9000-pu-b0-jf-b0-"
- #define  IWL9000RFB_FW_PRE "iwlwifi-9000-pu-a0-jf-b0-"
- #define  IWL9260A_FW_PRE "iwlwifi-9260-th-a0-jf-a0-"
- #define  IWL9260B_FW_PRE "iwlwifi-9260-th-b0-jf-b0-"
--#define IWL9000_MODULE_FIRMWARE(api) \
--	IWL9000_FW_PRE "-" __stringify(api) ".ucode"
-+#define IWL9000A_MODULE_FIRMWARE(api) \
-+	IWL9000A_FW_PRE __stringify(api) ".ucode"
-+#define IWL9000B_MODULE_FIRMWARE(api) \
-+	IWL9000B_FW_PRE __stringify(api) ".ucode"
- #define IWL9000RFB_MODULE_FIRMWARE(api) \
--	IWL9000RFB_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL9000RFB_FW_PRE __stringify(api) ".ucode"
- #define IWL9260A_MODULE_FIRMWARE(api) \
--	IWL9260A_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL9260A_FW_PRE __stringify(api) ".ucode"
- #define IWL9260B_MODULE_FIRMWARE(api) \
--	IWL9260B_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL9260B_FW_PRE __stringify(api) ".ucode"
++	sinfo->generation = vif->generation;
+ 	return qtnf_cmd_get_sta_info(vif, mac, sinfo);
+ }
  
- #define NVM_HW_SECTION_NUM_FAMILY_9000		10
+@@ -439,11 +440,13 @@ qtnf_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 	ret = qtnf_cmd_get_sta_info(vif, sta_node->mac_addr, sinfo);
  
-@@ -194,7 +197,48 @@ const struct iwl_cfg iwl9460_2ac_cfg = {
- 	.nvm_ver = IWL9000_NVM_VERSION,
- 	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
- 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+};
+ 	if (unlikely(ret == -ENOENT)) {
+-		qtnf_sta_list_del(&vif->sta_list, mac);
++		qtnf_sta_list_del(vif, mac);
+ 		cfg80211_del_sta(vif->netdev, mac, GFP_KERNEL);
+ 		sinfo->filled = 0;
+ 	}
+ 
++	sinfo->generation = vif->generation;
 +
-+const struct iwl_cfg iwl9460_2ac_cfg_soc = {
-+	.name = "Intel(R) Dual Band Wireless AC 9460",
-+	.fw_name_pre = IWL9000A_FW_PRE,
-+	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
- 	.integrated = true,
-+	.soc_latency = 5000,
-+};
-+
-+const struct iwl_cfg iwl9461_2ac_cfg_soc = {
-+		.name = "Intel(R) Dual Band Wireless AC 9461",
-+		.fw_name_pre = IWL9000A_FW_PRE,
-+		.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+		.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+		IWL_DEVICE_9000,
-+		.ht_params = &iwl9000_ht_params,
-+		.nvm_ver = IWL9000_NVM_VERSION,
-+		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+		.integrated = true,
-+		.soc_latency = 5000,
-+};
-+
-+const struct iwl_cfg iwl9462_2ac_cfg_soc = {
-+		.name = "Intel(R) Dual Band Wireless AC 9462",
-+		.fw_name_pre = IWL9000A_FW_PRE,
-+		.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+		.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+		IWL_DEVICE_9000,
-+		.ht_params = &iwl9000_ht_params,
-+		.nvm_ver = IWL9000_NVM_VERSION,
-+		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+		.integrated = true,
-+		.soc_latency = 5000,
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index d7e295efb07d..e7bd21ed371b 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -88,6 +88,7 @@ struct qtnf_vif {
+ 	struct work_struct reset_work;
+ 	struct qtnf_sta_list sta_list;
+ 	unsigned long cons_tx_timeout_cnt;
++	int generation;
  };
  
- const struct iwl_cfg iwl9560_2ac_cfg = {
-@@ -206,10 +250,23 @@ const struct iwl_cfg iwl9560_2ac_cfg = {
- 	.nvm_ver = IWL9000_NVM_VERSION,
- 	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
- 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
--	.integrated = true,
- };
+ struct qtnf_mac_info {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index b3489b5b5d9e..8a3d2b1194e4 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -59,10 +59,11 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+ 	pr_debug("VIF%u.%u: MAC:%pM FC:%x\n", mac->macid, vif->vifid, sta_addr,
+ 		 frame_control);
  
--MODULE_FIRMWARE(IWL9000_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
-+const struct iwl_cfg iwl9560_2ac_cfg_soc = {
-+	.name = "Intel(R) Dual Band Wireless AC 9560",
-+	.fw_name_pre = IWL9000A_FW_PRE,
-+	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	.integrated = true,
-+	.soc_latency = 5000,
-+};
-+MODULE_FIRMWARE(IWL9000A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL9000B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL9000RFB_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL9260A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL9260B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 4a21c12276d7..f21fe59faccf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -535,47 +535,121 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x2526, 0x0238, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x023C, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0260, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x0264, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x2526, 0x02A0, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x02A4, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1010, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x1030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1210, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x2526, 0x1610, iwl9270_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x4010, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x4030, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x40A4, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0xA014, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x42A4, iwl9462_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0034, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0038, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x003C, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x0034, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x0038, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x003C, iwl9560_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
--	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x271B, 0x0214, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0034, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0038, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x003C, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0060, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0230, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0234, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0238, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x023C, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x2720, 0x4030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2720, 0x40A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0230, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0238, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x4030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x4034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x40A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x34F0, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0038, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x003C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0230, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0238, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x4030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x4034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x40A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0038, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x003C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0230, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0238, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x4030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x4034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0xA370, 0x40A4, iwl9462_2ac_cfg_soc)},
+-	qtnf_sta_list_add(&vif->sta_list, sta_addr);
++	qtnf_sta_list_add(vif, sta_addr);
  
- /* a000 Series */
- 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr_cdb)},
+ 	sinfo.assoc_req_ies = NULL;
+ 	sinfo.assoc_req_ies_len = 0;
++	sinfo.generation = vif->generation;
+ 
+ 	payload_len = len - sizeof(*sta_assoc);
+ 	tlv = (const struct qlink_tlv_hdr *)sta_assoc->ies;
+@@ -132,7 +133,7 @@ qtnf_event_handle_sta_deauth(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+ 	pr_debug("VIF%u.%u: MAC:%pM reason:%x\n", mac->macid, vif->vifid,
+ 		 sta_addr, reason);
+ 
+-	if (qtnf_sta_list_del(&vif->sta_list, sta_addr))
++	if (qtnf_sta_list_del(vif, sta_addr))
+ 		cfg80211_del_sta(vif->netdev, sta_deauth->sta_addr,
+ 				 GFP_KERNEL);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.c b/drivers/net/wireless/quantenna/qtnfmac/util.c
+index ed38e87471bf..e745733ba417 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/util.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/util.c
+@@ -57,9 +57,10 @@ struct qtnf_sta_node *qtnf_sta_list_lookup_index(struct qtnf_sta_list *list,
+ 	return NULL;
+ }
+ 
+-struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_sta_list *list,
++struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_vif *vif,
+ 					const u8 *mac)
+ {
++	struct qtnf_sta_list *list = &vif->sta_list;
+ 	struct qtnf_sta_node *node;
+ 
+ 	if (unlikely(!mac))
+@@ -77,13 +78,15 @@ struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_sta_list *list,
+ 	ether_addr_copy(node->mac_addr, mac);
+ 	list_add_tail(&node->list, &list->head);
+ 	atomic_inc(&list->size);
++	++vif->generation;
+ 
+ done:
+ 	return node;
+ }
+ 
+-bool qtnf_sta_list_del(struct qtnf_sta_list *list, const u8 *mac)
++bool qtnf_sta_list_del(struct qtnf_vif *vif, const u8 *mac)
+ {
++	struct qtnf_sta_list *list = &vif->sta_list;
+ 	struct qtnf_sta_node *node;
+ 	bool ret = false;
+ 
+@@ -93,6 +96,7 @@ bool qtnf_sta_list_del(struct qtnf_sta_list *list, const u8 *mac)
+ 		list_del(&node->list);
+ 		atomic_dec(&list->size);
+ 		kfree(node);
++		++vif->generation;
+ 		ret = true;
+ 	}
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.h b/drivers/net/wireless/quantenna/qtnfmac/util.h
+index 0359eae8c24b..0d4d92b11540 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/util.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/util.h
+@@ -26,9 +26,9 @@ struct qtnf_sta_node *qtnf_sta_list_lookup(struct qtnf_sta_list *list,
+ 					   const u8 *mac);
+ struct qtnf_sta_node *qtnf_sta_list_lookup_index(struct qtnf_sta_list *list,
+ 						 size_t index);
+-struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_sta_list *list,
++struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_vif *vif,
+ 					const u8 *mac);
+-bool qtnf_sta_list_del(struct qtnf_sta_list *list, const u8 *mac);
++bool qtnf_sta_list_del(struct qtnf_vif *vif, const u8 *mac);
+ 
+ void qtnf_sta_list_free(struct qtnf_sta_list *list);
+ 
 -- 
-2.15.0
+2.11.0
