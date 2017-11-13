@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:19808 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754083AbdKCV0q (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Nov 2017 17:26:46 -0400
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ganesh.krishna@microchip.com>, <gregkh@linuxfoundation.org>,
-        <devel@driverdev.osuosl.org>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        <stable@vger.kernel.org>,
-        Aditya Shankar <Aditya.Shankar@microchip.com>
-Subject: [PATCH] staging: wilc1000: Fix bssid buffer offset in Txq
-Date: Fri, 3 Nov 2017 14:26:27 +0530
-Message-ID: <1509699387-6916-1-git-send-email-aditya.shankar@microchip.com> (sfid-20171103_222652_394824_6C28D1D9)
+Received: from mail-sn1nam01on0085.outbound.protection.outlook.com ([104.47.32.85]:59533
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751391AbdKMK23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Nov 2017 05:28:29 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>
+Subject: [PATCH 0/10] qtnfmac: regular portion of features and fixes
+Date: Mon, 13 Nov 2017 13:28:05 +0300
+Message-Id: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com> (sfid-20171113_112926_588492_01C05119)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 46949b48568b ("staging: wilc1000: New cfg packet
-format in handle_set_wfi_drv_handler") updated the frame
-format sent from host to the firmware. The code to update
-the bssid offset in the new frame was part of a second
-patch in the series which did not make it in and thus
-causes connection problems after associating to an AP.
+Hello Kalle and all,
 
-This fix adds the proper offset of the bssid value in the
-Tx queue buffer to fix the connection issues.
+Here is the next set of patches for qtnfmac driver. This set
+enables the following features:
+- radar detection and CAC support
+- MAC-based ACL support
+- make GET_STA_STATS format more flexible and future-proof
+- inform wireless core about supported extended capabilities
 
-Fixes: Commit 46949b48568b ("staging: wilc1000: New cfg packet format in handle_set_wfi_drv_handler")
-Cc: stable@vger.kernel.org
-Signed-off-by: Aditya Shankar <Aditya.Shankar@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Besides, several issues has been fixed. The most notable
+among them are:
+- fix RSSI data passed from qtnfmac to wireless core
+- pass complete channel information between firmware and driver,
+  including both primary channel and center frequency
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 9addef1..f49dfa8 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -714,7 +714,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 					char *bssid = ((struct tx_complete_data *)(tqe->priv))->bssid;
- 
- 					buffer_offset = ETH_ETHERNET_HDR_OFFSET;
--					memcpy(&txb[offset + 4], bssid, 6);
-+					memcpy(&txb[offset + 8], bssid, 6);
- 				} else {
- 					buffer_offset = HOST_HDR_OFFSET;
- 				}
--- 
-2.7.4
+The last fix enables proper operation channel report by iw tool
+and fixes ACS mode in hostapd.
+
+Regards,
+Sergey
+
+Igor Mitsyanko (6):
+  qtnfmac: check that MAC exists in regulatory notifier
+  qtnfmac: add support for radar detection and CAC
+  qtnfmac: change default interface mode from AP to STA
+  qtnfmac: check for passed channel being NULL in MGMT_TX
+  qtnfmac: modify GET_STA_STATS cmd format for
+  qtnfmac: keeping track of "generation" for STA info
+
+Sergey Matyukevich (2):
+  qtnfmac: pass complete channel data between driver and
+  qtnfmac: fix rssi data passed to wireless core
+
+Vasily Ulyanov (2):
+  qtnfmac: fill wiphy's extended capabilities
+  qtnfmac: support MAC address based access control
+
+ cfg80211.c   |   63 ++++++++-
+ commands.c   |  375 ++++++++++++++++++++++++++++++++++++++++++-----------------
+ commands.h   |    5 
+ core.c       |   13 --
+ core.h       |    8 -
+ event.c      |   76 ++++++++++-
+ qlink.h      |  340 ++++++++++++++++++++++++++++++++++++++++-------------
+ qlink_util.c |   78 +++++++-----
+ qlink_util.h |    4 
+ util.c       |    8 -
+ util.h       |    4 
+ 11 files changed, 728 insertions(+), 246 deletions(-)
