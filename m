@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:43538 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754104AbdKNOdR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 09:33:17 -0500
-Message-ID: <1510669995.2030.26.camel@sipsolutions.net> (sfid-20171114_153352_092980_9FC40E8F)
-Subject: Re: [RFC] cfg80211: Implement Multiple BSSID capability in scanning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peng Xu <pxu@qti.qualcomm.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Sara Sharon <sara.sharon@intel.com>
-Date: Tue, 14 Nov 2017 15:33:15 +0100
-In-Reply-To: <929d1fdb74524aeaab4959f84a82c732@NASANEXM01F.na.qualcomm.com>
-References: <1509554358-10473-1-git-send-email-jouni@qca.qualcomm.com>
-         <1510664296.2030.22.camel@sipsolutions.net>
-         <4927d2288442486788cd5b4d0492537a@NASANEXM01F.na.qualcomm.com>
-         <1510669408.2030.23.camel@sipsolutions.net>
-         <929d1fdb74524aeaab4959f84a82c732@NASANEXM01F.na.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bl2nam02on0083.outbound.protection.outlook.com ([104.47.38.83]:7072
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752474AbdKMMBI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Nov 2017 07:01:08 -0500
+Date: Mon, 13 Nov 2017 15:00:55 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>
+Subject: Re: [RFC PATCH 2/2] nl80211: implement beacon change notifier
+Message-ID: <20171113115841.3dcrcjqnp543kndi@bars> (sfid-20171113_130115_478997_A32F3796)
+References: <20171109094024.9085-1-sergey.matyukevich.os@quantenna.com>
+ <20171109094024.9085-2-sergey.matyukevich.os@quantenna.com>
+ <1510565429.30497.10.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1510565429.30497.10.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Johannes and all,
 
-> > 
-> > This may be right for the WFA/Microsoft OUI, but not necessary anything
-> > else?
-> > 
+> > From: Vasily Ulyanov <vulyanov@quantenna.com>
+> >
+> > Notify user-space listeners about beacon data change.
 > 
-> Right, I only considered the most common cases since I did not find a
-> generic way to compare two vendor elements. Any suggestion?
+> What would this be needed for, and why couldn't you just directly talk
+> to hostapd/wpa_s?
 
-Right, not really.
+I apologize for email duplication, but it looks like reply from Vasily
+has been rejected due to Outlook issues. While we choose between mutt
+and gnus, here I briefly repeat the rationale behind these RFC patches.
 
-I'm not even sure why this is necessary anyway though, do we really
-think vendors will expect to be able to put vendor IEs inside the
-subelements and override the ones outside?
+The nl80211 get_beacon callback appears to be useful in the case when
+userspace software needs to retrieve current operational parameters of
+AP including HT/VHT IEs. In fact we considered two implementation options:
+to implement this functionality either in hostapd (extending its
+hostapd_cli interface) or in kernel (adding nl80211 call).
 
-Is there even any point for the WFA ones? It seems WMM really ought to
-be the same for all anyway, for example.
+We decided to try nl80211 since there was a stub for NL80211_CMD_GET_BEACON
+operation. Beacon change notifier was introduced due to the following reason:
+if anyone is interested in AP operational params, then he might be also
+interested to know when those params are changed.
 
-johannes
+Regards,
+Sergey
