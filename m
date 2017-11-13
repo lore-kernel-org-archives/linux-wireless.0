@@ -1,41 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:60013 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752336AbdKHNNu (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52157 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755519AbdKMUgD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 08:13:50 -0500
-Received: from mail-io0-f197.google.com ([209.85.223.197])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1eCQAv-0006qs-CD
-        for linux-wireless@vger.kernel.org; Wed, 08 Nov 2017 13:13:49 +0000
-Received: by mail-io0-f197.google.com with SMTP id 97so5517884iok.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Nov 2017 05:13:49 -0800 (PST)
-Date: Wed, 8 Nov 2017 07:13:46 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Per Mejdal Rasmussen <pmr@its.aau.dk>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Update regulatory rules for Denmark (DK) on 2.4 and 5GHz
-Message-ID: <20171108131346.dyn3hbhoonmbqk2d@ubuntu-xps13> (sfid-20171108_141353_903726_7373498F)
-References: <0b1762cd-761d-ebe3-a88e-4a2b1823c51f@its.aau.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0b1762cd-761d-ebe3-a88e-4a2b1823c51f@its.aau.dk>
+        Mon, 13 Nov 2017 15:36:03 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 09/10] brcmfmac: Remove noisy debugging.
+Date: Mon, 13 Nov 2017 21:35:46 +0100
+Message-Id: <1510605347-7629-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213624_289726_E0C735E7)
+In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 07, 2017 at 03:48:12PM +0100, Per Mejdal Rasmussen wrote:
-> Hi
-> 
-> I have taken the time research which frequencies and power levels are
-> allowed for WiFi in Denmark. So db.txt for wireless-regdb can be updated.
+From: Ian Molton <ian@mnementh.co.uk>
 
-Thanks for this information. I know I've been slow to respond, but
-there's no need to keep resending them. I've been looking through the
-documents trying to validate the changes you suggested, but my time for
-doing so has been limited so I haven't finished yet. I hope to be able
-to send a detailed response soon.
+If you need debugging this low level, you're doing something wrong.
+Remove these noisy debug statements so the code is more readable.
 
-Thanks,
-Seth
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index e89e242..9a3f903 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -371,9 +371,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	u8 data;
+ 	int retval;
+ 
+-	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+ 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
+-	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 
+ 	if (ret)
+ 		*ret = retval;
+@@ -386,9 +384,7 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	u32 data;
+ 	int retval;
+ 
+-	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+ 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
+-	brcmf_dbg(SDIO, "data:0x%08x\n", data);
+ 
+ 	if (ret)
+ 		*ret = retval;
+@@ -401,7 +397,6 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ {
+ 	int retval;
+ 
+-	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
+ 	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
+ 
+ 	if (ret)
+@@ -413,7 +408,6 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ {
+ 	int retval;
+ 
+-	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
+ 	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
+ 
+ 	if (ret)
+-- 
+1.9.1
