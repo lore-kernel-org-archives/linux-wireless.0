@@ -1,146 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:43227 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753259AbdKWS3I (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52151 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755517AbdKMUgD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Nov 2017 13:29:08 -0500
-Received: by mail-wm0-f49.google.com with SMTP id x63so18433742wmf.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2017 10:29:08 -0800 (PST)
-Subject: Re: rtl8723be on Fedora27
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        James Cameron <quozl@laptop.org>
-Cc: linux-wireless@vger.kernel.org
-References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
- <3a1fc541-9104-2d13-409f-c8e64845a86d@lwfinger.net>
- <c6662534-db2f-61dc-142e-8015984c6813@gmail.com>
- <2524fe93-9d8a-523e-3256-2b495c951eb0@lwfinger.net>
- <d4ba5178-3d60-76b0-3819-e70e3e173fac@gmail.com>
- <20171121203746.GC5400@us.netrek.org>
- <e639e8df-7cea-87c5-add9-cea1c5e57a8a@gmail.com>
- <20171121213046.GD5400@us.netrek.org>
- <44aaa502-a8f0-c494-f3d2-674e398ca16c@gmail.com>
- <88073798-e6c3-99a8-15ff-d3c7a8b3ef55@lwfinger.net>
-From: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>
-Message-ID: <ae223510-731a-2213-ea88-204a800ada2a@gmail.com> (sfid-20171123_192912_772639_F4097D6A)
-Date: Thu, 23 Nov 2017 19:29:05 +0100
-MIME-Version: 1.0
-In-Reply-To: <88073798-e6c3-99a8-15ff-d3c7a8b3ef55@lwfinger.net>
-Content-Type: text/plain; charset=iso-8859-2
+        Mon, 13 Nov 2017 15:36:03 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 02/10] brcmfmac: Register sizes on hardware are not dependent on compiler types
+Date: Mon, 13 Nov 2017 21:35:39 +0100
+Message-Id: <1510605347-7629-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213625_015948_E5D83AF5)
+In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2017-11-23 19:24 keltezéssel, Larry Finger írta:
-> On 11/23/2017 08:36 AM, Rákosi Gergely wrote:
->> 2017-11-21 22:30 keltezéssel, James Cameron írta:
->>> On Tue, Nov 21, 2017 at 09:52:12PM +0100, Rákosi Gergely wrote:
->>>> 2017-11-21 21:37 keltezéssel, James Cameron írta:
->>>>> On Tue, Nov 21, 2017 at 03:08:16PM +0100, Rákosi Gergely wrote:
->>>>>> 2017-11-18 16:52 keltezéssel, Larry Finger írta:
->>>>>>> On 11/17/2017 06:22 PM, Rákosi Gergely wrote:
->>>>>>>> Hello Larry,
->>>>>>>>
->>>>>>>> First of all, thanks your help.
->>>>>>>> Lets see...here is the kernel version: 4.13.12-300
->>>>>>>> The machine is an Asus ROG 553VE
->>>>>>>>
->>>>>>>> The firmware which loading in the dmesg is :
->>>>>>>> rtlwifi/rtl8723befw_36.bin
->>>>>>>> The output of md5sum is : 1850c1308fbcd95e9f6a7f58ede1e35f
->>>>>>> [...]
->>>>>>> sudo iw dev wlan0 scan | egrep "SSID|signal"
->>>>>>>
->>>>>>> Post that output. In addition, copy the dmesg output to some
->>>>>>> pastebin
->>>>>>> and post the link as well.
->>>>>>>
->>>>>>> Larry
->>>>>>>
->>>>>> Hello Larry,
->>>>>>
->>>>>> I hope this email post format is good, and fit to the rules.
->>>>>> Here is the output:
->>>>>>
->>>>>> root@skynet-x2 ~]# iw dev wlp2s0 scan | egrep "SSID|signal"
->>>>>>          signal: -46.00 dBm
->>>>>>          SSID: SKYNET-X2
->>>>>> [...]
->>>>>> [root@skynet-x2 ~]#
->>>>> Scan results seem normal.  Was this scan before disconnect?
->>>> Yes, this command output taken while the connection was OK
->>> Thanks.
->>>
->>>>>> And the dmesg output:
->>>>>>
->>>>>> https://pastebin.com/iqQSu2hD
->>>>> Is now v4.13.13.
->>>> Yes, thats the upgraded kernel
->>>>
->>>>> This is interesting, an H2C command was dropped, but no idea which.
->>>>>
->>>>> [    9.848052] rtl8723be: error H2C cmd because of Fw download
->>>>> fail!!!
->>>>>
->>>>> Disconnection happened at boot+440 seconds, associate+429 seconds;
->>>>>
->>>>> [  439.871033] rtlwifi: AP off, try to reconnect now
->>>>> [  439.871093] wlp2s0: Connection to AP 4c:5e:0c:c7:fa:e3 lost
->>>>>
->>>>> I cannot tell what causes disconnect.  I wonder if the same
->>>>> timing of the problem happens always, or if the timing varies.
->>>> The timing always changing, never is the same. And I dont realize
->>>> the cause at now...
->>> Thanks.  I had similar problem with different wireless device.
->>>
->>>>> Init MAC failed was another 30 seconds later;
->>>>>
->>>>> [  468.600670] IPv6: ADDRCONF(NETDEV_UP): wlp2s0: link is not ready
->>>>> [  469.618926] rtl8723be: Init MAC failed
->>>>>
->>>>> Looking at _rtl8723be_init_mac, there are two false returns;
->>>>> hardware power on fail, and llt write fail.
->>>>>
->>>>> Sorry, I don't have rtl8723be hardware.
->>>>>
->>>>> Rákosi, did any older kernel keep connection?
->>>> The oldest kernel is 4.13.9-300.fc27.x86_64 in Fedora 27
->>>> installation, but did the same.  If you can give advise how, and
->>>> what I do, then I'll try it.
->>> You might try running "Live CD" of Fedora 26 or Fedora 25, without
->>> installing, to test if unexpected disconnection happens in two older
->>> kernels.  Not for permanent solution, just for easy testing.
->>>
->>> I don't have specific advice for Fedora 27, you might ask Fedora
->>> community about that, or use RHBZ.  A quick search finds this old 2013
->>> page;
->>>
->>> https://fedoraproject.org/wiki/User:Ignatenkobrain/Kernel/Bisection
->>>
->> And now the wireless is working almost 20 hours long, from yesterday
->> afternoon. I dont know why. Lets check some happening:
->> - Yesterday I disconnect the charger from laptop, and lay down at the
->> other room
->> - I left the laptop more than a hour without interaction, so the system
->> is going to sleep
->> - When I push the keyboard the system load up, and everything is working
->> fine
->> - The battery almost depleted when I going back to the original room,
->> and connect the charger
->>
->> Then nothing changed, and I have a working rtl8723be wifi module. Why ?
->
-> Who knows? I do not understand why it did not work before the way mine
-> does with openSUSE!
->
-> Larry
->
->
-I found a workaround! If I power up the laptop, and check the wifi, and
-if it is OK, then I close down the screen (thats mean laptop going to
-sleep). After I open it, and just using like normal, then the connection
-working well for a day, or more.
-If I dont do that, then comes up the usual problem.
+From: Ian Molton <ian@mnementh.co.uk>
 
-What ? Anybody have an idea what is it mean, and how ?
+The 4 IO functions in this patch are incorrect as they use compiler types
+to determine how many bytes to send to the hardware.
 
-Thanks
-Gergely
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index a8976a76..25b5e9b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -264,7 +264,7 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 	func = sdiodev->func[fn];
+ 
+ 	switch (regsz) {
+-	case sizeof(u8):
++	case 1:
+ 		if (write) {
+ 			if (fn)
+ 				sdio_writeb(func, *(u8 *)data, addr, &ret);
+@@ -278,13 +278,13 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
+ 		}
+ 		break;
+-	case sizeof(u16):
++	case 2:
+ 		if (write)
+ 			sdio_writew(func, *(u16 *)data, addr, &ret);
+ 		else
+ 			*(u16 *)data = sdio_readw(func, addr, &ret);
+ 		break;
+-	case sizeof(u32):
++	case 4:
+ 		if (write)
+ 			sdio_writel(func, *(u32 *)data, addr, &ret);
+ 		else
+@@ -368,7 +368,7 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	for (i = 0; i < 3; i++) {
+ 		err = brcmf_sdiod_regrw_helper(sdiodev,
+ 					       SBSDIO_FUNC1_SBADDRLOW + i,
+-					       sizeof(u8), &addr[i], true);
++					       1, &addr[i], true);
+ 		if (err) {
+ 			brcmf_err("failed at addr: 0x%0x\n",
+ 				  SBSDIO_FUNC1_SBADDRLOW + i);
+@@ -407,7 +407,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
++	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+ 					  false);
+ 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
+ 
+@@ -423,10 +423,10 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
+-	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
++	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+ 					  false);
+ 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
+ 
+@@ -443,7 +443,7 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
++	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
+ 					  true);
+ 	if (ret)
+ 		*ret = retval;
+@@ -455,10 +455,10 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	int retval;
+ 
+ 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
+-	retval = brcmf_sdiod_addrprep(sdiodev, sizeof(data), &addr);
++	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
+ 	if (retval)
+ 		goto done;
+-	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, sizeof(data), &data,
++	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
+ 					  true);
+ 
+ done:
+@@ -876,7 +876,7 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
+ 
+ 	/* issue abort cmd52 command through F0 */
+ 	brcmf_sdiod_request_data(sdiodev, SDIO_FUNC_0, SDIO_CCCR_ABORT,
+-				 sizeof(t_func), &t_func, true);
++				 1, &t_func, true);
+ 
+ 	brcmf_dbg(SDIO, "Exit\n");
+ 	return 0;
+-- 
+1.9.1
