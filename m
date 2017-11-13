@@ -1,52 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40594 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752454AbdK0M5o (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:53070 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752516AbdKMOfK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Nov 2017 07:57:44 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Chris Wilson <chris@chris-wilson.co.uk>,
-        DRI Development <dri-devel@lists.freedesktop.org>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Build regressions/improvements in v4.15-rc1
-References: <1511776877-11130-1-git-send-email-geert@linux-m68k.org>
-        <CAMuHMdX6XpKbLYuwkdCK0YhYGaV5Sg8+v0DrUV9y6R3Qozf-qQ@mail.gmail.com>
-Date: Mon, 27 Nov 2017 14:57:37 +0200
-In-Reply-To: <CAMuHMdX6XpKbLYuwkdCK0YhYGaV5Sg8+v0DrUV9y6R3Qozf-qQ@mail.gmail.com>
-        (Geert Uytterhoeven's message of "Mon, 27 Nov 2017 11:11:17 +0100")
-Message-ID: <87lgirx4ji.fsf@purkki.adurom.net> (sfid-20171127_135822_011264_4117D092)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 13 Nov 2017 09:35:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: add a few extended error strings to key parsing
+Date: Mon, 13 Nov 2017 15:35:06 +0100
+Message-Id: <20171113143506.20396-1-johannes@sipsolutions.net> (sfid-20171113_153516_019809_CEBAD4C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On Mon, Nov 27, 2017 at 11:01 AM, Geert Uytterhoeven
-> <geert@linux-m68k.org> wrote:
->> Below is the list of build error/warning regressions/improvements in
->> v4.15-rc1[1] compared to v4.14[2].
->>
->> Summarized:
->>   - build errors: +2/-5
->
->> [1] http://kisskb.ellerman.id.au/kisskb/head/4fbd8d194f06c8a3fd2af1ce560ddb31f7ec8323/ (all 271 configs)
->> [2] http://kisskb.ellerman.id.au/kisskb/head/bebc6082da0a9f5d47a1ea2edc099bf671058bd4/ (270 out of 271 configs)
->
->> 2 error regressions:
->>   + /home/kisskb/slave/src/drivers/gpu/drm/i915/intel_csr.c: error: 'si' may be used uninitialized in this function [-Werror=uninitialized]:  => 204:3
->
-> x86_64-randconfig
->
->>   + /home/kisskb/slave/src/include/linux/bcma/bcma_driver_pci.h: error: field 'pci_controller' has incomplete type:  => 218:24
+This mostly serves as an example for how to add error strings
+and erroneous attribute pointers.
 
-The last "real" change to that file was from 2015 so I guess something
-else changed to trigger this? But anyway, I guess the reason is missing
-struct pci_controller forward declaration? Or missing include
-<asm/pci-bridge.h? Not sure.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 61 +++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 41 insertions(+), 20 deletions(-)
 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d23eb5700788..73f0e5524e84 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -734,11 +734,12 @@ struct key_parse {
+ 	bool def_uni, def_multi;
+ };
+ 
+-static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
++static int nl80211_parse_key_new(struct genl_info *info, struct nlattr *key,
++				 struct key_parse *k)
+ {
+ 	struct nlattr *tb[NL80211_KEY_MAX + 1];
+ 	int err = nla_parse_nested(tb, NL80211_KEY_MAX, key,
+-				   nl80211_key_policy, NULL);
++				   nl80211_key_policy, info->extack);
+ 	if (err)
+ 		return err;
+ 
+@@ -771,7 +772,8 @@ static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
+ 	if (tb[NL80211_KEY_TYPE]) {
+ 		k->type = nla_get_u32(tb[NL80211_KEY_TYPE]);
+ 		if (k->type < 0 || k->type >= NUM_NL80211_KEYTYPES)
+-			return -EINVAL;
++			return genl_err_attr(info, -EINVAL,
++					     tb[NL80211_KEY_TYPE]);
+ 	}
+ 
+ 	if (tb[NL80211_KEY_DEFAULT_TYPES]) {
+@@ -779,7 +781,8 @@ static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
+ 
+ 		err = nla_parse_nested(kdt, NUM_NL80211_KEY_DEFAULT_TYPES - 1,
+ 				       tb[NL80211_KEY_DEFAULT_TYPES],
+-				       nl80211_key_default_policy, NULL);
++				       nl80211_key_default_policy,
++				       info->extack);
+ 		if (err)
+ 			return err;
+ 
+@@ -820,8 +823,10 @@ static int nl80211_parse_key_old(struct genl_info *info, struct key_parse *k)
+ 
+ 	if (info->attrs[NL80211_ATTR_KEY_TYPE]) {
+ 		k->type = nla_get_u32(info->attrs[NL80211_ATTR_KEY_TYPE]);
+-		if (k->type < 0 || k->type >= NUM_NL80211_KEYTYPES)
++		if (k->type < 0 || k->type >= NUM_NL80211_KEYTYPES) {
++			GENL_SET_ERR_MSG(info, "key type out of range");
+ 			return -EINVAL;
++		}
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_KEY_DEFAULT_TYPES]) {
+@@ -850,31 +855,42 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
+ 	k->type = -1;
+ 
+ 	if (info->attrs[NL80211_ATTR_KEY])
+-		err = nl80211_parse_key_new(info->attrs[NL80211_ATTR_KEY], k);
++		err = nl80211_parse_key_new(info, info->attrs[NL80211_ATTR_KEY], k);
+ 	else
+ 		err = nl80211_parse_key_old(info, k);
+ 
+ 	if (err)
+ 		return err;
+ 
+-	if (k->def && k->defmgmt)
++	if (k->def && k->defmgmt) {
++		GENL_SET_ERR_MSG(info, "key with def && defmgmt is invalid");
+ 		return -EINVAL;
++	}
+ 
+ 	if (k->defmgmt) {
+-		if (k->def_uni || !k->def_multi)
++		if (k->def_uni || !k->def_multi) {
++			GENL_SET_ERR_MSG(info, "defmgmt key must be mcast");
+ 			return -EINVAL;
++		}
+ 	}
+ 
+ 	if (k->idx != -1) {
+ 		if (k->defmgmt) {
+-			if (k->idx < 4 || k->idx > 5)
++			if (k->idx < 4 || k->idx > 5) {
++				GENL_SET_ERR_MSG(info,
++						 "defmgmt key idx not 4 or 5");
+ 				return -EINVAL;
++			}
+ 		} else if (k->def) {
+-			if (k->idx < 0 || k->idx > 3)
++			if (k->idx < 0 || k->idx > 3) {
++				GENL_SET_ERR_MSG(info, "def key idx not 0-3");
+ 				return -EINVAL;
++			}
+ 		} else {
+-			if (k->idx < 0 || k->idx > 5)
++			if (k->idx < 0 || k->idx > 5) {
++				GENL_SET_ERR_MSG(info, "key idx not 0-5");
+ 				return -EINVAL;
++			}
+ 		}
+ 	}
+ 
+@@ -883,8 +899,9 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
+ 
+ static struct cfg80211_cached_keys *
+ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
+-		       struct nlattr *keys, bool *no_ht)
++		       struct genl_info *info, bool *no_ht)
+ {
++	struct nlattr *keys = info->attrs[NL80211_ATTR_KEYS];
+ 	struct key_parse parse;
+ 	struct nlattr *key;
+ 	struct cfg80211_cached_keys *result;
+@@ -909,17 +926,22 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
+ 		memset(&parse, 0, sizeof(parse));
+ 		parse.idx = -1;
+ 
+-		err = nl80211_parse_key_new(key, &parse);
++		err = nl80211_parse_key_new(info, key, &parse);
+ 		if (err)
+ 			goto error;
+ 		err = -EINVAL;
+ 		if (!parse.p.key)
+ 			goto error;
+-		if (parse.idx < 0 || parse.idx > 3)
++		if (parse.idx < 0 || parse.idx > 3) {
++			GENL_SET_ERR_MSG(info, "key index out of range [0-3]");
+ 			goto error;
++		}
+ 		if (parse.def) {
+-			if (def)
++			if (def) {
++				GENL_SET_ERR_MSG(info,
++						 "only one key can be default");
+ 				goto error;
++			}
+ 			def = 1;
+ 			result->def = parse.idx;
+ 			if (!parse.def_uni || !parse.def_multi)
+@@ -932,6 +954,7 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
+ 			goto error;
+ 		if (parse.p.cipher != WLAN_CIPHER_SUITE_WEP40 &&
+ 		    parse.p.cipher != WLAN_CIPHER_SUITE_WEP104) {
++			GENL_SET_ERR_MSG(info, "connect key must be WEP");
+ 			err = -EINVAL;
+ 			goto error;
+ 		}
+@@ -947,6 +970,7 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
+ 
+ 	if (result->def < 0) {
+ 		err = -EINVAL;
++		GENL_SET_ERR_MSG(info, "need a default/TX key");
+ 		goto error;
+ 	}
+ 
+@@ -8611,9 +8635,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 	if (ibss.privacy && info->attrs[NL80211_ATTR_KEYS]) {
+ 		bool no_ht = false;
+ 
+-		connkeys = nl80211_parse_connkeys(rdev,
+-					  info->attrs[NL80211_ATTR_KEYS],
+-					  &no_ht);
++		connkeys = nl80211_parse_connkeys(rdev, info, &no_ht);
+ 		if (IS_ERR(connkeys))
+ 			return PTR_ERR(connkeys);
+ 
+@@ -9017,8 +9039,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (connect.privacy && info->attrs[NL80211_ATTR_KEYS]) {
+-		connkeys = nl80211_parse_connkeys(rdev,
+-					  info->attrs[NL80211_ATTR_KEYS], NULL);
++		connkeys = nl80211_parse_connkeys(rdev, info, NULL);
+ 		if (IS_ERR(connkeys))
+ 			return PTR_ERR(connkeys);
+ 	}
 -- 
-Kalle Valo
+2.14.2
