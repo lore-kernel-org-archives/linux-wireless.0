@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:35254 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753758AbdKXVRS (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:1327 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753277AbdKNMPL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Nov 2017 16:17:18 -0500
-Received: by mail-qk0-f194.google.com with SMTP id p19so25927082qke.2
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Nov 2017 13:17:17 -0800 (PST)
-Subject: Re: [PATCH] cfg80211: select CRYPTO_SHA256 if needed
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-References: <20171124083525.28735-1-johannes@sipsolutions.net>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <9f8c14d6-d70d-693c-9ada-44d092f8d757@gmail.com> (sfid-20171124_221723_200342_283CF524)
-Date: Fri, 24 Nov 2017 13:17:14 -0800
+        Tue, 14 Nov 2017 07:15:11 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Daniel Drake <drake@endlessm.com>
+CC: Russell Hu <rhu@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Robert Chang <rwchang@qti.qualcomm.com>,
+        Aeolus Yang <aeolus@qti.qualcomm.com>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux@endlessm.com" <linux@endlessm.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "andy@infradead.org" <andy@infradead.org>
+Subject: Re: [v2] ath9k: add MSI support
+Date: Tue, 14 Nov 2017 12:15:08 +0000
+Message-ID: <87bmk5hx9x.fsf@kamboji.qca.qualcomm.com> (sfid-20171114_131535_818617_5E3E22B8)
+References: <20171110025415.7854-1-drake@endlessm.com>
+        <87y3na7eei.fsf@qca.qualcomm.com>
+        <CAD8Lp47uJbB27xZPH3dDqNuJcaNCGEsbpdqfK-h4+nzVLGk1aw@mail.gmail.com>
+In-Reply-To: <CAD8Lp47uJbB27xZPH3dDqNuJcaNCGEsbpdqfK-h4+nzVLGk1aw@mail.gmail.com>       (Daniel
+ Drake's message of "Tue, 14 Nov 2017 06:36:36 +0800")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20171124083525.28735-1-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/2017 12:35 AM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When regulatory database certificates are built-in, they're
-> currently using the SHA256 digest algorithm, so add that to
-> the build in that case.
-> 
-> Also add a note that for custom certificates, one may need
-> to add the right algorithms.
-> 
-> Reported-by: Florian Fainelli <f.fainelli@gmail.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Daniel Drake <drake@endlessm.com> writes:
 
-Tested-by: Florian Fainelli <f.fainelli@gmail.com>
+> On Mon, Nov 13, 2017 at 4:48 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrot=
+e:
+>> Enabling MSI by default is just too invasive, ath9k is used in so many
+>> different enviroments that risk of regressions is high. MSI needs a lot
+>> of testing before we can even consider enabling it by default.
+>
+> And it seems like we already found a regression here - the MSI Message
+> Data is being corrupted as described in my last mail.
 
-Thanks for the quick fix!
+Exactly.
 
-> ---
->  net/wireless/Kconfig | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-> index da91bb547db3..1abcc4fc4df1 100644
-> --- a/net/wireless/Kconfig
-> +++ b/net/wireless/Kconfig
-> @@ -20,6 +20,10 @@ config CFG80211
->  	tristate "cfg80211 - wireless configuration API"
->  	depends on RFKILL || !RFKILL
->  	select FW_LOADER
-> +	# may need to update this when certificates are changed and are
-> +	# using a different algorithm, though right now they shouldn't
-> +	# (this is here rather than below to allow it to be a module)
-> +	select CRYPTO_SHA256 if CFG80211_USE_KERNEL_REGDB_KEYS
->  	---help---
->  	  cfg80211 is the Linux wireless LAN (802.11) configuration API.
->  	  Enable this if you have a wireless device.
-> @@ -113,6 +117,9 @@ config CFG80211_EXTRA_REGDB_KEYDIR
->  	  certificates like in the kernel sources (net/wireless/certs/)
->  	  that shall be accepted for a signed regulatory database.
->  
-> +	  Note that you need to also select the correct CRYPTO_<hash> modules
-> +	  for your certificates, and if cfg80211 is built-in they also must be.
-> +
->  config CFG80211_REG_CELLULAR_HINTS
->  	bool "cfg80211 regulatory support for cellular base station hints"
->  	depends on CFG80211_CERTIFICATION_ONUS
-> 
+> Can't be fixed in firmware, but it would be good to have confirmation
+> of the hardware behavivour, and maybe some other solution is possible?
+> Are you following this up within Qualcomm?
 
--- 
-Florian
+No time to do that right now, sorry.
+
+--=20
+Kalle Valo=
