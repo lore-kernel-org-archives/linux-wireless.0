@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0166.hostedemail.com ([216.40.44.166]:41501 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752506AbdK1Q5j (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:8911 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756099AbdKNRia (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Nov 2017 11:57:39 -0500
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave03.hostedemail.com (Postfix) with ESMTP id D695D18036D58
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Nov 2017 16:49:20 +0000 (UTC)
-Message-ID: <1511887757.19952.38.camel@perches.com> (sfid-20171128_175742_614278_66858E9E)
-Subject: drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c: Odd array
- size
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "Larry.Finger" <Larry.Finger@lwfinger.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 28 Nov 2017 08:49:17 -0800
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Tue, 14 Nov 2017 12:38:30 -0500
+From: Peng Xu <pxu@qti.qualcomm.com>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Sara Sharon" <sara.sharon@intel.com>
+Subject: RE: [RFC] cfg80211: Implement Multiple BSSID capability in scanning
+Date: Tue, 14 Nov 2017 17:38:26 +0000
+Message-ID: <59a37842482b40ceb5e60c2155bca78c@NASANEXM01F.na.qualcomm.com> (sfid-20171114_184050_261011_A7AA8CBA)
+References: <1509554358-10473-1-git-send-email-jouni@qca.qualcomm.com>
+ <1510664296.2030.22.camel@sipsolutions.net>
+ <4927d2288442486788cd5b4d0492537a@NASANEXM01F.na.qualcomm.com>
+ <1510669408.2030.23.camel@sipsolutions.net>
+ <929d1fdb74524aeaab4959f84a82c732@NASANEXM01F.na.qualcomm.com>
+ <1510669995.2030.26.camel@sipsolutions.net>
+ <e540b35f76a447cab35f7267c09ee8f5@NASANEXM01F.na.qualcomm.com>
+ <20171114163127.GA24453@jouni.qca.qualcomm.com>
+In-Reply-To: <20171114163127.GA24453@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-61 entries in this table:
+> On Tue, Nov 14, 2017 at 02:39:31PM +0000, Peng Xu wrote:
+> > > I'm not even sure why this is necessary anyway though, do we really
+> > > think vendors will expect to be able to put vendor IEs inside the
+> > > subelements and override the ones outside?
+> > >
+> > > Is there even any point for the WFA ones? It seems WMM really ought
+> > > to be the same for all anyway, for example.
+> >
+> > I don't have any use case for such scenario. If vendor elements are
+> > unlikely to be present in subelement, this logic can be removed.
+>=20
+> As far as WMM element is concerned, I'd note that IEEE 802.11 standard do=
+es
+> not list EDCA Parameter Set element as one of the items that has to be sa=
+me
+> for all the BSSs in a multiple BSSID set and as such, I'd consider it to =
+be
+> allowed behavior for an AP to advertise different WMM parameters for
+> different nontransmitted BSSIDs.
+>=20
+> As far as other vendor specific elements are concerned, there could certa=
+inly
+> be use cases for using different values for WPA element, Hotspot 2.0
+> element, MBO/OCE element.
+>=20
+Hi Jouni,
+As you pointed out the use cases for having vendor elements in MBSSID subel=
+ements, what is
+your suggestion to identify and process the vendor elements?=20
 
-static const u8 OFDM_CONFIG[] = {
-	0x10, 0x0F, 0x0A, 0x0C, 0x14, 0xFA, 0xFF, 0x50,
-	0x00, 0x50, 0x00, 0x00, 0x00, 0x5C, 0x00, 0x00,
-	0x40, 0x00, 0x40, 0x00, 0x00, 0x00, 0xA8, 0x26,
-	0x32, 0x33, 0x06, 0xA5, 0x6F, 0x55, 0xC8, 0xBB,
-	0x0A, 0xE1, 0x2C, 0x4A, 0x86, 0x83, 0x34, 0x00,
-	0x4F, 0x24, 0x6F, 0xC2, 0x03, 0x40, 0x80, 0x00,
-	0xC0, 0xC1, 0x58, 0xF1, 0x00, 0xC4, 0x90, 0x3e,
-	0xD8, 0x3C, 0x7B, 0x10, 0x10
-};
-
-but only 60 written?
-
-static void rtl8187se_write_ofdm_config(struct ieee80211_hw *dev)
-{
-	/* write OFDM_CONFIG table */
-	int i;
-
-	for (i = 0; i < 60; i++)
-		rtl8225se_write_phy_ofdm(dev, i, OFDM_CONFIG[i]);
-
-}
-
-This is the only use of OFDM_CONFIG.
-
-What is the defect here?
-
-Should 60 be ARRAY_SIZE(OFDM_CONFIG) or should the array be shortened?
-
-One too many entries or one too few a write?
-My guess would be one too few a write.
+Thanks,
+Peng
