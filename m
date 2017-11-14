@@ -1,120 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:43217 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751418AbdKQKOU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Nov 2017 05:14:20 -0500
-Received: by mail-wm0-f52.google.com with SMTP id x63so5361539wmf.2
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Nov 2017 02:14:19 -0800 (PST)
+Received: from mout.gmx.net ([212.227.15.18]:50175 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754798AbdKNOEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Nov 2017 09:04:37 -0500
 MIME-Version: 1.0
-In-Reply-To: <1510905186.4011.202.camel@coelho.fi>
-References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
- <1509434718.4492.195.camel@coelho.fi> <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
- <1509952948.4492.360.camel@coelho.fi> <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
- <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
- <1510825750.4011.179.camel@coelho.fi> <CAB4CAwfg73wRoNca2GBaMn4eN04vf+uR3xdzYO0UWG1Nmaqo=w@mail.gmail.com>
- <1510901207.4011.197.camel@coelho.fi> <CAB4CAwcit2jqHXs7x2cowHdi31OH3wKnmyW4=v-6RGO-+1gjog@mail.gmail.com>
- <1510905186.4011.202.camel@coelho.fi>
-From: Chris Chiu <chiu@endlessm.com>
-Date: Fri, 17 Nov 2017 18:14:18 +0800
-Message-ID: <CAB4CAwf8+jty2J-xMpKnoSWR=CnR=GbMR4=fm-Eh7J7+L=dmjg@mail.gmail.com> (sfid-20171117_111427_159723_933554A2)
-Subject: Re: Need support for Intel new wifi module 9462NGW
-To: Luca Coelho <luca@coelho.fi>
-Cc: johannes.berg@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+Message-ID: <trinity-e7299e0d-f03e-486c-acdd-f84e9b6d3a32-1510668275455@3c-app-gmx-bs68> (sfid-20171114_150442_363648_FDAD9A47)
+From: "Porto Rio" <porto.rio@gmx.net>
+To: linux-wireless@vger.kernel.org
+Subject: mwifiex: how to restrict txpower per channel and regulatory region?
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 14 Nov 2017 15:04:35 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 17, 2017 at 3:53 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Fri, 2017-11-17 at 15:38 +0800, Chris Chiu wrote:
->> On Fri, Nov 17, 2017 at 2:46 PM, Luca Coelho <luca@coelho.fi> wrote:
->> > On Fri, 2017-11-17 at 14:39 +0800, Chris Chiu wrote:
->> > > On Thu, Nov 16, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi>
->> > > wrote:
->> > > > Hi Chris,
->> > > >
->> > > > On Thu, 2017-11-09 at 11:11 +0800, Chris Chiu wrote:
->> > > > > Hi Luca,
->> > > > >     Any suggestion for the "Failed to start INIT ucode: -110"
->> > > > > issue
->> > > > > for the firmware?
->> > > >
->> > > > There were a few problems which should now be fixed.  We
->> > > > published
->> > > > new
->> > > > firmwares in our linux-firmware.git tree[1] and also made some
->> > > > fixes in
->> > > > the driver[2].  Please update your system accordingly and let
->> > > > me
->> > > > know
->> > > > if it works for you.
->> > > >
->> > > > Thanks!
->> > > >
->> > > > [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/lin
->> > > > ux-f
->> > > > irmware.git/
->> > > > [2] https://patchwork.kernel.org/patch/10059871/
->> > > >     https://patchwork.kernel.org/patch/10059875/
->> > > >     https://patchwork.kernel.org/patch/10059873/
->> > > >
->> > > > --
->> > > > Cheers,
->> > > > Luca.
->> > >
->> > > Hi Luca,
->> >
->> > Hi Chris,
->> >
->> >
->> > >     Thanks for your patch and updated firmware. The driver can
->> > > initialize w/o error now. However, it always fails on ip-config
->> > > after
->> > > 4-way handshake complete. I have to mention that I removed the
->> > > field
->> > > ".soc_latency" in all new iwl_cfg you added in
->> > > https://patchwork.kernel.org/patch/10059875/ to remove compile
->> > > error
->> > > based on the linux mainline 4.14.
->> > >     I don't know whether if this causes the problem. Do you need
->> > > me
->> > > to
->> > > do anything for more information?
->> >
->> > That was my fault, I forgot to include one file in my commit.  I
->> > have
->> > sent v2 of the two last patches to solve the problem.  Can you try
->> > them?
->> >
->> > The problem you're seeing could be related to that, because we use
->> > a
->> > bit longer wait period for HW stabilization with integrated
->> > devices.
->> > And if you remove it, you may encounter random problems...
->> >
->> > --
->> > Cheers,
->> > Luca.
->>
->> Hi Luca,
->>     Thanks for your quick response. I  tried your v2 patch but things
->> remain the same. The signal strength and scan results seems nothing
->> wrong but still fail to get ip from DHCP server. Please let me know
->> what I can help here.
->
-> Can you provide the dmesg output and trace-cmd logs as explained here?
->
-> https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
->
->
-> --
-> Cheers,
-> Luca.
+Hi All
 
-Hi Luca,
-    Here's the dmesg log of the fail case on DHCP.
-https://gist.github.com/mschiu77/ec1a4579e6b863da68b703205cf8a0e4
+For (worldwide) regulatory compliance / WiFi certification I need to restrict/limit the txpower dependent on channels and regulatory region code. At the moment I can restrict it generally via e.g. "iw dev mlan0 set txpower fixed 800". Furthermore I can specify the allowed channels/frequencies with wireless-regdb and crda. Is there some similar way to limit the txpower?
 
-Chris
+I am using mwifiex (of LTS kernel 4.4 at the moment) on the ARM platform with Marvell chip 88W8897.
+
+There is some Marvell-specific way (specify txpwrlimit_cfg.conf, convert it to txpower_XX.bin file and put this into /lib/firmware/mrvl dir) which seems to work only with the reference driver published in Marvell's Extranet but not with the (open source) mwifiex driver which I want to use. Is this right? 
+I was asking myself if there is some (more general) Linux way to accomplish this with the open source driver(s), although the txpower limits are dependent on specific hardware parameters (cable loss, antenna gain).
+
+Thanks and best regards,
+Matthias
