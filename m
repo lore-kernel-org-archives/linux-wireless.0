@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eggs.gnu.org ([208.118.235.92]:56017 "EHLO eggs.gnu.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750817AbdKFEJ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Nov 2017 23:09:29 -0500
-Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
-        (envelope-from <nikolas@gnu.org>)
-        id 1eBYj0-0005tM-4W
-        for linux-wireless@vger.kernel.org; Sun, 05 Nov 2017 23:09:26 -0500
-Subject: Re: rtl8821ae dbi read question
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org, pkshih@realtek.com
-References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
- <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
- <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org>
- <702e4270-dcf3-5916-daee-f2265e0da907@lwfinger.net>
-From: Nik Nyby <nikolas@gnu.org>
-Message-ID: <ca520364-0d18-54c2-e6bc-b8245f8408ea@gnu.org> (sfid-20171106_050941_485634_E2AF2078)
-Date: Sun, 5 Nov 2017 23:09:15 -0500
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:56467 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753507AbdKNLsT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Nov 2017 06:48:19 -0500
+Date: Tue, 14 Nov 2017 12:48:24 +0100
+From: Greg KH <greg@kroah.com>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: Thomas Backlund <tmb@mageia.org>, linux-wireless@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: fix firmware names for 9xxx and a0 series hw
+Message-ID: <20171114114824.GA26814@kroah.com> (sfid-20171114_124828_372074_8C1544CD)
+References: <20171114103751.7761-1-tmb@mageia.org>
+ <1510656721.4011.87.camel@coelho.fi>
+ <2131d658-8a6e-2f3b-4e44-a3206385af46@mageia.org>
+ <1510659500.4011.90.camel@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <702e4270-dcf3-5916-daee-f2265e0da907@lwfinger.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1510659500.4011.90.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/05/2017 09:09 PM, Larry Finger wrote:
-> Disabling all of _rtl8821ae_enable_aspm_back_door() may not be wise. We 
-> tried that patch as part of debugging.
+On Tue, Nov 14, 2017 at 01:38:20PM +0200, Luciano Coelho wrote:
+> On Tue, 2017-11-14 at 13:29 +0200, Thomas Backlund wrote:
+> > Den 14-11-2017 kl. 12:52, skrev Luca Coelho:
+> > > On Tue, 2017-11-14 at 12:37 +0200, Thomas Backlund wrote:
+> > > > iwlwifi 9xxx and a0 series hw contains an extra dash in firmware
+> > > > file
+> > > > name
+> > > > as seeen in modinfo output for kernel 4.14:
+> > > > 
+> > > > firmware:       iwlwifi-9260-th-b0-jf-b0--34.ucode
+> > > > firmware:       iwlwifi-9260-th-a0-jf-a0--34.ucode
+> > > > firmware:       iwlwifi-9000-pu-a0-jf-b0--34.ucode
+> > > > firmware:       iwlwifi-9000-pu-a0-jf-a0--34.ucode
+> > > > firmware:       iwlwifi-QuQnj-a0-hr-a0--34.ucode
+> > > > firmware:       iwlwifi-QuQnj-a0-jf-b0--34.ucode
+> > > > firmware:       iwlwifi-QuQnj-f0-hr-a0--34.ucode
+> > > > firmware:       iwlwifi-Qu-a0-jf-b0--34.ucode
+> > > > firmware:       iwlwifi-Qu-a0-hr-a0--34.ucode
+> > > > 
+> > > > Fix that by dropping the extra adding of '"-"'.
+> > > > 
+> > > > Signed-off-by: Thomas Backlund <tmb-odJJhXpcy38dnm+yROfE0A@public
+> > > > .gmane.org>
+> > > > cc: Luca Coelho <luciano.coelho-ral2JQCrhuEAvxtiuMwx3w@public.gma
+> > > > ne.org>
+> > > > cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > > > 
+> > > > ---
+> > > 
+> > > Looks good, thanks!
+> > > 
+> > > Though I'm not sure this is worth sending to stable... Why do you
+> > > think
+> > > it's needed?
+> > > 
+> > 
+> > As 4.14 is a -longterm kernel and afaik atleast 9xxx series hw is
+> > out 
+> > there I thought it would be good to have it fixed there...
+> > 
+> > but in the end it's your call for upstream stable or not
+> > 
+> > I'll add it to the Mageia distrib kernels anyway.
 > 
-> That routine consists of two mdio r/w sequences, and 3 dbi r/w 
-> sequences. The third one of the latter is only used for RTL8812AE, thus 
-> it can be ignored.
-> 
-> What happens if you try disabling those r/w pairs one at a time? It is 
-> possible that one, or more of them, should be disabled when aspm is 
-> zero. 
+> Okay, fair enough.  I'll add it to stable, it's a very simple and not
+> risky fix anyway.  One can claim that userspace may get confused. 
+> Actually I think some distros use those values to check which firmwares
+> need to be installed, but I don't recall for sure now.
 
-I first tried disabling only the mdio sequences, then the dbi sequences. 
-I was able to reproduce my problem in both cases. But I have found that 
-my problem is resolved by only removing the enable_aspm() call, and 
-leaving the call to _rtl8821ae_enable_aspm_back_door() intact.
+The install scripts use those values, so yes, it would be good to have
+them be correct.
 
-If removing rtlpriv->intf_ops->enable_aspm(hw) is the same as setting 
-aspm=0, then it's possible I'm not setting the option correctly. But as 
-far as I can see right now, removing enable_aspm() is necessary for my 
-stable connection.
+thanks,
 
-> It should not matter whether the driver is built in, or loaded as 
-> a module. Please note that I never build that code in as I always want 
-> the option of refreshing the driver without rebooting.
-
-Thanks for the info - I'll do the same.
+greg k-h
