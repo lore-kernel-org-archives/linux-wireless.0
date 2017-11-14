@@ -1,364 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52103 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755361AbdKMUgC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 15:36:02 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 07/10] brcmfmac: Remove brcmf_sdiod_request_data()
-Date: Mon, 13 Nov 2017 21:35:44 +0100
-Message-Id: <1510605347-7629-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213625_934824_57760FB8)
-In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mga07.intel.com ([134.134.136.100]:55213 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751030AbdKNGdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Nov 2017 01:33:07 -0500
+Message-ID: <1510641182.4011.65.camel@intel.com> (sfid-20171114_073323_812283_16DE68CF)
+Subject: Re: Fwd: linux v4.14 causes firmware iwlwifi errors on Lenovo
+ Thinkpad T440s
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Tue, 14 Nov 2017 08:33:02 +0200
+In-Reply-To: <10da37f3-a018-7568-49a8-3a8ed86ef64c@lwfinger.net>
+References: <CAMRc=Mf92X2t8wjmE+xkXrA0QKY06uFeXhMY-97Ka=_UxuQbjw@mail.gmail.com>
+         <CAMRc=Mf-4HnRXLxoiPrzZVjeCpfY5+Q2Ydmee0GkViejk8nzaQ@mail.gmail.com>
+         <3045d677-8f24-b258-0eaf-ee8dae5ecd4c@lwfinger.net>
+         <CAMRc=Mf-sy79yoJiyZC8pOtHTo4P7SpHPsTmuHxEBfbc8xa+Uw@mail.gmail.com>
+         <10da37f3-a018-7568-49a8-3a8ed86ef64c@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+On Mon, 2017-11-13 at 16:23 -0600, Larry Finger wrote:
+> On 11/13/2017 03:30 PM, Bartosz Golaszewski wrote:
+> > 2017-11-13 21:45 GMT+01:00 Larry Finger <Larry.Finger@lwfinger.net>
+> > :
+> > > On 11/13/2017 02:22 PM, Bartosz Golaszewski wrote:
+> > > > 
+> > > > Forwarding here too as I messed up the address the last time.
+> > > > --
+> > > > 
+> > > > Hi,
+> > > > 
+> > > > I noticed my wireless interface can't get up with linux v4.14
+> > > > and the
+> > > > kernel log is flooded with firmware errors:
+> > > > 
+> > > > iwlwifi 0000:03:00.0: Firmware error during reconfiguration -
+> > > > reprobe!
+> > > > iwlwifi 0000:03:00.0: FW error in SYNC CMD DQA_ENABLE_CMD
+> > > > 
+> > > > and
+> > > > 
+> > > > ieee80211 phy63: Hardware restart was requested.
+> > > > 
+> > > > The wireless controller is: Intel Corporation Wireless 7260
+> > > > (rev 83)
+> > > > Firmware used is: iwlwifi-7260-17
+> > > > 
+> > > > Everything works fine with v4.13.12.
+> > > > 
+> > > > I didn't have time today to bisect for the offending commit.
+> > > > Full log
+> > > > uploaded[1].
+> > > > 
+> > > > Best regards,
+> > > > Bartosz Golaszewski
+> > > > 
+> > > > [1] https://pastebin.com/jksqxvS6
+> > > 
+> > > 
+> > > Your log shows "iwlwifi 0000:03:00.0: loaded firmware version
+> > > 17.228510.0
+> > > op_mode iwlmvm"
+> > > 
+> > > Mine, where the 7260 works, shows "iwlwifi 0000:04:00.0: loaded
+> > > firmware
+> > > version 17.459231.0 op_mode iwlmvm".
+> > > 
+> > > It seems as if you need newer firmware. A detailed file listing
+> > > shows
+> > > "-rw-r--r-- 1 root root 1049340 Oct  9 12:03
+> > > /lib/firmware/iwlwifi-7260-17.ucode". That date is likely when I
+> > > installed
+> > > the updated kernel firmware package from my distro. The md5sum
+> > > for the file
+> > > is 73a217f55c47d3a70bb5dbbe1d676423.
+> > > 
+> > > Larry
+> > > 
+> > 
+> > Ok so it seems the version in linux-firmware is outdated. The file
+> > you're using is available on github[1] and fixed the issue for me.
+> > 
+> > Thanks!
+> > Bartosz Golaszewski
+> > 
+> > [1] https://github.com/OpenELEC/iwlwifi-firmware
+> 
+> Interesting. Using md5sum of the git repo for linux-firmware gets
+> 73a217f55c47d3a70bb5dbbe1d676423  iwlwifi-7260-17.ucode.
+> 
+> That is the file I'm using.
 
-This function is obfuscating how IO works on this chip. Remove it
-and push its logic into brcmf_sdiod_reg_{read,write}().
+You shouldn't use firmwares from github or anywhere else except from
+the two official places where we release it:
 
-Handling of -ENOMEDIUM is altered, but as that's pretty much broken anyway
-we can ignore that.
+Mainline (but slow to get updated):
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 237 ++++++++-------------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |   2 +-
- 2 files changed, 87 insertions(+), 152 deletions(-)
+https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-7260-17.ucode
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 355aebd..bb2ebe6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -230,6 +230,43 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 	sdiodev->state = state;
- }
- 
-+static int brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev,
-+					 u32 address)
-+{
-+	int err = 0, i;
-+	u32 addr;
-+
-+	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
-+		return -ENOMEDIUM;
-+
-+	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
-+
-+	for (i = 0 ; i < 3 && !err ; i++, addr >>= 8)
-+		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
-+				  addr & 0xff, &err);
-+
-+	return err;
-+}
-+
-+static int brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
-+{
-+	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
-+	int err = 0;
-+
-+	if (bar0 != sdiodev->sbwad) {
-+		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
-+		if (err)
-+			return err;
-+
-+		sdiodev->sbwad = bar0;
-+	}
-+
-+	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
-+	return 0;
-+}
-+
- static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte,
- 					uint regaddr)
- {
-@@ -249,173 +286,84 @@ static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte,
- 	return err_ret;
- }
- 
--static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
--				    u32 addr, u8 regsz, void *data, bool write)
--{
--	struct sdio_func *func;
--	int ret = -EINVAL;
--
--	brcmf_dbg(SDIO, "rw=%d, func=%d, addr=0x%05x, nbytes=%d\n",
--		  write, fn, addr, regsz);
--
--	/* only allow byte access on F0 */
--	if (WARN_ON(regsz > 1 && !fn))
--		return -EINVAL;
--	func = sdiodev->func[fn];
--
--	switch (regsz) {
--	case 1:
--		if (write) {
--			if (fn)
--				sdio_writeb(func, *(u8 *)data, addr, &ret);
--			else
--				ret = brcmf_sdiod_f0_writeb(func, *(u8 *)data,
--							    addr);
--		} else {
--			if (fn)
--				*(u8 *)data = sdio_readb(func, addr, &ret);
--			else
--				*(u8 *)data = sdio_f0_readb(func, addr, &ret);
--		}
--		break;
--	case 2:
--		if (write)
--			sdio_writew(func, *(u16 *)data, addr, &ret);
--		else
--			*(u16 *)data = sdio_readw(func, addr, &ret);
--		break;
--	case 4:
--		if (write)
--			sdio_writel(func, *(u32 *)data, addr, &ret);
--		else
--			*(u32 *)data = sdio_readl(func, addr, &ret);
--		break;
--	default:
--		brcmf_err("invalid size: %d\n", regsz);
--		break;
--	}
--
--	if (ret)
--		brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
--			  write ? "write" : "read", fn, addr, ret);
--
--	return ret;
--}
--
- static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 				 u8 regsz, void *data)
- {
--	u8 func;
--	s32 retry = 0;
- 	int ret;
- 
--	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
--		return -ENOMEDIUM;
--
- 	/*
- 	 * figure out how to read the register based on address range
- 	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
- 	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
- 	 * The rest: function 1 silicon backplane core registers
-+	 * f0 writes must be bytewise
- 	 */
--	if ((addr & ~REG_F0_REG_MASK) == 0)
--		func = SDIO_FUNC_0;
--	else
--		func = SDIO_FUNC_1;
- 
--	do {
--		/* for retry wait for 1 ms till bus get settled down */
--		if (retry)
--			usleep_range(1000, 2000);
--
--		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
--					       data, true);
--
--	} while (ret != 0 && ret != -ENOMEDIUM &&
--		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
-+	if ((addr & ~REG_F0_REG_MASK) == 0) {
-+		if (WARN_ON(regsz > 1))
-+			return -EINVAL;
-+		ret = brcmf_sdiod_f0_writeb(sdiodev->func[0],
-+					    *(u8 *)data, addr);
-+	} else {
-+		switch (regsz) {
-+		case 1:
-+			sdio_writeb(sdiodev->func[1], *(u8 *)data, addr, &ret);
-+			break;
-+		case 4:
-+			ret = brcmf_sdiod_addrprep(sdiodev, &addr);
-+			if (ret)
-+				goto done;
- 
--	if (ret == -ENOMEDIUM)
--		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-+			sdio_writel(sdiodev->func[1], *(u32 *)data, addr, &ret);
-+			break;
-+		default:
-+			WARN(1, "Invalid reg size\n");
-+			ret = -EINVAL;
-+			break;
-+		}
-+	}
- 
-+done:
- 	return ret;
- }
- 
- static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 				u8 regsz, void *data)
- {
--	u8 func;
--	s32 retry = 0;
- 	int ret;
- 
--	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
--		return -ENOMEDIUM;
--
- 	/*
- 	 * figure out how to read the register based on address range
- 	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
- 	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
- 	 * The rest: function 1 silicon backplane core registers
-+	 * f0 reads must be bytewise
- 	 */
--	if ((addr & ~REG_F0_REG_MASK) == 0)
--		func = SDIO_FUNC_0;
--	else
--		func = SDIO_FUNC_1;
--
--	do {
--		memset(data, 0, regsz);
--
--		/* for retry wait for 1 ms till bus get settled down */
--		if (retry)
--			usleep_range(1000, 2000);
--
--		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
--					       data, false);
--
--	} while (ret != 0 && ret != -ENOMEDIUM &&
--		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
--
--	if (ret == -ENOMEDIUM)
--		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
--
--	return ret;
--}
--
--static int
--brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
--{
--	int err = 0, i;
--	u32 addr;
--
--	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
--		return -ENOMEDIUM;
--
--	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
--
--	for (i = 0 ; i < 3 && !err ; i++, addr >>= 8)
--		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
--				  addr & 0xff, &err);
--
--	return err;
--}
--
--static int
--brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
--{
--	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
--	int err = 0;
--
--	if (bar0 != sdiodev->sbwad) {
--		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
--		if (err)
--			return err;
-+	if ((addr & ~REG_F0_REG_MASK) == 0) {
-+		if (WARN_ON(regsz > 1))
-+			return -EINVAL;
-+		*(u8 *)data = sdio_f0_readb(sdiodev->func[0], addr, &ret);
-+	} else {
-+		switch (regsz) {
-+		case 1:
-+			*(u8 *)data = sdio_readb(sdiodev->func[1], addr, &ret);
-+			break;
-+		case 4:
-+			ret = brcmf_sdiod_addrprep(sdiodev, &addr);
-+			if (ret)
-+				goto done;
- 
--		sdiodev->sbwad = bar0;
-+			*(u32 *)data = sdio_readl(sdiodev->func[1], addr, &ret);
-+			break;
-+		default:
-+			WARN(1, "Invalid reg size\n");
-+			ret = -EINVAL;
-+			break;
-+		}
- 	}
- 
--	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
--	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
--
--	return 0;
-+done:
-+	return ret;
- }
- 
- u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
-@@ -439,15 +387,9 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
--	if (retval)
--		goto done;
--
- 	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
--
- 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 
--done:
- 	if (ret)
- 		*ret = retval;
- 
-@@ -472,13 +414,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
--	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
--	if (retval)
--		goto done;
--
- 	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
- 
--done:
- 	if (ret)
- 		*ret = retval;
- }
-@@ -886,14 +823,12 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 	return bcmerror;
- }
- 
--int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
-+int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
- {
--	char t_func = (char)fn;
- 	brcmf_dbg(SDIO, "Enter\n");
- 
- 	/* issue abort cmd52 command through F0 */
--	brcmf_sdiod_request_data(sdiodev, SDIO_FUNC_0, SDIO_CCCR_ABORT,
--				 1, &t_func, true);
-+	brcmf_sdiod_reg_write(sdiodev, SDIO_CCCR_ABORT, 1, &fn);
- 
- 	brcmf_dbg(SDIO, "Exit\n");
- 	return 0;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index e3b78db..1e4b476 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -339,7 +339,7 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		      u8 *data, uint size);
- 
- /* Issue an abort to the specified function */
--int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
-+int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn);
- void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev);
- void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 			      enum brcmf_sdiod_state state);
--- 
-1.9.1
+
+Our official public tree:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/plain/iwlwifi-7260-17.ucode
+
+
+And, of course, your distro may distribute these in an official package
+as well, but it's good to check the versions to be sure you're running
+the latest one we released.
+
+--
+Cheers,
+Luca.
