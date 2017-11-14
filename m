@@ -1,105 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:45364 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752246AbdKAP3h (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:48688 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755199AbdKNPUR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 11:29:37 -0400
-Received: by mail-oi0-f67.google.com with SMTP id f66so5042088oib.2
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Nov 2017 08:29:36 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 05/11] rtlwifi: rtl_pci: Add fill_tx_special_desc to issue H2C data, and process TXOK in interrupt.
-Date: Wed,  1 Nov 2017 10:29:20 -0500
-Message-Id: <20171101152926.24971-6-Larry.Finger@lwfinger.net> (sfid-20171101_163002_772732_E204C3AE)
-In-Reply-To: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
-References: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
+        Tue, 14 Nov 2017 10:20:17 -0500
+Received: by mail-pf0-f194.google.com with SMTP id r62so2052638pfd.5
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Nov 2017 07:20:17 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: fix the update of path metric for RANN frame
+Date: Tue, 14 Nov 2017 23:20:05 +0800
+Message-Id: <1510672805-32594-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20171114_162020_781664_38D2C7BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+The previous path metric update from RANN frame has not considered
+the own link metric toward the transmitting mesh STA. Fix this.
 
-With the RTL8822BE, an H2C tx queue is added to download FW and special
-data. This change implements the support code in rtl_pci.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+Reported-by: Michael65535
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/pci.c  | 11 +++++++++++
- drivers/net/wireless/realtek/rtlwifi/pci.h  |  1 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h |  4 ++++
- 3 files changed, 16 insertions(+)
+ net/mac80211/mesh_hwmp.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index e8c8ce601229..0c30f4bf657b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -926,6 +926,7 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 	unsigned long flags;
- 	u32 inta = 0;
- 	u32 intb = 0;
-+	u32 intd = 0;
- 	irqreturn_t ret = IRQ_HANDLED;
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index c1d1b86..35ad398 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -797,7 +797,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	struct mesh_path *mpath;
+ 	u8 ttl, flags, hopcount;
+ 	const u8 *orig_addr;
+-	u32 orig_sn, metric, metric_txsta, interval;
++	u32 orig_sn, new_metric, orig_metric, last_hop_metric, interval;
+ 	bool root_is_gate;
  
- 	if (rtlpci->irq_enabled == 0)
-@@ -1007,6 +1008,16 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 		_rtl_pci_tx_isr(hw, VO_QUEUE);
+ 	ttl = rann->rann_ttl;
+@@ -808,7 +808,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	interval = le32_to_cpu(rann->rann_interval);
+ 	hopcount = rann->rann_hopcount;
+ 	hopcount++;
+-	metric = le32_to_cpu(rann->rann_metric);
++	orig_metric = le32_to_cpu(rann->rann_metric);
+ 
+ 	/*  Ignore our own RANNs */
+ 	if (ether_addr_equal(orig_addr, sdata->vif.addr))
+@@ -825,7 +825,10 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		return;
  	}
  
-+	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8822BE) {
-+		if (intd & rtlpriv->cfg->maps[RTL_IMR_H2CDOK]) {
-+			rtlpriv->link_info.num_tx_inperiod++;
-+
-+			RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
-+				 "H2C TX OK interrupt!\n");
-+			_rtl_pci_tx_isr(hw, H2C_QUEUE);
-+		}
-+	}
-+
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE) {
- 		if (inta & rtlpriv->cfg->maps[RTL_IMR_COMDOK]) {
- 			rtlpriv->link_info.num_tx_inperiod++;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.h b/drivers/net/wireless/realtek/rtlwifi/pci.h
-index 0f1a0f8585b6..6bf346ec4616 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.h
-@@ -51,6 +51,7 @@
- #define MGNT_QUEUE				6
- #define HIGH_QUEUE				7
- #define HCCA_QUEUE				8
-+#define H2C_QUEUE				TXCMD_QUEUE	/* In 8822B */
+-	metric_txsta = airtime_link_metric_get(local, sta);
++	last_hop_metric = airtime_link_metric_get(local, sta);
++	new_metric = orig_metric + last_hop_metric;
++	if (new_metric < orig_metric)
++		new_metric = MAX_METRIC;
  
- #define RTL_PCI_DEVICE(vend, dev, cfg)  \
- 	.vendor = (vend), \
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 22afc14c3da6..f6b00505a69f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -709,6 +709,7 @@ enum rtl_var_map {
- 	RTL_IMR_RXFOVW,		/*Receive FIFO Overflow */
- 	RTL_IMR_RDU,		/*Receive Descriptor Unavailable */
- 	RTL_IMR_ATIMEND,	/*For 92C,ATIM Window End Interrupt */
-+	RTL_IMR_H2CDOK,		/*H2C Queue DMA OK Interrupt */
- 	RTL_IMR_BDOK,		/*Beacon Queue DMA OK Interrup */
- 	RTL_IMR_HIGHDOK,	/*High Queue DMA OK Interrupt */
- 	RTL_IMR_COMDOK,		/*Command Queue DMA OK Interrupt*/
-@@ -2144,6 +2145,9 @@ struct rtl_hal_ops {
- 	void (*fill_tx_cmddesc) (struct ieee80211_hw *hw, u8 *pdesc,
- 				 bool firstseg, bool lastseg,
- 				 struct sk_buff *skb);
-+	void (*fill_tx_special_desc)(struct ieee80211_hw *hw,
-+				     u8 *pdesc, u8 *pbd_desc,
-+				     struct sk_buff *skb, u8 hw_queue);
- 	bool (*query_rx_desc) (struct ieee80211_hw *hw,
- 			       struct rtl_stats *stats,
- 			       struct ieee80211_rx_status *rx_status,
+ 	mpath = mesh_path_lookup(sdata, orig_addr);
+ 	if (!mpath) {
+@@ -838,7 +841,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (!(SN_LT(mpath->sn, orig_sn)) &&
+-	    !(mpath->sn == orig_sn && metric < mpath->rann_metric)) {
++	    !(mpath->sn == orig_sn && new_metric < mpath->rann_metric)) {
+ 		rcu_read_unlock();
+ 		return;
+ 	}
+@@ -856,7 +859,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	mpath->sn = orig_sn;
+-	mpath->rann_metric = metric + metric_txsta;
++	mpath->rann_metric = new_metric;
+ 	mpath->is_root = true;
+ 	/* Recording RANNs sender address to send individually
+ 	 * addressed PREQs destined for root mesh STA */
+@@ -876,7 +879,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
+ 				       orig_sn, 0, NULL, 0, broadcast_addr,
+ 				       hopcount, ttl, interval,
+-				       metric + metric_txsta, 0, sdata);
++				       new_metric, 0, sdata);
+ 	}
+ 
+ 	rcu_read_unlock();
 -- 
-2.14.3
+2.3.0
