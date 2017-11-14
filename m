@@ -1,145 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:55433 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752685AbdK2NiG (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54361 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755287AbdKNNZ6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 08:38:06 -0500
-Subject: Re: [PATCH] ath10k: handling qos at STA side based on AP WMM
- enable/disable
-To: Balaji Pothunoori <bpothuno@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
- <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com>
- <e93273148ad44a54bfb39bc7018bfcc0@aptaiexm02b.ap.qualcomm.com>
- <e84f2a95-178b-dc07-bc6e-9dc779e0db0f@dd-wrt.com>
- <8f027afc7c094e6d84ff4205384eb66d@aptaiexm02b.ap.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <9c0c8939-c3d6-92ed-0d2d-2bd57c9234d7@dd-wrt.com> (sfid-20171129_143810_734191_8872D992)
-Date: Wed, 29 Nov 2017 14:38:04 +0100
-MIME-Version: 1.0
-In-Reply-To: <8f027afc7c094e6d84ff4205384eb66d@aptaiexm02b.ap.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 14 Nov 2017 08:25:58 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v3 06/12] wil6210: add block size checks during FW load
+Date: Tue, 14 Nov 2017 15:25:38 +0200
+Message-Id: <1510665944-30198-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142611_898939_4934EC19)
+In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 29.11.2017 um 11:12 schrieb Balaji Pothunoori:
->>> Hi Sebastian,
->>>
->>> If I am not wrong you are seeing the issue with WRT3200ACM (Marvell 88W8964) as client + QCA9984 (FW : 10.4-3.5.3-00038) as AP with below change you are seeing the crash while running traffic between the WRT3200ACM + QCA9984 ?
->>> Do you used  any other client in place of WRT3200ACM ?
->> there is not much  traffic required. as it seems the firmware crashes immediatly after association. the issue is also not present in 10.4-3.4-0082ww
-> Still my question is not cleared,  firmware crash is due to this patch ? Also let me know do you observed same behavior with any other chipset ?
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-no. its unrelated to this patch but since you're working for qca i 
-thought it would make sense to tell you this since saw that you're using 
-ath10k firmwares which arent published officiall but based on the
+When loading FW from file add block size checks to ensure a
+corrupted FW file will not cause the driver to write outside
+the device memory.
 
-qca firmwares which are published on chipcode. since i was testing  
-these firmwares too some weeks ago i found its a good idea to tell you this
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/fw_inc.c  | 58 +++++++++++++++++++-----------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
+ drivers/net/wireless/ath/wil6210/wmi.c     | 11 +++++-
+ 3 files changed, 49 insertions(+), 21 deletions(-)
 
->
->   
-> Regards,
-> Balaji.
->
->> Sebastian
->
->>> Regards,
->>> Balaji.
-> -----Original Message-----
-> From: Sebastian Gottschall [mailto:s.gottschall@dd-wrt.com]
-> Sent: Wednesday, November 29, 2017 2:04 PM
-> To: Balaji Pothunoori <bpothuno@qti.qualcomm.com>; ath10k@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH] ath10k: handling qos at STA side based on AP WMM enable/disable
->
-> Am 29.11.2017 um 07:58 schrieb Balaji Pothunoori:
->> Hi Sebastian,
->>
->> If I am not wrong you are seeing the issue with WRT3200ACM (Marvell 88W8964) as client + QCA9984 (FW : 10.4-3.5.3-00038) as AP with below change you are seeing the crash while running traffic between the WRT3200ACM + QCA9984 ?
->> Do you used  any other client in place of WRT3200ACM ?
-> there is not much  traffic required. as it seems the firmware crashes immediatly after association. the issue is also not present in 10.4-3.4-0082ww
->
->> Can you share the more details on firmware crash ?
-> so a firmware crashdump from log? i'll try to get it within the next hours. just need to resetup the test scenario
->
->
-> Sebastian
->
->
->> Regards,
->> Balaji.
->>
->> -----Original Message-----
->> From: Sebastian Gottschall [mailto:s.gottschall@dd-wrt.com]
->> Sent: Wednesday, November 29, 2017 8:28 AM
->> To: Balaji Pothunoori <bpothuno@qti.qualcomm.com>; ath10k@lists.infradead.org
->> Cc: linux-wireless@vger.kernel.org
->> Subject: Re: [PATCH] ath10k: handling qos at STA side based on AP WMM enable/disable
->>
->> did you notice  that Marvell 88W8964 based clients will crash 10.4-3.5.3 firmwares?  (tested with 9984 and 10.4-3.5.3-00038) client device was a linksys wrt3200acm running dd-wrt for testing
->>
->> Am 28.11.2017 um 11:07 schrieb bpothuno@qti.qualcomm.com:
->>> From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
->>>
->>> Data packets are not sent by STA in case of STA joined to non QOS AP
->>> (WMM disabled AP). This is happening because of STA is sending data
->>> packets to firmware from host with qos enabled along with non qos
->>> queue value(TID = 16).
->>> Due to qos enabled, firmware is discarding the packet.
->>>
->>> This patch fixes this issue by updating the qos based on station WME
->>> capability field if WMM is disabled in AP.
->>>
->>> This patch is required by 10.4 family chipsets like
->>> QCA4019/QCA9888/QCA9884/QCA99X0.
->>> Firmware Versoin : 10.4-3.5.1-00018.
->>>
->>> For 10.2.4 family chipsets QCA988X/QCA9887 and QCA6174 this patch has
->>> no effect.
->>>
->>> Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
->>> ---
->>>     drivers/net/wireless/ath/ath10k/mac.c |    2 +-
->>>     1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
->>> b/drivers/net/wireless/ath/ath10k/mac.c
->>> index 0a947ee..2616b99 100644
->>> --- a/drivers/net/wireless/ath/ath10k/mac.c
->>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->>> @@ -2563,7 +2563,7 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
->>>     		}
->>>     		break;
->>>     	case WMI_VDEV_TYPE_STA:
->>> -		if (vif->bss_conf.qos)
->>> +		if (sta->wme)
->>>     			arg->peer_flags |= arvif->ar->wmi.peer_flags->qos;
->>>     		break;
->>>     	case WMI_VDEV_TYPE_IBSS:
->> --
->> Mit freundlichen Grüssen / Regards
->>
->> Sebastian Gottschall / CTO
->>
->> NewMedia-NET GmbH - DD-WRT
->> Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
->> Registergericht: Amtsgericht Darmstadt, HRB 25473
->> Geschäftsführer: Peter Steinhäuser, Christian Scheele http://www.dd-wrt.com
->> email: s.gottschall@dd-wrt.com
->> Tel.: +496251-582650 / Fax: +496251-5826565
->>
-
+diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
+index 7a33792..77d1902 100644
+--- a/drivers/net/wireless/ath/wil6210/fw_inc.c
++++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
+@@ -26,14 +26,17 @@
+ 					     prefix_type, rowsize,	\
+ 					     groupsize, buf, len, ascii)
+ 
+-#define FW_ADDR_CHECK(ioaddr, val, msg) do { \
+-		ioaddr = wmi_buffer(wil, val); \
+-		if (!ioaddr) { \
+-			wil_err_fw(wil, "bad " msg ": 0x%08x\n", \
+-				   le32_to_cpu(val)); \
+-			return -EINVAL; \
+-		} \
+-	} while (0)
++static bool wil_fw_addr_check(struct wil6210_priv *wil,
++			      void __iomem **ioaddr, __le32 val,
++			      u32 size, const char *msg)
++{
++	*ioaddr = wmi_buffer_block(wil, val, size);
++	if (!(*ioaddr)) {
++		wil_err_fw(wil, "bad %s: 0x%08x\n", msg, le32_to_cpu(val));
++		return false;
++	}
++	return true;
++}
+ 
+ /**
+  * wil_fw_verify - verify firmware file validity
+@@ -160,7 +163,8 @@ static int fw_handle_data(struct wil6210_priv *wil, const void *data,
+ 		return -EINVAL;
+ 	}
+ 
+-	FW_ADDR_CHECK(dst, d->addr, "address");
++	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
++		return -EINVAL;
+ 	wil_dbg_fw(wil, "write [0x%08x] <== %zu bytes\n", le32_to_cpu(d->addr),
+ 		   s);
+ 	wil_memcpy_toio_32(dst, d->data, s);
+@@ -192,7 +196,8 @@ static int fw_handle_fill(struct wil6210_priv *wil, const void *data,
+ 		return -EINVAL;
+ 	}
+ 
+-	FW_ADDR_CHECK(dst, d->addr, "address");
++	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
++		return -EINVAL;
+ 
+ 	v = le32_to_cpu(d->value);
+ 	wil_dbg_fw(wil, "fill [0x%08x] <== 0x%08x, %zu bytes\n",
+@@ -248,7 +253,8 @@ static int fw_handle_direct_write(struct wil6210_priv *wil, const void *data,
+ 		u32 v = le32_to_cpu(block[i].value);
+ 		u32 x, y;
+ 
+-		FW_ADDR_CHECK(dst, block[i].addr, "address");
++		if (!wil_fw_addr_check(wil, &dst, block[i].addr, 0, "address"))
++			return -EINVAL;
+ 
+ 		x = readl(dst);
+ 		y = (x & m) | (v & ~m);
+@@ -314,10 +320,15 @@ static int fw_handle_gateway_data(struct wil6210_priv *wil, const void *data,
+ 	wil_dbg_fw(wil, "gw write record [%3d] blocks, cmd 0x%08x\n",
+ 		   n, gw_cmd);
+ 
+-	FW_ADDR_CHECK(gwa_addr, d->gateway_addr_addr, "gateway_addr_addr");
+-	FW_ADDR_CHECK(gwa_val, d->gateway_value_addr, "gateway_value_addr");
+-	FW_ADDR_CHECK(gwa_cmd, d->gateway_cmd_addr, "gateway_cmd_addr");
+-	FW_ADDR_CHECK(gwa_ctl, d->gateway_ctrl_address, "gateway_ctrl_address");
++	if (!wil_fw_addr_check(wil, &gwa_addr, d->gateway_addr_addr, 0,
++			       "gateway_addr_addr") ||
++	    !wil_fw_addr_check(wil, &gwa_val, d->gateway_value_addr, 0,
++			       "gateway_value_addr") ||
++	    !wil_fw_addr_check(wil, &gwa_cmd, d->gateway_cmd_addr, 0,
++			       "gateway_cmd_addr") ||
++	    !wil_fw_addr_check(wil, &gwa_ctl, d->gateway_ctrl_address, 0,
++			       "gateway_ctrl_address"))
++		return -EINVAL;
+ 
+ 	wil_dbg_fw(wil, "gw addresses: addr 0x%08x val 0x%08x"
+ 		   " cmd 0x%08x ctl 0x%08x\n",
+@@ -373,12 +384,19 @@ static int fw_handle_gateway_data4(struct wil6210_priv *wil, const void *data,
+ 	wil_dbg_fw(wil, "gw4 write record [%3d] blocks, cmd 0x%08x\n",
+ 		   n, gw_cmd);
+ 
+-	FW_ADDR_CHECK(gwa_addr, d->gateway_addr_addr, "gateway_addr_addr");
++	if (!wil_fw_addr_check(wil, &gwa_addr, d->gateway_addr_addr, 0,
++			       "gateway_addr_addr"))
++		return -EINVAL;
+ 	for (k = 0; k < ARRAY_SIZE(block->value); k++)
+-		FW_ADDR_CHECK(gwa_val[k], d->gateway_value_addr[k],
+-			      "gateway_value_addr");
+-	FW_ADDR_CHECK(gwa_cmd, d->gateway_cmd_addr, "gateway_cmd_addr");
+-	FW_ADDR_CHECK(gwa_ctl, d->gateway_ctrl_address, "gateway_ctrl_address");
++		if (!wil_fw_addr_check(wil, &gwa_val[k],
++				       d->gateway_value_addr[k],
++				       0, "gateway_value_addr"))
++			return -EINVAL;
++	if (!wil_fw_addr_check(wil, &gwa_cmd, d->gateway_cmd_addr, 0,
++			       "gateway_cmd_addr") ||
++	    !wil_fw_addr_check(wil, &gwa_ctl, d->gateway_ctrl_address, 0,
++			       "gateway_ctrl_address"))
++		return -EINVAL;
+ 
+ 	wil_dbg_fw(wil, "gw4 addresses: addr 0x%08x cmd 0x%08x ctl 0x%08x\n",
+ 		   le32_to_cpu(d->gateway_addr_addr),
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 8e9919b..48802ae 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -875,6 +875,7 @@ int wil_ps_update(struct wil6210_priv *wil,
+ int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
+ void wil_set_ethtoolops(struct net_device *ndev);
+ 
++void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr, u32 size);
+ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr);
+ void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr);
+ int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index dbdf71d..16aa624 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -140,13 +140,15 @@ static u32 wmi_addr_remap(u32 x)
+ /**
+  * Check address validity for WMI buffer; remap if needed
+  * @ptr - internal (linker) fw/ucode address
++ * @size - if non zero, validate the block does not
++ *  exceed the device memory (bar)
+  *
+  * Valid buffer should be DWORD aligned
+  *
+  * return address for accessing buffer from the host;
+  * if buffer is not valid, return NULL.
+  */
+-void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
++void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr_, u32 size)
+ {
+ 	u32 off;
+ 	u32 ptr = le32_to_cpu(ptr_);
+@@ -161,10 +163,17 @@ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
+ 	off = HOSTADDR(ptr);
+ 	if (off > wil->bar_size - 4)
+ 		return NULL;
++	if (size && ((off + size > wil->bar_size) || (off + size < off)))
++		return NULL;
+ 
+ 	return wil->csr + off;
+ }
+ 
++void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
++{
++	return wmi_buffer_block(wil, ptr_, 0);
++}
++
+ /**
+  * Check address validity
+  */
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+1.9.1
