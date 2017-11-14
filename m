@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:36143 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758792AbdKOTVn (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:29160 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754211AbdKNO36 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 14:21:43 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+        Tue, 14 Nov 2017 09:29:58 -0500
+From: Peng Xu <pxu@qti.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+        Jouni Malinen <jouni@qca.qualcomm.com>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
-Subject: RE: [PATCH] mac80211: Update last_ack status for all except probing
- frames
-Date: Wed, 15 Nov 2017 19:21:40 +0000
-Message-ID: <839c3938efae497e9058391fd4be4817@NALASEXR01H.na.qualcomm.com> (sfid-20171115_202148_875833_1D67FA68)
-References: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com>
-         <1509964164.2669.0.camel@sipsolutions.net>
-         <8bb232d231884f9595c81f945a5eef4f@NALASEXR01H.na.qualcomm.com>
-         <49241af7-a50f-5758-0c7e-77f2fae5d93d@quantenna.com>
-         <96799d352b7347a8a9092bb37f1cd8d9@NALASEXR01H.na.qualcomm.com>
- <1510565141.30497.6.camel@sipsolutions.net>
-In-Reply-To: <1510565141.30497.6.camel@sipsolutions.net>
+        "Sara Sharon" <sara.sharon@intel.com>
+Subject: RE: [RFC] cfg80211: Implement Multiple BSSID capability in scanning
+Date: Tue, 14 Nov 2017 14:29:55 +0000
+Message-ID: <929d1fdb74524aeaab4959f84a82c732@NASANEXM01F.na.qualcomm.com> (sfid-20171114_153002_560485_AB41B70C)
+References: <1509554358-10473-1-git-send-email-jouni@qca.qualcomm.com>
+         <1510664296.2030.22.camel@sipsolutions.net>
+         <4927d2288442486788cd5b4d0492537a@NASANEXM01F.na.qualcomm.com>
+ <1510669408.2030.23.camel@sipsolutions.net>
+In-Reply-To: <1510669408.2030.23.camel@sipsolutions.net>
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiBNb24sIDIwMTctMTEtMDYgYXQgMjA6MjAgKzAwMDAsIFJhamt1bWFyIE1hbm9oYXJhbiB3
-cm90ZToNCj4gPiA+ID4gRm9yIHN0ZWVyaW5nIGFuIGlkbGUgc3RhdGlvbiBmcm9tIG9uZSBCU1Mg
-dG8gYW5vdGhlciwgdGhlIHN0ZWVyaW5nDQo+ID4gPiA+IGFwcGxpY2F0aW9uIGhhcyB0byBrbm93
-IHRoZSBhY3R1YWwgc3RhdGlvbiBpZGxlIHBlcmlvZC4gQnV0IGlmIHRoZQ0KPiA+ID4gPiBpZGxl
-IHBlcmlvZCBpcyBjbGVhcmVkIGJ5IGFwX21heF9pbmFjdGl2aXR5LCB0aGUgc3RlZXJpbmcNCj4g
-PiA+ID4gYXBwbGljYXRpb24gY2Fubm90IHN0ZWVyIHRoZSBzdGF0aW9uIGV2ZW4gdGhvdWdoIHRo
-ZSBzdGF0aW9uIGlzDQo+ID4gPiA+IG5vdCBzZW5kaW5nIG9yIHJlY2VpdmluZw0KPiA+ID4NCj4g
-PiA+IGFueSBkYXRhIG9yIG1nbXQuIGZyYW1lLg0KPiANCj4gSSBndWVzcyB5b3Ugd2FudCBzb21l
-dGhpbmcgZWxzZS4gV2h5IGV2ZW4gY29uc2lkZXIgYSBzdGF0aW9uIHRoYXQncyBzZW5kaW5nDQo+
-IG1nbXQgZnJhbWVzIGFzIG5vbi1pZGxlPw0KPiANCj4gWW91IGNhbiBqdXN0IHVzZSB0aGUgZGF0
-YSBUWC9SWCBjb3VudGVycyB0byBmaWd1cmUgb3V0IGlmIHRoZSBzdGF0aW9uIGhhcyBiZWVuDQo+
-IGlkbGUuDQo+IA0KSG1tLi4gQnV0IHBvbGxpbmcgVFgvUlggY291bnRlcnMgd2lsbCBub3QgZ2l2
-ZSBleGFjdCBhY3Rpdml0eSB0aW1lLiBNb3Jlb3Zlcg0KSXQgd2lsbCBiZSB1c2VmdWwgaWYgU1RB
-J3MgbGFzdCBkYXRhIGFjdGl2aXR5IHRzdGFtcCBpcyBsb2dnZWQgaW4gc3RhdGlvbiBkdW1wLiBO
-bz8NCg0KPiBZb3UndmUgbm90IGNvbnZpbmNlZCBtZSB0aGF0IGNoYW5naW5nIHRoZSBjdXJyZW50
-IGxvZ2ljIGhlcmUgbWFrZXMgYW55IHNlbnNlLg0KPiANCkkgdGhvdWdodCBhZGRpbmcgbmV3IGlu
-YWN0aXZlIHRpbWUgYXR0cmlidXRlIG1heSBjb25mbGljdCB3aXRoIGV4aXN0aW5nIGxhc3RfYWN0
-aXZlDQppbmZvLiAgQXMgSWdvciBtZW50aW9uZWQgZWFybGllciwgd2hhdCBpcyB5b3VyIHRob3Vn
-aHQgb2YgYWRkaW5nIG5ldyBhdHRyaWJ1dGUgDQoic3RhX2xhc3RfZGF0YV9hY3RpdmUiIHRvIG1v
-bml0b3IgZGF0YSBmcmFtZS4NCg0KQW55IHN1Z2dlc3Rpb25zIGFyZSB3ZWxjb21lLg0KDQotUmFq
-a3VtYXINCg0K
+PiA+DQo+ID4gSXQgaXMgT1VJICsgdHlwZSArIHN1YlR5ZS4NCj4gDQo+IEFoLCByaWdodCwgdHlw
+ZS9zdWJ0eXBlLg0KPiANCj4gU3RpbGwsIHRoaXMgaXMgcHJvYmxlbWF0aWMsIGJlY2F1c2UgdGhl
+cmUncyBub3RoaW5nIHRoYXQgc2F5cyB0aGF0IHRoZSB2ZW5kb3IgSUUNCj4gbXVzdCBoYXZlIE9V
+SSArIHR5cGUgKyBzdWJ0eXBlLCB0aGUgc3BlYyBvbmx5IHNheXMgT1VJICsgdmVuZG9yIHNwZWNp
+ZmljDQo+IGRhdGEuDQo+IA0KPiBUaGlzIG1heSBiZSByaWdodCBmb3IgdGhlIFdGQS9NaWNyb3Nv
+ZnQgT1VJLCBidXQgbm90IG5lY2Vzc2FyeSBhbnl0aGluZw0KPiBlbHNlPw0KPiANCg0KUmlnaHQs
+IEkgb25seSBjb25zaWRlcmVkIHRoZSBtb3N0IGNvbW1vbiBjYXNlcyBzaW5jZSBJIGRpZCBub3Qg
+ZmluZCBhIGdlbmVyaWMgd2F5IHRvIGNvbXBhcmUgdHdvIHZlbmRvciBlbGVtZW50cy4gQW55IHN1
+Z2dlc3Rpb24/DQoNClRoYW5rcywNClBlbmcNCg==
