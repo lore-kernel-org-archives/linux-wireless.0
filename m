@@ -1,101 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:45840 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754802AbdKIXiv (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54362 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755369AbdKNN0C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 18:38:51 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 2/6] wl1251: Generate random MAC address only if driver does not have valid
-Date: Fri, 10 Nov 2017 00:38:24 +0100
-Message-Id: <1510270708-14377-3-git-send-email-pali.rohar@gmail.com> (sfid-20171110_004136_240813_B0C73985)
-In-Reply-To: <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Tue, 14 Nov 2017 08:26:02 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v3 08/12] wil6210: missing length check in wil_cfg80211_mgmt_tx
+Date: Tue, 14 Nov 2017 15:25:40 +0200
+Message-Id: <1510665944-30198-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142612_538932_3C590B6D)
+In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before this patch, driver generated random MAC address every time it was
-initialized. After that random MAC address could be overwritten with fixed
-one, if provided.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-This patch changes order. First it tries to read fixed MAC address and if
-it fails then driver generates random MAC address.
+Add a length check in wil_cfg80211_mgmt_tx to detect unsigned integer
+overflow.
 
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-Acked-by: Pavel Machek <pavel@ucw.cz>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wl1251/main.c |   27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 8929bb3..9106c20 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -1492,7 +1492,24 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	wl->hw->queues = 4;
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index c3d3c0c..771a534 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -901,7 +901,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			 u64 *cookie)
+ {
+ 	const u8 *buf = params->buf;
+-	size_t len = params->len;
++	size_t len = params->len, total;
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+ 	int rc;
+ 	bool tx_status = false;
+@@ -926,7 +926,11 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	if (len < sizeof(struct ieee80211_hdr_3addr))
+ 		return -EINVAL;
  
- 	if (wl->use_eeprom)
--		wl1251_read_eeprom_mac(wl);
-+		ret = wl1251_read_eeprom_mac(wl);
-+	else
-+		ret = -EINVAL;
+-	cmd = kmalloc(sizeof(*cmd) + len, GFP_KERNEL);
++	total = sizeof(*cmd) + len;
++	if (total < len)
++		return -EINVAL;
 +
-+	if (ret == 0 && !is_valid_ether_addr(wl->mac_addr))
-+		ret = -EINVAL;
-+
-+	if (ret < 0) {
-+		/*
-+		 * In case our MAC address is not correctly set,
-+		 * we use a random but Nokia MAC.
-+		 */
-+		static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
-+		memcpy(wl->mac_addr, nokia_oui, 3);
-+		get_random_bytes(wl->mac_addr + 3, 3);
-+		wl1251_warning("MAC address in eeprom or nvs data is not valid");
-+		wl1251_warning("Setting random MAC address: %pM", wl->mac_addr);
-+	}
++	cmd = kmalloc(total, GFP_KERNEL);
+ 	if (!cmd) {
+ 		rc = -ENOMEM;
+ 		goto out;
+@@ -936,7 +940,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	cmd->len = cpu_to_le16(len);
+ 	memcpy(cmd->payload, buf, len);
  
- 	ret = wl1251_register_hw(wl);
- 	if (ret)
-@@ -1513,7 +1530,6 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 	struct ieee80211_hw *hw;
- 	struct wl1251 *wl;
- 	int i;
--	static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
- 
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl1251_ops);
- 	if (!hw) {
-@@ -1563,13 +1579,6 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 	INIT_WORK(&wl->irq_work, wl1251_irq_work);
- 	INIT_WORK(&wl->tx_work, wl1251_tx_work);
- 
--	/*
--	 * In case our MAC address is not correctly set,
--	 * we use a random but Nokia MAC.
--	 */
--	memcpy(wl->mac_addr, nokia_oui, 3);
--	get_random_bytes(wl->mac_addr + 3, 3);
--
- 	wl->state = WL1251_STATE_OFF;
- 	mutex_init(&wl->mutex);
- 	spin_lock_init(&wl->wl_lock);
+-	rc = wmi_call(wil, WMI_SW_TX_REQ_CMDID, cmd, sizeof(*cmd) + len,
++	rc = wmi_call(wil, WMI_SW_TX_REQ_CMDID, cmd, total,
+ 		      WMI_SW_TX_COMPLETE_EVENTID, &evt, sizeof(evt), 2000);
+ 	if (rc == 0)
+ 		tx_status = !evt.evt.status;
 -- 
-1.7.9.5
+1.9.1
