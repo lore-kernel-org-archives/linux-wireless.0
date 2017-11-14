@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:1327 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753277AbdKNMPL (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45554 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753741AbdKNKwE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 07:15:11 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Daniel Drake <drake@endlessm.com>
-CC: Russell Hu <rhu@qti.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Robert Chang <rwchang@qti.qualcomm.com>,
-        Aeolus Yang <aeolus@qti.qualcomm.com>,
-        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        "linux@endlessm.com" <linux@endlessm.com>,
-        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
-        "andy@infradead.org" <andy@infradead.org>
-Subject: Re: [v2] ath9k: add MSI support
-Date: Tue, 14 Nov 2017 12:15:08 +0000
-Message-ID: <87bmk5hx9x.fsf@kamboji.qca.qualcomm.com> (sfid-20171114_131535_818617_5E3E22B8)
-References: <20171110025415.7854-1-drake@endlessm.com>
-        <87y3na7eei.fsf@qca.qualcomm.com>
-        <CAD8Lp47uJbB27xZPH3dDqNuJcaNCGEsbpdqfK-h4+nzVLGk1aw@mail.gmail.com>
-In-Reply-To: <CAD8Lp47uJbB27xZPH3dDqNuJcaNCGEsbpdqfK-h4+nzVLGk1aw@mail.gmail.com>       (Daniel
- Drake's message of "Tue, 14 Nov 2017 06:36:36 +0800")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Tue, 14 Nov 2017 05:52:04 -0500
+Message-ID: <1510656721.4011.87.camel@coelho.fi> (sfid-20171114_115222_984041_3ADD8789)
+From: Luca Coelho <luca@coelho.fi>
+To: Thomas Backlund <tmb@mageia.org>, linux-wireless@vger.kernel.org
+Cc: stable@vger.kernel.org
+Date: Tue, 14 Nov 2017 12:52:01 +0200
+In-Reply-To: <20171114103751.7761-1-tmb@mageia.org>
+References: <20171114103751.7761-1-tmb@mageia.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: fix firmware names for 9xxx and a0 series hw
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Drake <drake@endlessm.com> writes:
+On Tue, 2017-11-14 at 12:37 +0200, Thomas Backlund wrote:
+> iwlwifi 9xxx and a0 series hw contains an extra dash in firmware file
+> name
+> as seeen in modinfo output for kernel 4.14:
+> 
+> firmware:       iwlwifi-9260-th-b0-jf-b0--34.ucode
+> firmware:       iwlwifi-9260-th-a0-jf-a0--34.ucode
+> firmware:       iwlwifi-9000-pu-a0-jf-b0--34.ucode
+> firmware:       iwlwifi-9000-pu-a0-jf-a0--34.ucode
+> firmware:       iwlwifi-QuQnj-a0-hr-a0--34.ucode
+> firmware:       iwlwifi-QuQnj-a0-jf-b0--34.ucode
+> firmware:       iwlwifi-QuQnj-f0-hr-a0--34.ucode
+> firmware:       iwlwifi-Qu-a0-jf-b0--34.ucode
+> firmware:       iwlwifi-Qu-a0-hr-a0--34.ucode
+> 
+> Fix that by dropping the extra adding of '"-"'.
+> 
+> Signed-off-by: Thomas Backlund <tmb@mageia.org>
+> cc: Luca Coelho <luciano.coelho@intel.com>
+> cc: stable@vger.kernel.org
+> 
+> ---
 
-> On Mon, Nov 13, 2017 at 4:48 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrot=
-e:
->> Enabling MSI by default is just too invasive, ath9k is used in so many
->> different enviroments that risk of regressions is high. MSI needs a lot
->> of testing before we can even consider enabling it by default.
->
-> And it seems like we already found a regression here - the MSI Message
-> Data is being corrupted as described in my last mail.
+Looks good, thanks!
 
-Exactly.
+Though I'm not sure this is worth sending to stable... Why do you think
+it's needed?
 
-> Can't be fixed in firmware, but it would be good to have confirmation
-> of the hardware behavivour, and maybe some other solution is possible?
-> Are you following this up within Qualcomm?
+Anyway, I'm applying it in our internal tree and it will reach the
+mainline following our normal upstreaming process.
 
-No time to do that right now, sorry.
-
---=20
-Kalle Valo=
+--
+Cheers,
+Luca.
