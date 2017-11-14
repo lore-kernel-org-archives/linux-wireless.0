@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:38096 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751322AbdKQIQv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35112 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752907AbdKNHXz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Nov 2017 03:16:51 -0500
-Received: by mail-wm0-f43.google.com with SMTP id z3so4706052wme.3
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Nov 2017 00:16:51 -0800 (PST)
-Received: from skynet-x2.localdomain (catv-176-63-144-158.catv.broadband.hu. [176.63.144.158])
-        by smtp.gmail.com with ESMTPSA id d3sm2067819edd.41.2017.11.17.00.16.48
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 17 Nov 2017 00:16:48 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-From: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>
-Subject: rtl8723be on Fedora27
-Message-ID: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com> (sfid-20171117_091659_452104_9D316516)
-Date: Fri, 17 Nov 2017 09:16:47 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
+        Tue, 14 Nov 2017 02:23:55 -0500
+From: Ramon Fried <rfried@codeaurora.org>
+To: kvalo@codeaurora.org
+Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        bjorn.andersson@linaro.org, nicolas.dechesne@linaro.org,
+        Eyal Ilsar <eilsar@codeaurora.org>,
+        Ramon Fried <rfried@codeaurora.org>
+Subject: [PATCH v3] wcn36xx: Set default BTLE coexistence config
+Date: Tue, 14 Nov 2017 09:23:19 +0200
+Message-Id: <20171114072319.32705-1-rfried@codeaurora.org> (sfid-20171114_082409_980699_09A45E0F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Eyal Ilsar <eilsar@codeaurora.org>
 
-I'm trying to use rtl8723be wifi on Fedora27 but I still get continuosly
-disconnection. The error in the dmesg is "Init MAC failed"
-I tried with the following module options too : "fwlps=0 swlps=0" and
-the variant of "ant_sel=1 or 2 or 0"
-I downloaded the git files from your repo, and do the usual make,make
-install, and modprobe stuffs, and then restart the notebook, but I get
-the same result.
+If the value for the firmware configuration parameters
+BTC_STATIC_LEN_LE_BT and BTC_STATIC_LEN_LE_WLAN are not set the duty
+cycle between BT and WLAN is such that if BT (including BLE) is active
+WLAN gets 0 bandwidth. When tuning these parameters having a too high
+value for WLAN means that BLE performance degrades.
+The "sweet" point of roughly half of the maximal values was empirically
+found to achieve a balance between BLE and Wi-Fi coexistence
+performance.
 
-Thanks your help,
-Regards,
-Gergely
+Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
+Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 9c6590d5348a..1c7598752255 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -72,8 +72,10 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
+ 	WCN36XX_CFG_VAL(DYNAMIC_PS_POLL_VALUE, 0),
+ 	WCN36XX_CFG_VAL(TX_PWR_CTRL_ENABLE, 1),
+ 	WCN36XX_CFG_VAL(ENABLE_CLOSE_LOOP, 1),
+-	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
++	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_BT, 120000),
++	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_WLAN, 30000),
+ 	WCN36XX_CFG_VAL(MAX_ASSOC_LIMIT, 10),
++	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
+ 	WCN36XX_CFG_VAL(ENABLE_MCC_ADAPTIVE_SCHEDULER, 0),
+ };
+ 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
