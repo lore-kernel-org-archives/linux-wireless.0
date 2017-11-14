@@ -1,109 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52104 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755502AbdKMUgC (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:56430 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751171AbdKNDBV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 15:36:02 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 05/10] brcmfmac: Remove dead IO code
-Date: Mon, 13 Nov 2017 21:35:42 +0100
-Message-Id: <1510605347-7629-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213608_085631_8CE0F5A3)
-In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 13 Nov 2017 22:01:21 -0500
+Received: by mail-wm0-f67.google.com with SMTP id z3so19054333wme.5
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Nov 2017 19:01:21 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAL3ir7J5GwTjgo6U4k_r91uqMV4Nowr10k8-Kd+t8cXfrwKQDQ@mail.gmail.com>
+References: <CAL3ir7JHwLpNFRSv0jEED50XeFAWmSz4gXXOs0MpM=VeTGiKnQ@mail.gmail.com>
+ <CALLGbRKwcm0ugSKAV1p3rxGseAkp6Zk9RZvKZeTrWFJ_=-pSKg@mail.gmail.com> <CAL3ir7J5GwTjgo6U4k_r91uqMV4Nowr10k8-Kd+t8cXfrwKQDQ@mail.gmail.com>
+From: Yuri Shih <yurishih1985@gmail.com>
+Date: Tue, 14 Nov 2017 11:01:19 +0800
+Message-ID: <CAL5Ybtwn11N4RGsSsCaRtAQ14_i5DXQMnR+XsqYLin_2MYFHCw@mail.gmail.com> (sfid-20171114_040136_166313_9A9ED05E)
+Subject: Re: PS-Poll not behaving as expected
+To: Daniel Ghansah <smartwires@gmail.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+Hello Steve,
 
-The value passed to brcmf_sdiod_addrprep() is *always* 4
-remove this parameter and the unused code to handle it.
+For our hardware/driver information, they are the following:
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+Linux FW: Linux LEDE 4.4.87
+AP Hardware: Compex WPJ563HV (radio chip QCA9563, driver Ath9k)
+5G Radio: WLE1216V5-20 (radio chip QCA9984, driver Ath10k)
+Driver: Base Driver is compat-wireless-2017-01-31 (with various
+patches installed)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 1ea42c3..ad81ea4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -425,7 +425,7 @@ static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
- }
- 
- static int
--brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
-+brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
- {
- 	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
- 	int err = 0;
-@@ -439,9 +439,7 @@ static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	}
- 
- 	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
--
--	if (width == 4)
--		*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
- 	return 0;
- }
-@@ -467,7 +465,7 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
- 	if (retval)
- 		goto done;
- 
-@@ -500,7 +498,7 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%08x\n", addr, data);
--	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
-+	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
- 	if (retval)
- 		goto done;
- 
-@@ -736,7 +734,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
-+	err = brcmf_sdiod_addrprep(sdiodev, &addr);
- 	if (err)
- 		goto done;
- 
-@@ -757,7 +755,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
- 		  addr, pktq->qlen);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
-+	err = brcmf_sdiod_addrprep(sdiodev, &addr);
- 	if (err)
- 		goto done;
- 
-@@ -801,7 +799,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 
- 	memcpy(mypkt->data, buf, nbytes);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
-+	err = brcmf_sdiod_addrprep(sdiodev, &addr);
- 
- 	if (!err)
- 		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true, addr,
-@@ -821,7 +819,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
-+	err = brcmf_sdiod_addrprep(sdiodev, &addr);
- 	if (err)
- 		return err;
- 
--- 
-1.9.1
+Station: Marvell RD-88W-8897-WIFI-S0 (radio chip 88W8897)
+Driver - PCIE8897-15.68.6.p5-M2615485.p3-GPL-(FP68)
+
+Here's also a link to the wireshark sniffer recordings:
+https://drive.google.com/open?id=1GGNpMhfZ9Ya7HPrdISTxGLfXIuBgL1PR
+
+Right now we don't have kernel logs since we weren't the ones who did
+the test (test lab did them), but I can ask test lab to do the test
+and give us the logs.
+
+Thanks.
+
+Sincerely,
+
+Yuri
+
+On Tue, Nov 14, 2017 at 10:45 AM, Daniel Ghansah <smartwires@gmail.com> wrote:
+> Hello Steve,
+>          Thanks for your prompt response, and sorry for my lack of
+> details my colleague Yuri will provide this info shortly Thanks
+>
+> Regards
+> Daniel
+>
+> On Mon, Nov 13, 2017 at 7:01 PM, Steve deRosier <derosier@gmail.com> wrote:
+>> Hi Daniel,
+>>
+>> On Mon, Nov 13, 2017 at 2:40 PM, Daniel Ghansah <smartwires@gmail.com> wrote:
+>>>        Here is the problem we experience:
+>>>
+>>> When the station (wifi devices) sends a null QoS frame with power save
+>>> telling our AP that it is going into power save mode. RIght now, our
+>>> problem is that the AP will not stop sending data packets to the
+>>> station. Correct behavior is that the AP will buffer data packets and
+>>> stop sending any data or null packets (WiFi Alliance allows at most 2
+>>> of these packets to be sent by the AP before station sends ps-poll,
+>>> exclude retries) until a PS-Poll packet is sent by the station to
+>>> collect data. The AP should also respond only 1 packet per PS-Poll
+>>> (exclude any retries). Right now, we are also experiencing that the AP
+>>> will, at times, send more than 1 data packet to the station per
+>>> PS-Poll. The first and second problems may be linked together.
+>>>
+>>
+>> You've given no context with which we can help you. Things like the
+>> Linux version, the hardware running on the AP and client, which it is
+>> you're trying to report a bug on (the AP or Client), dmesg logs,
+>> wireless traces, and so on would all be somewhere between mandatory to
+>> helpful information. Trying to give us nothing but your interpretation
+>> of what the 802.11 standard says (which most of us know very well)
+>> isn't a useful bug report.
+>>
+>> This might help:
+>> https://wireless.wiki.kernel.org/en/users/documentation/reporting_bugs
+>>
+>> Please try again and send us the information we need to be able to help.
+>>
+>> Thanks,
+>> - Steve
+>
+>
+>
+> --
+> Regards,
+> Daniel Ghansah
