@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49636 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752279AbdKOMaG (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51528 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752092AbdKNRRE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 07:30:06 -0500
-Date: Wed, 15 Nov 2017 15:29:53 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: johannes.berg@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] mac80211: fix VLAN handling with TXQs
-Message-ID: <20171115122952.2rzx6kv2lycq5go5@mwanda> (sfid-20171115_133010_908764_213EBC40)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Tue, 14 Nov 2017 12:17:04 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Fix invalid STS_CAP_OFFSET_MASK.
+Date: Tue, 14 Nov 2017 09:16:59 -0800
+Message-Id: <1510679819-24115-1-git-send-email-greearb@candelatech.com> (sfid-20171114_181707_444944_F8E30A80)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ I fixed a Smatch bug and now it started warning about this code -dan ]
+From: Ben Greear <greearb@candelatech.com>
 
-Hello Johannes Berg,
+The 10.4 firmware defines this as a 3-bit field, as does the
+mac80211 stack.  The 4th bit is defined as CONF_IMPLICIT_BF
+at least in the firmware header I have seen.  This patch
+fixes the ath10k wmi header to match the firmware.
 
-This is a semi-automatic email about new static checker warnings.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-The patch 531682159092: "mac80211: fix VLAN handling with TXQs" from 
-Jun 22, 2017, leads to the following Smatch complaint:
-
-    net/mac80211/tx.c:3529 ieee80211_tx_dequeue()
-     error: we previously assumed 'skb' could be null (see line 3511)
-
-net/mac80211/tx.c
-  3500                                             tx.key, skb);
-  3501          } else {
-  3502                  if (invoke_tx_handlers_late(&tx))
-  3503                          goto begin;
-  3504  
-  3505                  skb = __skb_dequeue(&tx.skbs);
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The NULL skb would have to come from here.
-
-  3506  
-  3507                  if (!skb_queue_empty(&tx.skbs))
-  3508                          skb_queue_splice_tail(&tx.skbs, &txqi->frags);
-  3509          }
-  3510	
-  3511		if (skb && skb_has_frag_list(skb) &&
-                    ^^^
-Old code checks
-
-  3512		    !ieee80211_hw_check(&local->hw, TX_FRAG_LIST)) {
-  3513			if (skb_linearize(skb)) {
-  3514				ieee80211_free_txskb(&local->hw, skb);
-  3515				goto begin;
-  3516			}
-  3517		}
-  3518	
-  3519		switch (tx.sdata->vif.type) {
-  3520		case NL80211_IFTYPE_MONITOR:
-  3521			if (tx.sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
-  3522				vif = &tx.sdata->vif;
-  3523				break;
-  3524			}
-  3525			tx.sdata = rcu_dereference(local->monitor_sdata);
-  3526			if (tx.sdata) {
-  3527				vif = &tx.sdata->vif;
-  3528				info->hw_queue =
-  3529					vif->hw_queue[skb_get_queue_mapping(skb)];
-                                                                            ^^^
-Patch adds unchecked dereference (might be a false positive).
-
-  3530			} else if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL)) {
-  3531				ieee80211_free_txskb(&local->hw, skb);
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index ff15c37..9522f22 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -5195,7 +5195,8 @@ enum wmi_10_4_vdev_param {
+ #define WMI_VDEV_PARAM_TXBF_MU_TX_BFER BIT(3)
+ 
+ #define WMI_TXBF_STS_CAP_OFFSET_LSB	4
+-#define WMI_TXBF_STS_CAP_OFFSET_MASK	0xf0
++#define WMI_TXBF_STS_CAP_OFFSET_MASK	0x70
++#define WMI_TXBF_CONF_IMPLICIT_BF       BIT(7)
+ #define WMI_BF_SOUND_DIM_OFFSET_LSB	8
+ #define WMI_BF_SOUND_DIM_OFFSET_MASK	0xf00
+ 
+-- 
+2.4.11
