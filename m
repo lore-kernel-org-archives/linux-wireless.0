@@ -1,53 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45554 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753741AbdKNKwE (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54362 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755383AbdKNN0H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 05:52:04 -0500
-Message-ID: <1510656721.4011.87.camel@coelho.fi> (sfid-20171114_115222_984041_3ADD8789)
-From: Luca Coelho <luca@coelho.fi>
-To: Thomas Backlund <tmb@mageia.org>, linux-wireless@vger.kernel.org
-Cc: stable@vger.kernel.org
-Date: Tue, 14 Nov 2017 12:52:01 +0200
-In-Reply-To: <20171114103751.7761-1-tmb@mageia.org>
-References: <20171114103751.7761-1-tmb@mageia.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] iwlwifi: fix firmware names for 9xxx and a0 series hw
+        Tue, 14 Nov 2017 08:26:07 -0500
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 11/12] wil6210: remove suspend time statistics
+Date: Tue, 14 Nov 2017 15:25:43 +0200
+Message-Id: <1510665944-30198-12-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142617_701562_877C6CA1)
+In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-11-14 at 12:37 +0200, Thomas Backlund wrote:
-> iwlwifi 9xxx and a0 series hw contains an extra dash in firmware file
-> name
-> as seeen in modinfo output for kernel 4.14:
-> 
-> firmware:       iwlwifi-9260-th-b0-jf-b0--34.ucode
-> firmware:       iwlwifi-9260-th-a0-jf-a0--34.ucode
-> firmware:       iwlwifi-9000-pu-a0-jf-b0--34.ucode
-> firmware:       iwlwifi-9000-pu-a0-jf-a0--34.ucode
-> firmware:       iwlwifi-QuQnj-a0-hr-a0--34.ucode
-> firmware:       iwlwifi-QuQnj-a0-jf-b0--34.ucode
-> firmware:       iwlwifi-QuQnj-f0-hr-a0--34.ucode
-> firmware:       iwlwifi-Qu-a0-jf-b0--34.ucode
-> firmware:       iwlwifi-Qu-a0-hr-a0--34.ucode
-> 
-> Fix that by dropping the extra adding of '"-"'.
-> 
-> Signed-off-by: Thomas Backlund <tmb@mageia.org>
-> cc: Luca Coelho <luciano.coelho@intel.com>
-> cc: stable@vger.kernel.org
-> 
-> ---
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-Looks good, thanks!
+Currently suspend time statistics are showed through debugfs.
+Remove time statistics in suspend state since the timing may
+not be accurate in that state.
 
-Though I'm not sure this is worth sending to stable... Why do you think
-it's needed?
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 17 ++---------------
+ drivers/net/wireless/ath/wil6210/main.c    |  1 -
+ drivers/net/wireless/ath/wil6210/pm.c      | 20 ++------------------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  5 -----
+ 4 files changed, 4 insertions(+), 39 deletions(-)
 
-Anyway, I'm applying it in our internal tree and it will reach the
-mainline following our normal upstreaming process.
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 06b9c56..edaab0f 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1632,8 +1632,6 @@ static ssize_t wil_write_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
+-	wil->suspend_stats.min_suspend_time = ULONG_MAX;
+-	wil->suspend_stats.collection_start = ktime_get();
+ 
+ 	return len;
+ }
+@@ -1645,27 +1643,18 @@ static ssize_t wil_read_suspend_stats(struct file *file,
+ 	struct wil6210_priv *wil = file->private_data;
+ 	static char text[400];
+ 	int n;
+-	unsigned long long stats_collection_time =
+-		ktime_to_us(ktime_sub(ktime_get(),
+-				      wil->suspend_stats.collection_start));
+ 
+ 	n = snprintf(text, sizeof(text),
+ 		     "Suspend statistics:\n"
+ 		     "successful suspends:%ld failed suspends:%ld\n"
+ 		     "successful resumes:%ld failed resumes:%ld\n"
+-		     "rejected by host:%ld rejected by device:%ld\n"
+-		     "total suspend time:%lld min suspend time:%lld\n"
+-		     "max suspend time:%lld stats collection time: %lld\n",
++		     "rejected by host:%ld rejected by device:%ld\n",
+ 		     wil->suspend_stats.successful_suspends,
+ 		     wil->suspend_stats.failed_suspends,
+ 		     wil->suspend_stats.successful_resumes,
+ 		     wil->suspend_stats.failed_resumes,
+ 		     wil->suspend_stats.rejected_by_host,
+-		     wil->suspend_stats.rejected_by_device,
+-		     wil->suspend_stats.total_suspend_time,
+-		     wil->suspend_stats.min_suspend_time,
+-		     wil->suspend_stats.max_suspend_time,
+-		     stats_collection_time);
++		     wil->suspend_stats.rejected_by_device);
+ 
+ 	n = min_t(int, n, sizeof(text));
+ 
+@@ -1836,8 +1825,6 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 
+ 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
+ 
+-	wil->suspend_stats.collection_start = ktime_get();
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e92fd35..1b53cd3 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -579,7 +579,6 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
+ 			      WMI_WAKEUP_TRIGGER_BCAST;
+ 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
+-	wil->suspend_stats.min_suspend_time = ULONG_MAX;
+ 	wil->vring_idle_trsh = 16;
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 6fd5420..9fba237 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -323,16 +323,12 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ 	wil_dbg_pm(wil, "suspend: %s => %d\n",
+ 		   is_runtime ? "runtime" : "system", rc);
+ 
+-	if (!rc)
+-		wil->suspend_stats.suspend_start_time = ktime_get();
+-
+ 	return rc;
+ }
+ 
+ int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ {
+ 	int rc = 0;
+-	unsigned long long suspend_time_usec = 0;
+ 
+ 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
+ 
+@@ -350,21 +346,9 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
+ 	else
+ 		rc = wil_resume_radio_off(wil);
+ 
+-	if (rc)
+-		goto out;
+-
+-	suspend_time_usec =
+-		ktime_to_us(ktime_sub(ktime_get(),
+-				      wil->suspend_stats.suspend_start_time));
+-	wil->suspend_stats.total_suspend_time += suspend_time_usec;
+-	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
+-		wil->suspend_stats.min_suspend_time = suspend_time_usec;
+-	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
+-		wil->suspend_stats.max_suspend_time = suspend_time_usec;
+-
+ out:
+-	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
+-		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
++	wil_dbg_pm(wil, "resume: %s => %d\n", is_runtime ? "runtime" : "system",
++		   rc);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 7e017b1..ea04117 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -89,11 +89,6 @@ struct wil_suspend_stats {
+ 	unsigned long failed_resumes;
+ 	unsigned long rejected_by_device;
+ 	unsigned long rejected_by_host;
+-	unsigned long long total_suspend_time;
+-	unsigned long long min_suspend_time;
+-	unsigned long long max_suspend_time;
+-	ktime_t collection_start;
+-	ktime_t suspend_start_time;
+ };
+ 
+ /* Calculate MAC buffer size for the firmware. It includes all overhead,
+-- 
+1.9.1
