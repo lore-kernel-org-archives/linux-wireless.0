@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34882 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755845AbdKNRBz (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:43336 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754788AbdKNOXa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 12:01:55 -0500
-From: Colin King <colin.king@canonical.com>
-To: Hin-Tak Leung <htl10@users.sourceforge.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl818x: remove redundant check for cck_power > 15
-Date: Tue, 14 Nov 2017 17:01:45 +0000
-Message-Id: <20171114170145.3987-1-colin.king@canonical.com> (sfid-20171114_180225_238699_2BF9DEB7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Tue, 14 Nov 2017 09:23:30 -0500
+Message-ID: <1510669408.2030.23.camel@sipsolutions.net> (sfid-20171114_152333_197817_51805569)
+Subject: Re: [RFC] cfg80211: Implement Multiple BSSID capability in scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Peng Xu <pxu@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Sara Sharon <sara.sharon@intel.com>
+Date: Tue, 14 Nov 2017 15:23:28 +0100
+In-Reply-To: <4927d2288442486788cd5b4d0492537a@NASANEXM01F.na.qualcomm.com>
+References: <1509554358-10473-1-git-send-email-jouni@qca.qualcomm.com>
+         <1510664296.2030.22.camel@sipsolutions.net>
+         <4927d2288442486788cd5b4d0492537a@NASANEXM01F.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, 2017-11-14 at 14:20 +0000, Peng Xu wrote:
+> > 
+> > > +			if (tmp_old[0] == WLAN_EID_VENDOR_SPECIFIC) {
+> > > +				if (!memcmp(tmp_old + 2, tmp + 2, 5)) {
+> > > +					/* same vendor ie, copy from new ie
+> > 
+> > */
+> > > +					memcpy(pos, tmp, tmp[1] + 2);
+> > > +					pos += tmp[1] + 2;
+> > > +				} else {
+> > > +					memcpy(pos, tmp_old, tmp_old[1] +
+> > 
+> > 2);
+> > > +					pos += tmp_old[1] + 2;
+> > 
+> > This seems really strange. What's 5? Should it be 4, so you have
+> > OUI+subelement ID?
+> > 
+> 
+> It is OUI + type + subTye.
 
-cck_poweri cannot be greated than 15 as is derived from the bottom 4 bits
-from riv->channels[channel - 1].hw_value & 0xf.  Hence the check for it
-being greater than 15 is redundant and can be removed.
+Ah, right, type/subtype.
 
-Detected by CoverityScan, CID#744303 ("Logically dead code")
+Still, this is problematic, because there's nothing that says that the
+vendor IE must have OUI + type + subtype, the spec only says OUI +
+vendor specific data.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/realtek/rtl818x/rtl8187/rtl8225.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+This may be right for the WFA/Microsoft OUI, but not necessary anything
+else?
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/rtl8225.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/rtl8225.c
-index e6668ffb77e6..ff0971f1e2c8 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/rtl8225.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/rtl8225.c
-@@ -688,10 +688,7 @@ static void rtl8225z2_b_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
- 	cck_power = priv->channels[channel - 1].hw_value & 0xF;
- 	ofdm_power = priv->channels[channel - 1].hw_value >> 4;
- 
--	if (cck_power > 15)
--		cck_power = (priv->hw_rev == RTL8187BvB) ? 15 : 22;
--	else
--		cck_power += (priv->hw_rev == RTL8187BvB) ? 0 : 7;
-+	cck_power += (priv->hw_rev == RTL8187BvB) ? 0 : 7;
- 	cck_power += priv->txpwr_base & 0xF;
- 	cck_power = min(cck_power, (u8)35);
- 
--- 
-2.14.1
+johannes
