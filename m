@@ -1,84 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:54357 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755248AbdKIXiz (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54362 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755374AbdKNN0E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 18:38:55 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 4/6] wl1251: Set generated MAC address back to NVS data
-Date: Fri, 10 Nov 2017 00:38:26 +0100
-Message-Id: <1510270708-14377-5-git-send-email-pali.rohar@gmail.com> (sfid-20171110_004012_856753_9654A351)
-In-Reply-To: <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Tue, 14 Nov 2017 08:26:04 -0500
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 09/12] wil6210: get suspend reject reason and resume triggers from FW
+Date: Tue, 14 Nov 2017 15:25:41 +0200
+Message-Id: <1510665944-30198-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142612_906172_3A31FCA0)
+In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case there is no valid MAC address kernel generates random one. This
-patch propagate this generated MAC address back to NVS data which will be
-uploaded to wl1251 chip. So HW would have same MAC address as linux kernel
-uses.
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-This should not change any functionality, but it is better to tell wl1251
-correct mac address since beginning of chip usage.
+Upon receiving suspend reject, print reject reason.
+Upon receiving resume event, print resume triggers.
 
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wl1251/main.c |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/net/wireless/ath/wil6210/wmi.c | 46 +++++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/wil6210/wmi.h | 17 ++++++++++---
+ 2 files changed, 57 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index d497ba5..1f423be 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -1481,6 +1481,21 @@ static int wl1251_read_nvs_mac(struct wl1251 *wl)
- 	return 0;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index dd25f63..8ace618 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -2043,6 +2043,16 @@ void wmi_event_flush(struct wil6210_priv *wil)
+ 	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
  }
  
-+static int wl1251_write_nvs_mac(struct wl1251 *wl)
++static const char *suspend_status2name(u8 status)
 +{
-+	int i, ret;
-+
-+	ret = wl1251_check_nvs_mac(wl);
-+	if (ret)
-+		return ret;
-+
-+	/* MAC is stored in reverse order */
-+	for (i = 0; i < ETH_ALEN; i++)
-+		wl->nvs[NVS_OFF_MAC_DATA + i] = wl->mac_addr[ETH_ALEN - i - 1];
-+
-+	return 0;
++	switch (status) {
++	case WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE:
++		return "LINK_NOT_IDLE";
++	default:
++		return "Untracked status";
++	}
 +}
 +
- static int wl1251_register_hw(struct wl1251 *wl)
+ int wmi_suspend(struct wil6210_priv *wil)
  {
- 	int ret;
-@@ -1546,6 +1561,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 		static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
- 		memcpy(wl->mac_addr, nokia_oui, 3);
- 		get_random_bytes(wl->mac_addr + 3, 3);
-+		if (!wl->use_eeprom)
-+			wl1251_write_nvs_mac(wl);
- 		wl1251_warning("MAC address in eeprom or nvs data is not valid");
- 		wl1251_warning("Setting random MAC address: %pM", wl->mac_addr);
+ 	int rc;
+@@ -2058,7 +2068,7 @@ int wmi_suspend(struct wil6210_priv *wil)
+ 	wil->suspend_resp_rcvd = false;
+ 	wil->suspend_resp_comp = false;
+ 
+-	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED;
++	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE;
+ 
+ 	rc = wmi_call(wil, WMI_TRAFFIC_SUSPEND_CMDID, &cmd, sizeof(cmd),
+ 		      WMI_TRAFFIC_SUSPEND_EVENTID, &reply, sizeof(reply),
+@@ -2090,8 +2100,9 @@ int wmi_suspend(struct wil6210_priv *wil)
  	}
+ 
+ 	wil_dbg_wmi(wil, "suspend_response_completed rcvd\n");
+-	if (reply.evt.status == WMI_TRAFFIC_SUSPEND_REJECTED) {
+-		wil_dbg_pm(wil, "device rejected the suspend\n");
++	if (reply.evt.status != WMI_TRAFFIC_SUSPEND_APPROVED) {
++		wil_dbg_pm(wil, "device rejected the suspend, %s\n",
++			   suspend_status2name(reply.evt.status));
+ 		wil->suspend_stats.rejected_by_device++;
+ 	}
+ 	rc = reply.evt.status;
+@@ -2103,21 +2114,50 @@ int wmi_suspend(struct wil6210_priv *wil)
+ 	return rc;
+ }
+ 
++static void resume_triggers2string(u32 triggers, char *string, int str_size)
++{
++	string[0] = '\0';
++
++	if (!triggers) {
++		strlcat(string, " UNKNOWN", str_size);
++		return;
++	}
++
++	if (triggers & WMI_RESUME_TRIGGER_HOST)
++		strlcat(string, " HOST", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_UCAST_RX)
++		strlcat(string, " UCAST_RX", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_BCAST_RX)
++		strlcat(string, " BCAST_RX", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_WMI_EVT)
++		strlcat(string, " WMI_EVT", str_size);
++}
++
+ int wmi_resume(struct wil6210_priv *wil)
+ {
+ 	int rc;
++	char string[100];
+ 	struct {
+ 		struct wmi_cmd_hdr wmi;
+ 		struct wmi_traffic_resume_event evt;
+ 	} __packed reply;
+ 
+ 	reply.evt.status = WMI_TRAFFIC_RESUME_FAILED;
++	reply.evt.resume_triggers = WMI_RESUME_TRIGGER_UNKNOWN;
+ 
+ 	rc = wmi_call(wil, WMI_TRAFFIC_RESUME_CMDID, NULL, 0,
+ 		      WMI_TRAFFIC_RESUME_EVENTID, &reply, sizeof(reply),
+ 		      WIL_WAIT_FOR_SUSPEND_RESUME_COMP);
+ 	if (rc)
+ 		return rc;
++	resume_triggers2string(le32_to_cpu(reply.evt.resume_triggers), string,
++			       sizeof(string));
++	wil_dbg_pm(wil, "device resume %s, resume triggers:%s (0x%x)\n",
++		   reply.evt.status ? "failed" : "passed", string,
++		   le32_to_cpu(reply.evt.resume_triggers));
+ 
+ 	return reply.evt.status;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 5263ee7..d9e220a 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -2267,8 +2267,8 @@ struct wmi_link_maintain_cfg_read_done_event {
+ } __packed;
+ 
+ enum wmi_traffic_suspend_status {
+-	WMI_TRAFFIC_SUSPEND_APPROVED	= 0x0,
+-	WMI_TRAFFIC_SUSPEND_REJECTED	= 0x1,
++	WMI_TRAFFIC_SUSPEND_APPROVED			= 0x0,
++	WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE	= 0x1,
+ };
+ 
+ /* WMI_TRAFFIC_SUSPEND_EVENTID */
+@@ -2282,10 +2282,21 @@ enum wmi_traffic_resume_status {
+ 	WMI_TRAFFIC_RESUME_FAILED	= 0x1,
+ };
+ 
++enum wmi_resume_trigger {
++	WMI_RESUME_TRIGGER_UNKNOWN	= 0x0,
++	WMI_RESUME_TRIGGER_HOST		= 0x1,
++	WMI_RESUME_TRIGGER_UCAST_RX	= 0x2,
++	WMI_RESUME_TRIGGER_BCAST_RX	= 0x4,
++	WMI_RESUME_TRIGGER_WMI_EVT	= 0x8,
++};
++
+ /* WMI_TRAFFIC_RESUME_EVENTID */
+ struct wmi_traffic_resume_event {
+-	/* enum wmi_traffic_resume_status_e */
++	/* enum wmi_traffic_resume_status */
+ 	u8 status;
++	u8 reserved[3];
++	/* enum wmi_resume_trigger bitmap */
++	__le32 resume_triggers;
+ } __packed;
+ 
+ /* Power Save command completion status codes */
 -- 
-1.7.9.5
+1.9.1
