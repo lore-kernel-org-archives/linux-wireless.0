@@ -1,155 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:40016 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751480AbdKVJv3 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54358 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755287AbdKNNZx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Nov 2017 04:51:29 -0500
-Date: Wed, 22 Nov 2017 10:51:16 +0100
-From: Mylene JOSSERAND <mylene.josserand@free-electrons.com>
-To: Jes.Sorensen@gmail.com
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Maxime Ripard <maxime.ripard@free-electrons.com>
-Subject: Wifi RTL8723bu driver test: failed to scan
-Message-ID: <20171122105116.57c3c000@dell-desktop.home> (sfid-20171122_105133_895290_D38C90EC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Tue, 14 Nov 2017 08:25:53 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v3 03/12] wil6210: refresh FW capabilities during interface up
+Date: Tue, 14 Nov 2017 15:25:35 +0200
+Message-Id: <1510665944-30198-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142603_075611_480EB4DF)
+In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Jes Sorensen,
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-I am currently testing a LM811 Wifi/BT USB dongle [1] on a Sinlinx
-SinA33 Allwinner SoC board [2]. I saw that I should use the realtek
-driver RTL8723BU for this USB dongle.
+FW capabilities are currently retrieved only during module
+initialization, but userspace can replace the firmware while
+interface is down, so refresh the FW capabilities when
+interface is up (after FW is loaded) to ensure driver
+functionality matches the loaded FW.
 
-Currently, I am only testing the Wifi and the mainline driver (kernel
-4.14-rc7) does not seem to work. At least, the scanning does not output
-anything.
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/fw_inc.c   | 21 ++++++++-------------
+ drivers/net/wireless/ath/wil6210/main.c     | 25 +++++++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 13 +------------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
+ 4 files changed, 33 insertions(+), 27 deletions(-)
 
-I tested the driver recommended by LM Technologies [3] and it works
-fine (scan, connect and ping are ok). Before investigating on the
-differences between these two drivers, do you have any idea about this
-issue?
-
-Here are the commands and output I got with mainline's driver:
-
-# lsusb
-Bus 001 Device 001: ID 1d6b:0002
-Bus 001 Device 003: ID 0bda:b720
-Bus 001 Device 002: ID 05e3:0608
-Bus 002 Device 001: ID 1d6b:0001
-Bus 001 Device 004: ID 0bda:8152
-#
-# modprobe rtl8xxxu
-[   46.785896] usb 1-1.1: This Realtek USB WiFi dongle (0x0bda:0xb720)
-is untested! 
-[   46.802122] usb 1-1.1: Please report results to
-Jes.Sorensen@gmail.com 
-[   46.980269] usb 1-1.1: Vendor: Realtek
-[   46.988641] usb 1-1.1: Product: 802.11n WLAN Adapter
-[   46.998182] usb 1-1.1: rtl8723bu_parse_efuse: dumping efuse (0x200
-bytes): 
-[   47.014106] usb 1-1.1: 00: 29 81 03 7c 01 08 21 00
-[   47.023527] usb 1-1.1: 08: 40 07 05 35 10 00 00 00
-[   47.032888] usb 1-1.1: 10: 2c 2c 2c 2c 2c 2c 2b 2b
-[   47.042197] usb 1-1.1: 18: 2b 2b 2b f4 ff ff ff ff
-[   47.051442] usb 1-1.1: 20: ff ff ff ff ff ff ff ff
-[   47.060608] usb 1-1.1: 28: ff ff ff ff ff ff ff ff
-[   47.069672] usb 1-1.1: 30: ff ff ff ff ff ff ff ff
-[   47.078679] usb 1-1.1: 38: ff ff 2d 2d 2d 2d 2d 2d
-[   47.087599] usb 1-1.1: 40: 2d 2d 2d 2d 2d 03 ff ff
-[   47.096539] usb 1-1.1: 48: ff ff ff ff ff ff ff ff
-[   47.105489] usb 1-1.1: 50: ff ff ff ff ff ff ff ff
-[   47.114418] usb 1-1.1: 58: ff ff ff ff ff ff ff ff
-[   47.123322] usb 1-1.1: 60: ff ff ff ff ff ff ff ff
-[   47.132238] usb 1-1.1: 68: ff ff ff ff ff ff ff ff
-[   47.141059] usb 1-1.1: 70: ff ff ff ff ff ff ff ff
-[   47.149810] usb 1-1.1: 78: ff ff ff ff ff ff ff ff
-[   47.158479] usb 1-1.1: 80: ff ff ff ff ff ff ff ff
-[   47.167107] usb 1-1.1: 88: ff ff ff ff ff ff ff ff
-[   47.175651] usb 1-1.1: 90: ff ff ff ff ff ff ff ff
-[   47.184102] usb 1-1.1: 98: ff ff ff ff ff ff ff ff
-[   47.192463] usb 1-1.1: a0: ff ff ff ff ff ff ff ff
-[   47.200728] usb 1-1.1: a8: ff ff ff ff ff ff ff ff
-[   47.208943] usb 1-1.1: b0: ff ff ff ff ff ff ff ff
-[   47.217053] usb 1-1.1: b8: 20 1e 20 00 00 00 ff ff
-[   47.225146] usb 1-1.1: c0: ff 28 20 11 00 00 00 ff
-[   47.233169] usb 1-1.1: c8: 00 ff ff ff ff ff ff ff
-[   47.241140] usb 1-1.1: d0: ff ff ff ff ff ff ff ff
-[   47.249009] usb 1-1.1: d8: ff ff ff ff ff ff ff ff
-[   47.256776] usb 1-1.1: e0: ff ff ff ff ff ff ff ff
-[   47.264481] usb 1-1.1: e8: ff ff ff ff ff ff ff ff
-[   47.272098] usb 1-1.1: f0: ff ff ff ff ff ff ff ff
-[   47.279619] usb 1-1.1: f8: ff ff ff ff ff ff ff ff
-[   47.287029] usb 1-1.1: 100: da 0b 20 b7 e7 47 03 5c
-[   47.294503] usb 1-1.1: 108: f3 70 32 1d c2 09 03 52
-[   47.301934] usb 1-1.1: 110: 65 61 6c 74 65 6b 16 03
-[   47.309294] usb 1-1.1: 118: 38 30 32 2e 31 31 6e 20
-[   47.316579] usb 1-1.1: 120: 57 4c 41 4e 20 41 64 61
-[   47.323811] usb 1-1.1: 128: 70 74 65 72 00 ff ff ff
-[   47.331045] usb 1-1.1: 130: ff ff ff ff ff ff ff ff
-[   47.338222] usb 1-1.1: 138: ff ff ff ff ff ff ff ff
-[   47.345335] usb 1-1.1: 140: ff ff ff ff ff ff ff 0f
-[   47.352364] usb 1-1.1: 148: ff ff ff ff ff ff ff ff
-[   47.359299] usb 1-1.1: 150: ff ff ff ff ff ff ff ff
-[   47.366135] usb 1-1.1: 158: ff ff ff ff ff ff ff ff
-[   47.372882] usb 1-1.1: 160: ff ff ff ff ff ff ff ff
-[   47.379541] usb 1-1.1: 168: ff ff ff ff ff ff ff ff
-[   47.386117] usb 1-1.1: 170: ff ff ff ff ff ff ff ff
-[   47.392664] usb 1-1.1: 178: ff ff ff ff ff ff ff ff
-[   47.399154] usb 1-1.1: 180: ff ff ff ff ff ff ff ff
-[   47.405530] usb 1-1.1: 188: ff ff ff ff ff ff ff ff
-[   47.411846] usb 1-1.1: 190: ff ff ff ff ff ff ff ff
-[   47.418125] usb 1-1.1: 198: ff ff ff ff ff ff ff ff
-[   47.424365] usb 1-1.1: 1a0: ff ff ff ff ff ff ff ff
-[   47.430587] usb 1-1.1: 1a8: ff ff ff ff ff ff ff ff
-[   47.436769] usb 1-1.1: 1b0: ff ff ff ff ff ff ff ff
-[   47.442967] usb 1-1.1: 1b8: ff ff ff ff ff ff ff ff
-[   47.449168] usb 1-1.1: 1c0: ff ff ff ff ff ff ff ff
-[   47.455323] usb 1-1.1: 1c8: ff ff ff ff ff ff ff ff
-[   47.461471] usb 1-1.1: 1d0: ff ff ff ff ff ff ff ff
-[   47.467592] usb 1-1.1: 1d8: ff ff ff ff ff ff ff ff
-[   47.473713] usb 1-1.1: 1e0: ff ff ff ff ff ff ff ff
-[   47.479841] usb 1-1.1: 1e8: ff ff ff ff ff ff ff ff
-[   47.485942] usb 1-1.1: 1f0: ff ff ff ff ff ff ff ff
-[   47.492062] usb 1-1.1: 1f8: ff ff ff ff ff ff ff ff
-[   47.498173] usb 1-1.1: RTL8723BU rev E (SMIC) 1T1R, TX queues 3,
-WiFi=1, BT=1, GPS=0, HI PA=0 
-[   47.509357] usb 1-1.1: RTL8723BU MAC:5c:f3:70:32:1d:c2 
-[   47.516057] usb 1-1.1: rtl8xxxu: Loading firmware
-rtlwifi/rtl8723bu_nic.bin
-[   47.532111] usb 1-1.1: Firmware revision 35.0 (signature 0x5301)
-[   48.531644] usbcore: registered new interface driver rtl8xxxu 
-# 
-# 
-# ifconfig wlan0 up
-[   53.922338] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-#
-# iw wlan0 scan
-#
-# iw wlan0 info
-Interface wlan0
-	ifindex 4
-	wdev 0x1
-	addr 5c:f3:70:32:1d:c2
-	type managed
-	wiphy 0
-	txpower 20.00 dBm
-
-If you need more tests/information, do not hesitate to ask me.
-
-Thank you in advance for any help/hints!
-
-[1]:
-https://www.lm-technologies.com/product/wifi-and-bluetooth-usb-module-4-0-dual-mode-class-1-lm811/
-[2]: http://www.sinlinx.com/sina33.html
-[3]: https://wiki.lm-technologies.com/lm811-linux-driver-installation/
-
-Best regards,
-
+diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
+index e01acac..7a33792 100644
+--- a/drivers/net/wireless/ath/wil6210/fw_inc.c
++++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
+@@ -124,24 +124,19 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
+ 	return 0;
+ }
+ 
+-static int fw_handle_comment(struct wil6210_priv *wil, const void *data,
+-			     size_t size)
+-{
+-	wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1, data, size, true);
+-
+-	return 0;
+-}
+-
+ static int
+-fw_handle_capabilities(struct wil6210_priv *wil, const void *data,
+-		       size_t size)
++fw_handle_comment(struct wil6210_priv *wil, const void *data,
++		  size_t size)
+ {
+ 	const struct wil_fw_record_capabilities *rec = data;
+ 	size_t capa_size;
+ 
+ 	if (size < sizeof(*rec) ||
+-	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC)
++	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC) {
++		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
++				data, size, true);
+ 		return 0;
++	}
+ 
+ 	capa_size = size - offsetof(struct wil_fw_record_capabilities,
+ 				    capabilities);
+@@ -422,7 +417,7 @@ static int fw_handle_gateway_data4(struct wil6210_priv *wil, const void *data,
+ 	int (*parse_handler)(struct wil6210_priv *wil, const void *data,
+ 			     size_t size);
+ } wil_fw_handlers[] = {
+-	{wil_fw_type_comment, fw_handle_comment, fw_handle_capabilities},
++	{wil_fw_type_comment, fw_handle_comment, fw_handle_comment},
+ 	{wil_fw_type_data, fw_handle_data, fw_ignore_section},
+ 	{wil_fw_type_fill, fw_handle_fill, fw_ignore_section},
+ 	/* wil_fw_type_action */
+@@ -517,7 +512,7 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
+ 
+ 	rc = request_firmware(&fw, name, wil_to_dev(wil));
+ 	if (rc) {
+-		wil_err_fw(wil, "Failed to load firmware %s\n", name);
++		wil_err_fw(wil, "Failed to load firmware %s rc %d\n", name, rc);
+ 		return rc;
+ 	}
+ 	wil_dbg_fw(wil, "Loading <%s>, %zu bytes\n", name, fw->size);
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 885924a..e92fd35 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -760,6 +760,8 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
+ 	u8 retry_short;
+ 	int rc;
+ 
++	wil_refresh_fw_capabilities(wil);
++
+ 	rc = wmi_get_mgmt_retry(wil, &retry_short);
+ 	if (!rc) {
+ 		wiphy->retry_short = retry_short;
+@@ -767,6 +769,25 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
+ 	}
+ }
+ 
++void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
++{
++	struct wiphy *wiphy = wil_to_wiphy(wil);
++
++	wil->keep_radio_on_during_sleep =
++		wil->platform_ops.keep_radio_on_during_sleep &&
++		wil->platform_ops.keep_radio_on_during_sleep(
++			wil->platform_handle) &&
++		test_bit(WMI_FW_CAPABILITY_D3_SUSPEND, wil->fw_capabilities);
++
++	wil_info(wil, "keep_radio_on_during_sleep (%d)\n",
++		 wil->keep_radio_on_during_sleep);
++
++	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
++		wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
++	else
++		wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
++}
++
+ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
+ {
+ 	le32_to_cpus(&r->base);
+@@ -1071,11 +1092,11 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 			return rc;
+ 		}
+ 
++		wil_collect_fw_info(wil);
++
+ 		if (wil->ps_profile != WMI_PS_PROFILE_TYPE_DEFAULT)
+ 			wil_ps_update(wil, wil->ps_profile);
+ 
+-		wil_collect_fw_info(wil);
+-
+ 		if (wil->platform_ops.notify) {
+ 			rc = wil->platform_ops.notify(wil->platform_handle,
+ 						      WIL_PLATFORM_EVT_FW_RDY);
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index f281220..fdab8a5 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -83,9 +83,7 @@ void wil_set_capabilities(struct wil6210_priv *wil)
+ 
+ 	/* extract FW capabilities from file without loading the FW */
+ 	wil_request_firmware(wil, wil->wil_fw_name, false);
+-
+-	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
+-		wil_to_wiphy(wil)->signal_type = CFG80211_SIGNAL_TYPE_MBM;
++	wil_refresh_fw_capabilities(wil);
+ }
+ 
+ void wil_disable_irq(struct wil6210_priv *wil)
+@@ -295,15 +293,6 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	wil_set_capabilities(wil);
+ 	wil6210_clear_irq(wil);
+ 
+-	wil->keep_radio_on_during_sleep =
+-		wil->platform_ops.keep_radio_on_during_sleep &&
+-		wil->platform_ops.keep_radio_on_during_sleep(
+-			wil->platform_handle) &&
+-		test_bit(WMI_FW_CAPABILITY_D3_SUSPEND, wil->fw_capabilities);
+-
+-	wil_info(wil, "keep_radio_on_during_sleep (%d)\n",
+-		 wil->keep_radio_on_during_sleep);
+-
+ 	/* FW should raise IRQ when ready */
+ 	rc = wil_if_pcie_enable(wil);
+ 	if (rc) {
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 533cbb3..8e9919b 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -870,6 +870,7 @@ int wil_ps_update(struct wil6210_priv *wil,
+ int __wil_up(struct wil6210_priv *wil);
+ int wil_down(struct wil6210_priv *wil);
+ int __wil_down(struct wil6210_priv *wil);
++void wil_refresh_fw_capabilities(struct wil6210_priv *wil);
+ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r);
+ int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
+ void wil_set_ethtoolops(struct net_device *ndev);
 -- 
-Mylène Josserand, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+1.9.1
