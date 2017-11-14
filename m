@@ -1,55 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54595 "EHLO
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54368 "EHLO
         sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932349AbdK2KV2 (ORCPT
+        with ESMTP id S1755384AbdKNN0J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 05:21:28 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Luca Coelho <luca@coelho.fi>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Sara Sharon" <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 6/6] iwlwifi: fix access to prph when transport is stopped
-Date: Wed, 29 Nov 2017 10:21:22 +0000
-Message-ID: <87r2sh1j31.fsf@kamboji.qca.qualcomm.com> (sfid-20171129_112141_491073_0C2F82EB)
-References: <20171125153510.25359-1-luca@coelho.fi>
-        <20171125153510.25359-7-luca@coelho.fi>
-        <87vaht1j63.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87vaht1j63.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Wed, 29 Nov 2017 12:19:32 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Tue, 14 Nov 2017 08:26:09 -0500
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 12/12] wil6210: update statistics for suspend
+Date: Tue, 14 Nov 2017 15:25:44 +0200
+Message-Id: <1510665944-30198-13-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142622_735913_087D6354)
+In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-> Luca Coelho <luca@coelho.fi> writes:
->
->> From: Sara Sharon <sara.sharon@intel.com>
->>
->> When getting HW rfkill we get stop_device being called from two paths.
->> One path is the IRQ calling stop device, and updating op mode and
->> stack. As a result, cfg80211 is running rfkill sync work that shuts
->> down all devices (second path). In the second path, we eventually get
->> to iwl_mvm_stop_device which calls
->> iwl_fw_dump_conf_clear->iwl_fw_dbg_stop_recording, that access
->> periphery registers. The device may be stopped at this point from the
->> first path, which will result with a failure to access those
->> registers. Simply checking for the trans status is insufficient, since
->> the race will still exist, only minimized. Instead, move the stop from
->> iwl_fw_dump_conf_clear (which is getting called only from stop path)
->> to the transport stop device function, where the access is always
->> safe. This has the added value, of actually stopping dbgc before
->> stopping device even when the stop is initiated from the transport.
->>
->> Fixes: 1efc3843a4ee ("iwlwifi: stop dbgc recording before stopping
->> DMA")
->
-> No need to resend because of this, but Fixes should be in one line.
+Currently the statistics show how many successful/failed
+suspend/resume operations the system had.
+Update the statistics by splitting each successful/failed
+suspend/resume operations to radio on/off.
 
-Please ignore, I was too clever and forgot that I had called
-gnus-article-fill-cited-article which word wraps the mail :)
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c  | 47 ++++++++++++++++++++---------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 20 ++++++++----
+ drivers/net/wireless/ath/wil6210/pm.c       |  8 +++--
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 11 +++++--
+ 4 files changed, 59 insertions(+), 27 deletions(-)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index edaab0f..4475937 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1641,24 +1641,41 @@ static ssize_t wil_read_suspend_stats(struct file *file,
+ 				      size_t count, loff_t *ppos)
+ {
+ 	struct wil6210_priv *wil = file->private_data;
+-	static char text[400];
+-	int n;
++	char *text;
++	int n, ret, text_size = 500;
++
++	text = kmalloc(text_size, GFP_KERNEL);
++	if (!text)
++		return -ENOMEM;
+ 
+-	n = snprintf(text, sizeof(text),
+-		     "Suspend statistics:\n"
++	n = snprintf(text, text_size,
++		     "Radio on suspend statistics:\n"
+ 		     "successful suspends:%ld failed suspends:%ld\n"
+ 		     "successful resumes:%ld failed resumes:%ld\n"
+-		     "rejected by host:%ld rejected by device:%ld\n",
+-		     wil->suspend_stats.successful_suspends,
+-		     wil->suspend_stats.failed_suspends,
+-		     wil->suspend_stats.successful_resumes,
+-		     wil->suspend_stats.failed_resumes,
+-		     wil->suspend_stats.rejected_by_host,
+-		     wil->suspend_stats.rejected_by_device);
+-
+-	n = min_t(int, n, sizeof(text));
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, text, n);
++		     "rejected by device:%ld\n"
++		     "Radio off suspend statistics:\n"
++		     "successful suspends:%ld failed suspends:%ld\n"
++		     "successful resumes:%ld failed resumes:%ld\n"
++		     "General statistics:\n"
++		     "rejected by host:%ld\n",
++		     wil->suspend_stats.r_on.successful_suspends,
++		     wil->suspend_stats.r_on.failed_suspends,
++		     wil->suspend_stats.r_on.successful_resumes,
++		     wil->suspend_stats.r_on.failed_resumes,
++		     wil->suspend_stats.rejected_by_device,
++		     wil->suspend_stats.r_off.successful_suspends,
++		     wil->suspend_stats.r_off.failed_suspends,
++		     wil->suspend_stats.r_off.successful_resumes,
++		     wil->suspend_stats.r_off.failed_resumes,
++		     wil->suspend_stats.rejected_by_host);
++
++	n = min_t(int, n, text_size);
++
++	ret = simple_read_from_buffer(user_buf, count, ppos, text, n);
++
++	kfree(text);
++
++	return ret;
+ }
+ 
+ static const struct file_operations fops_suspend_stats = {
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 0592c73..42a5480 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -391,14 +391,16 @@ static int wil6210_suspend(struct device *dev, bool is_runtime)
+ 
+ 	rc = wil_suspend(wil, is_runtime, keep_radio_on);
+ 	if (!rc) {
+-		wil->suspend_stats.successful_suspends++;
+-
+ 		/* In case radio stays on, platform device will control
+ 		 * PCIe master
+ 		 */
+-		if (!keep_radio_on)
++		if (!keep_radio_on) {
+ 			/* disable bus mastering */
+ 			pci_clear_master(pdev);
++			wil->suspend_stats.r_off.successful_suspends++;
++		} else {
++			wil->suspend_stats.r_on.successful_suspends++;
++		}
+ 	}
+ out:
+ 	return rc;
+@@ -424,11 +426,17 @@ static int wil6210_resume(struct device *dev, bool is_runtime)
+ 	rc = wil_resume(wil, is_runtime, keep_radio_on);
+ 	if (rc) {
+ 		wil_err(wil, "device failed to resume (%d)\n", rc);
+-		wil->suspend_stats.failed_resumes++;
+-		if (!keep_radio_on)
++		if (!keep_radio_on) {
+ 			pci_clear_master(pdev);
++			wil->suspend_stats.r_off.failed_resumes++;
++		} else {
++			wil->suspend_stats.r_on.failed_resumes++;
++		}
+ 	} else {
+-		wil->suspend_stats.successful_resumes++;
++		if (keep_radio_on)
++			wil->suspend_stats.r_on.successful_resumes++;
++		else
++			wil->suspend_stats.r_off.successful_resumes++;
+ 	}
+ 
+ 	return rc;
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 9fba237..056b180 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -183,7 +183,7 @@ static int wil_suspend_keep_radio_on(struct wil6210_priv *wil)
+ 					break;
+ 				wil_err(wil,
+ 					"TO waiting for idle RX, suspend failed\n");
+-				wil->suspend_stats.failed_suspends++;
++				wil->suspend_stats.r_on.failed_suspends++;
+ 				goto resume_after_fail;
+ 			}
+ 			wil_dbg_ratelimited(wil, "rx vring is not empty -> NAPI\n");
+@@ -199,7 +199,7 @@ static int wil_suspend_keep_radio_on(struct wil6210_priv *wil)
+ 	 */
+ 	if (!wil_is_wmi_idle(wil)) {
+ 		wil_err(wil, "suspend failed due to pending WMI events\n");
+-		wil->suspend_stats.failed_suspends++;
++		wil->suspend_stats.r_on.failed_suspends++;
+ 		goto resume_after_fail;
+ 	}
+ 
+@@ -213,7 +213,7 @@ static int wil_suspend_keep_radio_on(struct wil6210_priv *wil)
+ 		if (rc) {
+ 			wil_err(wil, "platform device failed to suspend (%d)\n",
+ 				rc);
+-			wil->suspend_stats.failed_suspends++;
++			wil->suspend_stats.r_on.failed_suspends++;
+ 			wil_c(wil, RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
+ 			wil_unmask_irq(wil);
+ 			goto resume_after_fail;
+@@ -260,6 +260,7 @@ static int wil_suspend_radio_off(struct wil6210_priv *wil)
+ 		rc = wil_down(wil);
+ 		if (rc) {
+ 			wil_err(wil, "wil_down : %d\n", rc);
++			wil->suspend_stats.r_off.failed_suspends++;
+ 			goto out;
+ 		}
+ 	}
+@@ -272,6 +273,7 @@ static int wil_suspend_radio_off(struct wil6210_priv *wil)
+ 		rc = wil->platform_ops.suspend(wil->platform_handle, false);
+ 		if (rc) {
+ 			wil_enable_irq(wil);
++			wil->suspend_stats.r_off.failed_suspends++;
+ 			goto out;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index ea04117..cf27d97 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -82,12 +82,17 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+  */
+ #define WIL_MAX_MPDU_OVERHEAD	(62)
+ 
+-struct wil_suspend_stats {
++struct wil_suspend_count_stats {
+ 	unsigned long successful_suspends;
+-	unsigned long failed_suspends;
+ 	unsigned long successful_resumes;
++	unsigned long failed_suspends;
+ 	unsigned long failed_resumes;
+-	unsigned long rejected_by_device;
++};
++
++struct wil_suspend_stats {
++	struct wil_suspend_count_stats r_off;
++	struct wil_suspend_count_stats r_on;
++	unsigned long rejected_by_device; /* only radio on */
+ 	unsigned long rejected_by_host;
+ };
+ 
+-- 
+1.9.1
