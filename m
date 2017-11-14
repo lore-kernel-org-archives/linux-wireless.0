@@ -1,102 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:3532 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752499AbdK3QO4 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54358 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755325AbdKNNZ4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Nov 2017 11:14:56 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "toke@toke.dk" <toke@toke.dk>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "akolli@codeaurora.org" <akolli@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Anilkumar Kolli" <akolli@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
-Date: Thu, 30 Nov 2017 16:14:49 +0000
-Message-ID: <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com> (sfid-20171130_171515_581495_B0068A08)
-References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
-        <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com>
-In-Reply-To: <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com>
-        (akolli@qti.qualcomm.com's message of "Thu, 30 Nov 2017 18:28:21        +0530")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Tue, 14 Nov 2017 08:25:56 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v3 05/12] wil6210: fix length check in __wmi_send
+Date: Tue, 14 Nov 2017 15:25:37 +0200
+Message-Id: <1510665944-30198-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142603_633868_820A5041)
+In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<akolli@qti.qualcomm.com> writes:
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
->
-> 10.2.4 firmware branch (used in QCA988X) does not support
-> HTT_10_4_T2H_MSG_TYPE_PEER_STATS and that's why ath10k does not provide
-> tranmission rate statistics to user space, instead it just shows
-> hardcoded 6 Mbit/s. But pktlog firmware facility provides per peer tx
-> statistics. The firmware sends one pktlog event for every four
-> PPDUs per peer, which include:
->
-> * successful number of packets and bytes transmitted
-> * number of packets and bytes dropped
-> * retried number of packets and bytes
-> * rate info per ppdu
->
-> Firmware supports WMI_SERVICE_PEER_STATS, pktlog is enabled through
-> ATH10K_FLAG_PEER_STATS, which is nowadays enabled by default in ath10k.
->
-> This patch does not impact throughput.
->
-> Tested on QCA9880 with firmware version 10.2.4.70.48. This should also
-> work with firmware branch 10.2.4-1.0-00029
->
-> Parse peer stats from pktlog packets and update the tx rate information
-> per STA. This way user space can query about transmit rate with iw:
->
-> $iw wlan0 station dump
-> Station 3c:a9:f4:72:bb:a4 (on wlan1)
->         inactive time:  8210 ms
->         rx bytes:       9166
->         rx packets:     44
->         tx bytes:       1105
->         tx packets:     9
->         tx retries:     0
->         tx failed:      1
->         rx drop misc:   3
->         signal:         -75 [-75, -87, -88] dBm
->         signal avg:     -75 [-75, -85, -88] dBm
->         tx bitrate:     39.0 MBit/s MCS 10
->         rx bitrate:     26.0 MBit/s MCS 3
->         rx duration:    23250 us
->         authorized:     yes
->         authenticated:  yes
->         associated:     yes
->         preamble:       short
->         WMM/WME:        yes
->         MFP:            no
->         TDLS peer:      no
->         DTIM period:    2
->         beacon interval:100
->         short preamble: yes
->         short slot time:yes
->         connected time: 22 seconds
->
-> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+The current length check:
+sizeof(cmd) + len > r->entry_size
+will allow very large values of len (> U16_MAX - sizeof(cmd))
+and can cause a buffer overflow. Fix the check to cover this case.
+In addition, ensure the mailbox entry_size is not too small,
+since this can also bypass the above check.
 
-[...]
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/interrupt.c | 22 +++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/wmi.c       |  2 +-
+ 2 files changed, 22 insertions(+), 2 deletions(-)
 
-> +struct ath10k_10_2_peer_tx_stats {
-> +	u8 ratecode[PEER_STATS_FOR_NO_OF_PPDUS];
-> +	u8 success_pkts[PEER_STATS_FOR_NO_OF_PPDUS];
-> +	__le16 success_bytes[PEER_STATS_FOR_NO_OF_PPDUS];
-> +	u8 retry_pkts[PEER_STATS_FOR_NO_OF_PPDUS];
-> +	__le16 retry_bytes[PEER_STATS_FOR_NO_OF_PPDUS];
-> +	u8 failed_pkts[PEER_STATS_FOR_NO_OF_PPDUS];
-> +	__le16 failed_bytes[PEER_STATS_FOR_NO_OF_PPDUS];
-> +	u8 flags[PEER_STATS_FOR_NO_OF_PPDUS];
-> +	__le32 tx_duration;
-> +	u8 tx_ppdu_cnt;
-> +	u8 peer_id;
-> +} __packed;
-
-Toke, hopefully the tx_duration value here helps with ATF implementation
-using QCA988X.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 59def4f..5cf3417 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -358,6 +358,25 @@ static void wil_cache_mbox_regs(struct wil6210_priv *wil)
+ 	wil_mbox_ring_le2cpus(&wil->mbox_ctl.tx);
+ }
+ 
++static bool wil_validate_mbox_regs(struct wil6210_priv *wil)
++{
++	size_t min_size = sizeof(struct wil6210_mbox_hdr) +
++		sizeof(struct wmi_cmd_hdr);
++
++	if (wil->mbox_ctl.rx.entry_size < min_size) {
++		wil_err(wil, "rx mbox entry too small (%d)\n",
++			wil->mbox_ctl.rx.entry_size);
++		return false;
++	}
++	if (wil->mbox_ctl.tx.entry_size < min_size) {
++		wil_err(wil, "tx mbox entry too small (%d)\n",
++			wil->mbox_ctl.tx.entry_size);
++		return false;
++	}
++
++	return true;
++}
++
+ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
+ {
+ 	struct wil6210_priv *wil = cookie;
+@@ -393,7 +412,8 @@ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
+ 	if (isr & ISR_MISC_FW_READY) {
+ 		wil_dbg_irq(wil, "IRQ: FW ready\n");
+ 		wil_cache_mbox_regs(wil);
+-		set_bit(wil_status_mbox_ready, wil->status);
++		if (wil_validate_mbox_regs(wil))
++			set_bit(wil_status_mbox_ready, wil->status);
+ 		/**
+ 		 * Actual FW ready indicated by the
+ 		 * WMI_FW_READY_EVENTID
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 8a780f2..dbdf71d 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -448,7 +448,7 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
+ 	uint retry;
+ 	int rc = 0;
+ 
+-	if (sizeof(cmd) + len > r->entry_size) {
++	if (len > r->entry_size - sizeof(cmd)) {
+ 		wil_err(wil, "WMI size too large: %d bytes, max is %d\n",
+ 			(int)(sizeof(cmd) + len), r->entry_size);
+ 		return -ERANGE;
+-- 
+1.9.1
