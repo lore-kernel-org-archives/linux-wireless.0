@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:8911 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756099AbdKNRia (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55254 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750888AbdKNGyn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 12:38:30 -0500
-From: Peng Xu <pxu@qti.qualcomm.com>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Sara Sharon" <sara.sharon@intel.com>
-Subject: RE: [RFC] cfg80211: Implement Multiple BSSID capability in scanning
-Date: Tue, 14 Nov 2017 17:38:26 +0000
-Message-ID: <59a37842482b40ceb5e60c2155bca78c@NASANEXM01F.na.qualcomm.com> (sfid-20171114_184050_261011_A7AA8CBA)
-References: <1509554358-10473-1-git-send-email-jouni@qca.qualcomm.com>
- <1510664296.2030.22.camel@sipsolutions.net>
- <4927d2288442486788cd5b4d0492537a@NASANEXM01F.na.qualcomm.com>
- <1510669408.2030.23.camel@sipsolutions.net>
- <929d1fdb74524aeaab4959f84a82c732@NASANEXM01F.na.qualcomm.com>
- <1510669995.2030.26.camel@sipsolutions.net>
- <e540b35f76a447cab35f7267c09ee8f5@NASANEXM01F.na.qualcomm.com>
- <20171114163127.GA24453@jouni.qca.qualcomm.com>
-In-Reply-To: <20171114163127.GA24453@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+        Tue, 14 Nov 2017 01:54:43 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, bjorn.andersson@linaro.org,
+        nicolas.dechesne@linaro.org, Eyal Ilsar <eilsar@codeaurora.org>
+Subject: Re: [PATCH] wcn36xx: Set BTLE coexistence related configuration values to defaults
+References: <1510496506-4428-1-git-send-email-rfried@codeaurora.org>
+Date: Tue, 14 Nov 2017 08:54:37 +0200
+In-Reply-To: <1510496506-4428-1-git-send-email-rfried@codeaurora.org> (Ramon
+        Fried's message of "Sun, 12 Nov 2017 16:21:46 +0200")
+Message-ID: <871sl1jqoi.fsf@kamboji.qca.qualcomm.com> (sfid-20171114_075526_439100_4F4F961A)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Tue, Nov 14, 2017 at 02:39:31PM +0000, Peng Xu wrote:
-> > > I'm not even sure why this is necessary anyway though, do we really
-> > > think vendors will expect to be able to put vendor IEs inside the
-> > > subelements and override the ones outside?
-> > >
-> > > Is there even any point for the WFA ones? It seems WMM really ought
-> > > to be the same for all anyway, for example.
-> >
-> > I don't have any use case for such scenario. If vendor elements are
-> > unlikely to be present in subelement, this logic can be removed.
->=20
-> As far as WMM element is concerned, I'd note that IEEE 802.11 standard do=
-es
-> not list EDCA Parameter Set element as one of the items that has to be sa=
-me
-> for all the BSSs in a multiple BSSID set and as such, I'd consider it to =
-be
-> allowed behavior for an AP to advertise different WMM parameters for
-> different nontransmitted BSSIDs.
->=20
-> As far as other vendor specific elements are concerned, there could certa=
-inly
-> be use cases for using different values for WPA element, Hotspot 2.0
-> element, MBO/OCE element.
->=20
-Hi Jouni,
-As you pointed out the use cases for having vendor elements in MBSSID subel=
-ements, what is
-your suggestion to identify and process the vendor elements?=20
+Ramon Fried <rfried@codeaurora.org> writes:
 
-Thanks,
-Peng
+> From: Eyal Ilsar <eilsar@codeaurora.org>
+>
+> If the value for the firmware configuration parameters
+> BTC_STATIC_LEN_LE_BT and BTC_STATIC_LEN_LE_WLAN are not set the duty
+> cycle between BT and WLAN is such that if BT (including BLE) is active
+> WLAN gets 0 bandwidth. When tuning these parameters having a too high
+> value for WLAN means that BLE performance degrades. The "sweet" point
+> of roughly half of the maximal values was empirically found to achieve
+> a balance between BLE and Wi-Fi coexistence performance.
+>
+> Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
+> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+
+Then submit a new version of the patch then please include the version
+number:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
+
+So after fixing Bjorn's comments the next version should be v3.
+
+-- 
+Kalle Valo
