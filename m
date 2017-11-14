@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:32919 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750909AbdKIQNH (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54358 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755314AbdKNNZz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 11:13:07 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: =?utf-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        "make-wifi-fast@lists.bufferbloat.net"
-        <make-wifi-fast@lists.bufferbloat.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] ath10k: Re-enable TXQs for all devices
-Date: Thu, 9 Nov 2017 16:13:05 +0000
-Message-ID: <6112ae948ba2409da27709d01da567eb@NALASEXR01H.na.qualcomm.com> (sfid-20171109_171311_193348_CF2EBF28)
-References: <20171109071945.11033-1-toke@toke.dk>
-In-Reply-To: <20171109071945.11033-1-toke@toke.dk>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Tue, 14 Nov 2017 08:25:55 -0500
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 04/12] wil6210: abort properly in cfg suspend
+Date: Tue, 14 Nov 2017 15:25:36 +0200
+Message-Id: <1510665944-30198-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142603_337091_0CF5BCD8)
+In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBDb21taXQgNGNhMTgwNzgxNWFhNjgwMWFhY2VkN2ZkZWZhOWVkYWNjMjUyMTc2NyBkaXNhYmxl
-cyB0aGUgdXNlIG9mIHRoZQ0KPiBtYWM4MDIxMSBUWFFzIGZvciBzb21lIGRldmljZXMgYmVjYXVz
-ZSBvZiBhIHRoZW9yZXRpY2FsIHRocm91Z2hwdXQNCj4gcmVncmVzc2lvbi4gV2UgaGF2ZSBub3Qg
-c2VlbiB0aGlzIHJlZ3Jlc3Npb24gZm9yIGEgd2hpbGUgbm93LCBzbyBpdCBzaG91bGQgYmUNCj4g
-c2FmZSB0byByZS1lbmFibGUgVFhRcy4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFRva2UgSMO4aWxh
-bmQtSsO4cmdlbnNlbiA8dG9rZUB0b2tlLmRrPg0KPiAtLS0NCj4gVGhpcyBoYXMgYmVlbiBpbiBM
-RURFIHRydW5rIGZvciBhIGNvdXBsZSBvZiBtb250aHMgbm93IHdpdGggZ29vZCByZXN1bHRzLg0K
-Pg0KVG9rZSwNCiANCkdvb2QgdG8ga25vdyB0aGF0IHRoZSBwZXJmb3JtYW5jZSBkcm9wIGlzIG5v
-dCBzZWVuIHdpdGggdGhlIGNoaXBzIHRoYXQgZG9lcyBub3QNCmhhdmUgcHVzaC1wdWxsIHN1cHBv
-cnQuIFRoZSBpc3N1ZSB3YXMgb3JpZ2luYWxseSByZXBvcnRlZCB3aXRoIGFwMTUyICsgcWNhOTg4
-eA0KYnkgY29tbXVuaXR5IFsxXS4gSG9wZSB0aGlzIGNvbWJpbmF0aW9uIGlzIGFsc28gY29uc2lk
-ZXJlZCBpbiBMRURFLg0KDQotUmFqa3VtYXINCg0KWzFdIC0gaHR0cDovL2xpc3RzLmluZnJhZGVh
-ZC5vcmcvcGlwZXJtYWlsL2F0aDEway8yMDE2LUFwcmlsLzAwNzI2Ni5odG1sDQoNCg==
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+
+On-going operations were not aborted properly
+and required locks were not taken.
+
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 85d5c04..c3d3c0c 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1727,9 +1727,12 @@ static int wil_cfg80211_suspend(struct wiphy *wiphy,
+ 
+ 	wil_dbg_pm(wil, "suspending\n");
+ 
+-	wil_p2p_stop_discovery(wil);
+-
++	mutex_lock(&wil->mutex);
++	mutex_lock(&wil->p2p_wdev_mutex);
++	wil_p2p_stop_radio_operations(wil);
+ 	wil_abort_scan(wil, true);
++	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->mutex);
+ 
+ out:
+ 	return rc;
+-- 
+1.9.1
