@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:53246 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932694AbdKFTpV (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:5244 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752360AbdKNOje (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 14:45:21 -0500
-Received: by mail-io0-f194.google.com with SMTP id f20so16925116ioj.9
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Nov 2017 11:45:21 -0800 (PST)
+        Tue, 14 Nov 2017 09:39:34 -0500
+From: Peng Xu <pxu@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Sara Sharon" <sara.sharon@intel.com>
+Subject: RE: [RFC] cfg80211: Implement Multiple BSSID capability in scanning
+Date: Tue, 14 Nov 2017 14:39:31 +0000
+Message-ID: <e540b35f76a447cab35f7267c09ee8f5@NASANEXM01F.na.qualcomm.com> (sfid-20171114_153937_812097_A84CC6C4)
+References: <1509554358-10473-1-git-send-email-jouni@qca.qualcomm.com>
+         <1510664296.2030.22.camel@sipsolutions.net>
+         <4927d2288442486788cd5b4d0492537a@NASANEXM01F.na.qualcomm.com>
+         <1510669408.2030.23.camel@sipsolutions.net>
+         <929d1fdb74524aeaab4959f84a82c732@NASANEXM01F.na.qualcomm.com>
+ <1510669995.2030.26.camel@sipsolutions.net>
+In-Reply-To: <1510669995.2030.26.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20171029122816.8802-14-luca@coelho.fi>
-References: <20171029122816.8802-1-luca@coelho.fi> <20171029122816.8802-14-luca@coelho.fi>
-From: Kees Cook <keescook@chromium.org>
-Date: Mon, 6 Nov 2017 11:45:19 -0800
-Message-ID: <CAGXu5jLhCxwR1zntTYS_5X72kp-H8h++8PH-p5aKTC5oU-OaLw@mail.gmail.com> (sfid-20171106_204530_422719_15CD2187)
-Subject: Re: [PATCH 13/17] iwlwifi: mvm: Convert timers to use timer_setup()
-To: Luca Coelho <luca@coelho.fi>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 29, 2017 at 5:28 AM, Luca Coelho <luca@coelho.fi> wrote:
-> From: Kees Cook <keescook@chromium.org>
->
-> In preparation for unconditionally passing the struct timer_list pointer to
-> all timer callbacks, switch to using the new timer_setup() and from_timer()
-> to pass the timer pointer explicitly.
->
-> The RCU lifetime on baid_data is unclear, so this adds a direct copy of the
-> rcu_ptr passed to the original callback. It may be possible to improve this
-> to just use baid_data->mvm->baid_map[baid_data->baid] instead.
->
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Cc: Luca Coelho <luciano.coelho@intel.com>
-> Cc: Intel Linux Wireless <linuxwifi@intel.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Sara Sharon <sara.sharon@intel.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
->  drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 ++-
->  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  4 ++--
->  drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 18 +++++++++---------
->  3 files changed, 13 insertions(+), 12 deletions(-)
-
-Hi,
-
-Thanks for taking this! I had a question on timing: is this expected
-to land for 4.15? If not, I would like to take this via the timers
-tree, since it is one of the few remaining conversions.
-
-Thanks!
-
--Kees
-
--- 
-Kees Cook
-Pixel Security
+PiANCj4gUmlnaHQsIG5vdCByZWFsbHkuDQo+IA0KPiBJJ20gbm90IGV2ZW4gc3VyZSB3aHkgdGhp
+cyBpcyBuZWNlc3NhcnkgYW55d2F5IHRob3VnaCwgZG8gd2UgcmVhbGx5IHRoaW5rDQo+IHZlbmRv
+cnMgd2lsbCBleHBlY3QgdG8gYmUgYWJsZSB0byBwdXQgdmVuZG9yIElFcyBpbnNpZGUgdGhlIHN1
+YmVsZW1lbnRzIGFuZA0KPiBvdmVycmlkZSB0aGUgb25lcyBvdXRzaWRlPw0KPiANCj4gSXMgdGhl
+cmUgZXZlbiBhbnkgcG9pbnQgZm9yIHRoZSBXRkEgb25lcz8gSXQgc2VlbXMgV01NIHJlYWxseSBv
+dWdodCB0byBiZQ0KPiB0aGUgc2FtZSBmb3IgYWxsIGFueXdheSwgZm9yIGV4YW1wbGUuDQo+IA0K
+DQpJIGRvbid0IGhhdmUgYW55IHVzZSBjYXNlIGZvciBzdWNoIHNjZW5hcmlvLiBJZiB2ZW5kb3Ig
+ZWxlbWVudHMgYXJlIHVubGlrZWx5IHRvDQpiZSBwcmVzZW50IGluIHN1YmVsZW1lbnQsIHRoaXMg
+bG9naWMgY2FuIGJlIHJlbW92ZWQuDQoNClRoYW5rcywNClBlbmcNCg==
