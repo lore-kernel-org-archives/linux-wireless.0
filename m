@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:43907 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751377AbdK2C5e (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45812 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754289AbdKOQw4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Nov 2017 21:57:34 -0500
-Subject: Re: [PATCH] ath10k: handling qos at STA side based on AP WMM
- enable/disable
-To: bpothuno@qti.qualcomm.com, ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com> (sfid-20171129_035738_204823_323754C3)
-Date: Wed, 29 Nov 2017 03:57:31 +0100
-MIME-Version: 1.0
-In-Reply-To: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 15 Nov 2017 11:52:56 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 15 Nov 2017 18:52:39 +0200
+Message-Id: <20171115165242.21675-1-luca@coelho.fi> (sfid-20171115_175304_204989_F6BFFD8D)
+Subject: [PATCH 0/3] iwlwifi: fixes intended for 4.15 2017-11-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-did you notice  that Marvell 88W8964 based clients will crash 10.4-3.5.3 
-firmwares?  (tested with 9984 and 10.4-3.5.3-00038)
-client device was a linksys wrt3200acm running dd-wrt for testing
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Am 28.11.2017 um 11:07 schrieb bpothuno@qti.qualcomm.com:
-> From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
->
-> Data packets are not sent by STA in case of STA joined to
-> non QOS AP (WMM disabled AP). This is happening because of STA
-> is sending data packets to firmware from host with qos enabled
-> along with non qos queue value(TID = 16).
-> Due to qos enabled, firmware is discarding the packet.
->
-> This patch fixes this issue by updating the qos based on station
-> WME capability field if WMM is disabled in AP.
->
-> This patch is required by 10.4 family chipsets like
-> QCA4019/QCA9888/QCA9884/QCA99X0.
-> Firmware Versoin : 10.4-3.5.1-00018.
->
-> For 10.2.4 family chipsets QCA988X/QCA9887 and QCA6174 this patch
-> has no effect.
->
-> Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath10k/mac.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 0a947ee..2616b99 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -2563,7 +2563,7 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
->   		}
->   		break;
->   	case WMI_VDEV_TYPE_STA:
-> -		if (vif->bss_conf.qos)
-> +		if (sta->wme)
->   			arg->peer_flags |= arvif->ar->wmi.peer_flags->qos;
->   		break;
->   	case WMI_VDEV_TYPE_IBSS:
+Hi,
 
+This is the first batch of fixes intended for 4.15.  This are
+important fixes that solve problems with the new -34.ucode firmware
+that was published for 8000 series devices and problems with
+unrecognized 9000 series devices.  There is also one fix for the
+firmware name strings we export to modinfo.
+
+These are the fixes:
+
+* Support new FW API version of scan cmd (used in FW version 34);
+* Add a bunch of PCI IDs and fix configuration structs for A000
+  devices;
+* Fix the exported firmware name strings for 9000 and A000 devices;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+Luca Coelho (2):
+  iwlwifi: mvm: support version 7 of the SCAN_REQ_UMAC FW command
+  iwlwifi: fix PCI IDs and configuration mapping for 9000 series
+
+Thomas Backlund (1):
+  iwlwifi: fix firmware names for 9000 and A000 series hw
+
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c    |  73 +++++++++++--
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c    |  10 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/scan.h |  59 +++++++---
+ drivers/net/wireless/intel/iwlwifi/fw/file.h     |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |   6 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c    |  86 +++++++++++----
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c    | 132 ++++++++++++++++++-----
+ 7 files changed, 291 insertions(+), 76 deletions(-)
 
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+2.15.0
