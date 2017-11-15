@@ -1,171 +1,301 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:36291 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752951AbdK3NSv (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45838 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932460AbdKOQxA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Nov 2017 08:18:51 -0500
-Received: by mail-wm0-f52.google.com with SMTP id b76so12414699wmg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Nov 2017 05:18:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1511689749.4011.357.camel@coelho.fi>
-References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
- <1509434718.4492.195.camel@coelho.fi> <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
- <1509952948.4492.360.camel@coelho.fi> <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
- <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
- <1510825750.4011.179.camel@coelho.fi> <CAB4CAwfg73wRoNca2GBaMn4eN04vf+uR3xdzYO0UWG1Nmaqo=w@mail.gmail.com>
- <1510901207.4011.197.camel@coelho.fi> <CAB4CAwcit2jqHXs7x2cowHdi31OH3wKnmyW4=v-6RGO-+1gjog@mail.gmail.com>
- <CAB4CAwdZHwC0kiaGU5A1u_P8y0anw58o6KiOXAWbjwUtB=uLuQ@mail.gmail.com> <1511689749.4011.357.camel@coelho.fi>
-From: Chris Chiu <chiu@endlessm.com>
-Date: Thu, 30 Nov 2017 21:18:49 +0800
-Message-ID: <CAB4CAwf6uBbMgT_=Qb5uo+2g_sNSLdRhnjJt-C9vB6OgSjphyg@mail.gmail.com> (sfid-20171130_141920_725841_BDCFAB74)
-Subject: Re: [linuxwifi] Need support for Intel new wifi module 9462NGW
-To: Luca Coelho <luca@coelho.fi>
-Cc: johannes.berg@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 15 Nov 2017 11:53:00 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
+Date: Wed, 15 Nov 2017 18:52:41 +0200
+Message-Id: <20171115165242.21675-3-luca@coelho.fi> (sfid-20171115_175311_112043_30784A2E)
+In-Reply-To: <20171115165242.21675-1-luca@coelho.fi>
+References: <20171115165242.21675-1-luca@coelho.fi>
+Subject: [PATCH 2/3] iwlwifi: fix PCI IDs and configuration mapping for 9000 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
-    I got another machine which has Intel 9461NGW (31dc:0264) and
-stuck at the same problem. I can't see the DHCP response on the air.
-However, the router does respond to the DHCP discover. Please check
-the following tcpdump here. The 9461's mac address is
-60:f6:77:9a:f4:ed
-https://gist.github.com/mschiu77/8f613ba6e3c41a3bd5206f1e903b0bbd
+From: Luca Coelho <luciano.coelho@intel.com>
 
-    Then I go to AP and do tcpdump, I can still see the DHCP reply
-packet on the corresponding interface. Don't know why can't I see this
-packet on the air? maybe wrong channel?
+A lot of PCI IDs were missing and there were some problems with the
+configuration and firmware selection for devices on the 9000 series.
+Fix the firmware selection by adding files for the B-steps; add
+configuration for some integrated devices; and add a bunch of PCI IDs
+(mostly for integrated devices) that were missing from the driver's
+list.
 
-Chris
+Without this patch, a lot of devices will not be recognized or will
+try to load the wrong firmware file.
 
-On Sun, Nov 26, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Wed, 2017-11-22 at 21:48 +0800, Chris Chiu wrote:
->> On Fri, Nov 17, 2017 at 3:38 PM, Chris Chiu <chiu@endlessm.com>
->> wrote:
->> > On Fri, Nov 17, 2017 at 2:46 PM, Luca Coelho <luca@coelho.fi>
->> > wrote:
->> > > On Fri, 2017-11-17 at 14:39 +0800, Chris Chiu wrote:
->> > > > On Thu, Nov 16, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi>
->> > > > wrote:
->> > > > > Hi Chris,
->> > > > >
->> > > > > On Thu, 2017-11-09 at 11:11 +0800, Chris Chiu wrote:
->> > > > > > Hi Luca,
->> > > > > >     Any suggestion for the "Failed to start INIT ucode:
->> > > > > > -110"
->> > > > > > issue
->> > > > > > for the firmware?
->> > > > >
->> > > > > There were a few problems which should now be fixed.  We
->> > > > > published
->> > > > > new
->> > > > > firmwares in our linux-firmware.git tree[1] and also made
->> > > > > some
->> > > > > fixes in
->> > > > > the driver[2].  Please update your system accordingly and let
->> > > > > me
->> > > > > know
->> > > > > if it works for you.
->> > > > >
->> > > > > Thanks!
->> > > > >
->> > > > > [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/l
->> > > > > inux-f
->> > > > > irmware.git/
->> > > > > [2] https://patchwork.kernel.org/patch/10059871/
->> > > > >     https://patchwork.kernel.org/patch/10059875/
->> > > > >     https://patchwork.kernel.org/patch/10059873/
->> > > > >
->> > > > > --
->> > > > > Cheers,
->> > > > > Luca.
->> > > >
->> > > > Hi Luca,
->> > >
->> > > Hi Chris,
->> > >
->> > >
->> > > >     Thanks for your patch and updated firmware. The driver can
->> > > > initialize w/o error now. However, it always fails on ip-config
->> > > > after
->> > > > 4-way handshake complete. I have to mention that I removed the
->> > > > field
->> > > > ".soc_latency" in all new iwl_cfg you added in
->> > > > https://patchwork.kernel.org/patch/10059875/ to remove compile
->> > > > error
->> > > > based on the linux mainline 4.14.
->> > > >     I don't know whether if this causes the problem. Do you
->> > > > need me
->> > > > to
->> > > > do anything for more information?
->> > >
->> > > That was my fault, I forgot to include one file in my commit.  I
->> > > have
->> > > sent v2 of the two last patches to solve the problem.  Can you
->> > > try
->> > > them?
->> > >
->> > > The problem you're seeing could be related to that, because we
->> > > use a
->> > > bit longer wait period for HW stabilization with integrated
->> > > devices.
->> > > And if you remove it, you may encounter random problems...
->> > >
->> > > --
->> > > Cheers,
->> > > Luca.
->> >
->> > Hi Luca,
->> >     Thanks for your quick response. I  tried your v2 patch but
->> > things
->> > remain the same. The signal strength and scan results seems nothing
->> > wrong but still fail to get ip from DHCP server. Please let me know
->> > what I can help here.
->> >
->> > Chris
->>
->> Hi Luca,
->>     Some more observation I want to point out and maybe you can
->> suggest.
->> After your v2 patch and the latest firmware. I'm pretty sure there's
->> no problem
->> on my 9462NGW module to associate to an AP (4-way handshaking
->> complete)
->> dmesg in https://gist.github.com/mschiu77/1fe1f5128f1c49a93055ce23976
->> c09b5
->> here also shows
->> [   59.338785] wlp0s12f0: associated
->>
->> Then I do air sniffer with my mac book air and only dump DHCP packets
->> in
->> https://gist.github.com/mschiu77/677b5fbfdea0fea2eda4a36a84bcac8e
->>
->> As you see, 4 DHCP Discovery here but no response. I do the same
->> thing on
->> the other laptop to associate to the same AP SSID, there's no
->> problem.
->>
->> And yet another interesting thing is, every time I was trying to
->> associate
->> The ifconfig always give me a totally different ether address. I log
->> 5 times in
->> https://gist.github.com/mschiu77/54169d52b9fcf205d5c26752988f8a3d
->>
->> The read HW address should be 34:13:e8:6f:34:25 and it's also true in
->> tcpdump
->> log.
->>
->> I think maybe it's related. Can you suggest anything that I can try?
->
-> Hey Chris,
->
-> Thanks for the update and sorry for the delay.  I'll take a look into
-> this in the coming week, there's probably something missing in the
-> driver that is causing this issue...
->
-> --
-> Cheers,
-> Luca.
+Cc: stable@vger.kernel.org # 4.13
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  73 ++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 132 ++++++++++++++++++++------
+ 2 files changed, 168 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index af7c4f36b66f..e7e75b458005 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -72,18 +72,21 @@
+ #define IWL9000_SMEM_OFFSET		0x400000
+ #define IWL9000_SMEM_LEN		0x68000
+ 
+-#define  IWL9000_FW_PRE "iwlwifi-9000-pu-a0-jf-a0-"
++#define  IWL9000A_FW_PRE "iwlwifi-9000-pu-a0-jf-a0-"
++#define  IWL9000B_FW_PRE "iwlwifi-9000-pu-b0-jf-b0-"
+ #define  IWL9000RFB_FW_PRE "iwlwifi-9000-pu-a0-jf-b0-"
+ #define  IWL9260A_FW_PRE "iwlwifi-9260-th-a0-jf-a0-"
+ #define  IWL9260B_FW_PRE "iwlwifi-9260-th-b0-jf-b0-"
+-#define IWL9000_MODULE_FIRMWARE(api) \
+-	IWL9000_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL9000A_MODULE_FIRMWARE(api) \
++	IWL9000A_FW_PRE __stringify(api) ".ucode"
++#define IWL9000B_MODULE_FIRMWARE(api) \
++	IWL9000B_FW_PRE __stringify(api) ".ucode"
+ #define IWL9000RFB_MODULE_FIRMWARE(api) \
+-	IWL9000RFB_FW_PRE "-" __stringify(api) ".ucode"
++	IWL9000RFB_FW_PRE __stringify(api) ".ucode"
+ #define IWL9260A_MODULE_FIRMWARE(api) \
+-	IWL9260A_FW_PRE "-" __stringify(api) ".ucode"
++	IWL9260A_FW_PRE __stringify(api) ".ucode"
+ #define IWL9260B_MODULE_FIRMWARE(api) \
+-	IWL9260B_FW_PRE "-" __stringify(api) ".ucode"
++	IWL9260B_FW_PRE __stringify(api) ".ucode"
+ 
+ #define NVM_HW_SECTION_NUM_FAMILY_9000		10
+ 
+@@ -194,7 +197,48 @@ const struct iwl_cfg iwl9460_2ac_cfg = {
+ 	.nvm_ver = IWL9000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
++const struct iwl_cfg iwl9460_2ac_cfg_soc = {
++	.name = "Intel(R) Dual Band Wireless AC 9460",
++	.fw_name_pre = IWL9000A_FW_PRE,
++	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
++	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
++	IWL_DEVICE_9000,
++	.ht_params = &iwl9000_ht_params,
++	.nvm_ver = IWL9000_NVM_VERSION,
++	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+ 	.integrated = true,
++	.soc_latency = 5000,
++};
++
++const struct iwl_cfg iwl9461_2ac_cfg_soc = {
++		.name = "Intel(R) Dual Band Wireless AC 9461",
++		.fw_name_pre = IWL9000A_FW_PRE,
++		.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
++		.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
++		IWL_DEVICE_9000,
++		.ht_params = &iwl9000_ht_params,
++		.nvm_ver = IWL9000_NVM_VERSION,
++		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++		.integrated = true,
++		.soc_latency = 5000,
++};
++
++const struct iwl_cfg iwl9462_2ac_cfg_soc = {
++		.name = "Intel(R) Dual Band Wireless AC 9462",
++		.fw_name_pre = IWL9000A_FW_PRE,
++		.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
++		.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
++		IWL_DEVICE_9000,
++		.ht_params = &iwl9000_ht_params,
++		.nvm_ver = IWL9000_NVM_VERSION,
++		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++		.integrated = true,
++		.soc_latency = 5000,
+ };
+ 
+ const struct iwl_cfg iwl9560_2ac_cfg = {
+@@ -206,10 +250,23 @@ const struct iwl_cfg iwl9560_2ac_cfg = {
+ 	.nvm_ver = IWL9000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+-	.integrated = true,
+ };
+ 
+-MODULE_FIRMWARE(IWL9000_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
++const struct iwl_cfg iwl9560_2ac_cfg_soc = {
++	.name = "Intel(R) Dual Band Wireless AC 9560",
++	.fw_name_pre = IWL9000A_FW_PRE,
++	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
++	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
++	IWL_DEVICE_9000,
++	.ht_params = &iwl9000_ht_params,
++	.nvm_ver = IWL9000_NVM_VERSION,
++	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++	.integrated = true,
++	.soc_latency = 5000,
++};
++MODULE_FIRMWARE(IWL9000A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL9000B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL9000RFB_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL9260A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL9260B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 4a21c12276d7..f21fe59faccf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -535,47 +535,121 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x2526, 0x0238, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x023C, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0260, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0264, iwl9461_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x02A0, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x02A4, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1010, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1210, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1610, iwl9270_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x4010, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x4030, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x40A4, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0xA014, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x42A4, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0034, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0038, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x003C, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x0034, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x0038, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x003C, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x271B, 0x0214, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0034, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0038, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x003C, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0060, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x0230, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0234, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0238, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x023C, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x4030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x40A4, iwl9462_2ac_cfg_soc)},
+ 
+ /* a000 Series */
+ 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr_cdb)},
+-- 
+2.15.0
