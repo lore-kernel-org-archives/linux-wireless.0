@@ -1,98 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44780 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750729AbdKFKiO (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45878 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751572AbdKORt5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 05:38:14 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com
-Subject: Re: pull-request: iwlwifi-next 2017-11-03
-References: <1509703364.4492.350.camel@coelho.fi>
-Date: Mon, 06 Nov 2017 12:38:10 +0200
-In-Reply-To: <1509703364.4492.350.camel@coelho.fi> (Luca Coelho's message of
-        "Fri, 03 Nov 2017 12:02:44 +0200")
-Message-ID: <87k1z3k7zh.fsf@codeaurora.org> (sfid-20171106_113818_247973_345CA4E2)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 15 Nov 2017 12:49:57 -0500
+Message-ID: <1510768192.4011.126.camel@coelho.fi> (sfid-20171115_185000_275512_0E2BE5DF)
+From: Luca Coelho <luca@coelho.fi>
+To: Kyle McMartin <kyle@infradead.org>, ben@decadent.org.uk
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>,
+        linux-firmware@kernel.org,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Date: Wed, 15 Nov 2017 19:49:52 +0200
+In-Reply-To: <1510767968.4011.124.camel@coelho.fi>
+References: <1510767968.4011.124.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi firmwares update 2017-11-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Hi Ben,
 
-> Here's the final set of patches intended for v4.15.  It's not too
-> important to get them into v4.15 if there is no time anymore.  There
-> are a few new PCI IDs that can be added in the rc series or stable
-> (they need to go to other stable releases anyway).  And there's also
-> one bugfix that I could also send to rc.  The rest are just cleanups,
-> improvements or related to the A000 series.  Let me know how it goes
-> and I'll adapt if needed.
->
-> I have sent this out before and kbuildbot reported success.
->
-> Please let me know if there are any issues.
+I'm adding you here explicitly since you've been pushing stuff to the
+linux-firmware.git tree more recently. ;)
 
-As you know we got one more week before the merge window starts, so I
-should get this to v4.15.
+--
+Luca.
 
-> The following changes since commit e226fb5affccca98c405de80527180224d93d251:
->
->   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2017-11-02 19:48:25 +0200)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2017-11-03
->
-> for you to fetch changes up to 57b36f7fcb39c5eae8c1f463699f747af69643ba:
->
->   iwlwifi: add new cards for a000 series (2017-11-03 11:56:10 +0200)
->
+On Wed, 2017-11-15 at 19:46 +0200, Luca Coelho wrote:
+> Hi Kyle,
+> 
+> This pull-request supersedes my previous one.
+> 
+> I have updated the firmwares for the 3160, 3168, 7260, 7265D, 8000C
+> and
+> 8265 devices and added new FW versions for 8000C, 8265 and the new
+> 9000
+> series.
+> 
+> Please pull or let me know if there are any issues.
+> 
+> Cheers,
+> Luca.
+> 
+> 
+> The following changes since commit
+> bf04291309d3169c0ad3b8db52564235bbd08e30:
+> 
+>   WHENCE: Add new qed firmware (2017-10-09 18:03:26 +0100)
+> 
+> are available in the Git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-
+> firmware.git tags/iwlwifi-fw-2017-11-15
+> 
+> for you to fetch changes up to
+> 85313b4aa4ef0c2ce41bbd0ffdb9b03363256f28:
+> 
+>   iwlwifi: add firmware version 34 for new 9000 series (2017-11-15
+> 19:21:16 +0200)
+> 
 > ----------------------------------------------------------------
-> iwlwifi updates
->
-> * Some new PCI IDs;
-> * A bunch of cleanups;
-> * The timers update by Kees;
-> * Add more register dump call-sites;
-> * A fix for a locking issue in the TX flush code;
-> * Actual implementation of the TX flush code for A000;
-> * An optimization to drop RX frames during restart to avoid BA issues;
->
+> iwlwifi: add new FWs for 9000 series and update other ones
+> 
+> * Add FW version 33 for 9000 series;
+> * Add FW version 34 for 8000, 8265 and 9000 series;
+> * Update FW version 17 for 3160, 7260 and 7265;
+> * Update FW version 29 for 3168 and 7265D;
+> 
 > ----------------------------------------------------------------
-> Emmanuel Grumbach (3):
->       iwlwifi: mvm: rs: remove the ANT C from the toogle antenna logic
->       iwlwifi: remove dead code for internal devices only
->       iwlwifi: remove host assisted paging
->
-> Ihab Zhaika (3):
->       iwlwifi: add new cards for 8260 series
->       iwlwifi: add new cards for 8265 series
->       iwlwifi: add new cards for a000 series
->
-> Kees Cook (1):
->       iwlwifi: mvm: Convert timers to use timer_setup()
->
-> Kirtika Ruchandani (1):
->       iwlwifi: Add more call-sites for pcie reg dumper
->
-> Liad Kaufman (1):
->       iwlwifi: mvm: reset seq num after restart
->
-> Luca Coelho (1):
->       iwlwifi: mvm: hold mutex when flushing in iwl_mvm_flush_no_vif()
->
-> Sara Sharon (6):
->       iwlwifi: mvm: use RS macro instead of duplicating the code
->       iwlwifi: mvm: cleanup references to aggregation count limit
->       iwlwifi: mvm: improve latency when there is a reorder timeout
->       iwlwifi: fix multi queue notification for a000 devices
->       iwlwifi: mvm: refactor iwl_mvm_flush_no_vif
->       iwlwifi: mvm: add missing implementation of flush for a000 devices
->
-> Shahar S Matityahu (1):
->       iwlwifi: drop RX frames during hardware restart
-
-Pulled, thanks.
-
--- 
-Kalle Valo
+> Luca Coelho (5):
+>       iwlwifi: update firmwares for 3160, 3168, 7265D, 8000C and 8265
+>       iwlwifi: update firmwares for 3160, 3168, 7260, 7265 and 7265D
+>       iwlwifi: add new firmware version 34 for 8000C and 8265
+>       iwlwifi: add firmware version 33 for new 9000 series
+>       iwlwifi: add firmware version 34 for new 9000 series
+> 
+>  WHENCE                            |  32 +++++++++++++++++++++++++---
+> ----
+>  iwlwifi-3160-17.ucode             | Bin 918268 -> 918268 bytes
+>  iwlwifi-3168-29.ucode             | Bin 1036372 -> 1036372 bytes
+>  iwlwifi-7260-17.ucode             | Bin 1049340 -> 1049340 bytes
+>  iwlwifi-7265-17.ucode             | Bin 1180412 -> 1180412 bytes
+>  iwlwifi-7265D-29.ucode            | Bin 1036528 -> 1036528 bytes
+>  iwlwifi-8000C-31.ucode            | Bin 2309768 -> 2310116 bytes
+>  iwlwifi-8000C-34.ucode            | Bin 0 -> 2448976 bytes
+>  iwlwifi-8265-31.ucode             | Bin 2303024 -> 2307104 bytes
+>  iwlwifi-8265-34.ucode             | Bin 0 -> 2440780 bytes
+>  iwlwifi-9000-pu-b0-jf-b0-33.ucode | Bin 0 -> 2632620 bytes
+>  iwlwifi-9000-pu-b0-jf-b0-34.ucode | Bin 0 -> 2677620 bytes
+>  iwlwifi-9260-th-b0-jf-b0-33.ucode | Bin 0 -> 2637216 bytes
+>  iwlwifi-9260-th-b0-jf-b0-34.ucode | Bin 0 -> 2677772 bytes
+>  14 files changed, 25 insertions(+), 7 deletions(-)
+>  create mode 100644 iwlwifi-8000C-34.ucode
+>  create mode 100644 iwlwifi-8265-34.ucode
+>  create mode 100644 iwlwifi-9000-pu-b0-jf-b0-33.ucode
+>  create mode 100644 iwlwifi-9000-pu-b0-jf-b0-34.ucode
+>  create mode 100644 iwlwifi-9260-th-b0-jf-b0-33.ucode
+>  create mode 100644 iwlwifi-9260-th-b0-jf-b0-34.ucode
