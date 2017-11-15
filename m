@@ -1,72 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f175.google.com ([209.85.216.175]:48319 "EHLO
-        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752323AbdKOKNV (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:43333 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755084AbdKOH2s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 05:13:21 -0500
-Received: by mail-qt0-f175.google.com with SMTP id f8so33118444qta.5
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Nov 2017 02:13:20 -0800 (PST)
-Subject: Re: mesh point and ap mode on same interface
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Peter Oh <peter.oh@bowerswilkins.com>
-References: <e6b02c56-38c7-323e-2bc9-e2b4276b654c@tu-bs.de>
- <cc8baced-bd74-5703-d885-6ec444eb62ce@candelatech.com>
- <43bf6a27-be58-35e4-26fa-5e6b380353ac@bowerswilkins.com>
- <7dc592a5-9381-f715-6ea7-0a8b8deee311@tu-bs.de>
- <CADjYELwdUxEap_z=_HD4DS4FEQ2_2HP3w9cvDU-BTFLoOTDipg@mail.gmail.com>
- <5c04c7fe-8cf8-ddd8-d6a7-f42629586a63@bowerswilkins.com>
- <067d234a-59f0-4175-55af-9354617057b9@tu-bs.de>
- <61192d3b-b4c7-f47e-2ff9-44e17595d6a9@bowerswilkins.com>
- <fc1993f5-8b83-4e74-7866-2adcf318ff5f@tu-bs.de>
- <03700343-7b5c-b21e-8b7b-2ac8c7d3258b@bowerswilkins.com>
- <87po8jhncx.fsf@kamboji.qca.qualcomm.com>
-Cc: "Harms, Hannes" <hannes.harms@tu-bs.de>,
-        Ben Greear <greearb@candelatech.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A0C133E.8080305@broadcom.com> (sfid-20171115_111325_840658_9A1DF4EF)
-Date: Wed, 15 Nov 2017 11:13:18 +0100
-MIME-Version: 1.0
-In-Reply-To: <87po8jhncx.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Wed, 15 Nov 2017 02:28:48 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [PATCH 7/8] rsi: add module parameter operating mode
+Date: Wed, 15 Nov 2017 12:50:43 +0530
+Message-Id: <1510730444-3237-8-git-send-email-amitkarwar@gmail.com> (sfid-20171115_082856_193525_FBB0E0D5)
+In-Reply-To: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
+References: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2017 11:01 AM, Kalle Valo wrote:
-> (adding linux-wireless for a cfg80211 question)
->
-> Peter Oh <peter.oh@bowerswilkins.com> writes:
->> On 11/08/2017 04:49 AM, Harms, Hannes wrote:
->>
->>> I found a solution for the problem:
->>>
->>> When joining the mesh with beacon interval  set  to 100
->>> both  mesh and ap interface are coming up.
->>>
->>>> iw mesh0 mesh join my_mesh beacon-interval 100
->>>
->>> The default beacon interval is 1000 for mesh interfaces.
->>> It seems that QCA9880 is not working
->>> with different beacon intervals for ap + mesh.
->>
->> Good to hear that working. But mesh beacon interval 1000 which is
->> default value should work. Any mesh beacon intervals of multiple of AP
->> beacon intervals are supposed to work.
->>
->> (In other words, mesh beacon intervals that are not aligned by
->> multiple of AP beacon intervals won't work). These are valid for both
->> of QCA9880 and QCA4019 as far as I know.
->
-> It would be nice if ath10k could print a warning if the beacon intervals
-> are not compatible. Or is there a way to enforce the beacon interval
-> with help of cfg80211 or mac80211?
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-There is beacon interval checking in utility function 
-cfg80211_check_combinations() ->
-cfg80211_iter_combinations() -> cfg80211_calculate_bi_data() for that. 
-However, it seems brcmfmac is the only user of that function according 
-to lxr (or elixir).
+Operating mode determines the support for other protocols.
+This is made as module parameter for better usage.
 
-Regards,
-Arend
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_main.c | 58 ++++++++++++++++++++++++++++-----
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 10 +++++-
+ drivers/net/wireless/rsi/rsi_91x_usb.c  | 10 +++++-
+ drivers/net/wireless/rsi/rsi_common.h   |  2 +-
+ drivers/net/wireless/rsi/rsi_hal.h      | 11 +++++++
+ 5 files changed, 80 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 00f54c5..084b779 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -69,8 +69,24 @@ EXPORT_SYMBOL_GPL(rsi_dbg);
+ static char *opmode_str(int oper_mode)
+ {
+ 	switch (oper_mode) {
+-	case RSI_DEV_OPMODE_WIFI_ALONE:
++	case DEV_OPMODE_WIFI_ALONE:
+ 		return "Wi-Fi alone";
++	case DEV_OPMODE_BT_ALONE:
++		return "BT EDR alone";
++	case DEV_OPMODE_BT_LE_ALONE:
++		return "BT LE alone";
++	case DEV_OPMODE_BT_DUAL:
++		return "BT Dual";
++	case DEV_OPMODE_STA_BT:
++		return "Wi-Fi STA + BT EDR";
++	case DEV_OPMODE_STA_BT_LE:
++		return "Wi-Fi STA + BT LE";
++	case DEV_OPMODE_STA_BT_DUAL:
++		return "Wi-Fi STA + BT DUAL";
++	case DEV_OPMODE_AP_BT:
++		return "Wi-Fi AP + BT EDR";
++	case DEV_OPMODE_AP_BT_DUAL:
++		return "Wi-Fi AP + BT DUAL";
+ 	}
+ 
+ 	return "Unknown";
+@@ -278,7 +294,7 @@ void *rsi_get_bt_context(void *priv)
+  *
+  * Return: Pointer to the adapter structure on success, NULL on failure .
+  */
+-struct rsi_hw *rsi_91x_init(void)
++struct rsi_hw *rsi_91x_init(u16 oper_mode)
+ {
+ 	struct rsi_hw *adapter = NULL;
+ 	struct rsi_common *common = NULL;
+@@ -320,11 +336,34 @@ struct rsi_hw *rsi_91x_init(void)
+ 	spin_lock_init(&adapter->ps_lock);
+ 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
+ 	init_completion(&common->wlan_init_completion);
++	common->oper_mode = oper_mode;
+ 	common->init_done = true;
+-
+-	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
+-	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
+ 	adapter->device_model = RSI_DEV_9113;
++
++	/* Determine coex mode */
++	switch (common->oper_mode) {
++	case DEV_OPMODE_STA_BT_DUAL:
++	case DEV_OPMODE_STA_BT:
++	case DEV_OPMODE_STA_BT_LE:
++	case DEV_OPMODE_BT_ALONE:
++	case DEV_OPMODE_BT_LE_ALONE:
++	case DEV_OPMODE_BT_DUAL:
++		common->coex_mode = 2;
++		break;
++	case DEV_OPMODE_AP_BT_DUAL:
++	case DEV_OPMODE_AP_BT:
++		common->coex_mode = 4;
++		break;
++	case DEV_OPMODE_WIFI_ALONE:
++		common->coex_mode = 1;
++		break;
++	default:
++		common->oper_mode = 1;
++		common->coex_mode = 1;
++	}
++	rsi_dbg(INFO_ZONE, "%s: oper_mode = %d, coex_mode = %d\n",
++		__func__, common->oper_mode, common->coex_mode);
++
+ 	if (common->coex_mode > 1) {
+ 		if (rsi_coex_attach(common)) {
+ 			rsi_dbg(ERR_ZONE, "Failed to init coex module\n");
+@@ -359,10 +398,13 @@ void rsi_91x_deinit(struct rsi_hw *adapter)
+ 	for (ii = 0; ii < NUM_SOFT_QUEUES; ii++)
+ 		skb_queue_purge(&common->tx_queue[ii]);
+ 
+-	common->init_done = false;
+-
+-	if (common->coex_mode > 1)
++	if (common->coex_mode > 1) {
+ 		rsi_coex_detach(common);
++		if (g_proto_ops.bt_ops->detach)
++			g_proto_ops.bt_ops->detach(common->bt_adapter);
++	}
++
++	common->init_done = false;
+ 
+ 	kfree(common);
+ 	kfree(adapter->rsi_dev);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index ba38c6d..5722736 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -21,6 +21,14 @@
+ #include "rsi_coex.h"
+ #include "rsi_hal.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
+  * @rw: Read/write
+@@ -926,7 +934,7 @@ static int rsi_probe(struct sdio_func *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index b09c7da..a30305e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -21,6 +21,14 @@
+ #include "rsi_hal.h"
+ #include "rsi_coex.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_usb_card_write() - This function writes to the USB Card.
+  * @adapter: Pointer to the adapter structure.
+@@ -708,7 +716,7 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index 4616585..d9ff3b8 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -81,7 +81,7 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
+ 
+ void rsi_mac80211_detach(struct rsi_hw *hw);
+ u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
+-struct rsi_hw *rsi_91x_init(void);
++struct rsi_hw *rsi_91x_init(u16 oper_mode);
+ void rsi_91x_deinit(struct rsi_hw *adapter);
+ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
+ #ifdef CONFIG_PM
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index e712223..a7d3011 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -17,6 +17,17 @@
+ #ifndef __RSI_HAL_H__
+ #define __RSI_HAL_H__
+ 
++/* Device Operating modes */
++#define DEV_OPMODE_WIFI_ALONE		1
++#define DEV_OPMODE_BT_ALONE		4
++#define DEV_OPMODE_BT_LE_ALONE		8
++#define DEV_OPMODE_BT_DUAL		12
++#define DEV_OPMODE_STA_BT		5
++#define DEV_OPMODE_STA_BT_LE		9
++#define DEV_OPMODE_STA_BT_DUAL		13
++#define DEV_OPMODE_AP_BT		6
++#define DEV_OPMODE_AP_BT_DUAL		14
++
+ #define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
+ #define FLASH_SECTOR_SIZE		(4 * 1024)
+ 
+-- 
+2.7.4
