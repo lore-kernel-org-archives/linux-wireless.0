@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48650 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751344AbdKHKhg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 05:37:36 -0500
-Date: Wed, 8 Nov 2017 11:37:30 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Richard Genoud <richard.genoud@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
-Message-ID: <20171108103729.GA2641@redhat.com> (sfid-20171108_113759_635287_BEB66ED2)
-References: <1509983829.10974.2.camel@gmail.com>
- <20171107085327.GA11380@redhat.com>
- <CACQ1gAi6XtjCHPji3BP71jDG7srg+BshesviasXiSqnw2zs9_Q@mail.gmail.com>
- <20171107101320.GA12140@redhat.com>
- <1510052483.24015.1.camel@gmail.com>
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:48319 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752323AbdKOKNV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Nov 2017 05:13:21 -0500
+Received: by mail-qt0-f175.google.com with SMTP id f8so33118444qta.5
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Nov 2017 02:13:20 -0800 (PST)
+Subject: Re: mesh point and ap mode on same interface
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Peter Oh <peter.oh@bowerswilkins.com>
+References: <e6b02c56-38c7-323e-2bc9-e2b4276b654c@tu-bs.de>
+ <cc8baced-bd74-5703-d885-6ec444eb62ce@candelatech.com>
+ <43bf6a27-be58-35e4-26fa-5e6b380353ac@bowerswilkins.com>
+ <7dc592a5-9381-f715-6ea7-0a8b8deee311@tu-bs.de>
+ <CADjYELwdUxEap_z=_HD4DS4FEQ2_2HP3w9cvDU-BTFLoOTDipg@mail.gmail.com>
+ <5c04c7fe-8cf8-ddd8-d6a7-f42629586a63@bowerswilkins.com>
+ <067d234a-59f0-4175-55af-9354617057b9@tu-bs.de>
+ <61192d3b-b4c7-f47e-2ff9-44e17595d6a9@bowerswilkins.com>
+ <fc1993f5-8b83-4e74-7866-2adcf318ff5f@tu-bs.de>
+ <03700343-7b5c-b21e-8b7b-2ac8c7d3258b@bowerswilkins.com>
+ <87po8jhncx.fsf@kamboji.qca.qualcomm.com>
+Cc: "Harms, Hannes" <hannes.harms@tu-bs.de>,
+        Ben Greear <greearb@candelatech.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A0C133E.8080305@broadcom.com> (sfid-20171115_111325_840658_9A1DF4EF)
+Date: Wed, 15 Nov 2017 11:13:18 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1510052483.24015.1.camel@gmail.com>
+In-Reply-To: <87po8jhncx.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 07, 2017 at 12:01:23PM +0100, Richard Genoud wrote:
-> Le mardi 07 novembre 2017 à 11:13 +0100, Stanislaw Gruszka a écrit :
-> > On Tue, Nov 07, 2017 at 11:06:39AM +0100, Richard Genoud wrote:
-> > > > 3 short articles how to configure and use ftrace are here:
-> > > > https://lwn.net/Articles/365835/
-> > > > https://lwn.net/Articles/366796/
-> > > > https://lwn.net/Articles/370423/
-> > > > 
-> > > 
-> > > I tried with ftrace, but I don't think there's a way to dump the
-> > > trace
-> > > when there's a soft lock-up
-> > > (I can't do anything after the unbind, even the heartbeat led
-> > > stopped blinking).
-> > > I saw the /proc/sys/kernel/ftrace_dump_on_oops file, but there's no
-> > > /proc/sys/kernel/ftrace_dump_on_soft_lock-up file :)
-> > 
-> > You should configure function trace with rt2x* functions. After that
-> > start tracing, unbind the device, then stop tracing and provide trace
-> > output.
-> Ok, I found a way to display the trace (after the unbind, the board is
-> frozen and I can't type anything).
-> Adding
-> CONFIG_SOFTLOCKUP_DETECTOR=y
-> CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC=y
-> along with echo 1 > /proc/sys/kernel/ftrace_dump_on_oops does the trick
+On 11/15/2017 11:01 AM, Kalle Valo wrote:
+> (adding linux-wireless for a cfg80211 question)
+>
+> Peter Oh <peter.oh@bowerswilkins.com> writes:
+>> On 11/08/2017 04:49 AM, Harms, Hannes wrote:
+>>
+>>> I found a solution for the problem:
+>>>
+>>> When joining the mesh with beacon interval  set  to 100
+>>> both  mesh and ap interface are coming up.
+>>>
+>>>> iw mesh0 mesh join my_mesh beacon-interval 100
+>>>
+>>> The default beacon interval is 1000 for mesh interfaces.
+>>> It seems that QCA9880 is not working
+>>> with different beacon intervals for ap + mesh.
+>>
+>> Good to hear that working. But mesh beacon interval 1000 which is
+>> default value should work. Any mesh beacon intervals of multiple of AP
+>> beacon intervals are supposed to work.
+>>
+>> (In other words, mesh beacon intervals that are not aligned by
+>> multiple of AP beacon intervals won't work). These are valid for both
+>> of QCA9880 and QCA4019 as far as I know.
+>
+> It would be nice if ath10k could print a warning if the beacon intervals
+> are not compatible. Or is there a way to enforce the beacon interval
+> with help of cfg80211 or mac80211?
 
-No, that not I wanted you to do. Please remove those options and just do
-below on tracing directory.
+There is beacon interval checking in utility function 
+cfg80211_check_combinations() ->
+cfg80211_iter_combinations() -> cfg80211_calculate_bi_data() for that. 
+However, it seems brcmfmac is the only user of that function according 
+to lxr (or elixir).
 
-echo 0 > tracing_on 
-cat trace >  /dev/null
-echo "function_graph" > current_tracer 
-echo "rt2*" > set_ftrace_filter 
-echo 1 > tracing_on
-echo 1-2.2 > /sys/bus/usb/drivers/usb/unbind
-echo 0 > tracing_on
-cat trace > ~/trace.txt
-
-and provide trace.txt to me (can be in private email if big).
-
-Thanks
-Stanislaw
+Regards,
+Arend
