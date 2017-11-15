@@ -1,191 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54361 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755287AbdKNNZ6 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45818 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752925AbdKOQw5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 08:25:58 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH v3 06/12] wil6210: add block size checks during FW load
-Date: Tue, 14 Nov 2017 15:25:38 +0200
-Message-Id: <1510665944-30198-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142611_898939_4934EC19)
-In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Wed, 15 Nov 2017 11:52:57 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 15 Nov 2017 18:52:40 +0200
+Message-Id: <20171115165242.21675-2-luca@coelho.fi> (sfid-20171115_175305_020634_7A01C1F9)
+In-Reply-To: <20171115165242.21675-1-luca@coelho.fi>
+References: <20171115165242.21675-1-luca@coelho.fi>
+Subject: [PATCH 1/3] iwlwifi: mvm: support version 7 of the SCAN_REQ_UMAC FW command
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-When loading FW from file add block size checks to ensure a
-corrupted FW file will not cause the driver to write outside
-the device memory.
+Newer firmware versions (such as iwlwifi-8000C-34.ucode) have
+introduced an API change in the SCAN_REQ_UMAC command that is not
+backwards compatible.  The driver needs to detect and use the new API
+format when the firmware reports it, otherwise the scan command will
+not work properly, causing a command timeout.
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Fix this by adding a TLV that tells the driver that the new API is in
+use and use the correct structures for it.
+
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=197591
+
+Fixes: d7a5b3e9e42e ("iwlwifi: mvm: bump API to 34 for 8000 and up")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/fw_inc.c  | 58 +++++++++++++++++++-----------
- drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
- drivers/net/wireless/ath/wil6210/wmi.c     | 11 +++++-
- 3 files changed, 49 insertions(+), 21 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/scan.h | 59 ++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/fw/file.h     |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  6 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c    | 86 ++++++++++++++++++------
+ 4 files changed, 118 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
-index 7a33792..77d1902 100644
---- a/drivers/net/wireless/ath/wil6210/fw_inc.c
-+++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
-@@ -26,14 +26,17 @@
- 					     prefix_type, rowsize,	\
- 					     groupsize, buf, len, ascii)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+index 5a40092febfb..3bfc657f6b42 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+@@ -531,6 +531,8 @@ struct iwl_scan_config_v1 {
+ } __packed; /* SCAN_CONFIG_DB_CMD_API_S */
  
--#define FW_ADDR_CHECK(ioaddr, val, msg) do { \
--		ioaddr = wmi_buffer(wil, val); \
--		if (!ioaddr) { \
--			wil_err_fw(wil, "bad " msg ": 0x%08x\n", \
--				   le32_to_cpu(val)); \
--			return -EINVAL; \
--		} \
--	} while (0)
-+static bool wil_fw_addr_check(struct wil6210_priv *wil,
-+			      void __iomem **ioaddr, __le32 val,
-+			      u32 size, const char *msg)
-+{
-+	*ioaddr = wmi_buffer_block(wil, val, size);
-+	if (!(*ioaddr)) {
-+		wil_err_fw(wil, "bad %s: 0x%08x\n", msg, le32_to_cpu(val));
-+		return false;
-+	}
-+	return true;
-+}
+ #define SCAN_TWO_LMACS 2
++#define SCAN_LB_LMAC_IDX 0
++#define SCAN_HB_LMAC_IDX 1
+ 
+ struct iwl_scan_config {
+ 	__le32 flags;
+@@ -578,6 +580,7 @@ enum iwl_umac_scan_general_flags {
+ 	IWL_UMAC_SCAN_GEN_FLAGS_MATCH			= BIT(9),
+ 	IWL_UMAC_SCAN_GEN_FLAGS_EXTENDED_DWELL		= BIT(10),
+ 	IWL_UMAC_SCAN_GEN_FLAGS_LMAC2_FRAGMENTED	= BIT(11),
++	IWL_UMAC_SCAN_GEN_FLAGS_ADAPTIVE_DWELL		= BIT(13),
+ };
  
  /**
-  * wil_fw_verify - verify firmware file validity
-@@ -160,7 +163,8 @@ static int fw_handle_data(struct wil6210_priv *wil, const void *data,
- 		return -EINVAL;
- 	}
- 
--	FW_ADDR_CHECK(dst, d->addr, "address");
-+	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
-+		return -EINVAL;
- 	wil_dbg_fw(wil, "write [0x%08x] <== %zu bytes\n", le32_to_cpu(d->addr),
- 		   s);
- 	wil_memcpy_toio_32(dst, d->data, s);
-@@ -192,7 +196,8 @@ static int fw_handle_fill(struct wil6210_priv *wil, const void *data,
- 		return -EINVAL;
- 	}
- 
--	FW_ADDR_CHECK(dst, d->addr, "address");
-+	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
-+		return -EINVAL;
- 
- 	v = le32_to_cpu(d->value);
- 	wil_dbg_fw(wil, "fill [0x%08x] <== 0x%08x, %zu bytes\n",
-@@ -248,7 +253,8 @@ static int fw_handle_direct_write(struct wil6210_priv *wil, const void *data,
- 		u32 v = le32_to_cpu(block[i].value);
- 		u32 x, y;
- 
--		FW_ADDR_CHECK(dst, block[i].addr, "address");
-+		if (!wil_fw_addr_check(wil, &dst, block[i].addr, 0, "address"))
-+			return -EINVAL;
- 
- 		x = readl(dst);
- 		y = (x & m) | (v & ~m);
-@@ -314,10 +320,15 @@ static int fw_handle_gateway_data(struct wil6210_priv *wil, const void *data,
- 	wil_dbg_fw(wil, "gw write record [%3d] blocks, cmd 0x%08x\n",
- 		   n, gw_cmd);
- 
--	FW_ADDR_CHECK(gwa_addr, d->gateway_addr_addr, "gateway_addr_addr");
--	FW_ADDR_CHECK(gwa_val, d->gateway_value_addr, "gateway_value_addr");
--	FW_ADDR_CHECK(gwa_cmd, d->gateway_cmd_addr, "gateway_cmd_addr");
--	FW_ADDR_CHECK(gwa_ctl, d->gateway_ctrl_address, "gateway_ctrl_address");
-+	if (!wil_fw_addr_check(wil, &gwa_addr, d->gateway_addr_addr, 0,
-+			       "gateway_addr_addr") ||
-+	    !wil_fw_addr_check(wil, &gwa_val, d->gateway_value_addr, 0,
-+			       "gateway_value_addr") ||
-+	    !wil_fw_addr_check(wil, &gwa_cmd, d->gateway_cmd_addr, 0,
-+			       "gateway_cmd_addr") ||
-+	    !wil_fw_addr_check(wil, &gwa_ctl, d->gateway_ctrl_address, 0,
-+			       "gateway_ctrl_address"))
-+		return -EINVAL;
- 
- 	wil_dbg_fw(wil, "gw addresses: addr 0x%08x val 0x%08x"
- 		   " cmd 0x%08x ctl 0x%08x\n",
-@@ -373,12 +384,19 @@ static int fw_handle_gateway_data4(struct wil6210_priv *wil, const void *data,
- 	wil_dbg_fw(wil, "gw4 write record [%3d] blocks, cmd 0x%08x\n",
- 		   n, gw_cmd);
- 
--	FW_ADDR_CHECK(gwa_addr, d->gateway_addr_addr, "gateway_addr_addr");
-+	if (!wil_fw_addr_check(wil, &gwa_addr, d->gateway_addr_addr, 0,
-+			       "gateway_addr_addr"))
-+		return -EINVAL;
- 	for (k = 0; k < ARRAY_SIZE(block->value); k++)
--		FW_ADDR_CHECK(gwa_val[k], d->gateway_value_addr[k],
--			      "gateway_value_addr");
--	FW_ADDR_CHECK(gwa_cmd, d->gateway_cmd_addr, "gateway_cmd_addr");
--	FW_ADDR_CHECK(gwa_ctl, d->gateway_ctrl_address, "gateway_ctrl_address");
-+		if (!wil_fw_addr_check(wil, &gwa_val[k],
-+				       d->gateway_value_addr[k],
-+				       0, "gateway_value_addr"))
-+			return -EINVAL;
-+	if (!wil_fw_addr_check(wil, &gwa_cmd, d->gateway_cmd_addr, 0,
-+			       "gateway_cmd_addr") ||
-+	    !wil_fw_addr_check(wil, &gwa_ctl, d->gateway_ctrl_address, 0,
-+			       "gateway_ctrl_address"))
-+		return -EINVAL;
- 
- 	wil_dbg_fw(wil, "gw4 addresses: addr 0x%08x cmd 0x%08x ctl 0x%08x\n",
- 		   le32_to_cpu(d->gateway_addr_addr),
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 8e9919b..48802ae 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -875,6 +875,7 @@ int wil_ps_update(struct wil6210_priv *wil,
- int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
- void wil_set_ethtoolops(struct net_device *ndev);
- 
-+void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr, u32 size);
- void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr);
- void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr);
- int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index dbdf71d..16aa624 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -140,13 +140,15 @@ static u32 wmi_addr_remap(u32 x)
- /**
-  * Check address validity for WMI buffer; remap if needed
-  * @ptr - internal (linker) fw/ucode address
-+ * @size - if non zero, validate the block does not
-+ *  exceed the device memory (bar)
-  *
-  * Valid buffer should be DWORD aligned
-  *
-  * return address for accessing buffer from the host;
-  * if buffer is not valid, return NULL.
+@@ -631,12 +634,17 @@ struct iwl_scan_req_umac_tail {
+  * @uid: scan id, &enum iwl_umac_scan_uid_offsets
+  * @ooc_priority: out of channel priority - &enum iwl_scan_priority
+  * @general_flags: &enum iwl_umac_scan_general_flags
+- * @reserved2: for future use and alignment
+  * @scan_start_mac_id: report the scan start TSF time according to this mac TSF
+  * @extended_dwell: dwell time for channels 1, 6 and 11
+  * @active_dwell: dwell time for active scan
+  * @passive_dwell: dwell time for passive scan
+  * @fragmented_dwell: dwell time for fragmented passive scan
++ * @adwell_default_n_aps: for adaptive dwell the default number of APs
++ *	per channel
++ * @adwell_default_n_aps_social: for adaptive dwell the default
++ *	number of APs per social (1,6,11) channel
++ * @adwell_max_budget: for adaptive dwell the maximal budget of TU to be added
++ *	to total scan time
+  * @max_out_time: max out of serving channel time, per LMAC - for CDB there
+  *	are 2 LMACs
+  * @suspend_time: max suspend time, per LMAC - for CDB there are 2 LMACs
+@@ -644,6 +652,8 @@ struct iwl_scan_req_umac_tail {
+  * @channel_flags: &enum iwl_scan_channel_flags
+  * @n_channels: num of channels in scan request
+  * @reserved: for future use and alignment
++ * @reserved2: for future use and alignment
++ * @reserved3: for future use and alignment
+  * @data: &struct iwl_scan_channel_cfg_umac and
+  *	&struct iwl_scan_req_umac_tail
   */
--void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
-+void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr_, u32 size)
- {
- 	u32 off;
- 	u32 ptr = le32_to_cpu(ptr_);
-@@ -161,10 +163,17 @@ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
- 	off = HOSTADDR(ptr);
- 	if (off > wil->bar_size - 4)
- 		return NULL;
-+	if (size && ((off + size > wil->bar_size) || (off + size < off)))
-+		return NULL;
+@@ -651,41 +661,64 @@ struct iwl_scan_req_umac {
+ 	__le32 flags;
+ 	__le32 uid;
+ 	__le32 ooc_priority;
+-	/* SCAN_GENERAL_PARAMS_API_S_VER_4 */
+ 	__le16 general_flags;
+-	u8 reserved2;
++	u8 reserved;
+ 	u8 scan_start_mac_id;
+-	u8 extended_dwell;
+-	u8 active_dwell;
+-	u8 passive_dwell;
+-	u8 fragmented_dwell;
+ 	union {
+ 		struct {
++			u8 extended_dwell;
++			u8 active_dwell;
++			u8 passive_dwell;
++			u8 fragmented_dwell;
+ 			__le32 max_out_time;
+ 			__le32 suspend_time;
+ 			__le32 scan_priority;
+-			/* SCAN_CHANNEL_PARAMS_API_S_VER_4 */
++			/* SCAN_CHANNEL_PARAMS_API_S_VER_1 */
+ 			u8 channel_flags;
+ 			u8 n_channels;
+-			__le16 reserved;
++			__le16 reserved2;
+ 			u8 data[];
+ 		} v1; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_1 */
+ 		struct {
++			u8 extended_dwell;
++			u8 active_dwell;
++			u8 passive_dwell;
++			u8 fragmented_dwell;
+ 			__le32 max_out_time[SCAN_TWO_LMACS];
+ 			__le32 suspend_time[SCAN_TWO_LMACS];
+ 			__le32 scan_priority;
+-			/* SCAN_CHANNEL_PARAMS_API_S_VER_4 */
++			/* SCAN_CHANNEL_PARAMS_API_S_VER_1 */
+ 			u8 channel_flags;
+ 			u8 n_channels;
+-			__le16 reserved;
++			__le16 reserved2;
+ 			u8 data[];
+ 		} v6; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_6 */
++		struct {
++			u8 active_dwell;
++			u8 passive_dwell;
++			u8 fragmented_dwell;
++			u8 adwell_default_n_aps;
++			u8 adwell_default_n_aps_social;
++			u8 reserved3;
++			__le16 adwell_max_budget;
++			__le32 max_out_time[SCAN_TWO_LMACS];
++			__le32 suspend_time[SCAN_TWO_LMACS];
++			__le32 scan_priority;
++			/* SCAN_CHANNEL_PARAMS_API_S_VER_1 */
++			u8 channel_flags;
++			u8 n_channels;
++			__le16 reserved2;
++			u8 data[];
++		} v7; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_7 */
+ 	};
+ } __packed;
  
- 	return wil->csr + off;
+-#define IWL_SCAN_REQ_UMAC_SIZE sizeof(struct iwl_scan_req_umac)
++#define IWL_SCAN_REQ_UMAC_SIZE_V7 sizeof(struct iwl_scan_req_umac)
++#define IWL_SCAN_REQ_UMAC_SIZE_V6 (sizeof(struct iwl_scan_req_umac) - \
++				   2 * sizeof(u8) - sizeof(__le16))
+ #define IWL_SCAN_REQ_UMAC_SIZE_V1 (sizeof(struct iwl_scan_req_umac) - \
+-				   2 * sizeof(__le32))
++				   2 * sizeof(__le32) - 2 * sizeof(u8) - \
++				   sizeof(__le16))
+ 
+ /**
+  * struct iwl_umac_scan_abort
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 740d97093d1c..37a5c5b4eda6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -264,6 +264,7 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_STA_TYPE		= (__force iwl_ucode_tlv_api_t)30,
+ 	IWL_UCODE_TLV_API_NAN2_VER2		= (__force iwl_ucode_tlv_api_t)31,
+ 	/* API Set 1 */
++	IWL_UCODE_TLV_API_ADAPTIVE_DWELL	= (__force iwl_ucode_tlv_api_t)32,
+ 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
+ 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
+ 	IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL	= (__force iwl_ucode_tlv_api_t)37,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 0e18c5066f04..4575595ab022 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1142,6 +1142,12 @@ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
+ 			    IWL_UCODE_TLV_CAPA_D0I3_SUPPORT);
  }
  
-+void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr_)
++static inline bool iwl_mvm_is_adaptive_dwell_supported(struct iwl_mvm *mvm)
 +{
-+	return wmi_buffer_block(wil, ptr_, 0);
++	return fw_has_api(&mvm->fw->ucode_capa,
++			  IWL_UCODE_TLV_API_ADAPTIVE_DWELL);
 +}
 +
- /**
-  * Check address validity
-  */
+ static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
+ {
+ 	/* For now we only use this mode to differentiate between
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 774122fed454..e4fd476e9ccb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -130,6 +130,19 @@ struct iwl_mvm_scan_params {
+ 	u32 measurement_dwell;
+ };
+ 
++static inline void *iwl_mvm_get_scan_req_umac_data(struct iwl_mvm *mvm)
++{
++	struct iwl_scan_req_umac *cmd = mvm->scan_cmd;
++
++	if (iwl_mvm_is_adaptive_dwell_supported(mvm))
++		return (void *)&cmd->v7.data;
++
++	if (iwl_mvm_has_new_tx_api(mvm))
++		return (void *)&cmd->v6.data;
++
++	return (void *)&cmd->v1.data;
++}
++
+ static u8 iwl_mvm_scan_rx_ant(struct iwl_mvm *mvm)
+ {
+ 	if (mvm->scan_rx_ant != ANT_NONE)
+@@ -1075,25 +1088,57 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_mvm_scan_timing_params *timing = &scan_timing[params->type];
+ 
++	if (iwl_mvm_is_regular_scan(params))
++		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
++	else
++		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_2);
++
++	if (iwl_mvm_is_adaptive_dwell_supported(mvm)) {
++		if (params->measurement_dwell) {
++			cmd->v7.active_dwell = params->measurement_dwell;
++			cmd->v7.passive_dwell = params->measurement_dwell;
++		} else {
++			cmd->v7.active_dwell = IWL_SCAN_DWELL_ACTIVE;
++			cmd->v7.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
++		}
++		cmd->v7.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
++
++		cmd->v7.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
++		cmd->v7.max_out_time[SCAN_LB_LMAC_IDX] =
++			cpu_to_le32(timing->max_out_time);
++		cmd->v7.suspend_time[SCAN_LB_LMAC_IDX] =
++			cpu_to_le32(timing->suspend_time);
++		if (iwl_mvm_is_cdb_supported(mvm)) {
++			cmd->v7.max_out_time[SCAN_HB_LMAC_IDX] =
++				cpu_to_le32(timing->max_out_time);
++			cmd->v7.suspend_time[SCAN_HB_LMAC_IDX] =
++				cpu_to_le32(timing->suspend_time);
++		}
++
++		return;
++	}
++
+ 	if (params->measurement_dwell) {
+-		cmd->active_dwell = params->measurement_dwell;
+-		cmd->passive_dwell = params->measurement_dwell;
+-		cmd->extended_dwell = params->measurement_dwell;
++		cmd->v1.active_dwell = params->measurement_dwell;
++		cmd->v1.passive_dwell = params->measurement_dwell;
++		cmd->v1.extended_dwell = params->measurement_dwell;
+ 	} else {
+-		cmd->active_dwell = IWL_SCAN_DWELL_ACTIVE;
+-		cmd->passive_dwell = IWL_SCAN_DWELL_PASSIVE;
+-		cmd->extended_dwell = IWL_SCAN_DWELL_EXTENDED;
++		cmd->v1.active_dwell = IWL_SCAN_DWELL_ACTIVE;
++		cmd->v1.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
++		cmd->v1.extended_dwell = IWL_SCAN_DWELL_EXTENDED;
+ 	}
+-	cmd->fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
++	cmd->v1.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
+ 
+ 	if (iwl_mvm_has_new_tx_api(mvm)) {
+ 		cmd->v6.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
+-		cmd->v6.max_out_time[0] = cpu_to_le32(timing->max_out_time);
+-		cmd->v6.suspend_time[0] = cpu_to_le32(timing->suspend_time);
++		cmd->v6.max_out_time[SCAN_LB_LMAC_IDX] =
++			cpu_to_le32(timing->max_out_time);
++		cmd->v6.suspend_time[SCAN_LB_LMAC_IDX] =
++			cpu_to_le32(timing->suspend_time);
+ 		if (iwl_mvm_is_cdb_supported(mvm)) {
+-			cmd->v6.max_out_time[1] =
++			cmd->v6.max_out_time[SCAN_HB_LMAC_IDX] =
+ 				cpu_to_le32(timing->max_out_time);
+-			cmd->v6.suspend_time[1] =
++			cmd->v6.suspend_time[SCAN_HB_LMAC_IDX] =
+ 				cpu_to_le32(timing->suspend_time);
+ 		}
+ 	} else {
+@@ -1102,11 +1147,6 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
+ 		cmd->v1.scan_priority =
+ 			cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
+ 	}
+-
+-	if (iwl_mvm_is_regular_scan(params))
+-		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
+-	else
+-		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_2);
+ }
+ 
+ static void
+@@ -1178,8 +1218,7 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			     int type)
+ {
+ 	struct iwl_scan_req_umac *cmd = mvm->scan_cmd;
+-	void *cmd_data = iwl_mvm_has_new_tx_api(mvm) ?
+-			 (void *)&cmd->v6.data : (void *)&cmd->v1.data;
++	void *cmd_data = iwl_mvm_get_scan_req_umac_data(mvm);
+ 	struct iwl_scan_req_umac_tail *sec_part = cmd_data +
+ 		sizeof(struct iwl_scan_channel_cfg_umac) *
+ 			mvm->fw->ucode_capa.n_scan_channels;
+@@ -1216,7 +1255,10 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 				IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+ 				IWL_SCAN_CHANNEL_FLAG_CACHE_ADD;
+ 
+-	if (iwl_mvm_has_new_tx_api(mvm)) {
++	if (iwl_mvm_is_adaptive_dwell_supported(mvm)) {
++		cmd->v7.channel_flags = channel_flags;
++		cmd->v7.n_channels = params->n_channels;
++	} else if (iwl_mvm_has_new_tx_api(mvm)) {
+ 		cmd->v6.channel_flags = channel_flags;
+ 		cmd->v6.n_channels = params->n_channels;
+ 	} else {
+@@ -1661,8 +1703,10 @@ int iwl_mvm_scan_size(struct iwl_mvm *mvm)
+ {
+ 	int base_size = IWL_SCAN_REQ_UMAC_SIZE_V1;
+ 
+-	if (iwl_mvm_has_new_tx_api(mvm))
+-		base_size = IWL_SCAN_REQ_UMAC_SIZE;
++	if (iwl_mvm_is_adaptive_dwell_supported(mvm))
++		base_size = IWL_SCAN_REQ_UMAC_SIZE_V7;
++	else if (iwl_mvm_has_new_tx_api(mvm))
++		base_size = IWL_SCAN_REQ_UMAC_SIZE_V6;
+ 
+ 	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN))
+ 		return base_size +
 -- 
-1.9.1
+2.15.0
