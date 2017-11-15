@@ -1,287 +1,463 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0085.outbound.protection.outlook.com ([104.47.32.85]:59533
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752117AbdKMK2e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 05:28:34 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: [PATCH 03/10] qtnfmac: add support for radar detection and CAC
-Date: Mon, 13 Nov 2017 13:28:08 +0300
-Message-Id: <20171113102815.11254-4-sergey.matyukevich.os@quantenna.com> (sfid-20171113_112928_720478_64E69945)
-In-Reply-To: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
-References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from coyote.holtmann.net ([212.227.132.17]:48031 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932629AbdKOPhY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Nov 2017 10:37:24 -0500
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 11.1 \(3445.4.7\))
+Subject: Re: [PATCH 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1510730444-3237-6-git-send-email-amitkarwar@gmail.com>
+Date: Wed, 15 Nov 2017 16:37:22 +0100
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Message-Id: <6E0D3434-F2E9-4B4D-B66E-78DE921BB2CF@holtmann.org> (sfid-20171115_163803_247526_61A12D5F)
+References: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
+ <1510730444-3237-6-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Hi Amitkumar,
 
-Implement two parts of radar handling logic:
-- cfg80211 .start_radar_detect callback to allow nl80211 to initiate CAC
-- radar event to allow wlan device to advertize CAC and radar events
+> Redpine bluetooth driver is a thin driver which depends on
+> 'rsi_91x' driver for transmitting and receiving packets
+> to/from device. It creates hci interface when attach() is
+> called from 'rsi_91x' module.
+> 
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> ---
+> drivers/bluetooth/Kconfig   |  12 ++
+> drivers/bluetooth/Makefile  |   2 +
+> drivers/bluetooth/btrsi.c   | 268 ++++++++++++++++++++++++++++++++++++++++++++
+> drivers/bluetooth/rsi_hci.h |  51 +++++++++
+> 4 files changed, 333 insertions(+)
+> create mode 100644 drivers/bluetooth/btrsi.c
+> create mode 100644 drivers/bluetooth/rsi_hci.h
+> 
+> diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
+> index 60e1c7d..ca58d74 100644
+> --- a/drivers/bluetooth/Kconfig
+> +++ b/drivers/bluetooth/Kconfig
+> @@ -378,4 +378,16 @@ config BT_QCOMSMD
+> 	  Say Y here to compile support for HCI over Qualcomm SMD into the
+> 	  kernel or say M to compile as a module.
+> 
+> +config BT_RSI
+> +	tristate "Redpine HCI support"
+> +	depends on BT && BT_RFCOMM
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 18 ++++++-
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 38 ++++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/commands.h |  3 ++
- drivers/net/wireless/quantenna/qtnfmac/event.c    | 61 +++++++++++++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 36 +++++++++++++
- 5 files changed, 155 insertions(+), 1 deletion(-)
+the depends on BT_RFCOMM is wrong. And even the depends on BT is unneeded since that is already covered with the above menu clause.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 67a57c841c3f..64fc4119b3a6 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -751,6 +751,21 @@ static int qtnf_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
- 
-+static int qtnf_start_radar_detection(struct wiphy *wiphy,
-+				      struct net_device *ndev,
-+				      struct cfg80211_chan_def *chandef,
-+				      u32 cac_time_ms)
-+{
-+	struct qtnf_vif *vif = qtnf_netdev_get_priv(ndev);
-+	int ret;
-+
-+	ret = qtnf_cmd_start_cac(vif, chandef, cac_time_ms);
-+	if (ret)
-+		pr_err("%s: failed to start CAC ret=%d\n", ndev->name, ret);
-+
-+	return ret;
-+}
-+
- static struct cfg80211_ops qtn_cfg80211_ops = {
- 	.add_virtual_intf	= qtnf_add_virtual_intf,
- 	.change_virtual_intf	= qtnf_change_virtual_intf,
-@@ -774,7 +789,8 @@ static struct cfg80211_ops qtn_cfg80211_ops = {
- 	.disconnect		= qtnf_disconnect,
- 	.dump_survey		= qtnf_dump_survey,
- 	.get_channel		= qtnf_get_channel,
--	.channel_switch		= qtnf_channel_switch
-+	.channel_switch		= qtnf_channel_switch,
-+	.start_radar_detection	= qtnf_start_radar_detection,
- };
- 
- static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index bed81f0cb1cd..7089f3eb7a87 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2512,3 +2512,41 @@ int qtnf_cmd_get_channel(struct qtnf_vif *vif, struct cfg80211_chan_def *chdef)
- 	consume_skb(resp_skb);
- 	return ret;
- }
-+
-+int qtnf_cmd_start_cac(const struct qtnf_vif *vif,
-+		       const struct cfg80211_chan_def *chdef,
-+		       u32 cac_time_ms)
-+{
-+	struct qtnf_bus *bus = vif->mac->bus;
-+	struct sk_buff *cmd_skb;
-+	struct qlink_cmd_start_cac *cmd;
-+	int ret;
-+	u16 res_code;
-+
-+	cmd_skb = qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
-+					    QLINK_CMD_START_CAC,
-+					    sizeof(*cmd));
-+	if (unlikely(!cmd_skb))
-+		return -ENOMEM;
-+
-+	cmd = (struct qlink_cmd_start_cac *)cmd_skb->data;
-+	cmd->cac_time_ms = cpu_to_le32(cac_time_ms);
-+	qlink_chandef_cfg2q(chdef, &cmd->chan);
-+
-+	qtnf_bus_lock(bus);
-+	ret = qtnf_cmd_send(bus, cmd_skb, &res_code);
-+	qtnf_bus_unlock(bus);
-+
-+	if (ret)
-+		return ret;
-+
-+	switch (res_code) {
-+	case QLINK_CMD_RESULT_OK:
-+		break;
-+	default:
-+		ret = -EOPNOTSUPP;
-+		break;
-+	}
-+
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-index d981a76e5835..07a957af9a58 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -76,5 +76,8 @@ int qtnf_cmd_get_chan_stats(struct qtnf_wmac *mac, u16 channel,
- int qtnf_cmd_send_chan_switch(struct qtnf_vif *vif,
- 			      struct cfg80211_csa_settings *params);
- int qtnf_cmd_get_channel(struct qtnf_vif *vif, struct cfg80211_chan_def *chdef);
-+int qtnf_cmd_start_cac(const struct qtnf_vif *vif,
-+		       const struct cfg80211_chan_def *chdef,
-+		       u32 cac_time_ms);
- 
- #endif /* QLINK_COMMANDS_H_ */
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index a3a18d8469ae..9843ca36b74b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -395,6 +395,63 @@ qtnf_event_handle_freq_change(struct qtnf_wmac *mac,
- 	return 0;
- }
- 
-+static int qtnf_event_handle_radar(struct qtnf_vif *vif,
-+				   const struct qlink_event_radar *ev,
-+				   u16 len)
-+{
-+	struct wiphy *wiphy = priv_to_wiphy(vif->mac);
-+	struct cfg80211_chan_def chandef;
-+
-+	if (len < sizeof(*ev)) {
-+		pr_err("MAC%u: payload is too short\n", vif->mac->macid);
-+		return -EINVAL;
-+	}
-+
-+	if (!wiphy->registered || !vif->netdev)
-+		return 0;
-+
-+	qlink_chandef_q2cfg(wiphy, &ev->chan, &chandef);
-+
-+	if (!cfg80211_chandef_valid(&chandef)) {
-+		pr_err("MAC%u: bad channel f1=%u f2=%u bw=%u\n",
-+		       vif->mac->macid,
-+		       chandef.center_freq1, chandef.center_freq2,
-+		       chandef.width);
-+		return -EINVAL;
-+	}
-+
-+	pr_info("%s: radar event=%u f1=%u f2=%u bw=%u\n",
-+		vif->netdev->name, ev->event,
-+		chandef.center_freq1, chandef.center_freq2,
-+		chandef.width);
-+
-+	switch (ev->event) {
-+	case QLINK_RADAR_DETECTED:
-+		cfg80211_radar_event(wiphy, &chandef, GFP_KERNEL);
-+		break;
-+	case QLINK_RADAR_CAC_FINISHED:
-+		if (!vif->wdev.cac_started)
-+			break;
-+
-+		cfg80211_cac_event(vif->netdev, &chandef,
-+				   NL80211_RADAR_CAC_FINISHED, GFP_KERNEL);
-+		break;
-+	case QLINK_RADAR_CAC_ABORTED:
-+		if (!vif->wdev.cac_started)
-+			break;
-+
-+		cfg80211_cac_event(vif->netdev, &chandef,
-+				   NL80211_RADAR_CAC_ABORTED, GFP_KERNEL);
-+		break;
-+	default:
-+		pr_warn("%s: unhandled radar event %u\n",
-+			vif->netdev->name, ev->event);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
- static int qtnf_event_parse(struct qtnf_wmac *mac,
- 			    const struct sk_buff *event_skb)
- {
-@@ -449,6 +506,10 @@ static int qtnf_event_parse(struct qtnf_wmac *mac,
- 		ret = qtnf_event_handle_freq_change(mac, (const void *)event,
- 						    event_len);
- 		break;
-+	case QLINK_EVENT_RADAR:
-+		ret = qtnf_event_handle_radar(vif, (const void *)event,
-+					      event_len);
-+		break;
- 	default:
- 		pr_warn("unknown event type: %x\n", event_id);
- 		break;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 534d11e4175a..3e3de4629a53 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -205,6 +205,7 @@ struct qlink_auth_encr {
-  * @QLINK_CMD_REG_NOTIFY: notify device about regulatory domain change. This
-  *	command is supported only if device reports QLINK_HW_SUPPORTS_REG_UPDATE
-  *	capability.
-+ * @QLINK_CMD_START_CAC: start radar detection procedure on a specified channel.
-  */
- enum qlink_cmd_type {
- 	QLINK_CMD_FW_INIT		= 0x0001,
-@@ -224,6 +225,7 @@ enum qlink_cmd_type {
- 	QLINK_CMD_BAND_INFO_GET		= 0x001A,
- 	QLINK_CMD_CHAN_SWITCH		= 0x001B,
- 	QLINK_CMD_CHAN_GET		= 0x001C,
-+	QLINK_CMD_START_CAC		= 0x001D,
- 	QLINK_CMD_START_AP		= 0x0021,
- 	QLINK_CMD_STOP_AP		= 0x0022,
- 	QLINK_CMD_GET_STA_INFO		= 0x0030,
-@@ -617,6 +619,18 @@ struct qlink_cmd_start_ap {
- 	u8 info[0];
- } __packed;
- 
-+/**
-+ * struct qlink_cmd_start_cac - data for QLINK_CMD_START_CAC command
-+ *
-+ * @chan: a channel to start a radar detection procedure on.
-+ * @cac_time_ms: CAC time.
-+ */
-+struct qlink_cmd_start_cac {
-+	struct qlink_cmd chdr;
-+	struct qlink_chandef chan;
-+	__le32 cac_time_ms;
-+} __packed;
-+
- /* QLINK Command Responses messages related definitions
-  */
- 
-@@ -814,6 +828,7 @@ enum qlink_event_type {
- 	QLINK_EVENT_BSS_JOIN		= 0x0026,
- 	QLINK_EVENT_BSS_LEAVE		= 0x0027,
- 	QLINK_EVENT_FREQ_CHANGE		= 0x0028,
-+	QLINK_EVENT_RADAR		= 0x0029,
- };
- 
- /**
-@@ -963,6 +978,27 @@ struct qlink_event_scan_complete {
- 	__le32 flags;
- } __packed;
- 
-+enum qlink_radar_event {
-+	QLINK_RADAR_DETECTED,
-+	QLINK_RADAR_CAC_FINISHED,
-+	QLINK_RADAR_CAC_ABORTED,
-+	QLINK_RADAR_NOP_FINISHED,
-+	QLINK_RADAR_PRE_CAC_EXPIRED,
-+};
-+
-+/**
-+ * struct qlink_event_radar - data for QLINK_EVENT_RADAR event
-+ *
-+ * @chan: channel on which radar event happened.
-+ * @event: radar event type, one of &enum qlink_radar_event.
-+ */
-+struct qlink_event_radar {
-+	struct qlink_event ehdr;
-+	struct qlink_chandef chan;
-+	u8 event;
-+	u8 rsvd[3];
-+} __packed;
-+
- /* QLINK TLVs (Type-Length Values) definitions
-  */
- 
--- 
-2.11.0
+
+> +	default m
+
+No. New drivers are by default off.
+
+> +	help
+> +	  Redpine BT driver.
+> +	  This driver handles BT traffic from upper layers and pass
+> +	  to the RSI_91x coex module for further scheduling to device
+> +
+> +	  Say Y here to compile support for HCI over Qualcomm SMD into the
+> +	  kernel or say M to compile as a module.
+> +
+
+What I am missing is the depends on the RSI core piece that is needed.
+
+> endmenu
+> diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
+> index 4e4e44d..712af83a 100644
+> --- a/drivers/bluetooth/Makefile
+> +++ b/drivers/bluetooth/Makefile
+> @@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
+> 
+> obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
+> 
+> +obj-$(CONFIG_BT_RSI)		+= btrsi.o
+> +
+> btmrvl-y			:= btmrvl_main.o
+> btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
+> 
+> diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
+> new file mode 100644
+> index 0000000..c52f418
+> --- /dev/null
+> +++ b/drivers/bluetooth/btrsi.c
+> @@ -0,0 +1,268 @@
+> +/**
+> + * Copyright (c) 2017 Redpine Signals Inc.
+> + *
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> +e* ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> + */
+> +#include <linux/version.h>
+> +#include <linux/module.h>
+> +#include <linux/kernel.h>
+> +#include "rsi_hci.h"
+> +
+> +static struct rsi_mod_ops rsi_bt_ops = {
+> +	.attach	= rsi_hci_attach,
+> +	.detach	= rsi_hci_detach,
+> +	.recv_pkt = rsi_hci_recv_pkt,
+> +};
+> +
+> +static int rsi_hci_open(struct hci_dev *hdev)
+> +{
+> +	BT_INFO("%s open\n", hdev->name);
+
+No BT_INFO here. We are not spamming dmesg with pointless information. And this applies to all of these.
+
+> +
+> +	return 0;
+> +}
+> +
+> +static int rsi_hci_close(struct hci_dev *hdev)
+> +{
+> +	BT_INFO("%s closed\n", hdev->name);
+> +
+> +	return 0;
+> +}
+> +
+> +static int rsi_hci_flush(struct hci_dev *hdev)
+> +{
+> +	BT_ERR("%s flush\n", hdev->name);
+> +
+> +	return 0;
+> +}
+> +
+> +static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
+> +{
+> +	struct rsi_hci_adapter *h_adapter;
+
+					= hci_get_drvdata(dev);
+
+There is no need to do that separate.
+
+> +	struct sk_buff *new_skb = NULL;
+> +
+> +	int status = 0;
+> +
+> +	h_adapter = hci_get_drvdata(hdev);
+> +	if (!h_adapter) {
+> +		status = -EFAULT;
+> +		goto fail;
+> +	}
+
+And this error check seems unneeded since the Bluetooth core will never call ->send unless it is all correctly set up.
+
+> +
+> +	if (h_adapter->fsm_state != RSI_BT_FSM_DEVICE_READY) {
+> +		BT_INFO("BT Device not ready\n");
+> +		status = -ENODEV;
+> +		goto fail;
+> +	}
+
+Why are we registering a HCI device that might not be ready. This will be a massive bug in the whole system. Also one that is not recoverable. If something goes wrong, then lets unregister the HCI device.
+
+> +
+> +	if (!test_bit(HCI_RUNNING, &hdev->flags)) {
+> +		status = -EBUSY;
+> +		goto fail;
+> +	}
+
+This should no longer be needed. We moved this into the core and besides some old USB drivers, nobody is using this anymore.
+
+> +
+> +	switch (bt_cb(skb)->pkt_type) {
+> +	case HCI_COMMAND_PKT:
+> +		hdev->stat.cmd_tx++;
+> +		break;
+> +
+> +	case HCI_ACLDATA_PKT:
+> +		hdev->stat.acl_tx++;
+> +		break;
+> +
+> +	case HCI_SCODATA_PKT:
+> +		hdev->stat.sco_tx++;
+> +		break;
+> +
+> +	default:
+> +		dev_kfree_skb(skb);
+
+Don’t use dev_kfree_skb() here. I think the Bluetooth subsystem is not ready for that.
+
+> +		status = -EILSEQ;
+> +		goto fail;
+> +	}
+> +
+> +	if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
+> +		/* Re-allocate one more skb with sufficent headroom */
+> +		/* Space for Descriptor (16 bytes) is required in head room */
+> +		u16 new_len = skb->len + RSI_HEADROOM_FOR_BT_HAL;
+> +
+> +		new_skb = dev_alloc_skb(new_len);
+> +		if (!new_skb) {
+> +			dev_kfree_skb(skb);
+> +			return -ENOMEM;
+> +		}
+> +		skb_reserve(new_skb, RSI_HEADROOM_FOR_BT_HAL);
+> +		skb_put(new_skb, skb->len);
+> +		memcpy(new_skb->data, skb->data, skb->len);
+> +		bt_cb(new_skb)->pkt_type = bt_cb(skb)->pkt_type;
+> +		dev_kfree_skb(skb);
+> +		skb = new_skb;
+
+Just allocate a new skb with proper headroom. The data part can be shared. Doing this fully manual is just a bad idea.
+
+I also get the feeling that long term we want to change the Bluetooth drivers to specify the required SKB headroom so that they always get SKBs that are large enough for their needs.
+
+> +	}
+> +	if (h_adapter->proto_ops->coex_send_pkt)
+> +		return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
+> +							  RSI_BT_Q);
+
+This is worrisome. You need to send. If this callback is not available, then better not register the HCI device at all.
+
+> +
+> +fail:
+> +	dev_kfree_skb(skb);
+> +	return status;
+> +}
+> +
+> +int rsi_hci_recv_pkt(void *priv, u8 *pkt)
+> +{
+> +	struct rsi_hci_adapter *h_adapter = (struct rsi_hci_adapter *)priv;
+> +	struct hci_dev *hdev = NULL;
+> +	struct sk_buff *skb;
+> +	int pkt_len = (le16_to_cpu(*(__le16 *)pkt)) & 0x0fff;
+> +	u8 queue_no = (le16_to_cpu(*(__le16 *)pkt) & 0x7000) >> 12;
+
+We have get_unaligned_le16 helpers for this.
+
+> +
+> +	if (h_adapter->fsm_state != RSI_BT_FSM_DEVICE_READY) {
+> +		BT_INFO("BT Device not ready\n");
+> +		return 0;
+> +	}
+
+Why call this function if the device is not ready? Can that not be checked and the HCI device not be registered.
+
+> +
+> +	if (queue_no == RSI_BT_MGMT_Q) {
+> +		u8 msg_type = pkt[14] & 0xFF;
+> +
+> +		switch (msg_type) {
+> +		case RSI_RESULT_CONFIRM:
+> +			BT_INFO("BT Result Confirm\n");
+> +			return 0;
+> +		case RSI_BT_BER:
+> +			BT_INFO("BT Ber\n");
+> +			return 0;
+> +		case RSI_BT_CW:
+> +			BT_INFO("BT CW\n");
+> +			return 0;
+> +		default:
+> +			break;
+> +		}
+> +	}
+
+How noisy is this? Also no \n required for the BT_INFO functions. And here bt_dev_info is preferred anyway.
+
+> +
+> +	skb = dev_alloc_skb(pkt_len);
+> +	if (!skb)
+> +		return -ENOMEM;
+> +
+> +	hdev = h_adapter->hdev;
+> +	memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
+> +	skb_put(skb, pkt_len);
+> +	h_adapter->hdev->stat.byte_rx += skb->len;
+> +
+> +	skb->dev = (void *)hdev;
+> +	bt_cb(skb)->pkt_type = pkt[14];
+> +
+> +	return hci_recv_frame(hdev, skb);
+> +}
+> +EXPORT_SYMBOL_GPL(rsi_hci_recv_pkt);
+> +
+> +int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
+> +{
+> +	struct rsi_hci_adapter *h_adapter = NULL;
+> +	struct hci_dev *hdev;
+> +	int status = 0;
+> +
+> +	h_adapter = kzalloc(sizeof(*h_adapter), GFP_KERNEL);
+> +	if (!h_adapter)
+> +		return -ENOMEM;
+> +
+> +	h_adapter->priv = priv;
+> +	ops->set_bt_context(priv, h_adapter);
+> +	h_adapter->proto_ops = ops;
+> +	ops->bt_ops = &rsi_bt_ops;
+> +	h_adapter->fsm_state = RSI_BT_FSM_DEVICE_READY;
+> +
+> +	hdev = hci_alloc_dev();
+> +	if (!hdev) {
+> +		BT_ERR("Failed to alloc HCI device\n");
+> +		goto err;
+> +	}
+> +	h_adapter->hdev = hdev;
+> +
+> +	if (ops->get_host_intf(priv) == RSI_HOST_INTF_SDIO)
+> +		hdev->bus = HCI_SDIO;
+> +	else
+> +		hdev->bus = HCI_USB;
+> +
+> +	hci_set_drvdata(hdev, h_adapter);
+> +	hdev->dev_type = HCI_PRIMARY;
+> +	hdev->open = rsi_hci_open;
+> +	hdev->close = rsi_hci_close;
+> +	hdev->flush = rsi_hci_flush;
+> +	hdev->send = rsi_hci_send_pkt;
+> +
+> +	status = hci_register_dev(hdev);
+> +	if (status < 0) {
+> +		BT_ERR("%s: HCI registration failed with errcode %d\n",
+> +		       __func__, status);
+> +		goto err;
+> +	}
+> +
+> +	BT_INFO("%s interface created\n", hdev->name);
+> +
+> +	h_adapter->fsm_state = RSI_BT_FSM_DEVICE_READY;
+> +
+> +	return 0;
+> +
+> +err:
+> +	if (hdev) {
+> +		hci_unregister_dev(hdev);
+> +		hci_free_dev(hdev);
+> +		h_adapter->hdev = NULL;
+> +	}
+> +	kfree(h_adapter);
+> +
+> +	return -EINVAL;
+> +}
+> +
+> +void rsi_hci_detach(void *priv)
+> +{
+> +	struct rsi_hci_adapter *h_adapter = (struct rsi_hci_adapter *)priv;
+> +	struct hci_dev *hdev;
+> +
+> +	if (!h_adapter)
+> +		return;
+> +
+> +	hdev = h_adapter->hdev;
+> +
+> +	BT_INFO("Detaching %s\n", hdev->name);
+> +
+> +	if (hdev) {
+> +		hci_unregister_dev(hdev);
+> +		hci_free_dev(hdev);
+> +		h_adapter->hdev = NULL;
+> +	}
+> +
+> +	kfree(h_adapter);
+> +	h_adapter->fsm_state = RSI_BT_FSM_DEVICE_NOT_READY;
+> +}
+> +
+> +struct rsi_mod_ops *rsi_get_hci_ops(void)
+> +{
+> +	return &rsi_bt_ops;
+> +};
+> +EXPORT_SYMBOL_GPL(rsi_get_hci_ops);
+> +
+> +static int rsi_91x_bt_module_init(void)
+> +{
+> +	BT_INFO("%s: BT Module init called\n", __func__);
+> +
+> +	return 0;
+> +}
+> +
+> +static void rsi_91x_bt_module_exit(void)
+> +{
+> +	BT_INFO("%s: BT Module exit called\n", __func__);
+> +}
+> +
+> +module_init(rsi_91x_bt_module_init);
+> +module_exit(rsi_91x_bt_module_exit);
+> +MODULE_AUTHOR("Redpine Signals Inc");
+> +MODULE_DESCRIPTION("RSI BT driver");
+> +MODULE_SUPPORTED_DEVICE("RSI-BT");
+> +MODULE_LICENSE("Dual BSD/GPL");
+> diff --git a/drivers/bluetooth/rsi_hci.h b/drivers/bluetooth/rsi_hci.h
+> new file mode 100644
+> index 0000000..6f44231
+> --- /dev/null
+> +++ b/drivers/bluetooth/rsi_hci.h
+> @@ -0,0 +1,51 @@
+> +/**
+> + * Copyright (c) 2017 Redpine Signals Inc.
+> + *
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> + */
+> +
+> +#ifndef __RSI_HCI_H__
+> +#define __RSI_HCI_H__
+> +
+> +#include <net/bluetooth/bluetooth.h>
+> +#include <net/bluetooth/hci_core.h>
+> +#include <linux/rsi_header.h>
+> +#include <net/genetlink.h>
+> +
+> +/* RX frame types */
+> +#define RSI_RESULT_CONFIRM			0x80
+> +#define RSI_BT_PER				0x10
+> +#define RSI_BT_BER				0x11
+> +#define RSI_BT_CW				0x12
+> +
+> +#define RSI_HEADROOM_FOR_BT_HAL	16
+> +
+> +enum bt_fsm_state {
+> +	RSI_BT_FSM_DEVICE_NOT_READY = 0,
+> +	RSI_BT_FSM_DEVICE_READY,
+> +};
+> +
+> +struct rsi_hci_adapter {
+> +	void *priv;
+> +	struct rsi_proto_ops *proto_ops;
+> +	enum bt_fsm_state fsm_state;
+> +	struct hci_dev *hdev;
+> +};
+
+If they are btrsi.c specific, they should be in btrsi.c and not in a header file.
+
+> +
+> +#define RSI_FRAME_DESC_SIZE		16
+> +
+> +int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops);
+> +void rsi_hci_detach(void *priv);
+> +int rsi_hci_recv_pkt(void *data, u8 *pkt);
+
+And this is the part I do not get. What is the deal with the rsi_bt_ops. Having both exported is pointless.
+
+Regards
+
+Marcel
