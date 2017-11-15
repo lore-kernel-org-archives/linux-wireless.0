@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42418 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751528AbdKTPrO (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6551 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755215AbdKOKBk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 10:47:14 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi 2017-11-19
-References: <1511175768.4011.261.camel@coelho.fi>
-Date: Mon, 20 Nov 2017 17:47:09 +0200
-In-Reply-To: <1511175768.4011.261.camel@coelho.fi> (Luca Coelho's message of
-        "Mon, 20 Nov 2017 13:02:48 +0200")
-Message-ID: <87bmjxdkaq.fsf@kamboji.qca.qualcomm.com> (sfid-20171120_164726_432000_3E0D98D6)
+        Wed, 15 Nov 2017 05:01:40 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Peter Oh <peter.oh@bowerswilkins.com>
+CC: "Harms, Hannes" <hannes.harms@tu-bs.de>,
+        Ben Greear <greearb@candelatech.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mesh point and ap mode on same interface
+Date: Wed, 15 Nov 2017 10:01:36 +0000
+Message-ID: <87po8jhncx.fsf@kamboji.qca.qualcomm.com> (sfid-20171115_110145_329005_A7788683)
+References: <e6b02c56-38c7-323e-2bc9-e2b4276b654c@tu-bs.de>
+        <cc8baced-bd74-5703-d885-6ec444eb62ce@candelatech.com>
+        <43bf6a27-be58-35e4-26fa-5e6b380353ac@bowerswilkins.com>
+        <7dc592a5-9381-f715-6ea7-0a8b8deee311@tu-bs.de>
+        <CADjYELwdUxEap_z=_HD4DS4FEQ2_2HP3w9cvDU-BTFLoOTDipg@mail.gmail.com>
+        <5c04c7fe-8cf8-ddd8-d6a7-f42629586a63@bowerswilkins.com>
+        <067d234a-59f0-4175-55af-9354617057b9@tu-bs.de>
+        <61192d3b-b4c7-f47e-2ff9-44e17595d6a9@bowerswilkins.com>
+        <fc1993f5-8b83-4e74-7866-2adcf318ff5f@tu-bs.de>
+        <03700343-7b5c-b21e-8b7b-2ac8c7d3258b@bowerswilkins.com>
+In-Reply-To: <03700343-7b5c-b21e-8b7b-2ac8c7d3258b@bowerswilkins.com> (Peter
+        Oh's message of "Wed, 8 Nov 2017 10:13:16 -0800")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+(adding linux-wireless for a cfg80211 question)
 
-> Here is my first set of fixes for 4.15.  More details in the tag
-> description.
+Peter Oh <peter.oh@bowerswilkins.com> writes:
+> On 11/08/2017 04:49 AM, Harms, Hannes wrote:
 >
-> I have based it on wireless-drivers-next.git, because you didn't update
-> wireless-drivers.git yet.  Let me know if you want me to rebase once
-> you update.
+>> I found a solution for the problem:
+>>
+>> When joining the mesh with beacon interval  set  to 100
+>> both  mesh and ap interface are coming up.
+>>
+>> > iw mesh0 mesh join my_mesh beacon-interval 100
+>>
+>> The default beacon interval is 1000 for mesh interfaces.
+>> It seems that QCA9880 is not working
+>> with different beacon intervals for ap + mesh.
+>
+> Good to hear that working. But mesh beacon interval 1000 which is
+> default value should work. Any mesh beacon intervals of multiple of AP
+> beacon intervals are supposed to work.
+>
+> (In other words, mesh beacon intervals that are not aligned by
+>multiple of AP beacon intervals won't work). These are valid for both
+>of QCA9880 and QCA4019 as far as I know.
 
-No need to rebase, you did the right thing. And now I have fast forwarded
-wireless-drivers to latest net tree.
+It would be nice if ath10k could print a warning if the beacon intervals
+are not compatible. Or is there a way to enforce the beacon interval
+with help of cfg80211 or mac80211?
 
-> I have sent this out before and kbuildbot didn't find any issues. 
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit fdd0bd88ceaecf729db103ac8836af5805dd2dc1:
->
->   brcmfmac: add CLM download support (2017-11-11 03:04:09 +0200)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2017-11-19
-
-Pulled, thanks.
-
--- 
-Kalle Valo
+--=20
+Kalle Valo=
