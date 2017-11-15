@@ -1,58 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f181.google.com ([74.125.82.181]:48240 "EHLO
-        mail-ot0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933684AbdKGKHA (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:43486 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754693AbdKOH2b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2017 05:07:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171107085327.GA11380@redhat.com>
-References: <1509983829.10974.2.camel@gmail.com> <20171107085327.GA11380@redhat.com>
-From: Richard Genoud <richard.genoud@gmail.com>
-Date: Tue, 7 Nov 2017 11:06:39 +0100
-Message-ID: <CACQ1gAi6XtjCHPji3BP71jDG7srg+BshesviasXiSqnw2zs9_Q@mail.gmail.com> (sfid-20171107_110823_320712_8ECF77AB)
-Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 15 Nov 2017 02:28:31 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [PATCH 3/8] rsi: add header file rsi_header
+Date: Wed, 15 Nov 2017 12:50:39 +0530
+Message-Id: <1510730444-3237-4-git-send-email-amitkarwar@gmail.com> (sfid-20171115_082838_872495_27F385B4)
+In-Reply-To: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
+References: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2017-11-07 9:53 GMT+01:00 Stanislaw Gruszka <sgruszka@redhat.com>:
-> Hi
-Hi !
->
-> On Mon, Nov 06, 2017 at 04:57:09PM +0100, Richard Genoud wrote:
->> I get a soft lock-up while unbinding the USB driver on a TP-Link TL-WN727Nv3 (chipset 5370):
->>
->> # echo 1-2.2 > /sys/bus/usb/drivers/usb/unbind
->> watchdog: BUG: soft lockup - CPU#0 stuck for 23s! [kworker/u2:3:308]
-> ...
->> I can trigger this each time.
->
-> I can not reproduce this on my system (I'm using 4.14.0-rc6, but I don't
-> think it's an issue). I think the problem may be caused by usb
-> host controler driver, which can be different on your system.
->
-> Does ftrace work on your platform ? If so could you use ftrace
-> to provide rt2x00 functions trace when the  probllem happen ?
->
-> 3 short articles how to configure and use ftrace are here:
-> https://lwn.net/Articles/365835/
-> https://lwn.net/Articles/366796/
-> https://lwn.net/Articles/370423/
->
-I tried with ftrace, but I don't think there's a way to dump the trace
-when there's a soft lock-up
-(I can't do anything after the unbind, even the heartbeat led stopped blinking).
-I saw the /proc/sys/kernel/ftrace_dump_on_oops file, but there's no
-/proc/sys/kernel/ftrace_dump_on_soft_lock-up file :)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Or I missed something in ftrace ?
+The common parameters used by wlan and bt modules are added
+to a new header file "rsi_header.h" defined in '/include/linux'
 
-Thanks !
-Richard.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_main.h | 12 ++----------
+ include/linux/rsi_header.h          | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 10 deletions(-)
+ create mode 100644 include/linux/rsi_header.h
 
-> Thanks
-> Stanislaw
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index ee469dc..ca02a4b 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -20,6 +20,7 @@
+ #include <linux/string.h>
+ #include <linux/skbuff.h>
+ #include <net/mac80211.h>
++#include <linux/rsi_header.h>
+ 
+ struct rsi_sta {
+ 	struct ieee80211_sta *sta;
+@@ -85,10 +86,6 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
+ #define MGMT_HW_Q			10
+ #define BEACON_HW_Q			11
+ 
+-/* Queue information */
+-#define RSI_COEX_Q			0x0
+-#define RSI_WIFI_MGMT_Q                 0x4
+-#define RSI_WIFI_DATA_Q                 0x5
+ #define IEEE80211_MGMT_FRAME            0x00
+ #define IEEE80211_CTL_FRAME             0x04
+ 
+@@ -293,11 +290,6 @@ struct rsi_common {
+ 	struct ieee80211_vif *roc_vif;
+ };
+ 
+-enum host_intf {
+-	RSI_HOST_INTF_SDIO = 0,
+-	RSI_HOST_INTF_USB
+-};
+-
+ struct eepromrw_info {
+ 	u32 offset;
+ 	u32 length;
+@@ -322,7 +314,7 @@ struct rsi_hw {
+ 	struct device *device;
+ 	u8 sc_nvifs;
+ 
+-	enum host_intf rsi_host_intf;
++	enum rsi_host_intf rsi_host_intf;
+ 	u16 block_size;
+ 	enum ps_state ps_state;
+ 	struct rsi_ps_info ps_info;
+diff --git a/include/linux/rsi_header.h b/include/linux/rsi_header.h
+new file mode 100644
+index 0000000..16a447b
+--- /dev/null
++++ b/include/linux/rsi_header.h
+@@ -0,0 +1,34 @@
++/**
++ * Copyright (c) 2017 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_HEADER_H__
++#define __RSI_HEADER_H__
++
++/* HAL queue information */
++#define RSI_COEX_Q			0x0
++#define RSI_BT_Q			0x2
++#define RSI_WLAN_Q                      0x3
++#define RSI_WIFI_MGMT_Q                 0x4
++#define RSI_WIFI_DATA_Q                 0x5
++#define RSI_BT_MGMT_Q			0x6
++#define RSI_BT_DATA_Q			0x7
++
++enum rsi_host_intf {
++	RSI_HOST_INTF_SDIO = 0,
++	RSI_HOST_INTF_USB
++};
++
++#endif
+-- 
+2.7.4
