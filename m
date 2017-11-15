@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47432 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751383AbdKYQev (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:52014 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755443AbdKOPXv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Nov 2017 11:34:51 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 25 Nov 2017 18:34:34 +0200
-Message-Id: <20171125163444.24258-2-luca@coelho.fi> (sfid-20171125_173519_673780_5D0FC03F)
-In-Reply-To: <20171125163444.24258-1-luca@coelho.fi>
-References: <20171125163444.24258-1-luca@coelho.fi>
-Subject: [PATCH 01/11] iwlwifi: mvm: check for short GI only for OFDM
+        Wed, 15 Nov 2017 10:23:51 -0500
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 11.1 \(3445.4.7\))
+Subject: Re: [PATCH 2/8] rsi: add bluetooth rx endpoint
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1510730444-3237-3-git-send-email-amitkarwar@gmail.com>
+Date: Wed, 15 Nov 2017 16:23:49 +0100
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Message-Id: <440EED52-0556-4919-9727-078B2A7192D6@holtmann.org> (sfid-20171115_162535_595107_6D341AA4)
+References: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
+ <1510730444-3237-3-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi Amitkumar,
 
-This bit will be used in CCK to indicate short preamble.
+> USB endpoint 1 is used for WLAN which is presently in use.
+> USB endpoint 2 is introduced for BT Rx traffic. Enumeration
+> of Rx BT endpoint and submitting Rx BT URB are added.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 +++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+wouldn’t it be good to include the /sys/kernel/debug/usb/devices part here that shows how the USB device’s layout.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index d1a40688d5e1..7cbea7890b0c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -439,7 +439,8 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		rx_status->bw = RATE_INFO_BW_160;
- 		break;
- 	}
--	if (rate_n_flags & RATE_MCS_SGI_MSK)
-+	if (!(rate_n_flags & RATE_MCS_CCK_MSK) &&
-+	    rate_n_flags & RATE_MCS_SGI_MSK)
- 		rx_status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
- 	if (rate_n_flags & RATE_HT_MCS_GF_MSK)
- 		rx_status->enc_flags |= RX_ENC_FLAG_HT_GF;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 76dc58381e1c..f444ff3a3396 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1010,7 +1010,9 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		rx_status->bw = RATE_INFO_BW_160;
- 		break;
- 	}
--	if (rate_n_flags & RATE_MCS_SGI_MSK)
-+
-+	if (!(rate_n_flags & RATE_MCS_CCK_MSK) &&
-+	    rate_n_flags & RATE_MCS_SGI_MSK)
- 		rx_status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
- 	if (rate_n_flags & RATE_HT_MCS_GF_MSK)
- 		rx_status->enc_flags |= RX_ENC_FLAG_HT_GF;
--- 
-2.15.0
+Regards
+
+Marcel
