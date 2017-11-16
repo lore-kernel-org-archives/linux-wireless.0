@@ -1,118 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:55213 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751030AbdKNGdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 01:33:07 -0500
-Message-ID: <1510641182.4011.65.camel@intel.com> (sfid-20171114_073323_812283_16DE68CF)
-Subject: Re: Fwd: linux v4.14 causes firmware iwlwifi errors on Lenovo
- Thinkpad T440s
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Bartosz Golaszewski <brgl@bgdev.pl>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Tue, 14 Nov 2017 08:33:02 +0200
-In-Reply-To: <10da37f3-a018-7568-49a8-3a8ed86ef64c@lwfinger.net>
-References: <CAMRc=Mf92X2t8wjmE+xkXrA0QKY06uFeXhMY-97Ka=_UxuQbjw@mail.gmail.com>
-         <CAMRc=Mf-4HnRXLxoiPrzZVjeCpfY5+Q2Ydmee0GkViejk8nzaQ@mail.gmail.com>
-         <3045d677-8f24-b258-0eaf-ee8dae5ecd4c@lwfinger.net>
-         <CAMRc=Mf-sy79yoJiyZC8pOtHTo4P7SpHPsTmuHxEBfbc8xa+Uw@mail.gmail.com>
-         <10da37f3-a018-7568-49a8-3a8ed86ef64c@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:51700 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754883AbdKPGdU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Nov 2017 01:33:20 -0500
+Received: by mail-pg0-f65.google.com with SMTP id p9so19879867pgc.8
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Nov 2017 22:33:20 -0800 (PST)
+Date: Wed, 15 Nov 2017 22:33:17 -0800
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: kvalo@codeaurora.org, k.eugene.e@gmail.com,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, nicolas.dechesne@linaro.org,
+        Eyal Ilsar <eilsar@codeaurora.org>
+Subject: Re: [PATCH v3] wcn36xx: Set default BTLE coexistence config
+Message-ID: <20171116063317.GM28761@minitux> (sfid-20171116_073711_911739_2F2563DB)
+References: <20171114072319.32705-1-rfried@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171114072319.32705-1-rfried@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-11-13 at 16:23 -0600, Larry Finger wrote:
-> On 11/13/2017 03:30 PM, Bartosz Golaszewski wrote:
-> > 2017-11-13 21:45 GMT+01:00 Larry Finger <Larry.Finger@lwfinger.net>
-> > :
-> > > On 11/13/2017 02:22 PM, Bartosz Golaszewski wrote:
-> > > > 
-> > > > Forwarding here too as I messed up the address the last time.
-> > > > --
-> > > > 
-> > > > Hi,
-> > > > 
-> > > > I noticed my wireless interface can't get up with linux v4.14
-> > > > and the
-> > > > kernel log is flooded with firmware errors:
-> > > > 
-> > > > iwlwifi 0000:03:00.0: Firmware error during reconfiguration -
-> > > > reprobe!
-> > > > iwlwifi 0000:03:00.0: FW error in SYNC CMD DQA_ENABLE_CMD
-> > > > 
-> > > > and
-> > > > 
-> > > > ieee80211 phy63: Hardware restart was requested.
-> > > > 
-> > > > The wireless controller is: Intel Corporation Wireless 7260
-> > > > (rev 83)
-> > > > Firmware used is: iwlwifi-7260-17
-> > > > 
-> > > > Everything works fine with v4.13.12.
-> > > > 
-> > > > I didn't have time today to bisect for the offending commit.
-> > > > Full log
-> > > > uploaded[1].
-> > > > 
-> > > > Best regards,
-> > > > Bartosz Golaszewski
-> > > > 
-> > > > [1] https://pastebin.com/jksqxvS6
-> > > 
-> > > 
-> > > Your log shows "iwlwifi 0000:03:00.0: loaded firmware version
-> > > 17.228510.0
-> > > op_mode iwlmvm"
-> > > 
-> > > Mine, where the 7260 works, shows "iwlwifi 0000:04:00.0: loaded
-> > > firmware
-> > > version 17.459231.0 op_mode iwlmvm".
-> > > 
-> > > It seems as if you need newer firmware. A detailed file listing
-> > > shows
-> > > "-rw-r--r-- 1 root root 1049340 Oct  9 12:03
-> > > /lib/firmware/iwlwifi-7260-17.ucode". That date is likely when I
-> > > installed
-> > > the updated kernel firmware package from my distro. The md5sum
-> > > for the file
-> > > is 73a217f55c47d3a70bb5dbbe1d676423.
-> > > 
-> > > Larry
-> > > 
-> > 
-> > Ok so it seems the version in linux-firmware is outdated. The file
-> > you're using is available on github[1] and fixed the issue for me.
-> > 
-> > Thanks!
-> > Bartosz Golaszewski
-> > 
-> > [1] https://github.com/OpenELEC/iwlwifi-firmware
+On Mon 13 Nov 23:23 PST 2017, Ramon Fried wrote:
+
+> From: Eyal Ilsar <eilsar@codeaurora.org>
 > 
-> Interesting. Using md5sum of the git repo for linux-firmware gets
-> 73a217f55c47d3a70bb5dbbe1d676423  iwlwifi-7260-17.ucode.
+> If the value for the firmware configuration parameters
+> BTC_STATIC_LEN_LE_BT and BTC_STATIC_LEN_LE_WLAN are not set the duty
+> cycle between BT and WLAN is such that if BT (including BLE) is active
+> WLAN gets 0 bandwidth. When tuning these parameters having a too high
+> value for WLAN means that BLE performance degrades.
+> The "sweet" point of roughly half of the maximal values was empirically
+> found to achieve a balance between BLE and Wi-Fi coexistence
+> performance.
 > 
-> That is the file I'm using.
+> Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
+> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/smd.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index 9c6590d5348a..1c7598752255 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> @@ -72,8 +72,10 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
+>  	WCN36XX_CFG_VAL(DYNAMIC_PS_POLL_VALUE, 0),
+>  	WCN36XX_CFG_VAL(TX_PWR_CTRL_ENABLE, 1),
+>  	WCN36XX_CFG_VAL(ENABLE_CLOSE_LOOP, 1),
+> -	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
 
-You shouldn't use firmwares from github or anywhere else except from
-the two official places where we release it:
+I still don't see why you're moving this unrelated line, can you please
+help me see what I'm missing?
 
-Mainline (but slow to get updated):
+Thanks,
+Bjorn
 
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/iwlwifi-7260-17.ucode
-
-
-Our official public tree:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/plain/iwlwifi-7260-17.ucode
-
-
-And, of course, your distro may distribute these in an official package
-as well, but it's good to check the versions to be sure you're running
-the latest one we released.
-
---
-Cheers,
-Luca.
+> +	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_BT, 120000),
+> +	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_WLAN, 30000),
+>  	WCN36XX_CFG_VAL(MAX_ASSOC_LIMIT, 10),
+> +	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
+>  	WCN36XX_CFG_VAL(ENABLE_MCC_ADAPTIVE_SCHEDULER, 0),
+>  };
+>  
+> -- 
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
+> 
