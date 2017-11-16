@@ -1,102 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:52194 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752800AbdKFN5L (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45956 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751621AbdKPIsv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 08:57:11 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] rtlwifi: use ktime_get_real_seconds() for suspend time
-Date: Mon,  6 Nov 2017 14:55:36 +0100
-Message-Id: <20171106135619.1248453-2-arnd@arndb.de> (sfid-20171106_145739_240281_1067FF30)
-In-Reply-To: <20171106135619.1248453-1-arnd@arndb.de>
-References: <20171106135619.1248453-1-arnd@arndb.de>
+        Thu, 16 Nov 2017 03:48:51 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Thomas Backlund <tmb@mageia.org>,
+        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 16 Nov 2017 10:48:45 +0200
+Message-Id: <20171116084845.14688-1-luca@coelho.fi> (sfid-20171116_094907_723852_65C70639)
+In-Reply-To: <20171115165242.21675-4-luca@coelho.fi>
+References: <20171115165242.21675-4-luca@coelho.fi>
+Subject: [PATCH v2 3/3] iwlwifi: fix firmware names for 9000 and A000 series hw
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-do_gettimeofday() is deprecated and slower than necessary for the purpose
-of reading the seconds. This changes rtl_op_suspend/resume to use
-ktime_get_real_seconds() instead, which is simpler and avoids confusion
-about whether it is y2038-safe or not.
+From: Thomas Backlund <tmb@mageia.org>
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+iwlwifi 9000 and a0000 series hw contains an extra dash in firmware
+file name as seeen in modinfo output for kernel 4.14:
+
+firmware:       iwlwifi-9260-th-b0-jf-b0--34.ucode
+firmware:       iwlwifi-9260-th-a0-jf-a0--34.ucode
+firmware:       iwlwifi-9000-pu-a0-jf-b0--34.ucode
+firmware:       iwlwifi-9000-pu-a0-jf-a0--34.ucode
+firmware:       iwlwifi-QuQnj-a0-hr-a0--34.ucode
+firmware:       iwlwifi-QuQnj-a0-jf-b0--34.ucode
+firmware:       iwlwifi-QuQnj-f0-hr-a0--34.ucode
+firmware:       iwlwifi-Qu-a0-jf-b0--34.ucode
+firmware:       iwlwifi-Qu-a0-hr-a0--34.ucode
+
+Fix that by dropping the extra adding of '"-"'.
+
+Signed-off-by: Thomas Backlund <tmb@mageia.org>
+Cc: stable@vger.kernel.org # 4.13
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/core.c         | 10 ++++------
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c |  3 +--
- drivers/net/wireless/realtek/rtlwifi/wifi.h         |  2 +-
- 3 files changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 1147327e6f52..533e9cc4c84b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -550,15 +550,13 @@ static int rtl_op_suspend(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	struct timeval ts;
+In v2:
+
+   * fix rebasing damage;
+
+drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  6 +++---
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c | 10 +++++-----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index b6990400042f..e7e75b458005 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -82,11 +82,11 @@
+ #define IWL9000B_MODULE_FIRMWARE(api) \
+ 	IWL9000B_FW_PRE __stringify(api) ".ucode"
+ #define IWL9000RFB_MODULE_FIRMWARE(api) \
+-	IWL9000RFB_FW_PRE "-" __stringify(api) ".ucode"
++	IWL9000RFB_FW_PRE __stringify(api) ".ucode"
+ #define IWL9260A_MODULE_FIRMWARE(api) \
+-	IWL9260A_FW_PRE "-" __stringify(api) ".ucode"
++	IWL9260A_FW_PRE __stringify(api) ".ucode"
+ #define IWL9260B_MODULE_FIRMWARE(api) \
+-	IWL9260B_FW_PRE "-" __stringify(api) ".ucode"
++	IWL9260B_FW_PRE __stringify(api) ".ucode"
  
- 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "\n");
- 	if (WARN_ON(!wow))
- 		return -EINVAL;
+ #define NVM_HW_SECTION_NUM_FAMILY_9000		10
  
- 	/* to resolve s4 can not wake up*/
--	do_gettimeofday(&ts);
--	rtlhal->last_suspend_sec = ts.tv_sec;
-+	rtlhal->last_suspend_sec = ktime_get_real_seconds();
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
+index ea8206515171..705f83b02e13 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
+@@ -80,15 +80,15 @@
+ #define IWL_A000_HR_A0_FW_PRE	"iwlwifi-QuQnj-a0-hr-a0-"
  
- 	if ((ppsc->wo_wlan_mode & WAKE_ON_PATTERN_MATCH) && wow->n_patterns)
- 		_rtl_add_wowlan_patterns(hw, wow);
-@@ -577,7 +575,7 @@ static int rtl_op_resume(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
--	struct timeval ts;
-+	time64_t now;
+ #define IWL_A000_HR_MODULE_FIRMWARE(api) \
+-	IWL_A000_HR_FW_PRE "-" __stringify(api) ".ucode"
++	IWL_A000_HR_FW_PRE __stringify(api) ".ucode"
+ #define IWL_A000_JF_MODULE_FIRMWARE(api) \
+-	IWL_A000_JF_FW_PRE "-" __stringify(api) ".ucode"
++	IWL_A000_JF_FW_PRE __stringify(api) ".ucode"
+ #define IWL_A000_HR_F0_QNJ_MODULE_FIRMWARE(api) \
+-	IWL_A000_HR_F0_FW_PRE "-" __stringify(api) ".ucode"
++	IWL_A000_HR_F0_FW_PRE __stringify(api) ".ucode"
+ #define IWL_A000_JF_B0_QNJ_MODULE_FIRMWARE(api) \
+-	IWL_A000_JF_B0_FW_PRE "-" __stringify(api) ".ucode"
++	IWL_A000_JF_B0_FW_PRE __stringify(api) ".ucode"
+ #define IWL_A000_HR_A0_QNJ_MODULE_FIRMWARE(api) \
+-	IWL_A000_HR_A0_FW_PRE "-" __stringify(api) ".ucode"
++	IWL_A000_HR_A0_FW_PRE __stringify(api) ".ucode"
  
- 	RT_TRACE(rtlpriv, COMP_POWER, DBG_DMESG, "\n");
- 	rtlhal->driver_is_goingto_unload = false;
-@@ -585,8 +583,8 @@ static int rtl_op_resume(struct ieee80211_hw *hw)
- 	rtlhal->wake_from_pnp_sleep = true;
- 
- 	/* to resovle s4 can not wake up*/
--	do_gettimeofday(&ts);
--	if (ts.tv_sec - rtlhal->last_suspend_sec < 5)
-+	now = ktime_get_real_seconds();
-+	if (now - rtlhal->last_suspend_sec < 5)
- 		return -1;
- 
- 	rtl_op_start(hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 20ffe856180e..ad28e188bd04 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -1373,8 +1373,7 @@ static void _rtl8821ae_get_wakeup_reason(struct ieee80211_hw *hw)
- 
- 	ppsc->wakeup_reason = 0;
- 
--	do_gettimeofday(&ts);
--	rtlhal->last_suspend_sec = ts.tv_sec;
-+	rtlhal->last_suspend_sec = ktime_get_real_seconds();
- 
- 	switch (fw_reason) {
- 	case FW_WOW_V2_PTK_UPDATE_EVENT:
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 22afc14c3da6..6f1b0f4667d9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -1599,7 +1599,7 @@ struct rtl_hal {
- 	bool enter_pnp_sleep;
- 	bool wake_from_pnp_sleep;
- 	bool wow_enabled;
--	__kernel_time_t last_suspend_sec;
-+	time64_t last_suspend_sec;
- 	u32 wowlan_fwsize;
- 	u8 *wowlan_firmware;
+ #define NVM_HW_SECTION_NUM_FAMILY_A000		10
  
 -- 
-2.9.0
+2.15.0
