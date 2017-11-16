@@ -1,235 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:52011 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752099AbdK2Wjc (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45972 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756730AbdKPJtO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 17:39:32 -0500
-Subject: Re: [PATCH 3/4] ath10k: WMI: get wmi init parameter values from hw
- params
-To: Rakesh Pillai <pillair@qti.qualcomm.com>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@qti.qualcomm.com>
-References: <1511949097-524-1-git-send-email-pillair@qti.qualcomm.com>
- <1511949097-524-3-git-send-email-pillair@qti.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <98b51b81-8a33-f722-ca7a-605bd6d99bdf@dd-wrt.com> (sfid-20171129_233937_067014_4390228E)
-Date: Wed, 29 Nov 2017 23:39:27 +0100
-MIME-Version: 1.0
-In-Reply-To: <1511949097-524-3-git-send-email-pillair@qti.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 16 Nov 2017 04:49:14 -0500
+Message-ID: <1510825750.4011.179.camel@coelho.fi> (sfid-20171116_104920_628293_45534B82)
+From: Luca Coelho <luca@coelho.fi>
+To: Chris Chiu <chiu@endlessm.com>
+Cc: johannes.berg@intel.com, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org,
+        Linux Upstreaming Team <linux@endlessm.com>
+Date: Thu, 16 Nov 2017 11:49:10 +0200
+In-Reply-To: <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
+References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
+         <1509434718.4492.195.camel@coelho.fi>
+         <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
+         <1509952948.4492.360.camel@coelho.fi>
+         <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
+         <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Need support for Intel new wifi module 9462NGW
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-your code is not endian safe
+Hi Chris,
 
-see.
+On Thu, 2017-11-09 at 11:11 +0800, Chris Chiu wrote:
+> Hi Luca,
+>     Any suggestion for the "Failed to start INIT ucode: -110" issue
+> for the firmware?
 
-cfg->num_peers = ar->hw_params.num_peers;
+There were a few problems which should now be fixed.  We published new
+firmwares in our linux-firmware.git tree[1] and also made some fixes in
+the driver[2].  Please update your system accordingly and let me know
+if it works for you.
 
-you forgot to use __cpu_to_le32
+Thanks!
 
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/
+[2] https://patchwork.kernel.org/patch/10059871/
+    https://patchwork.kernel.org/patch/10059875/
+    https://patchwork.kernel.org/patch/10059873/
 
-
-Am 29.11.2017 um 10:51 schrieb Rakesh Pillai:
-> The parameter values for skid limit, number of peers and wds
-> entries values which are sent in wmi init cmd are hardware
-> specific.
->
-> Add support to obtain skid limit, number of peers and wds entries
-> values from hw params which will have the hw specific values
-> for these parameters.
->
-> Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-> Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath10k/core.c    | 36 +++++++++++++++++++++++++++++++
->   drivers/net/wireless/ath/ath10k/hw.h      |  4 ++++
->   drivers/net/wireless/ath/ath10k/wmi-tlv.c |  7 +++---
->   3 files changed, 44 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index 1e4e18e..be18913 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -75,6 +75,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 8,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA9887_HW_1_0_VERSION,
-> @@ -99,6 +102,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 8,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA6174_HW_2_1_VERSION,
-> @@ -122,6 +128,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 8,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA6174_HW_2_1_VERSION,
-> @@ -145,6 +154,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 8,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA6174_HW_3_0_VERSION,
-> @@ -168,6 +180,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 8,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA6174_HW_3_2_VERSION,
-> @@ -194,6 +209,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 8,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA99X0_HW_2_0_DEV_VERSION,
-> @@ -223,6 +241,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 11,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA9984_HW_1_0_DEV_VERSION,
-> @@ -257,6 +278,9 @@
->   		.vht160_mcs_rx_highest = 1560,
->   		.vht160_mcs_tx_highest = 1560,
->   		.n_cipher_suites = 11,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA9888_HW_2_0_DEV_VERSION,
-> @@ -290,6 +314,9 @@
->   		.vht160_mcs_rx_highest = 780,
->   		.vht160_mcs_tx_highest = 780,
->   		.n_cipher_suites = 11,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA9377_HW_1_0_DEV_VERSION,
-> @@ -313,6 +340,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 8,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA9377_HW_1_1_DEV_VERSION,
-> @@ -338,6 +368,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 8,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   	{
->   		.id = QCA4019_HW_1_0_DEV_VERSION,
-> @@ -368,6 +401,9 @@
->   		.vht160_mcs_rx_highest = 0,
->   		.vht160_mcs_tx_highest = 0,
->   		.n_cipher_suites = 11,
-> +		.num_peers = TARGET_TLV_NUM_PEERS,
-> +		.ast_skid_limit = 0x10,
-> +		.num_wds_entries = 0x20,
->   	},
->   };
->   
-> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-> index 05f26e5..fedb6c7 100644
-> --- a/drivers/net/wireless/ath/ath10k/hw.h
-> +++ b/drivers/net/wireless/ath/ath10k/hw.h
-> @@ -553,6 +553,10 @@ struct ath10k_hw_params {
->   
->   	/* Number of ciphers supported (i.e First N) in cipher_suites array */
->   	int n_cipher_suites;
-> +
-> +	u32 num_peers;
-> +	u32 ast_skid_limit;
-> +	u32 num_wds_entries;
->   };
->   
->   struct htt_rx_desc;
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> index 452846c..0183d01 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> @@ -1440,7 +1440,10 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
->   	cmd->num_host_mem_chunks = __cpu_to_le32(ar->wmi.num_mem_chunks);
->   
->   	cfg->num_vdevs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
-> -	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
-> +
-> +	cfg->num_peers = ar->hw_params.num_peers;
-> +	cfg->ast_skid_limit = ar->hw_params.ast_skid_limit;
-> +	cfg->num_wds_entries = ar->hw_params.num_wds_entries;
->   
->   	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
->   		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
-> @@ -1452,7 +1455,6 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
->   
->   	cfg->num_peer_keys = __cpu_to_le32(2);
->   	cfg->num_tids = __cpu_to_le32(TARGET_TLV_NUM_TIDS);
-> -	cfg->ast_skid_limit = __cpu_to_le32(0x10);
->   	cfg->tx_chain_mask = __cpu_to_le32(0x7);
->   	cfg->rx_chain_mask = __cpu_to_le32(0x7);
->   	cfg->rx_timeout_pri[0] = __cpu_to_le32(0x64);
-> @@ -1468,7 +1470,6 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
->   	cfg->num_mcast_table_elems = __cpu_to_le32(0);
->   	cfg->mcast2ucast_mode = __cpu_to_le32(0);
->   	cfg->tx_dbg_log_size = __cpu_to_le32(0x400);
-> -	cfg->num_wds_entries = __cpu_to_le32(0x20);
->   	cfg->dma_burst_size = __cpu_to_le32(0);
->   	cfg->mac_aggr_delim = __cpu_to_le32(0);
->   	cfg->rx_skip_defrag_timeout_dup_detection_check = __cpu_to_le32(0);
-
-
--- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+--
+Cheers,
+Luca.
