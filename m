@@ -1,109 +1,321 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47398 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:45946 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751277AbdKYPfe (ORCPT
+        with ESMTP id S1758805AbdKPIrb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Nov 2017 10:35:34 -0500
+        Thu, 16 Nov 2017 03:47:31 -0500
 From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 25 Nov 2017 17:35:10 +0200
-Message-Id: <20171125153510.25359-7-luca@coelho.fi> (sfid-20171125_163542_119286_D8C22E45)
-In-Reply-To: <20171125153510.25359-1-luca@coelho.fi>
-References: <20171125153510.25359-1-luca@coelho.fi>
-Subject: [PATCH 6/6] iwlwifi: fix access to prph when transport is stopped
+        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
+Date: Thu, 16 Nov 2017 10:47:21 +0200
+Message-Id: <20171116084721.14601-1-luca@coelho.fi> (sfid-20171116_094845_274611_485F2E16)
+In-Reply-To: <20171115165242.21675-3-luca@coelho.fi>
+References: <20171115165242.21675-3-luca@coelho.fi>
+Subject: [PATCH v2 2/3] iwlwifi: fix PCI IDs and configuration mapping for 9000 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-When getting HW rfkill we get stop_device being called from
-two paths.
-One path is the IRQ calling stop device, and updating op
-mode and stack.
-As a result, cfg80211 is running rfkill sync work that shuts
-down all devices (second path).
-In the second path, we eventually get to iwl_mvm_stop_device
-which calls iwl_fw_dump_conf_clear->iwl_fw_dbg_stop_recording,
-that access periphery registers.
-The device may be stopped at this point from the first path,
-which will result with a failure to access those registers.
-Simply checking for the trans status is insufficient, since
-the race will still exist, only minimized.
-Instead, move the stop from iwl_fw_dump_conf_clear (which is
-getting called only from stop path) to the transport stop
-device function, where the access is always safe.
-This has the added value, of actually stopping dbgc before
-stopping device even when the stop is initiated from the
-transport.
+A lot of PCI IDs were missing and there were some problems with the
+configuration and firmware selection for devices on the 9000 series.
+Fix the firmware selection by adding files for the B-steps; add
+configuration for some integrated devices; and add a bunch of PCI IDs
+(mostly for integrated devices) that were missing from the driver's
+list.
 
-Fixes: 1efc3843a4ee ("iwlwifi: stop dbgc recording before stopping DMA")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Without this patch, a lot of devices will not be recognized or will
+try to load the wrong firmware file.
+
+Cc: stable@vger.kernel.org # 4.13
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h          | 2 --
- drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 6 ++++++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c      | 9 +++++++++
- 3 files changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index 9c889a32fe24..223fb77a3aa9 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -209,8 +209,6 @@ static inline void iwl_fw_dbg_stop_recording(struct iwl_fw_runtime *fwrt)
+In v2:
+  * include the changes to iwl-config.h that were missing.
+
+
+drivers/net/wireless/intel/iwlwifi/cfg/9000.c   |  67 +++++++++++-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |   5 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 132 ++++++++++++++++++------
+ 3 files changed, 170 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index af7c4f36b66f..b6990400042f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -72,12 +72,15 @@
+ #define IWL9000_SMEM_OFFSET		0x400000
+ #define IWL9000_SMEM_LEN		0x68000
  
- static inline void iwl_fw_dump_conf_clear(struct iwl_fw_runtime *fwrt)
- {
--	iwl_fw_dbg_stop_recording(fwrt);
--
- 	fwrt->dump.conf = FW_DBG_INVALID;
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index c59f4581e972..ac05fd1e74c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -49,6 +49,7 @@
-  *
-  *****************************************************************************/
- #include "iwl-trans.h"
-+#include "iwl-prph.h"
- #include "iwl-context-info.h"
- #include "internal.h"
- 
-@@ -156,6 +157,11 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- 
- 	trans_pcie->is_down = true;
- 
-+	/* Stop dbgc before stopping device */
-+	iwl_write_prph(trans, DBGC_IN_SAMPLE, 0);
-+	udelay(100);
-+	iwl_write_prph(trans, DBGC_OUT_CTRL, 0);
+-#define  IWL9000_FW_PRE "iwlwifi-9000-pu-a0-jf-a0-"
++#define  IWL9000A_FW_PRE "iwlwifi-9000-pu-a0-jf-a0-"
++#define  IWL9000B_FW_PRE "iwlwifi-9000-pu-b0-jf-b0-"
+ #define  IWL9000RFB_FW_PRE "iwlwifi-9000-pu-a0-jf-b0-"
+ #define  IWL9260A_FW_PRE "iwlwifi-9260-th-a0-jf-a0-"
+ #define  IWL9260B_FW_PRE "iwlwifi-9260-th-b0-jf-b0-"
+-#define IWL9000_MODULE_FIRMWARE(api) \
+-	IWL9000_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL9000A_MODULE_FIRMWARE(api) \
++	IWL9000A_FW_PRE __stringify(api) ".ucode"
++#define IWL9000B_MODULE_FIRMWARE(api) \
++	IWL9000B_FW_PRE __stringify(api) ".ucode"
+ #define IWL9000RFB_MODULE_FIRMWARE(api) \
+ 	IWL9000RFB_FW_PRE "-" __stringify(api) ".ucode"
+ #define IWL9260A_MODULE_FIRMWARE(api) \
+@@ -194,7 +197,48 @@ const struct iwl_cfg iwl9460_2ac_cfg = {
+ 	.nvm_ver = IWL9000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
 +
- 	/* tell the device to stop sending interrupts */
- 	iwl_disable_interrupts(trans);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 3dee95e6a475..4541c86881d6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1227,6 +1227,15 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 
- 	trans_pcie->is_down = true;
- 
-+	/* Stop dbgc before stopping device */
-+	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
-+		iwl_set_bits_prph(trans, MON_BUFF_SAMPLE_CTL, 0x100);
-+	} else {
-+		iwl_write_prph(trans, DBGC_IN_SAMPLE, 0);
-+		udelay(100);
-+		iwl_write_prph(trans, DBGC_OUT_CTRL, 0);
-+	}
++const struct iwl_cfg iwl9460_2ac_cfg_soc = {
++	.name = "Intel(R) Dual Band Wireless AC 9460",
++	.fw_name_pre = IWL9000A_FW_PRE,
++	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
++	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
++	IWL_DEVICE_9000,
++	.ht_params = &iwl9000_ht_params,
++	.nvm_ver = IWL9000_NVM_VERSION,
++	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+ 	.integrated = true,
++	.soc_latency = 5000,
++};
 +
- 	/* tell the device to stop sending interrupts */
- 	iwl_disable_interrupts(trans);
++const struct iwl_cfg iwl9461_2ac_cfg_soc = {
++		.name = "Intel(R) Dual Band Wireless AC 9461",
++		.fw_name_pre = IWL9000A_FW_PRE,
++		.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
++		.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
++		IWL_DEVICE_9000,
++		.ht_params = &iwl9000_ht_params,
++		.nvm_ver = IWL9000_NVM_VERSION,
++		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++		.integrated = true,
++		.soc_latency = 5000,
++};
++
++const struct iwl_cfg iwl9462_2ac_cfg_soc = {
++		.name = "Intel(R) Dual Band Wireless AC 9462",
++		.fw_name_pre = IWL9000A_FW_PRE,
++		.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
++		.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
++		IWL_DEVICE_9000,
++		.ht_params = &iwl9000_ht_params,
++		.nvm_ver = IWL9000_NVM_VERSION,
++		.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++		.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++		.integrated = true,
++		.soc_latency = 5000,
+ };
  
+ const struct iwl_cfg iwl9560_2ac_cfg = {
+@@ -206,10 +250,23 @@ const struct iwl_cfg iwl9560_2ac_cfg = {
+ 	.nvm_ver = IWL9000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+-	.integrated = true,
+ };
+ 
+-MODULE_FIRMWARE(IWL9000_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
++const struct iwl_cfg iwl9560_2ac_cfg_soc = {
++	.name = "Intel(R) Dual Band Wireless AC 9560",
++	.fw_name_pre = IWL9000A_FW_PRE,
++	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
++	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
++	IWL_DEVICE_9000,
++	.ht_params = &iwl9000_ht_params,
++	.nvm_ver = IWL9000_NVM_VERSION,
++	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++	.integrated = true,
++	.soc_latency = 5000,
++};
++MODULE_FIRMWARE(IWL9000A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL9000B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL9000RFB_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL9260A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL9260B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index d1263a554420..e21e46cf6f9a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -366,6 +366,7 @@ struct iwl_cfg {
+ 	u32 dccm2_len;
+ 	u32 smem_offset;
+ 	u32 smem_len;
++	u32 soc_latency;
+ 	u16 nvm_ver;
+ 	u16 nvm_calib_ver;
+ 	u16 rx_with_siso_diversity:1,
+@@ -472,6 +473,10 @@ extern const struct iwl_cfg iwl9260_2ac_cfg;
+ extern const struct iwl_cfg iwl9270_2ac_cfg;
+ extern const struct iwl_cfg iwl9460_2ac_cfg;
+ extern const struct iwl_cfg iwl9560_2ac_cfg;
++extern const struct iwl_cfg iwl9460_2ac_cfg_soc;
++extern const struct iwl_cfg iwl9461_2ac_cfg_soc;
++extern const struct iwl_cfg iwl9462_2ac_cfg_soc;
++extern const struct iwl_cfg iwl9560_2ac_cfg_soc;
+ extern const struct iwl_cfg iwla000_2ac_cfg_hr;
+ extern const struct iwl_cfg iwla000_2ac_cfg_hr_cdb;
+ extern const struct iwl_cfg iwla000_2ac_cfg_jf;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 4a21c12276d7..f21fe59faccf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -535,47 +535,121 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x2526, 0x0238, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x023C, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0260, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0264, iwl9461_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x02A0, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x02A4, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1010, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1210, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1610, iwl9270_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x4010, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x4030, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x40A4, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0xA014, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x42A4, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0034, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0038, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x003C, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x0034, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x0038, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x003C, iwl9560_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x271B, 0x0214, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0034, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0038, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x003C, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0060, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x0230, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0234, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0238, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x023C, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x4030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x31DC, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x40A4, iwl9462_2ac_cfg_soc)},
+ 
+ /* a000 Series */
+ 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr_cdb)},
 -- 
 2.15.0
