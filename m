@@ -1,197 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52101 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755356AbdKMUgC (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:51485 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751742AbdKPSgW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 15:36:02 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 03/10] brcmfmac: Split brcmf_sdiod_regrw_helper() up.
-Date: Mon, 13 Nov 2017 21:35:40 +0100
-Message-Id: <1510605347-7629-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213610_166891_FFCBF189)
-In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 16 Nov 2017 13:36:22 -0500
+Received: by mail-pf0-f194.google.com with SMTP id j28so17904340pfk.8
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Nov 2017 10:36:22 -0800 (PST)
+Date: Thu, 16 Nov 2017 10:36:18 -0800
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: kvalo@codeaurora.org, k.eugene.e@gmail.com,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, nicolas.dechesne@linaro.org,
+        Eyal Ilsar <eilsar@codeaurora.org>
+Subject: Re: [PATCH v4] wcn36xx: Set default BTLE coexistence config
+Message-ID: <20171116183618.GA5284@builder> (sfid-20171116_193633_529224_07EF83CD)
+References: <20171116080126.17239-1-rfried@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171116080126.17239-1-rfried@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+On Thu 16 Nov 00:01 PST 2017, Ramon Fried wrote:
 
-This large function is concealing a LOT of obscure logic about
-how the hardware functions. Time to split it up.
+> From: Eyal Ilsar <eilsar@codeaurora.org>
+> 
+> If the value for the firmware configuration parameters
+> BTC_STATIC_LEN_LE_BT and BTC_STATIC_LEN_LE_WLAN are not set the duty
+> cycle between BT and WLAN is such that if BT (including BLE) is active
+> WLAN gets 0 bandwidth. When tuning these parameters having a too high
+> value for WLAN means that BLE performance degrades.
+> The "sweet" point of roughly half of the maximal values was empirically
+> found to achieve a balance between BLE and Wi-Fi coexistence
+> performance.
+> 
+> Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
+> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
 
-This first patch splits the function into two pieces - read and write,
-doing away with the rw flag in the process.
+Looks good,
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 94 +++++++++++++++++-----
- 1 file changed, 73 insertions(+), 21 deletions(-)
+Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 25b5e9b..3acc0ff 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -302,8 +302,8 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
- 	return ret;
- }
- 
--static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
--				   u8 regsz, void *data, bool write)
-+static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+				 u8 regsz, void *data)
- {
- 	u8 func;
- 	s32 retry = 0;
-@@ -324,13 +324,66 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		func = SDIO_FUNC_1;
- 
- 	do {
--		if (!write)
--			memset(data, 0, regsz);
- 		/* for retry wait for 1 ms till bus get settled down */
- 		if (retry)
- 			usleep_range(1000, 2000);
-+
-+		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
-+					       data, true);
-+
-+	} while (ret != 0 && ret != -ENOMEDIUM &&
-+		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
-+
-+	if (ret == -ENOMEDIUM) {
-+		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-+	} else if (ret != 0) {
-+		/*
-+		 * SleepCSR register access can fail when
-+		 * waking up the device so reduce this noise
-+		 * in the logs.
-+		 */
-+		if (addr != SBSDIO_FUNC1_SLEEPCSR)
-+			brcmf_err("failed to write data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
-+		else
-+			brcmf_dbg(SDIO, "failed to write data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
-+	}
-+
-+	return ret;
-+}
-+
-+static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+				u8 regsz, void *data)
-+{
-+	u8 func;
-+	s32 retry = 0;
-+	int ret;
-+
-+	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
-+		return -ENOMEDIUM;
-+
-+	/*
-+	 * figure out how to read the register based on address range
-+	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
-+	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
-+	 * The rest: function 1 silicon backplane core registers
-+	 */
-+	if ((addr & ~REG_F0_REG_MASK) == 0)
-+		func = SDIO_FUNC_0;
-+	else
-+		func = SDIO_FUNC_1;
-+
-+	do {
-+		memset(data, 0, regsz);
-+
-+		/* for retry wait for 1 ms till bus get settled down */
-+		if (retry)
-+			usleep_range(1000, 2000);
-+
- 		ret = brcmf_sdiod_request_data(sdiodev, func, addr, regsz,
--					       data, write);
-+					       data, false);
-+
- 	} while (ret != 0 && ret != -ENOMEDIUM &&
- 		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
- 
-@@ -343,12 +396,13 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		 * in the logs.
- 		 */
- 		if (addr != SBSDIO_FUNC1_SLEEPCSR)
--			brcmf_err("failed to %s data F%d@0x%05x, err: %d\n",
--				  write ? "write" : "read", func, addr, ret);
-+			brcmf_err("failed to read data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
- 		else
--			brcmf_dbg(SDIO, "failed to %s data F%d@0x%05x, err: %d\n",
--				  write ? "write" : "read", func, addr, ret);
-+			brcmf_dbg(SDIO, "failed to read data F%d@0x%05x, err: %d\n",
-+				  func, addr, ret);
- 	}
-+
- 	return ret;
- }
- 
-@@ -366,13 +420,11 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
- 
- 	for (i = 0; i < 3; i++) {
--		err = brcmf_sdiod_regrw_helper(sdiodev,
--					       SBSDIO_FUNC1_SBADDRLOW + i,
--					       1, &addr[i], true);
-+		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i, addr[i],
-+				  &err);
- 		if (err) {
- 			brcmf_err("failed at addr: 0x%0x\n",
- 				  SBSDIO_FUNC1_SBADDRLOW + i);
--			break;
- 		}
- 	}
- 
-@@ -407,8 +459,7 @@ u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x\n", addr);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
--					  false);
-+	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
- 	brcmf_dbg(SDIO, "data:0x%02x\n", data);
- 
- 	if (ret)
-@@ -426,8 +477,9 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
--					  false);
-+
-+	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
-+
- 	brcmf_dbg(SDIO, "data:0x%08x\n", data);
- 
- done:
-@@ -443,8 +495,8 @@ void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	int retval;
- 
- 	brcmf_dbg(SDIO, "addr:0x%08x, data:0x%02x\n", addr, data);
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 1, &data,
--					  true);
-+	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
-+
- 	if (ret)
- 		*ret = retval;
- }
-@@ -458,8 +510,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	retval = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (retval)
- 		goto done;
--	retval = brcmf_sdiod_regrw_helper(sdiodev, addr, 4, &data,
--					  true);
-+
-+	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
- 
- done:
- 	if (ret)
--- 
-1.9.1
+Regards,
+Bjorn
+
+> ---
+>  drivers/net/wireless/ath/wcn36xx/smd.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index 9c6590d5348a..6f1e741acf3e 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> @@ -73,6 +73,8 @@ static struct wcn36xx_cfg_val wcn36xx_cfg_vals[] = {
+>  	WCN36XX_CFG_VAL(TX_PWR_CTRL_ENABLE, 1),
+>  	WCN36XX_CFG_VAL(ENABLE_CLOSE_LOOP, 1),
+>  	WCN36XX_CFG_VAL(ENABLE_LPWR_IMG_TRANSITION, 0),
+> +	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_BT, 120000),
+> +	WCN36XX_CFG_VAL(BTC_STATIC_LEN_LE_WLAN, 30000),
+>  	WCN36XX_CFG_VAL(MAX_ASSOC_LIMIT, 10),
+>  	WCN36XX_CFG_VAL(ENABLE_MCC_ADAPTIVE_SCHEDULER, 0),
+>  };
+> -- 
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
+> 
