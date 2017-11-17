@@ -1,301 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54357 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753656AbdKNNZv (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51026 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753831AbdKQA2D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 08:25:51 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH v3 02/12] wil6210: print human readable names of WMI commands and events
-Date: Tue, 14 Nov 2017 15:25:34 +0200
-Message-Id: <1510665944-30198-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142602_692539_8A78C9DE)
-In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 16 Nov 2017 19:28:03 -0500
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id 0A52B40A5ED
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Nov 2017 16:28:01 -0800 (PST)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: What would it take to get WDS working with channel contexts?
+Message-ID: <24f85baf-5e19-a2c9-517d-9b69a47860d9@candelatech.com> (sfid-20171117_012807_810321_F19CD790)
+Date: Thu, 16 Nov 2017 16:28:00 -0800
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+I have a user interested in getting WDS working on ath10k, but evidently
+this is not supported since ath10k uses channel-contexts:
 
-Upon sending/receiving WMI commands/events, print human readable
-names in addition to id for easier debugging.
+ From net/mac80211/main.c:
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.c | 237 ++++++++++++++++++++++++++++++++-
- 1 file changed, 232 insertions(+), 5 deletions(-)
+		/*
+		 * WDS is currently prohibited when channel contexts are used
+		 * because there's no clear definition of which channel WDS
+		 * type interfaces use
+		 */
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index ffdd2fa..8a780f2 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -198,6 +198,232 @@ int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
- 	return 0;
- }
- 
-+static const char *cmdid2name(u16 cmdid)
-+{
-+	switch (cmdid) {
-+	case WMI_NOTIFY_REQ_CMDID:
-+		return "WMI_NOTIFY_REQ_CMD";
-+	case WMI_START_SCAN_CMDID:
-+		return "WMI_START_SCAN_CMD";
-+	case WMI_CONNECT_CMDID:
-+		return "WMI_CONNECT_CMD";
-+	case WMI_DISCONNECT_CMDID:
-+		return "WMI_DISCONNECT_CMD";
-+	case WMI_SW_TX_REQ_CMDID:
-+		return "WMI_SW_TX_REQ_CMD";
-+	case WMI_GET_RF_SECTOR_PARAMS_CMDID:
-+		return "WMI_GET_RF_SECTOR_PARAMS_CMD";
-+	case WMI_SET_RF_SECTOR_PARAMS_CMDID:
-+		return "WMI_SET_RF_SECTOR_PARAMS_CMD";
-+	case WMI_GET_SELECTED_RF_SECTOR_INDEX_CMDID:
-+		return "WMI_GET_SELECTED_RF_SECTOR_INDEX_CMD";
-+	case WMI_SET_SELECTED_RF_SECTOR_INDEX_CMDID:
-+		return "WMI_SET_SELECTED_RF_SECTOR_INDEX_CMD";
-+	case WMI_BRP_SET_ANT_LIMIT_CMDID:
-+		return "WMI_BRP_SET_ANT_LIMIT_CMD";
-+	case WMI_TOF_SESSION_START_CMDID:
-+		return "WMI_TOF_SESSION_START_CMD";
-+	case WMI_AOA_MEAS_CMDID:
-+		return "WMI_AOA_MEAS_CMD";
-+	case WMI_PMC_CMDID:
-+		return "WMI_PMC_CMD";
-+	case WMI_TOF_GET_TX_RX_OFFSET_CMDID:
-+		return "WMI_TOF_GET_TX_RX_OFFSET_CMD";
-+	case WMI_TOF_SET_TX_RX_OFFSET_CMDID:
-+		return "WMI_TOF_SET_TX_RX_OFFSET_CMD";
-+	case WMI_VRING_CFG_CMDID:
-+		return "WMI_VRING_CFG_CMD";
-+	case WMI_BCAST_VRING_CFG_CMDID:
-+		return "WMI_BCAST_VRING_CFG_CMD";
-+	case WMI_TRAFFIC_SUSPEND_CMDID:
-+		return "WMI_TRAFFIC_SUSPEND_CMD";
-+	case WMI_TRAFFIC_RESUME_CMDID:
-+		return "WMI_TRAFFIC_RESUME_CMD";
-+	case WMI_ECHO_CMDID:
-+		return "WMI_ECHO_CMD";
-+	case WMI_SET_MAC_ADDRESS_CMDID:
-+		return "WMI_SET_MAC_ADDRESS_CMD";
-+	case WMI_LED_CFG_CMDID:
-+		return "WMI_LED_CFG_CMD";
-+	case WMI_PCP_START_CMDID:
-+		return "WMI_PCP_START_CMD";
-+	case WMI_PCP_STOP_CMDID:
-+		return "WMI_PCP_STOP_CMD";
-+	case WMI_SET_SSID_CMDID:
-+		return "WMI_SET_SSID_CMD";
-+	case WMI_GET_SSID_CMDID:
-+		return "WMI_GET_SSID_CMD";
-+	case WMI_SET_PCP_CHANNEL_CMDID:
-+		return "WMI_SET_PCP_CHANNEL_CMD";
-+	case WMI_GET_PCP_CHANNEL_CMDID:
-+		return "WMI_GET_PCP_CHANNEL_CMD";
-+	case WMI_P2P_CFG_CMDID:
-+		return "WMI_P2P_CFG_CMD";
-+	case WMI_START_LISTEN_CMDID:
-+		return "WMI_START_LISTEN_CMD";
-+	case WMI_START_SEARCH_CMDID:
-+		return "WMI_START_SEARCH_CMD";
-+	case WMI_DISCOVERY_STOP_CMDID:
-+		return "WMI_DISCOVERY_STOP_CMD";
-+	case WMI_DELETE_CIPHER_KEY_CMDID:
-+		return "WMI_DELETE_CIPHER_KEY_CMD";
-+	case WMI_ADD_CIPHER_KEY_CMDID:
-+		return "WMI_ADD_CIPHER_KEY_CMD";
-+	case WMI_SET_APPIE_CMDID:
-+		return "WMI_SET_APPIE_CMD";
-+	case WMI_CFG_RX_CHAIN_CMDID:
-+		return "WMI_CFG_RX_CHAIN_CMD";
-+	case WMI_TEMP_SENSE_CMDID:
-+		return "WMI_TEMP_SENSE_CMD";
-+	case WMI_DEL_STA_CMDID:
-+		return "WMI_DEL_STA_CMD";
-+	case WMI_DISCONNECT_STA_CMDID:
-+		return "WMI_DISCONNECT_STA_CMD";
-+	case WMI_VRING_BA_EN_CMDID:
-+		return "WMI_VRING_BA_EN_CMD";
-+	case WMI_VRING_BA_DIS_CMDID:
-+		return "WMI_VRING_BA_DIS_CMD";
-+	case WMI_RCP_DELBA_CMDID:
-+		return "WMI_RCP_DELBA_CMD";
-+	case WMI_RCP_ADDBA_RESP_CMDID:
-+		return "WMI_RCP_ADDBA_RESP_CMD";
-+	case WMI_PS_DEV_PROFILE_CFG_CMDID:
-+		return "WMI_PS_DEV_PROFILE_CFG_CMD";
-+	case WMI_SET_MGMT_RETRY_LIMIT_CMDID:
-+		return "WMI_SET_MGMT_RETRY_LIMIT_CMD";
-+	case WMI_GET_MGMT_RETRY_LIMIT_CMDID:
-+		return "WMI_GET_MGMT_RETRY_LIMIT_CMD";
-+	case WMI_ABORT_SCAN_CMDID:
-+		return "WMI_ABORT_SCAN_CMD";
-+	case WMI_NEW_STA_CMDID:
-+		return "WMI_NEW_STA_CMD";
-+	case WMI_SET_THERMAL_THROTTLING_CFG_CMDID:
-+		return "WMI_SET_THERMAL_THROTTLING_CFG_CMD";
-+	case WMI_GET_THERMAL_THROTTLING_CFG_CMDID:
-+		return "WMI_GET_THERMAL_THROTTLING_CFG_CMD";
-+	case WMI_LINK_MAINTAIN_CFG_WRITE_CMDID:
-+		return "WMI_LINK_MAINTAIN_CFG_WRITE_CMD";
-+	case WMI_LO_POWER_CALIB_FROM_OTP_CMDID:
-+		return "WMI_LO_POWER_CALIB_FROM_OTP_CMD";
-+	default:
-+		return "Untracked CMD";
-+	}
-+}
-+
-+static const char *eventid2name(u16 eventid)
-+{
-+	switch (eventid) {
-+	case WMI_NOTIFY_REQ_DONE_EVENTID:
-+		return "WMI_NOTIFY_REQ_DONE_EVENT";
-+	case WMI_DISCONNECT_EVENTID:
-+		return "WMI_DISCONNECT_EVENT";
-+	case WMI_SW_TX_COMPLETE_EVENTID:
-+		return "WMI_SW_TX_COMPLETE_EVENT";
-+	case WMI_GET_RF_SECTOR_PARAMS_DONE_EVENTID:
-+		return "WMI_GET_RF_SECTOR_PARAMS_DONE_EVENT";
-+	case WMI_SET_RF_SECTOR_PARAMS_DONE_EVENTID:
-+		return "WMI_SET_RF_SECTOR_PARAMS_DONE_EVENT";
-+	case WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID:
-+		return "WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT";
-+	case WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID:
-+		return "WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT";
-+	case WMI_BRP_SET_ANT_LIMIT_EVENTID:
-+		return "WMI_BRP_SET_ANT_LIMIT_EVENT";
-+	case WMI_FW_READY_EVENTID:
-+		return "WMI_FW_READY_EVENT";
-+	case WMI_TRAFFIC_RESUME_EVENTID:
-+		return "WMI_TRAFFIC_RESUME_EVENT";
-+	case WMI_TOF_GET_TX_RX_OFFSET_EVENTID:
-+		return "WMI_TOF_GET_TX_RX_OFFSET_EVENT";
-+	case WMI_TOF_SET_TX_RX_OFFSET_EVENTID:
-+		return "WMI_TOF_SET_TX_RX_OFFSET_EVENT";
-+	case WMI_VRING_CFG_DONE_EVENTID:
-+		return "WMI_VRING_CFG_DONE_EVENT";
-+	case WMI_READY_EVENTID:
-+		return "WMI_READY_EVENT";
-+	case WMI_RX_MGMT_PACKET_EVENTID:
-+		return "WMI_RX_MGMT_PACKET_EVENT";
-+	case WMI_TX_MGMT_PACKET_EVENTID:
-+		return "WMI_TX_MGMT_PACKET_EVENT";
-+	case WMI_SCAN_COMPLETE_EVENTID:
-+		return "WMI_SCAN_COMPLETE_EVENT";
-+	case WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID:
-+		return "WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENT";
-+	case WMI_CONNECT_EVENTID:
-+		return "WMI_CONNECT_EVENT";
-+	case WMI_EAPOL_RX_EVENTID:
-+		return "WMI_EAPOL_RX_EVENT";
-+	case WMI_BA_STATUS_EVENTID:
-+		return "WMI_BA_STATUS_EVENT";
-+	case WMI_RCP_ADDBA_REQ_EVENTID:
-+		return "WMI_RCP_ADDBA_REQ_EVENT";
-+	case WMI_DELBA_EVENTID:
-+		return "WMI_DELBA_EVENT";
-+	case WMI_VRING_EN_EVENTID:
-+		return "WMI_VRING_EN_EVENT";
-+	case WMI_DATA_PORT_OPEN_EVENTID:
-+		return "WMI_DATA_PORT_OPEN_EVENT";
-+	case WMI_AOA_MEAS_EVENTID:
-+		return "WMI_AOA_MEAS_EVENT";
-+	case WMI_TOF_SESSION_END_EVENTID:
-+		return "WMI_TOF_SESSION_END_EVENT";
-+	case WMI_TOF_GET_CAPABILITIES_EVENTID:
-+		return "WMI_TOF_GET_CAPABILITIES_EVENT";
-+	case WMI_TOF_SET_LCR_EVENTID:
-+		return "WMI_TOF_SET_LCR_EVENT";
-+	case WMI_TOF_SET_LCI_EVENTID:
-+		return "WMI_TOF_SET_LCI_EVENT";
-+	case WMI_TOF_FTM_PER_DEST_RES_EVENTID:
-+		return "WMI_TOF_FTM_PER_DEST_RES_EVENT";
-+	case WMI_TOF_CHANNEL_INFO_EVENTID:
-+		return "WMI_TOF_CHANNEL_INFO_EVENT";
-+	case WMI_TRAFFIC_SUSPEND_EVENTID:
-+		return "WMI_TRAFFIC_SUSPEND_EVENT";
-+	case WMI_ECHO_RSP_EVENTID:
-+		return "WMI_ECHO_RSP_EVENT";
-+	case WMI_LED_CFG_DONE_EVENTID:
-+		return "WMI_LED_CFG_DONE_EVENT";
-+	case WMI_PCP_STARTED_EVENTID:
-+		return "WMI_PCP_STARTED_EVENT";
-+	case WMI_PCP_STOPPED_EVENTID:
-+		return "WMI_PCP_STOPPED_EVENT";
-+	case WMI_GET_SSID_EVENTID:
-+		return "WMI_GET_SSID_EVENT";
-+	case WMI_GET_PCP_CHANNEL_EVENTID:
-+		return "WMI_GET_PCP_CHANNEL_EVENT";
-+	case WMI_P2P_CFG_DONE_EVENTID:
-+		return "WMI_P2P_CFG_DONE_EVENT";
-+	case WMI_LISTEN_STARTED_EVENTID:
-+		return "WMI_LISTEN_STARTED_EVENT";
-+	case WMI_SEARCH_STARTED_EVENTID:
-+		return "WMI_SEARCH_STARTED_EVENT";
-+	case WMI_DISCOVERY_STOPPED_EVENTID:
-+		return "WMI_DISCOVERY_STOPPED_EVENT";
-+	case WMI_CFG_RX_CHAIN_DONE_EVENTID:
-+		return "WMI_CFG_RX_CHAIN_DONE_EVENT";
-+	case WMI_TEMP_SENSE_DONE_EVENTID:
-+		return "WMI_TEMP_SENSE_DONE_EVENT";
-+	case WMI_RCP_ADDBA_RESP_SENT_EVENTID:
-+		return "WMI_RCP_ADDBA_RESP_SENT_EVENT";
-+	case WMI_PS_DEV_PROFILE_CFG_EVENTID:
-+		return "WMI_PS_DEV_PROFILE_CFG_EVENT";
-+	case WMI_SET_MGMT_RETRY_LIMIT_EVENTID:
-+		return "WMI_SET_MGMT_RETRY_LIMIT_EVENT";
-+	case WMI_GET_MGMT_RETRY_LIMIT_EVENTID:
-+		return "WMI_GET_MGMT_RETRY_LIMIT_EVENT";
-+	case WMI_SET_THERMAL_THROTTLING_CFG_EVENTID:
-+		return "WMI_SET_THERMAL_THROTTLING_CFG_EVENT";
-+	case WMI_GET_THERMAL_THROTTLING_CFG_EVENTID:
-+		return "WMI_GET_THERMAL_THROTTLING_CFG_EVENT";
-+	case WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENTID:
-+		return "WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENT";
-+	case WMI_LO_POWER_CALIB_FROM_OTP_EVENTID:
-+		return "WMI_LO_POWER_CALIB_FROM_OTP_EVENT";
-+	default:
-+		return "Untracked EVENT";
-+	}
-+}
-+
- static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
- {
- 	struct {
-@@ -294,7 +520,8 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
- 	}
- 	cmd.hdr.seq = cpu_to_le16(++wil->wmi_seq);
- 	/* set command */
--	wil_dbg_wmi(wil, "WMI command 0x%04x [%d]\n", cmdid, len);
-+	wil_dbg_wmi(wil, "sending %s (0x%04x) [%d]\n",
-+		    cmdid2name(cmdid), cmdid, len);
- 	wil_hex_dump_wmi("Cmd ", DUMP_PREFIX_OFFSET, 16, 1, &cmd,
- 			 sizeof(cmd), true);
- 	wil_hex_dump_wmi("cmd ", DUMP_PREFIX_OFFSET, 16, 1, buf,
-@@ -963,8 +1190,8 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
- 			}
- 			spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
- 
--			wil_dbg_wmi(wil, "WMI event 0x%04x MID %d @%d msec\n",
--				    id, wmi->mid, tstamp);
-+			wil_dbg_wmi(wil, "recv %s (0x%04x) MID %d @%d msec\n",
-+				    eventid2name(id), id, wmi->mid, tstamp);
- 			trace_wil6210_wmi_event(wmi, &wmi[1],
- 						len - sizeof(*wmi));
- 		}
-@@ -1906,8 +2133,8 @@ static void wmi_event_handle(struct wil6210_priv *wil,
- 		void *evt_data = (void *)(&wmi[1]);
- 		u16 id = le16_to_cpu(wmi->command_id);
- 
--		wil_dbg_wmi(wil, "Handle WMI 0x%04x (reply_id 0x%04x)\n",
--			    id, wil->reply_id);
-+		wil_dbg_wmi(wil, "Handle %s (0x%04x) (reply_id 0x%04x)\n",
-+			    eventid2name(id), id, wil->reply_id);
- 		/* check if someone waits for this event */
- 		if (wil->reply_id && wil->reply_id == id) {
- 			WARN_ON(wil->reply_buf);
+
+Anyone have any suggestions as to how this could be made to work?
+
+Thanks,
+Ben
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
