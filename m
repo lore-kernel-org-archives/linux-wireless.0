@@ -1,59 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43240 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751418AbdKUKmy (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46094 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751599AbdKQHXR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 05:42:54 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: sedat.dilek@gmail.com, linux-wireless@vger.kernel.org,
-        linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi 2017-11-19
-References: <1511175768.4011.261.camel@coelho.fi>
-        <CA+icZUVqhmH3dyMXkHKsHus5qyfMqQfcOctvHRDf4x=6+ndfPw@mail.gmail.com>
-        <1511259055.4011.268.camel@coelho.fi>
-Date: Tue, 21 Nov 2017 12:42:48 +0200
-In-Reply-To: <1511259055.4011.268.camel@coelho.fi> (Luca Coelho's message of
-        "Tue, 21 Nov 2017 12:10:55 +0200")
-Message-ID: <871skrdiaf.fsf@kamboji.qca.qualcomm.com> (sfid-20171121_114257_603881_BC97E4B4)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 17 Nov 2017 02:23:17 -0500
+Message-ID: <1510903394.4011.201.camel@coelho.fi> (sfid-20171117_082320_778114_9BBE9E15)
+From: Luca Coelho <luca@coelho.fi>
+To: Chris Chiu <chiu@endlessm.com>
+Cc: johannes.berg@intel.com, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org,
+        Linux Upstreaming Team <linux@endlessm.com>
+Date: Fri, 17 Nov 2017 09:23:14 +0200
+In-Reply-To: <1510901207.4011.197.camel@coelho.fi>
+References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
+         <1509434718.4492.195.camel@coelho.fi>
+         <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
+         <1509952948.4492.360.camel@coelho.fi>
+         <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
+         <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
+         <1510825750.4011.179.camel@coelho.fi>
+         <CAB4CAwfg73wRoNca2GBaMn4eN04vf+uR3xdzYO0UWG1Nmaqo=w@mail.gmail.com>
+         <1510901207.4011.197.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Need support for Intel new wifi module 9462NGW
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Here are the links to v2 of the last two patches, please try with these
+instead (keep the first one that you already have):
 
->> [   10.630285] iwlwifi 0000:04:00.0: firmware: failed to load
->> iwlwifi-8265-34.ucode (-2)
->> [   10.630331] iwlwifi 0000:04:00.0: Direct firmware load for
->> iwlwifi-8265-34.ucode failed with error -2
->> [   10.630454] iwlwifi 0000:04:00.0: firmware: failed to load
->> iwlwifi-8265-33.ucode (-2)
->> [   10.630479] iwlwifi 0000:04:00.0: Direct firmware load for
->> iwlwifi-8265-33.ucode failed with error -2
->> [   10.630486] iwlwifi 0000:04:00.0: firmware: failed to load
->> iwlwifi-8265-32.ucode (-2)
->> [   10.630510] iwlwifi 0000:04:00.0: Direct firmware load for
->> iwlwifi-8265-32.ucode failed with error -2
->> [   10.636423] iwlwifi 0000:04:00.0: firmware: direct-loading
->> firmware
->> iwlwifi-8265-31.ucode
->> [   10.637463] iwlwifi 0000:04:00.0: loaded firmware version
->> 31.532993.0 op_mode iwlmvm
->
-> This is an unfortunate side-effect of the way firmwares are loaded. 
-> There is currently no way to prevent these error messages by making
-> some files optional... But you can ignore them.  Or, even better,
-> upgrade your firmware to the latest version the driver supports. :)
+https://patchwork.kernel.org/patch/10060837/
+https://patchwork.kernel.org/patch/10060839/
 
-Or even better that we improve request_firmware()&co to make it possible
-not to print an error message :)
+--
+Cheers,
+Luca.
 
-In ath10k we are also (again) suffering about the same problem due to:
 
-ath10k: activate user space firmware loading again
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c0cc00f250e19c717fc9cdbdb7f55aaa569c7498
-
--- 
-Kalle Valo
+On Fri, 2017-11-17 at 08:46 +0200, Luca Coelho wrote:
+> On Fri, 2017-11-17 at 14:39 +0800, Chris Chiu wrote:
+> > On Thu, Nov 16, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi>
+> > wrote:
+> > > Hi Chris,
+> > > 
+> > > On Thu, 2017-11-09 at 11:11 +0800, Chris Chiu wrote:
+> > > > Hi Luca,
+> > > >     Any suggestion for the "Failed to start INIT ucode: -110"
+> > > > issue
+> > > > for the firmware?
+> > > 
+> > > There were a few problems which should now be fixed.  We
+> > > published
+> > > new
+> > > firmwares in our linux-firmware.git tree[1] and also made some
+> > > fixes in
+> > > the driver[2].  Please update your system accordingly and let me
+> > > know
+> > > if it works for you.
+> > > 
+> > > Thanks!
+> > > 
+> > > [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux
+> > > -f
+> > > irmware.git/
+> > > [2] https://patchwork.kernel.org/patch/10059871/
+> > >     https://patchwork.kernel.org/patch/10059875/
+> > >     https://patchwork.kernel.org/patch/10059873/
+> > > 
+> > > --
+> > > Cheers,
+> > > Luca.
+> > 
+> > Hi Luca,
+> 
+> Hi Chris,
+> 
+> 
+> >     Thanks for your patch and updated firmware. The driver can
+> > initialize w/o error now. However, it always fails on ip-config
+> > after
+> > 4-way handshake complete. I have to mention that I removed the
+> > field
+> > ".soc_latency" in all new iwl_cfg you added in
+> > https://patchwork.kernel.org/patch/10059875/ to remove compile
+> > error
+> > based on the linux mainline 4.14.
+> >     I don't know whether if this causes the problem. Do you need me
+> > to
+> > do anything for more information?
+> 
+> That was my fault, I forgot to include one file in my commit.  I have
+> sent v2 of the two last patches to solve the problem.  Can you try
+> them?
+> 
+> The problem you're seeing could be related to that, because we use a
+> bit longer wait period for HW stabilization with integrated devices. 
+> And if you remove it, you may encounter random problems...
+> 
+> --
+> Cheers,
+> Luca.
