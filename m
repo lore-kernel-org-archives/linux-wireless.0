@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53679 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751350AbdKTQPg (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52462 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751173AbdKQJpS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 11:15:36 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Fix data rx for CCMP-256, GCMP and GCMP-256 in raw mode
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1509079154-22759-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1509079154-22759-1-git-send-email-vthiagar@qti.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Message-ID: <2d6293d2e0f04e98ad0ef1f08f3b7a34@eusanexr01a.eu.qualcomm.com> (sfid-20171120_171540_015803_D8EE7A20)
-Date: Mon, 20 Nov 2017 08:15:31 -0800
+        Fri, 17 Nov 2017 04:45:18 -0500
+Message-ID: <1510911915.2030.37.camel@sipsolutions.net> (sfid-20171117_104523_632334_6888C554)
+Subject: Re: What would it take to get WDS working with channel contexts?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 17 Nov 2017 10:45:15 +0100
+In-Reply-To: <24f85baf-5e19-a2c9-517d-9b69a47860d9@candelatech.com> (sfid-20171117_012807_810321_F19CD790)
+References: <24f85baf-5e19-a2c9-517d-9b69a47860d9@candelatech.com>
+         (sfid-20171117_012807_810321_F19CD790)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> wrote:
-
-> Make sure 16-byte mic is removed from the rx data packet
-> tail when CCMP-256, GCMP and GCMP-256 ciphers are used
-> in raw decap mode. This fixed rx traffic failures in those
-> ciphers in raw mode. Split the helper returning crypto
-> tail length into two, one to get the ICV length and other
-> to get the mic lengh for the cipher to make it clean.
+On Thu, 2017-11-16 at 16:28 -0800, Ben Greear wrote:
+> I have a user interested in getting WDS working on ath10k, but evidently
+> this is not supported since ath10k uses channel-contexts:
 > 
-> Fixes: 2ea9f12cefe4 ("ath10k: add new cipher suite support")
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>  From net/mac80211/main.c:
+> 
+> 		/*
+> 		 * WDS is currently prohibited when channel contexts are used
+> 		 * because there's no clear definition of which channel WDS
+> 		 * type interfaces use
+> 		 */
+> 
+> 
+> Anyone have any suggestions as to how this could be made to work?
 
-Patch applied to ath-current branch of ath.git, thanks.
+You probably don't want to hear this, but:
 
-307aeb31af0d ath10k: fix data rx for CCMP-256, GCMP and GCMP-256 in raw mode
+WDS isn't even properly working without them right now, since for
+example there's absolutely no feature negotiation between the peers as
+to which rates and other capabilities, bandwidths, etc. are acceptable
+(at any given moment in time).
 
--- 
-https://patchwork.kernel.org/patch/10029097/
+I therefore don't see any value in WDS mode at all unless these issues
+are fixed [*], and as such wouldn't want to take any patches that just
+do some minimal patching over to allow it with channel contexts.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+If you ask me, WDS is entirely useless without vendor-specific
+extensions to allow newer features, and the Linux "vendor-specific"
+extension to do that is AP/client 4-addr mode.
+
+johannes
+
+[*] and since the spec doesn't define this, you can't even fix them in
+any reasonable way, I think, unless you implement some vendor-specific
+things that maybe one vendor happens to do.
