@@ -1,160 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:39978 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753158AbdK2Pc3 (ORCPT
+Received: from mail-qt0-f174.google.com ([209.85.216.174]:38703 "EHLO
+        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752715AbdKQLGO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 10:32:29 -0500
-From: Anna-Maria Gleixner <anna-maria@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
-        Christoph Hellwig <hch@lst.de>,
-        John Stultz <john.stultz@linaro.org>,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        Fri, 17 Nov 2017 06:06:14 -0500
+Received: by mail-qt0-f174.google.com with SMTP id f8so5003897qta.5
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Nov 2017 03:06:13 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: ath10k@lists.infradead.org
+Cc: akolli@qti.qualcomm.com, akolli@codeaurora.org,
         linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 31/36] mac80211_hwsim: Replace hrtimer tasklet with softirq hrtimer
-Date: Wed, 29 Nov 2017 16:30:56 +0100
-Message-Id: <20171129153101.27297-32-anna-maria@linutronix.de> (sfid-20171129_163554_419160_1F645016)
-In-Reply-To: <20171129153101.27297-1-anna-maria@linutronix.de>
-References: <20171129153101.27297-1-anna-maria@linutronix.de>
+        Daniel Jeang <dyjeong@qti.qualcomm.com>,
+        Yifeng Tu <yifeng@qti.qualcomm.com>
+Subject: Re: [PATCHv3 1/2] ath10k: add per peer htt tx stats support for 10.4
+Date: Fri, 17 Nov 2017 12:06:06 +0100
+Message-ID: <2831996.nqnu04nqHR@bentobox> (sfid-20171117_120617_799356_F5C37FDA)
+In-Reply-To: <1479227849-10042-1-git-send-email-akolli@qti.qualcomm.com>
+References: <1479227849-10042-1-git-send-email-akolli@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart2363371.yF4V3ScnNr"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+--nextPart2363371.yF4V3ScnNr
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
-callback in softirq context and remove the hrtimer_tasklet.
+On Dienstag, 15. November 2016 22:07:29 CET akolli@qti.qualcomm.com wrote:
+> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+> 
+> Per peer tx stats are part of 'HTT_10_4_T2H_MSG_TYPE_PEER_STATS'
+> event, Firmware sends one HTT event for every four PPDUs.
+> HTT payload has success pkts/bytes, failed pkts/bytes, retry
+> pkts/bytes and rate info per ppdu.
+> Peer stats are enabled through 'WMI_SERVICE_PEER_STATS',
+> which are nowadays enabled by default.
+> 
+> Parse peer stats and update the tx rate information per STA.
+> 
+> tx rate, Peer stats are tested on QCA4019 with Firmware version
+> 10.4-3.2.1-00028.
+> 
+> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
-Cc: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/mac80211_hwsim.c | 44 ++++++++++++++++-------------------
- 1 file changed, 20 insertions(+), 24 deletions(-)
+Why is the support for 10.2.4 firmware not upstreamed? I mean the one which is 
+using pktlog to transfer the PEER_STATS information.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 10b075a46b26..d3f1861398a7 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -537,7 +537,7 @@ struct mac80211_hwsim_data {
- 	unsigned int rx_filter;
- 	bool started, idle, scanning;
- 	struct mutex mutex;
--	struct tasklet_hrtimer beacon_timer;
-+	struct hrtimer beacon_timer;
- 	enum ps_mode {
- 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
- 	} ps;
-@@ -1418,7 +1418,7 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
- {
- 	struct mac80211_hwsim_data *data = hw->priv;
- 	data->started = false;
--	tasklet_hrtimer_cancel(&data->beacon_timer);
-+	hrtimer_cancel(&data->beacon_timer);
- 	wiphy_dbg(hw->wiphy, "%s\n", __func__);
- }
- 
-@@ -1541,14 +1541,12 @@ static enum hrtimer_restart
- mac80211_hwsim_beacon(struct hrtimer *timer)
- {
- 	struct mac80211_hwsim_data *data =
--		container_of(timer, struct mac80211_hwsim_data,
--			     beacon_timer.timer);
-+		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
- 	struct ieee80211_hw *hw = data->hw;
- 	u64 bcn_int = data->beacon_int;
--	ktime_t next_bcn;
- 
- 	if (!data->started)
--		goto out;
-+		return HRTIMER_NORESTART;
- 
- 	ieee80211_iterate_active_interfaces_atomic(
- 		hw, IEEE80211_IFACE_ITER_NORMAL,
-@@ -1560,11 +1558,9 @@ mac80211_hwsim_beacon(struct hrtimer *timer)
- 		data->bcn_delta = 0;
- 	}
- 
--	next_bcn = ktime_add(hrtimer_get_expires(timer),
--			     ns_to_ktime(bcn_int * 1000));
--	tasklet_hrtimer_start(&data->beacon_timer, next_bcn, HRTIMER_MODE_ABS);
--out:
--	return HRTIMER_NORESTART;
-+	hrtimer_forward(&data->beacon_timer, hrtimer_get_expires(timer),
-+			ns_to_ktime(bcn_int * NSEC_PER_USEC));
-+	return HRTIMER_RESTART;
- }
- 
- static const char * const hwsim_chanwidths[] = {
-@@ -1638,15 +1634,15 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 	mutex_unlock(&data->mutex);
- 
- 	if (!data->started || !data->beacon_int)
--		tasklet_hrtimer_cancel(&data->beacon_timer);
--	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
-+		hrtimer_cancel(&data->beacon_timer);
-+	else if (!hrtimer_is_queued(&data->beacon_timer)) {
- 		u64 tsf = mac80211_hwsim_get_tsf(hw, NULL);
- 		u32 bcn_int = data->beacon_int;
- 		u64 until_tbtt = bcn_int - do_div(tsf, bcn_int);
- 
--		tasklet_hrtimer_start(&data->beacon_timer,
--				      ns_to_ktime(until_tbtt * 1000),
--				      HRTIMER_MODE_REL);
-+		hrtimer_start(&data->beacon_timer,
-+			      ns_to_ktime(until_tbtt * 1000),
-+			      HRTIMER_MODE_REL_SOFT);
- 	}
- 
- 	return 0;
-@@ -1709,7 +1705,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 			  info->enable_beacon, info->beacon_int);
- 		vp->bcn_en = info->enable_beacon;
- 		if (data->started &&
--		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
-+		    !hrtimer_is_queued(&data->beacon_timer) &&
- 		    info->enable_beacon) {
- 			u64 tsf, until_tbtt;
- 			u32 bcn_int;
-@@ -1717,9 +1713,9 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 			tsf = mac80211_hwsim_get_tsf(hw, vif);
- 			bcn_int = data->beacon_int;
- 			until_tbtt = bcn_int - do_div(tsf, bcn_int);
--			tasklet_hrtimer_start(&data->beacon_timer,
--					      ns_to_ktime(until_tbtt * 1000),
--					      HRTIMER_MODE_REL);
-+			hrtimer_start(&data->beacon_timer,
-+				      ns_to_ktime(until_tbtt * 1000),
-+				      HRTIMER_MODE_REL_SOFT);
- 		} else if (!info->enable_beacon) {
- 			unsigned int count = 0;
- 			ieee80211_iterate_active_interfaces_atomic(
-@@ -1728,7 +1724,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 			wiphy_dbg(hw->wiphy, "  beaconing vifs remaining: %u",
- 				  count);
- 			if (count == 0) {
--				tasklet_hrtimer_cancel(&data->beacon_timer);
-+				hrtimer_cancel(&data->beacon_timer);
- 				data->beacon_int = 0;
- 			}
- 		}
-@@ -2720,9 +2716,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 				    data->debugfs,
- 				    data, &hwsim_simulate_radar);
- 
--	tasklet_hrtimer_init(&data->beacon_timer,
--			     mac80211_hwsim_beacon,
--			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
-+	hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
-+		     HRTIMER_MODE_REL_SOFT);
-+	data->beacon_timer.function = mac80211_hwsim_beacon;
- 
- 	spin_lock_bh(&hwsim_radio_lock);
- 	list_add_tail(&data->list, &hwsim_radios);
--- 
-2.11.0
+Kind regards,
+	Sven
+--nextPart2363371.yF4V3ScnNr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAloOwp4ACgkQXYcKB8Em
+e0azeBAAgE5uOxsUvufaHlhEy4Jk2beEDBls2yGI4Yb5Lqq+kndb57atg16yBL/V
+TLVOTUhPp2n09E9u9sUqnJls1k4iikGCrxPRjHKes/hkGtLLDBhlwqCVc5EhFJyS
+IW111mYjrw9xT46unTPpJ6f30FVs5+AiGgBNjGMjXSDO6Xc8yCuKswB3WDdfLHvY
+nMRk0KB2BxyMm+NjZv3Taoj6vtFTWhOz0+UNAuhUV0VUQSaSXdS0Lk04mzOIXbEo
+L+yQXIBVKYvkjjM6z8gw0mp8tw1QTgRXD9Jfy/SiQUf3Llsq8dZY8w1GItQLWR6O
+s6rndkuwmEsazW1f5rMe8YJ+QRQ6CD2KM3vDfStrmU1P5u0EGFY7dcKtwnF+AILc
+kXVxwvU20OEmIkFgPp+XH7TD/Gdwg2jmBR/WuHwsodj/nPojM8la/3WpPilBhHJf
+O7oXCuJaCLeLp0Gf6ZpbmfMUZZyDw780bZik6FrO5N7Ky5Gh5N+WzifWUsT3VOu3
+MSJkKHmACa9GX5ubNH1920fbkePFXD0+/0tsFCQRJvorE4l8XsFSDElm4XUy3Ka/
+bo+1yNnFc4Nt3mj2M0PCYXRML2x6Q8Mg8lc89pX4tC1/UadSTib6kKjJtfbdfJRx
+x/KdBGWazUTfsJG3HK0Kcf/NSAfUdVOQZuCNQLztVAyoP6gEXBE=
+=c+DJ
+-----END PGP SIGNATURE-----
+
+--nextPart2363371.yF4V3ScnNr--
