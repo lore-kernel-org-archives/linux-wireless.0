@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50188 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752370AbdKVMeG (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:42842 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964925AbdKQWak (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Nov 2017 07:34:06 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Ellie Reeves <ellierevves@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: RE: [EXT] Marvell Mwifiex wireless driver: mwifiex_pcie broken on
- Marvell ESPRESSOBin
-Date: Wed, 22 Nov 2017 12:34:02 +0000
-Message-ID: <4dbd89bbcb0a4706bf3fe7b79025d95c@SC-EXCH02.marvell.com> (sfid-20171122_133409_644567_4093C10D)
-References: <6dc0221c-c7ec-d107-02e8-0ab443807e51@gmail.com>
- <a4233e0d08f1400fa30ef112e0fda464@SC-EXCH02.marvell.com>
- <7d8c7705-70ac-9a36-b5d2-23fcffcf6a29@gmail.com>
-In-Reply-To: <7d8c7705-70ac-9a36-b5d2-23fcffcf6a29@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+        Fri, 17 Nov 2017 17:30:40 -0500
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: bug in commit: mac80211: Fix possible sband related NULL pointer
+ de-reference
+Message-ID: <238cb9e7-c78f-66e4-01ed-5fead4f35820@candelatech.com> (sfid-20171117_233043_806273_CF512555)
+Date: Fri, 17 Nov 2017 14:30:37 -0800
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRWxsaWUsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRWxsaWUg
-UmVldmVzIFttYWlsdG86ZWxsaWVyZXZ2ZXNAZ21haWwuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXks
-IE5vdmVtYmVyIDIyLCAyMDE3IDM6NDMgUE0NCj4gVG86IEdhbmFwYXRoaSBCaGF0DQo+IENjOiBs
-aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGFtaXRrYXJ3YXJAZ21haWwuY29tOyBOaXNo
-YW50DQo+IFNhcm11a2FkYW07IFhpbm1pbmcgSHUNCj4gU3ViamVjdDogUmU6IFtFWFRdIE1hcnZl
-bGwgTXdpZmlleCB3aXJlbGVzcyBkcml2ZXI6IG13aWZpZXhfcGNpZSBicm9rZW4gb24NCj4gTWFy
-dmVsbCBFU1BSRVNTT0Jpbg0KPg0KPiBIZWxsbywNCj4gaXMgdGhlIHJlY2VudCBwYXRjaCBmb3Ig
-bXdpZmlleCB0aGUgb25lIEdhbmFwYXRoaSB3YXMgdGFsa2luZyBhYm91dCwgdG8gZml4DQo+IG13
-aWZpZXggb24gZXNwcmVzc29iaW4gPw0KDQpZZXMNCg0KPiBJZiBzbywgSSB0cmllZCBpdCAoaW4g
-djEgSSBhZG1pdCksIHdpdGhvdXQgbm8gcmVhbA0KPiBjaGFuZ2UuDQpDYW4geW91IGp1c3Qgc2hh
-cmUgdGhlIGRtc2cgbG9ncz8gQWxzbyBsZXQgdXMga25vdyBpZiB0aGVyZSBhcmUgYW55IHNwZWNp
-ZmljIHN0ZXBzIHlvdSBmb2xsb3cuDQoNCj4gVGhlIGludGVyZmFjZSBpcyBubyBsb25nZXIgc2hv
-d24gYXMgJ25vLWNhcnJpZXInIGJ1dCB0aGVyZSBpcyBzdGlsbCB0aGUNCj4gdGltZW91dCwgYW5k
-IGFsbCB0aGUgbWVzc2FnZXMgYWJvdXQgZncgYmVpbmcgaW4gYmFkIHN0YXRlLiA6LyBTb3JyeSBp
-ZiBJDQo+IGNvbmZ1c2VkIHRoZSBwYXRjaCB3aXRoIHNvbWV0aGluZyB1bnJlbGF0ZWQgdG8gdGhl
-IGVzcHJlc3NvYmluLg0KPg0KPiAtLQ0KPiBFbGxpZSBSZWV2ZXMNCg0KVGhhbmtzLA0KR2FuYXBh
-dGhpDQo=
+Author: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Date:   Thu Apr 27 12:45:38 2017 +0530
+
+     mac80211: Fix possible sband related NULL pointer de-reference
+
+     Existing API 'ieee80211_get_sdata_band' returns default 2 GHz band even
+     if the channel context configuration is NULL. This crashes for chipsets
+     which support 5 Ghz alone when it tries to access members of 'sband'.
+     Channel context configuration can be NULL in multivif case and when
+     channel switch is in progress (or) when it fails. Fix this by replacing
+     the API 'ieee80211_get_sdata_band' with  'ieee80211_get_sband' which
+     returns a NULL pointer for sband when the channel configuration is NULL.
+
+...
+
+This commit appears to break  sta_set_rate_info_tx on drivers that are not using chantx,
+because it calls ieee80211_get_sband, which does a WARN_ON when there is no chantx.
+
+Any idea how to make this work for chandef drivers?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
