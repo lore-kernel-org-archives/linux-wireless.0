@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60862 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750869AbdKIK7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 05:59:25 -0500
-Date: Thu, 9 Nov 2017 11:59:24 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Richard Genoud <richard.genoud@gmail.com>
-Subject: [PATCH] rt2x00usb: mark device removed when get ENOENT usb error
-Message-ID: <20171109105917.GA3206@redhat.com> (sfid-20171109_115940_587273_AA3A4184)
+Received: from mail-ot0-f174.google.com ([74.125.82.174]:39347 "EHLO
+        mail-ot0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751311AbdKQPvU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 17 Nov 2017 10:51:20 -0500
+Received: by mail-ot0-f174.google.com with SMTP id v15so2353986ote.6
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Nov 2017 07:51:20 -0800 (PST)
+Subject: Re: rtl8723be on Fedora27
+To: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>,
+        linux-wireless@vger.kernel.org
+References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <3a1fc541-9104-2d13-409f-c8e64845a86d@lwfinger.net> (sfid-20171117_165124_229436_172678AD)
+Date: Fri, 17 Nov 2017 09:51:17 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
+Content-Type: text/plain; charset=iso-8859-2; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ENOENT usb error mean "specified interface or endpoint does not exist or
-is not enabled". Mark device not present when we encounter this error
-similar like we do with ENODEV error.
+On 11/17/2017 02:16 AM, Rákosi Gergely wrote:
+> Hello,
+> 
+> I'm trying to use rtl8723be wifi on Fedora27 but I still get continuosly
+> disconnection. The error in the dmesg is "Init MAC failed"
+> I tried with the following module options too : "fwlps=0 swlps=0" and
+> the variant of "ant_sel=1 or 2 or 0"
+> I downloaded the git files from your repo, and do the usual make,make
+> install, and modprobe stuffs, and then restart the notebook, but I get
+> the same result.
 
-Otherwise we can have infinite loop in rt2x00usb_work_rxdone(), because
-we remove and put again RX entries to the queue infinitely.
+I know from the E-mail you sent to me privately that you are new to this 
+process, thus I am going to give you some pointers. It is important for you to 
+give your kernel version. Yes, for devoted Fedora users, saying that you are 
+using F27 might be sufficient; however, I am not one of them. You should always 
+supply the output of the command 'uname -r'.
 
-We can have similar situation when submit urb will fail all the time
-with other error, so we need consider to limit number of entries
-processed by rxdone work. But for now, since the patch fixes
-reproducible soft lockup issue on single processor systems
-and taken ENOENT error meaning, let apply this fix.
+On the RTL8723BE, "Init MAC failed" is not the dmesg that is expected from 
+either the HP ant_sel problem, or a power-save problem. Incidentally, although 
+there are many "fixes" that require modifying the XXps options, the underlying 
+cause of that issue was fixed almost one year ago.
 
-Patch adds additional ENOENT check not only in rx kick routine, but
-also on other places where we check for ENODEV error.
+The main software component that might be wrong is the firmware. Please find the 
+name of the firmware file that is being loaded from the dmesg output. It will be 
+rtlwifi/... Once you locate that name, run the command
 
-Reported-by: Richard Genoud <richard.genoud@gmail.com>
-Debugged-by: Richard Genoud <richard.genoud@gmail.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+md5sum /lib/firmware/rtlwifi/xxx
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index e2f4f5778267..086aad22743d 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -57,7 +57,7 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
- 		if (status >= 0)
- 			return 0;
- 
--		if (status == -ENODEV) {
-+		if (status == -ENODEV || status == -ENOENT) {
- 			/* Device has disappeared. */
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 			break;
-@@ -321,7 +321,7 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
- 
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
--		if (status == -ENODEV)
-+		if (status == -ENODEV || status == -ENOENT)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
- 		rt2x00lib_dmadone(entry);
-@@ -410,7 +410,7 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
- 
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
--		if (status == -ENODEV)
-+		if (status == -ENODEV || status == -ENOENT)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
- 		rt2x00lib_dmadone(entry);
--- 
-2.7.5
+Substitute the actual name for the xxx. Post the output of the md5sum.
+
+Larry
