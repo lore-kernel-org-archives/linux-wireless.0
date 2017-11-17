@@ -1,61 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46674 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751105AbdKULhr (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35690 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965841AbdKQQqd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 06:37:47 -0500
-Message-ID: <1511264260.4011.274.camel@coelho.fi> (sfid-20171121_123750_567867_8DEB15B3)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>, mcgrof@kernel.org
-Cc: sedat.dilek@gmail.com, linux-wireless@vger.kernel.org,
-        linuxwifi <linuxwifi@intel.com>
-Date: Tue, 21 Nov 2017 13:37:40 +0200
-In-Reply-To: <871skrdiaf.fsf@kamboji.qca.qualcomm.com>
-References: <1511175768.4011.261.camel@coelho.fi>
-         <CA+icZUVqhmH3dyMXkHKsHus5qyfMqQfcOctvHRDf4x=6+ndfPw@mail.gmail.com>
-         <1511259055.4011.268.camel@coelho.fi>
-         <871skrdiaf.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: pull-request: iwlwifi 2017-11-19
+        Fri, 17 Nov 2017 11:46:33 -0500
+Subject: Re: What would it take to get WDS working with channel contexts?
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <24f85baf-5e19-a2c9-517d-9b69a47860d9@candelatech.com>
+ <1510911915.2030.37.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <6c0f3696-b4bb-d653-3661-35250fae2894@candelatech.com> (sfid-20171117_174739_015809_ACB2ABF4)
+Date: Fri, 17 Nov 2017 08:46:27 -0800
+MIME-Version: 1.0
+In-Reply-To: <1510911915.2030.37.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-11-21 at 12:42 +0200, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > > [   10.630285] iwlwifi 0000:04:00.0: firmware: failed to load
-> > > iwlwifi-8265-34.ucode (-2)
-> > > [   10.630331] iwlwifi 0000:04:00.0: Direct firmware load for
-> > > iwlwifi-8265-34.ucode failed with error -2
-> > > [   10.630454] iwlwifi 0000:04:00.0: firmware: failed to load
-> > > iwlwifi-8265-33.ucode (-2)
-> > > [   10.630479] iwlwifi 0000:04:00.0: Direct firmware load for
-> > > iwlwifi-8265-33.ucode failed with error -2
-> > > [   10.630486] iwlwifi 0000:04:00.0: firmware: failed to load
-> > > iwlwifi-8265-32.ucode (-2)
-> > > [   10.630510] iwlwifi 0000:04:00.0: Direct firmware load for
-> > > iwlwifi-8265-32.ucode failed with error -2
-> > > [   10.636423] iwlwifi 0000:04:00.0: firmware: direct-loading
-> > > firmware
-> > > iwlwifi-8265-31.ucode
-> > > [   10.637463] iwlwifi 0000:04:00.0: loaded firmware version
-> > > 31.532993.0 op_mode iwlmvm
-> > 
-> > This is an unfortunate side-effect of the way firmwares are
-> > loaded. 
-> > There is currently no way to prevent these error messages by making
-> > some files optional... But you can ignore them.  Or, even better,
-> > upgrade your firmware to the latest version the driver supports. :)
-> 
-> Or even better that we improve request_firmware()&co to make it
-> possible
-> not to print an error message :)
 
-The last time we discussed this, Luis was working on changes to the
-firmware subsystem APIs, but I stopped following and have no idea what
-happened with those patches...
 
---
-Cheers,
-Luca.
+On 11/17/2017 01:45 AM, Johannes Berg wrote:
+> On Thu, 2017-11-16 at 16:28 -0800, Ben Greear wrote:
+>> I have a user interested in getting WDS working on ath10k, but evidently
+>> this is not supported since ath10k uses channel-contexts:
+>>
+>>  From net/mac80211/main.c:
+>>
+>> 		/*
+>> 		 * WDS is currently prohibited when channel contexts are used
+>> 		 * because there's no clear definition of which channel WDS
+>> 		 * type interfaces use
+>> 		 */
+>>
+>>
+>> Anyone have any suggestions as to how this could be made to work?
+>
+> You probably don't want to hear this, but:
+>
+> WDS isn't even properly working without them right now, since for
+> example there's absolutely no feature negotiation between the peers as
+> to which rates and other capabilities, bandwidths, etc. are acceptable
+> (at any given moment in time).
+>
+> I therefore don't see any value in WDS mode at all unless these issues
+> are fixed [*], and as such wouldn't want to take any patches that just
+> do some minimal patching over to allow it with channel contexts.
+>
+> If you ask me, WDS is entirely useless without vendor-specific
+> extensions to allow newer features, and the Linux "vendor-specific"
+> extension to do that is AP/client 4-addr mode.
+>
+> johannes
+>
+> [*] and since the spec doesn't define this, you can't even fix them in
+> any reasonable way, I think, unless you implement some vendor-specific
+> things that maybe one vendor happens to do.
+
+It looks like my options are to hack the mac80211 stack to be minimally
+functional with WDS and channel-contexts, or to hack ath10k driver to
+disable chan-tx in order to try to fix the ath10k firmware WDS issues.
+
+I'd guess the former is of slightly more use to society.  Do you have
+any quick hacks to allow mac80211 to work with chantx and WDS, even
+if you wouldn't want them upstream?
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
