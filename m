@@ -1,107 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:36682 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752467AbdKHNgp (ORCPT
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:34762 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932966AbdKQEvE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 08:36:45 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 6/7] brcmfmac: get rid of struct brcmf_cfg80211_info::active_scan field
-Date: Wed,  8 Nov 2017 14:36:36 +0100
-Message-Id: <1510148197-17851-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171108_143651_176911_96E99E86)
-In-Reply-To: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510148197-17851-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 16 Nov 2017 23:51:04 -0500
+Received: by mail-wm0-f42.google.com with SMTP id y82so2018429wmg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Nov 2017 20:51:03 -0800 (PST)
+MIME-Version: 1.0
+From: John Stultz <john.stultz@linaro.org>
+Date: Thu, 16 Nov 2017 20:51:02 -0800
+Message-ID: <CALAqxLV953NFSZEg5Rd0N0K6JerBqf9d5AUC52E4AjLH0d6RMQ@mail.gmail.com> (sfid-20171117_055206_003987_50F93066)
+Subject: wlcore: wl18xx: Trouble suspending caused by wifi being enabled?
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Maxim Altshul <maxim.altshul@ti.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Hey Folks,
+  So, for awhile recently, I've noticed my HiKey board (which uses the
+TI WL1835MOD chip for wifi) has had trouble when it tries to suspend.
+Basically it keeps on waking up while suspending, and then
+re-suspending over and over until it lucks out in whatever race is
+going on and manages to suspend before the wifi wakes it up.
 
-The field struct brcmf_cfg80211_info::active_scan is set to true upon
-initializing the driver instance, but it is never changed so simply
-get rid of it.
+Here's an example suspend-immediate-wake cycle:
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 10 +---------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h |  2 --
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      |  5 +----
- 3 files changed, 2 insertions(+), 15 deletions(-)
+[  241.975754] PM: suspend entry (deep)
+[  241.979590] PM: Syncing filesystems ... done.
+[  241.997363] Freezing user space processes ... (elapsed 0.003 seconds) done.
+[  242.007903] OOM killer disabled.
+[  242.011157] Freezing remaining freezable tasks ... (elapsed 0.002
+seconds) done.
+[  242.020715] Suspending console(s) (use no_console_suspend to debug)
+[  242.028155] wlan0: deauthenticating from 70:3a:cb:12:90:28 by local
+choice (Reason: 3=DEAUTH_LEAVING)
+[  242.029797] dwc2 f72c0000.usb: suspending usb gadget configfs-gadget
+[  242.029885] dwc2 f72c0000.usb: dwc2_hsotg_ep_disable: called for ep0
+[  242.029893] dwc2 f72c0000.usb: dwc2_hsotg_ep_disable: called for ep0
+[  242.071475] wlcore: down
+[  242.071795] queueing ieee80211 work while going to suspend
+[  242.071808] wlcore: down
+[  242.072120] queueing ieee80211 work while going to suspend
+[  242.073796] PM: Wakeup pending, aborting suspend
+[  242.073810] PM: Some devices failed to suspend, or early wake event detected
+[  242.091277] mmc_host mmc2: Bus speed (slot 0) = 24800000Hz (slot
+req 400000Hz, actual 400000HZ div = 31)
+[  242.128593] mmc_host mmc2: Bus speed (slot 0) = 24800000Hz (slot
+req 25000000Hz, actual 24800000HZ div = 0)
+[  242.129197] dwc2 f72c0000.usb: resuming usb gadget configfs-gadget
+[  242.337364] dwc2 f72c0000.usb: new device is high-speed
+[  242.413119] dwc2 f72c0000.usb: new device is high-speed
+[  242.452173] wlcore: PHY firmware version: Rev 8.2.0.0.237
+[  242.484959] dwc2 f72c0000.usb: new address 8
+[  242.499012] wlcore: firmware booted (Rev 8.9.0.0.70)
+[  242.506240] configfs-gadget gadget: high-speed config #1: b
+[  242.627752] OOM killer enabled.
+[  242.630899] Restarting tasks ... done.
+[  242.647180] PM: suspend exit
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 31a80a6..9b334e2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1043,7 +1043,6 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- {
- 	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
- 	s32 err;
--	u32 passive_scan;
- 	struct brcmf_scan_results *results;
- 	struct escan_info *escan = &cfg->escan_info;
- 
-@@ -1051,13 +1050,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 	escan->ifp = ifp;
- 	escan->wiphy = cfg->wiphy;
- 	escan->escan_state = WL_ESCAN_STATE_SCANNING;
--	passive_scan = cfg->active_scan ? 0 : 1;
--	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
--				    passive_scan);
--	if (err) {
--		brcmf_err("error (%d)\n", err);
--		return err;
--	}
-+
- 	brcmf_scan_config_mpc(ifp, 0);
- 	results = (struct brcmf_scan_results *)cfg->escan_info.escan_buf;
- 	results->version = 0;
-@@ -5767,7 +5760,6 @@ static s32 wl_init_priv(struct brcmf_cfg80211_info *cfg)
- 
- 	cfg->scan_request = NULL;
- 	cfg->pwr_save = true;
--	cfg->active_scan = true;	/* we do active scan per default */
- 	cfg->dongle_up = false;		/* dongle is not up yet */
- 	err = brcmf_init_priv_mem(cfg);
- 	if (err)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-index 7b2835e..b5b5f0f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-@@ -283,7 +283,6 @@ struct brcmf_cfg80211_wowl {
-  * @scan_status: scan activity on the dongle.
-  * @pub: common driver information.
-  * @channel: current channel.
-- * @active_scan: current scan mode.
-  * @int_escan_map: bucket map for which internal e-scan is done.
-  * @ibss_starter: indicates this sta is ibss starter.
-  * @pwr_save: indicate whether dongle to support power save mode.
-@@ -316,7 +315,6 @@ struct brcmf_cfg80211_info {
- 	unsigned long scan_status;
- 	struct brcmf_pub *pub;
- 	u32 channel;
--	bool active_scan;
- 	u32 int_escan_map;
- 	bool ibss_starter;
- 	bool pwr_save;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 1c450c0..c6cccb8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -692,10 +692,7 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
- 
- 	/* determine the scan engine parameters */
- 	sparams->bss_type = DOT11_BSSTYPE_ANY;
--	if (p2p->cfg->active_scan)
--		sparams->scan_type = 0;
--	else
--		sparams->scan_type = 1;
-+	sparams->scan_type = BRCMF_SCANTYPE_ACTIVE;
- 
- 	eth_broadcast_addr(sparams->bssid);
- 	sparams->home_time = cpu_to_le32(P2PAPI_SCAN_HOME_TIME_MS);
--- 
-1.9.1
+Eventually it will luck out and manage to suspend itself, but it can
+take close to a minute.  If I disable wifi the system reliably
+suspends every time.
+
+This used to not be the case, but its been so long, I'm not really
+sure when this issue cropped up.
+
+I wanted to see if anyone else had similar trouble or maybe had ideas
+how to chase this down?
+
+thanks
+-john
