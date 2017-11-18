@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.yrkesakademin.fi ([85.134.45.194]:48783 "EHLO
-        mx1.yrkesakademin.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754850AbdKNL3e (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:39837 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759628AbdKRPk7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 06:29:34 -0500
-Subject: Re: [PATCH] iwlwifi: fix firmware names for 9xxx and a0 series hw
-To: Luca Coelho <luciano.coelho@intel.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <stable@vger.kernel.org>
-References: <20171114103751.7761-1-tmb@mageia.org>
- <1510656721.4011.87.camel@coelho.fi>
-From: Thomas Backlund <tmb@mageia.org>
-Message-ID: <2131d658-8a6e-2f3b-4e44-a3206385af46@mageia.org> (sfid-20171114_122946_804272_1D09D966)
-Date: Tue, 14 Nov 2017 13:29:01 +0200
+        Sat, 18 Nov 2017 10:40:59 -0500
+Received: by mail-oi0-f51.google.com with SMTP id r190so3594950oie.6
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Nov 2017 07:40:59 -0800 (PST)
+Subject: Re: rtl8723be on Fedora27
+To: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>,
+        rosenp@gmail.com, linux-wireless@vger.kernel.org
+References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
+ <1510981609.5145.0.camel@gmail.com>
+ <21a2cc76-ed4e-22a2-3eb2-1f4b8df348fd@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <3161f550-9c7b-ecf9-45f4-2cfe4ba32d8a@lwfinger.net> (sfid-20171118_165442_642301_7A2E4C1D)
+Date: Sat, 18 Nov 2017 09:40:57 -0600
 MIME-Version: 1.0
-In-Reply-To: <1510656721.4011.87.camel@coelho.fi>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <21a2cc76-ed4e-22a2-3eb2-1f4b8df348fd@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Den 14-11-2017 kl. 12:52, skrev Luca Coelho:
-> On Tue, 2017-11-14 at 12:37 +0200, Thomas Backlund wrote:
->> iwlwifi 9xxx and a0 series hw contains an extra dash in firmware file
->> name
->> as seeen in modinfo output for kernel 4.14:
->>
->> firmware:       iwlwifi-9260-th-b0-jf-b0--34.ucode
->> firmware:       iwlwifi-9260-th-a0-jf-a0--34.ucode
->> firmware:       iwlwifi-9000-pu-a0-jf-b0--34.ucode
->> firmware:       iwlwifi-9000-pu-a0-jf-a0--34.ucode
->> firmware:       iwlwifi-QuQnj-a0-hr-a0--34.ucode
->> firmware:       iwlwifi-QuQnj-a0-jf-b0--34.ucode
->> firmware:       iwlwifi-QuQnj-f0-hr-a0--34.ucode
->> firmware:       iwlwifi-Qu-a0-jf-b0--34.ucode
->> firmware:       iwlwifi-Qu-a0-hr-a0--34.ucode
->>
->> Fix that by dropping the extra adding of '"-"'.
->>
->> Signed-off-by: Thomas Backlund <tmb-odJJhXpcy38dnm+yROfE0A@public.gmane.org>
->> cc: Luca Coelho <luciano.coelho-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
->> cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->>
->> ---
+On 11/18/2017 01:50 AM, Rákosi Gergely wrote:
+> Hello,
 > 
-> Looks good, thanks!
+> I put in to blacklist the module rtlwifi and rtl8723be, and now I get:
+> - kde's networkmanager did not recognize wireless devices
+> - in the messages log there are the following :
+> "registered new interface driver rtl8xxxu
+> Bluetooth: hci0: rtl : Direct firmware load for
+> rtl_bt/rtl8723b_config.bin failed with error -2
+> - ifconfig give no wireless devices (wlp2s0 or wlan0)
 > 
-> Though I'm not sure this is worth sending to stable... Why do you think
-> it's needed?
-> 
+> If I blacklist only rtlwifi then load the rtl8723be module like normal.
 
-As 4.14 is a -longterm kernel and afaik atleast 9xxx series hw is out 
-there I thought it would be good to have it fixed there...
+That is exactly what is expected. You can ignore that missing 
+rtl_bt/rtl8723b_config.bin. The BT part of the RTL8723BE does not need a 
+"config.bin". A patch was sent to the BT group to get rid of that message, but 
+it seems to be lost somewhere.
 
-but in the end it's your call for upstream stable or not
-
-I'll add it to the Mageia distrib kernels anyway.
-
-> Anyway, I'm applying it in our internal tree and it will reach the
-> mainline following our normal upstreaming process.
-> 
-
-Thanks.
-
-> --
-> Cheers,
-> Luca.
-> 
-
---
-Thomas
+Larry
