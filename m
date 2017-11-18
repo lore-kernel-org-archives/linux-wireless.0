@@ -1,224 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:43333 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755084AbdKOH2s (ORCPT
+Received: from mail-ot0-f169.google.com ([74.125.82.169]:37641 "EHLO
+        mail-ot0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764744AbdKRPTy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 02:28:48 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [PATCH 7/8] rsi: add module parameter operating mode
-Date: Wed, 15 Nov 2017 12:50:43 +0530
-Message-Id: <1510730444-3237-8-git-send-email-amitkarwar@gmail.com> (sfid-20171115_082856_193525_FBB0E0D5)
-In-Reply-To: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
-References: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
+        Sat, 18 Nov 2017 10:19:54 -0500
+Received: by mail-ot0-f169.google.com with SMTP id s4so4399725ote.4
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Nov 2017 07:19:54 -0800 (PST)
+Subject: Re: rtl8723be on Fedora27
+To: rosenp@gmail.com,
+        =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>,
+        linux-wireless@vger.kernel.org
+References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
+ <1510981609.5145.0.camel@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <4e2cf93a-4a3c-af1c-df1c-de8f234d615d@lwfinger.net> (sfid-20171118_162006_077000_ACEA4974)
+Date: Sat, 18 Nov 2017 09:19:52 -0600
+MIME-Version: 1.0
+In-Reply-To: <1510981609.5145.0.camel@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On 11/17/2017 11:06 PM, rosenp@gmail.com wrote:
+> On Fri, 2017-11-17 at 09:16 +0100, Rákosi Gergely wrote:
+>> Hello,
+>>
+>> I'm trying to use rtl8723be wifi on Fedora27 but I still get
+>> continuosly
+>> disconnection. The error in the dmesg is "Init MAC failed"
+>> I tried with the following module options too : "fwlps=0 swlps=0" and
+>> the variant of "ant_sel=1 or 2 or 0"
+>> I downloaded the git files from your repo, and do the usual make,make
+>> install, and modprobe stuffs, and then restart the notebook, but I
+>> get
+>> the same result.
+>>
+> 
+> Could try blacklisting rtlwifi. That way it uses rtl8xxxu.
 
-Operating mode determines the support for other protocols.
-This is made as module parameter for better usage.
+Ignore this suggestion. The RTL8723BE is NOT supported by rtl8xxxu. By the way, 
+that "u" means that the driver is for USB devices. The "E" at the end of yours 
+means PCIe!
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_main.c | 58 ++++++++++++++++++++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 10 +++++-
- drivers/net/wireless/rsi/rsi_91x_usb.c  | 10 +++++-
- drivers/net/wireless/rsi/rsi_common.h   |  2 +-
- drivers/net/wireless/rsi/rsi_hal.h      | 11 +++++++
- 5 files changed, 80 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 00f54c5..084b779 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -69,8 +69,24 @@ EXPORT_SYMBOL_GPL(rsi_dbg);
- static char *opmode_str(int oper_mode)
- {
- 	switch (oper_mode) {
--	case RSI_DEV_OPMODE_WIFI_ALONE:
-+	case DEV_OPMODE_WIFI_ALONE:
- 		return "Wi-Fi alone";
-+	case DEV_OPMODE_BT_ALONE:
-+		return "BT EDR alone";
-+	case DEV_OPMODE_BT_LE_ALONE:
-+		return "BT LE alone";
-+	case DEV_OPMODE_BT_DUAL:
-+		return "BT Dual";
-+	case DEV_OPMODE_STA_BT:
-+		return "Wi-Fi STA + BT EDR";
-+	case DEV_OPMODE_STA_BT_LE:
-+		return "Wi-Fi STA + BT LE";
-+	case DEV_OPMODE_STA_BT_DUAL:
-+		return "Wi-Fi STA + BT DUAL";
-+	case DEV_OPMODE_AP_BT:
-+		return "Wi-Fi AP + BT EDR";
-+	case DEV_OPMODE_AP_BT_DUAL:
-+		return "Wi-Fi AP + BT DUAL";
- 	}
- 
- 	return "Unknown";
-@@ -278,7 +294,7 @@ void *rsi_get_bt_context(void *priv)
-  *
-  * Return: Pointer to the adapter structure on success, NULL on failure .
-  */
--struct rsi_hw *rsi_91x_init(void)
-+struct rsi_hw *rsi_91x_init(u16 oper_mode)
- {
- 	struct rsi_hw *adapter = NULL;
- 	struct rsi_common *common = NULL;
-@@ -320,11 +336,34 @@ struct rsi_hw *rsi_91x_init(void)
- 	spin_lock_init(&adapter->ps_lock);
- 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
- 	init_completion(&common->wlan_init_completion);
-+	common->oper_mode = oper_mode;
- 	common->init_done = true;
--
--	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
--	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
- 	adapter->device_model = RSI_DEV_9113;
-+
-+	/* Determine coex mode */
-+	switch (common->oper_mode) {
-+	case DEV_OPMODE_STA_BT_DUAL:
-+	case DEV_OPMODE_STA_BT:
-+	case DEV_OPMODE_STA_BT_LE:
-+	case DEV_OPMODE_BT_ALONE:
-+	case DEV_OPMODE_BT_LE_ALONE:
-+	case DEV_OPMODE_BT_DUAL:
-+		common->coex_mode = 2;
-+		break;
-+	case DEV_OPMODE_AP_BT_DUAL:
-+	case DEV_OPMODE_AP_BT:
-+		common->coex_mode = 4;
-+		break;
-+	case DEV_OPMODE_WIFI_ALONE:
-+		common->coex_mode = 1;
-+		break;
-+	default:
-+		common->oper_mode = 1;
-+		common->coex_mode = 1;
-+	}
-+	rsi_dbg(INFO_ZONE, "%s: oper_mode = %d, coex_mode = %d\n",
-+		__func__, common->oper_mode, common->coex_mode);
-+
- 	if (common->coex_mode > 1) {
- 		if (rsi_coex_attach(common)) {
- 			rsi_dbg(ERR_ZONE, "Failed to init coex module\n");
-@@ -359,10 +398,13 @@ void rsi_91x_deinit(struct rsi_hw *adapter)
- 	for (ii = 0; ii < NUM_SOFT_QUEUES; ii++)
- 		skb_queue_purge(&common->tx_queue[ii]);
- 
--	common->init_done = false;
--
--	if (common->coex_mode > 1)
-+	if (common->coex_mode > 1) {
- 		rsi_coex_detach(common);
-+		if (g_proto_ops.bt_ops->detach)
-+			g_proto_ops.bt_ops->detach(common->bt_adapter);
-+	}
-+
-+	common->init_done = false;
- 
- 	kfree(common);
- 	kfree(adapter->rsi_dev);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index ba38c6d..5722736 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -21,6 +21,14 @@
- #include "rsi_coex.h"
- #include "rsi_hal.h"
- 
-+/* Default operating mode is wlan STA + BT */
-+static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
-+module_param(dev_oper_mode, ushort, 0444);
-+MODULE_PARM_DESC(dev_oper_mode,
-+		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
-+		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
-+		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
-+
- /**
-  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
-  * @rw: Read/write
-@@ -926,7 +934,7 @@ static int rsi_probe(struct sdio_func *pfunction,
- 
- 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
- 
--	adapter = rsi_91x_init();
-+	adapter = rsi_91x_init(dev_oper_mode);
- 	if (!adapter) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
- 			__func__);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index b09c7da..a30305e 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -21,6 +21,14 @@
- #include "rsi_hal.h"
- #include "rsi_coex.h"
- 
-+/* Default operating mode is wlan STA + BT */
-+static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
-+module_param(dev_oper_mode, ushort, 0444);
-+MODULE_PARM_DESC(dev_oper_mode,
-+		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
-+		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
-+		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
-+
- /**
-  * rsi_usb_card_write() - This function writes to the USB Card.
-  * @adapter: Pointer to the adapter structure.
-@@ -708,7 +716,7 @@ static int rsi_probe(struct usb_interface *pfunction,
- 
- 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
- 
--	adapter = rsi_91x_init();
-+	adapter = rsi_91x_init(dev_oper_mode);
- 	if (!adapter) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
- 			__func__);
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index 4616585..d9ff3b8 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -81,7 +81,7 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
- 
- void rsi_mac80211_detach(struct rsi_hw *hw);
- u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
--struct rsi_hw *rsi_91x_init(void);
-+struct rsi_hw *rsi_91x_init(u16 oper_mode);
- void rsi_91x_deinit(struct rsi_hw *adapter);
- int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
- #ifdef CONFIG_PM
-diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
-index e712223..a7d3011 100644
---- a/drivers/net/wireless/rsi/rsi_hal.h
-+++ b/drivers/net/wireless/rsi/rsi_hal.h
-@@ -17,6 +17,17 @@
- #ifndef __RSI_HAL_H__
- #define __RSI_HAL_H__
- 
-+/* Device Operating modes */
-+#define DEV_OPMODE_WIFI_ALONE		1
-+#define DEV_OPMODE_BT_ALONE		4
-+#define DEV_OPMODE_BT_LE_ALONE		8
-+#define DEV_OPMODE_BT_DUAL		12
-+#define DEV_OPMODE_STA_BT		5
-+#define DEV_OPMODE_STA_BT_LE		9
-+#define DEV_OPMODE_STA_BT_DUAL		13
-+#define DEV_OPMODE_AP_BT		6
-+#define DEV_OPMODE_AP_BT_DUAL		14
-+
- #define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
- #define FLASH_SECTOR_SIZE		(4 * 1024)
- 
--- 
-2.7.4
+Larry
