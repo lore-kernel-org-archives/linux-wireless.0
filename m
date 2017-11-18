@@ -1,142 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.yrkesakademin.fi ([85.134.45.195]:23450 "EHLO
-        mx2.yrkesakademin.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755995AbdKCREp (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:34709 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764322AbdKRHuT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Nov 2017 13:04:45 -0400
-To: <linux-wireless@vger.kernel.org>
-From: Thomas Backlund <tmb@mageia.org>
-Subject: ath10k_pci / qca6174 firmware crash...
-Message-ID: <6679116b-1bb3-bace-71de-5a21eea170f9@mageia.org> (sfid-20171103_180450_274627_D2D50F62)
-Date: Fri, 3 Nov 2017 18:49:43 +0200
+        Sat, 18 Nov 2017 02:50:19 -0500
+Received: by mail-wm0-f52.google.com with SMTP id y82so564696wmg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Nov 2017 23:50:19 -0800 (PST)
+Subject: Re: rtl8723be on Fedora27
+To: rosenp@gmail.com, linux-wireless@vger.kernel.org
+References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
+ <1510981609.5145.0.camel@gmail.com>
+From: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>
+Message-ID: <21a2cc76-ed4e-22a2-3eb2-1f4b8df348fd@gmail.com> (sfid-20171118_085028_710923_F9F0F6D5)
+Date: Sat, 18 Nov 2017 08:50:15 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <1510981609.5145.0.camel@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
-I have a Lenovo Yoga 720 running linux 4.13.10
+I put in to blacklist the module rtlwifi and rtl8723be, and now I get:
+- kde's networkmanager did not recognize wireless devices
+- in the messages log there are the following :
+"registered new interface driver rtl8xxxu
+Bluetooth: hci0: rtl : Direct firmware load for
+rtl_bt/rtl8723b_config.bin failed with error -2
+- ifconfig give no wireless devices (wlp2s0 or wlan0)
 
+If I blacklist only rtlwifi then load the rtl8723be module like normal.
 
-Got a firmware crash, and a reboot was needed to get the wireless back.
+Thanks,
+Geri
 
-is this known ?
-
-kernel logs:
-> [22881.494830] ath10k_pci 0000:3f:00.0: firmware crashed! (uuid n/a)
-> [22881.494840] ath10k_pci 0000:3f:00.0: qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 17aa:0827
-> [22881.494842] ath10k_pci 0000:3f:00.0: kconfig debug 1 debugfs 0 tracing 0 dfs 0 testmode 0
-> [22881.495227] ath10k_pci 0000:3f:00.0: firmware ver WLAN.RM.4.4.1-00051-QCARMSWP-1 api 6 features wowlan,ignore-otp crc32 c3fd4411
-> [22881.495495] ath10k_pci 0000:3f:00.0: board_file api 2 bmi_id N/A crc32 0e26ef70
-> [22881.495498] ath10k_pci 0000:3f:00.0: htt-ver 3.44 wmi-op 4 htt-op 3 cal otp max-sta 32 raw 0 hwcrypto 1
-> [22881.507606] ath10k_pci 0000:3f:00.0: failed to get memcpy hi address for firmware address 4: -16
-> [22881.507607] ath10k_pci 0000:3f:00.0: failed to read firmware dump area: -16
-> [22881.507609] ath10k_pci 0000:3f:00.0: Copy Engine register dump:
-> [22881.507625] ath10k_pci 0000:3f:00.0: [00]: 0x00034400   2   2   3   3
-> [22881.507637] ath10k_pci 0000:3f:00.0: [01]: 0x00034800  24  24 357 358
-> [22881.507644] ath10k_pci 0000:3f:00.0: [02]: 0x00034c00  35  35  97  99
-> [22881.507655] ath10k_pci 0000:3f:00.0: [03]: 0x00035000   2   2   4   2
-> [22881.507663] ath10k_pci 0000:3f:00.0: [04]: 0x00035400 847 847 233 169
-> [22881.507672] ath10k_pci 0000:3f:00.0: [05]: 0x00035800   0   0  64   0
-> [22881.507684] ath10k_pci 0000:3f:00.0: [06]: 0x00035c00  26  26  26  26
-> [22881.507691] ath10k_pci 0000:3f:00.0: [07]: 0x00036000   1   1   1   1
-> [22881.571157] ieee80211 phy0: Hardware restart was requested
-> [22882.260322] ath10k_pci 0000:3f:00.0: Unknown eventid: 118809
-> [22882.262835] ath10k_pci 0000:3f:00.0: Unknown eventid: 90118
-> [22882.356074] ath10k_pci 0000:3f:00.0: device successfully recovered
-
-
-
-At this point network is still broken.
-
-Here I tried to disable/enable wireless to recover network access :
-(sometimes it work, but not this time)
-
-> [23596.617062] wlp63s0: deauthenticating from 18:8b:45:02:96:cf by local choice (Reason: 3=DEAUTH_LEAVING)
-> [23602.583145] ath10k_pci 0000:3f:00.0: Unknown eventid: 118809
-> [23602.585917] ath10k_pci 0000:3f:00.0: Unknown eventid: 90118
-> [23602.642812] IPv6: ADDRCONF(NETDEV_UP): wlp63s0: link is not ready
-> [23602.655518] IPv6: ADDRCONF(NETDEV_UP): wlp63s0: link is not ready
-> [23609.249013] ath10k_pci 0000:3f:00.0: failed to receive control response completion, polling..
-> [23609.281698] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x00000001 at 0x00034430: -110
-> [23609.314384] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x00034444: -110
-> [23609.347066] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x0000001e at 0x00034430: -110
-> [23609.379755] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x00000001 at 0x00034830: -110
-> [23609.412449] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x00000001 at 0x00035430: -110
-> [23609.445129] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x00035444: -110
-> [23609.477809] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x0000001e at 0x00035430: -110
-> [23609.510497] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x0000001e at 0x00034830: -110
-> [23609.543184] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x00000001 at 0x00034c30: -110
-> [23610.977362] ath10k_pci 0000:3f:00.0: ctl_resp never came in (-110)
-> [23610.977365] ath10k_pci 0000:3f:00.0: failed to connect to HTC: -110
-> [23614.269213] ath10k_warn: 112 callbacks suppressed
-> [23614.269215] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0xffff0800 at 0x00035010: -110
-> [23614.301897] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x00035010: -110
-> [23614.334583] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0xfffeffff at 0x00035010: -110
-> [23614.367258] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003504c: -110
-> [23614.399936] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x0000ffff at 0x0003504c: -110
-> [23614.432615] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003504c: -110
-> [23614.465293] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0xffff0020 at 0x0003504c: -110
-> [23614.497976] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x00035444: -110
-> [23614.530657] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003543c: -110
-> [23614.563341] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x0d040000 at 0x00035400: -110
-> [23618.745947] ath10k_pci 0000:3f:00.0: failed to read device register, device is gone
-> [23619.277892] ath10k_warn: 143 callbacks suppressed
-> [23619.277895] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0xfffeffff at 0x00034410: -110
-> [23619.310205] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003444c: -110
-> [23619.342469] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x0000ffff at 0x0003444c: -110
-> [23619.375152] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003444c: -110
-> [23619.407560] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0xffff0010 at 0x0003444c: -110
-> [23619.440211] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x00034848: -110
-> [23619.472846] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x00034840: -110
-> [23619.505155] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x0d03e000 at 0x00034808: -110
-> [23619.537721] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0x00000200 at 0x0003480c: -110
-> [23619.570447] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x00034810: -110
-> [23624.291033] ath10k_warn: 144 callbacks suppressed
-> [23624.291036] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.323722] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.356179] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.388309] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.420669] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.453327] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.485783] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.517940] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.550562] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.582722] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23624.745569] ath10k_pci 0000:3f:00.0: failed to read device register, device is gone
-> [23626.469140] ath10k_pci 0000:3f:00.0: Could not init core: -110
-> [23626.481714] IPv6: ADDRCONF(NETDEV_UP): wlp63s0: link is not ready
-> [23650.593887] ath10k_warn: 59 callbacks suppressed
-> [23650.593889] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x00080008: -110
-> [23650.626577] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0xffffffff at 0x00080008: -110
-> [23650.680865] ath10k_pci 0000:3f:00.0: failed to wake target for write32 of 0xfffffffe at 0x00080008: -110
-> [23650.735049] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23650.767735] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23650.800425] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23650.833110] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23650.865796] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23650.898478] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23650.931164] ath10k_pci 0000:3f:00.0: failed to wake target for read32 at 0x0003a028: -110
-> [23653.871963] ath10k_pci 0000:3f:00.0: failed to read device register, device is gone
-> [23653.970010] ath10k_pci 0000:3f:00.0: firmware crashed! (uuid n/a)
-> [23653.970013] ath10k_pci 0000:3f:00.0: qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 17aa:0827
-> [23653.970014] ath10k_pci 0000:3f:00.0: kconfig debug 1 debugfs 0 tracing 0 dfs 0 testmode 0
-> [23653.970387] ath10k_pci 0000:3f:00.0: firmware ver WLAN.RM.4.4.1-00051-QCARMSWP-1 api 6 features wowlan,ignore-otp crc32 c3fd4411
-> [23653.970644] ath10k_pci 0000:3f:00.0: board_file api 2 bmi_id N/A crc32 0e26ef70
-> [23653.970645] ath10k_pci 0000:3f:00.0: htt-ver 3.44 wmi-op 4 htt-op 3 cal otp max-sta 32 raw 0 hwcrypto 1
-> [23654.472884] ath10k_pci 0000:3f:00.0: failed to read firmware dump area: -16
-> [23654.472886] ath10k_pci 0000:3f:00.0: Copy Engine register dump:
-> [23654.603625] ath10k_pci 0000:3f:00.0: [00]: 0x00034400 4294967295 4294967295 4294967295 4294967295
-> [23654.734356] ath10k_pci 0000:3f:00.0: [01]: 0x00034800 4294967295 4294967295 4294967295 4294967295
-> [23654.865098] ath10k_pci 0000:3f:00.0: [02]: 0x00034c00 4294967295 4294967295 4294967295 4294967295
-> [23654.995839] ath10k_pci 0000:3f:00.0: [03]: 0x00035000 4294967295 4294967295 4294967295 4294967295
-> [23655.126570] ath10k_pci 0000:3f:00.0: [04]: 0x00035400 4294967295 4294967295 4294967295 4294967295
-> [23655.257293] ath10k_pci 0000:3f:00.0: [05]: 0x00035800 4294967295 4294967295 4294967295 4294967295
-> [23655.388016] ath10k_pci 0000:3f:00.0: [06]: 0x00035c00 4294967295 4294967295 4294967295 4294967295
-> [23655.518515] ath10k_pci 0000:3f:00.0: [07]: 0x00036000 4294967295 4294967295 4294967295 4294967295
-> [23655.518530] ath10k_pci 0000:3f:00.0: failed to reset chip: -5
-> [23655.518531] ath10k_pci 0000:3f:00.0: Could not init hif: -5
-
-
---
-Thomas
+2017-11-18 06:06 keltezéssel, rosenp@gmail.com írta:
+> On Fri, 2017-11-17 at 09:16 +0100, Rákosi Gergely wrote:
+>> Hello,
+>>
+>> I'm trying to use rtl8723be wifi on Fedora27 but I still get
+>> continuosly
+>> disconnection. The error in the dmesg is "Init MAC failed"
+>> I tried with the following module options too : "fwlps=0 swlps=0" and
+>> the variant of "ant_sel=1 or 2 or 0"
+>> I downloaded the git files from your repo, and do the usual make,make
+>> install, and modprobe stuffs, and then restart the notebook, but I
+>> get
+>> the same result.
+>>
+> Could try blacklisting rtlwifi. That way it uses rtl8xxxu.
+>> Thanks your help,
+>> Regards,
+>> Gergely
