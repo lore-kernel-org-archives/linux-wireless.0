@@ -1,129 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:46297 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751643AbdKDNYi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Nov 2017 09:24:38 -0400
-Received: by mail-pg0-f68.google.com with SMTP id k7so4738175pga.3
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Nov 2017 06:24:38 -0700 (PDT)
-Date: Sun, 5 Nov 2017 00:24:28 +1100
-From: Simon Shields <simon@lineageos.org>
-To: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Subject: [PATCH] brcmfmac: add support for external 32khz clock
-Message-ID: <20171104132421.GA1541@archbox.home> (sfid-20171104_142442_928454_A68D5C01)
+Received: from eggs.gnu.org ([208.118.235.92]:58878 "EHLO eggs.gnu.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1764204AbdKSAjw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 18 Nov 2017 19:39:52 -0500
+Received: from Debian-exim by eggs.gnu.org with spam-scanned (Exim 4.71)
+        (envelope-from <nikolas@gnu.org>)
+        id 1eGDeH-0001Wf-1m
+        for linux-wireless@vger.kernel.org; Sat, 18 Nov 2017 19:39:49 -0500
+Subject: Re: rtl8821ae dbi read question
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, pkshih@realtek.com
+References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
+ <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
+ <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org>
+ <702e4270-dcf3-5916-daee-f2265e0da907@lwfinger.net>
+ <ca520364-0d18-54c2-e6bc-b8245f8408ea@gnu.org>
+ <41409929-78bb-f00b-74e5-b70d6d157c52@lwfinger.net>
+From: Nik Nyby <nikolas@gnu.org>
+Message-ID: <18ae2e47-aed9-0caa-7a17-1c98e4abc91c@gnu.org> (sfid-20171119_014028_984151_D93623A7)
+Date: Sat, 18 Nov 2017 19:39:41 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <41409929-78bb-f00b-74e5-b70d6d157c52@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some boards use an external 32khz clock for low-power
-mode timing. Make sure the clock is powered on while the chipset
-is active.
+On 11/06/2017 08:52 AM, Larry Finger wrote:
+> 
+> Your results seem to indicate that aspm, which is support_aspm 
+> internally, is not being set to zero. The first executable statement in 
+> enable_aspm is
+> 
+>          if (!ppsc->support_aspm)
+>                  return;
+> 
+> That statement should disable the entire routine; however, you still 
+> need to disable the call to this routine. It is possible that the timing 
+> is messed up when built into the kernel. Building as a module will be 
+> instructive.
+> 
+> Larry
+> 
 
-Signed-off-by: Simon Shields <simon@lineageos.org>
----
- .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt     |  2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h      |  2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c          |  5 +++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c        | 10 ++++++++++
- 4 files changed, 19 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-index b2bd4704f859..37add5e29272 100644
---- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-@@ -17,6 +17,8 @@ Optional properties:
- 	When not specified the device will use in-band SDIO interrupts.
-  - interrupt-names : name of the out-of-band interrupt, which must be set
- 	to "host-wake".
-+ - clocks : external 32khz clock
-+ - clock-names : name of the external 32khz clock, must be "32khz"
- 
- Example:
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index a62f8e70b320..2e7fabae81d3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -51,6 +51,7 @@ extern struct brcmf_mp_global_t brcmf_mp_global;
-  * @roamoff: Firmware roaming off?
-  * @ignore_probe_fail: Ignore probe failure.
-  * @country_codes: If available, pointer to struct for translating country codes
-+ * @clk: External 32khz clock, if present.
-  * @bus: Bus specific platform data. Only SDIO at the mmoment.
-  */
- struct brcmf_mp_device {
-@@ -60,6 +61,7 @@ struct brcmf_mp_device {
- 	bool		roamoff;
- 	bool		ignore_probe_fail;
- 	struct brcmfmac_pd_cc *country_codes;
-+	struct clk *clk;
- 	union {
- 		struct brcmfmac_sdio_pd sdio;
- 	} bus;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-index aee6e5937c41..46f42a2c3d2b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-@@ -13,6 +13,7 @@
-  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
-+#include <linux/clk.h>
- #include <linux/init.h>
- #include <linux/of.h>
- #include <linux/of_irq.h>
-@@ -39,6 +40,10 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
- 	if (of_property_read_u32(np, "brcm,drive-strength", &val) == 0)
- 		sdio->drive_strength = val;
- 
-+	settings->clk = devm_clk_get(dev, "32khz");
-+	if (IS_ERR(settings->clk))
-+		settings->clk = NULL;
-+
- 	/* make sure there are interrupts defined in the node */
- 	if (!of_find_property(np, "interrupts", NULL))
- 		return;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 613caca7dc02..f4ceca6dbe74 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -14,6 +14,7 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/clk.h>
- #include <linux/types.h>
- #include <linux/atomic.h>
- #include <linux/kernel.h>
-@@ -3853,6 +3854,11 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 		brcmf_err("Failed to get device parameters\n");
- 		goto fail;
- 	}
-+
-+	/* enable external 32khz clock, if present */
-+	if (sdiodev->settings->clk)
-+		clk_prepare_enable(sdiodev->settings->clk);
-+
- 	/* platform specific configuration:
- 	 *   alignments must be at least 4 bytes for ADMA
- 	 */
-@@ -4270,6 +4276,10 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
- 			}
- 			brcmf_chip_detach(bus->ci);
- 		}
-+
-+		if (bus->sdiodev->settings->clk)
-+			clk_disable_unprepare(bus->sdiodev->settings->clk);
-+
- 		if (bus->sdiodev->settings)
- 			brcmf_release_module_param(bus->sdiodev->settings);
- 
--- 
-2.15.0
+FYI, when building this driver as a module, I'm not seeing my unstable 
+connection problem anymore, with the aspm=0 config set in 
+/etc/modprobe.d/. Thanks for your help with this.
