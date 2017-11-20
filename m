@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f175.google.com ([74.125.82.175]:47801 "EHLO
-        mail-ot0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751405AbdKFCJE (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41122 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751387AbdKTQJH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Nov 2017 21:09:04 -0500
-Received: by mail-ot0-f175.google.com with SMTP id s88so7084015ota.4
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Nov 2017 18:09:04 -0800 (PST)
-Subject: Re: rtl8821ae dbi read question
-To: Nik Nyby <nikolas@gnu.org>, linux-wireless@vger.kernel.org,
-        pkshih@realtek.com
-References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
- <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net>
- <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <702e4270-dcf3-5916-daee-f2265e0da907@lwfinger.net> (sfid-20171106_030908_145253_FAFAE0D0)
-Date: Sun, 5 Nov 2017 20:09:02 -0600
-MIME-Version: 1.0
-In-Reply-To: <6912fa90-4b21-c325-993b-27fed3c75293@gnu.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 20 Nov 2017 11:09:07 -0500
+Message-ID: <1511194141.2030.46.camel@sipsolutions.net> (sfid-20171120_170915_958809_0B630156)
+Subject: Re: [PATCH] mac80211: Update last_ack status for all except probing
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
+Date: Mon, 20 Nov 2017 17:09:01 +0100
+In-Reply-To: <839c3938efae497e9058391fd4be4817@NALASEXR01H.na.qualcomm.com>
+References: <1509409746-26592-1-git-send-email-rmanohar@qti.qualcomm.com>
+         <1509964164.2669.0.camel@sipsolutions.net>
+         <8bb232d231884f9595c81f945a5eef4f@NALASEXR01H.na.qualcomm.com>
+         <49241af7-a50f-5758-0c7e-77f2fae5d93d@quantenna.com>
+         <96799d352b7347a8a9092bb37f1cd8d9@NALASEXR01H.na.qualcomm.com>
+         <1510565141.30497.6.camel@sipsolutions.net>
+         <839c3938efae497e9058391fd4be4817@NALASEXR01H.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/05/2017 03:15 PM, Nik Nyby wrote:
-> I also want to note that adding rtl8821ae.aspm=0 to my grub kernel boot command 
-> doesn't fix my problem. (I'm building this driver into the kernel, not as a 
-> module). My connection dropping problem is fixed only if I comment out the aspm 
-> init code in the driver, per this patch:
->    https://patchwork.kernel.org/patch/9951511/
+On Wed, 2017-11-15 at 19:21 +0000, Rajkumar Manoharan wrote:
+> > 
+> Hmm.. But polling TX/RX counters will not give exact activity time. 
 
-Disabling all of _rtl8821ae_enable_aspm_back_door() may not be wise. We tried 
-that patch as part of debugging.
+Yeah but if you do it every minute, you'll know if it was idle for
+roughly 5 minutes, or so... dunno, things could be done.
 
-That routine consists of two mdio r/w sequences, and 3 dbi r/w sequences. The 
-third one of the latter is only used for RTL8812AE, thus it can be ignored.
+> Moreover
+> It will be useful if STA's last data activity tstamp is logged in station dump. No?
 
-What happens if you try disabling those r/w pairs one at a time? It is possible 
-that one, or more of them, should be disabled when aspm is zero. It should not 
-matter whether the driver is built in, or loaded as a module. Please note that I 
-never build that code in as I always want the option of refreshing the driver 
-without rebooting.
+I don't object to adding that, though we should be careful with adding
+things and see if we _really_ need them, since they all have a cost.
 
-Larry
+johannes
