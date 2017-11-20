@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57608 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752785AbdKWNZi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Nov 2017 08:25:38 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "James Cao" <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>,
-        Brian Norris <briannorris@chromium.org>,
-        "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-Subject: RE: [EXT] Re: pull-request mwifiex-firmware 2017-10-31
-Date: Thu, 23 Nov 2017 13:25:30 +0000
-Message-ID: <e19495fef5024ea59965a9010e5ca5a3@SC-EXCH02.marvell.com> (sfid-20171123_142542_253264_F5272075)
-References: <99832be6bb804911a374c85d1865d0b2@SC-EXCH02.marvell.com>
- <1511401044.14687.6.camel@decadent.org.uk>
-In-Reply-To: <1511401044.14687.6.camel@decadent.org.uk>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:60494 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752035AbdKTTfy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Nov 2017 14:35:54 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, devicetree@vger.kernel.org,
+        Rob Herring <robh@kernel.org>
+Subject: [PATCH v7 1/3] dt-bindings: net: add mt76 wireless device binding
+Date: Mon, 20 Nov 2017 20:35:47 +0100
+Message-Id: <20171120193549.80831-2-nbd@nbd.name> (sfid-20171120_203628_003339_BB19211A)
+In-Reply-To: <20171120193549.80831-1-nbd@nbd.name>
+References: <20171120193549.80831-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQmVuLA0KDQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gT24gVHVlLCAyMDE3LTEwLTMxIGF0IDE1OjM0
-ICswMDAwLCBHYW5hcGF0aGkgQmhhdCB3cm90ZToNCj4gPiBUaGUgZm9sbG93aW5nIGNoYW5nZXMg
-c2luY2UgY29tbWl0DQo+IGUwNDk0ZTk1MTkyYWM1MzI5OTg5ZjRkMTI4Y2Y5NWM0MTdkNjE4Y2M6
-DQo+ID4NCj4gPiAgIGxpbnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQQ0llLVVTQjg5OTcg
-ZmlybXdhcmUgaW1hZ2UNCj4gPiAoMjAxNy0wOC0wMSAyMzo1NTozMCArMDUzMCkNCj4NCj4gQnV0
-IHRoYXQgY29tbWl0IGlzIG5vdCBpbiBsaW51eC1maXJtd2FyZS5naXQuDQoNClllcy4gU29ycnkg
-Zm9yIHRoZSBpbmNvbnZlbmllbmNlLg0KDQo+DQo+ID4gYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0
-IHJlcG9zaXRvcnkgYXQ6DQo+ID4NCj4gPiAgIGdpdDovL2dpdC5tYXJ2ZWxsLmNvbS9td2lmaWV4
-LWZpcm13YXJlLmdpdA0KPiA+DQo+ID4gZm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRvDQo+
-IGRiM2UxODU1ZWE0NmJjMWEyMmI4YmJlY2I0MDBjMjkwOWM1NTFjZjU6DQo+ID4NCj4gPiAgIGxp
-bnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQQ0llLVVTQjg5OTcgZmlybXdhcmUgaW1hZ2UN
-Cj4gPiAoMjAxNy0xMC0zMSAyMDo0OTo1MyArMDUzMCkNCj4gPg0KPiA+IC0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gPiBH
-YW5hcGF0aGkgQmhhdCAoMSk6DQo+ID4gICAgICAgbGludXgtZmlybXdhcmU6IHVwZGF0ZSBNYXJ2
-ZWxsIFBDSWUtVVNCODk5NyBmaXJtd2FyZSBpbWFnZQ0KPiA+DQo+ID4gIFdIRU5DRSAgICAgICAg
-ICAgICAgICAgICAgICAgIHwgICAyICstDQo+ID4gIG1ydmwvcGNpZXVzYjg5OTdfY29tYm9fdjQu
-YmluIHwgQmluIDYyMDgwMCAtPiA2MjI1MzIgYnl0ZXMNCj4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAx
-IGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPg0KPiBUaGVyZSBhcmUgdGhyZWUgY29tbWl0
-cyBpbiB0aGlzIHJlcG9zaXRvcnkgdGhhdCBhcmVuJ3QgaW4gbGludXgtIGZpcm13YXJlLmdpdCwN
-Cj4gbm90IG9uZS4gIFBsZWFzZSBlaXRoZXI6DQo+DQo+IDEuIFNlbmQgYSBwdWxsIHJlcXVlc3Qg
-bGlzdGluZyBhbGwgdGhlIGNvbW1pdHMgKHRoZSAgPHN0YXJ0PiBwYXJhbWV0ZXIgdG8gZ2l0DQo+
-IHJlcXVlc3QtcHVsbCBzaG91bGQgYmUgc29tZXRoaW5nIGxpa2UgIm9yaWdpbi9tYXN0ZXIiKSwN
-Cg0KSSBoYXZlIHNlbnQgYSBwdWxsIHJlcXVlc3Qgb2YgbGFzdCAzIGNvbW1pdHMuIExldCBtZSBr
-bm93IGlmIHRoaXMgd29ya3MgZmluZS4NCg0Kb3IgMi4gUmViYXNlIHRoaXMNCj4gYnJhbmNoIHRv
-IGluY2x1ZGUgb25seSB0aGUgY29tbWl0IHlvdSB3YW50IG1lIHRvIHB1bGwsIGFuZCBzZW5kIGEg
-cHVsbA0KPiByZXF1ZXN0IGxpc3RpbmcgdGhhdC4NCj4NCj4gQmVuLg0KPg0KPiAtLQ0KPiBCZW4g
-SHV0Y2hpbmdzDQo+IFdoZW4gaW4gZG91YnQsIHVzZSBicnV0ZSBmb3JjZS4gLSBLZW4gVGhvbXBz
-b24NCg0KVGhhbmtzLA0KR2FuYXBhdGhpDQo=
+Add documentation describing how device tree can be used to configure
+wireless chips supported by the mt76 driver.
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ .../bindings/net/wireless/mediatek,mt76.txt        | 32 ++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+new file mode 100644
+index 000000000000..0c17a0ec9b7b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+@@ -0,0 +1,32 @@
++* MediaTek mt76xx devices
++
++This node provides properties for configuring the MediaTek mt76xx wireless
++device. The node is expected to be specified as a child node of the PCI
++controller to which the wireless chip is connected.
++
++Optional properties:
++
++- mac-address: See ethernet.txt in the parent directory
++- local-mac-address: See ethernet.txt in the parent directory
++- ieee80211-freq-limit: See ieee80211.txt
++- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
++
++Optional nodes:
++- led: Properties for a connected LED
++  Optional properties:
++    - led-sources: See Documentation/devicetree/bindings/leds/common.txt
++
++&pcie {
++	pcie0 {
++		wifi@0,0 {
++			compatible = "mediatek,mt76";
++			reg = <0x0000 0 0 0 0>;
++			ieee80211-freq-limit = <5000000 6000000>;
++			mediatek,mtd-eeprom = <&factory 0x8000>;
++
++			led {
++				led-sources = <2>;
++			};
++		};
++	};
++};
+-- 
+2.14.2
