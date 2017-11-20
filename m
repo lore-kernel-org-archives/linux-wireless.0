@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:34709 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764322AbdKRHuT (ORCPT
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:45330 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752546AbdKTUv1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Nov 2017 02:50:19 -0500
-Received: by mail-wm0-f52.google.com with SMTP id y82so564696wmg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Nov 2017 23:50:19 -0800 (PST)
-Subject: Re: rtl8723be on Fedora27
-To: rosenp@gmail.com, linux-wireless@vger.kernel.org
-References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
- <1510981609.5145.0.camel@gmail.com>
-From: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>
-Message-ID: <21a2cc76-ed4e-22a2-3eb2-1f4b8df348fd@gmail.com> (sfid-20171118_085028_710923_F9F0F6D5)
-Date: Sat, 18 Nov 2017 08:50:15 +0100
+        Mon, 20 Nov 2017 15:51:27 -0500
+Received: by mail-qt0-f175.google.com with SMTP id r37so8400123qtj.12
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2017 12:51:27 -0800 (PST)
+Subject: Re: [EXT] Marvell Mwifiex wireless driver: mwifiex_pcie broken on
+ Marvell ESPRESSOBin
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+References: <6dc0221c-c7ec-d107-02e8-0ab443807e51@gmail.com>
+ <a4233e0d08f1400fa30ef112e0fda464@SC-EXCH02.marvell.com>
+From: Ellie Reeves <ellierevves@gmail.com>
+Message-ID: <cafe2dd6-169f-03ee-5b34-a415b5c8d4c9@gmail.com> (sfid-20171120_215131_655462_F323C203)
+Date: Mon, 20 Nov 2017 15:51:10 -0500
 MIME-Version: 1.0
-In-Reply-To: <1510981609.5145.0.camel@gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <a4233e0d08f1400fa30ef112e0fda464@SC-EXCH02.marvell.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi Ganapathi,
+thank you a lot for the quick answer :). Would it be possible for you to 
+send me the patch to fix this, so I could patch the kernel myself ? I'd 
+really appreciate that, and also would like to know a bit more about the 
+issue, yes, I'm curious. :) I like learning things.
 
-I put in to blacklist the module rtlwifi and rtl8723be, and now I get:
-- kde's networkmanager did not recognize wireless devices
-- in the messages log there are the following :
-"registered new interface driver rtl8xxxu
-Bluetooth: hci0: rtl : Direct firmware load for
-rtl_bt/rtl8723b_config.bin failed with error -2
-- ifconfig give no wireless devices (wlp2s0 or wlan0)
-
-If I blacklist only rtlwifi then load the rtl8723be module like normal.
-
-Thanks,
-Geri
-
-2017-11-18 06:06 keltezéssel, rosenp@gmail.com írta:
-> On Fri, 2017-11-17 at 09:16 +0100, Rákosi Gergely wrote:
->> Hello,
->>
->> I'm trying to use rtl8723be wifi on Fedora27 but I still get
->> continuosly
->> disconnection. The error in the dmesg is "Init MAC failed"
->> I tried with the following module options too : "fwlps=0 swlps=0" and
->> the variant of "ant_sel=1 or 2 or 0"
->> I downloaded the git files from your repo, and do the usual make,make
->> install, and modprobe stuffs, and then restart the notebook, but I
->> get
->> the same result.
->>
-> Could try blacklisting rtlwifi. That way it uses rtl8xxxu.
->> Thanks your help,
->> Regards,
->> Gergely
+-- 
+Ellie Reeves
