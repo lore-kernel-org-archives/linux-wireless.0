@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0088.outbound.protection.outlook.com ([104.47.34.88]:61114
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752780AbdKBKbZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Nov 2017 06:31:25 -0400
-Date: Thu, 2 Nov 2017 13:31:07 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: igor.mitsyanko.os@quantenna.com
-Cc: linux-wireless@vger.kernel.org, vulyanov@quantenna.com,
-        johannes@sipsolutions.net
-Subject: Re: [PATCH V2 9/9] qtnfmac: pass all CONNECT cmd params to wireless
- card for processing
-Message-ID: <20171102103103.ewmrkhl26f3k2c5a@bars> (sfid-20171102_113129_692393_9879F6B5)
-References: <20171031010455.27772-1-igor.mitsyanko.os@quantenna.com>
- <20171031010455.27772-10-igor.mitsyanko.os@quantenna.com>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:10081 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751071AbdKTL5Y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Nov 2017 06:57:24 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Christian Lamparter <chunkeey@gmail.com>
+CC: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix recent bandwidth conversion bug
+Date: Mon, 20 Nov 2017 11:57:21 +0000
+Message-ID: <87tvxpf9i8.fsf@kamboji.qca.qualcomm.com> (sfid-20171120_125738_297305_02024DC5)
+References: <20171101200157.27096-1-chunkeey@gmail.com>
+        <224e2890-3775-967b-d4ce-4297574c0642@dd-wrt.com>
+        <1666282.PC3nhpCf9f@debian64>
+In-Reply-To: <1666282.PC3nhpCf9f@debian64> (Christian Lamparter's message of
+        "Thu, 02 Nov 2017 20:34:06 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171031010455.27772-10-igor.mitsyanko.os@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> 
-> Specifically, following parameters are needed for wireless device
-> configuration but were not available to it before:
-> - HT/VHT capabilities and capabilities masks.
-> - full channel info (not just IEEE number)
-> - BSSID hint
-> - previous BSSID for reassoc request
-> 
-> Move Management Frame Protection setting from common encr info
-> structure into STA-specific .connect command parameters.
-> 
-> Make sure that all new qlink structure definitions are alignment-safe.
-> 
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Christian Lamparter <chunkeey@gmail.com> writes:
 
-Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> On Wednesday, November 1, 2017 9:37:53 PM CET Sebastian Gottschall wrote:
+>> a additional array bounds check would be good
+>
+> Ah, about that:
+>
+> the bw variable in ath10k_htt_rx_h_rates() is extracted from info2
+> in the following way [0]:
+> |	bw =3D info2 & 3;
+>
+> the txrate.bw variable in ath10k_update_per_peer_tx_stats() is set by [1]=
+:
+> |	txrate.bw =3D ATH10K_HW_BW(peer_stats->flags);
+>
+> ATH10K_HW_BW is a macro defined as [2]:
+> |	#define ATH10K_HW_BW(flags)		(((flags) >> 3) & 0x3)
+>
+> In both cases the bandwidth values already are limited to 0-3 by
+> the "and 3" operation.
 
-for the whole patch set...
+Until someone changes that part of the code (and the firmware
+interface). IMHO a switch is safer as there we don't have any risk of
+out of bands access.
 
-Regards,
-Sergey
+--=20
+Kalle Valo=
