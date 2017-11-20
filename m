@@ -1,93 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:42900 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933906AbdKQHiD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41070 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751364AbdKTQGv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Nov 2017 02:38:03 -0500
-Received: by mail-wm0-f54.google.com with SMTP id 5so3316872wmk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Nov 2017 23:38:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1510901207.4011.197.camel@coelho.fi>
-References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
- <1509434718.4492.195.camel@coelho.fi> <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
- <1509952948.4492.360.camel@coelho.fi> <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
- <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
- <1510825750.4011.179.camel@coelho.fi> <CAB4CAwfg73wRoNca2GBaMn4eN04vf+uR3xdzYO0UWG1Nmaqo=w@mail.gmail.com>
- <1510901207.4011.197.camel@coelho.fi>
-From: Chris Chiu <chiu@endlessm.com>
-Date: Fri, 17 Nov 2017 15:38:01 +0800
-Message-ID: <CAB4CAwcit2jqHXs7x2cowHdi31OH3wKnmyW4=v-6RGO-+1gjog@mail.gmail.com> (sfid-20171117_083807_010086_1E56EFD3)
-Subject: Re: Need support for Intel new wifi module 9462NGW
-To: Luca Coelho <luca@coelho.fi>
-Cc: johannes.berg@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 20 Nov 2017 11:06:51 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-11-20
+Date: Mon, 20 Nov 2017 17:06:44 +0100
+Message-Id: <20171120160645.21074-1-johannes@sipsolutions.net> (sfid-20171120_170655_608527_2815222D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 17, 2017 at 2:46 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Fri, 2017-11-17 at 14:39 +0800, Chris Chiu wrote:
->> On Thu, Nov 16, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi> wrote:
->> > Hi Chris,
->> >
->> > On Thu, 2017-11-09 at 11:11 +0800, Chris Chiu wrote:
->> > > Hi Luca,
->> > >     Any suggestion for the "Failed to start INIT ucode: -110"
->> > > issue
->> > > for the firmware?
->> >
->> > There were a few problems which should now be fixed.  We published
->> > new
->> > firmwares in our linux-firmware.git tree[1] and also made some
->> > fixes in
->> > the driver[2].  Please update your system accordingly and let me
->> > know
->> > if it works for you.
->> >
->> > Thanks!
->> >
->> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-f
->> > irmware.git/
->> > [2] https://patchwork.kernel.org/patch/10059871/
->> >     https://patchwork.kernel.org/patch/10059875/
->> >     https://patchwork.kernel.org/patch/10059873/
->> >
->> > --
->> > Cheers,
->> > Luca.
->>
->> Hi Luca,
->
-> Hi Chris,
->
->
->>     Thanks for your patch and updated firmware. The driver can
->> initialize w/o error now. However, it always fails on ip-config after
->> 4-way handshake complete. I have to mention that I removed the field
->> ".soc_latency" in all new iwl_cfg you added in
->> https://patchwork.kernel.org/patch/10059875/ to remove compile error
->> based on the linux mainline 4.14.
->>     I don't know whether if this causes the problem. Do you need me
->> to
->> do anything for more information?
->
-> That was my fault, I forgot to include one file in my commit.  I have
-> sent v2 of the two last patches to solve the problem.  Can you try
-> them?
->
-> The problem you're seeing could be related to that, because we use a
-> bit longer wait period for HW stabilization with integrated devices.
-> And if you remove it, you may encounter random problems...
->
-> --
-> Cheers,
-> Luca.
+Hi Dave,
 
-Hi Luca,
-    Thanks for your quick response. I  tried your v2 patch but things
-remain the same. The signal strength and scan results seems nothing
-wrong but still fail to get ip from DHCP server. Please let me know
-what I can help here.
+Sorry this is coming now, I had a super hectic time after travel
+since I had to catch up after two weeks of being away ...
 
-Chris
+That's not really an excuse, but I'm asking you anyway to pull
+Kees's timer conversions with the fixes since he really wants
+to make more changes on top and clean this up properly. I've had
+those pending, but in the hectic week after coming back didn't
+send the mac80211-next pull request that I should have done.
+
+If you don't want that, let me know and I'll respin without it.
+
+Otherwise, please pull and let me know if there's any problem.
+
+Thanks,
+johannes
+
+
+
+The following changes since commit 32a72bbd5da2411eab591bf9bc2e39349106193a:
+
+  net: vxge: Fix some indentation issues (2017-11-20 11:36:30 +0900)
+
+are available in the git repository at:
+
+  ssh://korg/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-11-20
+
+for you to fetch changes up to 33ddd81e2bd5d9970b9f01ab383ba45035fa41ee:
+
+  mac80211: properly free requested-but-not-started TX agg sessions (2017-11-20 17:01:31 +0100)
+
+----------------------------------------------------------------
+A few things:
+ * straggler timer conversions from Kees
+ * memory leak fix in hwsim
+ * fix some fallout from regdb changes if wireless is built-in
+ * also free aggregation sessions in startup state when station
+   goes away, to avoid crashing the timer
+
+----------------------------------------------------------------
+Ben Hutchings (1):
+      mac80211_hwsim: Fix memory leak in hwsim_new_radio_nl()
+
+Johannes Berg (3):
+      nl80211: don't expose wdev->ssid for most interfaces
+      cfg80211: initialize regulatory keys/database later
+      mac80211: properly free requested-but-not-started TX agg sessions
+
+Kees Cook (2):
+      mac80211: Convert timers to use timer_setup()
+      mac80211: aggregation: Convert timers to use timer_setup()
+
+ drivers/net/wireless/mac80211_hwsim.c |  5 +++-
+ net/mac80211/agg-rx.c                 | 41 ++++++++++++-----------------
+ net/mac80211/agg-tx.c                 | 49 ++++++++++++++++-------------------
+ net/mac80211/ibss.c                   |  7 +++--
+ net/mac80211/ieee80211_i.h            |  3 ++-
+ net/mac80211/led.c                    | 11 ++++----
+ net/mac80211/main.c                   |  3 +--
+ net/mac80211/mesh.c                   | 27 +++++++++----------
+ net/mac80211/mesh.h                   |  2 +-
+ net/mac80211/mesh_hwmp.c              |  4 +--
+ net/mac80211/mesh_pathtbl.c           |  3 +--
+ net/mac80211/mlme.c                   | 32 ++++++++++-------------
+ net/mac80211/ocb.c                    | 10 +++----
+ net/mac80211/sta_info.c               | 15 +++--------
+ net/mac80211/sta_info.h               | 12 +++++++--
+ net/wireless/nl80211.c                | 26 +++++++++++++++++--
+ net/wireless/reg.c                    | 42 +++++++++++++++++++-----------
+ 17 files changed, 155 insertions(+), 137 deletions(-)
