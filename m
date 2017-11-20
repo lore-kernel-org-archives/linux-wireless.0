@@ -1,97 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:56430 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751171AbdKNDBV (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36765 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751073AbdKTMyc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 22:01:21 -0500
-Received: by mail-wm0-f67.google.com with SMTP id z3so19054333wme.5
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Nov 2017 19:01:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAL3ir7J5GwTjgo6U4k_r91uqMV4Nowr10k8-Kd+t8cXfrwKQDQ@mail.gmail.com>
-References: <CAL3ir7JHwLpNFRSv0jEED50XeFAWmSz4gXXOs0MpM=VeTGiKnQ@mail.gmail.com>
- <CALLGbRKwcm0ugSKAV1p3rxGseAkp6Zk9RZvKZeTrWFJ_=-pSKg@mail.gmail.com> <CAL3ir7J5GwTjgo6U4k_r91uqMV4Nowr10k8-Kd+t8cXfrwKQDQ@mail.gmail.com>
-From: Yuri Shih <yurishih1985@gmail.com>
-Date: Tue, 14 Nov 2017 11:01:19 +0800
-Message-ID: <CAL5Ybtwn11N4RGsSsCaRtAQ14_i5DXQMnR+XsqYLin_2MYFHCw@mail.gmail.com> (sfid-20171114_040136_166313_9A9ED05E)
-Subject: Re: PS-Poll not behaving as expected
-To: Daniel Ghansah <smartwires@gmail.com>
-Cc: Steve deRosier <derosier@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 20 Nov 2017 07:54:32 -0500
+Received: by mail-pf0-f196.google.com with SMTP id i15so7251222pfa.3
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2017 04:54:32 -0800 (PST)
+From: venkat.prashanth2498@gmail.com
+To: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
+Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+        Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
+Subject: [PATCH v1] rtlwifi:rtl8723ae: Fix embedded function names with __func__
+Date: Mon, 20 Nov 2017 18:23:57 +0530
+Message-Id: <1511182437-5870-1-git-send-email-venkat.prashanth2498@gmail.com> (sfid-20171120_135436_032196_5D76111F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Steve,
+From: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
 
-For our hardware/driver information, they are the following:
+Prefer and make it generic by using %s and __func__ to print functions name
+instead of embedding functions name in print statements 
 
-Linux FW: Linux LEDE 4.4.87
-AP Hardware: Compex WPJ563HV (radio chip QCA9563, driver Ath9k)
-5G Radio: WLE1216V5-20 (radio chip QCA9984, driver Ath10k)
-Driver: Base Driver is compat-wireless-2017-01-31 (with various
-patches installed)
+Signed-off-by: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
 
-Station: Marvell RD-88W-8897-WIFI-S0 (radio chip 88W8897)
-Driver - PCIE8897-15.68.6.p5-M2615485.p3-GPL-(FP68)
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Here's also a link to the wireshark sniffer recordings:
-https://drive.google.com/open?id=1GGNpMhfZ9Ya7HPrdISTxGLfXIuBgL1PR
-
-Right now we don't have kernel logs since we weren't the ones who did
-the test (test lab did them), but I can ask test lab to do the test
-and give us the logs.
-
-Thanks.
-
-Sincerely,
-
-Yuri
-
-On Tue, Nov 14, 2017 at 10:45 AM, Daniel Ghansah <smartwires@gmail.com> wrote:
-> Hello Steve,
->          Thanks for your prompt response, and sorry for my lack of
-> details my colleague Yuri will provide this info shortly Thanks
->
-> Regards
-> Daniel
->
-> On Mon, Nov 13, 2017 at 7:01 PM, Steve deRosier <derosier@gmail.com> wrote:
->> Hi Daniel,
->>
->> On Mon, Nov 13, 2017 at 2:40 PM, Daniel Ghansah <smartwires@gmail.com> wrote:
->>>        Here is the problem we experience:
->>>
->>> When the station (wifi devices) sends a null QoS frame with power save
->>> telling our AP that it is going into power save mode. RIght now, our
->>> problem is that the AP will not stop sending data packets to the
->>> station. Correct behavior is that the AP will buffer data packets and
->>> stop sending any data or null packets (WiFi Alliance allows at most 2
->>> of these packets to be sent by the AP before station sends ps-poll,
->>> exclude retries) until a PS-Poll packet is sent by the station to
->>> collect data. The AP should also respond only 1 packet per PS-Poll
->>> (exclude any retries). Right now, we are also experiencing that the AP
->>> will, at times, send more than 1 data packet to the station per
->>> PS-Poll. The first and second problems may be linked together.
->>>
->>
->> You've given no context with which we can help you. Things like the
->> Linux version, the hardware running on the AP and client, which it is
->> you're trying to report a bug on (the AP or Client), dmesg logs,
->> wireless traces, and so on would all be somewhere between mandatory to
->> helpful information. Trying to give us nothing but your interpretation
->> of what the 802.11 standard says (which most of us know very well)
->> isn't a useful bug report.
->>
->> This might help:
->> https://wireless.wiki.kernel.org/en/users/documentation/reporting_bugs
->>
->> Please try again and send us the information we need to be able to help.
->>
->> Thanks,
->> - Steve
->
->
->
-> --
-> Regards,
-> Daniel Ghansah
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+index f713c72..bd56bb6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+@@ -389,7 +389,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
+ 
+ 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
+ 		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
+-			 "DMA mapping error\n");
++			 "%s():DMA Mapping Error", __func__);
+ 		return;
+ 	}
+ 	if (mac->opmode == NL80211_IFTYPE_STATION) {
+@@ -498,7 +498,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
+ 		if (ieee80211_is_data_qos(fc)) {
+ 			if (mac->rdg_en) {
+ 				RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
+-					 "Enable RDG function.\n");
++			"%s():Enable RDG function.\n", __func__);
+ 				SET_TX_DESC_RDG_ENABLE(pdesc, 1);
+ 				SET_TX_DESC_HTC(pdesc, 1);
+ 			}
+@@ -537,7 +537,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
+ 		SET_TX_DESC_BMC(pdesc, 1);
+ 	}
+ 
+-	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "\n");
++	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "%s():\n", __func__);
+ }
+ 
+ void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
+@@ -557,7 +557,7 @@ void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
+ 
+ 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
+ 		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
+-			 "DMA mapping error\n");
++			 "%s():DMA Mapping Error", __func__);
+ 		return;
+ 	}
+ 	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+-- 
+1.9.1
