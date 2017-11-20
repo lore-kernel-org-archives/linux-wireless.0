@@ -1,54 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:35999 "EHLO
-        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764854AbdKRPwQ (ORCPT
+Received: from james.theweblords.de ([217.11.55.87]:46725 "EHLO
+        james.theweblords.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751454AbdKTQe1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Nov 2017 10:52:16 -0500
-Received: by mail-oi0-f50.google.com with SMTP id n16so3624193oig.3
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Nov 2017 07:52:16 -0800 (PST)
-Subject: Re: rtl8723be on Fedora27
-To: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>,
-        linux-wireless@vger.kernel.org
-References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
- <3a1fc541-9104-2d13-409f-c8e64845a86d@lwfinger.net>
- <c6662534-db2f-61dc-142e-8015984c6813@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <2524fe93-9d8a-523e-3256-2b495c951eb0@lwfinger.net> (sfid-20171118_165443_051529_867767A0)
-Date: Sat, 18 Nov 2017 09:52:14 -0600
+        Mon, 20 Nov 2017 11:34:27 -0500
+Date: Mon, 20 Nov 2017 17:34:15 +0100
+From: Peter =?UTF-8?B?R3Jvw59l?= <pegro@friiks.de>
+To: linux-wireless@vger.kernel.org
+Subject: Setting TX power on a monitoring interface
+Message-ID: <20171120173415.1ae44829@fem-net.de> (sfid-20171120_173430_381441_284E75CE)
 MIME-Version: 1.0
-In-Reply-To: <c6662534-db2f-61dc-142e-8015984c6813@gmail.com>
-Content-Type: text/plain; charset=iso-8859-2; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/MekTkFt/+0LkOewdE3PpEGo"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/17/2017 06:22 PM, Rákosi Gergely wrote:
-> Hello Larry,
-> 
-> First of all, thanks your help.
-> Lets see...here is the kernel version: 4.13.12-300
-> The machine is an Asus ROG 553VE
-> 
-> The firmware which loading in the dmesg is : rtlwifi/rtl8723befw_36.bin
-> The output of md5sum is : 1850c1308fbcd95e9f6a7f58ede1e35f
+--Sig_/MekTkFt/+0LkOewdE3PpEGo
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-In mailing lists like this, top posting is not recommended. Please read 
-http://www.idallen.com/topposting.html for a good explanation why top posting is 
-not good, particularly for complicated threads.
+Hi everyone.
 
-You have the correct firmware. By the way, the code in 4.13.12 should be better 
-that rtlwifi_new. That latter repo is deliberately kept a little bit behind just 
-in case there is a regression.
+The iw tool allows to set TX power settings on network interfaces.
 
-With NO options in the loading, please run the following:
+If I try to set the TX power level on a _monitor_ interface, I get
+a kernel warning:
 
-iw dev
+ ------------[ cut here ]------------
+ WARNING: CPU: 0 PID: 2193 at net/mac80211/driver-ops.h:167
+ ieee80211_bss_info_change_notify+0x111/0x190 Modules linked in: uvcvideo
+ videobuf2_vmalloc videobuf2_memops videobuf2_v4l2 videobuf2_core=20
+rndis_host cdc_ether usbnet mii tp_smapi(O) thinkpad_ec(O) ohci_hcd vboxpci=
+(O)
+ vboxnetadp(O) vboxnetflt(O) v boxdrv(O) x86_pkg_temp_thermal kvm_intel kvm
+ irqbypass iwldvm iwlwifi ehci_pci ehci_hcd tpm_tis tpm_tis_core tpm CPU: 0
+ PID: 2193 Comm: iw Tainted: G           O    4.12.12-gentoo #2 task:
+ ffff880186fd5cc0 task.stack: ffffc90001b54000 RIP:
+ 0010:ieee80211_bss_info_change_notify+0x111/0x190 RSP: 0018:ffffc90001b57a=
+10
+ EFLAGS: 00010246 RAX: 0000000000000006 RBX: ffff8801052ce840 RCX:
+ 0000000000000064 RDX: 00000000fffffffc RSI: 0000000000040000 RDI:
+ ffff8801052ce840 RBP: ffffc90001b57a38 R08: 0000000000000062 R09:
+ 0000000000000000 R10: ffff8802144b5000 R11: ffff880049dc4614 R12:
+ 0000000000040000 R13: 0000000000000064 R14: ffff8802105f0760 R15:
+ ffffc90001b57b48 FS:  00007f92644b4580(0000) GS:ffff88021e200000(0000)
+ knlGS:0000000000000000 CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 00007f9263c109f0 CR3: 00000001df850000 CR4: 00000000000406f0
+ Call Trace:
+  ieee80211_recalc_txpower+0x33/0x40
+  ieee80211_set_tx_power+0x40/0x180
+  nl80211_set_wiphy+0x32e/0x950
 
-You should only see one device. On the "Interface" line, note what your system 
-calls the wifi device. Substitute that for the "wlan0" in the next command:
+Steps to reproduce:
 
-sudo iw dev wlan0 scan | egrep "SSID|signal"
+  iw dev wlan0 interface add mon0 type monitor
+  ip link set dev mon0 up
+  iw dev mon0 set txpower fixed 100
 
-Post that output. In addition, copy the dmesg output to some pastebin and post 
-the link as well.
+Is that a bug to be fixed?
+What would be the correct way of fixing it? Maybe I can provide a patch.
 
-Larry
+Regards
+Peter
+
+--Sig_/MekTkFt/+0LkOewdE3PpEGo
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEFBMm5T0HjV/btb+Q2Ws8k4f65hoFAloTBAcACgkQ2Ws8k4f6
+5hrvAwf+L3o3YVvsSuyo9rJmJXbt/G1+OmkamMYXi5oWotOSgFwCGSKrOiYvaUY5
+Mcf/yrpjePo2DWJK5A+cqsW/92OGV2UO78oHGMp6dSaU5FpkWu6RRuQufMAsgD52
+vr2mxYoa7JA5I3opi1nsEYrPKWfYt8PmITcOXLbfa4rPMbnsQ370H3KY5fx5W0FH
+FElqICdbOgKbz4FbbTyY36L5Dk7O6PDyO9oOkQak42sVmZSyK66dHAWB0p0m6E7g
+6reSYab7RsuSZaTm0qreRNDQZ+tXMmeGshodGysgiTQSbmHkJwLmpPuREbka9qcF
+iBQnUGdGZ3HI6TDwyS8mUxa5R+CSjg==
+=XcQq
+-----END PGP SIGNATURE-----
+
+--Sig_/MekTkFt/+0LkOewdE3PpEGo--
