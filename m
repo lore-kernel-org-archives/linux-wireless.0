@@ -1,129 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f181.google.com ([74.125.82.181]:44858 "EHLO
-        mail-ot0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753216AbdKWSYI (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:9266 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751073AbdKTMKf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Nov 2017 13:24:08 -0500
-Received: by mail-ot0-f181.google.com with SMTP id d27so16928349ote.11
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2017 10:24:07 -0800 (PST)
-Subject: Re: rtl8723be on Fedora27
-To: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>,
-        James Cameron <quozl@laptop.org>
-Cc: linux-wireless@vger.kernel.org
-References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
- <3a1fc541-9104-2d13-409f-c8e64845a86d@lwfinger.net>
- <c6662534-db2f-61dc-142e-8015984c6813@gmail.com>
- <2524fe93-9d8a-523e-3256-2b495c951eb0@lwfinger.net>
- <d4ba5178-3d60-76b0-3819-e70e3e173fac@gmail.com>
- <20171121203746.GC5400@us.netrek.org>
- <e639e8df-7cea-87c5-add9-cea1c5e57a8a@gmail.com>
- <20171121213046.GD5400@us.netrek.org>
- <44aaa502-a8f0-c494-f3d2-674e398ca16c@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <88073798-e6c3-99a8-15ff-d3c7a8b3ef55@lwfinger.net> (sfid-20171123_192412_266190_BBD0E138)
-Date: Thu, 23 Nov 2017 12:24:05 -0600
+        Mon, 20 Nov 2017 07:10:35 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Peter Oh <peter.oh@bowerswilkins.com>
+CC: Sven Eckelmann <sven.eckelmann@openmesh.com>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k: Fix reported HT MCS rates with NSS > 1
+Date: Mon, 20 Nov 2017 12:10:30 +0000
+Message-ID: <87po8df8wc.fsf@kamboji.qca.qualcomm.com> (sfid-20171120_131038_761008_45D3F88C)
+References: <20170511090930.18205-1-sven.eckelmann@openmesh.com>
+        <1728147.6Xy77nSgBU@bentobox>
+        <d27a10b1-6323-ebf0-5c2d-4a9c3b8d978d@dd-wrt.com>
+        <1960925.hkIbv4gX65@bentobox>
+        <bfcfa3eb-fb45-cb8d-ad87-a5fe6dc96fe3@bowerswilkins.com>
+In-Reply-To: <bfcfa3eb-fb45-cb8d-ad87-a5fe6dc96fe3@bowerswilkins.com> (Peter
+        Oh's message of "Mon, 6 Nov 2017 13:25:42 -0800")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <44aaa502-a8f0-c494-f3d2-674e398ca16c@gmail.com>
-Content-Type: text/plain; charset=iso-8859-2; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/23/2017 08:36 AM, Rákosi Gergely wrote:
-> 2017-11-21 22:30 keltezéssel, James Cameron írta:
->> On Tue, Nov 21, 2017 at 09:52:12PM +0100, Rákosi Gergely wrote:
->>> 2017-11-21 21:37 keltezéssel, James Cameron írta:
->>>> On Tue, Nov 21, 2017 at 03:08:16PM +0100, Rákosi Gergely wrote:
->>>>> 2017-11-18 16:52 keltezéssel, Larry Finger írta:
->>>>>> On 11/17/2017 06:22 PM, Rákosi Gergely wrote:
->>>>>>> Hello Larry,
->>>>>>>
->>>>>>> First of all, thanks your help.
->>>>>>> Lets see...here is the kernel version: 4.13.12-300
->>>>>>> The machine is an Asus ROG 553VE
->>>>>>>
->>>>>>> The firmware which loading in the dmesg is : rtlwifi/rtl8723befw_36.bin
->>>>>>> The output of md5sum is : 1850c1308fbcd95e9f6a7f58ede1e35f
->>>>>> [...]
->>>>>> sudo iw dev wlan0 scan | egrep "SSID|signal"
->>>>>>
->>>>>> Post that output. In addition, copy the dmesg output to some pastebin
->>>>>> and post the link as well.
->>>>>>
->>>>>> Larry
->>>>>>
->>>>> Hello Larry,
->>>>>
->>>>> I hope this email post format is good, and fit to the rules.
->>>>> Here is the output:
->>>>>
->>>>> root@skynet-x2 ~]# iw dev wlp2s0 scan | egrep "SSID|signal"
->>>>>          signal: -46.00 dBm
->>>>>          SSID: SKYNET-X2
->>>>> [...]
->>>>> [root@skynet-x2 ~]#
->>>> Scan results seem normal.  Was this scan before disconnect?
->>> Yes, this command output taken while the connection was OK
->> Thanks.
->>
->>>>> And the dmesg output:
->>>>>
->>>>> https://pastebin.com/iqQSu2hD
->>>> Is now v4.13.13.
->>> Yes, thats the upgraded kernel
->>>
->>>> This is interesting, an H2C command was dropped, but no idea which.
->>>>
->>>> [    9.848052] rtl8723be: error H2C cmd because of Fw download fail!!!
->>>>
->>>> Disconnection happened at boot+440 seconds, associate+429 seconds;
->>>>
->>>> [  439.871033] rtlwifi: AP off, try to reconnect now
->>>> [  439.871093] wlp2s0: Connection to AP 4c:5e:0c:c7:fa:e3 lost
->>>>
->>>> I cannot tell what causes disconnect.  I wonder if the same
->>>> timing of the problem happens always, or if the timing varies.
->>> The timing always changing, never is the same. And I dont realize
->>> the cause at now...
->> Thanks.  I had similar problem with different wireless device.
->>
->>>> Init MAC failed was another 30 seconds later;
->>>>
->>>> [  468.600670] IPv6: ADDRCONF(NETDEV_UP): wlp2s0: link is not ready
->>>> [  469.618926] rtl8723be: Init MAC failed
->>>>
->>>> Looking at _rtl8723be_init_mac, there are two false returns;
->>>> hardware power on fail, and llt write fail.
->>>>
->>>> Sorry, I don't have rtl8723be hardware.
->>>>
->>>> Rákosi, did any older kernel keep connection?
->>> The oldest kernel is 4.13.9-300.fc27.x86_64 in Fedora 27
->>> installation, but did the same.  If you can give advise how, and
->>> what I do, then I'll try it.
->> You might try running "Live CD" of Fedora 26 or Fedora 25, without
->> installing, to test if unexpected disconnection happens in two older
->> kernels.  Not for permanent solution, just for easy testing.
->>
->> I don't have specific advice for Fedora 27, you might ask Fedora
->> community about that, or use RHBZ.  A quick search finds this old 2013
->> page;
->>
->> https://fedoraproject.org/wiki/User:Ignatenkobrain/Kernel/Bisection
->>
-> And now the wireless is working almost 20 hours long, from yesterday
-> afternoon. I dont know why. Lets check some happening:
-> - Yesterday I disconnect the charger from laptop, and lay down at the
-> other room
-> - I left the laptop more than a hour without interaction, so the system
-> is going to sleep
-> - When I push the keyboard the system load up, and everything is working
-> fine
-> - The battery almost depleted when I going back to the original room,
-> and connect the charger
-> 
-> Then nothing changed, and I have a working rtl8723be wifi module. Why ?
+Peter Oh <peter.oh@bowerswilkins.com> writes:
 
-Who knows? I do not understand why it did not work before the way mine does with 
-openSUSE!
+> On 11/06/2017 01:02 AM, Sven Eckelmann wrote:
+>> On Montag, 6. November 2017 09:28:42 CET Sebastian Gottschall wrote:
+>>> Am 06.11.2017 um 09:23 schrieb Sven Eckelmann:
+>>>> On Sonntag, 5. November 2017 10:22:22 CET Sebastian Gottschall wrote:
+>>>>> the assumption made in this patch is obviously wrong (at least for mo=
+re
+>>>>> recent firmwares and 9984)
+>>>>> my log is flooded with messages like
+>>>>> [208802.803537] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stat=
+s
+>>>>> [208805.108515] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stat=
+s
+>>>>> [208821.747621] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stat=
+s
+>>>>> [208822.516599] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stat=
+s
+>>>>> [208841.257780] ath10k_pci 0001:03:00.0: Invalid VHT mcs 15 peer stat=
+s
+>> [...]
+>>>> This patch only splits WMI_RATE_PREAMBLE_HT & WMI_RATE_PREAMBLE_VHT. A=
+nd for
+>>>> WMI_RATE_PREAMBLE_HT (*not VHT*), it uses a slightly different approac=
+h. But
+>>>> the WMI_RATE_PREAMBLE_VHT part (which you see in your logs) is basical=
+ly
+>>>> untouched.
+>>> then a question follows up. is this check really neccessary?
+>> Until we find out what the heck VHT MCS 15 should mean in this context -=
+ maybe.
+>> But to the message - no, the message is most likely not necessary for ea=
+ch
+>> received "invalid" peer tx stat.
+>
+> This validation check expects peer tx stat packets from FW contain
+> reasonable values and gives warning if values are different from
+> expectation. The problem comes from the assumption that "it always
+> contains reasonable stat value" which is wrong at least based on my
+> results. For instance, the reason MCS =3D=3D 15 is because all 4 bits of
+> mcs potion set to 1, not because FW really sets it to 15
+> intentionally. when the mcs potion bits are set to all 1s, the other
+> bits such as nss are also set to all 1s.
+> Hence it looks FW passed totally invalid stat info to me.
+>
+> I don't have preference on whether it's better to split VHT and HT
+> check or not, but it is more appropriate to change that warning level
+> to debug level.
 
-Larry
+I think we should add a special case to not print the warning if mcs =3D=3D
+15 until we figure out what it means.
+
+--=20
+Kalle Valo=
