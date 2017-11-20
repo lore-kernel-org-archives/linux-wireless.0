@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f174.google.com ([74.125.82.174]:39347 "EHLO
-        mail-ot0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751311AbdKQPvU (ORCPT
+Received: from mx08-00252a01.pphosted.com ([91.207.212.211]:43746 "EHLO
+        mx08-00252a01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751454AbdKTQjs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Nov 2017 10:51:20 -0500
-Received: by mail-ot0-f174.google.com with SMTP id v15so2353986ote.6
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Nov 2017 07:51:20 -0800 (PST)
-Subject: Re: rtl8723be on Fedora27
-To: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>,
-        linux-wireless@vger.kernel.org
-References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <3a1fc541-9104-2d13-409f-c8e64845a86d@lwfinger.net> (sfid-20171117_165124_229436_172678AD)
-Date: Fri, 17 Nov 2017 09:51:17 -0600
+        Mon, 20 Nov 2017 11:39:48 -0500
+Received: from pps.filterd (m0102629.ppops.net [127.0.0.1])
+        by mx08-00252a01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vAKGcT5W003801
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2017 16:39:47 GMT
+Received: from mail-wr0-f199.google.com (mail-wr0-f199.google.com [209.85.128.199])
+        by mx08-00252a01.pphosted.com with ESMTP id 2eaa7k16h5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK)
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2017 16:39:47 +0000
+Received: by mail-wr0-f199.google.com with SMTP id y42so6167098wrd.23
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2017 08:39:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
-Content-Type: text/plain; charset=iso-8859-2; format=flowed
+From: James Hughes <james.hughes@raspberrypi.org>
+Date: Mon, 20 Nov 2017 16:39:45 +0000
+Message-ID: <CAE_XsML9q6=viKqG2TQCEb921reZBFuRC7=_vy87VDNqD5ONww@mail.gmail.com> (sfid-20171120_173952_028130_0BA38678)
+Subject: Question on a RTL8812AU driver
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/17/2017 02:16 AM, Rákosi Gergely wrote:
-> Hello,
-> 
-> I'm trying to use rtl8723be wifi on Fedora27 but I still get continuosly
-> disconnection. The error in the dmesg is "Init MAC failed"
-> I tried with the following module options too : "fwlps=0 swlps=0" and
-> the variant of "ant_sel=1 or 2 or 0"
-> I downloaded the git files from your repo, and do the usual make,make
-> install, and modprobe stuffs, and then restart the notebook, but I get
-> the same result.
+Hello all,
 
-I know from the E-mail you sent to me privately that you are new to this 
-process, thus I am going to give you some pointers. It is important for you to 
-give your kernel version. Yes, for devoted Fedora users, saying that you are 
-using F27 might be sufficient; however, I am not one of them. You should always 
-supply the output of the command 'uname -r'.
+I know there been a lot of work done on Realtek drivers in the last
+few months, and was wondering whether this will be of use for my
+particular issue.
 
-On the RTL8723BE, "Init MAC failed" is not the dmesg that is expected from 
-either the HP ant_sel problem, or a power-save problem. Incidentally, although 
-there are many "fixes" that require modifying the XXps options, the underlying 
-cause of that issue was fixed almost one year ago.
+We have a Raspberry Pi that needs to use a USB wireless adaptor
+(2001:3314) which uses the rtl8812AU chipset. We have to use this
+device as it's the only one that has been qualified for this
+particular use case.
 
-The main software component that might be wrong is the firmware. Please find the 
-name of the firmware file that is being loaded from the dmesg output. It will be 
-rtlwifi/... Once you locate that name, run the command
+We have been using an out of tree driver, I think originally from
+Realtek, that works, but after a few days locks up, and often requires
+a reboot on the Pi. We do have some mitigation strategies, but it'
+would be better to have a working driver. The Pi is, on the whole,
+inaccessible.
 
-md5sum /lib/firmware/rtlwifi/xxx
+The OoT driver is from here
+https://github.com/diederikdehaas/rtl8812AU and appear quite ancient.
 
-Substitute the actual name for the xxx. Post the output of the md5sum.
+So, I've been looking at the 4.14 staging drivers that do seem to have
+support for some realtek devices. However, none of the drivers I have
+built recognise the module. The source of rtlwifi does refer to the
+8812AU, but only to ignore it. There are other references throughout
+the source.,
 
-Larry
+My question, eventually, is down to figuring out whether any of the
+new staging code is destined to work on this device, or am I going to
+have to stick with the driver we are currently using which clearly has
+a lockup issue that I, in all likelihood, not going to be able to
+track down since its takes days for it to occur.
+
+Or if anyone has any suggestions for getting this working, I'm all ears.
+
+TIA
+
+James Hughes, Raspberry Pi.
