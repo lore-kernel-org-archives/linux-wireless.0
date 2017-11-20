@@ -1,510 +1,371 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:33461 "EHLO
-        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754874AbdK2Mts (ORCPT
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:46777 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751015AbdKTLDa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 07:49:48 -0500
+        Mon, 20 Nov 2017 06:03:30 -0500
+Received: by mail-wr0-f181.google.com with SMTP id r2so1242229wra.13
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2017 03:03:29 -0800 (PST)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: AP6335 with mainline kernel
+To: Vanessa Maegima <vanessa.maegima@nxp.com>,
+        "van.ayumi@gmail.com" <van.ayumi@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "embed3d@gmail.com" <embed3d@gmail.com>
+References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
+ <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com>
+ <1510916848.26896.2.camel@nxp.com> <5A0EDC25.7030505@broadcom.com>
+ <1510932224.22506.0.camel@nxp.com>
+Message-ID: <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com> (sfid-20171120_120333_444266_1297B84B)
+Date: Mon, 20 Nov 2017 12:03:25 +0100
 MIME-Version: 1.0
-In-Reply-To: <6E0D3434-F2E9-4B4D-B66E-78DE921BB2CF@holtmann.org>
-References: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
- <1510730444-3237-6-git-send-email-amitkarwar@gmail.com> <6E0D3434-F2E9-4B4D-B66E-78DE921BB2CF@holtmann.org>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Wed, 29 Nov 2017 18:19:45 +0530
-Message-ID: <CAEhWJF=pvMSz5XRp0vPyej6KBnD-frDYFggy55jEJv3ciXim_Q@mail.gmail.com> (sfid-20171129_134957_229305_6888106E)
-Subject: Re: [PATCH 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1510932224.22506.0.camel@nxp.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 15, 2017 at 9:07 PM, Marcel Holtmann <marcel@holtmann.org> wrot=
-e:
-> Hi Amitkumar,
->
->> Redpine bluetooth driver is a thin driver which depends on
->> 'rsi_91x' driver for transmitting and receiving packets
->> to/from device. It creates hci interface when attach() is
->> called from 'rsi_91x' module.
+On 17-11-17 16:24, Vanessa Maegima wrote:
+> Hi Arend,
+> 
+> On Sex, 2017-11-17 at 13:55 +0100, Arend van Spriel wrote:
+>> On 11/17/2017 12:08 PM, Vanessa Maegima wrote:
+>>>
+>>> Hi Arend,
+>>>
+>>> On Sex, 2017-11-10 at 20:58 +0100, Arend van Spriel wrote:
+>>>>
+>>>> On 10-11-17 13:43, Vanessa Maegima wrote:
+>>>>>
+>>>>>
+>>>>> Hi,
+>>>>>
+>>>>> On Qui, 2017-09-21 at 12:30 -0300, Vanessa Ayumi Maegima wrote:
+>>>>>>
+>>>>>>
+>>>>>> Hi Arend,
+>>>>>>
+>>>>>> On Thu, Sep 21, 2017 at 4:26 AM, Arend van Spriel
+>>>>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> On 20-09-17 21:33, Vanessa Ayumi Maegima wrote:
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> Hi,
+>>>>>>>>
+>>>>>>>> I am trying to enable Wifi on imx7d-pico using mainline
+>>>>>>>> kernel.
+>>>>>>>> imx7d-pico
+>>>>>>>> has an AP6335 chip.
+>>>>>>>>
+>>>>>>>> I am facing some issues related to the nvram file. I am
+>>>>>>>> using
+>>>>>>>> the
+>>>>>>>> firmware
+>>>>>>>> provided by Buildroot (brcmfmac4339-sdio.bin). I get the
+>>>>>>>> following error:
+>>>>>>>>
+>>>>>>>> [    8.630380] brcmfmac: brcmf_sdio_htclk: HT Avail
+>>>>>>>> timeout
+>>>>>>>> (1000000):
+>>>>>>>> clkctl 0x50
+>>>>>>>>
+>>>>>>>> I have tried to use the firmware and nvram provided by
+>>>>>>>> TechNexion
+>>>>>>>> but I
+>>>>>>>> get
+>>>>>>>> the same error.
+>>>>>>>>
+>>>>>>>> Is there anyone that could enable Wifi on AP6335 using
+>>>>>>>> kernel
+>>>>>>>> mainline?
+>>>>>>>> What nvram file was used?
+>>>>>>>>
+>>>>>>>> I am able to use Wifi on the board if I use the firmware,
+>>>>>>>> nvram
+>>>>>>>> file and
+>>>>>>>> kernel
+>>>>>>>> provided by TechNexion. They use a 4.1 kernel from NXP
+>>>>>>>> with
+>>>>>>>> the
+>>>>>>>> bcmdhd
+>>>>>>>> driver.
+>>>>>>>>
+>>>>>>>> So I know that the hardware is functional.
+>>>>>>>>
+>>>>>>>> Any suggestions as how to get it working with a 4.13 and
+>>>>>>>> brcmfmac
+>>>>>>>> driver
+>>>>>>>> is
+>>>>>>>> appreciated.
+>>>>>>> So the nvram file is specific to the wifi chipset on your
+>>>>>>> platform
+>>>>>>> so best
+>>>>>>> to stick with the provided one. The "HT Avail timeout" most
+>>>>>>> often
+>>>>>>> is an
+>>>>>>> indication that the firmware crashed. So getting more debug
+>>>>>>> output
+>>>>>>> would
+>>>>>>> help us understand how it ended up like that. Can you build
+>>>>>>> the
+>>>>>>> brcmfmac
+>>>>>>> with CONFIG_BRCMDBG and load the driver using:
+>>>>>>>
+>>>>>>> $ insmod brcmfmac.ko debug=0x1416
+>>>>>> Thanks for the reply!
+>>>>>>
+>>>>>> Here is the log (using 4.14-rc1):
+>>>>>>
+>>>>>> # dmesg | grep brcmfmac
+>>>>>> [   19.297206] brcmfmac: brcmfmac_module_init No platform
+>>>>>> data
+>>>>>> available.
+>>>>>> [   19.307075] brcmfmac: brcmf_sdio_probe Enter
+>>>>>> [   19.308384] brcmfmac: F1 signature read
+>>>>>> @0x18000000=0x16224335
+>>>>>> [   19.309026] brcmfmac: brcmf_chip_recognition found AXI
+>>>>>> chip:
+>>>>>> BCM4339, rev=2
+>>>>>> [   19.317115] brcmfmac: brcmf_chip_cores_check  [1 ] core
+>>>>>> 0x800:46
+>>>>>> base 0x18000000 wrap 0x18100000
+>>>>>> [   19.317141] brcmfmac: brcmf_chip_cores_check  [2 ] core
+>>>>>> 0x812:46
+>>>>>> base 0x18001000 wrap 0x18101000
+>>>>>> [   19.317165] brcmfmac: brcmf_chip_cores_check  [3 ] core
+>>>>>> 0x83e:4
+>>>>>> base 0x18002000 wrap 0x18102000
+>>>>>> [   19.317188] brcmfmac: brcmf_chip_cores_check  [4 ] core
+>>>>>> 0x83c:4
+>>>>>> base 0x18003000 wrap 0x18103000
+>>>>>> [   19.317210] brcmfmac: brcmf_chip_cores_check  [5 ] core
+>>>>>> 0x81a:20
+>>>>>> base 0x18004000 wrap 0x18104000
+>>>>>> [   19.317233] brcmfmac: brcmf_chip_cores_check  [6 ] core
+>>>>>> 0x829:21
+>>>>>> base 0x18005000 wrap 0x18105000
+>>>>>> [   19.317256] brcmfmac: brcmf_chip_cores_check  [7 ] core
+>>>>>> 0x135:0
+>>>>>> base 0x00000000 wrap 0x18109000
+>>>>>> [   19.317279] brcmfmac: brcmf_chip_cores_check  [8 ] core
+>>>>>> 0x240:0
+>>>>>> base 0x00000000 wrap 0x00000000
+>>>>>> [   19.317298] brcmfmac: brcmf_chip_set_passive Enter
+>>>>>> [   19.322232] brcmfmac: brcmf_chip_get_raminfo RAM:
+>>>>>> base=0x180000
+>>>>>> size=786432 (0xc0000) sr=0 (0x0)
+>>>>>> [   19.322457] brcmfmac: brcmf_chip_setup ccrev=46,
+>>>>>> pmurev=23,
+>>>>>> pmucaps=0x39cc5f17
+>>>>>> [   19.322481] brcmfmac: brcmf_get_module_param Enter, bus=0,
+>>>>>> chip=17209, rev=2
+>>>>>> [   19.322504] brcmfmac: brcmf_sdiod_sgtable_alloc nents=35
+>>>>>> [   19.322531] brcmfmac: brcmf_sdio_kso_init Enter
+>>>>>> [   19.322618] brcmfmac: brcmf_sdio_drivestrengthinit No SDIO
+>>>>>> driver
+>>>>>> strength init needed for chip 43
+>>>>>> 39 rev 2 pmurev 23
+>>>>>> [   19.323235] brcmfmac: brcmf_attach Enter
+>>>>>> [   19.323725] brcmfmac: brcmf_proto_attach Enter
+>>>>>> [   19.323769] brcmfmac: brcmf_fweh_register event handler
+>>>>>> registered
+>>>>>> for PSM_WATCHDOG
+>>>>>> [   19.324306] brcmfmac: brcmf_sdio_probe completed!!
+>>>>>> [   19.324337] brcmfmac: brcmf_fw_map_chip_to_name: using
+>>>>>> brcm/brcmfmac4339-sdio.bin for chip 0x00433
+>>>>>> 9(17209) rev 0x000002
+>>>>>> [   19.335353] brcmfmac: brcmf_fw_get_firmwares_pcie enter:
+>>>>>> dev=mmc0:0001:1
+>>>>>> [   19.351787] brcmfmac: brcmf_fw_request_code_done enter:
+>>>>>> dev=mmc0:0001:1
+>>>>>> [   19.353202] brcmfmac: brcmf_fw_request_nvram_done enter:
+>>>>>> dev=mmc0:0001:1
+>>>>>> [   19.353424] brcmfmac: brcmf_sdio_firmware_callback Enter:
+>>>>>> dev=mmc0:0001:1, err=0
+>>>>>> [   19.353814] brcmfmac: brcmf_sdio_download_code_file Enter
+>>>>>> [   19.388586] brcmfmac: brcmf_sdio_verifymemory Compare RAM
+>>>>>> dl &
+>>>>>> ul
+>>>>>> at 0x00180000; size=493599
+>>>>>> [   19.546675] brcmfmac: brcmf_sdio_download_nvram Enter
+>>>>>> [   19.547432] brcmfmac: brcmf_sdio_verifymemory Compare RAM
+>>>>>> dl &
+>>>>>> ul
+>>>>>> at 0x0023f730; size=2256
+>>>>>> [   19.548665] brcmfmac: brcmf_chip_set_active Enter
+>>>>>> [   20.562974] brcmfmac: brcmf_sdio_htclk: HT Avail timeout
+>>>>>> (1000000):
+>>>>>> clkctl 0x50
+>>>>>> [   20.570490] brcmfmac: brcmf_sdio_firmware_callback failed:
+>>>>>> dev=mmc0:0001:1, err=0
+>>>>>> [   20.570739] brcmfmac: brcmf_sdio_remove Enter
+>>>>>> [   20.570775] brcmfmac: brcmf_detach Enter
+>>>>>> [   20.610414] brcmfmac: brcmf_bus_change_state 0 -> 0
+>>>>>> [   20.610441] brcmfmac: brcmf_sdio_bus_stop Enter
+>>>>>> [   21.622477] brcmfmac: brcmf_sdio_htclk: HT Avail timeout
+>>>>>> (1000000):
+>>>>>> clkctl 0x50
+>>>>>> [   21.630912] brcmfmac: brcmf_proto_detach Enter
+>>>>>> [   21.630967] brcmfmac: brcmf_fweh_unregister event handler
+>>>>>> cleared
+>>>>>> for PSM_WATCHDOG
+>>>>>> [   22.642457] brcmfmac: brcmf_sdio_htclk: HT Avail timeout
+>>>>>> (1000000):
+>>>>>> clkctl 0x50
+>>>>>> [   22.680131] brcmfmac: brcmf_chip_set_passive Enter
+>>>>>> [   22.682580] brcmfmac: brcmf_sdio_remove Disconnected
+>>>>>>
+>>>>> Any suggestions on this?
+>>>> Sorry for not getting back to your earlier email. Thanks for the
+>>>> reminder. So you tried different firmwares, right? Can you
+>>>> provide
+>>>> output of the following command:
+>>>>
+>>>> $ strings firmware.bin | tail -1
+>>>>
+>>>> for the firmwares you tried.
+>>>>
+>>>> Regards,
+>>>> Arend
+>>> Thanks for the reply!
+>>>
+>>> Here's the output:
+>>>
+>>> For Technexion firmware:
+>>>
+>>> # strings /lib/firmware/brcm/brcmfmac4339-sdio.bin | tail -1
+>>> 4339a0-roml/sdio-ag-pool-p2p-pno-pktfilter-keepalive-aoe-sr-mchan-
+>>> proptxstatus-lpc-tdls-autoabn-txbf-
+>>> rcc-wepso-okc-ndoe Version: 6.37.32.28 CRC: 3075f12e Date: Thu
+>>> 2014-04-
+>>> 03 12:15:31 CST FWID 01-4ae4ad
+>>> 03
+>>>
+>>> For linux-firmware and Buildroot firmware:
+>>>
+>>> # strings /lib/firmware/brcm/brcmfmac4339-sdio.bin | tail -1
+>>> 4339a0-roml/sdio-ag-pool-autoabn-lpc Version: 6.37.34.28 CRC:
+>>> a696897b
+>>> Date: Thu 2014-08-28 18:40:12
+>>> PDT FWID 01-a13120fc
+>>>
+>>> In both cases, I am using the nvram provided by Technexion.
+>> That should be fine.
 >>
->> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->> ---
->> drivers/bluetooth/Kconfig   |  12 ++
->> drivers/bluetooth/Makefile  |   2 +
->> drivers/bluetooth/btrsi.c   | 268 ++++++++++++++++++++++++++++++++++++++=
-++++++
->> drivers/bluetooth/rsi_hci.h |  51 +++++++++
->> 4 files changed, 333 insertions(+)
->> create mode 100644 drivers/bluetooth/btrsi.c
->> create mode 100644 drivers/bluetooth/rsi_hci.h
+>> Can you try the patch below. It would give me more info on state of
+>> firmware.
 >>
->> diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
->> index 60e1c7d..ca58d74 100644
->> --- a/drivers/bluetooth/Kconfig
->> +++ b/drivers/bluetooth/Kconfig
->> @@ -378,4 +378,16 @@ config BT_QCOMSMD
->>         Say Y here to compile support for HCI over Qualcomm SMD into the
->>         kernel or say M to compile as a module.
+>> Regards,
+>> Arend
 >>
->> +config BT_RSI
->> +     tristate "Redpine HCI support"
->> +     depends on BT && BT_RFCOMM
->
-> the depends on BT_RFCOMM is wrong. And even the depends on BT is unneeded=
- since that is already covered with the above menu clause.
->
->
->> +     default m
->
-> No. New drivers are by default off.
-
-We made it by default on, as RSI core module depends on this.
-
->
->> +     help
->> +       Redpine BT driver.
->> +       This driver handles BT traffic from upper layers and pass
->> +       to the RSI_91x coex module for further scheduling to device
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>> b/drivers/ne
+>> index f355612..631c5cb 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>> @@ -828,8 +828,27 @@ static int brcmf_sdio_htclk(struct brcmf_sdio
+>> *bus,
+>> bool on,
+>>                           return -EBADE;
+>>                   }
+>>                   if (!SBSDIO_CLKAV(clkctl, bus->alp_only)) {
+>> +                       struct brcmf_core *pmu =
+>> brcmf_chip_get_pmu(bus->ci);
+>> +                       u32 regaddr;
+>> +                       u32 val;
 >> +
->> +       Say Y here to compile support for HCI over Qualcomm SMD into the
->> +       kernel or say M to compile as a module.
+>>                           brcmf_err("HT Avail timeout (%d): clkctl
+>> 0x%02x\n",
+>>                                     PMU_MAX_TRANSITION_DLY, clkctl);
 >> +
->
-> What I am missing is the depends on the RSI core piece that is needed.
-
-Actually RSI core module depends on RSI BT module as per our design.
-As soon as firmware is downloaded by RSI core module, we get WLAN and
-BT card ready frames from firmware. BT initialization has to happen at
-this point. So btrsi module should be loaded first.
-
->
->> endmenu
->> diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
->> index 4e4e44d..712af83a 100644
->> --- a/drivers/bluetooth/Makefile
->> +++ b/drivers/bluetooth/Makefile
->> @@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)                +=3D btqca.o
+>> +                       /* DEBUG INFO */
+>> +                       regaddr = CORE_CC_REG(pmu->base, pmucontrol);
+>> +                       val = brcmf_sdiod_regrl(bus->sdiodev,
+>> regaddr,
+>> &err);
+>> +                       brcmf_err("  pmucontrol   = %08x\n", val);
+>> +                       regaddr = CORE_CC_REG(pmu->base, pmustatus);
+>> +                       val = brcmf_sdiod_regrl(bus->sdiodev,
+>> regaddr,
+>> &err);
+>> +                       brcmf_err("  pmustatus    = %08x\n", val);
+>> +                       regaddr = CORE_CC_REG(pmu->base,
+>> min_res_mask);
+>> +                       val = brcmf_sdiod_regrl(bus->sdiodev,
+>> regaddr,
+>> &err);
+>> +                       brcmf_err("  min_res_mask = %08x\n", val);
+>> +                       regaddr = CORE_CC_REG(pmu->base,
+>> max_res_mask);
+>> +                       val = brcmf_sdiod_regrl(bus->sdiodev,
+>> regaddr,
+>> &err);
+>> +                       brcmf_err("  max_res_mask = %08x\n", val);
+>> +
+>>                           return -EBADE;
+>>                   }
 >>
->> obj-$(CONFIG_BT_HCIUART_NOKIA)        +=3D hci_nokia.o
 >>
->> +obj-$(CONFIG_BT_RSI)         +=3D btrsi.o
->> +
->> btmrvl-y                      :=3D btmrvl_main.o
->> btmrvl-$(CONFIG_DEBUG_FS)     +=3D btmrvl_debugfs.o
->>
->> diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
->> new file mode 100644
->> index 0000000..c52f418
->> --- /dev/null
->> +++ b/drivers/bluetooth/btrsi.c
->> @@ -0,0 +1,268 @@
->> +/**
->> + * Copyright (c) 2017 Redpine Signals Inc.
->> + *
->> + * Permission to use, copy, modify, and/or distribute this software for=
- any
->> + * purpose with or without fee is hereby granted, provided that the abo=
-ve
->> + * copyright notice and this permission notice appear in all copies.
->> + *
->> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRAN=
-TIES
->> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
->> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE =
-FOR
->> +e* ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAG=
-ES
->> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN A=
-N
->> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT=
- OF
->> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->> + */
->> +#include <linux/version.h>
->> +#include <linux/module.h>
->> +#include <linux/kernel.h>
->> +#include "rsi_hci.h"
->> +
->> +static struct rsi_mod_ops rsi_bt_ops =3D {
->> +     .attach =3D rsi_hci_attach,
->> +     .detach =3D rsi_hci_detach,
->> +     .recv_pkt =3D rsi_hci_recv_pkt,
->> +};
->> +
->> +static int rsi_hci_open(struct hci_dev *hdev)
->> +{
->> +     BT_INFO("%s open\n", hdev->name);
->
-> No BT_INFO here. We are not spamming dmesg with pointless information. An=
-d this applies to all of these.
->
->> +
->> +     return 0;
->> +}
->> +
->> +static int rsi_hci_close(struct hci_dev *hdev)
->> +{
->> +     BT_INFO("%s closed\n", hdev->name);
->> +
->> +     return 0;
->> +}
->> +
->> +static int rsi_hci_flush(struct hci_dev *hdev)
->> +{
->> +     BT_ERR("%s flush\n", hdev->name);
->> +
->> +     return 0;
->> +}
->> +
->> +static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
->> +{
->> +     struct rsi_hci_adapter *h_adapter;
->
->                                         =3D hci_get_drvdata(dev);
->
-> There is no need to do that separate.
->
->> +     struct sk_buff *new_skb =3D NULL;
->> +
->> +     int status =3D 0;
->> +
->> +     h_adapter =3D hci_get_drvdata(hdev);
->> +     if (!h_adapter) {
->> +             status =3D -EFAULT;
->> +             goto fail;
->> +     }
->
-> And this error check seems unneeded since the Bluetooth core will never c=
-all ->send unless it is all correctly set up.
->
->> +
->> +     if (h_adapter->fsm_state !=3D RSI_BT_FSM_DEVICE_READY) {
->> +             BT_INFO("BT Device not ready\n");
->> +             status =3D -ENODEV;
->> +             goto fail;
->> +     }
->
-> Why are we registering a HCI device that might not be ready. This will be=
- a massive bug in the whole system. Also one that is not recoverable. If so=
-mething goes wrong, then lets unregister the HCI device.
->
->> +
->> +     if (!test_bit(HCI_RUNNING, &hdev->flags)) {
->> +             status =3D -EBUSY;
->> +             goto fail;
->> +     }
->
-> This should no longer be needed. We moved this into the core and besides =
-some old USB drivers, nobody is using this anymore.
->
->> +
->> +     switch (bt_cb(skb)->pkt_type) {
->> +     case HCI_COMMAND_PKT:
->> +             hdev->stat.cmd_tx++;
->> +             break;
->> +
->> +     case HCI_ACLDATA_PKT:
->> +             hdev->stat.acl_tx++;
->> +             break;
->> +
->> +     case HCI_SCODATA_PKT:
->> +             hdev->stat.sco_tx++;
->> +             break;
->> +
->> +     default:
->> +             dev_kfree_skb(skb);
->
-> Don=E2=80=99t use dev_kfree_skb() here. I think the Bluetooth subsystem i=
-s not ready for that.
->
->> +             status =3D -EILSEQ;
->> +             goto fail;
->> +     }
->> +
->> +     if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
->> +             /* Re-allocate one more skb with sufficent headroom */
->> +             /* Space for Descriptor (16 bytes) is required in head roo=
-m */
->> +             u16 new_len =3D skb->len + RSI_HEADROOM_FOR_BT_HAL;
->> +
->> +             new_skb =3D dev_alloc_skb(new_len);
->> +             if (!new_skb) {
->> +                     dev_kfree_skb(skb);
->> +                     return -ENOMEM;
->> +             }
->> +             skb_reserve(new_skb, RSI_HEADROOM_FOR_BT_HAL);
->> +             skb_put(new_skb, skb->len);
->> +             memcpy(new_skb->data, skb->data, skb->len);
->> +             bt_cb(new_skb)->pkt_type =3D bt_cb(skb)->pkt_type;
->> +             dev_kfree_skb(skb);
->> +             skb =3D new_skb;
->
-> Just allocate a new skb with proper headroom. The data part can be shared=
-. Doing this fully manual is just a bad idea.
->
-> I also get the feeling that long term we want to change the Bluetooth dri=
-vers to specify the required SKB headroom so that they always get SKBs that=
- are large enough for their needs.
->
->> +     }
->> +     if (h_adapter->proto_ops->coex_send_pkt)
->> +             return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv=
-, skb,
->> +                                                       RSI_BT_Q);
->
-> This is worrisome. You need to send. If this callback is not available, t=
-hen better not register the HCI device at all.
->
->> +
->> +fail:
->> +     dev_kfree_skb(skb);
->> +     return status;
->> +}
->> +
->> +int rsi_hci_recv_pkt(void *priv, u8 *pkt)
->> +{
->> +     struct rsi_hci_adapter *h_adapter =3D (struct rsi_hci_adapter *)pr=
-iv;
->> +     struct hci_dev *hdev =3D NULL;
->> +     struct sk_buff *skb;
->> +     int pkt_len =3D (le16_to_cpu(*(__le16 *)pkt)) & 0x0fff;
->> +     u8 queue_no =3D (le16_to_cpu(*(__le16 *)pkt) & 0x7000) >> 12;
->
-> We have get_unaligned_le16 helpers for this.
->
->> +
->> +     if (h_adapter->fsm_state !=3D RSI_BT_FSM_DEVICE_READY) {
->> +             BT_INFO("BT Device not ready\n");
->> +             return 0;
->> +     }
->
-> Why call this function if the device is not ready? Can that not be checke=
-d and the HCI device not be registered.
->
->> +
->> +     if (queue_no =3D=3D RSI_BT_MGMT_Q) {
->> +             u8 msg_type =3D pkt[14] & 0xFF;
->> +
->> +             switch (msg_type) {
->> +             case RSI_RESULT_CONFIRM:
->> +                     BT_INFO("BT Result Confirm\n");
->> +                     return 0;
->> +             case RSI_BT_BER:
->> +                     BT_INFO("BT Ber\n");
->> +                     return 0;
->> +             case RSI_BT_CW:
->> +                     BT_INFO("BT CW\n");
->> +                     return 0;
->> +             default:
->> +                     break;
->> +             }
->> +     }
->
-> How noisy is this? Also no \n required for the BT_INFO functions. And her=
-e bt_dev_info is preferred anyway.
->
->> +
->> +     skb =3D dev_alloc_skb(pkt_len);
->> +     if (!skb)
->> +             return -ENOMEM;
->> +
->> +     hdev =3D h_adapter->hdev;
->> +     memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
->> +     skb_put(skb, pkt_len);
->> +     h_adapter->hdev->stat.byte_rx +=3D skb->len;
->> +
->> +     skb->dev =3D (void *)hdev;
->> +     bt_cb(skb)->pkt_type =3D pkt[14];
->> +
->> +     return hci_recv_frame(hdev, skb);
->> +}
->> +EXPORT_SYMBOL_GPL(rsi_hci_recv_pkt);
->> +
->> +int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
->> +{
->> +     struct rsi_hci_adapter *h_adapter =3D NULL;
->> +     struct hci_dev *hdev;
->> +     int status =3D 0;
->> +
->> +     h_adapter =3D kzalloc(sizeof(*h_adapter), GFP_KERNEL);
->> +     if (!h_adapter)
->> +             return -ENOMEM;
->> +
->> +     h_adapter->priv =3D priv;
->> +     ops->set_bt_context(priv, h_adapter);
->> +     h_adapter->proto_ops =3D ops;
->> +     ops->bt_ops =3D &rsi_bt_ops;
->> +     h_adapter->fsm_state =3D RSI_BT_FSM_DEVICE_READY;
->> +
->> +     hdev =3D hci_alloc_dev();
->> +     if (!hdev) {
->> +             BT_ERR("Failed to alloc HCI device\n");
->> +             goto err;
->> +     }
->> +     h_adapter->hdev =3D hdev;
->> +
->> +     if (ops->get_host_intf(priv) =3D=3D RSI_HOST_INTF_SDIO)
->> +             hdev->bus =3D HCI_SDIO;
->> +     else
->> +             hdev->bus =3D HCI_USB;
->> +
->> +     hci_set_drvdata(hdev, h_adapter);
->> +     hdev->dev_type =3D HCI_PRIMARY;
->> +     hdev->open =3D rsi_hci_open;
->> +     hdev->close =3D rsi_hci_close;
->> +     hdev->flush =3D rsi_hci_flush;
->> +     hdev->send =3D rsi_hci_send_pkt;
->> +
->> +     status =3D hci_register_dev(hdev);
->> +     if (status < 0) {
->> +             BT_ERR("%s: HCI registration failed with errcode %d\n",
->> +                    __func__, status);
->> +             goto err;
->> +     }
->> +
->> +     BT_INFO("%s interface created\n", hdev->name);
->> +
->> +     h_adapter->fsm_state =3D RSI_BT_FSM_DEVICE_READY;
->> +
->> +     return 0;
->> +
->> +err:
->> +     if (hdev) {
->> +             hci_unregister_dev(hdev);
->> +             hci_free_dev(hdev);
->> +             h_adapter->hdev =3D NULL;
->> +     }
->> +     kfree(h_adapter);
->> +
->> +     return -EINVAL;
->> +}
->> +
->> +void rsi_hci_detach(void *priv)
->> +{
->> +     struct rsi_hci_adapter *h_adapter =3D (struct rsi_hci_adapter *)pr=
-iv;
->> +     struct hci_dev *hdev;
->> +
->> +     if (!h_adapter)
->> +             return;
->> +
->> +     hdev =3D h_adapter->hdev;
->> +
->> +     BT_INFO("Detaching %s\n", hdev->name);
->> +
->> +     if (hdev) {
->> +             hci_unregister_dev(hdev);
->> +             hci_free_dev(hdev);
->> +             h_adapter->hdev =3D NULL;
->> +     }
->> +
->> +     kfree(h_adapter);
->> +     h_adapter->fsm_state =3D RSI_BT_FSM_DEVICE_NOT_READY;
->> +}
->> +
->> +struct rsi_mod_ops *rsi_get_hci_ops(void)
->> +{
->> +     return &rsi_bt_ops;
->> +};
->> +EXPORT_SYMBOL_GPL(rsi_get_hci_ops);
->> +
->> +static int rsi_91x_bt_module_init(void)
->> +{
->> +     BT_INFO("%s: BT Module init called\n", __func__);
->> +
->> +     return 0;
->> +}
->> +
->> +static void rsi_91x_bt_module_exit(void)
->> +{
->> +     BT_INFO("%s: BT Module exit called\n", __func__);
->> +}
->> +
->> +module_init(rsi_91x_bt_module_init);
->> +module_exit(rsi_91x_bt_module_exit);
->> +MODULE_AUTHOR("Redpine Signals Inc");
->> +MODULE_DESCRIPTION("RSI BT driver");
->> +MODULE_SUPPORTED_DEVICE("RSI-BT");
->> +MODULE_LICENSE("Dual BSD/GPL");
->> diff --git a/drivers/bluetooth/rsi_hci.h b/drivers/bluetooth/rsi_hci.h
->> new file mode 100644
->> index 0000000..6f44231
->> --- /dev/null
->> +++ b/drivers/bluetooth/rsi_hci.h
->> @@ -0,0 +1,51 @@
->> +/**
->> + * Copyright (c) 2017 Redpine Signals Inc.
->> + *
->> + * Permission to use, copy, modify, and/or distribute this software for=
- any
->> + * purpose with or without fee is hereby granted, provided that the abo=
-ve
->> + * copyright notice and this permission notice appear in all copies.
->> + *
->> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRAN=
-TIES
->> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
->> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE =
-FOR
->> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAG=
-ES
->> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN A=
-N
->> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT=
- OF
->> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->> + */
->> +
->> +#ifndef __RSI_HCI_H__
->> +#define __RSI_HCI_H__
->> +
->> +#include <net/bluetooth/bluetooth.h>
->> +#include <net/bluetooth/hci_core.h>
->> +#include <linux/rsi_header.h>
->> +#include <net/genetlink.h>
->> +
->> +/* RX frame types */
->> +#define RSI_RESULT_CONFIRM                   0x80
->> +#define RSI_BT_PER                           0x10
->> +#define RSI_BT_BER                           0x11
->> +#define RSI_BT_CW                            0x12
->> +
->> +#define RSI_HEADROOM_FOR_BT_HAL      16
->> +
->> +enum bt_fsm_state {
->> +     RSI_BT_FSM_DEVICE_NOT_READY =3D 0,
->> +     RSI_BT_FSM_DEVICE_READY,
->> +};
->> +
->> +struct rsi_hci_adapter {
->> +     void *priv;
->> +     struct rsi_proto_ops *proto_ops;
->> +     enum bt_fsm_state fsm_state;
->> +     struct hci_dev *hdev;
->> +};
->
-> If they are btrsi.c specific, they should be in btrsi.c and not in a head=
-er file.
->
->> +
->> +#define RSI_FRAME_DESC_SIZE          16
->> +
->> +int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops);
->> +void rsi_hci_detach(void *priv);
->> +int rsi_hci_recv_pkt(void *data, u8 *pkt);
->
-> And this is the part I do not get. What is the deal with the rsi_bt_ops. =
-Having both exported is pointless.
+> 
+> Here's the output for both firmwares:
+> 
+> Technexion:
+> # dmesg | grep brcmfmac
+> [    5.307067] brcmfmac: brcmf_fw_map_chip_to_name: using
+> brcm/brcmfmac4339-sdio.bin for chip 0x00433
+> 9(17209) rev 0x000002
+> [    6.400792] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> clkctl 0x50
+> [    6.408444] brcmfmac: brcmf_sdio_htclk:   pmucontrol   = 01774381
+> [    6.415595] brcmfmac: brcmf_sdio_htclk:   pmustatus    = 0000002a
+> [    6.421915] brcmfmac: brcmf_sdio_htclk:   min_res_mask = 0fcaff77
+> [    6.428124] brcmfmac: brcmf_sdio_htclk:   max_res_mask = 0fceff77
+> [    7.482668] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> clkctl 0x50
+> [    7.490214] brcmfmac: brcmf_sdio_htclk:   pmucontrol   = 01774381
+> [    7.496414] brcmfmac: brcmf_sdio_htclk:   pmustatus    = 0000002a
+> [    7.503873] brcmfmac: brcmf_sdio_htclk:   min_res_mask = 0fcaff77
+> [    7.510182] brcmfmac: brcmf_sdio_htclk:   max_res_mask = 0fceff77
+> #  strings /lib/firmware/brcm/brcmfmac4339-sdio.bin | tail -1
+> 4339a0-roml/sdio-ag-pool-p2p-pno-pktfilter-keepalive-aoe-sr-mchan-
+> proptxstatus-lpc-tdls-autoabn-txbf-
+> rcc-wepso-okc-ndoe Version: 6.37.32.28 CRC: 3075f12e Date: Thu 2014-04-
+> 03 12:15:31 CST FWID 01-4ae4ad
+> 03
+> 
+> Buildroot:
+> # dmesg | grep brcmfmac
+> [    5.343118] brcmfmac: brcmf_fw_map_chip_to_name: using
+> brcm/brcmfmac4339-sdio.bin for chip 0x00433
+> 9(17209) rev 0x000002
+> [    6.420070] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> clkctl 0x50
+> [    6.427722] brcmfmac: brcmf_sdio_htclk:   pmucontrol   = 01774381
+> [    6.434865] brcmfmac: brcmf_sdio_htclk:   pmustatus    = 0000002a
+> [    6.441174] brcmfmac: brcmf_sdio_htclk:   min_res_mask = 0fcaff77
+> [    6.447379] brcmfmac: brcmf_sdio_htclk:   max_res_mask = 0fceff77
+> [    7.502653] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000):
+> clkctl 0x50
+> [    7.510200] brcmfmac: brcmf_sdio_htclk:   pmucontrol   = 01774381
+> [    7.516398] brcmfmac: brcmf_sdio_htclk:   pmustatus    = 0000002a
+> [    7.523826] brcmfmac: brcmf_sdio_htclk:   min_res_mask = 0fcaff77
+> [    7.530117] brcmfmac: brcmf_sdio_htclk:   max_res_mask = 0fceff77
+> # strings /lib/firmware/brcm/brcmfmac4339-sdio.bin | tail -1
+> 4339a0-roml/sdio-ag-pool-autoabn-lpc Version: 6.37.34.28 CRC: a696897b
+> Date: Thu 2014-08-28 18:40:12
+> PDT FWID 01-a13120fc
 
-rsi core module initializes rsi_bt_ops by calling exported function
-rsi_get_hci_ops().
+Thanks for the info. The pmustatus indeed shows there is no HT clock for 
+the backplane. Will have to discuss with h/w guys. Meanwhile, can you 
+try the patch below. It will create a memory dump of the device using 
+the dev_coredump framework, ie. under /sys/class/devcoredump/. It will 
+probably create two dumps as the error occurs twice during probe. Just 
+sent me the first or put it somewhere on internet so I can download it 
+and have a look at it.
 
-Regards,
-Amitkumar
+Thanks,
+Arend
