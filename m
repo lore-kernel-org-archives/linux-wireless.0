@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:38029 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750953AbdKLOk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Nov 2017 09:40:27 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>, make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH v2] ath10k: Re-enable TXQs for all devices
-In-Reply-To: <f5540404-f2e0-203a-ee75-daf357f29547@nbd.name>
-References: <20171110004839.7478-1-toke@toke.dk> <f5540404-f2e0-203a-ee75-daf357f29547@nbd.name>
-Date: Sun, 12 Nov 2017 23:40:12 +0900
-Message-ID: <87shdjpnlf.fsf@toke.dk> (sfid-20171112_154031_764601_5AC105C8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from paleale.coelho.fi ([176.9.41.70]:46674 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751105AbdKULhr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Nov 2017 06:37:47 -0500
+Message-ID: <1511264260.4011.274.camel@coelho.fi> (sfid-20171121_123750_567867_8DEB15B3)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>, mcgrof@kernel.org
+Cc: sedat.dilek@gmail.com, linux-wireless@vger.kernel.org,
+        linuxwifi <linuxwifi@intel.com>
+Date: Tue, 21 Nov 2017 13:37:40 +0200
+In-Reply-To: <871skrdiaf.fsf@kamboji.qca.qualcomm.com>
+References: <1511175768.4011.261.camel@coelho.fi>
+         <CA+icZUVqhmH3dyMXkHKsHus5qyfMqQfcOctvHRDf4x=6+ndfPw@mail.gmail.com>
+         <1511259055.4011.268.camel@coelho.fi>
+         <871skrdiaf.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi 2017-11-19
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+On Tue, 2017-11-21 at 12:42 +0200, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> 
+> > > [   10.630285] iwlwifi 0000:04:00.0: firmware: failed to load
+> > > iwlwifi-8265-34.ucode (-2)
+> > > [   10.630331] iwlwifi 0000:04:00.0: Direct firmware load for
+> > > iwlwifi-8265-34.ucode failed with error -2
+> > > [   10.630454] iwlwifi 0000:04:00.0: firmware: failed to load
+> > > iwlwifi-8265-33.ucode (-2)
+> > > [   10.630479] iwlwifi 0000:04:00.0: Direct firmware load for
+> > > iwlwifi-8265-33.ucode failed with error -2
+> > > [   10.630486] iwlwifi 0000:04:00.0: firmware: failed to load
+> > > iwlwifi-8265-32.ucode (-2)
+> > > [   10.630510] iwlwifi 0000:04:00.0: Direct firmware load for
+> > > iwlwifi-8265-32.ucode failed with error -2
+> > > [   10.636423] iwlwifi 0000:04:00.0: firmware: direct-loading
+> > > firmware
+> > > iwlwifi-8265-31.ucode
+> > > [   10.637463] iwlwifi 0000:04:00.0: loaded firmware version
+> > > 31.532993.0 op_mode iwlmvm
+> > 
+> > This is an unfortunate side-effect of the way firmwares are
+> > loaded. 
+> > There is currently no way to prevent these error messages by making
+> > some files optional... But you can ignore them.  Or, even better,
+> > upgrade your firmware to the latest version the driver supports. :)
+> 
+> Or even better that we improve request_firmware()&co to make it
+> possible
+> not to print an error message :)
 
-> On 2017-11-10 01:48, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Commit 4ca1807815aa6801aaced7fdefa9edacc2521767 disables the use of the
->> mac80211 TXQs for some devices because of a theoretical throughput
->> regression. The original regression report[1] was related to fq_codel
->> qdisc drop performance, which was fixed in
->> 9d18562a227874289fda8ca5d117d8f503f1dcca. Since then, we have not seen
->> the TXQ-related regression, so it should be safe to re-enable TXQs.
-> That commit is unrelated to the fq/codel implementations in mac80211,
-> since mac80211 with txq does not use qdisc.
+The last time we discussed this, Luis was working on changes to the
+firmware subsystem APIs, but I stopped following and have no idea what
+happened with those patches...
 
-Yup. Which is why it's odd that the initial bug report referred to this;
-that would indicate that the regression had nothing to do with TXQs in
-the first place, and we could have merged this ages ago?
-
--Toke
+--
+Cheers,
+Luca.
