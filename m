@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:46450 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752708AbdK0VFm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Nov 2017 16:05:42 -0500
-Received: by mail-wm0-f66.google.com with SMTP id u83so37015260wmb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Nov 2017 13:05:41 -0800 (PST)
-Subject: Re: [PATCH v1] brcmfmac: Avoid build error with make W=1
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <cf5fb89e-2a69-207f-a3a4-3ec204eed408@broadcom.com> (sfid-20171127_220551_763630_4AB2777D)
-Date: Mon, 27 Nov 2017 22:05:39 +0100
+Received: from civicrm.laptop.org ([18.85.44.157]:45111 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751298AbdKUIEP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Nov 2017 03:04:15 -0500
+Date: Tue, 21 Nov 2017 19:04:08 +1100
+From: James Cameron <quozl@laptop.org>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Subject: Re: [PATCH] mwifiex: do not support change AP interface to station
+ mode
+Message-ID: <20171121080408.GH19252@us.netrek.org> (sfid-20171121_090419_205565_20490588)
+References: <1511249043-21404-1-git-send-email-huxm@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1511249043-21404-1-git-send-email-huxm@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Nov 21, 2017 at 03:24:03PM +0800, Xinming Hu wrote:
+> Firmware do not support change interface from micro-ap mode to
+> station mode, forbidden this operation in driver accordingly.
 
+All firmware or specific versions?
 
-On 23-11-17 16:57, Andy Shevchenko wrote:
-> When I run make W=1 on gcc (Debian 7.2.0-16) 7.2.0 I got an error for
-> the first run, all next ones are okay.
 > 
->    CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:2078: error: Cannot parse struct or union!
-> scripts/Makefile.build:310: recipe for target 'drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o' failed
-> 
-> Seems like something happened with W=1 and wrong kernel doc format.
-> As a quick fix remove dubious /** in the code.
-
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
 > ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> index 6e0d9a9..a87758f 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> @@ -1181,6 +1181,12 @@ static int mwifiex_deinit_priv_params(struct mwifiex_private *priv)
+>  		switch (type) {
+>  		case NL80211_IFTYPE_ADHOC:
+>  		case NL80211_IFTYPE_STATION:
+> +			if (mwifiex_get_priv_by_id(priv->adapter, priv->bss_num,
+> +						   MWIFIEX_BSS_TYPE_STA)){
+
+Is this test necessary?
+
+dev->ieee80211_ptr->iftype is always NL80211_IFTYPE_AP at this point.
+
+> +				mwifiex_dbg(priv->adapter, INFO,
+> +					    "Skip change virtual interface\n");
+
+Is this message easy to understand?  Other messages in the same
+function seem easier; e.g. "%s: changing to %d not supported\n"
+
+> +				return 0;
+
+Should this be -EOPNOTSUPP rather than 0?
+
+> +			}
+>  			return mwifiex_change_vif_to_sta_adhoc(dev, curr_iftype,
+>  							       type, params);
+>  			break;
+> -- 
+> 1.9.1
+> 
+
+-- 
+James Cameron
+http://quozl.netrek.org/
