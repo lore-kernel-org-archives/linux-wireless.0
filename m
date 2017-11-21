@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:46002 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752980AbdKTVe0 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59736 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751587AbdKUMDs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 16:34:26 -0500
-Date: Mon, 20 Nov 2017 15:34:23 -0600
-From: Rob Herring <robh@kernel.org>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v7 1/3] dt-bindings: net: add mt76 wireless device binding
-Message-ID: <20171120213423.kzjtoq6ggrylomh5@rob-hp-laptop> (sfid-20171120_223429_966008_19886CED)
-References: <20171120193549.80831-1-nbd@nbd.name>
- <20171120193549.80831-2-nbd@nbd.name>
+        Tue, 21 Nov 2017 07:03:48 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v2] mwifiex: do not support change AP interface to station mode
+Date: Tue, 21 Nov 2017 20:03:35 +0800
+Message-ID: <1511265815-13087-1-git-send-email-huxm@marvell.com> (sfid-20171121_130352_756017_5B370C03)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171120193549.80831-2-nbd@nbd.name>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 20, 2017 at 08:35:47PM +0100, Felix Fietkau wrote:
-> Add documentation describing how device tree can be used to configure
-> wireless chips supported by the mt76 driver.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->  .../bindings/net/wireless/mediatek,mt76.txt        | 32 ++++++++++++++++++++++
->  1 file changed, 32 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+Firmware do not support change interface from micro-ap mode to
+station mode, forbidden this operation in driver accordingly.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+---
+v2: remove unnecessary sta/uap combo check(James Cameron)
+
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 6e0d9a9..4d45df8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1180,7 +1180,6 @@ static int mwifiex_deinit_priv_params(struct mwifiex_private *priv)
+ 	case NL80211_IFTYPE_AP:
+ 		switch (type) {
+ 		case NL80211_IFTYPE_ADHOC:
+-		case NL80211_IFTYPE_STATION:
+ 			return mwifiex_change_vif_to_sta_adhoc(dev, curr_iftype,
+ 							       type, params);
+ 			break;
+-- 
+1.9.1
