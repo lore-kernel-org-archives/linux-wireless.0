@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38372 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752181AbdKHMcZ (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:43118 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751669AbdKUJaz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 07:32:25 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 21 Nov 2017 04:30:55 -0500
+Received: by mail-lf0-f68.google.com with SMTP id 73so13266284lfu.10
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Nov 2017 01:30:55 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [01/11] rtlwifi: rtl_pci: Fix formatting errors in pci.h
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171101152926.24971-2-Larry.Finger@lwfinger.net>
-References: <20171101152926.24971-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Message-Id: <20171108123224.E531A607C7@smtp.codeaurora.org> (sfid-20171108_133228_983922_93BDD47E)
-Date: Wed,  8 Nov 2017 12:32:24 +0000 (UTC)
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1511175768.4011.261.camel@coelho.fi>
+References: <1511175768.4011.261.camel@coelho.fi>
+From: Sedat Dilek <sedat.dilek@gmail.com>
+Date: Tue, 21 Nov 2017 10:30:53 +0100
+Message-ID: <CA+icZUVqhmH3dyMXkHKsHus5qyfMqQfcOctvHRDf4x=6+ndfPw@mail.gmail.com> (sfid-20171121_103241_955353_B5D33D0B)
+Subject: Re: pull-request: iwlwifi 2017-11-19
+To: Luca Coelho <luca@coelho.fi>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        linuxwifi <linuxwifi@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On Mon, Nov 20, 2017 at 12:02 PM, Luca Coelho <luca@coelho.fi> wrote:
+[..]
+> ----------------------------------------------------------------
+> iwlwifi: first set of fixes for 4.15
+>
+> * Support new FW API version of scan cmd (used in FW version 34);
 
-> Checkpatch.pl reports a number of formatting problems in this header
-> file. None of the changes cause any functional changes in the driver.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Cc: Birming Chiu <birming@realtek.com>
-> Cc: Shaofu <shaofu@realtek.com>
-> Cc: Steven Ting <steventing@realtek.com>
+While seeing this...
+I have here a iwlwifi-8265 hardware and have seen a recently uploaded
+FW-version 34 in iwlwifi-firmware Git.
+Can you explain the dependence of iwlwifi firmware-version / Linux
+kernel-release and especially probing?
+Currently, I am using Linux v4.14 from Debian/experimental.
 
-7 patches applied to wireless-drivers-next.git, thanks.
+- Sedat -
 
-6bc05d5d8e9d rtlwifi: rtl_pci: Fix formatting errors in pci.h
-ae0122b6793d rtlwifi: rtl_pci: Fix formatting problems in pci.c
-5f647f4dfe41 rtlwifi: rtl_pci: Simplify some code be eliminating extraneous variables
-57869e4ba77a rtlwifi: rtl_pci: Add support for 8822be TX/RX BD
-89d3e8abcf24 rtlwifi: rtl_pci: Add fill_tx_special_desc to issue H2C data, and process TXOK in interrupt.
-68929a838000 rtlwifi: rtl_pci: Add ID for 8822BE
-c1b586402c15 rtlwifi: rtl_pci: Extend recognized interrupt parameters from two to four ISR
+P.S.: From my logs
 
--- 
-https://patchwork.kernel.org/patch/10036495/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+[   10.630285] iwlwifi 0000:04:00.0: firmware: failed to load
+iwlwifi-8265-34.ucode (-2)
+[   10.630331] iwlwifi 0000:04:00.0: Direct firmware load for
+iwlwifi-8265-34.ucode failed with error -2
+[   10.630454] iwlwifi 0000:04:00.0: firmware: failed to load
+iwlwifi-8265-33.ucode (-2)
+[   10.630479] iwlwifi 0000:04:00.0: Direct firmware load for
+iwlwifi-8265-33.ucode failed with error -2
+[   10.630486] iwlwifi 0000:04:00.0: firmware: failed to load
+iwlwifi-8265-32.ucode (-2)
+[   10.630510] iwlwifi 0000:04:00.0: Direct firmware load for
+iwlwifi-8265-32.ucode failed with error -2
+[   10.636423] iwlwifi 0000:04:00.0: firmware: direct-loading firmware
+iwlwifi-8265-31.ucode
+[   10.637463] iwlwifi 0000:04:00.0: loaded firmware version
+31.532993.0 op_mode iwlmvm
