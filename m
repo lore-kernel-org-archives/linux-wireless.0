@@ -1,48 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:54015 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751590AbdKKRFm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Nov 2017 12:05:42 -0500
-From: Johan Hovold <johan@kernel.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Loic Poulain <loic.poulain@linaro.org>
-Subject: [PATCH] wcn36xx: fix iris child-node lookup
-Date: Sat, 11 Nov 2017 18:05:32 +0100
-Message-Id: <20171111170532.6110-1-johan@kernel.org> (sfid-20171111_180603_660735_515734FD)
+Received: from store.laptop.org ([18.85.44.157]:57303 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751184AbdKUUhz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Nov 2017 15:37:55 -0500
+Date: Wed, 22 Nov 2017 07:37:46 +1100
+From: James Cameron <quozl@laptop.org>
+To: =?iso-8859-1?Q?R=E1kosi?= Gergely <rakosi.gergely@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: rtl8723be on Fedora27
+Message-ID: <20171121203746.GC5400@us.netrek.org> (sfid-20171121_213818_080102_831402F2)
+References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
+ <3a1fc541-9104-2d13-409f-c8e64845a86d@lwfinger.net>
+ <c6662534-db2f-61dc-142e-8015984c6813@gmail.com>
+ <2524fe93-9d8a-523e-3256-2b495c951eb0@lwfinger.net>
+ <d4ba5178-3d60-76b0-3819-e70e3e173fac@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <d4ba5178-3d60-76b0-3819-e70e3e173fac@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix child-node lookup during probe, which ended up searching the whole
-device tree depth-first starting at the parent rather than just matching
-on its children.
+On Tue, Nov 21, 2017 at 03:08:16PM +0100, Rákosi Gergely wrote:
+> 2017-11-18 16:52 keltezéssel, Larry Finger írta:
+> > On 11/17/2017 06:22 PM, Rákosi Gergely wrote:
+> >> Hello Larry,
+> >>
+> >> First of all, thanks your help.
+> >> Lets see...here is the kernel version: 4.13.12-300
+> >> The machine is an Asus ROG 553VE
+> >>
+> >> The firmware which loading in the dmesg is : rtlwifi/rtl8723befw_36.bin
+> >> The output of md5sum is : 1850c1308fbcd95e9f6a7f58ede1e35f
+> >
+> > [...]
+> > sudo iw dev wlan0 scan | egrep "SSID|signal"
+> >
+> > Post that output. In addition, copy the dmesg output to some pastebin
+> > and post the link as well.
+> >
+> > Larry
+> >
+> Hello Larry,
+> 
+> I hope this email post format is good, and fit to the rules.
+> Here is the output:
+> 
+> root@skynet-x2 ~]# iw dev wlp2s0 scan | egrep "SSID|signal"
+>         signal: -46.00 dBm
+>         SSID: SKYNET-X2
+> [...]
+> [root@skynet-x2 ~]#
 
-To make things worse, the parent mmio node was also prematurely freed.
+Scan results seem normal.  Was this scan before disconnect?
 
-Fixes: fd52bdae9ab0 ("wcn36xx: Disable 5GHz for wcn3620")
-Cc: stable <stable@vger.kernel.org>     # 4.14
-Cc: Loic Poulain <loic.poulain@linaro.org>
-Signed-off-by: Johan Hovold <johan@kernel.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> And the dmesg output:
+> 
+> https://pastebin.com/iqQSu2hD
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 71812a2dd513..f7d228b5ba93 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1233,7 +1233,7 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
- 	}
- 
- 	/* External RF module */
--	iris_node = of_find_node_by_name(mmio_node, "iris");
-+	iris_node = of_get_child_by_name(mmio_node, "iris");
- 	if (iris_node) {
- 		if (of_device_is_compatible(iris_node, "qcom,wcn3620"))
- 			wcn->rf_id = RF_IRIS_WCN3620;
+Is now v4.13.13.
+
+This is interesting, an H2C command was dropped, but no idea which.
+
+[    9.848052] rtl8723be: error H2C cmd because of Fw download fail!!!
+
+Disconnection happened at boot+440 seconds, associate+429 seconds;
+
+[  439.871033] rtlwifi: AP off, try to reconnect now
+[  439.871093] wlp2s0: Connection to AP 4c:5e:0c:c7:fa:e3 lost
+
+I cannot tell what causes disconnect.  I wonder if the same
+timing of the problem happens always, or if the timing varies.
+
+Init MAC failed was another 30 seconds later;
+
+[  468.600670] IPv6: ADDRCONF(NETDEV_UP): wlp2s0: link is not ready
+[  469.618926] rtl8723be: Init MAC failed
+
+Looking at _rtl8723be_init_mac, there are two false returns; hardware
+power on fail, and llt write fail.
+
+Sorry, I don't have rtl8723be hardware.
+
+Rákosi, did any older kernel keep connection?
+
 -- 
-2.15.0
+James Cameron
+http://quozl.netrek.org/
