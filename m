@@ -1,73 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:43070 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934065AbdKBTfA (ORCPT
+Received: from mail-ot0-f177.google.com ([74.125.82.177]:37010 "EHLO
+        mail-ot0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751345AbdKUWgD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Nov 2017 15:35:00 -0400
-Received: by mail-wm0-f53.google.com with SMTP id m72so599506wmc.0
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Nov 2017 12:34:59 -0700 (PDT)
-From: Christian Lamparter <chunkeey@gmail.com>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: [PATCH] ath10k: fix recent bandwidth conversion bug
-Date: Thu, 02 Nov 2017 20:34:06 +0100
-Message-ID: <1666282.PC3nhpCf9f@debian64> (sfid-20171102_203503_878606_B2B1FC2C)
-In-Reply-To: <224e2890-3775-967b-d4ce-4297574c0642@dd-wrt.com>
-References: <20171101200157.27096-1-chunkeey@gmail.com> <224e2890-3775-967b-d4ce-4297574c0642@dd-wrt.com>
+        Tue, 21 Nov 2017 17:36:03 -0500
+Received: by mail-ot0-f177.google.com with SMTP id s4so11967034ote.4
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Nov 2017 14:36:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Chris Murphy <lists@colorremedies.com>
+Date: Tue, 21 Nov 2017 15:36:02 -0700
+Message-ID: <CAJCQCtQUE6V6zQewVAQJRmDPHjqL=Mixq4nj0kZGZ67UKOTnKg@mail.gmail.com> (sfid-20171121_233722_067053_6DB917B7)
+Subject: BCM4331 won't connect with WPA2
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, November 1, 2017 9:37:53 PM CET Sebastian Gottschall wrote:
-> a additional array bounds check would be good
+Hi,
 
-Ah, about that:
+Pretty much all the details and logs are here:
 
-the bw variable in ath10k_htt_rx_h_rates() is extracted from info2
-in the following way [0]:
-|	bw = info2 & 3;
+refuses to connect to WPA2 secured WiFi
+https://bugzilla.redhat.com/show_bug.cgi?id=1516009
 
-the txrate.bw variable in ath10k_update_per_peer_tx_stats() is set by [1]:
-|	txrate.bw = ATH10K_HW_BW(peer_stats->flags);
+So I will just include a summary here:
 
-ATH10K_HW_BW is a macro defined as [2]:
-|	#define ATH10K_HW_BW(flags)		(((flags) >> 3) & 0x3)
+Macbook Pro, Broadcom BCM4331
+firmware version 784.2 (2012-08-15....
+kernels 4.5.5 through 4.13.13
+NetworkManager-1.8.4
+wpa_supplicant-2.6
 
-In both cases the bandwidth values already are limited to 0-3 by
-the "and 3" operation.
+Access point is an Xfinity branded
+Arris TG1682G, 802.11a/b/g/n/ac
 
-[0] <https://elixir.free-electrons.com/linux/v4.14-rc7/source/drivers/net/wireless/ath/ath10k/htt_rx.c#L646>
+Connecting to this AP's unsecured "xfinity" SSID succeeds, but fails
+to its "altitude" WPA2 secured SSID. The user visible failure is
+either no error other than three dots for the Wifi icon in the gnome
+menu bar, or more often the modal passphrase dialog for the AP comes
+up asking for the passphrase again.
 
-[1] <https://elixir.free-electrons.com/linux/v4.14-rc7/source/drivers/net/wireless/ath/ath10k/htt_rx.c#L2254>
-[2] <https://elixir.free-electrons.com/linux/v4.14-rc7/source/drivers/net/wireless/ath/ath10k/wmi.h#L4810>
+No other devices (about 1/2 dozen) have this problem, including this
+same laptop if I reboot to macOS and connect to this same "altitude"
+SSID with the same entered passphrase.
+
+There is an attached log (journal3) where a connection did succeed for
+a very short amount of time, but then promptly was disconnected with
+all subsequent attempts to connect failing while the user intervention
+was zero (I was touching nothing, just monitoring and logging stuff).
+
+The journal2 log attached to the bug report contains wpa_supplicant -d
+output. Let me know if I need to retry with -dd and post that
+somewhere. Also in the bug are the kernel config options, I don't see
+any of the requested 80211 options in the reporting bugs guidelines.
+https://wireless.wiki.kernel.org/en/users/documentation/reporting_bugs
+
+So if I need to compile a kernel and enable options, no problem, just
+let me know which ones.
+
+If I change any of the three components: client (the laptop with
+BCM4331) + linux + AP then the problem doesn't happen. Change the OS
+and it works. All other devices work with this AP and WPA2. And
+BCM4331 + linux work with other APs than this one. So it's something
+of a trifecta bug.
 
 
-> > @@ -592,6 +592,9 @@ struct amsdu_subframe_hdr {
-> >   
-> >   #define GROUP_ID_IS_SU_MIMO(x) ((x) == 0 || (x) == 63)
-> >   
-> > +static const u8 ath10k_bw_to_mac80211[] = { RATE_INFO_BW_20, RATE_INFO_BW_40,
-> > +	RATE_INFO_BW_80, RATE_INFO_BW_160 };
-> > +
-> >   static void ath10k_htt_rx_h_rates(struct ath10k *ar,
-> >   				  struct ieee80211_rx_status *status,
-> >   				  struct htt_rx_desc *rxd)
-> > @@ -694,23 +697,7 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
-> >   		if (sgi)
-> >   			status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
-> >   
-> > [...]
-> > +		status->bw = ath10k_bw_to_mac80211[bw];
-> >   		status->encoding = RX_ENC_VHT;
-> >   		break;
-> >   	default:
-> > @@ -2297,7 +2284,7 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
-> >   		arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
-> >   
-> >   	arsta->txrate.nss = txrate.nss;
-> > -	arsta->txrate.bw = txrate.bw + RATE_INFO_BW_20;
-> > +	arsta->txrate.bw = ath10k_bw_to_mac80211[txrate.bw];
-> >   }
-> >   
-> >   static void ath10k_htt_fetch_peer_stats(struct ath10k *ar,
+-- 
+Chris Murphy
