@@ -1,566 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:48200 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750910AbdKLUGw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Nov 2017 15:06:52 -0500
-Received: by mail-oi0-f65.google.com with SMTP id b189so8682709oia.5
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Nov 2017 12:06:52 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH] rtlwifi: Convert individual interrupt results to struct
-Date: Sun, 12 Nov 2017 14:06:45 -0600
-Message-Id: <20171112200645.26284-1-Larry.Finger@lwfinger.net> (sfid-20171112_210657_135723_81F6D021)
+Received: from nbd.name ([46.4.11.11]:57038 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751367AbdKUJu4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Nov 2017 04:50:56 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH v8 0/3] mt76: add new wireless driver for MediaTek MT76x2 PCIe chips
+Date: Tue, 21 Nov 2017 10:50:50 +0100
+Message-Id: <20171121095053.82673-1-nbd@nbd.name> (sfid-20171121_105146_483819_3AB6049A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the RTL8822BE and later devices, the number of interrupt vectors
-has grown from 2 to 4. At this point, saving and passing those vectors
-in a struct makes more sense than using individual scaler variables.
+Changes since v7:
+- Fix build errors
 
-In two of the drivers, code to process the second of the interrupt
-registers was included, but commented out. This patch removes those
-useless sections.
+Changes since v6:
+- DT documentation fixes
+- Add LED configuration
+- PHY gain calibration fixes
+- Endian fixes
+- Tx status processing fixes
+- EEPROM validation fixes
+- IBSS RSN fix
+- AP mode powersave delivery fix
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/pci.c         | 47 +++++++++++-----------
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    | 11 +++--
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.h    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    | 12 ++----
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.h    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    | 12 ++----
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.h    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    | 11 +++--
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.h    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    | 12 +++---
- .../net/wireless/realtek/rtlwifi/rtl8192se/hw.h    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    |  7 ++--
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.h    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    | 13 +++---
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.h    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    | 11 +++--
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.h    |  3 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        | 11 ++++-
- 18 files changed, 76 insertions(+), 95 deletions(-)
+Changes since v5:
+- Adjust for mac80211 API changes
+- EEPROM parsing fixes
+- Ad-hoc mode WPA2 fixes
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index c2575b0b9440..ed6e4a5b99de 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -924,10 +924,8 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	unsigned long flags;
--	u32 inta = 0;
--	u32 intb = 0;
--	u32 intc = 0;
--	u32 intd = 0;
-+	struct rtl_int intvec = {0};
-+
- 	irqreturn_t ret = IRQ_HANDLED;
- 
- 	if (rtlpci->irq_enabled == 0)
-@@ -937,47 +935,47 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 	rtlpriv->cfg->ops->disable_interrupt(hw);
- 
- 	/*read ISR: 4/8bytes */
--	rtlpriv->cfg->ops->interrupt_recognized(hw, &inta, &intb, &intc, &intd);
-+	rtlpriv->cfg->ops->interrupt_recognized(hw, &intvec);
- 
- 	/*Shared IRQ or HW disappeared */
--	if (!inta || inta == 0xffff)
-+	if (!intvec.inta || intvec.inta == 0xffff)
- 		goto done;
- 
- 	/*<1> beacon related */
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_TBDOK])
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_TBDOK])
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
- 			 "beacon ok interrupt!\n");
- 
--	if (unlikely(inta & rtlpriv->cfg->maps[RTL_IMR_TBDER]))
-+	if (unlikely(intvec.inta & rtlpriv->cfg->maps[RTL_IMR_TBDER]))
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
- 			 "beacon err interrupt!\n");
- 
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_BDOK])
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_BDOK])
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE, "beacon interrupt!\n");
- 
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_BCNINT]) {
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_BCNINT]) {
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
- 			 "prepare beacon for interrupt!\n");
- 		tasklet_schedule(&rtlpriv->works.irq_prepare_bcn_tasklet);
- 	}
- 
- 	/*<2> Tx related */
--	if (unlikely(intb & rtlpriv->cfg->maps[RTL_IMR_TXFOVW]))
-+	if (unlikely(intvec.intb & rtlpriv->cfg->maps[RTL_IMR_TXFOVW]))
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING, "IMR_TXFOVW!\n");
- 
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_MGNTDOK]) {
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_MGNTDOK]) {
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
- 			 "Manage ok interrupt!\n");
- 		_rtl_pci_tx_isr(hw, MGNT_QUEUE);
- 	}
- 
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_HIGHDOK]) {
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_HIGHDOK]) {
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
- 			 "HIGH_QUEUE ok interrupt!\n");
- 		_rtl_pci_tx_isr(hw, HIGH_QUEUE);
- 	}
- 
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_BKDOK]) {
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_BKDOK]) {
- 		rtlpriv->link_info.num_tx_inperiod++;
- 
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
-@@ -985,7 +983,7 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 		_rtl_pci_tx_isr(hw, BK_QUEUE);
- 	}
- 
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_BEDOK]) {
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_BEDOK]) {
- 		rtlpriv->link_info.num_tx_inperiod++;
- 
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
-@@ -993,7 +991,7 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 		_rtl_pci_tx_isr(hw, BE_QUEUE);
- 	}
- 
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_VIDOK]) {
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_VIDOK]) {
- 		rtlpriv->link_info.num_tx_inperiod++;
- 
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
-@@ -1001,7 +999,7 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 		_rtl_pci_tx_isr(hw, VI_QUEUE);
- 	}
- 
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_VODOK]) {
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_VODOK]) {
- 		rtlpriv->link_info.num_tx_inperiod++;
- 
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
-@@ -1010,7 +1008,7 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 	}
- 
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8822BE) {
--		if (intd & rtlpriv->cfg->maps[RTL_IMR_H2CDOK]) {
-+		if (intvec.intd & rtlpriv->cfg->maps[RTL_IMR_H2CDOK]) {
- 			rtlpriv->link_info.num_tx_inperiod++;
- 
- 			RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
-@@ -1020,7 +1018,7 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 	}
- 
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE) {
--		if (inta & rtlpriv->cfg->maps[RTL_IMR_COMDOK]) {
-+		if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_COMDOK]) {
- 			rtlpriv->link_info.num_tx_inperiod++;
- 
- 			RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
-@@ -1030,25 +1028,25 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 	}
- 
- 	/*<3> Rx related */
--	if (inta & rtlpriv->cfg->maps[RTL_IMR_ROK]) {
-+	if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_ROK]) {
- 		RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE, "Rx ok interrupt!\n");
- 		_rtl_pci_rx_interrupt(hw);
- 	}
- 
--	if (unlikely(inta & rtlpriv->cfg->maps[RTL_IMR_RDU])) {
-+	if (unlikely(intvec.inta & rtlpriv->cfg->maps[RTL_IMR_RDU])) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
- 			 "rx descriptor unavailable!\n");
- 		_rtl_pci_rx_interrupt(hw);
- 	}
- 
--	if (unlikely(intb & rtlpriv->cfg->maps[RTL_IMR_RXFOVW])) {
-+	if (unlikely(intvec.intb & rtlpriv->cfg->maps[RTL_IMR_RXFOVW])) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING, "rx overflow !\n");
- 		_rtl_pci_rx_interrupt(hw);
- 	}
- 
- 	/*<4> fw related*/
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8723AE) {
--		if (inta & rtlpriv->cfg->maps[RTL_IMR_C2HCMD]) {
-+		if (intvec.inta & rtlpriv->cfg->maps[RTL_IMR_C2HCMD]) {
- 			RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
- 				 "firmware interrupt!\n");
- 			queue_delayed_work(rtlpriv->works.rtl_wq,
-@@ -1064,7 +1062,8 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- 	 */
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8188EE ||
- 	    rtlhal->hw_type == HARDWARE_TYPE_RTL8723BE) {
--		if (unlikely(inta & rtlpriv->cfg->maps[RTL_IMR_HSISR_IND])) {
-+		if (unlikely(intvec.inta &
-+		    rtlpriv->cfg->maps[RTL_IMR_HSISR_IND])) {
- 			RT_TRACE(rtlpriv, COMP_INTR, DBG_TRACE,
- 				 "hsisr interrupt!\n");
- 			_rtl_pci_hs_interrupt(hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-index e30a18e64ff5..988d5ac57d02 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-@@ -1472,17 +1472,16 @@ void rtl88ee_card_disable(struct ieee80211_hw *hw)
- }
- 
- void rtl88ee_interrupt_recognized(struct ieee80211_hw *hw,
--				  u32 *p_inta, u32 *p_intb,
--				  u32 *p_intc, u32 *p_intd)
-+				  struct rtl_int *intvec)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
--	*p_inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
--	rtl_write_dword(rtlpriv, ISR, *p_inta);
-+	intvec->inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
-+	rtl_write_dword(rtlpriv, ISR, intvec->inta);
- 
--	*p_intb = rtl_read_dword(rtlpriv, REG_HISRE) & rtlpci->irq_mask[1];
--	rtl_write_dword(rtlpriv, REG_HISRE, *p_intb);
-+	intvec->intb = rtl_read_dword(rtlpriv, REG_HISRE) & rtlpci->irq_mask[1];
-+	rtl_write_dword(rtlpriv, REG_HISRE, intvec->intb);
- 
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h
-index cdf49de1e6ed..214cd2a32018 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h
-@@ -29,8 +29,7 @@
- void rtl88ee_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val);
- void rtl88ee_read_eeprom_info(struct ieee80211_hw *hw);
- void rtl88ee_interrupt_recognized(struct ieee80211_hw *hw,
--				  u32 *p_inta, u32 *p_intb,
--				  u32 *p_intc, u32 *p_intd);
-+				  struct rtl_int *int_vec);
- int rtl88ee_hw_init(struct ieee80211_hw *hw);
- void rtl88ee_card_disable(struct ieee80211_hw *hw);
- void rtl88ee_enable_interrupt(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-index 0f4c86a28716..4a81e0ef4b8e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-@@ -1375,19 +1375,13 @@ void rtl92ce_card_disable(struct ieee80211_hw *hw)
- }
- 
- void rtl92ce_interrupt_recognized(struct ieee80211_hw *hw,
--				  u32 *p_inta, u32 *p_intb,
--				  u32 *p_intc, u32 *p_intd)
-+				  struct rtl_int *intvec)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
--	*p_inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
--	rtl_write_dword(rtlpriv, ISR, *p_inta);
--
--	/*
--	 * *p_intb = rtl_read_dword(rtlpriv, REG_HISRE) & rtlpci->irq_mask[1];
--	 * rtl_write_dword(rtlpriv, ISR + 4, *p_intb);
--	 */
-+	intvec->inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
-+	rtl_write_dword(rtlpriv, ISR, intvec->inta);
- }
- 
- void rtl92ce_set_beacon_related_registers(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.h
-index b5c8e2fc1ba2..6711ea1a75d9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.h
-@@ -42,8 +42,7 @@ static inline u8 rtl92c_get_chnl_group(u8 chnl)
- void rtl92ce_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val);
- void rtl92ce_read_eeprom_info(struct ieee80211_hw *hw);
- void rtl92ce_interrupt_recognized(struct ieee80211_hw *hw,
--				  u32 *p_inta, u32 *p_intb,
--				  u32 *p_intc, u32 *p_intd);
-+				  struct rtl_int *int_vec);
- int rtl92ce_hw_init(struct ieee80211_hw *hw);
- void rtl92ce_card_disable(struct ieee80211_hw *hw);
- void rtl92ce_enable_interrupt(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-index 0da6c0136857..80123fd97221 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-@@ -1356,19 +1356,13 @@ void rtl92de_card_disable(struct ieee80211_hw *hw)
- }
- 
- void rtl92de_interrupt_recognized(struct ieee80211_hw *hw,
--				  u32 *p_inta, u32 *p_intb,
--				  u32 *p_intc, u32 *p_intd)
-+				  struct rtl_int *intvec)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
--	*p_inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
--	rtl_write_dword(rtlpriv, ISR, *p_inta);
--
--	/*
--	 * *p_intb = rtl_read_dword(rtlpriv, REG_HISRE) & rtlpci->irq_mask[1];
--	 * rtl_write_dword(rtlpriv, ISR + 4, *p_intb);
--	 */
-+	intvec->inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
-+	rtl_write_dword(rtlpriv, ISR, intvec->inta);
- }
- 
- void rtl92de_set_beacon_related_registers(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.h
-index 9236aa91273d..e6c702e69ecf 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.h
-@@ -29,8 +29,7 @@
- void rtl92de_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val);
- void rtl92de_read_eeprom_info(struct ieee80211_hw *hw);
- void rtl92de_interrupt_recognized(struct ieee80211_hw *hw,
--				  u32 *p_inta, u32 *p_intb,
--				  u32 *p_intc, u32 *p_intd);
-+				  struct rtl_int *int_vec);
- int rtl92de_hw_init(struct ieee80211_hw *hw);
- void rtl92de_card_disable(struct ieee80211_hw *hw);
- void rtl92de_enable_interrupt(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index fe5da637e77a..fd7928fdbd1a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -1694,17 +1694,16 @@ void rtl92ee_card_disable(struct ieee80211_hw *hw)
- }
- 
- void rtl92ee_interrupt_recognized(struct ieee80211_hw *hw,
--				  u32 *p_inta, u32 *p_intb,
--				  u32 *p_intc, u32 *p_intd)
-+				  struct rtl_int *intvec)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
--	*p_inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
--	rtl_write_dword(rtlpriv, ISR, *p_inta);
-+	intvec->inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
-+	rtl_write_dword(rtlpriv, ISR, intvec->inta);
- 
--	*p_intb = rtl_read_dword(rtlpriv, REG_HISRE) & rtlpci->irq_mask[1];
--	rtl_write_dword(rtlpriv, REG_HISRE, *p_intb);
-+	intvec->intb = rtl_read_dword(rtlpriv, REG_HISRE) & rtlpci->irq_mask[1];
-+	rtl_write_dword(rtlpriv, REG_HISRE, intvec->intb);
- }
- 
- void rtl92ee_set_beacon_related_registers(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.h
-index cd6d3322f033..3a63bec9b0cc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.h
-@@ -29,8 +29,7 @@
- void rtl92ee_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val);
- void rtl92ee_read_eeprom_info(struct ieee80211_hw *hw);
- void rtl92ee_interrupt_recognized(struct ieee80211_hw *hw,
--				  u32 *p_inta, u32 *p_intb,
--				  u32 *p_intc, u32 *p_intd);
-+				  struct rtl_int *int_vec);
- int rtl92ee_hw_init(struct ieee80211_hw *hw);
- void rtl92ee_card_disable(struct ieee80211_hw *hw);
- void rtl92ee_enable_interrupt(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-index 76bf089cced4..30dea7b9bc17 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-@@ -1558,17 +1558,17 @@ void rtl92se_card_disable(struct ieee80211_hw *hw)
- 	udelay(100);
- }
- 
--void rtl92se_interrupt_recognized(struct ieee80211_hw *hw, u32 *p_inta,
--			     u32 *p_intb, u32 *p_intc, u32 *p_intd)
-+void rtl92se_interrupt_recognized(struct ieee80211_hw *hw,
-+				  struct rtl_int *intvec)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
--	*p_inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
--	rtl_write_dword(rtlpriv, ISR, *p_inta);
-+	intvec->inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
-+	rtl_write_dword(rtlpriv, ISR, intvec->inta);
- 
--	*p_intb = rtl_read_dword(rtlpriv, ISR + 4) & rtlpci->irq_mask[1];
--	rtl_write_dword(rtlpriv, ISR + 4, *p_intb);
-+	intvec->intb = rtl_read_dword(rtlpriv, ISR + 4) & rtlpci->irq_mask[1];
-+	rtl_write_dword(rtlpriv, ISR + 4, intvec->intb);
- }
- 
- void rtl92se_set_beacon_related_registers(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.h
-index 607056010974..fa836ceefc8f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.h
-@@ -42,8 +42,7 @@ void rtl92se_get_hw_reg(struct ieee80211_hw *hw,
- 			u8 variable, u8 *val);
- void rtl92se_read_eeprom_info(struct ieee80211_hw *hw);
- void rtl92se_interrupt_recognized(struct ieee80211_hw *hw,
--				  u32 *p_inta, u32 *p_intb,
--				  u32 *p_intc, u32 *p_intd);
-+				  struct rtl_int *int_vec);
- int rtl92se_hw_init(struct ieee80211_hw *hw);
- void rtl92se_card_disable(struct ieee80211_hw *hw);
- void rtl92se_enable_interrupt(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index c3f98d58124c..545115db507e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -1340,14 +1340,13 @@ void rtl8723e_card_disable(struct ieee80211_hw *hw)
- }
- 
- void rtl8723e_interrupt_recognized(struct ieee80211_hw *hw,
--				   u32 *p_inta, u32 *p_intb,
--				   u32 *p_intc, u32 *p_intd)
-+				   struct rtl_int *intvec)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
--	*p_inta = rtl_read_dword(rtlpriv, 0x3a0) & rtlpci->irq_mask[0];
--	rtl_write_dword(rtlpriv, 0x3a0, *p_inta);
-+	intvec->inta = rtl_read_dword(rtlpriv, 0x3a0) & rtlpci->irq_mask[0];
-+	rtl_write_dword(rtlpriv, 0x3a0, intvec->inta);
- }
- 
- void rtl8723e_set_beacon_related_registers(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.h
-index 19e467a37c72..c76e453f4f43 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.h
-@@ -34,8 +34,7 @@ void rtl8723e_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val);
- void rtl8723e_read_eeprom_info(struct ieee80211_hw *hw);
- 
- void rtl8723e_interrupt_recognized(struct ieee80211_hw *hw,
--				   u32 *p_inta, u32 *p_intb,
--				   u32 *p_intc, u32 *p_intd);
-+				   struct rtl_int *int_vec);
- int rtl8723e_hw_init(struct ieee80211_hw *hw);
- void rtl8723e_card_disable(struct ieee80211_hw *hw);
- void rtl8723e_enable_interrupt(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index 7cd1ffa7d4a7..d2369b0cad99 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -1682,18 +1682,17 @@ void rtl8723be_card_disable(struct ieee80211_hw *hw)
- }
- 
- void rtl8723be_interrupt_recognized(struct ieee80211_hw *hw,
--				    u32 *p_inta, u32 *p_intb,
--				    u32 *p_intc, u32 *p_intd)
-+				    struct rtl_int *intvec)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
--	*p_inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
--	rtl_write_dword(rtlpriv, ISR, *p_inta);
-+	intvec->inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
-+	rtl_write_dword(rtlpriv, ISR, intvec->inta);
- 
--	*p_intb = rtl_read_dword(rtlpriv, REG_HISRE) &
--					rtlpci->irq_mask[1];
--	rtl_write_dword(rtlpriv, REG_HISRE, *p_intb);
-+	intvec->intb = rtl_read_dword(rtlpriv, REG_HISRE) &
-+				      rtlpci->irq_mask[1];
-+	rtl_write_dword(rtlpriv, REG_HISRE, intvec->intb);
- }
- 
- void rtl8723be_set_beacon_related_registers(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.h
-index 2215a792f6bf..ae856a19e81a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.h
-@@ -30,8 +30,7 @@ void rtl8723be_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val);
- void rtl8723be_read_eeprom_info(struct ieee80211_hw *hw);
- 
- void rtl8723be_interrupt_recognized(struct ieee80211_hw *hw,
--				    u32 *p_inta, u32 *p_intb,
--				    u32 *p_intc, u32 *p_intd);
-+				    struct rtl_int *int_vec);
- int rtl8723be_hw_init(struct ieee80211_hw *hw);
- void rtl8723be_card_disable(struct ieee80211_hw *hw);
- void rtl8723be_enable_interrupt(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 43e18c4c1e68..f20e77b4bb65 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -2483,17 +2483,16 @@ void rtl8821ae_card_disable(struct ieee80211_hw *hw)
- }
- 
- void rtl8821ae_interrupt_recognized(struct ieee80211_hw *hw,
--				    u32 *p_inta, u32 *p_intb,
--				    u32 *p_intc, u32 *p_intd)
-+				    struct rtl_int *intvec)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 
--	*p_inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
--	rtl_write_dword(rtlpriv, ISR, *p_inta);
-+	intvec->inta = rtl_read_dword(rtlpriv, ISR) & rtlpci->irq_mask[0];
-+	rtl_write_dword(rtlpriv, ISR, intvec->inta);
- 
--	*p_intb = rtl_read_dword(rtlpriv, REG_HISRE) & rtlpci->irq_mask[1];
--	rtl_write_dword(rtlpriv, REG_HISRE, *p_intb);
-+	intvec->intb = rtl_read_dword(rtlpriv, REG_HISRE) & rtlpci->irq_mask[1];
-+	rtl_write_dword(rtlpriv, REG_HISRE, intvec->intb);
- }
- 
- void rtl8821ae_set_beacon_related_registers(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.h
-index 284d259fe557..e2ab783a2ad9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.h
-@@ -30,8 +30,7 @@ void rtl8821ae_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val);
- void rtl8821ae_read_eeprom_info(struct ieee80211_hw *hw);
- 
- void rtl8821ae_interrupt_recognized(struct ieee80211_hw *hw,
--				    u32 *p_inta, u32 *p_intb,
--				    u32 *p_intc, u32 *p_intd);
-+				    struct rtl_int *int_vec);
- int rtl8821ae_hw_init(struct ieee80211_hw *hw);
- void rtl8821ae_card_disable(struct ieee80211_hw *hw);
- void rtl8821ae_enable_interrupt(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 92d4859ec906..e2b14793b705 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2093,14 +2093,21 @@ struct rtl_wow_pattern {
- 	u32 mask[4];
- };
- 
-+/* struct to store contents of interrupt vectors */
-+struct rtl_int {
-+	u32 inta;
-+	u32 intb;
-+	u32 intc;
-+	u32 intd;
-+};
-+
- struct rtl_hal_ops {
- 	int (*init_sw_vars) (struct ieee80211_hw *hw);
- 	void (*deinit_sw_vars) (struct ieee80211_hw *hw);
- 	void (*read_chip_version)(struct ieee80211_hw *hw);
- 	void (*read_eeprom_info) (struct ieee80211_hw *hw);
- 	void (*interrupt_recognized) (struct ieee80211_hw *hw,
--				      u32 *p_inta, u32 *p_intb,
--				      u32 *p_intc, u32 *p_intd);
-+				      struct rtl_int *intvec);
- 	int (*hw_init) (struct ieee80211_hw *hw);
- 	void (*hw_disable) (struct ieee80211_hw *hw);
- 	void (*hw_suspend) (struct ieee80211_hw *hw);
+Changes since v4:
+- Cleanups suggested by Stanislaw Gruszka
+- Device tree fixes suggested by Rob Herring
+- EEPROM MAC address parsing fix
+
+Changes since v3:
+- DFS fixes
+- stability fixes
+- use wiphy_read_of_freq_limits
+
+Changes since v2:
+- lots of checkpatch cleanups
+- various tx path (and other) fixes
+- use the new bitfield API
+- documented device tree bindings
+
+Felix Fietkau (3):
+  Documentation: dt: net: add mt76 wireless device binding
+  mt76: add common code shared between multiple chipsets
+  mt76: add driver code for MT76x2e
+
+ .../bindings/net/wireless/mediatek,mt76.txt        |  24 +
+ drivers/net/wireless/mediatek/Kconfig              |   1 +
+ drivers/net/wireless/mediatek/Makefile             |   1 +
+ drivers/net/wireless/mediatek/mt76/Kconfig         |  10 +
+ drivers/net/wireless/mediatek/mt76/Makefile        |  15 +
+ drivers/net/wireless/mediatek/mt76/debugfs.c       |  76 ++
+ drivers/net/wireless/mediatek/mt76/dma.c           | 451 ++++++++++++
+ drivers/net/wireless/mediatek/mt76/dma.h           |  38 +
+ drivers/net/wireless/mediatek/mt76/eeprom.c        | 112 +++
+ drivers/net/wireless/mediatek/mt76/mac80211.c      | 344 +++++++++
+ drivers/net/wireless/mediatek/mt76/mmio.c          |  61 ++
+ drivers/net/wireless/mediatek/mt76/mt76.h          | 355 ++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        | 223 ++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_core.c   |  88 +++
+ .../net/wireless/mediatek/mt76/mt76x2_debugfs.c    | 133 ++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c    | 493 +++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h    |  80 +++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    | 184 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.h    |  68 ++
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 644 +++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h | 181 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c   | 784 +++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    | 738 +++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    | 189 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   | 534 ++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c    | 452 ++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h    | 136 ++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_pci.c    | 109 +++
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    | 691 ++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   | 566 +++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_trace.c  |  23 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  | 144 ++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     | 255 +++++++
+ drivers/net/wireless/mediatek/mt76/trace.c         |  23 +
+ drivers/net/wireless/mediatek/mt76/trace.h         |  71 ++
+ drivers/net/wireless/mediatek/mt76/tx.c            | 511 ++++++++++++++
+ drivers/net/wireless/mediatek/mt76/util.c          |  78 ++
+ drivers/net/wireless/mediatek/mt76/util.h          |  44 ++
+ 38 files changed, 8930 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+ create mode 100644 drivers/net/wireless/mediatek/mt76/Kconfig
+ create mode 100644 drivers/net/wireless/mediatek/mt76/Makefile
+ create mode 100644 drivers/net/wireless/mediatek/mt76/debugfs.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/dma.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/dma.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/eeprom.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mac80211.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mmio.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_core.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_pci.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/trace.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/trace.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/tx.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/util.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/util.h
+
 -- 
-2.15.0
+2.11.0
