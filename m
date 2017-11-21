@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:55904 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758004AbdKOOnI (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:54520 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751567AbdKULba (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 09:43:08 -0500
-Message-ID: <1510756985.2030.33.camel@sipsolutions.net> (sfid-20171115_154404_864725_372236F3)
-Subject: Re: [bug report] mac80211: fix VLAN handling with TXQs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 15 Nov 2017 15:43:05 +0100
-In-Reply-To: <20171115122952.2rzx6kv2lycq5go5@mwanda> (sfid-20171115_133010_908764_213EBC40)
-References: <20171115122952.2rzx6kv2lycq5go5@mwanda>
-         (sfid-20171115_133010_908764_213EBC40)
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 21 Nov 2017 06:31:30 -0500
+Date: Tue, 21 Nov 2017 20:31:27 +0900 (KST)
+Message-Id: <20171121.203127.1032715998803915402.davem@davemloft.net> (sfid-20171121_123148_136294_88A7B547)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2017-11-20
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1511263472.2030.48.camel@sipsolutions.net>
+References: <20171120160645.21074-1-johannes@sipsolutions.net>
+        <20171121.201722.1123390949587944979.davem@davemloft.net>
+        <1511263472.2030.48.camel@sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 21 Nov 2017 12:24:32 +0100
 
-> This is a semi-automatic email about new static checker warnings.
+> On Tue, 2017-11-21 at 20:17 +0900, David Miller wrote:
+>> From: Johannes Berg <johannes@sipsolutions.net>
+>> Date: Mon, 20 Nov 2017 17:06:44 +0100
+>> 
+>> >   ssh://korg/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-11-20
+>> 
+>> That's an awesome URL, but I don't think I'll be able to pull
+>> from it :-)
 > 
-> The patch 531682159092: "mac80211: fix VLAN handling with TXQs" from 
-> Jun 22, 2017, leads to the following Smatch complaint:
+> Huh. That's what I get for following Konstantin's advice to use
+> insteadOf in git configuration ...
 > 
->     net/mac80211/tx.c:3529 ieee80211_tx_dequeue()
->      error: we previously assumed 'skb' could be null (see line 3511)
+> Should be
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-11-20
+> 
+> (or https if you prefer)
 
-Thanks for the report.
-
-> net/mac80211/tx.c
->   3500                                             tx.key, skb);
->   3501          } else {
->   3502                  if (invoke_tx_handlers_late(&tx))
->   3503                          goto begin;
->   3504  
->   3505                  skb = __skb_dequeue(&tx.skbs);
->                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> The NULL skb would have to come from here.
-
-Yeah - this can't actually be empty at this point, as far as I can
-tell.
-
->   3511		if (skb && skb_has_frag_list(skb) &&
->                     ^^^
-> Old code checks
-
-So I guess this is just useless.
-
-I can send a patch to remove this if the warning bothers you much, or
-I'll defer until I get smatch updated and it starts bothering me ;-)
-
-johannes
+That works better, pulled, thanks!
