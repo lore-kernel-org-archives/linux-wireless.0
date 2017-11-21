@@ -1,62 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6551 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755215AbdKOKBk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 05:01:40 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <peter.oh@bowerswilkins.com>
-CC: "Harms, Hannes" <hannes.harms@tu-bs.de>,
-        Ben Greear <greearb@candelatech.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mesh point and ap mode on same interface
-Date: Wed, 15 Nov 2017 10:01:36 +0000
-Message-ID: <87po8jhncx.fsf@kamboji.qca.qualcomm.com> (sfid-20171115_110145_329005_A7788683)
-References: <e6b02c56-38c7-323e-2bc9-e2b4276b654c@tu-bs.de>
-        <cc8baced-bd74-5703-d885-6ec444eb62ce@candelatech.com>
-        <43bf6a27-be58-35e4-26fa-5e6b380353ac@bowerswilkins.com>
-        <7dc592a5-9381-f715-6ea7-0a8b8deee311@tu-bs.de>
-        <CADjYELwdUxEap_z=_HD4DS4FEQ2_2HP3w9cvDU-BTFLoOTDipg@mail.gmail.com>
-        <5c04c7fe-8cf8-ddd8-d6a7-f42629586a63@bowerswilkins.com>
-        <067d234a-59f0-4175-55af-9354617057b9@tu-bs.de>
-        <61192d3b-b4c7-f47e-2ff9-44e17595d6a9@bowerswilkins.com>
-        <fc1993f5-8b83-4e74-7866-2adcf318ff5f@tu-bs.de>
-        <03700343-7b5c-b21e-8b7b-2ac8c7d3258b@bowerswilkins.com>
-In-Reply-To: <03700343-7b5c-b21e-8b7b-2ac8c7d3258b@bowerswilkins.com> (Peter
-        Oh's message of "Wed, 8 Nov 2017 10:13:16 -0800")
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from store.laptop.org ([18.85.44.157]:59117 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750794AbdKUTVe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Nov 2017 14:21:34 -0500
+Date: Wed, 22 Nov 2017 06:21:26 +1100
+From: James Cameron <quozl@laptop.org>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Subject: Re: [EXT] Re: [PATCH] mwifiex: do not support change AP interface to
+ station mode
+Message-ID: <20171121192126.GA5400@us.netrek.org> (sfid-20171121_202138_199439_5146C3CD)
+References: <1511249043-21404-1-git-send-email-huxm@marvell.com>
+ <20171121080408.GH19252@us.netrek.org>
+ <f937c2db94884640b64e6950416121e1@SC-EXCH02.marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <f937c2db94884640b64e6950416121e1@SC-EXCH02.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(adding linux-wireless for a cfg80211 question)
+On Tue, Nov 21, 2017 at 12:03:19PM +0000, Xinming Hu wrote:
+> Hi James,
+> 
+> > -----Original Message-----
+> > From: quozl@laptop.org [mailto:quozl@laptop.org]
+> > Sent: 2017年11月21日 16:04
+> > To: Xinming Hu <huxm@marvell.com>
+> > Cc: Linux Wireless <linux-wireless@vger.kernel.org>; Kalle Valo
+> > <kvalo@codeaurora.org>; Brian Norris <briannorris@chromium.org>; Dmitry
+> > Torokhov <dtor@google.com>; rajatja@google.com; Zhiyuan Yang
+> > <yangzy@marvell.com>; Tim Song <songtao@marvell.com>; Cathy Luo
+> > <cluo@marvell.com>; James Cao <jcao@marvell.com>; Ganapathi Bhat
+> > <gbhat@marvell.com>; Ellie Reeves <ellierevves@gmail.com>
+> > Subject: [EXT] Re: [PATCH] mwifiex: do not support change AP interface to
+> > station mode
+> > 
+> > External Email
+> > 
+> > ----------------------------------------------------------------------
+> > On Tue, Nov 21, 2017 at 03:24:03PM +0800, Xinming Hu wrote:
+> > > Firmware do not support change interface from micro-ap mode to station
+> > > mode, forbidden this operation in driver accordingly.
+> > 
+> > All firmware or specific versions?
+> > 
+> 
+> This property result from the initial design consideration in
+> firmware.
 
-Peter Oh <peter.oh@bowerswilkins.com> writes:
-> On 11/08/2017 04:49 AM, Harms, Hannes wrote:
->
->> I found a solution for the problem:
->>
->> When joining the mesh with beacon interval  set  to 100
->> both  mesh and ap interface are coming up.
->>
->> > iw mesh0 mesh join my_mesh beacon-interval 100
->>
->> The default beacon interval is 1000 for mesh interfaces.
->> It seems that QCA9880 is not working
->> with different beacon intervals for ap + mesh.
->
-> Good to hear that working. But mesh beacon interval 1000 which is
-> default value should work. Any mesh beacon intervals of multiple of AP
-> beacon intervals are supposed to work.
->
-> (In other words, mesh beacon intervals that are not aligned by
->multiple of AP beacon intervals won't work). These are valid for both
->of QCA9880 and QCA4019 as far as I know.
+Thanks.  I maintain a product that uses your MV8787 device with
+firmware sd8787_uapsta.bin and review mwifiex patches for local
+backport.
 
-It would be nice if ath10k could print a warning if the beacon intervals
-are not compatible. Or is there a way to enforce the beacon interval
-with help of cfg80211 or mac80211?
+> 
+> > >
+> > > Signed-off-by: Cathy Luo <cluo@marvell.com>
+> > > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > > ---
+> > >  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 6 ++++++
+> > >  1 file changed, 6 insertions(+)
+> > >
+> > > diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > > b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > > index 6e0d9a9..a87758f 100644
+> > > --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > > +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > > @@ -1181,6 +1181,12 @@ static int mwifiex_deinit_priv_params(struct
+> > mwifiex_private *priv)
+> > >  		switch (type) {
+> > >  		case NL80211_IFTYPE_ADHOC:
+> > >  		case NL80211_IFTYPE_STATION:
+> > > +			if (mwifiex_get_priv_by_id(priv->adapter, priv->bss_num,
+> > > +						   MWIFIEX_BSS_TYPE_STA)){
+> > 
+> > Is this test necessary?
+> 
+> Hhn, yes, Will remove this check, which comes from a fix for combo sta/uap case.
+> Thanks for the suggestion.
+> 
+> > 
+> > dev->ieee80211_ptr->iftype is always NL80211_IFTYPE_AP at this point.
+> > 
+> > > +				mwifiex_dbg(priv->adapter, INFO,
+> > > +					    "Skip change virtual interface\n");
+> > 
+> > Is this message easy to understand?  Other messages in the same function
+> > seem easier; e.g. "%s: changing to %d not supported\n"
+> 
+> OK.
+> 
+> > 
+> > > +				return 0;
+> > 
+> > Should this be -EOPNOTSUPP rather than 0?
+> 
+> Yes.
+> 
+> > 
+> > > +			}
+> > >  			return mwifiex_change_vif_to_sta_adhoc(dev, curr_iftype,
+> > >  							       type, params);
+> > >  			break;
+> > > --
+> > > 1.9.1
+> > >
+> > 
+> > --
+> > James Cameron
+> > http://quozl.netrek.org/
 
---=20
-Kalle Valo=
+-- 
+James Cameron
+http://quozl.netrek.org/
