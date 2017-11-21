@@ -1,125 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:45600 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752413AbdKWOga (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59734 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751317AbdKUMDs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Nov 2017 09:36:30 -0500
-Received: by mail-wm0-f45.google.com with SMTP id 9so17249809wme.4
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2017 06:36:29 -0800 (PST)
-Subject: Re: rtl8723be on Fedora27
-To: James Cameron <quozl@laptop.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org
-References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
- <3a1fc541-9104-2d13-409f-c8e64845a86d@lwfinger.net>
- <c6662534-db2f-61dc-142e-8015984c6813@gmail.com>
- <2524fe93-9d8a-523e-3256-2b495c951eb0@lwfinger.net>
- <d4ba5178-3d60-76b0-3819-e70e3e173fac@gmail.com>
- <20171121203746.GC5400@us.netrek.org>
- <e639e8df-7cea-87c5-add9-cea1c5e57a8a@gmail.com>
- <20171121213046.GD5400@us.netrek.org>
-From: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>
-Message-ID: <44aaa502-a8f0-c494-f3d2-674e398ca16c@gmail.com> (sfid-20171123_153639_456378_79F27053)
-Date: Thu, 23 Nov 2017 15:36:24 +0100
+        Tue, 21 Nov 2017 07:03:48 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: "quozl@laptop.org" <quozl@laptop.org>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        "Dmitry Torokhov" <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Subject: RE: [EXT] Re: [PATCH] mwifiex: do not support change AP interface to
+ station mode
+Date: Tue, 21 Nov 2017 12:03:19 +0000
+Message-ID: <f937c2db94884640b64e6950416121e1@SC-EXCH02.marvell.com> (sfid-20171121_130353_915165_2EB0D53A)
+References: <1511249043-21404-1-git-send-email-huxm@marvell.com>
+ <20171121080408.GH19252@us.netrek.org>
+In-Reply-To: <20171121080408.GH19252@us.netrek.org>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-In-Reply-To: <20171121213046.GD5400@us.netrek.org>
-Content-Type: text/plain; charset=iso-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2017-11-21 22:30 keltezéssel, James Cameron írta:
-> On Tue, Nov 21, 2017 at 09:52:12PM +0100, Rákosi Gergely wrote:
->> 2017-11-21 21:37 keltezéssel, James Cameron írta:
->>> On Tue, Nov 21, 2017 at 03:08:16PM +0100, Rákosi Gergely wrote:
->>>> 2017-11-18 16:52 keltezéssel, Larry Finger írta:
->>>>> On 11/17/2017 06:22 PM, Rákosi Gergely wrote:
->>>>>> Hello Larry,
->>>>>>
->>>>>> First of all, thanks your help.
->>>>>> Lets see...here is the kernel version: 4.13.12-300
->>>>>> The machine is an Asus ROG 553VE
->>>>>>
->>>>>> The firmware which loading in the dmesg is : rtlwifi/rtl8723befw_36.bin
->>>>>> The output of md5sum is : 1850c1308fbcd95e9f6a7f58ede1e35f
->>>>> [...]
->>>>> sudo iw dev wlan0 scan | egrep "SSID|signal"
->>>>>
->>>>> Post that output. In addition, copy the dmesg output to some pastebin
->>>>> and post the link as well.
->>>>>
->>>>> Larry
->>>>>
->>>> Hello Larry,
->>>>
->>>> I hope this email post format is good, and fit to the rules.
->>>> Here is the output:
->>>>
->>>> root@skynet-x2 ~]# iw dev wlp2s0 scan | egrep "SSID|signal"
->>>>         signal: -46.00 dBm
->>>>         SSID: SKYNET-X2
->>>> [...]
->>>> [root@skynet-x2 ~]#
->>> Scan results seem normal.  Was this scan before disconnect?
->> Yes, this command output taken while the connection was OK
-> Thanks.
->
->>>> And the dmesg output:
->>>>
->>>> https://pastebin.com/iqQSu2hD
->>> Is now v4.13.13.
->> Yes, thats the upgraded kernel
->>
->>> This is interesting, an H2C command was dropped, but no idea which.
->>>
->>> [    9.848052] rtl8723be: error H2C cmd because of Fw download fail!!!
->>>
->>> Disconnection happened at boot+440 seconds, associate+429 seconds;
->>>
->>> [  439.871033] rtlwifi: AP off, try to reconnect now
->>> [  439.871093] wlp2s0: Connection to AP 4c:5e:0c:c7:fa:e3 lost
->>>
->>> I cannot tell what causes disconnect.  I wonder if the same
->>> timing of the problem happens always, or if the timing varies.
->> The timing always changing, never is the same. And I dont realize
->> the cause at now...
-> Thanks.  I had similar problem with different wireless device.
->
->>> Init MAC failed was another 30 seconds later;
->>>
->>> [  468.600670] IPv6: ADDRCONF(NETDEV_UP): wlp2s0: link is not ready
->>> [  469.618926] rtl8723be: Init MAC failed
->>>
->>> Looking at _rtl8723be_init_mac, there are two false returns;
->>> hardware power on fail, and llt write fail.
->>>
->>> Sorry, I don't have rtl8723be hardware.
->>>
->>> Rákosi, did any older kernel keep connection?
->> The oldest kernel is 4.13.9-300.fc27.x86_64 in Fedora 27
->> installation, but did the same.  If you can give advise how, and
->> what I do, then I'll try it.
-> You might try running "Live CD" of Fedora 26 or Fedora 25, without
-> installing, to test if unexpected disconnection happens in two older
-> kernels.  Not for permanent solution, just for easy testing.
->
-> I don't have specific advice for Fedora 27, you might ask Fedora
-> community about that, or use RHBZ.  A quick search finds this old 2013
-> page;
->
-> https://fedoraproject.org/wiki/User:Ignatenkobrain/Kernel/Bisection
->
-And now the wireless is working almost 20 hours long, from yesterday
-afternoon. I dont know why. Lets check some happening:
-- Yesterday I disconnect the charger from laptop, and lay down at the
-other room
-- I left the laptop more than a hour without interaction, so the system
-is going to sleep
-- When I push the keyboard the system load up, and everything is working
-fine
-- The battery almost depleted when I going back to the original room,
-and connect the charger
-
-Then nothing changed, and I have a working rtl8723be wifi module. Why ?
-
-Thanks,
-Gergely
+SGkgSmFtZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogcXVvemxA
+bGFwdG9wLm9yZyBbbWFpbHRvOnF1b3psQGxhcHRvcC5vcmddDQo+IFNlbnQ6IDIwMTfE6jEx1MIy
+McjVIDE2OjA0DQo+IFRvOiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiBDYzogTGlu
+dXggV2lyZWxlc3MgPGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz47IEthbGxlIFZhbG8N
+Cj4gPGt2YWxvQGNvZGVhdXJvcmEub3JnPjsgQnJpYW4gTm9ycmlzIDxicmlhbm5vcnJpc0BjaHJv
+bWl1bS5vcmc+OyBEbWl0cnkNCj4gVG9yb2tob3YgPGR0b3JAZ29vZ2xlLmNvbT47IHJhamF0amFA
+Z29vZ2xlLmNvbTsgWmhpeXVhbiBZYW5nDQo+IDx5YW5nenlAbWFydmVsbC5jb20+OyBUaW0gU29u
+ZyA8c29uZ3Rhb0BtYXJ2ZWxsLmNvbT47IENhdGh5IEx1bw0KPiA8Y2x1b0BtYXJ2ZWxsLmNvbT47
+IEphbWVzIENhbyA8amNhb0BtYXJ2ZWxsLmNvbT47IEdhbmFwYXRoaSBCaGF0DQo+IDxnYmhhdEBt
+YXJ2ZWxsLmNvbT47IEVsbGllIFJlZXZlcyA8ZWxsaWVyZXZ2ZXNAZ21haWwuY29tPg0KPiBTdWJq
+ZWN0OiBbRVhUXSBSZTogW1BBVENIXSBtd2lmaWV4OiBkbyBub3Qgc3VwcG9ydCBjaGFuZ2UgQVAg
+aW50ZXJmYWNlIHRvDQo+IHN0YXRpb24gbW9kZQ0KPiANCj4gRXh0ZXJuYWwgRW1haWwNCj4gDQo+
+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0NCj4gT24gVHVlLCBOb3YgMjEsIDIwMTcgYXQgMDM6MjQ6MDNQTSArMDgw
+MCwgWGlubWluZyBIdSB3cm90ZToNCj4gPiBGaXJtd2FyZSBkbyBub3Qgc3VwcG9ydCBjaGFuZ2Ug
+aW50ZXJmYWNlIGZyb20gbWljcm8tYXAgbW9kZSB0byBzdGF0aW9uDQo+ID4gbW9kZSwgZm9yYmlk
+ZGVuIHRoaXMgb3BlcmF0aW9uIGluIGRyaXZlciBhY2NvcmRpbmdseS4NCj4gDQo+IEFsbCBmaXJt
+d2FyZSBvciBzcGVjaWZpYyB2ZXJzaW9ucz8NCj4gDQoNClRoaXMgcHJvcGVydHkgcmVzdWx0IGZy
+b20gdGhlIGluaXRpYWwgZGVzaWduIGNvbnNpZGVyYXRpb24gaW4gZmlybXdhcmUuDQoNCj4gPg0K
+PiA+IFNpZ25lZC1vZmYtYnk6IENhdGh5IEx1byA8Y2x1b0BtYXJ2ZWxsLmNvbT4NCj4gPiBTaWdu
+ZWQtb2ZmLWJ5OiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+IC0tLQ0KPiA+ICBk
+cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvY2ZnODAyMTEuYyB8IDYgKysrKysr
+DQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1n
+aXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvY2ZnODAyMTEuYw0KPiA+
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2NmZzgwMjExLmMNCj4gPiBp
+bmRleCA2ZTBkOWE5Li5hODc3NThmIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL21hcnZlbGwvbXdpZmlleC9jZmc4MDIxMS5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvbWFydmVsbC9td2lmaWV4L2NmZzgwMjExLmMNCj4gPiBAQCAtMTE4MSw2ICsxMTgxLDEy
+IEBAIHN0YXRpYyBpbnQgbXdpZmlleF9kZWluaXRfcHJpdl9wYXJhbXMoc3RydWN0DQo+IG13aWZp
+ZXhfcHJpdmF0ZSAqcHJpdikNCj4gPiAgCQlzd2l0Y2ggKHR5cGUpIHsNCj4gPiAgCQljYXNlIE5M
+ODAyMTFfSUZUWVBFX0FESE9DOg0KPiA+ICAJCWNhc2UgTkw4MDIxMV9JRlRZUEVfU1RBVElPTjoN
+Cj4gPiArCQkJaWYgKG13aWZpZXhfZ2V0X3ByaXZfYnlfaWQocHJpdi0+YWRhcHRlciwgcHJpdi0+
+YnNzX251bSwNCj4gPiArCQkJCQkJICAgTVdJRklFWF9CU1NfVFlQRV9TVEEpKXsNCj4gDQo+IElz
+IHRoaXMgdGVzdCBuZWNlc3Nhcnk/DQoNCkhobiwgeWVzLCBXaWxsIHJlbW92ZSB0aGlzIGNoZWNr
+LCB3aGljaCBjb21lcyBmcm9tIGEgZml4IGZvciBjb21ibyBzdGEvdWFwIGNhc2UuDQpUaGFua3Mg
+Zm9yIHRoZSBzdWdnZXN0aW9uLg0KDQo+IA0KPiBkZXYtPmllZWU4MDIxMV9wdHItPmlmdHlwZSBp
+cyBhbHdheXMgTkw4MDIxMV9JRlRZUEVfQVAgYXQgdGhpcyBwb2ludC4NCj4gDQo+ID4gKwkJCQlt
+d2lmaWV4X2RiZyhwcml2LT5hZGFwdGVyLCBJTkZPLA0KPiA+ICsJCQkJCSAgICAiU2tpcCBjaGFu
+Z2UgdmlydHVhbCBpbnRlcmZhY2VcbiIpOw0KPiANCj4gSXMgdGhpcyBtZXNzYWdlIGVhc3kgdG8g
+dW5kZXJzdGFuZD8gIE90aGVyIG1lc3NhZ2VzIGluIHRoZSBzYW1lIGZ1bmN0aW9uDQo+IHNlZW0g
+ZWFzaWVyOyBlLmcuICIlczogY2hhbmdpbmcgdG8gJWQgbm90IHN1cHBvcnRlZFxuIg0KDQpPSy4N
+Cg0KPiANCj4gPiArCQkJCXJldHVybiAwOw0KPiANCj4gU2hvdWxkIHRoaXMgYmUgLUVPUE5PVFNV
+UFAgcmF0aGVyIHRoYW4gMD8NCg0KWWVzLg0KDQo+IA0KPiA+ICsJCQl9DQo+ID4gIAkJCXJldHVy
+biBtd2lmaWV4X2NoYW5nZV92aWZfdG9fc3RhX2FkaG9jKGRldiwgY3Vycl9pZnR5cGUsDQo+ID4g
+IAkJCQkJCQkgICAgICAgdHlwZSwgcGFyYW1zKTsNCj4gPiAgCQkJYnJlYWs7DQo+ID4gLS0NCj4g
+PiAxLjkuMQ0KPiA+DQo+IA0KPiAtLQ0KPiBKYW1lcyBDYW1lcm9uDQo+IGh0dHA6Ly9xdW96bC5u
+ZXRyZWsub3JnLw0K
