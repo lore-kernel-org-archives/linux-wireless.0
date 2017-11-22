@@ -1,378 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40244 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752307AbdKGQZX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2017 11:25:23 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Doug Anderson <dianders@chromium.org>
+Received: from mail-ve1eur01on0058.outbound.protection.outlook.com ([104.47.1.58]:65120
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751575AbdKVKsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Nov 2017 05:48:39 -0500
+From: Vanessa Maegima <vanessa.maegima@nxp.com>
+To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
+        "van.ayumi@gmail.com" <van.ayumi@gmail.com>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>
-Subject: RE: [EXT] Re: [PATCH 1/3] mwifiex: cleanup rx_pkt_lock usage in
- 11n_rxreorder.c
-Date: Tue, 7 Nov 2017 16:25:19 +0000
-Message-ID: <a4c65d325abd4d4eb45d8cb3cd172df3@SC-EXCH02.marvell.com> (sfid-20171107_172531_481171_BF5CD2E6)
-References: <1509442967-14149-1-git-send-email-gbhat@marvell.com>
- <1509442967-14149-2-git-send-email-gbhat@marvell.com>
- <20171101212853.GA89416@google.com>
- <cb98c452aa344fc0b501a776cfa8708a@SC-EXCH02.marvell.com>
- <CAD=FV=VuxFtDdcMndLNzVYDoid8N3jP46j0sOFXG1D4CzX0=Zw@mail.gmail.com>
- <20171107022508.GA42502@google.com>
-In-Reply-To: <20171107022508.GA42502@google.com>
-Content-Type: text/plain; charset="us-ascii"
+        "embed3d@gmail.com" <embed3d@gmail.com>
+Subject: Re: AP6335 with mainline kernel
+Date: Wed, 22 Nov 2017 10:48:35 +0000
+Message-ID: <1511347672.18886.2.camel@nxp.com> (sfid-20171122_114843_976374_FA24AE4E)
+References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
+         <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com>
+         <1510916848.26896.2.camel@nxp.com> <5A0EDC25.7030505@broadcom.com>
+         <1510932224.22506.0.camel@nxp.com>
+         <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com>
+         <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
+In-Reply-To: <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Doug/Brian,
-
-Thanks a lot for the comments and the discussion. First of all we will abort the change added by this patch as we don't need rx_pkt_lock acquired to protect the deleted item.  Next, we will prepare below changes to address the concerns discussed:
-1. Move rx_pkt_lock from mwifiex_private to rx_reorder_tbl
-2. Protect all (missing) cases of rx_reorder_ptr array (creation/insertion/iteration) with rx_pkt_lock
-3. Protect start_win with rx_pkt_lock
-4. Use rx_pkt_lock instead of rx_reorder_tbl_lock in mwifiex_11n_find_last_seq_num ()
-5. Protect mwifiex_11n_find_last_seq_num() with rx_pkt_lock
-6. Hold rx_pkt_lock for the entire function mwifiex_11n_dispatch_pkt_until_start_win ()
-
-Above changes are mentioned below under their respective comments. Kindly go through:
-
-> Subject: Re: [EXT] Re: [PATCH 1/3] mwifiex: cleanup rx_pkt_lock usage in
-> 11n_rxreorder.c
->
-> Hi Doug and Ganapathi,
->
-> On Mon, Nov 06, 2017 at 04:42:20PM -0800, Doug Anderson wrote:
-> > Hi,
-> >
-> > Please take the review below with a grain of salt since I'm not
-> > terribly familiar with this driver.  I thought I might be able to help
-> > since I had previously looked at some of the spinlock stuff, but after
-> > digging through the below I'm not 100% convinced I understand this
-> > driver enough to do a quick review...
-> >
-> > On Thu, Nov 2, 2017 at 3:30 AM, Ganapathi Bhat <gbhat@marvell.com>
-> wrote:
-> > > Hi Brian,
-> > >
-> > >> On Tue, Oct 31, 2017 at 03:12:45PM +0530, Ganapathi Bhat wrote:
-> > >> > From: Karthik Ananthapadmanabha <karthida@marvell.com>
-> > >> >
-> > >> > Fix the incorrect usage of rx_pkt_lock spinlock. Realsing the
-> > >> > spinlock while the element is still in process is unsafe. The
-> > >> > lock must be released only after the element processing is complete.
-> > >> >
-> > >> > Signed-off-by: Karthik Ananthapadmanabha <karthida@marvell.com>
-> > >> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> > >> > ---
-> > >> >  drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 5 +++--
-> > >> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > >> >
-> > >> > diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-> > >> > b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-> > >> > index 1edcdda..0149c4a 100644
-> > >> > --- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-> > >> > +++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-> > >> > @@ -124,9 +124,10 @@ static int mwifiex_11n_dispatch_pkt(struct
-> > >> mwifiex_private *priv, void *payload)
-> > >> >                     rx_tmp_ptr = tbl->rx_reorder_ptr[i];
-> > >> >                     tbl->rx_reorder_ptr[i] = NULL;
-> > >> >             }
-> > >> > -           spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-> > >>
-> > >> So, what is this lock protecting? Is it for protecting the packet
-> > >> itself, or for protecting the ring buffer?
-> > >
-> > > This lock is protecting the ring buffer but with the current change, we are
-> trying also to protect the packet too.
-> >
-> > What are you trying to protect the packet from?  In other words: what
-> > other code is trying to make changes to the same structure?  I'd agree
->
-> Agreed on this question. I don't understand what, specifically, about "the
-> packet" you're trying to protect, nor what other code might be accessing it.
->
-> > with Brian that on first glance nobody else can have a reference to
-> > this packet since we've removed it from the global list.  If you're
->
-> Right, if we're safely removing it from the pseudo ring buffer, then nobody
-> else should have access to it now.
->
-> > trying to protect something internal to this structure or something
-> > global to mwifiex then it seems like you'd want a different lock...
-> >
-> >
-> > >> As I read it, it's just the latter, since once we've removed it
-> > >> from the ring buffer (and are about to dispatch it up toward the
-> > >> networking layer), it's handled only by a single context (or else,
-> > >> protected via some other common lock(s)).
-> > >>
-> > >> If I'm correct above, then I think the current code here is
-> > >> actually safe, since it holds the lock while removing from the ring
-> > >> buffer -- after it's removed from the ring, there's no way another
-> > >> thread can find this payload, and so we can release the lock.
-> > >
-> > > There are cases where the ring buffer is iterated by cfg80211 thread:
-> > > mwifiex_cfg80211_tdls_oper => mwifiex_tdls_oper =>
-> > > mwifiex_tdls_process_disable_link =>
-> > >mwifiex_11n_cleanup_reorder_tbl => mwifiex_del_rx_reorder_entry =>
-> > >mwifiex_11n_dispatch_pkt_until_start_win => {iterates the ring buffer} So,
-> > >at worst case we can have two threads (main & cfg80211) running
-> > >mwifiex_11n_dispatch_pkt_until_start_win(), iterating the ring buffer.
-> >
-> > Let me see if I'm understanding properly.
-> >
-> > There's a global (one for the whole driver) list called the
->
-> Just a point of order: it's a single list for each 'mwifiex_private' -- there can
-> actually be multiple virtual interfaces attached to each physical wiphy
-> interface, and each virtual interface gets a 'mwifiex_private' instance. But
-> otherwise, your descriptions are accurate I believe.
->
-> > "rx_reorder_tbl_ptr".  Insertion, deletion, and iteration of elements
-> > into this list are protected by the global "rx_reorder_tbl_lock" so we
-> > don't corrupt the linked list structure.
-> >
-> > The actual elements in the "rx_reorder_tbl_ptr" are _not_ protected by
-> > the global "rx_reorder_tbl_lock".  I make this statement because I see
-> > mwifiex_11n_get_rx_reorder_tbl() which drops the lock before returning
-> > an entry.
->
-> Actually, patch 3 is changing that one :)
->
-> > ...and it seems sane that there could be a separate (more fine
-> > grained) lock protecting these elements.  It is OK to keep a pointer
-> > to an element in this list without holding the lock--even if it's
-> > removed from the list the pointer is still valid.  Presumably full
-> > deletion of the element (and any other access of members of the
-> > element) is protected by some other lock.
->
-> Aiee! You have too much faith. mwifiex_11n_del_rx_reorder_tbl_by_ta() ->
-> mwifiex_del_rx_reorder_entry(), for instance, has *very* bad handling of
-> this lock. It looks like:
-> (a) it does a series of acquire/release pairs on this lock while still retaining the
-> mwifiex_rx_reorder_tbl pointer. That's bad.
-> (b) it doesn't have any other lock to protect deletion; it *hopes* that it
-> cleared out the remaining packets in its buffer
-> (mwifiex_11n_dispatch_pkt_until_start_win()); but it doesn't hold any other
-> relevant locks between that and this:
->
->         spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
->         list_del(&tbl->list);
->         spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
->
->         kfree(tbl->rx_reorder_ptr);
->         kfree(tbl);
->
-> That's pretty bad.
->
-> I think it's best to work toward holding that lock while anyone is accessing the
-> entry. So we should only drop the lock when we're done accessing the
-> element, or when we've removed it from the list.
->
-> > Each element in the "rx_reorder_tbl_ptr" list is a "struct
-> > mwifiex_rx_reorder_tbl".  It contains a pseudo-circular buffer
-> > (win_size elements big) "tbl->rx_reorder_ptr[]".  Insertions and
-> > deletions from the pseudo-circular buffer are supposed to be protected
-> > by the global "rx_pkt_lock".
->
-> Seems right to me.
->
-> > In general if you hold an "index" into this buffer you should be
-> > holding the "rx_pkt_lock",
->
-> Sure.
->
-> > but if you hold
-> > one of the elements (each element is a pointer) then you presumably
-> > don't need the "rx_pkt_lock" (if you do, I'd be curious as to why).
->
-> You mean, "if you hold one of these elements [and have removed it from
-> the ring buffer]" then you don't need the lock? If so, I agree.
->
-> > Did I get that right?
-> >
-
-Yes.  Actually, I got this now. We removed it from ring buffer and no more locking needed for this element. Sorry Brian for unnecessary confusions. Somehow I missed the point that the element is being deleted.
-
-> >
-> > So overall the "rx_pkt_lock" seems a bit fishy to me.
-> >
-> > My first clue that something seems wrong is that "rx_pkt_lock" is
-> > global (one for the whole driver) but seems to be protecting something
-> > that is more fine-grained.  Locks really ought to be part of the
-> > structure whose elements they are protecting.  Said another way, I'd
-> > expect "rx_pkt_lock" NOT to be in "priv" but for there to be a
-> > separate instance of "rx_pkt_lock" inside each "struct
-> > mwifiex_rx_reorder_tbl".  That would make it much more obvious what
-> > was being protected and also would allow different tables to be worked
-> > on at the same time.
-> >
-> > NOTE: it's probably not the end of the world if there's a single
-> > global "rx_pkt_lock", it's just less ideal and not all that different
-> > than having one big lock protecting everything in the driver.
->
-> Agreed on the above 2 paragraphs. At a minimum, rx_pkt_lock should be
-> documented better. But part of that documentation is typically putting the
-> lock near what it's protecting.
->
-
-Will address this with change #1
-
-> But overall, I'm not sure we're getting much interesting concurrency here at
-> all, and so I'm not sure if all the (poort attempt at) fine-grained locking is
-> even helpful. Ganapathi only pointed out
-> cfg80211 TDLS operations as the "2nd thread of execution" besides the
-> mwifiex "main thread" -- this thread is only used for configuration (e.g.,
-> setup, teardown, and configuration of TDLS links). And any time we're
-> holding the "fine grained" rx_pkt_lock, we already are holdling the larger
-> table lock.
->
-> > The other thing that is fishy is that "rx_pkt_lock" doesn't seem to be
-> > reliably protecting, again as Brian pointed out.  Specifically:
-> >
-> > * It seems like "start_win" is supposed to be protected by
-> > "rx_pkt_lock" too, but it's not in
-> > mwifiex_11n_dispatch_pkt_until_start_win() (and many other places, I
-> > didn't check).  In general any place where we're holding an _index_
-> > into the table seems like it should have the "rx_pkt_lock" and
-> > "start_win" is an index.  Why do I say this?  If you are holding an
-> > _index_ and something is deleted from the list (or shuffled) then the
-> > index just won't be valid anymore.  Thus if others can be inserting /
-> > removing / shuffling the list then holding an index isn't safe without
-> > the lock.
->
-> Agreed.
-
-Will address this with change #3
-
->
-> > * There are several places that access "rx_reorder_ptr" without
-> > grabbing "rx_pkt_lock".  That seems wrong.  For instance,
-> > mwifiex_get_rx_reorder_tbl(), but probably other places too.
->
-> Ah, yes.
->
-
-Will address this with change #2
-
-> > * Functions like mwifiex_11n_find_last_seq_num() seem quite confused.
-> > They act on a table entry but for some reason grab the
-> > "rx_reorder_tbl_lock", which was supposed to be protecting the linked
-> > list (I think).
->
-> Agreed.
->
-
-Will address this with change #4
-
-> > Worse yet mwifiex_11n_find_last_seq_num() returns an _index_ into the
-> > pseudo-queue.  I don't think that is a super valid thing to do unless
-> > you assume that the caller has the rx_reorder_tbl_lock, which it
-> > doesn't.  Probably
-> > mwifiex_11n_find_last_seq_num() should require the caller hold
-> > "rx_pkt_lock".
->
-
-Will address this with change #5
-
-> I'm not sure the right solution here, but it does look wrong today. The only
-> saving grace here would be if we don't care about this being slightly
-> inaccurate. For instance, I *think* it's fine to return some of this out of order.
->
-> On a similar note: why does mwifiex_11n_dispatch_pkt_until_start_win()
-> release rx_pkt_lock in between each index (i.e., the "for (i = 0; i <
-> pkt_to_send; ++i)" loop)? That means that the entire ring buffer indexing
-> could change underneath our feet. I'm not sure this is technically unsafe (we
-> do still grab the lock and do NULL checks), but it might still cause undesireable
-> results around what packets get dispatched or now -- i.e., we might not
-> *really* be honoring the window arguments that were passed in.
->
-
-Will address this with change #6
-
-> > >> On a related note: I don't actually see the ring buffer *insertion*
-> > >> being protected by this rx_pkt_lock, so is it really useful? See
-> > >> mwifiex_11n_rx_reorder_pkt(). Perhaps the correct lock is actually
-> > >> rx_reorder_tbl_lock()? Except that serves multiple purposes it seems...
-> > >
-> > > Right, ring buffer insertion is not protected.  I think we should be using
-> both rx_reorder_tbl_lock(which is already present) and rx_pkt_lock(we
-> need to add) during insertion (mwifiex_11n_rx_reorder_pkt()).
-> >
-> > As far as I see mwifiex_11n_rx_reorder_pkt() doesn't hold
-> > "rx_reorder_tbl_lock" for the whole function.  It just grabs it to
-> > search the linked list and then drops it.  Is that right?  Seems OK
-> > given my current (limited) understanding but it sounded like you were
-> > expecting it to be held for the whole function?
->
-> I think patch 3 fixes that? It tries to grab the lock for (almost) the entire
-> function.
->
-> > IMHO then it needs to grab "rx_pkt_lock" before the access to
-> > tbl->start_win, but I haven't looked at everything fully.
-> >
-> >
-> > > Also, we should be using rx_pkt_lock instead of rx_reorder_tbl_lock in
-> mwifiex_11n_find_last_seq_num().
-> > >>
-> > >> Another thought: from what I can tell, all of these operations are
-> > >> *only* performed on the main thread, so there's actually no
-> > >> concurrency involved at all. So we also could probably drop this lock
-> entirely...
-> > >
-> > > Let us know your inputs on above observations.
-> >
-> > Not sure if my thoughts above made sense or were useful.  Hopefully I
-> > didn't sound too stupid...  ;)
->
-> Not stupid to me. Thanks for looking.
->
-
-Thanks for all the reviews.
-
-> Brian
->
-> > >> I guess the real point is: can you explain better what you intend
-> > >> this lock to do? Then we can review whether you're accomplishing
-> > >> your intention, or whether we should improve the usage of this lock
-> > >> in some other way, or perhaps even kill it entirely.
-
-Brian,
-I got it. This change is not needed.
-
-Also, let us know if above changes are all that we needed OR if above changes still fail to accurately address the things mentioned here.
-
-> > >>
-> > >> Thanks,
-> > >> Brian
-> > >>
-> > >> >             if (rx_tmp_ptr)
-> > >> >                     mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
-> > >> > +
-> > >> > +           spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-> > >> >     }
-> > >> >
-> > >> >     spin_lock_irqsave(&priv->rx_pkt_lock, flags); @@ -167,8
-> > >> > +168,8 @@ static int mwifiex_11n_dispatch_pkt(struct
-> > >> > mwifiex_private *priv, void
-> > >> *payload)
-> > >> >             }
-> > >> >             rx_tmp_ptr = tbl->rx_reorder_ptr[i];
-> > >> >             tbl->rx_reorder_ptr[i] = NULL;
-> > >> > -           spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-> > >> >             mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
-> > >> > +           spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-> > >> >     }
-> > >> >
-> > >> >     spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-> > >> > --
-> > >> > 1.9.1
-> > >> >
-> > >
-> > > Regards,
-> > > Ganapathi
+SGkgQXJlbmQsDQoNCk9uIFNlZywgMjAxNy0xMS0yMCBhdCAxMjoxMiArMDEwMCwgQXJlbmQgdmFu
+IFNwcmllbCB3cm90ZToNCj4gT24gMjAtMTEtMTcgMTI6MDMsIEFyZW5kIHZhbiBTcHJpZWwgd3Jv
+dGU6DQo+ID4gDQo+ID4gT24gMTctMTEtMTcgMTY6MjQsIFZhbmVzc2EgTWFlZ2ltYSB3cm90ZToN
+Cj4gPiA+IA0KPiA+ID4gSGkgQXJlbmQsDQo+ID4gPiANCj4gPiA+IE9uIFNleCwgMjAxNy0xMS0x
+NyBhdCAxMzo1NSArMDEwMCwgQXJlbmQgdmFuIFNwcmllbCB3cm90ZToNCj4gPiA+ID4gDQo+ID4g
+PiA+IE9uIDExLzE3LzIwMTcgMTI6MDggUE0sIFZhbmVzc2EgTWFlZ2ltYSB3cm90ZToNCj4gPiA+
+ID4gPiANCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBIaSBBcmVuZCwNCj4gPiA+ID4gPiANCj4gPiA+
+ID4gPiBPbiBTZXgsIDIwMTctMTEtMTAgYXQgMjA6NTggKzAxMDAsIEFyZW5kIHZhbiBTcHJpZWwg
+d3JvdGU6DQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gT24gMTAtMTEt
+MTcgMTM6NDMsIFZhbmVzc2EgTWFlZ2ltYSB3cm90ZToNCj4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+
+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gSGksDQo+ID4gPiA+ID4gPiA+
+IA0KPiA+ID4gPiA+ID4gPiBPbiBRdWksIDIwMTctMDktMjEgYXQgMTI6MzAgLTAzMDAsIFZhbmVz
+c2EgQXl1bWkgTWFlZ2ltYQ0KPiA+ID4gPiA+ID4gPiB3cm90ZToNCj4gPiA+ID4gPiA+ID4gPiAN
+Cj4gPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gPiBIaSBB
+cmVuZCwNCj4gPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gPiBPbiBUaHUsIFNlcCAyMSwg
+MjAxNyBhdCA0OjI2IEFNLCBBcmVuZCB2YW4gU3ByaWVsDQo+ID4gPiA+ID4gPiA+ID4gPGFyZW5k
+LnZhbnNwcmllbEBicm9hZGNvbS5jb20+IHdyb3RlOg0KPiA+ID4gPiA+ID4gPiA+ID4gDQo+ID4g
+PiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiA+ID4gDQo+
+ID4gPiA+ID4gPiA+ID4gPiBPbiAyMC0wOS0xNyAyMTozMywgVmFuZXNzYSBBeXVtaSBNYWVnaW1h
+IHdyb3RlOg0KPiA+ID4gPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gPiA+ID4gDQo+ID4g
+PiA+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gPiA+
+ID4gDQo+ID4gPiA+ID4gPiA+ID4gPiA+IEhpLA0KPiA+ID4gPiA+ID4gPiA+ID4gPiANCj4gPiA+
+ID4gPiA+ID4gPiA+ID4gSSBhbSB0cnlpbmcgdG8gZW5hYmxlIFdpZmkgb24gaW14N2QtcGljbyB1
+c2luZw0KPiA+ID4gPiA+ID4gPiA+ID4gPiBtYWlubGluZQ0KPiA+ID4gPiA+ID4gPiA+ID4gPiBr
+ZXJuZWwuDQo+ID4gPiA+ID4gPiA+ID4gPiA+IGlteDdkLXBpY28NCj4gPiA+ID4gPiA+ID4gPiA+
+ID4gaGFzIGFuIEFQNjMzNSBjaGlwLg0KPiA+ID4gPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+
+ID4gPiA+ID4gSSBhbSBmYWNpbmcgc29tZSBpc3N1ZXMgcmVsYXRlZCB0byB0aGUgbnZyYW0gZmls
+ZS4NCj4gPiA+ID4gPiA+ID4gPiA+ID4gSSBhbQ0KPiA+ID4gPiA+ID4gPiA+ID4gPiB1c2luZw0K
+PiA+ID4gPiA+ID4gPiA+ID4gPiB0aGUNCj4gPiA+ID4gPiA+ID4gPiA+ID4gZmlybXdhcmUNCj4g
+PiA+ID4gPiA+ID4gPiA+ID4gcHJvdmlkZWQgYnkgQnVpbGRyb290IChicmNtZm1hYzQzMzktc2Rp
+by5iaW4pLiBJDQo+ID4gPiA+ID4gPiA+ID4gPiA+IGdldCB0aGUNCj4gPiA+ID4gPiA+ID4gPiA+
+ID4gZm9sbG93aW5nIGVycm9yOg0KPiA+ID4gPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4g
+PiA+ID4gW8KgwqDCoMKgOC42MzAzODBdIGJyY21mbWFjOiBicmNtZl9zZGlvX2h0Y2xrOiBIVCBB
+dmFpbA0KPiA+ID4gPiA+ID4gPiA+ID4gPiB0aW1lb3V0DQo+ID4gPiA+ID4gPiA+ID4gPiA+ICgx
+MDAwMDAwKToNCj4gPiA+ID4gPiA+ID4gPiA+ID4gY2xrY3RsIDB4NTANCj4gPiA+ID4gPiA+ID4g
+PiA+ID4gDQo+ID4gPiA+ID4gPiA+ID4gPiA+IEkgaGF2ZSB0cmllZCB0byB1c2UgdGhlIGZpcm13
+YXJlIGFuZCBudnJhbSBwcm92aWRlZA0KPiA+ID4gPiA+ID4gPiA+ID4gPiBieQ0KPiA+ID4gPiA+
+ID4gPiA+ID4gPiBUZWNoTmV4aW9uDQo+ID4gPiA+ID4gPiA+ID4gPiA+IGJ1dCBJDQo+ID4gPiA+
+ID4gPiA+ID4gPiA+IGdldA0KPiA+ID4gPiA+ID4gPiA+ID4gPiB0aGUgc2FtZSBlcnJvci4NCj4g
+PiA+ID4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+ID4gPiA+IElzIHRoZXJlIGFueW9uZSB0
+aGF0IGNvdWxkIGVuYWJsZSBXaWZpIG9uIEFQNjMzNQ0KPiA+ID4gPiA+ID4gPiA+ID4gPiB1c2lu
+Zw0KPiA+ID4gPiA+ID4gPiA+ID4gPiBrZXJuZWwNCj4gPiA+ID4gPiA+ID4gPiA+ID4gbWFpbmxp
+bmU/DQo+ID4gPiA+ID4gPiA+ID4gPiA+IFdoYXQgbnZyYW0gZmlsZSB3YXMgdXNlZD8NCj4gPiA+
+ID4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+ID4gPiA+IEkgYW0gYWJsZSB0byB1c2UgV2lm
+aSBvbiB0aGUgYm9hcmQgaWYgSSB1c2UgdGhlDQo+ID4gPiA+ID4gPiA+ID4gPiA+IGZpcm13YXJl
+LA0KPiA+ID4gPiA+ID4gPiA+ID4gPiBudnJhbQ0KPiA+ID4gPiA+ID4gPiA+ID4gPiBmaWxlIGFu
+ZA0KPiA+ID4gPiA+ID4gPiA+ID4gPiBrZXJuZWwNCj4gPiA+ID4gPiA+ID4gPiA+ID4gcHJvdmlk
+ZWQgYnkgVGVjaE5leGlvbi4gVGhleSB1c2UgYSA0LjEga2VybmVsIGZyb20NCj4gPiA+ID4gPiA+
+ID4gPiA+ID4gTlhQDQo+ID4gPiA+ID4gPiA+ID4gPiA+IHdpdGgNCj4gPiA+ID4gPiA+ID4gPiA+
+ID4gdGhlDQo+ID4gPiA+ID4gPiA+ID4gPiA+IGJjbWRoZA0KPiA+ID4gPiA+ID4gPiA+ID4gPiBk
+cml2ZXIuDQo+ID4gPiA+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiA+ID4gPiBTbyBJIGtu
+b3cgdGhhdCB0aGUgaGFyZHdhcmUgaXMgZnVuY3Rpb25hbC4NCj4gPiA+ID4gPiA+ID4gPiA+ID4g
+DQo+ID4gPiA+ID4gPiA+ID4gPiA+IEFueSBzdWdnZXN0aW9ucyBhcyBob3cgdG8gZ2V0IGl0IHdv
+cmtpbmcgd2l0aCBhDQo+ID4gPiA+ID4gPiA+ID4gPiA+IDQuMTMgYW5kDQo+ID4gPiA+ID4gPiA+
+ID4gPiA+IGJyY21mbWFjDQo+ID4gPiA+ID4gPiA+ID4gPiA+IGRyaXZlcg0KPiA+ID4gPiA+ID4g
+PiA+ID4gPiBpcw0KPiA+ID4gPiA+ID4gPiA+ID4gPiBhcHByZWNpYXRlZC4NCj4gPiA+ID4gPiA+
+ID4gPiA+IFNvIHRoZSBudnJhbSBmaWxlIGlzIHNwZWNpZmljIHRvIHRoZSB3aWZpIGNoaXBzZXQg
+b24NCj4gPiA+ID4gPiA+ID4gPiA+IHlvdXINCj4gPiA+ID4gPiA+ID4gPiA+IHBsYXRmb3JtDQo+
+ID4gPiA+ID4gPiA+ID4gPiBzbyBiZXN0DQo+ID4gPiA+ID4gPiA+ID4gPiB0byBzdGljayB3aXRo
+IHRoZSBwcm92aWRlZCBvbmUuIFRoZSAiSFQgQXZhaWwNCj4gPiA+ID4gPiA+ID4gPiA+IHRpbWVv
+dXQiIG1vc3QNCj4gPiA+ID4gPiA+ID4gPiA+IG9mdGVuDQo+ID4gPiA+ID4gPiA+ID4gPiBpcyBh
+bg0KPiA+ID4gPiA+ID4gPiA+ID4gaW5kaWNhdGlvbiB0aGF0IHRoZSBmaXJtd2FyZSBjcmFzaGVk
+LiBTbyBnZXR0aW5nIG1vcmUNCj4gPiA+ID4gPiA+ID4gPiA+IGRlYnVnDQo+ID4gPiA+ID4gPiA+
+ID4gPiBvdXRwdXQNCj4gPiA+ID4gPiA+ID4gPiA+IHdvdWxkDQo+ID4gPiA+ID4gPiA+ID4gPiBo
+ZWxwIHVzIHVuZGVyc3RhbmQgaG93IGl0IGVuZGVkIHVwIGxpa2UgdGhhdC4gQ2FuIHlvdQ0KPiA+
+ID4gPiA+ID4gPiA+ID4gYnVpbGQNCj4gPiA+ID4gPiA+ID4gPiA+IHRoZQ0KPiA+ID4gPiA+ID4g
+PiA+ID4gYnJjbWZtYWMNCj4gPiA+ID4gPiA+ID4gPiA+IHdpdGggQ09ORklHX0JSQ01EQkcgYW5k
+IGxvYWQgdGhlIGRyaXZlciB1c2luZzoNCj4gPiA+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4g
+PiA+ID4gJCBpbnNtb2QgYnJjbWZtYWMua28gZGVidWc9MHgxNDE2DQo+ID4gPiA+ID4gPiA+ID4g
+VGhhbmtzIGZvciB0aGUgcmVwbHkhDQo+ID4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+ID4g
+SGVyZSBpcyB0aGUgbG9nICh1c2luZyA0LjE0LXJjMSk6DQo+ID4gPiA+ID4gPiA+ID4gDQo+ID4g
+PiA+ID4gPiA+ID4gIyBkbWVzZyB8IGdyZXAgYnJjbWZtYWMNCj4gPiA+ID4gPiA+ID4gPiBbwqDC
+oMKgMTkuMjk3MjA2XSBicmNtZm1hYzogYnJjbWZtYWNfbW9kdWxlX2luaXQgTm8NCj4gPiA+ID4g
+PiA+ID4gPiBwbGF0Zm9ybQ0KPiA+ID4gPiA+ID4gPiA+IGRhdGENCj4gPiA+ID4gPiA+ID4gPiBh
+dmFpbGFibGUuDQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDE5LjMwNzA3NV0gYnJjbWZtYWM6IGJy
+Y21mX3NkaW9fcHJvYmUgRW50ZXINCj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMTkuMzA4Mzg0XSBi
+cmNtZm1hYzogRjEgc2lnbmF0dXJlIHJlYWQNCj4gPiA+ID4gPiA+ID4gPiBAMHgxODAwMDAwMD0w
+eDE2MjI0MzM1DQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDE5LjMwOTAyNl0gYnJjbWZtYWM6IGJy
+Y21mX2NoaXBfcmVjb2duaXRpb24gZm91bmQNCj4gPiA+ID4gPiA+ID4gPiBBWEkNCj4gPiA+ID4g
+PiA+ID4gPiBjaGlwOg0KPiA+ID4gPiA+ID4gPiA+IEJDTTQzMzksIHJldj0yDQo+ID4gPiA+ID4g
+PiA+ID4gW8KgwqDCoDE5LjMxNzExNV0gYnJjbWZtYWM6IGJyY21mX2NoaXBfY29yZXNfY2hlY2vC
+oMKgWzEgXQ0KPiA+ID4gPiA+ID4gPiA+IGNvcmUNCj4gPiA+ID4gPiA+ID4gPiAweDgwMDo0Ng0K
+PiA+ID4gPiA+ID4gPiA+IGJhc2UgMHgxODAwMDAwMCB3cmFwIDB4MTgxMDAwMDANCj4gPiA+ID4g
+PiA+ID4gPiBbwqDCoMKgMTkuMzE3MTQxXSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVj
+a8KgwqBbMiBdDQo+ID4gPiA+ID4gPiA+ID4gY29yZQ0KPiA+ID4gPiA+ID4gPiA+IDB4ODEyOjQ2
+DQo+ID4gPiA+ID4gPiA+ID4gYmFzZSAweDE4MDAxMDAwIHdyYXAgMHgxODEwMTAwMA0KPiA+ID4g
+PiA+ID4gPiA+IFvCoMKgwqAxOS4zMTcxNjVdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2No
+ZWNrwqDCoFszIF0NCj4gPiA+ID4gPiA+ID4gPiBjb3JlDQo+ID4gPiA+ID4gPiA+ID4gMHg4M2U6
+NA0KPiA+ID4gPiA+ID4gPiA+IGJhc2UgMHgxODAwMjAwMCB3cmFwIDB4MTgxMDIwMDANCj4gPiA+
+ID4gPiA+ID4gPiBbwqDCoMKgMTkuMzE3MTg4XSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19j
+aGVja8KgwqBbNCBdDQo+ID4gPiA+ID4gPiA+ID4gY29yZQ0KPiA+ID4gPiA+ID4gPiA+IDB4ODNj
+OjQNCj4gPiA+ID4gPiA+ID4gPiBiYXNlIDB4MTgwMDMwMDAgd3JhcCAweDE4MTAzMDAwDQo+ID4g
+PiA+ID4gPiA+ID4gW8KgwqDCoDE5LjMxNzIxMF0gYnJjbWZtYWM6IGJyY21mX2NoaXBfY29yZXNf
+Y2hlY2vCoMKgWzUgXQ0KPiA+ID4gPiA+ID4gPiA+IGNvcmUNCj4gPiA+ID4gPiA+ID4gPiAweDgx
+YToyMA0KPiA+ID4gPiA+ID4gPiA+IGJhc2UgMHgxODAwNDAwMCB3cmFwIDB4MTgxMDQwMDANCj4g
+PiA+ID4gPiA+ID4gPiBbwqDCoMKgMTkuMzE3MjMzXSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jl
+c19jaGVja8KgwqBbNiBdDQo+ID4gPiA+ID4gPiA+ID4gY29yZQ0KPiA+ID4gPiA+ID4gPiA+IDB4
+ODI5OjIxDQo+ID4gPiA+ID4gPiA+ID4gYmFzZSAweDE4MDA1MDAwIHdyYXAgMHgxODEwNTAwMA0K
+PiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAxOS4zMTcyNTZdIGJyY21mbWFjOiBicmNtZl9jaGlwX2Nv
+cmVzX2NoZWNrwqDCoFs3IF0NCj4gPiA+ID4gPiA+ID4gPiBjb3JlDQo+ID4gPiA+ID4gPiA+ID4g
+MHgxMzU6MA0KPiA+ID4gPiA+ID4gPiA+IGJhc2UgMHgwMDAwMDAwMCB3cmFwIDB4MTgxMDkwMDAN
+Cj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMTkuMzE3Mjc5XSBicmNtZm1hYzogYnJjbWZfY2hpcF9j
+b3Jlc19jaGVja8KgwqBbOCBdDQo+ID4gPiA+ID4gPiA+ID4gY29yZQ0KPiA+ID4gPiA+ID4gPiA+
+IDB4MjQwOjANCj4gPiA+ID4gPiA+ID4gPiBiYXNlIDB4MDAwMDAwMDAgd3JhcCAweDAwMDAwMDAw
+DQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDE5LjMxNzI5OF0gYnJjbWZtYWM6IGJyY21mX2NoaXBf
+c2V0X3Bhc3NpdmUgRW50ZXINCj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMTkuMzIyMjMyXSBicmNt
+Zm1hYzogYnJjbWZfY2hpcF9nZXRfcmFtaW5mbyBSQU06DQo+ID4gPiA+ID4gPiA+ID4gYmFzZT0w
+eDE4MDAwMA0KPiA+ID4gPiA+ID4gPiA+IHNpemU9Nzg2NDMyICgweGMwMDAwKSBzcj0wICgweDAp
+DQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDE5LjMyMjQ1N10gYnJjbWZtYWM6IGJyY21mX2NoaXBf
+c2V0dXAgY2NyZXY9NDYsDQo+ID4gPiA+ID4gPiA+ID4gcG11cmV2PTIzLA0KPiA+ID4gPiA+ID4g
+PiA+IHBtdWNhcHM9MHgzOWNjNWYxNw0KPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAxOS4zMjI0ODFd
+IGJyY21mbWFjOiBicmNtZl9nZXRfbW9kdWxlX3BhcmFtIEVudGVyLA0KPiA+ID4gPiA+ID4gPiA+
+IGJ1cz0wLA0KPiA+ID4gPiA+ID4gPiA+IGNoaXA9MTcyMDksIHJldj0yDQo+ID4gPiA+ID4gPiA+
+ID4gW8KgwqDCoDE5LjMyMjUwNF0gYnJjbWZtYWM6IGJyY21mX3NkaW9kX3NndGFibGVfYWxsb2MN
+Cj4gPiA+ID4gPiA+ID4gPiBuZW50cz0zNQ0KPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAxOS4zMjI1
+MzFdIGJyY21mbWFjOiBicmNtZl9zZGlvX2tzb19pbml0IEVudGVyDQo+ID4gPiA+ID4gPiA+ID4g
+W8KgwqDCoDE5LjMyMjYxOF0gYnJjbWZtYWM6IGJyY21mX3NkaW9fZHJpdmVzdHJlbmd0aGluaXQN
+Cj4gPiA+ID4gPiA+ID4gPiBObyBTRElPDQo+ID4gPiA+ID4gPiA+ID4gZHJpdmVyDQo+ID4gPiA+
+ID4gPiA+ID4gc3RyZW5ndGggaW5pdCBuZWVkZWQgZm9yIGNoaXAgNDMNCj4gPiA+ID4gPiA+ID4g
+PiAzOSByZXYgMiBwbXVyZXYgMjMNCj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMTkuMzIzMjM1XSBi
+cmNtZm1hYzogYnJjbWZfYXR0YWNoIEVudGVyDQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDE5LjMy
+MzcyNV0gYnJjbWZtYWM6IGJyY21mX3Byb3RvX2F0dGFjaCBFbnRlcg0KPiA+ID4gPiA+ID4gPiA+
+IFvCoMKgwqAxOS4zMjM3NjldIGJyY21mbWFjOiBicmNtZl9md2VoX3JlZ2lzdGVyIGV2ZW50DQo+
+ID4gPiA+ID4gPiA+ID4gaGFuZGxlcg0KPiA+ID4gPiA+ID4gPiA+IHJlZ2lzdGVyZWQNCj4gPiA+
+ID4gPiA+ID4gPiBmb3IgUFNNX1dBVENIRE9HDQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDE5LjMy
+NDMwNl0gYnJjbWZtYWM6IGJyY21mX3NkaW9fcHJvYmUgY29tcGxldGVkISENCj4gPiA+ID4gPiA+
+ID4gPiBbwqDCoMKgMTkuMzI0MzM3XSBicmNtZm1hYzogYnJjbWZfZndfbWFwX2NoaXBfdG9fbmFt
+ZToNCj4gPiA+ID4gPiA+ID4gPiB1c2luZw0KPiA+ID4gPiA+ID4gPiA+IGJyY20vYnJjbWZtYWM0
+MzM5LXNkaW8uYmluIGZvciBjaGlwIDB4MDA0MzMNCj4gPiA+ID4gPiA+ID4gPiA5KDE3MjA5KSBy
+ZXYgMHgwMDAwMDINCj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMTkuMzM1MzUzXSBicmNtZm1hYzog
+YnJjbWZfZndfZ2V0X2Zpcm13YXJlc19wY2llDQo+ID4gPiA+ID4gPiA+ID4gZW50ZXI6DQo+ID4g
+PiA+ID4gPiA+ID4gZGV2PW1tYzA6MDAwMToxDQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDE5LjM1
+MTc4N10gYnJjbWZtYWM6IGJyY21mX2Z3X3JlcXVlc3RfY29kZV9kb25lDQo+ID4gPiA+ID4gPiA+
+ID4gZW50ZXI6DQo+ID4gPiA+ID4gPiA+ID4gZGV2PW1tYzA6MDAwMToxDQo+ID4gPiA+ID4gPiA+
+ID4gW8KgwqDCoDE5LjM1MzIwMl0gYnJjbWZtYWM6IGJyY21mX2Z3X3JlcXVlc3RfbnZyYW1fZG9u
+ZQ0KPiA+ID4gPiA+ID4gPiA+IGVudGVyOg0KPiA+ID4gPiA+ID4gPiA+IGRldj1tbWMwOjAwMDE6
+MQ0KPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAxOS4zNTM0MjRdIGJyY21mbWFjOiBicmNtZl9zZGlv
+X2Zpcm13YXJlX2NhbGxiYWNrDQo+ID4gPiA+ID4gPiA+ID4gRW50ZXI6DQo+ID4gPiA+ID4gPiA+
+ID4gZGV2PW1tYzA6MDAwMToxLCBlcnI9MA0KPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAxOS4zNTM4
+MTRdIGJyY21mbWFjOiBicmNtZl9zZGlvX2Rvd25sb2FkX2NvZGVfZmlsZQ0KPiA+ID4gPiA+ID4g
+PiA+IEVudGVyDQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDE5LjM4ODU4Nl0gYnJjbWZtYWM6IGJy
+Y21mX3NkaW9fdmVyaWZ5bWVtb3J5DQo+ID4gPiA+ID4gPiA+ID4gQ29tcGFyZSBSQU0NCj4gPiA+
+ID4gPiA+ID4gPiBkbCAmDQo+ID4gPiA+ID4gPiA+ID4gdWwNCj4gPiA+ID4gPiA+ID4gPiBhdCAw
+eDAwMTgwMDAwOyBzaXplPTQ5MzU5OQ0KPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAxOS41NDY2NzVd
+IGJyY21mbWFjOiBicmNtZl9zZGlvX2Rvd25sb2FkX252cmFtDQo+ID4gPiA+ID4gPiA+ID4gRW50
+ZXINCj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMTkuNTQ3NDMyXSBicmNtZm1hYzogYnJjbWZfc2Rp
+b192ZXJpZnltZW1vcnkNCj4gPiA+ID4gPiA+ID4gPiBDb21wYXJlIFJBTQ0KPiA+ID4gPiA+ID4g
+PiA+IGRsICYNCj4gPiA+ID4gPiA+ID4gPiB1bA0KPiA+ID4gPiA+ID4gPiA+IGF0IDB4MDAyM2Y3
+MzA7IHNpemU9MjI1Ng0KPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAxOS41NDg2NjVdIGJyY21mbWFj
+OiBicmNtZl9jaGlwX3NldF9hY3RpdmUgRW50ZXINCj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMjAu
+NTYyOTc0XSBicmNtZm1hYzogYnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwNCj4gPiA+ID4gPiA+
+ID4gPiB0aW1lb3V0DQo+ID4gPiA+ID4gPiA+ID4gKDEwMDAwMDApOg0KPiA+ID4gPiA+ID4gPiA+
+IGNsa2N0bCAweDUwDQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDIwLjU3MDQ5MF0gYnJjbWZtYWM6
+IGJyY21mX3NkaW9fZmlybXdhcmVfY2FsbGJhY2sNCj4gPiA+ID4gPiA+ID4gPiBmYWlsZWQ6DQo+
+ID4gPiA+ID4gPiA+ID4gZGV2PW1tYzA6MDAwMToxLCBlcnI9MA0KPiA+ID4gPiA+ID4gPiA+IFvC
+oMKgwqAyMC41NzA3MzldIGJyY21mbWFjOiBicmNtZl9zZGlvX3JlbW92ZSBFbnRlcg0KPiA+ID4g
+PiA+ID4gPiA+IFvCoMKgwqAyMC41NzA3NzVdIGJyY21mbWFjOiBicmNtZl9kZXRhY2ggRW50ZXIN
+Cj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMjAuNjEwNDE0XSBicmNtZm1hYzogYnJjbWZfYnVzX2No
+YW5nZV9zdGF0ZSAwIC0+IDANCj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMjAuNjEwNDQxXSBicmNt
+Zm1hYzogYnJjbWZfc2Rpb19idXNfc3RvcCBFbnRlcg0KPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAy
+MS42MjI0NzddIGJyY21mbWFjOiBicmNtZl9zZGlvX2h0Y2xrOiBIVCBBdmFpbA0KPiA+ID4gPiA+
+ID4gPiA+IHRpbWVvdXQNCj4gPiA+ID4gPiA+ID4gPiAoMTAwMDAwMCk6DQo+ID4gPiA+ID4gPiA+
+ID4gY2xrY3RsIDB4NTANCj4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgMjEuNjMwOTEyXSBicmNtZm1h
+YzogYnJjbWZfcHJvdG9fZGV0YWNoIEVudGVyDQo+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoDIxLjYz
+MDk2N10gYnJjbWZtYWM6IGJyY21mX2Z3ZWhfdW5yZWdpc3RlciBldmVudA0KPiA+ID4gPiA+ID4g
+PiA+IGhhbmRsZXINCj4gPiA+ID4gPiA+ID4gPiBjbGVhcmVkDQo+ID4gPiA+ID4gPiA+ID4gZm9y
+IFBTTV9XQVRDSERPRw0KPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAyMi42NDI0NTddIGJyY21mbWFj
+OiBicmNtZl9zZGlvX2h0Y2xrOiBIVCBBdmFpbA0KPiA+ID4gPiA+ID4gPiA+IHRpbWVvdXQNCj4g
+PiA+ID4gPiA+ID4gPiAoMTAwMDAwMCk6DQo+ID4gPiA+ID4gPiA+ID4gY2xrY3RsIDB4NTANCj4g
+PiA+ID4gPiA+ID4gPiBbwqDCoMKgMjIuNjgwMTMxXSBicmNtZm1hYzogYnJjbWZfY2hpcF9zZXRf
+cGFzc2l2ZSBFbnRlcg0KPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqAyMi42ODI1ODBdIGJyY21mbWFj
+OiBicmNtZl9zZGlvX3JlbW92ZSBEaXNjb25uZWN0ZWQNCj4gPiA+ID4gPiA+ID4gPiANCj4gPiA+
+ID4gPiA+ID4gQW55IHN1Z2dlc3Rpb25zIG9uIHRoaXM/DQo+ID4gPiA+ID4gPiBTb3JyeSBmb3Ig
+bm90IGdldHRpbmcgYmFjayB0byB5b3VyIGVhcmxpZXIgZW1haWwuIFRoYW5rcw0KPiA+ID4gPiA+
+ID4gZm9yIHRoZQ0KPiA+ID4gPiA+ID4gcmVtaW5kZXIuIFNvIHlvdSB0cmllZCBkaWZmZXJlbnQg
+ZmlybXdhcmVzLCByaWdodD8gQ2FuIHlvdQ0KPiA+ID4gPiA+ID4gcHJvdmlkZQ0KPiA+ID4gPiA+
+ID4gb3V0cHV0IG9mIHRoZSBmb2xsb3dpbmcgY29tbWFuZDoNCj4gPiA+ID4gPiA+IA0KPiA+ID4g
+PiA+ID4gJCBzdHJpbmdzIGZpcm13YXJlLmJpbiB8IHRhaWwgLTENCj4gPiA+ID4gPiA+IA0KPiA+
+ID4gPiA+ID4gZm9yIHRoZSBmaXJtd2FyZXMgeW91IHRyaWVkLg0KPiA+ID4gPiA+ID4gDQo+ID4g
+PiA+ID4gPiBSZWdhcmRzLA0KPiA+ID4gPiA+ID4gQXJlbmQNCj4gPiA+ID4gPiBUaGFua3MgZm9y
+IHRoZSByZXBseSENCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBIZXJlJ3MgdGhlIG91dHB1dDoNCj4g
+PiA+ID4gPiANCj4gPiA+ID4gPiBGb3IgVGVjaG5leGlvbiBmaXJtd2FyZToNCj4gPiA+ID4gPiAN
+Cj4gPiA+ID4gPiAjIHN0cmluZ3MgL2xpYi9maXJtd2FyZS9icmNtL2JyY21mbWFjNDMzOS1zZGlv
+LmJpbiB8IHRhaWwgLTENCj4gPiA+ID4gPiA0MzM5YTAtcm9tbC9zZGlvLWFnLXBvb2wtcDJwLXBu
+by1wa3RmaWx0ZXIta2VlcGFsaXZlLWFvZS1zci0NCj4gPiA+ID4gPiBtY2hhbi0NCj4gPiA+ID4g
+PiBwcm9wdHhzdGF0dXMtbHBjLXRkbHMtYXV0b2Fibi10eGJmLQ0KPiA+ID4gPiA+IHJjYy13ZXBz
+by1va2MtbmRvZSBWZXJzaW9uOiA2LjM3LjMyLjI4IENSQzogMzA3NWYxMmUgRGF0ZToNCj4gPiA+
+ID4gPiBUaHUNCj4gPiA+ID4gPiAyMDE0LTA0LQ0KPiA+ID4gPiA+IDAzIDEyOjE1OjMxIENTVCBG
+V0lEIDAxLTRhZTRhZA0KPiA+ID4gPiA+IDAzDQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4gRm9yIGxp
+bnV4LWZpcm13YXJlIGFuZCBCdWlsZHJvb3QgZmlybXdhcmU6DQo+ID4gPiA+ID4gDQo+ID4gPiA+
+ID4gIyBzdHJpbmdzIC9saWIvZmlybXdhcmUvYnJjbS9icmNtZm1hYzQzMzktc2Rpby5iaW4gfCB0
+YWlsIC0xDQo+ID4gPiA+ID4gNDMzOWEwLXJvbWwvc2Rpby1hZy1wb29sLWF1dG9hYm4tbHBjIFZl
+cnNpb246IDYuMzcuMzQuMjggQ1JDOg0KPiA+ID4gPiA+IGE2OTY4OTdiDQo+ID4gPiA+ID4gRGF0
+ZTogVGh1IDIwMTQtMDgtMjggMTg6NDA6MTINCj4gPiA+ID4gPiBQRFQgRldJRCAwMS1hMTMxMjBm
+Yw0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IEluIGJvdGggY2FzZXMsIEkgYW0gdXNpbmcgdGhlIG52
+cmFtIHByb3ZpZGVkIGJ5IFRlY2huZXhpb24uDQo+ID4gPiA+IFRoYXQgc2hvdWxkIGJlIGZpbmUu
+DQo+ID4gPiA+IA0KPiA+ID4gPiBDYW4geW91IHRyeSB0aGUgcGF0Y2ggYmVsb3cuIEl0IHdvdWxk
+IGdpdmUgbWUgbW9yZSBpbmZvIG9uDQo+ID4gPiA+IHN0YXRlIG9mDQo+ID4gPiA+IGZpcm13YXJl
+Lg0KPiA+ID4gPiANCj4gPiA+ID4gUmVnYXJkcywNCj4gPiA+ID4gQXJlbmQNCj4gPiA+ID4gDQo+
+ID4gPiA+IGRpZmYgLS1naXQNCj4gPiA+ID4gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9icm9hZGNv
+bS9icmNtODAyMTEvYnJjbWZtYWMvc2Rpby5jDQo+ID4gPiA+IGIvZHJpdmVycy9uZQ0KPiA+ID4g
+PiBpbmRleCBmMzU1NjEyLi42MzFjNWNiIDEwMDY0NA0KPiA+ID4gPiAtLS0gYS9kcml2ZXJzL25l
+dC93aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvc2Rpby5jDQo+ID4gPiA+ICsr
+KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9zZGlv
+LmMNCj4gPiA+ID4gQEAgLTgyOCw4ICs4MjgsMjcgQEAgc3RhdGljIGludCBicmNtZl9zZGlvX2h0
+Y2xrKHN0cnVjdA0KPiA+ID4gPiBicmNtZl9zZGlvDQo+ID4gPiA+ICpidXMsDQo+ID4gPiA+IGJv
+b2wgb24sDQo+ID4gPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqByZXR1cm4gLUVCQURFOw0KPiA+ID4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqB9DQo+ID4gPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoGlmICghU0JTRElPX0NMS0FWKGNsa2N0bCwgYnVzLT5hbHBfb25seSkpIHsNCj4gPiA+ID4g
+K8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBzdHJ1Y3QgYnJj
+bWZfY29yZSAqcG11ID0NCj4gPiA+ID4gYnJjbWZfY2hpcF9nZXRfcG11KGJ1cy0+Y2kpOw0KPiA+
+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHUzMiBy
+ZWdhZGRyOw0KPiA+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoHUzMiB2YWw7DQo+ID4gPiA+ICsNCj4gPiA+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGJyY21mX2VycigiSFQgQXZhaWwgdGltZW91
+dCAoJWQpOg0KPiA+ID4gPiBjbGtjdGwNCj4gPiA+ID4gMHglMDJ4XG4iLA0KPiA+ID4gPiDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqBQTVVfTUFYX1RSQU5TSVRJT05fRExZLA0KPiA+ID4gPiBjbGtjdGwpOw0KPiA+
+ID4gPiArDQo+ID4gPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgLyogREVCVUcgSU5GTyAqLw0KPiA+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJlZ2FkZHIgPSBDT1JFX0NDX1JFRyhwbXUtPmJhc2UsDQo+
+ID4gPiA+IHBtdWNvbnRyb2wpOw0KPiA+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoHZhbCA9IGJyY21mX3NkaW9kX3JlZ3JsKGJ1cy0+c2Rpb2RldiwN
+Cj4gPiA+ID4gcmVnYWRkciwNCj4gPiA+ID4gJmVycik7DQo+ID4gPiA+ICvCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgYnJjbWZfZXJyKCLCoMKgcG11Y29udHJv
+bMKgwqDCoD0gJTA4eFxuIiwNCj4gPiA+ID4gdmFsKTsNCj4gPiA+ID4gK8KgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZWdhZGRyID0gQ09SRV9DQ19SRUcocG11
+LT5iYXNlLA0KPiA+ID4gPiBwbXVzdGF0dXMpOw0KPiA+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHZhbCA9IGJyY21mX3NkaW9kX3JlZ3JsKGJ1cy0+
+c2Rpb2RldiwNCj4gPiA+ID4gcmVnYWRkciwNCj4gPiA+ID4gJmVycik7DQo+ID4gPiA+ICvCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgYnJjbWZfZXJyKCLCoMKg
+cG11c3RhdHVzwqDCoMKgwqA9ICUwOHhcbiIsDQo+ID4gPiA+IHZhbCk7DQo+ID4gPiA+ICvCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmVnYWRkciA9IENPUkVf
+Q0NfUkVHKHBtdS0+YmFzZSwNCj4gPiA+ID4gbWluX3Jlc19tYXNrKTsNCj4gPiA+ID4gK8KgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB2YWwgPSBicmNtZl9zZGlv
+ZF9yZWdybChidXMtPnNkaW9kZXYsDQo+ID4gPiA+IHJlZ2FkZHIsDQo+ID4gPiA+ICZlcnIpOw0K
+PiA+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGJy
+Y21mX2VycigiwqDCoG1pbl9yZXNfbWFzayA9ICUwOHhcbiIsDQo+ID4gPiA+IHZhbCk7DQo+ID4g
+PiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmVnYWRk
+ciA9IENPUkVfQ0NfUkVHKHBtdS0+YmFzZSwNCj4gPiA+ID4gbWF4X3Jlc19tYXNrKTsNCj4gPiA+
+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB2YWwgPSBi
+cmNtZl9zZGlvZF9yZWdybChidXMtPnNkaW9kZXYsDQo+ID4gPiA+IHJlZ2FkZHIsDQo+ID4gPiA+
+ICZlcnIpOw0KPiA+ID4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoGJyY21mX2VycigiwqDCoG1heF9yZXNfbWFzayA9ICUwOHhcbiIsDQo+ID4gPiA+IHZh
+bCk7DQo+ID4gPiA+ICsNCj4gPiA+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoHJldHVybiAtRUJBREU7DQo+ID4gPiA+IMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoH0NCj4gPiA+ID4gDQo+ID4gPiA+IA0KPiA+ID4gSGVyZSdz
+IHRoZSBvdXRwdXQgZm9yIGJvdGggZmlybXdhcmVzOg0KPiA+ID4gDQo+ID4gPiBUZWNobmV4aW9u
+Og0KPiA+ID4gIyBkbWVzZyB8IGdyZXAgYnJjbWZtYWMNCj4gPiA+IFvCoMKgwqDCoDUuMzA3MDY3
+XSBicmNtZm1hYzogYnJjbWZfZndfbWFwX2NoaXBfdG9fbmFtZTogdXNpbmcNCj4gPiA+IGJyY20v
+YnJjbWZtYWM0MzM5LXNkaW8uYmluIGZvciBjaGlwIDB4MDA0MzMNCj4gPiA+IDkoMTcyMDkpIHJl
+diAweDAwMDAwMg0KPiA+ID4gW8KgwqDCoMKgNi40MDA3OTJdIGJyY21mbWFjOiBicmNtZl9zZGlv
+X2h0Y2xrOiBIVCBBdmFpbCB0aW1lb3V0DQo+ID4gPiAoMTAwMDAwMCk6DQo+ID4gPiBjbGtjdGwg
+MHg1MA0KPiA+ID4gW8KgwqDCoMKgNi40MDg0NDRdIGJyY21mbWFjOiBicmNtZl9zZGlvX2h0Y2xr
+OsKgwqDCoHBtdWNvbnRyb2zCoMKgwqA9DQo+ID4gPiAwMTc3NDM4MQ0KPiA+ID4gW8KgwqDCoMKg
+Ni40MTU1OTVdIGJyY21mbWFjOiBicmNtZl9zZGlvX2h0Y2xrOsKgwqDCoHBtdXN0YXR1c8KgwqDC
+oMKgPQ0KPiA+ID4gMDAwMDAwMmENCj4gPiA+IFvCoMKgwqDCoDYuNDIxOTE1XSBicmNtZm1hYzog
+YnJjbWZfc2Rpb19odGNsazrCoMKgwqBtaW5fcmVzX21hc2sgPQ0KPiA+ID4gMGZjYWZmNzcNCj4g
+PiA+IFvCoMKgwqDCoDYuNDI4MTI0XSBicmNtZm1hYzogYnJjbWZfc2Rpb19odGNsazrCoMKgwqBt
+YXhfcmVzX21hc2sgPQ0KPiA+ID4gMGZjZWZmNzcNCj4gPiA+IFvCoMKgwqDCoDcuNDgyNjY4XSBi
+cmNtZm1hYzogYnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91dA0KPiA+ID4gKDEwMDAw
+MDApOg0KPiA+ID4gY2xrY3RsIDB4NTANCj4gPiA+IFvCoMKgwqDCoDcuNDkwMjE0XSBicmNtZm1h
+YzogYnJjbWZfc2Rpb19odGNsazrCoMKgwqBwbXVjb250cm9swqDCoMKgPQ0KPiA+ID4gMDE3NzQz
+ODENCj4gPiA+IFvCoMKgwqDCoDcuNDk2NDE0XSBicmNtZm1hYzogYnJjbWZfc2Rpb19odGNsazrC
+oMKgwqBwbXVzdGF0dXPCoMKgwqDCoD0NCj4gPiA+IDAwMDAwMDJhDQo+ID4gPiBbwqDCoMKgwqA3
+LjUwMzg3M10gYnJjbWZtYWM6IGJyY21mX3NkaW9faHRjbGs6wqDCoMKgbWluX3Jlc19tYXNrID0N
+Cj4gPiA+IDBmY2FmZjc3DQo+ID4gPiBbwqDCoMKgwqA3LjUxMDE4Ml0gYnJjbWZtYWM6IGJyY21m
+X3NkaW9faHRjbGs6wqDCoMKgbWF4X3Jlc19tYXNrID0NCj4gPiA+IDBmY2VmZjc3DQo+ID4gPiAj
+wqDCoHN0cmluZ3MgL2xpYi9maXJtd2FyZS9icmNtL2JyY21mbWFjNDMzOS1zZGlvLmJpbiB8IHRh
+aWwgLTENCj4gPiA+IDQzMzlhMC1yb21sL3NkaW8tYWctcG9vbC1wMnAtcG5vLXBrdGZpbHRlci1r
+ZWVwYWxpdmUtYW9lLXNyLQ0KPiA+ID4gbWNoYW4tDQo+ID4gPiBwcm9wdHhzdGF0dXMtbHBjLXRk
+bHMtYXV0b2Fibi10eGJmLQ0KPiA+ID4gcmNjLXdlcHNvLW9rYy1uZG9lIFZlcnNpb246IDYuMzcu
+MzIuMjggQ1JDOiAzMDc1ZjEyZSBEYXRlOiBUaHUNCj4gPiA+IDIwMTQtMDQtDQo+ID4gPiAwMyAx
+MjoxNTozMSBDU1QgRldJRCAwMS00YWU0YWQNCj4gPiA+IDAzDQo+ID4gPiANCj4gPiA+IEJ1aWxk
+cm9vdDoNCj4gPiA+ICMgZG1lc2cgfCBncmVwIGJyY21mbWFjDQo+ID4gPiBbwqDCoMKgwqA1LjM0
+MzExOF0gYnJjbWZtYWM6IGJyY21mX2Z3X21hcF9jaGlwX3RvX25hbWU6IHVzaW5nDQo+ID4gPiBi
+cmNtL2JyY21mbWFjNDMzOS1zZGlvLmJpbiBmb3IgY2hpcCAweDAwNDMzDQo+ID4gPiA5KDE3MjA5
+KSByZXYgMHgwMDAwMDINCj4gPiA+IFvCoMKgwqDCoDYuNDIwMDcwXSBicmNtZm1hYzogYnJjbWZf
+c2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91dA0KPiA+ID4gKDEwMDAwMDApOg0KPiA+ID4gY2xr
+Y3RsIDB4NTANCj4gPiA+IFvCoMKgwqDCoDYuNDI3NzIyXSBicmNtZm1hYzogYnJjbWZfc2Rpb19o
+dGNsazrCoMKgwqBwbXVjb250cm9swqDCoMKgPQ0KPiA+ID4gMDE3NzQzODENCj4gPiA+IFvCoMKg
+wqDCoDYuNDM0ODY1XSBicmNtZm1hYzogYnJjbWZfc2Rpb19odGNsazrCoMKgwqBwbXVzdGF0dXPC
+oMKgwqDCoD0NCj4gPiA+IDAwMDAwMDJhDQo+ID4gPiBbwqDCoMKgwqA2LjQ0MTE3NF0gYnJjbWZt
+YWM6IGJyY21mX3NkaW9faHRjbGs6wqDCoMKgbWluX3Jlc19tYXNrID0NCj4gPiA+IDBmY2FmZjc3
+DQo+ID4gPiBbwqDCoMKgwqA2LjQ0NzM3OV0gYnJjbWZtYWM6IGJyY21mX3NkaW9faHRjbGs6wqDC
+oMKgbWF4X3Jlc19tYXNrID0NCj4gPiA+IDBmY2VmZjc3DQo+ID4gPiBbwqDCoMKgwqA3LjUwMjY1
+M10gYnJjbWZtYWM6IGJyY21mX3NkaW9faHRjbGs6IEhUIEF2YWlsIHRpbWVvdXQNCj4gPiA+ICgx
+MDAwMDAwKToNCj4gPiA+IGNsa2N0bCAweDUwDQo+ID4gPiBbwqDCoMKgwqA3LjUxMDIwMF0gYnJj
+bWZtYWM6IGJyY21mX3NkaW9faHRjbGs6wqDCoMKgcG11Y29udHJvbMKgwqDCoD0NCj4gPiA+IDAx
+Nzc0MzgxDQo+ID4gPiBbwqDCoMKgwqA3LjUxNjM5OF0gYnJjbWZtYWM6IGJyY21mX3NkaW9faHRj
+bGs6wqDCoMKgcG11c3RhdHVzwqDCoMKgwqA9DQo+ID4gPiAwMDAwMDAyYQ0KPiA+ID4gW8KgwqDC
+oMKgNy41MjM4MjZdIGJyY21mbWFjOiBicmNtZl9zZGlvX2h0Y2xrOsKgwqDCoG1pbl9yZXNfbWFz
+ayA9DQo+ID4gPiAwZmNhZmY3Nw0KPiA+ID4gW8KgwqDCoMKgNy41MzAxMTddIGJyY21mbWFjOiBi
+cmNtZl9zZGlvX2h0Y2xrOsKgwqDCoG1heF9yZXNfbWFzayA9DQo+ID4gPiAwZmNlZmY3Nw0KPiA+
+ID4gIyBzdHJpbmdzIC9saWIvZmlybXdhcmUvYnJjbS9icmNtZm1hYzQzMzktc2Rpby5iaW4gfCB0
+YWlsIC0xDQo+ID4gPiA0MzM5YTAtcm9tbC9zZGlvLWFnLXBvb2wtYXV0b2Fibi1scGMgVmVyc2lv
+bjogNi4zNy4zNC4yOCBDUkM6DQo+ID4gPiBhNjk2ODk3Yg0KPiA+ID4gRGF0ZTogVGh1IDIwMTQt
+MDgtMjggMTg6NDA6MTINCj4gPiA+IFBEVCBGV0lEIDAxLWExMzEyMGZjDQo+ID4gVGhhbmtzIGZv
+ciB0aGUgaW5mby4gVGhlIHBtdXN0YXR1cyBpbmRlZWQgc2hvd3MgdGhlcmUgaXMgbm8gSFQNCj4g
+PiBjbG9jayBmb3LCoA0KPiA+IHRoZSBiYWNrcGxhbmUuIFdpbGwgaGF2ZSB0byBkaXNjdXNzIHdp
+dGggaC93IGd1eXMuIE1lYW53aGlsZSwgY2FuDQo+ID4geW91wqANCj4gPiB0cnkgdGhlIHBhdGNo
+IGJlbG93LiBJdCB3aWxsIGNyZWF0ZSBhIG1lbW9yeSBkdW1wIG9mIHRoZSBkZXZpY2UNCj4gPiB1
+c2luZ8KgDQo+ID4gdGhlIGRldl9jb3JlZHVtcCBmcmFtZXdvcmssIGllLiB1bmRlciAvc3lzL2Ns
+YXNzL2RldmNvcmVkdW1wLy4gSXQNCj4gPiB3aWxswqANCj4gPiBwcm9iYWJseSBjcmVhdGUgdHdv
+IGR1bXBzIGFzIHRoZSBlcnJvciBvY2N1cnMgdHdpY2UgZHVyaW5nIHByb2JlLg0KPiA+IEp1c3TC
+oA0KPiA+IHNlbnQgbWUgdGhlIGZpcnN0IG9yIHB1dCBpdCBzb21ld2hlcmUgb24gaW50ZXJuZXQg
+c28gSSBjYW4gZG93bmxvYWQNCj4gPiBpdMKgDQo+ID4gYW5kIGhhdmUgYSBsb29rIGF0IGl0Lg0K
+PiB3aXRoIHBhdGNoIDotKA0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9zZGlvLmPCoA0KPiBiL2RyaXZlcnMvbmUNCj4g
+aW5kZXggZjM1NTYxMi4uZjdkZWQ5MSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL3NkaW8uYw0KPiArKysgYi9kcml2ZXJzL25l
+dC93aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvc2Rpby5jDQo+IEBAIC04MzAs
+NiArODMwLDExIEBAIHN0YXRpYyBpbnQgYnJjbWZfc2Rpb19odGNsayhzdHJ1Y3QgYnJjbWZfc2Rp
+bw0KPiAqYnVzLMKgDQo+IGJvb2wgb24sDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqBpZiAoIVNCU0RJT19DTEtBVihjbGtjdGwsIGJ1cy0+YWxwX29ubHkpKSB7DQo+IMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgYnJjbWZfZXJyKCJI
+VCBBdmFpbCB0aW1lb3V0ICglZCk6IGNsa2N0bA0KPiAweCUwMnhcbiIsDQo+IMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqBQTVVfTUFYX1RSQU5TSVRJT05fRExZLCBjbGtjdGwpOw0KPiArDQo+ICvCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgLyogREVCVUcgSU5GTyAqLw0KPiArwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGJyY21mX2RlYnVnX2Ny
+ZWF0ZV9tZW1kdW1wKGJ1cy0+c2Rpb2Rldi0NCj4gPmJ1c19pZiwNCj4gK8KgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBOVUxMLCAwKTsNCj4gKw0KPiDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJldHVybiAtRUJBREU7DQo+
+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB9DQo+IA0KPiANCg0KSSBhbSBhcHBs
+eWluZyB0aGlzIHBhdGNoIGFuZCBhcHBhcmVudGx5IHRoZSBkdW1wcyBhcmUgbm90IGNyZWF0ZWQu
+DQoNCiMgbHMgL3N5cy9jbGFzcy9kZXZjb3JlZHVtcC8gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqANCmRpc2FibGVkDQoNCklzIHRo
+ZXJlIHNvbWV0aGluZyBlbHNlIEkgbmVlZCB0byBtb2RpZnk/IEkgYW0gdXNpbmcgbWFpbmxpbmUg
+a2VybmVsLg0KDQpUaGFua3Mh
