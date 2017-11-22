@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:44694 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752471AbdKIG3o (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41302 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751599AbdKVSmo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 01:29:44 -0500
-Message-ID: <1510208981.22803.106.camel@coelho.fi> (sfid-20171109_072953_212919_4F50BBC8)
-From: Luca Coelho <luca@coelho.fi>
-To: Chris Chiu <chiu@endlessm.com>
-Cc: johannes.berg@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>
-Date: Thu, 09 Nov 2017 08:29:41 +0200
-In-Reply-To: <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
-References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
-         <1509434718.4492.195.camel@coelho.fi>
-         <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
-         <1509952948.4492.360.camel@coelho.fi>
-         <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
-         <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
+        Wed, 22 Nov 2017 13:42:44 -0500
+Message-ID: <1511376145.2841.1.camel@sipsolutions.net> (sfid-20171122_194314_322707_DFE296E5)
+Subject: Re: kernel BUG at crypto/asymmetric_keys/public_key.c:80
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        David Howells <dhowells@redhat.com>,
+        linux-wireless@vger.kernel.org
+Date: Wed, 22 Nov 2017 19:42:25 +0100
+In-Reply-To: <2ef18f35-bb00-2f4b-45fe-1beb3cdd0745@broadcom.com> (sfid-20171122_192904_463452_F66EBF18)
+References: <d2b989b6-38cf-a04d-0353-3540fdb891ed@gmail.com>
+         <2ef18f35-bb00-2f4b-45fe-1beb3cdd0745@broadcom.com>
+         (sfid-20171122_192904_463452_F66EBF18)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: Need support for Intel new wifi module 9462NGW
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Chris,
+On Wed, 2017-11-22 at 19:29 +0100, Arend van Spriel wrote:
+> + Johannes
+> 
+>  >>>     BUG_ON(!sig->digest);
+>          BUG_ON(!sig->s);
 
+I *think* this is the same bug that was reported before, then this
+should fix it:
 
-On Thu, 2017-11-09 at 11:11 +0800, Chris Chiu wrote:
-> Hi Luca,
->     Any suggestion for the "Failed to start INIT ucode: -110" issue
-> for the firmware?
+https://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git/commit/?id=d7be102f2945a626f55e0501e52bb31ba3e77b81
 
-We are investigating this now.  This seems to be related to the secure
-boot key not being valid...
+Can you try?
 
-I'll let you know when we progress on this.
-
-
---
-Cheers,
-Luca.
+johannes
