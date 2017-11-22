@@ -1,114 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chaos.universe-factory.net ([31.24.148.19]:38456 "EHLO
-        chaos.universe-factory.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932225AbdK0SFt (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:38375 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751379AbdKVB1D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Nov 2017 13:05:49 -0500
-From: Matthias Schiffer <mschiffer@universe-factory.net>
-To: kvalo@qca.qualcomm.com
-Cc: ath9k-devel@qca.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, nbd@nbd.name
-Subject: [PATCH 2/3] ath9k: move spectral scan support under a separate config symbol
-Date: Mon, 27 Nov 2017 18:56:22 +0100
-Message-Id: <1c982c915065a9b5ed3232eedb567f589eca261b.1511804622.git.mschiffer@universe-factory.net> (sfid-20171127_190623_571528_916E663B)
-In-Reply-To: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
-References: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
-In-Reply-To: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
-References: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
+        Tue, 21 Nov 2017 20:27:03 -0500
+Received: by mail-qk0-f193.google.com with SMTP id a142so14740796qkb.5
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Nov 2017 17:27:03 -0800 (PST)
+From: Li Jin <li.jin@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wright Feng <wright.feng@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        brcm80211-dev-list@cypress.com,
+        brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, Jason Uy <jason.uy@broadcom.com>,
+        Li Jin <li.jin@broadcom.com>
+Subject: [PATCH INTERNAL V2 1/1] brcmfmac: add console log support with configurable read size
+Date: Tue, 21 Nov 2017 17:26:30 -0800
+Message-Id: <1511313990-19334-1-git-send-email-li.jin@broadcom.com> (sfid-20171122_022736_042775_E761C997)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At the moment, spectral scan support, and with it RELAY, is always enabled
-with ATH9K[_HTC]_DEBUGFS. Spectral scan support is currently the only user
-of RELAY in ath9k, and it unconditionally reserves a relay channel.
+From: Jason Uy <jason.uy@broadcom.com>
 
-Having debugfs support in ath9k is often useful even on very small embedded
-routers, where we'd rather like to avoid the code size and RAM usage of the
-relay support.
+Add support for configurable read size so that older wifi
+chips that have size restrictions can be supported.
 
-Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Signed-off-by: Jason Uy <jason.uy@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Signed-off-by: Li Jin <li.jin@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/Kconfig           | 14 ++++++++++----
- drivers/net/wireless/ath/ath9k/Makefile          |  4 ++--
- drivers/net/wireless/ath/ath9k/common-spectral.h |  4 ++--
- 3 files changed, 14 insertions(+), 8 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  5 +++
+ .../wireless/broadcom/brcm80211/brcmfmac/common.h  |  2 ++
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 39 ++++++++++++++++++++--
+ 3 files changed, 43 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 783a38f1a626..1f3523019509 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -61,13 +61,12 @@ config ATH9K_DEBUGFS
- 	depends on ATH9K && DEBUG_FS
- 	select MAC80211_DEBUGFS
- 	select ATH9K_COMMON_DEBUG
--	select RELAY
- 	---help---
- 	  Say Y, if you need access to ath9k's statistics for
- 	  interrupts, rate control, etc.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 7a2b495..e1bfcaa 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -52,6 +52,10 @@ int brcmf_msg_level;
+ module_param_named(debug, brcmf_msg_level, int, S_IRUSR | S_IWUSR);
+ MODULE_PARM_DESC(debug, "Level of debug output");
  
--	  Also required for changing debug message flags at run time.
--	  As well as access to the FFT/spectral data and TX99.
-+	  Also required for changing debug message flags at run time and for
-+	  TX99.
- 
- config ATH9K_STATION_STATISTICS
- 	bool "Detailed station statistics"
-@@ -177,7 +176,6 @@ config ATH9K_HTC_DEBUGFS
- 	bool "Atheros ath9k_htc debugging"
- 	depends on ATH9K_HTC && DEBUG_FS
- 	select ATH9K_COMMON_DEBUG
--	select RELAY
- 	---help---
- 	  Say Y, if you need access to ath9k_htc's statistics.
- 	  As well as access to the FFT/spectral data.
-@@ -192,3 +190,11 @@ config ATH9K_HWRNG
- 
- 	  Say Y, feeds the entropy directly from the WiFi driver to the input
- 	  pool.
++static unsigned int brcmf_log_size;
++module_param_named(logsize, brcmf_log_size, int, 0000);
++MODULE_PARM_DESC(logsize, "Size of log output to read each time");
 +
-+config ATH9K_COMMON_SPECTRAL
-+	bool "Atheros ath9k/ath9k_htc spectral scan support"
-+	depends on ATH9K_DEBUGFS || ATH9K_HTC_DEBUGFS
-+	select RELAY
-+	default n
-+	---help---
-+	  Say Y to enable access to the FFT/spectral data via debugfs.
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 90e4a341076c..80197101eda7 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -61,8 +61,8 @@ ath9k_common-y:=	common.o \
- 			common-init.o \
- 			common-beacon.o
+ static int brcmf_p2p_enable;
+ module_param_named(p2pon, brcmf_p2p_enable, int, 0);
+ MODULE_PARM_DESC(p2pon, "Enable legacy p2p management functionality");
+@@ -287,6 +291,7 @@ struct brcmf_mp_device *brcmf_get_module_param(struct device *dev,
+ 	settings->feature_disable = brcmf_feature_disable;
+ 	settings->fcmode = brcmf_fcmode;
+ 	settings->roamoff = !!brcmf_roamoff;
++	settings->log_size = brcmf_log_size;
+ #ifdef DEBUG
+ 	settings->ignore_probe_fail = !!brcmf_ignore_probe_fail;
+ #endif
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
+index a62f8e7..f3eab04 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
+@@ -51,6 +51,7 @@ extern struct brcmf_mp_global_t brcmf_mp_global;
+  * @roamoff: Firmware roaming off?
+  * @ignore_probe_fail: Ignore probe failure.
+  * @country_codes: If available, pointer to struct for translating country codes
++ * @log_size: limit the read size when accessing log from wifi chip
+  * @bus: Bus specific platform data. Only SDIO at the mmoment.
+  */
+ struct brcmf_mp_device {
+@@ -60,6 +61,7 @@ struct brcmf_mp_device {
+ 	bool		roamoff;
+ 	bool		ignore_probe_fail;
+ 	struct brcmfmac_pd_cc *country_codes;
++	unsigned int	log_size;
+ 	union {
+ 		struct brcmfmac_sdio_pd sdio;
+ 	} bus;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 613caca..71ba680 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2790,6 +2790,10 @@ static int brcmf_sdio_readconsole(struct brcmf_sdio *bus)
+ 	u8 line[CONSOLE_LINE_MAX], ch;
+ 	u32 n, idx, addr;
+ 	int rv;
++	unsigned int left_to_read;
++	unsigned int offset;
++	unsigned int cur_read_size;
++	unsigned int log_size = bus->sdiodev->settings->log_size;
  
--ath9k_common-$(CONFIG_ATH9K_COMMON_DEBUG) += common-debug.o \
--					     common-spectral.o
-+ath9k_common-$(CONFIG_ATH9K_COMMON_DEBUG) += common-debug.o
-+ath9k_common-$(CONFIG_ATH9K_COMMON_SPECTRAL) += common-spectral.o
+ 	/* Don't do anything until FWREADY updates console address */
+ 	if (bus->console_addr == 0)
+@@ -2823,9 +2827,38 @@ static int brcmf_sdio_readconsole(struct brcmf_sdio *bus)
  
- ath9k_htc-y +=	htc_hst.o \
- 		hif_usb.o \
-diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.h b/drivers/net/wireless/ath/ath9k/common-spectral.h
-index 5d1a51d83aa6..303ab470ce34 100644
---- a/drivers/net/wireless/ath/ath9k/common-spectral.h
-+++ b/drivers/net/wireless/ath/ath9k/common-spectral.h
-@@ -151,7 +151,7 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
- 	return bins[0] & 0x3f;
- }
+ 	/* Read the console buffer */
+ 	addr = le32_to_cpu(c->log_le.buf);
+-	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, addr, c->buf, c->bufsize);
+-	if (rv < 0)
+-		return rv;
++
++	if (log_size > 0) {
++		/* limit the amount of data to read in case wifi chip has
++		 * restrictions
++		 */
++		left_to_read = c->bufsize;
++		offset = 0;
++		while (left_to_read) {
++			cur_read_size = (left_to_read > log_size) ?
++					 log_size :
++					 left_to_read;
++
++			rv = brcmf_sdiod_ramrw(bus->sdiodev,
++					       false,
++					       addr + offset,
++					       c->buf + offset,
++					       cur_read_size);
++			if (rv < 0)
++				return rv;
++
++			left_to_read -= cur_read_size;
++			offset += cur_read_size;
++		}
++	} else {
++		rv = brcmf_sdiod_ramrw(bus->sdiodev,
++				       false,
++				       addr,
++				       c->buf,
++				       c->bufsize);
++		if (rv < 0)
++			return rv;
++	}
  
--#ifdef CONFIG_ATH9K_COMMON_DEBUG
-+#ifdef CONFIG_ATH9K_COMMON_SPECTRAL
- void ath9k_cmn_spectral_init_debug(struct ath_spec_scan_priv *spec_priv, struct dentry *debugfs_phy);
- void ath9k_cmn_spectral_deinit_debug(struct ath_spec_scan_priv *spec_priv);
- 
-@@ -183,6 +183,6 @@ static inline int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv,
- {
- 	return 0;
- }
--#endif /* CONFIG_ATH9K_COMMON_DEBUG */
-+#endif /* CONFIG_ATH9K_COMMON_SPECTRAL */
- 
- #endif /* SPECTRAL_H */
+ 	while (c->last != idx) {
+ 		for (n = 0; n < CONSOLE_LINE_MAX - 2; n++) {
 -- 
-2.15.0
+2.7.4
