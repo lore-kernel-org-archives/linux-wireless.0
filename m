@@ -1,161 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933191AbdKATXq (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46984 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751260AbdKVUu5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 15:23:46 -0400
-Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 11/12] wil6210: remove suspend time statistics
-Date: Wed,  1 Nov 2017 21:23:21 +0200
-Message-Id: <1509564202-30078-12-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202356_196933_E3BFA5FB)
-In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Wed, 22 Nov 2017 15:50:57 -0500
+Message-ID: <1511383851.4011.319.camel@coelho.fi> (sfid-20171122_215100_431258_854B939C)
+From: Luca Coelho <luca@coelho.fi>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, sedat.dilek@gmail.com,
+        linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Wed, 22 Nov 2017 22:50:51 +0200
+In-Reply-To: <20171122194629.GI729@wotan.suse.de>
+References: <1511175768.4011.261.camel@coelho.fi>
+         <CA+icZUVqhmH3dyMXkHKsHus5qyfMqQfcOctvHRDf4x=6+ndfPw@mail.gmail.com>
+         <1511259055.4011.268.camel@coelho.fi>
+         <871skrdiaf.fsf@kamboji.qca.qualcomm.com>
+         <1511264260.4011.274.camel@coelho.fi> <20171122194629.GI729@wotan.suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi 2017-11-19
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+On Wed, 2017-11-22 at 20:46 +0100, Luis R. Rodriguez wrote:
+> On Tue, Nov 21, 2017 at 01:37:40PM +0200, Luca Coelho wrote:
+> > On Tue, 2017-11-21 at 12:42 +0200, Kalle Valo wrote:
+> > > Luca Coelho <luca@coelho.fi> writes:
+> > > 
+> > > > > [   10.630285] iwlwifi 0000:04:00.0: firmware: failed to load
+> > > > > iwlwifi-8265-34.ucode (-2)
+> > > > > [   10.630331] iwlwifi 0000:04:00.0: Direct firmware load for
+> > > > > iwlwifi-8265-34.ucode failed with error -2
+> > > > > [   10.630454] iwlwifi 0000:04:00.0: firmware: failed to load
+> > > > > iwlwifi-8265-33.ucode (-2)
+> > > > > [   10.630479] iwlwifi 0000:04:00.0: Direct firmware load for
+> > > > > iwlwifi-8265-33.ucode failed with error -2
+> > > > > [   10.630486] iwlwifi 0000:04:00.0: firmware: failed to load
+> > > > > iwlwifi-8265-32.ucode (-2)
+> > > > > [   10.630510] iwlwifi 0000:04:00.0: Direct firmware load for
+> > > > > iwlwifi-8265-32.ucode failed with error -2
+> > > > > [   10.636423] iwlwifi 0000:04:00.0: firmware: direct-loading
+> > > > > firmware
+> > > > > iwlwifi-8265-31.ucode
+> > > > > [   10.637463] iwlwifi 0000:04:00.0: loaded firmware version
+> > > > > 31.532993.0 op_mode iwlmvm
+> > > > 
+> > > > This is an unfortunate side-effect of the way firmwares are
+> > > > loaded. 
+> > > > There is currently no way to prevent these error messages by
+> > > > making
+> > > > some files optional... But you can ignore them.  Or, even
+> > > > better,
+> > > > upgrade your firmware to the latest version the driver
+> > > > supports. :)
+> > > 
+> > > Or even better that we improve request_firmware()&co to make it
+> > > possible
+> > > not to print an error message :)
+> > 
+> > The last time we discussed this, Luis was working on changes to the
+> > firmware subsystem APIs, but I stopped following and have no idea
+> > what
+> > happened with those patches...
+> 
+> You guys dropped the ball on this but I don't blame you, the state of
+> affairs
+> of evolving anything on the firmware API has been a pain in the ass
+> for ages.
 
-Currently suspend time statistics are showed through debugfs.
-Remove time statistics in suspend state since the timing may
-not be accurate in that state.
+Luis,
 
-Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 17 ++---------------
- drivers/net/wireless/ath/wil6210/main.c    |  1 -
- drivers/net/wireless/ath/wil6210/pm.c      | 20 ++------------------
- drivers/net/wireless/ath/wil6210/wil6210.h |  5 -----
- 4 files changed, 4 insertions(+), 39 deletions(-)
+I really appreciate your work on this, don't get me wrong.  But I don't
+think we dropped the ball.  We still need the small feature (not sure
+if it can be done with a small *change*, though) of not warning when a
+firmware is not found.  Nothing changed here.
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 06b9c56..edaab0f 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1632,8 +1632,6 @@ static ssize_t wil_write_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
--	wil->suspend_stats.min_suspend_time = ULONG_MAX;
--	wil->suspend_stats.collection_start = ktime_get();
- 
- 	return len;
- }
-@@ -1645,27 +1643,18 @@ static ssize_t wil_read_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 	static char text[400];
- 	int n;
--	unsigned long long stats_collection_time =
--		ktime_to_us(ktime_sub(ktime_get(),
--				      wil->suspend_stats.collection_start));
- 
- 	n = snprintf(text, sizeof(text),
- 		     "Suspend statistics:\n"
- 		     "successful suspends:%ld failed suspends:%ld\n"
- 		     "successful resumes:%ld failed resumes:%ld\n"
--		     "rejected by host:%ld rejected by device:%ld\n"
--		     "total suspend time:%lld min suspend time:%lld\n"
--		     "max suspend time:%lld stats collection time: %lld\n",
-+		     "rejected by host:%ld rejected by device:%ld\n",
- 		     wil->suspend_stats.successful_suspends,
- 		     wil->suspend_stats.failed_suspends,
- 		     wil->suspend_stats.successful_resumes,
- 		     wil->suspend_stats.failed_resumes,
- 		     wil->suspend_stats.rejected_by_host,
--		     wil->suspend_stats.rejected_by_device,
--		     wil->suspend_stats.total_suspend_time,
--		     wil->suspend_stats.min_suspend_time,
--		     wil->suspend_stats.max_suspend_time,
--		     stats_collection_time);
-+		     wil->suspend_stats.rejected_by_device);
- 
- 	n = min_t(int, n, sizeof(text));
- 
-@@ -1836,8 +1825,6 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 
- 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
- 
--	wil->suspend_stats.collection_start = ktime_get();
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index e92fd35..1b53cd3 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -579,7 +579,6 @@ int wil_priv_init(struct wil6210_priv *wil)
- 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
- 			      WMI_WAKEUP_TRIGGER_BCAST;
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
--	wil->suspend_stats.min_suspend_time = ULONG_MAX;
- 	wil->vring_idle_trsh = 16;
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index ce4f546..48ec186 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -319,16 +319,12 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
- 	wil_dbg_pm(wil, "suspend: %s => %d\n",
- 		   is_runtime ? "runtime" : "system", rc);
- 
--	if (!rc)
--		wil->suspend_stats.suspend_start_time = ktime_get();
--
- 	return rc;
- }
- 
- int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
- {
- 	int rc = 0;
--	unsigned long long suspend_time_usec = 0;
- 
- 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
- 
-@@ -346,21 +342,9 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
- 	else
- 		rc = wil_resume_radio_off(wil);
- 
--	if (rc)
--		goto out;
--
--	suspend_time_usec =
--		ktime_to_us(ktime_sub(ktime_get(),
--				      wil->suspend_stats.suspend_start_time));
--	wil->suspend_stats.total_suspend_time += suspend_time_usec;
--	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
--		wil->suspend_stats.min_suspend_time = suspend_time_usec;
--	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
--		wil->suspend_stats.max_suspend_time = suspend_time_usec;
--
- out:
--	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
--		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
-+	wil_dbg_pm(wil, "resume: %s => %d\n", is_runtime ? "runtime" : "system",
-+		   rc);
- 	return rc;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 2441818..0ae2415 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -89,11 +89,6 @@ struct wil_suspend_stats {
- 	unsigned long failed_resumes;
- 	unsigned long rejected_by_device;
- 	unsigned long rejected_by_host;
--	unsigned long long total_suspend_time;
--	unsigned long long min_suspend_time;
--	unsigned long long max_suspend_time;
--	ktime_t collection_start;
--	ktime_t suspend_start_time;
- };
- 
- /* Calculate MAC buffer size for the firmware. It includes all overhead,
--- 
-1.9.1
+The problem, and the reason why you see it as my having dropped the
+ball, is that the change we needed grew into a massive refactoring of
+the entire firmware loading mechanism, with the addition of driver
+data, lots of advanced options etc.
+
+You certainly remember that I even reviewed the first patchset, but
+then it all snowballed into discussions that led to literally
+*hundreds* of emails going back and forth and I just didn't have the
+time to follow anymore...
+
+In a selfish way, if I only think about the iwlwifi and ath10k drivers,
+ I don't care *how* the "no warning" feature is implemented.  If it is
+implemented with the "load from a range", a new concept of "driver
+data", a "functional API" or just a simple "optional" flag, it doesn't
+matter.  The driver can implement the range search, as it does now. 
+The only thing the driver *can't* do at the moment is to get rid of the
+warnings.
+
+But, personally, I'm not in a hurry.  It's a bit annoying to get
+reports repeatedly from the community about those warnings and having
+to explain how things work, but I can live with that.
+
+I'd be happy to help with anything that doesn't involve following
+hundreds of emails and reviewing massive refactors in code I'm not
+completely familiar with. ;) Let me know.
+
+
+--
+Cheers,
+Luca.
