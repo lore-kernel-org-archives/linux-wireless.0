@@ -1,334 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:50044 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752745AbdKOH2X (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:43152 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751546AbdKVSX2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2017 02:28:23 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [PATCH 1/8] rsi: add rx control block to handle rx packets in USB
-Date: Wed, 15 Nov 2017 12:50:37 +0530
-Message-Id: <1510730444-3237-2-git-send-email-amitkarwar@gmail.com> (sfid-20171115_082829_985091_B6D721D0)
-In-Reply-To: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
-References: <1510730444-3237-1-git-send-email-amitkarwar@gmail.com>
+        Wed, 22 Nov 2017 13:23:28 -0500
+Received: by mail-wm0-f46.google.com with SMTP id x63so12190568wmf.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Nov 2017 10:23:28 -0800 (PST)
+Subject: Re: brcmfmac: Unable to handle kernel paging request at virtual
+ address 726f6674616cd8
+To: Stefan Wahren <stefan.wahren@i2se.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        brcm80211-dev-list@cypress.com
+References: <578431614.96494.1510505412682@email.1und1.de>
+ <1906631797.229909.1511367617667@email.1und1.de>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <08b0ba6f-d4e7-576e-18fe-98e8247d2d91@broadcom.com> (sfid-20171122_192332_584116_64276688)
+Date: Wed, 22 Nov 2017 19:23:26 +0100
+MIME-Version: 1.0
+In-Reply-To: <1906631797.229909.1511367617667@email.1und1.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On 22-11-17 17:20, Stefan Wahren wrote:
+> Hi,
+> 
+>> Stefan Wahren <stefan.wahren@i2se.com> hat am 12. November 2017 um 17:50 geschrieben:
+>>
+>>
+>> Hi,
+>> i discovered a random oops during probe of brcmfmac on Raspberry Pi 3 in yesterdays kernelci run for net-next [1]. I need to point out there is no DT entry for the wifi chip on Raspberry Pi 3 in the lack of a driver for the necessary GPIO expander. So the "HT Avail timeout" is expected.
+>>
+>> I was also able to trigger this oops by calling "modprobe brcmfmac" on my Raspberry Pi 3 with latest linux-next.
+>>
+>> Any help to fix this is appreciated.
+>>
+>> [1] - https://storage.kernelci.org/net-next/master/v4.14-rc8-2221-ga8a6f1e4ea78/arm64/defconfig+kselftest/lab-baylibre/boot-bcm2837-rpi-3-b.txt
+>>
+> 
+> the issue still persists in linux-next-20171122:
+> 
+> [  817.659632] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac43430-sdio.bin for chip 0x00a9a6(43430) rev 0x000001
+> [  817.672739] brcmfmac mmc1:0001:1: Direct firmware load for brcm/brcmfmac43430-sdio.txt failed with error -2
+> [  818.708435] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+> [  819.722103] brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+> [  819.755321] Unable to handle kernel paging request at virtual address 726f6674616cd8
+> [  819.763255] Mem abort info:
+> [  819.766131]   ESR = 0x96000004
+> [  819.769240]   Exception class = DABT (current EL), IL = 32 bits
+> [  819.775290]   SET = 0, FnV = 0
+> [  819.778416]   EA = 0, S1PTW = 0
+> [  819.781605] Data abort info:
+> [  819.784552]   ISV = 0, ISS = 0x00000004
+> [  819.788495]   CM = 0, WnR = 0
+> [  819.791532] [00726f6674616cd8] address between user and kernel address ranges
+> [  819.798805] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+> [  819.804469] Modules linked in: brcmfmac cfg80211 brcmutil vc4 cec drm_kms_helper drm bcm2835_rng rfkill rng_core smsc95xx usbnet bcm2835_dma crc32_ce pwm_bcm2835 i2c_bcm2835 ip_tables x_tables ipv6 [last unloaded: cfg80211]
+> [  819.824687] CPU: 3 PID: 92 Comm: kworker/3:1 Not tainted 4.14.0-next-20171122 #1
+> [  819.832207] Hardware name: Raspberry Pi 3 Model B Rev 1.2 (DT)
+> [  819.838152] Workqueue: events request_firmware_work_func
+> [  819.843561] task: ffff80003833aa00 task.stack: ffff000009498000
+> [  819.849583] pstate: 60000005 (nZCv daif -PAN -UAO)
+> [  819.854460] pc : mutex_lock+0xc/0x40
+> [  819.858101] lr : device_release_driver_internal+0x38/0x1f0
+> [  819.863676] sp : ffff00000949bbf0
+> [  819.867045] x29: ffff00000949bbf0 x28: 0000000000000000
+> [  819.872451] x27: ffff00000931bd20 x26: ffff000008f9fbb0
+> [  819.877856] x25: ffff80003833aa00 x24: ffff800036e20f80
+> [  819.883261] x23: 0000000000000000 x22: ffff800039fd3d00
+> [  819.888665] x21: 0000000000000000 x20: 6d726f6674616cd8
+> [  819.894068] x19: 6d726f6674616c78 x18: 0000000000000000
+> [  819.899473] x17: 0000ffffa52ba930 x16: ffff000008256b30
+> [  819.904877] x15: 0000000000000000 x14: 0000000000000400
+> [  819.910282] x13: 0000000000000400 x12: 0000000000000000
+> [  819.915685] x11: 0000000000000000 x10: 0000000000000001
+> [  819.921087] x9 : 0000000000000001 x8 : ffff800032fdec08
+> [  819.926493] x7 : ffff800032d7c158 x6 : 0000000000000000
+> [  819.931895] x5 : ffff800032d7c288 x4 : 0000000000000000
+> [  819.937299] x3 : ffff80003833aa00 x2 : 0000000000000000
+> [  819.942705] x1 : ffff80003833aa00 x0 : 6d726f6674616cd8
+> [  819.948112] Process kworker/3:1 (pid: 92, stack limit = 0xffff000009498000)
+> [  819.955188] Call trace:
+> [  819.957681]  mutex_lock+0xc/0x40
+> [  819.960967]  device_release_driver+0x14/0x20
+> [  819.965450]  brcmf_sdio_firmware_callback+0x160/0x578 [brcmfmac]
+> [  819.971689]  brcmf_fw_request_nvram_done+0x258/0x5e8 [brcmfmac]
+> [  819.977717]  request_firmware_work_func+0x34/0x60
+> [  819.982510]  process_one_work+0x1cc/0x328
+> [  819.986592]  worker_thread+0x50/0x450
+> [  819.990320]  kthread+0xf8/0x128
+> [  819.993516]  ret_from_fork+0x10/0x18
+> [  819.997154] Code: d65f03c0 d5384101 d2800002 f9800011 (c85ffc03)
+> [  820.003351] ---[ end trace f4bff35241327a18 ]---
+> 
 
-Rx bluetooth endpoint shall be added in further patches. Rx control
-block is introduced here to handle Rx packets properly. Separate
-function is written to initialize the RX control blocks.
+seems like a use-after-free. We do a device_release_driver() twice. Once 
+for sdio func #1 and for sdio func #2. This was introduced by:
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+commit 7a51461fc2da82a6c565a3ee65c41c197f28225d
+Author: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Date:   Mon Jun 12 12:47:34 2017 +0100
+
+     brcmfmac: unbind all devices upon failure in firmware callback
+
+What we do is:
+
+         device_release_driver(dev);
+         device_release_driver(&sdiodev->func[2]->dev);
+
+with the assumption that dev == &sdiodev->func[1]->dev. I wonder if that 
+is always true. The error print did not make it in your log. Maybe we 
+should make it explicit here (see below).
+
+Regards,
+Arend
 ---
- drivers/net/wireless/rsi/rsi_91x_main.c     |  4 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  2 +-
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 75 +++++++++++++++++++++++------
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 35 +++++++++-----
- drivers/net/wireless/rsi/rsi_common.h       |  2 +-
- drivers/net/wireless/rsi/rsi_main.h         |  2 +-
- drivers/net/wireless/rsi/rsi_usb.h          | 10 +++-
- 7 files changed, 96 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 0cb8e68..0413af8 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -137,7 +137,7 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
-  *
-  * Return: 0 on success, -1 on failure.
-  */
--int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
-+int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
- {
- 	u8 *frame_desc = NULL, extended_desc = 0;
- 	u32 index, length = 0, queueno = 0;
-@@ -146,7 +146,7 @@ int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
- 
- 	index = 0;
- 	do {
--		frame_desc = &common->rx_data_pkt[index];
-+		frame_desc = &rx_pkt[index];
- 		actual_length = *(u16 *)&frame_desc[0];
- 		offset = *(u16 *)&frame_desc[2];
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 8e2a95c..9fbc0ef 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -118,7 +118,7 @@ static int rsi_process_pkt(struct rsi_common *common)
- 		goto fail;
- 	}
- 
--	status = rsi_read_pkt(common, rcv_pkt_len);
-+	status = rsi_read_pkt(common, common->rx_data_pkt, rcv_pkt_len);
- 
- fail:
- 	kfree(common->rx_data_pkt);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 0873022..147fcee2 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -247,12 +247,13 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
-  */
- static void rsi_rx_done_handler(struct urb *urb)
- {
--	struct rsi_hw *adapter = urb->context;
--	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	struct rx_usb_ctrl_block *rx_cb = urb->context;
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)rx_cb->data;
- 
- 	if (urb->status)
- 		return;
- 
-+	rx_cb->pend = 1;
- 	rsi_set_event(&dev->rx_thread.event);
- }
- 
-@@ -262,10 +263,11 @@ static void rsi_rx_done_handler(struct urb *urb)
-  *
-  * Return: 0 on success, a negative error code on failure.
-  */
--static int rsi_rx_urb_submit(struct rsi_hw *adapter)
-+static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
- {
- 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
--	struct urb *urb = dev->rx_usb_urb[0];
-+	struct rx_usb_ctrl_block *rx_cb = &dev->rx_cb[ep_num - 1];
-+	struct urb *urb = rx_cb->rx_urb;
- 	int status;
- 
- 	usb_fill_bulk_urb(urb,
-@@ -275,7 +277,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter)
- 			  urb->transfer_buffer,
- 			  3000,
- 			  rsi_rx_done_handler,
--			  adapter);
-+			  rx_cb);
- 
- 	status = usb_submit_urb(urb, GFP_KERNEL);
- 	if (status)
-@@ -484,14 +486,54 @@ static struct rsi_host_intf_ops usb_host_intf_ops = {
-  */
- static void rsi_deinit_usb_interface(struct rsi_hw *adapter)
- {
-+	u8 idx;
-+
- 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
- 
- 	rsi_kill_thread(&dev->rx_thread);
--	usb_free_urb(dev->rx_usb_urb[0]);
-+
-+	for (idx = 0; idx < MAX_RX_URBS; idx++) {
-+		usb_free_urb(dev->rx_cb[idx].rx_urb);
-+		kfree(dev->rx_cb[idx].rx_buffer);
-+	}
-+
- 	kfree(adapter->priv->rx_data_pkt);
- 	kfree(dev->tx_buffer);
- }
- 
-+static int rsi_usb_init_rx(struct rsi_hw *adapter)
-+{
-+	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
-+	struct rx_usb_ctrl_block *rx_cb;
-+	u8 idx;
-+
-+	for (idx = 0; idx < MAX_RX_URBS; idx++) {
-+		rx_cb = &dev->rx_cb[idx];
-+
-+		rx_cb->rx_buffer = kzalloc(RSI_USB_BUF_SIZE * 2,
-+					   GFP_KERNEL | GFP_DMA);
-+		if (!rx_cb->rx_buffer)
-+			goto err;
-+
-+		rx_cb->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
-+		if (!rx_cb->rx_urb) {
-+			rsi_dbg(ERR_ZONE, "Failed alloc rx urb[%d]\n", idx);
-+			goto err;
-+		}
-+		rx_cb->rx_urb->transfer_buffer = rx_cb->rx_buffer;
-+		rx_cb->ep_num = idx + 1;
-+		rx_cb->data = (void *)dev;
-+	}
-+	return 0;
-+
-+err:
-+	for (idx = 0; idx < MAX_RX_URBS; idx++) {
-+		kfree(dev->rx_cb[idx].rx_buffer);
-+		kfree(dev->rx_cb[idx].rx_urb);
-+	}
-+	return -1;
-+}
-+
- /**
-  * rsi_init_usb_interface() - This function initializes the usb interface.
-  * @adapter: Pointer to the adapter structure.
-@@ -504,7 +546,7 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
- {
- 	struct rsi_91x_usbdev *rsi_dev;
- 	struct rsi_common *common = adapter->priv;
--	int status;
-+	int status, i;
- 
- 	rsi_dev = kzalloc(sizeof(*rsi_dev), GFP_KERNEL);
- 	if (!rsi_dev)
-@@ -531,12 +573,12 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
- 		status = -ENOMEM;
- 		goto fail_tx;
- 	}
--	rsi_dev->rx_usb_urb[0] = usb_alloc_urb(0, GFP_KERNEL);
--	if (!rsi_dev->rx_usb_urb[0]) {
--		status = -ENOMEM;
--		goto fail_rx;
-+
-+	if (rsi_usb_init_rx(adapter)) {
-+		rsi_dbg(ERR_ZONE, "Failed to init RX handle\n");
-+		return -ENOMEM;
- 	}
--	rsi_dev->rx_usb_urb[0]->transfer_buffer = adapter->priv->rx_data_pkt;
-+
- 	rsi_dev->tx_blk_size = 252;
- 	adapter->block_size = rsi_dev->tx_blk_size;
- 
-@@ -564,9 +606,10 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
- 	return 0;
- 
- fail_thread:
--	usb_free_urb(rsi_dev->rx_usb_urb[0]);
--fail_rx:
--	kfree(rsi_dev->tx_buffer);
-+	for (i = 0; i < MAX_RX_URBS; i++) {
-+		kfree(rsi_dev->rx_cb[i].rx_buffer);
-+		kfree(rsi_dev->rx_cb[i].rx_urb);
-+	}
- fail_tx:
- 	kfree(common->rx_data_pkt);
- 	return status;
-@@ -698,7 +741,7 @@ static int rsi_probe(struct usb_interface *pfunction,
- 		rsi_dbg(INIT_ZONE, "%s: Device Init Done\n", __func__);
- 	}
- 
--	status = rsi_rx_urb_submit(adapter);
-+	status = rsi_rx_urb_submit(adapter, WLAN_EP);
- 	if (status)
- 		goto err1;
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-index 465692b..d0650ea 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-@@ -29,7 +29,8 @@ void rsi_usb_rx_thread(struct rsi_common *common)
- {
- 	struct rsi_hw *adapter = common->priv;
- 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
--	int status;
-+	struct rx_usb_ctrl_block *rx_cb;
-+	int status, idx;
- 
- 	do {
- 		rsi_wait_event(&dev->rx_thread.event, EVENT_WAIT_FOREVER);
-@@ -37,20 +38,30 @@ void rsi_usb_rx_thread(struct rsi_common *common)
- 		if (atomic_read(&dev->rx_thread.thread_done))
- 			goto out;
- 
--		mutex_lock(&common->rx_lock);
--		status = rsi_read_pkt(common, 0);
--		if (status) {
--			rsi_dbg(ERR_ZONE, "%s: Failed To read data", __func__);
-+		for (idx = 0; idx < MAX_RX_URBS; idx++) {
-+			rx_cb = &dev->rx_cb[idx];
-+			if (!rx_cb->pend)
-+				continue;
-+
-+			mutex_lock(&common->rx_lock);
-+			status = rsi_read_pkt(common, rx_cb->rx_buffer, 0);
-+			if (status) {
-+				rsi_dbg(ERR_ZONE, "%s: Failed To read data",
-+					__func__);
-+				mutex_unlock(&common->rx_lock);
-+				break;
-+			}
-+			rx_cb->pend = 0;
- 			mutex_unlock(&common->rx_lock);
--			return;
-+
-+			if (adapter->rx_urb_submit(adapter, rx_cb->ep_num)) {
-+				rsi_dbg(ERR_ZONE,
-+					"%s: Failed in urb submission",
-+					__func__);
-+				return;
-+			}
- 		}
--		mutex_unlock(&common->rx_lock);
- 		rsi_reset_event(&dev->rx_thread.event);
--		if (adapter->rx_urb_submit(adapter)) {
--			rsi_dbg(ERR_ZONE,
--				"%s: Failed in urb submission", __func__);
--			return;
--		}
- 	} while (1);
- 
- out:
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index d07dbba..1d8af41 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -82,7 +82,7 @@ void rsi_mac80211_detach(struct rsi_hw *hw);
- u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
- struct rsi_hw *rsi_91x_init(void);
- void rsi_91x_deinit(struct rsi_hw *adapter);
--int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len);
-+int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
- #ifdef CONFIG_PM
- int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan);
- #endif
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index 8cab630..ee469dc 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -343,7 +343,7 @@ struct rsi_hw {
- 	void *rsi_dev;
- 	struct rsi_host_intf_ops *host_intf_ops;
- 	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
--	int (*rx_urb_submit)(struct rsi_hw *adapter);
-+	int (*rx_urb_submit)(struct rsi_hw *adapter, u8 ep_num);
- 	int (*determine_event_timeout)(struct rsi_hw *adapter);
- };
- 
-diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
-index 891daea..7e781d5 100644
---- a/drivers/net/wireless/rsi/rsi_usb.h
-+++ b/drivers/net/wireless/rsi/rsi_usb.h
-@@ -39,12 +39,20 @@
- #define RSI_USB_BUF_SIZE	     4096
- #define RSI_USB_CTRL_BUF_SIZE	     0x04
- 
-+struct rx_usb_ctrl_block {
-+	u8 *data;
-+	struct urb *rx_urb;
-+	u8 *rx_buffer;
-+	u8 ep_num;
-+	u8 pend;
-+};
-+
- struct rsi_91x_usbdev {
- 	struct rsi_thread rx_thread;
- 	u8 endpoint;
- 	struct usb_device *usbdev;
- 	struct usb_interface *pfunction;
--	struct urb *rx_usb_urb[MAX_RX_URBS];
-+	struct rx_usb_ctrl_block rx_cb[MAX_RX_URBS];
- 	u8 *tx_buffer;
- 	__le16 bulkin_size;
- 	u8 bulkin_endpoint_addr;
--- 
-2.7.4
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c 
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 613caca..0fda9a4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4096,7 +4096,7 @@ static void brcmf_sdio_firmware_callback(struct 
+device *dev, int err,
+         sdio_release_host(sdiodev->func[1]);
+  fail:
+         brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
+-       device_release_driver(dev);
++       device_release_driver(&sdiodev->func[1]->dev);
+         device_release_driver(&sdiodev->func[2]->dev);
+  }
