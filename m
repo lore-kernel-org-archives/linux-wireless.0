@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53494 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750779AbdKLMvr (ORCPT
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:44541 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752394AbdKVXH1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Nov 2017 07:51:47 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ramon Fried <rfried@codeaurora.org>
-Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bjorn.andersson@linaro.org,
-        nicolas.dechesne@linaro.org, Eyal Ilsar <eilsar@codeaurora.org>
-Subject: Re: [PATCH] wcn36xx: Set BTLE coexistence related configuration values to defaults
-References: <1510490904-21255-1-git-send-email-rfried@codeaurora.org>
-Date: Sun, 12 Nov 2017 14:51:40 +0200
-In-Reply-To: <1510490904-21255-1-git-send-email-rfried@codeaurora.org> (Ramon
-        Fried's message of "Sun, 12 Nov 2017 14:48:24 +0200")
-Message-ID: <87fu9jwtgj.fsf@kamboji.qca.qualcomm.com> (sfid-20171112_135202_837204_69C18C32)
+        Wed, 22 Nov 2017 18:07:27 -0500
+Subject: Re: kernel BUG at crypto/asymmetric_keys/public_key.c:80
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        David Howells <dhowells@redhat.com>,
+        linux-wireless@vger.kernel.org
+References: <d2b989b6-38cf-a04d-0353-3540fdb891ed@gmail.com>
+ <2ef18f35-bb00-2f4b-45fe-1beb3cdd0745@broadcom.com>
+ <1511376145.2841.1.camel@sipsolutions.net>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <a95ae21a-c9f7-4e01-98f1-469201e20615@gmail.com> (sfid-20171123_000821_646748_DD153C1F)
+Date: Wed, 22 Nov 2017 15:07:20 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1511376145.2841.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ramon Fried <rfried@codeaurora.org> writes:
+On 11/22/2017 10:42 AM, Johannes Berg wrote:
+> On Wed, 2017-11-22 at 19:29 +0100, Arend van Spriel wrote:
+>> + Johannes
+>>
+>>  >>>     BUG_ON(!sig->digest);
+>>          BUG_ON(!sig->s);
+> 
+> I *think* this is the same bug that was reported before, then this
+> should fix it:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git/commit/?id=d7be102f2945a626f55e0501e52bb31ba3e77b81
+> 
+> Can you try?
 
-> From: Eyal Ilsar <eilsar@codeaurora.org>
->
-> Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
-> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
->  drivers/net/wireless/ath/wcn36xx/smd.c  | 4 +++-
->  2 files changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-> index b83f01d..0d4ed41 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/main.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-> @@ -27,7 +27,7 @@
->  #include <linux/soc/qcom/wcnss_ctrl.h>
->  #include "wcn36xx.h"
->  
-> -unsigned int wcn36xx_dbg_mask;
-> +unsigned int wcn36xx_dbg_mask = WCN36XX_DBG_NONE;
+My baseline already has this commit actually, is there something else
+you would want me to check?
 
-And this looks unrelated to the title?
-
+Thanks!
 -- 
-Kalle Valo
+Florian
