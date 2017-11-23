@@ -1,78 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:56467 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753507AbdKNLsT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57312 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750880AbdKWHmS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 06:48:19 -0500
-Date: Tue, 14 Nov 2017 12:48:24 +0100
-From: Greg KH <greg@kroah.com>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: Thomas Backlund <tmb@mageia.org>, linux-wireless@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: fix firmware names for 9xxx and a0 series hw
-Message-ID: <20171114114824.GA26814@kroah.com> (sfid-20171114_124828_372074_8C1544CD)
-References: <20171114103751.7761-1-tmb@mageia.org>
- <1510656721.4011.87.camel@coelho.fi>
- <2131d658-8a6e-2f3b-4e44-a3206385af46@mageia.org>
- <1510659500.4011.90.camel@intel.com>
+        Thu, 23 Nov 2017 02:42:18 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: kbuild test robot <lkp@intel.com>
+Cc: Felix Fietkau <nbd@nbd.name>, kbuild-all@01.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v7 3/3] mt76: add driver code for MT76x2e
+References: <20171120193549.80831-4-nbd@nbd.name>
+        <201711231440.jGwH44nB%fengguang.wu@intel.com>
+Date: Thu, 23 Nov 2017 09:42:13 +0200
+In-Reply-To: <201711231440.jGwH44nB%fengguang.wu@intel.com> (kbuild test
+        robot's message of "Thu, 23 Nov 2017 15:05:04 +0800")
+Message-ID: <871skpa1be.fsf@kamboji.qca.qualcomm.com> (sfid-20171123_084221_957009_32F60F92)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1510659500.4011.90.camel@intel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 14, 2017 at 01:38:20PM +0200, Luciano Coelho wrote:
-> On Tue, 2017-11-14 at 13:29 +0200, Thomas Backlund wrote:
-> > Den 14-11-2017 kl. 12:52, skrev Luca Coelho:
-> > > On Tue, 2017-11-14 at 12:37 +0200, Thomas Backlund wrote:
-> > > > iwlwifi 9xxx and a0 series hw contains an extra dash in firmware
-> > > > file
-> > > > name
-> > > > as seeen in modinfo output for kernel 4.14:
-> > > > 
-> > > > firmware:       iwlwifi-9260-th-b0-jf-b0--34.ucode
-> > > > firmware:       iwlwifi-9260-th-a0-jf-a0--34.ucode
-> > > > firmware:       iwlwifi-9000-pu-a0-jf-b0--34.ucode
-> > > > firmware:       iwlwifi-9000-pu-a0-jf-a0--34.ucode
-> > > > firmware:       iwlwifi-QuQnj-a0-hr-a0--34.ucode
-> > > > firmware:       iwlwifi-QuQnj-a0-jf-b0--34.ucode
-> > > > firmware:       iwlwifi-QuQnj-f0-hr-a0--34.ucode
-> > > > firmware:       iwlwifi-Qu-a0-jf-b0--34.ucode
-> > > > firmware:       iwlwifi-Qu-a0-hr-a0--34.ucode
-> > > > 
-> > > > Fix that by dropping the extra adding of '"-"'.
-> > > > 
-> > > > Signed-off-by: Thomas Backlund <tmb-odJJhXpcy38dnm+yROfE0A@public
-> > > > .gmane.org>
-> > > > cc: Luca Coelho <luciano.coelho-ral2JQCrhuEAvxtiuMwx3w@public.gma
-> > > > ne.org>
-> > > > cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> > > > 
-> > > > ---
-> > > 
-> > > Looks good, thanks!
-> > > 
-> > > Though I'm not sure this is worth sending to stable... Why do you
-> > > think
-> > > it's needed?
-> > > 
-> > 
-> > As 4.14 is a -longterm kernel and afaik atleast 9xxx series hw is
-> > out 
-> > there I thought it would be good to have it fixed there...
-> > 
-> > but in the end it's your call for upstream stable or not
-> > 
-> > I'll add it to the Mageia distrib kernels anyway.
-> 
-> Okay, fair enough.  I'll add it to stable, it's a very simple and not
-> risky fix anyway.  One can claim that userspace may get confused. 
-> Actually I think some distros use those values to check which firmwares
-> need to be installed, but I don't recall for sure now.
+kbuild test robot <lkp@intel.com> writes:
 
-The install scripts use those values, so yes, it would be good to have
-them be correct.
+> I love your patch! Yet something to improve:
+>
+> [auto build test ERROR on wireless-drivers-next/master]
+> [also build test ERROR on v4.14 next-20171122]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Felix-Fietkau/dt-bindings-net-add-mt76-wireless-device-binding/20171123-125723
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+> config: tile-allyesconfig (attached as .config)
+> compiler: tilegx-linux-gcc (GCC) 4.6.2
+> reproduce:
+>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=tile 
+>
+> All errors (new ones prefixed by >>):
+>
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c: In function 'mt76x2_mac_process_rate':
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:49:20: error: 'RX_FLAG_SHORTPRE' undeclared (first use in this function)
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:49:20: note: each undeclared identifier is reported only once for each function it appears in
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:58:19: error: 'RX_FLAG_HT_GF' undeclared (first use in this function)
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:61:19: error: 'RX_FLAG_HT' undeclared (first use in this function)
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:65:19: error: 'RX_FLAG_VHT' undeclared (first use in this function)
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:67:9: error: 'struct ieee80211_rx_status' has no member named 'vht_nss'
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:75:19: error: 'RX_FLAG_LDPC' undeclared (first use in this function)
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:78:19: error: 'RX_FLAG_SHORT_GI' undeclared (first use in this function)
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:81:24: error: 'RX_FLAG_STBC_SHIFT' undeclared (first use in this function)
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:87:19: error: 'RX_FLAG_40MHZ' undeclared (first use in this function)
+>>> drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:90:9: error: 'struct ieee80211_rx_status' has no member named 'vht_flag'
+>    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:90:23: error: 'RX_VHT_FLAG_80MHZ' undeclared (first use in this function)
 
-thanks,
+Felix fixed these in v8.
 
-greg k-h
+-- 
+Kalle Valo
