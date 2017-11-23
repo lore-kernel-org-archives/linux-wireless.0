@@ -1,65 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:58836 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750984AbdK3GWz (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:43227 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753259AbdKWS3I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Nov 2017 01:22:55 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Limin Zhu <liminzhu@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] mwifiex: cfg80211: do not change virtual interface during scan processing
-Date: Thu, 30 Nov 2017 14:22:34 +0800
-Message-ID: <1512022954-10129-1-git-send-email-huxm@marvell.com> (sfid-20171130_072300_946016_2F1EC9C1)
+        Thu, 23 Nov 2017 13:29:08 -0500
+Received: by mail-wm0-f49.google.com with SMTP id x63so18433742wmf.2
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2017 10:29:08 -0800 (PST)
+Subject: Re: rtl8723be on Fedora27
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        James Cameron <quozl@laptop.org>
+Cc: linux-wireless@vger.kernel.org
+References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
+ <3a1fc541-9104-2d13-409f-c8e64845a86d@lwfinger.net>
+ <c6662534-db2f-61dc-142e-8015984c6813@gmail.com>
+ <2524fe93-9d8a-523e-3256-2b495c951eb0@lwfinger.net>
+ <d4ba5178-3d60-76b0-3819-e70e3e173fac@gmail.com>
+ <20171121203746.GC5400@us.netrek.org>
+ <e639e8df-7cea-87c5-add9-cea1c5e57a8a@gmail.com>
+ <20171121213046.GD5400@us.netrek.org>
+ <44aaa502-a8f0-c494-f3d2-674e398ca16c@gmail.com>
+ <88073798-e6c3-99a8-15ff-d3c7a8b3ef55@lwfinger.net>
+From: =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>
+Message-ID: <ae223510-731a-2213-ea88-204a800ada2a@gmail.com> (sfid-20171123_192912_772639_F4097D6A)
+Date: Thu, 23 Nov 2017 19:29:05 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <88073798-e6c3-99a8-15ff-d3c7a8b3ef55@lwfinger.net>
+Content-Type: text/plain; charset=iso-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Limin Zhu <liminzhu@marvell.com>
+2017-11-23 19:24 keltezéssel, Larry Finger írta:
+> On 11/23/2017 08:36 AM, Rákosi Gergely wrote:
+>> 2017-11-21 22:30 keltezéssel, James Cameron írta:
+>>> On Tue, Nov 21, 2017 at 09:52:12PM +0100, Rákosi Gergely wrote:
+>>>> 2017-11-21 21:37 keltezéssel, James Cameron írta:
+>>>>> On Tue, Nov 21, 2017 at 03:08:16PM +0100, Rákosi Gergely wrote:
+>>>>>> 2017-11-18 16:52 keltezéssel, Larry Finger írta:
+>>>>>>> On 11/17/2017 06:22 PM, Rákosi Gergely wrote:
+>>>>>>>> Hello Larry,
+>>>>>>>>
+>>>>>>>> First of all, thanks your help.
+>>>>>>>> Lets see...here is the kernel version: 4.13.12-300
+>>>>>>>> The machine is an Asus ROG 553VE
+>>>>>>>>
+>>>>>>>> The firmware which loading in the dmesg is :
+>>>>>>>> rtlwifi/rtl8723befw_36.bin
+>>>>>>>> The output of md5sum is : 1850c1308fbcd95e9f6a7f58ede1e35f
+>>>>>>> [...]
+>>>>>>> sudo iw dev wlan0 scan | egrep "SSID|signal"
+>>>>>>>
+>>>>>>> Post that output. In addition, copy the dmesg output to some
+>>>>>>> pastebin
+>>>>>>> and post the link as well.
+>>>>>>>
+>>>>>>> Larry
+>>>>>>>
+>>>>>> Hello Larry,
+>>>>>>
+>>>>>> I hope this email post format is good, and fit to the rules.
+>>>>>> Here is the output:
+>>>>>>
+>>>>>> root@skynet-x2 ~]# iw dev wlp2s0 scan | egrep "SSID|signal"
+>>>>>>          signal: -46.00 dBm
+>>>>>>          SSID: SKYNET-X2
+>>>>>> [...]
+>>>>>> [root@skynet-x2 ~]#
+>>>>> Scan results seem normal.  Was this scan before disconnect?
+>>>> Yes, this command output taken while the connection was OK
+>>> Thanks.
+>>>
+>>>>>> And the dmesg output:
+>>>>>>
+>>>>>> https://pastebin.com/iqQSu2hD
+>>>>> Is now v4.13.13.
+>>>> Yes, thats the upgraded kernel
+>>>>
+>>>>> This is interesting, an H2C command was dropped, but no idea which.
+>>>>>
+>>>>> [    9.848052] rtl8723be: error H2C cmd because of Fw download
+>>>>> fail!!!
+>>>>>
+>>>>> Disconnection happened at boot+440 seconds, associate+429 seconds;
+>>>>>
+>>>>> [  439.871033] rtlwifi: AP off, try to reconnect now
+>>>>> [  439.871093] wlp2s0: Connection to AP 4c:5e:0c:c7:fa:e3 lost
+>>>>>
+>>>>> I cannot tell what causes disconnect.  I wonder if the same
+>>>>> timing of the problem happens always, or if the timing varies.
+>>>> The timing always changing, never is the same. And I dont realize
+>>>> the cause at now...
+>>> Thanks.  I had similar problem with different wireless device.
+>>>
+>>>>> Init MAC failed was another 30 seconds later;
+>>>>>
+>>>>> [  468.600670] IPv6: ADDRCONF(NETDEV_UP): wlp2s0: link is not ready
+>>>>> [  469.618926] rtl8723be: Init MAC failed
+>>>>>
+>>>>> Looking at _rtl8723be_init_mac, there are two false returns;
+>>>>> hardware power on fail, and llt write fail.
+>>>>>
+>>>>> Sorry, I don't have rtl8723be hardware.
+>>>>>
+>>>>> Rákosi, did any older kernel keep connection?
+>>>> The oldest kernel is 4.13.9-300.fc27.x86_64 in Fedora 27
+>>>> installation, but did the same.  If you can give advise how, and
+>>>> what I do, then I'll try it.
+>>> You might try running "Live CD" of Fedora 26 or Fedora 25, without
+>>> installing, to test if unexpected disconnection happens in two older
+>>> kernels.  Not for permanent solution, just for easy testing.
+>>>
+>>> I don't have specific advice for Fedora 27, you might ask Fedora
+>>> community about that, or use RHBZ.  A quick search finds this old 2013
+>>> page;
+>>>
+>>> https://fedoraproject.org/wiki/User:Ignatenkobrain/Kernel/Bisection
+>>>
+>> And now the wireless is working almost 20 hours long, from yesterday
+>> afternoon. I dont know why. Lets check some happening:
+>> - Yesterday I disconnect the charger from laptop, and lay down at the
+>> other room
+>> - I left the laptop more than a hour without interaction, so the system
+>> is going to sleep
+>> - When I push the keyboard the system load up, and everything is working
+>> fine
+>> - The battery almost depleted when I going back to the original room,
+>> and connect the charger
+>>
+>> Then nothing changed, and I have a working rtl8723be wifi module. Why ?
+>
+> Who knows? I do not understand why it did not work before the way mine
+> does with openSUSE!
+>
+> Larry
+>
+>
+I found a workaround! If I power up the laptop, and check the wifi, and
+if it is OK, then I close down the screen (thats mean laptop going to
+sleep). After I open it, and just using like normal, then the connection
+working well for a day, or more.
+If I dont do that, then comes up the usual problem.
 
-(1) Change virtual interface operation in cfg80211 process reset and
-reinitilize private data structure.
-(2) Scan result event processed in main process will dereference private
-data structure concurrently, ocassionly crash the kernel.
+What ? Anybody have an idea what is it mean, and how ?
 
-The cornel case could be trigger by below steps:
-(1) wpa_cli mlan0 scan
-(2) ./hostapd mlan0.conf
-
-Cfg80211 asynchronous scan procedure is not all the time operated
-under rtnl lock, here we add the protect to serialize the cfg80211
-scan and change_virtual interface operation.
-
-Signed-off-by: Limin Zhu <liminzhu@marvell.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 4d45df8..ce4432c 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1116,6 +1116,12 @@ static int mwifiex_deinit_priv_params(struct mwifiex_private *priv)
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 	enum nl80211_iftype curr_iftype = dev->ieee80211_ptr->iftype;
- 
-+	if (priv->scan_request) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "change virtual interface: scan in process\n");
-+		return -EBUSY;
-+	}
-+
- 	switch (curr_iftype) {
- 	case NL80211_IFTYPE_ADHOC:
- 		switch (type) {
--- 
-1.9.1
+Thanks
+Gergely
