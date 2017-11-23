@@ -1,164 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54362 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755374AbdKNN0E (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37091 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751525AbdKWBhg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 08:26:04 -0500
-Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 09/12] wil6210: get suspend reject reason and resume triggers from FW
-Date: Tue, 14 Nov 2017 15:25:41 +0200
-Message-Id: <1510665944-30198-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142612_906172_3A31FCA0)
-In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Wed, 22 Nov 2017 20:37:36 -0500
+Message-ID: <1511401044.14687.6.camel@decadent.org.uk> (sfid-20171123_023739_608934_5CD7FB50)
+Subject: Re: pull-request mwifiex-firmware 2017-10-31
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        James Cao <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Date: Thu, 23 Nov 2017 01:37:24 +0000
+In-Reply-To: <99832be6bb804911a374c85d1865d0b2@SC-EXCH02.marvell.com>
+References: <99832be6bb804911a374c85d1865d0b2@SC-EXCH02.marvell.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-8z9o70C7omSOB0ESpUsR"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-Upon receiving suspend reject, print reject reason.
-Upon receiving resume event, print resume triggers.
+--=-8z9o70C7omSOB0ESpUsR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.c | 46 +++++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/wil6210/wmi.h | 17 ++++++++++---
- 2 files changed, 57 insertions(+), 6 deletions(-)
+On Tue, 2017-10-31 at 15:34 +0000, Ganapathi Bhat wrote:
+> The following changes since commit e0494e95192ac5329989f4d128cf95c417d618=
+cc:
+>=20
+>   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-08-01 =
+23:55:30 +0530)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index dd25f63..8ace618 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -2043,6 +2043,16 @@ void wmi_event_flush(struct wil6210_priv *wil)
- 	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
- }
- 
-+static const char *suspend_status2name(u8 status)
-+{
-+	switch (status) {
-+	case WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE:
-+		return "LINK_NOT_IDLE";
-+	default:
-+		return "Untracked status";
-+	}
-+}
-+
- int wmi_suspend(struct wil6210_priv *wil)
- {
- 	int rc;
-@@ -2058,7 +2068,7 @@ int wmi_suspend(struct wil6210_priv *wil)
- 	wil->suspend_resp_rcvd = false;
- 	wil->suspend_resp_comp = false;
- 
--	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED;
-+	reply.evt.status = WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE;
- 
- 	rc = wmi_call(wil, WMI_TRAFFIC_SUSPEND_CMDID, &cmd, sizeof(cmd),
- 		      WMI_TRAFFIC_SUSPEND_EVENTID, &reply, sizeof(reply),
-@@ -2090,8 +2100,9 @@ int wmi_suspend(struct wil6210_priv *wil)
- 	}
- 
- 	wil_dbg_wmi(wil, "suspend_response_completed rcvd\n");
--	if (reply.evt.status == WMI_TRAFFIC_SUSPEND_REJECTED) {
--		wil_dbg_pm(wil, "device rejected the suspend\n");
-+	if (reply.evt.status != WMI_TRAFFIC_SUSPEND_APPROVED) {
-+		wil_dbg_pm(wil, "device rejected the suspend, %s\n",
-+			   suspend_status2name(reply.evt.status));
- 		wil->suspend_stats.rejected_by_device++;
- 	}
- 	rc = reply.evt.status;
-@@ -2103,21 +2114,50 @@ int wmi_suspend(struct wil6210_priv *wil)
- 	return rc;
- }
- 
-+static void resume_triggers2string(u32 triggers, char *string, int str_size)
-+{
-+	string[0] = '\0';
-+
-+	if (!triggers) {
-+		strlcat(string, " UNKNOWN", str_size);
-+		return;
-+	}
-+
-+	if (triggers & WMI_RESUME_TRIGGER_HOST)
-+		strlcat(string, " HOST", str_size);
-+
-+	if (triggers & WMI_RESUME_TRIGGER_UCAST_RX)
-+		strlcat(string, " UCAST_RX", str_size);
-+
-+	if (triggers & WMI_RESUME_TRIGGER_BCAST_RX)
-+		strlcat(string, " BCAST_RX", str_size);
-+
-+	if (triggers & WMI_RESUME_TRIGGER_WMI_EVT)
-+		strlcat(string, " WMI_EVT", str_size);
-+}
-+
- int wmi_resume(struct wil6210_priv *wil)
- {
- 	int rc;
-+	char string[100];
- 	struct {
- 		struct wmi_cmd_hdr wmi;
- 		struct wmi_traffic_resume_event evt;
- 	} __packed reply;
- 
- 	reply.evt.status = WMI_TRAFFIC_RESUME_FAILED;
-+	reply.evt.resume_triggers = WMI_RESUME_TRIGGER_UNKNOWN;
- 
- 	rc = wmi_call(wil, WMI_TRAFFIC_RESUME_CMDID, NULL, 0,
- 		      WMI_TRAFFIC_RESUME_EVENTID, &reply, sizeof(reply),
- 		      WIL_WAIT_FOR_SUSPEND_RESUME_COMP);
- 	if (rc)
- 		return rc;
-+	resume_triggers2string(le32_to_cpu(reply.evt.resume_triggers), string,
-+			       sizeof(string));
-+	wil_dbg_pm(wil, "device resume %s, resume triggers:%s (0x%x)\n",
-+		   reply.evt.status ? "failed" : "passed", string,
-+		   le32_to_cpu(reply.evt.resume_triggers));
- 
- 	return reply.evt.status;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 5263ee7..d9e220a 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -2267,8 +2267,8 @@ struct wmi_link_maintain_cfg_read_done_event {
- } __packed;
- 
- enum wmi_traffic_suspend_status {
--	WMI_TRAFFIC_SUSPEND_APPROVED	= 0x0,
--	WMI_TRAFFIC_SUSPEND_REJECTED	= 0x1,
-+	WMI_TRAFFIC_SUSPEND_APPROVED			= 0x0,
-+	WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE	= 0x1,
- };
- 
- /* WMI_TRAFFIC_SUSPEND_EVENTID */
-@@ -2282,10 +2282,21 @@ enum wmi_traffic_resume_status {
- 	WMI_TRAFFIC_RESUME_FAILED	= 0x1,
- };
- 
-+enum wmi_resume_trigger {
-+	WMI_RESUME_TRIGGER_UNKNOWN	= 0x0,
-+	WMI_RESUME_TRIGGER_HOST		= 0x1,
-+	WMI_RESUME_TRIGGER_UCAST_RX	= 0x2,
-+	WMI_RESUME_TRIGGER_BCAST_RX	= 0x4,
-+	WMI_RESUME_TRIGGER_WMI_EVT	= 0x8,
-+};
-+
- /* WMI_TRAFFIC_RESUME_EVENTID */
- struct wmi_traffic_resume_event {
--	/* enum wmi_traffic_resume_status_e */
-+	/* enum wmi_traffic_resume_status */
- 	u8 status;
-+	u8 reserved[3];
-+	/* enum wmi_resume_trigger bitmap */
-+	__le32 resume_triggers;
- } __packed;
- 
- /* Power Save command completion status codes */
--- 
-1.9.1
+But that commit is not in linux-firmware.git.
+
+> are available in the git repository at:
+>=20
+>   git://git.marvell.com/mwifiex-firmware.git
+>=20
+> for you to fetch changes up to db3e1855ea46bc1a22b8bbecb400c2909c551cf5:
+>=20
+>   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-10-31 =
+20:49:53 +0530)
+>=20
+> ----------------------------------------------------------------
+> Ganapathi Bhat (1):
+>       linux-firmware: update Marvell PCIe-USB8997 firmware image
+>=20
+>  WHENCE                        |   2 +-
+>  mrvl/pcieusb8997_combo_v4.bin | Bin 620800 -> 622532 bytes
+>  2 files changed, 1 insertion(+), 1 deletion(-)
+
+There are three commits in this repository that aren't in linux-
+firmware.git, not one.  Please either:
+
+1. Send a pull request listing all the commits (the  <start> parameter
+to git request-pull should be something like "origin/master"), or
+2. Rebase this branch to include only the commit you want me to pull,
+and send a pull request listing that.
+
+Ben.
+
+--=20
+Ben Hutchings
+When in doubt, use brute force. - Ken Thompson
+
+
+--=-8z9o70C7omSOB0ESpUsR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEErCspvTSmr92z9o8157/I7JWGEQkFAloWJlQACgkQ57/I7JWG
+EQl1kQ/+OwXz8Dyi6Cx0UWpaoToIe6UMzWs27IpBNZ4IKOCrBqB90MuL+YNRV9pC
+mzO0p8Xx8luXoI3ls4g1drOCuH883A7yQxVRrkDpxJNkGgtYJaZq4o+Q0wH+U18Y
+sJQywIYcayXUT3SpTldDbWzcTXibC78Fu4qsMVca/5If6u4iRhTjoE2+YUJCHuk/
+JdYJHmk3utCD1iAiIvUGFSXarP1mze6qQ9gFmnihau6oEeZMeA05AIkm32P6NxhL
+0lRfV5LtzRx71x4354xrYm3tm69RLS5FdD/BLaQ+T0kN1rZsTbmHn6nMxBlRU1jo
+UplpapTDtSTQ1mPgX72jSj4dUycKYNO9uPD9h4PyTtGSGjI3wpyVKvL1ivsrm+B0
+yOihvGRx9Dt1kxjZHM6tToy9YiZEEAalKW39sSByztEhw1/ep7E0xTAZVDMgRx+1
+O9L2H+Zt2IhhdMGxdMzmyDcnu4FVJb9+p7W6EOQeXUypNXeIJHXxntnztbgfyw69
+iG346fH7K/QZAJw6qv7ZuogLA5tE9wD51rRDjPKevwOewGbyxl9R4meEzLk13mWO
+3tbYzIiv+WtYh0//wTsTpZYzz7Gl7tn4J0NhnDAE+P+NN5xu3ODtWXNfhnZznnFJ
+MjMKcp1DmaaNvEEhCEfLJAkjEJ9yp1lR+TlxTNtMIbkB32Q6m1Q=
+=/zt3
+-----END PGP SIGNATURE-----
+
+--=-8z9o70C7omSOB0ESpUsR--
