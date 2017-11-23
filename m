@@ -1,68 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0085.outbound.protection.outlook.com ([104.47.32.85]:59533
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751391AbdKMK23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 05:28:29 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: [PATCH 0/10] qtnfmac: regular portion of features and fixes
-Date: Mon, 13 Nov 2017 13:28:05 +0300
-Message-Id: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com> (sfid-20171113_112926_588492_01C05119)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37354 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752680AbdKWNXt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Nov 2017 08:23:49 -0500
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "James Cao" <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>,
+        Brian Norris <briannorris@chromium.org>,
+        "Ben Hutchings" <ben@decadent.org.uk>
+Subject: pull-request mwifiex-firmware 2017-11-23
+Date: Thu, 23 Nov 2017 13:23:39 +0000
+Message-ID: <178d86c104de49e589a6ac10930d1b27@SC-EXCH02.marvell.com> (sfid-20171123_142352_614131_27F0C17C)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle and all,
-
-Here is the next set of patches for qtnfmac driver. This set
-enables the following features:
-- radar detection and CAC support
-- MAC-based ACL support
-- make GET_STA_STATS format more flexible and future-proof
-- inform wireless core about supported extended capabilities
-
-Besides, several issues has been fixed. The most notable
-among them are:
-- fix RSSI data passed from qtnfmac to wireless core
-- pass complete channel information between firmware and driver,
-  including both primary channel and center frequency
-
-The last fix enables proper operation channel report by iw tool
-and fixes ACS mode in hostapd.
-
-Regards,
-Sergey
-
-Igor Mitsyanko (6):
-  qtnfmac: check that MAC exists in regulatory notifier
-  qtnfmac: add support for radar detection and CAC
-  qtnfmac: change default interface mode from AP to STA
-  qtnfmac: check for passed channel being NULL in MGMT_TX
-  qtnfmac: modify GET_STA_STATS cmd format for
-  qtnfmac: keeping track of "generation" for STA info
-
-Sergey Matyukevich (2):
-  qtnfmac: pass complete channel data between driver and
-  qtnfmac: fix rssi data passed to wireless core
-
-Vasily Ulyanov (2):
-  qtnfmac: fill wiphy's extended capabilities
-  qtnfmac: support MAC address based access control
-
- cfg80211.c   |   63 ++++++++-
- commands.c   |  375 ++++++++++++++++++++++++++++++++++++++++++-----------------
- commands.h   |    5 
- core.c       |   13 --
- core.h       |    8 -
- event.c      |   76 ++++++++++-
- qlink.h      |  340 ++++++++++++++++++++++++++++++++++++++++-------------
- qlink_util.c |   78 +++++++-----
- qlink_util.h |    4 
- util.c       |    8 -
- util.h       |    4 
- 11 files changed, 728 insertions(+), 246 deletions(-)
+VGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCA0N2FmZDk5NTBmYmNhZGViN2NlZmMw
+OTNiMjFkNjEyM2JkYzc2Zjc5Og0KDQogIGxpbnV4LWZpcm13YXJlOiBhZGQgTWFydmVsbCBVU0I4
+OTk3IGZpcm13YXJlIGltYWdlICgyMDE3LTA1LTAyIDEyOjI4OjM0ICswNTMwKQ0KDQphcmUgYXZh
+aWxhYmxlIGluIHRoZSBnaXQgcmVwb3NpdG9yeSBhdDoNCg0KICBnaXQ6Ly9naXQubWFydmVsbC5j
+b20vbXdpZmlleC1maXJtd2FyZS5naXQgbWFzdGVyDQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdl
+cyB1cCB0byBkYjNlMTg1NWVhNDZiYzFhMjJiOGJiZWNiNDAwYzI5MDljNTUxY2Y1Og0KDQogIGxp
+bnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQQ0llLVVTQjg5OTcgZmlybXdhcmUgaW1hZ2Ug
+KDIwMTctMTAtMzEgMjA6NDk6NTMgKzA1MzApDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkdhbmFwYXRoaSBCaGF0ICgy
+KToNCiAgICAgIGxpbnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQQ0llLVVTQjg5OTcgZmly
+bXdhcmUgaW1hZ2UNCiAgICAgIGxpbnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQQ0llLVVT
+Qjg5OTcgZmlybXdhcmUgaW1hZ2UNCg0KWGlubWluZyBIdSAoMSk6DQogICAgICBsaW51eC1maXJt
+d2FyZTogdXBkYXRlIE1hcnZlbGwgUENJZS1VU0I4ODk3LUEyIGZpcm13YXJlIGltYWdlDQoNCiBX
+SEVOQ0UgICAgICAgICAgICAgICAgICAgICAgICB8ICAgNCArKy0tDQogbXJ2bC9wY2llODg5N191
+YXBzdGEuYmluICAgICAgfCBCaW4gODIwMjEyIC0+IDgzNjU0MCBieXRlcw0KIG1ydmwvcGNpZXVz
+Yjg5OTdfY29tYm9fdjQuYmluIHwgQmluIDU5NzEzNiAtPiA2MjI1MzIgYnl0ZXMNCiAzIGZpbGVz
+IGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCg==
