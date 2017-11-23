@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:38064 "EHLO
-        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752420AbdK1Uju (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Nov 2017 15:39:50 -0500
-Received: by mail-oi0-f44.google.com with SMTP id s9so875637oie.5
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Nov 2017 12:39:50 -0800 (PST)
-Subject: Re: drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c: Odd
- array size
-To: Joe Perches <joe@perches.com>, Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1511887757.19952.38.camel@perches.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <f2da30a1-0b42-ce8c-2054-47fa9ae3b4e5@lwfinger.net> (sfid-20171128_213958_624679_7344306E)
-Date: Tue, 28 Nov 2017 14:39:48 -0600
-MIME-Version: 1.0
-In-Reply-To: <1511887757.19952.38.camel@perches.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:25022 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752204AbdKWP5J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Nov 2017 10:57:09 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] brcmfmac: Avoid build error with make W=1
+Date: Thu, 23 Nov 2017 17:57:04 +0200
+Message-Id: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com> (sfid-20171123_165718_644768_5FA8B558)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/28/2017 10:49 AM, Joe Perches wrote:
-> 61 entries in this table:
-> 
-> static const u8 OFDM_CONFIG[] = {
-> 	0x10, 0x0F, 0x0A, 0x0C, 0x14, 0xFA, 0xFF, 0x50,
-> 	0x00, 0x50, 0x00, 0x00, 0x00, 0x5C, 0x00, 0x00,
-> 	0x40, 0x00, 0x40, 0x00, 0x00, 0x00, 0xA8, 0x26,
-> 	0x32, 0x33, 0x06, 0xA5, 0x6F, 0x55, 0xC8, 0xBB,
-> 	0x0A, 0xE1, 0x2C, 0x4A, 0x86, 0x83, 0x34, 0x00,
-> 	0x4F, 0x24, 0x6F, 0xC2, 0x03, 0x40, 0x80, 0x00,
-> 	0xC0, 0xC1, 0x58, 0xF1, 0x00, 0xC4, 0x90, 0x3e,
-> 	0xD8, 0x3C, 0x7B, 0x10, 0x10
-> };
-> 
-> but only 60 written?
-> 
-> static void rtl8187se_write_ofdm_config(struct ieee80211_hw *dev)
-> {
-> 	/* write OFDM_CONFIG table */
-> 	int i;
-> 
-> 	for (i = 0; i < 60; i++)
-> 		rtl8225se_write_phy_ofdm(dev, i, OFDM_CONFIG[i]);
-> 
-> }
-> 
-> This is the only use of OFDM_CONFIG.
-> 
-> What is the defect here?
-> 
-> Should 60 be ARRAY_SIZE(OFDM_CONFIG) or should the array be shortened?
-> 
-> One too many entries or one too few a write?
-> My guess would be one too few a write.
+When I run make W=1 on gcc (Debian 7.2.0-16) 7.2.0 I got an error for
+the first run, all next ones are okay.
 
-Joe,
+  CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:2078: error: Cannot parse struct or union!
+scripts/Makefile.build:310: recipe for target 'drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o' failed
 
-You are probably right; however, as I do not have this device and cannot test, 
-the safer thing would be to crop the array back to 60 entries. That way the 
-driver's behavior does not change.
+Seems like something happened with W=1 and wrong kernel doc format.
+As a quick fix remove dubious /** in the code.
 
-I looked to see if rtl8187 had a similar construct, but it does not.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Larry
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index e3495ea95553..870e00cea29c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2070,7 +2070,7 @@ static int brcmf_sdio_txpkt_hdalign(struct brcmf_sdio *bus, struct sk_buff *pkt)
+ 	return head_pad;
+ }
+ 
+-/**
++/*
+  * struct brcmf_skbuff_cb reserves first two bytes in sk_buff::cb for
+  * bus layer usage.
+  */
+-- 
+2.15.0
