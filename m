@@ -1,119 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:51317 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752246AbdKAP3c (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:40970 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752769AbdKWOBH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 11:29:32 -0400
-Received: by mail-oi0-f67.google.com with SMTP id j126so5002930oib.8
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Nov 2017 08:29:32 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 01/11] rtlwifi: rtl_pci: Fix formatting errors in pci.h
-Date: Wed,  1 Nov 2017 10:29:16 -0500
-Message-Id: <20171101152926.24971-2-Larry.Finger@lwfinger.net> (sfid-20171101_162938_042845_8D488BED)
-In-Reply-To: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
-References: <20171101152926.24971-1-Larry.Finger@lwfinger.net>
+        Thu, 23 Nov 2017 09:01:07 -0500
+Message-ID: <1511445655.14687.65.camel@decadent.org.uk> (sfid-20171123_150111_445783_41B32492)
+Subject: Re: pull-request mwifiex-firmware 2017-11-23
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Ganapathi Bhat <gbhat@marvell.com>,
+        "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        James Cao <jcao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Karthik Doddayennegere Ananthapadmanabha <karthida@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Date: Thu, 23 Nov 2017 14:00:55 +0000
+In-Reply-To: <178d86c104de49e589a6ac10930d1b27@SC-EXCH02.marvell.com>
+References: <178d86c104de49e589a6ac10930d1b27@SC-EXCH02.marvell.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-vhO8gF5ntqJJjfWd9Fkb"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Checkpatch.pl reports a number of formatting problems in this header
-file. None of the changes cause any functional changes in the driver.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/pci.h | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+--=-vhO8gF5ntqJJjfWd9Fkb
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.h b/drivers/net/wireless/realtek/rtlwifi/pci.h
-index 1af92b34979d..e331f5a3b35f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.h
-@@ -27,10 +27,9 @@
- #define __RTL_PCI_H__
- 
- #include <linux/pci.h>
--/*
--1: MSDU packet queue,
--2: Rx Command Queue
--*/
-+/* 1: MSDU packet queue,
-+ * 2: Rx Command Queue
-+ */
- #define RTL_PCI_RX_MPDU_QUEUE			0
- #define RTL_PCI_RX_CMD_QUEUE			1
- #define RTL_PCI_MAX_RX_QUEUE			2
-@@ -223,8 +222,9 @@ struct rtl_pci {
- 	u8 const_hostpci_aspm_setting;
- 	/*pci-e device */
- 	u8 const_devicepci_aspm_setting;
--	/*If it supports ASPM, Offset[560h] = 0x40,
--	   otherwise Offset[560h] = 0x00. */
-+	/* If it supports ASPM, Offset[560h] = 0x40,
-+	 * otherwise Offset[560h] = 0x00.
-+	 */
- 	bool support_aspm;
- 	bool support_backdoor;
- 
-@@ -279,7 +279,7 @@ int rtl_pci_reset_trx_ring(struct ieee80211_hw *hw);
- extern const struct rtl_intf_ops rtl_pci_ops;
- 
- int rtl_pci_probe(struct pci_dev *pdev,
--			    const struct pci_device_id *id);
-+		  const struct pci_device_id *id);
- void rtl_pci_disconnect(struct pci_dev *pdev);
- #ifdef CONFIG_PM_SLEEP
- int rtl_pci_suspend(struct device *dev);
-@@ -287,34 +287,34 @@ int rtl_pci_resume(struct device *dev);
- #endif /* CONFIG_PM_SLEEP */
- static inline u8 pci_read8_sync(struct rtl_priv *rtlpriv, u32 addr)
- {
--	return readb((u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
-+	return readb((u8 __iomem *)rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline u16 pci_read16_sync(struct rtl_priv *rtlpriv, u32 addr)
- {
--	return readw((u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
-+	return readw((u8 __iomem *)rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline u32 pci_read32_sync(struct rtl_priv *rtlpriv, u32 addr)
- {
--	return readl((u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
-+	return readl((u8 __iomem *)rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline void pci_write8_async(struct rtl_priv *rtlpriv, u32 addr, u8 val)
- {
--	writeb(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
-+	writeb(val, (u8 __iomem *)rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline void pci_write16_async(struct rtl_priv *rtlpriv,
- 				     u32 addr, u16 val)
- {
--	writew(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
-+	writew(val, (u8 __iomem *)rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline void pci_write32_async(struct rtl_priv *rtlpriv,
- 				     u32 addr, u32 val)
- {
--	writel(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
-+	writel(val, (u8 __iomem *)rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline u16 calc_fifo_space(u16 rp, u16 wp)
--- 
-2.14.3
+On Thu, 2017-11-23 at 13:23 +0000, Ganapathi Bhat wrote:
+> The following changes since commit 47afd9950fbcadeb7cefc093b21d6123bdc76f=
+79:
+>=20
+>   linux-firmware: add Marvell USB8997 firmware image (2017-05-02 12:28:34=
+ +0530)
+>=20
+> are available in the git repository at:
+>=20
+>   git://git.marvell.com/mwifiex-firmware.git master
+>=20
+> for you to fetch changes up to db3e1855ea46bc1a22b8bbecb400c2909c551cf5:
+>=20
+>   linux-firmware: update Marvell PCIe-USB8997 firmware image (2017-10-31 =
+20:49:53 +0530)
+>=20
+> ----------------------------------------------------------------
+> Ganapathi Bhat (2):
+>       linux-firmware: update Marvell PCIe-USB8997 firmware image
+>       linux-firmware: update Marvell PCIe-USB8997 firmware image
+>=20
+> Xinming Hu (1):
+>       linux-firmware: update Marvell PCIe-USB8897-A2 firmware image
+>=20
+>  WHENCE                        |   4 ++--
+>  mrvl/pcie8897_uapsta.bin      | Bin 820212 -> 836540 bytes
+>  mrvl/pcieusb8997_combo_v4.bin | Bin 597136 -> 622532 bytes
+>  3 files changed, 2 insertions(+), 2 deletions(-)
+
+Pulled, thanks.
+
+Ben.
+
+--=20
+Ben Hutchings
+When in doubt, use brute force. - Ken Thompson
+
+
+--=-vhO8gF5ntqJJjfWd9Fkb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEErCspvTSmr92z9o8157/I7JWGEQkFAloW1JcACgkQ57/I7JWG
+EQmlKw//bbanCeyKuFrQwmv9rAgpUTX3t+inBpoC2KSrc4jgo8KglKzQXT8KYRQP
+HxdnbIvWJISjfGDwgcIGxO0fYiT7uD+NFtVLQhxmDo5V3HQhsD+E4Sc14MqGXTFl
+tXJiVX6Yxzbcmx4F6kr4lNrEyo4T5TDBkdQg2b8gPVt8+CDU/+PRZQkcsakXwcgx
+m2jAvGI3kEr3tKbVxPhHjXV+NKGkOF30r4uFi8BSXEq5Q7+f68O06XKhXELSaI/C
+rmSeeBKCsHGfdtbXkqf2ReZF5NvLJbwRhlaTixZmcEmlY6HKvlaq4LmBbm5BM+3T
+RhD6w+Uu+mftUUZY0H9F/gCCNdNP+NWTm8tgIio0t6r8CC4qOPiemXG1xsSFXYi4
+PhhfZTIiI4JSenclW5Tli2L1hqAS7/zKyPGsUmv0bZATjNoK+1j07aEdSrN2L4w7
+7gGXUSSL0CvqqUckAys6bzX6LJZ+B8AO3PpNut7drWXjIhi5TJyHQii981HJ0XRq
+fFrFvykiMXjDgWFpG1oRFw4ZBJqYhXvIy+xqklYsaJfjCEGHGpKOKR6dcu5wGNis
+aiw8zQbwppeBa5OJBcscexU7SlyQhivmhv/5sc8HIm6zIQpKSU6BFuo8q1tZZmXA
+K4EpoQRO57bQN8WTNbxDmZLsRM0aahYFov2Fmv7wJJrFgPK9p0s=
+=OS1S
+-----END PGP SIGNATURE-----
+
+--=-vhO8gF5ntqJJjfWd9Fkb--
