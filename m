@@ -1,67 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from james.theweblords.de ([217.11.55.87]:37245 "EHLO
-        james.theweblords.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752369AbdK0PHe (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:37536 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751735AbdKXH4j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Nov 2017 10:07:34 -0500
-Date: Mon, 27 Nov 2017 16:07:22 +0100
-From: Peter =?UTF-8?B?R3Jvw59l?= <pegro@friiks.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Setting TX power on a monitoring interface
-Message-ID: <20171127160722.4969cd23@friiks.de> (sfid-20171127_160737_710701_E5B0F542)
-In-Reply-To: <1511782993.5456.6.camel@sipsolutions.net>
-References: <20171120173415.1ae44829@fem-net.de>
-        <1511782993.5456.6.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/0XjPkdf5iMa=sXmaIfCP1po"; protocol="application/pgp-signature"
+        Fri, 24 Nov 2017 02:56:39 -0500
+Message-ID: <1511510188.2841.7.camel@sipsolutions.net> (sfid-20171124_085656_470744_D8E65EFF)
+Subject: Re: kernel BUG at crypto/asymmetric_keys/public_key.c:80
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Fainelli <f.fainelli@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        David Howells <dhowells@redhat.com>,
+        linux-wireless@vger.kernel.org
+Date: Fri, 24 Nov 2017 08:56:28 +0100
+In-Reply-To: <46fde28f-8f97-841e-d00a-399a40b3a2e7@gmail.com> (sfid-20171123_184803_677305_35FC2C0E)
+References: <d2b989b6-38cf-a04d-0353-3540fdb891ed@gmail.com>
+         <2ef18f35-bb00-2f4b-45fe-1beb3cdd0745@broadcom.com>
+         <1511376145.2841.1.camel@sipsolutions.net>
+         <a95ae21a-c9f7-4e01-98f1-469201e20615@gmail.com>
+         <1511447043.2841.2.camel@sipsolutions.net>
+         <46fde28f-8f97-841e-d00a-399a40b3a2e7@gmail.com>
+         (sfid-20171123_184803_677305_35FC2C0E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/0XjPkdf5iMa=sXmaIfCP1po
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2017-11-23 at 09:47 -0800, Florian Fainelli wrote:
 
-On Mon, 27 Nov 2017 12:43:13 +0100
-Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org> wrote:
+> Absolutely, please find it enclosed.
 
-> > What would be the correct way of fixing it? Maybe I can provide a patch=
-. =20
->=20
-> That's a really good question :-)
->=20
-> I think if the driver has WANT_MONITOR_VIF, then we can pass that
-> through and let the driver sort it out.
->
-> But if not, we probably just have to reject the configuration?
+Thanks.
 
-With passing through you mean calling bss_info_changed on the driver for the
-monitor interface?
+This is a bit odd. I didn't think the most likely reason is that you
+have
 
-Are monitor interfaces allowed to exist when WANT_MONITOR_VIF is not set?
-I ask, whether I would have to check=20
-  sdata->vif.type =3D=3D NL80211_IFTYPE_MONITOR
-_and_ also
-  ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF)
-?
+CONFIG_CRYPTO_SHA256=m
 
-Regards
-Peter
+but everything else built-in. Thus, when loading the certificate,
+there's no way to calculate the digest since that requires sha-256,
+hence
 
---Sig_/0XjPkdf5iMa=sXmaIfCP1po
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+        BUG_ON(!sig->digest);
 
------BEGIN PGP SIGNATURE-----
+If you make CONFIG_CRYPTO_SHA256=y then it should go away.
 
-iQEzBAEBCAAdFiEEFBMm5T0HjV/btb+Q2Ws8k4f65hoFAlocKioACgkQ2Ws8k4f6
-5hpmCAf9EZfWIoLR8E+9n9MJnWqeoxcAQu/8tH2Z4O4F+owA/Fy+S+imkuUedGjO
-K+fbOL1pCYKa3yJSqGPlUaaU/a0krK7MTEw7r440/KQOw1dsnxIUl8KtrCxU9t9V
-2Nhpc/ifxecrAt483K9NVR4hyzOpY4lT+t4/Uxl83b0hw7/YRks5MrE5u17sj83S
-R+XizWc1IteHeDndJvKGNFc6wolILq8PtgTFfpG6CAn4CUxbGG7zadZih+0Cs/bt
-KViFBIUggDk31qeKQAAKQNQ/5ZDwKDneVxfs0Cw9Y5k2xtGmie4odw5+aZCRH2lk
-QUUmR7qxhxQ9ZhTUUBi7BaIUtxVE4A==
-=sCrn
------END PGP SIGNATURE-----
+I guess I'll do this:
 
---Sig_/0XjPkdf5iMa=sXmaIfCP1po--
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index da91bb547db3..1abcc4fc4df1 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -20,6 +20,10 @@ config CFG80211
+ 	tristate "cfg80211 - wireless configuration API"
+ 	depends on RFKILL || !RFKILL
+ 	select FW_LOADER
++	# may need to update this when certificates are changed and are
++	# using a different algorithm, though right now they shouldn't
++	# (this is here rather than below to allow it to be a module)
++	select CRYPTO_SHA256 if CFG80211_USE_KERNEL_REGDB_KEYS
+ 	---help---
+ 	  cfg80211 is the Linux wireless LAN (802.11) configuration API.
+ 	  Enable this if you have a wireless device.
+@@ -113,6 +117,9 @@ config CFG80211_EXTRA_REGDB_KEYDIR
+ 	  certificates like in the kernel sources (net/wireless/certs/)
+ 	  that shall be accepted for a signed regulatory database.
+ 
++	  Note that you need to also select the correct CRYPTO_<hash> modules
++	  for your certificates, and if cfg80211 is built-in they also must be.
++
+ config CFG80211_REG_CELLULAR_HINTS
+ 	bool "cfg80211 regulatory support for cellular base station hints"
+ 	depends on CFG80211_CERTIFICATION_ONUS
+
+
+Can you try if that fixes your config for you?
+
+johannes
