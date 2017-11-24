@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:56762 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750933AbdKJVaC (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35450 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753428AbdKXLri (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2017 16:30:02 -0500
-Date: Fri, 10 Nov 2017 22:29:59 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-cc: Fengguang Wu <fengguang.wu@intel.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [run_timer_softirq] BUG: unable to handle kernel paging request
- at 0000000000010007
-In-Reply-To: <CA+55aFxz=_g38OsVXhLBMGXnQyZ3CvFk971e19z9eu+9Pu=4dA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.20.1711102228030.2288@nanos> (sfid-20171110_223043_427601_CBBC1EF4)
-References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com> <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com> <20171029234820.nzwavupqlv2iqo3m@wfg-t540p.sh.intel.com> <CA+55aFxA=+iO1cysMnLZz1iNd4W+gEf4Ys9FGoWM+zmuST2KOQ@mail.gmail.com>
- <20171109051905.pdlsyrbzrwlsjbrs@wfg-t540p.sh.intel.com> <CA+55aFxz=_g38OsVXhLBMGXnQyZ3CvFk971e19z9eu+9Pu=4dA@mail.gmail.com>
+        Fri, 24 Nov 2017 06:47:38 -0500
+Date: Fri, 24 Nov 2017 12:47:42 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: venkat.prashanth2498@gmail.com
+Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+        Larry.Finger@lwfinger.net
+Subject: Re: [PATCH v3] rtlwifi:rtl8723ae:add the function name to the
+ printouts
+Message-ID: <20171124114742.GA24008@kroah.com> (sfid-20171124_124741_047257_831AE789)
+References: <1511523680-5033-1-git-send-email-venkat.prashanth2498@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1511523680-5033-1-git-send-email-venkat.prashanth2498@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 10 Nov 2017, Linus Torvalds wrote:
+On Fri, Nov 24, 2017 at 05:11:20PM +0530, venkat.prashanth2498@gmail.com wrote:
+> From: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
+> 
+> Prefer and make it generic by using %s and __func__
+> to print function name
+> 
+> Change Log:
+> 
+> v2:
+> a. RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "\n");
+> The function name is not necessary in above code
+> according to conditions as mentioned in comments.
+> 
+> b. modified the commit message according
+> to suggested comments.
+> 
+> c. fixed the alignment issues.
+> 
+> v1:
+> a. Sign-off line is saperated from subject
+> line from earlier patch version.
+> 
+> Signed-off-by: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 6 +++---
 
-> On Wed, Nov 8, 2017 at 9:19 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
-> >
-> > Yes it's accessing the list. Here is the faddr2line output.
-> 
-> Ok, so it's a corrupted timer list. Which is not a big surprise.
-> 
-> It's
-> 
->                 next->pprev = pprev;
-> 
-> in __hlist_del(), and the trapping instruction decodes as
-> 
->         mov    %rdx,0x8(%rax)
-> 
-> with %rax having the value dead000000000200,
-> 
-> Which is just LIST_POISON2.
-> 
-> So we've deleted that entry twice - LIST_POISON2 is what hlist_del()
-> sets pprev to after already deleting it once.
-> 
-> Although in this case it might not be hlist_del(), because
-> detach_timer() also sets entry->next to LIST_POISON2.
-> 
-> Which is pretty bogus, we are supposed to use LIST_POISON1 for the
-> "next" pointer. Oh well. Nobody cares, except for the list entry
-> debugging code, which isn't run on the hlist cases.
-> 
-> Adding Thomas Gleixner to the cc. It should not be possible to delete
-> the same timer twice.
+Why are you sending me this patch???
 
-Right, it shouldn't.
+confused,
 
-Fengguang, can you please enable:
-
-CONFIG_DEBUG_OBJECTS
-CONFIG_DEBUG_OBJECTS_TIMERS
-
-and try to reproduce? Debugobject should catch that hopefully.
-
-Thanks,
-
-	tglx
+greg k-h
