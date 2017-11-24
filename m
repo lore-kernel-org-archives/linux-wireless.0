@@ -1,79 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52140 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755524AbdKMUgD (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35701 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753402AbdKXLl1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 15:36:03 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 06/10] brcmfmac: Remove bandaid for SleepCSR
-Date: Mon, 13 Nov 2017 21:35:43 +0100
-Message-Id: <1510605347-7629-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171113_213610_480447_FE8102BD)
-In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 24 Nov 2017 06:41:27 -0500
+Received: by mail-pg0-f67.google.com with SMTP id l19so15246998pgo.2
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Nov 2017 03:41:27 -0800 (PST)
+From: venkat.prashanth2498@gmail.com
+To: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
+Cc: chaoming_li@realsil.com.cn, Larry.Finger@lwfinger.net,
+        Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
+Subject: [PATCH v3] rtlwifi:rtl8723ae:add the function name to the printouts
+Date: Fri, 24 Nov 2017 17:11:20 +0530
+Message-Id: <1511523680-5033-1-git-send-email-venkat.prashanth2498@gmail.com> (sfid-20171124_124131_898805_5F610BAA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+From: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
 
-Register access code is not the place for band-aid fixes like this.
-If this is a genuine problem, it should be fixed further up in the driver
-stack.
+Prefer and make it generic by using %s and __func__
+to print function name
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Change Log:
+
+v2:
+a. RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "\n");
+The function name is not necessary in above code
+according to conditions as mentioned in comments.
+
+b. modified the commit message according
+to suggested comments.
+
+c. fixed the alignment issues.
+
+v1:
+a. Sign-off line is saperated from subject
+line from earlier patch version.
+
+Signed-off-by: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 28 +---------------------
- 1 file changed, 1 insertion(+), 27 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index ad81ea4..355aebd 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -334,21 +334,8 @@ static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 	} while (ret != 0 && ret != -ENOMEDIUM &&
- 		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
- 
--	if (ret == -ENOMEDIUM) {
-+	if (ret == -ENOMEDIUM)
- 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
--	} else if (ret != 0) {
--		/*
--		 * SleepCSR register access can fail when
--		 * waking up the device so reduce this noise
--		 * in the logs.
--		 */
--		if (addr != SBSDIO_FUNC1_SLEEPCSR)
--			brcmf_err("failed to write data F%d@0x%05x, err: %d\n",
--				  func, addr, ret);
--		else
--			brcmf_dbg(SDIO, "failed to write data F%d@0x%05x, err: %d\n",
--				  func, addr, ret);
--	}
- 
- 	return ret;
- }
-@@ -389,19 +376,6 @@ static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 
- 	if (ret == -ENOMEDIUM)
- 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
--	else if (ret != 0) {
--		/*
--		 * SleepCSR register access can fail when
--		 * waking up the device so reduce this noise
--		 * in the logs.
--		 */
--		if (addr != SBSDIO_FUNC1_SLEEPCSR)
--			brcmf_err("failed to read data F%d@0x%05x, err: %d\n",
--				  func, addr, ret);
--		else
--			brcmf_dbg(SDIO, "failed to read data F%d@0x%05x, err: %d\n",
--				  func, addr, ret);
--	}
- 
- 	return ret;
- }
--- 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+index f713c72..09c4e14 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+@@ -389,7 +389,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
+
+ 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
+ 		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
+-			 "DMA mapping error\n");
++			 "%s():DMA mapping error\n", __func__);
+ 		return;
+ 	}
+ 	if (mac->opmode == NL80211_IFTYPE_STATION) {
+@@ -498,7 +498,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
+ 		if (ieee80211_is_data_qos(fc)) {
+ 			if (mac->rdg_en) {
+ 				RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
+-				"Enable RDG function.\n");
++				"%s():Enable RDG function.\n", __func__);
+ 				SET_TX_DESC_RDG_ENABLE(pdesc, 1);
+ 				SET_TX_DESC_HTC(pdesc, 1);
+ 			}
+@@ -557,7 +557,7 @@ void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
+
+ 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
+ 		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
+-			 "DMA mapping error\n");
++			 "%s():DMA mapping error\n", __func__);
+ 		return;
+ 	}
+ 	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+--
 1.9.1
