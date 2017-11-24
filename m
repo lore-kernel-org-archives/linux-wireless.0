@@ -1,201 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53070 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:38224 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752516AbdKMOfK (ORCPT
+        with ESMTP id S1752825AbdKXIf3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 09:35:10 -0500
+        Fri, 24 Nov 2017 03:35:29 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: add a few extended error strings to key parsing
-Date: Mon, 13 Nov 2017 15:35:06 +0100
-Message-Id: <20171113143506.20396-1-johannes@sipsolutions.net> (sfid-20171113_153516_019809_CEBAD4C2)
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: select CRYPTO_SHA256 if needed
+Date: Fri, 24 Nov 2017 09:35:25 +0100
+Message-Id: <20171124083525.28735-1-johannes@sipsolutions.net> (sfid-20171124_093532_763090_3B4784F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This mostly serves as an example for how to add error strings
-and erroneous attribute pointers.
+When regulatory database certificates are built-in, they're
+currently using the SHA256 digest algorithm, so add that to
+the build in that case.
 
+Also add a note that for custom certificates, one may need
+to add the right algorithms.
+
+Reported-by: Florian Fainelli <f.fainelli@gmail.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 61 +++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 41 insertions(+), 20 deletions(-)
+ net/wireless/Kconfig | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d23eb5700788..73f0e5524e84 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -734,11 +734,12 @@ struct key_parse {
- 	bool def_uni, def_multi;
- };
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index da91bb547db3..1abcc4fc4df1 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -20,6 +20,10 @@ config CFG80211
+ 	tristate "cfg80211 - wireless configuration API"
+ 	depends on RFKILL || !RFKILL
+ 	select FW_LOADER
++	# may need to update this when certificates are changed and are
++	# using a different algorithm, though right now they shouldn't
++	# (this is here rather than below to allow it to be a module)
++	select CRYPTO_SHA256 if CFG80211_USE_KERNEL_REGDB_KEYS
+ 	---help---
+ 	  cfg80211 is the Linux wireless LAN (802.11) configuration API.
+ 	  Enable this if you have a wireless device.
+@@ -113,6 +117,9 @@ config CFG80211_EXTRA_REGDB_KEYDIR
+ 	  certificates like in the kernel sources (net/wireless/certs/)
+ 	  that shall be accepted for a signed regulatory database.
  
--static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
-+static int nl80211_parse_key_new(struct genl_info *info, struct nlattr *key,
-+				 struct key_parse *k)
- {
- 	struct nlattr *tb[NL80211_KEY_MAX + 1];
- 	int err = nla_parse_nested(tb, NL80211_KEY_MAX, key,
--				   nl80211_key_policy, NULL);
-+				   nl80211_key_policy, info->extack);
- 	if (err)
- 		return err;
- 
-@@ -771,7 +772,8 @@ static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
- 	if (tb[NL80211_KEY_TYPE]) {
- 		k->type = nla_get_u32(tb[NL80211_KEY_TYPE]);
- 		if (k->type < 0 || k->type >= NUM_NL80211_KEYTYPES)
--			return -EINVAL;
-+			return genl_err_attr(info, -EINVAL,
-+					     tb[NL80211_KEY_TYPE]);
- 	}
- 
- 	if (tb[NL80211_KEY_DEFAULT_TYPES]) {
-@@ -779,7 +781,8 @@ static int nl80211_parse_key_new(struct nlattr *key, struct key_parse *k)
- 
- 		err = nla_parse_nested(kdt, NUM_NL80211_KEY_DEFAULT_TYPES - 1,
- 				       tb[NL80211_KEY_DEFAULT_TYPES],
--				       nl80211_key_default_policy, NULL);
-+				       nl80211_key_default_policy,
-+				       info->extack);
- 		if (err)
- 			return err;
- 
-@@ -820,8 +823,10 @@ static int nl80211_parse_key_old(struct genl_info *info, struct key_parse *k)
- 
- 	if (info->attrs[NL80211_ATTR_KEY_TYPE]) {
- 		k->type = nla_get_u32(info->attrs[NL80211_ATTR_KEY_TYPE]);
--		if (k->type < 0 || k->type >= NUM_NL80211_KEYTYPES)
-+		if (k->type < 0 || k->type >= NUM_NL80211_KEYTYPES) {
-+			GENL_SET_ERR_MSG(info, "key type out of range");
- 			return -EINVAL;
-+		}
- 	}
- 
- 	if (info->attrs[NL80211_ATTR_KEY_DEFAULT_TYPES]) {
-@@ -850,31 +855,42 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
- 	k->type = -1;
- 
- 	if (info->attrs[NL80211_ATTR_KEY])
--		err = nl80211_parse_key_new(info->attrs[NL80211_ATTR_KEY], k);
-+		err = nl80211_parse_key_new(info, info->attrs[NL80211_ATTR_KEY], k);
- 	else
- 		err = nl80211_parse_key_old(info, k);
- 
- 	if (err)
- 		return err;
- 
--	if (k->def && k->defmgmt)
-+	if (k->def && k->defmgmt) {
-+		GENL_SET_ERR_MSG(info, "key with def && defmgmt is invalid");
- 		return -EINVAL;
-+	}
- 
- 	if (k->defmgmt) {
--		if (k->def_uni || !k->def_multi)
-+		if (k->def_uni || !k->def_multi) {
-+			GENL_SET_ERR_MSG(info, "defmgmt key must be mcast");
- 			return -EINVAL;
-+		}
- 	}
- 
- 	if (k->idx != -1) {
- 		if (k->defmgmt) {
--			if (k->idx < 4 || k->idx > 5)
-+			if (k->idx < 4 || k->idx > 5) {
-+				GENL_SET_ERR_MSG(info,
-+						 "defmgmt key idx not 4 or 5");
- 				return -EINVAL;
-+			}
- 		} else if (k->def) {
--			if (k->idx < 0 || k->idx > 3)
-+			if (k->idx < 0 || k->idx > 3) {
-+				GENL_SET_ERR_MSG(info, "def key idx not 0-3");
- 				return -EINVAL;
-+			}
- 		} else {
--			if (k->idx < 0 || k->idx > 5)
-+			if (k->idx < 0 || k->idx > 5) {
-+				GENL_SET_ERR_MSG(info, "key idx not 0-5");
- 				return -EINVAL;
-+			}
- 		}
- 	}
- 
-@@ -883,8 +899,9 @@ static int nl80211_parse_key(struct genl_info *info, struct key_parse *k)
- 
- static struct cfg80211_cached_keys *
- nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
--		       struct nlattr *keys, bool *no_ht)
-+		       struct genl_info *info, bool *no_ht)
- {
-+	struct nlattr *keys = info->attrs[NL80211_ATTR_KEYS];
- 	struct key_parse parse;
- 	struct nlattr *key;
- 	struct cfg80211_cached_keys *result;
-@@ -909,17 +926,22 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
- 		memset(&parse, 0, sizeof(parse));
- 		parse.idx = -1;
- 
--		err = nl80211_parse_key_new(key, &parse);
-+		err = nl80211_parse_key_new(info, key, &parse);
- 		if (err)
- 			goto error;
- 		err = -EINVAL;
- 		if (!parse.p.key)
- 			goto error;
--		if (parse.idx < 0 || parse.idx > 3)
-+		if (parse.idx < 0 || parse.idx > 3) {
-+			GENL_SET_ERR_MSG(info, "key index out of range [0-3]");
- 			goto error;
-+		}
- 		if (parse.def) {
--			if (def)
-+			if (def) {
-+				GENL_SET_ERR_MSG(info,
-+						 "only one key can be default");
- 				goto error;
-+			}
- 			def = 1;
- 			result->def = parse.idx;
- 			if (!parse.def_uni || !parse.def_multi)
-@@ -932,6 +954,7 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
- 			goto error;
- 		if (parse.p.cipher != WLAN_CIPHER_SUITE_WEP40 &&
- 		    parse.p.cipher != WLAN_CIPHER_SUITE_WEP104) {
-+			GENL_SET_ERR_MSG(info, "connect key must be WEP");
- 			err = -EINVAL;
- 			goto error;
- 		}
-@@ -947,6 +970,7 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
- 
- 	if (result->def < 0) {
- 		err = -EINVAL;
-+		GENL_SET_ERR_MSG(info, "need a default/TX key");
- 		goto error;
- 	}
- 
-@@ -8611,9 +8635,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	if (ibss.privacy && info->attrs[NL80211_ATTR_KEYS]) {
- 		bool no_ht = false;
- 
--		connkeys = nl80211_parse_connkeys(rdev,
--					  info->attrs[NL80211_ATTR_KEYS],
--					  &no_ht);
-+		connkeys = nl80211_parse_connkeys(rdev, info, &no_ht);
- 		if (IS_ERR(connkeys))
- 			return PTR_ERR(connkeys);
- 
-@@ -9017,8 +9039,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 	}
- 
- 	if (connect.privacy && info->attrs[NL80211_ATTR_KEYS]) {
--		connkeys = nl80211_parse_connkeys(rdev,
--					  info->attrs[NL80211_ATTR_KEYS], NULL);
-+		connkeys = nl80211_parse_connkeys(rdev, info, NULL);
- 		if (IS_ERR(connkeys))
- 			return PTR_ERR(connkeys);
- 	}
++	  Note that you need to also select the correct CRYPTO_<hash> modules
++	  for your certificates, and if cfg80211 is built-in they also must be.
++
+ config CFG80211_REG_CELLULAR_HINTS
+ 	bool "cfg80211 regulatory support for cellular base station hints"
+ 	depends on CFG80211_CERTIFICATION_ONUS
 -- 
 2.14.2
