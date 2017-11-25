@@ -1,45 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f169.google.com ([74.125.82.169]:37641 "EHLO
-        mail-ot0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764744AbdKRPTy (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47398 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751277AbdKYPfe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Nov 2017 10:19:54 -0500
-Received: by mail-ot0-f169.google.com with SMTP id s4so4399725ote.4
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Nov 2017 07:19:54 -0800 (PST)
-Subject: Re: rtl8723be on Fedora27
-To: rosenp@gmail.com,
-        =?UTF-8?Q?R=c3=a1kosi_Gergely?= <rakosi.gergely@gmail.com>,
-        linux-wireless@vger.kernel.org
-References: <f5876284-360c-e6bf-01c8-ed95c4298647@gmail.com>
- <1510981609.5145.0.camel@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <4e2cf93a-4a3c-af1c-df1c-de8f234d615d@lwfinger.net> (sfid-20171118_162006_077000_ACEA4974)
-Date: Sat, 18 Nov 2017 09:19:52 -0600
-MIME-Version: 1.0
-In-Reply-To: <1510981609.5145.0.camel@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sat, 25 Nov 2017 10:35:34 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 25 Nov 2017 17:35:10 +0200
+Message-Id: <20171125153510.25359-7-luca@coelho.fi> (sfid-20171125_163542_119286_D8C22E45)
+In-Reply-To: <20171125153510.25359-1-luca@coelho.fi>
+References: <20171125153510.25359-1-luca@coelho.fi>
+Subject: [PATCH 6/6] iwlwifi: fix access to prph when transport is stopped
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/17/2017 11:06 PM, rosenp@gmail.com wrote:
-> On Fri, 2017-11-17 at 09:16 +0100, Rákosi Gergely wrote:
->> Hello,
->>
->> I'm trying to use rtl8723be wifi on Fedora27 but I still get
->> continuosly
->> disconnection. The error in the dmesg is "Init MAC failed"
->> I tried with the following module options too : "fwlps=0 swlps=0" and
->> the variant of "ant_sel=1 or 2 or 0"
->> I downloaded the git files from your repo, and do the usual make,make
->> install, and modprobe stuffs, and then restart the notebook, but I
->> get
->> the same result.
->>
-> 
-> Could try blacklisting rtlwifi. That way it uses rtl8xxxu.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Ignore this suggestion. The RTL8723BE is NOT supported by rtl8xxxu. By the way, 
-that "u" means that the driver is for USB devices. The "E" at the end of yours 
-means PCIe!
+When getting HW rfkill we get stop_device being called from
+two paths.
+One path is the IRQ calling stop device, and updating op
+mode and stack.
+As a result, cfg80211 is running rfkill sync work that shuts
+down all devices (second path).
+In the second path, we eventually get to iwl_mvm_stop_device
+which calls iwl_fw_dump_conf_clear->iwl_fw_dbg_stop_recording,
+that access periphery registers.
+The device may be stopped at this point from the first path,
+which will result with a failure to access those registers.
+Simply checking for the trans status is insufficient, since
+the race will still exist, only minimized.
+Instead, move the stop from iwl_fw_dump_conf_clear (which is
+getting called only from stop path) to the transport stop
+device function, where the access is always safe.
+This has the added value, of actually stopping dbgc before
+stopping device even when the stop is initiated from the
+transport.
 
-Larry
+Fixes: 1efc3843a4ee ("iwlwifi: stop dbgc recording before stopping DMA")
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h          | 2 --
+ drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 6 ++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c      | 9 +++++++++
+ 3 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index 9c889a32fe24..223fb77a3aa9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -209,8 +209,6 @@ static inline void iwl_fw_dbg_stop_recording(struct iwl_fw_runtime *fwrt)
+ 
+ static inline void iwl_fw_dump_conf_clear(struct iwl_fw_runtime *fwrt)
+ {
+-	iwl_fw_dbg_stop_recording(fwrt);
+-
+ 	fwrt->dump.conf = FW_DBG_INVALID;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index c59f4581e972..ac05fd1e74c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -49,6 +49,7 @@
+  *
+  *****************************************************************************/
+ #include "iwl-trans.h"
++#include "iwl-prph.h"
+ #include "iwl-context-info.h"
+ #include "internal.h"
+ 
+@@ -156,6 +157,11 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+ 
+ 	trans_pcie->is_down = true;
+ 
++	/* Stop dbgc before stopping device */
++	iwl_write_prph(trans, DBGC_IN_SAMPLE, 0);
++	udelay(100);
++	iwl_write_prph(trans, DBGC_OUT_CTRL, 0);
++
+ 	/* tell the device to stop sending interrupts */
+ 	iwl_disable_interrupts(trans);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 3dee95e6a475..4541c86881d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1227,6 +1227,15 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 
+ 	trans_pcie->is_down = true;
+ 
++	/* Stop dbgc before stopping device */
++	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
++		iwl_set_bits_prph(trans, MON_BUFF_SAMPLE_CTL, 0x100);
++	} else {
++		iwl_write_prph(trans, DBGC_IN_SAMPLE, 0);
++		udelay(100);
++		iwl_write_prph(trans, DBGC_OUT_CTRL, 0);
++	}
++
+ 	/* tell the device to stop sending interrupts */
+ 	iwl_disable_interrupts(trans);
+ 
+-- 
+2.15.0
