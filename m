@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:49725 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754004AbdKBRKX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Nov 2017 13:10:23 -0400
-Received: by mail-io0-f196.google.com with SMTP id n137so519875iod.6
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Nov 2017 10:10:22 -0700 (PDT)
-Date: Thu, 2 Nov 2017 10:10:18 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
-        Govind Singh <govinds@qti.qualcomm.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        Ben Greear <greearb@candelatech.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: move pci suspend/resume functions
-Message-ID: <20171102171017.GA11081@google.com> (sfid-20171102_181104_904451_95AB0992)
-References: <20171102110903.2886660-1-arnd@arndb.de>
- <87mv44ln5v.fsf@qca.qualcomm.com>
- <CAK8P3a2xkh19gocctXf4gv1Km_SaYJPbSC5QkkZ0WMQQAXp83Q@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:45738 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751631AbdKYP3g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 25 Nov 2017 10:29:36 -0500
+Received: from mail-qk0-f176.google.com (mail-qk0-f176.google.com [209.85.220.176])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4032D218A3
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Nov 2017 15:29:35 +0000 (UTC)
+Received: by mail-qk0-f176.google.com with SMTP id a142so27648736qkb.5
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Nov 2017 07:29:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK8P3a2xkh19gocctXf4gv1Km_SaYJPbSC5QkkZ0WMQQAXp83Q@mail.gmail.com>
+In-Reply-To: <1511467106-21175-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1511467106-21175-1-git-send-email-arend.vanspriel@broadcom.com>
+From: Josh Boyer <jwboyer@kernel.org>
+Date: Sat, 25 Nov 2017 10:29:33 -0500
+Message-ID: <CA+5PVA5e2xEdGVZi4Nqu-GgrbvyKH0+cChaBBwutyd+cBKrp8w@mail.gmail.com> (sfid-20171125_163009_193362_03A7BDD6)
+Subject: Re: [PATCH 0/5] brcm: firmware addressing security issues
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-firmware@kernel.org,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 02, 2017 at 04:40:57PM +0100, Arnd Bergmann wrote:
-> On Thu, Nov 2, 2017 at 4:23 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> > Brian has already fixed this, please check that:
-> >
-> > https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=ath-next&id=20665a9076d48e9abd9a2db13d307f58f7ef6647
-> >
-> > But apparently I forgot to merge ath-next to wireless-drivers-next, will
-> > do that soon.
-> 
-> Yes, Brian's version is better. I considered the same, but wasn't sure
-> it was safe.
+On Thu, Nov 23, 2017 at 2:58 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> This series of firmware patches address a number of security
+> issues as listed in the individual commit messages. It also
+> adds new firmware for bcm43430 rev 0.
+>
+> The series applies to the master branch of the linux-firmware
+> repository.
+>
+> Arend van Spriel (5):
+>   brcm: update firmware for bcm4339
+>   brcm: introduce firmware for bcm43430 revision 0
+>   brcm: update firmware for bcm4354
+>   brcm: update firmware for bcm4356
+>   brcm: update firmware for bcm4358
+>
+>  WHENCE                        |   1 +
+>  brcm/brcmfmac4339-sdio.bin    | Bin 493599 -> 562183 bytes
+>  brcm/brcmfmac43430a0-sdio.bin | Bin 0 -> 382455 bytes
+>  brcm/brcmfmac4354-sdio.bin    | Bin 591837 -> 626589 bytes
+>  brcm/brcmfmac4356-pcie.bin    | Bin 623012 -> 661999 bytes
+>  brcm/brcmfmac4358-pcie.bin    | Bin 629040 -> 633817 bytes
+>  6 files changed, 1 insertion(+)
+>  create mode 100644 brcm/brcmfmac43430a0-sdio.bin
 
-Yes, it's safe. The code is still basically dead, since the mac80211 ops
-get dropped with !CONFIG_PM (so no one calls the
-*_hif_{suspend,resume}() functions), but at least we have fewer
-#ifdef's.
+Series applied.  Thanks!
 
-Brian
+josh
