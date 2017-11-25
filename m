@@ -1,119 +1,871 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:53850 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751558AbdK2Idl (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47520 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751853AbdKYQfF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 03:33:41 -0500
-Subject: Re: [PATCH] ath10k: handling qos at STA side based on AP WMM
- enable/disable
-To: Balaji Pothunoori <bpothuno@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
- <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com>
- <e93273148ad44a54bfb39bc7018bfcc0@aptaiexm02b.ap.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <e84f2a95-178b-dc07-bc6e-9dc779e0db0f@dd-wrt.com> (sfid-20171129_093402_578641_49327924)
-Date: Wed, 29 Nov 2017 09:33:36 +0100
-MIME-Version: 1.0
-In-Reply-To: <e93273148ad44a54bfb39bc7018bfcc0@aptaiexm02b.ap.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sat, 25 Nov 2017 11:35:05 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 25 Nov 2017 18:34:44 +0200
+Message-Id: <20171125163444.24258-12-luca@coelho.fi> (sfid-20171125_173521_202004_677B0BD1)
+In-Reply-To: <20171125163444.24258-1-luca@coelho.fi>
+References: <20171125163444.24258-1-luca@coelho.fi>
+Subject: [PATCH 11/11] iwlwifi: rename the temporary name of A000 to the official 22000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 29.11.2017 um 07:58 schrieb Balaji Pothunoori:
-> Hi Sebastian,
->
-> If I am not wrong you are seeing the issue with WRT3200ACM (Marvell 88W8964) as client + QCA9984 (FW : 10.4-3.5.3-00038) as AP with below change you are seeing the crash while running traffic between the WRT3200ACM + QCA9984 ?
-> Do you used  any other client in place of WRT3200ACM ?
+From: Luca Coelho <luciano.coelho@intel.com>
 
-there is not much  traffic required. as it seems the firmware crashes 
-immediatly after association. the issue is also not present in 
-10.4-3.4-0082ww
+The family name A000 was just a place-holder when we didn't know what
+the official name would be yet.  Now we know that the family name is
+22000, so rename all occurrences accordingly.
 
-> Can you share the more details on firmware crash ?
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/Makefile        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c     | 216 +++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c      | 216 ---------------------
+ .../net/wireless/intel/iwlwifi/fw/api/commands.h   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h     |   4 +-
+ drivers/net/wireless/intel/iwlwifi/fw/smem.c       |   8 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  20 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h        |  12 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  10 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  36 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |   4 +-
+ 16 files changed, 272 insertions(+), 272 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+ delete mode 100644 drivers/net/wireless/intel/iwlwifi/cfg/a000.c
 
-so a firmware crashdump from log? i'll try to get it within the next 
-hours. just need to resetup the test scenario
-
-
-Sebastian
-
-
->
-> Regards,
-> Balaji.
->
-> -----Original Message-----
-> From: Sebastian Gottschall [mailto:s.gottschall@dd-wrt.com]
-> Sent: Wednesday, November 29, 2017 8:28 AM
-> To: Balaji Pothunoori <bpothuno@qti.qualcomm.com>; ath10k@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH] ath10k: handling qos at STA side based on AP WMM enable/disable
->
-> did you notice  that Marvell 88W8964 based clients will crash 10.4-3.5.3 firmwares?  (tested with 9984 and 10.4-3.5.3-00038) client device was a linksys wrt3200acm running dd-wrt for testing
->
-> Am 28.11.2017 um 11:07 schrieb bpothuno@qti.qualcomm.com:
->> From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
->>
->> Data packets are not sent by STA in case of STA joined to non QOS AP
->> (WMM disabled AP). This is happening because of STA is sending data
->> packets to firmware from host with qos enabled along with non qos
->> queue value(TID = 16).
->> Due to qos enabled, firmware is discarding the packet.
->>
->> This patch fixes this issue by updating the qos based on station WME
->> capability field if WMM is disabled in AP.
->>
->> This patch is required by 10.4 family chipsets like
->> QCA4019/QCA9888/QCA9884/QCA99X0.
->> Firmware Versoin : 10.4-3.5.1-00018.
->>
->> For 10.2.4 family chipsets QCA988X/QCA9887 and QCA6174 this patch has
->> no effect.
->>
->> Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
->> ---
->>    drivers/net/wireless/ath/ath10k/mac.c |    2 +-
->>    1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
->> b/drivers/net/wireless/ath/ath10k/mac.c
->> index 0a947ee..2616b99 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -2563,7 +2563,7 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
->>    		}
->>    		break;
->>    	case WMI_VDEV_TYPE_STA:
->> -		if (vif->bss_conf.qos)
->> +		if (sta->wme)
->>    			arg->peer_flags |= arvif->ar->wmi.peer_flags->qos;
->>    		break;
->>    	case WMI_VDEV_TYPE_IBSS:
->
-> --
-> Mit freundlichen Grüssen / Regards
->
-> Sebastian Gottschall / CTO
->
-> NewMedia-NET GmbH - DD-WRT
-> Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-> Registergericht: Amtsgericht Darmstadt, HRB 25473
-> Geschäftsführer: Peter Steinhäuser, Christian Scheele http://www.dd-wrt.com
-> email: s.gottschall@dd-wrt.com
-> Tel.: +496251-582650 / Fax: +496251-5826565
->
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
+index ff136f299a0a..e2c151ae8649 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/Makefile
+@@ -9,7 +9,7 @@ iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
+ iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
+ iwlwifi-objs		+= pcie/ctxt-info.o pcie/trans-gen2.o pcie/tx-gen2.o
+ iwlwifi-$(CONFIG_IWLDVM) += cfg/1000.o cfg/2000.o cfg/5000.o cfg/6000.o
+-iwlwifi-$(CONFIG_IWLMVM) += cfg/7000.o cfg/8000.o cfg/9000.o cfg/a000.o
++iwlwifi-$(CONFIG_IWLMVM) += cfg/7000.o cfg/8000.o cfg/9000.o cfg/22000.o
+ iwlwifi-objs		+= iwl-trans.o
+ iwlwifi-objs		+= fw/notif-wait.o
+ iwlwifi-$(CONFIG_IWLMVM) += fw/paging.o fw/smem.o fw/init.o fw/dbg.o
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+new file mode 100644
+index 000000000000..7c08711a9f94
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -0,0 +1,216 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2015-2017 Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2015-2017 Intel Deutschland GmbH
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++
++#include <linux/module.h>
++#include <linux/stringify.h>
++#include "iwl-config.h"
++#include "iwl-agn-hw.h"
++
++/* Highest firmware API version supported */
++#define IWL_22000_UCODE_API_MAX	34
++
++/* Lowest firmware API version supported */
++#define IWL_22000_UCODE_API_MIN	24
++
++/* NVM versions */
++#define IWL_22000_NVM_VERSION		0x0a1d
++#define IWL_22000_TX_POWER_VERSION	0xffff /* meaningless */
++
++/* Memory offsets and lengths */
++#define IWL_22000_DCCM_OFFSET		0x800000 /* LMAC1 */
++#define IWL_22000_DCCM_LEN		0x10000 /* LMAC1 */
++#define IWL_22000_DCCM2_OFFSET		0x880000
++#define IWL_22000_DCCM2_LEN		0x8000
++#define IWL_22000_SMEM_OFFSET		0x400000
++#define IWL_22000_SMEM_LEN		0xD0000
++
++#define IWL_22000_JF_FW_PRE	"iwlwifi-Qu-a0-jf-b0-"
++#define IWL_22000_HR_FW_PRE	"iwlwifi-Qu-a0-hr-a0-"
++#define IWL_22000_HR_CDB_FW_PRE	"iwlwifi-QuIcp-z0-hrcdb-a0-"
++#define IWL_22000_HR_F0_FW_PRE	"iwlwifi-QuQnj-f0-hr-a0-"
++#define IWL_22000_JF_B0_FW_PRE	"iwlwifi-QuQnj-a0-jf-b0-"
++#define IWL_22000_HR_A0_FW_PRE	"iwlwifi-QuQnj-a0-hr-a0-"
++
++#define IWL_22000_HR_MODULE_FIRMWARE(api) \
++	IWL_22000_HR_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL_22000_JF_MODULE_FIRMWARE(api) \
++	IWL_22000_JF_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL_22000_HR_F0_QNJ_MODULE_FIRMWARE(api) \
++	IWL_22000_HR_F0_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL_22000_JF_B0_QNJ_MODULE_FIRMWARE(api) \
++	IWL_22000_JF_B0_FW_PRE "-" __stringify(api) ".ucode"
++#define IWL_22000_HR_A0_QNJ_MODULE_FIRMWARE(api) \
++	IWL_22000_HR_A0_FW_PRE "-" __stringify(api) ".ucode"
++
++#define NVM_HW_SECTION_NUM_FAMILY_22000		10
++
++static const struct iwl_base_params iwl_22000_base_params = {
++	.eeprom_size = OTP_LOW_IMAGE_SIZE_FAMILY_22000,
++	.num_of_queues = 512,
++	.shadow_ram_support = true,
++	.led_compensation = 57,
++	.wd_timeout = IWL_LONG_WD_TIMEOUT,
++	.max_event_log_size = 512,
++	.shadow_reg_enable = true,
++	.pcie_l1_allowed = true,
++};
++
++static const struct iwl_ht_params iwl_22000_ht_params = {
++	.stbc = true,
++	.ldpc = true,
++	.ht40_bands = BIT(NL80211_BAND_2GHZ) | BIT(NL80211_BAND_5GHZ),
++};
++
++#define IWL_DEVICE_22000						\
++	.ucode_api_max = IWL_22000_UCODE_API_MAX,			\
++	.ucode_api_min = IWL_22000_UCODE_API_MIN,			\
++	.device_family = IWL_DEVICE_FAMILY_22000,			\
++	.max_inst_size = IWL60_RTC_INST_SIZE,				\
++	.max_data_size = IWL60_RTC_DATA_SIZE,				\
++	.base_params = &iwl_22000_base_params,				\
++	.led_mode = IWL_LED_RF_STATE,					\
++	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_22000,		\
++	.non_shared_ant = ANT_A,					\
++	.dccm_offset = IWL_22000_DCCM_OFFSET,				\
++	.dccm_len = IWL_22000_DCCM_LEN,					\
++	.dccm2_offset = IWL_22000_DCCM2_OFFSET,				\
++	.dccm2_len = IWL_22000_DCCM2_LEN,				\
++	.smem_offset = IWL_22000_SMEM_OFFSET,				\
++	.smem_len = IWL_22000_SMEM_LEN,					\
++	.features = IWL_TX_CSUM_NETIF_FLAGS | NETIF_F_RXCSUM,		\
++	.apmg_not_supported = true,					\
++	.mq_rx_supported = true,					\
++	.vht_mu_mimo_supported = true,					\
++	.mac_addr_from_csr = true,					\
++	.use_tfh = true,						\
++	.rf_id = true,							\
++	.gen2 = true,							\
++	.nvm_type = IWL_NVM_EXT,					\
++	.dbgc_supported = true,						\
++	.tx_cmd_queue_size = 32,					\
++	.min_umac_error_event_table = 0x400000
++
++const struct iwl_cfg iwl22000_2ac_cfg_hr = {
++	.name = "Intel(R) Dual Band Wireless AC 22000",
++	.fw_name_pre = IWL_22000_HR_FW_PRE,
++	IWL_DEVICE_22000,
++	.ht_params = &iwl_22000_ht_params,
++	.nvm_ver = IWL_22000_NVM_VERSION,
++	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
++const struct iwl_cfg iwl22000_2ac_cfg_hr_cdb = {
++	.name = "Intel(R) Dual Band Wireless AC 22000",
++	.fw_name_pre = IWL_22000_HR_CDB_FW_PRE,
++	IWL_DEVICE_22000,
++	.ht_params = &iwl_22000_ht_params,
++	.nvm_ver = IWL_22000_NVM_VERSION,
++	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++	.cdb = true,
++};
++
++const struct iwl_cfg iwl22000_2ac_cfg_jf = {
++	.name = "Intel(R) Dual Band Wireless AC 22000",
++	.fw_name_pre = IWL_22000_JF_FW_PRE,
++	IWL_DEVICE_22000,
++	.ht_params = &iwl_22000_ht_params,
++	.nvm_ver = IWL_22000_NVM_VERSION,
++	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
++const struct iwl_cfg iwl22000_2ax_cfg_hr = {
++	.name = "Intel(R) Dual Band Wireless AX 22000",
++	.fw_name_pre = IWL_22000_HR_FW_PRE,
++	IWL_DEVICE_22000,
++	.ht_params = &iwl_22000_ht_params,
++	.nvm_ver = IWL_22000_NVM_VERSION,
++	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
++const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_f0 = {
++	.name = "Intel(R) Dual Band Wireless AX 22000",
++	.fw_name_pre = IWL_22000_HR_F0_FW_PRE,
++	IWL_DEVICE_22000,
++	.ht_params = &iwl_22000_ht_params,
++	.nvm_ver = IWL_22000_NVM_VERSION,
++	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
++const struct iwl_cfg iwl22000_2ax_cfg_qnj_jf_b0 = {
++	.name = "Intel(R) Dual Band Wireless AX 22000",
++	.fw_name_pre = IWL_22000_JF_B0_FW_PRE,
++	IWL_DEVICE_22000,
++	.ht_params = &iwl_22000_ht_params,
++	.nvm_ver = IWL_22000_NVM_VERSION,
++	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
++const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0 = {
++	.name = "Intel(R) Dual Band Wireless AX 22000",
++	.fw_name_pre = IWL_22000_HR_A0_FW_PRE,
++	IWL_DEVICE_22000,
++	.ht_params = &iwl_22000_ht_params,
++	.nvm_ver = IWL_22000_NVM_VERSION,
++	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
++MODULE_FIRMWARE(IWL_22000_HR_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_JF_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_HR_F0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_JF_B0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_HR_A0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
+deleted file mode 100644
+index ea8206515171..000000000000
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
++++ /dev/null
+@@ -1,216 +0,0 @@
+-/******************************************************************************
+- *
+- * This file is provided under a dual BSD/GPLv2 license.  When using or
+- * redistributing this file, you may do so under either license.
+- *
+- * GPL LICENSE SUMMARY
+- *
+- * Copyright(c) 2015-2017 Intel Deutschland GmbH
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * BSD LICENSE
+- *
+- * Copyright(c) 2015-2017 Intel Deutschland GmbH
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- *
+- *  * Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- *  * Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in
+- *    the documentation and/or other materials provided with the
+- *    distribution.
+- *  * Neither the name Intel Corporation nor the names of its
+- *    contributors may be used to endorse or promote products derived
+- *    from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- *
+- *****************************************************************************/
+-
+-#include <linux/module.h>
+-#include <linux/stringify.h>
+-#include "iwl-config.h"
+-#include "iwl-agn-hw.h"
+-
+-/* Highest firmware API version supported */
+-#define IWL_A000_UCODE_API_MAX	34
+-
+-/* Lowest firmware API version supported */
+-#define IWL_A000_UCODE_API_MIN	24
+-
+-/* NVM versions */
+-#define IWL_A000_NVM_VERSION		0x0a1d
+-#define IWL_A000_TX_POWER_VERSION	0xffff /* meaningless */
+-
+-/* Memory offsets and lengths */
+-#define IWL_A000_DCCM_OFFSET		0x800000 /* LMAC1 */
+-#define IWL_A000_DCCM_LEN		0x10000 /* LMAC1 */
+-#define IWL_A000_DCCM2_OFFSET		0x880000
+-#define IWL_A000_DCCM2_LEN		0x8000
+-#define IWL_A000_SMEM_OFFSET		0x400000
+-#define IWL_A000_SMEM_LEN		0xD0000
+-
+-#define IWL_A000_JF_FW_PRE	"iwlwifi-Qu-a0-jf-b0-"
+-#define IWL_A000_HR_FW_PRE	"iwlwifi-Qu-a0-hr-a0-"
+-#define IWL_A000_HR_CDB_FW_PRE	"iwlwifi-QuIcp-z0-hrcdb-a0-"
+-#define IWL_A000_HR_F0_FW_PRE	"iwlwifi-QuQnj-f0-hr-a0-"
+-#define IWL_A000_JF_B0_FW_PRE	"iwlwifi-QuQnj-a0-jf-b0-"
+-#define IWL_A000_HR_A0_FW_PRE	"iwlwifi-QuQnj-a0-hr-a0-"
+-
+-#define IWL_A000_HR_MODULE_FIRMWARE(api) \
+-	IWL_A000_HR_FW_PRE "-" __stringify(api) ".ucode"
+-#define IWL_A000_JF_MODULE_FIRMWARE(api) \
+-	IWL_A000_JF_FW_PRE "-" __stringify(api) ".ucode"
+-#define IWL_A000_HR_F0_QNJ_MODULE_FIRMWARE(api) \
+-	IWL_A000_HR_F0_FW_PRE "-" __stringify(api) ".ucode"
+-#define IWL_A000_JF_B0_QNJ_MODULE_FIRMWARE(api) \
+-	IWL_A000_JF_B0_FW_PRE "-" __stringify(api) ".ucode"
+-#define IWL_A000_HR_A0_QNJ_MODULE_FIRMWARE(api) \
+-	IWL_A000_HR_A0_FW_PRE "-" __stringify(api) ".ucode"
+-
+-#define NVM_HW_SECTION_NUM_FAMILY_A000		10
+-
+-static const struct iwl_base_params iwl_a000_base_params = {
+-	.eeprom_size = OTP_LOW_IMAGE_SIZE_FAMILY_A000,
+-	.num_of_queues = 512,
+-	.shadow_ram_support = true,
+-	.led_compensation = 57,
+-	.wd_timeout = IWL_LONG_WD_TIMEOUT,
+-	.max_event_log_size = 512,
+-	.shadow_reg_enable = true,
+-	.pcie_l1_allowed = true,
+-};
+-
+-static const struct iwl_ht_params iwl_a000_ht_params = {
+-	.stbc = true,
+-	.ldpc = true,
+-	.ht40_bands = BIT(NL80211_BAND_2GHZ) | BIT(NL80211_BAND_5GHZ),
+-};
+-
+-#define IWL_DEVICE_A000							\
+-	.ucode_api_max = IWL_A000_UCODE_API_MAX,			\
+-	.ucode_api_min = IWL_A000_UCODE_API_MIN,			\
+-	.device_family = IWL_DEVICE_FAMILY_A000,			\
+-	.max_inst_size = IWL60_RTC_INST_SIZE,				\
+-	.max_data_size = IWL60_RTC_DATA_SIZE,				\
+-	.base_params = &iwl_a000_base_params,				\
+-	.led_mode = IWL_LED_RF_STATE,					\
+-	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_A000,		\
+-	.non_shared_ant = ANT_A,					\
+-	.dccm_offset = IWL_A000_DCCM_OFFSET,				\
+-	.dccm_len = IWL_A000_DCCM_LEN,					\
+-	.dccm2_offset = IWL_A000_DCCM2_OFFSET,				\
+-	.dccm2_len = IWL_A000_DCCM2_LEN,				\
+-	.smem_offset = IWL_A000_SMEM_OFFSET,				\
+-	.smem_len = IWL_A000_SMEM_LEN,					\
+-	.features = IWL_TX_CSUM_NETIF_FLAGS | NETIF_F_RXCSUM,		\
+-	.apmg_not_supported = true,					\
+-	.mq_rx_supported = true,					\
+-	.vht_mu_mimo_supported = true,					\
+-	.mac_addr_from_csr = true,					\
+-	.use_tfh = true,						\
+-	.rf_id = true,							\
+-	.gen2 = true,							\
+-	.nvm_type = IWL_NVM_EXT,					\
+-	.dbgc_supported = true,						\
+-	.tx_cmd_queue_size = 32,					\
+-	.min_umac_error_event_table = 0x400000
+-
+-const struct iwl_cfg iwla000_2ac_cfg_hr = {
+-	.name = "Intel(R) Dual Band Wireless AC a000",
+-	.fw_name_pre = IWL_A000_HR_FW_PRE,
+-	IWL_DEVICE_A000,
+-	.ht_params = &iwl_a000_ht_params,
+-	.nvm_ver = IWL_A000_NVM_VERSION,
+-	.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+-};
+-
+-const struct iwl_cfg iwla000_2ac_cfg_hr_cdb = {
+-	.name = "Intel(R) Dual Band Wireless AC a000",
+-	.fw_name_pre = IWL_A000_HR_CDB_FW_PRE,
+-	IWL_DEVICE_A000,
+-	.ht_params = &iwl_a000_ht_params,
+-	.nvm_ver = IWL_A000_NVM_VERSION,
+-	.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+-	.cdb = true,
+-};
+-
+-const struct iwl_cfg iwla000_2ac_cfg_jf = {
+-	.name = "Intel(R) Dual Band Wireless AC a000",
+-	.fw_name_pre = IWL_A000_JF_FW_PRE,
+-	IWL_DEVICE_A000,
+-	.ht_params = &iwl_a000_ht_params,
+-	.nvm_ver = IWL_A000_NVM_VERSION,
+-	.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+-};
+-
+-const struct iwl_cfg iwla000_2ax_cfg_hr = {
+-	.name = "Intel(R) Dual Band Wireless AX a000",
+-	.fw_name_pre = IWL_A000_HR_FW_PRE,
+-	IWL_DEVICE_A000,
+-	.ht_params = &iwl_a000_ht_params,
+-	.nvm_ver = IWL_A000_NVM_VERSION,
+-	.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+-};
+-
+-const struct iwl_cfg iwla000_2ax_cfg_qnj_hr_f0 = {
+-	.name = "Intel(R) Dual Band Wireless AX a000",
+-	.fw_name_pre = IWL_A000_HR_F0_FW_PRE,
+-	IWL_DEVICE_A000,
+-	.ht_params = &iwl_a000_ht_params,
+-	.nvm_ver = IWL_A000_NVM_VERSION,
+-	.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+-};
+-
+-const struct iwl_cfg iwla000_2ax_cfg_qnj_jf_b0 = {
+-	.name = "Intel(R) Dual Band Wireless AX a000",
+-	.fw_name_pre = IWL_A000_JF_B0_FW_PRE,
+-	IWL_DEVICE_A000,
+-	.ht_params = &iwl_a000_ht_params,
+-	.nvm_ver = IWL_A000_NVM_VERSION,
+-	.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+-};
+-
+-const struct iwl_cfg iwla000_2ax_cfg_qnj_hr_a0 = {
+-	.name = "Intel(R) Dual Band Wireless AX a000",
+-	.fw_name_pre = IWL_A000_HR_A0_FW_PRE,
+-	IWL_DEVICE_A000,
+-	.ht_params = &iwl_a000_ht_params,
+-	.nvm_ver = IWL_A000_NVM_VERSION,
+-	.nvm_calib_ver = IWL_A000_TX_POWER_VERSION,
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+-};
+-
+-MODULE_FIRMWARE(IWL_A000_HR_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
+-MODULE_FIRMWARE(IWL_A000_JF_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
+-MODULE_FIRMWARE(IWL_A000_HR_F0_QNJ_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
+-MODULE_FIRMWARE(IWL_A000_JF_B0_QNJ_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
+-MODULE_FIRMWARE(IWL_A000_HR_A0_QNJ_MODULE_FIRMWARE(IWL_A000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
+index 7ebbf097488b..f285bacc8726 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
+@@ -215,7 +215,7 @@ enum iwl_legacy_cmds {
+ 	/**
+ 	 * @SCD_QUEUE_CFG: &struct iwl_scd_txq_cfg_cmd for older hardware,
+ 	 *	&struct iwl_tx_queue_cfg_cmd with &struct iwl_tx_queue_cfg_rsp
+-	 *	for newer (A000) hardware.
++	 *	for newer (22000) hardware.
+ 	 */
+ 	SCD_QUEUE_CFG = 0x1d,
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index f5d5ba7e37ec..a2a40b515a3c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -121,7 +121,7 @@ enum iwl_tx_flags {
+ }; /* TX_FLAGS_BITS_API_S_VER_1 */
+ 
+ /**
+- * enum iwl_tx_cmd_flags - bitmasks for tx_flags in TX command for a000
++ * enum iwl_tx_cmd_flags - bitmasks for tx_flags in TX command for 22000
+  * @IWL_TX_FLAGS_CMD_RATE: use rate from the TX command
+  * @IWL_TX_FLAGS_ENCRYPT_DIS: frame should not be encrypted, even if it belongs
+  *	to a secured STA
+@@ -301,7 +301,7 @@ struct iwl_dram_sec_info {
+ } __packed; /* DRAM_SEC_INFO_API_S_VER_1 */
+ 
+ /**
+- * struct iwl_tx_cmd_gen2 - TX command struct to FW for a000 devices
++ * struct iwl_tx_cmd_gen2 - TX command struct to FW for 22000 devices
+  * ( TX_CMD = 0x1c )
+  * @len: in bytes of the payload, see below for details
+  * @offload_assist: TX offload configuration
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/smem.c b/drivers/net/wireless/intel/iwlwifi/fw/smem.c
+index 76675736ba4f..fb4b6442b4d7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/smem.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/smem.c
+@@ -63,8 +63,8 @@
+ #include "runtime.h"
+ #include "fw/api/commands.h"
+ 
+-static void iwl_parse_shared_mem_a000(struct iwl_fw_runtime *fwrt,
+-				      struct iwl_rx_packet *pkt)
++static void iwl_parse_shared_mem_22000(struct iwl_fw_runtime *fwrt,
++				       struct iwl_rx_packet *pkt)
+ {
+ 	struct iwl_shared_mem_cfg *mem_cfg = (void *)pkt->data;
+ 	int i, lmac;
+@@ -143,8 +143,8 @@ void iwl_get_shared_mem_conf(struct iwl_fw_runtime *fwrt)
+ 		return;
+ 
+ 	pkt = cmd.resp_pkt;
+-	if (fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000)
+-		iwl_parse_shared_mem_a000(fwrt, pkt);
++	if (fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_22000)
++		iwl_parse_shared_mem_22000(fwrt, pkt);
+ 	else
+ 		iwl_parse_shared_mem(fwrt, pkt);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index d1263a554420..9cc4647ded7e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -89,7 +89,7 @@ enum iwl_device_family {
+ 	IWL_DEVICE_FAMILY_7000,
+ 	IWL_DEVICE_FAMILY_8000,
+ 	IWL_DEVICE_FAMILY_9000,
+-	IWL_DEVICE_FAMILY_A000,
++	IWL_DEVICE_FAMILY_22000,
+ };
+ 
+ /*
+@@ -266,7 +266,7 @@ struct iwl_tt_params {
+ #define OTP_LOW_IMAGE_SIZE_FAMILY_7000	(16 * 512 * sizeof(u16)) /* 16 KB */
+ #define OTP_LOW_IMAGE_SIZE_FAMILY_8000	(32 * 512 * sizeof(u16)) /* 32 KB */
+ #define OTP_LOW_IMAGE_SIZE_FAMILY_9000	OTP_LOW_IMAGE_SIZE_FAMILY_8000
+-#define OTP_LOW_IMAGE_SIZE_FAMILY_A000	OTP_LOW_IMAGE_SIZE_FAMILY_9000
++#define OTP_LOW_IMAGE_SIZE_FAMILY_22000	OTP_LOW_IMAGE_SIZE_FAMILY_9000
+ 
+ struct iwl_eeprom_params {
+ 	const u8 regulatory_bands[7];
+@@ -330,7 +330,7 @@ struct iwl_pwr_tx_backoff {
+  * @vht_mu_mimo_supported: VHT MU-MIMO support
+  * @rf_id: need to read rf_id to determine the firmware image
+  * @integrated: discrete or integrated
+- * @gen2: a000 and on transport operation
++ * @gen2: 22000 and on transport operation
+  * @cdb: CDB support
+  * @nvm_type: see &enum iwl_nvm_type
+  * @tx_cmd_queue_size: size of the cmd queue. If zero, use the same value as
+@@ -472,13 +472,13 @@ extern const struct iwl_cfg iwl9260_2ac_cfg;
+ extern const struct iwl_cfg iwl9270_2ac_cfg;
+ extern const struct iwl_cfg iwl9460_2ac_cfg;
+ extern const struct iwl_cfg iwl9560_2ac_cfg;
+-extern const struct iwl_cfg iwla000_2ac_cfg_hr;
+-extern const struct iwl_cfg iwla000_2ac_cfg_hr_cdb;
+-extern const struct iwl_cfg iwla000_2ac_cfg_jf;
+-extern const struct iwl_cfg iwla000_2ax_cfg_hr;
+-extern const struct iwl_cfg iwla000_2ax_cfg_qnj_hr_f0;
+-extern const struct iwl_cfg iwla000_2ax_cfg_qnj_jf_b0;
+-extern const struct iwl_cfg iwla000_2ax_cfg_qnj_hr_a0;
++extern const struct iwl_cfg iwl22000_2ac_cfg_hr;
++extern const struct iwl_cfg iwl22000_2ac_cfg_hr_cdb;
++extern const struct iwl_cfg iwl22000_2ac_cfg_jf;
++extern const struct iwl_cfg iwl22000_2ax_cfg_hr;
++extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_f0;
++extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_jf_b0;
++extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0;
+ #endif /* CONFIG_IWLMVM */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
+index 66e5db41e559..11789ffb6512 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
+@@ -121,7 +121,7 @@
+ #define FH_MEM_CBBC_16_19_UPPER_BOUND		(FH_MEM_LOWER_BOUND + 0xC00)
+ #define FH_MEM_CBBC_20_31_LOWER_BOUND		(FH_MEM_LOWER_BOUND + 0xB20)
+ #define FH_MEM_CBBC_20_31_UPPER_BOUND		(FH_MEM_LOWER_BOUND + 0xB80)
+-/* a000 TFD table address, 64 bit */
++/* 22000 TFD table address, 64 bit */
+ #define TFH_TFDQ_CBB_TABLE			(0x1C00)
+ 
+ /* Find TFD CB base pointer for given queue */
+@@ -140,7 +140,7 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(struct iwl_trans *trans,
+ 	return FH_MEM_CBBC_20_31_LOWER_BOUND + 4 * (chnl - 20);
+ }
+ 
+-/* a000 configuration registers */
++/* 22000 configuration registers */
+ 
+ /*
+  * TFH Configuration register.
+@@ -697,8 +697,8 @@ struct iwl_tfh_tb {
+  * Each Tx queue uses a circular buffer of 256 TFDs stored in host DRAM.
+  * Both driver and device share these circular buffers, each of which must be
+  * contiguous 256 TFDs.
+- * For pre a000 HW it is 256 x 128 bytes-per-TFD = 32 KBytes
+- * For a000 HW and on it is 256 x 256 bytes-per-TFD = 65 KBytes
++ * For pre 22000 HW it is 256 x 128 bytes-per-TFD = 32 KBytes
++ * For 22000 HW and on it is 256 x 256 bytes-per-TFD = 65 KBytes
+  *
+  * Driver must indicate the physical address of the base of each
+  * circular buffer via the FH_MEM_CBBC_QUEUE registers.
+@@ -750,10 +750,10 @@ struct iwl_tfh_tfd {
+ /**
+  * struct iwlagn_schedq_bc_tbl scheduler byte count table
+  *	base physical address provided by SCD_DRAM_BASE_ADDR
+- * For devices up to a000:
++ * For devices up to 22000:
+  * @tfd_offset  0-12 - tx command byte count
+  *		12-16 - station index
+- * For a000 and on:
++ * For 22000 and on:
+  * @tfd_offset  0-12 - tx command byte count
+  *		12-13 - number of 64 byte chunks
+  *		14-16 - reserved
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index ca0b5536a8a6..196b90b0451f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -549,7 +549,7 @@ struct iwl_trans_ops {
+ 			   unsigned int queue_wdg_timeout);
+ 	void (*txq_disable)(struct iwl_trans *trans, int queue,
+ 			    bool configure_scd);
+-	/* a000 functions */
++	/* 22000 functions */
+ 	int (*txq_alloc)(struct iwl_trans *trans,
+ 			 struct iwl_tx_queue_cfg_cmd *cmd,
+ 			 int cmd_id,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index c0de7bb86cf7..3019ed9bccd2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -297,7 +297,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 	if (ret) {
+ 		struct iwl_trans *trans = mvm->trans;
+ 
+-		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_A000)
++		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_22000)
+ 			IWL_ERR(mvm,
+ 				"SecBoot CPU1 Status: 0x%x, CPU2 Status: 0x%x\n",
+ 				iwl_read_prph(trans, UMAG_SB_CPU_1_STATUS),
+@@ -998,9 +998,9 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 		goto error;
+ 
+ 	/* Init RSS configuration */
+-	/* TODO - remove a000 disablement when we have RXQ config API */
++	/* TODO - remove 22000 disablement when we have RXQ config API */
+ 	if (iwl_mvm_has_new_rx_api(mvm) &&
+-	    mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_A000) {
++	    mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_22000) {
+ 		ret = iwl_send_rss_cfg_cmd(mvm);
+ 		if (ret) {
+ 			IWL_ERR(mvm, "Failed to configure RSS queues: %d\n",
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index e0226d2315bb..5a646dc6ad87 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4281,7 +4281,7 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
+ 			   mvm->trans->num_rx_queues);
+ 
+ 	/* TODO - remove this when we have RXQ config API */
+-	if (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_A000) {
++	if (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_22000) {
+ 		qmask = BIT(0);
+ 		if (notif->sync)
+ 			atomic_set(&mvm->queue_sync_counter, 1);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index bd6ba550c809..d556a1dd5e0d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1239,7 +1239,7 @@ static inline bool iwl_mvm_has_new_tx_api(struct iwl_mvm *mvm)
+ static inline bool iwl_mvm_has_unified_ucode(struct iwl_mvm *mvm)
+ {
+ 	/* TODO - better define this */
+-	return mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_A000;
++	return mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22000;
+ }
+ 
+ static inline bool iwl_mvm_is_cdb_supported(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index c19f98489d4e..8351232472eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1760,7 +1760,7 @@ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
+ 	}
+ 
+ 	/*
+-	 * For a000 firmware and on we cannot add queue to a station unknown
++	 * For 22000 firmware and on we cannot add queue to a station unknown
+ 	 * to firmware so enable queue here - after the station was added
+ 	 */
+ 	if (iwl_mvm_has_new_tx_api(mvm))
+@@ -1858,7 +1858,7 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		return ret;
+ 
+ 	/*
+-	 * For a000 firmware and on we cannot add queue to a station unknown
++	 * For 22000 firmware and on we cannot add queue to a station unknown
+ 	 * to firmware so enable queue here - after the station was added
+ 	 */
+ 	if (iwl_mvm_has_new_tx_api(mvm)) {
+@@ -2037,7 +2037,7 @@ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	/*
+ 	 * Enable cab queue after the ADD_STA command is sent.
+-	 * This is needed for a000 firmware which won't accept SCD_QUEUE_CFG
++	 * This is needed for 22000 firmware which won't accept SCD_QUEUE_CFG
+ 	 * command with unknown station id, and for FW that doesn't support
+ 	 * station API since the cab queue is not included in the
+ 	 * tfd_queue_mask.
+@@ -2503,7 +2503,7 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			    tid_data->next_reclaimed);
+ 
+ 	/*
+-	 * In A000 HW, the next_reclaimed index is only 8 bit, so we'll need
++	 * In 22000 HW, the next_reclaimed index is only 8 bit, so we'll need
+ 	 * to align the wrap around of ssn so we compare relevant values.
+ 	 */
+ 	normalized_ssn = tid_data->ssn;
+@@ -3588,7 +3588,7 @@ u16 iwl_mvm_tid_queued(struct iwl_mvm *mvm, struct iwl_mvm_tid_data *tid_data)
+ 	u16 sn = IEEE80211_SEQ_TO_SN(tid_data->seq_number);
+ 
+ 	/*
+-	 * In A000 HW, the next_reclaimed index is only 8 bit, so we'll need
++	 * In 22000 HW, the next_reclaimed index is only 8 bit, so we'll need
+ 	 * to align the wrap around of ssn so we compare relevant values.
+ 	 */
+ 	if (mvm->trans->cfg->gen2)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 0407ea30bb82..e359e2538f9a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1131,7 +1131,7 @@ static void iwl_mvm_check_ratid_empty(struct iwl_mvm *mvm,
+ 	}
+ 
+ 	/*
+-	 * In A000 HW, the next_reclaimed index is only 8 bit, so we'll need
++	 * In 22000 HW, the next_reclaimed index is only 8 bit, so we'll need
+ 	 * to align the wrap around of ssn so we compare relevant values.
+ 	 */
+ 	normalized_ssn = tid_data->ssn;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 4a21c12276d7..a0f5081f4355 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -577,19 +577,19 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg)},
+ 
+-/* a000 Series */
+-	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr_cdb)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0310, iwla000_2ac_cfg_jf)},
+-	{IWL_PCI_DEVICE(0x2720, 0x0000, iwla000_2ax_cfg_hr)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0070, iwla000_2ax_cfg_hr)},
+-	{IWL_PCI_DEVICE(0x2720, 0x0078, iwla000_2ax_cfg_hr)},
+-	{IWL_PCI_DEVICE(0x2720, 0x0070, iwla000_2ac_cfg_hr_cdb)},
+-	{IWL_PCI_DEVICE(0x2720, 0x0030, iwla000_2ac_cfg_hr_cdb)},
+-	{IWL_PCI_DEVICE(0x2720, 0x1080, iwla000_2ax_cfg_hr)},
+-	{IWL_PCI_DEVICE(0x2720, 0x0090, iwla000_2ac_cfg_hr_cdb)},
+-	{IWL_PCI_DEVICE(0x2720, 0x0310, iwla000_2ac_cfg_hr_cdb)},
+-	{IWL_PCI_DEVICE(0x40C0, 0x0000, iwla000_2ax_cfg_hr)},
+-	{IWL_PCI_DEVICE(0x40C0, 0x0A10, iwla000_2ax_cfg_hr)},
++/* 22000 Series */
++	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwl22000_2ac_cfg_hr_cdb)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0310, iwl22000_2ac_cfg_jf)},
++	{IWL_PCI_DEVICE(0x2720, 0x0000, iwl22000_2ax_cfg_hr)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0070, iwl22000_2ax_cfg_hr)},
++	{IWL_PCI_DEVICE(0x2720, 0x0078, iwl22000_2ax_cfg_hr)},
++	{IWL_PCI_DEVICE(0x2720, 0x0070, iwl22000_2ac_cfg_hr_cdb)},
++	{IWL_PCI_DEVICE(0x2720, 0x0030, iwl22000_2ac_cfg_hr_cdb)},
++	{IWL_PCI_DEVICE(0x2720, 0x1080, iwl22000_2ax_cfg_hr)},
++	{IWL_PCI_DEVICE(0x2720, 0x0090, iwl22000_2ac_cfg_hr_cdb)},
++	{IWL_PCI_DEVICE(0x2720, 0x0310, iwl22000_2ac_cfg_hr_cdb)},
++	{IWL_PCI_DEVICE(0x40C0, 0x0000, iwl22000_2ax_cfg_hr)},
++	{IWL_PCI_DEVICE(0x40C0, 0x0A10, iwl22000_2ax_cfg_hr)},
+ 
+ #endif /* CONFIG_IWLMVM */
+ 
+@@ -631,7 +631,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		iwl_trans->cfg = cfg_7265d;
+ 	}
+ 
+-	if (iwl_trans->cfg->rf_id && cfg == &iwla000_2ac_cfg_hr_cdb &&
++	if (iwl_trans->cfg->rf_id && cfg == &iwl22000_2ac_cfg_hr_cdb &&
+ 	    iwl_trans->hw_rev != CSR_HW_REV_TYPE_HR_CDB) {
+ 		u32 rf_id_chp = CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id);
+ 		u32 jf_chp_id = CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_JF);
+@@ -639,14 +639,14 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 		if (rf_id_chp == jf_chp_id) {
+ 			if (iwl_trans->hw_rev == CSR_HW_REV_TYPE_QNJ)
+-				cfg = &iwla000_2ax_cfg_qnj_jf_b0;
++				cfg = &iwl22000_2ax_cfg_qnj_jf_b0;
+ 			else
+-				cfg = &iwla000_2ac_cfg_jf;
++				cfg = &iwl22000_2ac_cfg_jf;
+ 		} else if (rf_id_chp == hr_chp_id) {
+ 			if (iwl_trans->hw_rev == CSR_HW_REV_TYPE_QNJ)
+-				cfg = &iwla000_2ax_cfg_qnj_hr_a0;
++				cfg = &iwl22000_2ax_cfg_qnj_hr_a0;
+ 			else
+-				cfg = &iwla000_2ac_cfg_hr;
++				cfg = &iwl22000_2ac_cfg_hr;
+ 		}
+ 		iwl_trans->cfg = cfg;
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 8d992d5ba064..05e34a243042 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3240,9 +3240,9 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 
+ 		hw_status = iwl_read_prph(trans, UMAG_GEN_HW_STATUS);
+ 		if (hw_status & UMAG_GEN_HW_IS_FPGA)
+-			trans->cfg = &iwla000_2ax_cfg_qnj_hr_f0;
++			trans->cfg = &iwl22000_2ax_cfg_qnj_hr_f0;
+ 		else
+-			trans->cfg = &iwla000_2ac_cfg_hr;
++			trans->cfg = &iwl22000_2ac_cfg_hr;
+ 	}
+ #endif
+ 
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+2.15.0
