@@ -1,36 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58148 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753304AbdKIKyh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 05:54:37 -0500
-Date: Thu, 9 Nov 2017 11:54:36 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Richard Genoud <richard.genoud@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
-Message-ID: <20171109105435.GA2875@redhat.com> (sfid-20171109_115500_553517_6454A1C2)
-References: <1509983829.10974.2.camel@gmail.com>
- <20171107085327.GA11380@redhat.com>
- <CACQ1gAi6XtjCHPji3BP71jDG7srg+BshesviasXiSqnw2zs9_Q@mail.gmail.com>
- <20171107101320.GA12140@redhat.com>
- <1510052483.24015.1.camel@gmail.com>
- <20171108103729.GA2641@redhat.com>
- <1510139235.10467.1.camel@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1510139235.10467.1.camel@gmail.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:47354 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751277AbdKYPfa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 25 Nov 2017 10:35:30 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 25 Nov 2017 17:35:04 +0200
+Message-Id: <20171125153510.25359-1-luca@coelho.fi> (sfid-20171125_163545_329638_1C4D6308)
+Subject: [PATCH 0/6] iwlwifi: fixes intended for 4.15 2017-11-25
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 08, 2017 at 12:07:15PM +0100, Richard Genoud wrote:
-> (maybe if there was more than one CPU on the board, I could do
-> something, but that's not the case)
+From: Luca Coelho <luciano.coelho@intel.com>
 
-I reproduced the problem with nosmp option. I think we need
-to check also for ENOENT error (not only for ENODEV).
-Will post the fix in a second.
+Hi,
 
-Thanks for reporting and debugging
-Stanislaw 
+This is the second batch of fixes intended for 4.15.
+
+These are the fixes:
+
+* One fix in rate-scaling;
+* One fix for the TX queue hang detection for AP/GO modes;
+* Fix the TX queue hang timeout used in monitor interfaces;
+* Fix packet injection;
+* Remove a wrong error message when dumping PCI registers;
+* Fix race condition with RF-kill;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+Emmanuel Grumbach (3):
+  iwlwifi: mvm: don't use transmit queue hang detection when it is not
+    possible
+  iwlwifi: mvm: fix the TX queue hang timeout for MONITOR vif type
+  iwlwifi: mvm: fix packet injection
+
+Sara Sharon (2):
+  iwlwifi: pcie: fix erroneous "Read failed message"
+  iwlwifi: fix access to prph when transport is stopped
+
+Shaul Triebitz (1):
+  iwlwifi: mvm: set correct chains in Rx status
+
+ drivers/net/wireless/intel/iwlwifi/fw/api/txq.h    |  4 ++
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h        |  2 -
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 53 ++++++++++++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 13 +++++-
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |  6 +++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 10 ++++
+ 11 files changed, 80 insertions(+), 19 deletions(-)
+
+-- 
+2.15.0
