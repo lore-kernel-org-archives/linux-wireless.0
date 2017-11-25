@@ -1,90 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:64767 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932376AbdKATXf (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47376 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751277AbdKYPfc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Nov 2017 15:23:35 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH v2 05/12] wil6210: fix length check in __wmi_send
-Date: Wed,  1 Nov 2017 21:23:15 +0200
-Message-Id: <1509564202-30078-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171101_202340_444053_E2F5ECAC)
-In-Reply-To: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1509564202-30078-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Sat, 25 Nov 2017 10:35:32 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 25 Nov 2017 17:35:07 +0200
+Message-Id: <20171125153510.25359-4-luca@coelho.fi> (sfid-20171125_163535_998227_BD945AEC)
+In-Reply-To: <20171125153510.25359-1-luca@coelho.fi>
+References: <20171125153510.25359-1-luca@coelho.fi>
+Subject: [PATCH 3/6] iwlwifi: mvm: fix the TX queue hang timeout for MONITOR vif type
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The current length check:
-sizeof(cmd) + len > r->entry_size
-will allow very large values of len (> U16_MAX - sizeof(cmd))
-and can cause a buffer overflow. Fix the check to cover this case.
-In addition, ensure the mailbox entry_size is not too small,
-since this can also bypass the above check.
+The MONITOR type is missing in the interface type switch.
+Add it.
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/interrupt.c | 22 +++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wmi.c       |  2 +-
- 2 files changed, 22 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 59def4f..5cf3417 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -358,6 +358,25 @@ static void wil_cache_mbox_regs(struct wil6210_priv *wil)
- 	wil_mbox_ring_le2cpus(&wil->mbox_ctl.tx);
- }
- 
-+static bool wil_validate_mbox_regs(struct wil6210_priv *wil)
-+{
-+	size_t min_size = sizeof(struct wil6210_mbox_hdr) +
-+		sizeof(struct wmi_cmd_hdr);
-+
-+	if (wil->mbox_ctl.rx.entry_size < min_size) {
-+		wil_err(wil, "rx mbox entry too small (%d)\n",
-+			wil->mbox_ctl.rx.entry_size);
-+		return false;
-+	}
-+	if (wil->mbox_ctl.tx.entry_size < min_size) {
-+		wil_err(wil, "tx mbox entry too small (%d)\n",
-+			wil->mbox_ctl.tx.entry_size);
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
- static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
- {
- 	struct wil6210_priv *wil = cookie;
-@@ -393,7 +412,8 @@ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
- 	if (isr & ISR_MISC_FW_READY) {
- 		wil_dbg_irq(wil, "IRQ: FW ready\n");
- 		wil_cache_mbox_regs(wil);
--		set_bit(wil_status_mbox_ready, wil->status);
-+		if (wil_validate_mbox_regs(wil))
-+			set_bit(wil_status_mbox_ready, wil->status);
- 		/**
- 		 * Actual FW ready indicated by the
- 		 * WMI_FW_READY_EVENTID
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 8a780f2..dbdf71d 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -448,7 +448,7 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
- 	uint retry;
- 	int rc = 0;
- 
--	if (sizeof(cmd) + len > r->entry_size) {
-+	if (len > r->entry_size - sizeof(cmd)) {
- 		wil_err(wil, "WMI size too large: %d bytes, max is %d\n",
- 			(int)(sizeof(cmd) + len), r->entry_size);
- 		return -ERANGE;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 19c1d1f76e15..03ffd84786ca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -1172,6 +1172,8 @@ unsigned int iwl_mvm_get_wd_timeout(struct iwl_mvm *mvm,
+ 		return le32_to_cpu(txq_timer->p2p_go);
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		return le32_to_cpu(txq_timer->p2p_device);
++	case NL80211_IFTYPE_MONITOR:
++		return default_timeout;
+ 	default:
+ 		WARN_ON(1);
+ 		return mvm->cfg->base_params->wd_timeout;
 -- 
-1.9.1
+2.15.0
