@@ -1,161 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54362 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755383AbdKNN0H (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47456 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751835AbdKYQex (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Nov 2017 08:26:07 -0500
-Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v3 11/12] wil6210: remove suspend time statistics
-Date: Tue, 14 Nov 2017 15:25:43 +0200
-Message-Id: <1510665944-30198-12-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171114_142617_701562_877C6CA1)
-In-Reply-To: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1510665944-30198-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Sat, 25 Nov 2017 11:34:53 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 25 Nov 2017 18:34:37 +0200
+Message-Id: <20171125163444.24258-5-luca@coelho.fi> (sfid-20171125_173508_519978_AB36CABB)
+In-Reply-To: <20171125163444.24258-1-luca@coelho.fi>
+References: <20171125163444.24258-1-luca@coelho.fi>
+Subject: [PATCH 04/11] iwlwifi: mvm: revert support new Coex firmware API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Currently suspend time statistics are showed through debugfs.
-Remove time statistics in suspend state since the timing may
-not be accurate in that state.
+This new API will not be used, remove the code that
+supports it.
 
-Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 17 ++---------------
- drivers/net/wireless/ath/wil6210/main.c    |  1 -
- drivers/net/wireless/ath/wil6210/pm.c      | 20 ++------------------
- drivers/net/wireless/ath/wil6210/wil6210.h |  5 -----
- 4 files changed, 4 insertions(+), 39 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/coex.h | 30 ---------------------
+ drivers/net/wireless/intel/iwlwifi/fw/file.h     |  3 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c    | 33 +++++-------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 12 +++------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  6 -----
+ 5 files changed, 9 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 06b9c56..edaab0f 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1632,8 +1632,6 @@ static ssize_t wil_write_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
--	wil->suspend_stats.min_suspend_time = ULONG_MAX;
--	wil->suspend_stats.collection_start = ktime_get();
- 
- 	return len;
- }
-@@ -1645,27 +1643,18 @@ static ssize_t wil_read_suspend_stats(struct file *file,
- 	struct wil6210_priv *wil = file->private_data;
- 	static char text[400];
- 	int n;
--	unsigned long long stats_collection_time =
--		ktime_to_us(ktime_sub(ktime_get(),
--				      wil->suspend_stats.collection_start));
- 
- 	n = snprintf(text, sizeof(text),
- 		     "Suspend statistics:\n"
- 		     "successful suspends:%ld failed suspends:%ld\n"
- 		     "successful resumes:%ld failed resumes:%ld\n"
--		     "rejected by host:%ld rejected by device:%ld\n"
--		     "total suspend time:%lld min suspend time:%lld\n"
--		     "max suspend time:%lld stats collection time: %lld\n",
-+		     "rejected by host:%ld rejected by device:%ld\n",
- 		     wil->suspend_stats.successful_suspends,
- 		     wil->suspend_stats.failed_suspends,
- 		     wil->suspend_stats.successful_resumes,
- 		     wil->suspend_stats.failed_resumes,
- 		     wil->suspend_stats.rejected_by_host,
--		     wil->suspend_stats.rejected_by_device,
--		     wil->suspend_stats.total_suspend_time,
--		     wil->suspend_stats.min_suspend_time,
--		     wil->suspend_stats.max_suspend_time,
--		     stats_collection_time);
-+		     wil->suspend_stats.rejected_by_device);
- 
- 	n = min_t(int, n, sizeof(text));
- 
-@@ -1836,8 +1825,6 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 
- 	wil6210_debugfs_create_ITR_CNT(wil, dbg);
- 
--	wil->suspend_stats.collection_start = ktime_get();
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index e92fd35..1b53cd3 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -579,7 +579,6 @@ int wil_priv_init(struct wil6210_priv *wil)
- 	wil->wakeup_trigger = WMI_WAKEUP_TRIGGER_UCAST |
- 			      WMI_WAKEUP_TRIGGER_BCAST;
- 	memset(&wil->suspend_stats, 0, sizeof(wil->suspend_stats));
--	wil->suspend_stats.min_suspend_time = ULONG_MAX;
- 	wil->vring_idle_trsh = 16;
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index 6fd5420..9fba237 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -323,16 +323,12 @@ int wil_suspend(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
- 	wil_dbg_pm(wil, "suspend: %s => %d\n",
- 		   is_runtime ? "runtime" : "system", rc);
- 
--	if (!rc)
--		wil->suspend_stats.suspend_start_time = ktime_get();
--
- 	return rc;
- }
- 
- int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
- {
- 	int rc = 0;
--	unsigned long long suspend_time_usec = 0;
- 
- 	wil_dbg_pm(wil, "resume: %s\n", is_runtime ? "runtime" : "system");
- 
-@@ -350,21 +346,9 @@ int wil_resume(struct wil6210_priv *wil, bool is_runtime, bool keep_radio_on)
- 	else
- 		rc = wil_resume_radio_off(wil);
- 
--	if (rc)
--		goto out;
--
--	suspend_time_usec =
--		ktime_to_us(ktime_sub(ktime_get(),
--				      wil->suspend_stats.suspend_start_time));
--	wil->suspend_stats.total_suspend_time += suspend_time_usec;
--	if (suspend_time_usec < wil->suspend_stats.min_suspend_time)
--		wil->suspend_stats.min_suspend_time = suspend_time_usec;
--	if (suspend_time_usec > wil->suspend_stats.max_suspend_time)
--		wil->suspend_stats.max_suspend_time = suspend_time_usec;
--
- out:
--	wil_dbg_pm(wil, "resume: %s => %d, suspend time %lld usec\n",
--		   is_runtime ? "runtime" : "system", rc, suspend_time_usec);
-+	wil_dbg_pm(wil, "resume: %s => %d\n", is_runtime ? "runtime" : "system",
-+		   rc);
- 	return rc;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 7e017b1..ea04117 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -89,11 +89,6 @@ struct wil_suspend_stats {
- 	unsigned long failed_resumes;
- 	unsigned long rejected_by_device;
- 	unsigned long rejected_by_host;
--	unsigned long long total_suspend_time;
--	unsigned long long min_suspend_time;
--	unsigned long long max_suspend_time;
--	ktime_t collection_start;
--	ktime_t suspend_start_time;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
+index d09555afe2c5..87c1ddea75ae 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
+@@ -188,11 +188,6 @@ enum iwl_bt_mxbox_dw3 {
+ 	BT_MBOX(3, UPDATE_REQUEST, 21, 1),
  };
  
- /* Calculate MAC buffer size for the firmware. It includes all overhead,
+-enum iwl_bt_mxbox_dw4 {
+-	BT_MBOX(4, ATS_BT_INTERVAL, 0, 7),
+-	BT_MBOX(4, ATS_BT_ACTIVE_MAX_TH, 7, 7),
+-};
+-
+ #define BT_MBOX_MSG(_notif, _num, _field)				     \
+ 	((le32_to_cpu((_notif)->mbox_msg[(_num)]) & BT_MBOX##_num##_##_field)\
+ 	>> BT_MBOX##_num##_##_field##_POS)
+@@ -232,31 +227,6 @@ enum iwl_bt_ci_compliance {
+  * @reserved: reserved
+  */
+ struct iwl_bt_coex_profile_notif {
+-	__le32 mbox_msg[8];
+-	__le32 msg_idx;
+-	__le32 bt_ci_compliance;
+-
+-	__le32 primary_ch_lut;
+-	__le32 secondary_ch_lut;
+-	__le32 bt_activity_grading;
+-	u8 ttc_status;
+-	u8 rrc_status;
+-	__le16 reserved;
+-} __packed; /* BT_COEX_PROFILE_NTFY_API_S_VER_5 */
+-
+-/**
+- * struct iwl_bt_coex_profile_notif - notification about BT coex
+- * @mbox_msg: message from BT to WiFi
+- * @msg_idx: the index of the message
+- * @bt_ci_compliance: enum %iwl_bt_ci_compliance
+- * @primary_ch_lut: LUT used for primary channel &enum iwl_bt_coex_lut_type
+- * @secondary_ch_lut: LUT used for secondary channel &enum iwl_bt_coex_lut_type
+- * @bt_activity_grading: the activity of BT &enum iwl_bt_activity_grading
+- * @ttc_status: is TTC enabled - one bit per PHY
+- * @rrc_status: is RRC enabled - one bit per PHY
+- * @reserved: reserved
+- */
+-struct iwl_bt_coex_profile_notif_v4 {
+ 	__le32 mbox_msg[4];
+ 	__le32 msg_idx;
+ 	__le32 bt_ci_compliance;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 740d97093d1c..e52678c8f899 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -246,8 +246,6 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
+  * @IWL_UCODE_TLV_API_STA_TYPE: This ucode supports station type assignement.
+  * @IWL_UCODE_TLV_API_NAN2_VER2: This ucode supports NAN API version 2
+  * @IWL_UCODE_TLV_API_NEW_RX_STATS: should new RX STATISTICS API be used
+- * @IWL_UCODE_TLV_API_ATS_COEX_EXTERNAL: the coex notification is enlared to
+- *	include information about ACL time sharing.
+  * @IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY: Quota command includes a field
+  *	indicating low latency direction.
+  *
+@@ -266,7 +264,6 @@ enum iwl_ucode_tlv_api {
+ 	/* API Set 1 */
+ 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
+ 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
+-	IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL	= (__force iwl_ucode_tlv_api_t)37,
+ 	IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY	= (__force iwl_ucode_tlv_api_t)38,
+ 
+ 	NUM_IWL_UCODE_TLV_API
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+index 79c80f181f7d..890dbfff3a06 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+@@ -7,7 +7,6 @@
+  *
+  * Copyright(c) 2013 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2017        Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,7 +33,6 @@
+  *
+  * Copyright(c) 2013 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2017        Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -514,36 +512,17 @@ void iwl_mvm_rx_bt_coex_notif(struct iwl_mvm *mvm,
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_bt_coex_profile_notif *notif = (void *)pkt->data;
+ 
+-	if (!iwl_mvm_has_new_ats_coex_api(mvm)) {
+-		struct iwl_bt_coex_profile_notif_v4 *v4 = (void *)pkt->data;
+-
+-		mvm->last_bt_notif.mbox_msg[0] = v4->mbox_msg[0];
+-		mvm->last_bt_notif.mbox_msg[1] = v4->mbox_msg[1];
+-		mvm->last_bt_notif.mbox_msg[2] = v4->mbox_msg[2];
+-		mvm->last_bt_notif.mbox_msg[3] = v4->mbox_msg[3];
+-		mvm->last_bt_notif.msg_idx = v4->msg_idx;
+-		mvm->last_bt_notif.bt_ci_compliance = v4->bt_ci_compliance;
+-		mvm->last_bt_notif.primary_ch_lut = v4->primary_ch_lut;
+-		mvm->last_bt_notif.secondary_ch_lut = v4->secondary_ch_lut;
+-		mvm->last_bt_notif.bt_activity_grading =
+-			v4->bt_activity_grading;
+-		mvm->last_bt_notif.ttc_status = v4->ttc_status;
+-		mvm->last_bt_notif.rrc_status = v4->rrc_status;
+-	} else {
+-		/* save this notification for future use: rssi fluctuations */
+-		memcpy(&mvm->last_bt_notif, notif, sizeof(mvm->last_bt_notif));
+-	}
+-
+ 	IWL_DEBUG_COEX(mvm, "BT Coex Notification received\n");
+-	IWL_DEBUG_COEX(mvm, "\tBT ci compliance %d\n",
+-		       mvm->last_bt_notif.bt_ci_compliance);
++	IWL_DEBUG_COEX(mvm, "\tBT ci compliance %d\n", notif->bt_ci_compliance);
+ 	IWL_DEBUG_COEX(mvm, "\tBT primary_ch_lut %d\n",
+-		       le32_to_cpu(mvm->last_bt_notif.primary_ch_lut));
++		       le32_to_cpu(notif->primary_ch_lut));
+ 	IWL_DEBUG_COEX(mvm, "\tBT secondary_ch_lut %d\n",
+-		       le32_to_cpu(mvm->last_bt_notif.secondary_ch_lut));
++		       le32_to_cpu(notif->secondary_ch_lut));
+ 	IWL_DEBUG_COEX(mvm, "\tBT activity grading %d\n",
+-		       le32_to_cpu(mvm->last_bt_notif.bt_activity_grading));
++		       le32_to_cpu(notif->bt_activity_grading));
+ 
++	/* remember this notification for future use: rssi fluctuations */
++	memcpy(&mvm->last_bt_notif, notif, sizeof(mvm->last_bt_notif));
+ 
+ 	iwl_mvm_bt_coex_notif_handle(mvm);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 2ff594f11259..dad18a609d9a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -470,8 +470,7 @@ static ssize_t iwl_dbgfs_disable_power_off_write(struct iwl_mvm *mvm, char *buf,
+ }
+ 
+ static
+-int iwl_mvm_coex_dump_mbox(struct iwl_mvm *mvm,
+-			   struct iwl_bt_coex_profile_notif *notif, char *buf,
++int iwl_mvm_coex_dump_mbox(struct iwl_bt_coex_profile_notif *notif, char *buf,
+ 			   int pos, int bufsz)
+ {
+ 	pos += scnprintf(buf+pos, bufsz-pos, "MBOX dw0:\n");
+@@ -525,12 +524,7 @@ int iwl_mvm_coex_dump_mbox(struct iwl_mvm *mvm,
+ 	BT_MBOX_PRINT(3, INBAND_P, false);
+ 	BT_MBOX_PRINT(3, MSG_TYPE_2, false);
+ 	BT_MBOX_PRINT(3, SSN_2, false);
+-	BT_MBOX_PRINT(3, UPDATE_REQUEST, !iwl_mvm_has_new_ats_coex_api(mvm));
+-
+-	if (iwl_mvm_has_new_ats_coex_api(mvm)) {
+-		BT_MBOX_PRINT(4, ATS_BT_INTERVAL, false);
+-		BT_MBOX_PRINT(4, ATS_BT_ACTIVE_MAX_TH, true);
+-	}
++	BT_MBOX_PRINT(3, UPDATE_REQUEST, true);
+ 
+ 	return pos;
+ }
+@@ -549,7 +543,7 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
+-	pos += iwl_mvm_coex_dump_mbox(mvm, notif, buf, pos, bufsz);
++	pos += iwl_mvm_coex_dump_mbox(notif, buf, pos, bufsz);
+ 
+ 	pos += scnprintf(buf + pos, bufsz - pos, "bt_ci_compliance = %d\n",
+ 			 notif->bt_ci_compliance);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 0e18c5066f04..bd6ba550c809 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1263,12 +1263,6 @@ static inline bool iwl_mvm_has_new_rx_stats_api(struct iwl_mvm *mvm)
+ 			  IWL_UCODE_TLV_API_NEW_RX_STATS);
+ }
+ 
+-static inline bool iwl_mvm_has_new_ats_coex_api(struct iwl_mvm *mvm)
+-{
+-	return fw_has_api(&mvm->fw->ucode_capa,
+-			  IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL);
+-}
+-
+ static inline bool iwl_mvm_has_quota_low_latency(struct iwl_mvm *mvm)
+ {
+ 	return fw_has_api(&mvm->fw->ucode_capa,
 -- 
-1.9.1
+2.15.0
