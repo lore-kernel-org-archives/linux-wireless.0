@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:41052 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751301AbdKTQBq (ORCPT
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:36779 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750720AbdKZFiW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 11:01:46 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: properly free requested-but-not-started TX agg sessions
-Date: Mon, 20 Nov 2017 17:01:44 +0100
-Message-Id: <20171120160144.20961-1-johannes@sipsolutions.net> (sfid-20171120_170205_655032_C82C5584)
+        Sun, 26 Nov 2017 00:38:22 -0500
+Received: by mail-pl0-f66.google.com with SMTP id b12so6562667plm.3
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Nov 2017 21:38:22 -0800 (PST)
+Date: Sun, 26 Nov 2017 13:38:18 +0800
+From: Kenneth Lu <kuohsianglu@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl@lists.infradead.org
+Subject: [PATCH] ath6kl: remove redundant variable ies_len
+Message-ID: <20171126053818.GA6602@blackstone> (sfid-20171126_064100_189666_13ED3D5E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+To get rid of W=1 warning: variable ‘ies_len’ set but not used.
+Variable ies_len is being assigned but never read.
 
-When deleting a station or otherwise tearing down all aggregation
-sessions, make sure to delete requested but not yet started ones,
-to avoid the following scenario:
-
- * session is requested, added to tid_start_tx[]
- * ieee80211_ba_session_work() runs, gets past BLOCK_BA check
- * ieee80211_sta_tear_down_BA_sessions() runs, locks &sta->ampdu_mlme.mtx,
-   e.g. while deleting the station - deleting all active sessions
- * ieee80211_ba_session_work() continues since tear down flushes it, and
-   calls ieee80211_tx_ba_session_handle_start() for the new session, arms
-   the timer for it
- * station deletion continues to __cleanup_single_sta() and frees the
-   session struct, while the timer is armed
-
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kenneth Lu <kuohsianglu@gmail.com>
 ---
- net/mac80211/agg-tx.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 3680b380e70c..5f8ab5be369f 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -330,6 +330,11 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index b53eb2b..2ba8cf3 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2766,7 +2766,6 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_mgmt *mgmt;
+ 	bool hidden = false;
+ 	u8 *ies;
+-	int ies_len;
+ 	struct wmi_connect_cmd p;
+ 	int res;
+ 	int i, ret;
+@@ -2804,7 +2803,6 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	ies = mgmt->u.beacon.variable;
+ 	if (ies > info->beacon.head + info->beacon.head_len)
+ 		return -EINVAL;
+-	ies_len = info->beacon.head + info->beacon.head_len - ies;
  
- 	spin_lock_bh(&sta->lock);
- 
-+	/* free struct pending for start, if present */
-+	tid_tx = sta->ampdu_mlme.tid_start_tx[tid];
-+	kfree(tid_tx);
-+	sta->ampdu_mlme.tid_start_tx[tid] = NULL;
-+
- 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
- 	if (!tid_tx) {
- 		spin_unlock_bh(&sta->lock);
+ 	if (info->ssid == NULL)
+ 		return -EINVAL;
 -- 
-2.14.2
+2.7.4
