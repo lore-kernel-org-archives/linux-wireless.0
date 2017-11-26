@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43714 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752620AbdKGIx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2017 03:53:29 -0500
-Date: Tue, 7 Nov 2017 09:53:28 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Richard Genoud <richard.genoud@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Soft lockup in rt2x00usb_work_rxdone()
-Message-ID: <20171107085327.GA11380@redhat.com> (sfid-20171107_095346_610378_6464B82D)
-References: <1509983829.10974.2.camel@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1509983829.10974.2.camel@gmail.com>
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:34303 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751402AbdKZQGH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 26 Nov 2017 11:06:07 -0500
+From: Ashish Kalra <eashishkalra@gmail.com>
+To: zajec5@gmail.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        eashishkalra@gmail.com
+Subject: [PATCH] Removed Warning shown in checkpatch.pl for comment and white space
+Date: Sun, 26 Nov 2017 21:35:50 +0530
+Message-Id: <20171126160550.3746-1-eashishkalra@gmail.com> (sfid-20171126_170622_812610_D4E6E58F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+checkpatch.pl was showing warnings due to incorrected space at the end
+of line and also not using * at start of second comment line, Corrected
+the same and now there is zero warning
 
-On Mon, Nov 06, 2017 at 04:57:09PM +0100, Richard Genoud wrote:
-> I get a soft lock-up while unbinding the USB driver on a TP-Link TL-WN727Nv3 (chipset 5370):
-> 
-> # echo 1-2.2 > /sys/bus/usb/drivers/usb/unbind
-> watchdog: BUG: soft lockup - CPU#0 stuck for 23s! [kworker/u2:3:308]
-...
-> I can trigger this each time.
+Signed-off-by: Ashish Kalra <eashishkalra@gmail.com>
+---
+ drivers/bcma/driver_pcie2.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I can not reproduce this on my system (I'm using 4.14.0-rc6, but I don't
-think it's an issue). I think the problem may be caused by usb
-host controler driver, which can be different on your system.
-
-Does ftrace work on your platform ? If so could you use ftrace
-to provide rt2x00 functions trace when the  probllem happen ? 
-
-3 short articles how to configure and use ftrace are here:
-https://lwn.net/Articles/365835/
-https://lwn.net/Articles/366796/
-https://lwn.net/Articles/370423/
-
-Thanks
-Stanislaw
+diff --git a/drivers/bcma/driver_pcie2.c b/drivers/bcma/driver_pcie2.c
+index b1a6e327cb23..cf889fc62ac7 100644
+--- a/drivers/bcma/driver_pcie2.c
++++ b/drivers/bcma/driver_pcie2.c
+@@ -83,7 +83,8 @@ static void bcma_core_pcie2_hw_ltr_war(struct bcma_drv_pcie2 *pcie2)
+ 		bcma_core_pcie2_set_ltr_vals(pcie2);
+ 
+ 		/* TODO:
+-		si_core_wrapperreg(pcie2, 3, 0x60, 0x8080, 0); */
++		 *si_core_wrapperreg(pcie2, 3, 0x60, 0x8080, 0);
++		 */
+ 
+ 		/* enable the LTR */
+ 		devstsctr2 |= PCIE2_CAP_DEVSTSCTRL2_LTRENAB;
+-- 
+2.14.1
