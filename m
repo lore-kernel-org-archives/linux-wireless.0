@@ -1,113 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:35178 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752852AbdK1Qf1 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45466 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751180AbdK0HJi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Nov 2017 11:35:27 -0500
-Received: by mail-qk0-f195.google.com with SMTP id c13so600214qke.2
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Nov 2017 08:35:27 -0800 (PST)
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: Slow connection with rtl8xxxu and 8192eu chipset
-To: Nikolay Borisov <n.borisov.lkml@gmail.com>,
-        linux-wireless@vger.kernel.org
-References: <1195e649-c57f-1247-a0dc-2f0cc0732a00@gmail.com>
- <ce042534-6ba9-9654-c99f-7cfdff45b88a@gmail.com>
- <61e93af9-ef8a-5319-5a23-0b622d3cf0d0@gmail.com>
- <7cb804e5-c1f5-a5d4-764d-e5a786625093@gmail.com>
-Message-ID: <0b5d91b2-7e79-5767-aab7-7911806454a3@gmail.com> (sfid-20171128_173531_474945_B73A08C6)
-Date: Tue, 28 Nov 2017 11:35:24 -0500
+        Mon, 27 Nov 2017 02:09:38 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v2 2/3] mwifiex: device dump support for usb interface
+Date: Mon, 27 Nov 2017 15:09:14 +0800
+Message-ID: <1511766555-30780-2-git-send-email-huxm@marvell.com> (sfid-20171127_080942_589243_51E6FAFF)
+In-Reply-To: <1511766555-30780-1-git-send-email-huxm@marvell.com>
+References: <1511766555-30780-1-git-send-email-huxm@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <7cb804e5-c1f5-a5d4-764d-e5a786625093@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/28/2017 11:26 AM, Nikolay Borisov wrote:
-> 
-> 
-> On 28.11.2017 18:16, Jes Sorensen wrote:
->> On 11/14/2017 05:39 AM, Nikolay Borisov wrote:
->>>
->>>
->>> On 14.11.2017 11:26, Nikolay Borisov wrote:
->>>> (Please CC as I'm not subscribed)
->>>>
->>>> Hello,
->>>>
->>>> I have the tp-link tl-wn822N usb wifi dongle. lsbusb reports it as
->>>>
->>>> Bus 001 Device 003: ID 2357:0108
->>>>
->>>> Unfortunately with the in-kernel rtl8xxxu driver I don't get very good
->>>> results:
->>>>
->>>> wifi1     IEEE 802.11  ESSID:"HOME"
->>>>           Mode:Managed  Frequency:2.462 GHz  Access Point:
->>>> 30:B5:C2:75:A4:CD
->>>>           Bit Rate=1 Mb/s   Tx-Power=20 dBm
->>>>           Retry short limit:7   RTS thr=2347 B   Fragment thr:off
->>>>           Power Management:off
->>>>           Link Quality=26/70  Signal level=-84 dBm
->>>>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>>>           Tx excessive retries:0  Invalid misc:165   Missed beacon:0
->>>>
->>>>
->>>> At the same time if I use an out of tree driver acquired from github:
->>>> https://github.com/Mange/rtl8192eu-linux-driver I get the following:
->>>>
->>>> wifi1     IEEE 802.11bgn  ESSID:"HOME"  Nickname:"<WIFI@REALTEK>"
->>>>           Mode:Managed  Frequency:2.462 GHz  Access Point:
->>>> 30:B5:C2:75:A4:CD
->>>>           Bit Rate:144.4 Mb/s   Sensitivity:0/0
->>>>           Retry:off   RTS thr:off   Fragment thr:off
->>>>           Power Management:off
->>>>           Link Quality=81/100  Signal level=100/100  Noise level=0/100
->>>>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>>>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->>>>
->>>> Clearly this is a software problem of the in-kernel driver. I'm using
->>>> v4.10.17 with commit c14239f23adb ("rtl8xxxu: Add another 8192eu device
->>>> to the USB list") so that my device is recognised. Latest commit for
->>>> that driver in my kernel is: c59f13bbead4 ("rtl8xxxu: Work around issue
->>>> with 8192eu and 8723bu devices not reconnecting").
->>>>
->>>> Any ideas what I can do to further debug this, I'd really like to use
->>>> the in-kernel driver ?
->>>
->>> I just tested with verbatim 4.14 and even though the wireless works, 
->>> iwconfig reports something strange: 
->>>
->>> iwconfig wifi1
->>> wifi1     no wireless extensions.
->>>
->>> However, my device works as expected (albeit still slow): 
->>>
->>> wifi1     Link encap:Ethernet  HWaddr 18:d6:c7:0d:47:3c  
->>>           inet addr:10.20.1.175  Bcast:10.20.1.255  Mask:255.255.255.0
->>>           inet6 addr: fe80::281d:5f27:eb1b:8ded/64 Scope:Link
->>>           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
->>>           RX packets:38903 errors:0 dropped:0 overruns:0 frame:0
->>>           TX packets:24689 errors:0 dropped:0 overruns:0 carrier:0
->>>           collisions:0 txqueuelen:1000 
->>>           RX bytes:51524413 (51.5 MB)  TX bytes:5503039 (5.5 MB)
->>
->> iwconfig has been deprecated for a decade, but maybe you could elaborate
->> on what you feel is strange in this output?
-> 
-> Well there are 2 things:
-> 
-> 1. The low bitrate - which I've confirmed doing actual data test, ie,
-> not just the number but the fact that the speeds are low.
-> 
-> 2. The worse signal level/link quality.
+Firmware dump on usb interface is different with current
+sdio/pcie chipset, which is based on register operation.
 
-I don't see either of those in the iwconfig output
+When firmware hang on usb interface, context dump will be
+upload to host using 0x73 firmware debug event.
 
-The low TX bitrate is a known issue. Somehow the firmware rate handling
-doesn't seem to work (or it works differently than I assumed) similar to
-for the 8188eu. It's something I need to figure out when I have some time.
+This patch store dump data from debug event and send to
+userspace using device coredump API.
 
-As for link quality is this something you measured or read out of 'iw' ?
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+v2: Addressed below review comments from Brian Norris
+    a) Check for overflow introduced by invalid event.
+    b) Use end of transmission signal to recognize last event.
+---
+ drivers/net/wireless/marvell/mwifiex/fw.h        | 10 ++++
+ drivers/net/wireless/marvell/mwifiex/init.c      |  9 ++++
+ drivers/net/wireless/marvell/mwifiex/main.h      |  2 +
+ drivers/net/wireless/marvell/mwifiex/sta_event.c | 61 ++++++++++++++++++++++++
+ 4 files changed, 82 insertions(+)
 
-Thanks,
-Jes
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 13cd58e9..4d5e686 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -56,6 +56,15 @@ struct mwifiex_fw_data {
+ 	u8 data[1];
+ } __packed;
+ 
++struct mwifiex_fw_dump_header {
++	__le16          seq_num;
++	__le16          reserved;
++	__le16          type;
++	__le16          len;
++} __packed;
++
++#define FW_DUMP_INFO_ENDED 0x0002
++
+ #define MWIFIEX_FW_DNLD_CMD_1 0x1
+ #define MWIFIEX_FW_DNLD_CMD_5 0x5
+ #define MWIFIEX_FW_DNLD_CMD_6 0x6
+@@ -570,6 +579,7 @@ enum mwifiex_channel_flags {
+ #define EVENT_BG_SCAN_STOPPED           0x00000065
+ #define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
+ #define EVENT_MULTI_CHAN_INFO           0x0000006a
++#define EVENT_FW_DUMP_INFO		0x00000073
+ #define EVENT_TX_STATUS_REPORT		0x00000074
+ #define EVENT_BT_COEX_WLAN_PARA_CHANGE	0X00000076
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index b0d3d68..d239e92 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -64,6 +64,13 @@ static void wakeup_timer_fn(struct timer_list *t)
+ 		adapter->if_ops.card_reset(adapter);
+ }
+ 
++static void fw_dump_timer_fn(struct timer_list *t)
++{
++	struct mwifiex_adapter *adapter = from_timer(adapter, t, devdump_timer);
++
++	mwifiex_upload_device_dump(adapter);
++}
++
+ /*
+  * This function initializes the private structure and sets default
+  * values to the members.
+@@ -315,6 +322,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ 	adapter->active_scan_triggered = false;
+ 	timer_setup(&adapter->wakeup_timer, wakeup_timer_fn, 0);
+ 	adapter->devdump_len = 0;
++	timer_setup(&adapter->devdump_timer, fw_dump_timer_fn, 0);
+ }
+ 
+ /*
+@@ -397,6 +405,7 @@ static void mwifiex_invalidate_lists(struct mwifiex_adapter *adapter)
+ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ {
+ 	del_timer(&adapter->wakeup_timer);
++	del_timer_sync(&adapter->devdump_timer);
+ 	mwifiex_cancel_all_pending_cmd(adapter);
+ 	wake_up_interruptible(&adapter->cmd_wait_q.wait);
+ 	wake_up_interruptible(&adapter->hs_activate_wait_q);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 8b6241a..6b5539b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1037,6 +1037,7 @@ struct mwifiex_adapter {
+ 	/* Device dump data/length */
+ 	void *devdump_data;
+ 	int devdump_len;
++	struct timer_list devdump_timer;
+ };
+ 
+ void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
+@@ -1682,6 +1683,7 @@ void mwifiex_process_multi_chan_event(struct mwifiex_private *priv,
+ void mwifiex_multi_chan_resync(struct mwifiex_adapter *adapter);
+ int mwifiex_set_mac_address(struct mwifiex_private *priv,
+ 			    struct net_device *dev);
++void mwifiex_devdump_tmo_func(unsigned long function_context);
+ 
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index d8db412..93dfb76 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -584,6 +584,62 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
+ 		adapter->coex_rx_win_size);
+ }
+ 
++static void
++mwifiex_fw_dump_info_event(struct mwifiex_private *priv,
++			   struct sk_buff *event_skb)
++{
++	struct mwifiex_adapter *adapter = priv->adapter;
++	struct mwifiex_fw_dump_header *fw_dump_hdr =
++				(void *)adapter->event_body;
++
++	if (adapter->iface_type != MWIFIEX_USB) {
++		mwifiex_dbg(adapter, MSG,
++			    "event is not on usb interface, ignore it\n");
++		return;
++	}
++
++	if (!adapter->devdump_data) {
++		/* When receive the first event, allocate device dump
++		 * buffer, dump driver info.
++		 */
++		adapter->devdump_data = vzalloc(MWIFIEX_FW_DUMP_SIZE);
++		if (!adapter->devdump_data) {
++			mwifiex_dbg(adapter, ERROR,
++				    "vzalloc devdump data failure!\n");
++			return;
++		}
++
++		mwifiex_drv_info_dump(adapter);
++
++		/* If no proceeded event arrive in 10s, upload device
++		 * dump data, this will be useful if the end of
++		 * transmission event get lost, in this cornel case,
++		 * user would still get partial of the dump.
++		 */
++		mod_timer(&adapter->devdump_timer,
++			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
++	}
++
++	/* Overflow check */
++	if (adapter->devdump_len + event_skb->len >= MWIFIEX_FW_DUMP_SIZE)
++		goto upload_dump;
++
++	memmove(adapter->devdump_data + adapter->devdump_len,
++		adapter->event_skb->data, event_skb->len);
++	adapter->devdump_len += event_skb->len;
++
++	if (le16_to_cpu(fw_dump_hdr->type == FW_DUMP_INFO_ENDED)) {
++		mwifiex_dbg(adapter, MSG,
++			    "receive end of transmission flag event!\n");
++		goto upload_dump;
++	}
++	return;
++
++upload_dump:
++	del_timer_sync(&adapter->devdump_timer);
++	mwifiex_upload_device_dump(adapter);
++}
++
+ /*
+  * This function handles events generated by firmware.
+  *
+@@ -636,6 +692,7 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
+  *      - EVENT_DELBA
+  *      - EVENT_BA_STREAM_TIEMOUT
+  *      - EVENT_AMSDU_AGGR_CTRL
++ *      - EVENT_FW_DUMP_INFO
+  */
+ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ {
+@@ -1007,6 +1064,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 					    adapter->event_skb->len -
+ 					    sizeof(eventcause));
+ 		break;
++	case EVENT_FW_DUMP_INFO:
++		mwifiex_dbg(adapter, EVENT, "event: firmware debug info\n");
++		mwifiex_fw_dump_info_event(priv, adapter->event_skb);
++		break;
+ 	/* Debugging event; not used, but let's not print an ERROR for it. */
+ 	case EVENT_UNKNOWN_DEBUG:
+ 		mwifiex_dbg(adapter, EVENT, "event: debug\n");
+-- 
+1.9.1
