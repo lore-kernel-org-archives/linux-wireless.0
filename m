@@ -1,88 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f178.google.com ([74.125.82.178]:44465 "EHLO
-        mail-ot0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751350AbdKMWXF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:58590 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752380AbdK0VrB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 17:23:05 -0500
-Subject: Re: Fwd: linux v4.14 causes firmware iwlwifi errors on Lenovo
- Thinkpad T440s
-To: Bartosz Golaszewski <brgl@bgdev.pl>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-References: <CAMRc=Mf92X2t8wjmE+xkXrA0QKY06uFeXhMY-97Ka=_UxuQbjw@mail.gmail.com>
- <CAMRc=Mf-4HnRXLxoiPrzZVjeCpfY5+Q2Ydmee0GkViejk8nzaQ@mail.gmail.com>
- <3045d677-8f24-b258-0eaf-ee8dae5ecd4c@lwfinger.net>
- <CAMRc=Mf-sy79yoJiyZC8pOtHTo4P7SpHPsTmuHxEBfbc8xa+Uw@mail.gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <10da37f3-a018-7568-49a8-3a8ed86ef64c@lwfinger.net> (sfid-20171113_232314_911359_B9E550C5)
-Date: Mon, 13 Nov 2017 16:23:03 -0600
-MIME-Version: 1.0
-In-Reply-To: <CAMRc=Mf-sy79yoJiyZC8pOtHTo4P7SpHPsTmuHxEBfbc8xa+Uw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 27 Nov 2017 16:47:01 -0500
+Message-ID: <1511819218.5456.17.camel@sipsolutions.net> (sfid-20171127_224705_164537_D9EE14B2)
+Subject: Re: [RFC] cfg80211: Implement Multiple BSSID capability in scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Peng Xu <pxu@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Sara Sharon <sara.sharon@intel.com>
+Date: Mon, 27 Nov 2017 22:46:58 +0100
+In-Reply-To: <15034b29555b487bb172735015f5b78f@nasanexm01a.na.qualcomm.com>
+References: <1509554358-10473-1-git-send-email-jouni@qca.qualcomm.com>
+         <1510664296.2030.22.camel@sipsolutions.net>
+         <4927d2288442486788cd5b4d0492537a@NASANEXM01F.na.qualcomm.com>
+         <1510669408.2030.23.camel@sipsolutions.net>
+         <929d1fdb74524aeaab4959f84a82c732@NASANEXM01F.na.qualcomm.com>
+         <1510669995.2030.26.camel@sipsolutions.net>
+         <e540b35f76a447cab35f7267c09ee8f5@NASANEXM01F.na.qualcomm.com>
+         <20171114163127.GA24453@jouni.qca.qualcomm.com>
+         <59a37842482b40ceb5e60c2155bca78c@NASANEXM01F.na.qualcomm.com>
+         <1511784190.5456.13.camel@sipsolutions.net>
+         <15034b29555b487bb172735015f5b78f@nasanexm01a.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/13/2017 03:30 PM, Bartosz Golaszewski wrote:
-> 2017-11-13 21:45 GMT+01:00 Larry Finger <Larry.Finger@lwfinger.net>:
->> On 11/13/2017 02:22 PM, Bartosz Golaszewski wrote:
->>>
->>> Forwarding here too as I messed up the address the last time.
->>> --
->>>
->>> Hi,
->>>
->>> I noticed my wireless interface can't get up with linux v4.14 and the
->>> kernel log is flooded with firmware errors:
->>>
->>> iwlwifi 0000:03:00.0: Firmware error during reconfiguration - reprobe!
->>> iwlwifi 0000:03:00.0: FW error in SYNC CMD DQA_ENABLE_CMD
->>>
->>> and
->>>
->>> ieee80211 phy63: Hardware restart was requested.
->>>
->>> The wireless controller is: Intel Corporation Wireless 7260 (rev 83)
->>> Firmware used is: iwlwifi-7260-17
->>>
->>> Everything works fine with v4.13.12.
->>>
->>> I didn't have time today to bisect for the offending commit. Full log
->>> uploaded[1].
->>>
->>> Best regards,
->>> Bartosz Golaszewski
->>>
->>> [1] https://pastebin.com/jksqxvS6
->>
->>
->> Your log shows "iwlwifi 0000:03:00.0: loaded firmware version 17.228510.0
->> op_mode iwlmvm"
->>
->> Mine, where the 7260 works, shows "iwlwifi 0000:04:00.0: loaded firmware
->> version 17.459231.0 op_mode iwlmvm".
->>
->> It seems as if you need newer firmware. A detailed file listing shows
->> "-rw-r--r-- 1 root root 1049340 Oct  9 12:03
->> /lib/firmware/iwlwifi-7260-17.ucode". That date is likely when I installed
->> the updated kernel firmware package from my distro. The md5sum for the file
->> is 73a217f55c47d3a70bb5dbbe1d676423.
->>
->> Larry
->>
+On Mon, 2017-11-27 at 19:14 +0000, Peng Xu wrote:
+> > Is a new version of this patch hinging only on this? We'd love to have a fixed-
+> > up one :-)
 > 
-> Ok so it seems the version in linux-firmware is outdated. The file
-> you're using is available on github[1] and fixed the issue for me.
+> The new version covers the use cases mentioned by Jouni as the OUIs of the vendor commands 
+> has the format of OUI + type + subtype. For other format of vendor commands, they will be treated
+> as different vendor commands and are added in the new IE as well. 
 > 
-> Thanks!
-> Bartosz Golaszewski
-> 
-> [1] https://github.com/OpenELEC/iwlwifi-firmware
+Sounds fine to me.
 
-Interesting. Using md5sum of the git repo for linux-firmware gets
-73a217f55c47d3a70bb5dbbe1d676423  iwlwifi-7260-17.ucode.
-
-That is the file I'm using.
-
-Larry
+johannes
