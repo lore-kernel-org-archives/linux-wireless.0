@@ -1,72 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47438 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751824AbdKYQew (ORCPT
+Received: from chaos.universe-factory.net ([31.24.148.19]:38452 "EHLO
+        chaos.universe-factory.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932331AbdK0SFt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Nov 2017 11:34:52 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 25 Nov 2017 18:34:35 +0200
-Message-Id: <20171125163444.24258-3-luca@coelho.fi> (sfid-20171125_173457_142840_0D4BB412)
-In-Reply-To: <20171125163444.24258-1-luca@coelho.fi>
-References: <20171125163444.24258-1-luca@coelho.fi>
-Subject: [PATCH 02/11] iwlwifi: mvm: support MGMT frames in compressed BA
+        Mon, 27 Nov 2017 13:05:49 -0500
+From: Matthias Schiffer <mschiffer@universe-factory.net>
+To: kvalo@qca.qualcomm.com
+Cc: ath9k-devel@qca.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nbd@nbd.name
+Subject: [PATCH 3/3] ath10k: move spectral scan support under a separate config symbol
+Date: Mon, 27 Nov 2017 18:56:23 +0100
+Message-Id: <af2dc61b09d13b393e777a661ecc528f627a6a0d.1511804622.git.mschiffer@universe-factory.net> (sfid-20171127_190623_822101_477C460C)
+In-Reply-To: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
+References: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
+In-Reply-To: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
+References: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+At the moment, spectral scan support, and with it RELAY, is always enabled
+with ATH10K_DEBUGFS. Spectral scan support is currently the only user of
+RELAY in ath10k, and it unconditionally reserves a relay channel.
 
-In A000 family, compressed BA notifs can include MGMT
-frames, so don't fail RXs in such a case.
+Having debugfs support in ath10k is often useful even on very small
+embedded routers, where we'd rather like to avoid the code size and RAM
+usage of the relay support. While ath10k-based devices usually have more
+resources than ath9k-based ones, it makes sense to keep the configuration
+symmetric to ath9k, so the same base kernel without RELAY can be used for
+both ath9k and ath10k hardware.
 
-While at it, since in A000 the TID for MGMT frames is
-15, treat it in the RX flow as if received TID 8. This
-way we won't require special handling of this TID.
-
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index d88c3685a6dd..0407ea30bb82 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1623,7 +1623,7 @@ static void iwl_mvm_tx_reclaim(struct iwl_mvm *mvm, int sta_id, int tid,
- 	int freed;
+checkpatch.pl wants me to write a more meaningful description for
+ATH10K_SPECTRAL, but I don't actually know enough about the spectral scan
+feature to do so...
+
+ drivers/net/wireless/ath/ath10k/Kconfig    | 9 ++++++++-
+ drivers/net/wireless/ath/ath10k/Makefile   | 2 +-
+ drivers/net/wireless/ath/ath10k/spectral.h | 4 ++--
+ 3 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index 87f56d0e17a6..deb5ae21a559 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -47,12 +47,19 @@ config ATH10K_DEBUG
+ config ATH10K_DEBUGFS
+ 	bool "Atheros ath10k debugfs support"
+ 	depends on ATH10K && DEBUG_FS
+-	select RELAY
+ 	---help---
+ 	  Enabled debugfs support
  
- 	if (WARN_ONCE(sta_id >= IWL_MVM_STATION_COUNT ||
--		      tid >= IWL_MAX_TID_COUNT,
-+		      tid > IWL_MAX_TID_COUNT,
- 		      "sta_id %d tid %d", sta_id, tid))
- 		return;
+ 	  If unsure, say Y to make it easier to debug problems.
  
-@@ -1678,7 +1678,7 @@ static void iwl_mvm_tx_reclaim(struct iwl_mvm *mvm, int sta_id, int tid,
- 		if (ieee80211_is_data_qos(hdr->frame_control))
- 			freed++;
- 		else
--			WARN_ON_ONCE(1);
-+			WARN_ON_ONCE(tid != IWL_MAX_TID_COUNT);
- 
- 		iwl_trans_free_tx_cmd(mvm->trans, info->driver_data[1]);
- 
-@@ -1770,8 +1770,12 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 			struct iwl_mvm_compressed_ba_tfd *ba_tfd =
- 				&ba_res->tfd[i];
- 
-+			tid = ba_tfd->tid;
-+			if (tid == IWL_MGMT_TID)
-+				tid = IWL_MAX_TID_COUNT;
++config ATH10K_SPECTRAL
++	bool "Atheros ath10k spectral scan support"
++	depends on ATH10K_DEBUGFS
++	select RELAY
++	default n
++	---help---
++	  Say Y to enable access to the FFT/spectral data via debugfs.
 +
- 			mvmsta->tid_data[i].lq_color = lq_color;
--			iwl_mvm_tx_reclaim(mvm, sta_id, ba_tfd->tid,
-+			iwl_mvm_tx_reclaim(mvm, sta_id, tid,
- 					   (int)(le16_to_cpu(ba_tfd->q_num)),
- 					   le16_to_cpu(ba_tfd->tfd_index),
- 					   &ba_info,
+ config ATH10K_TRACING
+ 	bool "Atheros ath10k tracing support"
+ 	depends on ATH10K
+diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
+index 899b9b79f4ce..af8f11970a08 100644
+--- a/drivers/net/wireless/ath/ath10k/Makefile
++++ b/drivers/net/wireless/ath/ath10k/Makefile
+@@ -14,7 +14,7 @@ ath10k_core-y += mac.o \
+ 		 p2p.o \
+ 		 swap.o
+ 
+-ath10k_core-$(CONFIG_ATH10K_DEBUGFS) += spectral.o
++ath10k_core-$(CONFIG_ATH10K_SPECTRAL) += spectral.o
+ ath10k_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
+ ath10k_core-$(CONFIG_ATH10K_TRACING) += trace.o
+ ath10k_core-$(CONFIG_THERMAL) += thermal.o
+diff --git a/drivers/net/wireless/ath/ath10k/spectral.h b/drivers/net/wireless/ath/ath10k/spectral.h
+index 89b0ad769d4f..b2a2e8ae04b8 100644
+--- a/drivers/net/wireless/ath/ath10k/spectral.h
++++ b/drivers/net/wireless/ath/ath10k/spectral.h
+@@ -44,7 +44,7 @@ enum ath10k_spectral_mode {
+ 	SPECTRAL_MANUAL,
+ };
+ 
+-#ifdef CONFIG_ATH10K_DEBUGFS
++#ifdef CONFIG_ATH10K_SPECTRAL
+ 
+ int ath10k_spectral_process_fft(struct ath10k *ar,
+ 				struct wmi_phyerr_ev_arg *phyerr,
+@@ -85,6 +85,6 @@ static inline void ath10k_spectral_destroy(struct ath10k *ar)
+ {
+ }
+ 
+-#endif /* CONFIG_ATH10K_DEBUGFS */
++#endif /* CONFIG_ATH10K_SPECTRAL */
+ 
+ #endif /* SPECTRAL_H */
 -- 
 2.15.0
