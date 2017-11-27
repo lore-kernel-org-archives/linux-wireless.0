@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40562 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755575AbdKJCaL (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.133]:60857 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751689AbdK0Lv6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2017 21:30:11 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [V2,1/7] brcmfmac: handle FWHALT mailbox indication
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1510148197-17851-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510148197-17851-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20171110023011.0026A607E5@smtp.codeaurora.org> (sfid-20171110_033015_438263_450EFED8)
-Date: Fri, 10 Nov 2017 02:30:09 +0000 (UTC)
+        Mon, 27 Nov 2017 06:51:58 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>,
+        Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>,
+        Erik Stromdahl <erik.stromdahl@gmail.com>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+        Sarada Prasanna Garnayak <c_sgarna@qti.qualcomm.com>,
+        Venkateswara Naralasetty <vnaralas@qti.qualcomm.com>,
+        Marcin Rokicki <marcin.rokicki@tieto.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: use 64-bit crash dump timestamps
+Date: Mon, 27 Nov 2017 12:49:51 +0100
+Message-Id: <20171127115113.2831506-1-arnd@arndb.de> (sfid-20171127_125217_522266_54B41D49)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+The dump format uses 64-bit timestamps already, but calling
+getnstimeofday() only returns a 32-bit number on 32-bit architectures,
+so that will overflow in y2038.
 
-> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-> 
-> The firmware uses a mailbox to communicate to the host what is going
-> on. In the driver we validate the bit received. Various people seen
-> the following message:
-> 
->  brcmfmac: brcmf_sdio_hostmail: Unknown mailbox data content: 0x40012
-> 
-> Bit 4 is cause of this message, but this actually indicates the firmware
-> has halted. Handle this bit by giving a more meaningful error message.
-> 
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+This changes it to use ktime_get_real_ts64() instead.
 
-7 patches applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/ath/ath10k/core.h  | 2 +-
+ drivers/net/wireless/ath/ath10k/debug.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-2fd3877b5bb7 brcmfmac: handle FWHALT mailbox indication
-6c219b008815 brcmfmac: disable packet filtering in promiscuous mode
-8c6efda22f5f brcmfmac: cleanup brcmf_cfg80211_escan() function
-df2d8388bc96 brcmfmac: use msecs_to_jiffies() instead of calculation using HZ
-588378f15cff brcmfmac: get rid of brcmf_cfg80211_escan() function
-bbf35414cd23 brcmfmac: get rid of struct brcmf_cfg80211_info::active_scan field
-bd99a3013bdc brcmfmac: move configuration of probe request IEs
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 643041ef3271..dd3c6c63aae1 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -463,7 +463,7 @@ struct ath10k_fw_crash_data {
+ 	bool crashed_since_read;
+ 
+ 	guid_t guid;
+-	struct timespec timestamp;
++	struct timespec64 timestamp;
+ 	__le32 registers[REG_DUMP_COUNT_QCA988X];
+ 	struct ath10k_ce_crash_data ce_crash_data[CE_COUNT_MAX];
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index df514507d3f1..66498e3c0f91 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -720,7 +720,7 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
+ 
+ 	crash_data->crashed_since_read = true;
+ 	guid_gen(&crash_data->guid);
+-	getnstimeofday(&crash_data->timestamp);
++	ktime_get_real_ts64(&crash_data->timestamp);
+ 
+ 	return crash_data;
+ }
 -- 
-https://patchwork.kernel.org/patch/10048525/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.9.0
