@@ -1,144 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0085.outbound.protection.outlook.com ([104.47.32.85]:59533
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752177AbdKMK2i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2017 05:28:38 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: [PATCH 07/10] qtnfmac: fill wiphy's extended capabilities
-Date: Mon, 13 Nov 2017 13:28:12 +0300
-Message-Id: <20171113102815.11254-8-sergey.matyukevich.os@quantenna.com> (sfid-20171113_112927_840411_5E1A353E)
-In-Reply-To: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
-References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from chaos.universe-factory.net ([31.24.148.19]:38454 "EHLO
+        chaos.universe-factory.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932336AbdK0SFt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Nov 2017 13:05:49 -0500
+From: Matthias Schiffer <mschiffer@universe-factory.net>
+To: kvalo@qca.qualcomm.com
+Cc: ath9k-devel@qca.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nbd@nbd.name
+Subject: [PATCH 1/3] ath9k: remove stray backslash in Makefile
+Date: Mon, 27 Nov 2017 18:56:21 +0100
+Message-Id: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net> (sfid-20171127_190702_501814_FF5CD925)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasily Ulyanov <vulyanov@quantenna.com>
-
-These are needed to inform userspace about features the hardware
-supports (e.g. BSS Transition Management 802.11v)
-
-Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
+Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
 ---
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 44 +++++++++++++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/core.c     |  2 ++
- drivers/net/wireless/quantenna/qtnfmac/core.h     |  3 ++
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  1 +
- 4 files changed, 50 insertions(+)
+ drivers/net/wireless/ath/ath9k/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 7089f3eb7a87..839e86b99837 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -1029,6 +1029,10 @@ static int qtnf_parse_variable_mac_info(struct qtnf_wmac *mac,
- 	struct qlink_iface_comb_num *comb;
- 	size_t tlv_full_len;
- 	const struct qlink_tlv_hdr *tlv;
-+	u8 *ext_capa = NULL;
-+	u8 *ext_capa_mask = NULL;
-+	u8 ext_capa_len = 0;
-+	u8 ext_capa_mask_len = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 36a40ffdce15..90e4a341076c 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -59,7 +59,7 @@ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
+ obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
+ ath9k_common-y:=	common.o \
+ 			common-init.o \
+-			common-beacon.o \
++			common-beacon.o
  
- 	mac->macinfo.n_limits = 0;
- 
-@@ -1092,6 +1096,18 @@ static int qtnf_parse_variable_mac_info(struct qtnf_wmac *mac,
- 			if (limits[rec].types)
- 				rec++;
- 			break;
-+		case WLAN_EID_EXT_CAPABILITY:
-+			if (unlikely(tlv_value_len > U8_MAX))
-+				return -EINVAL;
-+			ext_capa = (u8 *)tlv->val;
-+			ext_capa_len = tlv_value_len;
-+			break;
-+		case QTN_TLV_ID_EXT_CAPABILITY_MASK:
-+			if (unlikely(tlv_value_len > U8_MAX))
-+				return -EINVAL;
-+			ext_capa_mask = (u8 *)tlv->val;
-+			ext_capa_mask_len = tlv_value_len;
-+			break;
- 		default:
- 			break;
- 		}
-@@ -1112,6 +1128,34 @@ static int qtnf_parse_variable_mac_info(struct qtnf_wmac *mac,
- 		return -EINVAL;
- 	}
- 
-+	if (ext_capa_len != ext_capa_mask_len) {
-+		pr_err("MAC%u: ext_capa/_mask lengths mismatch: %u != %u\n",
-+		       mac->macid, ext_capa_len, ext_capa_mask_len);
-+		return -EINVAL;
-+	}
-+
-+	if (ext_capa_len > 0) {
-+		ext_capa = kmemdup(ext_capa, ext_capa_len, GFP_KERNEL);
-+		if (!ext_capa)
-+			return -ENOMEM;
-+
-+		ext_capa_mask =
-+			kmemdup(ext_capa_mask, ext_capa_mask_len, GFP_KERNEL);
-+		if (!ext_capa_mask) {
-+			kfree(ext_capa);
-+			return -ENOMEM;
-+		}
-+	} else {
-+		ext_capa = NULL;
-+		ext_capa_mask = NULL;
-+	}
-+
-+	kfree(mac->macinfo.extended_capabilities);
-+	kfree(mac->macinfo.extended_capabilities_mask);
-+	mac->macinfo.extended_capabilities = ext_capa;
-+	mac->macinfo.extended_capabilities_mask = ext_capa_mask;
-+	mac->macinfo.extended_capabilities_len = ext_capa_len;
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index ea850cb7dffc..3de0b26f839d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -381,6 +381,8 @@ static void qtnf_core_mac_detach(struct qtnf_bus *bus, unsigned int macid)
- 	}
- 
- 	kfree(mac->macinfo.limits);
-+	kfree(mac->macinfo.extended_capabilities);
-+	kfree(mac->macinfo.extended_capabilities_mask);
- 	kfree(wiphy->iface_combinations);
- 	wiphy_free(wiphy);
- 	bus->mac[macid] = NULL;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index 8e42d1bdc65f..d7e295efb07d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -106,6 +106,9 @@ struct qtnf_mac_info {
- 	struct ieee80211_vht_cap vht_cap_mod_mask;
- 	struct ieee80211_iface_limit *limits;
- 	size_t n_limits;
-+	u8 *extended_capabilities;
-+	u8 *extended_capabilities_mask;
-+	u8 extended_capabilities_len;
- };
- 
- struct qtnf_chan_stats {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 1f150be98820..f4d7d1603e3c 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -1020,6 +1020,7 @@ enum qlink_tlv_id {
- 	QTN_TLV_ID_KEY			= 0x0302,
- 	QTN_TLV_ID_SEQ			= 0x0303,
- 	QTN_TLV_ID_IE_SET		= 0x0305,
-+	QTN_TLV_ID_EXT_CAPABILITY_MASK	= 0x0306,
- };
- 
- struct qlink_tlv_hdr {
+ ath9k_common-$(CONFIG_ATH9K_COMMON_DEBUG) += common-debug.o \
+ 					     common-spectral.o
 -- 
-2.11.0
+2.15.0
