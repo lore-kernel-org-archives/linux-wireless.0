@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:37109 "EHLO
-        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751981AbdKVKNb (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:38548 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751446AbdK0MC0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Nov 2017 05:13:31 -0500
-Received: by mail-qk0-f176.google.com with SMTP id 136so15994088qkd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Nov 2017 02:13:31 -0800 (PST)
-Subject: Re: [EXT] Marvell Mwifiex wireless driver: mwifiex_pcie broken on
- Marvell ESPRESSOBin
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-References: <6dc0221c-c7ec-d107-02e8-0ab443807e51@gmail.com>
- <a4233e0d08f1400fa30ef112e0fda464@SC-EXCH02.marvell.com>
-From: Ellie Reeves <ellierevves@gmail.com>
-Message-ID: <7d8c7705-70ac-9a36-b5d2-23fcffcf6a29@gmail.com> (sfid-20171122_113257_309409_703522D5)
-Date: Wed, 22 Nov 2017 05:13:26 -0500
-MIME-Version: 1.0
-In-Reply-To: <a4233e0d08f1400fa30ef112e0fda464@SC-EXCH02.marvell.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        Mon, 27 Nov 2017 07:02:26 -0500
+Message-ID: <1511784144.5456.12.camel@sipsolutions.net> (sfid-20171127_130230_808749_D88FB83F)
+Subject: Re: [RFC PATCH 2/2] nl80211: implement beacon change notifier
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>,
+        Marianna Carrera <mcarrera@quantenna.com>
+Date: Mon, 27 Nov 2017 13:02:24 +0100
+In-Reply-To: <20171115153547.kkunkrfcivoqcsq2@bars>
+References: <20171109094024.9085-1-sergey.matyukevich.os@quantenna.com>
+         <20171109094024.9085-2-sergey.matyukevich.os@quantenna.com>
+         <1510565429.30497.10.camel@sipsolutions.net>
+         <20171113115841.3dcrcjqnp543kndi@bars>
+         <1510575765.30497.38.camel@sipsolutions.net>
+         <20171115153547.kkunkrfcivoqcsq2@bars>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-is the recent patch for mwifiex the one Ganapathi was talking about, to 
-fix mwifiex on espressobin ? If so, I tried it (in v1 I admit), without 
-no real change. The interface is no longer shown as 'no-carrier' but 
-there is still the timeout, and all the messages about fw being in bad 
-state. :/ Sorry if I confused the patch with something unrelated to the 
-espressobin.
+On Wed, 2017-11-15 at 18:35 +0300, Sergey Matyukevich wrote:
 
--- 
-Ellie Reeves
+> In our case, we are experimenting with applications running along with
+> hostapd and enabling band steering and client roaming functionality.
+> As I mentioned, various approaches are being examined, including
+> both pure nl80211-based approach as well as adding direct hooks
+> to hostapd.
+
+To be honest, I'm torn on this.
+
+On the one hand, I think it's fairly reasonable functionality, but on
+the other hand I'm not sure we should encourage such separate
+approaches - it seems to me that will lead to a lot of fragmentation
+and much harder debuggability for upstream where these things get used.
+
+It's also a bunch of code we have to maintain, for nothing that seems
+of use to the community - since it's the sort of flexibility explicitly
+designed for non-public code (otherwise it could just be part of
+hostapd; actually it could even if it were non-public, at least in
+theory, unless you're planning it as a value-add thing to go with an
+open source hostapd ...).
+
+So while I don't want to stop you entirely in your tracks with this,
+I'd really prefer you explore other options regarding where to put your
+client steering functionality, perhaps even working on hostapd.
+
+johannes
