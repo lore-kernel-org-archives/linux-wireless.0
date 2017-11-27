@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:54134 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752424AbdKGLJ0 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:59700 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751373AbdK0Kd0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2017 06:09:26 -0500
-Received: by mail-qt0-f193.google.com with SMTP id n61so14644035qte.10
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Nov 2017 03:09:26 -0800 (PST)
-Subject: Re: [PATCH] brcmfmac: add support for external 32khz clock
-To: Simon Shields <simon@lineageos.org>
-References: <20171104132421.GA1541@archbox.home> <5A004099.90200@broadcom.com>
- <20171106112726.GA25134@lineageos.org>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, devicetree@vger.kernel.org,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A019463.9060701@broadcom.com> (sfid-20171107_120940_088546_137CF0F3)
-Date: Tue, 7 Nov 2017 12:09:23 +0100
-MIME-Version: 1.0
-In-Reply-To: <20171106112726.GA25134@lineageos.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Mon, 27 Nov 2017 05:33:26 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-11-27
+Date: Mon, 27 Nov 2017 11:32:56 +0100
+Message-Id: <20171127103257.13399-1-johannes@sipsolutions.net> (sfid-20171127_113333_416703_18C779F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/6/2017 12:27 PM, Simon Shields wrote:
-> On Mon, Nov 06, 2017 at 11:59:37AM +0100, Arend van Spriel wrote:
->> On 11/4/2017 2:24 PM, Simon Shields wrote:
->>> Some boards use an external 32khz clock for low-power
->>> mode timing. Make sure the clock is powered on while the chipset
->>> is active.
->>
->> Do you have such a board? With the little documentation I can get my hands
->> on here I wonder whether the clock needs to be enabled before the device is
->> powered. If you have the hardware I would like to check some registers in
->> the device.
->>
->
-> Yes. Trats2 (exynos4412-based) has such a setup. The BCM4334 works fine
-> with this patch and one more that enables the WL_REG_EN pin when
-> brcmfmac is probed.
+Hi Dave,
 
-Ok. So this is exactly the thing I was wondering about. So it makes me 
-curious how the WL_REG_EN patch looks like. Can you provide that?
+Here are a few more fixes, one of which fixes the crash Florian
+reported which I think is the same that zero-day reported.
 
-> Without this patch (and only enabling WL_REG_EN), the chip is detected but
-> attempting to initialise it fails with a bunch of timeouts.
+Please pull and let me know if there's any problem.
 
-I would be interested in seeing a detailed log of that. Could you 
-provide that? You need to build the driver with CONFIG_BRCMDBG and pass 
-module parameter 'debug=0x1416' upon insmod/modprobe.
+Thanks,
+johannes
 
-Regards,
-Arend
+
+
+The following changes since commit a13e8d418f3cb9d0b4efa6e744b8b23c0e3cdfe8:
+
+  Merge tag 'mac80211-for-davem-2017-11-20' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2017-11-21 20:30:57 +0900)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-11-27
+
+for you to fetch changes up to 72e2c3438ba3bd2ed640b6b5ea9e58993dd9ab7f:
+
+  mac80211: tear down RX aggregations first (2017-11-27 11:24:59 +0100)
+
+----------------------------------------------------------------
+Four fixes:
+ * CRYPTO_SHA256 is needed for regdb validation
+ * mac80211: mesh path metric was wrong in some frames
+ * mac80211: use QoS null-data packets on QoS connections
+ * mac80211: tear down RX aggregation sessions first to
+   drop fewer packets in HW restart scenarios
+
+----------------------------------------------------------------
+Chun-Yeow Yeoh (1):
+      mac80211: fix the update of path metric for RANN frame
+
+Johannes Berg (2):
+      cfg80211: select CRYPTO_SHA256 if needed
+      mac80211: use QoS NDP for AP probing
+
+Sara Sharon (1):
+      mac80211: tear down RX aggregations first
+
+ drivers/net/wireless/ath/ath9k/channel.c |  2 +-
+ drivers/net/wireless/st/cw1200/sta.c     |  4 ++--
+ drivers/net/wireless/ti/wl1251/main.c    |  2 +-
+ drivers/net/wireless/ti/wlcore/cmd.c     |  5 +++--
+ include/net/mac80211.h                   |  8 +++++++-
+ net/mac80211/ht.c                        |  4 +++-
+ net/mac80211/mesh_hwmp.c                 | 15 +++++++++------
+ net/mac80211/mlme.c                      |  2 +-
+ net/mac80211/tx.c                        | 29 +++++++++++++++++++++++++++--
+ net/wireless/Kconfig                     |  7 +++++++
+ 10 files changed, 61 insertions(+), 17 deletions(-)
