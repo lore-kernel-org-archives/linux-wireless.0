@@ -1,94 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45956 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751621AbdKPIsv (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:37032 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752168AbdK0LnP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Nov 2017 03:48:51 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Thomas Backlund <tmb@mageia.org>,
-        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 16 Nov 2017 10:48:45 +0200
-Message-Id: <20171116084845.14688-1-luca@coelho.fi> (sfid-20171116_094907_723852_65C70639)
-In-Reply-To: <20171115165242.21675-4-luca@coelho.fi>
-References: <20171115165242.21675-4-luca@coelho.fi>
-Subject: [PATCH v2 3/3] iwlwifi: fix firmware names for 9000 and A000 series hw
+        Mon, 27 Nov 2017 06:43:15 -0500
+Message-ID: <1511782993.5456.6.camel@sipsolutions.net> (sfid-20171127_124324_810293_BCFF416D)
+Subject: Re: Setting TX power on a monitoring interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Peter =?ISO-8859-1?Q?Gro=DFe?= <pegro@friiks.de>,
+        linux-wireless@vger.kernel.org
+Date: Mon, 27 Nov 2017 12:43:13 +0100
+In-Reply-To: <20171120173415.1ae44829@fem-net.de> (sfid-20171120_173430_381441_284E75CE)
+References: <20171120173415.1ae44829@fem-net.de>
+         (sfid-20171120_173430_381441_284E75CE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Thomas Backlund <tmb@mageia.org>
+On Mon, 2017-11-20 at 17:34 +0100, Peter Große wrote:
+> Hi everyone.
+> 
+> The iw tool allows to set TX power settings on network interfaces.
+> 
+> If I try to set the TX power level on a _monitor_ interface, I get
+> a kernel warning:
+> 
+>  ------------[ cut here ]------------
+>  WARNING: CPU: 0 PID: 2193 at net/mac80211/driver-ops.h:167
+>  ieee80211_bss_info_change_notify+0x111/0x190 Modules linked in: uvcvideo
+>  videobuf2_vmalloc videobuf2_memops videobuf2_v4l2 videobuf2_core 
+> rndis_host cdc_ether usbnet mii tp_smapi(O) thinkpad_ec(O) ohci_hcd vboxpci(O)
+>  vboxnetadp(O) vboxnetflt(O) v boxdrv(O) x86_pkg_temp_thermal kvm_intel kvm
+>  irqbypass iwldvm iwlwifi ehci_pci ehci_hcd tpm_tis tpm_tis_core tpm CPU: 0
+>  PID: 2193 Comm: iw Tainted: G           O    4.12.12-gentoo #2 task:
+>  ffff880186fd5cc0 task.stack: ffffc90001b54000 RIP:
+>  0010:ieee80211_bss_info_change_notify+0x111/0x190 RSP: 0018:ffffc90001b57a10
+>  EFLAGS: 00010246 RAX: 0000000000000006 RBX: ffff8801052ce840 RCX:
+>  0000000000000064 RDX: 00000000fffffffc RSI: 0000000000040000 RDI:
+>  ffff8801052ce840 RBP: ffffc90001b57a38 R08: 0000000000000062 R09:
+>  0000000000000000 R10: ffff8802144b5000 R11: ffff880049dc4614 R12:
+>  0000000000040000 R13: 0000000000000064 R14: ffff8802105f0760 R15:
+>  ffffc90001b57b48 FS:  00007f92644b4580(0000) GS:ffff88021e200000(0000)
+>  knlGS:0000000000000000 CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>  CR2: 00007f9263c109f0 CR3: 00000001df850000 CR4: 00000000000406f0
+>  Call Trace:
+>   ieee80211_recalc_txpower+0x33/0x40
+>   ieee80211_set_tx_power+0x40/0x180
+>   nl80211_set_wiphy+0x32e/0x950
+> 
+> Steps to reproduce:
+> 
+>   iw dev wlan0 interface add mon0 type monitor
+>   ip link set dev mon0 up
+>   iw dev mon0 set txpower fixed 100
+> 
+> Is that a bug to be fixed?
 
-iwlwifi 9000 and a0000 series hw contains an extra dash in firmware
-file name as seeen in modinfo output for kernel 4.14:
+Yeah, it's a bug.
 
-firmware:       iwlwifi-9260-th-b0-jf-b0--34.ucode
-firmware:       iwlwifi-9260-th-a0-jf-a0--34.ucode
-firmware:       iwlwifi-9000-pu-a0-jf-b0--34.ucode
-firmware:       iwlwifi-9000-pu-a0-jf-a0--34.ucode
-firmware:       iwlwifi-QuQnj-a0-hr-a0--34.ucode
-firmware:       iwlwifi-QuQnj-a0-jf-b0--34.ucode
-firmware:       iwlwifi-QuQnj-f0-hr-a0--34.ucode
-firmware:       iwlwifi-Qu-a0-jf-b0--34.ucode
-firmware:       iwlwifi-Qu-a0-hr-a0--34.ucode
+> What would be the correct way of fixing it? Maybe I can provide a patch.
 
-Fix that by dropping the extra adding of '"-"'.
+That's a really good question :-)
 
-Signed-off-by: Thomas Backlund <tmb@mageia.org>
-Cc: stable@vger.kernel.org # 4.13
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
+I think if the driver has WANT_MONITOR_VIF, then we can pass that
+through and let the driver sort it out.
 
-In v2:
+But if not, we probably just have to reject the configuration?
 
-   * fix rebasing damage;
-
-drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  6 +++---
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c | 10 +++++-----
- 2 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index b6990400042f..e7e75b458005 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -82,11 +82,11 @@
- #define IWL9000B_MODULE_FIRMWARE(api) \
- 	IWL9000B_FW_PRE __stringify(api) ".ucode"
- #define IWL9000RFB_MODULE_FIRMWARE(api) \
--	IWL9000RFB_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL9000RFB_FW_PRE __stringify(api) ".ucode"
- #define IWL9260A_MODULE_FIRMWARE(api) \
--	IWL9260A_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL9260A_FW_PRE __stringify(api) ".ucode"
- #define IWL9260B_MODULE_FIRMWARE(api) \
--	IWL9260B_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL9260B_FW_PRE __stringify(api) ".ucode"
- 
- #define NVM_HW_SECTION_NUM_FAMILY_9000		10
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-index ea8206515171..705f83b02e13 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/a000.c
-@@ -80,15 +80,15 @@
- #define IWL_A000_HR_A0_FW_PRE	"iwlwifi-QuQnj-a0-hr-a0-"
- 
- #define IWL_A000_HR_MODULE_FIRMWARE(api) \
--	IWL_A000_HR_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL_A000_HR_FW_PRE __stringify(api) ".ucode"
- #define IWL_A000_JF_MODULE_FIRMWARE(api) \
--	IWL_A000_JF_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL_A000_JF_FW_PRE __stringify(api) ".ucode"
- #define IWL_A000_HR_F0_QNJ_MODULE_FIRMWARE(api) \
--	IWL_A000_HR_F0_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL_A000_HR_F0_FW_PRE __stringify(api) ".ucode"
- #define IWL_A000_JF_B0_QNJ_MODULE_FIRMWARE(api) \
--	IWL_A000_JF_B0_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL_A000_JF_B0_FW_PRE __stringify(api) ".ucode"
- #define IWL_A000_HR_A0_QNJ_MODULE_FIRMWARE(api) \
--	IWL_A000_HR_A0_FW_PRE "-" __stringify(api) ".ucode"
-+	IWL_A000_HR_A0_FW_PRE __stringify(api) ".ucode"
- 
- #define NVM_HW_SECTION_NUM_FAMILY_A000		10
- 
--- 
-2.15.0
+johannes
