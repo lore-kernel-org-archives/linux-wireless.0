@@ -1,100 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:32828 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751492AbdKTRET (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 12:04:19 -0500
-Received: by mail-ot0-f194.google.com with SMTP id s12so8205943otc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2017 09:04:19 -0800 (PST)
-Subject: Re: [PATCH v1] rtlwifi:rtl8723ae: Fix embedded function names with
- __func__
-To: venkat.prashanth2498@gmail.com, gregkh@linuxfoundation.org,
-        linux-wireless@vger.kernel.org
-Cc: chaoming_li@realsil.com.cn
-References: <1511182437-5870-1-git-send-email-venkat.prashanth2498@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <0a8893ae-b39f-da34-ddda-a0a447717ce2@lwfinger.net> (sfid-20171120_180423_407583_D3BC6C70)
-Date: Mon, 20 Nov 2017 11:04:16 -0600
-MIME-Version: 1.0
-In-Reply-To: <1511182437-5870-1-git-send-email-venkat.prashanth2498@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:62226 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752112AbdK1Ojd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Nov 2017 09:39:33 -0500
+Message-ID: <1511879969.4011.435.camel@intel.com> (sfid-20171128_153936_880769_8FC14AB3)
+Subject: Re: [PATCH 08/11] iwlwifi: mvm: Add debugfs support for FTM
+ initiator fields
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, Adiel Aloni <adiel.aloni@intel.com>
+Date: Tue, 28 Nov 2017 16:39:29 +0200
+In-Reply-To: <201711282154.dLWMuU7H%fengguang.wu@intel.com>
+References: <20171125163444.24258-9-luca@coelho.fi>
+         <201711282154.dLWMuU7H%fengguang.wu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/20/2017 06:53 AM, venkat.prashanth2498@gmail.com wrote:
-> From: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
+On Tue, 2017-11-28 at 21:34 +0800, kbuild test robot wrote:
+> Hi Adiel,
 > 
-> Prefer and make it generic by using %s and __func__ to print functions name
-> instead of embedding functions name in print statements
+> Thank you for the patch! Yet something to improve:
 > 
-> Signed-off-by: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
-
-What changed between the first one you sent, and the second that you labeled 
-"V1". The reviewers should not have to discover that for themselves.
-
-Certainly adding the function name to the printouts might be useful; however, 
-your commit message says "instead of embedding functions name". That is 
-obviously not true. None of the changes ever included the function name in the 
-message.
-
-There are other comments shown below.
-
+> [auto build test ERROR on wireless-drivers-next/master]
+> [also build test ERROR on v4.15-rc1 next-20171128]
+> [if your patch is applied to the wrong git tree, please drop us a
+> note to help improve the system]
 > 
-> ---
->   drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 8 ++++----
->   1 file changed, 4 insertions(+), 4 deletions(-)
+> url:    https://github.com/0day-ci/linux/commits/Luca-Coelho/iwlwifi-
+> updates-intended-for-v4-16-2017-11-25/20171128-205312
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireles
+> s-drivers-next.git master
+> config: x86_64-randconfig-x011-201748 (attached as .config)
+> compiler: gcc-7 (Debian 7.2.0-12) 7.2.1 20171025
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=x86_64 
 > 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-> index f713c72..bd56bb6 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-> @@ -389,7 +389,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
->   
->   	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
->   		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
-> -			 "DMA mapping error\n");
-> +			 "%s():DMA Mapping Error", __func__);
->   		return;
->   	}
->   	if (mac->opmode == NL80211_IFTYPE_STATION) {
-> @@ -498,7 +498,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
->   		if (ieee80211_is_data_qos(fc)) {
->   			if (mac->rdg_en) {
->   				RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
-> -					 "Enable RDG function.\n");
-> +			"%s():Enable RDG function.\n", __func__);
-
-The above line fails to align the continuation statement. Always run 
-scripts/checkpatch.pl on all your submissions.
-
->   				SET_TX_DESC_RDG_ENABLE(pdesc, 1);
->   				SET_TX_DESC_HTC(pdesc, 1);
->   			}
-> @@ -537,7 +537,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
->   		SET_TX_DESC_BMC(pdesc, 1);
->   	}
->   
-> -	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "\n");
-> +	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "%s():\n", __func__);
-
-This one is NOT an error condition. Why would the function name be needed here? 
-If the user has DBG_TRACE turned on, then the function where a COMP_SEND message 
-is emitted will be known. The code is bloated enough already.
-
->   }
->   
->   void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
-> @@ -557,7 +557,7 @@ void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
->   
->   	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
->   		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
-> -			 "DMA mapping error\n");
-> +			 "%s():DMA Mapping Error", __func__);
->   		return;
->   	}
->   	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
+> All error/warnings (new ones prefixed by >>):
 > 
+>    drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c: In function
+> 'iwl_dbgfs_tof_range_request_write':
+> > > drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c:957:27:
+> > > error: 'struct iwl_tof_range_req_cmd' has no member named
+> > > 'common_calib'
+> 
+>        mvm->tof_data.range_req.common_calib =
 
-The patch needs more work. NACK.
+Ouch, for some reason I didn't have debugfs enabled in my .config and
+missed this.
 
-Larry
+This patch depends on some code that is not upstream yet, so I'll just
+remove it for now.
+
+--
+Cheers,
+Luca.
