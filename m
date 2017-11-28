@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:10504 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932341AbdKPKww (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:37864 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751418AbdK1IgD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Nov 2017 05:52:52 -0500
-Subject: Re: [PATCH] staging: wilc1000: Fix bssid buffer offset in Txq
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <ganesh.krishna@microchip.com>,
-        <stable@vger.kernel.org>, <gregkh@linuxfoundation.org>
-References: <1509699387-6916-1-git-send-email-aditya.shankar@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <6f9884a1-22d6-b076-f34c-0bcbe5c8af20@microchip.com> (sfid-20171116_115257_450293_B74DC724)
-Date: Thu, 16 Nov 2017 12:52:36 +0200
+        Tue, 28 Nov 2017 03:36:03 -0500
+Date: Tue, 28 Nov 2017 14:05:55 +0530
+From: Morgan Freeman <morganfreeman6991@gmail.com>
+To: Ashish Kalra <eashishkalra@gmail.com>
+Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] drivers: bcma: driver_pcie2.c: Comment format
+ correction & moving trailing */ to a separate line  as per checkpatch
+Message-ID: <20171128083555.GA2807@himanshu-Vostro-3559> (sfid-20171128_093640_523632_972677B0)
+References: <20171126172747.GA6512@himanshu-Vostro-3559>
+ <20171128021142.2793-1-eashishkalra@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1509699387-6916-1-git-send-email-aditya.shankar@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171128021142.2793-1-eashishkalra@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Aditya,
+Hi Ashish,
 
-My problem is fixed with this patch. WILC1000 connects to AP,
-IP is retrieved from DHCP server and ping works. You can add my
+On Tue, Nov 28, 2017 at 07:41:42AM +0530, Ashish Kalra wrote:
+> This patch fixes the checkpatch.pl warning:
 
-Tested-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Write in _imperative_mood_ as I said before.
+Like "Use this..." or "Make this..."
 
-Thanks,
-Claudiu
 
-On 03.11.2017 10:56, Aditya Shankar wrote:
-> Commit 46949b48568b ("staging: wilc1000: New cfg packet
-> format in handle_set_wfi_drv_handler") updated the frame
-> format sent from host to the firmware. The code to update
-> the bssid offset in the new frame was part of a second
-> patch in the series which did not make it in and thus
-> causes connection problems after associating to an AP.
+> WARNING: Block comments use * on subsequent lines
+> +		/* TODO:
+> +		si_core_wrapperreg(pcie2, 3, 0x60, 0x8080, 0); */
 > 
-> This fix adds the proper offset of the bssid value in the
-> Tx queue buffer to fix the connection issues.
+> WARNING: Block comments use a trailing */ on a separate line
+> +		si_core_wrapperreg(pcie2, 3, 0x60, 0x8080, 0); */
 > 
-> Fixes: Commit 46949b48568b ("staging: wilc1000: New cfg packet format in handle_set_wfi_drv_handler")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Aditya Shankar <Aditya.Shankar@microchip.com>
+> total: 0 errors, 2 warnings, 200 lines checked
+
+No need to mention all of this!
+
+> Signed-off-by: Ashish Kalra <eashishkalra@gmail.com>
 > ---
->  drivers/staging/wilc1000/wilc_wlan.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> index 9addef1..f49dfa8 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -714,7 +714,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
->  					char *bssid = ((struct tx_complete_data *)(tqe->priv))->bssid;
->  
->  					buffer_offset = ETH_ETHERNET_HDR_OFFSET;
-> -					memcpy(&txb[offset + 4], bssid, 6);
-> +					memcpy(&txb[offset + 8], bssid, 6);
->  				} else {
->  					buffer_offset = HOST_HDR_OFFSET;
->  				}
-> 
+> changes from v1 (https://lkml.org/lkml/2017/11/26/85)
+> v2: Improved commit message as per review from Morgan Freeman <morganfreeman6991@gmail.com>
+
+Your patch subject is again *wrong* here.
+
+Look here: https://pastebin.com/X7x89Q4v
+
+Please take a look at this :
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
+Also, don't send me the patch directly, instead to the relevant maintainer and
+CC me.
+
+
+Thanks
+Himanshu Jha
