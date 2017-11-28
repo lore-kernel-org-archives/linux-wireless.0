@@ -1,70 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35090 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752559AbdKGCST (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47854 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752313AbdK1MXE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 21:18:19 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stefan Wahren <stefan.wahren@i2se.com>
-Cc: Simon Shields <simon@lineageos.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list@cypress.com
-Subject: Re: [PATCH] brcmfmac: add support for external 32khz clock
-References: <20171104132421.GA1541@archbox.home>
-        <1925563700.5172.1509993297900@email.1und1.de>
-Date: Tue, 07 Nov 2017 04:18:14 +0200
-In-Reply-To: <1925563700.5172.1509993297900@email.1und1.de> (Stefan Wahren's
-        message of "Mon, 6 Nov 2017 19:34:57 +0100 (CET)")
-Message-ID: <871slarfvd.fsf@purkki.adurom.net> (sfid-20171107_031828_966455_2DDA1B53)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Tue, 28 Nov 2017 07:23:04 -0500
+Message-ID: <1511871780.4011.426.camel@coelho.fi> (sfid-20171128_132313_550706_47F1383F)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Tue, 28 Nov 2017 14:23:00 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-+vsbtcg0byRo4INFcR0r"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi 2017-11-28
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefan Wahren <stefan.wahren@i2se.com> writes:
 
->> Simon Shields <simon@lineageos.org> hat am 4. November 2017 um 14:24 geschrieben:
->> 
->> 
->> Some boards use an external 32khz clock for low-power
->> mode timing. Make sure the clock is powered on while the chipset
->> is active.
->> 
->> Signed-off-by: Simon Shields <simon@lineageos.org>
->> ---
->>  .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt     |  2 ++
->>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h      |  2 ++
->>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c          |  5 +++++
->>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c        | 10 ++++++++++
->>  4 files changed, 19 insertions(+)
->> 
->> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> index b2bd4704f859..37add5e29272 100644
->> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> @@ -17,6 +17,8 @@ Optional properties:
->>  	When not specified the device will use in-band SDIO interrupts.
->>   - interrupt-names : name of the out-of-band interrupt, which must be set
->>  	to "host-wake".
->> + - clocks : external 32khz clock
->> + - clock-names : name of the external 32khz clock, must be "32khz"
->
-> sorry for the nitpicking, but according to the datasheet [1] it's
-> 32768 Hz. Apart from that i suggest to use a functional name for the
-> clock like "low_power" or something else, which is more flexible and
-> future-proof.
->
-> Btw this binding needs to be a separate patch, which should go to the
-> devicetree guys.
+--=-+vsbtcg0byRo4INFcR0r
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Previously I have applied binding documentation changes which the DT
-maintainers have acked, that's why I specifically asked to Cc device
-tree list. Has something changed?
+Hi Kalle,
 
--- 
-Kalle Valo
+Here is my second set of fixes for 4.15.  More details in the tag
+description.
+
+I have sent this out before and kbuildbot didn't find any issues.=20
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit ed59b7d53c95548d83d4e7e1bc5edafcdcad09c9=
+:
+
+  Merge ath-current from git://git.kernel.org/pub/scm/linux/kernel/git/kval=
+o/ath.git (2017-11-21 11:52:18 +0200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
+ags/iwlwifi-for-kalle-2017-11-28
+
+for you to fetch changes up to 0232d2cd7aa8e1b810fe84fb4059a0bd1eabe2ba:
+
+  iwlwifi: fix access to prph when transport is stopped (2017-11-25 17:12:5=
+6 +0200)
+
+----------------------------------------------------------------
+Second batch of fixes intended for 4.15.
+
+* One fix in rate-scaling;
+* One fix for the TX queue hang detection for AP/GO modes;
+* Fix the TX queue hang timeout used in monitor interfaces;
+* Fix packet injection;
+* Remove a wrong error message when dumping PCI registers;
+* Fix race condition with RF-kill;
+
+----------------------------------------------------------------
+Emmanuel Grumbach (3):
+      iwlwifi: mvm: don't use transmit queue hang detection when it is not =
+possible
+      iwlwifi: mvm: fix the TX queue hang timeout for MONITOR vif type
+      iwlwifi: mvm: fix packet injection
+
+Sara Sharon (2):
+      iwlwifi: pcie: fix erroneous "Read failed message"
+      iwlwifi: fix access to prph when transport is stopped
+
+Shaul Triebitz (1):
+      iwlwifi: mvm: set correct chains in Rx status
+
+ drivers/net/wireless/intel/iwlwifi/fw/api/txq.h      |  4 ++++
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h          |  2 --
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c         |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c        |  4 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c         | 53 ++++++++++++++++=
+++++++++++++++++++++++++-------------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c          |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c       | 13 ++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c |  6 ++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c      | 10 ++++++++++
+--=-+vsbtcg0byRo4INFcR0r
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlodVSQACgkQoUecoho8
+xfrvSg/+NiKrTWL4JTrQkz50B0qvxkKsE/+aMOK9pqTVTim3Rc7NmXdkXfSayq0X
+anlB/ShwkhZncLjr1Z2DVsAwPByX8at8IqvC91L8f46ZjUqXrdi+HZXJBL13yIxe
+no+4uLpTGR/XwRYmw736Lj0MXJfalC9PnXPEDfeU+2KDrfJNcvUNXVrYH+PPVha7
+mmN+qVh7ok5iXAGl7E0ufNw0cqrQmiapPdVYPPfUSxgdcANl5kwxLUZnHTfdkulI
+RZGdmD7R92Myl82fWrxjAfso2yR+xNlXevSDwZX0h8xQQrlcHf6tSKJHwVjAuzXH
+R8Mc5sqzDLLHkGz9Z+YKp1t16XjSpmnKILbKDOFq6gIWQ7v+/IGB5QqBB0ofGbke
+QmdQolBPyN6a/x8OaSuNE2lxkTfEGkLmRuLgaeUyhWDWHMSX0tGtl695UnkoQU75
+tCMFOcKtGRAebXitCHLN3CaO7t/ggCBeSVir598gysgZl0TatgEJMzIC11WHu7ce
+QPnXEngGIVoxpwJ/aFNZmvwLQ0bmmpn8m5L6XpVXOxgXJAUxM1jlLPx6Gms1mU+v
+kVfcI+XFO+5H4ZpJeV8dk+GEMf2PMY2hZHT3xPrmTbIT/FwNXJmpNbFzv6hGMz7b
+MZde4VRsof+Xb097ypvz3wFCAwxnEZuGcDq9sa9vrzcHI9GmM9Y=
+=JLaO
+-----END PGP SIGNATURE-----
+
+--=-+vsbtcg0byRo4INFcR0r--
