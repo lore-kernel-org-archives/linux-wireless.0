@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33966 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752028AbdKTTbq (ORCPT
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:38524 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754008AbdK1MJK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 14:31:46 -0500
-Date: Mon, 20 Nov 2017 20:31:51 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: venkat.prashanth2498@gmail.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn
-Subject: Re: [PATCH] rtlwifi:rtl8723ae: Fix embedded function names with
- __func__ Prefer and make it generic by using %s and __func__ to print
- functions name instead of embedding functions name in print statements
-Message-ID: <20171120193151.GD2780@kroah.com> (sfid-20171120_203149_708717_77713B44)
-References: <1511181199-4638-1-git-send-email-venkat.prashanth2498@gmail.com>
+        Tue, 28 Nov 2017 07:09:10 -0500
+Received: by mail-qt0-f181.google.com with SMTP id q13so148429qtb.5
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Nov 2017 04:09:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1511181199-4638-1-git-send-email-venkat.prashanth2498@gmail.com>
+From: Cristian <caravena@gmail.com>
+Date: Tue, 28 Nov 2017 09:09:08 -0300
+Message-ID: <CABwnbUmWhxx0oN8H1H-0Qy9OYczszFX7yoLLud7VSBLxTn7Dyg@mail.gmail.com> (sfid-20171128_130918_213277_F9199602)
+Subject: platform regulatory.0: Direct firmware load for regulatory.db failed
+ with error -2
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 20, 2017 at 06:03:19PM +0530, venkat.prashanth2498@gmail.com wrote:
-> From: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
-> 
-> ---
+Hello,
 
-Something when really wrong when you created your patch :(
+Linux version 4.15.0-041500rc1-generic
 
-Please always send it to yourself first, and of course, use
-scripts/checkpatch.pl to ensure you did not do anything wrong (like was
-done here...)
+Report in:
+https://bugzilla.kernel.org/show_bug.cgi?id=198013
 
-good luck!
+dmesg:
+[    5.663292] platform regulatory.0: Direct firmware load for
+regulatory.db failed with error -2
 
-greg k-h
+Regards,
+-- 
+Cristian
