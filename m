@@ -1,121 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35970 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932166AbdK2Mx1 (ORCPT
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:9742 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751872AbdK1ICN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 07:53:27 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [v2 3/8] rsi: add header file rsi_header
-Date: Wed, 29 Nov 2017 18:15:08 +0530
-Message-Id: <1511959513-3902-4-git-send-email-amitkarwar@gmail.com> (sfid-20171129_135341_202499_07F02D57)
-In-Reply-To: <1511959513-3902-1-git-send-email-amitkarwar@gmail.com>
-References: <1511959513-3902-1-git-send-email-amitkarwar@gmail.com>
+        Tue, 28 Nov 2017 03:02:13 -0500
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] wlcore: allow elp during wowlan suspend
+Date: Tue, 28 Nov 2017 08:02:07 +0000
+Message-ID: <8665E2433BC68541A24DFFCA87B70F5B364A3796@DFRE01.ent.ti.com> (sfid-20171128_090235_564740_20A5A38B)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+when enabling wowlan and entering suspend the last write to the firmware
+allowing it to go into elp mode was not completing before suspend, leaving
+the firmware running in full active mode consuming high power.
+Use an immediate call instead of a work queue for this last access
+allowing the firmware to go into power save during wowlan uspend.
 
-The common parameters used by wlan and bt modules are added
-to a new header file "rsi_header.h" defined in '/include/linux'
-
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
 ---
- drivers/net/wireless/rsi/rsi_main.h | 12 ++----------
- include/linux/rsi_header.h          | 34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+), 10 deletions(-)
- create mode 100644 include/linux/rsi_header.h
+ drivers/net/wireless/ti/wlcore/main.c | 29 ++++++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index ee469dc..ca02a4b 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -20,6 +20,7 @@
- #include <linux/string.h>
- #include <linux/skbuff.h>
- #include <net/mac80211.h>
-+#include <linux/rsi_header.h>
- 
- struct rsi_sta {
- 	struct ieee80211_sta *sta;
-@@ -85,10 +86,6 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
- #define MGMT_HW_Q			10
- #define BEACON_HW_Q			11
- 
--/* Queue information */
--#define RSI_COEX_Q			0x0
--#define RSI_WIFI_MGMT_Q                 0x4
--#define RSI_WIFI_DATA_Q                 0x5
- #define IEEE80211_MGMT_FRAME            0x00
- #define IEEE80211_CTL_FRAME             0x04
- 
-@@ -293,11 +290,6 @@ struct rsi_common {
- 	struct ieee80211_vif *roc_vif;
- };
- 
--enum host_intf {
--	RSI_HOST_INTF_SDIO = 0,
--	RSI_HOST_INTF_USB
--};
--
- struct eepromrw_info {
- 	u32 offset;
- 	u32 length;
-@@ -322,7 +314,7 @@ struct rsi_hw {
- 	struct device *device;
- 	u8 sc_nvifs;
- 
--	enum host_intf rsi_host_intf;
-+	enum rsi_host_intf rsi_host_intf;
- 	u16 block_size;
- 	enum ps_state ps_state;
- 	struct rsi_ps_info ps_info;
-diff --git a/include/linux/rsi_header.h b/include/linux/rsi_header.h
-new file mode 100644
-index 0000000..16a447b
---- /dev/null
-+++ b/include/linux/rsi_header.h
-@@ -0,0 +1,34 @@
-+/**
-+ * Copyright (c) 2017 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/t=
+i/wlcore/main.c
+index 792cb91..1c31555 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -42,6 +42,7 @@
+ #include "sysfs.h"
+=20
+ #define WL1271_BOOT_RETRIES 3
++#define WL1271_SUSPEND_SLEEP 100
+=20
+ static char *fwlog_param;
+ static int fwlog_mem_blocks =3D -1;
+@@ -979,6 +980,24 @@ static int wlcore_fw_wakeup(struct wl1271 *wl)
+ 	return wlcore_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG, ELPCTRL_WAKE_UP);
+ }
+=20
++static int wlcore_fw_sleep(struct wl1271 *wl)
++{
++	int ret;
 +
-+#ifndef __RSI_HEADER_H__
-+#define __RSI_HEADER_H__
++	mutex_lock(&wl->mutex);
++	ret =3D wlcore_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG, ELPCTRL_SLEEP);
++	if (ret < 0) {
++		wl12xx_queue_recovery_work(wl);
++		goto out;
++	}
++	set_bit(WL1271_FLAG_IN_ELP, &wl->flags);
++out:
++	mutex_unlock(&wl->mutex);
++	mdelay(WL1271_SUSPEND_SLEEP);
 +
-+/* HAL queue information */
-+#define RSI_COEX_Q			0x0
-+#define RSI_BT_Q			0x2
-+#define RSI_WLAN_Q                      0x3
-+#define RSI_WIFI_MGMT_Q                 0x4
-+#define RSI_WIFI_DATA_Q                 0x5
-+#define RSI_BT_MGMT_Q			0x6
-+#define RSI_BT_DATA_Q			0x7
++	return 0;
++}
 +
-+enum rsi_host_intf {
-+	RSI_HOST_INTF_SDIO = 0,
-+	RSI_HOST_INTF_USB
-+};
+ static int wl1271_setup(struct wl1271 *wl)
+ {
+ 	wl->raw_fw_status =3D kzalloc(wl->fw_status_len, GFP_KERNEL);
+@@ -1750,7 +1769,6 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
+ 		goto out_sleep;
+=20
+ out_sleep:
+-	wl1271_ps_elp_sleep(wl);
+ 	mutex_unlock(&wl->mutex);
+=20
+ 	if (ret < 0) {
+@@ -1783,6 +1801,15 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw=
+,
+ 	 */
+ 	cancel_delayed_work(&wl->tx_watchdog_work);
+=20
++	/*
++	 * Use an immediate call for allowing the firmware to go into power
++	 * save during suspend.
++	 * Using a workque for this last write was only hapenning on resume
++	 * leaving the firmware with power save disabled during suspend,
++	 * while consuming full power during wowlan suspend.
++	 */
++	wlcore_fw_sleep(wl);
 +
-+#endif
--- 
+ 	return 0;
+ }
+=20
+--=20
 2.7.4
