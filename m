@@ -1,210 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52120 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751351AbdKUNqL (ORCPT
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:43185 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932072AbdK2MxV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 08:46:11 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: use QoS NDP for AP probing
-Date: Tue, 21 Nov 2017 14:46:08 +0100
-Message-Id: <20171121134608.13043-1-johannes@sipsolutions.net> (sfid-20171121_144712_740109_96DF0F65)
+        Wed, 29 Nov 2017 07:53:21 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v2 2/8] rsi: add bluetooth rx endpoint
+Date: Wed, 29 Nov 2017 18:15:07 +0530
+Message-Id: <1511959513-3902-3-git-send-email-amitkarwar@gmail.com> (sfid-20171129_135327_520999_647B01E7)
+In-Reply-To: <1511959513-3902-1-git-send-email-amitkarwar@gmail.com>
+References: <1511959513-3902-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-When connected to a QoS/WMM AP, mac80211 should use a QoS NDP
-for probing it, instead of a regular non-QoS one, fix this.
+USB endpoint 1 is used for WLAN which is presently in use.
+USB endpoint 2 is introduced for BT Rx traffic. Enumeration
+of Rx BT endpoint and submitting Rx BT URB are added.
 
-Change all the drivers to *not* allow QoS NDP for now, even
-though it looks like most of them should be OK with that.
+>From /sys/kernel/debug/usb/devices,
+Ad=81(I) is for WLAN EP IN and Ad=01(O) is for Wlan EP OUT.
+Ad=82(I) is for BT EP IN and Ad=02(O) is for BT EP OUT.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+T:  Bus=01 Lev=01 Prnt=01 Port=09 Cnt=03 Dev#=  4 Spd=480  MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=1618 ProdID=9113 Rev= 0.02
+S:  Manufacturer=Redpine Signals, Inc.
+S:  Product=Wireless USB Network Module
+S:  SerialNumber=000000000001
+C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
+I:* If#= 0 Alt= 0 #EPs= 6 Cls=00(>ifc ) Sub=00 Prot=00 Driver=(none)
+E:  Ad=81(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=01(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=82(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=02(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=03(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/ath/ath9k/channel.c |  2 +-
- drivers/net/wireless/st/cw1200/sta.c     |  4 ++--
- drivers/net/wireless/ti/wl1251/main.c    |  2 +-
- drivers/net/wireless/ti/wlcore/cmd.c     |  5 +++--
- include/net/mac80211.h                   |  8 +++++++-
- net/mac80211/mlme.c                      |  2 +-
- net/mac80211/tx.c                        | 29 +++++++++++++++++++++++++++--
- 7 files changed, 42 insertions(+), 10 deletions(-)
+v2: Included '/sys/kernel/debug/usb/devices' info in patch description(Marcel)
+---
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 37 ++++++++++++++++++++--------------
+ drivers/net/wireless/rsi/rsi_usb.h     |  6 +++---
+ 2 files changed, 25 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index f0439f2d566b..173891b11b2d 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1112,7 +1112,7 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
- 		if (!avp->assoc)
- 			return false;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 147fcee2..b212a15 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -103,41 +103,42 @@ static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
+ 	struct usb_host_interface *iface_desc;
+ 	struct usb_endpoint_descriptor *endpoint;
+ 	__le16 buffer_size;
+-	int ii, bep_found = 0;
++	int ii, bin_found = 0, bout_found = 0;
  
--		skb = ieee80211_nullfunc_get(sc->hw, vif);
-+		skb = ieee80211_nullfunc_get(sc->hw, vif, false);
- 		if (!skb)
- 			return false;
+ 	iface_desc = &(interface->altsetting[0]);
  
-diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
-index a52224836a2b..666b88cb2cfe 100644
---- a/drivers/net/wireless/st/cw1200/sta.c
-+++ b/drivers/net/wireless/st/cw1200/sta.c
-@@ -198,7 +198,7 @@ void __cw1200_cqm_bssloss_sm(struct cw1200_common *priv,
+ 	for (ii = 0; ii < iface_desc->desc.bNumEndpoints; ++ii) {
+ 		endpoint = &(iface_desc->endpoint[ii].desc);
  
- 		priv->bss_loss_state++;
+-		if ((!(dev->bulkin_endpoint_addr)) &&
++		if (!dev->bulkin_endpoint_addr[bin_found] &&
+ 		    (endpoint->bEndpointAddress & USB_DIR_IN) &&
+-		    ((endpoint->bmAttributes &
+-		    USB_ENDPOINT_XFERTYPE_MASK) ==
++		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
+ 		    USB_ENDPOINT_XFER_BULK)) {
+ 			buffer_size = endpoint->wMaxPacketSize;
+-			dev->bulkin_size = buffer_size;
+-			dev->bulkin_endpoint_addr =
++			dev->bulkin_size[bin_found] = buffer_size;
++			dev->bulkin_endpoint_addr[bin_found] =
+ 				endpoint->bEndpointAddress;
++			bin_found++;
+ 		}
  
--		skb = ieee80211_nullfunc_get(priv->hw, priv->vif);
-+		skb = ieee80211_nullfunc_get(priv->hw, priv->vif, false);
- 		WARN_ON(!skb);
- 		if (skb)
- 			cw1200_tx(priv->hw, NULL, skb);
-@@ -2266,7 +2266,7 @@ static int cw1200_upload_null(struct cw1200_common *priv)
- 		.rate = 0xFF,
- 	};
+-		if (!dev->bulkout_endpoint_addr[bep_found] &&
++		if (!dev->bulkout_endpoint_addr[bout_found] &&
+ 		    !(endpoint->bEndpointAddress & USB_DIR_IN) &&
+ 		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
+-		      USB_ENDPOINT_XFER_BULK)) {
+-			dev->bulkout_endpoint_addr[bep_found] =
++		    USB_ENDPOINT_XFER_BULK)) {
++			buffer_size = endpoint->wMaxPacketSize;
++			dev->bulkout_endpoint_addr[bout_found] =
+ 				endpoint->bEndpointAddress;
+ 			buffer_size = endpoint->wMaxPacketSize;
+-			dev->bulkout_size[bep_found] = buffer_size;
+-			bep_found++;
++			dev->bulkout_size[bout_found] = buffer_size;
++			bout_found++;
+ 		}
  
--	frame.skb = ieee80211_nullfunc_get(priv->hw, priv->vif);
-+	frame.skb = ieee80211_nullfunc_get(priv->hw, priv->vif, false);
- 	if (!frame.skb)
- 		return -ENOMEM;
+-		if (bep_found >= MAX_BULK_EP)
++		if (bin_found >= MAX_BULK_EP || bout_found >= MAX_BULK_EP)
+ 			break;
+ 	}
  
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 9915d83a4a30..6d02c660b4ab 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -566,7 +566,7 @@ static int wl1251_build_null_data(struct wl1251 *wl)
- 		size = sizeof(struct wl12xx_null_data_template);
- 		ptr = NULL;
- 	} else {
--		skb = ieee80211_nullfunc_get(wl->hw, wl->vif);
-+		skb = ieee80211_nullfunc_get(wl->hw, wl->vif, false);
- 		if (!skb)
- 			goto out;
- 		size = skb->len;
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 2bfc12fdc929..761cf8573a80 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -1069,7 +1069,8 @@ int wl12xx_cmd_build_null_data(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 		ptr = NULL;
- 	} else {
- 		skb = ieee80211_nullfunc_get(wl->hw,
--					     wl12xx_wlvif_to_vif(wlvif));
-+					     wl12xx_wlvif_to_vif(wlvif),
-+					     false);
- 		if (!skb)
- 			goto out;
- 		size = skb->len;
-@@ -1096,7 +1097,7 @@ int wl12xx_cmd_build_klv_null_data(struct wl1271 *wl,
- 	struct sk_buff *skb = NULL;
- 	int ret = -ENOMEM;
+-	if (!(dev->bulkin_endpoint_addr) &&
+-	    (dev->bulkout_endpoint_addr[0]))
++	if (!(dev->bulkin_endpoint_addr[0]) &&
++	    dev->bulkout_endpoint_addr[0])
+ 		return -EINVAL;
  
--	skb = ieee80211_nullfunc_get(wl->hw, vif);
-+	skb = ieee80211_nullfunc_get(wl->hw, vif, false);
- 	if (!skb)
- 		goto out;
+ 	return 0;
+@@ -273,7 +274,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
+ 	usb_fill_bulk_urb(urb,
+ 			  dev->usbdev,
+ 			  usb_rcvbulkpipe(dev->usbdev,
+-				dev->bulkin_endpoint_addr),
++			  dev->bulkin_endpoint_addr[ep_num - 1]),
+ 			  urb->transfer_buffer,
+ 			  3000,
+ 			  rsi_rx_done_handler,
+@@ -745,6 +746,12 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 	if (status)
+ 		goto err1;
  
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ed73f79fe6ad..2ee4af25256d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4474,18 +4474,24 @@ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
-  * ieee80211_nullfunc_get - retrieve a nullfunc template
-  * @hw: pointer obtained from ieee80211_alloc_hw().
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @qos_ok: QoS NDP is acceptable to the caller, this should be set
-+ *	if at all possible
-  *
-  * Creates a Nullfunc template which can, for example, uploaded to
-  * hardware. The template must be updated after association so that correct
-  * BSSID and address is used.
-  *
-+ * If @qos_ndp is set and the association is to an AP with QoS/WMM, the
-+ * returned packet will be QoS NDP.
-+ *
-  * Note: Caller (or hardware) is responsible for setting the
-  * &IEEE80211_FCTL_PM bit as well as Duration and Sequence Control fields.
-  *
-  * Return: The nullfunc template. %NULL on error.
-  */
- struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
--				       struct ieee80211_vif *vif);
-+				       struct ieee80211_vif *vif,
-+				       bool qos_ok);
- 
- /**
-  * ieee80211_probereq_get - retrieve a Probe Request template
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4c80e7896fa2..fa0f96c74898 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -896,7 +896,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 	struct ieee80211_hdr_3addr *nullfunc;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
--	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif);
-+	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif, true);
- 	if (!skb)
- 		return;
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7b8154474b9e..3160954fc406 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4438,13 +4438,15 @@ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
- EXPORT_SYMBOL(ieee80211_pspoll_get);
- 
- struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
--				       struct ieee80211_vif *vif)
-+				       struct ieee80211_vif *vif,
-+				       bool qos_ok)
- {
- 	struct ieee80211_hdr_3addr *nullfunc;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_if_managed *ifmgd;
- 	struct ieee80211_local *local;
- 	struct sk_buff *skb;
-+	bool qos = false;
- 
- 	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
- 		return NULL;
-@@ -4453,7 +4455,17 @@ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
- 	ifmgd = &sdata->u.mgd;
- 	local = sdata->local;
- 
--	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*nullfunc));
-+	if (qos_ok) {
-+		struct sta_info *sta;
-+
-+		rcu_read_lock();
-+		sta = sta_info_get(sdata, ifmgd->bssid);
-+		qos = sta && sta->sta.wme;
-+		rcu_read_unlock();
++	if (adapter->priv->coex_mode > 1) {
++		status = rsi_rx_urb_submit(adapter, BT_EP);
++		if (status)
++			goto err1;
 +	}
 +
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
-+			    sizeof(*nullfunc) + 2);
- 	if (!skb)
- 		return NULL;
+ 	return 0;
+ err1:
+ 	rsi_deinit_usb_interface(adapter);
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 7e781d5..0fda14c 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -31,7 +31,7 @@
+ #define USB_VENDOR_REGISTER_WRITE    0x16
+ #define RSI_USB_TX_HEAD_ROOM         128
  
-@@ -4463,6 +4475,19 @@ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
- 	nullfunc->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
- 					      IEEE80211_STYPE_NULLFUNC |
- 					      IEEE80211_FCTL_TODS);
-+	if (qos) {
-+		__le16 qos = cpu_to_le16(7);
-+
-+		BUILD_BUG_ON((IEEE80211_STYPE_QOS_NULLFUNC |
-+			      IEEE80211_STYPE_NULLFUNC) !=
-+			     IEEE80211_STYPE_QOS_NULLFUNC);
-+		nullfunc->frame_control |=
-+			cpu_to_le16(IEEE80211_STYPE_QOS_NULLFUNC);
-+		skb->priority = 7;
-+		skb_set_queue_mapping(skb, IEEE80211_AC_VO);
-+		skb_put_data(skb, &qos, sizeof(qos));
-+	}
-+
- 	memcpy(nullfunc->addr1, ifmgd->bssid, ETH_ALEN);
- 	memcpy(nullfunc->addr2, vif->addr, ETH_ALEN);
- 	memcpy(nullfunc->addr3, ifmgd->bssid, ETH_ALEN);
+-#define MAX_RX_URBS                  1
++#define MAX_RX_URBS                  2
+ #define MAX_BULK_EP                  8
+ #define WLAN_EP                      1
+ #define BT_EP                        2
+@@ -54,8 +54,8 @@ struct rsi_91x_usbdev {
+ 	struct usb_interface *pfunction;
+ 	struct rx_usb_ctrl_block rx_cb[MAX_RX_URBS];
+ 	u8 *tx_buffer;
+-	__le16 bulkin_size;
+-	u8 bulkin_endpoint_addr;
++	__le16 bulkin_size[MAX_BULK_EP];
++	u8 bulkin_endpoint_addr[MAX_BULK_EP];
+ 	__le16 bulkout_size[MAX_BULK_EP];
+ 	u8 bulkout_endpoint_addr[MAX_BULK_EP];
+ 	u32 tx_blk_size;
 -- 
-2.14.2
+2.7.4
