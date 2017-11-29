@@ -1,72 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47448 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751277AbdKYQew (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:49393 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752022AbdK2G7A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Nov 2017 11:34:52 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 25 Nov 2017 18:34:36 +0200
-Message-Id: <20171125163444.24258-4-luca@coelho.fi> (sfid-20171125_173458_219343_E3E6EF0A)
-In-Reply-To: <20171125163444.24258-1-luca@coelho.fi>
-References: <20171125163444.24258-1-luca@coelho.fi>
-Subject: [PATCH 03/11] iwlwifi: mvm: rs: don't override the rate history in the search cycle
+        Wed, 29 Nov 2017 01:59:00 -0500
+From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] ath10k: handling qos at STA side based on AP WMM
+ enable/disable
+Date: Wed, 29 Nov 2017 06:58:55 +0000
+Message-ID: <e93273148ad44a54bfb39bc7018bfcc0@aptaiexm02b.ap.qualcomm.com> (sfid-20171129_075904_605798_95881A07)
+References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
+ <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com>
+In-Reply-To: <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-When we are in a search cycle, we try different combinations
-of parameters. Those combinations are called 'columns'.
-When we switch to a new column, we first need to check if
-this column has a suitable rate, if not, we can't try it.
-This means we must not erase the statistics we gathered
-for the previous column until we are sure that we are
-indeed switching column.
-
-The code that tries to switch to a new column first sets
-a whole bunch of things for the new column, and only then
-checks that we can find suitable rates in that column.
-While doing that, the code mistakenly erased the rate
-statistics. This code was right until
-struct iwl_scale_tbl_info grew up for TPC.
-
-Fix this to make sure we don't erase the rate statistics
-until we are sure that we can indeed switch to the new
-column.
-
-Note that this bug is really harmless since it causes a
-change in the behavior only when we can't find any rate
-in the new column which should really not happen. In the
-case we do find a suitable we reset the rate statistics
-a few lines later anyway.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index c69515ed72df..fbfa5eafcc93 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -1877,12 +1877,10 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
- 	struct rs_rate *rate = &search_tbl->rate;
- 	const struct rs_tx_column *column = &rs_tx_columns[col_id];
- 	const struct rs_tx_column *curr_column = &rs_tx_columns[tbl->column];
--	u32 sz = (sizeof(struct iwl_scale_tbl_info) -
--		  (sizeof(struct iwl_rate_scale_data) * IWL_RATE_COUNT));
- 	unsigned long rate_mask = 0;
- 	u32 rate_idx = 0;
- 
--	memcpy(search_tbl, tbl, sz);
-+	memcpy(search_tbl, tbl, offsetof(struct iwl_scale_tbl_info, win));
- 
- 	rate->sgi = column->sgi;
- 	rate->ant = column->ant;
--- 
-2.15.0
+SGkgU2ViYXN0aWFuLA0KDQpJZiBJIGFtIG5vdCB3cm9uZyB5b3UgYXJlIHNlZWluZyB0aGUgaXNz
+dWUgd2l0aCBXUlQzMjAwQUNNIChNYXJ2ZWxsIDg4Vzg5NjQpIGFzIGNsaWVudCArIFFDQTk5ODQg
+KEZXIDogMTAuNC0zLjUuMy0wMDAzOCkgYXMgQVAgd2l0aCBiZWxvdyBjaGFuZ2UgeW91IGFyZSBz
+ZWVpbmcgdGhlIGNyYXNoIHdoaWxlIHJ1bm5pbmcgdHJhZmZpYyBiZXR3ZWVuIHRoZSBXUlQzMjAw
+QUNNICsgUUNBOTk4NCA/DQpEbyB5b3UgdXNlZCAgYW55IG90aGVyIGNsaWVudCBpbiBwbGFjZSBv
+ZiBXUlQzMjAwQUNNID8NCkNhbiB5b3Ugc2hhcmUgdGhlIG1vcmUgZGV0YWlscyBvbiBmaXJtd2Fy
+ZSBjcmFzaCA/DQoNClJlZ2FyZHMsDQpCYWxhamkuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
+LS0tDQpGcm9tOiBTZWJhc3RpYW4gR290dHNjaGFsbCBbbWFpbHRvOnMuZ290dHNjaGFsbEBkZC13
+cnQuY29tXSANClNlbnQ6IFdlZG5lc2RheSwgTm92ZW1iZXIgMjksIDIwMTcgODoyOCBBTQ0KVG86
+IEJhbGFqaSBQb3RodW5vb3JpIDxicG90aHVub0BxdGkucXVhbGNvbW0uY29tPjsgYXRoMTBrQGxp
+c3RzLmluZnJhZGVhZC5vcmcNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1
+YmplY3Q6IFJlOiBbUEFUQ0hdIGF0aDEwazogaGFuZGxpbmcgcW9zIGF0IFNUQSBzaWRlIGJhc2Vk
+IG9uIEFQIFdNTSBlbmFibGUvZGlzYWJsZQ0KDQpkaWQgeW91IG5vdGljZcKgIHRoYXQgTWFydmVs
+bCA4OFc4OTY0IGJhc2VkIGNsaWVudHMgd2lsbCBjcmFzaCAxMC40LTMuNS4zIGZpcm13YXJlcz/C
+oCAodGVzdGVkIHdpdGggOTk4NCBhbmQgMTAuNC0zLjUuMy0wMDAzOCkgY2xpZW50IGRldmljZSB3
+YXMgYSBsaW5rc3lzIHdydDMyMDBhY20gcnVubmluZyBkZC13cnQgZm9yIHRlc3RpbmcNCg0KQW0g
+MjguMTEuMjAxNyB1bSAxMTowNyBzY2hyaWViIGJwb3RodW5vQHF0aS5xdWFsY29tbS5jb206DQo+
+IEZyb206IEJhbGFqaSBQb3RodW5vb3JpIDxicG90aHVub0BxdGkucXVhbGNvbW0uY29tPg0KPg0K
+PiBEYXRhIHBhY2tldHMgYXJlIG5vdCBzZW50IGJ5IFNUQSBpbiBjYXNlIG9mIFNUQSBqb2luZWQg
+dG8gbm9uIFFPUyBBUCANCj4gKFdNTSBkaXNhYmxlZCBBUCkuIFRoaXMgaXMgaGFwcGVuaW5nIGJl
+Y2F1c2Ugb2YgU1RBIGlzIHNlbmRpbmcgZGF0YSANCj4gcGFja2V0cyB0byBmaXJtd2FyZSBmcm9t
+IGhvc3Qgd2l0aCBxb3MgZW5hYmxlZCBhbG9uZyB3aXRoIG5vbiBxb3MgDQo+IHF1ZXVlIHZhbHVl
+KFRJRCA9IDE2KS4NCj4gRHVlIHRvIHFvcyBlbmFibGVkLCBmaXJtd2FyZSBpcyBkaXNjYXJkaW5n
+IHRoZSBwYWNrZXQuDQo+DQo+IFRoaXMgcGF0Y2ggZml4ZXMgdGhpcyBpc3N1ZSBieSB1cGRhdGlu
+ZyB0aGUgcW9zIGJhc2VkIG9uIHN0YXRpb24gV01FIA0KPiBjYXBhYmlsaXR5IGZpZWxkIGlmIFdN
+TSBpcyBkaXNhYmxlZCBpbiBBUC4NCj4NCj4gVGhpcyBwYXRjaCBpcyByZXF1aXJlZCBieSAxMC40
+IGZhbWlseSBjaGlwc2V0cyBsaWtlIA0KPiBRQ0E0MDE5L1FDQTk4ODgvUUNBOTg4NC9RQ0E5OVgw
+Lg0KPiBGaXJtd2FyZSBWZXJzb2luIDogMTAuNC0zLjUuMS0wMDAxOC4NCj4NCj4gRm9yIDEwLjIu
+NCBmYW1pbHkgY2hpcHNldHMgUUNBOTg4WC9RQ0E5ODg3IGFuZCBRQ0E2MTc0IHRoaXMgcGF0Y2gg
+aGFzIA0KPiBubyBlZmZlY3QuDQo+DQo+IFNpZ25lZC1vZmYtYnk6IEJhbGFqaSBQb3RodW5vb3Jp
+IDxicG90aHVub0BxdGkucXVhbGNvbW0uY29tPg0KPiAtLS0NCj4gICBkcml2ZXJzL25ldC93aXJl
+bGVzcy9hdGgvYXRoMTBrL21hYy5jIHwgICAgMiArLQ0KPiAgIDEgZmlsZSBjaGFuZ2VkLCAxIGlu
+c2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvYXRoL2F0aDEway9tYWMuYyANCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgv
+YXRoMTBrL21hYy5jDQo+IGluZGV4IDBhOTQ3ZWUuLjI2MTZiOTkgMTAwNjQ0DQo+IC0tLSBhL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsvbWFjLmMNCj4gKysrIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvYXRoL2F0aDEway9tYWMuYw0KPiBAQCAtMjU2Myw3ICsyNTYzLDcgQEAgc3RhdGlj
+IHZvaWQgYXRoMTBrX3BlZXJfYXNzb2NfaF9xb3Moc3RydWN0IGF0aDEwayAqYXIsDQo+ICAgCQl9
+DQo+ICAgCQlicmVhazsNCj4gICAJY2FzZSBXTUlfVkRFVl9UWVBFX1NUQToNCj4gLQkJaWYgKHZp
+Zi0+YnNzX2NvbmYucW9zKQ0KPiArCQlpZiAoc3RhLT53bWUpDQo+ICAgCQkJYXJnLT5wZWVyX2Zs
+YWdzIHw9IGFydmlmLT5hci0+d21pLnBlZXJfZmxhZ3MtPnFvczsNCj4gICAJCWJyZWFrOw0KPiAg
+IAljYXNlIFdNSV9WREVWX1RZUEVfSUJTUzoNCg0KDQotLQ0KTWl0IGZyZXVuZGxpY2hlbiBHcsO8
+c3NlbiAvIFJlZ2FyZHMNCg0KU2ViYXN0aWFuIEdvdHRzY2hhbGwgLyBDVE8NCg0KTmV3TWVkaWEt
+TkVUIEdtYkggLSBERC1XUlQNCkZpcm1lbnNpdHo6ICBTdHViZW53YWxkYWxsZWUgMjFhLCA2NDYy
+NSBCZW5zaGVpbQ0KUmVnaXN0ZXJnZXJpY2h0OiBBbXRzZ2VyaWNodCBEYXJtc3RhZHQsIEhSQiAy
+NTQ3Mw0KR2VzY2jDpGZ0c2bDvGhyZXI6IFBldGVyIFN0ZWluaMOkdXNlciwgQ2hyaXN0aWFuIFNj
+aGVlbGUgaHR0cDovL3d3dy5kZC13cnQuY29tDQplbWFpbDogcy5nb3R0c2NoYWxsQGRkLXdydC5j
+b20NClRlbC46ICs0OTYyNTEtNTgyNjUwIC8gRmF4OiArNDk2MjUxLTU4MjY1NjUNCg0K
