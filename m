@@ -1,222 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47456 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751835AbdKYQex (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64442 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753169AbdK2JwI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Nov 2017 11:34:53 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Wed, 29 Nov 2017 04:52:08 -0500
+From: Rakesh Pillai <pillair@qti.qualcomm.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 25 Nov 2017 18:34:37 +0200
-Message-Id: <20171125163444.24258-5-luca@coelho.fi> (sfid-20171125_173508_519978_AB36CABB)
-In-Reply-To: <20171125163444.24258-1-luca@coelho.fi>
-References: <20171125163444.24258-1-luca@coelho.fi>
-Subject: [PATCH 04/11] iwlwifi: mvm: revert support new Coex firmware API
+        Rakesh Pillai <pillair@qti.qualcomm.com>,
+        Govind Singh <govinds@qti.qualcomm.com>
+Subject: [PATCH 1/4] ath10k: WMI: modify svc bitmap parsing for wcn3990
+Date: Wed, 29 Nov 2017 15:21:34 +0530
+Message-Id: <1511949097-524-1-git-send-email-pillair@qti.qualcomm.com> (sfid-20171129_105214_165664_0BEF101C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Due to the limitation of wmi tlv parsing logic, if there are
+two parameters in a wmi event with same tlv tag, we can get only
+the last value, as it overwrites the prev value of the same tlv tag.
 
-This new API will not be used, remove the code that
-supports it.
+The service ready event in wcn3990 contains two parameters of the
+same tag UINT32, due to which the svc bitmap is overwritten with the
+DBS support parameter.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Refactor the service ready event parsing to allow parsing two tlv
+of the same tag UINT32 for wcn3990.
+
+Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
+Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/coex.h | 30 ---------------------
- drivers/net/wireless/intel/iwlwifi/fw/file.h     |  3 ---
- drivers/net/wireless/intel/iwlwifi/mvm/coex.c    | 33 +++++-------------------
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 12 +++------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  6 -----
- 5 files changed, 9 insertions(+), 75 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c     |  4 ++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 58 ++++++++++++++++++++++++-------
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 46 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |  1 +
+ 4 files changed, 96 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-index d09555afe2c5..87c1ddea75ae 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/coex.h
-@@ -188,11 +188,6 @@ enum iwl_bt_mxbox_dw3 {
- 	BT_MBOX(3, UPDATE_REQUEST, 21, 1),
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0a947ee..b86b9c8 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3574,7 +3574,9 @@ static int ath10k_mac_tx_wmi_mgmt(struct ath10k *ar, struct sk_buff *skb)
+ 		return ATH10K_MAC_TX_HTT;
+ 	case ATH10K_HW_TXRX_MGMT:
+ 		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
+-			     ar->running_fw->fw_file.fw_features))
++			     ar->running_fw->fw_file.fw_features) ||
++			     test_bit(WMI_SERVICE_MGMT_TX_WMI,
++				      ar->wmi.svc_map))
+ 			return ATH10K_MAC_TX_WMI_MGMT;
+ 		else if (ar->htt.target_version_major >= 3)
+ 			return ATH10K_MAC_TX_HTT;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 7616c1c..35bcae4 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -917,31 +917,68 @@ static int ath10k_wmi_tlv_op_pull_phyerr_ev_hdr(struct ath10k *ar,
+ 	return -ENOMEM;
+ }
+ 
++struct wmi_tlv_svc_rdy_parse {
++	const struct hal_reg_capabilities *reg;
++	const struct wmi_tlv_svc_rdy_ev *ev;
++	const __le32 *svc_bmap;
++	const struct wlan_host_mem_req *mem_reqs;
++	bool svc_bmap_done;
++	bool dbs_hw_mode_done;
++};
++
++static int ath10k_wmi_tlv_svc_rdy_parse(struct ath10k *ar, u16 tag, u16 len,
++					const void *ptr, void *data)
++{
++	struct wmi_tlv_svc_rdy_parse *svc_rdy = data;
++
++	switch (tag) {
++	case WMI_TLV_TAG_STRUCT_SERVICE_READY_EVENT:
++		svc_rdy->ev = ptr;
++		break;
++	case WMI_TLV_TAG_STRUCT_HAL_REG_CAPABILITIES:
++		svc_rdy->reg = ptr;
++		break;
++	case WMI_TLV_TAG_ARRAY_STRUCT:
++		svc_rdy->mem_reqs = ptr;
++		break;
++	case WMI_TLV_TAG_ARRAY_UINT32:
++		if (!svc_rdy->svc_bmap_done) {
++			svc_rdy->svc_bmap_done = true;
++			svc_rdy->svc_bmap = ptr;
++		} else if (!svc_rdy->dbs_hw_mode_done) {
++			svc_rdy->dbs_hw_mode_done = true;
++		}
++		break;
++	default:
++		break;
++	}
++	return 0;
++}
++
+ static int ath10k_wmi_tlv_op_pull_svc_rdy_ev(struct ath10k *ar,
+ 					     struct sk_buff *skb,
+ 					     struct wmi_svc_rdy_ev_arg *arg)
+ {
+-	const void **tb;
+ 	const struct hal_reg_capabilities *reg;
+ 	const struct wmi_tlv_svc_rdy_ev *ev;
+ 	const __le32 *svc_bmap;
+ 	const struct wlan_host_mem_req *mem_reqs;
++	struct wmi_tlv_svc_rdy_parse svc_rdy = { };
+ 	int ret;
+ 
+-	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
+-	if (IS_ERR(tb)) {
+-		ret = PTR_ERR(tb);
++	ret = ath10k_wmi_tlv_iter(ar, skb->data, skb->len,
++				  ath10k_wmi_tlv_svc_rdy_parse, &svc_rdy);
++	if (ret) {
+ 		ath10k_warn(ar, "failed to parse tlv: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	ev = tb[WMI_TLV_TAG_STRUCT_SERVICE_READY_EVENT];
+-	reg = tb[WMI_TLV_TAG_STRUCT_HAL_REG_CAPABILITIES];
+-	svc_bmap = tb[WMI_TLV_TAG_ARRAY_UINT32];
+-	mem_reqs = tb[WMI_TLV_TAG_ARRAY_STRUCT];
++	ev = svc_rdy.ev;
++	reg = svc_rdy.reg;
++	svc_bmap = svc_rdy.svc_bmap;
++	mem_reqs = svc_rdy.mem_reqs;
+ 
+ 	if (!ev || !reg || !svc_bmap || !mem_reqs) {
+-		kfree(tb);
+ 		return -EPROTO;
+ 	}
+ 
+@@ -961,7 +998,6 @@ static int ath10k_wmi_tlv_op_pull_svc_rdy_ev(struct ath10k *ar,
+ 	    __le32_to_cpu(ev->abi.abi_ver_ns1) != WMI_TLV_ABI_VER_NS1 ||
+ 	    __le32_to_cpu(ev->abi.abi_ver_ns2) != WMI_TLV_ABI_VER_NS2 ||
+ 	    __le32_to_cpu(ev->abi.abi_ver_ns3) != WMI_TLV_ABI_VER_NS3) {
+-		kfree(tb);
+ 		return -ENOTSUPP;
+ 	}
+ 
+@@ -982,12 +1018,10 @@ static int ath10k_wmi_tlv_op_pull_svc_rdy_ev(struct ath10k *ar,
+ 	ret = ath10k_wmi_tlv_iter(ar, mem_reqs, ath10k_wmi_tlv_len(mem_reqs),
+ 				  ath10k_wmi_tlv_parse_mem_reqs, arg);
+ 	if (ret) {
+-		kfree(tb);
+ 		ath10k_warn(ar, "failed to parse mem_reqs tlv: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	kfree(tb);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index 22cf011..77327a2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -965,6 +965,50 @@ enum wmi_tlv_service {
+ 	WMI_TLV_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT,
+ 	WMI_TLV_SERVICE_MDNS_OFFLOAD,
+ 	WMI_TLV_SERVICE_SAP_AUTH_OFFLOAD,
++	WMI_TLV_SERVICE_DUAL_BAND_SIMULTANEOUS_SUPPORT,
++	WMI_TLV_SERVICE_OCB,
++	WMI_TLV_SERVICE_AP_ARPNS_OFFLOAD,
++	WMI_TLV_SERVICE_PER_BAND_CHAINMASK_SUPPORT,
++	WMI_TLV_SERVICE_PACKET_FILTER_OFFLOAD,
++	WMI_TLV_SERVICE_MGMT_TX_HTT,
++	WMI_TLV_SERVICE_MGMT_TX_WMI,
++	WMI_TLV_SERVICE_EXT_MSG,
++	WMI_TLV_SERVICE_MAWC,
++	WMI_TLV_SERVICE_PEER_ASSOC_CONF,
++	WMI_TLV_SERVICE_EGAP,
++	WMI_TLV_SERVICE_STA_PMF_OFFLOAD,
++	WMI_TLV_SERVICE_UNIFIED_WOW_CAPABILITY,
++	WMI_TLV_SERVICE_ENHANCED_PROXY_STA,
++	WMI_TLV_SERVICE_ATF,
++	WMI_TLV_SERVICE_COEX_GPIO,
++	WMI_TLV_SERVICE_AUX_SPECTRAL_INTF,
++	WMI_TLV_SERVICE_AUX_CHAN_LOAD_INTF,
++	WMI_TLV_SERVICE_BSS_CHANNEL_INFO_64,
++	WMI_TLV_SERVICE_ENTERPRISE_MESH,
++	WMI_TLV_SERVICE_RESTRT_CHNL_SUPPORT,
++	WMI_TLV_SERVICE_BPF_OFFLOAD,
++	WMI_TLV_SERVICE_SYNC_DELETE_CMDS,
++	WMI_TLV_SERVICE_SMART_ANTENNA_SW_SUPPORT,
++	WMI_TLV_SERVICE_SMART_ANTENNA_HW_SUPPORT,
++	WMI_TLV_SERVICE_RATECTRL_LIMIT_MAX_MIN_RATES,
++	WMI_TLV_SERVICE_NAN_DATA,
++	WMI_TLV_SERVICE_NAN_RTT,
++	WMI_TLV_SERVICE_11AX,
++	WMI_TLV_SERVICE_DEPRECATED_REPLACE,
++	WMI_TLV_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
++	WMI_TLV_SERVICE_ENHANCED_MCAST_FILTER,
++	WMI_TLV_SERVICE_PERIODIC_CHAN_STAT_SUPPORT,
++	WMI_TLV_SERVICE_MESH_11S,
++	WMI_TLV_SERVICE_HALF_RATE_QUARTER_RATE_SUPPORT,
++	WMI_TLV_SERVICE_VDEV_RX_FILTER,
++	WMI_TLV_SERVICE_P2P_LISTEN_OFFLOAD_SUPPORT,
++	WMI_TLV_SERVICE_MARK_FIRST_WAKEUP_PACKET,
++	WMI_TLV_SERVICE_MULTIPLE_MCAST_FILTER_SET,
++	WMI_TLV_SERVICE_HOST_MANAGED_RX_REORDER,
++	WMI_TLV_SERVICE_FLASH_RDWR_SUPPORT,
++	WMI_TLV_SERVICE_WLAN_STATS_REPORT,
++	WMI_TLV_SERVICE_TX_MSDU_ID_NEW_PARTITION_SUPPORT,
++	WMI_TLV_SERVICE_DFS_PHYERR_OFFLOAD,
  };
  
--enum iwl_bt_mxbox_dw4 {
--	BT_MBOX(4, ATS_BT_INTERVAL, 0, 7),
--	BT_MBOX(4, ATS_BT_ACTIVE_MAX_TH, 7, 7),
--};
--
- #define BT_MBOX_MSG(_notif, _num, _field)				     \
- 	((le32_to_cpu((_notif)->mbox_msg[(_num)]) & BT_MBOX##_num##_##_field)\
- 	>> BT_MBOX##_num##_##_field##_POS)
-@@ -232,31 +227,6 @@ enum iwl_bt_ci_compliance {
-  * @reserved: reserved
-  */
- struct iwl_bt_coex_profile_notif {
--	__le32 mbox_msg[8];
--	__le32 msg_idx;
--	__le32 bt_ci_compliance;
--
--	__le32 primary_ch_lut;
--	__le32 secondary_ch_lut;
--	__le32 bt_activity_grading;
--	u8 ttc_status;
--	u8 rrc_status;
--	__le16 reserved;
--} __packed; /* BT_COEX_PROFILE_NTFY_API_S_VER_5 */
--
--/**
-- * struct iwl_bt_coex_profile_notif - notification about BT coex
-- * @mbox_msg: message from BT to WiFi
-- * @msg_idx: the index of the message
-- * @bt_ci_compliance: enum %iwl_bt_ci_compliance
-- * @primary_ch_lut: LUT used for primary channel &enum iwl_bt_coex_lut_type
-- * @secondary_ch_lut: LUT used for secondary channel &enum iwl_bt_coex_lut_type
-- * @bt_activity_grading: the activity of BT &enum iwl_bt_activity_grading
-- * @ttc_status: is TTC enabled - one bit per PHY
-- * @rrc_status: is RRC enabled - one bit per PHY
-- * @reserved: reserved
-- */
--struct iwl_bt_coex_profile_notif_v4 {
- 	__le32 mbox_msg[4];
- 	__le32 msg_idx;
- 	__le32 bt_ci_compliance;
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 740d97093d1c..e52678c8f899 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -246,8 +246,6 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
-  * @IWL_UCODE_TLV_API_STA_TYPE: This ucode supports station type assignement.
-  * @IWL_UCODE_TLV_API_NAN2_VER2: This ucode supports NAN API version 2
-  * @IWL_UCODE_TLV_API_NEW_RX_STATS: should new RX STATISTICS API be used
-- * @IWL_UCODE_TLV_API_ATS_COEX_EXTERNAL: the coex notification is enlared to
-- *	include information about ACL time sharing.
-  * @IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY: Quota command includes a field
-  *	indicating low latency direction.
-  *
-@@ -266,7 +264,6 @@ enum iwl_ucode_tlv_api {
- 	/* API Set 1 */
- 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
- 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
--	IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL	= (__force iwl_ucode_tlv_api_t)37,
- 	IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY	= (__force iwl_ucode_tlv_api_t)38,
- 
- 	NUM_IWL_UCODE_TLV_API
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-index 79c80f181f7d..890dbfff3a06 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-@@ -7,7 +7,6 @@
-  *
-  * Copyright(c) 2013 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2017        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -34,7 +33,6 @@
-  *
-  * Copyright(c) 2013 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-- * Copyright(c) 2017        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -514,36 +512,17 @@ void iwl_mvm_rx_bt_coex_notif(struct iwl_mvm *mvm,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_bt_coex_profile_notif *notif = (void *)pkt->data;
- 
--	if (!iwl_mvm_has_new_ats_coex_api(mvm)) {
--		struct iwl_bt_coex_profile_notif_v4 *v4 = (void *)pkt->data;
--
--		mvm->last_bt_notif.mbox_msg[0] = v4->mbox_msg[0];
--		mvm->last_bt_notif.mbox_msg[1] = v4->mbox_msg[1];
--		mvm->last_bt_notif.mbox_msg[2] = v4->mbox_msg[2];
--		mvm->last_bt_notif.mbox_msg[3] = v4->mbox_msg[3];
--		mvm->last_bt_notif.msg_idx = v4->msg_idx;
--		mvm->last_bt_notif.bt_ci_compliance = v4->bt_ci_compliance;
--		mvm->last_bt_notif.primary_ch_lut = v4->primary_ch_lut;
--		mvm->last_bt_notif.secondary_ch_lut = v4->secondary_ch_lut;
--		mvm->last_bt_notif.bt_activity_grading =
--			v4->bt_activity_grading;
--		mvm->last_bt_notif.ttc_status = v4->ttc_status;
--		mvm->last_bt_notif.rrc_status = v4->rrc_status;
--	} else {
--		/* save this notification for future use: rssi fluctuations */
--		memcpy(&mvm->last_bt_notif, notif, sizeof(mvm->last_bt_notif));
--	}
--
- 	IWL_DEBUG_COEX(mvm, "BT Coex Notification received\n");
--	IWL_DEBUG_COEX(mvm, "\tBT ci compliance %d\n",
--		       mvm->last_bt_notif.bt_ci_compliance);
-+	IWL_DEBUG_COEX(mvm, "\tBT ci compliance %d\n", notif->bt_ci_compliance);
- 	IWL_DEBUG_COEX(mvm, "\tBT primary_ch_lut %d\n",
--		       le32_to_cpu(mvm->last_bt_notif.primary_ch_lut));
-+		       le32_to_cpu(notif->primary_ch_lut));
- 	IWL_DEBUG_COEX(mvm, "\tBT secondary_ch_lut %d\n",
--		       le32_to_cpu(mvm->last_bt_notif.secondary_ch_lut));
-+		       le32_to_cpu(notif->secondary_ch_lut));
- 	IWL_DEBUG_COEX(mvm, "\tBT activity grading %d\n",
--		       le32_to_cpu(mvm->last_bt_notif.bt_activity_grading));
-+		       le32_to_cpu(notif->bt_activity_grading));
- 
-+	/* remember this notification for future use: rssi fluctuations */
-+	memcpy(&mvm->last_bt_notif, notif, sizeof(mvm->last_bt_notif));
- 
- 	iwl_mvm_bt_coex_notif_handle(mvm);
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 2ff594f11259..dad18a609d9a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -470,8 +470,7 @@ static ssize_t iwl_dbgfs_disable_power_off_write(struct iwl_mvm *mvm, char *buf,
+ #define WMI_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id, len) \
+@@ -1121,6 +1165,8 @@ enum wmi_tlv_service {
+ 	       WMI_SERVICE_MDNS_OFFLOAD, len);
+ 	SVCMAP(WMI_TLV_SERVICE_SAP_AUTH_OFFLOAD,
+ 	       WMI_SERVICE_SAP_AUTH_OFFLOAD, len);
++	SVCMAP(WMI_TLV_SERVICE_MGMT_TX_WMI,
++	       WMI_SERVICE_MGMT_TX_WMI, len);
  }
  
- static
--int iwl_mvm_coex_dump_mbox(struct iwl_mvm *mvm,
--			   struct iwl_bt_coex_profile_notif *notif, char *buf,
-+int iwl_mvm_coex_dump_mbox(struct iwl_bt_coex_profile_notif *notif, char *buf,
- 			   int pos, int bufsz)
- {
- 	pos += scnprintf(buf+pos, bufsz-pos, "MBOX dw0:\n");
-@@ -525,12 +524,7 @@ int iwl_mvm_coex_dump_mbox(struct iwl_mvm *mvm,
- 	BT_MBOX_PRINT(3, INBAND_P, false);
- 	BT_MBOX_PRINT(3, MSG_TYPE_2, false);
- 	BT_MBOX_PRINT(3, SSN_2, false);
--	BT_MBOX_PRINT(3, UPDATE_REQUEST, !iwl_mvm_has_new_ats_coex_api(mvm));
--
--	if (iwl_mvm_has_new_ats_coex_api(mvm)) {
--		BT_MBOX_PRINT(4, ATS_BT_INTERVAL, false);
--		BT_MBOX_PRINT(4, ATS_BT_ACTIVE_MAX_TH, true);
--	}
-+	BT_MBOX_PRINT(3, UPDATE_REQUEST, true);
+ #undef SVCMAP
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index c02b21c..6c11b36 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -195,6 +195,7 @@ enum wmi_service {
+ 	WMI_SERVICE_SMART_LOGGING_SUPPORT,
+ 	WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
+ 	WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
++	WMI_SERVICE_MGMT_TX_WMI,
  
- 	return pos;
- }
-@@ -549,7 +543,7 @@ static ssize_t iwl_dbgfs_bt_notif_read(struct file *file, char __user *user_buf,
- 
- 	mutex_lock(&mvm->mutex);
- 
--	pos += iwl_mvm_coex_dump_mbox(mvm, notif, buf, pos, bufsz);
-+	pos += iwl_mvm_coex_dump_mbox(notif, buf, pos, bufsz);
- 
- 	pos += scnprintf(buf + pos, bufsz - pos, "bt_ci_compliance = %d\n",
- 			 notif->bt_ci_compliance);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 0e18c5066f04..bd6ba550c809 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1263,12 +1263,6 @@ static inline bool iwl_mvm_has_new_rx_stats_api(struct iwl_mvm *mvm)
- 			  IWL_UCODE_TLV_API_NEW_RX_STATS);
- }
- 
--static inline bool iwl_mvm_has_new_ats_coex_api(struct iwl_mvm *mvm)
--{
--	return fw_has_api(&mvm->fw->ucode_capa,
--			  IWL_UCODE_TLV_API_COEX_ATS_EXTERNAL);
--}
--
- static inline bool iwl_mvm_has_quota_low_latency(struct iwl_mvm *mvm)
- {
- 	return fw_has_api(&mvm->fw->ucode_capa,
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
 -- 
-2.15.0
+1.9.1
