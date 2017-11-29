@@ -1,84 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:45619 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932442AbdKFUkM (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:53850 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751558AbdK2Idl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 15:40:12 -0500
-Received: by mail-it0-f66.google.com with SMTP id n195so6996464itg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Nov 2017 12:40:12 -0800 (PST)
+        Wed, 29 Nov 2017 03:33:41 -0500
+Subject: Re: [PATCH] ath10k: handling qos at STA side based on AP WMM
+ enable/disable
+To: Balaji Pothunoori <bpothuno@qti.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
+ <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com>
+ <e93273148ad44a54bfb39bc7018bfcc0@aptaiexm02b.ap.qualcomm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <e84f2a95-178b-dc07-bc6e-9dc779e0db0f@dd-wrt.com> (sfid-20171129_093402_578641_49327924)
+Date: Wed, 29 Nov 2017 09:33:36 +0100
 MIME-Version: 1.0
-In-Reply-To: <1509997730.4492.422.camel@coelho.fi>
-References: <20171029122816.8802-1-luca@coelho.fi> <20171029122816.8802-14-luca@coelho.fi>
- <CAGXu5jLhCxwR1zntTYS_5X72kp-H8h++8PH-p5aKTC5oU-OaLw@mail.gmail.com> <1509997730.4492.422.camel@coelho.fi>
-From: Kees Cook <keescook@chromium.org>
-Date: Mon, 6 Nov 2017 12:40:11 -0800
-Message-ID: <CAGXu5j+X1Pyfhv9f+==EVdMjOi8ks+pzXEe2=uQVHtJjKLAEaA@mail.gmail.com> (sfid-20171106_214021_140437_B91FA5FE)
-Subject: Re: [PATCH 13/17] iwlwifi: mvm: Convert timers to use timer_setup()
-To: Luca Coelho <luca@coelho.fi>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <e93273148ad44a54bfb39bc7018bfcc0@aptaiexm02b.ap.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 6, 2017 at 11:48 AM, Luca Coelho <luca@coelho.fi> wrote:
-> On Mon, 2017-11-06 at 11:45 -0800, Kees Cook wrote:
->> On Sun, Oct 29, 2017 at 5:28 AM, Luca Coelho <luca@coelho.fi> wrote:
->> > From: Kees Cook <keescook@chromium.org>
->> >
->> > In preparation for unconditionally passing the struct timer_list
->> > pointer to
->> > all timer callbacks, switch to using the new timer_setup() and
->> > from_timer()
->> > to pass the timer pointer explicitly.
->> >
->> > The RCU lifetime on baid_data is unclear, so this adds a direct
->> > copy of the
->> > rcu_ptr passed to the original callback. It may be possible to
->> > improve this
->> > to just use baid_data->mvm->baid_map[baid_data->baid] instead.
->> >
->> > Cc: Johannes Berg <johannes.berg@intel.com>
->> > Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> > Cc: Luca Coelho <luciano.coelho@intel.com>
->> > Cc: Intel Linux Wireless <linuxwifi@intel.com>
->> > Cc: Kalle Valo <kvalo@codeaurora.org>
->> > Cc: Sara Sharon <sara.sharon@intel.com>
->> > Cc: linux-wireless@vger.kernel.org
->> > Cc: netdev@vger.kernel.org
->> > Signed-off-by: Kees Cook <keescook@chromium.org>
->> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->> > ---
->> >  drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 ++-
->> >  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  4 ++--
->> >  drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 18 +++++++++----
->> > -----
->> >  3 files changed, 13 insertions(+), 12 deletions(-)
->>
->> Hi,
->>
->> Thanks for taking this! I had a question on timing: is this expected
->> to land for 4.15? If not, I would like to take this via the timers
->> tree, since it is one of the few remaining conversions.
+Am 29.11.2017 um 07:58 schrieb Balaji Pothunoori:
+> Hi Sebastian,
 >
-> Hi Kees,
->
-> Yes, this should land for 4.15.  Kalle just pulled my pull-request
-> (which includes this) to wireless-drivers-next.  He told me he'll send
-> a pull-request for 4.15 during this week and hopefully Dave will pull
-> from him too.
->
-> I'll let you know if something doesn't go as planned.
+> If I am not wrong you are seeing the issue with WRT3200ACM (Marvell 88W8964) as client + QCA9984 (FW : 10.4-3.5.3-00038) as AP with below change you are seeing the crash while running traffic between the WRT3200ACM + QCA9984 ?
+> Do you used  any other client in place of WRT3200ACM ?
 
-Awesome, thanks very much!
+there is not much  traffic required. as it seems the firmware crashes 
+immediatly after association. the issue is also not present in 
+10.4-3.4-0082ww
 
--Kees
+> Can you share the more details on firmware crash ?
+
+so a firmware crashdump from log? i'll try to get it within the next 
+hours. just need to resetup the test scenario
+
+
+Sebastian
+
+
+>
+> Regards,
+> Balaji.
+>
+> -----Original Message-----
+> From: Sebastian Gottschall [mailto:s.gottschall@dd-wrt.com]
+> Sent: Wednesday, November 29, 2017 8:28 AM
+> To: Balaji Pothunoori <bpothuno@qti.qualcomm.com>; ath10k@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH] ath10k: handling qos at STA side based on AP WMM enable/disable
+>
+> did you notice  that Marvell 88W8964 based clients will crash 10.4-3.5.3 firmwares?  (tested with 9984 and 10.4-3.5.3-00038) client device was a linksys wrt3200acm running dd-wrt for testing
+>
+> Am 28.11.2017 um 11:07 schrieb bpothuno@qti.qualcomm.com:
+>> From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+>>
+>> Data packets are not sent by STA in case of STA joined to non QOS AP
+>> (WMM disabled AP). This is happening because of STA is sending data
+>> packets to firmware from host with qos enabled along with non qos
+>> queue value(TID = 16).
+>> Due to qos enabled, firmware is discarding the packet.
+>>
+>> This patch fixes this issue by updating the qos based on station WME
+>> capability field if WMM is disabled in AP.
+>>
+>> This patch is required by 10.4 family chipsets like
+>> QCA4019/QCA9888/QCA9884/QCA99X0.
+>> Firmware Versoin : 10.4-3.5.1-00018.
+>>
+>> For 10.2.4 family chipsets QCA988X/QCA9887 and QCA6174 this patch has
+>> no effect.
+>>
+>> Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+>> ---
+>>    drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+>>    1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
+>> b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 0a947ee..2616b99 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -2563,7 +2563,7 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+>>    		}
+>>    		break;
+>>    	case WMI_VDEV_TYPE_STA:
+>> -		if (vif->bss_conf.qos)
+>> +		if (sta->wme)
+>>    			arg->peer_flags |= arvif->ar->wmi.peer_flags->qos;
+>>    		break;
+>>    	case WMI_VDEV_TYPE_IBSS:
+>
+> --
+> Mit freundlichen Grüssen / Regards
+>
+> Sebastian Gottschall / CTO
+>
+> NewMedia-NET GmbH - DD-WRT
+> Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+> Registergericht: Amtsgericht Darmstadt, HRB 25473
+> Geschäftsführer: Peter Steinhäuser, Christian Scheele http://www.dd-wrt.com
+> email: s.gottschall@dd-wrt.com
+> Tel.: +496251-582650 / Fax: +496251-5826565
+>
 
 -- 
-Kees Cook
-Pixel Security
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
