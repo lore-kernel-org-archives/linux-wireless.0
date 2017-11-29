@@ -1,89 +1,338 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:43888 "EHLO
-        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754374AbdJIRtz (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:7362 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753154AbdK2Vdl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2017 13:49:55 -0400
-Received: by mail-oi0-f47.google.com with SMTP id c77so39067785oig.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Oct 2017 10:49:55 -0700 (PDT)
+        Wed, 29 Nov 2017 16:33:41 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: unify rx processing in napi_poll
+Date: Wed, 29 Nov 2017 13:33:32 -0800
+Message-ID: <1511991212-4837-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20171129_223348_924750_0FDD59A9)
 MIME-Version: 1.0
-From: Andrey Konovalov <andreyknvl@google.com>
-Date: Mon, 9 Oct 2017 19:49:54 +0200
-Message-ID: <CAAeHK+xaHtb_CnEhZ5ncPXDERYhOu-+kvaAXpjbcBPRTT6xd9A@mail.gmail.com> (sfid-20171009_195429_545988_FFC5803B)
-Subject: usb/net/ar5523: warning in ar5523_submit_rx_cmd/usb_submit_urb
-To: Pontus Fuchs <pontus.fuchs@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc: Dmitry Vyukov <dvyukov@google.com>,
-        Kostya Serebryany <kcc@google.com>,
-        syzkaller <syzkaller@googlegroups.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+With current NAPI implementation, NAPI poll can deliver more frames
+to net core than allotted budget. This may cause warning in napi_poll.
+Remaining quota is not accounted, while processing amsdus in
+rx_in_ord_ind and rx_ind queue. Adding num_msdus at last can not
+prevent delivering more frames to net core. With this change,
+all amdus from both in_ord_ind and rx_ind queues are processed and
+enqueued into common skb list instead of delivering into mac80211.
+Later msdus from common queue are dequeued and delivered depends on
+quota availability. This change also simplifies the rx processing in
+napi poll routine.
 
-I've got the following report while fuzzing the kernel with syzkaller.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h   |   1 -
+ drivers/net/wireless/ath/ath10k/htt.h    |   2 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 121 ++++++++++++++++---------------
+ 3 files changed, 63 insertions(+), 61 deletions(-)
 
-On commit 8a5776a5f49812d29fe4b2d0a2d71675c3facf3f (4.14-rc4).
-
-It seems that the driver doesn't check the endpoint type provided in
-the USB descriptor.
-
-usb 1-1: BOGUS urb xfer, pipe 3 != type 1
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 2265 at drivers/usb/core/urb.c:449
-usb_submit_urb+0xf8a/0x11d0
-Modules linked in:
-CPU: 1 PID: 2265 Comm: kworker/1:2 Not tainted
-4.14.0-rc4-43418-g43a3f84d2109 #379
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-Workqueue: usb_hub_wq hub_event
-task: ffff88006abc8000 task.stack: ffff880063e08000
-RIP: 0010:usb_submit_urb+0xf8a/0x11d0 drivers/usb/core/urb.c:448
-RSP: 0000:ffff880063e0ded0 EFLAGS: 00010286
-RAX: 0000000000000029 RBX: ffff8800694cbf00 RCX: 0000000000000000
-RDX: 0000000000000029 RSI: ffffffff86a76d40 RDI: ffffed000c7c1bcc
-RBP: ffff880063e0dfd0 R08: 1ffff1000c7c1a72 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000000 R12: 1ffff1000c7c1be1
-R13: 0000000000000001 R14: 0000000000000003 R15: ffff88006bb47e10
-FS:  0000000000000000(0000) GS:ffff88006c500000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f43b3d37000 CR3: 00000000695d4000 CR4: 00000000000006e0
-Call Trace:
- ar5523_submit_rx_cmd+0x20a/0x320 drivers/net/wireless/ath/ar5523/ar5523.c:208
- ar5523_probe+0x1683/0x3af0 drivers/net/wireless/ath/ar5523/ar5523.c:1643
- usb_probe_interface+0x35d/0x8e0 drivers/usb/core/driver.c:361
- really_probe drivers/base/dd.c:413
- driver_probe_device+0x610/0xa00 drivers/base/dd.c:557
- __device_attach_driver+0x230/0x290 drivers/base/dd.c:653
- bus_for_each_drv+0x161/0x210 drivers/base/bus.c:463
- __device_attach+0x26e/0x3d0 drivers/base/dd.c:710
- device_initial_probe+0x1f/0x30 drivers/base/dd.c:757
- bus_probe_device+0x1eb/0x290 drivers/base/bus.c:523
- device_add+0xd0b/0x1660 drivers/base/core.c:1835
- usb_set_configuration+0x104e/0x1870 drivers/usb/core/message.c:1932
- generic_probe+0x73/0xe0 drivers/usb/core/generic.c:174
- usb_probe_device+0xaf/0xe0 drivers/usb/core/driver.c:266
- really_probe drivers/base/dd.c:413
- driver_probe_device+0x610/0xa00 drivers/base/dd.c:557
- __device_attach_driver+0x230/0x290 drivers/base/dd.c:653
- bus_for_each_drv+0x161/0x210 drivers/base/bus.c:463
- __device_attach+0x26e/0x3d0 drivers/base/dd.c:710
- device_initial_probe+0x1f/0x30 drivers/base/dd.c:757
- bus_probe_device+0x1eb/0x290 drivers/base/bus.c:523
- device_add+0xd0b/0x1660 drivers/base/core.c:1835
- usb_new_device+0x7b8/0x1020 drivers/usb/core/hub.c:2457
- hub_port_connect drivers/usb/core/hub.c:4903
- hub_port_connect_change drivers/usb/core/hub.c:5009
- port_event drivers/usb/core/hub.c:5115
- hub_event+0x194d/0x3740 drivers/usb/core/hub.c:5195
- process_one_work+0xc7f/0x1db0 kernel/workqueue.c:2119
- worker_thread+0x221/0x1850 kernel/workqueue.c:2253
- kthread+0x3a1/0x470 kernel/kthread.c:231
- ret_from_fork+0x2a/0x40 arch/x86/entry/entry_64.S:431
-Code: 48 8b 85 30 ff ff ff 48 8d b8 98 00 00 00 e8 6e df c7 fe 45 89
-e8 44 89 f1 4c 89 fa 48 89 c6 48 c7 c7 c0 ce 04 87 e8 50 6d 16 fd <0f>
-ff e9 9b f7 ff ff e8 9a f1 5f fd e9 80 f7 ff ff e8 60 c4 2d
----[ end trace 4ec8ea7915652acc ]---
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 643041ef3271..6ecc58811656 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -67,7 +67,6 @@
+ 
+ /* NAPI poll budget */
+ #define ATH10K_NAPI_BUDGET      64
+-#define ATH10K_NAPI_QUOTA_LIMIT 60
+ 
+ /* SMBIOS type containing Board Data File Name Extension */
+ #define ATH10K_SMBIOS_BDF_EXT_TYPE 0xF8
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 6305308422c4..7d6143523634 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1695,7 +1695,7 @@ struct ath10k_htt {
+ 	/* This is used to group tx/rx completions separately and process them
+ 	 * in batches to reduce cache stalls
+ 	 */
+-	struct sk_buff_head rx_compl_q;
++	struct sk_buff_head rx_msdus_q;
+ 	struct sk_buff_head rx_in_ord_compl_q;
+ 	struct sk_buff_head tx_fetch_ind_q;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index e31438541ee1..d82f26dbba44 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -227,7 +227,7 @@ void ath10k_htt_rx_free(struct ath10k_htt *htt)
+ {
+ 	del_timer_sync(&htt->rx_ring.refill_retry_timer);
+ 
+-	skb_queue_purge(&htt->rx_compl_q);
++	skb_queue_purge(&htt->rx_msdus_q);
+ 	skb_queue_purge(&htt->rx_in_ord_compl_q);
+ 	skb_queue_purge(&htt->tx_fetch_ind_q);
+ 
+@@ -515,7 +515,7 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 	htt->rx_ring.sw_rd_idx.msdu_payld = 0;
+ 	hash_init(htt->rx_ring.skb_table);
+ 
+-	skb_queue_head_init(&htt->rx_compl_q);
++	skb_queue_head_init(&htt->rx_msdus_q);
+ 	skb_queue_head_init(&htt->rx_in_ord_compl_q);
+ 	skb_queue_head_init(&htt->tx_fetch_ind_q);
+ 	atomic_set(&htt->num_mpdus_ready, 0);
+@@ -951,16 +951,25 @@ static char *ath10k_get_tid(struct ieee80211_hdr *hdr, char *out, size_t size)
+ 	return out;
+ }
+ 
+-static void ath10k_process_rx(struct ath10k *ar,
+-			      struct ieee80211_rx_status *rx_status,
+-			      struct sk_buff *skb)
++static void ath10k_htt_rx_h_queue_msdu(struct ath10k *ar,
++				       struct ieee80211_rx_status *rx_status,
++				       struct sk_buff *skb)
++{
++	struct ieee80211_rx_status *status;
++
++	status = IEEE80211_SKB_RXCB(skb);
++	*status = *rx_status;
++
++	__skb_queue_tail(&ar->htt.rx_msdus_q, skb);
++}
++
++static void ath10k_process_rx(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ieee80211_rx_status *status;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	char tid[32];
+ 
+ 	status = IEEE80211_SKB_RXCB(skb);
+-	*status = *rx_status;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_DATA,
+ 		   "rx skb %pK len %u peer %pM %s %s sn %u %s%s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i amsdu-more %i\n",
+@@ -1492,7 +1501,7 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
+ 	}
+ }
+ 
+-static void ath10k_htt_rx_h_deliver(struct ath10k *ar,
++static void ath10k_htt_rx_h_enqueue(struct ath10k *ar,
+ 				    struct sk_buff_head *amsdu,
+ 				    struct ieee80211_rx_status *status)
+ {
+@@ -1515,7 +1524,7 @@ static void ath10k_htt_rx_h_deliver(struct ath10k *ar,
+ 			status->flag |= RX_FLAG_ALLOW_SAME_PN;
+ 		}
+ 
+-		ath10k_process_rx(ar, status, msdu);
++		ath10k_htt_rx_h_queue_msdu(ar, status, msdu);
+ 	}
+ }
+ 
+@@ -1627,7 +1636,7 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
+ 	struct ath10k *ar = htt->ar;
+ 	struct ieee80211_rx_status *rx_status = &htt->rx_status;
+ 	struct sk_buff_head amsdu;
+-	int ret, num_msdus;
++	int ret;
+ 
+ 	__skb_queue_head_init(&amsdu);
+ 
+@@ -1649,7 +1658,6 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
+ 		return ret;
+ 	}
+ 
+-	num_msdus = skb_queue_len(&amsdu);
+ 	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
+ 
+ 	/* only for ret = 1 indicates chained msdus */
+@@ -1658,9 +1666,9 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
+ 
+ 	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
+ 	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status, true);
+-	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
++	ath10k_htt_rx_h_enqueue(ar, &amsdu, rx_status);
+ 
+-	return num_msdus;
++	return 0;
+ }
+ 
+ static void ath10k_htt_rx_proc_rx_ind(struct ath10k_htt *htt,
+@@ -1868,15 +1876,14 @@ static void ath10k_htt_rx_h_rx_offload_prot(struct ieee80211_rx_status *status,
+ 			RX_FLAG_MMIC_STRIPPED;
+ }
+ 
+-static int ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
+-				      struct sk_buff_head *list)
++static void ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
++				       struct sk_buff_head *list)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+ 	struct ieee80211_rx_status *status = &htt->rx_status;
+ 	struct htt_rx_offload_msdu *rx;
+ 	struct sk_buff *msdu;
+ 	size_t offset;
+-	int num_msdu = 0;
+ 
+ 	while ((msdu = __skb_dequeue(list))) {
+ 		/* Offloaded frames don't have Rx descriptor. Instead they have
+@@ -1915,10 +1922,8 @@ static int ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
+ 
+ 		ath10k_htt_rx_h_rx_offload_prot(status, msdu);
+ 		ath10k_htt_rx_h_channel(ar, status, NULL, rx->vdev_id);
+-		ath10k_process_rx(ar, status, msdu);
+-		num_msdu++;
++		ath10k_htt_rx_h_queue_msdu(ar, status, msdu);
+ 	}
+-	return num_msdu;
+ }
+ 
+ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
+@@ -1934,7 +1939,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
+ 	u8 tid;
+ 	bool offload;
+ 	bool frag;
+-	int ret, num_msdus = 0;
++	int ret;
+ 
+ 	lockdep_assert_held(&htt->rx_ring.lock);
+ 
+@@ -1976,7 +1981,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
+ 	 * separately.
+ 	 */
+ 	if (offload)
+-		num_msdus = ath10k_htt_rx_h_rx_offload(ar, &list);
++		ath10k_htt_rx_h_rx_offload(ar, &list);
+ 
+ 	while (!skb_queue_empty(&list)) {
+ 		__skb_queue_head_init(&amsdu);
+@@ -1989,11 +1994,10 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
+ 			 * better to report something than nothing though. This
+ 			 * should still give an idea about rx rate to the user.
+ 			 */
+-			num_msdus += skb_queue_len(&amsdu);
+ 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
+ 			ath10k_htt_rx_h_filter(ar, &amsdu, status);
+ 			ath10k_htt_rx_h_mpdu(ar, &amsdu, status, false);
+-			ath10k_htt_rx_h_deliver(ar, &amsdu, status);
++			ath10k_htt_rx_h_enqueue(ar, &amsdu, status);
+ 			break;
+ 		case -EAGAIN:
+ 			/* fall through */
+@@ -2005,7 +2009,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
+ 			return -EIO;
+ 		}
+ 	}
+-	return num_msdus;
++	return ret;
+ }
+ 
+ static void ath10k_htt_rx_tx_fetch_resp_id_confirm(struct ath10k *ar,
+@@ -2606,6 +2610,24 @@ void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
+ }
+ EXPORT_SYMBOL(ath10k_htt_rx_pktlog_completion_handler);
+ 
++static int ath10k_htt_rx_deliver_msdu(struct ath10k *ar, int quota, int budget)
++{
++	struct sk_buff *skb;
++
++	while (quota < budget) {
++		if (skb_queue_empty(&ar->htt.rx_msdus_q))
++			break;
++
++		skb = __skb_dequeue(&ar->htt.rx_msdus_q);
++		if (!skb)
++			break;
++		ath10k_process_rx(ar, skb);
++		quota++;
++	}
++
++	return quota;
++}
++
+ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+@@ -2613,63 +2635,44 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
+ 	struct sk_buff_head tx_ind_q;
+ 	struct sk_buff *skb;
+ 	unsigned long flags;
+-	int quota = 0, done, num_rx_msdus;
++	int quota = 0, done, ret;
+ 	bool resched_napi = false;
+ 
+ 	__skb_queue_head_init(&tx_ind_q);
+ 
+-	/* Since in-ord-ind can deliver more than 1 A-MSDU in single event,
+-	 * process it first to utilize full available quota.
++	/* Process pending frames before dequeuing more data
++	 * from hardware.
+ 	 */
+-	while (quota < budget) {
+-		if (skb_queue_empty(&htt->rx_in_ord_compl_q))
+-			break;
+-
+-		skb = __skb_dequeue(&htt->rx_in_ord_compl_q);
+-		if (!skb) {
+-			resched_napi = true;
+-			goto exit;
+-		}
++	quota = ath10k_htt_rx_deliver_msdu(ar, quota, budget);
++	if (quota == budget) {
++		resched_napi = true;
++		goto exit;
++	}
+ 
++	while ((skb = __skb_dequeue(&htt->rx_in_ord_compl_q))) {
+ 		spin_lock_bh(&htt->rx_ring.lock);
+-		num_rx_msdus = ath10k_htt_rx_in_ord_ind(ar, skb);
++		ret = ath10k_htt_rx_in_ord_ind(ar, skb);
+ 		spin_unlock_bh(&htt->rx_ring.lock);
+-		if (num_rx_msdus < 0) {
+-			resched_napi = true;
+-			goto exit;
+-		}
+ 
+ 		dev_kfree_skb_any(skb);
+-		if (num_rx_msdus > 0)
+-			quota += num_rx_msdus;
+-
+-		if ((quota > ATH10K_NAPI_QUOTA_LIMIT) &&
+-		    !skb_queue_empty(&htt->rx_in_ord_compl_q)) {
++		if (ret == -EIO) {
+ 			resched_napi = true;
+ 			goto exit;
+ 		}
+ 	}
+ 
+-	while (quota < budget) {
+-		/* no more data to receive */
+-		if (!atomic_read(&htt->num_mpdus_ready))
+-			break;
+-
+-		num_rx_msdus = ath10k_htt_rx_handle_amsdu(htt);
+-		if (num_rx_msdus < 0) {
++	while (atomic_read(&htt->num_mpdus_ready)) {
++		ret = ath10k_htt_rx_handle_amsdu(htt);
++		if (ret == -EIO) {
+ 			resched_napi = true;
+ 			goto exit;
+ 		}
+-
+-		quota += num_rx_msdus;
+ 		atomic_dec(&htt->num_mpdus_ready);
+-		if ((quota > ATH10K_NAPI_QUOTA_LIMIT) &&
+-		    atomic_read(&htt->num_mpdus_ready)) {
+-			resched_napi = true;
+-			goto exit;
+-		}
+ 	}
+ 
++	/* Deliver received data after processing data from hardware */
++	quota = ath10k_htt_rx_deliver_msdu(ar, quota, budget);
++
+ 	/* From NAPI documentation:
+ 	 *  The napi poll() function may also process TX completions, in which
+ 	 *  case if it processes the entire TX ring then it should count that
+-- 
+1.9.1
