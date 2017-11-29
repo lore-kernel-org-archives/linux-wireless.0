@@ -1,74 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f181.google.com ([74.125.82.181]:45662 "EHLO
-        mail-ot0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750748AbdKEQuI (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:39978 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753158AbdK2Pc3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Nov 2017 11:50:08 -0500
-Received: by mail-ot0-f181.google.com with SMTP id q99so6471477ota.2
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Nov 2017 08:50:08 -0800 (PST)
-Subject: Re: rtl8821ae dbi read question
-To: Nik Nyby <nikolas@gnu.org>, linux-wireless@vger.kernel.org,
-        pkshih@realtek.com
-References: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <695fe947-7b0d-ef4b-5e90-ff503df6a08b@lwfinger.net> (sfid-20171105_175013_554323_DD749AD1)
-Date: Sun, 5 Nov 2017 10:50:06 -0600
-MIME-Version: 1.0
-In-Reply-To: <d46763ef-14d1-a6fa-fb33-a0bd676ef056@gnu.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 29 Nov 2017 10:32:29 -0500
+From: Anna-Maria Gleixner <anna-maria@linutronix.de>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
+        Christoph Hellwig <hch@lst.de>,
+        John Stultz <john.stultz@linaro.org>,
+        Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v3 31/36] mac80211_hwsim: Replace hrtimer tasklet with softirq hrtimer
+Date: Wed, 29 Nov 2017 16:30:56 +0100
+Message-Id: <20171129153101.27297-32-anna-maria@linutronix.de> (sfid-20171129_163554_419160_1F645016)
+In-Reply-To: <20171129153101.27297-1-anna-maria@linutronix.de>
+References: <20171129153101.27297-1-anna-maria@linutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2017 06:27 PM, Nik Nyby wrote:
-> In drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c, we have this function:
-> 
->   static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
->   {
->       u16 read_addr = addr & 0xfffc;
->       u8 tmp = 0, count = 0, ret = 0;
-> 
->       rtl_write_word(rtlpriv, REG_DBI_ADDR, read_addr);
->       rtl_write_byte(rtlpriv, REG_DBI_FLAG, 0x2);
->       tmp = rtl_read_byte(rtlpriv, REG_DBI_FLAG);
->       count = 0;
->       while (tmp && count < 20) {
->           udelay(10);
->           tmp = rtl_read_byte(rtlpriv, REG_DBI_FLAG);
->           count++;
->       }
->       if (0 == tmp) {
->           read_addr = REG_DBI_RDATA + addr % 4;
->           ret = rtl_read_word(rtlpriv, read_addr);
->       }
->       return ret;
->   }
-> 
-> Near the end of the function, in this line:
-> 
->    ret = rtl_read_word(rtlpriv, read_addr);
-> 
-> rtl_read_word() returns a u16, but "ret" is declared as a u8. Is that a problem, 
-> or is this code correct?
-> 
-> What's prompting this question is that I'm getting frequent disconnects from my 
-> access point with my rtl8821ae device. I've experienced this behavior both 
-> before and after the recent change to this function in commit 
-> b8b8b16352cd90c6083033fd4487f04fae935c18.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-If you read the commit message for commit b8b8b16352cd, you will find that we do 
-not understand why using a byte read causes failure, but reverting the change so 
-that it is a word read made it function again. The "fix" was found by a user 
-doing bisection, and verified on my system, where the RTL8821AE has stable 
-connections. The transfer rates take wild swings, but the connection is not dropped.
+Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
+callback in softirq context and remove the hrtimer_tasklet.
 
-If you NIC behaves differently, then you will need to help us debug the problem. 
-If you had a kernel that worked, then you might try bisection. If that is not 
-possible, you might try various combinations of module parameters aspm, 
-int_clear, and msi. Those parameters default to 1, so setting one or more of 
-them to zero is the test. Note, however, that changing any of these might cause 
-the system to fail, thus I recommend that you test changes dynamically with 
-modprobe, and not create a file in /etc/modprobe.d/ until you have verified that 
-changing one or more of these parameters actually helps. That will keep from 
-making your system unbootable.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
+Cc: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 44 ++++++++++++++++-------------------
+ 1 file changed, 20 insertions(+), 24 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 10b075a46b26..d3f1861398a7 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -537,7 +537,7 @@ struct mac80211_hwsim_data {
+ 	unsigned int rx_filter;
+ 	bool started, idle, scanning;
+ 	struct mutex mutex;
+-	struct tasklet_hrtimer beacon_timer;
++	struct hrtimer beacon_timer;
+ 	enum ps_mode {
+ 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
+ 	} ps;
+@@ -1418,7 +1418,7 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
+ {
+ 	struct mac80211_hwsim_data *data = hw->priv;
+ 	data->started = false;
+-	tasklet_hrtimer_cancel(&data->beacon_timer);
++	hrtimer_cancel(&data->beacon_timer);
+ 	wiphy_dbg(hw->wiphy, "%s\n", __func__);
+ }
+ 
+@@ -1541,14 +1541,12 @@ static enum hrtimer_restart
+ mac80211_hwsim_beacon(struct hrtimer *timer)
+ {
+ 	struct mac80211_hwsim_data *data =
+-		container_of(timer, struct mac80211_hwsim_data,
+-			     beacon_timer.timer);
++		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
+ 	struct ieee80211_hw *hw = data->hw;
+ 	u64 bcn_int = data->beacon_int;
+-	ktime_t next_bcn;
+ 
+ 	if (!data->started)
+-		goto out;
++		return HRTIMER_NORESTART;
+ 
+ 	ieee80211_iterate_active_interfaces_atomic(
+ 		hw, IEEE80211_IFACE_ITER_NORMAL,
+@@ -1560,11 +1558,9 @@ mac80211_hwsim_beacon(struct hrtimer *timer)
+ 		data->bcn_delta = 0;
+ 	}
+ 
+-	next_bcn = ktime_add(hrtimer_get_expires(timer),
+-			     ns_to_ktime(bcn_int * 1000));
+-	tasklet_hrtimer_start(&data->beacon_timer, next_bcn, HRTIMER_MODE_ABS);
+-out:
+-	return HRTIMER_NORESTART;
++	hrtimer_forward(&data->beacon_timer, hrtimer_get_expires(timer),
++			ns_to_ktime(bcn_int * NSEC_PER_USEC));
++	return HRTIMER_RESTART;
+ }
+ 
+ static const char * const hwsim_chanwidths[] = {
+@@ -1638,15 +1634,15 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_unlock(&data->mutex);
+ 
+ 	if (!data->started || !data->beacon_int)
+-		tasklet_hrtimer_cancel(&data->beacon_timer);
+-	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
++		hrtimer_cancel(&data->beacon_timer);
++	else if (!hrtimer_is_queued(&data->beacon_timer)) {
+ 		u64 tsf = mac80211_hwsim_get_tsf(hw, NULL);
+ 		u32 bcn_int = data->beacon_int;
+ 		u64 until_tbtt = bcn_int - do_div(tsf, bcn_int);
+ 
+-		tasklet_hrtimer_start(&data->beacon_timer,
+-				      ns_to_ktime(until_tbtt * 1000),
+-				      HRTIMER_MODE_REL);
++		hrtimer_start(&data->beacon_timer,
++			      ns_to_ktime(until_tbtt * 1000),
++			      HRTIMER_MODE_REL_SOFT);
+ 	}
+ 
+ 	return 0;
+@@ -1709,7 +1705,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 			  info->enable_beacon, info->beacon_int);
+ 		vp->bcn_en = info->enable_beacon;
+ 		if (data->started &&
+-		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
++		    !hrtimer_is_queued(&data->beacon_timer) &&
+ 		    info->enable_beacon) {
+ 			u64 tsf, until_tbtt;
+ 			u32 bcn_int;
+@@ -1717,9 +1713,9 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 			tsf = mac80211_hwsim_get_tsf(hw, vif);
+ 			bcn_int = data->beacon_int;
+ 			until_tbtt = bcn_int - do_div(tsf, bcn_int);
+-			tasklet_hrtimer_start(&data->beacon_timer,
+-					      ns_to_ktime(until_tbtt * 1000),
+-					      HRTIMER_MODE_REL);
++			hrtimer_start(&data->beacon_timer,
++				      ns_to_ktime(until_tbtt * 1000),
++				      HRTIMER_MODE_REL_SOFT);
+ 		} else if (!info->enable_beacon) {
+ 			unsigned int count = 0;
+ 			ieee80211_iterate_active_interfaces_atomic(
+@@ -1728,7 +1724,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 			wiphy_dbg(hw->wiphy, "  beaconing vifs remaining: %u",
+ 				  count);
+ 			if (count == 0) {
+-				tasklet_hrtimer_cancel(&data->beacon_timer);
++				hrtimer_cancel(&data->beacon_timer);
+ 				data->beacon_int = 0;
+ 			}
+ 		}
+@@ -2720,9 +2716,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 				    data->debugfs,
+ 				    data, &hwsim_simulate_radar);
+ 
+-	tasklet_hrtimer_init(&data->beacon_timer,
+-			     mac80211_hwsim_beacon,
+-			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
++	hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
++		     HRTIMER_MODE_REL_SOFT);
++	data->beacon_timer.function = mac80211_hwsim_beacon;
+ 
+ 	spin_lock_bh(&hwsim_radio_lock);
+ 	list_add_tail(&data->list, &hwsim_radios);
+-- 
+2.11.0
