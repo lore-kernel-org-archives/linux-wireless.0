@@ -1,143 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:43648 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750771AbdK3FYq (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:43907 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751377AbdK2C5e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Nov 2017 00:24:46 -0500
-From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] ath10k: handling qos at STA side based on AP WMM
+        Tue, 28 Nov 2017 21:57:34 -0500
+Subject: Re: [PATCH] ath10k: handling qos at STA side based on AP WMM
  enable/disable
-Date: Thu, 30 Nov 2017 05:24:40 +0000
-Message-ID: <b89b64babafd4f309ca5d539f484d140@aptaiexm02b.ap.qualcomm.com> (sfid-20171130_062451_444814_05154AF3)
+To: bpothuno@qti.qualcomm.com, ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
 References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
- <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com>
- <e93273148ad44a54bfb39bc7018bfcc0@aptaiexm02b.ap.qualcomm.com>
- <e84f2a95-178b-dc07-bc6e-9dc779e0db0f@dd-wrt.com>
- <8f027afc7c094e6d84ff4205384eb66d@aptaiexm02b.ap.qualcomm.com>
- <9c0c8939-c3d6-92ed-0d2d-2bd57c9234d7@dd-wrt.com>
-In-Reply-To: <9c0c8939-c3d6-92ed-0d2d-2bd57c9234d7@dd-wrt.com>
-Content-Type: text/plain; charset="utf-8"
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com> (sfid-20171129_035738_204823_323754C3)
+Date: Wed, 29 Nov 2017 03:57:31 +0100
 MIME-Version: 1.0
+In-Reply-To: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pj4+PiBIaSBTZWJhc3RpYW4sDQo+Pj4+SWYgSSBhbSBub3Qgd3JvbmcgeW91IGFyZSBzZWVpbmcg
-dGhlIGlzc3VlIHdpdGggV1JUMzIwMEFDTSAoTWFydmVsbCA4OFc4OTY0KSBhcyBjbGllbnQgKyBR
-Q0E5OTg0IChGVyA6IDEwLjQtMy41LjMtMDAwMzgpIGFzIEFQIHdpdGggYmVsb3cgY2hhbmdlIHlv
-dSBhcmUgc2VlaW5nIHRoZSBjcmFzaCB3aGlsZSBydW5uaW5nIHRyYWZmaWMgYmV0d2VlbiB0aGUg
-V1JUMzIwMEFDTSArIFFDQTk5ODQgPw0KPj4+PiBEbyB5b3UgdXNlZCAgYW55IG90aGVyIGNsaWVu
-dCBpbiBwbGFjZSBvZiBXUlQzMjAwQUNNID8NCj4+PiB0aGVyZSBpcyBub3QgbXVjaCAgdHJhZmZp
-YyByZXF1aXJlZC4gYXMgaXQgc2VlbXMgdGhlIGZpcm13YXJlIGNyYXNoZXMgDQo+Pj4gaW1tZWRp
-YXRseSBhZnRlciBhc3NvY2lhdGlvbi4gdGhlIGlzc3VlIGlzIGFsc28gbm90IHByZXNlbnQgaW4g
-DQo+Pj4gMTAuNC0zLjQtMDA4Mnd3DQo+PiBTdGlsbCBteSBxdWVzdGlvbiBpcyBub3QgY2xlYXJl
-ZCwgIGZpcm13YXJlIGNyYXNoIGlzIGR1ZSB0byB0aGlzIHBhdGNoID8gQWxzbyBsZXQgbWUga25v
-dyBkbyB5b3Ugb2JzZXJ2ZWQgc2FtZSBiZWhhdmlvciB3aXRoIGFueSBvdGhlciBjaGlwc2V0ID8N
-Cg0KPm5vLiBpdHMgdW5yZWxhdGVkIHRvIHRoaXMgcGF0Y2ggYnV0IHNpbmNlIHlvdSdyZSB3b3Jr
-aW5nIGZvciBxY2EgaSB0aG91Z2h0IGl0IHdvdWxkIG1ha2Ugc2Vuc2UgdG8gdGVsbCB5b3UgdGhp
-cyBzaW5jZSBzYXcgdGhhdCB5b3UncmUgdXNpbmcgYXRoMTBrIGZpcm13YXJlcyB3aGljaCBhcmVu
-dCBwdWJsaXNoZWQgb2ZmaWNpYWxsIGJ1dCBiYXNlZCBvbiB0aGUNCg0KPnFjYSBmaXJtd2FyZXMg
-d2hpY2ggYXJlIHB1Ymxpc2hlZCBvbiBjaGlwY29kZS4gc2luY2UgaSB3YXMgdGVzdGluZyB0aGVz
-ZSBmaXJtd2FyZXMgdG9vIHNvbWUgd2Vla3MgYWdvIGkgZm91bmQgaXRzIGEgZ29vZCBpZGVhIHRv
-IHRlbGwgeW91IHRoaXMNCg0KVGhhbmtzIGZvciBjb25maXJtYXRpb24gLCBMZXQgdXMga25vdyBm
-cm9tIHdoZXJlIHlvdSBoYXZlIHByb2N1cmVkIGF0aDEwayBmaXJtd2FyZSA6IDEwLjQtMy41LjMt
-MDAwMzggPyBEaWQgeW91IGFsc28gc2VlbiB0aGUgaXNzdWUgb24gbGF0ZXN0IGZpcm13YXJlIHZl
-cnNpb24/DQoNCj4+DQo+PiAgIA0KPj4gUmVnYXJkcywNCj4+IEJhbGFqaS4NCj4NCj4+IFNlYmFz
-dGlhbg0KPg0KPj4+IFJlZ2FyZHMsDQo+Pj4gQmFsYWppLg0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KRnJvbTogU2ViYXN0aWFuIEdvdHRzY2hhbGwgW21haWx0bzpzLmdvdHRzY2hhbGxA
-ZGQtd3J0LmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDI5LCAyMDE3IDc6MDggUE0N
-ClRvOiBCYWxhamkgUG90aHVub29yaSA8YnBvdGh1bm9AcXRpLnF1YWxjb21tLmNvbT47IGF0aDEw
-a0BsaXN0cy5pbmZyYWRlYWQub3JnDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
-DQpTdWJqZWN0OiBSZTogW1BBVENIXSBhdGgxMGs6IGhhbmRsaW5nIHFvcyBhdCBTVEEgc2lkZSBi
-YXNlZCBvbiBBUCBXTU0gZW5hYmxlL2Rpc2FibGUNCg0KQW0gMjkuMTEuMjAxNyB1bSAxMToxMiBz
-Y2hyaWViIEJhbGFqaSBQb3RodW5vb3JpOg0KPj4+IEhpIFNlYmFzdGlhbiwNCj4+Pg0KPj4+IElm
-IEkgYW0gbm90IHdyb25nIHlvdSBhcmUgc2VlaW5nIHRoZSBpc3N1ZSB3aXRoIFdSVDMyMDBBQ00g
-KE1hcnZlbGwgODhXODk2NCkgYXMgY2xpZW50ICsgUUNBOTk4NCAoRlcgOiAxMC40LTMuNS4zLTAw
-MDM4KSBhcyBBUCB3aXRoIGJlbG93IGNoYW5nZSB5b3UgYXJlIHNlZWluZyB0aGUgY3Jhc2ggd2hp
-bGUgcnVubmluZyB0cmFmZmljIGJldHdlZW4gdGhlIFdSVDMyMDBBQ00gKyBRQ0E5OTg0ID8NCj4+
-PiBEbyB5b3UgdXNlZCAgYW55IG90aGVyIGNsaWVudCBpbiBwbGFjZSBvZiBXUlQzMjAwQUNNID8N
-Cj4+IHRoZXJlIGlzIG5vdCBtdWNoICB0cmFmZmljIHJlcXVpcmVkLiBhcyBpdCBzZWVtcyB0aGUg
-ZmlybXdhcmUgY3Jhc2hlcyANCj4+IGltbWVkaWF0bHkgYWZ0ZXIgYXNzb2NpYXRpb24uIHRoZSBp
-c3N1ZSBpcyBhbHNvIG5vdCBwcmVzZW50IGluIA0KPj4gMTAuNC0zLjQtMDA4Mnd3DQo+IFN0aWxs
-IG15IHF1ZXN0aW9uIGlzIG5vdCBjbGVhcmVkLCAgZmlybXdhcmUgY3Jhc2ggaXMgZHVlIHRvIHRo
-aXMgcGF0Y2ggPyBBbHNvIGxldCBtZSBrbm93IGRvIHlvdSBvYnNlcnZlZCBzYW1lIGJlaGF2aW9y
-IHdpdGggYW55IG90aGVyIGNoaXBzZXQgPw0KDQpuby4gaXRzIHVucmVsYXRlZCB0byB0aGlzIHBh
-dGNoIGJ1dCBzaW5jZSB5b3UncmUgd29ya2luZyBmb3IgcWNhIGkgdGhvdWdodCBpdCB3b3VsZCBt
-YWtlIHNlbnNlIHRvIHRlbGwgeW91IHRoaXMgc2luY2Ugc2F3IHRoYXQgeW91J3JlIHVzaW5nIGF0
-aDEwayBmaXJtd2FyZXMgd2hpY2ggYXJlbnQgcHVibGlzaGVkIG9mZmljaWFsbCBidXQgYmFzZWQg
-b24gdGhlDQoNCnFjYSBmaXJtd2FyZXMgd2hpY2ggYXJlIHB1Ymxpc2hlZCBvbiBjaGlwY29kZS4g
-c2luY2UgaSB3YXMgdGVzdGluZyB0aGVzZSBmaXJtd2FyZXMgdG9vIHNvbWUgd2Vla3MgYWdvIGkg
-Zm91bmQgaXRzIGEgZ29vZCBpZGVhIHRvIHRlbGwgeW91IHRoaXMNCg0KPg0KPiAgIA0KPiBSZWdh
-cmRzLA0KPiBCYWxhamkuDQo+DQo+PiBTZWJhc3RpYW4NCj4NCj4+PiBSZWdhcmRzLA0KPj4+IEJh
-bGFqaS4NCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogU2ViYXN0aWFuIEdv
-dHRzY2hhbGwgW21haWx0bzpzLmdvdHRzY2hhbGxAZGQtd3J0LmNvbV0NCj4gU2VudDogV2VkbmVz
-ZGF5LCBOb3ZlbWJlciAyOSwgMjAxNyAyOjA0IFBNDQo+IFRvOiBCYWxhamkgUG90aHVub29yaSA8
-YnBvdGh1bm9AcXRpLnF1YWxjb21tLmNvbT47IGF0aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnDQo+
-IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRD
-SF0gYXRoMTBrOiBoYW5kbGluZyBxb3MgYXQgU1RBIHNpZGUgYmFzZWQgb24gQVAgV01NIGVuYWJs
-ZS9kaXNhYmxlDQo+DQo+IEFtIDI5LjExLjIwMTcgdW0gMDc6NTggc2NocmllYiBCYWxhamkgUG90
-aHVub29yaToNCj4+IEhpIFNlYmFzdGlhbiwNCj4+DQo+PiBJZiBJIGFtIG5vdCB3cm9uZyB5b3Ug
-YXJlIHNlZWluZyB0aGUgaXNzdWUgd2l0aCBXUlQzMjAwQUNNIChNYXJ2ZWxsIDg4Vzg5NjQpIGFz
-IGNsaWVudCArIFFDQTk5ODQgKEZXIDogMTAuNC0zLjUuMy0wMDAzOCkgYXMgQVAgd2l0aCBiZWxv
-dyBjaGFuZ2UgeW91IGFyZSBzZWVpbmcgdGhlIGNyYXNoIHdoaWxlIHJ1bm5pbmcgdHJhZmZpYyBi
-ZXR3ZWVuIHRoZSBXUlQzMjAwQUNNICsgUUNBOTk4NCA/DQo+PiBEbyB5b3UgdXNlZCAgYW55IG90
-aGVyIGNsaWVudCBpbiBwbGFjZSBvZiBXUlQzMjAwQUNNID8NCj4gdGhlcmUgaXMgbm90IG11Y2jC
-oCB0cmFmZmljIHJlcXVpcmVkLiBhcyBpdCBzZWVtcyB0aGUgZmlybXdhcmUgY3Jhc2hlcyBpbW1l
-ZGlhdGx5IGFmdGVyIGFzc29jaWF0aW9uLiB0aGUgaXNzdWUgaXMgYWxzbyBub3QgcHJlc2VudCBp
-biAxMC40LTMuNC0wMDgyd3cNCj4NCj4+IENhbiB5b3Ugc2hhcmUgdGhlIG1vcmUgZGV0YWlscyBv
-biBmaXJtd2FyZSBjcmFzaCA/DQo+IHNvIGEgZmlybXdhcmUgY3Jhc2hkdW1wIGZyb20gbG9nPyBp
-J2xsIHRyeSB0byBnZXQgaXQgd2l0aGluIHRoZSBuZXh0IGhvdXJzLiBqdXN0IG5lZWQgdG8gcmVz
-ZXR1cCB0aGUgdGVzdCBzY2VuYXJpbw0KPg0KPg0KPiBTZWJhc3RpYW4NCj4NCj4NCj4+IFJlZ2Fy
-ZHMsDQo+PiBCYWxhamkuDQo+Pg0KPj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4+IEZy
-b206IFNlYmFzdGlhbiBHb3R0c2NoYWxsIFttYWlsdG86cy5nb3R0c2NoYWxsQGRkLXdydC5jb21d
-DQo+PiBTZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDI5LCAyMDE3IDg6MjggQU0NCj4+IFRvOiBC
-YWxhamkgUG90aHVub29yaSA8YnBvdGh1bm9AcXRpLnF1YWxjb21tLmNvbT47IGF0aDEwa0BsaXN0
-cy5pbmZyYWRlYWQub3JnDQo+PiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+
-PiBTdWJqZWN0OiBSZTogW1BBVENIXSBhdGgxMGs6IGhhbmRsaW5nIHFvcyBhdCBTVEEgc2lkZSBi
-YXNlZCBvbiBBUCBXTU0gZW5hYmxlL2Rpc2FibGUNCj4+DQo+PiBkaWQgeW91IG5vdGljZcKgIHRo
-YXQgTWFydmVsbCA4OFc4OTY0IGJhc2VkIGNsaWVudHMgd2lsbCBjcmFzaCAxMC40LTMuNS4zIGZp
-cm13YXJlcz/CoCAodGVzdGVkIHdpdGggOTk4NCBhbmQgMTAuNC0zLjUuMy0wMDAzOCkgY2xpZW50
-IGRldmljZSB3YXMgYSBsaW5rc3lzIHdydDMyMDBhY20gcnVubmluZyBkZC13cnQgZm9yIHRlc3Rp
-bmcNCj4+DQo+PiBBbSAyOC4xMS4yMDE3IHVtIDExOjA3IHNjaHJpZWIgYnBvdGh1bm9AcXRpLnF1
-YWxjb21tLmNvbToNCj4+PiBGcm9tOiBCYWxhamkgUG90aHVub29yaSA8YnBvdGh1bm9AcXRpLnF1
-YWxjb21tLmNvbT4NCj4+Pg0KPj4+IERhdGEgcGFja2V0cyBhcmUgbm90IHNlbnQgYnkgU1RBIGlu
-IGNhc2Ugb2YgU1RBIGpvaW5lZCB0byBub24gUU9TIEFQDQo+Pj4gKFdNTSBkaXNhYmxlZCBBUCku
-IFRoaXMgaXMgaGFwcGVuaW5nIGJlY2F1c2Ugb2YgU1RBIGlzIHNlbmRpbmcgZGF0YQ0KPj4+IHBh
-Y2tldHMgdG8gZmlybXdhcmUgZnJvbSBob3N0IHdpdGggcW9zIGVuYWJsZWQgYWxvbmcgd2l0aCBu
-b24gcW9zDQo+Pj4gcXVldWUgdmFsdWUoVElEID0gMTYpLg0KPj4+IER1ZSB0byBxb3MgZW5hYmxl
-ZCwgZmlybXdhcmUgaXMgZGlzY2FyZGluZyB0aGUgcGFja2V0Lg0KPj4+DQo+Pj4gVGhpcyBwYXRj
-aCBmaXhlcyB0aGlzIGlzc3VlIGJ5IHVwZGF0aW5nIHRoZSBxb3MgYmFzZWQgb24gc3RhdGlvbiBX
-TUUNCj4+PiBjYXBhYmlsaXR5IGZpZWxkIGlmIFdNTSBpcyBkaXNhYmxlZCBpbiBBUC4NCj4+Pg0K
-Pj4+IFRoaXMgcGF0Y2ggaXMgcmVxdWlyZWQgYnkgMTAuNCBmYW1pbHkgY2hpcHNldHMgbGlrZQ0K
-Pj4+IFFDQTQwMTkvUUNBOTg4OC9RQ0E5ODg0L1FDQTk5WDAuDQo+Pj4gRmlybXdhcmUgVmVyc29p
-biA6IDEwLjQtMy41LjEtMDAwMTguDQo+Pj4NCj4+PiBGb3IgMTAuMi40IGZhbWlseSBjaGlwc2V0
-cyBRQ0E5ODhYL1FDQTk4ODcgYW5kIFFDQTYxNzQgdGhpcyBwYXRjaCBoYXMNCj4+PiBubyBlZmZl
-Y3QuDQo+Pj4NCj4+PiBTaWduZWQtb2ZmLWJ5OiBCYWxhamkgUG90aHVub29yaSA8YnBvdGh1bm9A
-cXRpLnF1YWxjb21tLmNvbT4NCj4+PiAtLS0NCj4+PiAgICAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-YXRoL2F0aDEway9tYWMuYyB8ICAgIDIgKy0NCj4+PiAgICAgMSBmaWxlIGNoYW5nZWQsIDEgaW5z
-ZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+Pj4NCj4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvYXRoL2F0aDEway9tYWMuYw0KPj4+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-YXRoL2F0aDEway9tYWMuYw0KPj4+IGluZGV4IDBhOTQ3ZWUuLjI2MTZiOTkgMTAwNjQ0DQo+Pj4g
-LS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEway9tYWMuYw0KPj4+ICsrKyBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsvbWFjLmMNCj4+PiBAQCAtMjU2Myw3ICsyNTYz
-LDcgQEAgc3RhdGljIHZvaWQgYXRoMTBrX3BlZXJfYXNzb2NfaF9xb3Moc3RydWN0IGF0aDEwayAq
-YXIsDQo+Pj4gICAgIAkJfQ0KPj4+ICAgICAJCWJyZWFrOw0KPj4+ICAgICAJY2FzZSBXTUlfVkRF
-Vl9UWVBFX1NUQToNCj4+PiAtCQlpZiAodmlmLT5ic3NfY29uZi5xb3MpDQo+Pj4gKwkJaWYgKHN0
-YS0+d21lKQ0KPj4+ICAgICAJCQlhcmctPnBlZXJfZmxhZ3MgfD0gYXJ2aWYtPmFyLT53bWkucGVl
-cl9mbGFncy0+cW9zOw0KPj4+ICAgICAJCWJyZWFrOw0KPj4+ICAgICAJY2FzZSBXTUlfVkRFVl9U
-WVBFX0lCU1M6DQo+PiAtLQ0KPj4gTWl0IGZyZXVuZGxpY2hlbiBHcsO8c3NlbiAvIFJlZ2FyZHMN
-Cj4+DQo+PiBTZWJhc3RpYW4gR290dHNjaGFsbCAvIENUTw0KPj4NCj4+IE5ld01lZGlhLU5FVCBH
-bWJIIC0gREQtV1JUDQo+PiBGaXJtZW5zaXR6OiAgU3R1YmVud2FsZGFsbGVlIDIxYSwgNjQ2MjUg
-QmVuc2hlaW0NCj4+IFJlZ2lzdGVyZ2VyaWNodDogQW10c2dlcmljaHQgRGFybXN0YWR0LCBIUkIg
-MjU0NzMNCj4+IEdlc2Now6RmdHNmw7xocmVyOiBQZXRlciBTdGVpbmjDpHVzZXIsIENocmlzdGlh
-biBTY2hlZWxlIGh0dHA6Ly93d3cuZGQtd3J0LmNvbQ0KPj4gZW1haWw6IHMuZ290dHNjaGFsbEBk
-ZC13cnQuY29tDQo+PiBUZWwuOiArNDk2MjUxLTU4MjY1MCAvIEZheDogKzQ5NjI1MS01ODI2NTY1
-DQo+Pg0KDQotLSANCk1pdCBmcmV1bmRsaWNoZW4gR3LDvHNzZW4gLyBSZWdhcmRzDQoNClNlYmFz
-dGlhbiBHb3R0c2NoYWxsIC8gQ1RPDQoNCk5ld01lZGlhLU5FVCBHbWJIIC0gREQtV1JUDQpGaXJt
-ZW5zaXR6OiAgU3R1YmVud2FsZGFsbGVlIDIxYSwgNjQ2MjUgQmVuc2hlaW0NClJlZ2lzdGVyZ2Vy
-aWNodDogQW10c2dlcmljaHQgRGFybXN0YWR0LCBIUkIgMjU0NzMNCkdlc2Now6RmdHNmw7xocmVy
-OiBQZXRlciBTdGVpbmjDpHVzZXIsIENocmlzdGlhbiBTY2hlZWxlDQpodHRwOi8vd3d3LmRkLXdy
-dC5jb20NCmVtYWlsOiBzLmdvdHRzY2hhbGxAZGQtd3J0LmNvbQ0KVGVsLjogKzQ5NjI1MS01ODI2
-NTAgLyBGYXg6ICs0OTYyNTEtNTgyNjU2NQ0KDQo=
+did you notice  that Marvell 88W8964 based clients will crash 10.4-3.5.3 
+firmwares?  (tested with 9984 and 10.4-3.5.3-00038)
+client device was a linksys wrt3200acm running dd-wrt for testing
+
+Am 28.11.2017 um 11:07 schrieb bpothuno@qti.qualcomm.com:
+> From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+>
+> Data packets are not sent by STA in case of STA joined to
+> non QOS AP (WMM disabled AP). This is happening because of STA
+> is sending data packets to firmware from host with qos enabled
+> along with non qos queue value(TID = 16).
+> Due to qos enabled, firmware is discarding the packet.
+>
+> This patch fixes this issue by updating the qos based on station
+> WME capability field if WMM is disabled in AP.
+>
+> This patch is required by 10.4 family chipsets like
+> QCA4019/QCA9888/QCA9884/QCA99X0.
+> Firmware Versoin : 10.4-3.5.1-00018.
+>
+> For 10.2.4 family chipsets QCA988X/QCA9887 and QCA6174 this patch
+> has no effect.
+>
+> Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 0a947ee..2616b99 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -2563,7 +2563,7 @@ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+>   		}
+>   		break;
+>   	case WMI_VDEV_TYPE_STA:
+> -		if (vif->bss_conf.qos)
+> +		if (sta->wme)
+>   			arg->peer_flags |= arvif->ar->wmi.peer_flags->qos;
+>   		break;
+>   	case WMI_VDEV_TYPE_IBSS:
+
+
+-- 
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
