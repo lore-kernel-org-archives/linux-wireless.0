@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:55122 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750760AbdKFIKY (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36998 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750928AbdK2HvU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Nov 2017 03:10:24 -0500
-From: <mpubbise@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
-Subject: [PATCHv2 1/2] ath10k: update tdls teardown state to target
-Date: Mon, 6 Nov 2017 13:39:31 +0530
-Message-ID: <1509955772-4941-2-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20171106_091026_765820_737F5FB1)
-In-Reply-To: <1509955772-4941-1-git-send-email-mpubbise@qti.qualcomm.com>
-References: <1509955772-4941-1-git-send-email-mpubbise@qti.qualcomm.com>
+        Wed, 29 Nov 2017 02:51:20 -0500
+Received: by mail-lf0-f68.google.com with SMTP id a12so2783960lfe.4
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Nov 2017 23:51:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1511259055.4011.268.camel@coelho.fi>
+References: <1511175768.4011.261.camel@coelho.fi> <CA+icZUVqhmH3dyMXkHKsHus5qyfMqQfcOctvHRDf4x=6+ndfPw@mail.gmail.com>
+ <1511259055.4011.268.camel@coelho.fi>
+From: Sedat Dilek <sedat.dilek@gmail.com>
+Date: Wed, 29 Nov 2017 08:51:18 +0100
+Message-ID: <CA+icZUVPzwX6hyPZaUJWwn7zOGMaRAkQ7SA6haw6p0F-YX7kBw@mail.gmail.com> (sfid-20171129_085123_714785_096EDF2B)
+Subject: Re: pull-request: iwlwifi 2017-11-19
+To: Luca Coelho <luca@coelho.fi>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        linuxwifi <linuxwifi@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+On Tue, Nov 21, 2017 at 11:10 AM, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2017-11-21 at 10:30 +0100, Sedat Dilek wrote:
+>> On Mon, Nov 20, 2017 at 12:02 PM, Luca Coelho <luca@coelho.fi> wrote:
+>> [..]
+>> > ----------------------------------------------------------------
+>> > iwlwifi: first set of fixes for 4.15
+>> >
+>> > * Support new FW API version of scan cmd (used in FW version 34);
+>>
+>> While seeing this...
+>> I have here a iwlwifi-8265 hardware and have seen a recently uploaded
+>> FW-version 34 in iwlwifi-firmware Git.
+>> Can you explain the dependence of iwlwifi firmware-version / Linux
+>> kernel-release and especially probing?
+>> Currently, I am using Linux v4.14 from Debian/experimental.
+>
+> Mostly for backwards-compatibility, the driver is able to work with a
+> range of firmware versions.  It only uses one of them at a time (i.e.
+> the highest supported version it finds).
+>
+> The driver in v4.14 support version 34 and below.  So it starts looking
+> for that one and, if not found, falls back to the next lower version
+> (i.e. 33) and so on, until it finds one.
+>
 
-It is required to update the teardown state of the peer when
-a tdls link with that peer is terminated. This information is
-useful for the target to perform some cleanups wrt the tdls peer.
+Isn't Linux v4.14.3 (here: -rc1) minimum to completely support new
+features in v34 firmware?
 
-Without proper cleanup, target assumes that the peer is connected and
-blocks future connection requests, updating the teardown state of the
-peer addresses the problem.
+"iwlwifi: mvm: support version 7 of the SCAN_REQ_UMAC FW command"
+commit dac4df1c5f2c34903f61b1bc4fc722e31b4199e7 upstream.
 
-Tested this change on QCA9888 with 10.4-3.5.1-00018 fw version.
+- Sedat -
 
-Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0a947ee..c6460e7 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6201,6 +6201,16 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			   "mac vdev %d peer delete %pM sta %pK (sta gone)\n",
- 			   arvif->vdev_id, sta->addr, sta);
- 
-+		if (sta->tdls) {
-+			ret = ath10k_mac_tdls_peer_update(ar, arvif->vdev_id,
-+							  sta,
-+							  WMI_TDLS_PEER_STATE_TEARDOWN);
-+			if (ret)
-+				ath10k_warn(ar, "failed to update tdls peer state for %pM state %d: %i\n",
-+					    sta->addr,
-+					    WMI_TDLS_PEER_STATE_TEARDOWN, ret);
-+		}
-+
- 		ret = ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
- 		if (ret)
- 			ath10k_warn(ar, "failed to delete peer %pM for vdev %d: %i\n",
--- 
-1.7.9.5
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git/commit/?h=linux-4.14.y&id=930929379cc8f92275675fb27e572c4d539f6b8a
