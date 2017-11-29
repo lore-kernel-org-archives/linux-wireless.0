@@ -1,41 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52314 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752365AbdKHMux (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35970 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932166AbdK2Mx1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 07:50:53 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: iwlegacy: remove redundant pointer sta_priv
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171101092622.16625-1-colin.king@canonical.com>
-References: <20171101092622.16625-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20171108125052.F00B3607E1@smtp.codeaurora.org> (sfid-20171108_135112_648834_312EB134)
-Date: Wed,  8 Nov 2017 12:50:52 +0000 (UTC)
+        Wed, 29 Nov 2017 07:53:27 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v2 3/8] rsi: add header file rsi_header
+Date: Wed, 29 Nov 2017 18:15:08 +0530
+Message-Id: <1511959513-3902-4-git-send-email-amitkarwar@gmail.com> (sfid-20171129_135341_202499_07F02D57)
+In-Reply-To: <1511959513-3902-1-git-send-email-amitkarwar@gmail.com>
+References: <1511959513-3902-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Pointer sta_priv is assigned but never read, hence it is redundant
-> and can be removed. Cleans up clang warning:
-> 
-> drivers/net/wireless/intel/iwlegacy/4965-rs.c:2163:2: warning: Value
-> stored to 'sta_priv' is never read
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+The common parameters used by wlan and bt modules are added
+to a new header file "rsi_header.h" defined in '/include/linux'
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_main.h | 12 ++----------
+ include/linux/rsi_header.h          | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 10 deletions(-)
+ create mode 100644 include/linux/rsi_header.h
 
-6c6e25311312 iwlegacy: remove redundant pointer sta_priv
-
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index ee469dc..ca02a4b 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -20,6 +20,7 @@
+ #include <linux/string.h>
+ #include <linux/skbuff.h>
+ #include <net/mac80211.h>
++#include <linux/rsi_header.h>
+ 
+ struct rsi_sta {
+ 	struct ieee80211_sta *sta;
+@@ -85,10 +86,6 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
+ #define MGMT_HW_Q			10
+ #define BEACON_HW_Q			11
+ 
+-/* Queue information */
+-#define RSI_COEX_Q			0x0
+-#define RSI_WIFI_MGMT_Q                 0x4
+-#define RSI_WIFI_DATA_Q                 0x5
+ #define IEEE80211_MGMT_FRAME            0x00
+ #define IEEE80211_CTL_FRAME             0x04
+ 
+@@ -293,11 +290,6 @@ struct rsi_common {
+ 	struct ieee80211_vif *roc_vif;
+ };
+ 
+-enum host_intf {
+-	RSI_HOST_INTF_SDIO = 0,
+-	RSI_HOST_INTF_USB
+-};
+-
+ struct eepromrw_info {
+ 	u32 offset;
+ 	u32 length;
+@@ -322,7 +314,7 @@ struct rsi_hw {
+ 	struct device *device;
+ 	u8 sc_nvifs;
+ 
+-	enum host_intf rsi_host_intf;
++	enum rsi_host_intf rsi_host_intf;
+ 	u16 block_size;
+ 	enum ps_state ps_state;
+ 	struct rsi_ps_info ps_info;
+diff --git a/include/linux/rsi_header.h b/include/linux/rsi_header.h
+new file mode 100644
+index 0000000..16a447b
+--- /dev/null
++++ b/include/linux/rsi_header.h
+@@ -0,0 +1,34 @@
++/**
++ * Copyright (c) 2017 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_HEADER_H__
++#define __RSI_HEADER_H__
++
++/* HAL queue information */
++#define RSI_COEX_Q			0x0
++#define RSI_BT_Q			0x2
++#define RSI_WLAN_Q                      0x3
++#define RSI_WIFI_MGMT_Q                 0x4
++#define RSI_WIFI_DATA_Q                 0x5
++#define RSI_BT_MGMT_Q			0x6
++#define RSI_BT_DATA_Q			0x7
++
++enum rsi_host_intf {
++	RSI_HOST_INTF_SDIO = 0,
++	RSI_HOST_INTF_USB
++};
++
++#endif
 -- 
-https://patchwork.kernel.org/patch/10036047/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
