@@ -1,59 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:22381 "EHLO
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:64442 "EHLO
         alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751228AbdKUH6K (ORCPT
+        with ESMTP id S1753169AbdK2JwR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 02:58:10 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>,
-        "akolli@codeaurora.org" <akolli@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Daniel Jeang" <dyjeong@qti.qualcomm.com>,
-        Yifeng Tu <yifeng@qti.qualcomm.com>
-Subject: Re: [PATCHv3 1/2] ath10k: add per peer htt tx stats support for 10.4
-Date: Tue, 21 Nov 2017 07:58:01 +0000
-Message-ID: <87tvxocbcn.fsf@kamboji.qca.qualcomm.com> (sfid-20171121_085814_278149_D73B22C9)
-References: <1479227849-10042-1-git-send-email-akolli@qti.qualcomm.com>
-        <2831996.nqnu04nqHR@bentobox>
-In-Reply-To: <2831996.nqnu04nqHR@bentobox> (Sven Eckelmann's message of "Fri,
-        17 Nov 2017 12:06:06 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Wed, 29 Nov 2017 04:52:17 -0500
+From: Rakesh Pillai <pillair@qti.qualcomm.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@qti.qualcomm.com>,
+        Govind Singh <govinds@qti.qualcomm.com>
+Subject: [PATCH 4/4] ath10k: WMI: add hw params entry for wcn3990
+Date: Wed, 29 Nov 2017 15:21:37 +0530
+Message-Id: <1511949097-524-4-git-send-email-pillair@qti.qualcomm.com> (sfid-20171129_105224_758383_31AF4C31)
+In-Reply-To: <1511949097-524-1-git-send-email-pillair@qti.qualcomm.com>
+References: <1511949097-524-1-git-send-email-pillair@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Eckelmann <sven.eckelmann@openmesh.com> writes:
+Add hw params entry for wcn3990 and populate various
+target specific values for wcn3990.
 
-> On Dienstag, 15. November 2016 22:07:29 CET akolli@qti.qualcomm.com wrote=
-:
->> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
->>=20
->> Per peer tx stats are part of 'HTT_10_4_T2H_MSG_TYPE_PEER_STATS'
->> event, Firmware sends one HTT event for every four PPDUs.
->> HTT payload has success pkts/bytes, failed pkts/bytes, retry
->> pkts/bytes and rate info per ppdu.
->> Peer stats are enabled through 'WMI_SERVICE_PEER_STATS',
->> which are nowadays enabled by default.
->>=20
->> Parse peer stats and update the tx rate information per STA.
->>=20
->> tx rate, Peer stats are tested on QCA4019 with Firmware version
->> 10.4-3.2.1-00028.
->>=20
->> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
->
-> Why is the support for 10.2.4 firmware not upstreamed? I mean the one whi=
-ch is=20
-> using pktlog to transfer the PEER_STATS information.
+Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
+Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 18 ++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.c   |  2 ++
+ drivers/net/wireless/ath/ath10k/hw.h   | 10 ++++++++++
+ 3 files changed, 30 insertions(+)
 
-I'm not sure what you are asking. If you are asking the firmware release
-mentioned in the commit log that's in ath10k-firmware:
-
-https://github.com/kvalo/ath10k-firmware/tree/master/QCA4019/hw1.0/3.2.1
-
-But I'm sure you know that already.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index be18913..6abffb5 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -405,6 +405,24 @@
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 	},
++	{
++		.id = WCN3990_HW_1_0_DEV_VERSION,
++		.dev_id = 0,
++		.name = "wcn3990 hw1.0",
++		.continuous_frag_desc = true,
++		.tx_chain_mask = 0x7,
++		.rx_chain_mask = 0x7,
++		.max_spatial_stream = 4,
++		.fw = {
++			.dir = WCN3990_HW_1_0_FW_DIR,
++		},
++		.sw_decrypt_mcast_mgmt = true,
++		.hw_ops = &wcn3990_ops,
++		.decap_align_bytes = 1,
++		.num_peers = TARGET_HL_10_TLV_NUM_PEERS,
++		.ast_skid_limit = TARGET_HL_10_TLV_AST_SKID_LIMIT,
++		.num_wds_entries = TARGET_HL_10_TLV_NUM_WDS_ENTRIES,
++	},
+ };
+ 
+ static const char *const ath10k_core_fw_feature_str[] = {
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index 88955bb..76b9b41 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -931,3 +931,5 @@ static int ath10k_qca99x0_rx_desc_get_l3_pad_bytes(struct htt_rx_desc *rxd)
+ 	.set_coverage_class = ath10k_hw_qca988x_set_coverage_class,
+ 	.enable_pll_clk = ath10k_hw_qca6174_enable_pll_clock,
+ };
++
++const struct ath10k_hw_ops wcn3990_ops = {0};
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index fedb6c7..90ad39b 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -128,6 +128,10 @@ enum qca9377_chip_id_rev {
+ #define QCA4019_HW_1_0_BOARD_DATA_FILE "board.bin"
+ #define QCA4019_HW_1_0_PATCH_LOAD_ADDR  0x1234
+ 
++/* WCN3990 1.0 definitions */
++#define WCN3990_HW_1_0_DEV_VERSION	ATH10K_HW_WCN3990
++#define WCN3990_HW_1_0_FW_DIR		ATH10K_FW_DIR "/WCN3990/hw3.0"
++
+ #define ATH10K_FW_FILE_BASE		"firmware"
+ #define ATH10K_FW_API_MAX		6
+ #define ATH10K_FW_API_MIN		2
+@@ -571,6 +575,7 @@ struct ath10k_hw_ops {
+ extern const struct ath10k_hw_ops qca988x_ops;
+ extern const struct ath10k_hw_ops qca99x0_ops;
+ extern const struct ath10k_hw_ops qca6174_ops;
++extern const struct ath10k_hw_ops wcn3990_ops;
+ 
+ extern const struct ath10k_hw_clk_params qca6174_clk[];
+ 
+@@ -667,6 +672,11 @@ struct ath10k_hw_ops {
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
+ #define TARGET_TLV_NUM_WOW_PATTERNS		22
+ 
++/* Target specific defines for WMI-HL-1.0 firmware */
++#define TARGET_HL_10_TLV_NUM_PEERS		14
++#define TARGET_HL_10_TLV_AST_SKID_LIMIT		6
++#define TARGET_HL_10_TLV_NUM_WDS_ENTRIES	2
++
+ /* Diagnostic Window */
+ #define CE_DIAG_PIPE	7
+ 
+-- 
+1.9.1
