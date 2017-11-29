@@ -1,181 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.uni-rostock.de ([139.30.22.72]:57398 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751684AbdKUMXV (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47964 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753216AbdK2IQD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Nov 2017 07:23:21 -0500
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Subject: [PATCH v2 2/5] mac80211_hwsim: add hashtable with mac address keys for faster lookup
-Date: Tue, 21 Nov 2017 13:17:41 +0100
-In-Reply-To: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
-References: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
-MIME-Version: 1.0
-Content-Type: text/plain
-Message-ID: <7f6aabdb-0689-44b2-95e4-49696d765d0f@MAIL2.uni-rostock.de> (sfid-20171121_132327_751536_44E60A64)
+        Wed, 29 Nov 2017 03:16:03 -0500
+Message-ID: <1511943359.4827.18.camel@coelho.fi> (sfid-20171129_091607_663405_4AEC58C3)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, janet.morgan@intel.com, joe.konno@intel.com
+Date: Wed, 29 Nov 2017 10:15:59 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-f/kx17T7SJw/Y2v32yys"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2017-11-29
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a rhastable for mac address lookup of hwsim radios. This
-especially improve the speed on reception of a netlink message with a new
-frame. Although redundant, we keep holding a normal list for all radios,
-since the rhashtable_walk interface adds a lot of overhead for iterating
-over all radios and the doc of rhashtable recommend a redundant structure
-for stable walks in such situations.
 
-Since rhashtable is rcu protected we do not need a lock for delivering
-frames and thus improving this scenario.
+--=-f/kx17T7SJw/Y2v32yys
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 56 +++++++++++++++++++++++++----------
- 1 file changed, 40 insertions(+), 16 deletions(-)
+Hi Kalle,
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index d35dc6b2a733..48b9efed725e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -32,6 +32,7 @@
- #include <net/genetlink.h>
- #include <net/net_namespace.h>
- #include <net/netns/generic.h>
-+#include <linux/rhashtable.h>
- #include "mac80211_hwsim.h"
- 
- #define WARN_QUEUE 100
-@@ -489,6 +490,7 @@ static const struct ieee80211_iface_combination hwsim_if_comb_p2p_dev[] = {
- 
- static spinlock_t hwsim_radio_lock;
- static LIST_HEAD(hwsim_radios);
-+static struct rhashtable hwsim_radios_rht;
- static spinlock_t hwsim_delete_lock;
- static LIST_HEAD(delete_radios);
- static int hwsim_radio_idx;
-@@ -501,6 +503,7 @@ static struct platform_driver mac80211_hwsim_driver = {
- 
- struct mac80211_hwsim_data {
- 	struct list_head list;
-+	struct rhash_head rht;
- 	struct ieee80211_hw *hw;
- 	struct device *dev;
- 	struct ieee80211_supported_band bands[NUM_NL80211_BANDS];
-@@ -575,6 +578,20 @@ struct mac80211_hwsim_data {
- 	u64 tx_failed;
- };
- 
-+static u32 hwsim_table_hash(const void *addr, u32 len, u32 seed)
-+{
-+	/* Use last four bytes of hw addr as hash index */
-+	return jhash_1word(*(u32 *)(addr + 2), seed);
-+}
-+
-+static const struct rhashtable_params hwsim_rht_params = {
-+	.nelem_hint = 2,
-+	.automatic_shrinking = true,
-+	.key_len = ETH_ALEN,
-+	.key_offset = offsetof(struct mac80211_hwsim_data, addresses[1]),
-+	.head_offset = offsetof(struct mac80211_hwsim_data, rht),
-+	.hashfn = hwsim_table_hash,
-+};
- 
- struct hwsim_radiotap_hdr {
- 	struct ieee80211_radiotap_header hdr;
-@@ -2727,6 +2744,15 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
- 
- 	spin_lock_bh(&hwsim_radio_lock);
-+	err = rhashtable_insert_fast(&hwsim_radios_rht, &data->rht,
-+				     hwsim_rht_params);
-+	if (err < 0) {
-+		pr_debug("mac80211_hwsim: radio index %d already present\n",
-+			 idx);
-+		spin_unlock_bh(&hwsim_radio_lock);
-+		goto failed_final_insert;
-+	}
-+
- 	list_add_tail(&data->list, &hwsim_radios);
- 	spin_unlock_bh(&hwsim_radio_lock);
- 
-@@ -2735,6 +2761,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 
- 	return idx;
- 
-+failed_final_insert:
-+	debugfs_remove_recursive(data->debugfs);
-+	ieee80211_unregister_hw(data->hw);
- failed_hw:
- 	device_release_driver(data->dev);
- failed_bind:
-@@ -2870,22 +2899,9 @@ static void hwsim_mon_setup(struct net_device *dev)
- 
- static struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(const u8 *addr)
- {
--	struct mac80211_hwsim_data *data;
--	bool _found = false;
--
--	spin_lock_bh(&hwsim_radio_lock);
--	list_for_each_entry(data, &hwsim_radios, list) {
--		if (memcmp(data->addresses[1].addr, addr, ETH_ALEN) == 0) {
--			_found = true;
--			break;
--		}
--	}
--	spin_unlock_bh(&hwsim_radio_lock);
--
--	if (!_found)
--		return NULL;
--
--	return data;
-+	return rhashtable_lookup_fast(&hwsim_radios_rht,
-+				      addr,
-+				      hwsim_rht_params);
- }
- 
- static void hwsim_register_wmediumd(struct net *net, u32 portid)
-@@ -3184,6 +3200,8 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 			continue;
- 
- 		list_del(&data->list);
-+		rhashtable_remove_fast(&hwsim_radios_rht, &data->rht,
-+				       hwsim_rht_params);
- 		spin_unlock_bh(&hwsim_radio_lock);
- 		mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy),
- 					 info);
-@@ -3343,6 +3361,8 @@ static void remove_user_radios(u32 portid)
- 	list_for_each_entry_safe(entry, tmp, &hwsim_radios, list) {
- 		if (entry->destroy_on_close && entry->portid == portid) {
- 			list_del(&entry->list);
-+			rhashtable_remove_fast(&hwsim_radios_rht, &entry->rht,
-+					       hwsim_rht_params);
- 
- 			spin_lock_bh(&hwsim_delete_lock);
- 			list_add(&entry->list, &delete_radios);
-@@ -3423,6 +3443,8 @@ static void __net_exit hwsim_exit_net(struct net *net)
- 			continue;
- 
- 		list_del(&data->list);
-+		rhashtable_remove_fast(&hwsim_radios_rht, &data->rht,
-+				       hwsim_rht_params);
- 
- 		spin_lock_bh(&hwsim_delete_lock);
- 		list_add(&data->list, &delete_radios);
-@@ -3461,6 +3483,7 @@ static int __init init_mac80211_hwsim(void)
- 
- 	spin_lock_init(&hwsim_radio_lock);
- 	spin_lock_init(&hwsim_delete_lock);
-+	rhashtable_init(&hwsim_radios_rht, &hwsim_rht_params);
- 
- 	err = register_pernet_device(&hwsim_net_ops);
- 	if (err)
-@@ -3613,6 +3636,7 @@ static void __exit exit_mac80211_hwsim(void)
- 	}
- 	spin_unlock_bh(&hwsim_delete_lock);
- 
-+	rhashtable_destroy(&hwsim_radios_rht);
- 	unregister_netdev(hwsim_mon);
- 	platform_driver_unregister(&mac80211_hwsim_driver);
- 	unregister_pernet_device(&hwsim_net_ops);
--- 
-2.15.0
+This is my first batch of patches intended for v4.16.  As I mentioned
+in the patchset thread, I removed patch 08/11 because it was broken.=20
+More details about the contents in the tag description.
+
+I have sent this out before and kbuildbot reported success.
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit fdd0bd88ceaecf729db103ac8836af5805dd2dc1=
+:
+
+  brcmfmac: add CLM download support (2017-11-11 03:04:09 +0200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2017-11-29
+
+for you to fetch changes up to 2f7a3863191afc2c132854b7ffb1b867b4b9e8be:
+
+  iwlwifi: rename the temporary name of A000 to the official 22000 (2017-11=
+-28 16:39:57 +0200)
+
+----------------------------------------------------------------
+First batch of iwlwifi updates for v4.16
+
+* Rename the temporary name A000 to 22000;
+* Change in the way we print the firmware version;
+* Remove some unused code;
+* Other small improvements;
+
+----------------------------------------------------------------
+Emmanuel Grumbach (4):
+      iwlwifi: mvm: rs: don't override the rate history in the search cycle
+      iwlwifi: mvm: revert support new Coex firmware API
+      iwlwifi: print the version number of the firmware in hex
+      iwlwifi: fix the ALIVE notification layout
+
+Johannes Berg (2):
+      iwlwifi: mvm: remove TCP wakeup support
+      iwlwifi: mvm: remove superfluous flush_work()
+
+Liad Kaufman (2):
+      iwlwifi: mvm: support MGMT frames in compressed BA
+      iwlwifi: dbg: allow wrt collection before ALIVE
+
+Luca Coelho (1):
+      iwlwifi: rename the temporary name of A000 to the official 22000
+
+Sara Sharon (1):
+      iwlwifi: mvm: check for short GI only for OFDM
+
+ drivers/net/wireless/intel/iwlwifi/Makefile          |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c       | 216 +++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/cfg/a000.c        | 216 ---------------=
+---------------------------------------------------------------------------
+ drivers/net/wireless/intel/iwlwifi/fw/api/alive.h    |   4 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/coex.h     |  30 -------------
+ drivers/net/wireless/intel/iwlwifi/fw/api/commands.h |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h       |   4 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c          |  15 ++++++-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h         |   3 --
+ drivers/net/wireless/intel/iwlwifi/fw/smem.c         |   8 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h      |  20 ++++-----
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c         |  11 +++--
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h          |  12 ++---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c        |  33 +++-----------
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c          | 232 +--------------=
+---------------------------------------------------------------------------=
+-------
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c     |  12 ++---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c          |   6 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c    |  30 +++----------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         |   8 +---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c          |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c          |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c        |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c         |  10 ++---
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c  |   6 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c          |  12 +++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c        |  36 +++++++--------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c      |   4 +-
+ 28 files changed, 323 insertions(+), 622 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+ delete mode 100644 drivers/net/wireless/intel/iwlwifi/cfg/a000.c
+--=-f/kx17T7SJw/Y2v32yys
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAloebL8ACgkQoUecoho8
+xfpTog/+M342D6+CB0QJyw2EnuSIrzMS2W26zcv3Pin40KYTIAouqKZL8rr6NL3E
+GP8ipA7h1XfPC6CYDSxNCMMGuO9sQ+J1VwDlamz47u+Sucg+n3tuPzbuw9iftCu0
+exul+uLq/Ns+1ObiLNXSTOZbB3xu9oSycCdTpNxZiLkCgDQWG3ZFDWoi9aHCLNzt
+lRX1CXIIcXCqNOO7cMeYZBS4SxGbwZHf3VDkVb88g6Qm9ghHLlQ79EmlWQVZ/pai
+ddItUHNyr7ccZjJVIcUQrKqiKnRk49zYe+mQg36+IbdyIkBmiVgA8603vv/3rHG6
+2qaEc5fdFrgVnRXYluGH88fdEagECAcXbLsebkp7Rx/boZ2IuYnlcj7mF3PRnz/Y
+cbPDvZOheBspJLY/nJx1gvZZYPTQ3kIyn1vBCgsF0QiqSKGeyr9VCZoOCGsysRkS
+o/N1r6DVUuzHRCLBJoUnF/bTk02qcR8xJXJtKMvnaD7unD9ytce7Ox4JG+kwpts6
+uK+yRi8dxp60xQT8pxhMQ0D4y31ch4hTaEvSvhREj9qDXmyNgBmCnMqbLx37G588
+bsxObXK+JvrZjJUF00Ykp1+paU+HCxBTkDeFmMm17DnFlBwnftV9uGE1OtCPl/iw
+NdyvzCUNVI8++a6In/Mc1AoLAyRtWPyEL6fHcmzmM480zYzcTe0=
+=phqj
+-----END PGP SIGNATURE-----
+
+--=-f/kx17T7SJw/Y2v32yys--
