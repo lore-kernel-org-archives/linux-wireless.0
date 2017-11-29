@@ -1,40 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55658 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752277AbdKHMyb (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:45062 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754087AbdK2KMM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2017 07:54:31 -0500
+        Wed, 29 Nov 2017 05:12:12 -0500
+From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] ath10k: handling qos at STA side based on AP WMM
+ enable/disable
+Date: Wed, 29 Nov 2017 10:12:07 +0000
+Message-ID: <8f027afc7c094e6d84ff4205384eb66d@aptaiexm02b.ap.qualcomm.com> (sfid-20171129_111219_914634_40F54867)
+References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
+ <5ec76365-7ca2-15bd-0bcc-9cc19b9f3b27@dd-wrt.com>
+ <e93273148ad44a54bfb39bc7018bfcc0@aptaiexm02b.ap.qualcomm.com>
+ <e84f2a95-178b-dc07-bc6e-9dc779e0db0f@dd-wrt.com>
+In-Reply-To: <e84f2a95-178b-dc07-bc6e-9dc779e0db0f@dd-wrt.com>
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: zd1201: remove unused variable framelen
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171107185630.7791-1-colin.king@canonical.com>
-References: <20171107185630.7791-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20171108125430.B983F60261@smtp.codeaurora.org> (sfid-20171108_135449_151000_45BC0EEE)
-Date: Wed,  8 Nov 2017 12:54:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Variable framelen is assigned but never read, hence it is redundant
-> and can be removed. Cleans up clang warning:
-> 
-> drivers/net/wireless/zydas/zd1201.c:234:3: warning: Value stored
-> to 'framelen' is never read
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-
-Patch applied to wireless-drivers-next.git, thanks.
-
-03e40f1e7680 zd1201: remove unused variable framelen
-
--- 
-https://patchwork.kernel.org/patch/10047145/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Pj4gSGkgU2ViYXN0aWFuLA0KPj4NCj4+IElmIEkgYW0gbm90IHdyb25nIHlvdSBhcmUgc2VlaW5n
+IHRoZSBpc3N1ZSB3aXRoIFdSVDMyMDBBQ00gKE1hcnZlbGwgODhXODk2NCkgYXMgY2xpZW50ICsg
+UUNBOTk4NCAoRlcgOiAxMC40LTMuNS4zLTAwMDM4KSBhcyBBUCB3aXRoIGJlbG93IGNoYW5nZSB5
+b3UgYXJlIHNlZWluZyB0aGUgY3Jhc2ggd2hpbGUgcnVubmluZyB0cmFmZmljIGJldHdlZW4gdGhl
+IFdSVDMyMDBBQ00gKyBRQ0E5OTg0ID8NCj4+IERvIHlvdSB1c2VkICBhbnkgb3RoZXIgY2xpZW50
+IGluIHBsYWNlIG9mIFdSVDMyMDBBQ00gPw0KDQo+dGhlcmUgaXMgbm90IG11Y2ggIHRyYWZmaWMg
+cmVxdWlyZWQuIGFzIGl0IHNlZW1zIHRoZSBmaXJtd2FyZSBjcmFzaGVzIGltbWVkaWF0bHkgYWZ0
+ZXIgYXNzb2NpYXRpb24uIHRoZSBpc3N1ZSBpcyBhbHNvIG5vdCBwcmVzZW50IGluIDEwLjQtMy40
+LTAwODJ3dw0KDQpTdGlsbCBteSBxdWVzdGlvbiBpcyBub3QgY2xlYXJlZCwgIGZpcm13YXJlIGNy
+YXNoIGlzIGR1ZSB0byB0aGlzIHBhdGNoID8gQWxzbyBsZXQgbWUga25vdyBkbyB5b3Ugb2JzZXJ2
+ZWQgc2FtZSBiZWhhdmlvciB3aXRoIGFueSBvdGhlciBjaGlwc2V0ID8NCg0KIA0KUmVnYXJkcywN
+CkJhbGFqaS4NCg0KPlNlYmFzdGlhbg0KDQoNCj4+DQo+PiBSZWdhcmRzLA0KPj4gQmFsYWppLg0K
+DQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogU2ViYXN0aWFuIEdvdHRzY2hhbGwg
+W21haWx0bzpzLmdvdHRzY2hhbGxAZGQtd3J0LmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE5vdmVt
+YmVyIDI5LCAyMDE3IDI6MDQgUE0NClRvOiBCYWxhamkgUG90aHVub29yaSA8YnBvdGh1bm9AcXRp
+LnF1YWxjb21tLmNvbT47IGF0aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnDQpDYzogbGludXgtd2ly
+ZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogW1BBVENIXSBhdGgxMGs6IGhhbmRs
+aW5nIHFvcyBhdCBTVEEgc2lkZSBiYXNlZCBvbiBBUCBXTU0gZW5hYmxlL2Rpc2FibGUNCg0KQW0g
+MjkuMTEuMjAxNyB1bSAwNzo1OCBzY2hyaWViIEJhbGFqaSBQb3RodW5vb3JpOg0KPiBIaSBTZWJh
+c3RpYW4sDQo+DQo+IElmIEkgYW0gbm90IHdyb25nIHlvdSBhcmUgc2VlaW5nIHRoZSBpc3N1ZSB3
+aXRoIFdSVDMyMDBBQ00gKE1hcnZlbGwgODhXODk2NCkgYXMgY2xpZW50ICsgUUNBOTk4NCAoRlcg
+OiAxMC40LTMuNS4zLTAwMDM4KSBhcyBBUCB3aXRoIGJlbG93IGNoYW5nZSB5b3UgYXJlIHNlZWlu
+ZyB0aGUgY3Jhc2ggd2hpbGUgcnVubmluZyB0cmFmZmljIGJldHdlZW4gdGhlIFdSVDMyMDBBQ00g
+KyBRQ0E5OTg0ID8NCj4gRG8geW91IHVzZWQgIGFueSBvdGhlciBjbGllbnQgaW4gcGxhY2Ugb2Yg
+V1JUMzIwMEFDTSA/DQoNCnRoZXJlIGlzIG5vdCBtdWNowqAgdHJhZmZpYyByZXF1aXJlZC4gYXMg
+aXQgc2VlbXMgdGhlIGZpcm13YXJlIGNyYXNoZXMgaW1tZWRpYXRseSBhZnRlciBhc3NvY2lhdGlv
+bi4gdGhlIGlzc3VlIGlzIGFsc28gbm90IHByZXNlbnQgaW4gMTAuNC0zLjQtMDA4Mnd3DQoNCj4g
+Q2FuIHlvdSBzaGFyZSB0aGUgbW9yZSBkZXRhaWxzIG9uIGZpcm13YXJlIGNyYXNoID8NCg0Kc28g
+YSBmaXJtd2FyZSBjcmFzaGR1bXAgZnJvbSBsb2c/IGknbGwgdHJ5IHRvIGdldCBpdCB3aXRoaW4g
+dGhlIG5leHQgaG91cnMuIGp1c3QgbmVlZCB0byByZXNldHVwIHRoZSB0ZXN0IHNjZW5hcmlvDQoN
+Cg0KU2ViYXN0aWFuDQoNCg0KPg0KPiBSZWdhcmRzLA0KPiBCYWxhamkuDQo+DQo+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFNlYmFzdGlhbiBHb3R0c2NoYWxsIFttYWlsdG86
+cy5nb3R0c2NoYWxsQGRkLXdydC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgTm92ZW1iZXIgMjks
+IDIwMTcgODoyOCBBTQ0KPiBUbzogQmFsYWppIFBvdGh1bm9vcmkgPGJwb3RodW5vQHF0aS5xdWFs
+Y29tbS5jb20+OyBhdGgxMGtAbGlzdHMuaW5mcmFkZWFkLm9yZw0KPiBDYzogbGludXgtd2lyZWxl
+c3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIGF0aDEwazogaGFuZGxp
+bmcgcW9zIGF0IFNUQSBzaWRlIGJhc2VkIG9uIEFQIFdNTSBlbmFibGUvZGlzYWJsZQ0KPg0KPiBk
+aWQgeW91IG5vdGljZcKgIHRoYXQgTWFydmVsbCA4OFc4OTY0IGJhc2VkIGNsaWVudHMgd2lsbCBj
+cmFzaCAxMC40LTMuNS4zIGZpcm13YXJlcz/CoCAodGVzdGVkIHdpdGggOTk4NCBhbmQgMTAuNC0z
+LjUuMy0wMDAzOCkgY2xpZW50IGRldmljZSB3YXMgYSBsaW5rc3lzIHdydDMyMDBhY20gcnVubmlu
+ZyBkZC13cnQgZm9yIHRlc3RpbmcNCj4NCj4gQW0gMjguMTEuMjAxNyB1bSAxMTowNyBzY2hyaWVi
+IGJwb3RodW5vQHF0aS5xdWFsY29tbS5jb206DQo+PiBGcm9tOiBCYWxhamkgUG90aHVub29yaSA8
+YnBvdGh1bm9AcXRpLnF1YWxjb21tLmNvbT4NCj4+DQo+PiBEYXRhIHBhY2tldHMgYXJlIG5vdCBz
+ZW50IGJ5IFNUQSBpbiBjYXNlIG9mIFNUQSBqb2luZWQgdG8gbm9uIFFPUyBBUA0KPj4gKFdNTSBk
+aXNhYmxlZCBBUCkuIFRoaXMgaXMgaGFwcGVuaW5nIGJlY2F1c2Ugb2YgU1RBIGlzIHNlbmRpbmcg
+ZGF0YQ0KPj4gcGFja2V0cyB0byBmaXJtd2FyZSBmcm9tIGhvc3Qgd2l0aCBxb3MgZW5hYmxlZCBh
+bG9uZyB3aXRoIG5vbiBxb3MNCj4+IHF1ZXVlIHZhbHVlKFRJRCA9IDE2KS4NCj4+IER1ZSB0byBx
+b3MgZW5hYmxlZCwgZmlybXdhcmUgaXMgZGlzY2FyZGluZyB0aGUgcGFja2V0Lg0KPj4NCj4+IFRo
+aXMgcGF0Y2ggZml4ZXMgdGhpcyBpc3N1ZSBieSB1cGRhdGluZyB0aGUgcW9zIGJhc2VkIG9uIHN0
+YXRpb24gV01FDQo+PiBjYXBhYmlsaXR5IGZpZWxkIGlmIFdNTSBpcyBkaXNhYmxlZCBpbiBBUC4N
+Cj4+DQo+PiBUaGlzIHBhdGNoIGlzIHJlcXVpcmVkIGJ5IDEwLjQgZmFtaWx5IGNoaXBzZXRzIGxp
+a2UNCj4+IFFDQTQwMTkvUUNBOTg4OC9RQ0E5ODg0L1FDQTk5WDAuDQo+PiBGaXJtd2FyZSBWZXJz
+b2luIDogMTAuNC0zLjUuMS0wMDAxOC4NCj4+DQo+PiBGb3IgMTAuMi40IGZhbWlseSBjaGlwc2V0
+cyBRQ0E5ODhYL1FDQTk4ODcgYW5kIFFDQTYxNzQgdGhpcyBwYXRjaCBoYXMNCj4+IG5vIGVmZmVj
+dC4NCj4+DQo+PiBTaWduZWQtb2ZmLWJ5OiBCYWxhamkgUG90aHVub29yaSA8YnBvdGh1bm9AcXRp
+LnF1YWxjb21tLmNvbT4NCj4+IC0tLQ0KPj4gICAgZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0
+aDEway9tYWMuYyB8ICAgIDIgKy0NCj4+ICAgIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigr
+KSwgMSBkZWxldGlvbigtKQ0KPj4NCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVz
+cy9hdGgvYXRoMTBrL21hYy5jDQo+PiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsv
+bWFjLmMNCj4+IGluZGV4IDBhOTQ3ZWUuLjI2MTZiOTkgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL21hYy5jDQo+PiArKysgYi9kcml2ZXJzL25ldC93aXJl
+bGVzcy9hdGgvYXRoMTBrL21hYy5jDQo+PiBAQCAtMjU2Myw3ICsyNTYzLDcgQEAgc3RhdGljIHZv
+aWQgYXRoMTBrX3BlZXJfYXNzb2NfaF9xb3Moc3RydWN0IGF0aDEwayAqYXIsDQo+PiAgICAJCX0N
+Cj4+ICAgIAkJYnJlYWs7DQo+PiAgICAJY2FzZSBXTUlfVkRFVl9UWVBFX1NUQToNCj4+IC0JCWlm
+ICh2aWYtPmJzc19jb25mLnFvcykNCj4+ICsJCWlmIChzdGEtPndtZSkNCj4+ICAgIAkJCWFyZy0+
+cGVlcl9mbGFncyB8PSBhcnZpZi0+YXItPndtaS5wZWVyX2ZsYWdzLT5xb3M7DQo+PiAgICAJCWJy
+ZWFrOw0KPj4gICAgCWNhc2UgV01JX1ZERVZfVFlQRV9JQlNTOg0KPg0KPiAtLQ0KPiBNaXQgZnJl
+dW5kbGljaGVuIEdyw7xzc2VuIC8gUmVnYXJkcw0KPg0KPiBTZWJhc3RpYW4gR290dHNjaGFsbCAv
+IENUTw0KPg0KPiBOZXdNZWRpYS1ORVQgR21iSCAtIERELVdSVA0KPiBGaXJtZW5zaXR6OiAgU3R1
+YmVud2FsZGFsbGVlIDIxYSwgNjQ2MjUgQmVuc2hlaW0NCj4gUmVnaXN0ZXJnZXJpY2h0OiBBbXRz
+Z2VyaWNodCBEYXJtc3RhZHQsIEhSQiAyNTQ3Mw0KPiBHZXNjaMOkZnRzZsO8aHJlcjogUGV0ZXIg
+U3RlaW5ow6R1c2VyLCBDaHJpc3RpYW4gU2NoZWVsZSBodHRwOi8vd3d3LmRkLXdydC5jb20NCj4g
+ZW1haWw6IHMuZ290dHNjaGFsbEBkZC13cnQuY29tDQo+IFRlbC46ICs0OTYyNTEtNTgyNjUwIC8g
+RmF4OiArNDk2MjUxLTU4MjY1NjUNCj4NCg0KLS0gDQpNaXQgZnJldW5kbGljaGVuIEdyw7xzc2Vu
+IC8gUmVnYXJkcw0KDQpTZWJhc3RpYW4gR290dHNjaGFsbCAvIENUTw0KDQpOZXdNZWRpYS1ORVQg
+R21iSCAtIERELVdSVA0KRmlybWVuc2l0ejogIFN0dWJlbndhbGRhbGxlZSAyMWEsIDY0NjI1IEJl
+bnNoZWltDQpSZWdpc3RlcmdlcmljaHQ6IEFtdHNnZXJpY2h0IERhcm1zdGFkdCwgSFJCIDI1NDcz
+DQpHZXNjaMOkZnRzZsO8aHJlcjogUGV0ZXIgU3RlaW5ow6R1c2VyLCBDaHJpc3RpYW4gU2NoZWVs
+ZQ0KaHR0cDovL3d3dy5kZC13cnQuY29tDQplbWFpbDogcy5nb3R0c2NoYWxsQGRkLXdydC5jb20N
+ClRlbC46ICs0OTYyNTEtNTgyNjUwIC8gRmF4OiArNDk2MjUxLTU4MjY1NjUNCg0K
