@@ -1,307 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:50022 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753239AbdKXL3Y (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:46041 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754026AbdK2JwS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Nov 2017 06:29:24 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [RFC] rtlwifi: Add two components (kernel modules) to rtlwifi
-Date: Fri, 24 Nov 2017 11:29:10 +0000
-Message-ID: <5B2DA6FDDF928F4E855344EE0A5C39D105846AAB@RTITMBSV07.realtek.com.tw> (sfid-20171124_122928_301704_3C957DAA)
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+        Wed, 29 Nov 2017 04:52:18 -0500
+From: Rakesh Pillai <pillair@qti.qualcomm.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@qti.qualcomm.com>,
+        Govind Singh <govinds@qti.qualcomm.com>
+Subject: [PATCH 3/4] ath10k: WMI: get wmi init parameter values from hw params
+Date: Wed, 29 Nov 2017 15:21:36 +0530
+Message-Id: <1511949097-524-3-git-send-email-pillair@qti.qualcomm.com> (sfid-20171129_105221_896471_A355BE62)
+In-Reply-To: <1511949097-524-1-git-send-email-pillair@qti.qualcomm.com>
+References: <1511949097-524-1-git-send-email-pillair@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes and Kalle,
+The parameter values for skid limit, number of peers and wds
+entries values which are sent in wmi init cmd are hardware
+specific.
+
+Add support to obtain skid limit, number of peers and wds entries
+values from hw params which will have the hw specific values
+for these parameters.
+
+Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
+Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c    | 36 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h      |  4 ++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  7 +++---
+ 3 files changed, 44 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 1e4e18e..be18913 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -75,6 +75,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA9887_HW_1_0_VERSION,
+@@ -99,6 +102,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -122,6 +128,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -145,6 +154,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_0_VERSION,
+@@ -168,6 +180,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -194,6 +209,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA99X0_HW_2_0_DEV_VERSION,
+@@ -223,6 +241,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 11,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA9984_HW_1_0_DEV_VERSION,
+@@ -257,6 +278,9 @@
+ 		.vht160_mcs_rx_highest = 1560,
+ 		.vht160_mcs_tx_highest = 1560,
+ 		.n_cipher_suites = 11,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA9888_HW_2_0_DEV_VERSION,
+@@ -290,6 +314,9 @@
+ 		.vht160_mcs_rx_highest = 780,
+ 		.vht160_mcs_tx_highest = 780,
+ 		.n_cipher_suites = 11,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_0_DEV_VERSION,
+@@ -313,6 +340,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -338,6 +368,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+@@ -368,6 +401,9 @@
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 11,
++		.num_peers = TARGET_TLV_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
+ 	},
+ };
  
-In order to reduce effort to maintain the MAC/BB/RF functions and keep them
-to be up-to-date, we introduce two new components that are phydm and halmac
-maintained by Realtek's MAC/BB/RF teams. The components are similar to
-existing component btcoexist that used by various platforms and OSs, but
-they're quite bigger than btcoexist.
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 05f26e5..fedb6c7 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -553,6 +553,10 @@ struct ath10k_hw_params {
  
-The phydm is short for 'PHY dynamic mechanism' that used to adapt to
-different environments to yield good performance, and also provide basic
-APIs to control BB and RF. The halmac is short for 'HAL MAC' that provides
-APIs to control wifi MAC and power sequence.
+ 	/* Number of ciphers supported (i.e First N) in cipher_suites array */
+ 	int n_cipher_suites;
++
++	u32 num_peers;
++	u32 ast_skid_limit;
++	u32 num_wds_entries;
+ };
  
-Using these components, the core part of rtlwifi can access wifi chip
-through readable APIs instead of registers, so it will be easier to
-understand.
+ struct htt_rx_desc;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 452846c..0183d01 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1440,7 +1440,10 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cmd->num_host_mem_chunks = __cpu_to_le32(ar->wmi.num_mem_chunks);
  
-The followings will show architecture and our questions that need
-your comments:
+ 	cfg->num_vdevs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+-	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
++
++	cfg->num_peers = ar->hw_params.num_peers;
++	cfg->ast_skid_limit = ar->hw_params.ast_skid_limit;
++	cfg->num_wds_entries = ar->hw_params.num_wds_entries;
  
-1. Architecture -- ops, dispatching routine
+ 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
+ 		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+@@ -1452,7 +1455,6 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
  
-   Similar to the component btcoexist, phydm and halmac provide many ops
-   that looks like:
-   
-    struct rtl_halmac_ops {
-        int (*halmac_init_adapter)(struct rtl_priv *);
-        int (*halmac_deinit_adapter)(struct rtl_priv *);
-        int (*halmac_init_hal)(struct rtl_priv *);
-        int (*halmac_deinit_hal)(struct rtl_priv *);
-        int (*halmac_poweron)(struct rtl_priv *);
-        int (*halmac_poweroff)(struct rtl_priv *);
-   
-        ...
-    }
-   
-    struct rtl_phydm_ops {
-        /* init/deinit priv */
-        int (*phydm_init_priv)(struct rtl_priv *rtlpriv, struct rtl_phydm_params *params);
-        int (*phydm_deinit_priv)(struct rtl_priv *rtlpriv);
-        bool (*phydm_load_txpower_by_rate)(struct rtl_priv *rtlpriv);
-        bool (*phydm_load_txpower_limit)(struct rtl_priv *rtlpriv);
-       
-        ...
-    }
- 
- 
-   Thus, the rtlwifi's core part can access the components by these ops,
-   and then the ops will dispatch to proper routines according to specified
-   chip. The dispatching code looks like:
- 
-    if (dm->support_ic_type == ODM_RTL8723D) {
-        if (config_type == CONFIG_BB_PHY_REG)
-            READ_AND_CONFIG_MP(8723d, _phy_reg);
-        else if (config_type == CONFIG_BB_AGC_TAB)
-            READ_AND_CONFIG_MP(8723d, _agc_tab);
-        else if (config_type == CONFIG_BB_PHY_REG_PG)
-            READ_AND_CONFIG_MP(8723d, _phy_reg_pg);
-    }
- 
-    if (dm->support_ic_type == ODM_RTL8822B) {
-        if (config_type == CONFIG_BB_PHY_REG)
-            READ_AND_CONFIG_MP(8822b, _phy_reg);
-        else if (config_type == CONFIG_BB_AGC_TAB)
-            READ_AND_CONFIG_MP(8822b, _agc_tab);
-        else if (config_type == CONFIG_BB_PHY_REG_PG) {
-            if (dm->rfe_type == 2)
-                READ_AND_CONFIG_MP(8822b, _phy_reg_pg_type2);
-            else if (dm->rfe_type == 3)
-                READ_AND_CONFIG_MP(8822b, _phy_reg_pg_type3);
-            else if (dm->rfe_type == 4)
-                READ_AND_CONFIG_MP(8822b, _phy_reg_pg_type4);
-            else if (dm->rfe_type == 5)
-                READ_AND_CONFIG_MP(8822b, _phy_reg_pg_type5);
-            else if (dm->rfe_type == 12)
-                READ_AND_CONFIG_MP(8822b, _phy_reg_pg_type12);
-            else if (dm->rfe_type == 15)
-                READ_AND_CONFIG_MP(8822b, _phy_reg_pg_type15);
-            else if (dm->rfe_type == 16)
-                READ_AND_CONFIG_MP(8822b, _phy_reg_pg_type16);
-            else if (dm->rfe_type == 17)
-                READ_AND_CONFIG_MP(8822b, _phy_reg_pg_type17);
-            else
-                READ_AND_CONFIG_MP(8822b, _phy_reg_pg);
-        }
-    }
- 
- 
-2. Debug message
- 
-   Because the components contain many sub-components, the debug messages
-   should be limited. We add PHYDM_DBG() and HALMAC_RT_TRACE() with
-   parameter 'comp' to output messages of the specified sub-components.
-   Then, these two macros will redirect message to RT_TRACE()
-   with corresponding debug components that are COMP_PHYDM and COMP_HALMAC.
-   Though the parameter 'comp' in macro HALMAC_RT_TRACE() isn't used,
-   it was preserved to filter messages in the future.
-   The macros look like:
- 
-    #define PHYDM_DBG(dm, comp, fmt, args...)               \
-        do {                                \
-            if ((comp) & (dm->debug_components)) {      \
-                RT_TRACE(((struct rtl_priv *)dm->adapter),  \
-                    COMP_PHYDM, DBG_DMESG, "[PHYDM] " fmt, \
-                    ## args);              \
-           }                                               \
-       } while (0)
-   
-   
-    #define HALMAC_RT_TRACE(drv_adapter, comp, level, fmt, args...)   \
-        RT_TRACE(drv_adapter, COMP_HALMAC, level, fmt, ## args)
-   
-   
-    #define RT_TRACE(rtlpriv, comp, level, fmt, ...)            \
- 
- 
-3. Debug FS
- 
-   Considering the debug of ethtool, it can dump registers and efuse
-   content, but we also need to check status and change state for
-   remote debug. For example, we need to check btcoexist's status
-   continuously to know whether the decision is correct or not. If
-   something is incorrect, we can write a command to switch to manual
-   mode. In this mode, we'll try some decision rules manually to clarify
-   the issue, and then we add the solution to driver. For the reasons,
-   debugfs is needed.
- 
-   Normally, rtlwifi's debugfs locates on /sys/kernel/debug/rtlwifi/11-22-33-44-55-66/,
-   and there're many entries within this directory. For example,
-   mac_xx, bb_xx and rf_xx are used to dump registers, and write_yy
-   are used to write register and issue firmware commands. For the
-   various purposes, the fs modes of these entries will be read/read-write/write.
-   The debug code is enclosed by the compiler flag CONFIG_RTLWIFI_DEBUG,
-   so one can turn on/off by this flag existed in Kconfig.
- 
- 
-4. Directory structure
- 
-   The component phydm contains BB and RF functions, and RF part is located
-   on 'rtlwifi/phydm/halrf/'. Each chip is put into individual directory, and
-   directories look like:
- 
-   rtlwifi/phydm/rtl8822b/
-   rtlwifi/phydm/rtl8723d/
-   rtlwifi/phydm/halrf/rtl8822b/
-   rtlwifi/phydm/halrf/rtl8723d/
- 
- 
-   Similarly, directory structure of the component halmac looks like:
- 
-   rtlwifi/halmac/halmac_88xx
-   rtlwifi/halmac/halmac_88xx/halmac_8822b
-   rtlwifi/halmac/halmac_88xx/halmac_8821c
- 
- 
-5. Defects
- 
-   We found some defects in rtlwifi or new components, and need your comments.
- 
-5.1. The enumerator layout is totally different with old ICs
- 
-    Take rate index for example, the older ICs didn't support VHT, hence
-    the original code did not consider to integrate VHT related flag/enum
-    info. Like:
- 
-    enum ratr_table_mode {
-        RATR_INX_WIRELESS_NGB = 0,
-        RATR_INX_WIRELESS_NG = 1,
-        RATR_INX_WIRELESS_NB = 2,
-        RATR_INX_WIRELESS_N = 3,
-        RATR_INX_WIRELESS_GB = 4,
-        RATR_INX_WIRELESS_G = 5,
-        RATR_INX_WIRELESS_B = 6,
-        RATR_INX_WIRELESS_MC = 7,
-        RATR_INX_WIRELESS_A = 8,
-        RATR_INX_WIRELESS_AC_5N = 8,
-        RATR_INX_WIRELESS_AC_24N = 9,
-    };
-   
-    enum ratr_table_mode_new {
-        RATEID_IDX_BGN_40M_2SS = 0,
-        RATEID_IDX_BGN_40M_1SS = 1,
-        RATEID_IDX_BGN_20M_2SS_BN = 2,
-        RATEID_IDX_BGN_20M_1SS_BN = 3,
-        RATEID_IDX_GN_N2SS = 4,
-        RATEID_IDX_GN_N1SS = 5,
-        RATEID_IDX_BG = 6,
-        RATEID_IDX_G = 7,
-        RATEID_IDX_B = 8,
-        RATEID_IDX_VHT_2SS = 9,
-        RATEID_IDX_VHT_1SS = 10,
-        RATEID_IDX_MIX1 = 11,
-        RATEID_IDX_MIX2 = 12,
-        RATEID_IDX_VHT_3SS = 13,
-        RATEID_IDX_BGN_3SS = 14,
-    };
- 
-    ,which leads to the result that the driver needs to have a function
-    "rtl_mrate_idx_to_arfr_id" to convert the rate index between old and
-    new series of ICs. These values are associated with hardware design, so it
-    is the only way for it.
- 
-5.2. Usage of delay
- 
-    The phydm uses a lot of “mdelay/udelay” functions to accomplish the
-    hardware settings.
- 
-5.3. The code flow of the phydm module is not "structuralized"
- 
-    A lot of deep indents to nest the decision statements. Like:
- 
- 
-    If () {
-        If () {
-            for () {
-                for () {
-                    if () {
-                    }
-                }
-            }
-        } else {
-            switch () {
-            case:
-                if ()
-                break;
-            }
-        }
-    }
- 
-    And the code just written straightly to set registers to do everything.
-    So the code may has such codes to control hardware registers.
- 
-    For example:
- 
-    if ((*p_dm->p_channel <= 14) && (*p_dm->p_band_width == CHANNEL_WIDTH_20)) {
-        if (p_dm->rssi_min >= rssi_l2h) {
-        /*if (p_dm->bhtstfdisabled == false)*/
-        odm_set_bb_reg(p_dm, 0x8d8, BIT(17), 0x1);
-       
-        odm_set_bb_reg(p_dm, 0x98c, 0x7fc0000, 0x0);
-        odm_set_bb_reg(p_dm, 0x818, 0x7000000, 0x1);
-        odm_set_bb_reg(p_dm, 0xc04, BIT(18), 0x0);
-        odm_set_bb_reg(p_dm, 0xe04, BIT(18), 0x0);
-        if (p_dm->p_advance_ota & PHYDM_HP_OTA_SETTING_A) {
-            odm_set_bb_reg(p_dm, 0x19d8, MASKDWORD, 0x444);
-            odm_set_bb_reg(p_dm, 0x19d4, MASKDWORD, 0x4444aaaa);
-        } else if (p_dm->p_advance_ota & PHYDM_HP_OTA_SETTING_B) {
-            odm_set_bb_reg(p_dm, 0x19d8, MASKDWORD, 0x444);
-            odm_set_bb_reg(p_dm, 0x19d4, MASKDWORD, 0x444444aa);
-        }
-        } else if (p_dm->rssi_min < rssi_h2l) {
-            /*if (p_dm->bhtstfdisabled == true)*/
-            odm_set_bb_reg(p_dm, 0x8d8, BIT(17), 0x0);
-           
-            odm_set_bb_reg(p_dm, 0x98c, MASKDWORD, 0x43440000);
-            odm_set_bb_reg(p_dm, 0x818, 0x7000000, 0x4);
-            odm_set_bb_reg(p_dm, 0xc04, (BIT(18) | BIT(21)), 0x0);
-            odm_set_bb_reg(p_dm, 0xe04, (BIT(18) | BIT(21)), 0x0);
-            odm_set_bb_reg(p_dm, 0x19d8, MASKDWORD, 0xaaa);
-            odm_set_bb_reg(p_dm, 0x19d4, MASKDWORD, 0xaaaaaaaa);
-        }
-    } else {
-        /*odm_set_bb_reg(p_dm, 0x8d8, BIT(17), 0x0);*/
-        odm_set_bb_reg(p_dm, 0x98c, MASKDWORD, 0x43440000);
-        odm_set_bb_reg(p_dm, 0x818, 0x7000000, 0x4);
-        odm_set_bb_reg(p_dm, 0xc04, (BIT(18) | BIT(21)), 0x0);
-        odm_set_bb_reg(p_dm, 0xe04, (BIT(18) | BIT(21)), 0x0);
-        odm_set_bb_reg(p_dm, 0x19d8, MASKDWORD, 0xaaa);
-        odm_set_bb_reg(p_dm, 0x19d4, MASKDWORD, 0xaaaaaaaa);
-    }
- 
-    These hardware operations may not easy to read without documents.
- 
-5.4. Pass the context data as (void *)
- 
-    For convenience, the struct mainly used by phydm is passed the type
-    (void *). Like:
- 
-    static void phydm_acs_nhm_setting(void *p_dm_void, u32 acs_step)
- 
- 
- 
-Because the codes are quite big, I don't attach them. If you need full
-source code to reference, you can find it in drivers/staging/rtlwifi/ that
-is little old, or I can send it as private mail to you.
- 
-Thanks
-PK
- 
+ 	cfg->num_peer_keys = __cpu_to_le32(2);
+ 	cfg->num_tids = __cpu_to_le32(TARGET_TLV_NUM_TIDS);
+-	cfg->ast_skid_limit = __cpu_to_le32(0x10);
+ 	cfg->tx_chain_mask = __cpu_to_le32(0x7);
+ 	cfg->rx_chain_mask = __cpu_to_le32(0x7);
+ 	cfg->rx_timeout_pri[0] = __cpu_to_le32(0x64);
+@@ -1468,7 +1470,6 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cfg->num_mcast_table_elems = __cpu_to_le32(0);
+ 	cfg->mcast2ucast_mode = __cpu_to_le32(0);
+ 	cfg->tx_dbg_log_size = __cpu_to_le32(0x400);
+-	cfg->num_wds_entries = __cpu_to_le32(0x20);
+ 	cfg->dma_burst_size = __cpu_to_le32(0);
+ 	cfg->mac_aggr_delim = __cpu_to_le32(0);
+ 	cfg->rx_skip_defrag_timeout_dup_detection_check = __cpu_to_le32(0);
+-- 
+1.9.1
