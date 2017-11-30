@@ -1,39 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:32888 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756113AbdKCRgd (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:3532 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752499AbdK3QO4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Nov 2017 13:36:33 -0400
-Received: from mail-io0-f199.google.com ([209.85.223.199])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1eAftQ-0001Hj-Lp
-        for linux-wireless@vger.kernel.org; Fri, 03 Nov 2017 17:36:32 +0000
-Received: by mail-io0-f199.google.com with SMTP id 101so9974803ioj.6
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Nov 2017 10:36:32 -0700 (PDT)
-Date: Fri, 3 Nov 2017 12:36:30 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: =?utf-8?B?0JDQvdC00YDQtdC5INCY0LLQsNC90L7Qsg==?= <wowz89@mail.ru>
-Subject: Re: [PATCH v2] wireless-regdb: Add 5 Ghz rules for Kazakhstan (KZ)
-Message-ID: <20171103173630.dlkvsa63e6n75wgw@ubuntu-xps13> (sfid-20171103_183648_736038_5242FF47)
-References: <20171020150651.32424-1-seth.forshee@canonical.com>
+        Thu, 30 Nov 2017 11:14:56 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "toke@toke.dk" <toke@toke.dk>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "akolli@codeaurora.org" <akolli@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Anilkumar Kolli" <akolli@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
+Date: Thu, 30 Nov 2017 16:14:49 +0000
+Message-ID: <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com> (sfid-20171130_171515_581495_B0068A08)
+References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
+        <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com>
+In-Reply-To: <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com>
+        (akolli@qti.qualcomm.com's message of "Thu, 30 Nov 2017 18:28:21        +0530")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171020150651.32424-1-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 20, 2017 at 10:06:51AM -0500, Seth Forshee wrote:
-> Add rules for 5150-5250 MHz, 5250-5350 MHz, and 5470-5725 Mhz
-> based on the documents at [1] and [2].
-> 
-> v2: Also add DFS region
-> 
-> [1] http://mic.gov.kz/sites/default/files/pages/pravila_prisvoeniya_polos_chastot_no34.pdf
-> [2] http://adilet.zan.kz/rus/docs/P000001379_
-> 
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+<akolli@qti.qualcomm.com> writes:
 
-Applied.
+> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+>
+> 10.2.4 firmware branch (used in QCA988X) does not support
+> HTT_10_4_T2H_MSG_TYPE_PEER_STATS and that's why ath10k does not provide
+> tranmission rate statistics to user space, instead it just shows
+> hardcoded 6 Mbit/s. But pktlog firmware facility provides per peer tx
+> statistics. The firmware sends one pktlog event for every four
+> PPDUs per peer, which include:
+>
+> * successful number of packets and bytes transmitted
+> * number of packets and bytes dropped
+> * retried number of packets and bytes
+> * rate info per ppdu
+>
+> Firmware supports WMI_SERVICE_PEER_STATS, pktlog is enabled through
+> ATH10K_FLAG_PEER_STATS, which is nowadays enabled by default in ath10k.
+>
+> This patch does not impact throughput.
+>
+> Tested on QCA9880 with firmware version 10.2.4.70.48. This should also
+> work with firmware branch 10.2.4-1.0-00029
+>
+> Parse peer stats from pktlog packets and update the tx rate information
+> per STA. This way user space can query about transmit rate with iw:
+>
+> $iw wlan0 station dump
+> Station 3c:a9:f4:72:bb:a4 (on wlan1)
+>         inactive time:  8210 ms
+>         rx bytes:       9166
+>         rx packets:     44
+>         tx bytes:       1105
+>         tx packets:     9
+>         tx retries:     0
+>         tx failed:      1
+>         rx drop misc:   3
+>         signal:         -75 [-75, -87, -88] dBm
+>         signal avg:     -75 [-75, -85, -88] dBm
+>         tx bitrate:     39.0 MBit/s MCS 10
+>         rx bitrate:     26.0 MBit/s MCS 3
+>         rx duration:    23250 us
+>         authorized:     yes
+>         authenticated:  yes
+>         associated:     yes
+>         preamble:       short
+>         WMM/WME:        yes
+>         MFP:            no
+>         TDLS peer:      no
+>         DTIM period:    2
+>         beacon interval:100
+>         short preamble: yes
+>         short slot time:yes
+>         connected time: 22 seconds
+>
+> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+
+[...]
+
+> +struct ath10k_10_2_peer_tx_stats {
+> +	u8 ratecode[PEER_STATS_FOR_NO_OF_PPDUS];
+> +	u8 success_pkts[PEER_STATS_FOR_NO_OF_PPDUS];
+> +	__le16 success_bytes[PEER_STATS_FOR_NO_OF_PPDUS];
+> +	u8 retry_pkts[PEER_STATS_FOR_NO_OF_PPDUS];
+> +	__le16 retry_bytes[PEER_STATS_FOR_NO_OF_PPDUS];
+> +	u8 failed_pkts[PEER_STATS_FOR_NO_OF_PPDUS];
+> +	__le16 failed_bytes[PEER_STATS_FOR_NO_OF_PPDUS];
+> +	u8 flags[PEER_STATS_FOR_NO_OF_PPDUS];
+> +	__le32 tx_duration;
+> +	u8 tx_ppdu_cnt;
+> +	u8 peer_id;
+> +} __packed;
+
+Toke, hopefully the tx_duration value here helps with ATF implementation
+using QCA988X.
+
+--=20
+Kalle Valo=
