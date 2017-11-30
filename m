@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47976 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751546AbdK2IUw (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:5479 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750866AbdK3FzZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Nov 2017 03:20:52 -0500
-Message-ID: <1511943649.4827.20.camel@coelho.fi> (sfid-20171129_092056_716493_020D7BF3)
-From: Luca Coelho <luca@coelho.fi>
-To: sedat.dilek@gmail.com
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        linuxwifi <linuxwifi@intel.com>
-Date: Wed, 29 Nov 2017 10:20:49 +0200
-In-Reply-To: <CA+icZUVPzwX6hyPZaUJWwn7zOGMaRAkQ7SA6haw6p0F-YX7kBw@mail.gmail.com>
-References: <1511175768.4011.261.camel@coelho.fi>
-         <CA+icZUVqhmH3dyMXkHKsHus5qyfMqQfcOctvHRDf4x=6+ndfPw@mail.gmail.com>
-         <1511259055.4011.268.camel@coelho.fi>
-         <CA+icZUVPzwX6hyPZaUJWwn7zOGMaRAkQ7SA6haw6p0F-YX7kBw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: pull-request: iwlwifi 2017-11-19
+        Thu, 30 Nov 2017 00:55:25 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Peter Oh <peter.oh@bowerswilkins.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
+Subject: RE: [PATCH] ath10k: unify rx processing in napi_poll
+Date: Thu, 30 Nov 2017 05:55:23 +0000
+Message-ID: <b4d1ec9afff447fc92d92645a4273222@NALASEXR01H.na.qualcomm.com> (sfid-20171130_065535_266570_B0C04E21)
+References: <1511991212-4837-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <01899b3e-15c5-4f23-5c3c-86b23a0a9451@bowerswilkins.com>
+In-Reply-To: <01899b3e-15c5-4f23-5c3c-86b23a0a9451@bowerswilkins.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-11-29 at 08:51 +0100, Sedat Dilek wrote:
-> On Tue, Nov 21, 2017 at 11:10 AM, Luca Coelho <luca@coelho.fi> wrote:
-> > On Tue, 2017-11-21 at 10:30 +0100, Sedat Dilek wrote:
-> > > On Mon, Nov 20, 2017 at 12:02 PM, Luca Coelho <luca@coelho.fi>
-> > > wrote:
-> > > [..]
-> > > > -------------------------------------------------------------
-> > > > ---
-> > > > iwlwifi: first set of fixes for 4.15
-> > > > 
-> > > > * Support new FW API version of scan cmd (used in FW version
-> > > > 34);
-> > > 
-> > > While seeing this...
-> > > I have here a iwlwifi-8265 hardware and have seen a recently
-> > > uploaded
-> > > FW-version 34 in iwlwifi-firmware Git.
-> > > Can you explain the dependence of iwlwifi firmware-version /
-> > > Linux
-> > > kernel-release and especially probing?
-> > > Currently, I am using Linux v4.14 from Debian/experimental.
-> > 
-> > Mostly for backwards-compatibility, the driver is able to work with
-> > a
-> > range of firmware versions.  It only uses one of them at a time
-> > (i.e.
-> > the highest supported version it finds).
-> > 
-> > The driver in v4.14 support version 34 and below.  So it starts
-> > looking
-> > for that one and, if not found, falls back to the next lower
-> > version
-> > (i.e. 33) and so on, until it finds one.
-> > 
-> 
-> Isn't Linux v4.14.3 (here: -rc1) minimum to completely support new
-> features in v34 firmware?
+> I'm wondering if this patch is related to kernel crash due to ath10k napi=
+.
+>=20
+> Do you think this patch helps the crash below?
+>=20
+> This crash happened ath10k v4.14 (10/04/2017, commit id c09dbd7) +
+> 3.14.43 kernel backports.
+>=20
+> [ 6866.655419] ------------[ cut here ]------------
+> [ 6866.659029] kernel BUG at /net/core/dev.c:4301!
+> [ 6866.666404] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP ARM
+> [ 6866.672206] Modules linked in: asix essedma qca_ssdk ath9k
+>
+This change solves WARN_ON_ONCE in napi_poll.=20
+WARNING: CPU: 0 PID: 7 at ../net/core/dev.c:5274=20
 
-Yes, it is.  But this was a bug and we can't go back and fix v4.14.0-2, 
-right? So it's the best we can do and whoever is using v4.14, should
-update to v4.14.3 when it comes out to be able to use version 34 of the
-firmware.
+Im not sure about BUG_ON that you mentioned. Feel free to verify the change=
+.
 
-
---
-Cheers,
-Luca.
+-Rajkumar
