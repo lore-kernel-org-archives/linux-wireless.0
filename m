@@ -1,127 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr40066.outbound.protection.outlook.com ([40.107.4.66]:52503
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752742AbdKJMnX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2017 07:43:23 -0500
-From: Vanessa Maegima <vanessa.maegima@nxp.com>
-To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "van.ayumi@gmail.com" <van.ayumi@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "embed3d@gmail.com" <embed3d@gmail.com>,
-        "joerg.krause@embedded.rocks" <joerg.krause@embedded.rocks>
-Subject: Re: AP6335 with mainline kernel
-Date: Fri, 10 Nov 2017 12:43:20 +0000
-Message-ID: <1510317758.12715.3.camel@nxp.com> (sfid-20171110_134330_862756_50EB0FA0)
-References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
-         <e9fe560a-fba3-aaa8-8c0a-b3c6f5ce1a74@broadcom.com>
-         <CABACg+wyKfFNyZurY7vVMHS+AG-tcih6uZTZM=d5TUPjOM9Qcw@mail.gmail.com>
-In-Reply-To: <CABACg+wyKfFNyZurY7vVMHS+AG-tcih6uZTZM=d5TUPjOM9Qcw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:36979 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750782AbdK3Q2v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Nov 2017 11:28:51 -0500
+Date: Thu, 30 Nov 2017 17:28:42 +0100
+In-Reply-To: <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com>
+References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com> <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com> <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "akolli@codeaurora.org" <akolli@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>
+From: =?ISO-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Message-ID: <DAB5EBB8-C820-4056-8AAB-063D05F38BD5@toke.dk> (sfid-20171130_172856_338606_8D7D5BFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCk9uIFF1aSwgMjAxNy0wOS0yMSBhdCAxMjozMCAtMDMwMCwgVmFuZXNzYSBBeXVtaSBN
-YWVnaW1hIHdyb3RlOg0KPiBIaSBBcmVuZCwNCj4gDQo+IE9uIFRodSwgU2VwIDIxLCAyMDE3IGF0
-IDQ6MjYgQU0sIEFyZW5kIHZhbiBTcHJpZWwNCj4gPGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5j
-b20+IHdyb3RlOg0KPiA+IA0KPiA+IE9uIDIwLTA5LTE3IDIxOjMzLCBWYW5lc3NhIEF5dW1pIE1h
-ZWdpbWEgd3JvdGU6DQo+ID4gPiANCj4gPiA+IA0KPiA+ID4gSGksDQo+ID4gPiANCj4gPiA+IEkg
-YW0gdHJ5aW5nIHRvIGVuYWJsZSBXaWZpIG9uIGlteDdkLXBpY28gdXNpbmcgbWFpbmxpbmUga2Vy
-bmVsLg0KPiA+ID4gaW14N2QtcGljbw0KPiA+ID4gaGFzIGFuIEFQNjMzNSBjaGlwLg0KPiA+ID4g
-DQo+ID4gPiBJIGFtIGZhY2luZyBzb21lIGlzc3VlcyByZWxhdGVkIHRvIHRoZSBudnJhbSBmaWxl
-LiBJIGFtIHVzaW5nIHRoZQ0KPiA+ID4gZmlybXdhcmUNCj4gPiA+IHByb3ZpZGVkIGJ5IEJ1aWxk
-cm9vdCAoYnJjbWZtYWM0MzM5LXNkaW8uYmluKS4gSSBnZXQgdGhlDQo+ID4gPiBmb2xsb3dpbmcg
-ZXJyb3I6DQo+ID4gPiANCj4gPiA+IFvCoMKgwqDCoDguNjMwMzgwXSBicmNtZm1hYzogYnJjbWZf
-c2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91dA0KPiA+ID4gKDEwMDAwMDApOg0KPiA+ID4gY2xr
-Y3RsIDB4NTANCj4gPiA+IA0KPiA+ID4gSSBoYXZlIHRyaWVkIHRvIHVzZSB0aGUgZmlybXdhcmUg
-YW5kIG52cmFtIHByb3ZpZGVkIGJ5IFRlY2hOZXhpb24NCj4gPiA+IGJ1dCBJDQo+ID4gPiBnZXQN
-Cj4gPiA+IHRoZSBzYW1lIGVycm9yLg0KPiA+ID4gDQo+ID4gPiBJcyB0aGVyZSBhbnlvbmUgdGhh
-dCBjb3VsZCBlbmFibGUgV2lmaSBvbiBBUDYzMzUgdXNpbmcga2VybmVsDQo+ID4gPiBtYWlubGlu
-ZT8NCj4gPiA+IFdoYXQgbnZyYW0gZmlsZSB3YXMgdXNlZD8NCj4gPiA+IA0KPiA+ID4gSSBhbSBh
-YmxlIHRvIHVzZSBXaWZpIG9uIHRoZSBib2FyZCBpZiBJIHVzZSB0aGUgZmlybXdhcmUsIG52cmFt
-DQo+ID4gPiBmaWxlIGFuZA0KPiA+ID4ga2VybmVsDQo+ID4gPiBwcm92aWRlZCBieSBUZWNoTmV4
-aW9uLiBUaGV5IHVzZSBhIDQuMSBrZXJuZWwgZnJvbSBOWFAgd2l0aCB0aGUNCj4gPiA+IGJjbWRo
-ZA0KPiA+ID4gZHJpdmVyLg0KPiA+ID4gDQo+ID4gPiBTbyBJIGtub3cgdGhhdCB0aGUgaGFyZHdh
-cmUgaXMgZnVuY3Rpb25hbC4NCj4gPiA+IA0KPiA+ID4gQW55IHN1Z2dlc3Rpb25zIGFzIGhvdyB0
-byBnZXQgaXQgd29ya2luZyB3aXRoIGEgNC4xMyBhbmQgYnJjbWZtYWMNCj4gPiA+IGRyaXZlcg0K
-PiA+ID4gaXMNCj4gPiA+IGFwcHJlY2lhdGVkLg0KPiA+IA0KPiA+IFNvIHRoZSBudnJhbSBmaWxl
-IGlzIHNwZWNpZmljIHRvIHRoZSB3aWZpIGNoaXBzZXQgb24geW91ciBwbGF0Zm9ybQ0KPiA+IHNv
-IGJlc3QNCj4gPiB0byBzdGljayB3aXRoIHRoZSBwcm92aWRlZCBvbmUuIFRoZSAiSFQgQXZhaWwg
-dGltZW91dCIgbW9zdCBvZnRlbg0KPiA+IGlzIGFuDQo+ID4gaW5kaWNhdGlvbiB0aGF0IHRoZSBm
-aXJtd2FyZSBjcmFzaGVkLiBTbyBnZXR0aW5nIG1vcmUgZGVidWcgb3V0cHV0DQo+ID4gd291bGQN
-Cj4gPiBoZWxwIHVzIHVuZGVyc3RhbmQgaG93IGl0IGVuZGVkIHVwIGxpa2UgdGhhdC4gQ2FuIHlv
-dSBidWlsZCB0aGUNCj4gPiBicmNtZm1hYw0KPiA+IHdpdGggQ09ORklHX0JSQ01EQkcgYW5kIGxv
-YWQgdGhlIGRyaXZlciB1c2luZzoNCj4gPiANCj4gPiAkIGluc21vZCBicmNtZm1hYy5rbyBkZWJ1
-Zz0weDE0MTYNCj4gVGhhbmtzIGZvciB0aGUgcmVwbHkhDQo+IA0KPiBIZXJlIGlzIHRoZSBsb2cg
-KHVzaW5nIDQuMTQtcmMxKToNCj4gDQo+ICMgZG1lc2cgfCBncmVwIGJyY21mbWFjDQo+IFvCoMKg
-wqAxOS4yOTcyMDZdIGJyY21mbWFjOiBicmNtZm1hY19tb2R1bGVfaW5pdCBObyBwbGF0Zm9ybSBk
-YXRhDQo+IGF2YWlsYWJsZS4NCj4gW8KgwqDCoDE5LjMwNzA3NV0gYnJjbWZtYWM6IGJyY21mX3Nk
-aW9fcHJvYmUgRW50ZXINCj4gW8KgwqDCoDE5LjMwODM4NF0gYnJjbWZtYWM6IEYxIHNpZ25hdHVy
-ZSByZWFkIEAweDE4MDAwMDAwPTB4MTYyMjQzMzUNCj4gW8KgwqDCoDE5LjMwOTAyNl0gYnJjbWZt
-YWM6IGJyY21mX2NoaXBfcmVjb2duaXRpb24gZm91bmQgQVhJIGNoaXA6DQo+IEJDTTQzMzksIHJl
-dj0yDQo+IFvCoMKgwqAxOS4zMTcxMTVdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2NoZWNr
-wqDCoFsxIF0gY29yZSAweDgwMDo0Ng0KPiBiYXNlIDB4MTgwMDAwMDAgd3JhcCAweDE4MTAwMDAw
-DQo+IFvCoMKgwqAxOS4zMTcxNDFdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2NoZWNrwqDC
-oFsyIF0gY29yZSAweDgxMjo0Ng0KPiBiYXNlIDB4MTgwMDEwMDAgd3JhcCAweDE4MTAxMDAwDQo+
-IFvCoMKgwqAxOS4zMTcxNjVdIGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2NoZWNrwqDCoFsz
-IF0gY29yZSAweDgzZTo0DQo+IGJhc2UgMHgxODAwMjAwMCB3cmFwIDB4MTgxMDIwMDANCj4gW8Kg
-wqDCoDE5LjMxNzE4OF0gYnJjbWZtYWM6IGJyY21mX2NoaXBfY29yZXNfY2hlY2vCoMKgWzQgXSBj
-b3JlIDB4ODNjOjQNCj4gYmFzZSAweDE4MDAzMDAwIHdyYXAgMHgxODEwMzAwMA0KPiBbwqDCoMKg
-MTkuMzE3MjEwXSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVja8KgwqBbNSBdIGNvcmUg
-MHg4MWE6MjANCj4gYmFzZSAweDE4MDA0MDAwIHdyYXAgMHgxODEwNDAwMA0KPiBbwqDCoMKgMTku
-MzE3MjMzXSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVja8KgwqBbNiBdIGNvcmUgMHg4
-Mjk6MjENCj4gYmFzZSAweDE4MDA1MDAwIHdyYXAgMHgxODEwNTAwMA0KPiBbwqDCoMKgMTkuMzE3
-MjU2XSBicmNtZm1hYzogYnJjbWZfY2hpcF9jb3Jlc19jaGVja8KgwqBbNyBdIGNvcmUgMHgxMzU6
-MA0KPiBiYXNlIDB4MDAwMDAwMDAgd3JhcCAweDE4MTA5MDAwDQo+IFvCoMKgwqAxOS4zMTcyNzld
-IGJyY21mbWFjOiBicmNtZl9jaGlwX2NvcmVzX2NoZWNrwqDCoFs4IF0gY29yZSAweDI0MDowDQo+
-IGJhc2UgMHgwMDAwMDAwMCB3cmFwIDB4MDAwMDAwMDANCj4gW8KgwqDCoDE5LjMxNzI5OF0gYnJj
-bWZtYWM6IGJyY21mX2NoaXBfc2V0X3Bhc3NpdmUgRW50ZXINCj4gW8KgwqDCoDE5LjMyMjIzMl0g
-YnJjbWZtYWM6IGJyY21mX2NoaXBfZ2V0X3JhbWluZm8gUkFNOiBiYXNlPTB4MTgwMDAwDQo+IHNp
-emU9Nzg2NDMyICgweGMwMDAwKSBzcj0wICgweDApDQo+IFvCoMKgwqAxOS4zMjI0NTddIGJyY21m
-bWFjOiBicmNtZl9jaGlwX3NldHVwIGNjcmV2PTQ2LCBwbXVyZXY9MjMsDQo+IHBtdWNhcHM9MHgz
-OWNjNWYxNw0KPiBbwqDCoMKgMTkuMzIyNDgxXSBicmNtZm1hYzogYnJjbWZfZ2V0X21vZHVsZV9w
-YXJhbSBFbnRlciwgYnVzPTAsDQo+IGNoaXA9MTcyMDksIHJldj0yDQo+IFvCoMKgwqAxOS4zMjI1
-MDRdIGJyY21mbWFjOiBicmNtZl9zZGlvZF9zZ3RhYmxlX2FsbG9jIG5lbnRzPTM1DQo+IFvCoMKg
-wqAxOS4zMjI1MzFdIGJyY21mbWFjOiBicmNtZl9zZGlvX2tzb19pbml0IEVudGVyDQo+IFvCoMKg
-wqAxOS4zMjI2MThdIGJyY21mbWFjOiBicmNtZl9zZGlvX2RyaXZlc3RyZW5ndGhpbml0IE5vIFNE
-SU8gZHJpdmVyDQo+IHN0cmVuZ3RoIGluaXQgbmVlZGVkIGZvciBjaGlwIDQzDQo+IDM5IHJldiAy
-IHBtdXJldiAyMw0KPiBbwqDCoMKgMTkuMzIzMjM1XSBicmNtZm1hYzogYnJjbWZfYXR0YWNoIEVu
-dGVyDQo+IFvCoMKgwqAxOS4zMjM3MjVdIGJyY21mbWFjOiBicmNtZl9wcm90b19hdHRhY2ggRW50
-ZXINCj4gW8KgwqDCoDE5LjMyMzc2OV0gYnJjbWZtYWM6IGJyY21mX2Z3ZWhfcmVnaXN0ZXIgZXZl
-bnQgaGFuZGxlciByZWdpc3RlcmVkDQo+IGZvciBQU01fV0FUQ0hET0cNCj4gW8KgwqDCoDE5LjMy
-NDMwNl0gYnJjbWZtYWM6IGJyY21mX3NkaW9fcHJvYmUgY29tcGxldGVkISENCj4gW8KgwqDCoDE5
-LjMyNDMzN10gYnJjbWZtYWM6IGJyY21mX2Z3X21hcF9jaGlwX3RvX25hbWU6IHVzaW5nDQo+IGJy
-Y20vYnJjbWZtYWM0MzM5LXNkaW8uYmluIGZvciBjaGlwIDB4MDA0MzMNCj4gOSgxNzIwOSkgcmV2
-IDB4MDAwMDAyDQo+IFvCoMKgwqAxOS4zMzUzNTNdIGJyY21mbWFjOiBicmNtZl9md19nZXRfZmly
-bXdhcmVzX3BjaWUgZW50ZXI6DQo+IGRldj1tbWMwOjAwMDE6MQ0KPiBbwqDCoMKgMTkuMzUxNzg3
-XSBicmNtZm1hYzogYnJjbWZfZndfcmVxdWVzdF9jb2RlX2RvbmUgZW50ZXI6DQo+IGRldj1tbWMw
-OjAwMDE6MQ0KPiBbwqDCoMKgMTkuMzUzMjAyXSBicmNtZm1hYzogYnJjbWZfZndfcmVxdWVzdF9u
-dnJhbV9kb25lIGVudGVyOg0KPiBkZXY9bW1jMDowMDAxOjENCj4gW8KgwqDCoDE5LjM1MzQyNF0g
-YnJjbWZtYWM6IGJyY21mX3NkaW9fZmlybXdhcmVfY2FsbGJhY2sgRW50ZXI6DQo+IGRldj1tbWMw
-OjAwMDE6MSwgZXJyPTANCj4gW8KgwqDCoDE5LjM1MzgxNF0gYnJjbWZtYWM6IGJyY21mX3NkaW9f
-ZG93bmxvYWRfY29kZV9maWxlIEVudGVyDQo+IFvCoMKgwqAxOS4zODg1ODZdIGJyY21mbWFjOiBi
-cmNtZl9zZGlvX3ZlcmlmeW1lbW9yeSBDb21wYXJlIFJBTSBkbCAmIHVsDQo+IGF0IDB4MDAxODAw
-MDA7IHNpemU9NDkzNTk5DQo+IFvCoMKgwqAxOS41NDY2NzVdIGJyY21mbWFjOiBicmNtZl9zZGlv
-X2Rvd25sb2FkX252cmFtIEVudGVyDQo+IFvCoMKgwqAxOS41NDc0MzJdIGJyY21mbWFjOiBicmNt
-Zl9zZGlvX3ZlcmlmeW1lbW9yeSBDb21wYXJlIFJBTSBkbCAmIHVsDQo+IGF0IDB4MDAyM2Y3MzA7
-IHNpemU9MjI1Ng0KPiBbwqDCoMKgMTkuNTQ4NjY1XSBicmNtZm1hYzogYnJjbWZfY2hpcF9zZXRf
-YWN0aXZlIEVudGVyDQo+IFvCoMKgwqAyMC41NjI5NzRdIGJyY21mbWFjOiBicmNtZl9zZGlvX2h0
-Y2xrOiBIVCBBdmFpbCB0aW1lb3V0DQo+ICgxMDAwMDAwKToNCj4gY2xrY3RsIDB4NTANCj4gW8Kg
-wqDCoDIwLjU3MDQ5MF0gYnJjbWZtYWM6IGJyY21mX3NkaW9fZmlybXdhcmVfY2FsbGJhY2sgZmFp
-bGVkOg0KPiBkZXY9bW1jMDowMDAxOjEsIGVycj0wDQo+IFvCoMKgwqAyMC41NzA3MzldIGJyY21m
-bWFjOiBicmNtZl9zZGlvX3JlbW92ZSBFbnRlcg0KPiBbwqDCoMKgMjAuNTcwNzc1XSBicmNtZm1h
-YzogYnJjbWZfZGV0YWNoIEVudGVyDQo+IFvCoMKgwqAyMC42MTA0MTRdIGJyY21mbWFjOiBicmNt
-Zl9idXNfY2hhbmdlX3N0YXRlIDAgLT4gMA0KPiBbwqDCoMKgMjAuNjEwNDQxXSBicmNtZm1hYzog
-YnJjbWZfc2Rpb19idXNfc3RvcCBFbnRlcg0KPiBbwqDCoMKgMjEuNjIyNDc3XSBicmNtZm1hYzog
-YnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91dA0KPiAoMTAwMDAwMCk6DQo+IGNsa2N0
-bCAweDUwDQo+IFvCoMKgwqAyMS42MzA5MTJdIGJyY21mbWFjOiBicmNtZl9wcm90b19kZXRhY2gg
-RW50ZXINCj4gW8KgwqDCoDIxLjYzMDk2N10gYnJjbWZtYWM6IGJyY21mX2Z3ZWhfdW5yZWdpc3Rl
-ciBldmVudCBoYW5kbGVyIGNsZWFyZWQNCj4gZm9yIFBTTV9XQVRDSERPRw0KPiBbwqDCoMKgMjIu
-NjQyNDU3XSBicmNtZm1hYzogYnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwgdGltZW91dA0KPiAo
-MTAwMDAwMCk6DQo+IGNsa2N0bCAweDUwDQo+IFvCoMKgwqAyMi42ODAxMzFdIGJyY21mbWFjOiBi
-cmNtZl9jaGlwX3NldF9wYXNzaXZlIEVudGVyDQo+IFvCoMKgwqAyMi42ODI1ODBdIGJyY21mbWFj
-OiBicmNtZl9zZGlvX3JlbW92ZSBEaXNjb25uZWN0ZWQNCj4gDQoNCkFueSBzdWdnZXN0aW9ucyBv
-biB0aGlzPw0KDQo+ID4gDQo+ID4gDQo+ID4gUmVnYXJkcywNCj4gPiBBcmVuZA0KPiA+ID4gDQo+
-ID4gPiANCj4gPiA+IFRoYW5rcyENCj4gPiA+IA0KPiA+ID4gUmVnYXJkcywNCj4gPiA+IFZhbmVz
-c2ENCj4gPiA+IA==
+
+
+
+>> +struct ath10k_10_2_peer_tx_stats {
+>> +	u8 ratecode[PEER_STATS_FOR_NO_OF_PPDUS];
+>> +	u8 success_pkts[PEER_STATS_FOR_NO_OF_PPDUS];
+>> +	__le16 success_bytes[PEER_STATS_FOR_NO_OF_PPDUS];
+>> +	u8 retry_pkts[PEER_STATS_FOR_NO_OF_PPDUS];
+>> +	__le16 retry_bytes[PEER_STATS_FOR_NO_OF_PPDUS];
+>> +	u8 failed_pkts[PEER_STATS_FOR_NO_OF_PPDUS];
+>> +	__le16 failed_bytes[PEER_STATS_FOR_NO_OF_PPDUS];
+>> +	u8 flags[PEER_STATS_FOR_NO_OF_PPDUS];
+>> +	__le32 tx_duration;
+>> +	u8 tx_ppdu_cnt;
+>> +	u8 peer_id;
+>> +} __packed;
+>
+>Toke, hopefully the tx_duration value here helps with ATF
+>implementation
+>using QCA988X=2E
+
+Awesome! What's the semantics of this field? Just total=20
+duration spent serving that station in the reporting interval?
+Does it include retry attempts?
+
+-Toke
