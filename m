@@ -1,56 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753099AbdLNQxR (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:37395 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751582AbdLAHt7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 11:53:17 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 0/9] wil6210 patches
-Date: Thu, 14 Dec 2017 18:53:04 +0200
-Message-Id: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175323_341319_66DC9904)
+        Fri, 1 Dec 2017 02:49:59 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v3 7/8] rsi: add module parameter operating mode
+Date: Fri,  1 Dec 2017 13:11:24 +0530
+Message-Id: <1512114085-2615-8-git-send-email-amitkarwar@gmail.com> (sfid-20171201_085011_824158_89AB8DF2)
+In-Reply-To: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com>
+References: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes from v1:
-- Fix code review comments on "wil6210: support Scheduled scan"
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-The following patches include several wil6210 fixes.
+Operating mode determines the support for other protocols.
+This is made as module parameter for better usage.
 
-Dedy Lansky (2):
-  wil6210: support Scheduled scan
-  wil6210: remove leftover "FIXME"s
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_main.c | 57 ++++++++++++++++++++++++++++-----
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 10 +++++-
+ drivers/net/wireless/rsi/rsi_91x_usb.c  | 10 +++++-
+ drivers/net/wireless/rsi/rsi_common.h   |  2 +-
+ drivers/net/wireless/rsi/rsi_hal.h      | 11 +++++++
+ 5 files changed, 79 insertions(+), 11 deletions(-)
 
-Lazar Alexei (2):
-  wil6210: support 40bit DMA addresses
-  wil6210: add support for headroom configuration
-
-Lior David (2):
-  wil6210: configurable broadcast TX MCS
-  wil6210: remove reference to preset_chandef
-
-Maya Erez (3):
-  wil6210: add platform capabilities bitmap
-  wil6210: set platform features based on FW capabilities
-  wil6210: prevent parallel suspend and dump collection
-
- drivers/net/wireless/ath/wil6210/cfg80211.c       |  68 +++++-
- drivers/net/wireless/ath/wil6210/debugfs.c        |   1 -
- drivers/net/wireless/ath/wil6210/interrupt.c      |   2 +-
- drivers/net/wireless/ath/wil6210/main.c           |  67 +++++-
- drivers/net/wireless/ath/wil6210/netdev.c         |   2 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c       |  36 +++-
- drivers/net/wireless/ath/wil6210/pm.c             |  17 ++
- drivers/net/wireless/ath/wil6210/pmc.c            |  11 +-
- drivers/net/wireless/ath/wil6210/txrx.c           | 101 ++++++++-
- drivers/net/wireless/ath/wil6210/wil6210.h        |  15 +-
- drivers/net/wireless/ath/wil6210/wil_crash_dump.c |  11 +
- drivers/net/wireless/ath/wil6210/wil_platform.h   |  15 +-
- drivers/net/wireless/ath/wil6210/wmi.c            | 241 +++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wmi.h            | 100 +++++++--
- 14 files changed, 621 insertions(+), 66 deletions(-)
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 375b725..4a0f5a18 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -68,8 +68,24 @@ EXPORT_SYMBOL_GPL(rsi_dbg);
+ static char *opmode_str(int oper_mode)
+ {
+ 	switch (oper_mode) {
+-	case RSI_DEV_OPMODE_WIFI_ALONE:
++	case DEV_OPMODE_WIFI_ALONE:
+ 		return "Wi-Fi alone";
++	case DEV_OPMODE_BT_ALONE:
++		return "BT EDR alone";
++	case DEV_OPMODE_BT_LE_ALONE:
++		return "BT LE alone";
++	case DEV_OPMODE_BT_DUAL:
++		return "BT Dual";
++	case DEV_OPMODE_STA_BT:
++		return "Wi-Fi STA + BT EDR";
++	case DEV_OPMODE_STA_BT_LE:
++		return "Wi-Fi STA + BT LE";
++	case DEV_OPMODE_STA_BT_DUAL:
++		return "Wi-Fi STA + BT DUAL";
++	case DEV_OPMODE_AP_BT:
++		return "Wi-Fi AP + BT EDR";
++	case DEV_OPMODE_AP_BT_DUAL:
++		return "Wi-Fi AP + BT DUAL";
+ 	}
+ 
+ 	return "Unknown";
+@@ -267,7 +283,7 @@ void rsi_set_bt_context(void *priv, void *bt_context)
+  *
+  * Return: Pointer to the adapter structure on success, NULL on failure .
+  */
+-struct rsi_hw *rsi_91x_init(void)
++struct rsi_hw *rsi_91x_init(u16 oper_mode)
+ {
+ 	struct rsi_hw *adapter = NULL;
+ 	struct rsi_common *common = NULL;
+@@ -309,11 +325,34 @@ struct rsi_hw *rsi_91x_init(void)
+ 	spin_lock_init(&adapter->ps_lock);
+ 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
+ 	init_completion(&common->wlan_init_completion);
++	common->oper_mode = oper_mode;
+ 	common->init_done = true;
+-
+-	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
+-	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
+ 	adapter->device_model = RSI_DEV_9113;
++
++	/* Determine coex mode */
++	switch (common->oper_mode) {
++	case DEV_OPMODE_STA_BT_DUAL:
++	case DEV_OPMODE_STA_BT:
++	case DEV_OPMODE_STA_BT_LE:
++	case DEV_OPMODE_BT_ALONE:
++	case DEV_OPMODE_BT_LE_ALONE:
++	case DEV_OPMODE_BT_DUAL:
++		common->coex_mode = 2;
++		break;
++	case DEV_OPMODE_AP_BT_DUAL:
++	case DEV_OPMODE_AP_BT:
++		common->coex_mode = 4;
++		break;
++	case DEV_OPMODE_WIFI_ALONE:
++		common->coex_mode = 1;
++		break;
++	default:
++		common->oper_mode = 1;
++		common->coex_mode = 1;
++	}
++	rsi_dbg(INFO_ZONE, "%s: oper_mode = %d, coex_mode = %d\n",
++		__func__, common->oper_mode, common->coex_mode);
++
+ 	if (common->coex_mode > 1) {
+ 		if (rsi_coex_attach(common)) {
+ 			rsi_dbg(ERR_ZONE, "Failed to init coex module\n");
+@@ -348,10 +387,12 @@ void rsi_91x_deinit(struct rsi_hw *adapter)
+ 	for (ii = 0; ii < NUM_SOFT_QUEUES; ii++)
+ 		skb_queue_purge(&common->tx_queue[ii]);
+ 
+-	common->init_done = false;
+-
+-	if (common->coex_mode > 1)
++	if (common->coex_mode > 1) {
+ 		rsi_coex_detach(common);
++		rsi_bt_ops.detach(common->bt_adapter);
++	}
++
++	common->init_done = false;
+ 
+ 	kfree(common);
+ 	kfree(adapter->rsi_dev);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index ba38c6d..5722736 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -21,6 +21,14 @@
+ #include "rsi_coex.h"
+ #include "rsi_hal.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
+  * @rw: Read/write
+@@ -926,7 +934,7 @@ static int rsi_probe(struct sdio_func *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index b09c7da..a30305e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -21,6 +21,14 @@
+ #include "rsi_hal.h"
+ #include "rsi_coex.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_usb_card_write() - This function writes to the USB Card.
+  * @adapter: Pointer to the adapter structure.
+@@ -708,7 +716,7 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index 4616585..d9ff3b8 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -81,7 +81,7 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
+ 
+ void rsi_mac80211_detach(struct rsi_hw *hw);
+ u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
+-struct rsi_hw *rsi_91x_init(void);
++struct rsi_hw *rsi_91x_init(u16 oper_mode);
+ void rsi_91x_deinit(struct rsi_hw *adapter);
+ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
+ #ifdef CONFIG_PM
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index e712223..a7d3011 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -17,6 +17,17 @@
+ #ifndef __RSI_HAL_H__
+ #define __RSI_HAL_H__
+ 
++/* Device Operating modes */
++#define DEV_OPMODE_WIFI_ALONE		1
++#define DEV_OPMODE_BT_ALONE		4
++#define DEV_OPMODE_BT_LE_ALONE		8
++#define DEV_OPMODE_BT_DUAL		12
++#define DEV_OPMODE_STA_BT		5
++#define DEV_OPMODE_STA_BT_LE		9
++#define DEV_OPMODE_STA_BT_DUAL		13
++#define DEV_OPMODE_AP_BT		6
++#define DEV_OPMODE_AP_BT_DUAL		14
++
+ #define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
+ #define FLASH_SECTOR_SIZE		(4 * 1024)
+ 
 -- 
-1.9.1
+2.7.4
