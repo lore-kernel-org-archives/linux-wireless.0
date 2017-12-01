@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41508 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752470AbdLDPBQ (ORCPT
+Received: from smtprelay0046.hostedemail.com ([216.40.44.46]:53731 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750872AbdLAJmV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 10:01:16 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
-References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
-        <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
-Date: Mon, 04 Dec 2017 17:01:12 +0200
-In-Reply-To: <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
-        (Sergey Matyukevich's message of "Mon, 13 Nov 2017 13:28:15 +0300")
-Message-ID: <871skalepz.fsf@purkki.adurom.net> (sfid-20171204_160131_206241_7976FE5C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 1 Dec 2017 04:42:21 -0500
+Message-ID: <1512121337.19952.154.camel@perches.com> (sfid-20171201_104245_874709_AD4AEBB0)
+Subject: Re: [PATCH] wlcore, wl1251: fix spelling mistake: "Couldnt" ->
+ "Couldn't"
+From: Joe Perches <joe@perches.com>
+To: Colin King <colin.king@canonical.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 01 Dec 2017 01:42:17 -0800
+In-Reply-To: <20171201093433.9154-1-colin.king@canonical.com>
+References: <20171201093433.9154-1-colin.king@canonical.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+On Fri, 2017-12-01 at 09:34 +0000, Colin King wrote:
+> Trivial fix to spelling mistake in error message text.
+[]
+> diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/ti/wl1251/init.c
+[]
+> @@ -311,7 +311,7 @@ static int wl1251_hw_init_data_path_config(struct wl1251 *wl)
+>  	wl->data_path = kzalloc(sizeof(struct acx_data_path_params_resp),
+>  				GFP_KERNEL);
+>  	if (!wl->data_path) {
+> -		wl1251_error("Couldnt allocate data path parameters");
+> +		wl1251_error("Couldn't allocate data path parameters");
 
-> From: Vasily Ulyanov <vulyanov@quantenna.com>
->
-> This allows a running AP to blacklist STAs by their MAC addresses
-> respecting the configured policy (either accept or deny unless listed).
-> It can be setup on .start_ap or with .set_mac_acl commands.
->
-> Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
-
-[...]
-
-> @@ -918,6 +933,7 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
->  	wiphy->max_scan_ie_len = QTNF_MAX_VSIE_LEN;
->  	wiphy->mgmt_stypes = qtnf_mgmt_stypes;
->  	wiphy->max_remain_on_channel_duration = 5000;
-> +	wiphy->max_acl_mac_addrs = mac->macinfo.max_acl_mac_addrs;
->  
->  	wiphy->iface_combinations = iface_comb;
->  	wiphy->n_iface_combinations = 1;
-> @@ -932,6 +948,9 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
->  			WIPHY_FLAG_AP_UAPSD |
->  			WIPHY_FLAG_HAS_CHANNEL_SWITCH;
->  
-> +	if (wiphy->max_acl_mac_addrs > 0)
-> +		wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME;
-
-Conditonally enabling WIPHY_FLAG_HAVE_AP_SME looks somewhat suspicious
-to me and from a quick search I don't see any other driver doing
-something similar. Can you explain why AP_SME is related to MAC ACL?
-
--- 
-Kalle Valo
+Might be better to remove this one.
