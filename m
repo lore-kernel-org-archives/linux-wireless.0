@@ -1,78 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753524AbdLNQx1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 11:53:27 -0500
-Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 6/9] wil6210: add support for headroom configuration
-Date: Thu, 14 Dec 2017 18:53:10 +0200
-Message-Id: <1513270393-919-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175331_429996_81E2AE88)
-In-Reply-To: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from mga09.intel.com ([134.134.136.24]:32875 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752166AbdLALss (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Dec 2017 06:48:48 -0500
+Message-ID: <1512128925.4827.49.camel@intel.com> (sfid-20171201_124852_831424_692D904A)
+Subject: Re: [PATCH 1/5] mac80211: always update the PM state of a peer on
+ MGMT / DATA frames
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Fri, 01 Dec 2017 13:48:45 +0200
+In-Reply-To: <1509353300.2637.2.camel@sipsolutions.net>
+References: <20171029095111.17078-1-luca@coelho.fi>
+         <20171029095111.17078-2-luca@coelho.fi>
+         <1509353300.2637.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+On Mon, 2017-10-30 at 09:48 +0100, Johannes Berg wrote:
+> On Sun, 2017-10-29 at 11:51 +0200, Luca Coelho wrote:
+> > From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > 
+> > The 2016 version of the spec is more generic about when the
+> > AP should update the power management state of the peer:
+> > the AP shall update the state based on any management or
+> > data frames. This means that even non-bufferable management
+> > frames should be looked at to update to maintain the power
+> > management state of the peer.
+> > 
+> > This can avoid problematic cases for example if a station
+> > disappears while being asleep and then re-appears. The AP
+> > would remember it as in power save, but the Authentication
+> > frame couldn't be used to set the peer as awake again.
+> > Note that this issues wasn't really critical since at some
+> > point (after the association) we would have removed the
+> > station and created another one with all the states cleared.
+> 
+> IIRC this caused a hwsim test failure - is that addressed yet?
 
-Add module parameter for configuring the headroom size
-in the skb allocation.
+FTR, I'm sending a separate patch with the hwsim fix, as we agreed, as
+part of the patchset I'm sending today.
 
-Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 62c04f0..89967ce 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -41,6 +41,32 @@
- module_param(rx_large_buf, bool, 0444);
- MODULE_PARM_DESC(rx_large_buf, " allocate 8KB RX buffers, default - no");
- 
-+#define WIL6210_MAX_HEADROOM_SIZE	(256)
-+
-+static ushort headroom_size; /* = 0; */
-+static int headroom_size_set(const char *val, const struct kernel_param *kp)
-+{
-+	int ret;
-+
-+	ret = param_set_uint(val, kp);
-+	if (ret)
-+		return ret;
-+
-+	if (headroom_size > WIL6210_MAX_HEADROOM_SIZE)
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static const struct kernel_param_ops headroom_ops = {
-+	.set = headroom_size_set,
-+	.get = param_get_ushort,
-+};
-+
-+module_param_cb(headroom_size, &headroom_ops, &headroom_size, 0644);
-+MODULE_PARM_DESC(headroom_size,
-+		 " headroom size for rx skb allocation, default - 0");
-+
- static inline uint wil_rx_snaplen(void)
- {
- 	return rx_align_2 ? 6 : 0;
-@@ -630,7 +656,7 @@ static int wil_rx_refill(struct wil6210_priv *wil, int count)
- 	u32 next_tail;
- 	int rc = 0;
- 	int headroom = ndev->type == ARPHRD_IEEE80211_RADIOTAP ?
--			WIL6210_RTAP_SIZE : 0;
-+			WIL6210_RTAP_SIZE : headroom_size;
- 
- 	for (; next_tail = wil_vring_next_tail(v),
- 			(next_tail != v->swhead) && (count-- > 0);
--- 
-1.9.1
+--
+Luca.
