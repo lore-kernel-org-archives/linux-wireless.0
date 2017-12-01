@@ -1,73 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:46085 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751737AbdLVNi1 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48338 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752426AbdLANFp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 08:38:27 -0500
-Subject: [PATCH v2 0/6] ath10k: firmware ramdump support
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Dec 2017 15:38:12 +0200
-Message-ID: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net> (sfid-20171222_143837_645766_31DD87A7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Fri, 1 Dec 2017 08:05:45 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  1 Dec 2017 15:05:35 +0200
+Message-Id: <20171201130535.27656-3-luca@coelho.fi> (sfid-20171201_140553_568733_5E6EF30F)
+In-Reply-To: <20171201130535.27656-1-luca@coelho.fi>
+References: <20171201130535.27656-1-luca@coelho.fi>
+Subject: [PATCH 2/2] iwlwifi: mvm: flush queue before deleting ROC
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-here are patches adding firmware ramdump support to make it easier to
-debug firmware crashes. This also removes the depracated fw_crash_dump
-debugfs file.
+Before deleting a time event (remain-on-channel instance), flush
+the queue so that frames cannot get stuck on it. We already flush
+the AUX STA queues, but a separate station is used for the P2P
+Device queue.
 
-Kalle
-
-v2:
-
-o patch 2: fix conflict in due to commit dafa42036012 ("ath10k: use 64-bit crash dump timestamps")
-
-o patch 2: fix build errors when CONFIG_DEV_COREDUMP is disabled:
-
-drivers/net/wireless/ath/ath10k/coredump.c:24:30: error: redefinition of 'ath10k_coredump_new'
-drivers/net/wireless/ath/ath10k/coredump.c:130:5: error: redefinition of 'ath10k_coredump_submit'
-
-o patch 5: fix coccinelli warning:
-
-drivers/net/wireless/ath/ath10k/pci.c:1561:2-3: Unneeded semicolon
-
-o patch 5: fix coccinelli warning:
-  
-drivers/net/wireless/ath/ath10k/pci.c:1522:6-15: WARNING: Unsigned expression compared with zero: skip_size < 0
-
-  by changing the check to:
-
-  if (cur_section->end > next_section->start) {
-
-o patch 5: fix error handling when calling ath10k_pci_set_ram_config()
-
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 ++
+ .../net/wireless/intel/iwlwifi/mvm/time-event.c    | 24 ++++++++++++++++++++--
+ 2 files changed, 24 insertions(+), 2 deletions(-)
 
-Alan Liu (1):
-      ath10k: add memory dump support for QCA6174/QCA9377
-
-Kalle Valo (5):
-      ath10k: remove deprecated fw_crash_dump debugfs file
-      ath10k: refactor firmware crashdump code to coredump.c
-      ath10k: detach coredump.c from debug.c
-      ath10k: add coredump_mask module parameter
-      ath10k: add memory dump support QCA988X
-
-
- drivers/net/wireless/ath/ath10k/Makefile   |    1 
- drivers/net/wireless/ath/ath10k/core.c     |   31 +
- drivers/net/wireless/ath/ath10k/core.h     |   18 -
- drivers/net/wireless/ath/ath10k/coredump.c |  993 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/coredump.h |  225 ++++++
- drivers/net/wireless/ath/ath10k/debug.c    |  275 --------
- drivers/net/wireless/ath/ath10k/debug.h    |   16 
- drivers/net/wireless/ath/ath10k/hw.h       |    1 
- drivers/net/wireless/ath/ath10k/pci.c      |  221 ++++++
- 9 files changed, 1482 insertions(+), 299 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/coredump.c
- create mode 100644 drivers/net/wireless/ath/ath10k/coredump.h
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 6a9a25beab3f..55ab5349dd40 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1061,6 +1061,7 @@ struct iwl_mvm {
+  * @IWL_MVM_STATUS_ROC_AUX_RUNNING: AUX remain-on-channel is running
+  * @IWL_MVM_STATUS_D3_RECONFIG: D3 reconfiguration is being done
+  * @IWL_MVM_STATUS_FIRMWARE_RUNNING: firmware is running
++ * @IWL_MVM_STATUS_NEED_FLUSH_P2P: need to flush P2P bcast STA
+  */
+ enum iwl_mvm_status {
+ 	IWL_MVM_STATUS_HW_RFKILL,
+@@ -1072,6 +1073,7 @@ enum iwl_mvm_status {
+ 	IWL_MVM_STATUS_ROC_AUX_RUNNING,
+ 	IWL_MVM_STATUS_D3_RECONFIG,
+ 	IWL_MVM_STATUS_FIRMWARE_RUNNING,
++	IWL_MVM_STATUS_NEED_FLUSH_P2P,
+ };
+ 
+ /* Keep track of completed init configuration */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index 4d0314912e94..e25cda9fbf6c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -132,6 +132,24 @@ void iwl_mvm_roc_done_wk(struct work_struct *wk)
+ 	 * executed, and a new time event means a new command.
+ 	 */
+ 	iwl_mvm_flush_sta(mvm, &mvm->aux_sta, true, CMD_ASYNC);
++
++	/* Do the same for the P2P device queue (STA) */
++	if (test_and_clear_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status)) {
++		struct iwl_mvm_vif *mvmvif;
++
++		/*
++		 * NB: access to this pointer would be racy, but the flush bit
++		 * can only be set when we had a P2P-Device VIF, and we have a
++		 * flush of this work in iwl_mvm_prepare_mac_removal() so it's
++		 * not really racy.
++		 */
++
++		if (!WARN_ON(!mvm->p2p_device_vif)) {
++			mvmvif = iwl_mvm_vif_from_mac80211(mvm->p2p_device_vif);
++			iwl_mvm_flush_sta(mvm, &mvmvif->bcast_sta, true,
++					  CMD_ASYNC);
++		}
++	}
+ }
+ 
+ static void iwl_mvm_roc_finished(struct iwl_mvm *mvm)
+@@ -855,10 +873,12 @@ void iwl_mvm_stop_roc(struct iwl_mvm *mvm)
+ 
+ 	mvmvif = iwl_mvm_vif_from_mac80211(te_data->vif);
+ 
+-	if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE)
++	if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE) {
+ 		iwl_mvm_remove_time_event(mvm, mvmvif, te_data);
+-	else
++		set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status);
++	} else {
+ 		iwl_mvm_remove_aux_roc_te(mvm, mvmvif, te_data);
++	}
+ 
+ 	iwl_mvm_roc_finished(mvm);
+ }
+-- 
+2.15.0
