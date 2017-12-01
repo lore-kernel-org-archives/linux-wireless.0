@@ -1,73 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0052.outbound.protection.outlook.com ([104.47.42.52]:40224
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S936739AbdLSL3S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 06:29:18 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: [PATCH v2 0/10] qtnfmac: regular portion of fixes and features
-Date: Tue, 19 Dec 2017 14:28:46 +0300
-Message-Id: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com> (sfid-20171219_122923_311327_B22785F4)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from ns.iliad.fr ([212.27.33.1]:44038 "EHLO ns.iliad.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750742AbdLAQJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Dec 2017 11:09:16 -0500
+Message-ID: <1512144555.38490.84.camel@sakura.staff.proxad.net> (sfid-20171201_170920_655832_6F08366A)
+Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
+From: Maxime Bizon <mbizon@freebox.fr>
+Reply-To: mbizon@freebox.fr
+To: Christian Lamparter <chunkeey@gmail.com>
+Cc: akolli@codeaurora.org, akolli@qti.qualcomm.com,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Date: Fri, 01 Dec 2017 17:09:15 +0100
+In-Reply-To: <6519868.NEUq8DTjxK@debian64>
+References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
+         <7792e2fb2c546d8745c65e48945f2535@codeaurora.org>
+         <1512140710.38490.81.camel@sakura.staff.proxad.net>
+         <6519868.NEUq8DTjxK@debian64>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle and all,
 
-Here is the next set of patches for qtnfmac driver. This set
-enables the following features:
-- radar detection and CAC support
-- MAC-based ACL support
-- make GET_STA_STATS format more flexible and future-proof
-- inform wireless core about supported extended capabilities
+On Fri, 2017-12-01 at 16:53 +0100, Christian Lamparter wrote:
 
-Besides, several issues has been fixed. The most notable
-among them are:
-- fix RSSI data passed from qtnfmac to wireless core
-- pass complete channel information between firmware and driver,
-  including both primary channel and center frequency
+> "[PATCH] ath10k: fix recent bandwidth conversion bug"
 
-The last fix enables proper operation channel report by iw tool
-and fixes ACS mode in hostapd.
+indeed, much better
 
-Changes v1 -> v2
-- remove conditional enablement of WIPHY_FLAG_HAVE_AP_SME when
-  non-zero max_acl_mac_addrs is reported by firmware
-- rebase on top of the latest wireless-drivers-next/master
+thanks
 
-Regards,
-Sergey
-
-Igor Mitsyanko (6):
-  qtnfmac: check that MAC exists in regulatory notifier
-  qtnfmac: add support for radar detection and CAC
-  qtnfmac: change default interface mode from AP to STA
-  qtnfmac: check for passed channel being NULL in MGMT_TX
-  qtnfmac: modify GET_STA_STATS cmd format for
-  qtnfmac: keeping track of "generation" for STA info
-
-Sergey Matyukevich (2):
-  qtnfmac: pass complete channel data between driver and
-  qtnfmac: fix rssi data passed to wireless core
-
-Vasily Ulyanov (2):
-  qtnfmac: fill wiphy's extended capabilities
-  qtnfmac: support MAC address based access control
-
-
- cfg80211.c   |   60 ++++++++-
- commands.c   |  375 ++++++++++++++++++++++++++++++++++++++++++-----------------
- commands.h   |    5 
- core.c       |   13 --
- core.h       |    8 -
- event.c      |   76 ++++++++++-
- qlink.h      |  340 ++++++++++++++++++++++++++++++++++++++++-------------
- qlink_util.c |   78 +++++++-----
- qlink_util.h |    4 
- util.c       |    8 -
- util.h       |    4 
- 11 files changed, 725 insertions(+), 246 deletions(-)
+-- 
+Maxime
