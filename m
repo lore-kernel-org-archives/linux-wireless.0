@@ -1,88 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:52935 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751001AbdLHBAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 20:00:36 -0500
-Date: Fri, 8 Dec 2017 12:00:34 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Ihab Zhaika <ihab.zhaika@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: linux-next: manual merge of the wireless-drivers-next tree with the
- wireless-drivers tree
-Message-ID: <20171208120034.499e1a65@canb.auug.org.au> (sfid-20171208_020054_487789_428FCC22)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33303 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750854AbdLAHt2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Dec 2017 02:49:28 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org
+Subject: [v3 0/8] rsi: add bluetooth and coex support
+Date: Fri,  1 Dec 2017 13:11:17 +0530
+Message-Id: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com> (sfid-20171201_084950_645060_31486050)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Today's linux-next merge of the wireless-drivers-next tree got a
-conflict in:
+This patch series adds new bluetooth driver and coex enhancments
+in existing wlan driver for RSI chipsets.
+As per our architecture, both wlan and bluetooth drivers talk
+over same SDIO interface to device. Separate endpoint will be
+used in case of USB interface.
 
-  drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+Changes in v3: 5/8 and 6/8 patches are modified
+Changes in v2: 2/8, 5/8 and 6/8 patches are modified
 
-between commit:
+Prameela Rani Garnepudi (6):
+  rsi: add rx control block to handle rx packets in USB
+  rsi: add header file rsi_header
+  rsi: add coex support
+  Bluetooth: btrsi: add new rsi bluetooth driver
+  rsi: add module parameter operating mode
+  rsi: sdio changes to support BT
 
-  567deca8e72d ("iwlwifi: add new cards for 9260 and 22000 series")
+Siva Rebbagondla (2):
+  rsi: add bluetooth rx endpoint
+  rsi: handle BT traffic in driver
 
-from the wireless-drivers tree and commit:
-
-  2f7a3863191a ("iwlwifi: rename the temporary name of A000 to the official 22000")
-
-from the wireless-drivers-next tree.
-
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
+ drivers/bluetooth/Kconfig                   |  11 ++
+ drivers/bluetooth/Makefile                  |   2 +
+ drivers/bluetooth/btrsi.c                   | 211 ++++++++++++++++++++++++++++
+ drivers/bluetooth/rsi_hci.h                 |  40 ++++++
+ drivers/net/wireless/rsi/Kconfig            |   2 +-
+ drivers/net/wireless/rsi/Makefile           |   1 +
+ drivers/net/wireless/rsi/rsi_91x_coex.c     | 184 ++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_core.c     |  16 ++-
+ drivers/net/wireless/rsi/rsi_91x_hal.c      |  56 ++++++--
+ drivers/net/wireless/rsi/rsi_91x_main.c     | 110 ++++++++++++++-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   2 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     |  13 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |   5 +-
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 124 +++++++++++-----
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  35 +++--
+ drivers/net/wireless/rsi/rsi_coex.h         |  38 +++++
+ drivers/net/wireless/rsi/rsi_common.h       |   5 +-
+ drivers/net/wireless/rsi/rsi_hal.h          |  21 +++
+ drivers/net/wireless/rsi/rsi_main.h         |  20 +--
+ drivers/net/wireless/rsi/rsi_mgmt.h         |   3 +
+ drivers/net/wireless/rsi/rsi_usb.h          |  16 ++-
+ include/linux/rsi_header.h                  |  56 ++++++++
+ 22 files changed, 888 insertions(+), 83 deletions(-)
+ create mode 100644 drivers/bluetooth/btrsi.c
+ create mode 100644 drivers/bluetooth/rsi_hci.h
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
+ create mode 100644 include/linux/rsi_header.h
 
 -- 
-Cheers,
-Stephen Rothwell
-
-diff --cc drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index ccd7c33c4c28,5ed89d7ac4b2..000000000000
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@@ -652,20 -651,19 +652,20 @@@ static const struct pci_device_id iwl_h
-  	{IWL_PCI_DEVICE(0xA370, 0x4034, iwl9560_2ac_cfg_soc)},
-  	{IWL_PCI_DEVICE(0xA370, 0x40A4, iwl9462_2ac_cfg_soc)},
-  
-- /* a000 Series */
-- 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr_cdb)},
-- 	{IWL_PCI_DEVICE(0x34F0, 0x0310, iwla000_2ac_cfg_jf)},
-- 	{IWL_PCI_DEVICE(0x2720, 0x0000, iwla000_2ax_cfg_hr)},
-- 	{IWL_PCI_DEVICE(0x34F0, 0x0070, iwla000_2ax_cfg_hr)},
-- 	{IWL_PCI_DEVICE(0x2720, 0x0078, iwla000_2ax_cfg_hr)},
-- 	{IWL_PCI_DEVICE(0x2720, 0x0070, iwla000_2ac_cfg_hr_cdb)},
-- 	{IWL_PCI_DEVICE(0x2720, 0x0030, iwla000_2ac_cfg_hr_cdb)},
-- 	{IWL_PCI_DEVICE(0x2720, 0x1080, iwla000_2ax_cfg_hr)},
-- 	{IWL_PCI_DEVICE(0x2720, 0x0090, iwla000_2ac_cfg_hr_cdb)},
-- 	{IWL_PCI_DEVICE(0x2720, 0x0310, iwla000_2ac_cfg_hr_cdb)},
-- 	{IWL_PCI_DEVICE(0x40C0, 0x0000, iwla000_2ax_cfg_hr)},
-- 	{IWL_PCI_DEVICE(0x40C0, 0x0A10, iwla000_2ax_cfg_hr)},
-- 	{IWL_PCI_DEVICE(0xA0F0, 0x0000, iwla000_2ax_cfg_hr)},
-+ /* 22000 Series */
-+ 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwl22000_2ac_cfg_hr_cdb)},
-+ 	{IWL_PCI_DEVICE(0x34F0, 0x0310, iwl22000_2ac_cfg_jf)},
-+ 	{IWL_PCI_DEVICE(0x2720, 0x0000, iwl22000_2ax_cfg_hr)},
-+ 	{IWL_PCI_DEVICE(0x34F0, 0x0070, iwl22000_2ax_cfg_hr)},
-+ 	{IWL_PCI_DEVICE(0x2720, 0x0078, iwl22000_2ax_cfg_hr)},
-+ 	{IWL_PCI_DEVICE(0x2720, 0x0070, iwl22000_2ac_cfg_hr_cdb)},
-+ 	{IWL_PCI_DEVICE(0x2720, 0x0030, iwl22000_2ac_cfg_hr_cdb)},
-+ 	{IWL_PCI_DEVICE(0x2720, 0x1080, iwl22000_2ax_cfg_hr)},
-+ 	{IWL_PCI_DEVICE(0x2720, 0x0090, iwl22000_2ac_cfg_hr_cdb)},
-+ 	{IWL_PCI_DEVICE(0x2720, 0x0310, iwl22000_2ac_cfg_hr_cdb)},
-+ 	{IWL_PCI_DEVICE(0x40C0, 0x0000, iwl22000_2ax_cfg_hr)},
-+ 	{IWL_PCI_DEVICE(0x40C0, 0x0A10, iwl22000_2ax_cfg_hr)},
-++	{IWL_PCI_DEVICE(0xA0F0, 0x0000, iwl22000_2ax_cfg_hr)},
-  
-  #endif /* CONFIG_IWLMVM */
-  
+2.7.4
