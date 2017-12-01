@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:52788 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755298AbdL2Ibj (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:39303 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbdLAIig (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Dec 2017 03:31:39 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <yhchuang@realtek.com>, <Larry.Finger@lwfinger.net>,
-        <johannes.berg@intel.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/11] rtlwifi: Remove unnecessary 'out of memory' message
-Date: Fri, 29 Dec 2017 16:31:06 +0800
-Message-ID: <20171229083112.31540-6-pkshih@realtek.com> (sfid-20171229_093322_653414_B93DCF42)
-In-Reply-To: <20171229083112.31540-1-pkshih@realtek.com>
-References: <20171229083112.31540-1-pkshih@realtek.com>
+        Fri, 1 Dec 2017 03:38:36 -0500
+Received: by mail-qk0-f196.google.com with SMTP id u184so12237650qkd.6
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Dec 2017 00:38:35 -0800 (PST)
+Subject: Re: [PATCH] brcmfmac: Add sg parameters dts parsing
+To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        linux-wireless@vger.kernel.org
+References: <20171201075542.GA31376@aremote07.aus.cypress.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, brcm80211-dev-list@cypress.com,
+        brcm80211-dev-list.pdl@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, Wright Feng <Wright.Feng@cypress.com>,
+        Stanley Hsu <Stanley.Hsu@cypress.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A211508.6030603@broadcom.com> (sfid-20171201_093839_655630_E35E9763)
+Date: Fri, 1 Dec 2017 09:38:32 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20171201075542.GA31376@aremote07.aus.cypress.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shreeya Patel <shreeya.patel23498@gmail.com>
+On 12/1/2017 8:55 AM, Chi-Hsien Lin wrote:
+> broken_sg_support, sd_head_align, and sd_sgentry_align are used in
+> brcmfmac code but not configurable in dts file. Add the parsing logic.
+> Now they can be configured like below in dts:
+> 	brcm,broken_sg_support;
+> 	brcm,sd_head_align =/bits/  16 <4>;
+> 	brcm,sd_sgentry_align =/bits/  16 <4>;
 
-This is merged by Ping-Ke Shih from commit 596e0559d61a ("Staging:
-rtlwifi: Remove unnecessary 'out of memory' message."), and commit log
-is reserved below.
+Hi Chi-Hsien,
 
-Logging messages that show some type of "out of memory" error
-are generally unnecessary as there is a generic message and
-a stack dump done by the memory subsystem.
+For device tree support you should submit a separate commit on the dt 
+binding specification. For broadcom fullmac chipsets binding spec can be 
+found in 
+Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt.
 
-These messages generally increase kernel size without much
-added value.
+The alignment properties are to be specified in bytes, not bits.
 
-Problem found by checkpatch.
-
-Signed-off-by: Shreeya Patel <shreeya.patel23498@gmail.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/rc.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
-index 02811eda57cd..9638bf4a96f7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
-@@ -265,11 +265,9 @@ static void *rtl_rate_alloc_sta(void *ppriv,
- 	struct rtl_priv *rtlpriv = ppriv;
- 	struct rtl_rate_priv *rate_priv;
- 
--	rate_priv = kzalloc(sizeof(struct rtl_rate_priv), gfp);
--	if (!rate_priv) {
--		pr_err("Unable to allocate private rc structure\n");
-+	rate_priv = kzalloc(sizeof(*rate_priv), gfp);
-+	if (!rate_priv)
- 		return NULL;
--	}
- 
- 	rtlpriv->rate_priv = rate_priv;
- 
--- 
-2.14.1
+Regards,
+Arend
