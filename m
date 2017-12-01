@@ -1,128 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34502 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753062AbdLDGsZ (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35432 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751039AbdLAT5L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 01:48:25 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v3 3/3] mwifiex: debugfs: trigger device dump for usb interface
-Date: Mon, 4 Dec 2017 14:47:58 +0800
-Message-ID: <1512370078-24245-3-git-send-email-huxm@marvell.com> (sfid-20171204_074833_541426_AB62E3AA)
-In-Reply-To: <1512370078-24245-1-git-send-email-huxm@marvell.com>
-References: <1512370078-24245-1-git-send-email-huxm@marvell.com>
+        Fri, 1 Dec 2017 14:57:11 -0500
+Received: by mail-wm0-f68.google.com with SMTP id f9so5301571wmh.0
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Dec 2017 11:57:11 -0800 (PST)
+Subject: Re: [PATCH V2] brcm: add CYW4373 firmwares and Cypress license file
+To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        linux-firmware@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com
+References: <20171201084243.GA58942@aremote07.aus.cypress.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f96ddf93-0e1d-d6f1-570b-fd3c8ec711e0@broadcom.com> (sfid-20171201_205724_285727_AFFEDE30)
+Date: Fri, 1 Dec 2017 20:57:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20171201084243.GA58942@aremote07.aus.cypress.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch extend device_dump debugfs function to make it
-works for usb interface.
+On 01-12-17 09:43, Chi-Hsien Lin wrote:
+> Add the CYW4373 SDIO and USB firmware files, along with the corresponding
+> Cypress license file.
 
-For command timeouts, USB firmware will automatically emit
-firmware dump events, so we don't implement device_dump().
+Just wanted to be sure. These firmware files contain a CLM to get the 
+device operational, ie. no separate CLM download is needed.
 
-For user-initiated dumps, we trigger it by issue firmware
-dump event command to firmware, as there is no command
-response, do not start 10s timer.
+Regards,
+Arend
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
-v2: Same as v1
-v3: Add more comments Regards the different dump mechanism
-    between usb and other interfaces.(Brian Norris)
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c  | 11 +++++++----
- drivers/net/wireless/marvell/mwifiex/debugfs.c | 13 +++++++++----
- drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  4 ++++
- 4 files changed, 21 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index dcc529e..8746600 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -290,13 +290,16 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 	adapter->dbg.last_cmd_act[adapter->dbg.last_cmd_index] =
- 			get_unaligned_le16((u8 *)host_cmd + S_DS_GEN);
- 
-+	/* Setup the timer after transmit command, except that specific
-+	 * command might not have command response.
-+	 */
-+	if (cmd_code != HostCmd_CMD_FW_DUMP_EVENT)
-+		mod_timer(&adapter->cmd_timer,
-+			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
-+
- 	/* Clear BSS_NO_BITS from HostCmd */
- 	cmd_code &= HostCmd_CMD_ID_MASK;
- 
--	/* Setup the timer after transmit command */
--	mod_timer(&adapter->cmd_timer,
--		  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-index 6f4239b..c84a219 100644
---- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-@@ -168,10 +168,15 @@
- {
- 	struct mwifiex_private *priv = file->private_data;
- 
--	if (!priv->adapter->if_ops.device_dump)
--		return -EIO;
--
--	priv->adapter->if_ops.device_dump(priv->adapter);
-+/* For command timeouts, USB firmware will automatically emit
-+ * firmware dump events, so we don't implement device_dump().
-+ * For user-initiated dumps, we trigger it ourselves.
-+ */
-+	if (priv->adapter->iface_type == MWIFIEX_USB)
-+		mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT,
-+				 HostCmd_ACT_GEN_SET, 0, NULL, true);
-+	else
-+		priv->adapter->if_ops.device_dump(priv->adapter);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 4d5e686..9c2cdef 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -409,6 +409,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_TDLS_CONFIG                       0x0100
- #define HostCmd_CMD_MC_POLICY                         0x0121
- #define HostCmd_CMD_TDLS_OPER                         0x0122
-+#define HostCmd_CMD_FW_DUMP_EVENT		      0x0125
- #define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
- #define HostCmd_CMD_CHAN_REGION_CFG		      0x0242
- #define HostCmd_CMD_PACKET_AGGR_CTRL		      0x0251
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index fb09014..211e47d 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2206,6 +2206,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 	case HostCmd_CMD_CHAN_REGION_CFG:
- 		ret = mwifiex_cmd_chan_region_cfg(priv, cmd_ptr, cmd_action);
- 		break;
-+	case HostCmd_CMD_FW_DUMP_EVENT:
-+		cmd_ptr->command = cpu_to_le16(cmd_no);
-+		cmd_ptr->size = cpu_to_le16(S_DS_GEN);
-+		break;
- 	default:
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
--- 
-1.9.1
+> Signed-off-by: Chi-hsien Lin<chi-hsien.lin@cypress.com>
+> ---
+>   LICENCE.cypress            | 139 +++++++++++++++++++++++++++++++++++++++++++++
+>   WHENCE                     |   5 ++
+>   brcm/brcmfmac4373-sdio.bin | Bin 0 -> 457994 bytes
+>   brcm/brcmfmac4373.bin      | Bin 0 -> 479232 bytes
+>   4 files changed, 144 insertions(+)
+>   create mode 100644 LICENCE.cypress
+>   create mode 100644 brcm/brcmfmac4373-sdio.bin
+>   create mode 100644 brcm/brcmfmac4373.bin
