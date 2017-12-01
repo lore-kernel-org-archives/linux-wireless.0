@@ -1,98 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48526 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751934AbdLBQ3E (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 11:29:04 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  2 Dec 2017 18:28:43 +0200
-Message-Id: <20171202162858.4167-1-luca@coelho.fi> (sfid-20171202_172949_801692_2AF88DF0)
-Subject: [PATCH 00/15] iwlwifi: updates intended for v4.16 2017-12-02
+Received: from mail.toke.dk ([52.28.52.200]:50557 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752035AbdLAPyR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Dec 2017 10:54:17 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "akolli\@codeaurora.org" <akolli@codeaurora.org>,
+        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>,
+        "linux-wireless-owner\@vger.kernel.org"
+        <linux-wireless-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
+In-Reply-To: <1512143142.25588.17.camel@sipsolutions.net>
+References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com> <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com> <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com> <DAB5EBB8-C820-4056-8AAB-063D05F38BD5@toke.dk> <87bmjjzppd.fsf@kamboji.qca.qualcomm.com> <5080a68538fd2d883e15bacaa969661b@codeaurora.org> <87r2se36rq.fsf@toke.dk> <87k1y6y04i.fsf@kamboji.qca.qualcomm.com> <87d13y31r0.fsf@toke.dk> <1512143142.25588.17.camel@sipsolutions.net>
+Date: Fri, 01 Dec 2017 16:54:12 +0100
+Message-ID: <87a7z230m3.fsf@toke.dk> (sfid-20171201_165425_202553_22EA5335)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Hi,
+> On Fri, 2017-12-01 at 16:29 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>>=20
+>> Yeah, figures. Well, maybe we'll just have to support an asynchronous
+>> callback into mac80211 to register airtime usage. Will probably have to
+>> add some asynchronicity anyway to avoid doing too much work in the fast
+>> path.
+>
+> I really think we should have that anyway. In fact, perhaps we should
+> just enforce it that way? Then ath9k would have to do a bit more work,
+> but it's also the slower of the devices :-)
+>
+> But this plays in with the whole multi-queue RX we discussed before.
 
-Here's the second batch of patches intended for 4.16.  Nothing major,
-just continued development, some cleanups and small fixes here and
-there.
+Yeah, that's what I meant by 'add some asynchronicity anyway' :)
 
-* Initial work for rate-scaling offload;
-* Support for new FW API version;
-* Some couple of fixes here and there;
-* Some old patches that had never made it to the mainline;
+I guess that once we have an asynchronous scheduler task of some kind,
+supporting the callback is easy, but pulling the data out of each packet
+needs more work. But since we'll have to do that for ath9k anyway it
+becomes more a question of whether it's something that should be
+supported in mac80211 or if it should be implemented in each driver.
+But since that logic will have to be written from scratch anyway, is
+there any reason to not just do it in mac80211 from the beginning?
 
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Avraham Stern (1):
-  iwlwifi: mvm: add WFA vendor specific TPC report IE to probe request
-
-David Spinadel (1):
-  iwlwifi: mvm: enable RX offloading with TKIP and WEP
-
-Emmanuel Grumbach (1):
-  iwlwifi: mvm: remove set but unused variable in iwl_mvm_roc_done_wk
-
-Gregory Greenman (7):
-  iwlwifi: mvm: rs: introduce new API for rate scaling
-  iwlwifi: mvm: rs: add ops for the new rate scaling in the FW
-  iwlwifi: mvm: rs: add basic implementation of the new RS API handlers
-  iwlwifi: mvm: rs: new rate scale API - add FW notifications
-  iwlwifi: mvm: rs: new rate scale API - add debugfs hooks
-  iwlwifi: mvm: rs: add size checks when printing to a buffer
-  iwlwifi: mvm: rs: add sanity check when sending LQ command
-
-Johannes Berg (1):
-  iwlwifi: mvm: request statistics when reading debugfs
-
-Liad Kaufman (1):
-  iwlwifi: mvm: make init_dbg effective only on failure
-
-Luca Coelho (1):
-  iwlwifi: bump FW API to 36 for 8000 and up
-
-Sara Sharon (2):
-  iwlwifi: mvm: avoid dumping assert log when device is stopped
-  iwlwifi: mvm: mark MIC stripped MPDUs
-
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c     |   2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |   4 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |   2 +-
- .../net/wireless/intel/iwlwifi/fw/api/datapath.h   |  15 ++
- drivers/net/wireless/intel/iwlwifi/fw/api/rs.h     | 262 +++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/fw/file.h       |   2 +
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/Makefile    |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |  79 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |   8 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  13 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   9 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c     | 296 +++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 230 ++++++++--------
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h        |  48 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  16 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |  35 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  19 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |   7 +-
- .../net/wireless/intel/iwlwifi/mvm/time-event.c    |   9 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   8 +-
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  14 +-
- 24 files changed, 948 insertions(+), 148 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-
--- 
-2.15.0
+-Toke
