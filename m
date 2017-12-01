@@ -1,124 +1,374 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:59744 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752574AbdLLTEV (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:59783 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751980AbdLAKy7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 14:04:21 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 9/9] wil6210: remove reference to preset_chandef
-Date: Tue, 12 Dec 2017 21:04:02 +0200
-Message-Id: <1513105442-28041-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171212_200428_312382_412D51A1)
-In-Reply-To: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 1 Dec 2017 05:54:59 -0500
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 11.1 \(3445.4.7\))
+Subject: Re: [v3 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1512114085-2615-6-git-send-email-amitkarwar@gmail.com>
+Date: Fri, 1 Dec 2017 11:54:56 +0100
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Message-Id: <24DB6495-8CFF-401F-88A7-59BD03BC0C88@holtmann.org> (sfid-20171201_115504_589021_101BB755)
+References: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com>
+ <1512114085-2615-6-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+Hi Amitkumar,
 
-The field preset_chandef of wireless_dev must not be accessed
-by the driver because it is private to cfg80211. Store the
-monitor channel locally in wil6210_priv instead.
+> Redpine bluetooth driver is a thin driver which depends on
+> 'rsi_91x' driver for transmitting and receiving packets
+> to/from device. It creates hci interface when attach() is
+> called from 'rsi_91x' module.
+> 
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> ---
+> v3: Made BT_RSI module by default off(Marcel)
+>    Removed redundant exported function rsi_get_hci_ops()(Marcel)
+> v2: Addressed review comments from Marcel
+>    Removed unnecessary 'depends on BT && BT_RFOMM' line in Kconfig
+>    Removed redundant BT_INFO messages
+>    h_adapter initialization and declaration in a single line.
+>    Removed unnecessary error checks for HCI_RUNNING and fsm_state
+>    Allocated new skb with skb_realloc_headroom() API if headroom is not sufficient
+>    Used get_unaligned_le16 helpers
+>    Moved a structure and union from header file to btrsi.c file
+> ---
+> drivers/bluetooth/Kconfig   |  11 +++
+> drivers/bluetooth/Makefile  |   2 +
+> drivers/bluetooth/btrsi.c   | 211 ++++++++++++++++++++++++++++++++++++++++++++
+> drivers/bluetooth/rsi_hci.h |  40 +++++++++
+> include/linux/rsi_header.h  |   2 +
+> 5 files changed, 266 insertions(+)
+> create mode 100644 drivers/bluetooth/btrsi.c
+> create mode 100644 drivers/bluetooth/rsi_hci.h
+> 
+> diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
+> index 60e1c7d..33d7514 100644
+> --- a/drivers/bluetooth/Kconfig
+> +++ b/drivers/bluetooth/Kconfig
+> @@ -378,4 +378,15 @@ config BT_QCOMSMD
+> 	  Say Y here to compile support for HCI over Qualcomm SMD into the
+> 	  kernel or say M to compile as a module.
+> 
+> +config BT_RSI
+> +	tristate "Redpine HCI support"
+> +	default n
+> +	help
+> +	  Redpine BT driver.
+> +	  This driver handles BT traffic from upper layers and pass
+> +	  to the RSI_91x coex module for further scheduling to device
+> +
+> +	  Say Y here to compile support for HCI over Redpine into the
+> +	  kernel or say M to compile as a module.
+> +
+> endmenu
+> diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
+> index 4e4e44d..712af83a 100644
+> --- a/drivers/bluetooth/Makefile
+> +++ b/drivers/bluetooth/Makefile
+> @@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
+> 
+> obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
+> 
+> +obj-$(CONFIG_BT_RSI)		+= btrsi.o
+> +
+> btmrvl-y			:= btmrvl_main.o
+> btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
+> 
+> diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
+> new file mode 100644
+> index 0000000..71f6f4e
+> --- /dev/null
+> +++ b/drivers/bluetooth/btrsi.c
+> @@ -0,0 +1,211 @@
+> +/**
+> + * Copyright (c) 2017 Redpine Signals Inc.
+> + *
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> +e* ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> + */
+> +#include <linux/version.h>
+> +#include <linux/module.h>
+> +#include <linux/kernel.h>
+> +#include "rsi_hci.h"
+> +
+> +struct rsi_hci_adapter {
+> +	void *priv;
+> +	struct rsi_proto_ops *proto_ops;
+> +	struct hci_dev *hdev;
+> +};
+> +
+> +const struct rsi_mod_ops rsi_bt_ops = {
+> +	.attach	= rsi_hci_attach,
+> +	.detach	= rsi_hci_detach,
+> +	.recv_pkt = rsi_hci_recv_pkt,
+> +};
+> +EXPORT_SYMBOL(rsi_bt_ops);
+> +
+> +static int rsi_hci_open(struct hci_dev *hdev)
+> +{
+> +	return 0;
+> +}
+> +
+> +static int rsi_hci_close(struct hci_dev *hdev)
+> +{
+> +	return 0;
+> +}
+> +
+> +static int rsi_hci_flush(struct hci_dev *hdev)
+> +{
+> +	return 0;
+> +}
+> +
+> +static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
+> +{
+> +	struct rsi_hci_adapter *h_adapter = hci_get_drvdata(hdev);
+> +	struct sk_buff *new_skb = NULL;
+> +
+> +	switch (bt_cb(skb)->pkt_type) {
+> +	case HCI_COMMAND_PKT:
+> +		hdev->stat.cmd_tx++;
+> +		break;
+> +
+> +	case HCI_ACLDATA_PKT:
+> +		hdev->stat.acl_tx++;
+> +		break;
+> +
+> +	case HCI_SCODATA_PKT:
+> +		hdev->stat.sco_tx++;
+> +		break;
+> +	}
+> +
+> +	if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
+> +		/* Insufficient skb headroom - allocate a new skb */
+> +		new_skb = skb_realloc_headroom(skb, RSI_HEADROOM_FOR_BT_HAL);
+> +		if (unlikely(!new_skb))
+> +			return -ENOMEM;
+> +		bt_cb(new_skb)->pkt_type = bt_cb(skb)->pkt_type;
+> +		kfree_skb(skb);
+> +		skb = new_skb;
+> +	}
+> +
+> +	return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
+> +						   RSI_BT_Q);
+> +}
+> +
+> +int rsi_hci_recv_pkt(void *priv, u8 *pkt)
+> +{
+> +	struct rsi_hci_adapter *h_adapter = (struct rsi_hci_adapter *)priv;
+> +	struct hci_dev *hdev = h_adapter->hdev;
+> +	struct sk_buff *skb;
+> +
+> +	int pkt_len = get_unaligned_le16(pkt) & 0x0fff;
+> +	u8 queue_no = (get_unaligned_le16(pkt) & 0x7000) >> 12;
+> +
+> +	if (queue_no == RSI_BT_MGMT_Q) {
+> +		u8 msg_type = pkt[14] & 0xFF;
+> +
+> +		switch (msg_type) {
+> +		case RSI_RESULT_CONFIRM:
+> +			bt_dev_info(hdev, "BT Result Confirm");
+> +			return 0;
+> +		case RSI_BT_BER:
+> +			bt_dev_info(hdev, "BT Ber");
+> +			return 0;
+> +		case RSI_BT_CW:
+> +			bt_dev_info(hdev, "BT CW");
+> +			return 0;
+> +		default:
+> +			break;
+> +		}
+> +	}
+> +
+> +	skb = dev_alloc_skb(pkt_len);
+> +	if (!skb)
+> +		return -ENOMEM;
+> +
+> +	memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
+> +	skb_put(skb, pkt_len);
+> +	h_adapter->hdev->stat.byte_rx += skb->len;
+> +
+> +	skb->dev = (void *)hdev;
+> +	bt_cb(skb)->pkt_type = pkt[14];
+> +
+> +	return hci_recv_frame(hdev, skb);
+> +}
+> +
+> +int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
+> +{
+> +	struct rsi_hci_adapter *h_adapter = NULL;
+> +	struct hci_dev *hdev;
+> +	int status = 0;
+> +
+> +	h_adapter = kzalloc(sizeof(*h_adapter), GFP_KERNEL);
+> +	if (!h_adapter)
+> +		return -ENOMEM;
+> +
+> +	h_adapter->priv = priv;
+> +	ops->set_bt_context(priv, h_adapter);
+> +	h_adapter->proto_ops = ops;
+> +
+> +	hdev = hci_alloc_dev();
+> +	if (!hdev) {
+> +		BT_ERR("Failed to alloc HCI device\n");
+> +		goto err;
+> +	}
+> +
+> +	h_adapter->hdev = hdev;
+> +
+> +	if (ops->get_host_intf(priv) == RSI_HOST_INTF_SDIO)
+> +		hdev->bus = HCI_SDIO;
+> +	else
+> +		hdev->bus = HCI_USB;
+> +
+> +	hci_set_drvdata(hdev, h_adapter);
+> +	hdev->dev_type = HCI_PRIMARY;
+> +	hdev->open = rsi_hci_open;
+> +	hdev->close = rsi_hci_close;
+> +	hdev->flush = rsi_hci_flush;
+> +	hdev->send = rsi_hci_send_pkt;
+> +
+> +	status = hci_register_dev(hdev);
+> +	if (status < 0) {
+> +		BT_ERR("%s: HCI registration failed with errcode %d\n",
+> +		       __func__, status);
+> +		goto err;
+> +	}
+> +
+> +	return 0;
+> +err:
+> +	if (hdev) {
+> +		hci_unregister_dev(hdev);
+> +		hci_free_dev(hdev);
+> +		h_adapter->hdev = NULL;
+> +	}
+> +	kfree(h_adapter);
+> +
+> +	return -EINVAL;
+> +}
+> +
+> +void rsi_hci_detach(void *priv)
+> +{
+> +	struct rsi_hci_adapter *h_adapter = (struct rsi_hci_adapter *)priv;
+> +	struct hci_dev *hdev;
+> +
+> +	if (!h_adapter)
+> +		return;
+> +
+> +	hdev = h_adapter->hdev;
+> +	if (hdev) {
+> +		hci_unregister_dev(hdev);
+> +		hci_free_dev(hdev);
+> +		h_adapter->hdev = NULL;
+> +	}
+> +
+> +	kfree(h_adapter);
+> +}
+> +
+> +static int rsi_91x_bt_module_init(void)
+> +{
+> +	BT_INFO("%s: BT Module init called\n", __func__);
+> +
+> +	return 0;
+> +}
+> +
+> +static void rsi_91x_bt_module_exit(void)
+> +{
+> +	BT_INFO("%s: BT Module exit called\n", __func__);
+> +}
+> +
+> +module_init(rsi_91x_bt_module_init);
+> +module_exit(rsi_91x_bt_module_exit);
+> +MODULE_AUTHOR("Redpine Signals Inc");
+> +MODULE_DESCRIPTION("RSI BT driver");
+> +MODULE_SUPPORTED_DEVICE("RSI-BT");
+> +MODULE_LICENSE("Dual BSD/GPL");
+> diff --git a/drivers/bluetooth/rsi_hci.h b/drivers/bluetooth/rsi_hci.h
+> new file mode 100644
+> index 0000000..6fc7757
+> --- /dev/null
+> +++ b/drivers/bluetooth/rsi_hci.h
+> @@ -0,0 +1,40 @@
+> +/**
+> + * Copyright (c) 2017 Redpine Signals Inc.
+> + *
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> + */
+> +
+> +#ifndef __RSI_HCI_H__
+> +#define __RSI_HCI_H__
+> +
+> +#include <net/bluetooth/bluetooth.h>
+> +#include <net/bluetooth/hci_core.h>
+> +#include <linux/unaligned/le_byteshift.h>
+> +#include <linux/rsi_header.h>
+> +#include <net/genetlink.h>
+> +
+> +/* RX frame types */
+> +#define RSI_RESULT_CONFIRM			0x80
+> +#define RSI_BT_PER				0x10
+> +#define RSI_BT_BER				0x11
+> +#define RSI_BT_CW				0x12
+> +
+> +#define RSI_HEADROOM_FOR_BT_HAL	16
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 3 +--
- drivers/net/wireless/ath/wil6210/debugfs.c  | 1 -
- drivers/net/wireless/ath/wil6210/netdev.c   | 2 +-
- drivers/net/wireless/ath/wil6210/txrx.c     | 3 +--
- drivers/net/wireless/ath/wil6210/wil6210.h  | 1 +
- drivers/net/wireless/ath/wil6210/wmi.c      | 2 +-
- 6 files changed, 5 insertions(+), 7 deletions(-)
+I still like to see changes to the BT core that allows the driver to specify how headroom it needs. This can be follow up patches, but we should do that since reallocating the SKBs all the time is also pointless.
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 39509d0..768f63f38 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -956,9 +956,8 @@ static int wil_cfg80211_set_channel(struct wiphy *wiphy,
- 				    struct cfg80211_chan_def *chandef)
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
--	struct wireless_dev *wdev = wil_to_wdev(wil);
- 
--	wdev->preset_chandef = *chandef;
-+	wil->monitor_chandef = *chandef;
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 4475937..4a48882 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -869,7 +869,6 @@ static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
- 
- 	params.buf = frame;
- 	params.len = len;
--	params.chan = wdev->preset_chandef.chan;
- 
- 	rc = wil_cfg80211_mgmt_tx(wiphy, wdev, &params, NULL);
- 
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index b641ac1..7ba4e0a 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -150,7 +150,7 @@ void *wil_if_alloc(struct device *dev)
- 	wdev->iftype = NL80211_IFTYPE_STATION; /* TODO */
- 	/* default monitor channel */
- 	ch = wdev->wiphy->bands[NL80211_BAND_60GHZ]->channels;
--	cfg80211_chandef_create(&wdev->preset_chandef, ch, NL80211_CHAN_NO_HT);
-+	cfg80211_chandef_create(&wil->monitor_chandef, ch, NL80211_CHAN_NO_HT);
- 
- 	ndev = alloc_netdev(0, "wlan%d", NET_NAME_UNKNOWN, wil_dev_setup);
- 	if (!ndev) {
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 4fc05f7..9f8c6087f 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -428,7 +428,6 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct vring *vring,
- static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
- 				       struct sk_buff *skb)
- {
--	struct wireless_dev *wdev = wil->wdev;
- 	struct wil6210_rtap {
- 		struct ieee80211_radiotap_header rthdr;
- 		/* fields should be in the order of bits in rthdr.it_present */
-@@ -455,7 +454,7 @@ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
- 	int rtap_len = sizeof(struct wil6210_rtap);
- 	int phy_length = 0; /* phy info header size, bytes */
- 	static char phy_data[128];
--	struct ieee80211_channel *ch = wdev->preset_chandef.chan;
-+	struct ieee80211_channel *ch = wil->monitor_chandef.chan;
- 
- 	if (rtap_include_phy_info) {
- 		rtap_len = sizeof(*rtap_vendor) + sizeof(*d);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 703e09e..1131893 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -655,6 +655,7 @@ struct wil6210_priv {
- 	unsigned long last_fw_recovery; /* jiffies of last fw recovery */
- 	wait_queue_head_t wq; /* for all wait_event() use */
- 	/* profile */
-+	struct cfg80211_chan_def monitor_chandef;
- 	u32 monitor_flags;
- 	u32 privacy; /* secure connection? */
- 	u8 hidden_ssid; /* relevant in AP mode */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 4d7fb47..bee018d 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1780,7 +1780,7 @@ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
- 	int rc;
- 
- 	if (wdev->iftype == NL80211_IFTYPE_MONITOR) {
--		struct ieee80211_channel *ch = wdev->preset_chandef.chan;
-+		struct ieee80211_channel *ch = wil->monitor_chandef.chan;
- 
- 		cmd.sniffer_cfg.mode = cpu_to_le32(WMI_SNIFFER_ON);
- 		if (ch)
--- 
-1.9.1
+> +
+> +#define RSI_FRAME_DESC_SIZE		16
+> +
+> +int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops);
+> +void rsi_hci_detach(void *priv);
+> +int rsi_hci_recv_pkt(void *data, u8 *pkt);
+> +
+> +#endif
+
+I have no idea why this header file is needed at all. Fold this into btrsi.c and make the rsi_hci_* functions static.
+
+> diff --git a/include/linux/rsi_header.h b/include/linux/rsi_header.h
+> index 737ab4e..07d9574 100644
+> --- a/include/linux/rsi_header.h
+> +++ b/include/linux/rsi_header.h
+> @@ -51,4 +51,6 @@ struct rsi_mod_ops {
+> 	void (*detach)(void *priv);
+> 	int (*recv_pkt)(void *priv, u8 *msg);
+> };
+> +
+> +extern const struct rsi_mod_ops rsi_bt_ops;
+
+If you expose rsi_hci_attach via rsi_bt_ops, then there is no need for making rsi_hci_attach also public. I mentioned this in the first review as well. I do not get it. Either you expose rsi_bt_ops from this module or you expose the rsi_hci_* function, but both is totally pointless.
+
+Regards
+
+Marcel
