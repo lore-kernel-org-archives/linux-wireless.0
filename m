@@ -1,133 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35074 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967276AbdLSMr3 (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:1536 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751202AbdLAU1j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 07:47:29 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 05/11] brcmfmac: Remove func0 from function array
-Date: Tue, 19 Dec 2017 13:47:11 +0100
-Message-Id: <1513687637-5555-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134747_813941_7B67497B)
-In-Reply-To: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 1 Dec 2017 15:27:39 -0500
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ganesh.krishna@microchip.com>, <gregkh@linuxfoundation.org>,
+        <devel@driverdev.osuosl.org>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH] staging: wilc1000: Fix problems reported by checkpatch
+Date: Sat, 2 Dec 2017 01:57:14 +0530
+Message-ID: <1512160034-6400-1-git-send-email-aditya.shankar@microchip.com> (sfid-20171201_212745_076081_D7481041)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+This commit fixes below style problems in multiple lines
+Fix checkpatch WARNING: line over 80 characters
+Fix CHECK: Lines should not end with a '('
 
-func0 is not provided by the mmc stack as a function when probing.
-Instead providing specific access functions to read/write it.
-
-This prepares for a patch to remove the actual array entry itself.
-
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-[arend: rephrased the commit message]
-[arend: removed unrelated comment for which separate patch is warranted]
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |  5 +----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   |  7 ++++---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 13 ++++++-------
- 3 files changed, 11 insertions(+), 14 deletions(-)
+ drivers/staging/wilc1000/linux_mon.c | 30 ++++++++++++++++++------------
+ 1 file changed, 18 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index b6d0757..b7931eb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -1022,8 +1022,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	/* store refs to functions used. mmc_card does
- 	 * not hold the F0 function pointer.
- 	 */
--	sdiodev->func[0] = kmemdup(func, sizeof(*func), GFP_KERNEL);
--	sdiodev->func[0]->num = 0;
-+	sdiodev->func[0] = NULL;
- 	sdiodev->func[1] = func->card->sdio_func[0];
- 	sdiodev->func[2] = func;
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 91d49c4..a793c42 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -69,7 +69,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+ 	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
+ 		/* hostapd callback mgmt frame */
  
-@@ -1049,7 +1048,6 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- fail:
- 	dev_set_drvdata(&func->dev, NULL);
- 	dev_set_drvdata(&sdiodev->func[1]->dev, NULL);
--	kfree(sdiodev->func[0]);
- 	kfree(sdiodev);
- 	kfree(bus_if);
- 	return err;
-@@ -1082,7 +1080,6 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
- 		dev_set_drvdata(&sdiodev->func[2]->dev, NULL);
+-		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		skb = dev_alloc_skb(size +
++				    sizeof(struct wilc_wfi_radiotap_cb_hdr));
+ 		if (!skb)
+ 			return;
  
- 		kfree(bus_if);
--		kfree(sdiodev->func[0]);
- 		kfree(sdiodev);
- 	}
+@@ -80,11 +81,12 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
  
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index e334476..1aa2a79 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3771,9 +3771,10 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
- 	u32 val, rev;
+ 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
  
- 	val = brcmf_sdiod_readl(sdiodev, addr, NULL);
--	if ((sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
--	     sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
--	    addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
-+
-+	if ((sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
-+	     sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
-+	     addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
- 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
- 		if (rev >= 2) {
- 			val &= ~CID_ID_MASK;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index d113c7d..6e2fc06 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -21,7 +21,9 @@
- #include <linux/firmware.h>
- #include "firmware.h"
+-		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		cb_hdr->hdr.it_len =
++			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
  
--#define SDIO_FUNC_0		0
-+/* Maximum number of I/O funcs */
-+#define NUM_SDIO_FUNCS	3
-+
- #define SDIO_FUNC_1		1
- #define SDIO_FUNC_2		2
+-		cb_hdr->hdr.it_present = cpu_to_le32(
+-				(1 << IEEE80211_RADIOTAP_RATE) |
+-				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
++		cb_hdr->hdr.it_present =
++			cpu_to_le32((1 << IEEE80211_RADIOTAP_RATE) |
++				    (1 << IEEE80211_RADIOTAP_TX_FLAGS));
  
-@@ -39,9 +41,6 @@
- #define INTR_STATUS_FUNC1	0x2
- #define INTR_STATUS_FUNC2	0x4
+ 		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
  
--/* Maximum number of I/O funcs */
--#define SDIOD_MAX_IOFUNCS	7
--
- /* mask of register map */
- #define REG_F0_REG_MASK		0x7FF
- #define REG_F1_MISC_MASK	0x1FFFF
-@@ -175,7 +174,7 @@ struct brcmf_sdreg {
- struct brcmf_sdiod_freezer;
+@@ -96,7 +98,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+ 		}
  
- struct brcmf_sdio_dev {
--	struct sdio_func *func[SDIO_MAX_FUNCS];
-+	struct sdio_func *func[NUM_SDIO_FUNCS];
- 	u8 num_funcs;			/* Supported funcs on client */
- 	u32 sbwad;			/* Save backplane window address */
- 	struct brcmf_core *cc_core;	/* chipcommon core info struct */
-@@ -297,10 +296,10 @@ struct sdpcmd_regs {
- /* SDIO device register access interface */
- /* Accessors for SDIO Function 0 */
- #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
--	sdio_f0_readb((sdiodev)->func[0], (addr), (r))
-+	sdio_f0_readb((sdiodev)->func[1], (addr), (r))
+ 	} else {
+-		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
++		skb = dev_alloc_skb(size +
++				    sizeof(struct wilc_wfi_radiotap_hdr));
  
- #define brcmf_sdiod_func0_wb(sdiodev, addr, v, ret) \
--	sdio_f0_writeb((sdiodev)->func[0], (v), (addr), (ret))
-+	sdio_f0_writeb((sdiodev)->func[1], (v), (addr), (ret))
+ 		if (!skb)
+ 			return;
+@@ -105,7 +108,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+ 		hdr = skb_push(skb, sizeof(*hdr));
+ 		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
+ 		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+-		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
++		hdr->hdr.it_len =
++			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
+ 		hdr->hdr.it_present = cpu_to_le32
+ 				(1 << IEEE80211_RADIOTAP_RATE); /* | */
+ 		hdr->rate = 5; /* txrate->bitrate / 5; */
+@@ -197,7 +201,8 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 	skb_pull(skb, rtap_len);
  
- /* Accessors for SDIO Function 1 */
- #define brcmf_sdiod_readb(sdiodev, addr, r) \
+ 	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
+-		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		skb2 = dev_alloc_skb(skb->len +
++				     sizeof(struct wilc_wfi_radiotap_cb_hdr));
+ 		if (!skb2)
+ 			return -ENOMEM;
+ 
+@@ -208,11 +213,12 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 
+ 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+ 
+-		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		cb_hdr->hdr.it_len =
++			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
+ 
+-		cb_hdr->hdr.it_present = cpu_to_le32(
+-				(1 << IEEE80211_RADIOTAP_RATE) |
+-				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
++		cb_hdr->hdr.it_present =
++			cpu_to_le32((1 << IEEE80211_RADIOTAP_RATE) |
++				    (1 << IEEE80211_RADIOTAP_TX_FLAGS));
+ 
+ 		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
+ 		cb_hdr->tx_flags = 0x0004;
 -- 
-1.9.1
+2.7.4
