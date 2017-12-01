@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:36964 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752126AbdLEQvI (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48284 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752137AbdLALvB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 11:51:08 -0500
-Date: Tue, 05 Dec 2017 11:51:04 -0500 (EST)
-Message-Id: <20171205.115104.386744893504634236.davem@davemloft.net> (sfid-20171205_175125_659558_80356C31)
-To: dsahern@gmail.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, j@w1.fi
-Subject: Re: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <fe8e7ad5-9579-31ce-0d02-a6c8522ba366@gmail.com>
-References: <20171205.113145.172521292247335321.davem@davemloft.net>
-        <1512491661.26976.19.camel@sipsolutions.net>
-        <fe8e7ad5-9579-31ce-0d02-a6c8522ba366@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Fri, 1 Dec 2017 06:51:01 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Fri,  1 Dec 2017 13:50:51 +0200
+Message-Id: <20171201115053.29608-2-luca@coelho.fi> (sfid-20171201_125105_257381_4F7B2365)
+In-Reply-To: <20171201115053.29608-1-luca@coelho.fi>
+References: <20171201115053.29608-1-luca@coelho.fi>
+Subject: [PATCH 1/3] mac80211: don't warn on AID field without top two MSBs set
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Ahern <dsahern@gmail.com>
-Date: Tue, 5 Dec 2017 09:41:21 -0700
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On 12/5/17 9:34 AM, Johannes Berg wrote:
->> On Tue, 2017-12-05 at 11:31 -0500, David Miller wrote:
->>>
->>>> We could try to fix up the big endian problem here, but we
->>>> don't know *how* userspace misbehaved - if using nla_put_u32
->>>> then we could, but we also found a debug tool (which we'll
->>>> ignore for the purposes of this regression) that was putting
->>>> the padding into the length.
->> 
->>> We're stuck with this thing forever... I'd like to consider other
->>> options.
->>>
->>> I've seen this problem at least one time before, therefore I
->>> suggest when we see a U8 attribute with a U32's length:
->>>
->>> 1) We access it as a u32, this takes care of all endianness
->>>    issues.
->> 
->> Possible, but as I said above, I've seen at least one tool (a debug
->> only script) now that will actually emit a U8 followed by 3 bytes of
->> padding to make it netlink-aligned, but set the length to 4. That would
->> be broken by making this change.
->> 
->> I'm not saying this is bad - but there are different levels of
->> compatibility and I'd probably go for "bug compatibility" here rather
->> than "fix-it-up compatibility".
->> 
->> Your call, ultimately - I've already fixed the tool I had found :-)
->> 
->>> 2) We emit a warning so that the app gets fixes.
->> 
-> 
-> The attached is my proposal. Basically, allow it the length mismatch but
-> print a warning. This restores previous behavior and tells users of bad
-> commands.
+While the change between 802.11-2012 and 802.11-2016 to move from
+requiring APs to set the two top bits to now requiring them to be
+cleared was apparently unintentional and will be fixed, clients
+should either way assume that the top five bits are reserved and
+ignore them.
 
-Where is the "access the U8 attribute as a U32 if length is 4" part
-of my #1 above?
+Implement that in mac80211.
 
-That's essential to handle this properly on all endianness.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4c80e7896fa2..cc55ff8ae979 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2862,10 +2862,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	aid = le16_to_cpu(mgmt->u.assoc_resp.aid);
+ 	capab_info = le16_to_cpu(mgmt->u.assoc_resp.capab_info);
+ 
+-	if ((aid & (BIT(15) | BIT(14))) != (BIT(15) | BIT(14)))
+-		sdata_info(sdata, "invalid AID value 0x%x; bits 15:14 not set\n",
+-			   aid);
+-	aid &= ~(BIT(15) | BIT(14));
++	/*
++	 * The 5 MSB of the AID field are reserved
++	 * (802.11-2016 9.4.1.8 AID field)
++	 */
++	aid &= 0x7ff;
+ 
+ 	ifmgd->broken_ap = false;
+ 
+-- 
+2.15.0
