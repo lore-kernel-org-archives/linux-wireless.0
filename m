@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51024 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:48300 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933785AbdLRMi3 (ORCPT
+        with ESMTP id S1752124AbdLALvC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 07:38:29 -0500
+        Fri, 1 Dec 2017 06:51:02 -0500
 From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Adiel Aloni <adiel.aloni@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 14:38:13 +0200
-Message-Id: <20171218123815.3968-10-luca@coelho.fi> (sfid-20171218_133835_930538_AA6B3FB9)
-In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
-References: <20171218123815.3968-1-luca@coelho.fi>
-Subject: [PATCH 09/11] iwlwifi: mvm: adjust to quota offload
+Date: Fri,  1 Dec 2017 13:50:53 +0200
+Message-Id: <20171201115053.29608-4-luca@coelho.fi> (sfid-20171201_125108_438839_92663106)
+In-Reply-To: <20171201115053.29608-1-luca@coelho.fi>
+References: <20171201115053.29608-1-luca@coelho.fi>
+Subject: [PATCH 3/3] mac80211_hwsim: enforce PS_MANUAL_POLL to be set after PS_ENABLED
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+From: Adiel Aloni <adiel.aloni@intel.com>
 
-Skip Quota handling if firmware implements Quota.
+Enforce using PS_MANUAL_POLL in ps hwsim debugfs to trigger a poll,
+only if PS_ENABLED was set before.
+This is required due to commit c9491367b759 ("mac80211: always update the
+PM state of a peer on MGMT / DATA frames") that enforces the ap to
+check only mgmt/data frames ps bit, and then update station's power save
+accordingly.
+When sending only ps-poll (control frame) the ap will not be aware that
+the station entered power save.
+Setting ps enable before triggering ps_poll, will send NDP with PM bit
+enabled first.
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Adiel Aloni <adiel.aloni@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/file.h   | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/quota.c | 4 ++++
- 2 files changed, 6 insertions(+)
+ drivers/net/wireless/mac80211_hwsim.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 12f97a2fc7ea..1a05d506ac9a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -314,6 +314,7 @@ typedef unsigned int __bitwise iwl_ucode_tlv_capa_t;
-  * @IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT: supports gscan
-  * @IWL_UCODE_TLV_CAPA_STA_PM_NOTIF: firmware will send STA PM notification
-  * @IWL_UCODE_TLV_CAPA_TLC_OFFLOAD: firmware implements rate scaling algorithm
-+ * @IWL_UCODE_TLV_CAPA_DYNAMIC_QUOTA: firmware implements quota related
-  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
-  * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
-  * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
-@@ -369,6 +370,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_CDB_SUPPORT			= (__force iwl_ucode_tlv_capa_t)40,
- 	IWL_UCODE_TLV_CAPA_D0I3_END_FIRST		= (__force iwl_ucode_tlv_capa_t)41,
- 	IWL_UCODE_TLV_CAPA_TLC_OFFLOAD                  = (__force iwl_ucode_tlv_capa_t)43,
-+	IWL_UCODE_TLV_CAPA_DYNAMIC_QUOTA                = (__force iwl_ucode_tlv_capa_t)44,
- 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
- 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
- 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/quota.c b/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
-index b4a0264329b7..690559bdf421 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
-@@ -202,6 +202,10 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ec2f4c31425a..719ce06007c6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -727,16 +727,21 @@ static int hwsim_fops_ps_write(void *dat, u64 val)
+ 	    val != PS_MANUAL_POLL)
+ 		return -EINVAL;
  
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	if (fw_has_capa(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_CAPA_DYNAMIC_QUOTA))
+-	old_ps = data->ps;
+-	data->ps = val;
+-
+-	local_bh_disable();
+ 	if (val == PS_MANUAL_POLL) {
++		if (data->ps != PS_ENABLED)
++			return -EINVAL;
++		local_bh_disable();
+ 		ieee80211_iterate_active_interfaces_atomic(
+ 			data->hw, IEEE80211_IFACE_ITER_NORMAL,
+ 			hwsim_send_ps_poll, data);
+-		data->ps_poll_pending = true;
+-	} else if (old_ps == PS_DISABLED && val != PS_DISABLED) {
++		local_bh_enable();
 +		return 0;
++	}
++	old_ps = data->ps;
++	data->ps = val;
 +
- 	/* update all upon completion */
- 	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
- 		return 0;
++	local_bh_disable();
++	if (old_ps == PS_DISABLED && val != PS_DISABLED) {
+ 		ieee80211_iterate_active_interfaces_atomic(
+ 			data->hw, IEEE80211_IFACE_ITER_NORMAL,
+ 			hwsim_send_nullfunc_ps, data);
 -- 
-2.15.1
+2.15.0
