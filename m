@@ -1,157 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:60681 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753141AbdLEKBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 05:01:17 -0500
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
-Subject: net/wireless/shipped-certs.c:2:1: error: expected expression at end
- of input
-Message-ID: <4006aefb-e9af-d809-b45a-201d20e75f9d@molgen.mpg.de> (sfid-20171205_110226_118243_D9C78F49)
-Date: Tue, 5 Dec 2017 11:01:14 +0100
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36339 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750854AbdLAF3R (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Dec 2017 00:29:17 -0500
+Received: by mail-wm0-f65.google.com with SMTP id b76so1421897wmg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Nov 2017 21:29:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256; boundary="------------ms000905090305080807030508"
+In-Reply-To: <CAB4CAwf6uBbMgT_=Qb5uo+2g_sNSLdRhnjJt-C9vB6OgSjphyg@mail.gmail.com>
+References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
+ <1509434718.4492.195.camel@coelho.fi> <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
+ <1509952948.4492.360.camel@coelho.fi> <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
+ <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
+ <1510825750.4011.179.camel@coelho.fi> <CAB4CAwfg73wRoNca2GBaMn4eN04vf+uR3xdzYO0UWG1Nmaqo=w@mail.gmail.com>
+ <1510901207.4011.197.camel@coelho.fi> <CAB4CAwcit2jqHXs7x2cowHdi31OH3wKnmyW4=v-6RGO-+1gjog@mail.gmail.com>
+ <CAB4CAwdZHwC0kiaGU5A1u_P8y0anw58o6KiOXAWbjwUtB=uLuQ@mail.gmail.com>
+ <1511689749.4011.357.camel@coelho.fi> <CAB4CAwf6uBbMgT_=Qb5uo+2g_sNSLdRhnjJt-C9vB6OgSjphyg@mail.gmail.com>
+From: Chris Chiu <chiu@endlessm.com>
+Date: Fri, 1 Dec 2017 13:29:15 +0800
+Message-ID: <CAB4CAweoq=PAqjPW_POLy5+9tHFquunoY6h5xNJ9EU=xY5zcxg@mail.gmail.com> (sfid-20171201_062922_552215_999C82AE)
+Subject: Re: [linuxwifi] Need support for Intel new wifi module 9462NGW
+To: Luca Coelho <luca@coelho.fi>
+Cc: johannes.berg@intel.com, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org,
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+Hi Luca,
+    I think the problem is not missing DHCP reply. I installed tcpdump
+on the machine with Intel 9461NGW and start monitoring on the wlan
+interface.
+The result is following
+https://gist.github.com/mschiu77/f4cc14ddae6adf137da15675cca59b30
 
---------------ms000905090305080807030508
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+I also attach the ifconfig result at the end of the above url. Hope
+this can help a little.
 
-Dear Linux folks,
+Chris
 
-
-Building the Linux kernel fails with the error below on Debian=20
-Sid/unstable with gcc (Debian 7.2.0-8) 7.2.0.
-
-```
-$ git describe
-v4.15-rc2-79-gfd6d2e506ce6
-$ git log --oneline -1
-fd6d2e506ce6 Merge tag 'docs-4.15-fixes' of git://git.lwn.net/linux
-$ time ARCH=3Di386 make deb-pkg -j50
-[=E2=80=A6]
-net/wireless/shipped-certs.c:2:1: error: expected expression at end of in=
-put
-  const u8 shipped_regdb_certs[] =3D {
-  ^~~~~
-[=E2=80=A6]
-$ more net/wireless/shipped-certs.c
-#include "reg.h"
-const u8 shipped_regdb_certs[] =3D {
-```
-
-
-Kind regards,
-
-Paul
-
-
-
---------------ms000905090305080807030508
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCC
-EFowggUSMIID+qADAgECAgkA4wvV+K8l2YEwDQYJKoZIhvcNAQELBQAwgYIxCzAJBgNVBAYT
-AkRFMSswKQYDVQQKDCJULVN5c3RlbXMgRW50ZXJwcmlzZSBTZXJ2aWNlcyBHbWJIMR8wHQYD
-VQQLDBZULVN5c3RlbXMgVHJ1c3QgQ2VudGVyMSUwIwYDVQQDDBxULVRlbGVTZWMgR2xvYmFs
-Um9vdCBDbGFzcyAyMB4XDTE2MDIyMjEzMzgyMloXDTMxMDIyMjIzNTk1OVowgZUxCzAJBgNV
-BAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1dHNjaGVu
-IEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNVBAMTJERG
-Ti1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjCCASIwDQYJKoZIhvcNAQEBBQAD
-ggEPADCCAQoCggEBAMtg1/9moUHN0vqHl4pzq5lN6mc5WqFggEcVToyVsuXPztNXS43O+FZs
-FVV2B+pG/cgDRWM+cNSrVICxI5y+NyipCf8FXRgPxJiZN7Mg9mZ4F4fCnQ7MSjLnFp2uDo0p
-eQcAIFTcFV9Kltd4tjTTwXS1nem/wHdN6r1ZB+BaL2w8pQDcNb1lDY9/Mm3yWmpLYgHurDg0
-WUU2SQXaeMpqbVvAgWsRzNI8qIv4cRrKO+KA3Ra0Z3qLNupOkSk9s1FcragMvp0049ENF4N1
-xDkesJQLEvHVaY4l9Lg9K7/AjsMeO6W/VRCrKq4Xl14zzsjz9AkH4wKGMUZrAcUQDBHHWekC
-AwEAAaOCAXQwggFwMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUk+PYMiba1fFKpZFK4OpL
-4qIMz+EwHwYDVR0jBBgwFoAUv1kgNgB5oKAia4zV8mHSuCzLgkowEgYDVR0TAQH/BAgwBgEB
-/wIBAjAzBgNVHSAELDAqMA8GDSsGAQQBga0hgiwBAQQwDQYLKwYBBAGBrSGCLB4wCAYGZ4EM
-AQICMEwGA1UdHwRFMEMwQaA/oD2GO2h0dHA6Ly9wa2kwMzM2LnRlbGVzZWMuZGUvcmwvVGVs
-ZVNlY19HbG9iYWxSb290X0NsYXNzXzIuY3JsMIGGBggrBgEFBQcBAQR6MHgwLAYIKwYBBQUH
-MAGGIGh0dHA6Ly9vY3NwMDMzNi50ZWxlc2VjLmRlL29jc3ByMEgGCCsGAQUFBzAChjxodHRw
-Oi8vcGtpMDMzNi50ZWxlc2VjLmRlL2NydC9UZWxlU2VjX0dsb2JhbFJvb3RfQ2xhc3NfMi5j
-ZXIwDQYJKoZIhvcNAQELBQADggEBAIcL/z4Cm2XIVi3WO5qYi3FP2ropqiH5Ri71sqQPrhE4
-eTizDnS6dl2e6BiClmLbTDPo3flq3zK9LExHYFV/53RrtCyD2HlrtrdNUAtmB7Xts5et6u5/
-MOaZ/SLick0+hFvu+c+Z6n/XUjkurJgARH5pO7917tALOxrN5fcPImxHhPalR6D90Bo0fa3S
-PXez7vTXTf/D6OWST1k+kEcQSrCFWMBvf/iu7QhCnh7U3xQuTY+8npTD5+32GPg8SecmqKc2
-2CzeIs2LgtjZeOJVEqM7h0S2EQvVDFKvaYwPBt/QolOLV5h7z/0HJPT8vcP9SpIClxvyt7bP
-ZYoaorVyGTkwggWNMIIEdaADAgECAgwcOtRQhH7u81j4jncwDQYJKoZIhvcNAQELBQAwgZUx
-CzAJBgNVBAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1
-dHNjaGVuIEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNV
-BAMTJERGTi1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjAeFw0xNjExMDMxNTI0
-NDhaFw0zMTAyMjIyMzU5NTlaMGoxCzAJBgNVBAYTAkRFMQ8wDQYDVQQIDAZCYXllcm4xETAP
-BgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxhbmNrLUdlc2VsbHNjaGFmdDEVMBMG
-A1UEAwwMTVBHIENBIC0gRzAyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnhx4
-59Lh4WqgOs/Md04XxU2yFtfM15ZuJV0PZP7BmqSJKLLPyqmOrADfNdJ5PIGBto2JBhtRRBHd
-G0GROOvTRHjzOga95WOTeura79T21FWwwAwa29OFnD3ZplQs6HgdwQrZWNi1WHNJxn/4mA19
-rNEBUc5urSIpZPvZi5XmlF3v3JHOlx3KWV7mUteB4pwEEfGTg4npPAJbp2o7arxQdoIq+Pu2
-OsvqhD7Rk4QeaX+EM1QS4lqd1otW4hE70h/ODPy1xffgbZiuotWQLC6nIwa65Qv6byqlIX0q
-Zuu99Vsu+r3sWYsL5SBkgecNI7fMJ5tfHrjoxfrKl/ErTAt8GQIDAQABo4ICBTCCAgEwEgYD
-VR0TAQH/BAgwBgEB/wIBATAOBgNVHQ8BAf8EBAMCAQYwKQYDVR0gBCIwIDANBgsrBgEEAYGt
-IYIsHjAPBg0rBgEEAYGtIYIsAQEEMB0GA1UdDgQWBBTEiKUH7rh7qgwTv9opdGNSG0lwFjAf
-BgNVHSMEGDAWgBST49gyJtrV8UqlkUrg6kviogzP4TCBjwYDVR0fBIGHMIGEMECgPqA8hjpo
-dHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jcmwvY2Fjcmwu
-Y3JsMECgPqA8hjpodHRwOi8vY2RwMi5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1
-Yi9jcmwvY2FjcmwuY3JsMIHdBggrBgEFBQcBAQSB0DCBzTAzBggrBgEFBQcwAYYnaHR0cDov
-L29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZlci9PQ1NQMEoGCCsGAQUFBzAChj5odHRwOi8v
-Y2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNy
-dDBKBggrBgEFBQcwAoY+aHR0cDovL2NkcDIucGNhLmRmbi5kZS9nbG9iYWwtcm9vdC1nMi1j
-YS9wdWIvY2FjZXJ0L2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEBABLpeD5FygzqOjj+
-/lAOy20UQOGWlx0RMuPcI4nuyFT8SGmK9lD7QCg/HoaJlfU/r78ex+SEide326evlFAoJXIF
-jVyzNltDhpMKrPIDuh2N12zyn1EtagqPL6hu4pVRzcBpl/F2HCvtmMx5K4WN1L1fmHWLcSap
-dhXLvAZ9RG/B3rqyULLSNN8xHXYXpmtvG0VGJAndZ+lj+BH7uvd3nHWnXEHC2q7iQlDUqg0a
-wIqWJgdLlx1Q8Dg/sodv0m+LN0kOzGvVDRCmowBdWGhhusD+duKV66pBl+qhC+4LipariWaM
-qK5ppMQROATjYeNRvwI+nDcEXr2vDaKmdbxgDVwwggWvMIIEl6ADAgECAgweKlJIhfynPMVG
-/KIwDQYJKoZIhvcNAQELBQAwajELMAkGA1UEBhMCREUxDzANBgNVBAgMBkJheWVybjERMA8G
-A1UEBwwITXVlbmNoZW4xIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MRUwEwYD
-VQQDDAxNUEcgQ0EgLSBHMDIwHhcNMTcxMTE0MTEzNDE2WhcNMjAxMTEzMTEzNDE2WjCBizEL
-MAkGA1UEBhMCREUxIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MTQwMgYDVQQL
-DCtNYXgtUGxhbmNrLUluc3RpdHV0IGZ1ZXIgbW9sZWt1bGFyZSBHZW5ldGlrMQ4wDAYDVQQL
-DAVNUElNRzEUMBIGA1UEAwwLUGF1bCBNZW56ZWwwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
-ggEKAoIBAQDIh/UR/AX/YQ48VWWDMLTYtXjYJyhRHMc81ZHMMoaoG66lWB9MtKRTnB5lovLZ
-enTIUyPsCrMhTqV9CWzDf6v9gOTWVxHEYqrUwK5H1gx4XoK81nfV8oGV4EKuVmmikTXiztGz
-peyDmOY8o/EFNWP7YuRkY/lPQJQBeBHYq9AYIgX4StuXu83nusq4MDydygVOeZC15ts0tv3/
-6WmibmZd1OZRqxDOkoBbY3Djx6lERohs3IKS6RKiI7e90rCSy9rtidJBOvaQS9wvtOSKPx0a
-+2pAgJEVzZFjOAfBcXydXtqXhcpOi2VCyl+7+LnnTz016JJLsCBuWEcB3kP9nJYNAgMBAAGj
-ggIxMIICLTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIF4DAdBgNVHSUEFjAUBggrBgEFBQcD
-AgYIKwYBBQUHAwQwHQYDVR0OBBYEFHM0Mc3XjMLlhWpp4JufRELL4A/qMB8GA1UdIwQYMBaA
-FMSIpQfuuHuqDBO/2il0Y1IbSXAWMCAGA1UdEQQZMBeBFXBtZW56ZWxAbW9sZ2VuLm1wZy5k
-ZTB9BgNVHR8EdjB0MDigNqA0hjJodHRwOi8vY2RwMS5wY2EuZGZuLmRlL21wZy1nMi1jYS9w
-dWIvY3JsL2NhY3JsLmNybDA4oDagNIYyaHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzIt
-Y2EvcHViL2NybC9jYWNybC5jcmwwgc0GCCsGAQUFBwEBBIHAMIG9MDMGCCsGAQUFBzABhido
-dHRwOi8vb2NzcC5wY2EuZGZuLmRlL09DU1AtU2VydmVyL09DU1AwQgYIKwYBBQUHMAKGNmh0
-dHA6Ly9jZHAxLnBjYS5kZm4uZGUvbXBnLWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNydDBC
-BggrBgEFBQcwAoY2aHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzItY2EvcHViL2NhY2Vy
-dC9jYWNlcnQuY3J0MEAGA1UdIAQ5MDcwDwYNKwYBBAGBrSGCLAEBBDARBg8rBgEEAYGtIYIs
-AQEEAwYwEQYPKwYBBAGBrSGCLAIBBAMGMA0GCSqGSIb3DQEBCwUAA4IBAQCQs6bUDROpFO2F
-Qz2FMgrdb39VEo8P3DhmpqkaIMC5ZurGbbAL/tAR6lpe4af682nEOJ7VW86ilsIJgm1j0ueY
-aOuL8jrN4X7IF/8KdZnnNnImW3QVni6TCcc+7+ggci9JHtt0IDCj5vPJBpP/dKXLCN4M+exl
-GXYpfHgxh8gclJPY1rquhQrihCzHfKB01w9h9tWZDVMtSoy9EUJFhCXw7mYUsvBeJwZesN2B
-fndPkrXx6XWDdU3S1LyKgHlLIFtarLFm2Hb5zAUR33h+26cN6ohcGqGEEzgIG8tXS8gztEaj
-1s2RyzmKd4SXTkKR3GhkZNVWy+gM68J7jP6zzN+cMYIDmjCCA5YCAQEwejBqMQswCQYDVQQG
-EwJERTEPMA0GA1UECAwGQmF5ZXJuMREwDwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4
-LVBsYW5jay1HZXNlbGxzY2hhZnQxFTATBgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzF
-RvyiMA0GCWCGSAFlAwQCAQUAoIIB8TAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
-SIb3DQEJBTEPFw0xNzEyMDUxMDAxMTRaMC8GCSqGSIb3DQEJBDEiBCBs8p4vu9pmbamZP7WZ
-fPxmMGcyiTra8aZyvlETxeob3TBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglg
-hkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcG
-BSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGJBgkrBgEEAYI3EAQxfDB6MGoxCzAJBgNVBAYTAkRF
-MQ8wDQYDVQQIDAZCYXllcm4xETAPBgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxh
-bmNrLUdlc2VsbHNjaGFmdDEVMBMGA1UEAwwMTVBHIENBIC0gRzAyAgweKlJIhfynPMVG/KIw
-gYsGCyqGSIb3DQEJEAILMXygejBqMQswCQYDVQQGEwJERTEPMA0GA1UECAwGQmF5ZXJuMREw
-DwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4LVBsYW5jay1HZXNlbGxzY2hhZnQxFTAT
-BgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzFRvyiMA0GCSqGSIb3DQEBAQUABIIBADxk
-wiUzxSOTUCCMApfN+IqJiS5R8koa3B96OcJKk4/iPP+ujJFq0FFlGupFtMn5GCyXGnyZ1CeG
-5KvKYGlqmLosePhtwv5/C03QYeJMdHDV+1mOO7xvRxsAsnHRUPDtfO1dsyjmV/mcAQhPnuY3
-ik6mQTU8gRrM+Ndoyr0trvHTfm9g0rs/UvyazyQXfbRSah9LKmffwJfGMARyi0t+9g/wIG8e
-w3JAAqhoTkmXZ+V9pHMfZqG2JAqRQWURxfDD2viK78UqSSwbq0YSHg/sUYTI0N7uiQRPOPZF
-aGPZYE0t7k18yJu5ktDRccr1LTqhaJzPLH/28iNqCzhsdporWRsAAAAAAAA=
---------------ms000905090305080807030508--
+On Thu, Nov 30, 2017 at 9:18 PM, Chris Chiu <chiu@endlessm.com> wrote:
+> Hi Luca,
+>     I got another machine which has Intel 9461NGW (31dc:0264) and
+> stuck at the same problem. I can't see the DHCP response on the air.
+> However, the router does respond to the DHCP discover. Please check
+> the following tcpdump here. The 9461's mac address is
+> 60:f6:77:9a:f4:ed
+> https://gist.github.com/mschiu77/8f613ba6e3c41a3bd5206f1e903b0bbd
+>
+>     Then I go to AP and do tcpdump, I can still see the DHCP reply
+> packet on the corresponding interface. Don't know why can't I see this
+> packet on the air? maybe wrong channel?
+>
+> Chris
+>
+> On Sun, Nov 26, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi> wrote:
+>> On Wed, 2017-11-22 at 21:48 +0800, Chris Chiu wrote:
+>>> On Fri, Nov 17, 2017 at 3:38 PM, Chris Chiu <chiu@endlessm.com>
+>>> wrote:
+>>> > On Fri, Nov 17, 2017 at 2:46 PM, Luca Coelho <luca@coelho.fi>
+>>> > wrote:
+>>> > > On Fri, 2017-11-17 at 14:39 +0800, Chris Chiu wrote:
+>>> > > > On Thu, Nov 16, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi>
+>>> > > > wrote:
+>>> > > > > Hi Chris,
+>>> > > > >
+>>> > > > > On Thu, 2017-11-09 at 11:11 +0800, Chris Chiu wrote:
+>>> > > > > > Hi Luca,
+>>> > > > > >     Any suggestion for the "Failed to start INIT ucode:
+>>> > > > > > -110"
+>>> > > > > > issue
+>>> > > > > > for the firmware?
+>>> > > > >
+>>> > > > > There were a few problems which should now be fixed.  We
+>>> > > > > published
+>>> > > > > new
+>>> > > > > firmwares in our linux-firmware.git tree[1] and also made
+>>> > > > > some
+>>> > > > > fixes in
+>>> > > > > the driver[2].  Please update your system accordingly and let
+>>> > > > > me
+>>> > > > > know
+>>> > > > > if it works for you.
+>>> > > > >
+>>> > > > > Thanks!
+>>> > > > >
+>>> > > > > [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/l
+>>> > > > > inux-f
+>>> > > > > irmware.git/
+>>> > > > > [2] https://patchwork.kernel.org/patch/10059871/
+>>> > > > >     https://patchwork.kernel.org/patch/10059875/
+>>> > > > >     https://patchwork.kernel.org/patch/10059873/
+>>> > > > >
+>>> > > > > --
+>>> > > > > Cheers,
+>>> > > > > Luca.
+>>> > > >
+>>> > > > Hi Luca,
+>>> > >
+>>> > > Hi Chris,
+>>> > >
+>>> > >
+>>> > > >     Thanks for your patch and updated firmware. The driver can
+>>> > > > initialize w/o error now. However, it always fails on ip-config
+>>> > > > after
+>>> > > > 4-way handshake complete. I have to mention that I removed the
+>>> > > > field
+>>> > > > ".soc_latency" in all new iwl_cfg you added in
+>>> > > > https://patchwork.kernel.org/patch/10059875/ to remove compile
+>>> > > > error
+>>> > > > based on the linux mainline 4.14.
+>>> > > >     I don't know whether if this causes the problem. Do you
+>>> > > > need me
+>>> > > > to
+>>> > > > do anything for more information?
+>>> > >
+>>> > > That was my fault, I forgot to include one file in my commit.  I
+>>> > > have
+>>> > > sent v2 of the two last patches to solve the problem.  Can you
+>>> > > try
+>>> > > them?
+>>> > >
+>>> > > The problem you're seeing could be related to that, because we
+>>> > > use a
+>>> > > bit longer wait period for HW stabilization with integrated
+>>> > > devices.
+>>> > > And if you remove it, you may encounter random problems...
+>>> > >
+>>> > > --
+>>> > > Cheers,
+>>> > > Luca.
+>>> >
+>>> > Hi Luca,
+>>> >     Thanks for your quick response. I  tried your v2 patch but
+>>> > things
+>>> > remain the same. The signal strength and scan results seems nothing
+>>> > wrong but still fail to get ip from DHCP server. Please let me know
+>>> > what I can help here.
+>>> >
+>>> > Chris
+>>>
+>>> Hi Luca,
+>>>     Some more observation I want to point out and maybe you can
+>>> suggest.
+>>> After your v2 patch and the latest firmware. I'm pretty sure there's
+>>> no problem
+>>> on my 9462NGW module to associate to an AP (4-way handshaking
+>>> complete)
+>>> dmesg in https://gist.github.com/mschiu77/1fe1f5128f1c49a93055ce23976
+>>> c09b5
+>>> here also shows
+>>> [   59.338785] wlp0s12f0: associated
+>>>
+>>> Then I do air sniffer with my mac book air and only dump DHCP packets
+>>> in
+>>> https://gist.github.com/mschiu77/677b5fbfdea0fea2eda4a36a84bcac8e
+>>>
+>>> As you see, 4 DHCP Discovery here but no response. I do the same
+>>> thing on
+>>> the other laptop to associate to the same AP SSID, there's no
+>>> problem.
+>>>
+>>> And yet another interesting thing is, every time I was trying to
+>>> associate
+>>> The ifconfig always give me a totally different ether address. I log
+>>> 5 times in
+>>> https://gist.github.com/mschiu77/54169d52b9fcf205d5c26752988f8a3d
+>>>
+>>> The read HW address should be 34:13:e8:6f:34:25 and it's also true in
+>>> tcpdump
+>>> log.
+>>>
+>>> I think maybe it's related. Can you suggest anything that I can try?
+>>
+>> Hey Chris,
+>>
+>> Thanks for the update and sorry for the delay.  I'll take a look into
+>> this in the coming week, there's probably something missing in the
+>> driver that is causing this issue...
+>>
+>> --
+>> Cheers,
+>> Luca.
