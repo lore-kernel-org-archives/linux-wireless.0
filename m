@@ -1,97 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2726 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751112AbdLYBoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Dec 2017 20:44:06 -0500
-Subject: Re: [PATCH v3 27/27] devres: kill devm_ioremap_nocache
-To: Greg KH <gregkh@linuxfoundation.org>
-References: <1514026979-33838-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134532.GA10103@kroah.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-mips@linux-mips.org>,
-        <ulf.hansson@linaro.org>, <jakub.kicinski@netronome.com>,
-        <airlied@linux.ie>, <linux-wireless@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <alsa-devel@alsa-project.org>,
-        <dri-devel@lists.freedesktop.org>,
-        <platform-driver-x86@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-mtd@lists.infradead.org>, <daniel.vetter@intel.com>,
-        <dan.j.williams@intel.com>, <jason@lakedaemon.net>,
-        <linux-rtc@vger.kernel.org>, <boris.brezillon@free-electrons.com>,
-        <mchehab@kernel.org>, <dmaengine@vger.kernel.org>,
-        <vinod.koul@intel.com>, <richard@nod.at>, <marek.vasut@gmail.com>,
-        <industrypack-devel@lists.sourceforge.net>,
-        <linux-pci@vger.kernel.org>, <dvhart@infradead.org>,
-        <linux@roeck-us.net>, <linux-media@vger.kernel.org>,
-        <seanpaul@chromium.org>, <devel@driverdev.osuosl.org>,
-        <linux-watchdog@vger.kernel.org>, <arnd@arndb.de>,
-        <b.zolnierkie@samsung.com>, <marc.zyngier@arm.com>,
-        <jslaby@suse.com>, <jani.nikula@linux.intel.com>,
-        <linux-can@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
-        <broonie@kernel.org>, <mkl@pengutronix.de>,
-        <linux-fbdev@vger.kernel.org>, <nios2-dev@lists.rocketboards.org>,
-        <bhelgaas@google.com>, <tglx@linutronix.de>,
-        <andriy.shevchenko@linux.intel.com>, <kvalo@codeaurora.org>,
-        <a.zummo@towertech.it>, <netdev@vger.kernel.org>,
-        <linux-mmc@vger.kernel.org>, <lgirdwood@gmail.com>,
-        <ralf@linux-mips.org>, <linux-spi@vger.kernel.org>,
-        <ysxie@foxmail.com>, <wg@grandegger.com>,
-        <cyrille.pitchen@wedev4u.fr>, <tj@kernel.org>,
-        <alexandre.belloni@free-electrons.com>, <davem@davemloft.net>,
-        <andy@infradead.org>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <4d0991ec-9cd4-0c33-5560-ae9c2c762765@huawei.com> (sfid-20171225_024439_718216_9851C156)
-Date: Mon, 25 Dec 2017 09:43:40 +0800
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56566 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751202AbdLAIgI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Dec 2017 03:36:08 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: Xinming Hu <huxinming820@gmail.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Dmitry Torokhov" <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        James Cao <jcao@marvell.com>
+Subject: Re:  Re: Re: [PATCH 3/3] mwifiex: debugfs: trigger device dump for
+ usb interface
+Date: Fri, 1 Dec 2017 08:36:01 +0000
+Message-ID: <ff513aca34c94c6cab0b4ff0408c7922@SC-EXCH02.marvell.com> (sfid-20171201_093612_383331_E2D3E5A5)
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-In-Reply-To: <20171223134532.GA10103@kroah.com>
-Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 2017/12/23 21:45, Greg KH wrote:
-> On Sat, Dec 23, 2017 at 07:02:59PM +0800, Yisheng Xie wrote:
->> --- a/lib/devres.c
->> +++ b/lib/devres.c
->> @@ -44,35 +44,6 @@ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
->>  EXPORT_SYMBOL(devm_ioremap);
->>  
->>  /**
->> - * devm_ioremap_nocache - Managed ioremap_nocache()
->> - * @dev: Generic device to remap IO address for
->> - * @offset: Resource address to map
->> - * @size: Size of map
->> - *
->> - * Managed ioremap_nocache().  Map is automatically unmapped on driver
->> - * detach.
->> - */
->> -void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
->> -				   resource_size_t size)
->> -{
->> -	void __iomem **ptr, *addr;
->> -
->> -	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
->> -	if (!ptr)
->> -		return NULL;
->> -
->> -	addr = ioremap_nocache(offset, size);
-> 
-> Wait, devm_ioremap() calls ioremap(), not ioremap_nocache(), are you
-> _SURE_ that these are all identical?  For all arches?  If so, then
-> ioremap_nocache() can also be removed, right?
-
-Yeah, As Christophe pointed out, that 4 archs do not have the same function.
-But I do not why they do not want do the same thing. Driver may no know about
-this? right?
-
-> 
-> In my quick glance, I don't think you can do this series at all :(
-
-Yes, maybe should take Christophe suggestion and use a bool or enum to distinguish them?
-
-Thanks
-Yisheng
-> 
-> greg k-h
-> 
-> .
-> 
+SGkgQnJpYW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
+Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOox
+MtTCMcjVIDA6MzMNCj4gVG86IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+IENjOiBY
+aW5taW5nIEh1IDxodXhpbm1pbmc4MjBAZ21haWwuY29tPjsgTGludXggV2lyZWxlc3MNCj4gPGxp
+bnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz47IEthbGxlIFZhbG8gPGt2YWxvQGNvZGVhdXJv
+cmEub3JnPjsgRG1pdHJ5DQo+IFRvcm9raG92IDxkdG9yQGdvb2dsZS5jb20+OyByYWphdGphQGdv
+b2dsZS5jb207IFpoaXl1YW4gWWFuZw0KPiA8eWFuZ3p5QG1hcnZlbGwuY29tPjsgVGltIFNvbmcg
+PHNvbmd0YW9AbWFydmVsbC5jb20+OyBDYXRoeSBMdW8NCj4gPGNsdW9AbWFydmVsbC5jb20+OyBH
+YW5hcGF0aGkgQmhhdCA8Z2JoYXRAbWFydmVsbC5jb20+OyBKYW1lcyBDYW8NCj4gPGpjYW9AbWFy
+dmVsbC5jb20+DQo+IFN1YmplY3Q6IFtFWFRdIFJlOiBSZTogW1BBVENIIDMvM10gbXdpZmlleDog
+ZGVidWdmczogdHJpZ2dlciBkZXZpY2UgZHVtcCBmb3INCj4gdXNiIGludGVyZmFjZQ0KPiANCj4g
+RXh0ZXJuYWwgRW1haWwNCj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gSGkgU2ltb24sDQo+IA0KPiBP
+biBXZWQsIE5vdiAxNSwgMjAxNyBhdCAxMTozMTowNUFNICswMDAwLCBYaW5taW5nIEh1IHdyb3Rl
+Og0KPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEJyaWFuIE5v
+cnJpcyBbbWFpbHRvOmJyaWFubm9ycmlzQGNocm9taXVtLm9yZ10NCj4gPiA+DQo+ID4gPiBPbiBN
+b24sIEF1ZyAxNCwgMjAxNyBhdCAxMjoxOTowM1BNICswMDAwLCBYaW5taW5nIEh1IHdyb3RlOg0K
+PiA+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4
+L2RlYnVnZnMuYw0KPiA+ID4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmll
+eC9kZWJ1Z2ZzLmMNCj4gPiA+ID4gaW5kZXggNmY0MjM5Yi4uNWQ0NzZkZSAxMDA2NDQNCj4gPiA+
+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2RlYnVnZnMuYw0K
+PiA+ID4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvZGVidWdm
+cy5jDQo+ID4gPiA+IEBAIC0xNjgsMTAgKzE2OCwxMSBAQA0KPiA+ID4gPiAgew0KPiA+ID4gPiAg
+CXN0cnVjdCBtd2lmaWV4X3ByaXZhdGUgKnByaXYgPSBmaWxlLT5wcml2YXRlX2RhdGE7DQo+ID4g
+PiA+DQo+ID4gPiA+IC0JaWYgKCFwcml2LT5hZGFwdGVyLT5pZl9vcHMuZGV2aWNlX2R1bXApDQo+
+ID4gPiA+IC0JCXJldHVybiAtRUlPOw0KPiA+ID4gPiAtDQo+ID4gPiA+IC0JcHJpdi0+YWRhcHRl
+ci0+aWZfb3BzLmRldmljZV9kdW1wKHByaXYtPmFkYXB0ZXIpOw0KPiA+ID4gPiArCWlmIChwcml2
+LT5hZGFwdGVyLT5pZmFjZV90eXBlID09IE1XSUZJRVhfVVNCKQ0KPiA+ID4gPiArCQltd2lmaWV4
+X3NlbmRfY21kKHByaXYsIEhvc3RDbWRfQ01EX0ZXX0RVTVBfRVZFTlQsDQo+ID4gPiA+ICsJCQkJ
+IEhvc3RDbWRfQUNUX0dFTl9TRVQsIDAsIE5VTEwsIHRydWUpOw0KPiA+ID4NCj4gPiA+IFdoeSBj
+b3VsZG4ndCB5b3UganVzdCBpbXBsZW1lbnQgdGhlIGRldmljZV9kdW1wKCkgY2FsbGJhY2s/DQo+
+ID4NCj4gPiBDdXJyZW50bHkgbXdpZmlleF9zZW5kX2NtZCBmdW5jdGlvbiBpcyBub3QgZXhwb3J0
+ZWQgdG8gZXh0ZXJuYWwgbW9kdWxlcywgaXQNCj4gaXMgZGVzaWduZWQgZm9yIG1vZHVsZSBtd2lm
+aWV4IGludGVybmFsIHVzZS4NCj4gDQo+IElmIHlvdSByZWFsbHkgZG9uJ3Qgd2FudCB0byBleHBv
+cnQgbXdpZmlleF9zZW5kX2NtZCgpLCB5b3UgY2FuIGV4cG9ydCBzb21lDQo+IG90aGVyIHdyYXBw
+ZXIgd2hpY2ggZG9lcyB0aGUgbG9naWMgZm9yIHlvdS4gVGhlIHBvaW50IGlzIHRoYXQgdGhlcmUn
+cyBhIHdlbGwNCj4gZGVmaW5lZCBwb2ludCBmb3IgZGV0ZXJtaW5pbmcgaG93IHRvIGR1bXAgdGhl
+IGZpcm13YXJlIGJhc2VkIG9uIHdoaWNoDQo+IGludGVyZmFjZSB5b3UncmUgdXNpbmcuIFlvdSBz
+aG91bGQgdXNlIGl0Lg0KPiANCg0KDQpUaGFua3MgZm9yIHRoZSBzdWdnZXN0aW9uLCBpdCBzb3Vu
+ZHMgYmV0dGVyIHRoYW4gZXhwb3J0aW5nIG13aWZpZXhfc2VuZF9jbWQoKSBkaXJlY3RseS4NCklu
+IGFkZGl0aW9uIHRvIHVzZWQgYXMgZGVidWdmcyB0aXJnZ2VyLCB0aGUgImRlZmluZWQgcG9pbnQi
+IGlmX29wcy5kZXZpY2VfZHVtcCBpcyBvbmx5IHVzZWQgaW4gY29tbWFuZCB0aW1lb3V0IGNvbnRl
+eHQuDQpGb3Igc2Rpby9wY2llIGludGVyZmFjZSwgcmVnaXN0ZXIgb3BlcmF0aW9uIHdpbGwgYmUg
+bWFkZSB0byB0cmlnZ2VyIGZpcm13YXJlIGR1bXAgYW5kIGdldCBkdW1wIGNvbnRleHQgdW5kZXIg
+c3BlY2lmaWMgYWxnb3JpdGhtLg0KRm9yIHVzYiBpbnRlcmZhY2UsIGhvd2V2ZXIsICB0aGlzIGlz
+IG5vdCBuZWVkZWQsIHNpbmNlIGZpcm13YXJlIHdpbGwgYXV0b21hdGljYWxseSBzZW5kIGR1bXAg
+ZXZlbnQgdG8gaG9zdCB3aXRob3V0IGFueSB0cmlnZ2VyLCBhbmQgd2hhdCdzIG1vcmUgLCBob3N0
+IGlzIGFsc28gbm90IGFibGUgdG8gaXNzdWUgY29tbWFuZCBpbiB0aGUgc2l0dWF0aW9uLg0KDQpT
+byBwZXIgbXkgdW5kZXJzdGFuZCwgIGhlcmUgd2Ugb25seSBuZWVkIHByb3ZpZGUgYSBzaW1wbGUg
+d2F5IHRvIHRyaWdnZXIgLCBpbnN0ZWFkIG9mIGEgdG90YWxseSBmdW5jdGlvbmFsIGNvbXBsZXRl
+IGR1bXAgZW50cnkgcG9pbnQuIA0KU3VwcG9zZSBpZiB3ZSBtYWtlIHRoZSBjb21tYW5kIHRyaWdn
+ZXIgYSBwYXJ0IG9mIGlmX29wcy0+ZGV2aWNlX2R1bXAsICB0aGVuIHdlIGFsc28gbmVlZCBhZGQg
+Y2hlY2sgZm9yICJNV0lGSUVYX1VTQiIgaW4gbXdpZmlleF9jbWRfdG1vX2Z1bmMuIA0KDQppdCBh
+bHNvIGxvb2tzIGluZWxlZ2FudCwgYW5kIHdoYXQgd2UgZGlkIGxvb2tzIHdlaXJkLCB0aGV5IGFy
+ZQ0KKDEpIGV4cG9ydCBhIG5ldyAga2VybmVsIHN5bWJvbCwgIHRoZSB3cmFwcGVyIG9mIG13aWZp
+ZXhfc2VuZF9jb21tYW5kDQooMikgYWRkIHVzYiBpZl9vcHMtPmRldmljZV9kdW1wLCBpdCAgc2Vu
+ZCB0aGUgY29tbWFuZCBpbiBtd2lmaWV4X3VzYiwgaW5zdGVhZCBvZiBpbiBtd2lmaWV4IGl0c2Vs
+Zi4NCigzKSBieXBhc3MgYWJvdmUgImlmX29wcy0+ZGV2aWNlX2R1bXAiIGluIG13aWZpZXhfY21k
+X3Rtb19mdW5jLCB3aGljaCBpcyB0aGUgbWFpbmx5IHVzZXIgY2FzZS4NCg0KSSBhbSBub3Qgc3Vy
+ZSB3aGV0aGVyIHRoZXJlIGlzIGEgYmV0dGVyIHdheSBvbiB0aGlzLCBwZXJoYXBzIHdlIG5lZWQg
+YSB0cmFkZS1vZmYgb24gZGlmZmVyZW50IHNvbHV0aW9ucywgcGxlYXNlIGxldCB1cyBrbm93IGlm
+IHlvdSBoYXZlIG1vcmUgc3VnZ2VzdGlvbnMuDQoNClRoYW5rcyAmIFJlZ2FyZHMsDQpTSW1vbg0K
+DQo+ID4gSWYgd2UgZXhwb3J0IG13aWZpZXhfc2VuZF9jbWQsIGFuZCBjYWxsIGl0IGluIG13aWZp
+ZXhfdXNiLiBUaGVyZSB3aWxsDQo+ID4gYmUgYSBsb29wLA0KPiANCj4gU28/IFRoZXJlIGFyZSBh
+bGwgc29ydHMgb2YgaW50ZXJkZXBlbmRlbmNpZXMgYmV0d2VlbiBtd2lmaWV4LmtvIGFuZA0KPiBt
+d2lmaWV4X3VzYi5rbyAob3IgaW4geW91ciB3b3JkcywgImxvb3BzIikuDQo+IA0KPiA+IC5EZXZp
+Y2VfZHVtcCAobW9kdWxlIG13aWZpZXhfdXNiKSAgLS0+ICBtd2lmaWV4X3NlbmRfY21kKG1vZHVs
+ZQ0KPiA+IG13aWZpZXgpICAtLT4gLmhvc3RfdG9fY2FyZCAobW9kdWxlIG13aWZpZXhfdXNiKQ0K
+PiA+DQo+ID4gVGhpcyBzZWVtcyBub3QgYW4gZWxlZ2FudCBkZXNpZ24sIHJpZ2h0Pw0KPiANCj4g
+Tm8gbGVzcyBlbGVnYW50IHRoYW4gc2NhdHRlcmluZzoNCj4gDQo+IAlpZiAoIVVTQikNCj4gCQlk
+cml2ZXItPnRoaXMoKTsNCj4gCWVsc2UNCj4gCQl0aGF0KCk7DQo+IA0KPiBhbGwgb3ZlciB0aGUg
+cGxhY2UuDQo+IA0KPiA+IFJlZ2FyZHMsDQo+ID4gU2ltb24NCj4gPiA+DQo+ID4gPiA+ICsJZWxz
+ZQ0KPiA+ID4gPiArCQlwcml2LT5hZGFwdGVyLT5pZl9vcHMuZGV2aWNlX2R1bXAocHJpdi0+YWRh
+cHRlcik7DQo+ID4gPiA+DQo+ID4gPiA+ICAJcmV0dXJuIDA7DQo+ID4gPiA+ICB9DQo+IA0KPiBC
+cmlhbg0K
