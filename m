@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f176.google.com ([209.85.213.176]:37963 "EHLO
-        mail-yb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751543AbdLKIjw (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48328 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752001AbdLANFp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 03:39:52 -0500
-Received: by mail-yb0-f176.google.com with SMTP id h28so168094ybj.5
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 00:39:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20171209004534.GB3441@builder>
-References: <1512750846-13591-1-git-send-email-loic.poulain@linaro.org> <20171209004534.GB3441@builder>
-From: Loic Poulain <loic.poulain@linaro.org>
-Date: Mon, 11 Dec 2017 09:39:11 +0100
-Message-ID: <CAMZdPi-eUquLkhSBLjMhn2RAX-eJ4cf5PviS85nKAL0y81MQiw@mail.gmail.com> (sfid-20171211_093956_904041_E603A682)
-Subject: Re: [PATCH] wcn36xx: Fix dynamic power saving
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Nicolas Dechesne <nicolas.dechesne@linaro.org>,
-        Eugene Krasnikov <k.eugene.e@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 1 Dec 2017 08:05:45 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Ihab Zhaika <ihab.zhaika@intel.com>, stable@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  1 Dec 2017 15:05:34 +0200
+Message-Id: <20171201130535.27656-2-luca@coelho.fi> (sfid-20171201_140549_243435_F44D1CAE)
+In-Reply-To: <20171201130535.27656-1-luca@coelho.fi>
+References: <20171201130535.27656-1-luca@coelho.fi>
+Subject: [PATCH 1/2] iwlwifi: add new cards for 9260 and 22000 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bjorn,
+From: Ihab Zhaika <ihab.zhaika@intel.com>
 
-On 9 December 2017 at 01:45, Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
->>               }
->>       }
->>
->> +     if (changed & IEEE80211_CONF_CHANGE_PS) {
->> +             list_for_each_entry(tmp, &wcn->vif_list, list) {
->> +                     vif = wcn36xx_priv_to_vif(tmp);
->> +                     if (hw->conf.flags & IEEE80211_CONF_PS) {
->> +                             if (vif->bss_conf.ps) /* ps allowed ? */
->> +                                     wcn36xx_pmc_enter_bmps_state(wcn, vif);
->> +                     } else {
->> +                             wcn36xx_pmc_exit_bmps_state(wcn, vif);
->
-> During startup I get the error print from wcn36xx_pmc_exit_bmps_state()
-> that we're not in BMPS state. There's no harm in this, but the error
-> might concern people.
->
-> How about we in addition to this, change the wcn36xx_err() to a
-> wcn36xx_dbg(PMC...) ?
+add 1 PCI ID for 9260 series and 1 for 22000 series.
 
-Thanks for reporting this, I assume mac80211 disable PS mode before enabling it
-on timeout... It makes sense to avoid this error msg since balancing
-is well managed
-by this driver.
+Cc: stable@vger.kernel.org
+Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Regards,
-Loic
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index f21fe59faccf..ccd7c33c4c28 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -553,6 +553,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0214, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x271C, 0x0214, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x0034, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x0038, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x003C, iwl9560_2ac_cfg)},
+@@ -664,6 +665,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x2720, 0x0310, iwla000_2ac_cfg_hr_cdb)},
+ 	{IWL_PCI_DEVICE(0x40C0, 0x0000, iwla000_2ax_cfg_hr)},
+ 	{IWL_PCI_DEVICE(0x40C0, 0x0A10, iwla000_2ax_cfg_hr)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0000, iwla000_2ax_cfg_hr)},
+ 
+ #endif /* CONFIG_IWLMVM */
+ 
+-- 
+2.15.0
