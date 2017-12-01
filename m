@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:28334 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750919AbdL0KDk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Dec 2017 05:03:40 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:59313 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752368AbdLAP3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Dec 2017 10:29:44 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "akolli\@codeaurora.org" <akolli@codeaurora.org>,
+        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>,
+        "linux-wireless-owner\@vger.kernel.org"
+        <linux-wireless-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
+In-Reply-To: <87k1y6y04i.fsf@kamboji.qca.qualcomm.com>
+References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com> <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com> <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com> <DAB5EBB8-C820-4056-8AAB-063D05F38BD5@toke.dk> <87bmjjzppd.fsf@kamboji.qca.qualcomm.com> <5080a68538fd2d883e15bacaa969661b@codeaurora.org> <87r2se36rq.fsf@toke.dk> <87k1y6y04i.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 01 Dec 2017 16:29:39 +0100
+Message-ID: <87d13y31r0.fsf@toke.dk> (sfid-20171201_162958_526202_5A4E3A79)
 MIME-Version: 1.0
-Subject: Re: [next] ath10k: wmi: remove redundant integer fc
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20171218150245.9073-1-colin.king@canonical.com>
-References: <20171218150245.9073-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Message-ID: <9a6c9d36025e46fd9b22e985d3662d93@euamsexm01a.eu.qualcomm.com> (sfid-20171227_110418_875367_95637A28)
-Date: Wed, 27 Dec 2017 11:03:31 +0100
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-> Variable fc is being assigned but never used, so remove it. Cleans
-> up the clang warning:
-> 
-> warning: Value stored to 'fc' is never read
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>>> tx_duration is aggregate time duration of 4 PPDU sent to STA.
+>>> FW sends these values for retry packets also.
+>>
+>> Great, that sounds like just what we need.
+>
+> Except mapping to the iee80211_tx_status() might be difficult. I'm not
+> sure how HTT_T2H_MSG_TYPE_PKTLOG events are sent in relation to
+> HTT_T2H_MSG_TYPE_TX_COMPL_IND.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Yeah, figures. Well, maybe we'll just have to support an asynchronous
+callback into mac80211 to register airtime usage. Will probably have to
+add some asynchronicity anyway to avoid doing too much work in the fast
+path.
 
-a0709dfd7ff8 ath10k: wmi: remove redundant integer fc
+Will keep that in mind when I get around to revisiting those patches :)
 
--- 
-https://patchwork.kernel.org/patch/10119831/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-Toke
