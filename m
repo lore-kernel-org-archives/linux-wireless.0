@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51014 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:48332 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933777AbdLRMi2 (ORCPT
+        with ESMTP id S1751874AbdLANFo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 07:38:28 -0500
+        Fri, 1 Dec 2017 08:05:44 -0500
 From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 14:38:12 +0200
-Message-Id: <20171218123815.3968-9-luca@coelho.fi> (sfid-20171218_133851_179290_8E99ED6B)
-In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
-References: <20171218123815.3968-1-luca@coelho.fi>
-Subject: [PATCH 08/11] iwlwifi: mvm: don't warn on multiple packets when opening a queue
+Date: Fri,  1 Dec 2017 15:05:33 +0200
+Message-Id: <20171201130535.27656-1-luca@coelho.fi> (sfid-20171201_140551_092971_0D4028B5)
+Subject: [PATCH 0/2] iwlwifi: fixes intended for 4.15 2017-12-01
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-When we have TSO enabled, we might end up segmenting it and
-queuing multiple packets before the queue is even enabled.  This causes
-a warning.
+Hi,
 
-For example, when starting TCP traffic on a non-zero TID, the
-first packets may not have DSCP and will be sent on TID 0, while
-the actual data packets will be sent on the TID.
+This is the third batch of fixes intended for 4.15.
 
-To prevent this, simply remove the warning.
+These are the fixes:
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+* Add 2 new PCI IDs, one for 9000 and one for 22000;
+* Fix a queue hang due during ROC;
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index b65b4e8f8606..b926fd49e734 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -887,10 +887,9 @@ static void iwl_mvm_tx_add_stream(struct iwl_mvm *mvm,
- 	/*
- 	 * The first deferred frame should've stopped the MAC queues, so we
- 	 * should never get a second deferred frame for the RA/TID.
-+	 * In case of GSO the first packet may have been split, so don't warn.
- 	 */
--	if (!WARN(skb_queue_len(deferred_tx_frames) != 1,
--		  "RATID %d/%d has %d deferred frames\n", mvm_sta->sta_id, tid,
--		  skb_queue_len(deferred_tx_frames))) {
-+	if (skb_queue_len(deferred_tx_frames) == 1) {
- 		iwl_mvm_stop_mac_queues(mvm, BIT(mac_queue));
- 		schedule_work(&mvm->add_stream_wk);
- 	}
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+
+Ihab Zhaika (1):
+  iwlwifi: add new cards for 9260 and 22000 series
+
+Johannes Berg (1):
+  iwlwifi: mvm: flush queue before deleting ROC
+
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 ++
+ .../net/wireless/intel/iwlwifi/mvm/time-event.c    | 24 ++++++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  2 ++
+ 3 files changed, 26 insertions(+), 2 deletions(-)
+
 -- 
-2.15.1
+2.15.0
