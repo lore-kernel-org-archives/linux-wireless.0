@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f179.google.com ([209.85.216.179]:41922 "EHLO
-        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752182AbdLGI7M (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48624 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752546AbdLBQ3V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 03:59:12 -0500
-Received: by mail-qt0-f179.google.com with SMTP id i40so15702903qti.8
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Dec 2017 00:59:12 -0800 (PST)
-Subject: Re: [PATCH 00/10] brcmfmac: restructuring sdio access functions
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
- <5A29001E.4080905@broadcom.com> <87r2s6vs6d.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A2902DE.3050206@broadcom.com> (sfid-20171207_095916_324137_892AF583)
-Date: Thu, 7 Dec 2017 09:59:10 +0100
-MIME-Version: 1.0
-In-Reply-To: <87r2s6vs6d.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Sat, 2 Dec 2017 11:29:21 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  2 Dec 2017 18:28:58 +0200
+Message-Id: <20171202162858.4167-16-luca@coelho.fi> (sfid-20171202_172925_138632_CD486A6A)
+In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
+References: <20171202162858.4167-1-luca@coelho.fi>
+Subject: [PATCH 15/15] iwlwifi: mvm: request statistics when reading debugfs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/7/2017 9:49 AM, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->
->> On 11/13/2017 9:35 PM, Arend van Spriel wrote:
->>> These patches were originally submitted by Ian Molton a while ago so decided
->>> to resubmit them. This is a first series of 10 patches. Tested using BCM4354
->>> device which showed no regression.
->>>
->>> It is intended for 4.16 (no rush ;-) ) and applies to the master branch of
->>> the wireless-drivers-next repository.
->>
->> Hi Kalle,
->>
->> I have follow-up series on this one. If you plan to take it today or
->> tomorrow, I can hold the follow-up a bit more.
->
-> I'm hoping to apply these today.
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-btw. my neighbors put out the Finnish flag. Was that about your 
-independence? Not a yearly event, or is it?
+When statistics are read from debugfs, make sure that they
+are actually updated from the firmware.
 
-Gr. AvS
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 834c798f728c..270781e13e89 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -759,6 +759,9 @@ static ssize_t iwl_dbgfs_fw_rx_stats_read(struct file *file,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
++	if (iwl_mvm_firmware_running(mvm))
++		iwl_mvm_request_statistics(mvm, false);
++
+ 	pos += scnprintf(buf + pos, bufsz - pos, fmt_header,
+ 			 "Statistics_Rx - OFDM");
+ 	if (!iwl_mvm_has_new_rx_stats_api(mvm)) {
+-- 
+2.15.0
