@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:42058 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751081AbdLaRbm (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48662 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752387AbdLBQ3g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Dec 2017 12:31:42 -0500
-Received: by mail-lf0-f68.google.com with SMTP id e27so17425905lfb.9
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:41 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 08/18] ath10k: various fixes for high latency devices
-Date: Sun, 31 Dec 2017 18:29:15 +0100
-Message-Id: <20171231172925.24014-9-erik.stromdahl@gmail.com> (sfid-20171231_183215_003738_FC795CA3)
-In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
-References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+        Sat, 2 Dec 2017 11:29:36 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  2 Dec 2017 18:28:56 +0200
+Message-Id: <20171202162858.4167-14-luca@coelho.fi> (sfid-20171202_172946_579749_29E9E3B1)
+In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
+References: <20171202162858.4167-1-luca@coelho.fi>
+Subject: [PATCH 13/15] iwlwifi: mvm: mark MIC stripped MPDUs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A few execution paths are not applicable for high latency
-devices and can be skipped.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+When RADA is active, the hardware decrypts the packets and strips off
+the MIC as it is useless after decryption. Indicate that to mac80211.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 3 ++-
- drivers/net/wireless/ath/ath10k/txrx.c   | 2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 7b3d6bf015c7..1432d5b3e9d3 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2686,7 +2686,8 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		break;
- 	}
- 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
--		ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
-+		if (!ar->is_high_latency)
-+			ath10k_htt_rx_tx_compl_ind(htt->ar, skb);
- 		break;
- 	case HTT_T2H_MSG_TYPE_SEC_IND: {
- 		struct ath10k *ar = htt->ar;
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index febc3eb93fbd..a151abe5e97b 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -90,7 +90,7 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 0e6a7dd30aa9..a81ff4163d05 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -253,6 +253,8 @@ static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
+ 			return -1;
  
- 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
- 	ath10k_htt_tx_dec_pending(htt);
--	if (htt->num_pending_tx == 0)
-+	if (!ar->is_high_latency && (htt->num_pending_tx == 0))
- 		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
+ 		stats->flag |= RX_FLAG_DECRYPTED;
++		if (pkt_flags & FH_RSCSR_RADA_EN)
++			stats->flag |= RX_FLAG_MIC_STRIPPED;
+ 		*crypt_len = IEEE80211_CCMP_HDR_LEN;
+ 		return 0;
+ 	case IWL_RX_MPDU_STATUS_SEC_TKIP:
 -- 
-2.15.1
+2.15.0
