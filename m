@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35068 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967272AbdLSMr2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55304 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751649AbdLBNDg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 07:47:28 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Ian Molton <ian@mnementh.co.uk>
-Subject: [PATCH 06/11] brcmfmac: More efficient and slightly easier to read fixup for 4339 chips
-Date: Tue, 19 Dec 2017 13:47:12 +0100
-Message-Id: <1513687637-5555-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134754_211076_849B2C28)
-In-Reply-To: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sat, 2 Dec 2017 08:03:36 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi 2017-11-28
+References: <1511871780.4011.426.camel@coelho.fi>
+Date: Sat, 02 Dec 2017 15:03:32 +0200
+In-Reply-To: <1511871780.4011.426.camel@coelho.fi> (Luca Coelho's message of
+        "Tue, 28 Nov 2017 14:23:00 +0200")
+Message-ID: <87lgilwacb.fsf@kamboji.qca.qualcomm.com> (sfid-20171202_140340_661297_FD3697A9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Its more efficient to test the register we're interested in first,
-potentially avoiding two more comparisons, and therefore always avoiding
-one comparison per call on all other chips.
+Luca Coelho <luca@coelho.fi> writes:
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-[arend: fix some checkpatch warnings]
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+> Here is my second set of fixes for 4.15.  More details in the tag
+> description.
+>
+> I have sent this out before and kbuildbot didn't find any issues. 
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit ed59b7d53c95548d83d4e7e1bc5edafcdcad09c9:
+>
+>   Merge ath-current from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2017-11-21 11:52:18 +0200)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2017-11-28
+>
+> for you to fetch changes up to 0232d2cd7aa8e1b810fe84fb4059a0bd1eabe2ba:
+>
+>   iwlwifi: fix access to prph when transport is stopped (2017-11-25 17:12:56 +0200)
+>
+> ----------------------------------------------------------------
+> Second batch of fixes intended for 4.15.
+>
+> * One fix in rate-scaling;
+> * One fix for the TX queue hang detection for AP/GO modes;
+> * Fix the TX queue hang timeout used in monitor interfaces;
+> * Fix packet injection;
+> * Remove a wrong error message when dumping PCI registers;
+> * Fix race condition with RF-kill;
+>
+> ----------------------------------------------------------------
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 1aa2a79..12fc0b3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3772,15 +3772,16 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
- 
- 	val = brcmf_sdiod_readl(sdiodev, addr, NULL);
- 
--	if ((sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
--	     sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
--	     addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
-+	if (addr == CORE_CC_REG(SI_ENUM_BASE, chipid) &&
-+	    (sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339 ||
-+	     sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339)) {
- 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
- 		if (rev >= 2) {
- 			val &= ~CID_ID_MASK;
- 			val |= BRCM_CC_4339_CHIP_ID;
- 		}
- 	}
-+
- 	return val;
- }
- 
+Pulled, thanks.
+
 -- 
-1.9.1
+Kalle Valo
