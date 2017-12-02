@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57706 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752603AbdLRPDy (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:36470 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751687AbdLBOZ1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 10:03:54 -0500
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH][next] ath10k: wmi: remove redundant integer fc
-Date: Mon, 18 Dec 2017 15:02:45 +0000
-Message-Id: <20171218150245.9073-1-colin.king@canonical.com> (sfid-20171218_160423_393127_98C1DC9D)
-MIME-Version: 1.0
+        Sat, 2 Dec 2017 09:25:27 -0500
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v4] wcn36xx: Set default BTLE coexistence config
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20171116080126.17239-1-rfried@codeaurora.org>
+References: <20171116080126.17239-1-rfried@codeaurora.org>
+To: Ramon Fried <rfried@codeaurora.org>
+CC: <kvalo@codeaurora.org>, <k.eugene.e@gmail.com>,
+        <wcn36xx@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <bjorn.andersson@linaro.org>,
+        <nicolas.dechesne@linaro.org>, Eyal Ilsar <eilsar@codeaurora.org>,
+        "Ramon Fried" <rfried@codeaurora.org>
+Message-ID: <895e19e4aa5842af800ae774b29599a3@euamsexm01a.eu.qualcomm.com> (sfid-20171202_152534_201347_1E3C546C)
+Date: Sat, 2 Dec 2017 15:25:17 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Ramon Fried <rfried@codeaurora.org> wrote:
 
-Variable fc is being assigned but never used, so remove it. Cleans
-up the clang warning:
+> If the value for the firmware configuration parameters
+> BTC_STATIC_LEN_LE_BT and BTC_STATIC_LEN_LE_WLAN are not set the duty
+> cycle between BT and WLAN is such that if BT (including BLE) is active
+> WLAN gets 0 bandwidth. When tuning these parameters having a too high
+> value for WLAN means that BLE performance degrades.
+> The "sweet" point of roughly half of the maximal values was empirically
+> found to achieve a balance between BLE and Wi-Fi coexistence
+> performance.
+> 
+> Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
+> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+> Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-warning: Value stored to 'fc' is never read
+Patch applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
- 1 file changed, 2 deletions(-)
+4119b6160a35 wcn36xx: set default BTLE coexistence config
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 8d53063bd503..06fde53aa679 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2494,7 +2494,6 @@ ath10k_wmi_tlv_op_gen_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
- 	void *ptr;
- 	int len;
- 	u32 buf_len = msdu->len;
--	u16 fc;
- 	struct ath10k_vif *arvif;
- 	dma_addr_t mgmt_frame_dma;
- 	u32 vdev_id;
-@@ -2503,7 +2502,6 @@ ath10k_wmi_tlv_op_gen_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
- 		return ERR_PTR(-EINVAL);
- 
- 	hdr = (struct ieee80211_hdr *)msdu->data;
--	fc = le16_to_cpu(hdr->frame_control);
- 	arvif = (void *)cb->vif->drv_priv;
- 	vdev_id = arvif->vdev_id;
- 
 -- 
-2.14.1
+https://patchwork.kernel.org/patch/10060833/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
