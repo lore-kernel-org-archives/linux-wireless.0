@@ -1,117 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:44708 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932451AbdL1R6l (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48526 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751934AbdLBQ3E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Dec 2017 12:58:41 -0500
-Received: by mail-it0-f67.google.com with SMTP id b5so28888200itc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Dec 2017 09:58:41 -0800 (PST)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC 4/4] nl80211: Implement TX of control port frames
-Date: Thu, 28 Dec 2017 11:58:32 -0600
-Message-Id: <20171228175832.3253-5-denkenz@gmail.com> (sfid-20171228_185853_252453_1C65EE95)
-In-Reply-To: <20171228175832.3253-1-denkenz@gmail.com>
-References: <20171228175832.3253-1-denkenz@gmail.com>
+        Sat, 2 Dec 2017 11:29:04 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  2 Dec 2017 18:28:43 +0200
+Message-Id: <20171202162858.4167-1-luca@coelho.fi> (sfid-20171202_172949_801692_2AF88DF0)
+Subject: [PATCH 00/15] iwlwifi: updates intended for v4.16 2017-12-02
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit implements the TX side of NL80211_CMD_CONTROL_PORT_FRAME.
-Userspace provides the raw EAPoL frame using NL80211_ATTR_FRAME.  A
-skbuf is built and then injected onto the netdev of the wireless device.
-The CONTROL_PORT_ETHERTYPE_NO_ENCRYPT will still in theory be honored by
-the underlying TX path code.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- net/wireless/nl80211.c | 67 +++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 66 insertions(+), 1 deletion(-)
+Hi,
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 220fe5bc57fd..d6191579f044 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -12464,6 +12464,64 @@ static int nl80211_del_pmk(struct sk_buff *skb, struct genl_info *info)
- 	return ret;
- }
- 
-+static int nl80211_tx_control_port(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+	const u8 *buf;
-+	u8 *dest;
-+	size_t len;
-+	struct ethhdr *ehdr;
-+	int err;
-+
-+	if (!info->attrs[NL80211_ATTR_FRAME])
-+		return -EINVAL;
-+
-+	wdev_lock(wdev);
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_STATION:
-+		if (wdev->current_bss)
-+			break;
-+		err = -ENOTCONN;
-+		goto out;
-+	default:
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
-+	len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
-+
-+	skb = dev_alloc_skb(sizeof(struct ethhdr) + len);
-+	if (!skb) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	skb_reserve(skb, sizeof(struct ethhdr));
-+
-+	dest = skb_put(skb, len);
-+	memcpy(dest, buf, len);
-+
-+	ehdr = skb_push(skb, sizeof(struct ethhdr));
-+	memcpy(ehdr->h_dest, wdev->current_bss->pub.bssid, ETH_ALEN);
-+	memcpy(ehdr->h_source, wdev_address(wdev), ETH_ALEN);
-+	ehdr->h_proto = cpu_to_be16(ETH_P_PAE); // TODO: How to get ethertype?
-+
-+	wdev_unlock(wdev);
-+
-+	skb->dev = wdev->netdev;
-+	skb->protocol = htons(ETH_P_802_3);
-+	skb_reset_network_header(skb);
-+	skb_reset_mac_header(skb);
-+	dev_queue_xmit(skb);
-+	return 0;
-+
-+ out:
-+	wdev_unlock(wdev);
-+	return err;
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -13359,7 +13417,14 @@ static const struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
--
-+	{
-+		.cmd = NL80211_CMD_CONTROL_PORT_FRAME,
-+		.doit = nl80211_tx_control_port,
-+		.policy = nl80211_policy,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_family nl80211_fam __ro_after_init = {
+Here's the second batch of patches intended for 4.16.  Nothing major,
+just continued development, some cleanups and small fixes here and
+there.
+
+* Initial work for rate-scaling offload;
+* Support for new FW API version;
+* Some couple of fixes here and there;
+* Some old patches that had never made it to the mainline;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Avraham Stern (1):
+  iwlwifi: mvm: add WFA vendor specific TPC report IE to probe request
+
+David Spinadel (1):
+  iwlwifi: mvm: enable RX offloading with TKIP and WEP
+
+Emmanuel Grumbach (1):
+  iwlwifi: mvm: remove set but unused variable in iwl_mvm_roc_done_wk
+
+Gregory Greenman (7):
+  iwlwifi: mvm: rs: introduce new API for rate scaling
+  iwlwifi: mvm: rs: add ops for the new rate scaling in the FW
+  iwlwifi: mvm: rs: add basic implementation of the new RS API handlers
+  iwlwifi: mvm: rs: new rate scale API - add FW notifications
+  iwlwifi: mvm: rs: new rate scale API - add debugfs hooks
+  iwlwifi: mvm: rs: add size checks when printing to a buffer
+  iwlwifi: mvm: rs: add sanity check when sending LQ command
+
+Johannes Berg (1):
+  iwlwifi: mvm: request statistics when reading debugfs
+
+Liad Kaufman (1):
+  iwlwifi: mvm: make init_dbg effective only on failure
+
+Luca Coelho (1):
+  iwlwifi: bump FW API to 36 for 8000 and up
+
+Sara Sharon (2):
+  iwlwifi: mvm: avoid dumping assert log when device is stopped
+  iwlwifi: mvm: mark MIC stripped MPDUs
+
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c     |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |   2 +-
+ .../net/wireless/intel/iwlwifi/fw/api/datapath.h   |  15 ++
+ drivers/net/wireless/intel/iwlwifi/fw/api/rs.h     | 262 +++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h       |   2 +
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/Makefile    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |  79 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  13 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  10 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c     | 296 +++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 230 ++++++++--------
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h        |  48 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  16 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |  35 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  19 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |   7 +-
+ .../net/wireless/intel/iwlwifi/mvm/time-event.c    |   9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  14 +-
+ 24 files changed, 948 insertions(+), 148 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+
 -- 
-2.13.5
+2.15.0
