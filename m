@@ -1,460 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50984 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1759273AbdLRMiZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54826 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751649AbdLBM7V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 07:38:25 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 14:38:08 +0200
-Message-Id: <20171218123815.3968-5-luca@coelho.fi> (sfid-20171218_133842_495074_8072D05C)
-In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
-References: <20171218123815.3968-1-luca@coelho.fi>
-Subject: [PATCH 04/11] iwlwifi: runtime: sync FW and host clocks for logs
+        Sat, 2 Dec 2017 07:59:21 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org,
+        Thorsten Leemhuis <regressions@leemhuis.info>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Wireless regressions in v4.15-rc1
+Date: Sat, 02 Dec 2017 14:59:15 +0200
+Message-ID: <87po7xwajg.fsf@kamboji.qca.qualcomm.com> (sfid-20171202_135939_841463_D1ADD367)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Hi,
 
-For sync we send a marker cmd every <defined throughout debugfs> seconds.
-The trigger for getting gp2 clock values from the FW is set by
-writing to debugfs a periodic time in seconds,
-if value zero is written, only one request would be sent
-and the timer would be canceled.
+just a heads up to everyone that there are multiple regressions in
+v4.15-rc1. For starters hostapd (=AP mode) doesn't work because of:
 
-Also added a small infrastructure for debugfs runtime code.
+net: netlink: Update attr validation to require exact length for some types
+https://git.kernel.org/linus/28033ae4e0f5
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/Makefile       |   1 +
- drivers/net/wireless/intel/iwlwifi/fw/api/debug.h |   4 +-
- drivers/net/wireless/intel/iwlwifi/fw/debugfs.c   | 195 ++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/debugfs.h   |  87 ++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/init.c      |  13 +-
- drivers/net/wireless/intel/iwlwifi/fw/runtime.h   |  14 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |   6 +-
- 7 files changed, 313 insertions(+), 7 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
+Jouni fixed this already in hostapd but we also need a fix for kernel so
+that old hostapd versions continue to work:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
-index e2c151ae8649..e6205eae51fd 100644
---- a/drivers/net/wireless/intel/iwlwifi/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/Makefile
-@@ -15,6 +15,7 @@ iwlwifi-objs		+= fw/notif-wait.o
- iwlwifi-$(CONFIG_IWLMVM) += fw/paging.o fw/smem.o fw/init.o fw/dbg.o
- iwlwifi-$(CONFIG_IWLMVM) += fw/common_rx.o fw/nvm.o
- iwlwifi-$(CONFIG_ACPI) += fw/acpi.o
-+iwlwifi-$(CONFIG_IWLWIFI_DEBUGFS) += fw/debugfs.o
- 
- iwlwifi-objs += $(iwlwifi-m)
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-index 0a81fb1b6ed4..106782341544 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-@@ -250,10 +250,12 @@ struct iwl_mfu_assert_dump_notif {
-  * The ids for different type of markers to insert into the usniffer logs
-  *
-  * @MARKER_ID_TX_FRAME_LATENCY: TX latency marker
-+ * @MARKER_ID_SYNC_CLOCK: sync FW time and systime
-  */
- enum iwl_mvm_marker_id {
- 	MARKER_ID_TX_FRAME_LATENCY = 1,
--}; /* MARKER_ID_API_E_VER_1 */
-+	MARKER_ID_SYNC_CLOCK = 2,
-+}; /* MARKER_ID_API_E_VER_2 */
- 
- /**
-  * struct iwl_mvm_marker - mark info into the usniffer logs
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-new file mode 100644
-index 000000000000..e2ded29a145d
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-@@ -0,0 +1,195 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#include "api/commands.h"
-+#include "debugfs.h"
-+
-+#define FWRT_DEBUGFS_READ_FILE_OPS(name)				\
-+static ssize_t iwl_dbgfs_##name##_read(struct iwl_fw_runtime *fwrt,	\
-+				       char *buf, size_t count,		\
-+				       loff_t *ppos);			\
-+static const struct file_operations iwl_dbgfs_##name##_ops = {		\
-+	.read = iwl_dbgfs_##name##_read,				\
-+	.open = simple_open,						\
-+	.llseek = generic_file_llseek,					\
-+}
-+
-+#define FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen)			\
-+static ssize_t iwl_dbgfs_##name##_write(struct iwl_fw_runtime *fwrt,	\
-+					char *buf, size_t count,	\
-+					loff_t *ppos);			\
-+static ssize_t _iwl_dbgfs_##name##_write(struct file *file,		\
-+					 const char __user *user_buf,	\
-+					 size_t count, loff_t *ppos)	\
-+{									\
-+	struct iwl_fw_runtime *fwrt = file->private_data;		\
-+	char buf[buflen] = {};						\
-+	size_t buf_size = min(count, sizeof(buf) -  1);			\
-+									\
-+	if (copy_from_user(buf, user_buf, buf_size))			\
-+		return -EFAULT;						\
-+									\
-+	return iwl_dbgfs_##name##_write(fwrt, buf, buf_size, ppos);	\
-+}
-+
-+#define FWRT_DEBUGFS_READ_WRITE_FILE_OPS(name, buflen)			\
-+FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen)				\
-+static const struct file_operations iwl_dbgfs_##name##_ops = {		\
-+	.write = _iwl_dbgfs_##name##_write,				\
-+	.read = iwl_dbgfs_##name##_read,				\
-+	.open = simple_open,						\
-+	.llseek = generic_file_llseek,					\
-+}
-+
-+#define FWRT_DEBUGFS_WRITE_FILE_OPS(name, buflen)			\
-+FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen)				\
-+static const struct file_operations iwl_dbgfs_##name##_ops = {		\
-+	.write = _iwl_dbgfs_##name##_write,				\
-+	.open = simple_open,						\
-+	.llseek = generic_file_llseek,					\
-+}
-+
-+#define FWRT_DEBUGFS_ADD_FILE_ALIAS(alias, name, parent, mode) do {	\
-+		if (!debugfs_create_file(alias, mode, parent, fwrt,	\
-+					 &iwl_dbgfs_##name##_ops))	\
-+			goto err;					\
-+	} while (0)
-+#define FWRT_DEBUGFS_ADD_FILE(name, parent, mode) \
-+	FWRT_DEBUGFS_ADD_FILE_ALIAS(#name, name, parent, mode)
-+
-+static int iwl_fw_send_timestamp_marker_cmd(struct iwl_fw_runtime *fwrt)
-+{
-+	struct iwl_mvm_marker marker = {
-+		.dw_len = sizeof(struct iwl_mvm_marker) / 4,
-+		.marker_id = MARKER_ID_SYNC_CLOCK,
-+
-+		/* the real timestamp is taken from the ftrace clock
-+		 * this is for finding the match between fw and kernel logs
-+		 */
-+		.timestamp = cpu_to_le64(fwrt->timestamp.seq++),
-+	};
-+
-+	struct iwl_host_cmd hcmd = {
-+		.id = MARKER_CMD,
-+		.flags = CMD_ASYNC,
-+		.data[0] = &marker,
-+		.len[0] = sizeof(marker),
-+	};
-+
-+	return iwl_trans_send_cmd(fwrt->trans, &hcmd);
-+}
-+
-+static void iwl_fw_timestamp_marker_wk(struct work_struct *work)
-+{
-+	int ret;
-+	struct iwl_fw_runtime *fwrt =
-+		container_of(work, struct iwl_fw_runtime, timestamp.wk.work);
-+	unsigned long delay = fwrt->timestamp.delay;
-+
-+	ret = iwl_fw_send_timestamp_marker_cmd(fwrt);
-+	if (!ret && delay)
-+		schedule_delayed_work(&fwrt->timestamp.wk,
-+				      round_jiffies_relative(delay));
-+	else
-+		IWL_INFO(fwrt,
-+			 "stopping timestamp_marker, ret: %d, delay: %u\n",
-+			 ret, jiffies_to_msecs(delay) / 1000);
-+}
-+
-+static ssize_t iwl_dbgfs_timestamp_marker_write(struct iwl_fw_runtime *fwrt,
-+						char *buf, size_t count,
-+						loff_t *ppos)
-+{
-+	int ret;
-+	u32 delay;
-+
-+	ret = kstrtou32(buf, 10, &delay);
-+	if (ret < 0)
-+		return ret;
-+
-+	IWL_INFO(fwrt,
-+		 "starting timestamp_marker trigger with delay: %us\n",
-+		 delay);
-+
-+	iwl_fw_cancel_timestamp(fwrt);
-+
-+	fwrt->timestamp.delay = msecs_to_jiffies(delay * 1000);
-+
-+	schedule_delayed_work(&fwrt->timestamp.wk,
-+			      round_jiffies_relative(fwrt->timestamp.delay));
-+	return count;
-+}
-+
-+FWRT_DEBUGFS_WRITE_FILE_OPS(timestamp_marker, 10);
-+
-+int iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
-+			    struct dentry *dbgfs_dir)
-+{
-+	INIT_DELAYED_WORK(&fwrt->timestamp.wk, iwl_fw_timestamp_marker_wk);
-+	FWRT_DEBUGFS_ADD_FILE(timestamp_marker, dbgfs_dir, S_IWUSR);
-+	return 0;
-+err:
-+	IWL_ERR(fwrt, "Can't create the fwrt debugfs directory\n");
-+	return -ENOMEM;
-+}
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
-new file mode 100644
-index 000000000000..e57ff92a68ae
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
-@@ -0,0 +1,87 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+
-+#include "runtime.h"
-+
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+int iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
-+			    struct dentry *dbgfs_dir);
-+
-+static inline void iwl_fw_cancel_timestamp(struct iwl_fw_runtime *fwrt)
-+{
-+	fwrt->timestamp.delay = 0;
-+	cancel_delayed_work_sync(&fwrt->timestamp.wk);
-+}
-+
-+#else
-+static inline int iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
-+					  struct dentry *dbgfs_dir)
-+{
-+	return 0;
-+}
-+
-+static inline void iwl_fw_cancel_timestamp(struct iwl_fw_runtime *fwrt) {}
-+
-+#endif /* CONFIG_IWLWIFI_DEBUGFS */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/init.c b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-index bfe5316bbb6a..c39fe84bb4c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/init.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-@@ -58,10 +58,12 @@
- #include "iwl-drv.h"
- #include "runtime.h"
- #include "dbg.h"
-+#include "debugfs.h"
- 
- void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
--			 const struct iwl_fw *fw,
--			 const struct iwl_fw_runtime_ops *ops, void *ops_ctx)
-+			const struct iwl_fw *fw,
-+			const struct iwl_fw_runtime_ops *ops, void *ops_ctx,
-+			struct dentry *dbgfs_dir)
- {
- 	memset(fwrt, 0, sizeof(*fwrt));
- 	fwrt->trans = trans;
-@@ -71,5 +73,12 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
- 	fwrt->ops = ops;
- 	fwrt->ops_ctx = ops_ctx;
- 	INIT_DELAYED_WORK(&fwrt->dump.wk, iwl_fw_error_dump_wk);
-+	iwl_fwrt_dbgfs_register(fwrt, dbgfs_dir);
- }
- IWL_EXPORT_SYMBOL(iwl_fw_runtime_init);
-+
-+void iwl_fw_runtime_exit(struct iwl_fw_runtime *fwrt)
-+{
-+	iwl_fw_cancel_timestamp(fwrt);
-+}
-+IWL_EXPORT_SYMBOL(iwl_fw_runtime_exit);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 50cfb6d795a5..e25c049f980f 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -134,11 +134,21 @@ struct iwl_fw_runtime {
- 		/* ts of the beginning of a non-collect fw dbg data period */
- 		unsigned long non_collect_ts_start[FW_DBG_TRIGGER_MAX - 1];
- 	} dump;
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+	struct {
-+		struct delayed_work wk;
-+		u32 delay;
-+		u64 seq;
-+	} timestamp;
-+#endif /* CONFIG_IWLWIFI_DEBUGFS */
- };
- 
- void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
--			 const struct iwl_fw *fw,
--			 const struct iwl_fw_runtime_ops *ops, void *ops_ctx);
-+			const struct iwl_fw *fw,
-+			const struct iwl_fw_runtime_ops *ops, void *ops_ctx,
-+			struct dentry *dbgfs_dir);
-+
-+void iwl_fw_runtime_exit(struct iwl_fw_runtime *fwrt);
- 
- static inline void iwl_fw_set_current_image(struct iwl_fw_runtime *fwrt,
- 					    enum iwl_ucode_type cur_fw_img)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index f32edc1709d1..1d4d499c7ba3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -602,7 +602,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	mvm->fw = fw;
- 	mvm->hw = hw;
- 
--	iwl_fw_runtime_init(&mvm->fwrt, trans, fw, &iwl_mvm_fwrt_ops, mvm);
-+	iwl_fw_runtime_init(&mvm->fwrt, trans, fw, &iwl_mvm_fwrt_ops, mvm,
-+			    dbgfs_dir);
- 
- 	mvm->init_status = 0;
- 
-@@ -800,6 +801,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	iwl_mvm_leds_exit(mvm);
- 	iwl_mvm_thermal_exit(mvm);
-  out_free:
-+	iwl_fw_runtime_exit(&mvm->fwrt);
- 	iwl_fw_flush_dump(&mvm->fwrt);
- 
- 	if (iwlmvm_mod_params.init_dbg)
-@@ -840,7 +842,7 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
- #if defined(CONFIG_PM_SLEEP) && defined(CONFIG_IWLWIFI_DEBUGFS)
- 	kfree(mvm->d3_resume_sram);
- #endif
--
-+	iwl_fw_runtime_exit(&mvm->fwrt);
- 	iwl_trans_op_mode_leave(mvm->trans);
- 
- 	iwl_phy_db_free(mvm->phy_db);
+https://w1.fi/cgit/hostap/commit/?id=a2426829ce426de82d2fa47071ca41ea81c43307
+
+Jouni also found a similar problem with mesh:
+
+https://w1.fi/cgit/hostap/commit/?id=963d3149abfcbab5b83f9023bc50321f777360d1
+
+And Johannes already submitted a revert related to wpa_supplicant:
+
+[net] Revert "net: core: maybe return -EEXIST in __dev_alloc_name" diffmboxseries
+https://patchwork.ozlabs.org/patch/843863/
+
+And with ath10k I'm now seeing this:
+
+[  133.175508] WARNING: CPU: 2 PID: 1743 at net/mac80211/agg-tx.c:315 ___ieee80211_stop_tx_ba_session+0x1ab/0x280 [mac80211]
+[  133.175660] Modules linked in: ctr ccm arc4 ath10k_pci(E) ath10k_core(E) ath(E) mac80211(E) cfg80211(E) snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_codec_generic joydev btusb snd_hda_i
+[  133.175924] CPU: 2 PID: 1743 Comm: hostapd Tainted: G            E    4.15.0-rc1-wt-ath+ #553
+[  133.175960] Hardware name: Hewlett-Packard HP ProBook 6540b/1722, BIOS 68CDD Ver. F.04 01/27/2010
+[  133.175996] task: ffff9a1b9b6e1cc0 task.stack: ffffb13800348000
+[  133.176072] RIP: 0010:___ieee80211_stop_tx_ba_session+0x1ab/0x280 [mac80211]
+[  133.176111] RSP: 0018:ffffb1380034b8f8 EFLAGS: 00210246
+[  133.176151] RAX: 0000000000000000 RBX: ffff9a1b93e85698 RCX: 0000000000000000
+[  133.176187] RDX: 0000000000000000 RSI: 00000000ffffffff RDI: 0000000000200246
+[  133.176223] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+[  133.176259] R10: 0000000000000000 R11: 0000000000000012 R12: 0000000000000000
+[  133.176295] R13: 0000000000000003 R14: 0000000000000000 R15: ffff9a1b93060dc0
+[  133.176332] FS:  0000000000000000(0000) GS:ffff9a1bb2600000(0063) knlGS:00000000f7b69b00
+[  133.176368] CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
+[  133.181034] CR2: 00000000f7dd56c0 CR3: 0000000119076000 CR4: 00000000000006e0
+[  133.181068] Call Trace:
+[  133.181191]  ieee80211_sta_tear_down_BA_sessions+0x6d/0x140 [mac80211]
+[  133.181264]  __sta_info_destroy_part1+0x5e/0x9d0 [mac80211]
+[  133.181336]  __sta_info_flush+0x129/0x190 [mac80211]
+[  133.181421]  ieee80211_stop_ap+0x14c/0x5c0 [mac80211]
+[  133.181516]  __cfg80211_stop_ap+0xdd/0x620 [cfg80211]
+[  133.181591]  cfg80211_stop_ap+0x3a/0x50 [cfg80211]
+[  133.181631]  genl_family_rcv_msg+0x1b9/0x370
+[  133.181680]  genl_rcv_msg+0x47/0x90
+[  133.181712]  ? genl_rcv+0x15/0x40
+[  133.181744]  ? genl_family_rcv_msg+0x370/0x370
+[  133.181777]  netlink_rcv_skb+0xd2/0xf0
+[  133.181816]  genl_rcv+0x24/0x40
+[  133.181850]  netlink_unicast+0x1c0/0x2e0
+[  133.181887]  netlink_sendmsg+0x2ac/0x390
+[  133.181931]  sock_sendmsg+0x30/0x40
+[  133.181965]  ___sys_sendmsg+0x2a6/0x2b0
+[  133.182003]  ? trace_hardirqs_on_caller+0x124/0x190
+[  133.182042]  ? trace_hardirqs_on_caller+0x124/0x190
+[  133.182083]  ? free_debug_processing+0x271/0x380
+[  133.182122]  ? __lock_acquire+0x52d/0x1120
+[  133.182159]  ? __lock_acquire+0x52d/0x1120
+[  133.182200]  ? __sys_sendmsg+0x41/0x70
+[  133.182231]  __sys_sendmsg+0x41/0x70
+[  133.182278]  compat_SyS_socketcall+0x2db/0x480
+[  133.182311]  ? task_work_run+0x6a/0xb0
+[  133.182366]  ? trace_hardirqs_off_thunk+0x1a/0x1c
+[  133.182406]  do_fast_syscall_32+0x9c/0x300
+[  133.182443]  entry_SYSENTER_compat+0x51/0x60
+[  133.182493] Code: 5d 41 5e 41 5f c3 c7 04 24 03 00 00 00 e9 dc fe ff ff 48 8d bf 58 09 00 00 be ff ff ff ff e8 dd 36 90 e7 85 c0 0f 85 a8 fe ff ff <0f> ff e9 a1 fe ff ff 4c 89 f7 e8 76 
+[  133.182798] ---[ end trace fb3fb3b808e4ce1b ]---
+
 -- 
-2.15.1
+Kalle Valo
