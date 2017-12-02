@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:39220 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932699AbdLSKfH (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48546 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752137AbdLBQ3G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 05:35:07 -0500
-Message-ID: <1513679705.26145.13.camel@sipsolutions.net> (sfid-20171219_113513_345982_3D14EE18)
-Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Date: Tue, 19 Dec 2017 11:35:05 +0100
-In-Reply-To: <20171219102932.xv7bxasvlvguy7jb@bars>
-References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
-         <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
-         <871skalepz.fsf@purkki.adurom.net> <20171205160010.cytra3bqbttwz5db@bars>
-         <878te0kud2.fsf@kamboji.qca.qualcomm.com>
-         <20171218161811.3f3sjhlxdfmsnljx@bars>
-         <1513676321.26145.1.camel@sipsolutions.net>
-         <20171219102932.xv7bxasvlvguy7jb@bars>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sat, 2 Dec 2017 11:29:06 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  2 Dec 2017 18:28:46 +0200
+Message-Id: <20171202162858.4167-4-luca@coelho.fi> (sfid-20171202_172911_397184_59F9F3FF)
+In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
+References: <20171202162858.4167-1-luca@coelho.fi>
+Subject: [PATCH 03/15] iwlwifi: mvm: remove set but unused variable in iwl_mvm_roc_done_wk
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> I guess it should be possible to do some kind of source address filtering
-> in hardware. But it looks like your question is whether it makes sense
-> or not. Probably not, I have no idea.
+Since the removal of non-DQA code, we don't need the queues
+variable any more. Remove it.
 
-Either way, I see no reason to support it if nobody has a driver for it
-:)
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-> By the way, what do you think about making MAC-based ACL capability the
-> first bit in enum nl80211_ap_sme_features ?
-
-No issues with that; I thought we already had some ACL feature bit
-though?
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index d3b8cb1e20b6..4de2ef809ccd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -101,7 +101,6 @@ void iwl_mvm_te_clear_data(struct iwl_mvm *mvm,
+ void iwl_mvm_roc_done_wk(struct work_struct *wk)
+ {
+ 	struct iwl_mvm *mvm = container_of(wk, struct iwl_mvm, roc_done_wk);
+-	u32 queues = 0;
+ 
+ 	/*
+ 	 * Clear the ROC_RUNNING /ROC_AUX_RUNNING status bit.
+@@ -110,14 +109,10 @@ void iwl_mvm_roc_done_wk(struct work_struct *wk)
+ 	 * in the case that the time event actually completed in the firmware
+ 	 * (which is handled in iwl_mvm_te_handle_notif).
+ 	 */
+-	if (test_and_clear_bit(IWL_MVM_STATUS_ROC_RUNNING, &mvm->status)) {
+-		queues |= BIT(IWL_MVM_OFFCHANNEL_QUEUE);
++	if (test_and_clear_bit(IWL_MVM_STATUS_ROC_RUNNING, &mvm->status))
+ 		iwl_mvm_unref(mvm, IWL_MVM_REF_ROC);
+-	}
+-	if (test_and_clear_bit(IWL_MVM_STATUS_ROC_AUX_RUNNING, &mvm->status)) {
+-		queues |= BIT(mvm->aux_queue);
++	if (test_and_clear_bit(IWL_MVM_STATUS_ROC_AUX_RUNNING, &mvm->status))
+ 		iwl_mvm_unref(mvm, IWL_MVM_REF_ROC_AUX);
+-	}
+ 
+ 	synchronize_net();
+ 
+-- 
+2.15.0
