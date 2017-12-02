@@ -1,70 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0053.outbound.protection.outlook.com ([104.47.34.53]:16736
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752242AbdLEQYw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 11:24:52 -0500
-Date: Tue, 5 Dec 2017 19:24:37 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+Received: from paleale.coelho.fi ([176.9.41.70]:48538 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752001AbdLBQ3G (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 2 Dec 2017 11:29:06 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 02/10] qtnfmac: pass complete channel data between driver
- and firmware
-Message-ID: <20171205162436.kf3dkvbeisfcs6sq@bars> (sfid-20171205_172458_022543_3E2EF426)
-References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
- <20171113102815.11254-3-sergey.matyukevich.os@quantenna.com>
- <87efoalfdo.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87efoalfdo.fsf@purkki.adurom.net>
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  2 Dec 2017 18:28:45 +0200
+Message-Id: <20171202162858.4167-3-luca@coelho.fi> (sfid-20171202_172953_767295_1278C15F)
+In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
+References: <20171202162858.4167-1-luca@coelho.fi>
+Subject: [PATCH 02/15] iwlwifi: bump FW API to 36 for 8000 and up
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> > Center frequency is not enough to describe the channel in HT and VHT
-> > modes. For 40MHz and 80MHz channels both primary channel and center
-> > frequency should be specified in order to qualify channel completely.
-> > This change adds primary channel info into qlink_chandef structure.
-> >
-> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> 
-> [...]
-> 
-> > +/**
-> >   * struct qlink_chandef - qlink channel definition
-> >   *
-> > + * @chan: primary channel definition
-> >   * @center_freq1: center frequency of first segment
-> >   * @center_freq2: center frequency of second segment (80+80 only)
-> >   * @width: channel width, one of @enum qlink_channel_width
-> >   */
-> >  struct qlink_chandef {
-> > +     struct qlink_channel chan;
-> >       __le16 center_freq1;
-> >       __le16 center_freq2;
-> >       u8 width;
-> > -     u8 rsvd[3];
-> > +     u8 rsvd;
-> >  } __packed;
-> 
-> Doesn't this break backwards compatibility with the older firmware? The
-> basic princinple is that old firmware images continue to work with newer
-> driver (or there will be a firmware image with new name, eg. fw-2.bin).
-> You can check how iwlwifi does that.
+Load version 36 of the API for these devices, if available.  We
+skipped version 35.
 
-Yes, it breaks. That is why we increment qlink protocol version in each
-change affecting backwards compatibility. So driver is going to work only
-with matching firmware. This is a very simplistic approach, but it looks
-reasonable for current stage of development since we keep adding features.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c  | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c  | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-> As this is a new driver I guess it doesn't matter that much to break it,
-> but please keep this in mind in the future.
-
-Sure, we keep that in mind. Though we haven't settled on any
-specific approach so far.
-
-Regards,
-Sergey
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 28f6e63b9b67..48f6f80eb24b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL_22000_UCODE_API_MAX	34
++#define IWL_22000_UCODE_API_MAX	36
+ 
+ /* Lowest firmware API version supported */
+ #define IWL_22000_UCODE_API_MIN	24
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+index 9bb7c19d48eb..3f4d9bac9f73 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+@@ -70,8 +70,8 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL8000_UCODE_API_MAX	34
+-#define IWL8265_UCODE_API_MAX	34
++#define IWL8000_UCODE_API_MAX	36
++#define IWL8265_UCODE_API_MAX	36
+ 
+ /* Lowest firmware API version supported */
+ #define IWL8000_UCODE_API_MIN	22
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index e7e75b458005..90a1d14cf7d2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL9000_UCODE_API_MAX	34
++#define IWL9000_UCODE_API_MAX	36
+ 
+ /* Lowest firmware API version supported */
+ #define IWL9000_UCODE_API_MIN	30
+-- 
+2.15.0
