@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:39282 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752997AbdLDFgy (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52084 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752308AbdLBUXg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 00:36:54 -0500
-Received: by mail-wm0-f42.google.com with SMTP id i11so12039458wmf.4
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Dec 2017 21:36:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1512290364.4827.57.camel@coelho.fi>
-References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
- <1509434718.4492.195.camel@coelho.fi> <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
- <1509952948.4492.360.camel@coelho.fi> <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
- <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
- <1510825750.4011.179.camel@coelho.fi> <CAB4CAwfg73wRoNca2GBaMn4eN04vf+uR3xdzYO0UWG1Nmaqo=w@mail.gmail.com>
- <1510901207.4011.197.camel@coelho.fi> <CAB4CAwcit2jqHXs7x2cowHdi31OH3wKnmyW4=v-6RGO-+1gjog@mail.gmail.com>
- <CAB4CAwdZHwC0kiaGU5A1u_P8y0anw58o6KiOXAWbjwUtB=uLuQ@mail.gmail.com>
- <1511689749.4011.357.camel@coelho.fi> <CAB4CAwf6uBbMgT_=Qb5uo+2g_sNSLdRhnjJt-C9vB6OgSjphyg@mail.gmail.com>
- <CAB4CAweoq=PAqjPW_POLy5+9tHFquunoY6h5xNJ9EU=xY5zcxg@mail.gmail.com>
- <1512107590.4827.38.camel@coelho.fi> <1512290364.4827.57.camel@coelho.fi>
-From: Chris Chiu <chiu@endlessm.com>
-Date: Mon, 4 Dec 2017 13:36:52 +0800
-Message-ID: <CAB4CAwd68miZHrVxhx2nGey-6685+19d4wXvhCux1KER+j1KNQ@mail.gmail.com> (sfid-20171204_063658_925756_28145BA6)
-Subject: Re: [linuxwifi] Need support for Intel new wifi module 9462NGW
-To: Luca Coelho <luca@coelho.fi>
-Cc: johannes.berg@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+        Sat, 2 Dec 2017 15:23:36 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: j@w1.fi, David Ahern <dsahern@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
+Date: Sat,  2 Dec 2017 21:23:31 +0100
+Message-Id: <20171202202332.10205-1-johannes@sipsolutions.net> (sfid-20171202_212358_779029_838D8F16)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
-    I applied https://patchwork.kernel.org/patch/10088929/ and
-https://patchwork.kernel.org/patch/10088939/, I can access internet
-thru 9461/9462NGW now. Thanks so much.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Chris
+This netlink type is used only for backwards compatibility
+with broken userspace that used the wrong size for a given
+u8 attribute, which is now rejected. It would've been wrong
+before already, since on big endian the wrong value (always
+zero) would be used by the kernel, but we can't break the
+existing deployed userspace - hostapd for example now fails
+to initialize entirely.
 
-On Sun, Dec 3, 2017 at 4:39 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Fri, 2017-12-01 at 07:53 +0200, Luca Coelho wrote:
->> On Fri, 2017-12-01 at 13:29 +0800, Chris Chiu wrote:
->> > Hi Luca,
->> >     I think the problem is not missing DHCP reply. I installed
->> > tcpdump
->> > on the machine with Intel 9461NGW and start monitoring on the wlan
->> > interface.
->> > The result is following
->> > https://gist.github.com/mschiu77/f4cc14ddae6adf137da15675cca59b30
->> >
->> > I also attach the ifconfig result at the end of the above url. Hope
->> > this can help a little.
->>
->> Hi Chris,
->>
->> Sorry for the delay.  We've been testing this internally, but
->> couldn't
->> reproduce it at first.  The problems seems to be with the firmware
->> that
->> we released.
->>
->> I'll provide you an update today or latest by Monday next week.
->
-> Hi Chris,
->
-> We found a patch that was missing from upstream and causes data
-> corruption on secure associations:
->
-> https://patchwork.kernel.org/patch/10088939/
->
->
-> Can you try to apply this patch and see if it fixes the problem you are
-> having?
->
-> --
-> Cheers,
-> Luca.
+We could try to fix up the big endian problem here, but we
+don't know *how* userspace misbehaved - if using nla_put_u32
+then we could, but we also found a debug tool (which we'll
+ignore for the purposes of this regression) that was putting
+the padding into the length.
+
+Fixes: 28033ae4e0f5 ("net: netlink: Update attr validation to require exact length for some types")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/netlink.h | 1 +
+ lib/nlattr.c          | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 0c154f98e987..448a9b86c959 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -180,6 +180,7 @@ enum {
+ 	NLA_S32,
+ 	NLA_S64,
+ 	NLA_BITFIELD32,
++	NLA_U8_BUGGY, /* don't use this - only for bug-ward compatibility */
+ 	__NLA_TYPE_MAX,
+ };
+ 
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index 8bf78b4b78f0..2b89d25d4745 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -28,6 +28,7 @@ static const u8 nla_attr_len[NLA_TYPE_MAX+1] = {
+ };
+ 
+ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
++	[NLA_U8_BUGGY]	= sizeof(u8),
+ 	[NLA_MSECS]	= sizeof(u64),
+ 	[NLA_NESTED]	= NLA_HDRLEN,
+ };
+-- 
+2.14.2
