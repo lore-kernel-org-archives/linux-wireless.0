@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:27916 "EHLO
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:19527 "EHLO
         alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751829AbdL0KVn (ORCPT
+        with ESMTP id S1751747AbdLBOeH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Dec 2017 05:21:43 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,1/6] ath10k: remove deprecated fw_crash_dump debugfs file
+        Sat, 2 Dec 2017 09:34:07 -0500
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <151394990944.9382.5479713630153339961.stgit@potku.adurom.net>
-References: <151394990944.9382.5479713630153339961.stgit@potku.adurom.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <653962c19c4c4f72a4aa11672c4f2973@euamsexm01a.eu.qualcomm.com> (sfid-20171227_112147_396765_0AAC25C5)
-Date: Wed, 27 Dec 2017 11:21:37 +0100
+To: Ben Greear <greearb@candelatech.com>
+CC: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
+Date: Sat, 2 Dec 2017 14:34:00 +0000
+Message-ID: <878telw65j.fsf@kamboji.qca.qualcomm.com> (sfid-20171202_153413_894121_61FAE6F3)
+References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
+        <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
+        <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
+        <e98b52a7-ac14-81da-1fab-0c66befcf6d2@candelatech.com>
+In-Reply-To: <e98b52a7-ac14-81da-1fab-0c66befcf6d2@candelatech.com> (Ben
+        Greear's message of "Tue, 21 Nov 2017 10:54:03 -0800")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+Ben Greear <greearb@candelatech.com> writes:
 
-> The fw_crash_dump file was deprecated by commmit 727000e6af34 ("ath10k: support
-> dev_coredump for crash dump") in v4.11 in favor of dev_coredump interface,
-> remove it now for good. Everyone should use dev_coredump now.
-> 
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Is this patch destined for stable?
+>
+> I was expecting to see it show up in the older stable releases,
+> but it has not so far as far as I can tell.
 
-6 patches applied to ath-next branch of ath.git, thanks.
+We are working on it, but not sure yet to which releases, it doesn't
+directly apply to all active stable releases.
 
-d333bdd9b065 ath10k: remove deprecated fw_crash_dump debugfs file
-f25b9f285a0e ath10k: refactor firmware crashdump code to coredump.c
-e2fcf60c6fe8 ath10k: detach coredump.c from debug.c
-5c9d0a20202b ath10k: add coredump_mask module parameter
-703f261dd77f ath10k: add memory dump support for QCA6174/QCA9377
-1a8e5c618bfa ath10k: add memory dump support QCA988X
-
--- 
-https://patchwork.kernel.org/patch/10130491/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+Kalle Valo=
