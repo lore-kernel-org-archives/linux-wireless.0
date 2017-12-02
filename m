@@ -1,317 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0052.outbound.protection.outlook.com ([104.47.42.52]:40224
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S965110AbdLSL3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 06:29:41 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>
-Subject: [PATCH v2 10/10] qtnfmac: support MAC address based access control
-Date: Tue, 19 Dec 2017 14:28:56 +0300
-Message-Id: <20171219112856.22463-11-sergey.matyukevich.os@quantenna.com> (sfid-20171219_122953_150630_4B8DD854)
-In-Reply-To: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
-References: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:48654 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752605AbdLBQ3c (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 2 Dec 2017 11:29:32 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  2 Dec 2017 18:28:53 +0200
+Message-Id: <20171202162858.4167-11-luca@coelho.fi> (sfid-20171202_174638_944066_27396495)
+In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
+References: <20171202162858.4167-1-luca@coelho.fi>
+Subject: [PATCH 10/15] iwlwifi: mvm: rs: add size checks when printing to a buffer
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasily Ulyanov <vulyanov@quantenna.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-This allows a running AP to blacklist STAs by their MAC addresses
-respecting the configured policy (either accept or deny unless listed).
-It can be setup on .start_ap or with .set_mac_acl commands.
+Replace sprintf by scnprintf throughout rs code.
 
-Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c  | 16 ++++++
- drivers/net/wireless/quantenna/qtnfmac/commands.c  | 62 ++++++++++++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/commands.h  |  2 +
- drivers/net/wireless/quantenna/qtnfmac/core.h      |  1 +
- drivers/net/wireless/quantenna/qtnfmac/qlink.h     | 37 ++++++++++++-
- .../net/wireless/quantenna/qtnfmac/qlink_util.c    | 18 +++++++
- .../net/wireless/quantenna/qtnfmac/qlink_util.h    |  2 +
- 7 files changed, 137 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c |  6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c      | 73 +++++++++++++-----------
+ 3 files changed, 45 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index cedb18e04bc2..abf10996c26a 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -778,6 +778,20 @@ static int qtnf_start_radar_detection(struct wiphy *wiphy,
- 	return ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 366fa75f9091..834c798f728c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -460,7 +460,8 @@ static ssize_t iwl_dbgfs_rs_data_read(struct file *file, char __user *user_buf,
+ 			  "last tx rate=0x%X ",
+ 			  lq_sta->last_rate_n_flags);
+ 
+-	desc += rs_pretty_print_rate(buff + desc, lq_sta->last_rate_n_flags);
++	desc += rs_pretty_print_rate(buff + desc, bufsz - desc,
++				     lq_sta->last_rate_n_flags);
+ 	mutex_unlock(&mvm->mutex);
+ 
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
+@@ -973,7 +974,8 @@ static ssize_t iwl_dbgfs_frame_stats_read(struct iwl_mvm *mvm,
+ 			continue;
+ 		pos += scnprintf(pos, endpos - pos, "Rate[%d]: ",
+ 				 (int)(ARRAY_SIZE(stats->last_rates) - i));
+-		pos += rs_pretty_print_rate(pos, stats->last_rates[idx]);
++		pos += rs_pretty_print_rate(pos, endpos - pos,
++					    stats->last_rates[idx]);
+ 	}
+ 	spin_unlock_bh(&mvm->drv_stats_lock);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 3690cfd738fb..fea56d211e97 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1591,7 +1591,7 @@ iwl_mvm_vif_dbgfs_clean(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ /* rate scaling */
+ int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool init);
+ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg);
+-int rs_pretty_print_rate(char *buf, const u32 rate);
++int rs_pretty_print_rate(char *buf, int bufsz, const u32 rate);
+ void rs_update_last_rssi(struct iwl_mvm *mvm,
+ 			 struct iwl_mvm_sta *mvmsta,
+ 			 struct ieee80211_rx_status *rx_status);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 428d34cb6683..56b3cf1834e5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -3579,7 +3579,7 @@ static void rs_free_sta(void *mvm_r, struct ieee80211_sta *sta, void *mvm_sta)
  }
  
-+static int qtnf_set_mac_acl(struct wiphy *wiphy,
-+			    struct net_device *dev,
-+			    const struct cfg80211_acl_data *params)
-+{
-+	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
-+	int ret;
-+
-+	ret = qtnf_cmd_set_mac_acl(vif, params);
-+	if (ret)
-+		pr_err("%s: failed to set mac ACL ret=%d\n", dev->name, ret);
-+
-+	return ret;
-+}
-+
- static struct cfg80211_ops qtn_cfg80211_ops = {
- 	.add_virtual_intf	= qtnf_add_virtual_intf,
- 	.change_virtual_intf	= qtnf_change_virtual_intf,
-@@ -803,6 +817,7 @@ static struct cfg80211_ops qtn_cfg80211_ops = {
- 	.get_channel		= qtnf_get_channel,
- 	.channel_switch		= qtnf_channel_switch,
- 	.start_radar_detection	= qtnf_start_radar_detection,
-+	.set_mac_acl		= qtnf_set_mac_acl,
- };
- 
- static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
-@@ -918,6 +933,7 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
- 	wiphy->max_scan_ie_len = QTNF_MAX_VSIE_LEN;
- 	wiphy->mgmt_stypes = qtnf_mgmt_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
-+	wiphy->max_acl_mac_addrs = mac->macinfo.max_acl_mac_addrs;
- 
- 	wiphy->iface_combinations = iface_comb;
- 	wiphy->n_iface_combinations = 1;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 38b9c1078058..6ffe4837bbdb 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -162,6 +162,14 @@ static void qtnf_cmd_tlv_ie_set_add(struct sk_buff *cmd_skb, u8 frame_type,
- 		memcpy(tlv->ie_data, buf, len);
- }
- 
-+static inline size_t qtnf_cmd_acl_data_size(const struct cfg80211_acl_data *acl)
-+{
-+	size_t size = sizeof(struct qlink_acl_data) +
-+		      acl->n_acl_entries * sizeof(struct qlink_mac_address);
-+
-+	return size;
-+}
-+
- static bool qtnf_cmd_start_ap_can_fit(const struct qtnf_vif *vif,
- 				      const struct cfg80211_ap_settings *s)
+ #ifdef CONFIG_MAC80211_DEBUGFS
+-int rs_pretty_print_rate(char *buf, const u32 rate)
++int rs_pretty_print_rate(char *buf, int bufsz, const u32 rate)
  {
-@@ -178,6 +186,9 @@ static bool qtnf_cmd_start_ap_can_fit(const struct qtnf_vif *vif,
- 	if (cfg80211_chandef_valid(&s->chandef))
- 		len += sizeof(struct qlink_tlv_chandef);
  
-+	if (s->acl)
-+		len += qtnf_cmd_acl_data_size(s->acl);
-+
- 	if (len > (sizeof(struct qlink_cmd) + QTNF_MAX_CMD_BUF_SIZE)) {
- 		pr_err("VIF%u.%u: can not fit AP settings: %u\n",
- 		       vif->mac->macid, vif->vifid, len);
-@@ -283,6 +294,16 @@ int qtnf_cmd_send_start_ap(struct qtnf_vif *vif,
- 		memcpy(tlv->val, s->vht_cap, sizeof(*s->vht_cap));
+ 	char *type, *bw;
+@@ -3590,10 +3590,10 @@ int rs_pretty_print_rate(char *buf, const u32 rate)
+ 	    !(rate & RATE_MCS_VHT_MSK)) {
+ 		int index = iwl_hwrate_to_plcp_idx(rate);
+ 
+-		return sprintf(buf, "Legacy | ANT: %s Rate: %s Mbps\n",
+-			       rs_pretty_ant(ant),
+-			       index == IWL_RATE_INVALID ? "BAD" :
+-			       iwl_rate_mcs[index].mbps);
++		return scnprintf(buf, bufsz, "Legacy | ANT: %s Rate: %s Mbps\n",
++				 rs_pretty_ant(ant),
++				 index == IWL_RATE_INVALID ? "BAD" :
++				 iwl_rate_mcs[index].mbps);
  	}
  
-+	if (s->acl) {
-+		size_t acl_size = qtnf_cmd_acl_data_size(s->acl);
-+		struct qlink_tlv_hdr *tlv =
-+			skb_put(cmd_skb, sizeof(*tlv) + acl_size);
-+
-+		tlv->type = cpu_to_le16(QTN_TLV_ID_ACL_DATA);
-+		tlv->len = cpu_to_le16(acl_size);
-+		qlink_acl_data_cfg2q(s->acl, (struct qlink_acl_data *)tlv->val);
-+	}
-+
- 	qtnf_bus_lock(vif->mac->bus);
+ 	if (rate & RATE_MCS_VHT_MSK) {
+@@ -3627,12 +3627,13 @@ int rs_pretty_print_rate(char *buf, const u32 rate)
+ 		bw = "BAD BW";
+ 	}
  
- 	ret = qtnf_cmd_send(vif->mac->bus, cmd_skb, &res_code);
-@@ -1206,6 +1227,7 @@ qtnf_cmd_resp_proc_mac_info(struct qtnf_wmac *mac,
- 	mac_info->radar_detect_widths =
- 			qlink_chan_width_mask_to_nl(le16_to_cpu(
- 					resp_info->radar_detect_widths));
-+	mac_info->max_acl_mac_addrs = le32_to_cpu(resp_info->max_acl_mac_addrs);
- 
- 	memcpy(&mac_info->ht_cap_mod_mask, &resp_info->ht_cap_mod_mask,
- 	       sizeof(mac_info->ht_cap_mod_mask));
-@@ -2609,3 +2631,43 @@ int qtnf_cmd_start_cac(const struct qtnf_vif *vif,
- 
- 	return ret;
+-	return sprintf(buf, "%s | ANT: %s BW: %s MCS: %d NSS: %d %s%s%s%s\n",
+-		       type, rs_pretty_ant(ant), bw, mcs, nss,
+-		       (rate & RATE_MCS_SGI_MSK) ? "SGI " : "NGI ",
+-		       (rate & RATE_MCS_STBC_MSK) ? "STBC " : "",
+-		       (rate & RATE_MCS_LDPC_MSK) ? "LDPC " : "",
+-		       (rate & RATE_MCS_BF_MSK) ? "BF " : "");
++	return scnprintf(buf, bufsz,
++			 "%s | ANT: %s BW: %s MCS: %d NSS: %d %s%s%s%s\n",
++			 type, rs_pretty_ant(ant), bw, mcs, nss,
++			 (rate & RATE_MCS_SGI_MSK) ? "SGI " : "NGI ",
++			 (rate & RATE_MCS_STBC_MSK) ? "STBC " : "",
++			 (rate & RATE_MCS_LDPC_MSK) ? "LDPC " : "",
++			 (rate & RATE_MCS_BF_MSK) ? "BF " : "");
  }
-+
-+int qtnf_cmd_set_mac_acl(const struct qtnf_vif *vif,
-+			 const struct cfg80211_acl_data *params)
-+{
-+	struct qtnf_bus *bus = vif->mac->bus;
-+	struct sk_buff *cmd_skb;
-+	struct qlink_cmd_set_mac_acl *cmd;
-+	u16 res_code;
-+	int ret;
-+
-+	cmd_skb = qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
-+					    QLINK_CMD_SET_MAC_ACL,
-+					    sizeof(*cmd) +
-+					    qtnf_cmd_acl_data_size(params));
-+	if (unlikely(!cmd_skb))
-+		return -ENOMEM;
-+
-+	cmd = (struct qlink_cmd_set_mac_acl *)cmd_skb->data;
-+	qlink_acl_data_cfg2q(params, &cmd->acl);
-+
-+	qtnf_bus_lock(bus);
-+	ret = qtnf_cmd_send(bus, cmd_skb, &res_code);
-+	qtnf_bus_unlock(bus);
-+
-+	if (unlikely(ret))
-+		return ret;
-+
-+	switch (res_code) {
-+	case QLINK_CMD_RESULT_OK:
-+		break;
-+	case QLINK_CMD_RESULT_INVALID:
-+		ret = -EINVAL;
-+		break;
-+	default:
-+		ret = -EOPNOTSUPP;
-+		break;
-+	}
-+
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-index 07a957af9a58..69a7d56f7e58 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -79,5 +79,7 @@ int qtnf_cmd_get_channel(struct qtnf_vif *vif, struct cfg80211_chan_def *chdef);
- int qtnf_cmd_start_cac(const struct qtnf_vif *vif,
- 		       const struct cfg80211_chan_def *chdef,
- 		       u32 cac_time_ms);
-+int qtnf_cmd_set_mac_acl(const struct qtnf_vif *vif,
-+			 const struct cfg80211_acl_data *params);
  
- #endif /* QLINK_COMMANDS_H_ */
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index e7bd21ed371b..c10900162297 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -103,6 +103,7 @@ struct qtnf_mac_info {
- 	u8 sretry_limit;
- 	u8 coverage_class;
- 	u8 radar_detect_widths;
-+	u32 max_acl_mac_addrs;
- 	struct ieee80211_ht_cap ht_cap_mod_mask;
- 	struct ieee80211_vht_cap vht_cap_mod_mask;
- 	struct ieee80211_iface_limit *limits;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 5d98000b0f5b..6a1f960228a1 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -19,7 +19,7 @@
+ /**
+@@ -3689,6 +3690,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	int desc = 0;
+ 	int i = 0;
+ 	ssize_t ret;
++	static const size_t bufsz = 2048;
  
- #include <linux/ieee80211.h>
+ 	struct iwl_lq_sta *lq_sta = file->private_data;
+ 	struct iwl_mvm_sta *mvmsta =
+@@ -3699,55 +3701,59 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	u32 ss_params;
  
--#define QLINK_PROTO_VER		9
-+#define QLINK_PROTO_VER		10
+ 	mvm = lq_sta->pers.drv;
+-	buff = kmalloc(2048, GFP_KERNEL);
++	buff = kmalloc(bufsz, GFP_KERNEL);
+ 	if (!buff)
+ 		return -ENOMEM;
  
- #define QLINK_MACID_RSVD		0xFF
- #define QLINK_VIFID_RSVD		0xFF
-@@ -239,6 +239,7 @@ enum qlink_cmd_type {
- 	QLINK_CMD_START_CAC		= 0x001D,
- 	QLINK_CMD_START_AP		= 0x0021,
- 	QLINK_CMD_STOP_AP		= 0x0022,
-+	QLINK_CMD_SET_MAC_ACL		= 0x0023,
- 	QLINK_CMD_GET_STA_INFO		= 0x0030,
- 	QLINK_CMD_ADD_KEY		= 0x0040,
- 	QLINK_CMD_DEL_KEY		= 0x0041,
-@@ -640,6 +641,38 @@ struct qlink_cmd_start_cac {
- 	__le32 cac_time_ms;
- } __packed;
+-	desc += sprintf(buff+desc, "sta_id %d\n", lq_sta->lq.sta_id);
+-	desc += sprintf(buff+desc, "failed=%d success=%d rate=0%lX\n",
+-			lq_sta->total_failed, lq_sta->total_success,
+-			lq_sta->active_legacy_rate);
+-	desc += sprintf(buff+desc, "fixed rate 0x%X\n",
+-			lq_sta->pers.dbg_fixed_rate);
+-	desc += sprintf(buff+desc, "valid_tx_ant %s%s%s\n",
++	desc += scnprintf(buff + desc, bufsz - desc,
++			  "sta_id %d\n", lq_sta->lq.sta_id);
++	desc += scnprintf(buff + desc, bufsz - desc,
++			  "failed=%d success=%d rate=0%lX\n",
++			  lq_sta->total_failed, lq_sta->total_success,
++			  lq_sta->active_legacy_rate);
++	desc += scnprintf(buff + desc, bufsz - desc, "fixed rate 0x%X\n",
++			  lq_sta->pers.dbg_fixed_rate);
++	desc += scnprintf(buff + desc, bufsz - desc, "valid_tx_ant %s%s%s\n",
+ 	    (iwl_mvm_get_valid_tx_ant(mvm) & ANT_A) ? "ANT_A," : "",
+ 	    (iwl_mvm_get_valid_tx_ant(mvm) & ANT_B) ? "ANT_B," : "",
+ 	    (iwl_mvm_get_valid_tx_ant(mvm) & ANT_C) ? "ANT_C" : "");
+-	desc += sprintf(buff+desc, "lq type %s\n",
+-			(is_legacy(rate)) ? "legacy" :
+-			is_vht(rate) ? "VHT" : "HT");
++	desc += scnprintf(buff + desc, bufsz - desc, "lq type %s\n",
++			  (is_legacy(rate)) ? "legacy" :
++			  is_vht(rate) ? "VHT" : "HT");
+ 	if (!is_legacy(rate)) {
+-		desc += sprintf(buff + desc, " %s",
++		desc += scnprintf(buff + desc, bufsz - desc, " %s",
+ 		   (is_siso(rate)) ? "SISO" : "MIMO2");
+-		desc += sprintf(buff + desc, " %s",
++		desc += scnprintf(buff + desc, bufsz - desc, " %s",
+ 				(is_ht20(rate)) ? "20MHz" :
+ 				(is_ht40(rate)) ? "40MHz" :
+ 				(is_ht80(rate)) ? "80MHz" :
+ 				(is_ht160(rate)) ? "160MHz" : "BAD BW");
+-		desc += sprintf(buff + desc, " %s %s %s %s\n",
++		desc += scnprintf(buff + desc, bufsz - desc, " %s %s %s %s\n",
+ 				(rate->sgi) ? "SGI" : "NGI",
+ 				(rate->ldpc) ? "LDPC" : "BCC",
+ 				(lq_sta->is_agg) ? "AGG on" : "",
+ 				(mvmsta->tlc_amsdu) ? "AMSDU on" : "");
+ 	}
+-	desc += sprintf(buff+desc, "last tx rate=0x%X\n",
++	desc += scnprintf(buff + desc, bufsz - desc, "last tx rate=0x%X\n",
+ 			lq_sta->last_rate_n_flags);
+-	desc += sprintf(buff+desc,
++	desc += scnprintf(buff + desc, bufsz - desc,
+ 			"general: flags=0x%X mimo-d=%d s-ant=0x%x d-ant=0x%x\n",
+ 			lq_sta->lq.flags,
+ 			lq_sta->lq.mimo_delim,
+ 			lq_sta->lq.single_stream_ant_msk,
+ 			lq_sta->lq.dual_stream_ant_msk);
  
-+enum qlink_acl_policy {
-+	QLINK_ACL_POLICY_ACCEPT_UNLESS_LISTED,
-+	QLINK_ACL_POLICY_DENY_UNLESS_LISTED,
-+};
-+
-+struct qlink_mac_address {
-+	u8 addr[ETH_ALEN];
-+} __packed;
-+
-+/**
-+ * struct qlink_acl_data - ACL data
-+ *
-+ * @policy: filter policy, one of &enum qlink_acl_policy.
-+ * @num_entries: number of MAC addresses in array.
-+ * @mac_address: MAC addresses array.
-+ */
-+struct qlink_acl_data {
-+	__le32 policy;
-+	__le32 num_entries;
-+	struct qlink_mac_address mac_addrs[0];
-+} __packed;
-+
-+/**
-+ * struct qlink_cmd_set_mac_acl - data for QLINK_CMD_SET_MAC_ACL command
-+ *
-+ * @acl: ACL data.
-+ */
-+struct qlink_cmd_set_mac_acl {
-+	struct qlink_cmd chdr;
-+	struct qlink_acl_data acl;
-+} __packed;
-+
- /* QLINK Command Responses messages related definitions
-  */
+-	desc += sprintf(buff+desc,
++	desc += scnprintf(buff + desc, bufsz - desc,
+ 			"agg: time_limit=%d dist_start_th=%d frame_cnt_limit=%d\n",
+ 			le16_to_cpu(lq_sta->lq.agg_time_limit),
+ 			lq_sta->lq.agg_disable_start_th,
+ 			lq_sta->lq.agg_frame_cnt_limit);
  
-@@ -701,6 +734,7 @@ struct qlink_resp_get_mac_info {
- 	struct ieee80211_ht_cap ht_cap_mod_mask;
- 	__le16 max_ap_assoc_sta;
- 	__le16 radar_detect_widths;
-+	__le32 max_acl_mac_addrs;
- 	u8 bands_cap;
- 	u8 rsvd[1];
- 	u8 var_info[0];
-@@ -1049,6 +1083,7 @@ enum qlink_tlv_id {
- 	QTN_TLV_ID_SEQ			= 0x0303,
- 	QTN_TLV_ID_IE_SET		= 0x0305,
- 	QTN_TLV_ID_EXT_CAPABILITY_MASK	= 0x0306,
-+	QTN_TLV_ID_ACL_DATA		= 0x0307,
- };
+-	desc += sprintf(buff+desc, "reduced tpc=%d\n", lq_sta->lq.reduced_tpc);
++	desc += scnprintf(buff + desc, bufsz - desc, "reduced tpc=%d\n",
++			  lq_sta->lq.reduced_tpc);
+ 	ss_params = le32_to_cpu(lq_sta->lq.ss_params);
+-	desc += sprintf(buff+desc, "single stream params: %s%s%s%s\n",
++	desc += scnprintf(buff + desc, bufsz - desc,
++			"single stream params: %s%s%s%s\n",
+ 			(ss_params & LQ_SS_PARAMS_VALID) ?
+ 			"VALID" : "INVALID",
+ 			(ss_params & LQ_SS_BFER_ALLOWED) ?
+@@ -3756,7 +3762,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 			", STBC" : "",
+ 			(ss_params & LQ_SS_FORCE) ?
+ 			", FORCE" : "");
+-	desc += sprintf(buff+desc,
++	desc += scnprintf(buff + desc, bufsz - desc,
+ 			"Start idx [0]=0x%x [1]=0x%x [2]=0x%x [3]=0x%x\n",
+ 			lq_sta->lq.initial_rate_index[0],
+ 			lq_sta->lq.initial_rate_index[1],
+@@ -3766,8 +3772,9 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
+ 		u32 r = le32_to_cpu(lq_sta->lq.rs_table[i]);
  
- struct qlink_tlv_hdr {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-index 19981d6440b6..aeeda81b09ea 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.c
-@@ -176,3 +176,21 @@ bool qtnf_utils_is_bit_set(const u8 *arr, unsigned int bit,
+-		desc += sprintf(buff+desc, " rate[%d] 0x%X ", i, r);
+-		desc += rs_pretty_print_rate(buff+desc, r);
++		desc += scnprintf(buff + desc, bufsz - desc,
++				  " rate[%d] 0x%X ", i, r);
++		desc += rs_pretty_print_rate(buff + desc, bufsz - desc, r);
+ 	}
  
- 	return arr[idx] & mask;
- }
-+
-+void qlink_acl_data_cfg2q(const struct cfg80211_acl_data *acl,
-+			  struct qlink_acl_data *qacl)
-+{
-+	switch (acl->acl_policy) {
-+	case NL80211_ACL_POLICY_ACCEPT_UNLESS_LISTED:
-+		qacl->policy =
-+			cpu_to_le32(QLINK_ACL_POLICY_ACCEPT_UNLESS_LISTED);
-+		break;
-+	case NL80211_ACL_POLICY_DENY_UNLESS_LISTED:
-+		qacl->policy = cpu_to_le32(QLINK_ACL_POLICY_DENY_UNLESS_LISTED);
-+		break;
-+	}
-+
-+	qacl->num_entries = cpu_to_le32(acl->n_acl_entries);
-+	memcpy(qacl->mac_addrs, acl->mac_addrs,
-+	       acl->n_acl_entries * sizeof(*qacl->mac_addrs));
-+}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-index 6c24561eb41f..54caeb38917c 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-@@ -71,5 +71,7 @@ void qlink_chandef_cfg2q(const struct cfg80211_chan_def *chdef,
- enum qlink_hidden_ssid qlink_hidden_ssid_nl2q(enum nl80211_hidden_ssid nl_val);
- bool qtnf_utils_is_bit_set(const u8 *arr, unsigned int bit,
- 			   unsigned int arr_max_len);
-+void qlink_acl_data_cfg2q(const struct cfg80211_acl_data *acl,
-+			  struct qlink_acl_data *qacl);
- 
- #endif /* _QTN_FMAC_QLINK_UTIL_H_ */
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
 -- 
-2.11.0
+2.15.0
