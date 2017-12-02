@@ -1,302 +1,379 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:64770 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751712AbdLBLbg (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48564 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752273AbdLBQ3I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 06:31:36 -0500
-From: Rakesh Pillai <pillair@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
+        Sat, 2 Dec 2017 11:29:08 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@qti.qualcomm.com>,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH v2 2/4] ath10k: WMI: Add management tx by reference support over wmi
-Date: Sat,  2 Dec 2017 17:00:46 +0530
-Message-Id: <1512214248-17127-3-git-send-email-pillair@qti.qualcomm.com> (sfid-20171202_123152_815339_924C28E5)
-In-Reply-To: <1512214248-17127-1-git-send-email-pillair@qti.qualcomm.com>
-References: <1512214248-17127-1-git-send-email-pillair@qti.qualcomm.com>
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat,  2 Dec 2017 18:28:48 +0200
+Message-Id: <20171202162858.4167-6-luca@coelho.fi> (sfid-20171202_172927_408850_3FAE29F6)
+In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
+References: <20171202162858.4167-1-luca@coelho.fi>
+Subject: [PATCH 05/15] iwlwifi: mvm: rs: introduce new API for rate scaling
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HL1.0 firmware branch, used in wcn3990, transmits management
-frames by reference over WMI.
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-Add support for management tx by reference over WMI.
+New devices will have rate scaling algorithm running in the firmware.
+With this feature, the driver's responsiblity is to provide an initial
+configuration and to handle notifications regarding recent rates and
+some other parameters. Debugfs hooks will be still available for
+reading the current rate/statistics and setting a fixed rate.
+The old API is supported so far, though both APIs cannot be used
+simultaneously.
 
-Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+This is the first patch in the series. It adds a new TLV specifying
+FW support for the new API and updates lq_sta to support two types
+of rate scaling.
+
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c    |  1 +
- drivers/net/wireless/ath/ath10k/core.h    |  3 ++
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  9 +++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 78 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h | 67 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |  1 +
- 6 files changed, 158 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/file.h      |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  6 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c       | 43 +++++++++++------------
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h       | 33 ++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c       |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 12 +++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h      |  7 +++-
+ 9 files changed, 79 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index b29fdbd..1e4e18e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -390,6 +390,7 @@
- 	[ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR] = "skip-null-func-war",
- 	[ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST] = "allows-mesh-bcast",
- 	[ATH10K_FW_FEATURE_NO_PS] = "no-ps",
-+	[ATH10K_FW_FEATURE_MGMT_TX_BY_REF] = "mgmt-tx-by-reference",
- };
- 
- static unsigned int ath10k_core_get_fw_feature_str(char *buf,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 643041e..30c4c07 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -615,6 +615,9 @@ enum ath10k_fw_features {
- 	/* Firmware does not support power save in station mode. */
- 	ATH10K_FW_FEATURE_NO_PS = 17,
- 
-+	/* Firmware allows management tx by reference instead of by value. */
-+	ATH10K_FW_FEATURE_MGMT_TX_BY_REF = 18,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 17367283f85f..4687d016f676 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -310,6 +310,7 @@ typedef unsigned int __bitwise iwl_ucode_tlv_capa_t;
+  * @IWL_UCODE_TLV_CAPA_BT_COEX_RRC: supports BT Coex RRC
+  * @IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT: supports gscan
+  * @IWL_UCODE_TLV_CAPA_STA_PM_NOTIF: firmware will send STA PM notification
++ * @IWL_UCODE_TLV_CAPA_TLC_OFFLOAD: firmware implements rate scaling algorithm
+  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
+  * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
+  * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
+@@ -364,6 +365,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT		= (__force iwl_ucode_tlv_capa_t)39,
+ 	IWL_UCODE_TLV_CAPA_CDB_SUPPORT			= (__force iwl_ucode_tlv_capa_t)40,
+ 	IWL_UCODE_TLV_CAPA_D0I3_END_FIRST		= (__force iwl_ucode_tlv_capa_t)41,
++	IWL_UCODE_TLV_CAPA_TLC_OFFLOAD                  = (__force iwl_ucode_tlv_capa_t)43,
+ 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
+ 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
+ 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5a646dc6ad87..4ff099f462fb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -420,6 +420,12 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
+ 	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
+ 	ieee80211_hw_set(hw, NEEDS_UNIQUE_STA_ADDR);
 +
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 2fc3f24..41eef94 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -377,6 +377,7 @@ struct wmi_ops {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
- 	struct sk_buff *skb;
- 	int ret;
-+	u32 mgmt_tx_cmdid;
- 
- 	if (!ar->wmi.ops->gen_mgmt_tx)
- 		return -EOPNOTSUPP;
-@@ -385,7 +386,13 @@ struct wmi_ops {
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
- 
--	ret = ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->mgmt_tx_cmdid);
-+	if (test_bit(ATH10K_FW_FEATURE_MGMT_TX_BY_REF,
-+		     ar->running_fw->fw_file.fw_features))
-+		mgmt_tx_cmdid = ar->wmi.cmd->mgmt_tx_send_cmdid;
-+	else
-+		mgmt_tx_cmdid = ar->wmi.cmd->mgmt_tx_cmdid;
-+
-+	ret = ath10k_wmi_cmd_send(ar, skb, mgmt_tx_cmdid);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 35bcae4..452846c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2484,6 +2484,82 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
- }
- 
- static struct sk_buff *
-+ath10k_wmi_tlv_op_gen_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
-+{
-+	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(msdu);
-+	struct wmi_tlv_mgmt_tx_cmd *cmd;
-+	struct wmi_tlv *tlv;
-+	struct ieee80211_hdr *hdr;
-+	struct sk_buff *skb;
-+	void *ptr;
-+	int len;
-+	u32 buf_len = msdu->len;
-+	u16 fc;
-+	struct ath10k_vif *arvif;
-+	dma_addr_t mgmt_frame_dma;
-+	u32 vdev_id;
-+
-+	if (!cb->vif)
-+		return ERR_PTR(-EINVAL);
-+
-+	hdr = (struct ieee80211_hdr *)msdu->data;
-+	fc = le16_to_cpu(hdr->frame_control);
-+	arvif = (void *)cb->vif->drv_priv;
-+	vdev_id = arvif->vdev_id;
-+
-+	if (WARN_ON_ONCE(!ieee80211_is_mgmt(hdr->frame_control)))
-+		return ERR_PTR(-EINVAL);
-+
-+	len = sizeof(*cmd) + 2 * sizeof(*tlv);
-+
-+	if ((ieee80211_is_action(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control) ||
-+	     ieee80211_is_disassoc(hdr->frame_control)) &&
-+	     ieee80211_has_protected(hdr->frame_control)) {
-+		len += IEEE80211_CCMP_MIC_LEN;
-+		buf_len += IEEE80211_CCMP_MIC_LEN;
++	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_TLC_OFFLOAD)) {
++		ieee80211_hw_set(hw, TX_AMPDU_SETUP_IN_HW);
++		ieee80211_hw_set(hw, HAS_RATE_CONTROL);
 +	}
 +
-+	buf_len = min_t(u32, buf_len, WMI_TLV_MGMT_TX_FRAME_MAX_LEN);
-+	buf_len = round_up(buf_len, 4);
-+
-+	len += buf_len;
-+	len = round_up(len, 4);
-+	skb = ath10k_wmi_alloc_skb(ar, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ptr = (void *)skb->data;
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_MGMT_TX_CMD);
-+	tlv->len = __cpu_to_le16(sizeof(*cmd));
-+	cmd = (void *)tlv->value;
-+	cmd->vdev_id = vdev_id;
-+	cmd->desc_id = 0;
-+	cmd->chanfreq = 0;
-+	cmd->buf_len = __cpu_to_le32(buf_len);
-+	cmd->frame_len = __cpu_to_le32(msdu->len);
-+	mgmt_frame_dma = dma_map_single(arvif->ar->dev, msdu->data,
-+					msdu->len, DMA_TO_DEVICE);
-+	if (!mgmt_frame_dma)
-+		return ERR_PTR(-ENOMEM);
-+
-+	cmd->paddr = __cpu_to_le64(mgmt_frame_dma);
-+
-+	ptr += sizeof(*tlv);
-+	ptr += sizeof(*cmd);
-+
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_BYTE);
-+	tlv->len = __cpu_to_le16(buf_len);
-+
-+	ptr += sizeof(*tlv);
-+	memcpy(ptr, msdu->data, buf_len);
-+
-+	return skb;
-+}
-+
-+static struct sk_buff *
- ath10k_wmi_tlv_op_gen_force_fw_hang(struct ath10k *ar,
- 				    enum wmi_force_fw_hang_type type,
- 				    u32 delay_ms)
-@@ -3292,6 +3368,7 @@ static u32 ath10k_wmi_tlv_prepare_peer_qos(u8 uapsd_queues, u8 sp)
- 	.bcn_filter_rx_cmdid = WMI_TLV_BCN_FILTER_RX_CMDID,
- 	.prb_req_filter_rx_cmdid = WMI_TLV_PRB_REQ_FILTER_RX_CMDID,
- 	.mgmt_tx_cmdid = WMI_TLV_MGMT_TX_CMDID,
-+	.mgmt_tx_send_cmdid = WMI_TLV_MGMT_TX_SEND_CMD,
- 	.prb_tmpl_cmdid = WMI_TLV_PRB_TMPL_CMDID,
- 	.addba_clear_resp_cmdid = WMI_TLV_ADDBA_CLEAR_RESP_CMDID,
- 	.addba_send_cmdid = WMI_TLV_ADDBA_SEND_CMDID,
-@@ -3626,6 +3703,7 @@ static u32 ath10k_wmi_tlv_prepare_peer_qos(u8 uapsd_queues, u8 sp)
- 	.gen_request_stats = ath10k_wmi_tlv_op_gen_request_stats,
- 	.gen_force_fw_hang = ath10k_wmi_tlv_op_gen_force_fw_hang,
- 	/* .gen_mgmt_tx = not implemented; HTT is used */
-+	.gen_mgmt_tx =  ath10k_wmi_tlv_op_gen_mgmt_tx,
- 	.gen_dbglog_cfg = ath10k_wmi_tlv_op_gen_dbglog_cfg,
- 	.gen_pktlog_enable = ath10k_wmi_tlv_op_gen_pktlog_enable,
- 	.gen_pktlog_disable = ath10k_wmi_tlv_op_gen_pktlog_disable,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 77327a2..4faaa64 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -22,6 +22,7 @@
- #define WMI_TLV_CMD_UNSUPPORTED 0
- #define WMI_TLV_PDEV_PARAM_UNSUPPORTED 0
- #define WMI_TLV_VDEV_PARAM_UNSUPPORTED 0
-+#define WMI_TLV_MGMT_TX_FRAME_MAX_LEN	64
+ 	if (iwl_mvm_has_new_rx_api(mvm))
+ 		ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
  
- enum wmi_tlv_grp_id {
- 	WMI_TLV_GRP_START = 0x3,
-@@ -132,6 +133,7 @@ enum wmi_tlv_cmd_id {
- 	WMI_TLV_PRB_REQ_FILTER_RX_CMDID,
- 	WMI_TLV_MGMT_TX_CMDID,
- 	WMI_TLV_PRB_TMPL_CMDID,
-+	WMI_TLV_MGMT_TX_SEND_CMD,
- 	WMI_TLV_ADDBA_CLEAR_RESP_CMDID = WMI_TLV_CMD(WMI_TLV_GRP_BA_NEG),
- 	WMI_TLV_ADDBA_SEND_CMDID,
- 	WMI_TLV_ADDBA_STATUS_CMDID,
-@@ -890,6 +892,63 @@ enum wmi_tlv_tag {
- 	WMI_TLV_TAG_STRUCT_SAP_OFL_DEL_STA_EVENT,
- 	WMI_TLV_TAG_STRUCT_APFIND_CMD_PARAM,
- 	WMI_TLV_TAG_STRUCT_APFIND_EVENT_HDR,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_SCHED_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_SCHED_EVENT,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_CONFIG_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_CONFIG_RESP_EVENT,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_UTC_TIME_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_START_TIMING_ADVERT_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_STOP_TIMING_ADVERT_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_GET_TSF_TIMER_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_GET_TSF_TIMER_RESP_EVENT,
-+	WMI_TLV_TAG_STRUCT_DCC_GET_STATS_CMD,
-+	WMI_TLV_TAG_STRUCT_DCC_CHANNEL_STATS_REQUEST,
-+	WMI_TLV_TAG_STRUCT_DCC_GET_STATS_RESP_EVENT,
-+	WMI_TLV_TAG_STRUCT_DCC_CLEAR_STATS_CMD,
-+	WMI_TLV_TAG_STRUCT_DCC_UPDATE_NDL_CMD,
-+	WMI_TLV_TAG_STRUCT_DCC_UPDATE_NDL_RESP_EVENT,
-+	WMI_TLV_TAG_STRUCT_DCC_STATS_EVENT,
-+	WMI_TLV_TAG_STRUCT_OCB_CHANNEL,
-+	WMI_TLV_TAG_STRUCT_OCB_SCHEDULE_ELEMENT,
-+	WMI_TLV_TAG_STRUCT_DCC_NDL_STATS_PER_CHANNEL,
-+	WMI_TLV_TAG_STRUCT_DCC_NDL_CHAN,
-+	WMI_TLV_TAG_STRUCT_QOS_PARAMETER,
-+	WMI_TLV_TAG_STRUCT_DCC_NDL_ACTIVE_STATE_CONFIG,
-+	WMI_TLV_TAG_STRUCT_ROAM_SCAN_EXTENDED_THRESHOLD_PARAM,
-+	WMI_TLV_TAG_STRUCT_ROAM_FILTER_FIXED_PARAM,
-+	WMI_TLV_TAG_STRUCT_PASSPOINT_CONFIG_CMD,
-+	WMI_TLV_TAG_STRUCT_PASSPOINT_EVENT_HDR,
-+	WMI_TLV_TAG_STRUCT_EXTSCAN_CONFIGURE_HOTLIST_SSID_MONITOR_CMD,
-+	WMI_TLV_TAG_STRUCT_EXTSCAN_HOTLIST_SSID_MATCH_EVENT,
-+	WMI_TLV_TAG_STRUCT_VDEV_TSF_TSTAMP_ACTION_CMD,
-+	WMI_TLV_TAG_STRUCT_VDEV_TSF_REPORT_EVENT,
-+	WMI_TLV_TAG_STRUCT_GET_FW_MEM_DUMP,
-+	WMI_TLV_TAG_STRUCT_UPDATE_FW_MEM_DUMP,
-+	WMI_TLV_TAG_STRUCT_FW_MEM_DUMP_PARAMS,
-+	WMI_TLV_TAG_STRUCT_DEBUG_MESG_FLUSH,
-+	WMI_TLV_TAG_STRUCT_DEBUG_MESG_FLUSH_COMPLETE,
-+	WMI_TLV_TAG_STRUCT_PEER_SET_RATE_REPORT_CONDITION,
-+	WMI_TLV_TAG_STRUCT_ROAM_SUBNET_CHANGE_CONFIG,
-+	WMI_TLV_TAG_STRUCT_VDEV_SET_IE_CMD,
-+	WMI_TLV_TAG_STRUCT_RSSI_BREACH_MONITOR_CONFIG,
-+	WMI_TLV_TAG_STRUCT_RSSI_BREACH_EVENT,
-+	WMI_TLV_TAG_STRUCT_EVENT_INITIAL_WAKEUP,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_PCL_CMD,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_HW_MODE_CMD,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_HW_MODE_RESPONSE_EVENT,
-+	WMI_TLV_TAG_STRUCT_SOC_HW_MODE_TRANSITION_EVENT,
-+	WMI_TLV_TAG_STRUCT_VDEV_TXRX_STREAMS,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_HW_MODE_RESPONSE_VDEV_MAC_ENTRY,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_DUAL_MAC_CONFIG_CMD,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_DUAL_MAC_CONFIG_RESPONSE_EVENT,
-+	WMI_TLV_TAG_STRUCT_IOAC_SOCK_PATTERN_T,
-+	WMI_TLV_TAG_STRUCT_WOW_ENABLE_ICMPV6_NA_FLT_CMD,
-+	WMI_TLV_TAG_STRUCT_DIAG_EVENT_LOG_CONFIG,
-+	WMI_TLV_TAG_STRUCT_DIAG_EVENT_LOG_SUPPORTED_EVENT,
-+	WMI_TLV_TAG_STRUCT_PACKET_FILTER_CONFIG,
-+	WMI_TLV_TAG_STRUCT_PACKET_FILTER_ENABLE,
-+	WMI_TLV_TAG_STRUCT_SAP_SET_BLACKLIST_PARAM_CMD,
-+	WMI_TLV_TAG_STRUCT_MGMT_TX_CMD,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 59c5ec3f46cb..a565bae770b8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1593,7 +1593,7 @@ int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool init);
+ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg);
+ int rs_pretty_print_rate(char *buf, const u32 rate);
+ void rs_update_last_rssi(struct iwl_mvm *mvm,
+-			 struct iwl_lq_sta *lq_sta,
++			 struct iwl_mvm_sta *mvmsta,
+ 			 struct ieee80211_rx_status *rx_status);
  
- 	WMI_TLV_TAG_MAX
+ /* power management */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index fbfa5eafcc93..739c47dbc6e8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -809,7 +809,7 @@ static int rs_collect_tlc_data(struct iwl_mvm *mvm,
+ 		return -EINVAL;
+ 
+ 	if (tbl->column != RS_COLUMN_INVALID) {
+-		struct lq_sta_pers *pers = &mvmsta->lq_sta.pers;
++		struct lq_sta_pers *pers = &mvmsta->lq_sta.rs_drv.pers;
+ 
+ 		pers->tx_stats[tbl->column][scale_index].total += attempts;
+ 		pers->tx_stats[tbl->column][scale_index].success += successes;
+@@ -1206,7 +1206,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	u8 lq_color = RS_DRV_DATA_LQ_COLOR_GET(tlc_info);
+ 	u32 tx_resp_hwrate = (uintptr_t)info->status.status_driver_data[1];
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+-	struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta;
++	struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta.rs_drv;
+ 
+ 	/* Treat uninitialized rate scaling data same as non-existing. */
+ 	if (!lq_sta) {
+@@ -2785,9 +2785,10 @@ static void rs_get_initial_rate(struct iwl_mvm *mvm,
+ 
+ /* Save info about RSSI of last Rx */
+ void rs_update_last_rssi(struct iwl_mvm *mvm,
+-			 struct iwl_lq_sta *lq_sta,
++			 struct iwl_mvm_sta *mvmsta,
+ 			 struct ieee80211_rx_status *rx_status)
+ {
++	struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta.rs_drv;
+ 	int i;
+ 
+ 	lq_sta->pers.chains = rx_status->chains;
+@@ -2859,12 +2860,11 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ static void rs_get_rate(void *mvm_r, struct ieee80211_sta *sta, void *mvm_sta,
+ 			struct ieee80211_tx_rate_control *txrc)
+ {
+-	struct sk_buff *skb = txrc->skb;
+-	struct iwl_op_mode *op_mode __maybe_unused =
+-			(struct iwl_op_mode *)mvm_r;
++	struct iwl_op_mode *op_mode = mvm_r;
+ 	struct iwl_mvm *mvm __maybe_unused = IWL_OP_MODE_GET_MVM(op_mode);
++	struct sk_buff *skb = txrc->skb;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct iwl_lq_sta *lq_sta = mvm_sta;
++	struct iwl_lq_sta *lq_sta;
+ 	struct rs_rate *optimal_rate;
+ 	u32 last_ucode_rate;
+ 
+@@ -2876,18 +2876,14 @@ static void rs_get_rate(void *mvm_r, struct ieee80211_sta *sta, void *mvm_sta,
+ 		mvm_sta = NULL;
+ 	}
+ 
+-	/* TODO: handle rate_idx_mask and rate_idx_mcs_mask */
+-
+-	/* Treat uninitialized rate scaling data same as non-existing. */
+-	if (lq_sta && !lq_sta->pers.drv) {
+-		IWL_DEBUG_RATE(mvm, "Rate scaling not initialized yet.\n");
+-		mvm_sta = NULL;
+-	}
+-
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+ 	if (rate_control_send_low(sta, mvm_sta, txrc))
+ 		return;
+ 
++	if (!mvm_sta)
++		return;
++
++	lq_sta = mvm_sta;
+ 	iwl_mvm_hwrate_to_tx_rate(lq_sta->last_rate_n_flags,
+ 				  info->band, &info->control.rates[0]);
+ 	info->control.rates[0].count = 1;
+@@ -2910,7 +2906,7 @@ static void *rs_alloc_sta(void *mvm_rate, struct ieee80211_sta *sta,
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	struct iwl_op_mode *op_mode = (struct iwl_op_mode *)mvm_rate;
+ 	struct iwl_mvm *mvm  = IWL_OP_MODE_GET_MVM(op_mode);
+-	struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta;
++	struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta.rs_drv;
+ 
+ 	IWL_DEBUG_RATE(mvm, "create station rate scale window\n");
+ 
+@@ -2924,7 +2920,7 @@ static void *rs_alloc_sta(void *mvm_rate, struct ieee80211_sta *sta,
+ 	memset(lq_sta->pers.chain_signal, 0, sizeof(lq_sta->pers.chain_signal));
+ 	lq_sta->pers.last_rssi = S8_MIN;
+ 
+-	return &mvmsta->lq_sta;
++	return lq_sta;
+ }
+ 
+ static int rs_vht_highest_rx_mcs_index(struct ieee80211_sta_vht_cap *vht_cap,
+@@ -3117,7 +3113,7 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+ 	struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+-	struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta;
++	struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta.rs_drv;
+ 	struct ieee80211_supported_band *sband;
+ 	unsigned long supp; /* must be unsigned long for for_each_set_bit */
+ 
+@@ -3383,7 +3379,7 @@ static void rs_bfer_active_iter(void *_data,
+ {
+ 	struct rs_bfer_active_iter_data *data = _data;
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+-	struct iwl_lq_cmd *lq_cmd = &mvmsta->lq_sta.lq;
++	struct iwl_lq_cmd *lq_cmd = &mvmsta->lq_sta.rs_drv.lq;
+ 	u32 ss_params = le32_to_cpu(lq_cmd->ss_params);
+ 
+ 	if (sta == data->exclude_sta)
+@@ -3495,7 +3491,8 @@ static void rs_set_lq_ss_params(struct iwl_mvm *mvm,
+ 
+ 	/* Disallow BFER on another STA if active and we're a higher priority */
+ 	if (rs_bfer_priority_cmp(mvmsta, bfer_mvmsta) > 0) {
+-		struct iwl_lq_cmd *bfersta_lq_cmd = &bfer_mvmsta->lq_sta.lq;
++		struct iwl_lq_cmd *bfersta_lq_cmd =
++			&bfer_mvmsta->lq_sta.rs_drv.lq;
+ 		u32 bfersta_ss_params = le32_to_cpu(bfersta_lq_cmd->ss_params);
+ 
+ 		bfersta_ss_params &= ~LQ_SS_BFER_ALLOWED;
+@@ -3697,7 +3694,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 
+ 	struct iwl_lq_sta *lq_sta = file->private_data;
+ 	struct iwl_mvm_sta *mvmsta =
+-		container_of(lq_sta, struct iwl_mvm_sta, lq_sta);
++		container_of(lq_sta, struct iwl_mvm_sta, lq_sta.rs_drv);
+ 	struct iwl_mvm *mvm;
+ 	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
+ 	struct rs_rate *rate = &tbl->rate;
+@@ -3990,7 +3987,7 @@ static void rs_add_debugfs(void *mvm, void *priv_sta, struct dentry *dir)
+ 	struct iwl_lq_sta *lq_sta = priv_sta;
+ 	struct iwl_mvm_sta *mvmsta;
+ 
+-	mvmsta = container_of(lq_sta, struct iwl_mvm_sta, lq_sta);
++	mvmsta = container_of(lq_sta, struct iwl_mvm_sta, lq_sta.rs_drv);
+ 
+ 	if (!mvmsta->vif)
+ 		return;
+@@ -4065,7 +4062,7 @@ void iwl_mvm_rate_control_unregister(void)
+ int iwl_mvm_tx_protection(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
+ 			  bool enable)
+ {
+-	struct iwl_lq_cmd *lq = &mvmsta->lq_sta.lq;
++	struct iwl_lq_cmd *lq = &mvmsta->lq_sta.rs_drv.lq;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+index 32b4d66debea..5075a8061c82 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+@@ -217,6 +217,38 @@ struct iwl_rate_mcs_info {
+ 	char	mcs[IWL_MAX_MCS_DISPLAY_SIZE];
  };
-@@ -1689,4 +1748,12 @@ struct wmi_tlv_tx_pause_ev {
  
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
++/**
++ * struct iwl_lq_sta_rs_fw - rate and related statistics for RS in FW
++ * @last_rate_n_flags: last rate reported by FW
++ * @sta_id: the id of the station
++#ifdef CONFIG_MAC80211_DEBUGFS
++ * @dbg_fixed_rate: for debug, use fixed rate if not 0
++ * @dbg_agg_frame_count_lim: for debug, max number of frames in A-MPDU
++#endif
++ * @chains: bitmask of chains reported in %chain_signal
++ * @chain_signal: per chain signal strength
++ * @last_rssi: last rssi reported
++ * @drv: pointer back to the driver data
++ */
++
++struct iwl_lq_sta_rs_fw {
++	/* last tx rate_n_flags */
++	u32 last_rate_n_flags;
++
++	/* persistent fields - initialized only once - keep last! */
++	struct lq_sta_pers_rs_fw {
++		u32 sta_id;
++#ifdef CONFIG_MAC80211_DEBUGFS
++		u32 dbg_fixed_rate;
++		u16 dbg_agg_frame_count_lim;
++#endif
++		u8 chains;
++		s8 chain_signal[IEEE80211_MAX_CHAINS];
++		s8 last_rssi;
++		struct iwl_mvm *drv;
++	} pers;
++};
++
+ /**
+  * struct iwl_rate_scale_data -- tx success history for one rate
+  */
+@@ -406,5 +438,4 @@ struct iwl_mvm_sta;
  
-+struct wmi_tlv_mgmt_tx_cmd {
-+	__le32 vdev_id;
-+	__le32 desc_id;
-+	__le32 chanfreq;
-+	__le64 paddr;
-+	__le32 frame_len;
-+	__le32 buf_len;
-+} __packed;
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 6c11b36..6259bd6 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -798,6 +798,7 @@ struct wmi_cmd_map {
- 	u32 bcn_filter_rx_cmdid;
- 	u32 prb_req_filter_rx_cmdid;
- 	u32 mgmt_tx_cmdid;
-+	u32 mgmt_tx_send_cmdid;
- 	u32 prb_tmpl_cmdid;
- 	u32 addba_clear_resp_cmdid;
- 	u32 addba_send_cmdid;
+ int iwl_mvm_tx_protection(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
+ 			  bool enable);
+-
+ #endif /* __rs__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 7cbea7890b0c..63a57f0a16ef 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -383,7 +383,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 								 false);
+ 		}
+ 
+-		rs_update_last_rssi(mvm, &mvmsta->lq_sta, rx_status);
++		rs_update_last_rssi(mvm, mvmsta, rx_status);
+ 
+ 		if (iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_RSSI) &&
+ 		    ieee80211_is_beacon(hdr->frame_control)) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index f444ff3a3396..00d048bd2d35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -933,7 +933,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 								 false);
+ 		}
+ 
+-		rs_update_last_rssi(mvm, &mvmsta->lq_sta, rx_status);
++		rs_update_last_rssi(mvm, mvmsta, rx_status);
+ 
+ 		if (iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_RSSI) &&
+ 		    ieee80211_is_beacon(hdr->frame_control)) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 8351232472eb..12875f773a86 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2548,6 +2548,14 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		.aggregate = true,
+ 	};
+ 
++	/*
++	 * When FW supports TLC_OFFLOAD, it also implements Tx aggregation
++	 * manager, so this function should never be called in this case.
++	 */
++	if (WARN_ON_ONCE(fw_has_capa(&mvm->fw->ucode_capa,
++				     IWL_UCODE_TLV_CAPA_TLC_OFFLOAD)))
++		return -EINVAL;
++
+ 	BUILD_BUG_ON((sizeof(mvmsta->agg_tids) * BITS_PER_BYTE)
+ 		     != IWL_MAX_TID_COUNT);
+ 
+@@ -2645,12 +2653,12 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	 */
+ 	mvmsta->max_agg_bufsize =
+ 		min(mvmsta->max_agg_bufsize, buf_size);
+-	mvmsta->lq_sta.lq.agg_frame_cnt_limit = mvmsta->max_agg_bufsize;
++	mvmsta->lq_sta.rs_drv.lq.agg_frame_cnt_limit = mvmsta->max_agg_bufsize;
+ 
+ 	IWL_DEBUG_HT(mvm, "Tx aggregation enabled on ra = %pM tid = %d\n",
+ 		     sta->addr, tid);
+ 
+-	return iwl_mvm_send_lq_cmd(mvm, &mvmsta->lq_sta.lq, false);
++	return iwl_mvm_send_lq_cmd(mvm, &mvmsta->lq_sta.rs_drv.lq, false);
+ }
+ 
+ static void iwl_mvm_unreserve_agg_queue(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index aedabe101cf0..5ffd6adbc383 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -383,6 +383,8 @@ struct iwl_mvm_rxq_dup_data {
+  * and from Tx response flow, it needs a spinlock.
+  * @tid_data: per tid data + mgmt. Look at %iwl_mvm_tid_data.
+  * @tid_to_baid: a simple map of TID to baid
++ * @lq_sta: holds rate scaling data, either for the case when RS is done in
++ *	the driver - %rs_drv or in the FW - %rs_fw.
+  * @reserved_queue: the queue reserved for this STA for DQA purposes
+  *	Every STA has is given one reserved queue to allow it to operate. If no
+  *	such queue can be guaranteed, the STA addition will fail.
+@@ -417,7 +419,10 @@ struct iwl_mvm_sta {
+ 	spinlock_t lock;
+ 	struct iwl_mvm_tid_data tid_data[IWL_MAX_TID_COUNT + 1];
+ 	u8 tid_to_baid[IWL_MAX_TID_COUNT];
+-	struct iwl_lq_sta lq_sta;
++	union {
++		struct iwl_lq_sta_rs_fw rs_fw;
++		struct iwl_lq_sta rs_drv;
++	} lq_sta;
+ 	struct ieee80211_vif *vif;
+ 	struct iwl_mvm_key_pn __rcu *ptk_pn[4];
+ 	struct iwl_mvm_rxq_dup_data *dup_data;
 -- 
-1.9.1
+2.15.0
