@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51840 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752450AbdLWJWL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36418 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752163AbdLDOwX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Dec 2017 04:22:11 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Mon, 4 Dec 2017 09:52:23 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 23 Dec 2017 11:22:00 +0200
-Message-Id: <20171223092200.30270-6-luca@coelho.fi> (sfid-20171223_102227_051032_84375B15)
-In-Reply-To: <20171223092200.30270-1-luca@coelho.fi>
-References: <20171223092200.30270-1-luca@coelho.fi>
-Subject: [PATCH 5/5] iwlwifi: mvm: check if mac80211_queue is valid in iwl_mvm_disable_txq
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>
+Subject: Re: [PATCH 03/10] qtnfmac: add support for radar detection and CAC
+References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
+        <20171113102815.11254-4-sergey.matyukevich.os@quantenna.com>
+        <87a7yylf9e.fsf@purkki.adurom.net>
+Date: Mon, 04 Dec 2017 16:52:19 +0200
+In-Reply-To: <87a7yylf9e.fsf@purkki.adurom.net> (Kalle Valo's message of "Mon,
+        04 Dec 2017 16:49:33 +0200")
+Message-ID: <87609mlf4s.fsf@purkki.adurom.net> (sfid-20171204_155228_850051_F44747F5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Sometimes iwl_mvm_disable_txq() may be called with mac80211_queue ==
-IEEE80211_INVAL_HW_QUEUE, and this would cause us to use BIT(0xFF)
-which is way too large for the u16 we used to store it in
-hw_queue_to_mac820211.  If this happens the following UBSAN warning
-will be generated:
+> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+>
+>> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+>>
+>> Implement two parts of radar handling logic:
+>> - cfg80211 .start_radar_detect callback to allow nl80211 to initiate CAC
+>> - radar event to allow wlan device to advertize CAC and radar events
+>>
+>> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+>
+> [...]
+>
+>> +int qtnf_cmd_start_cac(const struct qtnf_vif *vif,
+>> +		       const struct cfg80211_chan_def *chdef,
+>> +		       u32 cac_time_ms)
+>> +{
+>> +	struct qtnf_bus *bus = vif->mac->bus;
+>> +	struct sk_buff *cmd_skb;
+>> +	struct qlink_cmd_start_cac *cmd;
+>> +	int ret;
+>> +	u16 res_code;
+>> +
+>> +	cmd_skb = qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
+>> +					    QLINK_CMD_START_CAC,
+>> +					    sizeof(*cmd));
+>> +	if (unlikely(!cmd_skb))
+>> +		return -ENOMEM;
+>
+> The unlikely() looks pretty useless here. likely() and unlikely() are
+> supposed to be used in cases where it matters and the improvment can be
+> measured, I doubt that's the case here.
 
-[  167.185167] UBSAN: Undefined behaviour in drivers/net/wireless/intel/iwlwifi/mvm/utils.c:838:5
-[  167.185171] shift exponent 255 is too large for 64-bit type 'long unsigned int'
+But no need to resend just because of this.
 
-Fix that by checking that it is not IEEE80211_INVAL_HW_QUEUE and,
-while at it, add a warning if the queue number is larger than
-IEEE80211_MAX_QUEUES.
-
-Fixes: 34e10860ae8d ("iwlwifi: mvm: remove references to queue_info in new TX path")
-Reported-by: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index d65e1db7c097..70f8b8eb6117 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -800,12 +800,19 @@ int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 		.scd_queue = queue,
- 		.action = SCD_CFG_DISABLE_QUEUE,
- 	};
--	bool remove_mac_queue = true;
-+	bool remove_mac_queue = mac80211_queue != IEEE80211_INVAL_HW_QUEUE;
- 	int ret;
- 
-+	if (WARN_ON(remove_mac_queue && mac80211_queue >= IEEE80211_MAX_QUEUES))
-+		return -EINVAL;
-+
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
- 		spin_lock_bh(&mvm->queue_info_lock);
--		mvm->hw_queue_to_mac80211[queue] &= ~BIT(mac80211_queue);
-+
-+		if (remove_mac_queue)
-+			mvm->hw_queue_to_mac80211[queue] &=
-+				~BIT(mac80211_queue);
-+
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 
- 		iwl_trans_txq_free(mvm->trans, queue);
 -- 
-2.15.1
+Kalle Valo
