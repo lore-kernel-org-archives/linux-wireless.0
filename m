@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49620 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753182AbdLHMxF (ORCPT
+Received: from sonic306-34.consmr.mail.ir2.yahoo.com ([77.238.176.220]:46644
+        "EHLO sonic306-34.consmr.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752216AbdLDUnz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:53:05 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  8 Dec 2017 14:52:59 +0200
-Message-Id: <20171208125259.21401-1-luca@coelho.fi> (sfid-20171208_135309_203330_0DB403D5)
-Subject: [PATCH] iwlwifi: mvm: fix wrong #ifdef that uses a macro from backports
+        Mon, 4 Dec 2017 15:43:55 -0500
+Date: Mon, 4 Dec 2017 20:43:50 +0000 (UTC)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: Hin-Tak Leung <htl10@users.sourceforge.net>
+To: <linux-wireless@vger.kernel.org>,
+        Gabriele Gristina <gabriele.gristina@gmail.com>
+Cc: Herton Ronaldo Krzesinski <herton@canonical.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <831356585.2629841.1512420230218@mail.yahoo.com> (sfid-20171204_214358_720899_6CA6062A)
+Subject: Re: [PATCH] rtl8187: add master mode
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <831356585.2629841.1512420230218.ref@mail.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+--------------------------------------------
+On Mon, 4/12/17, Gabriele Gristina <gabriele.gristina@gmail.com> wrote:
 
-I accidentally pushed a patch with CPTCFG (which is used in the
-backports project) to the rs-fw.c file.  Fix that to use CONFIG
-instead.
-
-Fixes: 9f66a397c877 ("iwlwifi: mvm: rs: add ops for the new rate scaling in the FW")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-index 4e5f09408517..55d1274c6092 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-@@ -308,7 +308,7 @@ void iwl_mvm_rs_add_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta)
- 	lq_sta->pers.last_rssi = S8_MIN;
- 	lq_sta->last_rate_n_flags = 0;
+> This patch add the master mode to rtl8187
+> wireless driver.
  
--#ifdef CPTCFG_MAC80211_DEBUGFS
-+#ifdef CONFIG_MAC80211_DEBUGFS
- 	lq_sta->pers.dbg_fixed_rate = 0;
- #endif
- }
--- 
-2.15.0
+> Signed-off-by: Gabriele Gristina <gabriele.gristina@gmail.com>
+
+Your two-line patch is most likely completely wrong... master mode is not just the driver claiming (and lying...) to support master mode. At least, it is extremely imcomplete.
+
+We discussed this briefly some years ago; my impression of the discussion was that devices supporting master modes need to have some specific features which are not found in low-end devices (rtl818x being such). Although some of these necessities were foresaw to be possible to be implemented in software (i.e. the rest of the kernel in the core wifi stack) in a later stage.
+
+I think Larry can say a bit more in this matter.
+
+Hin-Tak
