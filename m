@@ -1,53 +1,313 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37041 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751160AbdLUJBP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 04:01:15 -0500
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH 00/10] *** HTT/CE changes for WCN3990 ***
-Date: Thu, 21 Dec 2017 14:30:49 +0530
-Message-Id: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com> (sfid-20171221_100120_383362_D4D7D120)
+Received: from store.laptop.org ([18.85.44.157]:53717 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752930AbdLDJB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Dec 2017 04:01:56 -0500
+Date: Mon, 4 Dec 2017 20:01:50 +1100
+From: James Cameron <quozl@laptop.org>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Subject: Re: [PATCH v3 1/3] mwifiex: refactor device dump code to make it
+ generic for usb interface
+Message-ID: <20171204090150.GS21549@us.netrek.org> (sfid-20171204_100200_663496_C6CCEC94)
+References: <1512370078-24245-1-git-send-email-huxm@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1512370078-24245-1-git-send-email-huxm@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This change adds HTT/CE layer support for WCN3990 target.
-WCN3990 is the integrated chipset using System NOC
-interconnect. This chipset uses 37 bit addressing mode,
-due to this 64bit rx ring desc, tx desc and ce desc
-support is added to enable extended addressing range.
+On Mon, Dec 04, 2017 at 02:47:56PM +0800, Xinming Hu wrote:
+> This patch refactor current device dump code to make it generic
+> for subsequent implementation on usb interface.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> ---
+> v2: Addressed below review comments from Brian Norris
+>     a) use new API timer_setup/from_timer.
+>     b) reset devdump_len during initization
+> v3: Same as v2
+> ---
+>  drivers/net/wireless/marvell/mwifiex/init.c |  1 +
+>  drivers/net/wireless/marvell/mwifiex/main.c | 87 +++++++++++++++--------------
+>  drivers/net/wireless/marvell/mwifiex/main.h | 11 +++-
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 13 +++--
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 14 +++--
+>  5 files changed, 72 insertions(+), 54 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+> index e1aa860..b0d3d68 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> @@ -314,6 +314,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+>  	adapter->iface_limit.p2p_intf = MWIFIEX_MAX_P2P_NUM;
+>  	adapter->active_scan_triggered = false;
+>  	timer_setup(&adapter->wakeup_timer, wakeup_timer_fn, 0);
+> +	adapter->devdump_len = 0;
+>  }
+>  
+>  /*
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+> index a96bd7e..f7d0299 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> @@ -1051,9 +1051,23 @@ void mwifiex_multi_chan_resync(struct mwifiex_adapter *adapter)
+>  }
+>  EXPORT_SYMBOL_GPL(mwifiex_multi_chan_resync);
+>  
+> -int mwifiex_drv_info_dump(struct mwifiex_adapter *adapter, void **drv_info)
+> +void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter)
+>  {
+> -	void *p;
+> +	/* Dump all the memory data into single file, a userspace script will
+> +	 * be used to split all the memory data to multiple files
+> +	 */
+> +	mwifiex_dbg(adapter, MSG,
+> +		    "== mwifiex dump information to /sys/class/devcoredump start");
 
-These changes are validated on QCA6174 and WCN3990 target.
+Missing \n - intentional, unchanged.
 
-Govind Singh (9):
-  ath10k: Update rx descriptor for WCN3990 target
-  ath10k: Add support for 64 bit HTT in-order indication msg
-  ath10k: Add support for 64 bit htt rx ring cfg
-  ath10k: Add support for 64 bit HTT frag descriptor
-  ath10k: Add support for htt_data_tx_desc_64 descriptor
-  ath10k: Add hw param for rx ring size support
-  ath10k: Add paddrs_ring_64 support for 64bit target
-  ath10k: Use dma_addr_t for ce buffers to support 64bit target
-  ath10k: Add support for 64 bit ce descriptor
+> +	dev_coredumpv(adapter->dev, adapter->devdump_data, adapter->devdump_len,
+> +		      GFP_KERNEL);
+> +	mwifiex_dbg(adapter, MSG,
+> +		    "== mwifiex dump information to /sys/class/devcoredump end");
 
-Rakesh Pillai (1):
-  ath10k: Add hw param for 64-bit address support
+Missing \n - intentional, unchanged.
 
- drivers/net/wireless/ath/ath10k/ce.c      | 634 +++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/ce.h      |  58 ++-
- drivers/net/wireless/ath/ath10k/core.c    |  26 ++
- drivers/net/wireless/ath/ath10k/htt.c     |   7 +-
- drivers/net/wireless/ath/ath10k/htt.h     | 142 ++++++-
- drivers/net/wireless/ath/ath10k/htt_rx.c  | 182 +++++++--
- drivers/net/wireless/ath/ath10k/htt_tx.c  | 598 +++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath10k/hw.h      |   6 +
- drivers/net/wireless/ath/ath10k/mac.c     |   2 +-
- drivers/net/wireless/ath/ath10k/pci.c     |  10 +-
- drivers/net/wireless/ath/ath10k/rx_desc.h |  50 +++
- 11 files changed, 1507 insertions(+), 208 deletions(-)
+> +}
+> +EXPORT_SYMBOL_GPL(mwifiex_upload_device_dump);
+> +
+> +void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter)
+> +{
+> +	char *p;
+>  	char drv_version[64];
+>  	struct usb_card_rec *cardp;
+>  	struct sdio_mmc_card *sdio_card;
+> @@ -1061,17 +1075,12 @@ int mwifiex_drv_info_dump(struct mwifiex_adapter *adapter, void **drv_info)
+>  	int i, idx;
+>  	struct netdev_queue *txq;
+>  	struct mwifiex_debug_info *debug_info;
+> -	void *drv_info_dump;
+>  
+>  	mwifiex_dbg(adapter, MSG, "===mwifiex driverinfo dump start===\n");
+>  
+> -	/* memory allocate here should be free in mwifiex_upload_device_dump*/
+> -	drv_info_dump = vzalloc(MWIFIEX_DRV_INFO_SIZE_MAX);
+> -
+> -	if (!drv_info_dump)
+> -		return 0;
+> -
+> -	p = (char *)(drv_info_dump);
+> +	p = adapter->devdump_data;
+> +	strcpy(p, "========Start dump driverinfo========\n");
+> +	p += strlen("========Start dump driverinfo========\n");
+>  	p += sprintf(p, "driver_name = " "\"mwifiex\"\n");
+>  
+>  	mwifiex_drv_get_driver_version(adapter, drv_version,
+> @@ -1155,21 +1164,18 @@ int mwifiex_drv_info_dump(struct mwifiex_adapter *adapter, void **drv_info)
+>  		kfree(debug_info);
+>  	}
+>  
+> +	strcpy(p, "\n========End dump========\n");
+> +	p += strlen("\n========End dump========\n");
+>  	mwifiex_dbg(adapter, MSG, "===mwifiex driverinfo dump end===\n");
+> -	*drv_info = drv_info_dump;
+> -	return p - drv_info_dump;
+> +	adapter->devdump_len = p - (char *)adapter->devdump_data;
+>  }
+>  EXPORT_SYMBOL_GPL(mwifiex_drv_info_dump);
+>  
+> -void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
+> -				int drv_info_size)
+> +void mwifiex_prepare_fw_dump_info(struct mwifiex_adapter *adapter)
+>  {
+> -	u8 idx, *dump_data, *fw_dump_ptr;
+> -	u32 dump_len;
+> -
+> -	dump_len = (strlen("========Start dump driverinfo========\n") +
+> -		       drv_info_size +
+> -		       strlen("\n========End dump========\n"));
+> +	u8 idx;
+> +	char *fw_dump_ptr;
+> +	u32 dump_len = 0;
+>  
+>  	for (idx = 0; idx < adapter->num_mem_types; idx++) {
+>  		struct memory_type_mapping *entry =
+> @@ -1184,24 +1190,24 @@ void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
+>  		}
+>  	}
+>  
+> -	dump_data = vzalloc(dump_len + 1);
+> -	if (!dump_data)
+> -		goto done;
+> -
+> -	fw_dump_ptr = dump_data;
+> +	if (dump_len + 1 + adapter->devdump_len > MWIFIEX_FW_DUMP_SIZE) {
+> +		/* Realloc in case buffer overflow */
+> +		fw_dump_ptr = vzalloc(dump_len + 1 + adapter->devdump_len);
+> +		mwifiex_dbg(adapter, MSG, "Realloc device dump data.");
+
+Missing \n - unintentional?
+
+> +		if (!fw_dump_ptr) {
+> +			vfree(adapter->devdump_data);
+> +			mwifiex_dbg(adapter, ERROR,
+> +				    "vzalloc devdump data failure!\n");
+> +			return;
+> +		}
+>  
+> -	/* Dump all the memory data into single file, a userspace script will
+> -	 * be used to split all the memory data to multiple files
+> -	 */
+> -	mwifiex_dbg(adapter, MSG,
+> -		    "== mwifiex dump information to /sys/class/devcoredump start");
+> +		memmove(fw_dump_ptr, adapter->devdump_data,
+> +			adapter->devdump_len);
+> +		vfree(adapter->devdump_data);
+> +		adapter->devdump_data = fw_dump_ptr;
+> +	}
+>  
+> -	strcpy(fw_dump_ptr, "========Start dump driverinfo========\n");
+> -	fw_dump_ptr += strlen("========Start dump driverinfo========\n");
+> -	memcpy(fw_dump_ptr, drv_info, drv_info_size);
+> -	fw_dump_ptr += drv_info_size;
+> -	strcpy(fw_dump_ptr, "\n========End dump========\n");
+> -	fw_dump_ptr += strlen("\n========End dump========\n");
+> +	fw_dump_ptr = (char *)adapter->devdump_data + adapter->devdump_len;
+>  
+>  	for (idx = 0; idx < adapter->num_mem_types; idx++) {
+>  		struct memory_type_mapping *entry =
+> @@ -1228,11 +1234,8 @@ void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
+>  	/* device dump data will be free in device coredump release function
+>  	 * after 5 min
+>  	 */
+> -	dev_coredumpv(adapter->dev, dump_data, dump_len, GFP_KERNEL);
+> -	mwifiex_dbg(adapter, MSG,
+> -		    "== mwifiex dump information to /sys/class/devcoredump end");
+> +	adapter->devdump_len = fw_dump_ptr - (char *)adapter->devdump_data;
+>  
+> -done:
+>  	for (idx = 0; idx < adapter->num_mem_types; idx++) {
+>  		struct memory_type_mapping *entry =
+>  			&adapter->mem_type_mapping_tbl[idx];
+> @@ -1241,10 +1244,8 @@ void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
+>  		entry->mem_ptr = NULL;
+>  		entry->mem_size = 0;
+>  	}
+> -
+> -	vfree(drv_info);
+>  }
+> -EXPORT_SYMBOL_GPL(mwifiex_upload_device_dump);
+> +EXPORT_SYMBOL_GPL(mwifiex_prepare_fw_dump_info);
+>  
+>  /*
+>   * CFG802.11 network device handler for statistics retrieval.
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+> index 154c079..8b6241a 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
+> @@ -94,6 +94,8 @@ enum {
+>  
+>  #define MAX_EVENT_SIZE                  2048
+>  
+> +#define MWIFIEX_FW_DUMP_SIZE       (2 * 1024 * 1024)
+> +
+>  #define ARP_FILTER_MAX_BUF_SIZE         68
+>  
+>  #define MWIFIEX_KEY_BUFFER_SIZE			16
+> @@ -1032,6 +1034,9 @@ struct mwifiex_adapter {
+>  	bool wake_by_wifi;
+>  	/* Aggregation parameters*/
+>  	struct bus_aggr_params bus_aggr;
+> +	/* Device dump data/length */
+> +	void *devdump_data;
+> +	int devdump_len;
+>  };
+>  
+>  void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
+> @@ -1656,9 +1661,9 @@ void mwifiex_hist_data_add(struct mwifiex_private *priv,
+>  u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+>  			    u8 rx_rate, u8 ht_info);
+>  
+> -int mwifiex_drv_info_dump(struct mwifiex_adapter *adapter, void **drv_info);
+> -void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
+> -				int drv_info_size);
+> +void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter);
+> +void mwifiex_prepare_fw_dump_info(struct mwifiex_adapter *adapter);
+> +void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter);
+>  void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
+>  void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
+>  int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index cd31494..f666cb2 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -2769,12 +2769,17 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+>  
+>  static void mwifiex_pcie_device_dump_work(struct mwifiex_adapter *adapter)
+>  {
+> -	int drv_info_size;
+> -	void *drv_info;
+> +	adapter->devdump_data = vzalloc(MWIFIEX_FW_DUMP_SIZE);
+> +	if (!adapter->devdump_data) {
+> +		mwifiex_dbg(adapter, ERROR,
+> +			    "vzalloc devdump data failure!\n");
+> +		return;
+> +	}
+>  
+> -	drv_info_size = mwifiex_drv_info_dump(adapter, &drv_info);
+> +	mwifiex_drv_info_dump(adapter);
+>  	mwifiex_pcie_fw_dump(adapter);
+> -	mwifiex_upload_device_dump(adapter, drv_info, drv_info_size);
+> +	mwifiex_prepare_fw_dump_info(adapter);
+> +	mwifiex_upload_device_dump(adapter);
+>  }
+>  
+>  static void mwifiex_pcie_card_reset_work(struct mwifiex_adapter *adapter)
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> index fd5183c..a828801 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> @@ -2505,15 +2505,21 @@ static void mwifiex_sdio_generic_fw_dump(struct mwifiex_adapter *adapter)
+>  static void mwifiex_sdio_device_dump_work(struct mwifiex_adapter *adapter)
+>  {
+>  	struct sdio_mmc_card *card = adapter->card;
+> -	int drv_info_size;
+> -	void *drv_info;
+>  
+> -	drv_info_size = mwifiex_drv_info_dump(adapter, &drv_info);
+> +	adapter->devdump_data = vzalloc(MWIFIEX_FW_DUMP_SIZE);
+> +	if (!adapter->devdump_data) {
+> +		mwifiex_dbg(adapter, ERROR,
+> +			    "vzalloc devdump data failure!\n");
+> +		return;
+> +	}
+> +
+> +	mwifiex_drv_info_dump(adapter);
+>  	if (card->fw_dump_enh)
+>  		mwifiex_sdio_generic_fw_dump(adapter);
+>  	else
+>  		mwifiex_sdio_fw_dump(adapter);
+> -	mwifiex_upload_device_dump(adapter, drv_info, drv_info_size);
+> +	mwifiex_prepare_fw_dump_info(adapter);
+> +	mwifiex_upload_device_dump(adapter);
+>  }
+>  
+>  static void mwifiex_sdio_work(struct work_struct *work)
+> -- 
+> 1.9.1
+> 
 
 -- 
-1.9.1
+James Cameron
+http://quozl.netrek.org/
