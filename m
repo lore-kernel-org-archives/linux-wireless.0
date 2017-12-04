@@ -1,56 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:54313 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751381AbdLUN5f (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34490 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752972AbdLDGsV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 08:57:35 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rakesh Pillai <pillair@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/3] Core changes for wcn3990
-Date: Thu, 21 Dec 2017 13:57:26 +0000
-Message-ID: <87tvwkchfe.fsf@kamboji.qca.qualcomm.com> (sfid-20171221_145740_776536_7859E0C7)
-References: <1513854887-10759-1-git-send-email-pillair@qti.qualcomm.com>
-In-Reply-To: <1513854887-10759-1-git-send-email-pillair@qti.qualcomm.com>
-        (Rakesh Pillai's message of "Thu, 21 Dec 2017 16:44:44 +0530")
-Content-Type: text/plain; charset="iso-8859-1"
+        Mon, 4 Dec 2017 01:48:21 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v3 2/3] mwifiex: device dump support for usb interface
+Date: Mon, 4 Dec 2017 14:47:57 +0800
+Message-ID: <1512370078-24245-2-git-send-email-huxm@marvell.com> (sfid-20171204_074832_974213_D8C30C82)
+In-Reply-To: <1512370078-24245-1-git-send-email-huxm@marvell.com>
+References: <1512370078-24245-1-git-send-email-huxm@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rakesh Pillai <pillair@qti.qualcomm.com> writes:
+Firmware dump on usb interface is different with current
+sdio/pcie chipset, which is based on register operation.
 
-> This patchset includes the core changes for wcn3990 to
-> - Add SNOC bus type used for wcn3990 target
-> - Add the debug mask for SNOC bus type
-> - Adding fw feature flag for non-bmi firmware load, since wcn3990
->   firmware is not loaded by bmi
->
-> Govind Singh (2):
->   ath10k: Add SNOC bus type for WCN3990 target
->   ath10k: Add debug mask for SNOC bus type
->
-> Rakesh Pillai (1):
->   ath10k: Add fw feature flag for non-bmi firmware load
+When firmware hang on usb interface, context dump will be
+upload to host using 0x73 firmware debug event.
 
-What did you use as the baseline for these patches? While I was trying
-to get these to the pending branch for build testing I noticed they
-don't apply to any of ath.git branches and git can't even find the
-baseline sha1 information:
+This patch store dump data from debug event and send to
+userspace using device coredump API.
 
-$ git am -s -3 10127467.mbox
-Applying: ath10k: Add SNOC bus type for WCN3990 target
-Applying: ath10k: Add debug mask for SNOC bus type
-Applying: ath10k: Add fw feature flag for non-bmi firmware load
-fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath=
-10k/core.c).
-error: could not build fake ancestor
-Patch failed at 0003 ath10k: Add fw feature flag for non-bmi firmware load
-The copy of the patch that failed is found in: .git/rebase-apply/patch
-When you have resolved this problem, run "git am --continue".
-If you prefer to skip this patch, run "git am --skip" instead.
-To restore the original branch and stop patching, run "git am --abort".
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+v2: Addressed below review comments from Brian Norris
+    a) Check for overflow introduced by invalid event.
+    b) Use end of transmission signal to recognize last event.
+v3: Same as v2
+---
+ drivers/net/wireless/marvell/mwifiex/fw.h        | 10 ++++
+ drivers/net/wireless/marvell/mwifiex/init.c      |  9 ++++
+ drivers/net/wireless/marvell/mwifiex/main.h      |  2 +
+ drivers/net/wireless/marvell/mwifiex/sta_event.c | 61 ++++++++++++++++++++++++
+ 4 files changed, 82 insertions(+)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 13cd58e9..4d5e686 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -56,6 +56,15 @@ struct mwifiex_fw_data {
+ 	u8 data[1];
+ } __packed;
+ 
++struct mwifiex_fw_dump_header {
++	__le16          seq_num;
++	__le16          reserved;
++	__le16          type;
++	__le16          len;
++} __packed;
++
++#define FW_DUMP_INFO_ENDED 0x0002
++
+ #define MWIFIEX_FW_DNLD_CMD_1 0x1
+ #define MWIFIEX_FW_DNLD_CMD_5 0x5
+ #define MWIFIEX_FW_DNLD_CMD_6 0x6
+@@ -570,6 +579,7 @@ enum mwifiex_channel_flags {
+ #define EVENT_BG_SCAN_STOPPED           0x00000065
+ #define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
+ #define EVENT_MULTI_CHAN_INFO           0x0000006a
++#define EVENT_FW_DUMP_INFO		0x00000073
+ #define EVENT_TX_STATUS_REPORT		0x00000074
+ #define EVENT_BT_COEX_WLAN_PARA_CHANGE	0X00000076
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index b0d3d68..d239e92 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -64,6 +64,13 @@ static void wakeup_timer_fn(struct timer_list *t)
+ 		adapter->if_ops.card_reset(adapter);
+ }
+ 
++static void fw_dump_timer_fn(struct timer_list *t)
++{
++	struct mwifiex_adapter *adapter = from_timer(adapter, t, devdump_timer);
++
++	mwifiex_upload_device_dump(adapter);
++}
++
+ /*
+  * This function initializes the private structure and sets default
+  * values to the members.
+@@ -315,6 +322,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ 	adapter->active_scan_triggered = false;
+ 	timer_setup(&adapter->wakeup_timer, wakeup_timer_fn, 0);
+ 	adapter->devdump_len = 0;
++	timer_setup(&adapter->devdump_timer, fw_dump_timer_fn, 0);
+ }
+ 
+ /*
+@@ -397,6 +405,7 @@ static void mwifiex_invalidate_lists(struct mwifiex_adapter *adapter)
+ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ {
+ 	del_timer(&adapter->wakeup_timer);
++	del_timer_sync(&adapter->devdump_timer);
+ 	mwifiex_cancel_all_pending_cmd(adapter);
+ 	wake_up_interruptible(&adapter->cmd_wait_q.wait);
+ 	wake_up_interruptible(&adapter->hs_activate_wait_q);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 8b6241a..6b5539b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1037,6 +1037,7 @@ struct mwifiex_adapter {
+ 	/* Device dump data/length */
+ 	void *devdump_data;
+ 	int devdump_len;
++	struct timer_list devdump_timer;
+ };
+ 
+ void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
+@@ -1682,6 +1683,7 @@ void mwifiex_process_multi_chan_event(struct mwifiex_private *priv,
+ void mwifiex_multi_chan_resync(struct mwifiex_adapter *adapter);
+ int mwifiex_set_mac_address(struct mwifiex_private *priv,
+ 			    struct net_device *dev);
++void mwifiex_devdump_tmo_func(unsigned long function_context);
+ 
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index d8db412..93dfb76 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -584,6 +584,62 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
+ 		adapter->coex_rx_win_size);
+ }
+ 
++static void
++mwifiex_fw_dump_info_event(struct mwifiex_private *priv,
++			   struct sk_buff *event_skb)
++{
++	struct mwifiex_adapter *adapter = priv->adapter;
++	struct mwifiex_fw_dump_header *fw_dump_hdr =
++				(void *)adapter->event_body;
++
++	if (adapter->iface_type != MWIFIEX_USB) {
++		mwifiex_dbg(adapter, MSG,
++			    "event is not on usb interface, ignore it\n");
++		return;
++	}
++
++	if (!adapter->devdump_data) {
++		/* When receive the first event, allocate device dump
++		 * buffer, dump driver info.
++		 */
++		adapter->devdump_data = vzalloc(MWIFIEX_FW_DUMP_SIZE);
++		if (!adapter->devdump_data) {
++			mwifiex_dbg(adapter, ERROR,
++				    "vzalloc devdump data failure!\n");
++			return;
++		}
++
++		mwifiex_drv_info_dump(adapter);
++
++		/* If no proceeded event arrive in 10s, upload device
++		 * dump data, this will be useful if the end of
++		 * transmission event get lost, in this cornel case,
++		 * user would still get partial of the dump.
++		 */
++		mod_timer(&adapter->devdump_timer,
++			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
++	}
++
++	/* Overflow check */
++	if (adapter->devdump_len + event_skb->len >= MWIFIEX_FW_DUMP_SIZE)
++		goto upload_dump;
++
++	memmove(adapter->devdump_data + adapter->devdump_len,
++		adapter->event_skb->data, event_skb->len);
++	adapter->devdump_len += event_skb->len;
++
++	if (le16_to_cpu(fw_dump_hdr->type == FW_DUMP_INFO_ENDED)) {
++		mwifiex_dbg(adapter, MSG,
++			    "receive end of transmission flag event!\n");
++		goto upload_dump;
++	}
++	return;
++
++upload_dump:
++	del_timer_sync(&adapter->devdump_timer);
++	mwifiex_upload_device_dump(adapter);
++}
++
+ /*
+  * This function handles events generated by firmware.
+  *
+@@ -636,6 +692,7 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
+  *      - EVENT_DELBA
+  *      - EVENT_BA_STREAM_TIEMOUT
+  *      - EVENT_AMSDU_AGGR_CTRL
++ *      - EVENT_FW_DUMP_INFO
+  */
+ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ {
+@@ -1007,6 +1064,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 					    adapter->event_skb->len -
+ 					    sizeof(eventcause));
+ 		break;
++	case EVENT_FW_DUMP_INFO:
++		mwifiex_dbg(adapter, EVENT, "event: firmware debug info\n");
++		mwifiex_fw_dump_info_event(priv, adapter->event_skb);
++		break;
+ 	/* Debugging event; not used, but let's not print an ERROR for it. */
+ 	case EVENT_UNKNOWN_DEBUG:
+ 		mwifiex_dbg(adapter, EVENT, "event: debug\n");
+-- 
+1.9.1
