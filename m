@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:42212 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751297AbdLSRAq (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:32877 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751982AbdLDW3F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 12:00:46 -0500
-Message-ID: <1513702844.26145.19.camel@sipsolutions.net> (sfid-20171219_180239_908318_D1F65A49)
-Subject: Re: [RFC PATCH 2/2] nl80211: implement beacon change notifier
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Marianna Carrera <mcarrera@quantenna.com>
-Date: Tue, 19 Dec 2017 18:00:44 +0100
-In-Reply-To: <20171205203129.flqhqrwa5y7uhgoz@bars>
-References: <20171109094024.9085-1-sergey.matyukevich.os@quantenna.com>
-         <20171109094024.9085-2-sergey.matyukevich.os@quantenna.com>
-         <1510565429.30497.10.camel@sipsolutions.net>
-         <20171113115841.3dcrcjqnp543kndi@bars>
-         <1510575765.30497.38.camel@sipsolutions.net>
-         <20171115153547.kkunkrfcivoqcsq2@bars>
-         <1511784144.5456.12.camel@sipsolutions.net>
-         <20171205203129.flqhqrwa5y7uhgoz@bars>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 4 Dec 2017 17:29:05 -0500
+Received: by mail-ot0-f195.google.com with SMTP id h9so16210272oti.0
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Dec 2017 14:29:04 -0800 (PST)
+Subject: Re: [PATCH] rtl8187: add master mode
+To: Gabriele Gristina <gabriele.gristina@gmail.com>
+Cc: Hin-Tak Leung <htl10@users.sourceforge.net>,
+        Herton Ronaldo Krzesinski <herton@canonical.com>,
+        linux-wireless@vger.kernel.org
+References: <1990723570.2726060.1512424959242.ref@mail.yahoo.com>
+ <1990723570.2726060.1512424959242@mail.yahoo.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <12302480-a14d-d542-d3b3-50e69664a8d6@lwfinger.net> (sfid-20171204_232908_887147_9B4D6572)
+Date: Mon, 4 Dec 2017 16:29:03 -0600
+MIME-Version: 1.0
+In-Reply-To: <1990723570.2726060.1512424959242@mail.yahoo.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sergey,
-
-Sorry for the long delay.
-
-On Tue, 2017-12-05 at 23:31 +0300, Sergey Matyukevich wrote:
+On 12/04/2017 04:02 PM, Hin-Tak Leung wrote:
+> --------------------------------------------
+> On Mon, 4/12/17, Gabriele Gristina <gabriele.gristina@gmail.com> wrote:
+>   
+>> I use these few
+>> byte from years and hostapd work like a charm.I
+>> don't understand why you write "completely
+>> wrong" but you are free to refuse this
+>> patch.
+>> Have a nice
+>> day,Gabriele
 > 
-> By the way, speaking about GET_CMD_BEACON and its possible users in the
-> community. There is already a stub for it in nl80211 uapi headers. What
-> was the original idea for that ? Or was it just a placeholder added
-> together with SET_BEACON ?
+> I think the issue was to do with hardware support of certain features - power-management (allowing the clients to sleep) and maintaining states across low-power states, and somewhat large number of clients. That it can work to some extent, and even to a very good extent, to serve a small number of clients - at full power, without power managrment - is not a surprise.
+> 
+> My impression that software (i.e. non-hardware) support was to improve to make it possible. Larry and others can comment on the current state.
 
-I think it was a placeholder, you can probably find it in git history.
-I vaguely remember thinking - many years ago - that all the operations
-should consistently support add, del, set and get, but that isn't
-really all that practical.
+Gabriele,
 
-johannes
+I agree that merely informing mac80211 that you support AP mode is unlikely to 
+provide full support for master mode, but I have not looked at that code for 
+many years.
+
+If you can show that your "fix" does support many clients, and that it does not 
+go belly-up when one of them tries to go to low power, then I will agree to 
+merge your patch. Until then, merging it now would suggest that we are offering 
+a service that the driver does not really support.
+
+BTW, why are you trying to create an AP with a 802.11G device? The performance 
+will be on par with what was expected 10 or 12 years ago.
+
+Larry
