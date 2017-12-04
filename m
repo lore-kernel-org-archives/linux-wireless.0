@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48662 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752387AbdLBQ3g (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54322 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751156AbdLDJqQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 11:29:36 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  2 Dec 2017 18:28:56 +0200
-Message-Id: <20171202162858.4167-14-luca@coelho.fi> (sfid-20171202_172946_579749_29E9E3B1)
-In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
-References: <20171202162858.4167-1-luca@coelho.fi>
-Subject: [PATCH 13/15] iwlwifi: mvm: mark MIC stripped MPDUs
+        Mon, 4 Dec 2017 04:46:16 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Subject: Re: [RESEND, PATCH v3 3/3] mwifiex: debugfs: trigger device dump for usb interface
+References: <1512370563-24660-1-git-send-email-huxm@marvell.com>
+Date: Mon, 04 Dec 2017 11:46:09 +0200
+In-Reply-To: <1512370563-24660-1-git-send-email-huxm@marvell.com> (Xinming
+        Hu's message of "Mon, 4 Dec 2017 14:56:03 +0800")
+Message-ID: <87vahmvna6.fsf@kamboji.qca.qualcomm.com> (sfid-20171204_104619_825428_336E3B84)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Xinming Hu <huxm@marvell.com> writes:
 
-When RADA is active, the hardware decrypts the packets and strips off
-the MIC as it is useless after decryption. Indicate that to mac80211.
+> This patch extend device_dump debugfs function to make it
+> works for usb interface.
+>
+> For command timeouts, USB firmware will automatically emit
+> firmware dump events, so we don't implement device_dump().
+>
+> For user-initiated dumps, we trigger it by issue firmware
+> dump event command to firmware, as there is no command
+> response, do not start 10s timer.
+>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> ---
+> v2: Same as v1
+> v3: Add more comments Regards the different dump mechanism
+>     between usb and other interfaces.(Brian Norris)
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 ++
- 1 file changed, 2 insertions(+)
+Please always resubmit the whole patchset, not individual patches:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 0e6a7dd30aa9..a81ff4163d05 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -253,6 +253,8 @@ static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
- 			return -1;
- 
- 		stats->flag |= RX_FLAG_DECRYPTED;
-+		if (pkt_flags & FH_RSCSR_RADA_EN)
-+			stats->flag |= RX_FLAG_MIC_STRIPPED;
- 		*crypt_len = IEEE80211_CCMP_HDR_LEN;
- 		return 0;
- 	case IWL_RX_MPDU_STATUS_SEC_TKIP:
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#resubmit_the_whole_patchset
+
+Also please don't use that awkward "RESEND" stuff some people seem to
+insist using. So instead of doing like this:
+
+v2, v3, v3 RESEND, v4
+
+do it like this which makes my life easier:
+
+v2, v3, v4, v5
+
+It's not like we are running out of version numbers :)
+
 -- 
-2.15.0
+Kalle Valo
