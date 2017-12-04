@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:10803 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753099AbdLNPav (ORCPT
+Received: from sonic304-37.consmr.mail.ir2.yahoo.com ([77.238.179.162]:46450
+        "EHLO sonic304-37.consmr.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751718AbdLDW6C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 10:30:51 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath9k_htc: Add a sanity check in ath9k_htc_ampdu_action()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20171205143508.qbnbm4d3wesguu2g@mwanda>
-References: <20171205143508.qbnbm4d3wesguu2g@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Sujith <Sujith.Manoharan@atheros.com>,
+        Mon, 4 Dec 2017 17:58:02 -0500
+Date: Mon, 4 Dec 2017 22:57:55 +0000 (UTC)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: Hin-Tak Leung <htl10@users.sourceforge.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
         Kalle Valo <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Message-ID: <1ba6b3947c1441f38ef51d1e827ce62c@euamsexm01a.eu.qualcomm.com> (sfid-20171214_163057_255147_121906AC)
-Date: Thu, 14 Dec 2017 16:30:39 +0100
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        Colin King <colin.king@canonical.com>
+Cc: <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Message-ID: <734417985.2789125.1512428275673@mail.yahoo.com> (sfid-20171204_235835_066209_C788887B)
+Subject: Re: [PATCH] rtlwifi: rtl818x: remove redundant check for cck_power
+ > 15
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <734417985.2789125.1512428275673.ref@mail.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-> Smatch generates a warning here:
-> 
->     drivers/net/wireless/ath/ath9k/htc_drv_main.c:1688 ath9k_htc_ampdu_action()
->     error: buffer overflow 'ista->tid_state' 8 <= 15
-> 
-> I don't know if it's a real bug or not but the other paths through this
-> function all ensure that "tid" is less than ATH9K_HTC_MAX_TID (8) so
-> checking here makes things more consistent.
-> 
-> Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+--------------------------------------------
+On Tue, 14/11/17, Colin King <colin.king@canonical.com> wrote:
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-413fd2f5c023 ath9k_htc: Add a sanity check in ath9k_htc_ampdu_action()
-
--- 
-https://patchwork.kernel.org/patch/10093021/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+=20
+> From: Colin Ian King <colin.king@canonical.com>
+=20
+> cck_poweri cannot be greated than 15 as
+> is derived from the bottom 4 bits
+> from riv->channels[channel -
+> 1].hw_value & 0xf.=C2=A0 Hence the check for it
+> being greater than 15 is redundant and
+> can be removed.
+=20
+> Detected by CoverityScan, CID#744303
+> ("Logically dead code")
+=20
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+=20
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
