@@ -1,72 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60160 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750802AbdLWNsc (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47374 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750774AbdLDGrt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Dec 2017 08:48:32 -0500
-Date: Sat, 23 Dec 2017 14:48:31 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Yisheng Xie <xieyisheng1@huawei.com>
-Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
-        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
-        boris.brezillon@free-electrons.com, richard@nod.at,
-        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
-        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
-        wim@iguana.be, linux@roeck-us.net, linux-watchdog@vger.kernel.org,
-        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
-        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
-        ralf@linux-mips.org, linux-mips@linux-mips.org,
-        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
-        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
-        andriy.shevchenko@linux.intel.com,
-        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
-        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
-        linux-media@vger.kernel.org, a.zummo@towertech.it,
-        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie,
-        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
-        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
-        dvhart@infradead.org, andy@infradead.org,
-        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
-        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
-        netdev@vger.kernel.org, vinod.koul@intel.com,
-        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
-        jslaby@suse.com
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-Message-ID: <20171223134831.GB10103@kroah.com> (sfid-20171223_144848_862201_24F8A364)
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+        Mon, 4 Dec 2017 01:47:49 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: Xinming Hu <huxinming820@gmail.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "Dmitry Torokhov" <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        James Cao <jcao@marvell.com>
+Subject: Re: Re: Re: Re: [PATCH 3/3] mwifiex: debugfs: trigger device dump for
+ usb interface
+Date: Mon, 4 Dec 2017 06:47:42 +0000
+Message-ID: <82e0ce2911514793a4a4d2417b13813f@SC-EXCH02.marvell.com> (sfid-20171204_074831_724094_225B80AE)
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
-> Hi all,
-> 
-> When I tried to use devm_ioremap function and review related code, I found
-> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
-> except one use ioremap while the other use ioremap_nocache.
-
-For all arches?  Really?  Look at MIPS, and x86, they have different
-functions.
-
-> While ioremap's
-> default function is ioremap_nocache, so devm_ioremap_nocache also have the
-> same function with devm_ioremap, which can just be killed to reduce the size
-> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
-> 
-> I have posted two versions, which use macro instead of function for
-> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
-> devm_ioremap_nocache for no need to keep a macro around for the duplicate
-> thing. So here comes v3 and please help to review.
-
-I don't think this can be done, what am I missing?  These functions are
-not identical, sorry for missing that before.
-
-thanks,
-
-greg k-h
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4gTm9ycmlzIFtt
+YWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOoxMtTCMsjVIDk6
+NDUNCj4gVG86IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+IENjOiBYaW5taW5nIEh1
+IDxodXhpbm1pbmc4MjBAZ21haWwuY29tPjsgTGludXggV2lyZWxlc3MNCj4gPGxpbnV4LXdpcmVs
+ZXNzQHZnZXIua2VybmVsLm9yZz47IEthbGxlIFZhbG8gPGt2YWxvQGNvZGVhdXJvcmEub3JnPjsg
+RG1pdHJ5DQo+IFRvcm9raG92IDxkdG9yQGdvb2dsZS5jb20+OyByYWphdGphQGdvb2dsZS5jb207
+IFpoaXl1YW4gWWFuZw0KPiA8eWFuZ3p5QG1hcnZlbGwuY29tPjsgVGltIFNvbmcgPHNvbmd0YW9A
+bWFydmVsbC5jb20+OyBDYXRoeSBMdW8NCj4gPGNsdW9AbWFydmVsbC5jb20+OyBHYW5hcGF0aGkg
+QmhhdCA8Z2JoYXRAbWFydmVsbC5jb20+OyBKYW1lcyBDYW8NCj4gPGpjYW9AbWFydmVsbC5jb20+
+DQo+IFN1YmplY3Q6IFtFWFRdIFJlOiBSZTogUmU6IFtQQVRDSCAzLzNdIG13aWZpZXg6IGRlYnVn
+ZnM6IHRyaWdnZXIgZGV2aWNlIGR1bXANCj4gZm9yIHVzYiBpbnRlcmZhY2UNCj4gDQo+IEV4dGVy
+bmFsIEVtYWlsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IE9uIEZyaSwgRGVjIDAxLCAyMDE3IGF0
+IDA4OjM2OjAxQU0gKzAwMDAsIFhpbm1pbmcgSHUgd3JvdGU6DQo+ID4gVGhhbmtzIGZvciB0aGUg
+c3VnZ2VzdGlvbiwgaXQgc291bmRzIGJldHRlciB0aGFuIGV4cG9ydGluZw0KPiA+IG13aWZpZXhf
+c2VuZF9jbWQoKSBkaXJlY3RseS4NCj4gPiBJbiBhZGRpdGlvbiB0byB1c2VkIGFzIGRlYnVnZnMg
+dGlyZ2dlciwgdGhlICJkZWZpbmVkIHBvaW50Ig0KPiA+IGlmX29wcy5kZXZpY2VfZHVtcCBpcyBv
+bmx5IHVzZWQgaW4gY29tbWFuZCB0aW1lb3V0IGNvbnRleHQuDQo+ID4gRm9yIHNkaW8vcGNpZSBp
+bnRlcmZhY2UsIHJlZ2lzdGVyIG9wZXJhdGlvbiB3aWxsIGJlIG1hZGUgdG8gdHJpZ2dlcg0KPiA+
+IGZpcm13YXJlIGR1bXAgYW5kIGdldCBkdW1wIGNvbnRleHQgdW5kZXIgc3BlY2lmaWMgYWxnb3Jp
+dGhtLg0KPiA+IEZvciB1c2IgaW50ZXJmYWNlLCBob3dldmVyLCAgdGhpcyBpcyBub3QgbmVlZGVk
+LCBzaW5jZSBmaXJtd2FyZSB3aWxsDQo+ID4gYXV0b21hdGljYWxseSBzZW5kIGR1bXAgZXZlbnQg
+dG8gaG9zdCB3aXRob3V0IGFueSB0cmlnZ2VyLCBhbmQgd2hhdCdzDQo+ID4gbW9yZSAsIGhvc3Qg
+aXMgYWxzbyBub3QgYWJsZSB0byBpc3N1ZSBjb21tYW5kIGluIHRoZSBzaXR1YXRpb24uDQo+ID4N
+Cj4gPiBTbyBwZXIgbXkgdW5kZXJzdGFuZCwgIGhlcmUgd2Ugb25seSBuZWVkIHByb3ZpZGUgYSBz
+aW1wbGUgd2F5IHRvDQo+ID4gdHJpZ2dlciAsIGluc3RlYWQgb2YgYSB0b3RhbGx5IGZ1bmN0aW9u
+YWwgY29tcGxldGUgZHVtcCBlbnRyeSBwb2ludC4NCj4gPiBTdXBwb3NlIGlmIHdlIG1ha2UgdGhl
+IGNvbW1hbmQgdHJpZ2dlciBhIHBhcnQgb2YgaWZfb3BzLT5kZXZpY2VfZHVtcCwNCj4gPiB0aGVu
+IHdlIGFsc28gbmVlZCBhZGQgY2hlY2sgZm9yICJNV0lGSUVYX1VTQiIgaW4gbXdpZmlleF9jbWRf
+dG1vX2Z1bmMuDQo+IA0KPiBBaCwgSSBzZWUuIFlvdXIgZXhwbGFuYXRpb24gbWFrZXMgc29tZSBt
+b3JlIHNlbnNlIHRoZW4uIEl0IHdvdWxkIGJlIG5pY2UgaWYNCj4geW91IGNvdWxkIGluY2x1ZGUg
+c29tZSBvZiB0aGlzIGluDQo+IChhKSB0aGUgY29tbWl0IG1lc3NhZ2UNCj4gKGIpIHRoZSBlbnRy
+eSBwb2ludCBpbiBkZWJ1Z2ZzLmMsIHdoZXJlIHlvdSB0cmlnZ2VyIHRoaXMNCj4gDQo+IFNvbWV0
+aGluZyBhbG9uZyB0aGUgbGluZXMgb2YgIkZvciBjb21tYW5kIHRpbWVvdXRzLCBVU0IgZmlybXdh
+cmUgd2lsbA0KPiBhdXRvbWF0aWNhbGx5IGVtaXQgZmlybXdhcmUgZHVtcCBldmVudHMsIHNvIHdl
+IGRvbid0IGltcGxlbWVudA0KPiBkZXZpY2VfZHVtcCgpLiBGb3IgdXNlci1pbml0aWF0ZWQgZHVt
+cHMsIHdlIHRyaWdnZXIgaXQgb3Vyc2VsdmVzLiINCj4gDQoNCk9rYXksIFRoYW5rcyENCg0KUmVn
+YXJkcywNClNpbW9uDQoNCj4gPiBpdCBhbHNvIGxvb2tzIGluZWxlZ2FudCwgYW5kIHdoYXQgd2Ug
+ZGlkIGxvb2tzIHdlaXJkLCB0aGV5IGFyZQ0KPiA+ICgxKSBleHBvcnQgYSBuZXcgIGtlcm5lbCBz
+eW1ib2wsICB0aGUgd3JhcHBlciBvZiBtd2lmaWV4X3NlbmRfY29tbWFuZA0KPiA+ICgyKSBhZGQg
+dXNiIGlmX29wcy0+ZGV2aWNlX2R1bXAsIGl0ICBzZW5kIHRoZSBjb21tYW5kIGluIG13aWZpZXhf
+dXNiLA0KPiBpbnN0ZWFkIG9mIGluIG13aWZpZXggaXRzZWxmLg0KPiA+ICgzKSBieXBhc3MgYWJv
+dmUgImlmX29wcy0+ZGV2aWNlX2R1bXAiIGluIG13aWZpZXhfY21kX3Rtb19mdW5jLCB3aGljaCBp
+cw0KPiB0aGUgbWFpbmx5IHVzZXIgY2FzZS4NCj4gDQo+IE5vLCBJJ20gbm90IHN1cmUgdGhhdCBz
+b2x1dGlvbiB3b3VsZCBiZSBtdWNoIGJldHRlci4gWW91ciBleGlzdGluZyBzb2x1dGlvbiB3aXRo
+DQo+IGFkZGl0aW9uYWwgY29tbWVudHMgaXMgcHJvYmFibHkgZmluZS4NCj4gDQo+ID4gSSBhbSBu
+b3Qgc3VyZSB3aGV0aGVyIHRoZXJlIGlzIGEgYmV0dGVyIHdheSBvbiB0aGlzLCBwZXJoYXBzIHdl
+IG5lZWQgYQ0KPiA+IHRyYWRlLW9mZiBvbiBkaWZmZXJlbnQgc29sdXRpb25zLCBwbGVhc2UgbGV0
+IHVzIGtub3cgaWYgeW91IGhhdmUgbW9yZQ0KPiA+IHN1Z2dlc3Rpb25zLg0KPiA+DQo+ID4gVGhh
+bmtzICYgUmVnYXJkcywNCj4gPiBTSW1vbg0KPiANCj4gQnJpYW4NCg==
