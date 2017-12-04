@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:38680 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751349AbdLVGDI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48160 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752360AbdLDPNF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 01:03:08 -0500
-Received: from mail-it0-f70.google.com ([209.85.214.70])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1eSGQE-0002dI-Vd
-        for linux-wireless@vger.kernel.org; Fri, 22 Dec 2017 06:03:07 +0000
-Received: by mail-it0-f70.google.com with SMTP id a3so9799276itg.7
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2017 22:03:06 -0800 (PST)
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 0/6] wireless-regdb: Support for new binary database format
-Date: Fri, 22 Dec 2017 00:02:57 -0600
-Message-Id: <20171222060303.14478-1-seth.forshee@canonical.com> (sfid-20171222_070343_262039_288D675B)
+        Mon, 4 Dec 2017 10:13:05 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Weixiao Zhang <waveletboy@gmail.com>
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] mwl8k: Expand non-DFS 5G channels
+References: <20171116075955.qbbqhwqn4lys3xco@ximibaba.lan>
+Date: Mon, 04 Dec 2017 17:13:00 +0200
+In-Reply-To: <20171116075955.qbbqhwqn4lys3xco@ximibaba.lan> (Weixiao Zhang's
+        message of "Thu, 16 Nov 2017 01:59:55 -0600")
+Message-ID: <87shcqjzlv.fsf@purkki.adurom.net> (sfid-20171204_161323_109977_1D9190DC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series starts with Johannes' patch for generating regulatory
-databases using the new format and adds various fixes and pieces which
-were missing such as installation to the firmware path, manual page
-updates, etc. It also restores support for the older database format to
-maintain compatibility with using CRDA on older kernels.
+Weixiao Zhang <waveletboy@gmail.com> writes:
 
-I've tested the results with 4.15 and things look to be working. I want
-to apply this in the next couple of days and get a new release out, so
-please let me know soon if you seen any issues.
+> Add non-DFS 5G upper channels (149-165) besides existed 4 lower channels
+> (36, 40, 44, 48).
+> { .band = NL80211_BAND_5GHZ, .center_freq = 5745, .hw_value = 149, },
+> { .band = NL80211_BAND_5GHZ, .center_freq = 5765, .hw_value = 153, },
+> { .band = NL80211_BAND_5GHZ, .center_freq = 5785, .hw_value = 157, },
+> { .band = NL80211_BAND_5GHZ, .center_freq = 5805, .hw_value = 161, },
+> { .band = NL80211_BAND_5GHZ, .center_freq = 5825, .hw_value = 165, },
+>
+> Signed-off-by: Weixiao Zhang <waveletboy@gmail.com>
 
-Thanks,
-Seth
+You don't need to copy the code from the patch to the commit log, I'll
+remove that when I commit this.
 
-Johannes Berg (1):
-  regdb: write firmware file format (version code 20)
-
-Seth Forshee (5):
-  wireless-regdb: Restore generation of old format database files
-  wireless-regdb: Add sforshee's x509 certificate
-  wireless-regdb: Better support for generating public certificates
-  wireless-regdb: Install regulatory.db and regulatory.db.p7s to
-    /lib/firmware
-  wireless-regdb: Document regulatory.db in the manual page
-
- Makefile          |  37 +++++++++++----
- README            |   4 +-
- db2fw.py          | 133 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- gen-pubcert.sh    |  18 ++++++++
- regulatory.bin.5  |  32 +++++++++----
- regulatory.db.5   |   1 +
- sforshee.x509.pem |  17 +++++++
- 7 files changed, 220 insertions(+), 22 deletions(-)
- create mode 100755 db2fw.py
- create mode 100755 gen-pubcert.sh
- create mode 100644 regulatory.db.5
- create mode 100644 sforshee.x509.pem
+-- 
+Kalle Valo
