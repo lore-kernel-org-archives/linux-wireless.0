@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:35238 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751307AbdLKPlo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49380 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752732AbdLDPPM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 10:41:44 -0500
-Received: by mail-pf0-f173.google.com with SMTP id j124so11808405pfc.2
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 07:41:44 -0800 (PST)
-Date: Mon, 11 Dec 2017 07:41:40 -0800
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Ramon Fried <rfried@codeaurora.org>
-Cc: Loic Poulain <loic.poulain@linaro.org>, kvalo@codeaurora.org,
-        linux-arm-msm@vger.kernel.org, linux-wireless@vger.kernel.org,
-        wcn36xx@lists.infradead.org, k.eugene.e@gmail.com
-Subject: Re: [PATCH v2] wcn36xx: Fix dynamic power saving
-Message-ID: <20171211154140.GD4803@minitux> (sfid-20171211_164148_345538_2F945526)
-References: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org>
- <20171211153403.GA30332@codeaurora.org>
+        Mon, 4 Dec 2017 10:15:12 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Li Jin <li.jin@broadcom.com>
+Cc: Wright Feng <wright.feng@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        brcm80211-dev-list@cypress.com,
+        brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org, Jason Uy <jason.uy@broadcom.com>
+Subject: Re: [PATCH INTERNAL V2 1/1] brcmfmac: add console log support with configurable read size
+References: <1511313990-19334-1-git-send-email-li.jin@broadcom.com>
+Date: Mon, 04 Dec 2017 17:15:07 +0200
+In-Reply-To: <1511313990-19334-1-git-send-email-li.jin@broadcom.com> (Li Jin's
+        message of "Tue, 21 Nov 2017 17:26:30 -0800")
+Message-ID: <87o9nejzic.fsf@purkki.adurom.net> (sfid-20171204_161530_546800_939F0376)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171211153403.GA30332@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 11 Dec 07:34 PST 2017, Ramon Fried wrote:
+Li Jin <li.jin@broadcom.com> writes:
 
-> On Mon, Dec 11, 2017 at 10:52:22AM +0200, Loic Poulain wrote:
-> > Since driver does not report hardware dynamic power saving cap,
-> > this is up to the mac80211 to manage power saving timeout and
-> > state machine, using the ieee80211 config callback to report
-> > PS changes. This patch enables/disables PS mode according to
-> > the new configuration.
-> > 
-> > Remove old behaviour enabling PS mode in a static way, this make
-> > the device unusable when power save is enabled since device is
-> > forced to PS regardless RX/TX traffic.
-> > 
-> 
-> Hi.
-> I tried to see if this patch solves the ping delay once power save is
-> turned on and it appears it doesn't (log below).
-> I do see some change in the delay though in comparison to testing without the patch.
-> Bjorn, How did you test it ?
-> 
+> From: Jason Uy <jason.uy@broadcom.com>
+>
+> Add support for configurable read size so that older wifi
+> chips that have size restrictions can be supported.
+>
+> Signed-off-by: Jason Uy <jason.uy@broadcom.com>
+> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> Signed-off-by: Li Jin <li.jin@broadcom.com>
 
-Without this patch I get ping times around a second and SSH is not
-usable, with this patch I see similar ping times as you, but SSH is
-usable.
+Arend, am I supposed to apply this even if there's this "INTERNAL" tag
+in the Subject?
 
-I have not been able to run iperf, because I keep hitting
-https://bugs.96boards.org/show_bug.cgi?id=663
-
-Regards,
-Bjorn
+-- 
+Kalle Valo
