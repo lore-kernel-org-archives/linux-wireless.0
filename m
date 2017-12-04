@@ -1,220 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753524AbdLNQxZ (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:56869 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752163AbdLDOO5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 11:53:25 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 5/9] wil6210: prevent parallel suspend and dump collection
-Date: Thu, 14 Dec 2017 18:53:09 +0200
-Message-Id: <1513270393-919-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175330_500409_6D18992B)
-In-Reply-To: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Mon, 4 Dec 2017 09:14:57 -0500
+Subject: Re: [PATCH] staging: wilc1000: Fix problems reported by checkpatch
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <ganesh.krishna@microchip.com>, <gregkh@linuxfoundation.org>,
+        <devel@driverdev.osuosl.org>
+References: <1512160034-6400-1-git-send-email-aditya.shankar@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <ce856e7c-230e-748d-a41d-9c5943cddae1@microchip.com> (sfid-20171204_151501_123881_34F96CE0)
+Date: Mon, 4 Dec 2017 16:14:54 +0200
+MIME-Version: 1.0
+In-Reply-To: <1512160034-6400-1-git-send-email-aditya.shankar@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Suspend and crash dump operations can happen simultaneously
-in case there is a FW assert during the suspend procedure
-or when SSR calls all the devices crashdump callbacks.
+Hi Aditya,
 
-To prevent that, a new flag is added, indicating that the
-dumps collection is in progress, in order to allow the
-suspend/reset decline if the dumps collection already started.
+On 01.12.2017 22:27, Aditya Shankar wrote:
+> This commit fixes below style problems in multiple lines
+> Fix checkpatch WARNING: line over 80 characters
+> Fix CHECK: Lines should not end with a '('
+You should fix only one issue per patch. Would be better to have
+a patch with "line over 80 characters fixes" and one with 
+"Lines should not end with a '('" fixes. Please see [1].
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c           | 33 +++++++++++++++++------
- drivers/net/wireless/ath/wil6210/pm.c             | 17 ++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h        |  1 +
- drivers/net/wireless/ath/wil6210/wil_crash_dump.c | 11 ++++++++
- 4 files changed, 54 insertions(+), 8 deletions(-)
+Thanks,
+Claudiu
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 7a8f8c2..aa6f9c4 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -998,6 +998,7 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
- int wil_reset(struct wil6210_priv *wil, bool load_fw)
- {
- 	int rc;
-+	unsigned long status_flags = BIT(wil_status_resetting);
- 
- 	wil_dbg_misc(wil, "reset\n");
- 
-@@ -1037,6 +1038,14 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	}
- 
- 	set_bit(wil_status_resetting, wil->status);
-+	if (test_bit(wil_status_collecting_dumps, wil->status)) {
-+		/* Device collects crash dump, cancel the reset.
-+		 * following crash dump collection, reset would take place.
-+		 */
-+		wil_dbg_misc(wil, "reject reset while collecting crash dump\n");
-+		rc = -EBUSY;
-+		goto out;
-+	}
- 
- 	cancel_work_sync(&wil->disconnect_worker);
- 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
-@@ -1051,7 +1060,11 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 
- 	/* prevent NAPI from being scheduled and prevent wmi commands */
- 	mutex_lock(&wil->wmi_mutex);
--	bitmap_zero(wil->status, wil_status_last);
-+	if (test_bit(wil_status_suspending, wil->status))
-+		status_flags |= BIT(wil_status_suspending);
-+	bitmap_and(wil->status, wil->status, &status_flags,
-+		   wil_status_last);
-+	wil_dbg_misc(wil, "wil->status (0x%lx)\n", *wil->status);
- 	mutex_unlock(&wil->wmi_mutex);
- 
- 	wil_mask_irq(wil);
-@@ -1069,14 +1082,14 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	wil_rx_fini(wil);
- 	if (rc) {
- 		wil_bl_crash_info(wil, true);
--		return rc;
-+		goto out;
- 	}
- 
- 	rc = wil_get_bl_info(wil);
- 	if (rc == -EAGAIN && !load_fw) /* ignore RF error if not going up */
- 		rc = 0;
- 	if (rc)
--		return rc;
-+		goto out;
- 
- 	wil_set_oob_mode(wil, oob_mode);
- 	if (load_fw) {
-@@ -1088,10 +1101,10 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		/* Loading f/w from the file */
- 		rc = wil_request_firmware(wil, wil->wil_fw_name, true);
- 		if (rc)
--			return rc;
-+			goto out;
- 		rc = wil_request_firmware(wil, WIL_BOARD_FILE_NAME, true);
- 		if (rc)
--			return rc;
-+			goto out;
- 
- 		wil_pre_fw_config(wil);
- 		wil_release_cpu(wil);
-@@ -1103,6 +1116,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	reinit_completion(&wil->wmi_call);
- 	reinit_completion(&wil->halp.comp);
- 
-+	clear_bit(wil_status_resetting, wil->status);
-+
- 	if (load_fw) {
- 		wil_configure_interrupt_moderation(wil);
- 		wil_unmask_irq(wil);
-@@ -1136,6 +1151,10 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	}
- 
- 	return rc;
-+
-+out:
-+	clear_bit(wil_status_resetting, wil->status);
-+	return rc;
- }
- 
- void wil_fw_error_recovery(struct wil6210_priv *wil)
-@@ -1241,9 +1260,7 @@ int __wil_down(struct wil6210_priv *wil)
- 	wil_abort_scan(wil, false);
- 	mutex_unlock(&wil->p2p_wdev_mutex);
- 
--	wil_reset(wil, false);
--
--	return 0;
-+	return wil_reset(wil, false);
- }
- 
- int wil_down(struct wil6210_priv *wil)
-diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
-index 056b180..0a96518 100644
---- a/drivers/net/wireless/ath/wil6210/pm.c
-+++ b/drivers/net/wireless/ath/wil6210/pm.c
-@@ -145,6 +145,13 @@ static int wil_suspend_keep_radio_on(struct wil6210_priv *wil)
- 
- 	/* Prevent handling of new tx and wmi commands */
- 	set_bit(wil_status_suspending, wil->status);
-+	if (test_bit(wil_status_collecting_dumps, wil->status)) {
-+		/* Device collects crash dump, cancel the suspend */
-+		wil_dbg_pm(wil, "reject suspend while collecting crash dump\n");
-+		clear_bit(wil_status_suspending, wil->status);
-+		wil->suspend_stats.rejected_by_host++;
-+		return -EBUSY;
-+	}
- 	wil_update_net_queues_bh(wil, NULL, true);
- 
- 	if (!wil_is_tx_idle(wil)) {
-@@ -255,6 +262,15 @@ static int wil_suspend_radio_off(struct wil6210_priv *wil)
- 
- 	wil_dbg_pm(wil, "suspend radio off\n");
- 
-+	set_bit(wil_status_suspending, wil->status);
-+	if (test_bit(wil_status_collecting_dumps, wil->status)) {
-+		/* Device collects crash dump, cancel the suspend */
-+		wil_dbg_pm(wil, "reject suspend while collecting crash dump\n");
-+		clear_bit(wil_status_suspending, wil->status);
-+		wil->suspend_stats.rejected_by_host++;
-+		return -EBUSY;
-+	}
-+
- 	/* if netif up, hardware is alive, shut it down */
- 	if (ndev->flags & IFF_UP) {
- 		rc = wil_down(wil);
-@@ -281,6 +297,7 @@ static int wil_suspend_radio_off(struct wil6210_priv *wil)
- 	set_bit(wil_status_suspended, wil->status);
- 
- out:
-+	clear_bit(wil_status_suspending, wil->status);
- 	wil_dbg_pm(wil, "suspend radio off: %d\n", rc);
- 
- 	return rc;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index f2bb55e..ca5abbd 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -445,6 +445,7 @@ enum { /* for wil6210_priv.status */
- 	wil_status_suspending, /* suspend in progress */
- 	wil_status_suspended, /* suspend completed, device is suspended */
- 	wil_status_resuming, /* resume in progress */
-+	wil_status_collecting_dumps, /* crashdump collection in progress */
- 	wil_status_last /* keep last */
- };
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
-index e53cf0c..1ed3306 100644
---- a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
-+++ b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
-@@ -72,6 +72,15 @@ int wil_fw_copy_crash_dump(struct wil6210_priv *wil, void *dest, u32 size)
- 		return -EINVAL;
- 	}
- 
-+	set_bit(wil_status_collecting_dumps, wil->status);
-+	if (test_bit(wil_status_suspending, wil->status) ||
-+	    test_bit(wil_status_suspended, wil->status) ||
-+	    test_bit(wil_status_resetting, wil->status)) {
-+		wil_err(wil, "cannot collect fw dump during suspend/reset\n");
-+		clear_bit(wil_status_collecting_dumps, wil->status);
-+		return -EINVAL;
-+	}
-+
- 	/* copy to crash dump area */
- 	for (i = 0; i < ARRAY_SIZE(fw_mapping); i++) {
- 		map = &fw_mapping[i];
-@@ -91,6 +100,8 @@ int wil_fw_copy_crash_dump(struct wil6210_priv *wil, void *dest, u32 size)
- 				     (const void __iomem * __force)data, len);
- 	}
- 
-+	clear_bit(wil_status_collecting_dumps, wil->status);
-+
- 	return 0;
- }
- 
--- 
-1.9.1
+[1] https://www.kernel.org/doc/html/latest/process/submitting-patches.html#split-changes
+
+> 
+> Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+> ---
+>  drivers/staging/wilc1000/linux_mon.c | 30 ++++++++++++++++++------------
+>  1 file changed, 18 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+> index 91d49c4..a793c42 100644
+> --- a/drivers/staging/wilc1000/linux_mon.c
+> +++ b/drivers/staging/wilc1000/linux_mon.c
+> @@ -69,7 +69,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+>  	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
+>  		/* hostapd callback mgmt frame */
+>  
+> -		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
+> +		skb = dev_alloc_skb(size +
+> +				    sizeof(struct wilc_wfi_radiotap_cb_hdr));
+>  		if (!skb)
+>  			return;
+>  
+> @@ -80,11 +81,12 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+>  
+>  		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+>  
+> -		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
+> +		cb_hdr->hdr.it_len =
+> +			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
+>  
+> -		cb_hdr->hdr.it_present = cpu_to_le32(
+> -				(1 << IEEE80211_RADIOTAP_RATE) |
+> -				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
+> +		cb_hdr->hdr.it_present =
+> +			cpu_to_le32((1 << IEEE80211_RADIOTAP_RATE) |
+> +				    (1 << IEEE80211_RADIOTAP_TX_FLAGS));
+>  
+>  		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
+>  
+> @@ -96,7 +98,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+>  		}
+>  
+>  	} else {
+> -		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
+> +		skb = dev_alloc_skb(size +
+> +				    sizeof(struct wilc_wfi_radiotap_hdr));
+>  
+>  		if (!skb)
+>  			return;
+> @@ -105,7 +108,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+>  		hdr = skb_push(skb, sizeof(*hdr));
+>  		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
+>  		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+> -		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
+> +		hdr->hdr.it_len =
+> +			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
+>  		hdr->hdr.it_present = cpu_to_le32
+>  				(1 << IEEE80211_RADIOTAP_RATE); /* | */
+>  		hdr->rate = 5; /* txrate->bitrate / 5; */
+> @@ -197,7 +201,8 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+>  	skb_pull(skb, rtap_len);
+>  
+>  	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
+> -		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
+> +		skb2 = dev_alloc_skb(skb->len +
+> +				     sizeof(struct wilc_wfi_radiotap_cb_hdr));
+>  		if (!skb2)
+>  			return -ENOMEM;
+>  
+> @@ -208,11 +213,12 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+>  
+>  		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+>  
+> -		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
+> +		cb_hdr->hdr.it_len =
+> +			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
+>  
+> -		cb_hdr->hdr.it_present = cpu_to_le32(
+> -				(1 << IEEE80211_RADIOTAP_RATE) |
+> -				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
+> +		cb_hdr->hdr.it_present =
+> +			cpu_to_le32((1 << IEEE80211_RADIOTAP_RATE) |
+> +				    (1 << IEEE80211_RADIOTAP_TX_FLAGS));
+>  
+>  		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
+>  		cb_hdr->tx_flags = 0x0004;
+> 
