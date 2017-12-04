@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48402 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:35450 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751863AbdLNMoO (ORCPT
+        with ESMTP id S1751104AbdLDLU2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 07:44:14 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 4 Dec 2017 06:20:28 -0500
 MIME-Version: 1.0
-Subject: Re: [1/1] rtlwifi: always initialize variables given to RT_TRACE()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171210195159.7454-1-nicolas.iooss_linux@m4x.org>
-References: <20171210195159.7454-1-nicolas.iooss_linux@m4x.org>
-To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Message-Id: <20171214124413.A4A5560A60@smtp.codeaurora.org> (sfid-20171214_134433_696062_E2F65E16)
-Date: Thu, 14 Dec 2017 12:44:13 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 04 Dec 2017 16:50:13 +0530
+From: akolli@codeaurora.org
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: mbizon@freebox.fr, linux-wireless-owner@vger.kernel.org,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
+In-Reply-To: <87374uxxjy.fsf@kamboji.qca.qualcomm.com>
+References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
+ <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com>
+ <1512125137.38490.70.camel@sakura.staff.proxad.net>
+ <7792e2fb2c546d8745c65e48945f2535@codeaurora.org>
+ <87374uxxjy.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <ec75cd163af6a2e989739474a4a190b5@codeaurora.org> (sfid-20171204_122031_902039_356D8AF4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicolas Iooss <nicolas.iooss_linux@m4x.org> wrote:
 
-> In rtl_rx_ampdu_apply(), when rtlpriv->cfg->ops->get_btc_status()
-> returns false, RT_TRACE() is called with the values of variables
-> reject_agg and agg_size, which have not been initialized.
 > 
-> Always initialize these variables in order to prevent using
-> uninitialized values.
+>>>> Parse peer stats from pktlog packets and update the tx rate
+>>>> information
+>>>> per STA. This way user space can query about transmit rate with iw:
+>>> 
+>>> everything works ok, ath10k_update_per_peer_tx_stats() is called and
+>>> ath10k_sta fields are updated correctly
+>>> 
+>>> but tx bitrate is still 6 MBit/s in station dump
+>>> 
+>> Hope CONFIG_MAC80211_DEBUGFS is enabled in your build.
+>> Please Run ping traffic and see and 'station dump'
 > 
-> This issue has been found with clang. The compiler reported:
-> 
->     drivers/net/wireless/realtek/rtlwifi/base.c:1665:6: error: variable
->     'agg_size' is used uninitialized whenever 'if' condition is false
->     [-Werror,-Wsometimes-uninitialized]
->             if (rtlpriv->cfg->ops->get_btc_status())
->                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->     drivers/net/wireless/realtek/rtlwifi/base.c:1671:31: note:
->     uninitialized use occurs here
->                      reject_agg, ctrl_agg_size, agg_size);
->                                                 ^~~~~~~~
-> 
->     drivers/net/wireless/realtek/rtlwifi/base.c:1665:6: error: variable
->     'reject_agg' is used uninitialized whenever 'if' condition
->           is false [-Werror,-Wsometimes-uninitialized]
->             if (rtlpriv->cfg->ops->get_btc_status())
->                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->     drivers/net/wireless/realtek/rtlwifi/base.c:1671:4: note:
->     uninitialized use occurs here
->                      reject_agg, ctrl_agg_size, agg_size);
->                      ^~~~~~~~~~
-> 
-> Fixes: 2635664e6e4a ("rtlwifi: Add rx ampdu cfg for btcoexist.")
-> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+> This feature should not depend on debugfs. Why is it needed? In patch 1
+> you already moved pktlog_filter to struct ath10k, does it need 
+> something
+> else as well?
 
-Patch applied to wireless-drivers-next.git, thanks.
+ATH10K updates tx rate from this callback,
+.sta_statistics                 = ath10k_sta_statistics,
 
-e4779162f737 rtlwifi: always initialize variables given to RT_TRACE()
+This callback is defined under CONFIG_MAC80211_DEBUGFS.
 
--- 
-https://patchwork.kernel.org/patch/10103995/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks,
+Anil.
