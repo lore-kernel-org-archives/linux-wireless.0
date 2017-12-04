@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51814 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751295AbdLWJWJ (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:44071 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751961AbdLDW2K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Dec 2017 04:22:09 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 23 Dec 2017 11:21:57 +0200
-Message-Id: <20171223092200.30270-3-luca@coelho.fi> (sfid-20171223_102219_359001_7252F4C5)
-In-Reply-To: <20171223092200.30270-1-luca@coelho.fi>
-References: <20171223092200.30270-1-luca@coelho.fi>
-Subject: [PATCH 2/5] iwlwifi: mvm: take RCU lock before dereferencing
+        Mon, 4 Dec 2017 17:28:10 -0500
+From: Vincent Legoll <vincent.legoll@gmail.com>
+To: m@bues.ch, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Vincent Legoll <vincent.legoll@gmail.com>
+Subject: [PATCH] ssb: make SSB a menuconfig to ease disabling it all
+Date: Mon,  4 Dec 2017 23:27:44 +0100
+Message-Id: <20171204222744.8817-2-vincent.legoll@gmail.com> (sfid-20171204_232855_734906_EB257320)
+In-Reply-To: <20171204222744.8817-1-vincent.legoll@gmail.com>
+References: <87efoan76r.fsf@purkki.adurom.net>
+ <20171204222744.8817-1-vincent.legoll@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+No need to get into the submenu to disable all SSB-related
+config entries.
 
-RCU isn't properly locked.
+This makes it easier to disable all SSB config options
+without entering the submenu. It will also enable one
+to see that en/dis-abled state from the outside menu.
 
-Fixes: 46d372af9935 ("iwlwifi: mvm: rs: new rate scale API - add FW notifications")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+This is only intended to change menuconfig UI, not change
+the config dependencies.
+
+Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/ssb/Kconfig | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-index 55d1274c6092..fb5745660509 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-@@ -234,13 +234,15 @@ void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
- 	struct iwl_mvm_sta *mvmsta;
- 	struct iwl_lq_sta_rs_fw *lq_sta;
+diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+index d8e4219c2324..f48a2ee587a4 100644
+--- a/drivers/ssb/Kconfig
++++ b/drivers/ssb/Kconfig
+@@ -3,10 +3,7 @@ config SSB_POSSIBLE
+ 	depends on HAS_IOMEM && HAS_DMA
+ 	default y
  
-+	rcu_read_lock();
+-menu "Sonics Silicon Backplane"
+-	depends on SSB_POSSIBLE
+-
+-config SSB
++menuconfig SSB
+ 	tristate "Sonics Silicon Backplane support"
+ 	depends on SSB_POSSIBLE
+ 	help
+@@ -21,6 +18,8 @@ config SSB
+ 
+ 	  If unsure, say N.
+ 
++if SSB
 +
- 	notif = (void *)pkt->data;
- 	mvmsta = iwl_mvm_sta_from_staid_rcu(mvm, notif->sta_id);
+ # Common SPROM support routines
+ config SSB_SPROM
+ 	bool
+@@ -185,4 +184,4 @@ config SSB_DRIVER_GPIO
  
- 	if (!mvmsta) {
- 		IWL_ERR(mvm, "Invalid sta id (%d) in FW TLC notification\n",
- 			notif->sta_id);
--		return;
-+		goto out;
- 	}
+ 	  If unsure, say N
  
- 	lq_sta = &mvmsta->lq_sta.rs_fw;
-@@ -251,6 +253,8 @@ void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
- 		IWL_DEBUG_RATE(mvm, "new rate_n_flags: 0x%X\n",
- 			       lq_sta->last_rate_n_flags);
- 	}
-+out:
-+	rcu_read_unlock();
- }
- 
- void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-endmenu
++endif # SSB
 -- 
-2.15.1
+2.11.0
