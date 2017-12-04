@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:42671 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756746AbdLTTvn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Dec 2017 14:51:43 -0500
-Received: by mail-pg0-f66.google.com with SMTP id q67so3092573pga.9
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Dec 2017 11:51:43 -0800 (PST)
-From: Amit Pundir <amit.pundir@linaro.org>
-To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Cc: Suren Baghdasaryan <surenb@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>
-Subject: [RFC][PATCH 3/4] NFC: Fix possible memory corruption when handling SHDLC I-Frame commands
-Date: Thu, 21 Dec 2017 01:21:23 +0530
-Message-Id: <1513799484-12505-4-git-send-email-amit.pundir@linaro.org> (sfid-20171220_205150_085665_9F9A7D25)
-In-Reply-To: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
-References: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
+Received: from mga11.intel.com ([192.55.52.93]:46084 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751636AbdLDM55 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Dec 2017 07:57:57 -0500
+Message-ID: <1512392273.4827.127.camel@intel.com> (sfid-20171204_135800_245132_CB43350A)
+Subject: Re: [PATCH 13/15] iwlwifi: mvm: mark MIC stripped MPDUs
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
+Date: Mon, 04 Dec 2017 14:57:53 +0200
+In-Reply-To: <20171202162858.4167-14-luca@coelho.fi>
+References: <20171202162858.4167-1-luca@coelho.fi>
+         <20171202162858.4167-14-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Suren Baghdasaryan <surenb@google.com>
+On Sat, 2017-12-02 at 18:28 +0200, Luca Coelho wrote:
+> From: Sara Sharon <sara.sharon@intel.com>
+> 
+> When RADA is active, the hardware decrypts the packets and strips off
+> the MIC as it is useless after decryption. Indicate that to mac80211.
+> 
+> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+> b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+> index 0e6a7dd30aa9..a81ff4163d05 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+> @@ -253,6 +253,8 @@ static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm,
+> struct ieee80211_hdr *hdr,
+>  			return -1;
+>  
+>  		stats->flag |= RX_FLAG_DECRYPTED;
+> +		if (pkt_flags & FH_RSCSR_RADA_EN)
+> +			stats->flag |= RX_FLAG_MIC_STRIPPED;
+>  		*crypt_len = IEEE80211_CCMP_HDR_LEN;
+>  		return 0;
+>  	case IWL_RX_MPDU_STATUS_SEC_TKIP:
 
-When handling SHDLC I-Frame commands "pipe" field used for indexing
-into an array should be checked before usage. If left unchecked it
-might access memory outside of the array of size NFC_HCI_MAX_PIPES(127).
+Same thing here, I'll move it to the -fixes series, since it's needed
+by 9000-series NICs.
 
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
----
- net/nfc/hci/core.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
-index ac8030c4bcf8..19cb2e473ea6 100644
---- a/net/nfc/hci/core.c
-+++ b/net/nfc/hci/core.c
-@@ -209,6 +209,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
- 		}
- 		create_info = (struct hci_create_pipe_resp *)skb->data;
- 
-+		if (create_info->pipe >= NFC_HCI_MAX_PIPES) {
-+			status = NFC_HCI_ANY_E_NOK;
-+			goto exit;
-+		}
-+
- 		/* Save the new created pipe and bind with local gate,
- 		 * the description for skb->data[3] is destination gate id
- 		 * but since we received this cmd from host controller, we
-@@ -232,6 +237,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
- 		}
- 		delete_info = (struct hci_delete_pipe_noti *)skb->data;
- 
-+		if (delete_info->pipe >= NFC_HCI_MAX_PIPES) {
-+			status = NFC_HCI_ANY_E_NOK;
-+			goto exit;
-+		}
-+
- 		hdev->pipes[delete_info->pipe].gate = NFC_HCI_INVALID_GATE;
- 		hdev->pipes[delete_info->pipe].dest_host = NFC_HCI_INVALID_HOST;
- 		break;
--- 
-2.7.4
+--
+Cheers,
+Luca.
