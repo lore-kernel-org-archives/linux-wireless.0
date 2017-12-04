@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52894 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751875AbdLSM14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 07:27:56 -0500
-Date: Tue, 19 Dec 2017 13:27:07 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Enrico Mioso <mrkiko.rs@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:56268 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752360AbdLDOrD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Dec 2017 09:47:03 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        nbd@nbd.name
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-Message-ID: <20171219122707.GA2672@redhat.com> (sfid-20171219_132759_854518_BB129F9F)
-References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain>
- <20171213152017.GA3554@redhat.com>
- <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain>
- <20171218152142.GA15414@redhat.com>
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>
+Subject: Re: [PATCH 02/10] qtnfmac: pass complete channel data between driver and firmware
+References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
+        <20171113102815.11254-3-sergey.matyukevich.os@quantenna.com>
+Date: Mon, 04 Dec 2017 16:46:59 +0200
+In-Reply-To: <20171113102815.11254-3-sergey.matyukevich.os@quantenna.com>
+        (Sergey Matyukevich's message of "Mon, 13 Nov 2017 13:28:07 +0300")
+Message-ID: <87efoalfdo.fsf@purkki.adurom.net> (sfid-20171204_154707_749238_ABAD6607)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171218152142.GA15414@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 18, 2017 at 04:21:42PM +0100, Stanislaw Gruszka wrote:
-> Hi
-> 
-> On Sat, Dec 16, 2017 at 07:33:47PM +0100, Enrico Mioso wrote:
-> > I tested the Archer MR200 device removing the patch as you suggested:
-> > package/kernel/mac80211/patches/600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
-> > ... the error still appears, but the driver is still working as of now.
-> > Here - reporting my dmesg
-> > [  819.060392] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
-> > [  819.069900] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-Please test two patches I posted today:
-https://marc.info/?l=linux-wireless&m=151368325114059&w=2
-https://marc.info/?l=linux-wireless&m=151368325914062&w=2
+> Center frequency is not enough to describe the channel in HT and VHT
+> modes. For 40MHz and 80MHz channels both primary channel and center
+> frequency should be specified in order to qualify channel completely.
+> This change adds primary channel info into qlink_chandef structure.
+>
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-If they do not work, please try the queue->threshold change.
+[...]
 
-Thanks
-Stanislaw
+> +/**
+>   * struct qlink_chandef - qlink channel definition
+>   *
+> + * @chan: primary channel definition
+>   * @center_freq1: center frequency of first segment
+>   * @center_freq2: center frequency of second segment (80+80 only)
+>   * @width: channel width, one of @enum qlink_channel_width
+>   */
+>  struct qlink_chandef {
+> +	struct qlink_channel chan;
+>  	__le16 center_freq1;
+>  	__le16 center_freq2;
+>  	u8 width;
+> -	u8 rsvd[3];
+> +	u8 rsvd;
+>  } __packed;
 
+Doesn't this break backwards compatibility with the older firmware? The
+basic princinple is that old firmware images continue to work with newer
+driver (or there will be a firmware image with new name, eg. fw-2.bin).
+You can check how iwlwifi does that.
 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-> index a2c1ca5c76d1..9e65b8f285e9 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-> @@ -1224,7 +1224,7 @@ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
->  
->  	rt2x00dev->ops->queue_init(queue);
->  
-> -	queue->threshold = DIV_ROUND_UP(queue->limit, 10);
-> +	queue->threshold = DIV_ROUND_UP(queue->limit, 8);
->  }
->  
->  int rt2x00queue_allocate(struct rt2x00_dev *rt2x00dev)
+As this is a new driver I guess it doesn't matter that much to break it,
+but please keep this in mind in the future.
+
+-- 
+Kalle Valo
