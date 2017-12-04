@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:40846 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756125AbdLOVId (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Dec 2017 16:08:33 -0500
-Received: by mail-io0-f195.google.com with SMTP id v186so3994418iod.7
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Dec 2017 13:08:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <07a73398-fbc8-7c84-9512-edff9cbc5e89@lwfinger.net>
-References: <CADBo=zzcMzFCOdbbskpPStJZdt4s7wdavPefqo9iHi_zVSzJTg@mail.gmail.com>
- <07a73398-fbc8-7c84-9512-edff9cbc5e89@lwfinger.net>
-From: James Hemsing <jhemsing@gmail.com>
-Date: Fri, 15 Dec 2017 16:08:32 -0500
-Message-ID: <CADBo=zzrLC=yYyPrJ18RFU0OXN2nEnB6X1pH6GBZDnKC0kjo6Q@mail.gmail.com> (sfid-20171215_220847_772528_83F6BA32)
-Subject: Re: rtl8723bu support on Complex 11t
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
+Received: from mga03.intel.com ([134.134.136.65]:64175 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753983AbdLDM5Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Dec 2017 07:57:24 -0500
+Message-ID: <1512392240.4827.126.camel@intel.com> (sfid-20171204_135733_295942_AC17A95D)
+Subject: Re: [PATCH 12/15] iwlwifi: mvm: enable RX offloading with TKIP and
+ WEP
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        David Spinadel <david.spinadel@intel.com>
+Date: Mon, 04 Dec 2017 14:57:20 +0200
+In-Reply-To: <20171202162858.4167-13-luca@coelho.fi>
+References: <20171202162858.4167-1-luca@coelho.fi>
+         <20171202162858.4167-13-luca@coelho.fi>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ha! I didn't realize those were two separate drivers. Blacklisting
-rtl8xxxu made it work consistently. The throughput is still about 1/2
-what it is in Windows 10, but at least it works! Thanks.
+On Sat, 2017-12-02 at 18:28 +0200, Luca Coelho wrote:
+> From: David Spinadel <david.spinadel@intel.com>
+> 
+> Set the flag that indicates that ICV was stripped on if
+> this option was enabled in the HW.
+> 
+> Signed-off-by: David Spinadel <david.spinadel@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
 
-On Mon, Dec 11, 2017 at 9:21 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 12/11/2017 06:59 PM, James Hemsing wrote:
->>
->> Hello,
->>
->> I have a Complex 11t tablet with this wireless card on USB. The kernel
->> driver supports it, but even at its best, it doesn't work at full
->> speed and frequently loses connections, whereas Windows 10 doesn't
->> have any problems. I'd be happy to test and debug code, and provide
->> whatever help I can to improve the driver for this device. Here is
->> some system information. The kernel I'm currently using is version
->> 4.13.0 on Ubuntu 17.10.
->>
->> Thanks,
->> James
->>
->> [    4.031513] Bluetooth: hci0: rtl: examining hci_ver=06 hci_rev=000b
->> lmp_ver=06 lmp_subver=8723
->> [    4.031515] Bluetooth: hci0: rtl: loading rtl_bt/rtl8723b_config.bin
->> [    4.032132] bluetooth hci0: Direct firmware load for
->> rtl_bt/rtl8723b_config.bin failed with error -2
->> [    4.032136] Bluetooth: hci0: rtl: loading rtl_bt/rtl8723b_fw.bin
->> [    4.160515] usb 1-6: rtl8723bu_parse_efuse: dumping efuse (0x200
->> bytes):
->> [    4.160667] usb 1-6: RTL8723BU rev E (SMIC) 1T1R, TX queues 3,
->> WiFi=1, BT=1, GPS=0, HI PA=0
->> [    4.160670] usb 1-6: RTL8723BU MAC: 7c:c7:09:69:b6:3a
->> [    4.160674] usb 1-6: rtl8xxxu: Loading firmware
->> rtlwifi/rtl8723bu_nic.bin
->> [    5.038493] 8723bu: loading out-of-tree module taints kernel.
->> [    5.039092] 8723bu: module verification failed: signature and/or
->> required key missing - tainting kernel
->
->
-> Why are you loading BOTH rtl8xxxu and 8723bu? The conflict between them will
-> cause all kinds of problems.
->
-> Larry
->
->
+I'll move this to my fixes series, because it's needed for the 9000
+series, which is currently broken upstream... :(
+
+--
+Cheers,
+Luca.
