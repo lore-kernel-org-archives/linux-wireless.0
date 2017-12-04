@@ -1,78 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753524AbdLNQxa (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34050 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751205AbdLDMTL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 11:53:30 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH v2 8/9] wil6210: remove leftover "FIXME"s
-Date: Thu, 14 Dec 2017 18:53:12 +0200
-Message-Id: <1513270393-919-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175336_505812_2044A81E)
-In-Reply-To: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Mon, 4 Dec 2017 07:19:11 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v4 3/3] mwifiex: debugfs: trigger device dump for usb interface
+Date: Mon, 4 Dec 2017 20:18:44 +0800
+Message-ID: <1512389924-25674-3-git-send-email-huxm@marvell.com> (sfid-20171204_131914_024349_437C8F10)
+In-Reply-To: <1512389924-25674-1-git-send-email-huxm@marvell.com>
+References: <1512389924-25674-1-git-send-email-huxm@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+This patch extend device_dump debugfs function to make it
+works for usb interface.
 
-"FIXME: IRQ mask debug" and "FIXME: interrupts enabled - for debug"
-can be removed because wil6210_debug_irq_mask() is now considered
-production feature.
+For command timeouts, USB firmware will automatically emit
+firmware dump events, so we don't implement device_dump().
 
-"FIXME FW can transmit only ucast frames to peer" and "FIXME real
-ring_id instead of hard coded 0" can be removed because FW/HW already
-support multicast transmission.
+For user-initiated dumps, we trigger it by issue firmware
+dump event command to firmware, as there is no command
+response, do not start 10s timer.
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/ath/wil6210/interrupt.c | 2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h   | 2 +-
- drivers/net/wireless/ath/wil6210/wmi.c       | 2 --
- 3 files changed, 2 insertions(+), 4 deletions(-)
+v2: Same as v1
+v3: Add more comments Regards the different dump mechanism
+    between usb and other interfaces.(Brian Norris)
+v4: Same as v3
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c  | 11 +++++++----
+ drivers/net/wireless/marvell/mwifiex/debugfs.c | 13 +++++++++----
+ drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  4 ++++
+ 4 files changed, 21 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 5cf3417..dcf87a7 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -565,7 +565,7 @@ static irqreturn_t wil6210_hardirq(int irq, void *cookie)
- 	if (unlikely((pseudo_cause == 0) || ((pseudo_cause & 0xff) == 0xff)))
- 		return IRQ_NONE;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index dcc529e..8746600 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -290,13 +290,16 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 	adapter->dbg.last_cmd_act[adapter->dbg.last_cmd_index] =
+ 			get_unaligned_le16((u8 *)host_cmd + S_DS_GEN);
  
--	/* FIXME: IRQ mask debug */
-+	/* IRQ mask debug */
- 	if (unlikely(wil6210_debug_irq_mask(wil, pseudo_cause)))
- 		return IRQ_NONE;
++	/* Setup the timer after transmit command, except that specific
++	 * command might not have command response.
++	 */
++	if (cmd_code != HostCmd_CMD_FW_DUMP_EVENT)
++		mod_timer(&adapter->cmd_timer,
++			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
++
+ 	/* Clear BSS_NO_BITS from HostCmd */
+ 	cmd_code &= HostCmd_CMD_ID_MASK;
  
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index ca5abbd..703e09e 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -439,7 +439,7 @@ enum { /* for wil6210_priv.status */
- 	wil_status_fwconnected,
- 	wil_status_dontscan,
- 	wil_status_mbox_ready, /* MBOX structures ready */
--	wil_status_irqen, /* FIXME: interrupts enabled - for debug */
-+	wil_status_irqen, /* interrupts enabled - for debug */
- 	wil_status_napi_en, /* NAPI enabled protected by wil->mutex */
- 	wil_status_resetting, /* reset in progress */
- 	wil_status_suspending, /* suspend in progress */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index d06090d..9b9882c 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -813,8 +813,6 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
- 		}
- 	}
+-	/* Setup the timer after transmit command */
+-	mod_timer(&adapter->cmd_timer,
+-		  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
+-
+ 	return 0;
+ }
  
--	/* FIXME FW can transmit only ucast frames to peer */
--	/* FIXME real ring_id instead of hard coded 0 */
- 	ether_addr_copy(wil->sta[evt->cid].addr, evt->bssid);
- 	wil->sta[evt->cid].status = wil_sta_conn_pending;
+diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+index 6f4239b..db2872d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
++++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+@@ -168,10 +168,15 @@
+ {
+ 	struct mwifiex_private *priv = file->private_data;
  
+-	if (!priv->adapter->if_ops.device_dump)
+-		return -EIO;
+-
+-	priv->adapter->if_ops.device_dump(priv->adapter);
++	/* For command timeouts, USB firmware will automatically emit
++	 * firmware dump events, so we don't implement device_dump().
++	 * For user-initiated dumps, we trigger it ourselves.
++	 */
++	if (priv->adapter->iface_type == MWIFIEX_USB)
++		mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT,
++				 HostCmd_ACT_GEN_SET, 0, NULL, true);
++	else
++		priv->adapter->if_ops.device_dump(priv->adapter);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 4d5e686..9c2cdef 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -409,6 +409,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_TDLS_CONFIG                       0x0100
+ #define HostCmd_CMD_MC_POLICY                         0x0121
+ #define HostCmd_CMD_TDLS_OPER                         0x0122
++#define HostCmd_CMD_FW_DUMP_EVENT		      0x0125
+ #define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
+ #define HostCmd_CMD_CHAN_REGION_CFG		      0x0242
+ #define HostCmd_CMD_PACKET_AGGR_CTRL		      0x0251
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index fb09014..211e47d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -2206,6 +2206,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 	case HostCmd_CMD_CHAN_REGION_CFG:
+ 		ret = mwifiex_cmd_chan_region_cfg(priv, cmd_ptr, cmd_action);
+ 		break;
++	case HostCmd_CMD_FW_DUMP_EVENT:
++		cmd_ptr->command = cpu_to_le16(cmd_no);
++		cmd_ptr->size = cpu_to_le16(S_DS_GEN);
++		break;
+ 	default:
+ 		mwifiex_dbg(priv->adapter, ERROR,
+ 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
 -- 
 1.9.1
