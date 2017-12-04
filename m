@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:37716 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752376AbdLERkl (ORCPT
+Received: from sonic310-28.consmr.mail.ir2.yahoo.com ([77.238.177.49]:33606
+        "EHLO sonic310-28.consmr.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752779AbdLDWCm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 12:40:41 -0500
-Date: Tue, 05 Dec 2017 12:40:38 -0500 (EST)
-Message-Id: <20171205.124038.2265447675450126665.davem@davemloft.net> (sfid-20171205_184049_255040_3BACDDA6)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi,
-        dsahern@gmail.com
-Subject: Re: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1512495010.26976.24.camel@sipsolutions.net>
-References: <1512491661.26976.19.camel@sipsolutions.net>
-        <20171205.114106.1013322969674769159.davem@davemloft.net>
-        <1512495010.26976.24.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 4 Dec 2017 17:02:42 -0500
+Date: Mon, 4 Dec 2017 22:02:39 +0000 (UTC)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: Hin-Tak Leung <htl10@users.sourceforge.net>
+To: Gabriele Gristina <gabriele.gristina@gmail.com>
+Cc: Herton Ronaldo Krzesinski <herton@canonical.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        <linux-wireless@vger.kernel.org>
+Message-ID: <1990723570.2726060.1512424959242@mail.yahoo.com> (sfid-20171204_230246_357410_EA02BFF4)
+Subject: Re: [PATCH] rtl8187: add master mode
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1990723570.2726060.1512424959242.ref@mail.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 05 Dec 2017 18:30:10 +0100
+--------------------------------------------
+On Mon, 4/12/17, Gabriele Gristina <gabriele.gristina@gmail.com> wrote:
+ 
+> I use these few
+> byte from years and hostapd work like a charm.I
+> don't understand why you write "completely
+> wrong" but you are free to refuse this
+> patch.
+> Have a nice
+> day,Gabriele
 
-> On Tue, 2017-12-05 at 11:41 -0500, David Miller wrote:
->> 
->> There is no reasonable interpretation for what that application is
->> doing, so I think we can safely call that case as buggy.
->> 
->> We are only trying to handle the situation where a U8 attribute
->> is presented as a bonafide U32 or a correct U8.
->> 
->> Does this make sense?
-> 
-> Well the application is buggy, but we don't really know in what way?
-> Perhaps somebody even did the equivalent of
->     nla_put_u32(ATTR, cpu_to_le32(x))
-> when they noticed it was broken on BE, and end up with a similar case
-> as I had above.
-> 
-> I don't think there's a good solution to this, applications must be
-> fixed anyhow. I'm just saying that I'd save the extra code and stay
-> compatible with applications as written today, even if they're now
-> broken on BE - and rely on the warning to fix it. Trying to fix it up
-> seems to have the potential to just break something else.
+I think the issue was to do with hardware support of certain features - power-management (allowing the clients to sleep) and maintaining states across low-power states, and somewhat large number of clients. That it can work to some extent, and even to a very good extent, to serve a small number of clients - at full power, without power managrment - is not a surprise.
 
-You might be right.
+My impression that software (i.e. non-hardware) support was to improve to make it possible. Larry and others can comment on the current state.
 
-Ok let's just go with the warning + existing behavior for now.
+ 
