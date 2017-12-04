@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:7947 "EHLO mga04.intel.com"
+Received: from nbd.name ([46.4.11.11]:59562 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751986AbdLANHm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 08:07:42 -0500
-Message-ID: <1512133659.4827.50.camel@intel.com> (sfid-20171201_140745_912884_17BFDD14)
-Subject: Re: [PATCH 1/5] mac80211: always update the PM state of a peer on
- MGMT / DATA frames
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Fri, 01 Dec 2017 15:07:39 +0200
-In-Reply-To: <1512130169.25588.11.camel@sipsolutions.net>
-References: <20171029095111.17078-1-luca@coelho.fi>
-         <20171029095111.17078-2-luca@coelho.fi>
-         <1509353300.2637.2.camel@sipsolutions.net>
-         <1512128925.4827.49.camel@intel.com>
-         <1512130169.25588.11.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751823AbdLDSuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Dec 2017 13:50:15 -0500
+Subject: Re: [PATCH v8 0/3] mt76: add new wireless driver for MediaTek MT76x2
+ PCIe chips
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+References: <20171121095053.82673-1-nbd@nbd.name>
+ <87wp22jzzb.fsf@purkki.adurom.net>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <753050de-c306-838e-98fc-b970cc77ebcf@nbd.name> (sfid-20171204_195019_827925_8531970F)
+Date: Mon, 4 Dec 2017 19:50:13 +0100
+MIME-Version: 1.0
+In-Reply-To: <87wp22jzzb.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-12-01 at 13:09 +0100, Johannes Berg wrote:
-> On Fri, 2017-12-01 at 13:48 +0200, Luciano Coelho wrote:
-> > 
-> > FTR, I'm sending a separate patch with the hwsim fix, as we agreed,
-> > as
-> > part of the patchset I'm sending today.
-> > 
+On 2017-12-04 16:04, Kalle Valo wrote:
+> Felix Fietkau <nbd@nbd.name> writes:
 > 
-> Still need a fix to the test case as well though :-)
+>> Changes since v7:
+>> - Fix build errors
+>>
+>> Changes since v6:
+>> - DT documentation fixes
+>> - Add LED configuration
+>> - PHY gain calibration fixes
+>> - Endian fixes
+>> - Tx status processing fixes
+>> - EEPROM validation fixes
+>> - IBSS RSN fix
+>> - AP mode powersave delivery fix
+>>
+>> Changes since v5:
+>> - Adjust for mac80211 API changes
+>> - EEPROM parsing fixes
+>> - Ad-hoc mode WPA2 fixes
+>>
+>> Changes since v4:
+>> - Cleanups suggested by Stanislaw Gruszka
+>> - Device tree fixes suggested by Rob Herring
+>> - EEPROM MAC address parsing fix
+>>
+>> Changes since v3:
+>> - DFS fixes
+>> - stability fixes
+>> - use wiphy_read_of_freq_limits
+>>
+>> Changes since v2:
+>> - lots of checkpatch cleanups
+>> - various tx path (and other) fixes
+>> - use the new bitfield API
+>> - documented device tree bindings
+>>
+>> Felix Fietkau (3):
+>>   Documentation: dt: net: add mt76 wireless device binding
+>>   mt76: add common code shared between multiple chipsets
+>>   mt76: add driver code for MT76x2e
+> 
+> Looking very good to me. Unless I hear any objections I'm planning to
+> apply this within the next few days.
+Great news, thanks. Please also apply the two patches from "kbuild test
+robot" that were sent in response to v7 - they still apply to v8.
 
-Yeah, I guess you should hold this patch until the test fix reaches
-hostap.  I'll leave that coordination with you. ;)
-
---
-Cheers,
-Luca.
+- Felix
