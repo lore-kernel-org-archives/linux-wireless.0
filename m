@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33303 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750854AbdLAHt2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56608 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751052AbdLEF07 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 02:49:28 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org
-Subject: [v3 0/8] rsi: add bluetooth and coex support
-Date: Fri,  1 Dec 2017 13:11:17 +0530
-Message-Id: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com> (sfid-20171201_084950_645060_31486050)
+        Tue, 5 Dec 2017 00:26:59 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 05 Dec 2017 10:56:58 +0530
+From: akolli@codeaurora.org
+To: mbizon@freebox.fr
+Cc: akolli@qti.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
+In-Reply-To: <1512397413.14552.67.camel@sakura.staff.proxad.net>
+References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
+ <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com>
+ <1512125137.38490.70.camel@sakura.staff.proxad.net>
+ <7792e2fb2c546d8745c65e48945f2535@codeaurora.org>
+ <1512140710.38490.81.camel@sakura.staff.proxad.net>
+ <45d5ada8ea658e49af85582b4f3f71f7@codeaurora.org>
+ <1512397413.14552.67.camel@sakura.staff.proxad.net>
+Message-ID: <642ec05b29239335ba748f25e248634b@codeaurora.org> (sfid-20171205_062703_945863_9031818A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+On 2017-12-04 19:53, Maxime Bizon wrote:
+> On Mon, 2017-12-04 at 18:54 +0530, akolli@codeaurora.org wrote:
+> 
+>> Hope 10.2.4-1.0-00029 Firmware binary works for you.
+> 
+> it does
+> 
+>> I will check this warning.
+> 
+> fixed by applying patch:
+>  "[PATCH] ath10k: fix recent bandwidth conversion bug"
+> 
+> as suggested by Christian Lamparter
+> 
+> only remaining oddity is the CONFIG_MAC80211_DEBUGFS dependency
 
-This patch series adds new bluetooth driver and coex enhancments
-in existing wlan driver for RSI chipsets.
-As per our architecture, both wlan and bluetooth drivers talk
-over same SDIO interface to device. Separate endpoint will be
-used in case of USB interface.
+I will send a patch to remove this dependency.
 
-Changes in v3: 5/8 and 6/8 patches are modified
-Changes in v2: 2/8, 5/8 and 6/8 patches are modified
-
-Prameela Rani Garnepudi (6):
-  rsi: add rx control block to handle rx packets in USB
-  rsi: add header file rsi_header
-  rsi: add coex support
-  Bluetooth: btrsi: add new rsi bluetooth driver
-  rsi: add module parameter operating mode
-  rsi: sdio changes to support BT
-
-Siva Rebbagondla (2):
-  rsi: add bluetooth rx endpoint
-  rsi: handle BT traffic in driver
-
- drivers/bluetooth/Kconfig                   |  11 ++
- drivers/bluetooth/Makefile                  |   2 +
- drivers/bluetooth/btrsi.c                   | 211 ++++++++++++++++++++++++++++
- drivers/bluetooth/rsi_hci.h                 |  40 ++++++
- drivers/net/wireless/rsi/Kconfig            |   2 +-
- drivers/net/wireless/rsi/Makefile           |   1 +
- drivers/net/wireless/rsi/rsi_91x_coex.c     | 184 ++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_core.c     |  16 ++-
- drivers/net/wireless/rsi/rsi_91x_hal.c      |  56 ++++++--
- drivers/net/wireless/rsi/rsi_91x_main.c     | 110 ++++++++++++++-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   2 +-
- drivers/net/wireless/rsi/rsi_91x_sdio.c     |  13 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |   5 +-
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 124 +++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  35 +++--
- drivers/net/wireless/rsi/rsi_coex.h         |  38 +++++
- drivers/net/wireless/rsi/rsi_common.h       |   5 +-
- drivers/net/wireless/rsi/rsi_hal.h          |  21 +++
- drivers/net/wireless/rsi/rsi_main.h         |  20 +--
- drivers/net/wireless/rsi/rsi_mgmt.h         |   3 +
- drivers/net/wireless/rsi/rsi_usb.h          |  16 ++-
- include/linux/rsi_header.h                  |  56 ++++++++
- 22 files changed, 888 insertions(+), 83 deletions(-)
- create mode 100644 drivers/bluetooth/btrsi.c
- create mode 100644 drivers/bluetooth/rsi_hci.h
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
- create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
- create mode 100644 include/linux/rsi_header.h
-
--- 
-2.7.4
+Thanks,
+Anil.
