@@ -1,129 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46926 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751803AbdLLHir (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:36675 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751473AbdLEOfY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 02:38:47 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v5 3/3] mwifiex: debugfs: trigger device dump for usb interface
-Date: Tue, 12 Dec 2017 15:38:13 +0800
-Message-ID: <1513064293-9400-3-git-send-email-huxm@marvell.com> (sfid-20171212_083849_842129_A2C3EC1F)
-In-Reply-To: <1513064293-9400-1-git-send-email-huxm@marvell.com>
-References: <1513064293-9400-1-git-send-email-huxm@marvell.com>
+        Tue, 5 Dec 2017 09:35:24 -0500
+Date: Tue, 5 Dec 2017 17:35:08 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Sujith <Sujith.Manoharan@atheros.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH] ath9k_htc: Add a sanity check in ath9k_htc_ampdu_action()
+Message-ID: <20171205143508.qbnbm4d3wesguu2g@mwanda> (sfid-20171205_153529_165113_DE72970A)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch extend device_dump debugfs function to make it
-works for usb interface.
+Smatch generates a warning here:
 
-For command timeouts, USB firmware will automatically emit
-firmware dump events, so we don't implement device_dump().
+    drivers/net/wireless/ath/ath9k/htc_drv_main.c:1688 ath9k_htc_ampdu_action()
+    error: buffer overflow 'ista->tid_state' 8 <= 15
 
-For user-initiated dumps, we trigger it by issue firmware
-dump event command to firmware, as there is no command
-response, do not start 10s timer.
+I don't know if it's a real bug or not but the other paths through this
+function all ensure that "tid" is less than ATH9K_HTC_MAX_TID (8) so
+checking here makes things more consistent.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
-v2: Same as v1
-v3: Add more comments Regards the different dump mechanism
-    between usb and other interfaces.(Brian Norris)
-v5: Same as v3,v4
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c  | 11 +++++++----
- drivers/net/wireless/marvell/mwifiex/debugfs.c | 13 +++++++++----
- drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  4 ++++
- 4 files changed, 21 insertions(+), 8 deletions(-)
+This might be fine.  I see lots of other drivers don't check tid.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index dcc529e..8746600 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -290,13 +290,16 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 	adapter->dbg.last_cmd_act[adapter->dbg.last_cmd_index] =
- 			get_unaligned_le16((u8 *)host_cmd + S_DS_GEN);
- 
-+	/* Setup the timer after transmit command, except that specific
-+	 * command might not have command response.
-+	 */
-+	if (cmd_code != HostCmd_CMD_FW_DUMP_EVENT)
-+		mod_timer(&adapter->cmd_timer,
-+			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
-+
- 	/* Clear BSS_NO_BITS from HostCmd */
- 	cmd_code &= HostCmd_CMD_ID_MASK;
- 
--	/* Setup the timer after transmit command */
--	mod_timer(&adapter->cmd_timer,
--		  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-index 6f4239b..db2872d 100644
---- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-@@ -168,10 +168,15 @@
- {
- 	struct mwifiex_private *priv = file->private_data;
- 
--	if (!priv->adapter->if_ops.device_dump)
--		return -EIO;
--
--	priv->adapter->if_ops.device_dump(priv->adapter);
-+	/* For command timeouts, USB firmware will automatically emit
-+	 * firmware dump events, so we don't implement device_dump().
-+	 * For user-initiated dumps, we trigger it ourselves.
-+	 */
-+	if (priv->adapter->iface_type == MWIFIEX_USB)
-+		mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT,
-+				 HostCmd_ACT_GEN_SET, 0, NULL, true);
-+	else
-+		priv->adapter->if_ops.device_dump(priv->adapter);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 4d5e686..9c2cdef 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -409,6 +409,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_TDLS_CONFIG                       0x0100
- #define HostCmd_CMD_MC_POLICY                         0x0121
- #define HostCmd_CMD_TDLS_OPER                         0x0122
-+#define HostCmd_CMD_FW_DUMP_EVENT		      0x0125
- #define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
- #define HostCmd_CMD_CHAN_REGION_CFG		      0x0242
- #define HostCmd_CMD_PACKET_AGGR_CTRL		      0x0251
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index fb09014..211e47d 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2206,6 +2206,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 	case HostCmd_CMD_CHAN_REGION_CFG:
- 		ret = mwifiex_cmd_chan_region_cfg(priv, cmd_ptr, cmd_action);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index f808e5833d7e..a82ad739ab80 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1683,6 +1683,10 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
+ 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
  		break;
-+	case HostCmd_CMD_FW_DUMP_EVENT:
-+		cmd_ptr->command = cpu_to_le16(cmd_no);
-+		cmd_ptr->size = cpu_to_le16(S_DS_GEN);
-+		break;
- 	default:
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
--- 
-1.9.1
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
++		if (tid >= ATH9K_HTC_MAX_TID) {
++			ret = -EINVAL;
++			break;
++		}
+ 		ista = (struct ath9k_htc_sta *) sta->drv_priv;
+ 		spin_lock_bh(&priv->tx.tx_lock);
+ 		ista->tid_state[tid] = AGGR_OPERATIONAL;
