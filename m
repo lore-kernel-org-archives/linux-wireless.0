@@ -1,160 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2718 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750713AbdLWLEk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Dec 2017 06:04:40 -0500
-From: Yisheng Xie <xieyisheng1@huawei.com>
-To: <linux-kernel@vger.kernel.org>, <gregkh@linuxfoundation.org>
-CC: <ysxie@foxmail.com>, <ulf.hansson@linaro.org>,
-        <linux-mmc@vger.kernel.org>, <boris.brezillon@free-electrons.com>,
-        <richard@nod.at>, <marek.vasut@gmail.com>,
-        <cyrille.pitchen@wedev4u.fr>, <linux-mtd@lists.infradead.org>,
-        <alsa-devel@alsa-project.org>, <wim@iguana.be>,
-        <linux@roeck-us.net>, <linux-watchdog@vger.kernel.org>,
-        <b.zolnierkie@samsung.com>, <linux-fbdev@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <linux-gpio@vger.kernel.org>,
-        <ralf@linux-mips.org>, <linux-mips@linux-mips.org>,
-        <lgirdwood@gmail.com>, <broonie@kernel.org>, <tglx@linutronix.de>,
-        <jason@lakedaemon.net>, <marc.zyngier@arm.com>, <arnd@arndb.de>,
-        <andriy.shevchenko@linux.intel.com>,
-        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
-        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
-        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
-        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
-        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
-        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
-        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
-        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
-        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <dvhart@infradead.org>, <andy@infradead.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
-        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
-        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
-        <dmaengine@vger.kernel.org>, <jslaby@suse.com>,
-        Yisheng Xie <xieyisheng1@huawei.com>
-Subject: [PATCH v3 00/27] kill devm_ioremap_nocache
-Date: Sat, 23 Dec 2017 18:55:25 +0800
-Message-ID: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com> (sfid-20171223_120514_157911_5B8AC6E0)
+Received: from mail-wr0-f177.google.com ([209.85.128.177]:34010 "EHLO
+        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752283AbdLELl1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Dec 2017 06:41:27 -0500
+Received: by mail-wr0-f177.google.com with SMTP id y21so20642907wrc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Dec 2017 03:41:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <d776bc3d-7712-8430-93e2-72e4b6bbf23c@exactcode.com>
+References: <d776bc3d-7712-8430-93e2-72e4b6bbf23c@exactcode.com>
+From: Belisko Marek <marek.belisko@gmail.com>
+Date: Tue, 5 Dec 2017 12:41:25 +0100
+Message-ID: <CAAfyv35EDMmyW_FTJJsNbOweivd=xwDgb=omRA4swQiu4ZXUqQ@mail.gmail.com> (sfid-20171205_124135_216869_B7DABB31)
+Subject: Re: MWIFIEX still unstable after two years on MS Surface Pro 3
+To: =?UTF-8?Q?Ren=C3=A9_Rebe?= <rene@exactcode.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Hi Rene,
 
-When I tried to use devm_ioremap function and review related code, I found
-devm_ioremap and devm_ioremap_nocache is almost the same with each other,
-except one use ioremap while the other use ioremap_nocache. While ioremap's
-default function is ioremap_nocache, so devm_ioremap_nocache also have the
-same function with devm_ioremap, which can just be killed to reduce the size
-of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
+On Tue, Dec 5, 2017 at 12:06 PM, Ren=C3=A9 Rebe <rene@exactcode.com> wrote:
+> Hi all,
+>
+> I write to start a discussion about the state of the mwifiex driver.
+> For over two years many other and me wait that the driver finally becomes
+> "stable". However, even with kernel 4.14.2 it still fails after some
+> minutes, or latest after some hours. With various stray errors in the sys=
+tem
+> log:
+>
+> Dec  5 09:50:50 surface3 kernel: mwifiex_pcie 0000:01:00.0: info: MWIFIEX
+> VERSION: mwifiex 1.0 (15.68.7.p119)
+> Dec  5 09:50:50 surface3 kernel: mwifiex_pcie 0000:01:00.0: driver_versio=
+n =3D
+> mwifiex 1.0 (15.68.7.p119)
+>
+> Dec  5 10:38:28 surface3 kernel: mwifiex_pcie 0000:01:00.0: info: trying =
+to
+> associate to 'XXX' bssid xx:xx:xx:xx:xx:xx
+> Dec  5 10:38:28 surface3 kernel: mwifiex_pcie 0000:01:00.0: info: associa=
+ted
+> to bssid xx:xx:xx:xx:xx:xx successfully
+> ...
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: Firmware wake=
+up
+> failed
+As workaround you can disable powersave for wifi (using iw command)
+and test it should resolve an issue (at least it fixes for me).
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: FW =
+in
+> reset state
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: car=
+d
+> is removed
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: deleting the
+> crypto keys
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: car=
+d
+> is removed
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: deleting the
+> crypto keys
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: car=
+d
+> is removed
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: deleting the
+> crypto keys
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: car=
+d
+> is removed
+> Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: deleting the
+> crypto keys
+>
+> Also, rmmod usually then hangs, and even if it eventually force unloads a=
+nd
+> such re-loading the module does not even get it back into some working
+> state. Not even with echoing 1 into the pci reset file.
+>
+> If this firmware and driver is already for years not working very stable,
+> can this not at least recover more gracefully?
+>
+> Any suggestions how to finally address and solve these issues are welcome=
+.
+>
+> If someone needs more logs and debug fluff let me know to generate it as
+> necessary.
+>
+> For what it is worth, at least the USB attached mwifi chip in the Surface=
+ 2
+> appears to work more reliable with the Linux driver.
+>
+> Best regards,
+>         Ren=C3=A9 Rebe
+>
+> --
+>   Ren=C3=A9 Rebe, ExactCODE GmbH, Lietzenburger Str. 42, DE-10117 Berlin
+>   http://exactcode.com | http://t2-project.org | http://rene.rebe.de
 
-I have posted two versions, which use macro instead of function for
-devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
-devm_ioremap_nocache for no need to keep a macro around for the duplicate
-thing. So here comes v3 and please help to review.
+BR,
 
-Thanks so much!
-Yisheng Xie
+marek
 
-[1] https://lkml.org/lkml/2017/11/20/135
-[2] https://lkml.org/lkml/2017/11/25/21
+--=20
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
 
-Yisheng Xie (27):
-  ASOC: replace devm_ioremap_nocache with devm_ioremap
-  spi: replace devm_ioremap_nocache with devm_ioremap
-  staging: replace devm_ioremap_nocache with devm_ioremap
-  ipack: replace devm_ioremap_nocache with devm_ioremap
-  media: replace devm_ioremap_nocache with devm_ioremap
-  gpio: replace devm_ioremap_nocache with devm_ioremap
-  mmc: replace devm_ioremap_nocache with devm_ioremap
-  PCI: replace devm_ioremap_nocache with devm_ioremap
-  platform/x86: replace devm_ioremap_nocache with devm_ioremap
-  tty: replace devm_ioremap_nocache with devm_ioremap
-  video: replace devm_ioremap_nocache with devm_ioremap
-  rtc: replace devm_ioremap_nocache with devm_ioremap
-  char: replace devm_ioremap_nocache with devm_ioremap
-  mtd: nand: replace devm_ioremap_nocache with devm_ioremap
-  dmaengine: replace devm_ioremap_nocache with devm_ioremap
-  ata: replace devm_ioremap_nocache with devm_ioremap
-  irqchip: replace devm_ioremap_nocache with devm_ioremap
-  pinctrl: replace devm_ioremap_nocache with devm_ioremap
-  drm: replace devm_ioremap_nocache with devm_ioremap
-  regulator: replace devm_ioremap_nocache with devm_ioremap
-  watchdog: replace devm_ioremap_nocache with devm_ioremap
-  tools/testing/nvdimm: replace devm_ioremap_nocache with devm_ioremap
-  MIPS: pci: replace devm_ioremap_nocache with devm_ioremap
-  can: replace devm_ioremap_nocache with devm_ioremap
-  wireless: replace devm_ioremap_nocache with devm_ioremap
-  ethernet: replace devm_ioremap_nocache with devm_ioremap
-  devres: kill devm_ioremap_nocache
-
- Documentation/driver-model/devres.txt           |  1 -
- arch/mips/pci/pci-ar2315.c                      |  3 +--
- drivers/ata/pata_arasan_cf.c                    |  3 +--
- drivers/ata/pata_octeon_cf.c                    |  9 ++++----
- drivers/ata/pata_rb532_cf.c                     |  2 +-
- drivers/char/hw_random/bcm63xx-rng.c            |  3 +--
- drivers/char/hw_random/octeon-rng.c             | 10 ++++-----
- drivers/dma/altera-msgdma.c                     |  3 +--
- drivers/dma/sprd-dma.c                          |  4 ++--
- drivers/gpio/gpio-ath79.c                       |  3 +--
- drivers/gpio/gpio-em.c                          |  6 ++---
- drivers/gpio/gpio-htc-egpio.c                   |  4 ++--
- drivers/gpio/gpio-xgene.c                       |  3 +--
- drivers/gpu/drm/hisilicon/hibmc/hibmc_drm_drv.c |  2 +-
- drivers/gpu/drm/msm/msm_drv.c                   |  2 +-
- drivers/gpu/drm/sti/sti_dvo.c                   |  3 +--
- drivers/gpu/drm/sti/sti_hda.c                   |  4 ++--
- drivers/gpu/drm/sti/sti_hdmi.c                  |  2 +-
- drivers/gpu/drm/sti/sti_tvout.c                 |  2 +-
- drivers/gpu/drm/sti/sti_vtg.c                   |  2 +-
- drivers/ipack/devices/ipoctal.c                 | 13 +++++------
- drivers/irqchip/irq-renesas-intc-irqpin.c       |  4 ++--
- drivers/media/platform/tegra-cec/tegra_cec.c    |  4 ++--
- drivers/mmc/host/sdhci-acpi.c                   |  3 +--
- drivers/mtd/nand/fsl_upm.c                      |  4 ++--
- drivers/net/can/sja1000/sja1000_platform.c      |  4 ++--
- drivers/net/ethernet/altera/altera_tse_main.c   |  3 +--
- drivers/net/ethernet/ethoc.c                    |  8 +++----
- drivers/net/ethernet/lantiq_etop.c              |  4 ++--
- drivers/net/ethernet/ti/netcp_core.c            |  2 +-
- drivers/net/wireless/ath/ath9k/ahb.c            |  2 +-
- drivers/pci/dwc/pci-dra7xx.c                    |  2 +-
- drivers/pinctrl/bcm/pinctrl-ns2-mux.c           |  2 +-
- drivers/pinctrl/bcm/pinctrl-nsp-mux.c           |  4 ++--
- drivers/pinctrl/freescale/pinctrl-imx1-core.c   |  2 +-
- drivers/pinctrl/pinctrl-amd.c                   |  4 ++--
- drivers/platform/x86/intel_pmc_core.c           |  5 ++---
- drivers/regulator/ti-abb-regulator.c            |  6 ++---
- drivers/rtc/rtc-sh.c                            |  4 ++--
- drivers/spi/spi-jcore.c                         |  3 +--
- drivers/staging/fsl-mc/bus/mc-io.c              |  8 +++----
- drivers/tty/mips_ejtag_fdc.c                    |  4 ++--
- drivers/tty/serial/8250/8250_omap.c             |  3 +--
- drivers/tty/serial/lantiq.c                     |  3 +--
- drivers/tty/serial/meson_uart.c                 |  3 +--
- drivers/tty/serial/owl-uart.c                   |  2 +-
- drivers/tty/serial/pic32_uart.c                 |  4 ++--
- drivers/video/fbdev/mbx/mbxfb.c                 |  9 ++++----
- drivers/video/fbdev/mmp/hw/mmp_ctrl.c           |  2 +-
- drivers/video/fbdev/pxa168fb.c                  |  4 ++--
- drivers/watchdog/bcm63xx_wdt.c                  |  4 ++--
- drivers/watchdog/rc32434_wdt.c                  |  4 ++--
- include/linux/io.h                              |  2 --
- lib/devres.c                                    | 29 -------------------------
- scripts/coccinelle/free/devm_free.cocci         |  2 --
- sound/soc/au1x/ac97c.c                          |  4 ++--
- sound/soc/au1x/i2sc.c                           |  4 ++--
- sound/soc/intel/atom/sst/sst_acpi.c             | 20 ++++++++---------
- sound/soc/intel/boards/mfld_machine.c           |  4 ++--
- sound/soc/sh/fsi.c                              |  4 ++--
- tools/testing/nvdimm/Kbuild                     |  2 +-
- tools/testing/nvdimm/test/iomap.c               |  2 +-
- 62 files changed, 109 insertions(+), 168 deletions(-)
-
--- 
-1.8.3.1
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
