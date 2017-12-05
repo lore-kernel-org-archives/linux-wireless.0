@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34027 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754395AbdLFKFa (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:57576 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752126AbdLERaQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Dec 2017 05:05:30 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org
-Subject: [v4 8/8] rsi: sdio changes to support BT
-Date: Wed,  6 Dec 2017 15:26:37 +0530
-Message-Id: <1512554197-19664-9-git-send-email-amitkarwar@gmail.com> (sfid-20171206_110538_044079_AD1D84D9)
-In-Reply-To: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
-References: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
+        Tue, 5 Dec 2017 12:30:16 -0500
+Message-ID: <1512495010.26976.24.camel@sipsolutions.net> (sfid-20171205_183025_803172_B1478FD3)
+Subject: Re: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi,
+        dsahern@gmail.com
+Date: Tue, 05 Dec 2017 18:30:10 +0100
+In-Reply-To: <20171205.114106.1013322969674769159.davem@davemloft.net>
+References: <20171202202332.10205-1-johannes@sipsolutions.net>
+         <20171205.113145.172521292247335321.davem@davemloft.net>
+         <1512491661.26976.19.camel@sipsolutions.net>
+         <20171205.114106.1013322969674769159.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On Tue, 2017-12-05 at 11:41 -0500, David Miller wrote:
+> 
+> There is no reasonable interpretation for what that application is
+> doing, so I think we can safely call that case as buggy.
+> 
+> We are only trying to handle the situation where a U8 attribute
+> is presented as a bonafide U32 or a correct U8.
+> 
+> Does this make sense?
 
-Queue number is correctly updated for BT traffic. Also, kzalloc
-instead of kmalloc is used for Rx packet allocation.
+Well the application is buggy, but we don't really know in what way?
+Perhaps somebody even did the equivalent of
+    nla_put_u32(ATTR, cpu_to_le32(x))
+when they noticed it was broken on BE, and end up with a similar case
+as I had above.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio.c     | 2 ++
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+I don't think there's a good solution to this, applications must be
+fixed anyhow. I'm just saying that I'd save the extra code and stay
+compatible with applications as written today, even if they're now
+broken on BE - and rely on the warning to fix it. Trying to fix it up
+seems to have the potential to just break something else.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index 5722736..beb18d0 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -763,6 +763,8 @@ static int rsi_sdio_host_intf_write_pkt(struct rsi_hw *adapter,
- 	int status;
- 
- 	queueno = ((pkt[1] >> 4) & 0xf);
-+	if (queueno == RSI_BT_MGMT_Q || queueno == RSI_BT_DATA_Q)
-+		queueno = RSI_BT_Q;
- 
- 	num_blocks = len / block_size;
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 26abe51..83652bd 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -103,7 +103,7 @@ static int rsi_process_pkt(struct rsi_common *common)
- 
- 	rcv_pkt_len = (num_blks * 256);
- 
--	common->rx_data_pkt = kmalloc(rcv_pkt_len, GFP_KERNEL);
-+	common->rx_data_pkt = kzalloc(rcv_pkt_len, GFP_KERNEL);
- 	if (!common->rx_data_pkt) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in memory allocation\n",
- 			__func__);
--- 
-2.7.4
+johannes
