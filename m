@@ -1,94 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:54262 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753199AbdLELCI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 06:02:08 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] wireless: don't write C files on failures
-Date: Tue,  5 Dec 2017 12:02:04 +0100
-Message-Id: <20171205110204.18579-2-johannes@sipsolutions.net> (sfid-20171205_120212_145137_FE29705F)
-In-Reply-To: <20171205110204.18579-1-johannes@sipsolutions.net>
-References: <20171205110204.18579-1-johannes@sipsolutions.net>
+Received: from mail-eopbgr30073.outbound.protection.outlook.com ([40.107.3.73]:30976
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752335AbdLEO65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Dec 2017 09:58:57 -0500
+From: Vanessa Maegima <vanessa.maegima@nxp.com>
+To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "van.ayumi@gmail.com" <van.ayumi@gmail.com>,
+        "embed3d@gmail.com" <embed3d@gmail.com>
+Subject: Re: AP6335 with mainline kernel
+Date: Tue, 5 Dec 2017 14:58:42 +0000
+Message-ID: <1512485878.9392.1.camel@nxp.com> (sfid-20171205_155901_972646_AB914EDE)
+References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
+         <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com>
+         <1510916848.26896.2.camel@nxp.com> <5A0EDC25.7030505@broadcom.com>
+         <1510932224.22506.0.camel@nxp.com>
+         <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com>
+         <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
+         <1511347672.18886.2.camel@nxp.com> <5A15584A.9090601@broadcom.com>
+         <1511450638.9102.1.camel@nxp.com> <5A1FFA17.6000703@broadcom.com>
+         <1512413992.18900.3.camel@nxp.com>
+         <CAF7Mx6q6mTOXc=4OFVCHAHd26pyfv5e6pK=TMNmb1S6=FBWUWQ@mail.gmail.com>
+In-Reply-To: <CAF7Mx6q6mTOXc=4OFVCHAHd26pyfv5e6pK=TMNmb1S6=FBWUWQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-Change the scripting inside the shipped/extra certs C code
-generation to not write the file when there are any failures.
-That way, if the build aborts due to failures, we don't get
-into a situation where a dummy file has been created and the
-next build succeeds, but not with the desired output.
-
-Fixes: 90a53e4432b1 ("cfg80211: implement regdb signature checking")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/Makefile | 48 ++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 38 insertions(+), 10 deletions(-)
-
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index 63cbb6432b2d..d7d6cb00c47b 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -25,17 +25,45 @@ endif
- 
- $(obj)/shipped-certs.c: $(wildcard $(srctree)/$(src)/certs/*.x509)
- 	@$(kecho) "  GEN     $@"
--	@echo '#include "reg.h"' > $@
--	@echo 'const u8 shipped_regdb_certs[] = {' >> $@
--	@for f in $^ ; do od -An -v -tx1 < $$f | sed -e 's/ /\n/g' | sed -e 's/^[0-9a-f]\+$$/\0/;t;d' | sed -e 's/^/0x/;s/$$/,/' >> $@ ; done
--	@echo '};' >> $@
--	@echo 'unsigned int shipped_regdb_certs_len = sizeof(shipped_regdb_certs);' >> $@
-+	@(set -e; \
-+	  allf=""; \
-+	  for f in $^ ; do \
-+	      # similar to hexdump -v -e '1/1 "0x%.2x," "\n"' \
-+	      thisf=$$(od -An -v -tx1 < $$f | \
-+	                   sed -e 's/ /\n/g' | \
-+	                   sed -e 's/^[0-9a-f]\+$$/\0/;t;d' | \
-+	                   sed -e 's/^/0x/;s/$$/,/'); \
-+	      # file should not be empty - maybe command substitution failed? \
-+	      test ! -z "$$thisf";\
-+	      allf=$$allf$$thisf;\
-+	  done; \
-+	  ( \
-+	      echo '#include "reg.h"'; \
-+	      echo 'const u8 shipped_regdb_certs[] = {'; \
-+	      echo "$$allf"; \
-+	      echo '};'; \
-+	      echo 'unsigned int shipped_regdb_certs_len = sizeof(shipped_regdb_certs);'; \
-+	  ) >> $@)
- 
- $(obj)/extra-certs.c: $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%) \
- 		      $(wildcard $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%)/*.x509)
- 	@$(kecho) "  GEN     $@"
--	@echo '#include "reg.h"' > $@
--	@echo 'const u8 extra_regdb_certs[] = {' >> $@
--	@for f in $^ ; do test -f $$f && od -An -v -tx1 < $$f | sed -e 's/ /\n/g' | sed -e 's/^[0-9a-f]\+$$/\0/;t;d' | sed -e 's/^/0x/;s/$$/,/' >> $@ ; done
--	@echo '};' >> $@
--	@echo 'unsigned int extra_regdb_certs_len = sizeof(extra_regdb_certs);' >> $@
-+	@(set -e; \
-+	  allf=""; \
-+	  for f in $^ ; do \
-+	      # similar to hexdump -v -e '1/1 "0x%.2x," "\n"' \
-+	      thisf=$$(od -An -v -tx1 < $$f | \
-+	                   sed -e 's/ /\n/g' | \
-+	                   sed -e 's/^[0-9a-f]\+$$/\0/;t;d' | \
-+	                   sed -e 's/^/0x/;s/$$/,/'); \
-+	      # file should not be empty - maybe command substitution failed? \
-+	      test ! -z "$$thisf";\
-+	      allf=$$allf$$thisf;\
-+	  done; \
-+	  ( \
-+	      echo '#include "reg.h"'; \
-+	      echo 'const u8 extra_regdb_certs[] = {'; \
-+	      echo "$$allf"; \
-+	      echo '};'; \
-+	      echo 'unsigned int extra_regdb_certs_len = sizeof(extra_regdb_certs);'; \
-+	  ) >> $@)
--- 
-2.14.2
+T24gVGVyLCAyMDE3LTEyLTA1IGF0IDEwOjA2ICswMTAwLCBBcmVuZCBWYW4gU3ByaWVsIHdyb3Rl
+Og0KPiBPbiBNb24sIERlYyA0LCAyMDE3IGF0IDg6MDAgUE0sIFZhbmVzc2EgTWFlZ2ltYSA8dmFu
+ZXNzYS5tYWVnaW1hQG54cC4NCj4gY29tPiB3cm90ZToNCj4gPiANCj4gPiBIaSBBcmVuZCwNCj4g
+PiANCj4gPiBPbiBRdWksIDIwMTctMTEtMzAgYXQgMTM6MzEgKzAxMDAsIEFyZW5kIHZhbiBTcHJp
+ZWwgd3JvdGU6DQo+ID4gPiANCj4gPiA+IE9uIDExLzIzLzIwMTcgNDoyNCBQTSwgVmFuZXNzYSBN
+YWVnaW1hIHdyb3RlOg0KPiA+ID4gPiANCj4gPiA+ID4gDQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4g
+DQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+
+ID4gDQo+ID4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+ID4g
+PiANCj4gPiA+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiA+ID4gQnVpbGRyb290Og0KPiA+
+ID4gPiA+ID4gPiA+ID4gIyBkbWVzZyB8IGdyZXAgYnJjbWZtYWMNCj4gPiA+ID4gPiA+ID4gPiA+
+IFvCoMKgwqDCoDUuMzQzMTE4XSBicmNtZm1hYzogYnJjbWZfZndfbWFwX2NoaXBfdG9fbmFtZToN
+Cj4gPiA+ID4gPiA+ID4gPiA+IHVzaW5nDQo+ID4gPiA+ID4gPiA+ID4gPiBicmNtL2JyY21mbWFj
+NDMzOS1zZGlvLmJpbiBmb3IgY2hpcCAweDAwNDMzDQo+ID4gPiA+ID4gPiA+ID4gPiA5KDE3MjA5
+KSByZXYgMHgwMDAwMDINCj4gPiA+ID4gPiA+ID4gPiA+IFvCoMKgwqDCoDYuNDIwMDcwXSBicmNt
+Zm1hYzogYnJjbWZfc2Rpb19odGNsazogSFQgQXZhaWwNCj4gPiA+ID4gPiA+ID4gPiA+IHRpbWVv
+dXQNCj4gPiA+ID4gPiA+ID4gPiA+ICgxMDAwMDAwKToNCj4gPiA+ID4gPiA+ID4gPiA+IGNsa2N0
+bCAweDUwDQo+ID4gPiA+ID4gPiA+ID4gPiBbwqDCoMKgwqA2LjQyNzcyMl0gYnJjbWZtYWM6DQo+
+ID4gPiA+ID4gPiA+ID4gPiBicmNtZl9zZGlvX2h0Y2xrOsKgwqDCoHBtdWNvbnRyb2zCoMKgwqA9
+DQo+ID4gPiA+ID4gPiA+ID4gPiAwMTc3NDM4MQ0KPiA+ID4gPiA+ID4gPiA+ID4gW8KgwqDCoMKg
+Ni40MzQ4NjVdIGJyY21mbWFjOg0KPiA+ID4gPiA+ID4gPiA+ID4gYnJjbWZfc2Rpb19odGNsazrC
+oMKgwqBwbXVzdGF0dXPCoMKgwqDCoD0NCj4gPiA+ID4gPiA+ID4gPiA+IDAwMDAwMDJhDQo+ID4g
+PiA+ID4gPiA+ID4gPiBbwqDCoMKgwqA2LjQ0MTE3NF0gYnJjbWZtYWM6DQo+ID4gPiA+ID4gPiA+
+ID4gPiBicmNtZl9zZGlvX2h0Y2xrOsKgwqDCoG1pbl9yZXNfbWFzaw0KPiA+ID4gPiA+ID4gPiA+
+ID4gPQ0KPiA+ID4gPiA+ID4gPiA+ID4gMGZjYWZmNzcNCj4gPiA+ID4gPiA+ID4gPiA+IFvCoMKg
+wqDCoDYuNDQ3Mzc5XSBicmNtZm1hYzoNCj4gPiA+ID4gPiA+ID4gPiA+IGJyY21mX3NkaW9faHRj
+bGs6wqDCoMKgbWF4X3Jlc19tYXNrDQo+ID4gPiA+ID4gPiA+ID4gPiA9DQo+ID4gPiA+ID4gPiA+
+ID4gPiAwZmNlZmY3Nw0KPiA+ID4gSXQgdG9vb2sgbWUgYSB3aGlsZSB0byBsb29rIGludG8gdGhp
+cy4gVW5mb3J0dW5hdGVseSBJIGRvIG5vdA0KPiA+ID4gaGF2ZSBhDQo+ID4gPiA0MzM5IHRvIHJl
+cGxpY2F0ZSB5b3VyIGlzc3VlLiBUaGUgY2xvc2VzdCBJIGhhdmUgaXMgYSA0MzM1LiBXaGF0DQo+
+ID4gPiBsb29rcw0KPiA+ID4gd3JvbmcgaGVyZSBpcyB0aGUgbWF4X3Jlc19tYXNrIGJlY2F1c2Ug
+dGhlIEhUIEF2YWlsIHJlc291cmNlIGlzDQo+ID4gPiBiaXQNCj4gPiA+IDI5DQo+ID4gPiB3aGlj
+aCBuZWVkcyB0byBiZSBzZXQgaW4gbWF4X3Jlc19tYXNrIGluIG9yZGVyIHRvIG1ha2UgdGhlDQo+
+ID4gPiByZXF1ZXN0DQo+ID4gPiB3b3JrLg0KPiA+ID4gT24gbXkgNDMzNSB0aGUgbWF4X3Jlc19t
+YXNrIGlzIDB4N2ZmZmZmZmYgYmVmb3JlIGNhbGxpbmcNCj4gPiA+IGJyY21mX3NkaW9faHRjbGso
+KS4gU28gdGhhdCBpcyB0aGUgY2F1c2Ugb2YgdGhlIGZhaWx1cmUgaW4NCj4gPiA+IGJyY21mX3Nk
+aW9faHRjbGsoKS4gSG93ZXZlciwgbm93IHRoZSBxdWVzdGlvbiBpcyB3aHkgaXQgaXMgbm90DQo+
+ID4gPiBwcm9wZXJseSBzZXQuDQo+ID4gPiANCj4gPiA+IEJldHdlZW4geW91ciBkZXZpY2UgYW5k
+IG1pbmUgdGhlcmUgaXMgb25jZSBkaXNjcmVwYW5jeSBpbiB0aGUNCj4gPiA+IHBtdWNvbnRyb2wN
+Cj4gPiA+IHJlZ2lzdGVyLCBpZS4gYml0IDkgaXMgc2V0IGZvciB5b3VyIGRldmljZS4gQWNjb3Jk
+aW5nIHRoZQ0KPiA+ID4gZG9jdW1lbnRhdGlvbg0KPiA+ID4gdGhlIHBvd2VyLW9uIHJlc2V0IHZh
+bHVlIGZvciB0aGlzIGJpdCBpcyAwIGFuZCBJIGRvbid0IHNlZW4gYW55DQo+ID4gPiBjb2RlDQo+
+ID4gPiBpbg0KPiA+ID4gb3VyIHByb3ByaWV0YXJ5IGRyaXZlciB0b3VjaGluZyBpdC4NCj4gPiA+
+IA0KPiA+ID4gPiANCj4gPiA+ID4gDQo+ID4gPiA+IFNvcnJ5IGZvciB0aGUgZGVsYXllZCBhbnN3
+ZXIsIEkgaGFkIHNvbWUgdHJvdWJsZSB0byBjb3B5IHRoZQ0KPiA+ID4gPiBzeW1saW5rcw0KPiA+
+ID4gPiBmaWxlcyBjb3JyZXRseSBmcm9tIC9zeXMvY2xhc3MvZGV2Y29yZWR1bXAuDQo+ID4gPiA+
+IA0KPiA+ID4gPiBJIHVwbG9hZGVkIHRoaXMgZm9sZGVyIHRvOiBodHRwczovL2VtZWEwMS5zYWZl
+bGlua3MucHJvdGVjdGlvbi4NCj4gPiA+ID4gb3V0bG9vay5jb20vP3VybD1odHRwcyUzQSUyRiUy
+RmVtZWEwMS5zYWZlbGlua3MucHJvdGVjdGlvbi5vdXRsDQo+ID4gPiA+ICZkYXRhPTAyJTdDMDEl
+N0N2YW5lc3NhLm1hZWdpbWElNDBueHAuY29tJTdDMjE5MGJlMTIwODIwNGI5ODRiOQ0KPiA+ID4g
+PiA2MDhkNTNiYmY4NDMyJTdDNjg2ZWExZDNiYzJiNGM2ZmE5MmNkOTljNWMzMDE2MzUlN0MwJTdD
+MCU3QzYzNjQNCj4gPiA+ID4gODA2MTYxMDE4Mzk4MDUmc2RhdGE9dzlEWks1dzFHUFFhT2ZEUGtC
+JTJGZkUydGJVYW5JeG16dGR4NTcwRk9ODQo+ID4gPiA+IDR0OCUzRCZyZXNlcnZlZD0wDQo+ID4g
+PiA+IG9vay5jb20vP3VybD1odHRwcyUzQSUyRiUyRmRyaXZlLmdvb2dsZS5jb20lMkZvcGVuJTNG
+aWQlM0QxZm9zYQ0KPiA+ID4gPiBoakxODQo+ID4gPiA+IDFLJmRhdGE9MDIlN0MwMSU3Q3ZhbmVz
+c2EubWFlZ2ltYSU0MG54cC5jb20lN0NiNjQzZTU3ODc2ZTQ0MTQwYQ0KPiA+ID4gPiBhMzAwDQo+
+ID4gPiA+IDhkNTM3ZWU0NGFhJTdDNjg2ZWExZDNiYzJiNGM2ZmE5MmNkOTljNWMzMDE2MzUlN0Mw
+JTdDMCU3QzYzNjQ3Ng0KPiA+ID4gPiA0MTg4DQo+ID4gPiA+IDQ5NDY0MjE0JnNkYXRhPUJyc0R6
+ME5jbTc4NmcxNjlUUU9xRmxiV3V5bFIxcGMxSmtsRWtxZUwlMkZBMCUzRA0KPiA+ID4gPiAmcmVz
+DQo+ID4gPiA+IGVydmVkPTANCj4gPiA+ID4gSTVOS1M1OV9hUFpkSExwRU5QRkh0Sw0KPiA+ID4g
+VGhhdCB3b3JrZWQgbmljZWx5LiBTbyB0aGUgZmlybXdhcmUgc2VlbXMgdG8gY3Jhc2ggdmVyeSBl
+YXJseS4gSQ0KPiA+ID4gaGF2ZQ0KPiA+ID4gcmVidWlsdCB0aGUgZmlybXdhcmUgdG8gcHJvdmlk
+ZSBtZSBtb3JlIGluZm8uIENhbiB5b3UgcmVkbyB0aGUNCj4gPiA+IGRldmNvcmVkdW1wIHRyaWNr
+IHdpdGggdGhhdCBmaXJtd2FyZS4NCj4gPiA+IA0KPiA+ID4gUmVnYXJkcywNCj4gPiA+IEFyZW5k
+DQo+ID4gVGhhbmtzIGZvciB5b3VyIHJlcGx5IQ0KPiA+IA0KPiA+IEkgdHJpZWQgeW91ciBuZXcg
+ZmlybXdhcmUgYW5kIGhlcmUgaXMgdGhlIG91dHB1dCAobmV3X2Zpcm13YXJlDQo+ID4gZm9sZGVy
+KToNCj4gPiBodHRwczovL2VtZWEwMS5zYWZlbGlua3MucHJvdGVjdGlvbi5vdXRsb29rLmNvbS8/
+dXJsPWh0dHBzJTNBJTJGJTJGDQo+ID4gZHJpdmUuZ29vZ2xlLmNvbSUyRmRyaXZlJTJGZm9sZGVy
+cyUyRjFmb3NhaGpMTjFLSTVOS1M1OV9hUFpkSExwRU5QRg0KPiA+IEh0JmRhdGE9MDIlN0MwMSU3
+Q3ZhbmVzc2EubWFlZ2ltYSU0MG54cC5jb20lN0MyMTkwYmUxMjA4MjA0Yjk4NGI5NjANCj4gPiA4
+ZDUzYmJmODQzMiU3QzY4NmVhMWQzYmMyYjRjNmZhOTJjZDk5YzVjMzAxNjM1JTdDMCU3QzAlN0M2
+MzY0ODA2MTYxDQo+ID4gMDE4Mzk4MDUmc2RhdGE9YUV6SU43WGkwUjQ1R3NFWmpjVjBITE1iM2VJ
+UUlyb2lLT1luTmdlMkhrOCUzRCZyZXNlcg0KPiA+IHZlZD0wDQo+ID4gSw0KPiBIaSBWYW5lc3Nh
+Lg0KPiANCj4gVGhlIG9ubHkgZmlsZSBvZiBpbnRlcmVzdCBpcyBvbmUgbmFtZWQgJ2RhdGEnIGFu
+ZCBpdCBpcyBub3QgcHJlc2VudA0KPiBpbg0KPiB0aGUgbmV3IGZvbGRlci4gVGhlc2UgY29yZSBk
+dW1wcyBhcmUgcmVtb3ZlZCBmcm9tIHRoZSBmaWxlc3lzdGVtDQo+IGFmdGVyDQo+IHNvbWUgdGlt
+ZW91dCAobm90IHN1cmUgaG93IGxvbmcpIHNvIHRoYXQgbWF5IGJlIHRoZSByZWFzb24uDQo+IA0K
+DQpIaSBBcmVuZCwNCg0KU29ycnkgZm9yIHRoaXMhDQoNCkkgdXBkYXRlZCB0aGUgZm9sZGVyIG9u
+wqBodHRwczovL2RyaXZlLmdvb2dsZS5jb20vZHJpdmUvZm9sZGVycy8xZm9zYWhqTA0KTjFLSTVO
+S1M1OV9hUFpkSExwRU5QRkh0Sw0KDQpUaGFua3MhDQoNClJlZ2FyZHMsDQpWYW5lc3NhDQoNCj4g
+UmVnYXJkcywNCj4gQXJlbmQNCj4gDQo+ID4gDQo+ID4gVGhhbmtzIQ0KPiA+IA0KPiA+IFJlZ2Fy
+ZHMsDQo+ID4gVmFuZXNzYQ==
