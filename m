@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50908 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758122AbdLRKOM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33610 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752911AbdLEJzD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 05:14:12 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Adiel Aloni <adiel.aloni@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 12:14:04 +0200
-Message-Id: <20171218101405.9330-2-luca@coelho.fi> (sfid-20171218_111423_057361_AC090D5B)
-In-Reply-To: <20171218101405.9330-1-luca@coelho.fi>
-References: <20171218101405.9330-1-luca@coelho.fi>
-Subject: [PATCH 1/2] mac80211_hwsim: enable TODS BIT in null data frame
+        Tue, 5 Dec 2017 04:55:03 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v1] brcmfmac: Avoid build error with make W=1
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com>
+References: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Message-Id: <20171205095502.E6B336087D@smtp.codeaurora.org> (sfid-20171205_105540_068859_E1D9D810)
+Date: Tue,  5 Dec 2017 09:55:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Adiel Aloni <adiel.aloni@intel.com>
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-Same as in ieee80211_nullfunc_get, enable the TODS bit, otherwise the
-nullfunc packet will not be handled in ap rx path.
-(will be dropped in ieee80211_accept_frame()).
+> When I run make W=1 on gcc (Debian 7.2.0-16) 7.2.0 I got an error for
+> the first run, all next ones are okay.
+> 
+>   CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:2078: error: Cannot parse struct or union!
+> scripts/Makefile.build:310: recipe for target 'drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o' failed
+> 
+> Seems like something happened with W=1 and wrong kernel doc format.
+> As a quick fix remove dubious /** in the code.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Signed-off-by: Adiel Aloni <adiel.aloni@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 1 +
- 1 file changed, 1 insertion(+)
+I'll queue this to v4.15.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 45cca54c05bf..3141b8e28b34 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -684,6 +684,7 @@ static void hwsim_send_nullfunc(struct mac80211_hwsim_data *data, u8 *mac,
- 	hdr = skb_put(skb, sizeof(*hdr) - ETH_ALEN);
- 	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
- 					 IEEE80211_STYPE_NULLFUNC |
-+					 IEEE80211_FCTL_TODS |
- 					 (ps ? IEEE80211_FCTL_PM : 0));
- 	hdr->duration_id = cpu_to_le16(0);
- 	memcpy(hdr->addr1, vp->bssid, ETH_ALEN);
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10073021/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
