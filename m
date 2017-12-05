@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:65279 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751687AbdLBOPB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 09:15:01 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mx.exactcode.de ([144.76.154.42]:49936 "EHLO mx.exactcode.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751040AbdLELfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Dec 2017 06:35:05 -0500
+To: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Cc: linux-wireless@vger.kernel.org
+From: =?UTF-8?Q?Ren=c3=a9_Rebe?= <rene@exactcode.com>
+Subject: MWIFIEX still unstable after two years on MS Surface Pro 3
+Message-ID: <d776bc3d-7712-8430-93e2-72e4b6bbf23c@exactcode.com> (sfid-20171205_123509_522039_7473D07C)
+Date: Tue, 5 Dec 2017 12:06:38 +0100
 MIME-Version: 1.0
-Subject: Re: [v2] ath10k: Re-enable TXQs for all devices
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20171110004839.7478-1-toke@toke.dk>
-References: <20171110004839.7478-1-toke@toke.dk>
-To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-CC: <make-wifi-fast@lists.bufferbloat.net>,
-        <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Message-ID: <062afbaa27964709a6d4550aa17a76e3@euamsexm01a.eu.qualcomm.com> (sfid-20171202_151505_352688_0481510F)
-Date: Sat, 2 Dec 2017 15:14:53 +0100
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Toke Høiland-Jørgensen wrote:
+Hi all,
 
-> Commit 4ca1807815aa ("ath10k: disable wake_tx_queue for older devices")
-> disables the use of the mac80211 TXQs for some devices because of a theoretical
-> throughput regression. The original regression report[1] was related to
-> fq_codel qdisc drop performance, which was fixed in commit 9d18562a2278
-> ("fq_codel: add batch ability to fq_codel_drop()"). Since then, we have not
-> seen the TXQ-related regression, so it should be safe to re-enable TXQs.
-> 
-> [1] http://lists.infradead.org/pipermail/ath10k/2016-April/007266.html
-> 
-> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+I write to start a discussion about the state of the mwifiex driver.
+For over two years many other and me wait that the driver finally 
+becomes "stable". However, even with kernel 4.14.2 it still fails after 
+some minutes, or latest after some hours. With various stray errors in 
+the system log:
 
-Patch applied to ath-next branch of ath.git, thanks.
+Dec  5 09:50:50 surface3 kernel: mwifiex_pcie 0000:01:00.0: info: 
+MWIFIEX VERSION: mwifiex 1.0 (15.68.7.p119)
+Dec  5 09:50:50 surface3 kernel: mwifiex_pcie 0000:01:00.0: 
+driver_version = mwifiex 1.0 (15.68.7.p119)
 
-170e8e6176d4 ath10k: re-enable TXQs for all devices
+Dec  5 10:38:28 surface3 kernel: mwifiex_pcie 0000:01:00.0: info: trying 
+to associate to 'XXX' bssid xx:xx:xx:xx:xx:xx
+Dec  5 10:38:28 surface3 kernel: mwifiex_pcie 0000:01:00.0: info: 
+associated to bssid xx:xx:xx:xx:xx:xx successfully
+...
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: Firmware 
+wakeup failed
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: FW 
+in reset state
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: 
+card is removed
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: deleting the 
+crypto keys
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: 
+card is removed
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: deleting the 
+crypto keys
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: 
+card is removed
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: deleting the 
+crypto keys
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: PREP_CMD: 
+card is removed
+Dec  5 10:42:51 surface3 kernel: mwifiex_pcie 0000:01:00.0: deleting the 
+crypto keys
+
+Also, rmmod usually then hangs, and even if it eventually force unloads 
+and such re-loading the module does not even get it back into some 
+working state. Not even with echoing 1 into the pci reset file.
+
+If this firmware and driver is already for years not working very 
+stable, can this not at least recover more gracefully?
+
+Any suggestions how to finally address and solve these issues are welcome.
+
+If someone needs more logs and debug fluff let me know to generate it as 
+necessary.
+
+For what it is worth, at least the USB attached mwifi chip in the 
+Surface 2 appears to work more reliable with the Linux driver.
+
+Best regards,
+	René Rebe
 
 -- 
-https://patchwork.kernel.org/patch/10052197/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+   René Rebe, ExactCODE GmbH, Lietzenburger Str. 42, DE-10117 Berlin
+   http://exactcode.com | http://t2-project.org | http://rene.rebe.de
