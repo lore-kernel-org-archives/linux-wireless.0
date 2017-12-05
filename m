@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36675 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751473AbdLEOfY (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:36652 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752126AbdLEQbr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 09:35:24 -0500
-Date: Tue, 5 Dec 2017 17:35:08 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Sujith <Sujith.Manoharan@atheros.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH] ath9k_htc: Add a sanity check in ath9k_htc_ampdu_action()
-Message-ID: <20171205143508.qbnbm4d3wesguu2g@mwanda> (sfid-20171205_153529_165113_DE72970A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Tue, 5 Dec 2017 11:31:47 -0500
+Date: Tue, 05 Dec 2017 11:31:45 -0500 (EST)
+Message-Id: <20171205.113145.172521292247335321.davem@davemloft.net> (sfid-20171205_173209_702313_26659857)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi,
+        dsahern@gmail.com, johannes.berg@intel.com
+Subject: Re: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20171202202332.10205-1-johannes@sipsolutions.net>
+References: <20171202202332.10205-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch generates a warning here:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Sat,  2 Dec 2017 21:23:31 +0100
 
-    drivers/net/wireless/ath/ath9k/htc_drv_main.c:1688 ath9k_htc_ampdu_action()
-    error: buffer overflow 'ista->tid_state' 8 <= 15
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> This netlink type is used only for backwards compatibility
+> with broken userspace that used the wrong size for a given
+> u8 attribute, which is now rejected. It would've been wrong
+> before already, since on big endian the wrong value (always
+> zero) would be used by the kernel, but we can't break the
+> existing deployed userspace - hostapd for example now fails
+> to initialize entirely.
+> 
+> We could try to fix up the big endian problem here, but we
+> don't know *how* userspace misbehaved - if using nla_put_u32
+> then we could, but we also found a debug tool (which we'll
+> ignore for the purposes of this regression) that was putting
+> the padding into the length.
+> 
+> Fixes: 28033ae4e0f5 ("net: netlink: Update attr validation to require exact length for some types")
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-I don't know if it's a real bug or not but the other paths through this
-function all ensure that "tid" is less than ATH9K_HTC_MAX_TID (8) so
-checking here makes things more consistent.
+We're stuck with this thing forever... I'd like to consider other
+options.
 
-Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-This might be fine.  I see lots of other drivers don't check tid.
+I've seen this problem at least one time before, therefore I
+suggest when we see a U8 attribute with a U32's length:
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index f808e5833d7e..a82ad739ab80 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1683,6 +1683,10 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		if (tid >= ATH9K_HTC_MAX_TID) {
-+			ret = -EINVAL;
-+			break;
-+		}
- 		ista = (struct ath9k_htc_sta *) sta->drv_priv;
- 		spin_lock_bh(&priv->tx.tx_lock);
- 		ista->tid_state[tid] = AGGR_OPERATIONAL;
+1) We access it as a u32, this takes care of all endianness
+   issues.
+
+2) We emit a warning so that the app gets fixes.
+
+Thanks.
