@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48284 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752137AbdLALvB (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:38934 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751937AbdLETId (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 06:51:01 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Fri,  1 Dec 2017 13:50:51 +0200
-Message-Id: <20171201115053.29608-2-luca@coelho.fi> (sfid-20171201_125105_257381_4F7B2365)
-In-Reply-To: <20171201115053.29608-1-luca@coelho.fi>
-References: <20171201115053.29608-1-luca@coelho.fi>
-Subject: [PATCH 1/3] mac80211: don't warn on AID field without top two MSBs set
+        Tue, 5 Dec 2017 14:08:33 -0500
+Date: Tue, 05 Dec 2017 14:08:29 -0500 (EST)
+Message-Id: <20171205.140829.310438010857738294.davem@davemloft.net> (sfid-20171205_200842_445074_0728746E)
+To: dsahern@gmail.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, j@w1.fi
+Subject: Re: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <c9bbb3a1-4a94-fece-478f-7e347734ddd2@gmail.com>
+References: <1512495010.26976.24.camel@sipsolutions.net>
+        <20171205.124038.2265447675450126665.davem@davemloft.net>
+        <c9bbb3a1-4a94-fece-478f-7e347734ddd2@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: David Ahern <dsahern@gmail.com>
+Date: Tue, 5 Dec 2017 11:15:29 -0700
 
-While the change between 802.11-2012 and 802.11-2016 to move from
-requiring APs to set the two top bits to now requiring them to be
-cleared was apparently unintentional and will be fixed, clients
-should either way assume that the top five bits are reserved and
-ignore them.
+> Is the patch I sent as an attachment good or should I re-send
+> standalone? (don't see it in patchwork)
 
-Implement that in mac80211.
+Patchwork has been wonky laterly, please resubmit as a fresh
+email for rewiew.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4c80e7896fa2..cc55ff8ae979 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2862,10 +2862,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	aid = le16_to_cpu(mgmt->u.assoc_resp.aid);
- 	capab_info = le16_to_cpu(mgmt->u.assoc_resp.capab_info);
- 
--	if ((aid & (BIT(15) | BIT(14))) != (BIT(15) | BIT(14)))
--		sdata_info(sdata, "invalid AID value 0x%x; bits 15:14 not set\n",
--			   aid);
--	aid &= ~(BIT(15) | BIT(14));
-+	/*
-+	 * The 5 MSB of the AID field are reserved
-+	 * (802.11-2016 9.4.1.8 AID field)
-+	 */
-+	aid &= 0x7ff;
- 
- 	ifmgd->broken_ap = false;
- 
--- 
-2.15.0
+Thanks.
