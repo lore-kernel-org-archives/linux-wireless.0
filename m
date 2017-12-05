@@ -1,97 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.138]:52381 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752273AbdLYL4H (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43280 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753111AbdLEKER (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Dec 2017 06:56:07 -0500
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Xinming Hu <huxm@marvell.com>, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        linux-rockchip@lists.infradead.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Caesar Wang <wxt@rock-chips.com>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v11 0/5] PCI: rockchip: Move PCIe WAKE# handling into pci core
-Date: Mon, 25 Dec 2017 19:47:37 +0800
-Message-Id: <20171225114742.18920-1-jeffy.chen@rock-chips.com> (sfid-20171225_125640_869151_DC0328E8)
+        Tue, 5 Dec 2017 05:04:17 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v8 0/3] mt76: add new wireless driver for MediaTek MT76x2 PCIe chips
+References: <20171121095053.82673-1-nbd@nbd.name>
+        <87wp22jzzb.fsf@purkki.adurom.net>
+        <753050de-c306-838e-98fc-b970cc77ebcf@nbd.name>
+Date: Tue, 05 Dec 2017 12:04:07 +0200
+In-Reply-To: <753050de-c306-838e-98fc-b970cc77ebcf@nbd.name> (Felix Fietkau's
+        message of "Mon, 4 Dec 2017 19:50:13 +0100")
+Message-ID: <87k1y1mqy0.fsf@codeaurora.org> (sfid-20171205_110617_222032_F25BFA89)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Felix Fietkau <nbd@nbd.name> writes:
 
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
+> On 2017-12-04 16:04, Kalle Valo wrote:
+>> Felix Fietkau <nbd@nbd.name> writes:
+>> 
+>>> Changes since v7:
+>>> - Fix build errors
+>>>
+>>> Changes since v6:
+>>> - DT documentation fixes
+>>> - Add LED configuration
+>>> - PHY gain calibration fixes
+>>> - Endian fixes
+>>> - Tx status processing fixes
+>>> - EEPROM validation fixes
+>>> - IBSS RSN fix
+>>> - AP mode powersave delivery fix
+>>>
+>>> Changes since v5:
+>>> - Adjust for mac80211 API changes
+>>> - EEPROM parsing fixes
+>>> - Ad-hoc mode WPA2 fixes
+>>>
+>>> Changes since v4:
+>>> - Cleanups suggested by Stanislaw Gruszka
+>>> - Device tree fixes suggested by Rob Herring
+>>> - EEPROM MAC address parsing fix
+>>>
+>>> Changes since v3:
+>>> - DFS fixes
+>>> - stability fixes
+>>> - use wiphy_read_of_freq_limits
+>>>
+>>> Changes since v2:
+>>> - lots of checkpatch cleanups
+>>> - various tx path (and other) fixes
+>>> - use the new bitfield API
+>>> - documented device tree bindings
+>>>
+>>> Felix Fietkau (3):
+>>>   Documentation: dt: net: add mt76 wireless device binding
+>>>   mt76: add common code shared between multiple chipsets
+>>>   mt76: add driver code for MT76x2e
+>> 
+>> Looking very good to me. Unless I hear any objections I'm planning to
+>> apply this within the next few days.
+>
+> Great news, thanks. Please also apply the two patches from "kbuild test
+> robot" that were sent in response to v7 - they still apply to v8.
 
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
-
-
-Changes in v11:
-Only add irq definitions for PCI devices and rewrite the commit message.
-Address Brian's comments.
-Only support 1-per-device PCIe WAKE# pin as suggested.
-Move to pcie port as Brian suggested.
-
-Changes in v10:
-Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
-since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
-
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-Fix check error in .cleanup().
-Move dedicated wakeirq setup to setup() callback and use
-device_set_wakeup_enable() to enable/disable.
-Rewrite the commit message.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-Rewrite the commit message.
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Move to pci.txt
-Rebase.
-Use "wakeup" instead of "wake"
-
-Changes in v3:
-Fix error handling.
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
-
-Jeffy Chen (5):
-  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-  of/irq: Adjust of_pci_irq parsing for multiple interrupts
-  mwifiex: Disable wakeup irq handling for pcie
-  PCI / PM: Add support for the PCIe WAKE# signal for OF
-  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie port for Gru
-
- Documentation/devicetree/bindings/pci/pci.txt | 10 ++++
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  | 11 +++--
- drivers/net/wireless/marvell/mwifiex/main.c   |  4 ++
- drivers/of/of_pci_irq.c                       | 71 +++++++++++++++++++++++++--
- drivers/pci/pci-driver.c                      | 10 ++++
- include/linux/of_pci.h                        |  9 ++++
- 6 files changed, 107 insertions(+), 8 deletions(-)
+Sure, I'll apply them as well.
 
 -- 
-2.11.0
+Kalle Valo
