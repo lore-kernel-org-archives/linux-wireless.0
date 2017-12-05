@@ -1,96 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:44489 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752965AbdLHNcQ (ORCPT
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:42498 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752065AbdLEQlX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 08:32:16 -0500
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH 2/2] ath10k: Populate RSC counter to firmware
-Date: Fri,  8 Dec 2017 19:02:12 +0530
-Message-Id: <1512739932-1577-1-git-send-email-govinds@qti.qualcomm.com> (sfid-20171208_143221_688279_0B039D88)
+        Tue, 5 Dec 2017 11:41:23 -0500
+Subject: Re: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
+To: Johannes Berg <johannes@sipsolutions.net>,
+        David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi
+References: <20171202202332.10205-1-johannes@sipsolutions.net>
+ <20171205.113145.172521292247335321.davem@davemloft.net>
+ <1512491661.26976.19.camel@sipsolutions.net>
+From: David Ahern <dsahern@gmail.com>
+Message-ID: <fe8e7ad5-9579-31ce-0d02-a6c8522ba366@gmail.com> (sfid-20171205_174127_939112_BD0FA254)
+Date: Tue, 5 Dec 2017 09:41:21 -0700
+MIME-Version: 1.0
+In-Reply-To: <1512491661.26976.19.camel@sipsolutions.net>
+Content-Type: multipart/mixed;
+ boundary="------------215C1691EE29F28FBC7BDE3E"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Access Point (AP) re-transmits message 3 of 4 way handshake if
-AP does not receive an appropriate response as acknowledgment.
-As a result, the client may receive message 3 multiple times.
-Each time it receives this message, it reinstalls the same
-encryption key, and thereby reset the incremental transmit packet
-number (nonce) and receive replay counter used by the encryption
-protocol. By forcing nonce reuse in this manner, the encryption
-protocol can be attacked, e.g., packets can be replayed, decrypted,
-and/or forged.
+This is a multi-part message in MIME format.
+--------------215C1691EE29F28FBC7BDE3E
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-Send RSC counter to FW in set key WMI command, so that FW can drop the
-packet in PN check if received packet sequence no is less than current
-RSC counter during group keys(GTK) exchange.
+On 12/5/17 9:34 AM, Johannes Berg wrote:
+> On Tue, 2017-12-05 at 11:31 -0500, David Miller wrote:
+>>
+>>> We could try to fix up the big endian problem here, but we
+>>> don't know *how* userspace misbehaved - if using nla_put_u32
+>>> then we could, but we also found a debug tool (which we'll
+>>> ignore for the purposes of this regression) that was putting
+>>> the padding into the length.
+> 
+>> We're stuck with this thing forever... I'd like to consider other
+>> options.
+>>
+>> I've seen this problem at least one time before, therefore I
+>> suggest when we see a U8 attribute with a U32's length:
+>>
+>> 1) We access it as a u32, this takes care of all endianness
+>>    issues.
+> 
+> Possible, but as I said above, I've seen at least one tool (a debug
+> only script) now that will actually emit a U8 followed by 3 bytes of
+> padding to make it netlink-aligned, but set the length to 4. That would
+> be broken by making this change.
+> 
+> I'm not saying this is bad - but there are different levels of
+> compatibility and I'd probably go for "bug compatibility" here rather
+> than "fix-it-up compatibility".
+> 
+> Your call, ultimately - I've already fixed the tool I had found :-)
+> 
+>> 2) We emit a warning so that the app gets fixes.
+> 
 
-Tested on QCA6174 HW3.0 with firmware version RM.4.4.1.c1-00035-QCARMSWP-1.
+The attached is my proposal. Basically, allow it the length mismatch but
+print a warning. This restores previous behavior and tells users of bad
+commands.
 
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c     | 1 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 3 +++
- drivers/net/wireless/ath/ath10k/wmi.h     | 4 +++-
- 3 files changed, 7 insertions(+), 1 deletion(-)
+--------------215C1691EE29F28FBC7BDE3E
+Content-Type: text/plain; charset=UTF-8; x-mac-type="0"; x-mac-creator="0";
+ name="0001-netlink-Relax-attr-validation-for-fixed-length-types.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename*0="0001-netlink-Relax-attr-validation-for-fixed-length-types.pa";
+ filename*1="tch"
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 06383e7..43f78e3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -226,6 +226,7 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 		.macaddr = macaddr,
- 	};
- 
-+	memcpy(arg.key_rsc_counter, key->rx_pn, IEEE80211_MAX_PN_LEN);
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
- 
- 	switch (key->cipher) {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 7616c1c..e7148f0 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1849,6 +1849,9 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	if (arg->macaddr)
- 		ether_addr_copy(cmd->peer_macaddr.addr, arg->macaddr);
- 
-+	memcpy(&cmd->key_rsc_counter, &arg->key_rsc_counter,
-+	       WMI_MAX_RSC_LEN);
-+
- 	ptr += sizeof(*tlv);
- 	ptr += sizeof(*cmd);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index c02b21c..4849787 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4752,6 +4752,7 @@ struct wmi_key_seq_counter {
- #define WMI_CIPHER_CKIP     0x6
- #define WMI_CIPHER_AES_CMAC 0x7
- #define WMI_CIPHER_AES_GCM  0x8
-+#define WMI_MAX_RSC_LEN     0x8
- 
- struct wmi_vdev_install_key_cmd {
- 	__le32 vdev_id;
-@@ -4759,7 +4760,7 @@ struct wmi_vdev_install_key_cmd {
- 	__le32 key_idx;
- 	__le32 key_flags;
- 	__le32 key_cipher; /* %WMI_CIPHER_ */
--	struct wmi_key_seq_counter key_rsc_counter;
-+	u8 key_rsc_counter[WMI_MAX_RSC_LEN];
- 	struct wmi_key_seq_counter key_global_rsc_counter;
- 	struct wmi_key_seq_counter key_tsc_counter;
- 	u8 wpi_key_rsc_counter[16];
-@@ -4782,6 +4783,7 @@ struct wmi_vdev_install_key_arg {
- 	u32 key_txmic_len;
- 	u32 key_rxmic_len;
- 	const void *key_data;
-+	u8 key_rsc_counter[IEEE80211_MAX_PN_LEN];
- };
- 
- /*
--- 
-1.9.1
+RnJvbSAyOWE1MDRjOGRlNTUzYzE3ZDRhYWZkNWEyY2I5Mzg0YTI4NjcyZmU0IE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBEYXZpZCBBaGVybiA8ZHNhaGVybkBnbWFpbC5jb20+
+CkRhdGU6IFN1biwgMyBEZWMgMjAxNyAwNzoyMjoyMCAtMDgwMApTdWJqZWN0OiBbUEFUQ0hd
+IG5ldGxpbms6IFJlbGF4IGF0dHIgdmFsaWRhdGlvbiBmb3IgZml4ZWQgbGVuZ3RoIHR5cGVz
+CgpDb21taXQgMjgwMzNhZTRlMGY1ICgibmV0OiBuZXRsaW5rOiBVcGRhdGUgYXR0ciB2YWxp
+ZGF0aW9uIHRvIHJlcXVpcmUKZXhhY3QgbGVuZ3RoIGZvciBzb21lIHR5cGVzIikgcmVxdWly
+ZXMgYXR0cmlidXRlcyB1c2luZyB0eXBlcyBOTEFfVSogYW5kCk5MQV9TKiB0byBoYXZlIGFu
+IGV4YWN0IGxlbmd0aC4gVGhpcyBjaGFuZ2UgaXMgZXhwb3NpbmcgYnVncyBpbiB2YXJpb3Vz
+CnVzZXJzcGFjZSBjb21tYW5kcyB0aGF0IGFyZSBzZW5kaW5nIGF0dHJpYnV0ZXMgd2l0aCBh
+biBpbnZhbGlkIGxlbmd0aAooZS5nLiwgYXR0cmlidXRlIGhhcyB0eXBlIE5MQV9VOCBhbmQg
+dXNlcnNwYWNlIHNlbmRzIE5MQV9VMzIpLiBXaGlsZQp0aGUgY29tbWFuZHMgYXJlIGNsZWFy
+bHkgYnJva2VuIGFuZCBuZWVkIHRvIGJlIGZpeGVkLCB1c2VycyBhcmUgYXJndWluZwp0aGF0
+IHRoZSBzdWRkZW4gY2hhbmdlIGluIGVuZm9yY2VtZW50IGlzIGJyZWFraW5nIG9sZGVyIGNv
+bW1hbmRzIG9uCm5ld2VyIGtlcm5lbHMgZm9yIHVzZSBjYXNlcyB0aGF0IG90aGVyd2lzZSAi
+d29ya2VkIi4KClJlbGF4IHRoZSB2YWxpZGF0aW9uIHRvIHByaW50IGEgd2FybmluZyBtZXNh
+Z2Ugc2ltaWxhciB0byB3aGF0IGlzIGRvbmUKZm9yIG1lc3NhZ2VzIGNvbnRhaW5pbmcgZXh0
+cmEgYnl0ZXMgYWZ0ZXIgcGFyc2luZy4KCkZpeGVzOiAyODAzM2FlNGUwZjUgKCJuZXQ6IG5l
+dGxpbms6IFVwZGF0ZSBhdHRyIHZhbGlkYXRpb24gdG8gcmVxdWlyZSBleGFjdCBsZW5ndGgg
+Zm9yIHNvbWUgdHlwZXMiKQpTaWduZWQtb2ZmLWJ5OiBEYXZpZCBBaGVybiA8ZHNhaGVybkBn
+bWFpbC5jb20+Ci0tLQogbGliL25sYXR0ci5jIHwgMTUgKysrKysrKysrKystLS0tCiAxIGZp
+bGUgY2hhbmdlZCwgMTEgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKCmRpZmYgLS1n
+aXQgYS9saWIvbmxhdHRyLmMgYi9saWIvbmxhdHRyLmMKaW5kZXggOGJmNzhiNGI3OGYwLi42
+MTIyNjYyOTA2YzggMTAwNjQ0Ci0tLSBhL2xpYi9ubGF0dHIuYworKysgYi9saWIvbmxhdHRy
+LmMKQEAgLTI4LDggKzI4LDE2IEBAIHN0YXRpYyBjb25zdCB1OCBubGFfYXR0cl9sZW5bTkxB
+X1RZUEVfTUFYKzFdID0gewogfTsKIAogc3RhdGljIGNvbnN0IHU4IG5sYV9hdHRyX21pbmxl
+bltOTEFfVFlQRV9NQVgrMV0gPSB7CisJW05MQV9VOF0JPSBzaXplb2YodTgpLAorCVtOTEFf
+VTE2XQk9IHNpemVvZih1MTYpLAorCVtOTEFfVTMyXQk9IHNpemVvZih1MzIpLAorCVtOTEFf
+VTY0XQk9IHNpemVvZih1NjQpLAogCVtOTEFfTVNFQ1NdCT0gc2l6ZW9mKHU2NCksCiAJW05M
+QV9ORVNURURdCT0gTkxBX0hEUkxFTiwKKwlbTkxBX1M4XQk9IHNpemVvZihzOCksCisJW05M
+QV9TMTZdCT0gc2l6ZW9mKHMxNiksCisJW05MQV9TMzJdCT0gc2l6ZW9mKHMzMiksCisJW05M
+QV9TNjRdCT0gc2l6ZW9mKHM2NCksCiB9OwogCiBzdGF0aWMgaW50IHZhbGlkYXRlX25sYV9i
+aXRmaWVsZDMyKGNvbnN0IHN0cnVjdCBubGF0dHIgKm5sYSwKQEAgLTcwLDEwICs3OCw5IEBA
+IHN0YXRpYyBpbnQgdmFsaWRhdGVfbmxhKGNvbnN0IHN0cnVjdCBubGF0dHIgKm5sYSwgaW50
+IG1heHR5cGUsCiAJQlVHX09OKHB0LT50eXBlID4gTkxBX1RZUEVfTUFYKTsKIAogCS8qIGZv
+ciBkYXRhIHR5cGVzIE5MQV9VKiBhbmQgTkxBX1MqIHJlcXVpcmUgZXhhY3QgbGVuZ3RoICov
+Ci0JaWYgKG5sYV9hdHRyX2xlbltwdC0+dHlwZV0pIHsKLQkJaWYgKGF0dHJsZW4gIT0gbmxh
+X2F0dHJfbGVuW3B0LT50eXBlXSkKLQkJCXJldHVybiAtRVJBTkdFOwotCQlyZXR1cm4gMDsK
+KwlpZiAobmxhX2F0dHJfbGVuW3B0LT50eXBlXSAmJiBhdHRybGVuICE9IG5sYV9hdHRyX2xl
+bltwdC0+dHlwZV0pIHsKKwkJcHJfd2Fybl9yYXRlbGltaXRlZCgibmV0bGluazogJyVzJzog
+YXR0cmlidXRlIHR5cGUgJWQgaGFzIGFuIGludmFsaWQgbGVuZ3RoLlxuIiwKKwkJCQkgICAg
+Y3VycmVudC0+Y29tbSwgdHlwZSk7CiAJfQogCiAJc3dpdGNoIChwdC0+dHlwZSkgewotLSAK
+Mi4xMS4wCgo=
+--------------215C1691EE29F28FBC7BDE3E--
