@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:38567 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752353AbdLBWsl (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:49502 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753159AbdLEKDm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 17:48:41 -0500
-Subject: Re: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-References: <20171202202332.10205-1-johannes@sipsolutions.net>
-From: David Ahern <dsahern@gmail.com>
-Message-ID: <bd801ee5-2f29-1797-26a3-e3d852294d47@gmail.com> (sfid-20171202_235807_516940_5559F3FD)
-Date: Sat, 2 Dec 2017 15:48:36 -0700
-MIME-Version: 1.0
-In-Reply-To: <20171202202332.10205-1-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Tue, 5 Dec 2017 05:03:42 -0500
+Message-ID: <1512468219.26976.15.camel@sipsolutions.net> (sfid-20171205_110616_664358_BF127EF9)
+Subject: Re: net/wireless/shipped-certs.c:2:1: error: expected expression at
+ end of input
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 05 Dec 2017 11:03:39 +0100
+In-Reply-To: <4006aefb-e9af-d809-b45a-201d20e75f9d@molgen.mpg.de> (sfid-20171205_110226_118243_D9C78F49)
+References: <4006aefb-e9af-d809-b45a-201d20e75f9d@molgen.mpg.de>
+         (sfid-20171205_110226_118243_D9C78F49)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/2/17 1:23 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2017-12-05 at 11:01 +0100, Paul Menzel wrote:
 > 
-> This netlink type is used only for backwards compatibility
-> with broken userspace that used the wrong size for a given
-> u8 attribute, which is now rejected. It would've been wrong
-> before already, since on big endian the wrong value (always
-> zero) would be used by the kernel, but we can't break the
-> existing deployed userspace - hostapd for example now fails
-> to initialize entirely.
 > 
-> We could try to fix up the big endian problem here, but we
-> don't know *how* userspace misbehaved - if using nla_put_u32
-> then we could, but we also found a debug tool (which we'll
-> ignore for the purposes of this regression) that was putting
-> the padding into the length.
-> 
-> Fixes: 28033ae4e0f5 ("net: netlink: Update attr validation to require exact length for some types")
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ```
+> $ git describe
+> v4.15-rc2-79-gfd6d2e506ce6
+> $ git log --oneline -1
+> fd6d2e506ce6 Merge tag 'docs-4.15-fixes' of git://git.lwn.net/linux
+> $ time ARCH=i386 make deb-pkg -j50
+> […]
+> net/wireless/shipped-certs.c:2:1: error: expected expression at end of input
+>   const u8 shipped_regdb_certs[] = {
+>   ^~~~~
+> […]
+> $ more net/wireless/shipped-certs.c
+> #include "reg.h"
+> const u8 shipped_regdb_certs[] = {
+> ```
 
-Hi Johannes:
+Ah, here we go - you probably don't have "hexdump" installed on this
+system?
 
-I have been really busy the past 2 weeks, so have not gotten around to
-dealing with this. I was planning to partially revert 28033ae4e0f5 --
-change it from failure to log an error message so buggy commands can be
-fixed.
+I thought about doing hexdump in posix shell/awk/sed/whatever
+instead... maybe I should do that.
 
-David
+johannes
