@@ -1,274 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55070 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752485AbdLVNjM (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:33880 "EHLO
+        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753088AbdLESPg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 08:39:12 -0500
-Subject: [PATCH v2 3/6] ath10k: detach coredump.c from debug.c
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Dec 2017 15:38:59 +0200
-Message-ID: <151394993871.9382.1431672643745493472.stgit@potku.adurom.net> (sfid-20171222_143919_013401_8B6FAA19)
-In-Reply-To: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net>
-References: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net>
+        Tue, 5 Dec 2017 13:15:36 -0500
+Subject: Re: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
+To: David Miller <davem@davemloft.net>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi
+References: <1512491661.26976.19.camel@sipsolutions.net>
+ <20171205.114106.1013322969674769159.davem@davemloft.net>
+ <1512495010.26976.24.camel@sipsolutions.net>
+ <20171205.124038.2265447675450126665.davem@davemloft.net>
+From: David Ahern <dsahern@gmail.com>
+Message-ID: <c9bbb3a1-4a94-fece-478f-7e347734ddd2@gmail.com> (sfid-20171205_191543_695490_780A6D9B)
+Date: Tue, 5 Dec 2017 11:15:29 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20171205.124038.2265447675450126665.davem@davemloft.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now coredump is totally separate from debug.c and doesn't depend on
-CONFIG_ATH10K_DEBUGFS anymore, only on CONFIG_DEV_COREDUMP. Also remove
-leftovers from the removed debugfs file support.
+On 12/5/17 10:40 AM, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Tue, 05 Dec 2017 18:30:10 +0100
+> 
+>> On Tue, 2017-12-05 at 11:41 -0500, David Miller wrote:
+>>>
+>>> There is no reasonable interpretation for what that application is
+>>> doing, so I think we can safely call that case as buggy.
+>>>
+>>> We are only trying to handle the situation where a U8 attribute
+>>> is presented as a bonafide U32 or a correct U8.
+>>>
+>>> Does this make sense?
+>>
+>> Well the application is buggy, but we don't really know in what way?
+>> Perhaps somebody even did the equivalent of
+>>     nla_put_u32(ATTR, cpu_to_le32(x))
+>> when they noticed it was broken on BE, and end up with a similar case
+>> as I had above.
+>>
+>> I don't think there's a good solution to this, applications must be
+>> fixed anyhow. I'm just saying that I'd save the extra code and stay
+>> compatible with applications as written today, even if they're now
+>> broken on BE - and rely on the warning to fix it. Trying to fix it up
+>> seems to have the potential to just break something else.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/Makefile   |    2 +
- drivers/net/wireless/ath/ath10k/core.c     |   10 +++++
- drivers/net/wireless/ath/ath10k/core.h     |   11 ++++--
- drivers/net/wireless/ath/ath10k/coredump.c |   51 +++++++++-------------------
- drivers/net/wireless/ath/ath10k/coredump.h |   11 ++++++
- drivers/net/wireless/ath/ath10k/debug.c    |    7 ----
- 6 files changed, 45 insertions(+), 47 deletions(-)
++1
 
-diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
-index 4e6a396827ee..6739ac26fd29 100644
---- a/drivers/net/wireless/ath/ath10k/Makefile
-+++ b/drivers/net/wireless/ath/ath10k/Makefile
-@@ -21,7 +21,7 @@ ath10k_core-$(CONFIG_ATH10K_TRACING) += trace.o
- ath10k_core-$(CONFIG_THERMAL) += thermal.o
- ath10k_core-$(CONFIG_MAC80211_DEBUGFS) += debugfs_sta.o
- ath10k_core-$(CONFIG_PM) += wow.o
--ath10k_core-$(CONFIG_ATH10K_DEBUGFS) += coredump.o
-+ath10k_core-$(CONFIG_DEV_COREDUMP) += coredump.o
- 
- obj-$(CONFIG_ATH10K_PCI) += ath10k_pci.o
- ath10k_pci-y += pci.o \
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 8d36bfcfcf01..c42e74e03ba5 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2676,12 +2676,19 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 
- 	init_dummy_netdev(&ar->napi_dev);
- 
--	ret = ath10k_debug_create(ar);
-+	ret = ath10k_coredump_create(ar);
- 	if (ret)
- 		goto err_free_aux_wq;
- 
-+	ret = ath10k_debug_create(ar);
-+	if (ret)
-+		goto err_free_coredump;
-+
- 	return ar;
- 
-+err_free_coredump:
-+	ath10k_coredump_destroy(ar);
-+
- err_free_aux_wq:
- 	destroy_workqueue(ar->workqueue_aux);
- err_free_wq:
-@@ -2703,6 +2710,7 @@ void ath10k_core_destroy(struct ath10k *ar)
- 	destroy_workqueue(ar->workqueue_aux);
- 
- 	ath10k_debug_destroy(ar);
-+	ath10k_coredump_destroy(ar);
- 	ath10k_htt_tx_destroy(&ar->htt);
- 	ath10k_wmi_free_host_mem(ar);
- 	ath10k_mac_destroy(ar);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 398cd3c57139..5e7705f59962 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -458,8 +458,6 @@ struct ath10k_ce_crash_hdr {
- 
- /* used for crash-dump storage, protected by data-lock */
- struct ath10k_fw_crash_data {
--	bool crashed_since_read;
--
- 	guid_t guid;
- 	struct timespec64 timestamp;
- 	__le32 registers[REG_DUMP_COUNT_QCA988X];
-@@ -489,8 +487,6 @@ struct ath10k_debug {
- 	u32 reg_addr;
- 	u32 nf_cal_period;
- 	void *cal_data;
--
--	struct ath10k_fw_crash_data *fw_crash_data;
- };
- 
- enum ath10k_state {
-@@ -961,6 +957,13 @@ struct ath10k {
- #endif
- 
- 	u32 pktlog_filter;
-+
-+#ifdef CONFIG_DEV_COREDUMP
-+	struct {
-+		struct ath10k_fw_crash_data *fw_crash_data;
-+	} coredump;
-+#endif
-+
- 	struct {
- 		/* protected by conf_mutex */
- 		struct ath10k_fw_components utf_mode_fw;
-diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
-index 51b86878e733..968ab2f74d83 100644
---- a/drivers/net/wireless/ath/ath10k/coredump.c
-+++ b/drivers/net/wireless/ath/ath10k/coredump.c
-@@ -21,15 +21,12 @@
- 
- #include "debug.h"
- 
--#ifdef CONFIG_DEV_COREDUMP
--
- struct ath10k_fw_crash_data *ath10k_coredump_new(struct ath10k *ar)
- {
--	struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
-+	struct ath10k_fw_crash_data *crash_data = ar->coredump.fw_crash_data;
- 
- 	lockdep_assert_held(&ar->data_lock);
- 
--	crash_data->crashed_since_read = true;
- 	guid_gen(&crash_data->guid);
- 	ktime_get_real_ts64(&crash_data->timestamp);
- 
-@@ -37,10 +34,9 @@ struct ath10k_fw_crash_data *ath10k_coredump_new(struct ath10k *ar)
- }
- EXPORT_SYMBOL(ath10k_coredump_new);
- 
--static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar,
--							   bool mark_read)
-+static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar)
- {
--	struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
-+	struct ath10k_fw_crash_data *crash_data = ar->coredump.fw_crash_data;
- 	struct ath10k_ce_crash_hdr *ce_hdr;
- 	struct ath10k_dump_file_data *dump_data;
- 	struct ath10k_tlv_dump_data *dump_tlv;
-@@ -64,12 +60,6 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar,
- 
- 	spin_lock_bh(&ar->data_lock);
- 
--	if (!crash_data->crashed_since_read) {
--		spin_unlock_bh(&ar->data_lock);
--		vfree(buf);
--		return NULL;
--	}
--
- 	dump_data = (struct ath10k_dump_file_data *)(buf);
- 	strlcpy(dump_data->df_magic, "ATH10K-FW-DUMP",
- 		sizeof(dump_data->df_magic));
-@@ -122,8 +112,6 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar,
- 	sofar += sizeof(*dump_tlv) + sizeof(*ce_hdr) +
- 		 CE_COUNT * sizeof(ce_hdr->entries[0]);
- 
--	ar->debug.fw_crash_data->crashed_since_read = !mark_read;
--
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	return dump_data;
-@@ -132,34 +120,29 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar,
- int ath10k_coredump_submit(struct ath10k *ar)
- {
- 	struct ath10k_dump_file_data *dump;
--	void *dump_ptr;
--	u32 dump_len;
- 
--	/* To keep the dump file available also for debugfs don't mark the
--	 * file read, only debugfs should do that.
--	 */
--	dump = ath10k_coredump_build(ar, false);
-+	dump = ath10k_coredump_build(ar);
- 	if (!dump) {
- 		ath10k_warn(ar, "no crash dump data found for devcoredump");
- 		return -ENODATA;
- 	}
- 
--	/* Make a copy of the dump file for dev_coredumpv() as during the
--	 * transition period we need to own the original file. Once
--	 * fw_crash_dump debugfs file is removed no need to have a copy
--	 * anymore.
--	 */
--	dump_len = le32_to_cpu(dump->len);
--	dump_ptr = vzalloc(dump_len);
-+	dev_coredumpv(ar->dev, dump, le32_to_cpu(dump->len), GFP_KERNEL);
- 
--	if (!dump_ptr)
--		return -ENOMEM;
--
--	memcpy(dump_ptr, dump, dump_len);
-+	return 0;
-+}
- 
--	dev_coredumpv(ar->dev, dump_ptr, dump_len, GFP_KERNEL);
-+int ath10k_coredump_create(struct ath10k *ar)
-+{
-+	ar->coredump.fw_crash_data = vzalloc(sizeof(*ar->coredump.fw_crash_data));
-+	if (!ar->coredump.fw_crash_data)
-+		return -ENOMEM;
- 
- 	return 0;
- }
- 
--#endif /* CONFIG_DEV_COREDUMP */
-+void ath10k_coredump_destroy(struct ath10k *ar)
-+{
-+	vfree(ar->coredump.fw_crash_data);
-+	ar->coredump.fw_crash_data = NULL;
-+}
-diff --git a/drivers/net/wireless/ath/ath10k/coredump.h b/drivers/net/wireless/ath/ath10k/coredump.h
-index 2d2f45b5aa37..2d33075f081a 100644
---- a/drivers/net/wireless/ath/ath10k/coredump.h
-+++ b/drivers/net/wireless/ath/ath10k/coredump.h
-@@ -103,6 +103,8 @@ struct ath10k_dump_file_data {
- 
- int ath10k_coredump_submit(struct ath10k *ar);
- struct ath10k_fw_crash_data *ath10k_coredump_new(struct ath10k *ar);
-+int ath10k_coredump_create(struct ath10k *ar);
-+void ath10k_coredump_destroy(struct ath10k *ar);
- 
- #else /* CONFIG_DEV_COREDUMP */
- 
-@@ -116,6 +118,15 @@ static inline struct ath10k_fw_crash_data *ath10k_coredump_new(struct ath10k *ar
- 	return NULL;
- }
- 
-+static inline int ath10k_coredump_create(struct ath10k *ar)
-+{
-+	return 0;
-+}
-+
-+static inline void ath10k_coredump_destroy(struct ath10k *ar)
-+{
-+}
-+
- #endif /* CONFIG_DEV_COREDUMP */
- 
- #endif /* _COREDUMP_H_ */
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index f8e44882439a..48788c851217 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -2137,10 +2137,6 @@ static const struct file_operations fops_fw_checksums = {
- 
- int ath10k_debug_create(struct ath10k *ar)
- {
--	ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
--	if (!ar->debug.fw_crash_data)
--		return -ENOMEM;
--
- 	ar->debug.cal_data = vzalloc(ATH10K_DEBUG_CAL_DATA_LEN);
- 	if (!ar->debug.cal_data)
- 		return -ENOMEM;
-@@ -2155,9 +2151,6 @@ int ath10k_debug_create(struct ath10k *ar)
- 
- void ath10k_debug_destroy(struct ath10k *ar)
- {
--	vfree(ar->debug.fw_crash_data);
--	ar->debug.fw_crash_data = NULL;
--
- 	vfree(ar->debug.cal_data);
- 	ar->debug.cal_data = NULL;
- 
+> 
+> You might be right.
+> 
+> Ok let's just go with the warning + existing behavior for now.
+
+Is the patch I sent as an attachment good or should I re-send
+standalone? (don't see it in patchwork)
