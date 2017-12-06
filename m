@@ -1,99 +1,327 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:40403 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751347AbdLKIw0 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:35572 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754395AbdLFKFT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 03:52:26 -0500
-Received: by mail-wm0-f68.google.com with SMTP id f206so12523823wmf.5
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 00:52:25 -0800 (PST)
-From: Loic Poulain <loic.poulain@linaro.org>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, k.eugene.e@gmail.com,
-        bjorn.andersson@linaro.org, Loic Poulain <loic.poulain@linaro.org>
-Subject: [PATCH v2] wcn36xx: Fix dynamic power saving
-Date: Mon, 11 Dec 2017 09:52:22 +0100
-Message-Id: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org> (sfid-20171211_095229_121183_2E767E0C)
+        Wed, 6 Dec 2017 05:05:19 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v4 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
+Date: Wed,  6 Dec 2017 15:26:34 +0530
+Message-Id: <1512554197-19664-6-git-send-email-amitkarwar@gmail.com> (sfid-20171206_110527_349459_0E830B70)
+In-Reply-To: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
+References: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since driver does not report hardware dynamic power saving cap,
-this is up to the mac80211 to manage power saving timeout and
-state machine, using the ieee80211 config callback to report
-PS changes. This patch enables/disables PS mode according to
-the new configuration.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Remove old behaviour enabling PS mode in a static way, this make
-the device unusable when power save is enabled since device is
-forced to PS regardless RX/TX traffic.
+Redpine bluetooth driver is a thin driver which depends on
+'rsi_91x' driver for transmitting and receiving packets
+to/from device. It creates hci interface when attach() is
+called from 'rsi_91x' module.
 
-Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- v2: remove error msg on unbalanced bmps exit
-     return -EALREADY if not in bmps mode
+v4: Removed rsi_hci.h file. Made the functions static(Marcel)
+v3: Made BT_RSI module by default off(Marcel)
+    Removed redundant exported function rsi_get_hci_ops()(Marcel)
+v2: Addressed review comments from Marcel
+    Removed unnecessary 'depends on BT && BT_RFOMM' line in Kconfig
+    Removed redundant BT_INFO messages
+    h_adapter initialization and declaration in a single line.
+    Removed unnecessary error checks for HCI_RUNNING and fsm_state
+    Allocated new skb with skb_realloc_headroom() API if headroom is not sufficient
+    Used get_unaligned_le16 helpers
+    Moved a structure and union from header file to btrsi.c file
+---
+ drivers/bluetooth/Kconfig  |  11 +++
+ drivers/bluetooth/Makefile |   2 +
+ drivers/bluetooth/btrsi.c  | 224 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/rsi_header.h |   2 +
+ 4 files changed, 239 insertions(+)
+ create mode 100644 drivers/bluetooth/btrsi.c
 
- drivers/net/wireless/ath/wcn36xx/main.c | 23 ++++++++++++-----------
- drivers/net/wireless/ath/wcn36xx/pmc.c  |  6 ++++--
- 2 files changed, 16 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index f0b4d43..436b8ea 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -384,6 +384,18 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 	}
+diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
+index 60e1c7d..33d7514 100644
+--- a/drivers/bluetooth/Kconfig
++++ b/drivers/bluetooth/Kconfig
+@@ -378,4 +378,15 @@ config BT_QCOMSMD
+ 	  Say Y here to compile support for HCI over Qualcomm SMD into the
+ 	  kernel or say M to compile as a module.
  
-+	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		list_for_each_entry(tmp, &wcn->vif_list, list) {
-+			vif = wcn36xx_priv_to_vif(tmp);
-+			if (hw->conf.flags & IEEE80211_CONF_PS) {
-+				if (vif->bss_conf.ps) /* ps allowed ? */
-+					wcn36xx_pmc_enter_bmps_state(wcn, vif);
-+			} else {
-+				wcn36xx_pmc_exit_bmps_state(wcn, vif);
-+			}
++config BT_RSI
++	tristate "Redpine HCI support"
++	default n
++	help
++	  Redpine BT driver.
++	  This driver handles BT traffic from upper layers and pass
++	  to the RSI_91x coex module for further scheduling to device
++
++	  Say Y here to compile support for HCI over Redpine into the
++	  kernel or say M to compile as a module.
++
+ endmenu
+diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
+index 4e4e44d..712af83a 100644
+--- a/drivers/bluetooth/Makefile
++++ b/drivers/bluetooth/Makefile
+@@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
+ 
+ obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
+ 
++obj-$(CONFIG_BT_RSI)		+= btrsi.o
++
+ btmrvl-y			:= btmrvl_main.o
+ btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
+ 
+diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
+new file mode 100644
+index 0000000..f76ae4d
+--- /dev/null
++++ b/drivers/bluetooth/btrsi.c
+@@ -0,0 +1,224 @@
++/**
++ * Copyright (c) 2017 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#include <linux/version.h>
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <net/bluetooth/bluetooth.h>
++#include <net/bluetooth/hci_core.h>
++#include <linux/unaligned/le_byteshift.h>
++#include <linux/rsi_header.h>
++#include <net/genetlink.h>
++
++/* RX frame types */
++#define RSI_RESULT_CONFIRM			0x80
++#define RSI_BT_PER				0x10
++#define RSI_BT_BER				0x11
++#define RSI_BT_CW				0x12
++
++#define RSI_HEADROOM_FOR_BT_HAL	16
++#define RSI_FRAME_DESC_SIZE	16
++
++static struct rsi_hci_adapter {
++	void *priv;
++	struct rsi_proto_ops *proto_ops;
++	struct hci_dev *hdev;
++};
++
++static int rsi_hci_open(struct hci_dev *hdev)
++{
++	return 0;
++}
++
++static int rsi_hci_close(struct hci_dev *hdev)
++{
++	return 0;
++}
++
++static int rsi_hci_flush(struct hci_dev *hdev)
++{
++	return 0;
++}
++
++static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
++{
++	struct rsi_hci_adapter *h_adapter = hci_get_drvdata(hdev);
++	struct sk_buff *new_skb = NULL;
++
++	switch (bt_cb(skb)->pkt_type) {
++	case HCI_COMMAND_PKT:
++		hdev->stat.cmd_tx++;
++		break;
++
++	case HCI_ACLDATA_PKT:
++		hdev->stat.acl_tx++;
++		break;
++
++	case HCI_SCODATA_PKT:
++		hdev->stat.sco_tx++;
++		break;
++	}
++
++	if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
++		/* Insufficient skb headroom - allocate a new skb */
++		new_skb = skb_realloc_headroom(skb, RSI_HEADROOM_FOR_BT_HAL);
++		if (unlikely(!new_skb))
++			return -ENOMEM;
++		bt_cb(new_skb)->pkt_type = bt_cb(skb)->pkt_type;
++		kfree_skb(skb);
++		skb = new_skb;
++	}
++
++	return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
++						   RSI_BT_Q);
++}
++
++static int rsi_hci_recv_pkt(void *priv, u8 *pkt)
++{
++	struct rsi_hci_adapter *h_adapter = (struct rsi_hci_adapter *)priv;
++	struct hci_dev *hdev = h_adapter->hdev;
++	struct sk_buff *skb;
++
++	int pkt_len = get_unaligned_le16(pkt) & 0x0fff;
++	u8 queue_no = (get_unaligned_le16(pkt) & 0x7000) >> 12;
++
++	if (queue_no == RSI_BT_MGMT_Q) {
++		u8 msg_type = pkt[14] & 0xFF;
++
++		switch (msg_type) {
++		case RSI_RESULT_CONFIRM:
++			bt_dev_info(hdev, "BT Result Confirm");
++			return 0;
++		case RSI_BT_BER:
++			bt_dev_info(hdev, "BT Ber");
++			return 0;
++		case RSI_BT_CW:
++			bt_dev_info(hdev, "BT CW");
++			return 0;
++		default:
++			break;
 +		}
 +	}
 +
- 	mutex_unlock(&wcn->conf_mutex);
- 
- 	return 0;
-@@ -747,17 +759,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
- 		vif_priv->dtim_period = bss_conf->dtim_period;
- 	}
- 
--	if (changed & BSS_CHANGED_PS) {
--		wcn36xx_dbg(WCN36XX_DBG_MAC,
--			    "mac bss PS set %d\n",
--			    bss_conf->ps);
--		if (bss_conf->ps) {
--			wcn36xx_pmc_enter_bmps_state(wcn, vif);
--		} else {
--			wcn36xx_pmc_exit_bmps_state(wcn, vif);
--		}
--	}
--
- 	if (changed & BSS_CHANGED_BSSID) {
- 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM\n",
- 			    bss_conf->bssid);
-diff --git a/drivers/net/wireless/ath/wcn36xx/pmc.c b/drivers/net/wireless/ath/wcn36xx/pmc.c
-index 589fe5f..1976b80 100644
---- a/drivers/net/wireless/ath/wcn36xx/pmc.c
-+++ b/drivers/net/wireless/ath/wcn36xx/pmc.c
-@@ -45,8 +45,10 @@ int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn,
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 
- 	if (WCN36XX_BMPS != vif_priv->pw_state) {
--		wcn36xx_err("Not in BMPS mode, no need to exit from BMPS mode!\n");
--		return -EINVAL;
-+		/* Unbalanced call or last BMPS enter failed */
-+		wcn36xx_dbg(WCN36XX_DBG_PMC,
-+			    "Not in BMPS mode, no need to exit\n");
-+		return -EALREADY;
- 	}
- 	wcn36xx_smd_exit_bmps(wcn, vif);
- 	vif_priv->pw_state = WCN36XX_FULL_POWER;
++	skb = dev_alloc_skb(pkt_len);
++	if (!skb)
++		return -ENOMEM;
++
++	memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
++	skb_put(skb, pkt_len);
++	h_adapter->hdev->stat.byte_rx += skb->len;
++
++	skb->dev = (void *)hdev;
++	bt_cb(skb)->pkt_type = pkt[14];
++
++	return hci_recv_frame(hdev, skb);
++}
++
++static int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
++{
++	struct rsi_hci_adapter *h_adapter = NULL;
++	struct hci_dev *hdev;
++	int status = 0;
++
++	h_adapter = kzalloc(sizeof(*h_adapter), GFP_KERNEL);
++	if (!h_adapter)
++		return -ENOMEM;
++
++	h_adapter->priv = priv;
++	ops->set_bt_context(priv, h_adapter);
++	h_adapter->proto_ops = ops;
++
++	hdev = hci_alloc_dev();
++	if (!hdev) {
++		BT_ERR("Failed to alloc HCI device\n");
++		goto err;
++	}
++
++	h_adapter->hdev = hdev;
++
++	if (ops->get_host_intf(priv) == RSI_HOST_INTF_SDIO)
++		hdev->bus = HCI_SDIO;
++	else
++		hdev->bus = HCI_USB;
++
++	hci_set_drvdata(hdev, h_adapter);
++	hdev->dev_type = HCI_PRIMARY;
++	hdev->open = rsi_hci_open;
++	hdev->close = rsi_hci_close;
++	hdev->flush = rsi_hci_flush;
++	hdev->send = rsi_hci_send_pkt;
++
++	status = hci_register_dev(hdev);
++	if (status < 0) {
++		BT_ERR("%s: HCI registration failed with errcode %d\n",
++		       __func__, status);
++		goto err;
++	}
++
++	return 0;
++err:
++	if (hdev) {
++		hci_unregister_dev(hdev);
++		hci_free_dev(hdev);
++		h_adapter->hdev = NULL;
++	}
++	kfree(h_adapter);
++
++	return -EINVAL;
++}
++
++static void rsi_hci_detach(void *priv)
++{
++	struct rsi_hci_adapter *h_adapter = (struct rsi_hci_adapter *)priv;
++	struct hci_dev *hdev;
++
++	if (!h_adapter)
++		return;
++
++	hdev = h_adapter->hdev;
++	if (hdev) {
++		hci_unregister_dev(hdev);
++		hci_free_dev(hdev);
++		h_adapter->hdev = NULL;
++	}
++
++	kfree(h_adapter);
++}
++
++const struct rsi_mod_ops rsi_bt_ops = {
++	.attach	= rsi_hci_attach,
++	.detach	= rsi_hci_detach,
++	.recv_pkt = rsi_hci_recv_pkt,
++};
++EXPORT_SYMBOL(rsi_bt_ops);
++
++static int rsi_91x_bt_module_init(void)
++{
++	BT_INFO("%s: BT Module init called\n", __func__);
++
++	return 0;
++}
++
++static void rsi_91x_bt_module_exit(void)
++{
++	BT_INFO("%s: BT Module exit called\n", __func__);
++}
++
++module_init(rsi_91x_bt_module_init);
++module_exit(rsi_91x_bt_module_exit);
++MODULE_AUTHOR("Redpine Signals Inc");
++MODULE_DESCRIPTION("RSI BT driver");
++MODULE_SUPPORTED_DEVICE("RSI-BT");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/include/linux/rsi_header.h b/include/linux/rsi_header.h
+index 737ab4e..07d9574 100644
+--- a/include/linux/rsi_header.h
++++ b/include/linux/rsi_header.h
+@@ -51,4 +51,6 @@ struct rsi_mod_ops {
+ 	void (*detach)(void *priv);
+ 	int (*recv_pkt)(void *priv, u8 *msg);
+ };
++
++extern const struct rsi_mod_ops rsi_bt_ops;
+ #endif
 -- 
 2.7.4
