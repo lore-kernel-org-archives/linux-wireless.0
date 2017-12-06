@@ -1,63 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:43409 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753714AbdLOIvg (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:39361 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754304AbdLFKFH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Dec 2017 03:51:36 -0500
-From: Srinivas Dasari <dasaris@qti.qualcomm.com>
-To: Marcel Holtmann <marcel@holtmann.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Sunil Dutt Undekari" <usdutt@qti.qualcomm.com>
-Subject: RE: [PATCH 1/2] cfg80211/nl80211: Optional authentication offload to
- userspace
-Date: Fri, 15 Dec 2017 08:51:29 +0000
-Message-ID: <829f69319fad450db616f02de781d1a8@aphydexm01b.ap.qualcomm.com> (sfid-20171215_095142_562975_011440BB)
-References: <1513187438-23967-1-git-send-email-jouni@qca.qualcomm.com>
- <A0B39E95-DAA8-4676-A0C7-8C21DBFE7DE4@holtmann.org>
-In-Reply-To: <A0B39E95-DAA8-4676-A0C7-8C21DBFE7DE4@holtmann.org>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Wed, 6 Dec 2017 05:05:07 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v4 2/8] rsi: add bluetooth rx endpoint
+Date: Wed,  6 Dec 2017 15:26:31 +0530
+Message-Id: <1512554197-19664-3-git-send-email-amitkarwar@gmail.com> (sfid-20171206_110512_126213_B02B6CBA)
+In-Reply-To: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
+References: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PmRvbuKAmXQgd2UgYWN0dWFsbHkgbmVlZCBhIGZsYWcgaW4gTkw4MDIxMV9DTURfQ09OTkVDVCB0
-aGF0IGluZGljYXRlcyB0aGF0IHVzZXJzcGFjZSBpcyBhYmxlIHRvIGFjdHVhbGx5IGhhbmRsZSBO
-TDgwMjExX0NNRF9FWFRFUk5BTF9BVVRILiBJdCBpcyBuaWNlID50aGF0IHRoZXJlIGlzIGZlYXR1
-cmUgZm9yIHVzZXJzcGFjZSB0byBzZWUgaWYgdGhlIGRyaXZlciBzdXBwb3J0cyBpdCwgYnV0IGhv
-dyBpcyB0aGUgZHJpdmVyIGFibGUgdG8gb2ZmbG9hZCBzdWNjZXNzZnVsbHkgaWYgaXQgZG9lc27i
-gJl0IGtub3cgdGhhdCB1c2Vyc3BhY2UgY2FuIGRvIGl0Lg0KT3VyIGlkZWEgd2FzIHRoZSBkcml2
-ZXIgdG8gdGltZW91dCB0aGUgY29ubmVjdCBmb3IgdGhlIHNjZW5hcmlvcyB3aGVyZSB0aGUgZXh0
-ZXJuYWwgYXV0aCAoU0FFKSBzdGF0dXMgaXMgbm90IGluZGljYXRlZC4NCkkgYWdyZWUgd2l0aCB5
-b3Ugb24gdXNlciBzcGFjZSBpbmRpY2F0aW5nIHRoaXMgY2FwYWJpbGl0eSB0byB0aGUgZHJpdmVy
-LiANCklzIGl0IGEgZmFpciBpZGVhIHRvIGV4dGVuZCBlbnVtIGNmZzgwMjExX2Fzc29jX3JlcV9m
-bGFncyBmb3IgdGhpcyA/IA0KDQpSZWdhcmRzLA0KU3Jpbml2YXMNCg0KLS0tLS1PcmlnaW5hbCBN
-ZXNzYWdlLS0tLS0NCkZyb206IE1hcmNlbCBIb2x0bWFubiBbbWFpbHRvOm1hcmNlbEBob2x0bWFu
-bi5vcmddIA0KU2VudDogRnJpZGF5LCBEZWNlbWJlciAxNSwgMjAxNyAxOjI5IEFNDQpUbzogSm91
-bmkgTWFsaW5lbiA8am91bmlAcWNhLnF1YWxjb21tLmNvbT4NCkNjOiBKb2hhbm5lcyBCZXJnIDxq
-b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PjsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
-OyBTcmluaXZhcyBEYXNhcmkgPGRhc2FyaXNAcXRpLnF1YWxjb21tLmNvbT4NClN1YmplY3Q6IFJl
-OiBbUEFUQ0ggMS8yXSBjZmc4MDIxMS9ubDgwMjExOiBPcHRpb25hbCBhdXRoZW50aWNhdGlvbiBv
-ZmZsb2FkIHRvIHVzZXJzcGFjZQ0KDQpIaSBKb3VuaSwNCg0KPiBUaGlzIGludGVyZmFjZSBhbGxv
-d3MgdGhlIGhvc3QgZHJpdmVyIHRvIG9mZmxvYWQgdGhlIGF1dGhlbnRpY2F0aW9uIHRvIA0KPiB1
-c2VyIHNwYWNlLiBUaGlzIGlzIGV4Y2x1c2l2ZWx5IGRlZmluZWQgZm9yIGhvc3QgZHJpdmVycyB0
-aGF0IGRvIG5vdCANCj4gZGVmaW5lIHNlcGFyYXRlIGNvbW1hbmRzIGZvciBhdXRoZW50aWNhdGlv
-biBhbmQgYXNzb2NpYXRpb24sIGJ1dCByZWx5IA0KPiBvbiB1c2Vyc3BhY2UgU01FIChlLmcuLCBp
-biB3cGFfc3VwcGxpY2FudCBmb3IgdGhlIA0KPiB+V1BBX0RSSVZFUl9GTEFHU19TTUUNCj4gY2Fz
-ZSkgZm9yIHRoZSBhdXRoZW50aWNhdGlvbiB0byBoYXBwZW4uIFRoaXMgY2FuIGJlIHVzZWQgdG8g
-aW1wbGVtZW50IA0KPiBTQUUgd2l0aG91dCBmdWxsIGltcGxlbWVudGF0aW9uIGluIHRoZSBrZXJu
-ZWwvZmlybXdhcmUgd2hpbGUgc3RpbGwgDQo+IGJlaW5nIGFibGUgdG8gdXNlIE5MODAyMTFfQ01E
-X0NPTk5FQ1Qgd2l0aCBkcml2ZXItYmFzZWQgQlNTIHNlbGVjdGlvbi4NCj4gDQo+IFRoZSBob3N0
-IGRyaXZlciBzZW5kcyB0aGUgTkw4MDIxMV9DTURfRVhURVJOQUxfQVVUSCBldmVudCB0byANCj4g
-c3RhcnQvYWJvcnQgdGhlIGF1dGhlbnRpY2F0aW9uIHRvIHVzZXJzcGFjZSBhbmQgc3RhdHVzIG9m
-IA0KPiBhdXRoZW50aWNhdGlvbiBpcyBmdXJ0aGVyIGluZGljYXRlZCBieSB1c2VyIHNwYWNlIHRv
-IGhvc3QgZHJpdmVyIA0KPiB0aHJvdWdoIHRoZSBzYW1lIGNvbW1hbmQgaW50ZXJmYWNlLiBTdWNo
-IGRyaXZlcnMgYWR2ZXJ0aXNlIHRoZSANCj4gY2FwYWJpbGl0eSB0aHJvdWdoIE5MODAyMTFfRVhU
-X0ZFQVRVUkVfRVhURVJOQUxfQVVUSC4NCg0KZG9u4oCZdCB3ZSBhY3R1YWxseSBuZWVkIGEgZmxh
-ZyBpbiBOTDgwMjExX0NNRF9DT05ORUNUIHRoYXQgaW5kaWNhdGVzIHRoYXQgdXNlcnNwYWNlIGlz
-IGFibGUgdG8gYWN0dWFsbHkgaGFuZGxlIE5MODAyMTFfQ01EX0VYVEVSTkFMX0FVVEguIEl0IGlz
-IG5pY2UgdGhhdCB0aGVyZSBpcyBmZWF0dXJlIGZvciB1c2Vyc3BhY2UgdG8gc2VlIGlmIHRoZSBk
-cml2ZXIgc3VwcG9ydHMgaXQsIGJ1dCBob3cgaXMgdGhlIGRyaXZlciBhYmxlIHRvIG9mZmxvYWQg
-c3VjY2Vzc2Z1bGx5IGlmIGl0IGRvZXNu4oCZdCBrbm93IHRoYXQgdXNlcnNwYWNlIGNhbiBkbyBp
-dC4NCg0KUmVnYXJkcw0KDQpNYXJjZWwNCg0K
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+
+USB endpoint 1 is used for WLAN which is presently in use.
+USB endpoint 2 is introduced for BT Rx traffic. Enumeration
+of Rx BT endpoint and submitting Rx BT URB are added.
+
+>From /sys/kernel/debug/usb/devices,
+Ad=81(I) is for WLAN EP IN and Ad=01(O) is for Wlan EP OUT.
+Ad=82(I) is for BT EP IN and Ad=02(O) is for BT EP OUT.
+
+T:  Bus=01 Lev=01 Prnt=01 Port=09 Cnt=03 Dev#=  4 Spd=480  MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=1618 ProdID=9113 Rev= 0.02
+S:  Manufacturer=Redpine Signals, Inc.
+S:  Product=Wireless USB Network Module
+S:  SerialNumber=000000000001
+C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
+I:* If#= 0 Alt= 0 #EPs= 6 Cls=00(>ifc ) Sub=00 Prot=00 Driver=(none)
+E:  Ad=81(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=01(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=82(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=02(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=03(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v3: Same as v2
+v2: Included '/sys/kernel/debug/usb/devices' info in patch description(Marcel)
+---
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 37 ++++++++++++++++++++--------------
+ drivers/net/wireless/rsi/rsi_usb.h     |  6 +++---
+ 2 files changed, 25 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 147fcee2..b212a15 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -103,41 +103,42 @@ static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
+ 	struct usb_host_interface *iface_desc;
+ 	struct usb_endpoint_descriptor *endpoint;
+ 	__le16 buffer_size;
+-	int ii, bep_found = 0;
++	int ii, bin_found = 0, bout_found = 0;
+ 
+ 	iface_desc = &(interface->altsetting[0]);
+ 
+ 	for (ii = 0; ii < iface_desc->desc.bNumEndpoints; ++ii) {
+ 		endpoint = &(iface_desc->endpoint[ii].desc);
+ 
+-		if ((!(dev->bulkin_endpoint_addr)) &&
++		if (!dev->bulkin_endpoint_addr[bin_found] &&
+ 		    (endpoint->bEndpointAddress & USB_DIR_IN) &&
+-		    ((endpoint->bmAttributes &
+-		    USB_ENDPOINT_XFERTYPE_MASK) ==
++		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
+ 		    USB_ENDPOINT_XFER_BULK)) {
+ 			buffer_size = endpoint->wMaxPacketSize;
+-			dev->bulkin_size = buffer_size;
+-			dev->bulkin_endpoint_addr =
++			dev->bulkin_size[bin_found] = buffer_size;
++			dev->bulkin_endpoint_addr[bin_found] =
+ 				endpoint->bEndpointAddress;
++			bin_found++;
+ 		}
+ 
+-		if (!dev->bulkout_endpoint_addr[bep_found] &&
++		if (!dev->bulkout_endpoint_addr[bout_found] &&
+ 		    !(endpoint->bEndpointAddress & USB_DIR_IN) &&
+ 		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
+-		      USB_ENDPOINT_XFER_BULK)) {
+-			dev->bulkout_endpoint_addr[bep_found] =
++		    USB_ENDPOINT_XFER_BULK)) {
++			buffer_size = endpoint->wMaxPacketSize;
++			dev->bulkout_endpoint_addr[bout_found] =
+ 				endpoint->bEndpointAddress;
+ 			buffer_size = endpoint->wMaxPacketSize;
+-			dev->bulkout_size[bep_found] = buffer_size;
+-			bep_found++;
++			dev->bulkout_size[bout_found] = buffer_size;
++			bout_found++;
+ 		}
+ 
+-		if (bep_found >= MAX_BULK_EP)
++		if (bin_found >= MAX_BULK_EP || bout_found >= MAX_BULK_EP)
+ 			break;
+ 	}
+ 
+-	if (!(dev->bulkin_endpoint_addr) &&
+-	    (dev->bulkout_endpoint_addr[0]))
++	if (!(dev->bulkin_endpoint_addr[0]) &&
++	    dev->bulkout_endpoint_addr[0])
+ 		return -EINVAL;
+ 
+ 	return 0;
+@@ -273,7 +274,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
+ 	usb_fill_bulk_urb(urb,
+ 			  dev->usbdev,
+ 			  usb_rcvbulkpipe(dev->usbdev,
+-				dev->bulkin_endpoint_addr),
++			  dev->bulkin_endpoint_addr[ep_num - 1]),
+ 			  urb->transfer_buffer,
+ 			  3000,
+ 			  rsi_rx_done_handler,
+@@ -745,6 +746,12 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 	if (status)
+ 		goto err1;
+ 
++	if (adapter->priv->coex_mode > 1) {
++		status = rsi_rx_urb_submit(adapter, BT_EP);
++		if (status)
++			goto err1;
++	}
++
+ 	return 0;
+ err1:
+ 	rsi_deinit_usb_interface(adapter);
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 7e781d5..0fda14c 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -31,7 +31,7 @@
+ #define USB_VENDOR_REGISTER_WRITE    0x16
+ #define RSI_USB_TX_HEAD_ROOM         128
+ 
+-#define MAX_RX_URBS                  1
++#define MAX_RX_URBS                  2
+ #define MAX_BULK_EP                  8
+ #define WLAN_EP                      1
+ #define BT_EP                        2
+@@ -54,8 +54,8 @@ struct rsi_91x_usbdev {
+ 	struct usb_interface *pfunction;
+ 	struct rx_usb_ctrl_block rx_cb[MAX_RX_URBS];
+ 	u8 *tx_buffer;
+-	__le16 bulkin_size;
+-	u8 bulkin_endpoint_addr;
++	__le16 bulkin_size[MAX_BULK_EP];
++	u8 bulkin_endpoint_addr[MAX_BULK_EP];
+ 	__le16 bulkout_size[MAX_BULK_EP];
+ 	u8 bulkout_endpoint_addr[MAX_BULK_EP];
+ 	u32 tx_blk_size;
+-- 
+2.7.4
