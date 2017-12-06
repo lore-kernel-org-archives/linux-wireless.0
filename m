@@ -1,374 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:59783 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751980AbdLAKy7 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40434 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754103AbdLFJeo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 05:54:59 -0500
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 11.1 \(3445.4.7\))
-Subject: Re: [v3 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1512114085-2615-6-git-send-email-amitkarwar@gmail.com>
-Date: Fri, 1 Dec 2017 11:54:56 +0100
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Message-Id: <24DB6495-8CFF-401F-88A7-59BD03BC0C88@holtmann.org> (sfid-20171201_115504_589021_101BB755)
-References: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com>
- <1512114085-2615-6-git-send-email-amitkarwar@gmail.com>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
+        Wed, 6 Dec 2017 04:34:44 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Dmitry Torokhov <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Subject: Re: Re: [PATCH v4 1/3] mwifiex: refactor device dump code to make it
+ generic for usb interface
+Date: Wed, 6 Dec 2017 09:34:13 +0000
+Message-ID: <5185369bb7644d97bb57c5dd9f1be656@SC-EXCH02.marvell.com> (sfid-20171206_103448_574474_9278EA68)
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amitkumar,
-
-> Redpine bluetooth driver is a thin driver which depends on
-> 'rsi_91x' driver for transmitting and receiving packets
-> to/from device. It creates hci interface when attach() is
-> called from 'rsi_91x' module.
-> 
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-> ---
-> v3: Made BT_RSI module by default off(Marcel)
->    Removed redundant exported function rsi_get_hci_ops()(Marcel)
-> v2: Addressed review comments from Marcel
->    Removed unnecessary 'depends on BT && BT_RFOMM' line in Kconfig
->    Removed redundant BT_INFO messages
->    h_adapter initialization and declaration in a single line.
->    Removed unnecessary error checks for HCI_RUNNING and fsm_state
->    Allocated new skb with skb_realloc_headroom() API if headroom is not sufficient
->    Used get_unaligned_le16 helpers
->    Moved a structure and union from header file to btrsi.c file
-> ---
-> drivers/bluetooth/Kconfig   |  11 +++
-> drivers/bluetooth/Makefile  |   2 +
-> drivers/bluetooth/btrsi.c   | 211 ++++++++++++++++++++++++++++++++++++++++++++
-> drivers/bluetooth/rsi_hci.h |  40 +++++++++
-> include/linux/rsi_header.h  |   2 +
-> 5 files changed, 266 insertions(+)
-> create mode 100644 drivers/bluetooth/btrsi.c
-> create mode 100644 drivers/bluetooth/rsi_hci.h
-> 
-> diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
-> index 60e1c7d..33d7514 100644
-> --- a/drivers/bluetooth/Kconfig
-> +++ b/drivers/bluetooth/Kconfig
-> @@ -378,4 +378,15 @@ config BT_QCOMSMD
-> 	  Say Y here to compile support for HCI over Qualcomm SMD into the
-> 	  kernel or say M to compile as a module.
-> 
-> +config BT_RSI
-> +	tristate "Redpine HCI support"
-> +	default n
-> +	help
-> +	  Redpine BT driver.
-> +	  This driver handles BT traffic from upper layers and pass
-> +	  to the RSI_91x coex module for further scheduling to device
-> +
-> +	  Say Y here to compile support for HCI over Redpine into the
-> +	  kernel or say M to compile as a module.
-> +
-> endmenu
-> diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
-> index 4e4e44d..712af83a 100644
-> --- a/drivers/bluetooth/Makefile
-> +++ b/drivers/bluetooth/Makefile
-> @@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
-> 
-> obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
-> 
-> +obj-$(CONFIG_BT_RSI)		+= btrsi.o
-> +
-> btmrvl-y			:= btmrvl_main.o
-> btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
-> 
-> diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
-> new file mode 100644
-> index 0000000..71f6f4e
-> --- /dev/null
-> +++ b/drivers/bluetooth/btrsi.c
-> @@ -0,0 +1,211 @@
-> +/**
-> + * Copyright (c) 2017 Redpine Signals Inc.
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> +e* ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +#include <linux/version.h>
-> +#include <linux/module.h>
-> +#include <linux/kernel.h>
-> +#include "rsi_hci.h"
-> +
-> +struct rsi_hci_adapter {
-> +	void *priv;
-> +	struct rsi_proto_ops *proto_ops;
-> +	struct hci_dev *hdev;
-> +};
-> +
-> +const struct rsi_mod_ops rsi_bt_ops = {
-> +	.attach	= rsi_hci_attach,
-> +	.detach	= rsi_hci_detach,
-> +	.recv_pkt = rsi_hci_recv_pkt,
-> +};
-> +EXPORT_SYMBOL(rsi_bt_ops);
-> +
-> +static int rsi_hci_open(struct hci_dev *hdev)
-> +{
-> +	return 0;
-> +}
-> +
-> +static int rsi_hci_close(struct hci_dev *hdev)
-> +{
-> +	return 0;
-> +}
-> +
-> +static int rsi_hci_flush(struct hci_dev *hdev)
-> +{
-> +	return 0;
-> +}
-> +
-> +static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
-> +{
-> +	struct rsi_hci_adapter *h_adapter = hci_get_drvdata(hdev);
-> +	struct sk_buff *new_skb = NULL;
-> +
-> +	switch (bt_cb(skb)->pkt_type) {
-> +	case HCI_COMMAND_PKT:
-> +		hdev->stat.cmd_tx++;
-> +		break;
-> +
-> +	case HCI_ACLDATA_PKT:
-> +		hdev->stat.acl_tx++;
-> +		break;
-> +
-> +	case HCI_SCODATA_PKT:
-> +		hdev->stat.sco_tx++;
-> +		break;
-> +	}
-> +
-> +	if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
-> +		/* Insufficient skb headroom - allocate a new skb */
-> +		new_skb = skb_realloc_headroom(skb, RSI_HEADROOM_FOR_BT_HAL);
-> +		if (unlikely(!new_skb))
-> +			return -ENOMEM;
-> +		bt_cb(new_skb)->pkt_type = bt_cb(skb)->pkt_type;
-> +		kfree_skb(skb);
-> +		skb = new_skb;
-> +	}
-> +
-> +	return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
-> +						   RSI_BT_Q);
-> +}
-> +
-> +int rsi_hci_recv_pkt(void *priv, u8 *pkt)
-> +{
-> +	struct rsi_hci_adapter *h_adapter = (struct rsi_hci_adapter *)priv;
-> +	struct hci_dev *hdev = h_adapter->hdev;
-> +	struct sk_buff *skb;
-> +
-> +	int pkt_len = get_unaligned_le16(pkt) & 0x0fff;
-> +	u8 queue_no = (get_unaligned_le16(pkt) & 0x7000) >> 12;
-> +
-> +	if (queue_no == RSI_BT_MGMT_Q) {
-> +		u8 msg_type = pkt[14] & 0xFF;
-> +
-> +		switch (msg_type) {
-> +		case RSI_RESULT_CONFIRM:
-> +			bt_dev_info(hdev, "BT Result Confirm");
-> +			return 0;
-> +		case RSI_BT_BER:
-> +			bt_dev_info(hdev, "BT Ber");
-> +			return 0;
-> +		case RSI_BT_CW:
-> +			bt_dev_info(hdev, "BT CW");
-> +			return 0;
-> +		default:
-> +			break;
-> +		}
-> +	}
-> +
-> +	skb = dev_alloc_skb(pkt_len);
-> +	if (!skb)
-> +		return -ENOMEM;
-> +
-> +	memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
-> +	skb_put(skb, pkt_len);
-> +	h_adapter->hdev->stat.byte_rx += skb->len;
-> +
-> +	skb->dev = (void *)hdev;
-> +	bt_cb(skb)->pkt_type = pkt[14];
-> +
-> +	return hci_recv_frame(hdev, skb);
-> +}
-> +
-> +int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
-> +{
-> +	struct rsi_hci_adapter *h_adapter = NULL;
-> +	struct hci_dev *hdev;
-> +	int status = 0;
-> +
-> +	h_adapter = kzalloc(sizeof(*h_adapter), GFP_KERNEL);
-> +	if (!h_adapter)
-> +		return -ENOMEM;
-> +
-> +	h_adapter->priv = priv;
-> +	ops->set_bt_context(priv, h_adapter);
-> +	h_adapter->proto_ops = ops;
-> +
-> +	hdev = hci_alloc_dev();
-> +	if (!hdev) {
-> +		BT_ERR("Failed to alloc HCI device\n");
-> +		goto err;
-> +	}
-> +
-> +	h_adapter->hdev = hdev;
-> +
-> +	if (ops->get_host_intf(priv) == RSI_HOST_INTF_SDIO)
-> +		hdev->bus = HCI_SDIO;
-> +	else
-> +		hdev->bus = HCI_USB;
-> +
-> +	hci_set_drvdata(hdev, h_adapter);
-> +	hdev->dev_type = HCI_PRIMARY;
-> +	hdev->open = rsi_hci_open;
-> +	hdev->close = rsi_hci_close;
-> +	hdev->flush = rsi_hci_flush;
-> +	hdev->send = rsi_hci_send_pkt;
-> +
-> +	status = hci_register_dev(hdev);
-> +	if (status < 0) {
-> +		BT_ERR("%s: HCI registration failed with errcode %d\n",
-> +		       __func__, status);
-> +		goto err;
-> +	}
-> +
-> +	return 0;
-> +err:
-> +	if (hdev) {
-> +		hci_unregister_dev(hdev);
-> +		hci_free_dev(hdev);
-> +		h_adapter->hdev = NULL;
-> +	}
-> +	kfree(h_adapter);
-> +
-> +	return -EINVAL;
-> +}
-> +
-> +void rsi_hci_detach(void *priv)
-> +{
-> +	struct rsi_hci_adapter *h_adapter = (struct rsi_hci_adapter *)priv;
-> +	struct hci_dev *hdev;
-> +
-> +	if (!h_adapter)
-> +		return;
-> +
-> +	hdev = h_adapter->hdev;
-> +	if (hdev) {
-> +		hci_unregister_dev(hdev);
-> +		hci_free_dev(hdev);
-> +		h_adapter->hdev = NULL;
-> +	}
-> +
-> +	kfree(h_adapter);
-> +}
-> +
-> +static int rsi_91x_bt_module_init(void)
-> +{
-> +	BT_INFO("%s: BT Module init called\n", __func__);
-> +
-> +	return 0;
-> +}
-> +
-> +static void rsi_91x_bt_module_exit(void)
-> +{
-> +	BT_INFO("%s: BT Module exit called\n", __func__);
-> +}
-> +
-> +module_init(rsi_91x_bt_module_init);
-> +module_exit(rsi_91x_bt_module_exit);
-> +MODULE_AUTHOR("Redpine Signals Inc");
-> +MODULE_DESCRIPTION("RSI BT driver");
-> +MODULE_SUPPORTED_DEVICE("RSI-BT");
-> +MODULE_LICENSE("Dual BSD/GPL");
-> diff --git a/drivers/bluetooth/rsi_hci.h b/drivers/bluetooth/rsi_hci.h
-> new file mode 100644
-> index 0000000..6fc7757
-> --- /dev/null
-> +++ b/drivers/bluetooth/rsi_hci.h
-> @@ -0,0 +1,40 @@
-> +/**
-> + * Copyright (c) 2017 Redpine Signals Inc.
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +
-> +#ifndef __RSI_HCI_H__
-> +#define __RSI_HCI_H__
-> +
-> +#include <net/bluetooth/bluetooth.h>
-> +#include <net/bluetooth/hci_core.h>
-> +#include <linux/unaligned/le_byteshift.h>
-> +#include <linux/rsi_header.h>
-> +#include <net/genetlink.h>
-> +
-> +/* RX frame types */
-> +#define RSI_RESULT_CONFIRM			0x80
-> +#define RSI_BT_PER				0x10
-> +#define RSI_BT_BER				0x11
-> +#define RSI_BT_CW				0x12
-> +
-> +#define RSI_HEADROOM_FOR_BT_HAL	16
-
-I still like to see changes to the BT core that allows the driver to specify how headroom it needs. This can be follow up patches, but we should do that since reallocating the SKBs all the time is also pointless.
-
-> +
-> +#define RSI_FRAME_DESC_SIZE		16
-> +
-> +int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops);
-> +void rsi_hci_detach(void *priv);
-> +int rsi_hci_recv_pkt(void *data, u8 *pkt);
-> +
-> +#endif
-
-I have no idea why this header file is needed at all. Fold this into btrsi.c and make the rsi_hci_* functions static.
-
-> diff --git a/include/linux/rsi_header.h b/include/linux/rsi_header.h
-> index 737ab4e..07d9574 100644
-> --- a/include/linux/rsi_header.h
-> +++ b/include/linux/rsi_header.h
-> @@ -51,4 +51,6 @@ struct rsi_mod_ops {
-> 	void (*detach)(void *priv);
-> 	int (*recv_pkt)(void *priv, u8 *msg);
-> };
-> +
-> +extern const struct rsi_mod_ops rsi_bt_ops;
-
-If you expose rsi_hci_attach via rsi_bt_ops, then there is no need for making rsi_hci_attach also public. I mentioned this in the first review as well. I do not get it. Either you expose rsi_bt_ops from this module or you expose the rsi_hci_* function, but both is totally pointless.
-
-Regards
-
-Marcel
+SGkgQnJpYW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4g
+Tm9ycmlzIFttYWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOox
+MtTCNsjVIDI6MjYNCj4gVG86IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+IENjOiBM
+aW51eCBXaXJlbGVzcyA8bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnPjsgS2FsbGUgVmFs
+bw0KPiA8a3ZhbG9AY29kZWF1cm9yYS5vcmc+OyBEbWl0cnkgVG9yb2tob3YgPGR0b3JAZ29vZ2xl
+LmNvbT47DQo+IHJhamF0amFAZ29vZ2xlLmNvbTsgWmhpeXVhbiBZYW5nIDx5YW5nenlAbWFydmVs
+bC5jb20+OyBUaW0gU29uZw0KPiA8c29uZ3Rhb0BtYXJ2ZWxsLmNvbT47IENhdGh5IEx1byA8Y2x1
+b0BtYXJ2ZWxsLmNvbT47IEphbWVzIENhbw0KPiA8amNhb0BtYXJ2ZWxsLmNvbT47IEdhbmFwYXRo
+aSBCaGF0IDxnYmhhdEBtYXJ2ZWxsLmNvbT47IEVsbGllIFJlZXZlcw0KPiA8ZWxsaWVyZXZ2ZXNA
+Z21haWwuY29tPg0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIIHY0IDEvM10gbXdpZmlleDog
+cmVmYWN0b3IgZGV2aWNlIGR1bXAgY29kZSB0byBtYWtlIGl0DQo+IGdlbmVyaWMgZm9yIHVzYiBp
+bnRlcmZhY2UNCj4gDQo+IEV4dGVybmFsIEVtYWlsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IEhp
+LA0KPiANCj4gT24gTW9uLCBEZWMgMDQsIDIwMTcgYXQgMDg6MTg6NDJQTSArMDgwMCwgWGlubWlu
+ZyBIdSB3cm90ZToNCj4gPiBUaGlzIHBhdGNoIHJlZmFjdG9yIGN1cnJlbnQgZGV2aWNlIGR1bXAg
+Y29kZSB0byBtYWtlIGl0IGdlbmVyaWMgZm9yDQo+ID4gc3Vic2VxdWVudCBpbXBsZW1lbnRhdGlv
+biBvbiB1c2IgaW50ZXJmYWNlLg0KPiANCj4gSSBzdGlsbCB0aGluayB5b3UncmUgbWFraW5nIHRo
+ZSBzcGFnaGV0dGkgd29yc2UuIEkgb25seSBoYXZlIGEgZmV3IHNwZWNpZmljDQo+IHN1Z2dlc3Rp
+b25zIGZvciBpbXByb3ZpbmcgeW91ciBzcGFnaGV0dGkgY29kZSBhdCB0aGUgbW9tZW50LCBidXQg
+SSdtIHN0aWxsIHN1cmUNCj4geW91IGNvdWxkIGRvIGJldHRlci4NCj4gDQoNCk9rLCBUaGFua3Mu
+DQoNCj4gPiBTaWduZWQtb2ZmLWJ5OiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+
+IFNpZ25lZC1vZmYtYnk6IENhdGh5IEx1byA8Y2x1b0BtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQt
+b2ZmLWJ5OiBHYW5hcGF0aGkgQmhhdCA8Z2JoYXRAbWFydmVsbC5jb20+DQo+ID4gLS0tDQo+ID4g
+djI6IEFkZHJlc3NlZCBiZWxvdyByZXZpZXcgY29tbWVudHMgZnJvbSBCcmlhbiBOb3JyaXMNCj4g
+PiAgICAgYSkgdXNlIG5ldyBBUEkgdGltZXJfc2V0dXAvZnJvbV90aW1lci4NCj4gPiAgICAgYikg
+cmVzZXQgZGV2ZHVtcF9sZW4gZHVyaW5nIGluaXRpemF0aW9uDQo+ID4gdjQ6IFNhbWUgYXMgdjIs
+djMNCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2lu
+aXQuYyB8ICAxICsNCj4gPiBkcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFp
+bi5jIHwgODcNCj4gPiArKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLQ0KPiA+IGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9tYWluLmggfCAxMSArKystDQo+ID4gZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYyB8IDEzICsrKy0tDQo+ID4gZHJp
+dmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3NkaW8uYyB8IDE0ICsrKy0tDQo+ID4g
+IDUgZmlsZXMgY2hhbmdlZCwgNzIgaW5zZXJ0aW9ucygrKSwgNTQgZGVsZXRpb25zKC0pDQo+ID4N
+Cj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2lu
+aXQuYw0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2luaXQuYw0K
+PiA+IGluZGV4IGUxYWE4NjAuLmIwZDNkNjggMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2luaXQuYw0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL21hcnZlbGwvbXdpZmlleC9pbml0LmMNCj4gPiBAQCAtMzE0LDYgKzMxNCw3IEBAIHN0
+YXRpYyB2b2lkIG13aWZpZXhfaW5pdF9hZGFwdGVyKHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIg
+KmFkYXB0ZXIpDQo+ID4gIAlhZGFwdGVyLT5pZmFjZV9saW1pdC5wMnBfaW50ZiA9IE1XSUZJRVhf
+TUFYX1AyUF9OVU07DQo+ID4gIAlhZGFwdGVyLT5hY3RpdmVfc2Nhbl90cmlnZ2VyZWQgPSBmYWxz
+ZTsNCj4gPiAgCXRpbWVyX3NldHVwKCZhZGFwdGVyLT53YWtldXBfdGltZXIsIHdha2V1cF90aW1l
+cl9mbiwgMCk7DQo+ID4gKwlhZGFwdGVyLT5kZXZkdW1wX2xlbiA9IDA7DQo+ID4gIH0NCj4gPg0K
+PiA+ICAvKg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213
+aWZpZXgvbWFpbi5jDQo+ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgv
+bWFpbi5jDQo+ID4gaW5kZXggYTk2YmQ3ZS4uZjdkMDI5OSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2
+ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gKysrIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21haW4uYw0KPiA+IEBAIC0xMDUxLDkgKzEw
+NTEsMjMgQEAgdm9pZCBtd2lmaWV4X211bHRpX2NoYW5fcmVzeW5jKHN0cnVjdA0KPiA+IG13aWZp
+ZXhfYWRhcHRlciAqYWRhcHRlcikgIH0NCj4gPiBFWFBPUlRfU1lNQk9MX0dQTChtd2lmaWV4X211
+bHRpX2NoYW5fcmVzeW5jKTsNCj4gPg0KPiA+IC1pbnQgbXdpZmlleF9kcnZfaW5mb19kdW1wKHN0
+cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIsIHZvaWQNCj4gPiAqKmRydl9pbmZvKQ0KPiA+
+ICt2b2lkIG13aWZpZXhfdXBsb2FkX2RldmljZV9kdW1wKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIg
+KmFkYXB0ZXIpDQo+ID4gIHsNCj4gPiAtCXZvaWQgKnA7DQo+ID4gKwkvKiBEdW1wIGFsbCB0aGUg
+bWVtb3J5IGRhdGEgaW50byBzaW5nbGUgZmlsZSwgYSB1c2Vyc3BhY2Ugc2NyaXB0IHdpbGwNCj4g
+PiArCSAqIGJlIHVzZWQgdG8gc3BsaXQgYWxsIHRoZSBtZW1vcnkgZGF0YSB0byBtdWx0aXBsZSBm
+aWxlcw0KPiA+ICsJICovDQo+ID4gKwltd2lmaWV4X2RiZyhhZGFwdGVyLCBNU0csDQo+ID4gKwkJ
+ICAgICI9PSBtd2lmaWV4IGR1bXAgaW5mb3JtYXRpb24gdG8gL3N5cy9jbGFzcy9kZXZjb3JlZHVt
+cA0KPiBzdGFydFxuIik7DQo+ID4gKwlkZXZfY29yZWR1bXB2KGFkYXB0ZXItPmRldiwgYWRhcHRl
+ci0+ZGV2ZHVtcF9kYXRhLA0KPiBhZGFwdGVyLT5kZXZkdW1wX2xlbiwNCj4gPiArCQkgICAgICBH
+RlBfS0VSTkVMKTsNCj4gDQo+IFNlZW1zIGxpa2UgeW91IHNob3VsZCByZXNldCBhZGFwdGVyLT5k
+ZXZkdW1wX2RhdGEgYW5kIC0+ZGV2ZHVtcF9sZW4gaGVyZSwNCj4gc28geW91IGRvbid0IGFjY2lk
+ZW50YWxseSByZXVzZSBpdD8gKFlvdSdyZSBleHBlY3RpbmcNCj4gZGV2X2NvcmVkdW1wdigpIHRv
+IGZyZWUgdGhlIGJ1ZmZlciwgbm8/KQ0KPiANCg0KT2gsIHllcywgSSB3YXMgZXhwZWN0IGRldl9j
+b3JlZHVtcHYgdG8gZnJlZSB0aGUgYnVmZmVyLCB0aGUgZGV2X2NvcmVkdW1wIGZyYW1ld29yayB3
+aWxsIGZyZWUgZHVtcCBkYXRhIGFmdGVyIDUgbWludXRlcy4NCldoYXQncyBtb3JlLCBJZiB0aGVy
+ZSBpcyBuZXcgY29yZWR1bXAgaW4gNSBtaW51dGVzLCB0aGUgbmV3IGR1bXAgZGF0YSB3aWxsIGJl
+IGRpc2NhcmQgYW5kIGZyZWUuDQpDb25zaWRlciBiZWxvdyBzZXF1ZW5jZSBoYXBwZW5zIGluIGNv
+bW1hbmQgdGltZW91dCBjb250ZXh0Og0KTXdpZmlleF9jbWRfdG1vX2Z1bmMNCigxKSAgLS0+ICAg
+ZmlybXdhcmUgZHVtcCAxIC0tPiAgICBkZXZjb3JlZHVtcCAxDQooMikgIC0tPiAgY2FyZF9yZXNl
+dCAtLT4gaW5pdCBzb2Z0d2FyZQ0KCQkJCUNvbW1hbmQgdGltZW91dCBoYXBwZW5zIGFnYWluCWlu
+IDUgbWludXRlcyAtLT4gIGZpcm13YXJlIGR1bXAgMiAgLS0+ICAgZGV2Y29yZWR1bXAgMg0KDQpI
+ZXJlLCBpZiB3ZSBmcmVlIGFkYXB0ZXItPiBkZXZkdW1wX2RhdGEsIGFuZCAgdGhlbiB1c2VyIGNh
+dCBkZXZjb3JlZHVtcDEsIHdpbGwgY3Jhc2ggdGhlIGtlcm5lbA0KDQoNCkkgdGhpbmssIGhlcmUs
+IFJlZ2FyZHMgInJlc2V0IGFkYXB0ZXItPmRldmR1bXBfZGF0YSIsIHlvdSBtZWFuIGFkYXB0ZXIt
+PmRldmR1bXBfZGF0YSA9IE5VTEwsIEJ1dCBub3QgZnJlZSBpdCwgcmlnaHQgPw0KDQo+ID4gKwlt
+d2lmaWV4X2RiZyhhZGFwdGVyLCBNU0csDQo+ID4gKwkJICAgICI9PSBtd2lmaWV4IGR1bXAgaW5m
+b3JtYXRpb24gdG8gL3N5cy9jbGFzcy9kZXZjb3JlZHVtcA0KPiBlbmRcbiIpOw0KPiA+ICt9IEVY
+UE9SVF9TWU1CT0xfR1BMKG13aWZpZXhfdXBsb2FkX2RldmljZV9kdW1wKTsNCj4gPiArDQo+ID4g
+K3ZvaWQgbXdpZmlleF9kcnZfaW5mb19kdW1wKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0
+ZXIpIHsNCj4gPiArCWNoYXIgKnA7DQo+ID4gIAljaGFyIGRydl92ZXJzaW9uWzY0XTsNCj4gPiAg
+CXN0cnVjdCB1c2JfY2FyZF9yZWMgKmNhcmRwOw0KPiA+ICAJc3RydWN0IHNkaW9fbW1jX2NhcmQg
+KnNkaW9fY2FyZDsNCj4gPiBAQCAtMTA2MSwxNyArMTA3NSwxMiBAQCBpbnQgbXdpZmlleF9kcnZf
+aW5mb19kdW1wKHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIsIHZvaWQgKipkcnZf
+aW5mbykNCj4gPiAgCWludCBpLCBpZHg7DQo+ID4gIAlzdHJ1Y3QgbmV0ZGV2X3F1ZXVlICp0eHE7
+DQo+ID4gIAlzdHJ1Y3QgbXdpZmlleF9kZWJ1Z19pbmZvICpkZWJ1Z19pbmZvOw0KPiA+IC0Jdm9p
+ZCAqZHJ2X2luZm9fZHVtcDsNCj4gPg0KPiA+ICAJbXdpZmlleF9kYmcoYWRhcHRlciwgTVNHLCAi
+PT09bXdpZmlleCBkcml2ZXJpbmZvIGR1bXAgc3RhcnQ9PT1cbiIpOw0KPiA+DQo+ID4gLQkvKiBt
+ZW1vcnkgYWxsb2NhdGUgaGVyZSBzaG91bGQgYmUgZnJlZSBpbiBtd2lmaWV4X3VwbG9hZF9kZXZp
+Y2VfZHVtcCovDQo+ID4gLQlkcnZfaW5mb19kdW1wID0gdnphbGxvYyhNV0lGSUVYX0RSVl9JTkZP
+X1NJWkVfTUFYKTsNCj4gPiAtDQo+ID4gLQlpZiAoIWRydl9pbmZvX2R1bXApDQo+ID4gLQkJcmV0
+dXJuIDA7DQo+ID4gLQ0KPiA+IC0JcCA9IChjaGFyICopKGRydl9pbmZvX2R1bXApOw0KPiA+ICsJ
+cCA9IGFkYXB0ZXItPmRldmR1bXBfZGF0YTsNCj4gPiArCXN0cmNweShwLCAiPT09PT09PT1TdGFy
+dCBkdW1wIGRyaXZlcmluZm89PT09PT09PVxuIik7DQo+ID4gKwlwICs9IHN0cmxlbigiPT09PT09
+PT1TdGFydCBkdW1wIGRyaXZlcmluZm89PT09PT09PVxuIik7DQo+ID4gIAlwICs9IHNwcmludGYo
+cCwgImRyaXZlcl9uYW1lID0gIiAiXCJtd2lmaWV4XCJcbiIpOw0KPiA+DQo+ID4gIAltd2lmaWV4
+X2Rydl9nZXRfZHJpdmVyX3ZlcnNpb24oYWRhcHRlciwgZHJ2X3ZlcnNpb24sIEBAIC0xMTU1LDIx
+DQo+ID4gKzExNjQsMTggQEAgaW50IG13aWZpZXhfZHJ2X2luZm9fZHVtcChzdHJ1Y3QgbXdpZmll
+eF9hZGFwdGVyICphZGFwdGVyLA0KPiB2b2lkICoqZHJ2X2luZm8pDQo+ID4gIAkJa2ZyZWUoZGVi
+dWdfaW5mbyk7DQo+ID4gIAl9DQo+ID4NCj4gPiArCXN0cmNweShwLCAiXG49PT09PT09PUVuZCBk
+dW1wPT09PT09PT1cbiIpOw0KPiA+ICsJcCArPSBzdHJsZW4oIlxuPT09PT09PT1FbmQgZHVtcD09
+PT09PT09XG4iKTsNCj4gPiAgCW13aWZpZXhfZGJnKGFkYXB0ZXIsIE1TRywgIj09PW13aWZpZXgg
+ZHJpdmVyaW5mbyBkdW1wIGVuZD09PVxuIik7DQo+ID4gLQkqZHJ2X2luZm8gPSBkcnZfaW5mb19k
+dW1wOw0KPiA+IC0JcmV0dXJuIHAgLSBkcnZfaW5mb19kdW1wOw0KPiA+ICsJYWRhcHRlci0+ZGV2
+ZHVtcF9sZW4gPSBwIC0gKGNoYXIgKilhZGFwdGVyLT5kZXZkdW1wX2RhdGE7DQo+ID4gIH0NCj4g
+PiAgRVhQT1JUX1NZTUJPTF9HUEwobXdpZmlleF9kcnZfaW5mb19kdW1wKTsNCj4gPg0KPiA+IC12
+b2lkIG13aWZpZXhfdXBsb2FkX2RldmljZV9kdW1wKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFk
+YXB0ZXIsIHZvaWQNCj4gKmRydl9pbmZvLA0KPiA+IC0JCQkJaW50IGRydl9pbmZvX3NpemUpDQo+
+ID4gK3ZvaWQgbXdpZmlleF9wcmVwYXJlX2Z3X2R1bXBfaW5mbyhzdHJ1Y3QgbXdpZmlleF9hZGFw
+dGVyICphZGFwdGVyKQ0KPiA+ICB7DQo+ID4gLQl1OCBpZHgsICpkdW1wX2RhdGEsICpmd19kdW1w
+X3B0cjsNCj4gPiAtCXUzMiBkdW1wX2xlbjsNCj4gPiAtDQo+ID4gLQlkdW1wX2xlbiA9IChzdHJs
+ZW4oIj09PT09PT09U3RhcnQgZHVtcCBkcml2ZXJpbmZvPT09PT09PT1cbiIpICsNCj4gPiAtCQkg
+ICAgICAgZHJ2X2luZm9fc2l6ZSArDQo+ID4gLQkJICAgICAgIHN0cmxlbigiXG49PT09PT09PUVu
+ZCBkdW1wPT09PT09PT1cbiIpKTsNCj4gPiArCXU4IGlkeDsNCj4gPiArCWNoYXIgKmZ3X2R1bXBf
+cHRyOw0KPiA+ICsJdTMyIGR1bXBfbGVuID0gMDsNCj4gPg0KPiA+ICAJZm9yIChpZHggPSAwOyBp
+ZHggPCBhZGFwdGVyLT5udW1fbWVtX3R5cGVzOyBpZHgrKykgew0KPiA+ICAJCXN0cnVjdCBtZW1v
+cnlfdHlwZV9tYXBwaW5nICplbnRyeSA9IEBAIC0xMTg0LDI0ICsxMTkwLDI0IEBADQo+IHZvaWQN
+Cj4gPiBtd2lmaWV4X3VwbG9hZF9kZXZpY2VfZHVtcChzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICph
+ZGFwdGVyLCB2b2lkDQo+ICpkcnZfaW5mbywNCj4gPiAgCQl9DQo+ID4gIAl9DQo+ID4NCj4gPiAt
+CWR1bXBfZGF0YSA9IHZ6YWxsb2MoZHVtcF9sZW4gKyAxKTsNCj4gPiAtCWlmICghZHVtcF9kYXRh
+KQ0KPiA+IC0JCWdvdG8gZG9uZTsNCj4gPiAtDQo+ID4gLQlmd19kdW1wX3B0ciA9IGR1bXBfZGF0
+YTsNCj4gPiArCWlmIChkdW1wX2xlbiArIDEgKyBhZGFwdGVyLT5kZXZkdW1wX2xlbiA+IE1XSUZJ
+RVhfRldfRFVNUF9TSVpFKSB7DQo+ID4gKwkJLyogUmVhbGxvYyBpbiBjYXNlIGJ1ZmZlciBvdmVy
+ZmxvdyAqLw0KPiA+ICsJCWZ3X2R1bXBfcHRyID0gdnphbGxvYyhkdW1wX2xlbiArIDEgKyBhZGFw
+dGVyLT5kZXZkdW1wX2xlbik7DQo+ID4gKwkJbXdpZmlleF9kYmcoYWRhcHRlciwgTVNHLCAiUmVh
+bGxvYyBkZXZpY2UgZHVtcCBkYXRhLlxuIik7DQo+ID4gKwkJaWYgKCFmd19kdW1wX3B0cikgew0K
+PiA+ICsJCQl2ZnJlZShhZGFwdGVyLT5kZXZkdW1wX2RhdGEpOw0KPiA+ICsJCQltd2lmaWV4X2Ri
+ZyhhZGFwdGVyLCBFUlJPUiwNCj4gPiArCQkJCSAgICAidnphbGxvYyBkZXZkdW1wIGRhdGEgZmFp
+bHVyZSFcbiIpOw0KPiA+ICsJCQlyZXR1cm47DQo+ID4gKwkJfQ0KPiA+DQo+ID4gLQkvKiBEdW1w
+IGFsbCB0aGUgbWVtb3J5IGRhdGEgaW50byBzaW5nbGUgZmlsZSwgYSB1c2Vyc3BhY2Ugc2NyaXB0
+IHdpbGwNCj4gPiAtCSAqIGJlIHVzZWQgdG8gc3BsaXQgYWxsIHRoZSBtZW1vcnkgZGF0YSB0byBt
+dWx0aXBsZSBmaWxlcw0KPiA+IC0JICovDQo+ID4gLQltd2lmaWV4X2RiZyhhZGFwdGVyLCBNU0cs
+DQo+ID4gLQkJICAgICI9PSBtd2lmaWV4IGR1bXAgaW5mb3JtYXRpb24gdG8gL3N5cy9jbGFzcy9k
+ZXZjb3JlZHVtcA0KPiBzdGFydCIpOw0KPiA+ICsJCW1lbW1vdmUoZndfZHVtcF9wdHIsIGFkYXB0
+ZXItPmRldmR1bXBfZGF0YSwNCj4gPiArCQkJYWRhcHRlci0+ZGV2ZHVtcF9sZW4pOw0KPiA+ICsJ
+CXZmcmVlKGFkYXB0ZXItPmRldmR1bXBfZGF0YSk7DQo+ID4gKwkJYWRhcHRlci0+ZGV2ZHVtcF9k
+YXRhID0gZndfZHVtcF9wdHI7DQo+ID4gKwl9DQo+ID4NCj4gPiAtCXN0cmNweShmd19kdW1wX3B0
+ciwgIj09PT09PT09U3RhcnQgZHVtcCBkcml2ZXJpbmZvPT09PT09PT1cbiIpOw0KPiA+IC0JZndf
+ZHVtcF9wdHIgKz0gc3RybGVuKCI9PT09PT09PVN0YXJ0IGR1bXAgZHJpdmVyaW5mbz09PT09PT09
+XG4iKTsNCj4gPiAtCW1lbWNweShmd19kdW1wX3B0ciwgZHJ2X2luZm8sIGRydl9pbmZvX3NpemUp
+Ow0KPiA+IC0JZndfZHVtcF9wdHIgKz0gZHJ2X2luZm9fc2l6ZTsNCj4gPiAtCXN0cmNweShmd19k
+dW1wX3B0ciwgIlxuPT09PT09PT1FbmQgZHVtcD09PT09PT09XG4iKTsNCj4gPiAtCWZ3X2R1bXBf
+cHRyICs9IHN0cmxlbigiXG49PT09PT09PUVuZCBkdW1wPT09PT09PT1cbiIpOw0KPiA+ICsJZndf
+ZHVtcF9wdHIgPSAoY2hhciAqKWFkYXB0ZXItPmRldmR1bXBfZGF0YSArDQo+IGFkYXB0ZXItPmRl
+dmR1bXBfbGVuOw0KPiA+DQo+ID4gIAlmb3IgKGlkeCA9IDA7IGlkeCA8IGFkYXB0ZXItPm51bV9t
+ZW1fdHlwZXM7IGlkeCsrKSB7DQo+ID4gIAkJc3RydWN0IG1lbW9yeV90eXBlX21hcHBpbmcgKmVu
+dHJ5ID0gQEAgLTEyMjgsMTEgKzEyMzQsOCBAQA0KPiB2b2lkDQo+ID4gbXdpZmlleF91cGxvYWRf
+ZGV2aWNlX2R1bXAoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlciwgdm9pZA0KPiAqZHJ2
+X2luZm8sDQo+ID4gIAkvKiBkZXZpY2UgZHVtcCBkYXRhIHdpbGwgYmUgZnJlZSBpbiBkZXZpY2Ug
+Y29yZWR1bXAgcmVsZWFzZSBmdW5jdGlvbg0KPiA+ICAJICogYWZ0ZXIgNSBtaW4NCj4gPiAgCSAq
+Lw0KPiANCj4gXl4gVGhpcyBjb21tZW50IGlzIGEgYml0IG91dCBvZiBwbGFjZSBub3cuIFRoZSBk
+YXRhIGlzIG5vdCBkdW1wZWQgdW50aWwgd2UgY2FsbA0KPiBtd2lmaWV4X3VwbG9hZF9kZXZpY2Vf
+ZHVtcCgpLCBhbmQgc28gd2UgZG9uJ3QgZ3VhcmFudGVlIGFueW9uZSB3aWxsDQo+IGFjdHVhbGx5
+IGZyZWUgaXQgZm9yIHVzIHVudGlsIHRoZW4NCj4gDQoNCk9rYXkuDQoNCj4gPiAtCWRldl9jb3Jl
+ZHVtcHYoYWRhcHRlci0+ZGV2LCBkdW1wX2RhdGEsIGR1bXBfbGVuLCBHRlBfS0VSTkVMKTsNCj4g
+PiAtCW13aWZpZXhfZGJnKGFkYXB0ZXIsIE1TRywNCj4gPiAtCQkgICAgIj09IG13aWZpZXggZHVt
+cCBpbmZvcm1hdGlvbiB0byAvc3lzL2NsYXNzL2RldmNvcmVkdW1wIGVuZCIpOw0KPiA+ICsJYWRh
+cHRlci0+ZGV2ZHVtcF9sZW4gPSBmd19kdW1wX3B0ciAtIChjaGFyICopYWRhcHRlci0+ZGV2ZHVt
+cF9kYXRhOw0KPiA+DQo+ID4gLWRvbmU6DQo+ID4gIAlmb3IgKGlkeCA9IDA7IGlkeCA8IGFkYXB0
+ZXItPm51bV9tZW1fdHlwZXM7IGlkeCsrKSB7DQo+ID4gIAkJc3RydWN0IG1lbW9yeV90eXBlX21h
+cHBpbmcgKmVudHJ5ID0NCj4gPiAgCQkJJmFkYXB0ZXItPm1lbV90eXBlX21hcHBpbmdfdGJsW2lk
+eF07DQo+ID4gQEAgLTEyNDEsMTAgKzEyNDQsOCBAQCB2b2lkIG13aWZpZXhfdXBsb2FkX2Rldmlj
+ZV9kdW1wKHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIsIHZvaWQgKmRydl9pbmZv
+LA0KPiA+ICAJCWVudHJ5LT5tZW1fcHRyID0gTlVMTDsNCj4gPiAgCQllbnRyeS0+bWVtX3NpemUg
+PSAwOw0KPiA+ICAJfQ0KPiA+IC0NCj4gPiAtCXZmcmVlKGRydl9pbmZvKTsNCj4gPiAgfQ0KPiA+
+IC1FWFBPUlRfU1lNQk9MX0dQTChtd2lmaWV4X3VwbG9hZF9kZXZpY2VfZHVtcCk7DQo+ID4gK0VY
+UE9SVF9TWU1CT0xfR1BMKG13aWZpZXhfcHJlcGFyZV9md19kdW1wX2luZm8pOw0KPiA+DQo+ID4g
+IC8qDQo+ID4gICAqIENGRzgwMi4xMSBuZXR3b3JrIGRldmljZSBoYW5kbGVyIGZvciBzdGF0aXN0
+aWNzIHJldHJpZXZhbC4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
+dmVsbC9td2lmaWV4L21haW4uaA0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9t
+d2lmaWV4L21haW4uaA0KPiA+IGluZGV4IDE1NGMwNzkuLjhiNjI0MWEgMTAwNjQ0DQo+ID4gLS0t
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21haW4uaA0KPiA+ICsrKyBi
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9tYWluLmgNCj4gPiBAQCAtOTQs
+NiArOTQsOCBAQCBlbnVtIHsNCj4gPg0KPiA+ICAjZGVmaW5lIE1BWF9FVkVOVF9TSVpFICAgICAg
+ICAgICAgICAgICAgMjA0OA0KPiA+DQo+ID4gKyNkZWZpbmUgTVdJRklFWF9GV19EVU1QX1NJWkUg
+ICAgICAgKDIgKiAxMDI0ICogMTAyNCkNCj4gPiArDQo+ID4gICNkZWZpbmUgQVJQX0ZJTFRFUl9N
+QVhfQlVGX1NJWkUgICAgICAgICA2OA0KPiA+DQo+ID4gICNkZWZpbmUgTVdJRklFWF9LRVlfQlVG
+RkVSX1NJWkUJCQkxNg0KPiA+IEBAIC0xMDMyLDYgKzEwMzQsOSBAQCBzdHJ1Y3QgbXdpZmlleF9h
+ZGFwdGVyIHsNCj4gPiAgCWJvb2wgd2FrZV9ieV93aWZpOw0KPiA+ICAJLyogQWdncmVnYXRpb24g
+cGFyYW1ldGVycyovDQo+ID4gIAlzdHJ1Y3QgYnVzX2FnZ3JfcGFyYW1zIGJ1c19hZ2dyOw0KPiA+
+ICsJLyogRGV2aWNlIGR1bXAgZGF0YS9sZW5ndGggKi8NCj4gPiArCXZvaWQgKmRldmR1bXBfZGF0
+YTsNCj4gPiArCWludCBkZXZkdW1wX2xlbjsNCj4gPiAgfTsNCj4gPg0KPiA+ICB2b2lkIG13aWZp
+ZXhfcHJvY2Vzc190eF9xdWV1ZShzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVyKTsgQEAN
+Cj4gPiAtMTY1Niw5ICsxNjYxLDkgQEAgdm9pZCBtd2lmaWV4X2hpc3RfZGF0YV9hZGQoc3RydWN0
+IG13aWZpZXhfcHJpdmF0ZQ0KPiA+ICpwcml2LA0KPiA+ICB1OCBtd2lmaWV4X2FkanVzdF9kYXRh
+X3JhdGUoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwNCj4gPiAgCQkJICAgIHU4IHJ4X3Jh
+dGUsIHU4IGh0X2luZm8pOw0KPiA+DQo+ID4gLWludCBtd2lmaWV4X2Rydl9pbmZvX2R1bXAoc3Ry
+dWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlciwgdm9pZA0KPiA+ICoqZHJ2X2luZm8pOyAtdm9p
+ZCBtd2lmaWV4X3VwbG9hZF9kZXZpY2VfZHVtcChzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyDQo+ICph
+ZGFwdGVyLCB2b2lkICpkcnZfaW5mbywNCj4gPiAtCQkJCWludCBkcnZfaW5mb19zaXplKTsNCj4g
+PiArdm9pZCBtd2lmaWV4X2Rydl9pbmZvX2R1bXAoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRh
+cHRlcik7IHZvaWQNCj4gPiArbXdpZmlleF9wcmVwYXJlX2Z3X2R1bXBfaW5mbyhzdHJ1Y3QgbXdp
+ZmlleF9hZGFwdGVyICphZGFwdGVyKTsgdm9pZA0KPiA+ICttd2lmaWV4X3VwbG9hZF9kZXZpY2Vf
+ZHVtcChzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVyKTsNCj4gPiAgdm9pZCAqbXdpZmll
+eF9hbGxvY19kbWFfYWxpZ25fYnVmKGludCByeF9sZW4sIGdmcF90IGZsYWdzKTsgIHZvaWQNCj4g
+PiBtd2lmaWV4X3F1ZXVlX21haW5fd29yayhzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVy
+KTsgIGludA0KPiA+IG13aWZpZXhfZ2V0X3dha2V1cF9yZWFzb24oc3RydWN0IG13aWZpZXhfcHJp
+dmF0ZSAqcHJpdiwgdTE2IGFjdGlvbiwNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+bWFydmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+IGluZGV4IGNkMzE0OTQuLmY2NjZjYjIgMTAwNjQ0
+DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYw0K
+PiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9wY2llLmMNCj4g
+PiBAQCAtMjc2OSwxMiArMjc2OSwxNyBAQCBzdGF0aWMgdm9pZCBtd2lmaWV4X3BjaWVfZndfZHVt
+cChzdHJ1Y3QNCj4gPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpDQo+ID4NCj4gPiAgc3RhdGlj
+IHZvaWQgbXdpZmlleF9wY2llX2RldmljZV9kdW1wX3dvcmsoc3RydWN0IG13aWZpZXhfYWRhcHRl
+cg0KPiA+ICphZGFwdGVyKSAgew0KPiA+IC0JaW50IGRydl9pbmZvX3NpemU7DQo+ID4gLQl2b2lk
+ICpkcnZfaW5mbzsNCj4gPiArCWFkYXB0ZXItPmRldmR1bXBfZGF0YSA9IHZ6YWxsb2MoTVdJRklF
+WF9GV19EVU1QX1NJWkUpOw0KPiANCj4gSSdtIHN0aWxsIG5vdCBzdXJlIHdoeSB5b3UgbmVlZCAz
+IGRpZmZlcmVudCBjYWxsZXJzIHRvIGFsbG9jYXRlIHRoZSBzYW1lIHNpemUNCj4gYnVmZmVyLiBJ
+dCBzZWVtcyBsaWtlIHRoaXMgc2hvdWxkIGFsbCBiZSBkb25lIGluIHRoZSBjb3JlLg0KPiANCg0K
+SSBoYWQgdGhvdWdodCBvZiBwdXQgbWVtb3J5IGFsbG9jYXRpb24gYW5kIGRydl9pbmZvX2R1bXAg
+aW50byAxIGZ1bmN0aW9uICwgYW5kIGxldCBpdCBjYWxsZWQgaW4gZGV2aWNlX2R1bXAuDQpCdXQg
+aXQgbG9va3MgcXVpdGUgc3RyYW5nZS4NCkNvbnNpZGVyIHRoZSBkaWZmZXJlbnQgaW1wbGVtZW50
+YXRpb24gb24gdXNiLCBsZXQgdGhlc2Ugc3ViIGZ1bmN0aW9ucyB3b3JrcyBpbiBhIGxvb3NlIGNv
+dXBsaW5nIHdheSBzZWVtcyBiZXR0ZXIgdG8gcmV1c2UgdGhhbiBhICJjb3JlIiBhcmNoaXRlY3R1
+cmUuDQoNClBsZWFzZSBsZXQgdXMga25vdyBpZiB5b3UgaGF2ZSBtb3JlIHN1Z2dlc3Rpb25zIHRv
+IGVuaGFuY2UgdGhpcyBwYXJ0DQoNClRoYW5rcyAmIFJlZ2FyZHMsDQpTaW1vbg0KDQo+IEJyaWFu
+DQo+IA0KPiA+ICsJaWYgKCFhZGFwdGVyLT5kZXZkdW1wX2RhdGEpIHsNCj4gPiArCQltd2lmaWV4
+X2RiZyhhZGFwdGVyLCBFUlJPUiwNCj4gPiArCQkJICAgICJ2emFsbG9jIGRldmR1bXAgZGF0YSBm
+YWlsdXJlIVxuIik7DQo+ID4gKwkJcmV0dXJuOw0KPiA+ICsJfQ0KPiA+DQo+ID4gLQlkcnZfaW5m
+b19zaXplID0gbXdpZmlleF9kcnZfaW5mb19kdW1wKGFkYXB0ZXIsICZkcnZfaW5mbyk7DQo+ID4g
+Kwltd2lmaWV4X2Rydl9pbmZvX2R1bXAoYWRhcHRlcik7DQo+ID4gIAltd2lmaWV4X3BjaWVfZndf
+ZHVtcChhZGFwdGVyKTsNCj4gPiAtCW13aWZpZXhfdXBsb2FkX2RldmljZV9kdW1wKGFkYXB0ZXIs
+IGRydl9pbmZvLCBkcnZfaW5mb19zaXplKTsNCj4gPiArCW13aWZpZXhfcHJlcGFyZV9md19kdW1w
+X2luZm8oYWRhcHRlcik7DQo+ID4gKwltd2lmaWV4X3VwbG9hZF9kZXZpY2VfZHVtcChhZGFwdGVy
+KTsNCj4gPiAgfQ0KPiA+DQo+ID4gIHN0YXRpYyB2b2lkIG13aWZpZXhfcGNpZV9jYXJkX3Jlc2V0
+X3dvcmsoc3RydWN0IG13aWZpZXhfYWRhcHRlcg0KPiA+ICphZGFwdGVyKSBkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3NkaW8uYw0KPiA+IGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3NkaW8uYw0KPiA+IGluZGV4IGZkNTE4M2Mu
+LmE4Mjg4MDEgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9t
+d2lmaWV4L3NkaW8uYw0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdp
+ZmlleC9zZGlvLmMNCj4gPiBAQCAtMjUwNSwxNSArMjUwNSwyMSBAQCBzdGF0aWMgdm9pZA0KPiA+
+IG13aWZpZXhfc2Rpb19nZW5lcmljX2Z3X2R1bXAoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRh
+cHRlcikgIHN0YXRpYw0KPiA+IHZvaWQgbXdpZmlleF9zZGlvX2RldmljZV9kdW1wX3dvcmsoc3Ry
+dWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikgIHsNCj4gPiAgCXN0cnVjdCBzZGlvX21tY19j
+YXJkICpjYXJkID0gYWRhcHRlci0+Y2FyZDsNCj4gPiAtCWludCBkcnZfaW5mb19zaXplOw0KPiA+
+IC0Jdm9pZCAqZHJ2X2luZm87DQo+ID4NCj4gPiAtCWRydl9pbmZvX3NpemUgPSBtd2lmaWV4X2Ry
+dl9pbmZvX2R1bXAoYWRhcHRlciwgJmRydl9pbmZvKTsNCj4gPiArCWFkYXB0ZXItPmRldmR1bXBf
+ZGF0YSA9IHZ6YWxsb2MoTVdJRklFWF9GV19EVU1QX1NJWkUpOw0KPiA+ICsJaWYgKCFhZGFwdGVy
+LT5kZXZkdW1wX2RhdGEpIHsNCj4gPiArCQltd2lmaWV4X2RiZyhhZGFwdGVyLCBFUlJPUiwNCj4g
+PiArCQkJICAgICJ2emFsbG9jIGRldmR1bXAgZGF0YSBmYWlsdXJlIVxuIik7DQo+ID4gKwkJcmV0
+dXJuOw0KPiA+ICsJfQ0KPiA+ICsNCj4gPiArCW13aWZpZXhfZHJ2X2luZm9fZHVtcChhZGFwdGVy
+KTsNCj4gPiAgCWlmIChjYXJkLT5md19kdW1wX2VuaCkNCj4gPiAgCQltd2lmaWV4X3NkaW9fZ2Vu
+ZXJpY19md19kdW1wKGFkYXB0ZXIpOw0KPiA+ICAJZWxzZQ0KPiA+ICAJCW13aWZpZXhfc2Rpb19m
+d19kdW1wKGFkYXB0ZXIpOw0KPiA+IC0JbXdpZmlleF91cGxvYWRfZGV2aWNlX2R1bXAoYWRhcHRl
+ciwgZHJ2X2luZm8sIGRydl9pbmZvX3NpemUpOw0KPiA+ICsJbXdpZmlleF9wcmVwYXJlX2Z3X2R1
+bXBfaW5mbyhhZGFwdGVyKTsNCj4gPiArCW13aWZpZXhfdXBsb2FkX2RldmljZV9kdW1wKGFkYXB0
+ZXIpOw0KPiA+ICB9DQo+ID4NCj4gPiAgc3RhdGljIHZvaWQgbXdpZmlleF9zZGlvX3dvcmsoc3Ry
+dWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KPiA+IC0tDQo+ID4gMS45LjENCj4gPg0K
