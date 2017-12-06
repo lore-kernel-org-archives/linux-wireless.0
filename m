@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:47830 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754414AbdLGPG7 (ORCPT
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:33975 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752690AbdLFHNi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 10:06:59 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rakesh Pillai <pillair@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Govind Singh <govinds@qti.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] ath10k: WMI: Add management tx by reference
- support over wmi
-Date: Thu, 7 Dec 2017 15:06:48 +0000
-Message-ID: <87tvx2tw54.fsf@kamboji.qca.qualcomm.com> (sfid-20171207_160709_946376_07E2DFB5)
-References: <1512214248-17127-1-git-send-email-pillair@qti.qualcomm.com>
-        <1512214248-17127-3-git-send-email-pillair@qti.qualcomm.com>
-In-Reply-To: <1512214248-17127-3-git-send-email-pillair@qti.qualcomm.com>
-        (Rakesh Pillai's message of "Sat, 2 Dec 2017 17:00:46 +0530")
-Content-Type: text/plain; charset="iso-8859-1"
+        Wed, 6 Dec 2017 02:13:38 -0500
 MIME-Version: 1.0
+In-Reply-To: <1512490314.4977.143.camel@synopsys.com>
+References: <1512490314.4977.143.camel@synopsys.com>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Wed, 6 Dec 2017 12:43:36 +0530
+Message-ID: <CAEhWJF=1GU9vOj5+DeJCOjbbh4zh_OMyv2HKH_1XT3XP2auFUg@mail.gmail.com> (sfid-20171206_081342_868259_542654D5)
+Subject: Re: rsi_91x: Failed to read status register on failed authentication
+To: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
+Cc: "amit.karwar@redpinesignals.com" <amit.karwar@redpinesignals.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-snps-arc@lists.infradead.org"
+        <linux-snps-arc@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rakesh Pillai <pillair@qti.qualcomm.com> writes:
-
-> HL1.0 firmware branch, used in wcn3990, transmits management
-> frames by reference over WMI.
+On Tue, Dec 5, 2017 at 9:41 PM, Alexey Brodkin
+<Alexey.Brodkin@synopsys.com> wrote:
+> Hi Amit,
 >
-> Add support for management tx by reference over WMI.
+> I'm seeing quite a strange behavior of RedPine module.
+> It connects perfectly fine to one of access points but fails
+> to connect to another.
 >
-> Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-> Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+> Moreover after that failure RSI driver starts to flood me with
+> messages saying:
+> --------------------->8--------------------
+> rsi_91x: rsi_sdio_check_buffer_status: Failed to read status register
+> --------------------->8--------------------
+>
+> Below you may find details of my 2 experiments.
+> Note I use vanilla Linux kernel v4.14.4
+>
+> Any ideas what could be wrong?
+>
 
-This one has an endian problem:
+Could you enable driver debug zones and share dmesg log for analysis?
 
-drivers/net/wireless/ath/ath10k/wmi-tlv.c:2537:22: warning: incorrect type =
-in assignment (different base types)
-drivers/net/wireless/ath/ath10k/wmi-tlv.c:2537:22:    expected restricted _=
-_le32 [usertype] vdev_id
-drivers/net/wireless/ath/ath10k/wmi-tlv.c:2537:22:    got unsigned int [uns=
-igned] [assigned] [usertype] vdev_id
+echo 0xffffffff > /sys/kernel/debug/phy0/debug_zone
 
-I recommend running ath10k-check before submission:
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/codingstyle#checki=
-ng_code
-
---=20
-Kalle Valo=
+Regards,
+Amitkumar
