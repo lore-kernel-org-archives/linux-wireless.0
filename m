@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51808 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751033AbdLWJWI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33902 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754801AbdLGNbu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Dec 2017 04:22:08 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 23 Dec 2017 11:21:56 +0200
-Message-Id: <20171223092200.30270-2-luca@coelho.fi> (sfid-20171223_102213_573677_6F2D298E)
-In-Reply-To: <20171223092200.30270-1-luca@coelho.fi>
-References: <20171223092200.30270-1-luca@coelho.fi>
-Subject: [PATCH 1/5] iwlwifi: mvm: flip AMSDU addresses only for 9000 family
+        Thu, 7 Dec 2017 08:31:50 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: cfg80211: do not change virtual interface during scan
+ processing
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1512022954-10129-1-git-send-email-huxm@marvell.com>
+References: <1512022954-10129-1-git-send-email-huxm@marvell.com>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Limin Zhu <liminzhu@marvell.com>, Xinming Hu <huxm@marvell.com>
+Message-Id: <20171207133150.382D0608BA@smtp.codeaurora.org> (sfid-20171207_143234_034902_666C2C3F)
+Date: Thu,  7 Dec 2017 13:31:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Xinming Hu <huxm@marvell.com> wrote:
 
-Hardware bug was fixed in later generation.
+> From: Limin Zhu <liminzhu@marvell.com>
+> 
+> (1) Change virtual interface operation in cfg80211 process reset and
+> reinitilize private data structure.
+> (2) Scan result event processed in main process will dereference private
+> data structure concurrently, ocassionly crash the kernel.
+> 
+> The cornel case could be trigger by below steps:
+> (1) wpa_cli mlan0 scan
+> (2) ./hostapd mlan0.conf
+> 
+> Cfg80211 asynchronous scan procedure is not all the time operated
+> under rtnl lock, here we add the protect to serialize the cfg80211
+> scan and change_virtual interface operation.
+> 
+> Signed-off-by: Limin Zhu <liminzhu@marvell.com>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index a3f7c1bf3cc8..71d6660c48e1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -830,6 +830,16 @@ static void iwl_mvm_agg_rx_received(struct iwl_mvm *mvm,
- 	rcu_read_unlock();
- }
- 
-+static void iwl_mvm_flip_address(u8 *addr)
-+{
-+	int i;
-+	u8 mac_addr[ETH_ALEN];
-+
-+	for (i = 0; i < ETH_ALEN; i++)
-+		mac_addr[i] = addr[ETH_ALEN - i - 1];
-+	ether_addr_copy(addr, mac_addr);
-+}
-+
- void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			struct iwl_rx_cmd_buffer *rxb, int queue)
- {
-@@ -984,21 +994,16 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		 */
- 		if ((desc->mac_flags2 & IWL_RX_MPDU_MFLG2_AMSDU) &&
- 		    !WARN_ON(!ieee80211_is_data_qos(hdr->frame_control))) {
--			int i;
- 			u8 *qc = ieee80211_get_qos_ctl(hdr);
--			u8 mac_addr[ETH_ALEN];
- 
- 			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
- 
--			for (i = 0; i < ETH_ALEN; i++)
--				mac_addr[i] = hdr->addr3[ETH_ALEN - i - 1];
--			ether_addr_copy(hdr->addr3, mac_addr);
-+			if (mvm->trans->cfg->device_family ==
-+			    IWL_DEVICE_FAMILY_9000) {
-+				iwl_mvm_flip_address(hdr->addr3);
- 
--			if (ieee80211_has_a4(hdr->frame_control)) {
--				for (i = 0; i < ETH_ALEN; i++)
--					mac_addr[i] =
--						hdr->addr4[ETH_ALEN - i - 1];
--				ether_addr_copy(hdr->addr4, mac_addr);
-+				if (ieee80211_has_a4(hdr->frame_control))
-+					iwl_mvm_flip_address(hdr->addr4);
- 			}
- 		}
- 		if (baid != IWL_RX_REORDER_DATA_INVALID_BAID) {
+c61cfe49f0f0 mwifiex: cfg80211: do not change virtual interface during scan processing
+
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10084299/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
