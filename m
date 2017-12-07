@@ -1,85 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:44513 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750757AbdLUObG (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44304 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753634AbdLGNUs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 09:31:06 -0500
-From: <bpothuno@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Balaji Pothunoori <bpothuno@qti.qualcomm.com>
-Subject: [PATCH] ath10k: advertising tdls wider bandwidth support for 5GHz
-Date: Thu, 21 Dec 2017 20:00:42 +0530
-Message-ID: <1513866642-709-1-git-send-email-bpothuno@qti.qualcomm.com> (sfid-20171221_153110_760732_8673C9F6)
+        Thu, 7 Dec 2017 08:20:48 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: wlcore: use boottime for fw time sync
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171127114903.2779545-1-arnd@arndb.de>
+References: <20171127114903.2779545-1-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Iain Hunter <drhunter95@gmail.com>,
+        "Reizer, Eyal" <eyalr@ti.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20171207132047.9770D6086A@smtp.codeaurora.org> (sfid-20171207_142135_416492_BD3DC95F)
+Date: Thu,  7 Dec 2017 13:20:46 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-This patch advertise tdls wider bandwidth support for 5GHz
-based on firmware wmi capabilties.
+> Using getnstimeofday()/timespec_to_ns() causes an overflow on 32-bit
+> architectures in 2038, and may suffer from time jumps due to
+> settimeofday() or leap seconds.
+> 
+> I don't see a reason why this needs to be UTC, so either monotonic
+> or boot time would be better here. Assuming that the fw time keeps
+> running during suspend, boottime is better than monotonic, and
+> ktime_get_boot_ns() will also save the additional conversion to
+> nanoseconds.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-This patch is required for chipset QCA9888.
-Firmware Versoin : 10.4-3.5.1-00018.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 3 ++-
- drivers/net/wireless/ath/ath10k/wmi.h | 5 +++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+99f6996d4cba wlcore: use boottime for fw time sync
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0298cce..9df455f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8271,7 +8271,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 	if (test_bit(WMI_SERVICE_TDLS, ar->wmi.svc_map) ||
- 	    test_bit(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY, ar->wmi.svc_map)) {
- 		ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
--		ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
-+		if (test_bit(WMI_SERVICE_TDLS_WIDER_BANDWIDTH, ar->wmi.svc_map))
-+			ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
- 	}
- 
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index f6d60dc..0fe87ab 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -196,6 +196,7 @@ enum wmi_service {
- 	WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
- 	WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
- 	WMI_SERVICE_MGMT_TX_WMI,
-+	WMI_SERVICE_TDLS_WIDER_BANDWIDTH,
- 
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -337,6 +338,7 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_TDLS_UAPSD_SLEEP_STA,
- 	WMI_10_4_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
- 	WMI_10_4_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
-+	WMI_10_4_SERVICE_TDLS_WIDER_BANDWIDTH,
- };
- 
- static inline char *wmi_service_name(int service_id)
-@@ -445,6 +447,7 @@ static inline char *wmi_service_name(int service_id)
- 	SVCSTR(WMI_SERVICE_SMART_LOGGING_SUPPORT);
- 	SVCSTR(WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE);
- 	SVCSTR(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY);
-+	SVCSTR(WMI_SERVICE_TDLS_WIDER_BANDWIDTH);
- 	default:
- 		return NULL;
- 	}
-@@ -741,6 +744,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE, len);
- 	SVCMAP(WMI_10_4_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
- 	       WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY, len);
-+	SVCMAP(WMI_10_4_SERVICE_TDLS_WIDER_BANDWIDTH,
-+	       WMI_SERVICE_TDLS_WIDER_BANDWIDTH, len);
- }
- 
- #undef SVCMAP
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10076691/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
