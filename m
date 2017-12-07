@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:37039 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbdL0KH7 (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:38314 "EHLO
+        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751288AbdLGIr3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Dec 2017 05:07:59 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 7 Dec 2017 03:47:29 -0500
+Received: by mail-wm0-f54.google.com with SMTP id 64so11409621wme.3
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Dec 2017 00:47:29 -0800 (PST)
+Subject: Re: [PATCH 00/10] brcmfmac: restructuring sdio access functions
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A29001E.4080905@broadcom.com> (sfid-20171207_094733_807470_DA9ED6F7)
+Date: Thu, 7 Dec 2017 09:47:26 +0100
 MIME-Version: 1.0
-Subject: Re: [01/10] ath10k: Add hw param for 64-bit address support
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1513846859-23639-2-git-send-email-govinds@qti.qualcomm.com>
-References: <1513846859-23639-2-git-send-email-govinds@qti.qualcomm.com>
-To: Govind Singh <govinds@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Rakesh Pillai" <pillair@qti.qualcomm.com>,
-        Govind Singh <govinds@qti.qualcomm.com>
-Message-ID: <b76f2a5377bf41aaa386645b432a2177@euamsexm01a.eu.qualcomm.com> (sfid-20171227_110804_106620_CE78648E)
-Date: Wed, 27 Dec 2017 11:07:52 +0100
+In-Reply-To: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Govind Singh <govinds@qti.qualcomm.com> wrote:
+On 11/13/2017 9:35 PM, Arend van Spriel wrote:
+> These patches were originally submitted by Ian Molton a while ago so decided
+> to resubmit them. This is a first series of 10 patches. Tested using BCM4354
+> device which showed no regression.
+>
+> It is intended for 4.16 (no rush ;-) ) and applies to the master branch of
+> the wireless-drivers-next repository.
 
-> WCN3990 target supports 37-bit addressing mode. In order
-> to accommodate extended address support, add hw param to
-> indicate if the target supports addressing above 32-bits.
-> 
-> Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-> Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Hi Kalle,
 
-10 patches applied to ath-next branch of ath.git, thanks.
+I have follow-up series on this one. If you plan to take it today or 
+tomorrow, I can hold the follow-up a bit more.
 
-f13cc6bd68ba ath10k: Add hw param for 64-bit address support
-e3def6f7ddf8 ath10k: Update rx descriptor for WCN3990 target
-3b0b55b19d1d ath10k: Add support for 64 bit HTT in-order indication msg
-9abe68535ad8 ath10k: Add support for 64 bit htt rx ring cfg
-71ad70961093 ath10k: Add support for 64 bit HTT frag descriptor
-e62ee5c381c5 ath10k: Add support for htt_data_tx_desc_64 descriptor
-bb8d0d15fc6a ath10k: Add hw param for rx ring size support
-a91a626baa15 ath10k: Add paddrs_ring_64 support for 64bit target
-5dac5f3772f6 ath10k: Use dma_addr_t for ce buffers to support 64bit target
-2a1e1ad3fd37 ath10k: Add support for 64 bit ce descriptor
-
--- 
-https://patchwork.kernel.org/patch/10127165/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Arend
