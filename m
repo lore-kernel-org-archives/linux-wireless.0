@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:46002 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752432AbdLNNdm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52328 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754721AbdLGN0D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 08:33:42 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S . Miller" <davem@davemloft.net>,
+        Thu, 7 Dec 2017 08:26:03 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: rsi: fix memory leak on buf and usb_reg_buf
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171116173918.3030-1-colin.king@canonical.com>
+References: <20171116173918.3030-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] wireless: Always rewrite generated files from scratch
-Date: Thu, 14 Dec 2017 14:33:38 +0100
-Message-Id: <20171214133338.10551-1-thierry.reding@gmail.com> (sfid-20171214_143400_562769_81210641)
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20171207132603.1A9C260240@smtp.codeaurora.org> (sfid-20171207_142633_846304_448033E2)
+Date: Thu,  7 Dec 2017 13:26:03 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+Colin Ian King <colin.king@canonical.com> wrote:
 
-Currently the certs C code generation appends to the generated files,
-which is most likely a leftover from commit 715a12334764 ("wireless:
-don't write C files on failures"). This causes duplicate code in the
-generated files if the certificates have their timestamps modified
-between builds and thereby trigger the generation rules.
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> In the cases where len is too long, the error return path fails to
+> kfree allocated buffers buf and usb_reg_buf.  The simplest fix is to
+> perform the sanity check on len before the allocations to avoid having
+> to do the kfree'ing in the first place.
+> 
+> Detected by CoverityScan, CID#1452258,1452259 ("Resource Leak")
+> 
+> Fixes: 59f73e2ae185 ("rsi: check length before USB read/write register")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Fixes: 715a12334764 ("wireless: don't write C files on failures")
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Based on next-20171214
+Patch applied to wireless-drivers-next.git, thanks.
 
- net/wireless/Makefile | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+c4ee30a280b1 wlcore, wl1251: fix spelling: "Couldnt" -> "Couldn't" and remove error on -ENOMEM
 
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index d7d6cb00c47b..b662be3422e1 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -43,7 +43,7 @@ $(obj)/shipped-certs.c: $(wildcard $(srctree)/$(src)/certs/*.x509)
- 	      echo "$$allf"; \
- 	      echo '};'; \
- 	      echo 'unsigned int shipped_regdb_certs_len = sizeof(shipped_regdb_certs);'; \
--	  ) >> $@)
-+	  ) > $@)
- 
- $(obj)/extra-certs.c: $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%) \
- 		      $(wildcard $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%)/*.x509)
-@@ -66,4 +66,4 @@ $(obj)/extra-certs.c: $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%) \
- 	      echo "$$allf"; \
- 	      echo '};'; \
- 	      echo 'unsigned int extra_regdb_certs_len = sizeof(extra_regdb_certs);'; \
--	  ) >> $@)
-+	  ) > $@)
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10061619/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
