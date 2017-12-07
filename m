@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:37765 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751108AbdLaRbo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54320 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755155AbdLGNtr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Dec 2017 12:31:44 -0500
-Received: by mail-lf0-f67.google.com with SMTP id f3so16110733lfe.4
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:43 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 10/18] ath10k: add HTT TX HL ops
-Date: Sun, 31 Dec 2017 18:29:17 +0100
-Message-Id: <20171231172925.24014-11-erik.stromdahl@gmail.com> (sfid-20171231_183208_312662_B6D5BBE0)
-In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
-References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+        Thu, 7 Dec 2017 08:49:47 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v1] brcmfmac: Avoid build error with make W=1
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com>
+References: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Message-Id: <20171207134947.68BE5607EB@smtp.codeaurora.org> (sfid-20171207_145023_539450_FCD09EA2)
+Date: Thu,  7 Dec 2017 13:49:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initial HTT TX ops for high latency devices.
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htt_tx.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+> When I run make W=1 on gcc (Debian 7.2.0-16) 7.2.0 I got an error for
+> the first run, all next ones are okay.
+> 
+>   CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:2078: error: Cannot parse struct or union!
+> scripts/Makefile.build:310: recipe for target 'drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o' failed
+> 
+> Seems like something happened with W=1 and wrong kernel doc format.
+> As a quick fix remove dubious /** in the code.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 4d0bfb47d162..321f131e417d 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -1565,11 +1565,17 @@ static const struct ath10k_htt_tx_ops htt_tx_ops_64 = {
- 	.htt_free_txbuff = ath10k_htt_tx_free_cont_txbuf_64,
- };
- 
-+static const struct ath10k_htt_tx_ops htt_tx_ops_hl = {
-+	.htt_send_frag_desc_bank_cfg = ath10k_htt_send_frag_desc_bank_cfg_32,
-+};
-+
- void ath10k_htt_set_tx_ops(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
- 
--	if (ar->hw_params.target_64bit)
-+	if (ar->is_high_latency)
-+		htt->tx_ops = &htt_tx_ops_hl;
-+	else if (ar->hw_params.target_64bit)
- 		htt->tx_ops = &htt_tx_ops_64;
- 	else
- 		htt->tx_ops = &htt_tx_ops_32;
+Patch applied to wireless-drivers.git, thanks.
+
+51ef7925e106 brcmfmac: Avoid build error with make W=1
+
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10073021/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
