@@ -1,122 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:33991 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753601AbdLHOmR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39132 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752291AbdLGKuE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 09:42:17 -0500
-Received: by mail-wr0-f196.google.com with SMTP id y21so11046450wrc.1
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Dec 2017 06:42:17 -0800 (PST)
-Date: Fri, 8 Dec 2017 15:42:11 +0100
-From: Gary Bisson <gary.bisson@boundarydevices.com>
-To: Alagu Sankar <alagusankar@silex-india.com>
-Cc: silexcommon@gmail.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [08/11] ath10k_sdio: common read write
-Message-ID: <20171208144211.tionzvzndhv7d5wy@t450s.lan> (sfid-20171208_154221_849397_1CA06383)
-References: <1506793068-27445-9-git-send-email-alagusankar@silex-india.com>
- <20171005100932.vamkzfulq3dg4iav@t450s.lan>
- <e9eb78a9e0ed5e1a3acf48af88d02119@silex-india.com>
+        Thu, 7 Dec 2017 05:50:04 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/10] brcmfmac: restructuring sdio access functions
+References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
+        <5A29001E.4080905@broadcom.com>
+        <87r2s6vs6d.fsf@kamboji.qca.qualcomm.com>
+        <5A2902DE.3050206@broadcom.com>
+Date: Thu, 07 Dec 2017 12:49:56 +0200
+In-Reply-To: <5A2902DE.3050206@broadcom.com> (Arend van Spriel's message of
+        "Thu, 7 Dec 2017 09:59:10 +0100")
+Message-ID: <87fu8mvmln.fsf@kamboji.qca.qualcomm.com> (sfid-20171207_115007_976929_362A808F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <e9eb78a9e0ed5e1a3acf48af88d02119@silex-india.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alagu,
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-On Thu, Oct 05, 2017 at 11:03:12PM +0530, Alagu Sankar wrote:
-> Hi Gary,
-> 
-> 
-> On 2017-10-05 15:39, Gary Bisson wrote:
-> > Hi Alagu,
-> > 
-> > On Sat, Sep 30, 2017 at 11:07:45PM +0530, silexcommon@gmail.com wrote:
-> > > From: Alagu Sankar <alagusankar@silex-india.com>
-> > > 
-> > > convert different read write functions in sdio hif to bring it under a
-> > > single read-write path. This helps in having a common dma bounce
-> > > buffer
-> > > implementation. Also helps in address modification that is required
-> > > specific to change in certain mbox addresses of sdio_write.
-> > > 
-> > > Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-> > > ---
-> > >  drivers/net/wireless/ath/ath10k/sdio.c | 131
-> > > ++++++++++++++++-----------------
-> > >  1 file changed, 64 insertions(+), 67 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/ath/ath10k/sdio.c
-> > > b/drivers/net/wireless/ath/ath10k/sdio.c
-> > > index 77d4fa4..bb6fa67 100644
-> > > --- a/drivers/net/wireless/ath/ath10k/sdio.c
-> > > +++ b/drivers/net/wireless/ath/ath10k/sdio.c
-> > > @@ -36,6 +36,11 @@
-> > > 
-> > >  #define ATH10K_SDIO_DMA_BUF_SIZE	(32 * 1024)
-> > > 
-> > > +static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf,
-> > > +			    u32 len, bool incr);
-> > > +static int ath10k_sdio_write(struct ath10k *ar, u32 addr, const
-> > > void *buf,
-> > > +			     u32 len, bool incr);
-> > > +
-> > 
-> > As mentioned by Kalle, u32 needs to be size_t.
-> Yes, the compiler I used is probably a step older and did not catch this.
-> > 
-> > >  /* inlined helper functions */
-> > > 
-> > >  /* Macro to check if DMA buffer is WORD-aligned and DMA-able.
-> > > @@ -152,6 +157,7 @@ static int ath10k_sdio_config(struct ath10k *ar)
-> > >  	struct sdio_func *func = ar_sdio->func;
-> > >  	unsigned char byte, asyncintdelay = 2;
-> > >  	int ret;
-> > > +	u32 addr;
-> > > 
-> > >  	ath10k_dbg(ar, ATH10K_DBG_BOOT, "sdio configuration\n");
-> > > 
-> > > @@ -180,9 +186,8 @@ static int ath10k_sdio_config(struct ath10k *ar)
-> > >  		 CCCR_SDIO_DRIVER_STRENGTH_ENABLE_C |
-> > >  		 CCCR_SDIO_DRIVER_STRENGTH_ENABLE_D);
-> > > 
-> > > -	ret = ath10k_sdio_func0_cmd52_wr_byte(func->card,
-> > > -					      CCCR_SDIO_DRIVER_STRENGTH_ENABLE_ADDR,
-> > > -					      byte);
-> > > +	addr = CCCR_SDIO_DRIVER_STRENGTH_ENABLE_ADDR,
-> > > +	ret = ath10k_sdio_func0_cmd52_wr_byte(func->card, addr, byte);
-> > 
-> > Not sure this part is needed.
-> This is to overcome checkpatch warning. Too big a names for the function and
-> macro
-> not helping in there. Will have to move it as a separate patch.
-> > 
-> > >  	if (ret) {
-> > >  		ath10k_warn(ar, "failed to enable driver strength: %d\n", ret);
-> > >  		goto out;
-> > > @@ -233,13 +238,16 @@ static int ath10k_sdio_config(struct ath10k *ar)
-> > > 
-> > >  static int ath10k_sdio_write32(struct ath10k *ar, u32 addr, u32 val)
-> > >  {
-> > > -	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
-> > > -	struct sdio_func *func = ar_sdio->func;
-> > > +	__le32 *buf;
-> > >  	int ret;
-> > > 
-> > > -	sdio_claim_host(func);
-> > > +	buf = kzalloc(sizeof(*buf), GFP_KERNEL);
-> > > +	if (!buf)
-> > > +		return -ENOMEM;
-> > > 
-> > > -	sdio_writel(func, val, addr, &ret);
-> > > +	*buf = cpu_to_le32(val);
-> > > +
-> > > +	ret = ath10k_sdio_write(ar, addr, &val, sizeof(val), true);
-> > 
-> > Shouldn't we use buf instead of val? buf seems pretty useless otherwise.
-> Yes, thanks for pointing this out. will be corrected in v2.
+> On 12/7/2017 9:49 AM, Kalle Valo wrote:
+>> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>>
+>>> On 11/13/2017 9:35 PM, Arend van Spriel wrote:
+>>>> These patches were originally submitted by Ian Molton a while ago so decided
+>>>> to resubmit them. This is a first series of 10 patches. Tested using BCM4354
+>>>> device which showed no regression.
+>>>>
+>>>> It is intended for 4.16 (no rush ;-) ) and applies to the master branch of
+>>>> the wireless-drivers-next repository.
+>>>
+>>> Hi Kalle,
+>>>
+>>> I have follow-up series on this one. If you plan to take it today or
+>>> tomorrow, I can hold the follow-up a bit more.
+>>
+>> I'm hoping to apply these today.
+>>
+>
+> btw. my neighbors put out the Finnish flag.
 
-Do you have any timeframe on the v2?
+Cool!
 
-Regards,
-Gary
+> Was that about your independence? Not a yearly event, or is it?
+
+December 6th is the independence day in Finland and that's a yearly
+event, a public holiday etc. But this year was special as it was 100
+years from gaining our independence.
+
+So yesterday, instead of applying patches, I was looking at people
+shaking hands[1] on TV. Yes, we are weird ;)
+
+[1] https://en.wikipedia.org/wiki/Independence_Day_Reception_(in_Finland)
+
+-- 
+Kalle Valo
