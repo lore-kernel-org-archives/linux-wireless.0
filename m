@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:59046 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752624AbdLSULd (ORCPT
+Received: from bombadil.infradead.org ([65.50.211.133]:38567 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752121AbdLGBga (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 15:11:33 -0500
-Message-ID: <1513714290.26145.24.camel@sipsolutions.net> (sfid-20171219_211213_535539_ECABF817)
-Subject: Re: [PATCH for-4.15] wireless: create, don't append, to
- shipped-certs.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Brian Norris <briannorris@chromium.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>,
-        Damian Tometzki <damian.tometzki@icloud.com>
-Date: Tue, 19 Dec 2017 21:11:30 +0100
-In-Reply-To: <20171219192303.31395-1-briannorris@chromium.org> (sfid-20171219_202313_371734_5DF1684C)
-References: <20171219192303.31395-1-briannorris@chromium.org>
-         (sfid-20171219_202313_371734_5DF1684C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 6 Dec 2017 20:36:30 -0500
+Date: Wed, 6 Dec 2017 17:36:29 -0800
+From: Kyle McMartin <kyle@infradead.org>
+To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-firmware@kernel.org
+Subject: Re: [PATCH V2] brcm: add CYW4373 firmwares and Cypress license file
+Message-ID: <20171207013629.GF1875@bombadil.infradead.org> (sfid-20171207_023634_273365_A060BE75)
+References: <20171201084243.GA58942@aremote07.aus.cypress.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171201084243.GA58942@aremote07.aus.cypress.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-12-19 at 11:23 -0800, Brian Norris wrote:
+On Fri, Dec 01, 2017 at 02:43:00AM -0600, Chi-Hsien Lin wrote:
+> Add the CYW4373 SDIO and USB firmware files, along with the corresponding
+> Cypress license file.
 > 
-> In practice, this is seen often by having a separate source and build
-> directory, where the build artifacts remain but the source tree changes
-> (even if Seth's cert doesn't change, it might get created/removed when
-> checking out different source revisions).
-> 
-> I don't see why this rule should be an append; we're writing the file
-> all in one go.
-
-Yeah, that was an oversight from the code prior to my changes to make
-it write it only once.
-
-> Fixes: 90a53e4432b1 ("cfg80211: implement regdb signature checking")
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
 > ---
-> This is an error introduced in 4.15-rc1.
+>  LICENCE.cypress            | 139 +++++++++++++++++++++++++++++++++++++++++++++
+>  WHENCE                     |   5 ++
+>  brcm/brcmfmac4373-sdio.bin | Bin 0 -> 457994 bytes
+>  brcm/brcmfmac4373.bin      | Bin 0 -> 479232 bytes
+>  4 files changed, 144 insertions(+)
+>  create mode 100644 LICENCE.cypress
+>  create mode 100644 brcm/brcmfmac4373-sdio.bin
+>  create mode 100644 brcm/brcmfmac4373.bin
 > 
-> I've seen other errors reported by Paul and Damian (CC'd); I think Paul's
-> failure was fixed already, but Damian might have still been having problems
-> with not having a "clean" environment. Perhaps he was hitting this bug?
 
-I'm not really sure what that problem was - I think a combination of
-missing clean-files and this perhaps? Anyway, I applied another fix for
-this today, and it's on the way to Linus's tree, along with the missing
-clean-files and a conversion to non-binary files so that patches work
-better.
+pulled, thanks chi-hsien.
 
-johannes
+regards, kyle
