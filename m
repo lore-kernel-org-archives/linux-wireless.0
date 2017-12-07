@@ -1,100 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48338 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752426AbdLANFp (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:3932 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753762AbdLGOaV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 08:05:45 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  1 Dec 2017 15:05:35 +0200
-Message-Id: <20171201130535.27656-3-luca@coelho.fi> (sfid-20171201_140553_568733_5E6EF30F)
-In-Reply-To: <20171201130535.27656-1-luca@coelho.fi>
-References: <20171201130535.27656-1-luca@coelho.fi>
-Subject: [PATCH 2/2] iwlwifi: mvm: flush queue before deleting ROC
+        Thu, 7 Dec 2017 09:30:21 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Jakub Kicinski <kubakici@wp.pl>
+CC: Matthias Schiffer <mschiffer@universe-factory.net>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "nbd@nbd.name" <nbd@nbd.name>
+Subject: Re: [PATCH 1/3] ath9k: remove stray backslash in Makefile
+Date: Thu, 7 Dec 2017 14:30:14 +0000
+Message-ID: <87374mvcej.fsf@kamboji.qca.qualcomm.com> (sfid-20171207_153243_058284_E320D62C)
+References: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
+        <20171127193516.682827ea@cakuba.netronome.com>
+In-Reply-To: <20171127193516.682827ea@cakuba.netronome.com> (Jakub Kicinski's
+        message of "Mon, 27 Nov 2017 19:35:16 -0800")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Jakub Kicinski <kubakici@wp.pl> writes:
 
-Before deleting a time event (remain-on-channel instance), flush
-the queue so that frames cannot get stuck on it. We already flush
-the AUX STA queues, but a separate station is used for the P2P
-Device queue.
+> On Mon, 27 Nov 2017 18:56:21 +0100, Matthias Schiffer wrote:
+>> Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/Makefile | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>=20
+>> diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wirel=
+ess/ath/ath9k/Makefile
+>> index 36a40ffdce15..90e4a341076c 100644
+>> --- a/drivers/net/wireless/ath/ath9k/Makefile
+>> +++ b/drivers/net/wireless/ath/ath9k/Makefile
+>> @@ -59,7 +59,7 @@ obj-$(CONFIG_ATH9K_HW) +=3D ath9k_hw.o
+>>  obj-$(CONFIG_ATH9K_COMMON) +=3D ath9k_common.o
+>>  ath9k_common-y:=3D	common.o \
+>>  			common-init.o \
+>> -			common-beacon.o \
+>> +			common-beacon.o
+>> =20
+>
+> It's not necessarily stray, there is nothing on the next line so it's
+> OK, and if you add \ at the end of all lines, you don't have to touch
+> the last line every time you add/remove something.  Sort of like
+> putting a , after last enum value.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 ++
- .../net/wireless/intel/iwlwifi/mvm/time-event.c    | 24 ++++++++++++++++++++--
- 2 files changed, 24 insertions(+), 2 deletions(-)
+I agree with Jakub, I think the backslash is there on purpose so I
+dropped this patch.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 6a9a25beab3f..55ab5349dd40 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1061,6 +1061,7 @@ struct iwl_mvm {
-  * @IWL_MVM_STATUS_ROC_AUX_RUNNING: AUX remain-on-channel is running
-  * @IWL_MVM_STATUS_D3_RECONFIG: D3 reconfiguration is being done
-  * @IWL_MVM_STATUS_FIRMWARE_RUNNING: firmware is running
-+ * @IWL_MVM_STATUS_NEED_FLUSH_P2P: need to flush P2P bcast STA
-  */
- enum iwl_mvm_status {
- 	IWL_MVM_STATUS_HW_RFKILL,
-@@ -1072,6 +1073,7 @@ enum iwl_mvm_status {
- 	IWL_MVM_STATUS_ROC_AUX_RUNNING,
- 	IWL_MVM_STATUS_D3_RECONFIG,
- 	IWL_MVM_STATUS_FIRMWARE_RUNNING,
-+	IWL_MVM_STATUS_NEED_FLUSH_P2P,
- };
- 
- /* Keep track of completed init configuration */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index 4d0314912e94..e25cda9fbf6c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -132,6 +132,24 @@ void iwl_mvm_roc_done_wk(struct work_struct *wk)
- 	 * executed, and a new time event means a new command.
- 	 */
- 	iwl_mvm_flush_sta(mvm, &mvm->aux_sta, true, CMD_ASYNC);
-+
-+	/* Do the same for the P2P device queue (STA) */
-+	if (test_and_clear_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status)) {
-+		struct iwl_mvm_vif *mvmvif;
-+
-+		/*
-+		 * NB: access to this pointer would be racy, but the flush bit
-+		 * can only be set when we had a P2P-Device VIF, and we have a
-+		 * flush of this work in iwl_mvm_prepare_mac_removal() so it's
-+		 * not really racy.
-+		 */
-+
-+		if (!WARN_ON(!mvm->p2p_device_vif)) {
-+			mvmvif = iwl_mvm_vif_from_mac80211(mvm->p2p_device_vif);
-+			iwl_mvm_flush_sta(mvm, &mvmvif->bcast_sta, true,
-+					  CMD_ASYNC);
-+		}
-+	}
- }
- 
- static void iwl_mvm_roc_finished(struct iwl_mvm *mvm)
-@@ -855,10 +873,12 @@ void iwl_mvm_stop_roc(struct iwl_mvm *mvm)
- 
- 	mvmvif = iwl_mvm_vif_from_mac80211(te_data->vif);
- 
--	if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE)
-+	if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE) {
- 		iwl_mvm_remove_time_event(mvm, mvmvif, te_data);
--	else
-+		set_bit(IWL_MVM_STATUS_NEED_FLUSH_P2P, &mvm->status);
-+	} else {
- 		iwl_mvm_remove_aux_roc_te(mvm, mvmvif, te_data);
-+	}
- 
- 	iwl_mvm_roc_finished(mvm);
- }
--- 
-2.15.0
+--=20
+Kalle Valo=
