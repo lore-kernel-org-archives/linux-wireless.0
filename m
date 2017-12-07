@@ -1,76 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47374 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750774AbdLDGrt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40552 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754922AbdLGNfJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 01:47:49 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Xinming Hu <huxinming820@gmail.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Dmitry Torokhov" <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        James Cao <jcao@marvell.com>
-Subject: Re: Re: Re: Re: [PATCH 3/3] mwifiex: debugfs: trigger device dump for
- usb interface
-Date: Mon, 4 Dec 2017 06:47:42 +0000
-Message-ID: <82e0ce2911514793a4a4d2417b13813f@SC-EXCH02.marvell.com> (sfid-20171204_074831_724094_225B80AE)
-Content-Type: text/plain; charset="gb2312"
+        Thu, 7 Dec 2017 08:35:09 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [v3] bcma: Adjust block comment
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171128155458.1036-1-eashishkalra@gmail.com>
+References: <20171128155458.1036-1-eashishkalra@gmail.com>
+To: Ashish Kalra <eashishkalra@gmail.com>
+Cc: zajec5@gmail.com, himanshujha199640@gmail.com,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        eashishkalra@gmail.com
+Message-Id: <20171207133508.C7E91608C8@smtp.codeaurora.org> (sfid-20171207_143539_112374_BC810034)
+Date: Thu,  7 Dec 2017 13:35:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQnJpYW4gTm9ycmlzIFtt
-YWlsdG86YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnXQ0KPiBTZW50OiAyMDE3xOoxMtTCMsjVIDk6
-NDUNCj4gVG86IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+IENjOiBYaW5taW5nIEh1
-IDxodXhpbm1pbmc4MjBAZ21haWwuY29tPjsgTGludXggV2lyZWxlc3MNCj4gPGxpbnV4LXdpcmVs
-ZXNzQHZnZXIua2VybmVsLm9yZz47IEthbGxlIFZhbG8gPGt2YWxvQGNvZGVhdXJvcmEub3JnPjsg
-RG1pdHJ5DQo+IFRvcm9raG92IDxkdG9yQGdvb2dsZS5jb20+OyByYWphdGphQGdvb2dsZS5jb207
-IFpoaXl1YW4gWWFuZw0KPiA8eWFuZ3p5QG1hcnZlbGwuY29tPjsgVGltIFNvbmcgPHNvbmd0YW9A
-bWFydmVsbC5jb20+OyBDYXRoeSBMdW8NCj4gPGNsdW9AbWFydmVsbC5jb20+OyBHYW5hcGF0aGkg
-QmhhdCA8Z2JoYXRAbWFydmVsbC5jb20+OyBKYW1lcyBDYW8NCj4gPGpjYW9AbWFydmVsbC5jb20+
-DQo+IFN1YmplY3Q6IFtFWFRdIFJlOiBSZTogUmU6IFtQQVRDSCAzLzNdIG13aWZpZXg6IGRlYnVn
-ZnM6IHRyaWdnZXIgZGV2aWNlIGR1bXANCj4gZm9yIHVzYiBpbnRlcmZhY2UNCj4gDQo+IEV4dGVy
-bmFsIEVtYWlsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IE9uIEZyaSwgRGVjIDAxLCAyMDE3IGF0
-IDA4OjM2OjAxQU0gKzAwMDAsIFhpbm1pbmcgSHUgd3JvdGU6DQo+ID4gVGhhbmtzIGZvciB0aGUg
-c3VnZ2VzdGlvbiwgaXQgc291bmRzIGJldHRlciB0aGFuIGV4cG9ydGluZw0KPiA+IG13aWZpZXhf
-c2VuZF9jbWQoKSBkaXJlY3RseS4NCj4gPiBJbiBhZGRpdGlvbiB0byB1c2VkIGFzIGRlYnVnZnMg
-dGlyZ2dlciwgdGhlICJkZWZpbmVkIHBvaW50Ig0KPiA+IGlmX29wcy5kZXZpY2VfZHVtcCBpcyBv
-bmx5IHVzZWQgaW4gY29tbWFuZCB0aW1lb3V0IGNvbnRleHQuDQo+ID4gRm9yIHNkaW8vcGNpZSBp
-bnRlcmZhY2UsIHJlZ2lzdGVyIG9wZXJhdGlvbiB3aWxsIGJlIG1hZGUgdG8gdHJpZ2dlcg0KPiA+
-IGZpcm13YXJlIGR1bXAgYW5kIGdldCBkdW1wIGNvbnRleHQgdW5kZXIgc3BlY2lmaWMgYWxnb3Jp
-dGhtLg0KPiA+IEZvciB1c2IgaW50ZXJmYWNlLCBob3dldmVyLCAgdGhpcyBpcyBub3QgbmVlZGVk
-LCBzaW5jZSBmaXJtd2FyZSB3aWxsDQo+ID4gYXV0b21hdGljYWxseSBzZW5kIGR1bXAgZXZlbnQg
-dG8gaG9zdCB3aXRob3V0IGFueSB0cmlnZ2VyLCBhbmQgd2hhdCdzDQo+ID4gbW9yZSAsIGhvc3Qg
-aXMgYWxzbyBub3QgYWJsZSB0byBpc3N1ZSBjb21tYW5kIGluIHRoZSBzaXR1YXRpb24uDQo+ID4N
-Cj4gPiBTbyBwZXIgbXkgdW5kZXJzdGFuZCwgIGhlcmUgd2Ugb25seSBuZWVkIHByb3ZpZGUgYSBz
-aW1wbGUgd2F5IHRvDQo+ID4gdHJpZ2dlciAsIGluc3RlYWQgb2YgYSB0b3RhbGx5IGZ1bmN0aW9u
-YWwgY29tcGxldGUgZHVtcCBlbnRyeSBwb2ludC4NCj4gPiBTdXBwb3NlIGlmIHdlIG1ha2UgdGhl
-IGNvbW1hbmQgdHJpZ2dlciBhIHBhcnQgb2YgaWZfb3BzLT5kZXZpY2VfZHVtcCwNCj4gPiB0aGVu
-IHdlIGFsc28gbmVlZCBhZGQgY2hlY2sgZm9yICJNV0lGSUVYX1VTQiIgaW4gbXdpZmlleF9jbWRf
-dG1vX2Z1bmMuDQo+IA0KPiBBaCwgSSBzZWUuIFlvdXIgZXhwbGFuYXRpb24gbWFrZXMgc29tZSBt
-b3JlIHNlbnNlIHRoZW4uIEl0IHdvdWxkIGJlIG5pY2UgaWYNCj4geW91IGNvdWxkIGluY2x1ZGUg
-c29tZSBvZiB0aGlzIGluDQo+IChhKSB0aGUgY29tbWl0IG1lc3NhZ2UNCj4gKGIpIHRoZSBlbnRy
-eSBwb2ludCBpbiBkZWJ1Z2ZzLmMsIHdoZXJlIHlvdSB0cmlnZ2VyIHRoaXMNCj4gDQo+IFNvbWV0
-aGluZyBhbG9uZyB0aGUgbGluZXMgb2YgIkZvciBjb21tYW5kIHRpbWVvdXRzLCBVU0IgZmlybXdh
-cmUgd2lsbA0KPiBhdXRvbWF0aWNhbGx5IGVtaXQgZmlybXdhcmUgZHVtcCBldmVudHMsIHNvIHdl
-IGRvbid0IGltcGxlbWVudA0KPiBkZXZpY2VfZHVtcCgpLiBGb3IgdXNlci1pbml0aWF0ZWQgZHVt
-cHMsIHdlIHRyaWdnZXIgaXQgb3Vyc2VsdmVzLiINCj4gDQoNCk9rYXksIFRoYW5rcyENCg0KUmVn
-YXJkcywNClNpbW9uDQoNCj4gPiBpdCBhbHNvIGxvb2tzIGluZWxlZ2FudCwgYW5kIHdoYXQgd2Ug
-ZGlkIGxvb2tzIHdlaXJkLCB0aGV5IGFyZQ0KPiA+ICgxKSBleHBvcnQgYSBuZXcgIGtlcm5lbCBz
-eW1ib2wsICB0aGUgd3JhcHBlciBvZiBtd2lmaWV4X3NlbmRfY29tbWFuZA0KPiA+ICgyKSBhZGQg
-dXNiIGlmX29wcy0+ZGV2aWNlX2R1bXAsIGl0ICBzZW5kIHRoZSBjb21tYW5kIGluIG13aWZpZXhf
-dXNiLA0KPiBpbnN0ZWFkIG9mIGluIG13aWZpZXggaXRzZWxmLg0KPiA+ICgzKSBieXBhc3MgYWJv
-dmUgImlmX29wcy0+ZGV2aWNlX2R1bXAiIGluIG13aWZpZXhfY21kX3Rtb19mdW5jLCB3aGljaCBp
-cw0KPiB0aGUgbWFpbmx5IHVzZXIgY2FzZS4NCj4gDQo+IE5vLCBJJ20gbm90IHN1cmUgdGhhdCBz
-b2x1dGlvbiB3b3VsZCBiZSBtdWNoIGJldHRlci4gWW91ciBleGlzdGluZyBzb2x1dGlvbiB3aXRo
-DQo+IGFkZGl0aW9uYWwgY29tbWVudHMgaXMgcHJvYmFibHkgZmluZS4NCj4gDQo+ID4gSSBhbSBu
-b3Qgc3VyZSB3aGV0aGVyIHRoZXJlIGlzIGEgYmV0dGVyIHdheSBvbiB0aGlzLCBwZXJoYXBzIHdl
-IG5lZWQgYQ0KPiA+IHRyYWRlLW9mZiBvbiBkaWZmZXJlbnQgc29sdXRpb25zLCBwbGVhc2UgbGV0
-IHVzIGtub3cgaWYgeW91IGhhdmUgbW9yZQ0KPiA+IHN1Z2dlc3Rpb25zLg0KPiA+DQo+ID4gVGhh
-bmtzICYgUmVnYXJkcywNCj4gPiBTSW1vbg0KPiANCj4gQnJpYW4NCg==
+Ashish Kalra <eashishkalra@gmail.com> wrote:
+
+> use * for block comments in multiple lines according to kernel coding
+> style
+> 
+> Reported by: checkpatch.pl
+> 
+> Signed-off-by: Ashish Kalra <eashishkalra@gmail.com>
+> Reviewed-by: Himanshu Jha <himanshujha199640@gmail.com>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+a765c8fdc869 bcma: Adjust block comment
+
+-- 
+https://patchwork.kernel.org/patch/10080747/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
