@@ -1,73 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48538 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752001AbdLBQ3G (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:48085 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752743AbdLGKUv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 11:29:06 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  2 Dec 2017 18:28:45 +0200
-Message-Id: <20171202162858.4167-3-luca@coelho.fi> (sfid-20171202_172953_767295_1278C15F)
-In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
-References: <20171202162858.4167-1-luca@coelho.fi>
-Subject: [PATCH 02/15] iwlwifi: bump FW API to 36 for 8000 and up
+        Thu, 7 Dec 2017 05:20:51 -0500
+From: Colin King <colin.king@canonical.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] brcmsmac: use ARRAY_SIZE on rfseq_updategainu_events
+Date: Thu,  7 Dec 2017 10:20:47 +0000
+Message-Id: <20171207102047.21635-1-colin.king@canonical.com> (sfid-20171207_112202_204316_355364CF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Load version 36 of the API for these devices, if available.  We
-skipped version 35.
+Use the ARRAY_SIZE macro on rfseq_updategainu_events to determine
+size of the array. Improvement suggested by coccinelle.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c  | 4 ++--
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c  | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 28f6e63b9b67..48f6f80eb24b 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+index 763e8ba6b178..7e01981bc5c8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+@@ -16049,8 +16049,7 @@ static void wlc_phy_workarounds_nphy_gainctrl(struct brcms_phy *pi)
+ 		wlc_phy_set_rfseq_nphy(pi, NPHY_RFSEQ_UPDATEGAINU,
+ 				       rfseq_updategainu_events,
+ 				       rfseq_updategainu_dlys,
+-				       sizeof(rfseq_updategainu_events) /
+-				       sizeof(rfseq_updategainu_events[0]));
++				       ARRAY_SIZE(rfseq_updategainu_events));
  
- /* Highest firmware API version supported */
--#define IWL_22000_UCODE_API_MAX	34
-+#define IWL_22000_UCODE_API_MAX	36
+ 		mod_phy_reg(pi, 0x153, (0xff << 8), (90 << 8));
  
- /* Lowest firmware API version supported */
- #define IWL_22000_UCODE_API_MIN	24
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-index 9bb7c19d48eb..3f4d9bac9f73 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-@@ -70,8 +70,8 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL8000_UCODE_API_MAX	34
--#define IWL8265_UCODE_API_MAX	34
-+#define IWL8000_UCODE_API_MAX	36
-+#define IWL8265_UCODE_API_MAX	36
- 
- /* Lowest firmware API version supported */
- #define IWL8000_UCODE_API_MIN	22
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index e7e75b458005..90a1d14cf7d2 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL9000_UCODE_API_MAX	34
-+#define IWL9000_UCODE_API_MAX	36
- 
- /* Lowest firmware API version supported */
- #define IWL9000_UCODE_API_MIN	30
 -- 
-2.15.0
+2.14.1
