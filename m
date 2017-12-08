@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60972 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43268 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751233AbdLTQWj (ORCPT
+        with ESMTP id S1752488AbdLHMab (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Dec 2017 11:22:39 -0500
+        Fri, 8 Dec 2017 07:30:31 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>
-Subject: Re: [PATCH 07/11] iwlwifi: add skb address to tx cmd in trace events data
-References: <20171218123815.3968-1-luca@coelho.fi>
-        <20171218123815.3968-8-luca@coelho.fi>
-        <878tdxh00r.fsf@kamboji.qca.qualcomm.com>
-        <1513786686.4827.485.camel@coelho.fi>
-Date: Wed, 20 Dec 2017 18:22:34 +0200
-In-Reply-To: <1513786686.4827.485.camel@coelho.fi> (Luca Coelho's message of
-        "Wed, 20 Dec 2017 18:18:06 +0200")
-Message-ID: <87wp1he5dh.fsf@kamboji.qca.qualcomm.com> (sfid-20171220_172243_787048_D1FE80A4)
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Ihab Zhaika <ihab.zhaika@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with the wireless-drivers tree
+References: <20171208120034.499e1a65@canb.auug.org.au>
+Date: Fri, 08 Dec 2017 14:30:26 +0200
+In-Reply-To: <20171208120034.499e1a65@canb.auug.org.au> (Stephen Rothwell's
+        message of "Fri, 8 Dec 2017 12:00:34 +1100")
+Message-ID: <877etxs8pp.fsf@kamboji.qca.qualcomm.com> (sfid-20171208_133059_003004_9F009F36)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
 
-> On Wed, 2017-12-20 at 17:49 +0200, Kalle Valo wrote:
->> Luca Coelho <luca@coelho.fi> writes:
->> 
->> > From: Mordechay Goodstein <mordechay.goodstein@intel.com>
->> > 
->> > This helps matching tx cmd with other trace events, like
->> > net_dev_xmit
->> > and net_dev_queue etc.
->> > 
->> > Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
->> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->> 
->> [...]
->> 
->> > @@ -120,9 +121,9 @@ TRACE_EVENT(iwlwifi_dev_tx,
->> >  				      __get_dynamic_array(buf1),
->> >  				      skb->len - hdr_len);
->> >  	),
->> > -	TP_printk("[%s] TX %.2x (%zu bytes)",
->> > +	TP_printk("[%s] TX %.2x (%zu bytes) skbaddr=%p",
->> >  		  __get_str(dev), ((u8
->> > *)__get_dynamic_array(buf0))[0],
->> > -		  __entry->framelen)
->> > +		  __entry->framelen, __entry->skbaddr)
->> >  );
->> 
->> Just so that you know there has been a lot of changes recently about
->> %p,
->> I think the addresses are nowadays hashed due to security reasons. No
->> idea if it afffects tracing events, but just wanted to point out
->> this.
+> Today's linux-next merge of the wireless-drivers-next tree got a
+> conflict in:
 >
-> Yeah, I've seen some discussions and I even commented that in our
-> internal review.  But I reckoned that if they are all hash, it should
-> still be possible to match them.
+>   drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+>
+> between commit:
+>
+>   567deca8e72d ("iwlwifi: add new cards for 9260 and 22000 series")
+>
+> from the wireless-drivers tree and commit:
+>
+>   2f7a3863191a ("iwlwifi: rename the temporary name of A000 to the official 22000")
+>
+> from the wireless-drivers-next tree.
+>
+> I fixed it up (see below) and can carry the fix as necessary. This
+> is now fixed as far as linux-next is concerned, but any non trivial
+> conflicts should be mentioned to your upstream maintainer when your tree
+> is submitted for merging.  You may also want to consider cooperating
+> with the maintainer of the conflicting tree to minimise any particularly
+> complex conflicts.
 
-Good point, matching is of course possible with hashes.
-
-> It would be good to check if that's done also for traces...
-
-Yeah, please let me know if you find out that.
+The fix looks good, thanks! I'll try to resolve the conflict before I
+send a wireless-drivers-next pull request to Dave.
 
 -- 
 Kalle Valo
