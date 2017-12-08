@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:32937 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752126AbdLLJAU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 04:00:20 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the mac80211-next tree
-In-Reply-To: <1513068419.26976.86.camel@sipsolutions.net>
-References: <20171212125805.5f7813fd@canb.auug.org.au> <1513068419.26976.86.camel@sipsolutions.net>
-Date: Tue, 12 Dec 2017 09:59:45 +0100
-Message-ID: <87r2s0uxry.fsf@toke.dk> (sfid-20171212_100033_179616_CDDAFE8E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43785 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753047AbdLHMKp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Dec 2017 07:10:45 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 09/10] brcmfmac: Remove unused macro.
+Date: Fri,  8 Dec 2017 13:10:34 +0100
+Message-Id: <1512735035-342-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131109_096944_E6AF79B3)
+In-Reply-To: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Ian Molton <ian@mnementh.co.uk>
 
-> Hi Stephen,
->
-> Thanks!
->
-> Felix made me aware of this yesterday evening and said he's going to
-> work out the required changes to mt76.
->
-> Kalle and I will make sure to submit the trees to Dave one by one so he
-> doesn't have to deal with it :)
->
-> Unfortunately, this might take a few days to resolve.
->
->> -void mt76_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
->> +void mt76_wake_tx_queue(struct ieee80211_hw *hw)
->>  {
->> +	struct ieee80211_txq *txq;
->>  	struct mt76_dev *dev = hw->priv;
->> -	struct mt76_txq *mtxq = (struct mt76_txq *) txq->drv_priv;
->> -	struct mt76_queue *hwq = mtxq->hwq;
->> +	struct mt76_txq *mtxq;
->> +	struct mt76_queue *hwq;
->>  
->> +	txq = ieee80211_next_txq(hw);
->> +	mtxq = (struct mt76_txq *) txq->drv_priv;
->> +	hwq = mtxq->hwq;
->
-> Looks pretty much right to me - perhaps for safety there should be a
-> NULL check on txq, but OTOH when you get here it should be non-NULL.
+This macro is used exactly nowhere in the code. Delete it.
 
-Note that while this will fix compilation it probably won't work right.
-next_txq() is not guaranteed to return the same txq as was previously
-passed in the wake_tx_queue() argument, so if this is the only place the
-driver calls next_txq(), things are likely going to break.
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Rather, the driver should call next_txq() whenever it schedules queues
-instead of doing its own internal scheduling.
-
-> Sorry for the inconvenience, I hadn't realized mt76 went in now.
-
-Yeah, hadn't expected these streams to cross either. If Felix is looking
-into this that is great; let me know if you need me to do anything else
-on the mac80211 side. :)
-
--Toke
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index b938407..1e1e198 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -159,8 +159,6 @@ struct rte_console {
+ /* manfid tuple length, include tuple, link bytes */
+ #define SBSDIO_CIS_MANFID_TUPLE_LEN	6
+ 
+-#define CORE_BUS_REG(base, field) \
+-		(base + offsetof(struct sdpcmd_regs, field))
+ #define SD_REG(field) \
+ 		(offsetof(struct sdpcmd_regs, field))
+ 
+-- 
+1.9.1
