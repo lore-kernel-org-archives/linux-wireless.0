@@ -1,101 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57882 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:47600 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752470AbdLHM4h (ORCPT
+        with ESMTP id S1752209AbdLHMfk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:56:37 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
-Subject: Re: [PATCH 6/6] iwlwifi: fix access to prph when transport is stopped
-References: <20171125153510.25359-1-luca@coelho.fi>
-        <20171125153510.25359-7-luca@coelho.fi>
-        <87mv351iys.fsf@kamboji.qca.qualcomm.com>
-        <1511951353.4827.27.camel@coelho.fi>
-        <87efo5s93p.fsf@kamboji.qca.qualcomm.com>
-        <87vahhflsf.fsf@purkki.adurom.net>
-        <1512736519.4827.287.camel@coelho.fi>
-Date: Fri, 08 Dec 2017 14:56:33 +0200
-In-Reply-To: <1512736519.4827.287.camel@coelho.fi> (Luca Coelho's message of
-        "Fri, 08 Dec 2017 14:35:19 +0200")
-Message-ID: <87y3mdqsxq.fsf@kamboji.qca.qualcomm.com> (sfid-20171208_135641_722894_227678A2)
+        Fri, 8 Dec 2017 07:35:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 08 Dec 2017 18:05:38 +0530
+From: akolli@codeaurora.org
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: akolli@qti.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Add BMI parameters to fix calibration from
+ DT/pre-cal
+In-Reply-To: <6476910.M9FJQ0px1r@bentobox>
+References: <1495709483-29793-1-git-send-email-akolli@qti.qualcomm.com>
+ <6476910.M9FJQ0px1r@bentobox>
+Message-ID: <637ab47b1794b409e595b7e219cd904f@codeaurora.org> (sfid-20171208_133543_654008_23F26AB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
-
-> On Fri, 2017-12-08 at 14:26 +0200, Kalle Valo wrote:
->> Kalle Valo <kvalo@codeaurora.org> writes:
+On 2017-12-08 17:42, Sven Eckelmann wrote:
+> On Donnerstag, 25. Mai 2017 16:21:23 CET akolli@qti.qualcomm.com wrote:
+>> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
 >> 
->> > Luca Coelho <luca@coelho.fi> writes:
->> > 
->> > > On Wed, 2017-11-29 at 12:23 +0200, Kalle Valo wrote:
->> > > 
->> > > > But no wonder I called gnus-article-fill-cited-article, the
->> > > > commit
->> > > > log is just weirdly wrapped. Are you using outlook or how do
->> > > > you get
->> > > > it so ugly? :)
->> > > 
->> > > Heh! I don't think it's wrapped weirdly, it's just that the
->> > > paragraphs
->> > > don't have spaces between them, right? ;)
->> > 
->> > Sorry, don't get what you mean with missing spaces. To me (and
->> > patchwork[1] and git[2] seem to agree) the word wrapping is just
->> > broken
->> > for this commit log, and I have seen it also with other iwlwifi
->> > commits.
->> > For example, there are just two words in the second line "two
->> > paths."
->> > 
->> > The standard format for git commit logs is something like this:
->> > 
->> > -----------------------------------------------------------------
->> > -----
->> > When getting HW rfkill we get stop_device being called from two
->> > paths.
->> > One path is the IRQ calling stop device, and updating op mode and
->> > stack.
->> > As a result, cfg80211 is running rfkill sync work that shuts down
->> > all
->> > devices (second path). In the second path, we eventually get to
->> > iwl_mvm_stop_device which calls iwl_fw_dump_conf_clear-
->> > >iwl_fw_dbg_stop_recording,
->> > that access periphery registers.
->> > 
->> > The device may be stopped at this point from the first path,
->> > which will result with a failure to access those registers. Simply
->> > checking for the trans status is insufficient, since the race will
->> > still
->> > exist, only minimized. Instead, move the stop from
->> > iwl_fw_dump_conf_clear (which is getting called only from stop
->> > path) to
->> > the transport stop device function, where the access is always
->> > safe.
->> > This has the added value, of actually stopping dbgc before stopping
->> > device even when the stop is initiated from the transport.
->> > -----------------------------------------------------------------
->> > -----
->> > 
->> > [1] https://patchwork.kernel.org/patch/10074849/
+>> QCA99X0, QCA9888, QCA9984 supports calibration data in
+>> either OTP or DT/pre-cal file. Current ath10k supports
+>> Calibration data from OTP only.
 >> 
->> Instead of trying to get what I mean, check instead the patchwork
->> page
->> and compare there the original commit log with my reformatted
->> version. I
->> think that visualises pretty well what I'm trying to say :)
->
-> Okay, granted, but that's not really because of alignment or line-
-> wrapping.  It's because the paragraphs are broken too often.
->
-> In any case, I'll pay more attention to this.  So my questions remains,
-> do you want me to remake my pull-req to fix this?
+>> If caldata is loaded from DT/pre-cal file, fetching board id
+>> and applying calibration parameters like tx power gets failed.
+>> 
+>> error log:
+>> [   15.733663] ath10k_pci 0000:01:00.0: failed to fetch board file: -2
+>> [   15.741474] ath10k_pci 0000:01:00.0: could not probe fw (-2)
+>> 
+>> This patch adds calibration data support from DT/pre-cal
+>> file.  Below parameters are used to get board id and
+>> applying calibration parameters from cal data.
+>> 
+>> 		EEPROM[OTP]	FLASH[DT/pre-cal file]
+>> Cal param	0x700		0x10000
+>> Board id	0x10		0x8000
+>> 
+>> Tested on QCA9888 with pre-cal file.
+>> 
+>> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/bmi.h  |    2 ++
+>>  drivers/net/wireless/ath/ath10k/core.c |   16 +++++++++++++---
+>>  2 files changed, 15 insertions(+), 3 deletions(-)
+> 
+> Just tried this on an QCA9984 which doesn't seem to have the
+> calibration data in the PCI EEPROM.
+> 
+>     [   71.728929] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0
+> target 0x01000000 chip_id 0x00000000 sub 168c:cafe
+>     [   71.732926] ath10k_pci 0000:01:00.0: kconfig debug 1 debugfs 1
+> tracing 0 dfs 1 testmode 1
+>     [   71.752282] ath10k_pci 0000:01:00.0: firmware ver
+> 10.4-ct-9984-fW-009-dfa0083 api 5 features peer-flow-ctrl crc32
+> 7198d117
+>     [   73.805730] ath10k_pci 0000:01:00.0: unable to read from the 
+> device
+>     [   73.805769] ath10k_pci 0000:01:00.0: could not execute otp for
+> board id check: -110
+> 
 
-This commit is already in wireless-drivers, so no need to resend. I was
-just trying to give an example of what I was trying to say.
+'ATH10K driver <-> 10.4 firmware' expects cal data to be either in 
+EEPROM or pre-cal-file or DT.
+Hope the error is observed when there is no cal data loaded.
 
--- 
-Kalle Valo
+> It works when I use the pre-cal data as calibration data. The checksum 
+> in the
+> pre-cal seems to be correct. Also the pre-cal data from 0:ART for the 
+> 2.4GHz
+> and 5GHz QCA4019 seem to work perfectly fine.
+> 
+
+Do you mean this patch works for only QCA4019 and not working for 
+QCA9984 ?
+
+> Anything which I could have missed or what I could test? Btw. I've also 
+> tested
+> the non-ct firmware (aka the official one from QCA).
+> 
+
+Thanks,
+Anil.
