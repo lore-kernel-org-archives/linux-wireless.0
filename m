@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:34612 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751091AbdLaRbu (ORCPT
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:40794 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753260AbdLHKiB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Dec 2017 12:31:50 -0500
-Received: by mail-lf0-f65.google.com with SMTP id h140so1449729lfg.1
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:49 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 17/18] ath10k: add QCA9377 usb hw_param item
-Date: Sun, 31 Dec 2017 18:29:24 +0100
-Message-Id: <20171231172925.24014-18-erik.stromdahl@gmail.com> (sfid-20171231_183154_345737_ACCDD836)
-In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
-References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+        Fri, 8 Dec 2017 05:38:01 -0500
+Received: by mail-qt0-f194.google.com with SMTP id u42so24863610qte.7
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Dec 2017 02:38:00 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        robh+dt@kernel.org, mark.rutland@arm.com,
+        ext.waldemar.rymarkiewicz@tieto.com, kvalo@codeaurora.org,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH v2 1/2] dt: bindings: add new dt entry for ath10k calibration variant
+Date: Fri,  8 Dec 2017 11:37:41 +0100
+Message-Id: <20171208103742.3181-2-sven.eckelmann@openmesh.com> (sfid-20171208_113808_645606_ABE66FDE)
+In-Reply-To: <20171208103742.3181-1-sven.eckelmann@openmesh.com>
+References: <20171208103742.3181-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware parameters for QCA9377 usb devices.
+The bus + bmi-chip-id + bmi-board-id is not enough to identify the correct
+board data file on QCA4019 based devices. Multiple different boards share
+the same values. Only the original reference designs can currently be
+identified and loaded from the board-2.bin. But these will not result in
+the correct calibration data when combined with the pre-calibration data
+from the device.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+An additional "variant" information has to be provided (via SMBIOS or DT)
+to select the correct board data for a design which was modified by an ODM.
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  1 +
- 2 files changed, 25 insertions(+)
+ Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index d42f6a1e5bfc..bc22d8c46252 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -414,6 +414,30 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.target_64bit = false,
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
-+	{
-+		.id = QCA9377_HW_1_1_DEV_VERSION,
-+		.dev_id = QCA9377_1_0_DEVICE_ID,
-+		.bus = ATH10K_BUS_USB,
-+		.name = "qca9377 hw1.1 usb",
-+		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
-+		.uart_pin = 6,
-+		.otp_exe_param = 0,
-+		.channel_counters_freq_hz = 88000,
-+		.max_probe_resp_desc_thres = 0,
-+		.cal_data_len = 8124,
-+		.fw = {
-+			.dir = QCA9377_HW_1_0_FW_DIR,
-+			.board = QCA9377_HW_1_0_BOARD_DATA_FILE_USB,
-+			.board_size = QCA9377_BOARD_DATA_SZ,
-+			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
-+		},
-+		.hw_ops = &qca988x_ops,
-+		.decap_align_bytes = 4,
-+		.start_once = true,
-+		.num_peers = TARGET_QCA9377_HL_NUM_PEERS,
-+		.ast_skid_limit = 0x10,
-+		.num_wds_entries = 0x20,
-+	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
- 		.dev_id = 0,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 98f9f3ccbf96..38cecbe4ddd9 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -128,6 +128,7 @@ enum qca9377_chip_id_rev {
- /* QCA9377 1.0 definitions */
- #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
- #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
-+#define QCA9377_HW_1_0_BOARD_DATA_FILE_USB "board-usb.bin"
- #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
- 
- /* QCA4019 1.0 definitions */
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 74d7f0af209c..3d2a031217da 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -41,6 +41,9 @@ Optional properties:
+ - qcom,msi_addr: MSI interrupt address.
+ - qcom,msi_base: Base value to add before writing MSI data into
+ 		MSI address register.
++- qcom,ath10k-calibration-variant: string to search for in the board-2.bin
++				   variant list with the same bus and device
++				   specific ids
+ - qcom,ath10k-calibration-data : calibration data + board specific data
+ 				 as an array, the length can vary between
+ 				 hw versions.
 -- 
-2.15.1
+2.11.0
