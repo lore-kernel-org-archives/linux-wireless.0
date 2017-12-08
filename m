@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:36435 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755458AbdLVSe5 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49620 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753182AbdLHMxF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 13:34:57 -0500
-Received: by mail-qk0-f178.google.com with SMTP id g123so3866128qka.3
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2017 10:34:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1513677938.26145.12.camel@sipsolutions.net>
-References: <39d50d91-ac83-611d-6709-021757686206@altermundi.net> <1513677938.26145.12.camel@sipsolutions.net>
-From: Thomas Pedersen <thomas@eero.com>
-Date: Fri, 22 Dec 2017 10:34:56 -0800
-Message-ID: <CADjYELy-Mh=-p=EgdqeG5AshsODhKjLzTiTTwcLfgnMpQbusjQ@mail.gmail.com> (sfid-20171222_193501_917392_BF787D06)
-Subject: Re: oops on cloned-mac 802.11s stations
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Gui Iribarren <gui@altermundi.net>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 8 Dec 2017 07:53:05 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  8 Dec 2017 14:52:59 +0200
+Message-Id: <20171208125259.21401-1-luca@coelho.fi> (sfid-20171208_135309_203330_0DB403D5)
+Subject: [PATCH] iwlwifi: mvm: fix wrong #ifdef that uses a macro from backports
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 19, 2017 at 2:05 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2017-12-18 at 03:44 +0100, Gui Iribarren wrote:
->> Steps to reproduce:
->> join a 802.11s mesh with a nodeA, and then join the same 802.11s mesh
->> with another nodeB, so that both nodes MAC addresses are exactly the
->> same (i.e. nodeB is "cloning" nodeA MAC)
->>
->> Expected result:
->> nodeA and nodeB coexist in a conflicting state, silently
->> (not saying that this is a desired scenario, of course; just came across
->> this while testing radios that accidentally had the same (fake) address.
->> the warning might ring a bell to someone, so reporting it here just for
->> the record)
->>
->> What actually happens:
->> both on nodeA and nodeB, the log is flooded with these warnings:
->
-> That's hardly an "oops", but yeah, not nice.
->
-> Somewhere we should drop packets if they appear to come from ourselves.
-> Perhaps like this:
->
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index b3cff69bfd66..fd580614085b 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -3625,6 +3625,8 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
->                 }
->                 return true;
->         case NL80211_IFTYPE_MESH_POINT:
-> +               if (ether_addr_equal(sdata->vif.addr, hdr->addr2))
-> +                       return false;
->                 if (multicast)
->                         return true;
->                 return ether_addr_equal(sdata->vif.addr, hdr->addr1);
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Makes sense.
+I accidentally pushed a patch with CPTCFG (which is used in the
+backports project) to the rs-fw.c file.  Fix that to use CONFIG
+instead.
 
+Fixes: 9f66a397c877 ("iwlwifi: mvm: rs: add ops for the new rate scaling in the FW")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+index 4e5f09408517..55d1274c6092 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+@@ -308,7 +308,7 @@ void iwl_mvm_rs_add_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta)
+ 	lq_sta->pers.last_rssi = S8_MIN;
+ 	lq_sta->last_rate_n_flags = 0;
+ 
+-#ifdef CPTCFG_MAC80211_DEBUGFS
++#ifdef CONFIG_MAC80211_DEBUGFS
+ 	lq_sta->pers.dbg_fixed_rate = 0;
+ #endif
+ }
 -- 
-thomas
+2.15.0
