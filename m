@@ -1,361 +1,852 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:44906 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752749AbdLMNBa (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43764 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752884AbdLHMKn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 08:01:30 -0500
-MIME-Version: 1.0
-In-Reply-To: <282AE144-205D-4FF2-B28C-3E348D227342@holtmann.org>
-References: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
- <1512554197-19664-6-git-send-email-amitkarwar@gmail.com> <282AE144-205D-4FF2-B28C-3E348D227342@holtmann.org>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Wed, 13 Dec 2017 18:31:27 +0530
-Message-ID: <CAEhWJFnsPa2aP4_4X4ObY-2RnjYPTQ_mpJLqEd-d=FPE8EjqmQ@mail.gmail.com> (sfid-20171213_140135_992328_2556DD20)
-Subject: Re: [v4 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 8 Dec 2017 07:10:43 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 04/10] brcmfmac: Rename / replace old IO functions with simpler ones.
+Date: Fri,  8 Dec 2017 13:10:29 +0100
+Message-Id: <1512735035-342-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131100_806007_0EE70EE3)
+In-Reply-To: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 7, 2017 at 2:39 PM, Marcel Holtmann <marcel@holtmann.org> wrote=
-:
-> Hi Amitkumar,
->
->> Redpine bluetooth driver is a thin driver which depends on
->> 'rsi_91x' driver for transmitting and receiving packets
->> to/from device. It creates hci interface when attach() is
->> called from 'rsi_91x' module.
->>
->> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->> ---
->> v4: Removed rsi_hci.h file. Made the functions static(Marcel)
->> v3: Made BT_RSI module by default off(Marcel)
->>    Removed redundant exported function rsi_get_hci_ops()(Marcel)
->> v2: Addressed review comments from Marcel
->>    Removed unnecessary 'depends on BT && BT_RFOMM' line in Kconfig
->>    Removed redundant BT_INFO messages
->>    h_adapter initialization and declaration in a single line.
->>    Removed unnecessary error checks for HCI_RUNNING and fsm_state
->>    Allocated new skb with skb_realloc_headroom() API if headroom is not =
-sufficient
->>    Used get_unaligned_le16 helpers
->>    Moved a structure and union from header file to btrsi.c file
->> ---
->> drivers/bluetooth/Kconfig  |  11 +++
->> drivers/bluetooth/Makefile |   2 +
->> drivers/bluetooth/btrsi.c  | 224 +++++++++++++++++++++++++++++++++++++++=
-++++++
->> include/linux/rsi_header.h |   2 +
->> 4 files changed, 239 insertions(+)
->> create mode 100644 drivers/bluetooth/btrsi.c
->>
->> diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
->> index 60e1c7d..33d7514 100644
->> --- a/drivers/bluetooth/Kconfig
->> +++ b/drivers/bluetooth/Kconfig
->> @@ -378,4 +378,15 @@ config BT_QCOMSMD
->>         Say Y here to compile support for HCI over Qualcomm SMD into the
->>         kernel or say M to compile as a module.
->>
->> +config BT_RSI
->> +     tristate "Redpine HCI support"
->> +     default n
->> +     help
->> +       Redpine BT driver.
->> +       This driver handles BT traffic from upper layers and pass
->> +       to the RSI_91x coex module for further scheduling to device
->> +
->> +       Say Y here to compile support for HCI over Redpine into the
->> +       kernel or say M to compile as a module.
->> +
->> endmenu
->> diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
->> index 4e4e44d..712af83a 100644
->> --- a/drivers/bluetooth/Makefile
->> +++ b/drivers/bluetooth/Makefile
->> @@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)                +=3D btqca.o
->>
->> obj-$(CONFIG_BT_HCIUART_NOKIA)        +=3D hci_nokia.o
->>
->> +obj-$(CONFIG_BT_RSI)         +=3D btrsi.o
->> +
->> btmrvl-y                      :=3D btmrvl_main.o
->> btmrvl-$(CONFIG_DEBUG_FS)     +=3D btmrvl_debugfs.o
->>
->> diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
->> new file mode 100644
->> index 0000000..f76ae4d
->> --- /dev/null
->> +++ b/drivers/bluetooth/btrsi.c
->> @@ -0,0 +1,224 @@
->> +/**
->> + * Copyright (c) 2017 Redpine Signals Inc.
->> + *
->> + * Permission to use, copy, modify, and/or distribute this software for=
- any
->> + * purpose with or without fee is hereby granted, provided that the abo=
-ve
->> + * copyright notice and this permission notice appear in all copies.
->> + *
->> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRAN=
-TIES
->> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
->> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE =
-FOR
->> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAG=
-ES
->> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN A=
-N
->> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT=
- OF
->> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->> + */
->> +#include <linux/version.h>
->> +#include <linux/module.h>
->> +#include <linux/kernel.h>
->> +#include <net/bluetooth/bluetooth.h>
->> +#include <net/bluetooth/hci_core.h>
->> +#include <linux/unaligned/le_byteshift.h>
->> +#include <linux/rsi_header.h>
->> +#include <net/genetlink.h>
->> +
->> +/* RX frame types */
->> +#define RSI_RESULT_CONFIRM                   0x80
->> +#define RSI_BT_PER                           0x10
->> +#define RSI_BT_BER                           0x11
->> +#define RSI_BT_CW                            0x12
->> +
->> +#define RSI_HEADROOM_FOR_BT_HAL      16
->> +#define RSI_FRAME_DESC_SIZE  16
->> +
->> +static struct rsi_hci_adapter {
->> +     void *priv;
->> +     struct rsi_proto_ops *proto_ops;
->> +     struct hci_dev *hdev;
->> +};
->> +
->> +static int rsi_hci_open(struct hci_dev *hdev)
->> +{
->> +     return 0;
->> +}
->> +
->> +static int rsi_hci_close(struct hci_dev *hdev)
->> +{
->> +     return 0;
->> +}
->> +
->> +static int rsi_hci_flush(struct hci_dev *hdev)
->> +{
->> +     return 0;
->> +}
->> +
->> +static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
->> +{
->> +     struct rsi_hci_adapter *h_adapter =3D hci_get_drvdata(hdev);
->> +     struct sk_buff *new_skb =3D NULL;
->> +
->> +     switch (bt_cb(skb)->pkt_type) {
->> +     case HCI_COMMAND_PKT:
->> +             hdev->stat.cmd_tx++;
->> +             break;
->> +
->> +     case HCI_ACLDATA_PKT:
->> +             hdev->stat.acl_tx++;
->> +             break;
->> +
->> +     case HCI_SCODATA_PKT:
->> +             hdev->stat.sco_tx++;
->> +             break;
->> +     }
->
-> Scrab these empty lines before the break. No need to bloat this up.
->
->> +
->> +     if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
->> +             /* Insufficient skb headroom - allocate a new skb */
->> +             new_skb =3D skb_realloc_headroom(skb, RSI_HEADROOM_FOR_BT_=
-HAL);
->> +             if (unlikely(!new_skb))
->> +                     return -ENOMEM;
->> +             bt_cb(new_skb)->pkt_type =3D bt_cb(skb)->pkt_type;
->> +             kfree_skb(skb);
->> +             skb =3D new_skb;
->> +     }
->> +
->> +     return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
->> +                                                RSI_BT_Q);
->> +}
->> +
->> +static int rsi_hci_recv_pkt(void *priv, u8 *pkt)
->
-> Why is it not const u8 *pkt?
->
->> +{
->> +     struct rsi_hci_adapter *h_adapter =3D (struct rsi_hci_adapter *)pr=
-iv;
->
-> The cast here is not needed since *priv is a void pointer.
->
->> +     struct hci_dev *hdev =3D h_adapter->hdev;
->> +     struct sk_buff *skb;
->> +
->> +     int pkt_len =3D get_unaligned_le16(pkt) & 0x0fff;
->> +     u8 queue_no =3D (get_unaligned_le16(pkt) & 0x7000) >> 12;
->
-> Why you are not doing get_unaligned_le16 once?
->
->> +
->> +     if (queue_no =3D=3D RSI_BT_MGMT_Q) {
->> +             u8 msg_type =3D pkt[14] & 0xFF;
->> +
->> +             switch (msg_type) {
->> +             case RSI_RESULT_CONFIRM:
->> +                     bt_dev_info(hdev, "BT Result Confirm");
->> +                     return 0;
->> +             case RSI_BT_BER:
->> +                     bt_dev_info(hdev, "BT Ber");
->> +                     return 0;
->> +             case RSI_BT_CW:
->> +                     bt_dev_info(hdev, "BT CW");
->> +                     return 0;
->> +             default:
->> +                     break;
->> +             }
->> +     }
->
-> Aren=E2=80=99t these above debug messages? How often
->
->> +
->> +     skb =3D dev_alloc_skb(pkt_len);
->> +     if (!skb)
->> +             return -ENOMEM;
->> +
->> +     memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
->> +     skb_put(skb, pkt_len);
->> +     h_adapter->hdev->stat.byte_rx +=3D skb->len;
->> +
->> +     skb->dev =3D (void *)hdev;
->
-> That above is no longer needed.
->
->> +     bt_cb(skb)->pkt_type =3D pkt[14];
->
-> Please hci_skb_pkt_type here.
->
->> +
->> +     return hci_recv_frame(hdev, skb);
->> +}
->> +
->> +static int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
->> +{
->> +     struct rsi_hci_adapter *h_adapter =3D NULL;
->> +     struct hci_dev *hdev;
->> +     int status =3D 0;
->> +
->> +     h_adapter =3D kzalloc(sizeof(*h_adapter), GFP_KERNEL);
->> +     if (!h_adapter)
->> +             return -ENOMEM;
->> +
->> +     h_adapter->priv =3D priv;
->> +     ops->set_bt_context(priv, h_adapter);
->> +     h_adapter->proto_ops =3D ops;
->> +
->> +     hdev =3D hci_alloc_dev();
->> +     if (!hdev) {
->> +             BT_ERR("Failed to alloc HCI device\n=E2=80=9D);
->
-> No \n at the end for the BT_ and bt_ ones.
->
->> +             goto err;
->> +     }
->> +
->> +     h_adapter->hdev =3D hdev;
->> +
->> +     if (ops->get_host_intf(priv) =3D=3D RSI_HOST_INTF_SDIO)
->> +             hdev->bus =3D HCI_SDIO;
->> +     else
->> +             hdev->bus =3D HCI_USB;
->> +
->> +     hci_set_drvdata(hdev, h_adapter);
->> +     hdev->dev_type =3D HCI_PRIMARY;
->> +     hdev->open =3D rsi_hci_open;
->> +     hdev->close =3D rsi_hci_close;
->> +     hdev->flush =3D rsi_hci_flush;
->> +     hdev->send =3D rsi_hci_send_pkt;
->> +
->> +     status =3D hci_register_dev(hdev);
->> +     if (status < 0) {
->> +             BT_ERR("%s: HCI registration failed with errcode %d\n",
->> +                    __func__, status);
->
-> The __func__ part is pointless here. And I would use err instead of statu=
-s as variable.
->
->> +             goto err;
->> +     }
->> +
->> +     return 0;
->> +err:
->> +     if (hdev) {
->> +             hci_unregister_dev(hdev);
->
-> That is wrong here. Nothing is registered.
->
->> +             hci_free_dev(hdev);
->> +             h_adapter->hdev =3D NULL;
->> +     }
->
-> And I would use two error labels or just do it right in the error cases. =
-It is actually simpler in the error cases since it is cleaner.
->
->> +     kfree(h_adapter);
->> +
->> +     return -EINVAL;
->> +}
->> +
->> +static void rsi_hci_detach(void *priv)
->> +{
->> +     struct rsi_hci_adapter *h_adapter =3D (struct rsi_hci_adapter *)pr=
-iv;
->> +     struct hci_dev *hdev;
->> +
->> +     if (!h_adapter)
->> +             return;
->> +
->> +     hdev =3D h_adapter->hdev;
->> +     if (hdev) {
->> +             hci_unregister_dev(hdev);
->> +             hci_free_dev(hdev);
->> +             h_adapter->hdev =3D NULL;
->> +     }
->> +
->> +     kfree(h_adapter);
->> +}
->> +
->> +const struct rsi_mod_ops rsi_bt_ops =3D {
->> +     .attach =3D rsi_hci_attach,
->> +     .detach =3D rsi_hci_detach,
->> +     .recv_pkt =3D rsi_hci_recv_pkt,
->> +};
->> +EXPORT_SYMBOL(rsi_bt_ops);
->> +
->> +static int rsi_91x_bt_module_init(void)
->> +{
->> +     BT_INFO("%s: BT Module init called\n", __func__);
->
-> Scarp this BT_INFO, both of them are pointless.
->
+From: Ian Molton <ian@mnementh.co.uk>
 
-Thanks for your review.
-We have addressed these comments and submitted v5.
+Primarily this patch removes:
 
-Regards,
-Amitkumar
+brcmf_sdiod_f0_writeb()
+brcmf_sdiod_reg_write()
+brcmf_sdiod_reg_read()
+
+Since we no longer use the quirky method of deciding which function to
+address via the address being accessed, take the opportunity to rename
+some IO functions more in line with common kernel code. We also convert
+those that map directly to sdio_{read,write}*() to macros.
+
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 169 +++----------------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 186 ++++++++++-----------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  28 +++-
+ 3 files changed, 138 insertions(+), 245 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 17cdc13..608c5f8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -137,27 +137,27 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 		if (sdiodev->bus_if->chip == BRCM_CC_43362_CHIP_ID) {
+ 			/* assign GPIO to SDIO core */
+ 			addr = CORE_CC_REG(SI_ENUM_BASE, gpiocontrol);
+-			gpiocontrol = brcmf_sdiod_regrl(sdiodev, addr, &ret);
++			gpiocontrol = brcmf_sdiod_readl(sdiodev, addr, &ret);
+ 			gpiocontrol |= 0x2;
+-			brcmf_sdiod_regwl(sdiodev, addr, gpiocontrol, &ret);
++			brcmf_sdiod_writel(sdiodev, addr, gpiocontrol, &ret);
+ 
+-			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_SELECT, 0xf,
+-					  &ret);
+-			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_OUT, 0, &ret);
+-			brcmf_sdiod_regwb(sdiodev, SBSDIO_GPIO_EN, 0x2, &ret);
++			brcmf_sdiod_writeb(sdiodev, SBSDIO_GPIO_SELECT,
++					   0xf, &ret);
++			brcmf_sdiod_writeb(sdiodev, SBSDIO_GPIO_OUT, 0, &ret);
++			brcmf_sdiod_writeb(sdiodev, SBSDIO_GPIO_EN, 0x2, &ret);
+ 		}
+ 
+ 		/* must configure SDIO_CCCR_IENx to enable irq */
+-		data = brcmf_sdiod_regrb(sdiodev, SDIO_CCCR_IENx, &ret);
++		data = brcmf_sdiod_func0_rb(sdiodev, SDIO_CCCR_IENx, &ret);
+ 		data |= 1 << SDIO_FUNC_1 | 1 << SDIO_FUNC_2 | 1;
+-		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_IENx, data, &ret);
++		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, data, &ret);
+ 
+ 		/* redirect, configure and enable io for interrupt signal */
+ 		data = SDIO_SEPINT_MASK | SDIO_SEPINT_OE;
+ 		if (pdata->oob_irq_flags & IRQF_TRIGGER_HIGH)
+ 			data |= SDIO_SEPINT_ACT_HI;
+-		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_BRCM_SEPINT, data, &ret);
+-
++		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_BRCM_SEPINT,
++				     data, &ret);
+ 		sdio_release_host(sdiodev->func[1]);
+ 	} else {
+ 		brcmf_dbg(SDIO, "Entering\n");
+@@ -183,8 +183,8 @@ void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
+ 
+ 		pdata = &sdiodev->settings->bus.sdio;
+ 		sdio_claim_host(sdiodev->func[1]);
+-		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_BRCM_SEPINT, 0, NULL);
+-		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_IENx, 0, NULL);
++		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_BRCM_SEPINT, 0, NULL);
++		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, 0, NULL);
+ 		sdio_release_host(sdiodev->func[1]);
+ 
+ 		sdiodev->oob_irq_requested = false;
+@@ -242,8 +242,8 @@ static int brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev,
+ 	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
+ 
+ 	for (i = 0 ; i < 3 && !err ; i++, addr >>= 8)
+-		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
+-				  addr & 0xff, &err);
++		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
++				   addr & 0xff, &err);
+ 
+ 	return err;
+ }
+@@ -267,124 +267,15 @@ static int brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
+ 	return 0;
+ }
+ 
+-static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func, u8 byte,
+-					uint regaddr)
+-{
+-	int err_ret;
+-
+-	/*
+-	 * Can only directly write to some F0 registers.
+-	 * Handle CCCR_IENx and CCCR_ABORT command
+-	 * as a special case.
+-	 */
+-	if ((regaddr == SDIO_CCCR_ABORT) ||
+-	    (regaddr == SDIO_CCCR_IENx))
+-		sdio_writeb(func, byte, regaddr, &err_ret);
+-	else
+-		sdio_f0_writeb(func, byte, regaddr, &err_ret);
+-
+-	return err_ret;
+-}
+-
+-static int brcmf_sdiod_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr,
+-				 u8 regsz, void *data)
+-{
+-	int ret;
+-
+-	/*
+-	 * figure out how to read the register based on address range
+-	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
+-	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
+-	 * The rest: function 1 silicon backplane core registers
+-	 * f0 writes must be bytewise
+-	 */
+-
+-	if ((addr & ~REG_F0_REG_MASK) == 0) {
+-		if (WARN_ON(regsz > 1))
+-			return -EINVAL;
+-		ret = brcmf_sdiod_f0_writeb(sdiodev->func[0],
+-					    *(u8 *)data, addr);
+-	} else {
+-		switch (regsz) {
+-		case 1:
+-			sdio_writeb(sdiodev->func[1], *(u8 *)data, addr, &ret);
+-			break;
+-		case 4:
+-			ret = brcmf_sdiod_addrprep(sdiodev, &addr);
+-			if (ret)
+-				goto done;
+-
+-			sdio_writel(sdiodev->func[1], *(u32 *)data, addr, &ret);
+-			break;
+-		default:
+-			WARN(1, "Invalid reg size\n");
+-			ret = -EINVAL;
+-			break;
+-		}
+-	}
+-
+-done:
+-	return ret;
+-}
+-
+-static int brcmf_sdiod_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr,
+-				u8 regsz, void *data)
+-{
+-	int ret;
+-
+-	/*
+-	 * figure out how to read the register based on address range
+-	 * 0x00 ~ 0x7FF: function 0 CCCR and FBR
+-	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
+-	 * The rest: function 1 silicon backplane core registers
+-	 * f0 reads must be bytewise
+-	 */
+-	if ((addr & ~REG_F0_REG_MASK) == 0) {
+-		if (WARN_ON(regsz > 1))
+-			return -EINVAL;
+-		*(u8 *)data = sdio_f0_readb(sdiodev->func[0], addr, &ret);
+-	} else {
+-		switch (regsz) {
+-		case 1:
+-			*(u8 *)data = sdio_readb(sdiodev->func[1], addr, &ret);
+-			break;
+-		case 4:
+-			ret = brcmf_sdiod_addrprep(sdiodev, &addr);
+-			if (ret)
+-				goto done;
+-
+-			*(u32 *)data = sdio_readl(sdiodev->func[1], addr, &ret);
+-			break;
+-		default:
+-			WARN(1, "Invalid reg size\n");
+-			ret = -EINVAL;
+-			break;
+-		}
+-	}
+-
+-done:
+-	return ret;
+-}
+-
+-u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
++u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ {
+-	u8 data;
++	u32 data = 0;
+ 	int retval;
+ 
+-	retval = brcmf_sdiod_reg_read(sdiodev, addr, 1, &data);
++	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 
+-	if (ret)
+-		*ret = retval;
+-
+-	return data;
+-}
+-
+-u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+-{
+-	u32 data;
+-	int retval;
+-
+-	retval = brcmf_sdiod_reg_read(sdiodev, addr, 4, &data);
++	if (!retval)
++		data = sdio_readl(sdiodev->func[1], addr, &retval);
+ 
+ 	if (ret)
+ 		*ret = retval;
+@@ -392,23 +283,15 @@ u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	return data;
+ }
+ 
+-void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+-		      u8 data, int *ret)
++void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr,
++			u32 data, int *ret)
+ {
+ 	int retval;
+ 
+-	retval = brcmf_sdiod_reg_write(sdiodev, addr, 1, &data);
+-
+-	if (ret)
+-		*ret = retval;
+-}
+-
+-void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+-		      u32 data, int *ret)
+-{
+-	int retval;
++	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 
+-	retval = brcmf_sdiod_reg_write(sdiodev, addr, 4, &data);
++	if (!retval)
++		sdio_writel(sdiodev->func[1], data, addr, &retval);
+ 
+ 	if (ret)
+ 		*ret = retval;
+@@ -846,8 +729,8 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, u8 fn)
+ {
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 
+-	/* issue abort cmd52 command through F0 */
+-	brcmf_sdiod_reg_write(sdiodev, SDIO_CCCR_ABORT, 1, &fn);
++	/* Issue abort cmd52 command through F0 */
++	brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_ABORT, fn, NULL);
+ 
+ 	brcmf_dbg(SDIO, "Exit\n");
+ 	return 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 310c4e2..752e0fb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -669,7 +669,7 @@ static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
+ 	int ret;
+ 
+ 	core = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+-	*regvar = brcmf_sdiod_regrl(bus->sdiodev, core->base + offset, &ret);
++	*regvar = brcmf_sdiod_readl(bus->sdiodev, core->base + offset, &ret);
+ 
+ 	return ret;
+ }
+@@ -680,7 +680,7 @@ static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
+ 	int ret;
+ 
+ 	core = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+-	brcmf_sdiod_regwl(bus->sdiodev, core->base + reg_offset, regval, &ret);
++	brcmf_sdiod_writel(bus->sdiodev, core->base + reg_offset, regval, &ret);
+ 
+ 	return ret;
+ }
+@@ -697,8 +697,7 @@ static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
+ 
+ 	wr_val = (on << SBSDIO_FUNC1_SLEEPCSR_KSO_SHIFT);
+ 	/* 1st KSO write goes to AOS wake up core if device is asleep  */
+-	brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
+-			  wr_val, &err);
++	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, wr_val, &err);
+ 
+ 	if (on) {
+ 		/* device WAKEUP through KSO:
+@@ -724,7 +723,7 @@ static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
+ 		 * just one write attempt may fail,
+ 		 * read it back until it matches written value
+ 		 */
+-		rd_val = brcmf_sdiod_regrb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
++		rd_val = brcmf_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
+ 					   &err);
+ 		if (!err) {
+ 			if ((rd_val & bmask) == cmp_val)
+@@ -734,9 +733,11 @@ static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
+ 		/* bail out upon subsequent access errors */
+ 		if (err && (err_cnt++ > BRCMF_SDIO_MAX_ACCESS_ERRORS))
+ 			break;
++
+ 		udelay(KSO_WAIT_US);
+-		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
+-				  wr_val, &err);
++		brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, wr_val,
++				   &err);
++
+ 	} while (try_cnt++ < MAX_KSO_ATTEMPTS);
+ 
+ 	if (try_cnt > 2)
+@@ -772,15 +773,15 @@ static int brcmf_sdio_htclk(struct brcmf_sdio *bus, bool on, bool pendok)
+ 		clkreq =
+ 		    bus->alp_only ? SBSDIO_ALP_AVAIL_REQ : SBSDIO_HT_AVAIL_REQ;
+ 
+-		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+-				  clkreq, &err);
++		brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++				   clkreq, &err);
+ 		if (err) {
+ 			brcmf_err("HT Avail request error: %d\n", err);
+ 			return -EBADE;
+ 		}
+ 
+ 		/* Check current status */
+-		clkctl = brcmf_sdiod_regrb(bus->sdiodev,
++		clkctl = brcmf_sdiod_readb(bus->sdiodev,
+ 					   SBSDIO_FUNC1_CHIPCLKCSR, &err);
+ 		if (err) {
+ 			brcmf_err("HT Avail read error: %d\n", err);
+@@ -790,35 +791,34 @@ static int brcmf_sdio_htclk(struct brcmf_sdio *bus, bool on, bool pendok)
+ 		/* Go to pending and await interrupt if appropriate */
+ 		if (!SBSDIO_CLKAV(clkctl, bus->alp_only) && pendok) {
+ 			/* Allow only clock-available interrupt */
+-			devctl = brcmf_sdiod_regrb(bus->sdiodev,
++			devctl = brcmf_sdiod_readb(bus->sdiodev,
+ 						   SBSDIO_DEVICE_CTL, &err);
+ 			if (err) {
+-				brcmf_err("Devctl error setting CA: %d\n",
+-					  err);
++				brcmf_err("Devctl error setting CA: %d\n", err);
+ 				return -EBADE;
+ 			}
+ 
+ 			devctl |= SBSDIO_DEVCTL_CA_INT_ONLY;
+-			brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_DEVICE_CTL,
+-					  devctl, &err);
++			brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_DEVICE_CTL,
++					   devctl, &err);
+ 			brcmf_dbg(SDIO, "CLKCTL: set PENDING\n");
+ 			bus->clkstate = CLK_PENDING;
+ 
+ 			return 0;
+ 		} else if (bus->clkstate == CLK_PENDING) {
+ 			/* Cancel CA-only interrupt filter */
+-			devctl = brcmf_sdiod_regrb(bus->sdiodev,
++			devctl = brcmf_sdiod_readb(bus->sdiodev,
+ 						   SBSDIO_DEVICE_CTL, &err);
+ 			devctl &= ~SBSDIO_DEVCTL_CA_INT_ONLY;
+-			brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_DEVICE_CTL,
+-					  devctl, &err);
++			brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_DEVICE_CTL,
++					   devctl, &err);
+ 		}
+ 
+ 		/* Otherwise, wait here (polling) for HT Avail */
+ 		timeout = jiffies +
+ 			  msecs_to_jiffies(PMU_MAX_TRANSITION_DLY/1000);
+ 		while (!SBSDIO_CLKAV(clkctl, bus->alp_only)) {
+-			clkctl = brcmf_sdiod_regrb(bus->sdiodev,
++			clkctl = brcmf_sdiod_readb(bus->sdiodev,
+ 						   SBSDIO_FUNC1_CHIPCLKCSR,
+ 						   &err);
+ 			if (time_after(jiffies, timeout))
+@@ -852,16 +852,16 @@ static int brcmf_sdio_htclk(struct brcmf_sdio *bus, bool on, bool pendok)
+ 
+ 		if (bus->clkstate == CLK_PENDING) {
+ 			/* Cancel CA-only interrupt filter */
+-			devctl = brcmf_sdiod_regrb(bus->sdiodev,
++			devctl = brcmf_sdiod_readb(bus->sdiodev,
+ 						   SBSDIO_DEVICE_CTL, &err);
+ 			devctl &= ~SBSDIO_DEVCTL_CA_INT_ONLY;
+-			brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_DEVICE_CTL,
+-					  devctl, &err);
++			brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_DEVICE_CTL,
++					   devctl, &err);
+ 		}
+ 
+ 		bus->clkstate = CLK_SDONLY;
+-		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+-				  clkreq, &err);
++		brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++				   clkreq, &err);
+ 		brcmf_dbg(SDIO, "CLKCTL: turned OFF\n");
+ 		if (err) {
+ 			brcmf_err("Failed access turning clock off: %d\n",
+@@ -951,14 +951,14 @@ static int brcmf_sdio_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
+ 
+ 		/* Going to sleep */
+ 		if (sleep) {
+-			clkcsr = brcmf_sdiod_regrb(bus->sdiodev,
++			clkcsr = brcmf_sdiod_readb(bus->sdiodev,
+ 						   SBSDIO_FUNC1_CHIPCLKCSR,
+ 						   &err);
+ 			if ((clkcsr & SBSDIO_CSR_MASK) == 0) {
+ 				brcmf_dbg(SDIO, "no clock, set ALP\n");
+-				brcmf_sdiod_regwb(bus->sdiodev,
+-						  SBSDIO_FUNC1_CHIPCLKCSR,
+-						  SBSDIO_ALP_AVAIL_REQ, &err);
++				brcmf_sdiod_writeb(bus->sdiodev,
++						   SBSDIO_FUNC1_CHIPCLKCSR,
++						   SBSDIO_ALP_AVAIL_REQ, &err);
+ 			}
+ 			err = brcmf_sdio_kso_control(bus, false);
+ 		} else {
+@@ -1178,16 +1178,16 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 	if (abort)
+ 		brcmf_sdiod_abort(bus->sdiodev, SDIO_FUNC_2);
+ 
+-	brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_FRAMECTRL,
+-			  SFC_RF_TERM, &err);
++	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_RF_TERM,
++			   &err);
+ 	bus->sdcnt.f1regdata++;
+ 
+ 	/* Wait until the packet has been flushed (device/FIFO stable) */
+ 	for (lastrbc = retries = 0xffff; retries > 0; retries--) {
+-		hi = brcmf_sdiod_regrb(bus->sdiodev,
+-				       SBSDIO_FUNC1_RFRAMEBCHI, &err);
+-		lo = brcmf_sdiod_regrb(bus->sdiodev,
+-				       SBSDIO_FUNC1_RFRAMEBCLO, &err);
++		hi = brcmf_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_RFRAMEBCHI,
++				       &err);
++		lo = brcmf_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_RFRAMEBCLO,
++				       &err);
+ 		bus->sdcnt.f1regdata += 2;
+ 
+ 		if ((hi == 0) && (lo == 0))
+@@ -1229,12 +1229,12 @@ static void brcmf_sdio_txfail(struct brcmf_sdio *bus)
+ 	bus->sdcnt.tx_sderrs++;
+ 
+ 	brcmf_sdiod_abort(sdiodev, SDIO_FUNC_2);
+-	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_WF_TERM, NULL);
++	brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_WF_TERM, NULL);
+ 	bus->sdcnt.f1regdata++;
+ 
+ 	for (i = 0; i < 3; i++) {
+-		hi = brcmf_sdiod_regrb(sdiodev, SBSDIO_FUNC1_WFRAMEBCHI, NULL);
+-		lo = brcmf_sdiod_regrb(sdiodev, SBSDIO_FUNC1_WFRAMEBCLO, NULL);
++		hi = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_WFRAMEBCHI, NULL);
++		lo = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_WFRAMEBCLO, NULL);
+ 		bus->sdcnt.f1regdata += 2;
+ 		if ((hi == 0) && (lo == 0))
+ 			break;
+@@ -2446,11 +2446,11 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		bus->hostintmask = 0;
+ 
+ 		/* Force backplane clocks to assure F2 interrupt propagates */
+-		saveclk = brcmf_sdiod_regrb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++		saveclk = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+ 					    &err);
+ 		if (!err)
+-			brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+-					  (saveclk | SBSDIO_FORCE_HT), &err);
++			brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++					   (saveclk | SBSDIO_FORCE_HT), &err);
+ 		if (err)
+ 			brcmf_err("Failed to force clock for F2: err %d\n",
+ 				  err);
+@@ -2509,7 +2509,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
+ 	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
+ 
+-	val = brcmf_sdiod_regrl(bus->sdiodev, addr, &ret);
++	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
+ 	bus->sdcnt.f1regdata++;
+ 	if (ret != 0)
+ 		return ret;
+@@ -2519,7 +2519,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 
+ 	/* Clear interrupts */
+ 	if (val) {
+-		brcmf_sdiod_regwl(bus->sdiodev, addr, val, &ret);
++		brcmf_sdiod_writel(bus->sdiodev, addr, val, &ret);
+ 		bus->sdcnt.f1regdata++;
+ 		atomic_or(val, &bus->intstatus);
+ 	}
+@@ -2545,23 +2545,23 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 
+ #ifdef DEBUG
+ 		/* Check for inconsistent device control */
+-		devctl = brcmf_sdiod_regrb(bus->sdiodev,
+-					   SBSDIO_DEVICE_CTL, &err);
++		devctl = brcmf_sdiod_readb(bus->sdiodev, SBSDIO_DEVICE_CTL,
++					   &err);
+ #endif				/* DEBUG */
+ 
+ 		/* Read CSR, if clock on switch to AVAIL, else ignore */
+-		clkctl = brcmf_sdiod_regrb(bus->sdiodev,
++		clkctl = brcmf_sdiod_readb(bus->sdiodev,
+ 					   SBSDIO_FUNC1_CHIPCLKCSR, &err);
+ 
+ 		brcmf_dbg(SDIO, "DPC: PENDING, devctl 0x%02x clkctl 0x%02x\n",
+ 			  devctl, clkctl);
+ 
+ 		if (SBSDIO_HTAV(clkctl)) {
+-			devctl = brcmf_sdiod_regrb(bus->sdiodev,
++			devctl = brcmf_sdiod_readb(bus->sdiodev,
+ 						   SBSDIO_DEVICE_CTL, &err);
+ 			devctl &= ~SBSDIO_DEVCTL_CA_INT_ONLY;
+-			brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_DEVICE_CTL,
+-					  devctl, &err);
++			brcmf_sdiod_writeb(bus->sdiodev,
++					   SBSDIO_DEVICE_CTL, devctl, &err);
+ 			bus->clkstate = CLK_AVAIL;
+ 		}
+ 	}
+@@ -3347,31 +3347,31 @@ static void brcmf_sdio_sr_init(struct brcmf_sdio *bus)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	val = brcmf_sdiod_regrb(bus->sdiodev, SBSDIO_FUNC1_WAKEUPCTRL, &err);
++	val = brcmf_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_WAKEUPCTRL, &err);
+ 	if (err) {
+ 		brcmf_err("error reading SBSDIO_FUNC1_WAKEUPCTRL\n");
+ 		return;
+ 	}
+ 
+ 	val |= 1 << SBSDIO_FUNC1_WCTRL_HTWAIT_SHIFT;
+-	brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_WAKEUPCTRL, val, &err);
++	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_WAKEUPCTRL, val, &err);
+ 	if (err) {
+ 		brcmf_err("error writing SBSDIO_FUNC1_WAKEUPCTRL\n");
+ 		return;
+ 	}
+ 
+ 	/* Add CMD14 Support */
+-	brcmf_sdiod_regwb(bus->sdiodev, SDIO_CCCR_BRCM_CARDCAP,
+-			  (SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT |
+-			   SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT),
+-			  &err);
++	brcmf_sdiod_func0_wb(bus->sdiodev, SDIO_CCCR_BRCM_CARDCAP,
++			     (SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT |
++			      SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT),
++			     &err);
+ 	if (err) {
+ 		brcmf_err("error writing SDIO_CCCR_BRCM_CARDCAP\n");
+ 		return;
+ 	}
+ 
+-	brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+-			  SBSDIO_FORCE_HT, &err);
++	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++			   SBSDIO_FORCE_HT, &err);
+ 	if (err) {
+ 		brcmf_err("error writing SBSDIO_FUNC1_CHIPCLKCSR\n");
+ 		return;
+@@ -3394,7 +3394,7 @@ static int brcmf_sdio_kso_init(struct brcmf_sdio *bus)
+ 	if (brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV)->rev < 12)
+ 		return 0;
+ 
+-	val = brcmf_sdiod_regrb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, &err);
++	val = brcmf_sdiod_readb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, &err);
+ 	if (err) {
+ 		brcmf_err("error reading SBSDIO_FUNC1_SLEEPCSR\n");
+ 		return err;
+@@ -3403,8 +3403,8 @@ static int brcmf_sdio_kso_init(struct brcmf_sdio *bus)
+ 	if (!(val & SBSDIO_FUNC1_SLEEPCSR_KSO_MASK)) {
+ 		val |= (SBSDIO_FUNC1_SLEEPCSR_KSO_EN <<
+ 			SBSDIO_FUNC1_SLEEPCSR_KSO_SHIFT);
+-		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
+-				  val, &err);
++		brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
++				   val, &err);
+ 		if (err) {
+ 			brcmf_err("error writing SBSDIO_FUNC1_SLEEPCSR\n");
+ 			return err;
+@@ -3565,9 +3565,9 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 				u8 devpend;
+ 
+ 				sdio_claim_host(bus->sdiodev->func[1]);
+-				devpend = brcmf_sdiod_regrb(bus->sdiodev,
+-							    SDIO_CCCR_INTx,
+-							    NULL);
++				devpend = brcmf_sdiod_func0_rb(bus->sdiodev,
++							       SDIO_CCCR_INTx,
++							       NULL);
+ 				sdio_release_host(bus->sdiodev->func[1]);
+ 				intstatus = devpend & (INTR_STATUS_FUNC1 |
+ 						       INTR_STATUS_FUNC2);
+@@ -3705,12 +3705,12 @@ static void brcmf_sdio_dataworker(struct work_struct *work)
+ 			}
+ 		}
+ 		addr = CORE_CC_REG(pmu->base, chipcontrol_addr);
+-		brcmf_sdiod_regwl(sdiodev, addr, 1, NULL);
+-		cc_data_temp = brcmf_sdiod_regrl(sdiodev, addr, NULL);
++		brcmf_sdiod_writel(sdiodev, addr, 1, NULL);
++		cc_data_temp = brcmf_sdiod_readl(sdiodev, addr, NULL);
+ 		cc_data_temp &= ~str_mask;
+ 		drivestrength_sel <<= str_shift;
+ 		cc_data_temp |= drivestrength_sel;
+-		brcmf_sdiod_regwl(sdiodev, addr, cc_data_temp, NULL);
++		brcmf_sdiod_writel(sdiodev, addr, cc_data_temp, NULL);
+ 
+ 		brcmf_dbg(INFO, "SDIO: %d mA (req=%d mA) drive strength selected, set to 0x%08x\n",
+ 			  str_tab[i].strength, drivestrength, cc_data_temp);
+@@ -3725,7 +3725,7 @@ static int brcmf_sdio_buscoreprep(void *ctx)
+ 
+ 	/* Try forcing SDIO core to do ALPAvail request only */
+ 	clkset = SBSDIO_FORCE_HW_CLKREQ_OFF | SBSDIO_ALP_AVAIL_REQ;
+-	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
++	brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
+ 	if (err) {
+ 		brcmf_err("error writing for HT off\n");
+ 		return err;
+@@ -3733,8 +3733,7 @@ static int brcmf_sdio_buscoreprep(void *ctx)
+ 
+ 	/* If register supported, wait for ALPAvail and then force ALP */
+ 	/* This may take up to 15 milliseconds */
+-	clkval = brcmf_sdiod_regrb(sdiodev,
+-				   SBSDIO_FUNC1_CHIPCLKCSR, NULL);
++	clkval = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, NULL);
+ 
+ 	if ((clkval & ~SBSDIO_AVBITS) != clkset) {
+ 		brcmf_err("ChipClkCSR access: wrote 0x%02x read 0x%02x\n",
+@@ -3742,10 +3741,11 @@ static int brcmf_sdio_buscoreprep(void *ctx)
+ 		return -EACCES;
+ 	}
+ 
+-	SPINWAIT(((clkval = brcmf_sdiod_regrb(sdiodev,
+-					      SBSDIO_FUNC1_CHIPCLKCSR, NULL)),
+-			!SBSDIO_ALPAV(clkval)),
+-			PMU_MAX_TRANSITION_DLY);
++	SPINWAIT(((clkval = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++					      NULL)),
++		 !SBSDIO_ALPAV(clkval)),
++		 PMU_MAX_TRANSITION_DLY);
++
+ 	if (!SBSDIO_ALPAV(clkval)) {
+ 		brcmf_err("timeout on ALPAV wait, clkval 0x%02x\n",
+ 			  clkval);
+@@ -3753,11 +3753,11 @@ static int brcmf_sdio_buscoreprep(void *ctx)
+ 	}
+ 
+ 	clkset = SBSDIO_FORCE_HW_CLKREQ_OFF | SBSDIO_FORCE_ALP;
+-	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
++	brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, clkset, &err);
+ 	udelay(65);
+ 
+ 	/* Also, disable the extra SDIO pull-ups */
+-	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_SDIOPULLUP, 0, NULL);
++	brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_SDIOPULLUP, 0, NULL);
+ 
+ 	return 0;
+ }
+@@ -3772,7 +3772,7 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
+ 	/* clear all interrupts */
+ 	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
+ 	reg_addr = core->base + offsetof(struct sdpcmd_regs, intstatus);
+-	brcmf_sdiod_regwl(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
++	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
+ 
+ 	if (rstvec)
+ 		/* Write reset vector to address 0 */
+@@ -3785,7 +3785,7 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
+ 	struct brcmf_sdio_dev *sdiodev = ctx;
+ 	u32 val, rev;
+ 
+-	val = brcmf_sdiod_regrl(sdiodev, addr, NULL);
++	val = brcmf_sdiod_readl(sdiodev, addr, NULL);
+ 	if ((sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 ||
+ 	     sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4339) &&
+ 	    addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
+@@ -3802,7 +3802,7 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
+ {
+ 	struct brcmf_sdio_dev *sdiodev = ctx;
+ 
+-	brcmf_sdiod_regwl(sdiodev, addr, val, NULL);
++	brcmf_sdiod_writel(sdiodev, addr, val, NULL);
+ }
+ 
+ static const struct brcmf_buscore_ops brcmf_sdio_buscore_ops = {
+@@ -3826,18 +3826,18 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
+ 	sdio_claim_host(sdiodev->func[1]);
+ 
+ 	pr_debug("F1 signature read @0x18000000=0x%4x\n",
+-		 brcmf_sdiod_regrl(sdiodev, SI_ENUM_BASE, NULL));
++		 brcmf_sdiod_readl(sdiodev, SI_ENUM_BASE, NULL));
+ 
+ 	/*
+ 	 * Force PLL off until brcmf_chip_attach()
+ 	 * programs PLL control regs
+ 	 */
+ 
+-	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+-			  BRCMF_INIT_CLKCTL1, &err);
++	brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, BRCMF_INIT_CLKCTL1,
++			   &err);
+ 	if (!err)
+-		clkctl = brcmf_sdiod_regrb(sdiodev,
+-					   SBSDIO_FUNC1_CHIPCLKCSR, &err);
++		clkctl = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++					   &err);
+ 
+ 	if (err || ((clkctl & ~SBSDIO_AVBITS) != BRCMF_INIT_CLKCTL1)) {
+ 		brcmf_err("ChipClkCSR access: err %d wrote 0x%02x read 0x%02x\n",
+@@ -3897,25 +3897,25 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
+ 	brcmf_sdio_drivestrengthinit(sdiodev, bus->ci, drivestrength);
+ 
+ 	/* Set card control so an SDIO card reset does a WLAN backplane reset */
+-	reg_val = brcmf_sdiod_regrb(sdiodev, SDIO_CCCR_BRCM_CARDCTRL, &err);
++	reg_val = brcmf_sdiod_func0_rb(sdiodev, SDIO_CCCR_BRCM_CARDCTRL, &err);
+ 	if (err)
+ 		goto fail;
+ 
+ 	reg_val |= SDIO_CCCR_BRCM_CARDCTRL_WLANRESET;
+ 
+-	brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_BRCM_CARDCTRL, reg_val, &err);
++	brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_BRCM_CARDCTRL, reg_val, &err);
+ 	if (err)
+ 		goto fail;
+ 
+ 	/* set PMUControl so a backplane reset does PMU state reload */
+ 	reg_addr = CORE_CC_REG(brcmf_chip_get_pmu(bus->ci)->base, pmucontrol);
+-	reg_val = brcmf_sdiod_regrl(sdiodev, reg_addr, &err);
++	reg_val = brcmf_sdiod_readl(sdiodev, reg_addr, &err);
+ 	if (err)
+ 		goto fail;
+ 
+ 	reg_val |= (BCMA_CC_PMU_CTL_RES_RELOAD << BCMA_CC_PMU_CTL_RES_SHIFT);
+ 
+-	brcmf_sdiod_regwl(sdiodev, reg_addr, reg_val, &err);
++	brcmf_sdiod_writel(sdiodev, reg_addr, reg_val, &err);
+ 	if (err)
+ 		goto fail;
+ 
+@@ -4055,10 +4055,10 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 		goto release;
+ 
+ 	/* Force clocks on backplane to be sure F2 interrupt propagates */
+-	saveclk = brcmf_sdiod_regrb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, &err);
++	saveclk = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, &err);
+ 	if (!err) {
+-		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+-				  (saveclk | SBSDIO_FORCE_HT), &err);
++		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++				   (saveclk | SBSDIO_FORCE_HT), &err);
+ 	}
+ 	if (err) {
+ 		brcmf_err("Failed to force clock for F2: err %d\n", err);
+@@ -4080,7 +4080,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 		w_sdreg32(bus, bus->hostintmask,
+ 			  offsetof(struct sdpcmd_regs, hostintmask));
+ 
+-		brcmf_sdiod_regwb(sdiodev, SBSDIO_WATERMARK, 8, &err);
++		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
+ 	} else {
+ 		/* Disable F2 again */
+ 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
+@@ -4091,8 +4091,8 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 		brcmf_sdio_sr_init(bus);
+ 	} else {
+ 		/* Restore previous clock setting */
+-		brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+-				  saveclk, &err);
++		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++				   saveclk, &err);
+ 	}
+ 
+ 	if (err == 0) {
+@@ -4224,7 +4224,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	bus->rxflow = false;
+ 
+ 	/* Done with backplane-dependent accesses, can drop clock... */
+-	brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, 0, NULL);
++	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, 0, NULL);
+ 
+ 	sdio_release_host(bus->sdiodev->func[1]);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 1e4b476..453213b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -50,6 +50,7 @@
+ #define SBSDIO_NUM_FUNCTION		3
+ 
+ /* function 0 vendor specific CCCR registers */
++
+ #define SDIO_CCCR_BRCM_CARDCAP			0xf0
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_SUPPORT	0x02
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	0x04
+@@ -131,8 +132,6 @@
+ /* with b15, maps to 32-bit SB access */
+ #define SBSDIO_SB_ACCESS_2_4B_FLAG	0x08000
+ 
+-/* valid bits in SBSDIO_FUNC1_SBADDRxxx regs */
+-
+ /* Address bits from SBADDR regs */
+ #define SBSDIO_SBWINDOW_MASK		0xffff8000
+ 
+@@ -293,13 +292,24 @@ struct sdpcmd_regs {
+ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev);
+ void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev);
+ 
+-/* sdio device register access interface */
+-u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret);
+-u32 brcmf_sdiod_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret);
+-void brcmf_sdiod_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr, u8 data,
+-		       int *ret);
+-void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr, u32 data,
+-		       int *ret);
++/* SDIO device register access interface */
++/* Accessors for SDIO Function 0 */
++#define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
++	sdio_readb((sdiodev)->func[0], (addr), (r))
++
++#define brcmf_sdiod_func0_wb(sdiodev, addr, v, ret) \
++	sdio_writeb((sdiodev)->func[0], (v), (addr), (ret))
++
++/* Accessors for SDIO Function 1 */
++#define brcmf_sdiod_readb(sdiodev, addr, r) \
++	sdio_readb((sdiodev)->func[1], (addr), (r))
++
++#define brcmf_sdiod_writeb(sdiodev, addr, v, ret) \
++	sdio_writeb((sdiodev)->func[1], (v), (addr), (ret))
++
++u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret);
++void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr, u32 data,
++			int *ret);
+ 
+ /* Buffer transfer to/from device (client) core via cmd53.
+  *   fn:       function number
+-- 
+1.9.1
