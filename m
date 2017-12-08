@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:36012 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933207AbdLRMbO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50054 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752209AbdLHMiu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 07:31:14 -0500
+        Fri, 8 Dec 2017 07:38:50 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH v2 06/15] iwlwifi: mvm: rs: add ops for the new rate scaling in the FW
+References: <20171202162858.4167-7-luca@coelho.fi>
+        <20171202213603.12512-1-luca@coelho.fi>
+Date: Fri, 08 Dec 2017 14:38:46 +0200
+In-Reply-To: <20171202213603.12512-1-luca@coelho.fi> (Luca Coelho's message of
+        "Sat, 2 Dec 2017 23:36:03 +0200")
+Message-ID: <87374ls8bt.fsf@kamboji.qca.qualcomm.com> (sfid-20171208_133854_176013_5B0F1934)
 MIME-Version: 1.0
-In-Reply-To: <1513556924.31581.51.camel@perches.com>
-References: <1513556924.31581.51.camel@perches.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Mon, 18 Dec 2017 14:31:12 +0200
-Message-ID: <CAHp75Vfw=AQHkiC7WhUkuytxG_reO8rmEfpA7z-2yAekFQ4AYQ@mail.gmail.com> (sfid-20171218_133240_408233_6DA36803)
-Subject: Re: [trivial PATCH] treewide: Align function definition open/close braces
-To: Joe Perches <joe@perches.com>
-Cc: Jiri Kosina <trivial@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        acpi4asus-user <acpi4asus-user@lists.sourceforge.net>,
-        Platform Driver <platform-driver-x86@vger.kernel.org>,
-        linux-rtc@vger.kernel.org,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        ocfs2-devel@oss.oracle.com, linux-xfs@vger.kernel.org,
-        linux-audit@redhat.com,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 18, 2017 at 2:28 AM, Joe Perches <joe@perches.com> wrote:
-> Some functions definitions have either the initial open brace and/or
-> the closing brace outside of column 1.
->
-> Move those braces to column 1.
->
-> This allows various function analyzers like gnu complexity to work
-> properly for these modified functions.
->
-> Miscellanea:
->
-> o Remove extra trailing ; and blank line from xfs_agf_verify
->
-> Signed-off-by: Joe Perches <joe@perches.com>
+Luca Coelho <luca@coelho.fi> writes:
 
->  drivers/platform/x86/eeepc-laptop.c                  |  2 +-
+> From: Gregory Greenman <gregory.greenman@intel.com>
+>
+> This patch introduces a new instance of rate_control_ops for
+> the new API (adding only empty stubs here and the subsequent
+> patches in the series will fill in the implementation).
+> The decision which API to use is done during the register
+> step according to FW TLV.
+>
+> Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-> diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
-> index 5a681962899c..4c38904a8a32 100644
-> --- a/drivers/platform/x86/eeepc-laptop.c
-> +++ b/drivers/platform/x86/eeepc-laptop.c
-> @@ -492,7 +492,7 @@ static void eeepc_platform_exit(struct eeepc_laptop *eeepc)
->   * potentially bad time, such as a timer interrupt.
->   */
->  static void tpd_led_update(struct work_struct *work)
-> - {
+[...]
+
+> +void iwl_mvm_rs_add_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta)
 > +{
->         struct eeepc_laptop *eeepc;
->
->         eeepc = container_of(work, struct eeepc_laptop, tpd_led_work);
-> diff --git a/drivers/rtc/rtc-ab-b5ze-s3.c b/drivers/rtc/rtc-ab-b5ze-s3.c
-> index a319bf1e49de..ef5c16dfabfa 100644
+> +	struct iwl_lq_sta_rs_fw *lq_sta = &mvmsta->lq_sta.rs_fw;
+> +
+> +	IWL_DEBUG_RATE(mvm, "create station rate scale window\n");
+> +
+> +	lq_sta->pers.drv = mvm;
+> +	lq_sta->pers.sta_id = mvmsta->sta_id;
+> +	lq_sta->pers.chains = 0;
+> +	memset(lq_sta->pers.chain_signal, 0, sizeof(lq_sta->pers.chain_signal));
+> +	lq_sta->pers.last_rssi = S8_MIN;
+> +	lq_sta->last_rate_n_flags = 0;
+> +
+> +#ifdef CPTCFG_MAC80211_DEBUGFS
+> +	lq_sta->pers.dbg_fixed_rate = 0;
+> +#endif
+> +}
 
-Acked-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-
-for PDx86 changes.
-
+CPTCFG_ doesn't look right. But no need to resend just because of this,
+you can send a followup patch.
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Kalle Valo
