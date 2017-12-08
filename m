@@ -1,62 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47532 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751863AbdLNMsF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 07:48:05 -0500
-Date: Thu, 14 Dec 2017 13:47:12 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Craig McQueen <craig.mcqueen@innerrange.com.au>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rt2800usb firmware rt2870.bin 0.36 not scanning
-Message-ID: <20171214124712.GA2737@redhat.com> (sfid-20171214_134808_606931_5338C3DA)
-References: <f2d6e3de-826a-c7b6-ac29-16b83be758e8@gmail.com>
- <5500469A22567C4BAF673A6E86AFA3A4022D2A096849@IR-CENTRAL.corp.innerrange.com>
- <5500469A22567C4BAF673A6E86AFA3A4022D2BB5ED6C@IR-CENTRAL.corp.innerrange.com>
- <17dbd0476f1e45c7af0cb70efb15d75f@innerrange.com.au>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:33955 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752468AbdLHMM0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Dec 2017 07:12:26 -0500
+Received: by mail-qt0-f196.google.com with SMTP id 33so25464319qtv.1
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Dec 2017 04:12:26 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: akolli@qti.qualcomm.com
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        akolli@codeaurora.org
+Subject: Re: [PATCH] ath10k: Add BMI parameters to fix calibration from DT/pre-cal
+Date: Fri, 08 Dec 2017 13:12:22 +0100
+Message-ID: <6476910.M9FJQ0px1r@bentobox> (sfid-20171208_131230_557351_4F84669C)
+In-Reply-To: <1495709483-29793-1-git-send-email-akolli@qti.qualcomm.com>
+References: <1495709483-29793-1-git-send-email-akolli@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <17dbd0476f1e45c7af0cb70efb15d75f@innerrange.com.au>
+Content-Type: multipart/signed; boundary="nextPart4384296.kb4GpoEaxo"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 13, 2017 at 11:24:28PM +0000, Craig McQueen wrote:
-> > Actually, I was wrong. With the 3.14.x Yocto-built kernel, this no-scan issue
-> > only happens with the Edup with the 5390 chipset, and the D-Link is fine.
-> > 
-> > But further testing with the 4.4.12 Yocto-built kernel shows that it randomly
-> > sometimes happens and sometimes doesn't with either the Edup or D-Link
-> > devices. That's especially interesting, because it suggests that there may be a
-> > race condition happening during the driver initialisation code (called from
-> > rt2x00lib_start()). At first I thought it was a race condition between the calls
-> > to rt2x00lib_load_firmware() and rt2x00lib_initialize(), but adding a time
-> > delay between those calls didn't help.
-> > 
-> > I'm wondering what the difference is between the two chipsets, so that the
-> > problem happens more on one chipset than the other. But not exclusively, as
-> > I mentioned above, so again, this points to a marginal timing issue that
-> > affects one more than the other.
-> > 
-> > > With the Ubuntu 4.4.6 kernel, both devices work fine, without this
-> > > no-scan problem.
-> > > ...
-> 
-> Now I'm using a 4.9.65 kernel, and this problem is still present. When the USB Wi-Fi dongle is plugged in, it just doesn't do anything -- doesn't scan for Wi-Fi networks, doesn't connect to anything.
-> 
-> My project is using ConnMan, so I've patched ConnMan so that it takes the device up, then down, then up again. Then it reliably works. But of course this is an ugly hack.
-> 
-> Based on my initial investigation, my hypothesis was that there's a race condition during rt2x00lib_start() in rt2x00dev.c. At first I thought it was between firmware loading and initialisation. But adding a time delay between the calls to rt2x00lib_load_firmware() and rt2x00lib_initialize() didn't help. Adding time delays at many possible points in the initialisation didn't seem to help. I thought there must be a race condition in a very specific location in the initialisation sequence, but could not confirm that hypothesis. So now I've drawn a blank.
-> 
-> Any advice on how to diagnose and remedy this issue?
+--nextPart4384296.kb4GpoEaxo
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-I know the vendor driver do initialization sequence twice - after
-finish first sequence the same steps are repeated second time.
-I don't know why that is needed and on all my Ralink USB devices
-one initialization sequence is sufficient with rt2x00 driver.
+On Donnerstag, 25. Mai 2017 16:21:23 CET akolli@qti.qualcomm.com wrote:
+> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+> 
+> QCA99X0, QCA9888, QCA9984 supports calibration data in
+> either OTP or DT/pre-cal file. Current ath10k supports
+> Calibration data from OTP only.
+> 
+> If caldata is loaded from DT/pre-cal file, fetching board id
+> and applying calibration parameters like tx power gets failed.
+> 
+> error log:
+> [   15.733663] ath10k_pci 0000:01:00.0: failed to fetch board file: -2
+> [   15.741474] ath10k_pci 0000:01:00.0: could not probe fw (-2)
+> 
+> This patch adds calibration data support from DT/pre-cal
+> file.  Below parameters are used to get board id and
+> applying calibration parameters from cal data.
+> 
+> 		EEPROM[OTP]	FLASH[DT/pre-cal file]
+> Cal param	0x700		0x10000
+> Board id	0x10		0x8000
+> 
+> Tested on QCA9888 with pre-cal file.
+> 
+> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/bmi.h  |    2 ++
+>  drivers/net/wireless/ath/ath10k/core.c |   16 +++++++++++++---
+>  2 files changed, 15 insertions(+), 3 deletions(-)
 
-Right fix to this will be found proper initialization sequence,
-so second step will not be needed, but perhaps this is firmware
-problem. Anyway ConnMan patch seems to be a good solution
-as well ;-) 
+Just tried this on an QCA9984 which doesn't seem to have the calibration data in the PCI EEPROM.
 
-Cheers
-Stanislaw
+    [   71.728929] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0 target 0x01000000 chip_id 0x00000000 sub 168c:cafe
+    [   71.732926] ath10k_pci 0000:01:00.0: kconfig debug 1 debugfs 1 tracing 0 dfs 1 testmode 1
+    [   71.752282] ath10k_pci 0000:01:00.0: firmware ver 10.4-ct-9984-fW-009-dfa0083 api 5 features peer-flow-ctrl crc32 7198d117
+    [   73.805730] ath10k_pci 0000:01:00.0: unable to read from the device
+    [   73.805769] ath10k_pci 0000:01:00.0: could not execute otp for board id check: -110
+
+It works when I use the pre-cal data as calibration data. The checksum in the 
+pre-cal seems to be correct. Also the pre-cal data from 0:ART for the 2.4GHz 
+and 5GHz QCA4019 seem to work perfectly fine.
+
+Anything which I could have missed or what I could test? Btw. I've also tested 
+the non-ct firmware (aka the official one from QCA).
+
+Kind
+--nextPart4384296.kb4GpoEaxo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAloqgaYACgkQXYcKB8Em
+e0a/pg/9EJ6/zaW0Ihn3tbmBwWvxxYiizBvkXYlQ6hpwIduX2Y++T2EeluHW91vL
+9/NbMaPB0xrAwvMt4ywb4mf05JILAQHV5RyxEWnxznJp+mrw9xOAgDwH70anJFkb
+XKKAMVWLS+BDQpCcUxWCImaZ3eAZzOllVQLHbD4+QTyiZSaSM20DMYWnnAoYtfkT
+yorYZfxcQH3SzOGFJTjzFX/hOhF8cl4NQ9xg1evtxMQLapxXYEg5C5xlY9PDBsaw
+RHexlOc37P1l4tpshjdfDNm1yqgTcrxjzOO93dcqr7WBr78sOzXEclsOMBDFA0of
+IjK6QBJ3GQx3hYrPzk8gd3oqGgwob7K807V05LN39KzbZkde2QVkoKJZW5F4ZIpk
+LoygMIBMjx1E0MYXPIalGhMIjZjdX00jU9kWJytoDIl0RK1XHHkDYsZv5yPx9dv3
+mDj0rFz46iUBfThhmxLtL1lqi2e0mmtEZdFTRhF5Dl1JC2JJc1cVa4TMt7ZUsPc0
+xxAPS3xDnmUoKbJ0naxQ6cGtshSbwF9LocvRo6MI1p/Z3+Yky1Z7HpBJgX61QSD8
+0J0cLODv12OHBjhhtwovCBYYSauA3k8jWFYJh4R+ujv9DDrwVCB+12hbLnOpO29l
+HHeIxs7chphk8Esg+1+p6hslURVSrGwMHjqT3rr5h+SZJssfjgw=
+=jn8Z
+-----END PGP SIGNATURE-----
+
+--nextPart4384296.kb4GpoEaxo--
