@@ -1,101 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0041.outbound.protection.outlook.com ([104.47.42.41]:63680
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933943AbdLRQS0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 11:18:26 -0500
-Date: Mon, 18 Dec 2017 19:18:12 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
-Message-ID: <20171218161811.3f3sjhlxdfmsnljx@bars> (sfid-20171218_172410_411982_C3CCFFD4)
-References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
- <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
- <871skalepz.fsf@purkki.adurom.net>
- <20171205160010.cytra3bqbttwz5db@bars>
- <878te0kud2.fsf@kamboji.qca.qualcomm.com>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58712 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753675AbdLHO3S (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Dec 2017 09:29:18 -0500
+Date: Fri, 8 Dec 2017 15:29:06 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Kalle Valo <kvalo@codeaurora.org>, sgruszka@redhat.com
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+        johannes.berg@intel.com, linville@tuxdriver.com,
+        linux-wireless@vger.kernel.org
+Subject: iwl3945: regression at 4.15-rc1 was Re: 4.15.0-rc1-next-20171201:
+ WARNING: .... at net/mac80211/agg-tx.c:315
+Message-ID: <20171208142906.GF7793@amd> (sfid-20171208_152954_598799_1E9DA4D3)
+References: <20171205102434.GA12780@amd>
+ <874lp5jwge.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <878te0kud2.fsf@kamboji.qca.qualcomm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="FeAIMMcddNRN4P4/"
+In-Reply-To: <874lp5jwge.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle,
 
-> >> > This allows a running AP to blacklist STAs by their MAC addresses
-> >> > respecting the configured policy (either accept or deny unless listed).
-> >> > It can be setup on .start_ap or with .set_mac_acl commands.
-> >> >
-> >> > Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
-> >>
-> >> [...]
-> >>
-> >> > @@ -918,6 +933,7 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
-> >> >       wiphy->max_scan_ie_len = QTNF_MAX_VSIE_LEN;
-> >> >       wiphy->mgmt_stypes = qtnf_mgmt_stypes;
-> >> >       wiphy->max_remain_on_channel_duration = 5000;
-> >> > +     wiphy->max_acl_mac_addrs = mac->macinfo.max_acl_mac_addrs;
-> >> >
-> >> >       wiphy->iface_combinations = iface_comb;
-> >> >       wiphy->n_iface_combinations = 1;
-> >> > @@ -932,6 +948,9 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
-> >> >                       WIPHY_FLAG_AP_UAPSD |
-> >> >                       WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-> >> >
-> >> > +     if (wiphy->max_acl_mac_addrs > 0)
-> >> > +             wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME;
-> >>
-> >> Conditonally enabling WIPHY_FLAG_HAVE_AP_SME looks somewhat suspicious
-> >> to me and from a quick search I don't see any other driver doing
-> >> something similar. Can you explain why AP_SME is related to MAC ACL?
+--FeAIMMcddNRN4P4/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi!
+
+> > This is quite annoying: repeated
 > >
-> > Wireless core performs several sanity check on wiphy registration: see
-> > wiphy_register implementation in net/wireless/core.c. One of those
-> > checks is as follows: if max_acl_mac_addrs is non-zero, then two
-> > conditions should be fulfilled:
-> > - cfg80211 set_mac_acl callback should be available
-> > - WIPHY_FLAG_HAVE_AP_SME should be set
+> > [ 4169.591529] ---[ end trace e65d97cf1d20b84d ]---
+> > [ 4169.591565] WARNING: CPU: 0 PID: 5472 at net/mac80211/agg-tx.c:315
+> > ___ieee80211_stop_tx_\
+> > ba_session+0x158/0x1f0
 > >
-> > The first condition is perfectly sane: it should be possible to
-> > set MACs to enable ACL feature. The second condition is that clear
-> > to me, but we have to comply in order to pass wiphy_registration.
-> > I assume that it somehow related to hostapd logic, but I haven't
-> > yet check that myself.
-> >
-> > The conditional enablement of WIPHY_FLAG_HAVE_AP_SME is easy to
-> > explain. We enable use firmware/hardware features to implement
-> > MAC-based ACL. So we enable it only if firmware report non-zero
-> > max_acl_mac_addrs value.
-> 
-> To me this looks like an ugly hack, either your firmware has AP_SME
-> support or not. It should not be enabled based on what settings user
-> space provides. If cfg80211 is giving you problems you should fix
-> cfg80211, not try to a workaround it in the driver like the vendor
-> drivers do. We work differently in upstream.
-> 
-> But Johannes (CCed) might think differently, and if he acks this, then
-> I'll of course take this.
+> > Hardware is thinkpad x60. Git blame says cfcdbde35 introduced the
+> > test.
+>=20
+> To save time for others, the driver is iwl3945:
+>=20
+> > [    0.970687] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connec=
+tion driver for Linux, in-tree:ds
+> > [    0.970690] iwl3945: Copyright(c) 2003-2011 Intel Corporation
+> > [    0.970692] iwl3945: hw_scan is disabled
+> > [    0.971082] iwl3945 0000:03:00.0: can't disable ASPM; OS doesn't hav=
+e ASPM control
+> > [    1.026281] iwl3945 0000:03:00.0: Tunable channels: 11 802.11bg, 13 =
+802.11a channels
+> > [    1.026287] iwl3945 0000:03:00.0: Detected Intel Wireless WiFi Link =
+3945ABG
+> > [    1.027866] ieee80211 phy0: Selected rate control algorithm 'iwl-394=
+5-rs'
 
-I took a closer look at this patch. It turns out that this conditional
-enablement of WIPHY_FLAG_HAVE_AP_SME is completely redundant here. This
-capability is already enabled unconditionally (though not visible in diff)
-for normal hostapd operations with FullMAC driver which mostly
-handles STAs in FW.
+And same problem is there in 4.15-rc1. It is regression from 4.14.
 
-Thanks for catching. In fact, those two lines should be removed.
-I will update the patch and resubmit the whole series.
+[  530.816390] WARNING: CPU: 1 PID: 3193 at net/mac80211/agg-tx.c:315
+___ieee802
+11_stop_tx_ba_session+0x158/0x1f0
+[  530.816395] Modules linked in:
+[  530.816405] CPU: 1 PID: 3193 Comm: wpa_supplicant Tainted: G
+W
+4.15.0-rc1+ #447
+[  530.816410] Hardware name: LENOVO 17097HU/17097HU, BIOS 7BETD8WW
+(2.19 ) 03/3
+1/2011
+[  530.816416] task: 17453748 task.stack: 79a41831
+[  530.816422] EIP: ___ieee80211_stop_tx_ba_session+0x158/0x1f0
+[  530.816427] EFLAGS: 00010246 CPU: 1
+[  530.816433] EAX: 00000000 EBX: f5c19000 ECX: f5eff670 EDX: f5eff040
+[  530.816438] ESI: 0000000f EDI: 00000003 EBP: ef32dbb4 ESP: ef32db8c
+[  530.816444]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+[  530.816450] CR0: 80050033 CR2: 091a4008 CR3: 34d412c0 CR4: 000006b0
+[  530.816455] Call Trace:
+[  530.816463]  ieee80211_sta_tear_down_BA_sessions+0x6e/0xd0
+[  530.816470]  __sta_info_destroy_part1+0x3d/0x1f0
 
 
-Meanwhile now it is not yet clear to me what should be done for driver which
-supports MAC-based ACL, but not full-fledged AP SME. Wireless core expects
-WIPHY_FLAG_HAVE_AP_SME to be set if driver supports MAC-based ACL. On the
-other hand, hostapd handles WIPHY_FLAG_HAVE_AP_SME and max_acl_mac_addrs
-independently, expecting certain things from drivers that advertise
-WIPHY_FLAG_HAVE_AP_SME.
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
 
-Regards,
-Sergey
+--FeAIMMcddNRN4P4/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAloqobIACgkQMOfwapXb+vLHwgCgqljnkfvdo7GFFbw8iJlqB0ny
+FoUAnjqc4fnytnhfvOMRFY4Eoc1JdLH6
+=uI8V
+-----END PGP SIGNATURE-----
+
+--FeAIMMcddNRN4P4/--
