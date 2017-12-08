@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0090.outbound.protection.outlook.com ([104.47.42.90]:51760
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750707AbdLKIL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 03:11:58 -0500
-Date: Mon, 11 Dec 2017 02:11:50 -0600
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-To: devicetree@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH] dt-bindings: net: wireless: Add sg parameters dts parsing
-Message-ID: <20171211081144.GA140567@aremote07.aus.cypress.com> (sfid-20171211_091202_786025_F8F03385)
+Received: from smtp.codeaurora.org ([198.145.29.96]:34356 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752989AbdLHNEu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Dec 2017 08:04:50 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: iwlwifi: mvm: fix wrong #ifdef that uses a macro from backports
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171208125259.21401-1-luca@coelho.fi>
+References: <20171208125259.21401-1-luca@coelho.fi>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Message-Id: <20171208130449.A3F136071B@smtp.codeaurora.org> (sfid-20171208_140453_962888_59FB18D0)
+Date: Fri,  8 Dec 2017 13:04:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-broken_sg_support, sd_head_align, and sd_sgentry_align are used in
-brcmfmac code but not configurable in dts file. Add the parsing logic.
-Now they can be configured like below in dts:
-	brcm,broken_sg_support;
-	brcm,sd_head_align = <4>;
-	brcm,sd_sgentry_align = <4>;
+Luciano Coelho <luca@coelho.fi> wrote:
 
-Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
----
- .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt        | 8 ++++++++
- 1 file changed, 8 insertions(+)
+> From: Luca Coelho <luciano.coelho@intel.com>
+> 
+> I accidentally pushed a patch with CPTCFG (which is used in the
+> backports project) to the rs-fw.c file.  Fix that to use CONFIG
+> instead.
+> 
+> Fixes: 9f66a397c877 ("iwlwifi: mvm: rs: add ops for the new rate scaling in the FW")
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-index 86602f2..4d42f0d 100644
---- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-@@ -17,6 +17,11 @@ Optional properties:
- 	When not specified the device will use in-band SDIO interrupts.
-  - interrupt-names : name of the out-of-band interrupt, which must be set
- 	to "host-wake".
-+ - broken_sg_support : flag for broken sg list support of SDIO host controller.
-+	Set this to true if the SDIO host controller has higher align
-+	requirement than 32 bytes for each scatterlist item.
-+ - sg_head_align : alignment requirement for start of data buffer.
-+ - sg_sgentry_align : length alignment requirement for each sg entry.
- 
- Example:
- 
-@@ -36,5 +41,8 @@ mmc3: mmc@1c12000 {
- 		interrupt-parent = <&pio>;
- 		interrupts = <10 8>; /* PH10 / EINT10 */
- 		interrupt-names = "host-wake";
-+		brcm,broken_sg_support;
-+		brcm,sd_head_align = <4>;
-+		brcm,sd_sgentry_align = <4>;
- 	};
- };
+Patch applied to wireless-drivers-next.git, thanks.
+
+59365b9efd48 iwlwifi: mvm: fix wrong #ifdef that uses a macro from backports
+
 -- 
-2.1.0
+https://patchwork.kernel.org/patch/10102471/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
