@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.141]:50692 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752288AbdLYL4H (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43761 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752883AbdLHMKn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Dec 2017 06:56:07 -0500
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        netdev@vger.kernel.org
-Subject: [RFC PATCH v11 3/5] mwifiex: Disable wakeup irq handling for pcie
-Date: Mon, 25 Dec 2017 19:47:40 +0800
-Message-Id: <20171225114742.18920-4-jeffy.chen@rock-chips.com> (sfid-20171225_125652_411849_A4E39D1F)
-In-Reply-To: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+        Fri, 8 Dec 2017 07:10:43 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 00/10] brcmfmac: restructuring sdio access functions - take 2
+Date: Fri,  8 Dec 2017 13:10:25 +0100
+Message-Id: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131055_365504_78984A96)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are going to handle the wakeup irq in the pci core.
+Here another series of patches which were originally submitted by
+Ian Molton. For some patches I reworded the commit message.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+The series is intended for 4.16 and applies to the master branch of
+the wireless-drivers-next repository.
 
-Changes in v11: None
-Changes in v10: None
-Changes in v9: None
-Changes in v8: None
-Changes in v7: None
-Changes in v6: None
-Changes in v5: None
-Changes in v3: None
-Changes in v2: None
+Ian Molton (10):
+  brcmfmac: Split brcmf_sdiod_buffrw function up.
+  brcmfmac: whitespace fixes in brcmf_sdiod_send_buf()
+  brcmfmac: Clarify if using braces.
+  brcmfmac: Rename / replace old IO functions with simpler ones.
+  brcmfmac: Tidy register definitions a little
+  brcmfmac: Remove brcmf_sdiod_addrprep()
+  brcmfmac: remove unnecessary call to
+    brcmf_sdiod_set_backplane_window()
+  brcmfmac: Cleanup offsetof()
+  brcmfmac: Remove unused macro.
+  brcmfmac: Remove repeated calls to brcmf_chip_get_core()
 
- drivers/net/wireless/marvell/mwifiex/main.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 313 ++++++++-------------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 248 ++++++++--------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  47 ++--
+ 3 files changed, 263 insertions(+), 345 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index a96bd7e653bf..3cc3403b977a 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1567,6 +1567,10 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
- 		goto err_exit;
- 
- 	adapter->dt_node = dev->of_node;
-+
-+	if (adapter->iface_type != MWIFIEX_PCIE)
-+		goto err_exit;
-+
- 	adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
- 	if (!adapter->irq_wakeup) {
- 		dev_dbg(dev, "fail to parse irq_wakeup from device tree\n");
 -- 
-2.11.0
+1.9.1
