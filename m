@@ -1,61 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39132 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752291AbdLGKuE (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43766 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752895AbdLHMKn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 05:50:04 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/10] brcmfmac: restructuring sdio access functions
-References: <1510605347-7629-1-git-send-email-arend.vanspriel@broadcom.com>
-        <5A29001E.4080905@broadcom.com>
-        <87r2s6vs6d.fsf@kamboji.qca.qualcomm.com>
-        <5A2902DE.3050206@broadcom.com>
-Date: Thu, 07 Dec 2017 12:49:56 +0200
-In-Reply-To: <5A2902DE.3050206@broadcom.com> (Arend van Spriel's message of
-        "Thu, 7 Dec 2017 09:59:10 +0100")
-Message-ID: <87fu8mvmln.fsf@kamboji.qca.qualcomm.com> (sfid-20171207_115007_976929_362A808F)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 8 Dec 2017 07:10:43 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 01/10] brcmfmac: Split brcmf_sdiod_buffrw function up.
+Date: Fri,  8 Dec 2017 13:10:26 +0100
+Message-Id: <1512735035-342-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131057_441314_C7D8F328)
+In-Reply-To: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Ian Molton <ian@mnementh.co.uk>
 
-> On 12/7/2017 9:49 AM, Kalle Valo wrote:
->> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->>
->>> On 11/13/2017 9:35 PM, Arend van Spriel wrote:
->>>> These patches were originally submitted by Ian Molton a while ago so decided
->>>> to resubmit them. This is a first series of 10 patches. Tested using BCM4354
->>>> device which showed no regression.
->>>>
->>>> It is intended for 4.16 (no rush ;-) ) and applies to the master branch of
->>>> the wireless-drivers-next repository.
->>>
->>> Hi Kalle,
->>>
->>> I have follow-up series on this one. If you plan to take it today or
->>> tomorrow, I can hold the follow-up a bit more.
->>
->> I'm hoping to apply these today.
->>
->
-> btw. my neighbors put out the Finnish flag.
+This function needs to be split up into separate read / write variants
+for clarity.
 
-Cool!
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 67 +++++++++++++++-------
+ 1 file changed, 45 insertions(+), 22 deletions(-)
 
-> Was that about your independence? Not a yearly event, or is it?
-
-December 6th is the independence day in Finland and that's a yearly
-event, a public holiday etc. But this year was special as it was 100
-years from gaining our independence.
-
-So yesterday, instead of applying patches, I was looking at people
-shaking hands[1] on TV. Yes, we are weird ;)
-
-[1] https://en.wikipedia.org/wiki/Independence_Day_Reception_(in_Finland)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 30ab0aa..d9ecc69 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -414,8 +414,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		*ret = retval;
+ }
+ 
+-static int brcmf_sdiod_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
+-			     bool write, u32 addr, struct sk_buff *pkt)
++static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev, uint fn,
++				 u32 addr, struct sk_buff *pkt)
+ {
+ 	unsigned int req_sz;
+ 	int err;
+@@ -424,18 +424,36 @@ static int brcmf_sdiod_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 	req_sz = pkt->len + 3;
+ 	req_sz &= (uint)~3;
+ 
+-	if (write)
+-		err = sdio_memcpy_toio(sdiodev->func[fn], addr,
+-				       ((u8 *)(pkt->data)), req_sz);
+-	else if (fn == 1)
+-		err = sdio_memcpy_fromio(sdiodev->func[fn], ((u8 *)(pkt->data)),
+-					 addr, req_sz);
++	if (fn == 1)
++		err = sdio_memcpy_fromio(sdiodev->func[fn],
++					 ((u8 *)(pkt->data)), addr, req_sz);
+ 	else
+ 		/* function 2 read is FIFO operation */
+-		err = sdio_readsb(sdiodev->func[fn], ((u8 *)(pkt->data)), addr,
+-				  req_sz);
++		err = sdio_readsb(sdiodev->func[fn],
++				  ((u8 *)(pkt->data)), addr, req_sz);
++
++	if (err == -ENOMEDIUM)
++		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
++
++	return err;
++}
++
++static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
++				  u32 addr, struct sk_buff *pkt)
++{
++	unsigned int req_sz;
++	int err;
++
++	/* Single skb use the standard mmc interface */
++	req_sz = pkt->len + 3;
++	req_sz &= (uint)~3;
++
++	err = sdio_memcpy_toio(sdiodev->func[fn], addr,
++			       ((u8 *)(pkt->data)), req_sz);
++
+ 	if (err == -ENOMEDIUM)
+ 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
++
+ 	return err;
+ }
+ 
+@@ -643,7 +661,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ 	if (err)
+ 		goto done;
+ 
+-	err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr, pkt);
++	err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr, pkt);
+ 
+ done:
+ 	return err;
+@@ -665,14 +683,14 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 		goto done;
+ 
+ 	if (pktq->qlen == 1)
+-		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
+-					 pktq->next);
++		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
++					    pktq->next);
+ 	else if (!sdiodev->sg_support) {
+ 		glom_skb = brcmu_pkt_buf_get_skb(totlen);
+ 		if (!glom_skb)
+ 			return -ENOMEM;
+-		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
+-					 glom_skb);
++		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
++					    glom_skb);
+ 		if (err)
+ 			goto done;
+ 
+@@ -707,8 +725,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 	err = brcmf_sdiod_addrprep(sdiodev, &addr);
+ 
+ 	if (!err)
+-		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true, addr,
+-					 mypkt);
++		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
+ 
+ 	brcmu_pkt_buf_free_skb(mypkt);
+ 	return err;
+@@ -730,8 +747,8 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	if (pktq->qlen == 1 || !sdiodev->sg_support)
+ 		skb_queue_walk(pktq, skb) {
+-			err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true,
+-						 addr, skb);
++			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
++						     addr, skb);
+ 			if (err)
+ 				break;
+ 		}
+@@ -783,10 +800,16 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 		sdaddr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 		skb_put(pkt, dsize);
+-		if (write)
++
++		if (write) {
+ 			memcpy(pkt->data, data, dsize);
+-		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write, sdaddr,
+-					 pkt);
++			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_1,
++						     sdaddr, pkt);
++		} else {
++			err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_1,
++						    sdaddr, pkt);
++		}
++
+ 		if (err) {
+ 			brcmf_err("membytes transfer failed\n");
+ 			break;
 -- 
-Kalle Valo
+1.9.1
