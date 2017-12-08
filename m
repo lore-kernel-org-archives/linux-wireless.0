@@ -1,92 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:53622 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751737AbdLVNik (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:33991 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753601AbdLHOmR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 08:38:40 -0500
-Subject: [PATCH v2 1/6] ath10k: remove deprecated fw_crash_dump debugfs file
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Dec 2017 15:38:29 +0200
-Message-ID: <151394990944.9382.5479713630153339961.stgit@potku.adurom.net> (sfid-20171222_143848_618677_ECEBD6D8)
-In-Reply-To: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net>
-References: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net>
+        Fri, 8 Dec 2017 09:42:17 -0500
+Received: by mail-wr0-f196.google.com with SMTP id y21so11046450wrc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Dec 2017 06:42:17 -0800 (PST)
+Date: Fri, 8 Dec 2017 15:42:11 +0100
+From: Gary Bisson <gary.bisson@boundarydevices.com>
+To: Alagu Sankar <alagusankar@silex-india.com>
+Cc: silexcommon@gmail.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [08/11] ath10k_sdio: common read write
+Message-ID: <20171208144211.tionzvzndhv7d5wy@t450s.lan> (sfid-20171208_154221_849397_1CA06383)
+References: <1506793068-27445-9-git-send-email-alagusankar@silex-india.com>
+ <20171005100932.vamkzfulq3dg4iav@t450s.lan>
+ <e9eb78a9e0ed5e1a3acf48af88d02119@silex-india.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e9eb78a9e0ed5e1a3acf48af88d02119@silex-india.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fw_crash_dump file was deprecated by commmit 727000e6af34 ("ath10k: support
-dev_coredump for crash dump") in v4.11 in favor of dev_coredump interface,
-remove it now for good. Everyone should use dev_coredump now.
+Hi Alagu,
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debug.c |   46 -------------------------------
- 1 file changed, 46 deletions(-)
+On Thu, Oct 05, 2017 at 11:03:12PM +0530, Alagu Sankar wrote:
+> Hi Gary,
+> 
+> 
+> On 2017-10-05 15:39, Gary Bisson wrote:
+> > Hi Alagu,
+> > 
+> > On Sat, Sep 30, 2017 at 11:07:45PM +0530, silexcommon@gmail.com wrote:
+> > > From: Alagu Sankar <alagusankar@silex-india.com>
+> > > 
+> > > convert different read write functions in sdio hif to bring it under a
+> > > single read-write path. This helps in having a common dma bounce
+> > > buffer
+> > > implementation. Also helps in address modification that is required
+> > > specific to change in certain mbox addresses of sdio_write.
+> > > 
+> > > Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+> > > ---
+> > >  drivers/net/wireless/ath/ath10k/sdio.c | 131
+> > > ++++++++++++++++-----------------
+> > >  1 file changed, 64 insertions(+), 67 deletions(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/ath/ath10k/sdio.c
+> > > b/drivers/net/wireless/ath/ath10k/sdio.c
+> > > index 77d4fa4..bb6fa67 100644
+> > > --- a/drivers/net/wireless/ath/ath10k/sdio.c
+> > > +++ b/drivers/net/wireless/ath/ath10k/sdio.c
+> > > @@ -36,6 +36,11 @@
+> > > 
+> > >  #define ATH10K_SDIO_DMA_BUF_SIZE	(32 * 1024)
+> > > 
+> > > +static int ath10k_sdio_read(struct ath10k *ar, u32 addr, void *buf,
+> > > +			    u32 len, bool incr);
+> > > +static int ath10k_sdio_write(struct ath10k *ar, u32 addr, const
+> > > void *buf,
+> > > +			     u32 len, bool incr);
+> > > +
+> > 
+> > As mentioned by Kalle, u32 needs to be size_t.
+> Yes, the compiler I used is probably a step older and did not catch this.
+> > 
+> > >  /* inlined helper functions */
+> > > 
+> > >  /* Macro to check if DMA buffer is WORD-aligned and DMA-able.
+> > > @@ -152,6 +157,7 @@ static int ath10k_sdio_config(struct ath10k *ar)
+> > >  	struct sdio_func *func = ar_sdio->func;
+> > >  	unsigned char byte, asyncintdelay = 2;
+> > >  	int ret;
+> > > +	u32 addr;
+> > > 
+> > >  	ath10k_dbg(ar, ATH10K_DBG_BOOT, "sdio configuration\n");
+> > > 
+> > > @@ -180,9 +186,8 @@ static int ath10k_sdio_config(struct ath10k *ar)
+> > >  		 CCCR_SDIO_DRIVER_STRENGTH_ENABLE_C |
+> > >  		 CCCR_SDIO_DRIVER_STRENGTH_ENABLE_D);
+> > > 
+> > > -	ret = ath10k_sdio_func0_cmd52_wr_byte(func->card,
+> > > -					      CCCR_SDIO_DRIVER_STRENGTH_ENABLE_ADDR,
+> > > -					      byte);
+> > > +	addr = CCCR_SDIO_DRIVER_STRENGTH_ENABLE_ADDR,
+> > > +	ret = ath10k_sdio_func0_cmd52_wr_byte(func->card, addr, byte);
+> > 
+> > Not sure this part is needed.
+> This is to overcome checkpatch warning. Too big a names for the function and
+> macro
+> not helping in there. Will have to move it as a separate patch.
+> > 
+> > >  	if (ret) {
+> > >  		ath10k_warn(ar, "failed to enable driver strength: %d\n", ret);
+> > >  		goto out;
+> > > @@ -233,13 +238,16 @@ static int ath10k_sdio_config(struct ath10k *ar)
+> > > 
+> > >  static int ath10k_sdio_write32(struct ath10k *ar, u32 addr, u32 val)
+> > >  {
+> > > -	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
+> > > -	struct sdio_func *func = ar_sdio->func;
+> > > +	__le32 *buf;
+> > >  	int ret;
+> > > 
+> > > -	sdio_claim_host(func);
+> > > +	buf = kzalloc(sizeof(*buf), GFP_KERNEL);
+> > > +	if (!buf)
+> > > +		return -ENOMEM;
+> > > 
+> > > -	sdio_writel(func, val, addr, &ret);
+> > > +	*buf = cpu_to_le32(val);
+> > > +
+> > > +	ret = ath10k_sdio_write(ar, addr, &val, sizeof(val), true);
+> > 
+> > Shouldn't we use buf instead of val? buf seems pretty useless otherwise.
+> Yes, thanks for pointing this out. will be corrected in v2.
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 181fd8e2e615..358c34eeb2d2 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -851,49 +851,6 @@ int ath10k_debug_fw_devcoredump(struct ath10k *ar)
- 	return 0;
- }
- 
--static int ath10k_fw_crash_dump_open(struct inode *inode, struct file *file)
--{
--	struct ath10k *ar = inode->i_private;
--	struct ath10k_dump_file_data *dump;
--
--	ath10k_warn(ar, "fw_crash_dump debugfs file is deprecated, please use /sys/class/devcoredump instead.");
--
--	dump = ath10k_build_dump_file(ar, true);
--	if (!dump)
--		return -ENODATA;
--
--	file->private_data = dump;
--
--	return 0;
--}
--
--static ssize_t ath10k_fw_crash_dump_read(struct file *file,
--					 char __user *user_buf,
--					 size_t count, loff_t *ppos)
--{
--	struct ath10k_dump_file_data *dump_file = file->private_data;
--
--	return simple_read_from_buffer(user_buf, count, ppos,
--				       dump_file,
--				       le32_to_cpu(dump_file->len));
--}
--
--static int ath10k_fw_crash_dump_release(struct inode *inode,
--					struct file *file)
--{
--	vfree(file->private_data);
--
--	return 0;
--}
--
--static const struct file_operations fops_fw_crash_dump = {
--	.open = ath10k_fw_crash_dump_open,
--	.read = ath10k_fw_crash_dump_read,
--	.release = ath10k_fw_crash_dump_release,
--	.owner = THIS_MODULE,
--	.llseek = default_llseek,
--};
--
- static ssize_t ath10k_reg_addr_read(struct file *file,
- 				    char __user *user_buf,
- 				    size_t count, loff_t *ppos)
-@@ -2460,9 +2417,6 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("simulate_fw_crash", 0600, ar->debug.debugfs_phy, ar,
- 			    &fops_simulate_fw_crash);
- 
--	debugfs_create_file("fw_crash_dump", 0400, ar->debug.debugfs_phy, ar,
--			    &fops_fw_crash_dump);
--
- 	debugfs_create_file("reg_addr", 0600, ar->debug.debugfs_phy, ar,
- 			    &fops_reg_addr);
- 
+Do you have any timeframe on the v2?
+
+Regards,
+Gary
