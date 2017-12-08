@@ -1,147 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:40967 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751063AbdLaRbq (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43787 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753055AbdLHMKp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Dec 2017 12:31:46 -0500
-Received: by mail-lf0-f68.google.com with SMTP id h137so8087396lfe.8
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:46 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 13/18] ath10k: htt: High latency TX support
-Date: Sun, 31 Dec 2017 18:29:20 +0100
-Message-Id: <20171231172925.24014-14-erik.stromdahl@gmail.com> (sfid-20171231_183151_903693_1998A204)
-In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
-References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+        Fri, 8 Dec 2017 07:10:45 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 02/10] brcmfmac: whitespace fixes in brcmf_sdiod_send_buf()
+Date: Fri,  8 Dec 2017 13:10:27 +0100
+Message-Id: <1512735035-342-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131058_606433_558BC985)
+In-Reply-To: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add HTT TX function for HL interfaces.
-Intended for SDIO and USB.
+From: Ian Molton <ian@mnementh.co.uk>
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+[arend: mention function in patch subject]
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_tx.c | 92 ++++++++++++++++++++++++++++++++
- 1 file changed, 92 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 1f6470de7b8d..7ea27454ef3f 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -495,6 +495,9 @@ int ath10k_htt_tx_start(struct ath10k_htt *htt)
- 	if (htt->tx_mem_allocated)
- 		return 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index d9ecc69..bff4610 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -714,6 +714,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 	int err;
  
-+	if (ar->is_high_latency)
-+		return 0;
+ 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
 +
- 	ret = ath10k_htt_tx_alloc_buf(htt);
- 	if (ret)
- 		goto free_idr_pending_tx;
-@@ -1188,6 +1191,94 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	return res;
+ 	if (!mypkt) {
+ 		brcmf_err("brcmu_pkt_buf_get_skb failed: len %d\n",
+ 			  nbytes);
+@@ -728,8 +729,8 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
+ 
+ 	brcmu_pkt_buf_free_skb(mypkt);
+-	return err;
+ 
++	return err;
  }
  
-+#define HTT_TX_HL_NEEDED_HEADROOM \
-+	(unsigned int)(sizeof(struct htt_cmd_hdr) + \
-+	sizeof(struct htt_data_tx_desc) + \
-+	sizeof(struct ath10k_htc_hdr))
-+
-+static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
-+			    struct sk_buff *msdu)
-+{
-+	struct ath10k *ar = htt->ar;
-+	int res, data_len;
-+	struct htt_cmd_hdr *cmd_hdr;
-+	struct htt_data_tx_desc *tx_desc;
-+	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
-+	struct sk_buff *tmp_skb;
-+	bool is_eth = (txmode == ATH10K_HW_TXRX_ETHERNET);
-+	u8 vdev_id = ath10k_htt_tx_get_vdev_id(ar, msdu);
-+	u8 tid = ath10k_htt_tx_get_tid(msdu, is_eth);
-+	u8 flags0 = 0;
-+	u16 flags1 = 0;
-+
-+	data_len = msdu->len;
-+
-+	switch (txmode) {
-+	case ATH10K_HW_TXRX_RAW:
-+	case ATH10K_HW_TXRX_NATIVE_WIFI:
-+		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
-+		/* fall through */
-+	case ATH10K_HW_TXRX_ETHERNET:
-+		flags0 |= SM(txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
-+		break;
-+	case ATH10K_HW_TXRX_MGMT:
-+		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
-+			     HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
-+		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
-+		break;
-+	}
-+
-+	if (skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT)
-+		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
-+
-+	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
-+	flags1 |= SM((u16)tid, HTT_DATA_TX_DESC_FLAGS1_EXT_TID);
-+	if (msdu->ip_summed == CHECKSUM_PARTIAL &&
-+	    !test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-+		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
-+		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
-+	}
-+
-+	/* Prepend the HTT header and TX desc struct to the data message
-+	 * and realloc the skb if it does not have enough headroom.
-+	 */
-+	if (skb_headroom(msdu) < HTT_TX_HL_NEEDED_HEADROOM) {
-+		tmp_skb = msdu;
-+
-+		ath10k_dbg(htt->ar, ATH10K_DBG_HTT,
-+			   "Not enough headroom in skb. Current headroom: %u, needed: %u. Reallocating...\n",
-+			   skb_headroom(msdu), HTT_TX_HL_NEEDED_HEADROOM);
-+		msdu = skb_realloc_headroom(msdu, HTT_TX_HL_NEEDED_HEADROOM);
-+		kfree_skb(tmp_skb);
-+		if (!msdu) {
-+			ath10k_warn(htt->ar, "htt hl tx: Unable to realloc skb!\n");
-+			res = -ENOMEM;
-+			goto out;
-+		}
-+	}
-+
-+	skb_push(msdu, sizeof(*cmd_hdr));
-+	skb_push(msdu, sizeof(*tx_desc));
-+	cmd_hdr = (struct htt_cmd_hdr *)msdu->data;
-+	tx_desc = (struct htt_data_tx_desc *)(msdu->data + sizeof(*cmd_hdr));
-+
-+	cmd_hdr->msg_type = HTT_H2T_MSG_TYPE_TX_FRM;
-+	tx_desc->flags0 = flags0;
-+	tx_desc->flags1 = __cpu_to_le16(flags1);
-+	tx_desc->len = __cpu_to_le16(data_len);
-+	tx_desc->id = 0;
-+	tx_desc->frags_paddr = 0; /* always zero */
-+	/* Initialize peer_id to INVALID_PEER because this is NOT
-+	 * Reinjection path
-+	 */
-+	tx_desc->peerid = __cpu_to_le32(HTT_INVALID_PEERID);
-+
-+	res = ath10k_htc_send(&htt->ar->htc, htt->eid, msdu);
-+
-+out:
-+	return res;
-+}
-+
- static int ath10k_htt_tx_32(struct ath10k_htt *htt,
- 			    enum ath10k_hw_txrx_mode txmode,
- 			    struct sk_buff *msdu)
-@@ -1619,6 +1710,7 @@ static const struct ath10k_htt_tx_ops htt_tx_ops_64 = {
- static const struct ath10k_htt_tx_ops htt_tx_ops_hl = {
- 	.htt_send_rx_ring_cfg = ath10k_htt_send_rx_ring_cfg_hl,
- 	.htt_send_frag_desc_bank_cfg = ath10k_htt_send_frag_desc_bank_cfg_32,
-+	.htt_tx = ath10k_htt_tx_hl,
- };
- 
- void ath10k_htt_set_tx_ops(struct ath10k_htt *htt)
+ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
 -- 
-2.15.1
+1.9.1
