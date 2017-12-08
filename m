@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:38825 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752126AbdLNMwj (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43793 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753079AbdLHMKq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 07:52:39 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: KAVITA MATHUR <kavitam@cdot.in>
-CC: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: regulatory.db file for ath10k
-Date: Thu, 14 Dec 2017 12:52:31 +0000
-Message-ID: <87fu8dmpyp.fsf@kamboji.qca.qualcomm.com> (sfid-20171214_135242_745078_D1665CCB)
-References: <20171213063219.M10289@cdot.in>
-        <240c63ef1f9745acaa0e7585be6a46de@aphydexm01f.ap.qualcomm.com>
-        <20171213081213.M75864@cdot.in>
-In-Reply-To: <20171213081213.M75864@cdot.in> (KAVITA MATHUR's message of "Wed,
-        13 Dec 2017 13:44:38 +0530")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Fri, 8 Dec 2017 07:10:46 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 07/10] brcmfmac: remove unnecessary call to brcmf_sdiod_set_backplane_window()
+Date: Fri,  8 Dec 2017 13:10:32 +0100
+Message-Id: <1512735035-342-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131059_185648_583CF12F)
+In-Reply-To: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(please don't top post)
+From: Ian Molton <ian@mnementh.co.uk>
 
-"KAVITA MATHUR" <kavitam@cdot.in> writes:
+All functions that might require the window address changing call
+brcmf_sdiod_set_backplane_window() prior to access. Thus resetting
+the window is not required.
 
-> I do not want to use regulatory.db. Can you please share your ath10k buil=
-d
-> configuration? I may be missing something in configuration.
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+[arend: corrected the driver prefix in the subject]
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-If you don't want to use regulatory.db you can just ignore the warning
-and continue to use CRDA as before.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 5fcd193..f8b47c1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -723,11 +723,6 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	dev_kfree_skb(pkt);
+ 
+-	/* Return the window to backplane enumeration space for core access */
+-	if (brcmf_sdiod_set_backplane_window(sdiodev, sdiodev->sbwad))
+-		brcmf_err("FAILED to set window back to 0x%x\n",
+-			  sdiodev->sbwad);
+-
+ 	sdio_release_host(sdiodev->func[1]);
+ 
+ 	return err;
+-- 
+1.9.1
