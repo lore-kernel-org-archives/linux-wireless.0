@@ -1,106 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35467 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751772AbdLBLbr (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:48817 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752905AbdLHJ16 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 06:31:47 -0500
-From: Rakesh Pillai <pillair@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@qti.qualcomm.com>,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH v2 4/4] ath10k: WMI: add hw params entry for wcn3990
-Date: Sat,  2 Dec 2017 17:00:48 +0530
-Message-Id: <1512214248-17127-5-git-send-email-pillair@qti.qualcomm.com> (sfid-20171202_123154_018852_3C94E90D)
-In-Reply-To: <1512214248-17127-1-git-send-email-pillair@qti.qualcomm.com>
-References: <1512214248-17127-1-git-send-email-pillair@qti.qualcomm.com>
+        Fri, 8 Dec 2017 04:27:58 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "ext.waldemar.rymarkiewicz@tieto.com"
+        <ext.waldemar.rymarkiewicz@tieto.com>
+Subject: Re: [PATCH 2/2] ath10k: search DT for qcom,ath10k-calibration-variant
+Date: Fri, 8 Dec 2017 09:27:52 +0000
+Message-ID: <87fu8ltvqg.fsf@kamboji.qca.qualcomm.com> (sfid-20171208_102821_602774_0B175A48)
+References: <20170310080615.22958-1-sven.eckelmann@openmesh.com>
+        <20170310080615.22958-2-sven.eckelmann@openmesh.com>
+In-Reply-To: <20170310080615.22958-2-sven.eckelmann@openmesh.com> (Sven
+        Eckelmann's message of "Fri, 10 Mar 2017 09:06:15 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add hw params entry for wcn3990 and populate various
-target specific values for wcn3990.
+Sven Eckelmann <sven.eckelmann@openmesh.com> writes:
 
-Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 18 ++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.c   |  2 ++
- drivers/net/wireless/ath/ath10k/hw.h   | 10 ++++++++++
- 3 files changed, 30 insertions(+)
+> Board Data File (BDF) is loaded upon driver boot-up procedure. The right
+> board data file is identified on QCA4019 using bus, bmi-chip-id and
+> bmi-board-id.
+>
+> The problem, however, can occur when the (default) board data file cannot
+> fulfill with the vendor requirements and it is necessary to use a differe=
+nt
+> board data file.
+>
+> This problem was solved for SMBIOS by adding a special SMBIOS type 0xF8.
+> Something similar has to be provided for systems without SMBIOS but with
+> device trees. No solution was specified by QCA and therefore a new one ha=
+s
+> to be found for ath10k.
+>
+> The device tree requires addition strings to define the variant name
+>
+>     wifi@a000000 {
+>     	status =3D "okay";
+>     	qcom,ath10k-calibration-variant =3D "RT-AC58U";
+>     };
+>
+>     wifi@a800000 {
+>     	status =3D "okay";
+>     	qcom,ath10k-calibration-variant =3D "RT-AC58U";
+>     };
+>
+> This would create the boarddata identifiers for the board-2.bin search
+>
+>  *  bus=3Dahb,bmi-chip-id=3D0,bmi-board-id=3D16,variant=3DRT-AC58U
+>  *  bus=3Dahb,bmi-chip-id=3D0,bmi-board-id=3D17,variant=3DRT-AC58U
+>
+> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+> ---
+> Since RFC:
+>
+>  - initialize variant pointer to have it initialized to NULL when
+>    of_property_read_string fails (thanks Christian Lamparter)
+>  - Only print warning that DT doesn't contain string ones (thanks Christi=
+an
+>    Lamparter)
+>  - Split patch in DT doc and ath10k part (thanks Christian Lamparter)
+>  - Allow to overwrite the variant string via DT and ignore that SMBIOS ha=
+d
+>    written anything to it
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index be18913..6abffb5 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -405,6 +405,24 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 	},
-+	{
-+		.id = WCN3990_HW_1_0_DEV_VERSION,
-+		.dev_id = 0,
-+		.name = "wcn3990 hw1.0",
-+		.continuous_frag_desc = true,
-+		.tx_chain_mask = 0x7,
-+		.rx_chain_mask = 0x7,
-+		.max_spatial_stream = 4,
-+		.fw = {
-+			.dir = WCN3990_HW_1_0_FW_DIR,
-+		},
-+		.sw_decrypt_mcast_mgmt = true,
-+		.hw_ops = &wcn3990_ops,
-+		.decap_align_bytes = 1,
-+		.num_peers = TARGET_HL_10_TLV_NUM_PEERS,
-+		.ast_skid_limit = TARGET_HL_10_TLV_AST_SKID_LIMIT,
-+		.num_wds_entries = TARGET_HL_10_TLV_NUM_WDS_ENTRIES,
-+	},
- };
- 
- static const char *const ath10k_core_fw_feature_str[] = {
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index 88955bb..76b9b41 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -931,3 +931,5 @@ static int ath10k_qca99x0_rx_desc_get_l3_pad_bytes(struct htt_rx_desc *rxd)
- 	.set_coverage_class = ath10k_hw_qca988x_set_coverage_class,
- 	.enable_pll_clk = ath10k_hw_qca6174_enable_pll_clock,
- };
-+
-+const struct ath10k_hw_ops wcn3990_ops = {0};
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index fedb6c7..90ad39b 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -128,6 +128,10 @@ enum qca9377_chip_id_rev {
- #define QCA4019_HW_1_0_BOARD_DATA_FILE "board.bin"
- #define QCA4019_HW_1_0_PATCH_LOAD_ADDR  0x1234
- 
-+/* WCN3990 1.0 definitions */
-+#define WCN3990_HW_1_0_DEV_VERSION	ATH10K_HW_WCN3990
-+#define WCN3990_HW_1_0_FW_DIR		ATH10K_FW_DIR "/WCN3990/hw3.0"
-+
- #define ATH10K_FW_FILE_BASE		"firmware"
- #define ATH10K_FW_API_MAX		6
- #define ATH10K_FW_API_MIN		2
-@@ -571,6 +575,7 @@ struct ath10k_hw_ops {
- extern const struct ath10k_hw_ops qca988x_ops;
- extern const struct ath10k_hw_ops qca99x0_ops;
- extern const struct ath10k_hw_ops qca6174_ops;
-+extern const struct ath10k_hw_ops wcn3990_ops;
- 
- extern const struct ath10k_hw_clk_params qca6174_clk[];
- 
-@@ -667,6 +672,11 @@ struct ath10k_hw_ops {
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
- #define TARGET_TLV_NUM_WOW_PATTERNS		22
- 
-+/* Target specific defines for WMI-HL-1.0 firmware */
-+#define TARGET_HL_10_TLV_NUM_PEERS		14
-+#define TARGET_HL_10_TLV_AST_SKID_LIMIT		6
-+#define TARGET_HL_10_TLV_NUM_WDS_ENTRIES	2
-+
- /* Diagnostic Window */
- #define CE_DIAG_PIPE	7
- 
--- 
-1.9.1
+[...]
+
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -779,6 +779,25 @@ static int ath10k_core_check_smbios(struct ath10k *a=
+r)
+>  	return 0;
+>  }
+> =20
+> +static int ath10k_core_check_dt(struct ath10k *ar)
+> +{
+> +	struct device_node *node;
+> +	const char *variant =3D NULL;
+> +
+> +	node =3D ar->dev->of_node;
+> +	if (!node)
+> +		return -ENOENT;
+> +
+> +	of_property_read_string(node, "qcom,ath10k-calibration-variant",
+> +				&variant);
+> +	if (!variant)
+> +		return -ENODATA;
+> +
+> +	strscpy(ar->id.bdf_ext, variant, sizeof(ar->id.bdf_ext));
+
+Kbuild bot found a warning here:
+
+   drivers/net/wireless/ath/ath10k/core.c: In function 'ath10k_core_check_d=
+t':
+>> drivers/net/wireless/ath/ath10k/core.c:877:2: warning: ignoring return v=
+alue of 'strscpy', declared with attribute warn_unused_result [-Wunused-res=
+ult]
+     strscpy(ar->id.bdf_ext, variant, sizeof(ar->id.bdf_ext));
+     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+I guess warn_unused_result in strscpy() is a recent addition and that's
+why you didn't see it.
+
+--=20
+Kalle Valo=
