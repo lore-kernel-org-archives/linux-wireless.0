@@ -1,104 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49106 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:49602 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752602AbdLEOhH (ORCPT
+        with ESMTP id S1752209AbdLHMfX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 09:37:07 -0500
-Message-ID: <1512484624.4827.187.camel@coelho.fi> (sfid-20171205_153740_827742_07EDFA02)
+        Fri, 8 Dec 2017 07:35:23 -0500
+Message-ID: <1512736519.4827.287.camel@coelho.fi> (sfid-20171208_133527_530063_CFEB3254)
 From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Date: Tue, 05 Dec 2017 16:37:04 +0200
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-RLUObsWoHQEWrPR657CZ"
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
+Date: Fri, 08 Dec 2017 14:35:19 +0200
+In-Reply-To: <87vahhflsf.fsf@purkki.adurom.net>
+References: <20171125153510.25359-1-luca@coelho.fi>
+         <20171125153510.25359-7-luca@coelho.fi>
+         <87mv351iys.fsf@kamboji.qca.qualcomm.com>
+         <1511951353.4827.27.camel@coelho.fi>
+         <87efo5s93p.fsf@kamboji.qca.qualcomm.com>
+         <87vahhflsf.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: pull-request: iwlwifi 2017-12-05
+Subject: Re: [PATCH 6/6] iwlwifi: fix access to prph when transport is
+ stopped
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2017-12-08 at 14:26 +0200, Kalle Valo wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+> > Luca Coelho <luca@coelho.fi> writes:
+> > 
+> > > On Wed, 2017-11-29 at 12:23 +0200, Kalle Valo wrote:
+> > > 
+> > > > But no wonder I called gnus-article-fill-cited-article, the
+> > > > commit
+> > > > log is just weirdly wrapped. Are you using outlook or how do
+> > > > you get
+> > > > it so ugly? :)
+> > > 
+> > > Heh! I don't think it's wrapped weirdly, it's just that the
+> > > paragraphs
+> > > don't have spaces between them, right? ;)
+> > 
+> > Sorry, don't get what you mean with missing spaces. To me (and
+> > patchwork[1] and git[2] seem to agree) the word wrapping is just
+> > broken
+> > for this commit log, and I have seen it also with other iwlwifi
+> > commits.
+> > For example, there are just two words in the second line "two
+> > paths."
+> > 
+> > The standard format for git commit logs is something like this:
+> > 
+> > -----------------------------------------------------------------
+> > -----
+> > When getting HW rfkill we get stop_device being called from two
+> > paths.
+> > One path is the IRQ calling stop device, and updating op mode and
+> > stack.
+> > As a result, cfg80211 is running rfkill sync work that shuts down
+> > all
+> > devices (second path). In the second path, we eventually get to
+> > iwl_mvm_stop_device which calls iwl_fw_dump_conf_clear-
+> > >iwl_fw_dbg_stop_recording,
+> > that access periphery registers.
+> > 
+> > The device may be stopped at this point from the first path,
+> > which will result with a failure to access those registers. Simply
+> > checking for the trans status is insufficient, since the race will
+> > still
+> > exist, only minimized. Instead, move the stop from
+> > iwl_fw_dump_conf_clear (which is getting called only from stop
+> > path) to
+> > the transport stop device function, where the access is always
+> > safe.
+> > This has the added value, of actually stopping dbgc before stopping
+> > device even when the stop is initiated from the transport.
+> > -----------------------------------------------------------------
+> > -----
+> > 
+> > [1] https://patchwork.kernel.org/patch/10074849/
+> 
+> Instead of trying to get what I mean, check instead the patchwork
+> page
+> and compare there the original commit log with my reformatted
+> version. I
+> think that visualises pretty well what I'm trying to say :)
 
---=-RLUObsWoHQEWrPR657CZ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Okay, granted, but that's not really because of alignment or line-
+wrapping.  It's because the paragraphs are broken too often.
 
-Hi Kalle,
+In any case, I'll pay more attention to this.  So my questions remains,
+do you want me to remake my pull-req to fix this?
 
-Here is my third set of fixes for 4.15.  The most important fixes are
-for the new 9000 series where we were not handling some offloads
-correctly and secure connections were totally broken.  There is also 4
-new PCI IDs and an ROC fix on P2P.  More details in the tag
-description.
-
-I have sent this out before and kbuildbot didn't find any issues.=20
-Please let me know if there are any issues.
-
-Cheers,
+--
 Luca.
-
-
-The following changes since commit 5c3de777bdaf48bd0cfb43097c0d0fb85056cab7=
-:
-
-  brcmfmac: change driver unbind order of the sdio function devices (2017-1=
-2-02 17:22:47 +0200)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
-ags/iwlwifi-for-kalle-2017-12-05
-
-for you to fetch changes up to bf19037074e770aad74b3b90f37b8b98db3f3748:
-
-  iwlwifi: mvm: mark MIC stripped MPDUs (2017-12-05 16:23:30 +0200)
-
-----------------------------------------------------------------
-Third batch of iwlwifi patches intended for 4.15.
-
-* Tell mac80211 when the MAC has been stripped (9000 series);
-* Tell mac80211 when the IVC has been stripped (9000 series);
-* Add 2 new PCI IDs, one for 9000 and one for 22000;
-* Fix a queue hang due during ROC.
-
-----------------------------------------------------------------
-David Spinadel (1):
-      iwlwifi: mvm: enable RX offloading with TKIP and WEP
-
-Ihab Zhaika (1):
-      iwlwifi: add new cards for 9260 and 22000 series
-
-Johannes Berg (1):
-      iwlwifi: mvm: flush queue before deleting ROC
-
-Sara Sharon (1):
-      iwlwifi: mvm: mark MIC stripped MPDUs
-
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h      |  4 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h        |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c       | 14 +++++++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 24 +++++++++++++++++=
-+++++--
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c       |  2 ++
- 5 files changed, 40 insertions(+), 6 deletions(-)
---=-RLUObsWoHQEWrPR657CZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlomrxAACgkQoUecoho8
-xfptRRAAlPy5KQAPpHeEIKn1AaMmiOpSQ1pzwQB+ShiOMmwKnuVDYVkpq6UD1ou2
-eiWj7Z9dWYc8ARYJ0xzfSd4t3B6ZRBAAWsR9lkfEGEa4MGdkHO7twqoY25v8Hc7w
-ZXg7axulf28QXlgS8i4fpfr0X3XEcoQ8ohTE8PkgJalz+kRrbAQef/QG8/25FSIQ
-Z1k7IoMldn6vX3Q8mKPImM7sk3B9sUHTP+PQdPAM5T5MZPEAo1I6hl8MbSRAKmSd
-zqvh0LKka0BHdlTiHM/QjS6GIP3YF8wRbiQXH6ufNFiuraevWSjd95Ki41Ot5Xk8
-bwv3T6MSgks+gQehw5XQCzSBL0KGvnYHeyTCdmv6zFhBV2aQNsGIbohhZM7I5rhE
-W+g4qCZNSIgmQhfNP+l+r4iC9BrbQx1DofcYeN+z/oEettSUhQ9FkOIBUTM66zWd
-3umv6P6noYNkO3vuh6JiHQ4cSjyDpMMAEkvM0ImnuP/nF5rfI+BDPKpVNqZWhG9E
-ZvJ61WM1AP+HhPy8LORbG0pb3/t4OHGgOGYWu1jfoa8xv40gqBcKI/WGwpOPVer9
-g4ti/qHgUR6OZiQq7DYWNNSojbRfnZeosOfSwGtzoLvIjVHrNS+rKbu9GR5yf7tJ
-QtAGixHzhFl6iGXahrdJzHSk2kw4+FLbDiEZmlccOdRtDy5tX3s=
-=DhL3
------END PGP SIGNATURE-----
-
---=-RLUObsWoHQEWrPR657CZ--
