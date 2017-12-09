@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50916 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758126AbdLRKOM (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:40242 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751115AbdLIUPi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 05:14:12 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 12:14:03 +0200
-Message-Id: <20171218101405.9330-1-luca@coelho.fi> (sfid-20171218_111422_287161_6008A308)
-Subject: [PATCH 0/2] cfg80211/mac80211 patches from our internal tree 2017-12-18
+        Sat, 9 Dec 2017 15:15:38 -0500
+Message-ID: <1512850533.26976.48.camel@sipsolutions.net> (sfid-20171209_211559_269452_2C7A3EE3)
+Subject: Re: Wireless regressions in v4.15-rc1
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Thorsten Leemhuis <regressions@leemhuis.info>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath10k@lists.infradead.org
+Date: Sat, 09 Dec 2017 21:15:33 +0100
+In-Reply-To: <87po7xwajg.fsf@kamboji.qca.qualcomm.com> (sfid-20171202_135939_841463_D1ADD367)
+References: <87po7xwajg.fsf@kamboji.qca.qualcomm.com>
+         (sfid-20171202_135939_841463_D1ADD367)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Sat, 2017-12-02 at 14:59 +0200, Kalle Valo wrote:
+> 
+> net: netlink: Update attr validation to require exact length for some types
+> https://git.kernel.org/linus/28033ae4e0f5
 
-Hi,
+This was reverted, more or less, to print only a warning:
 
-Here are a couple of patches from our internal tree.
+https://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git/commit/?id=6e237d099fac1f73a7b6d7287bb9191f29585a4e
 
-Cheers,
-Luca.
+> Jouni fixed this already in hostapd but we also need a fix for kernel so
+> that old hostapd versions continue to work:
+> 
+> https://w1.fi/cgit/hostap/commit/?id=a2426829ce426de82d2fa47071ca41ea81c43307
+> 
+> Jouni also found a similar problem with mesh:
+> 
+> https://w1.fi/cgit/hostap/commit/?id=963d3149abfcbab5b83f9023bc50321f777360d1
 
+See above for the kernel revert to let old hostapd versions continue to
+work (properly only on little endian platforms) when they don't have
+these fixes.
 
-Adiel Aloni (1):
-  mac80211_hwsim: enable TODS BIT in null data frame
+> And Johannes already submitted a revert related to wpa_supplicant:
+> 
+> [net] Revert "net: core: maybe return -EEXIST in __dev_alloc_name" diffmboxseries
+> https://patchwork.ozlabs.org/patch/843863/
 
-David Spinadel (1):
-  nl80211: send deauth reason if locally generated
+That was applied.
 
- drivers/net/wireless/mac80211_hwsim.c | 1 +
- net/wireless/nl80211.c                | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+> And with ath10k I'm now seeing this:
+> 
+> [  133.175508] WARNING: CPU: 2 PID: 1743 at net/mac80211/agg-tx.c:315 ___ieee80211_stop_tx_ba_session+0x1ab/0x280 [mac80211]
 
--- 
-2.15.1
+Just sent a fix for this, kinda a merge/patch failure.
+
+> johannes
