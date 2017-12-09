@@ -1,220 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46908 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751688AbdLLHim (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:38440 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751115AbdLITx7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 02:38:42 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v5 2/3] mwifiex: device dump support for usb interface
-Date: Tue, 12 Dec 2017 15:38:12 +0800
-Message-ID: <1513064293-9400-2-git-send-email-huxm@marvell.com> (sfid-20171212_083845_034500_267F2B93)
-In-Reply-To: <1513064293-9400-1-git-send-email-huxm@marvell.com>
-References: <1513064293-9400-1-git-send-email-huxm@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 9 Dec 2017 14:53:59 -0500
+Message-ID: <1512849236.26976.43.camel@sipsolutions.net> (sfid-20171209_205402_924382_E592C107)
+Subject: Re: Setting TX power on a monitoring interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Peter =?ISO-8859-1?Q?Gro=DFe?= <pegro@friiks.de>,
+        linux-wireless@vger.kernel.org
+Date: Sat, 09 Dec 2017 20:53:56 +0100
+In-Reply-To: <20171201183446.2c5f8504@fem-net.de> (sfid-20171201_183454_527148_F6A8C87B)
+References: <20171120173415.1ae44829@fem-net.de>
+         <1511782993.5456.6.camel@sipsolutions.net>
+         <20171127160722.4969cd23@friiks.de>
+         <1512139742.25588.14.camel@sipsolutions.net>
+         <20171201183446.2c5f8504@fem-net.de> (sfid-20171201_183454_527148_F6A8C87B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware dump on usb interface is different with current
-sdio/pcie chipset, which is based on register operation.
+Hi,
 
-When firmware hang on usb interface, context dump will be
-upload to host using 0x73 firmware debug event.
+(side note - I might reply faster if you don't drop me from Cc, since
+then it goes to my inbox in addition to my list folder)
 
-This patch store dump data from debug event and send to
-userspace using device coredump API.
+> > I meant to pass the &monitor_sdata.vif pointer instead of the real
+> > monitor interface that's coming through cfg80211. The former is virtual
+> > and has no netdev, but the diver is aware of it.
+> 
+> I'm not sure I get where to pass this to what. Do you mean in
+> drv_bss_info_changed or ieee80211_set_tx_power?
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
-v2: Addressed below review comments from Brian Norris
-    a) Check for overflow introduced by invalid event.
-    b) Use end of transmission signal to recognize last event.
-v5: Same as v2,v3,v4
----
- drivers/net/wireless/marvell/mwifiex/fw.h        | 10 ++++
- drivers/net/wireless/marvell/mwifiex/init.c      |  9 ++++
- drivers/net/wireless/marvell/mwifiex/main.h      |  2 +
- drivers/net/wireless/marvell/mwifiex/sta_event.c | 61 ++++++++++++++++++++++++
- 4 files changed, 82 insertions(+)
+Should be in ieee80211_set_tx_power, if the interface is you're getting
+in (dev/sdata) is MONITOR. You need to do the right locking (or may
+already have rtnl, check in nl80211.c) to get local->monitor_sdata, and
+then reject the call if that is NULL or pass it through with that sdata
+(or the vif from it)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 13cd58e9..4d5e686 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -56,6 +56,15 @@ struct mwifiex_fw_data {
- 	u8 data[1];
- } __packed;
- 
-+struct mwifiex_fw_dump_header {
-+	__le16          seq_num;
-+	__le16          reserved;
-+	__le16          type;
-+	__le16          len;
-+} __packed;
-+
-+#define FW_DUMP_INFO_ENDED 0x0002
-+
- #define MWIFIEX_FW_DNLD_CMD_1 0x1
- #define MWIFIEX_FW_DNLD_CMD_5 0x5
- #define MWIFIEX_FW_DNLD_CMD_6 0x6
-@@ -570,6 +579,7 @@ enum mwifiex_channel_flags {
- #define EVENT_BG_SCAN_STOPPED           0x00000065
- #define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
- #define EVENT_MULTI_CHAN_INFO           0x0000006a
-+#define EVENT_FW_DUMP_INFO		0x00000073
- #define EVENT_TX_STATUS_REPORT		0x00000074
- #define EVENT_BT_COEX_WLAN_PARA_CHANGE	0X00000076
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index b0d3d68..d239e92 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -64,6 +64,13 @@ static void wakeup_timer_fn(struct timer_list *t)
- 		adapter->if_ops.card_reset(adapter);
- }
- 
-+static void fw_dump_timer_fn(struct timer_list *t)
-+{
-+	struct mwifiex_adapter *adapter = from_timer(adapter, t, devdump_timer);
-+
-+	mwifiex_upload_device_dump(adapter);
-+}
-+
- /*
-  * This function initializes the private structure and sets default
-  * values to the members.
-@@ -315,6 +322,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->active_scan_triggered = false;
- 	timer_setup(&adapter->wakeup_timer, wakeup_timer_fn, 0);
- 	adapter->devdump_len = 0;
-+	timer_setup(&adapter->devdump_timer, fw_dump_timer_fn, 0);
- }
- 
- /*
-@@ -397,6 +405,7 @@ static void mwifiex_invalidate_lists(struct mwifiex_adapter *adapter)
- mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
- {
- 	del_timer(&adapter->wakeup_timer);
-+	del_timer_sync(&adapter->devdump_timer);
- 	mwifiex_cancel_all_pending_cmd(adapter);
- 	wake_up_interruptible(&adapter->cmd_wait_q.wait);
- 	wake_up_interruptible(&adapter->hs_activate_wait_q);
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 8b6241a..6b5539b 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1037,6 +1037,7 @@ struct mwifiex_adapter {
- 	/* Device dump data/length */
- 	void *devdump_data;
- 	int devdump_len;
-+	struct timer_list devdump_timer;
- };
- 
- void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
-@@ -1682,6 +1683,7 @@ void mwifiex_process_multi_chan_event(struct mwifiex_private *priv,
- void mwifiex_multi_chan_resync(struct mwifiex_adapter *adapter);
- int mwifiex_set_mac_address(struct mwifiex_private *priv,
- 			    struct net_device *dev);
-+void mwifiex_devdump_tmo_func(unsigned long function_context);
- 
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index d8db412..93dfb76 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -584,6 +584,62 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
- 		adapter->coex_rx_win_size);
- }
- 
-+static void
-+mwifiex_fw_dump_info_event(struct mwifiex_private *priv,
-+			   struct sk_buff *event_skb)
-+{
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	struct mwifiex_fw_dump_header *fw_dump_hdr =
-+				(void *)adapter->event_body;
-+
-+	if (adapter->iface_type != MWIFIEX_USB) {
-+		mwifiex_dbg(adapter, MSG,
-+			    "event is not on usb interface, ignore it\n");
-+		return;
-+	}
-+
-+	if (!adapter->devdump_data) {
-+		/* When receive the first event, allocate device dump
-+		 * buffer, dump driver info.
-+		 */
-+		adapter->devdump_data = vzalloc(MWIFIEX_FW_DUMP_SIZE);
-+		if (!adapter->devdump_data) {
-+			mwifiex_dbg(adapter, ERROR,
-+				    "vzalloc devdump data failure!\n");
-+			return;
-+		}
-+
-+		mwifiex_drv_info_dump(adapter);
-+
-+		/* If no proceeded event arrive in 10s, upload device
-+		 * dump data, this will be useful if the end of
-+		 * transmission event get lost, in this cornel case,
-+		 * user would still get partial of the dump.
-+		 */
-+		mod_timer(&adapter->devdump_timer,
-+			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
-+	}
-+
-+	/* Overflow check */
-+	if (adapter->devdump_len + event_skb->len >= MWIFIEX_FW_DUMP_SIZE)
-+		goto upload_dump;
-+
-+	memmove(adapter->devdump_data + adapter->devdump_len,
-+		adapter->event_skb->data, event_skb->len);
-+	adapter->devdump_len += event_skb->len;
-+
-+	if (le16_to_cpu(fw_dump_hdr->type == FW_DUMP_INFO_ENDED)) {
-+		mwifiex_dbg(adapter, MSG,
-+			    "receive end of transmission flag event!\n");
-+		goto upload_dump;
-+	}
-+	return;
-+
-+upload_dump:
-+	del_timer_sync(&adapter->devdump_timer);
-+	mwifiex_upload_device_dump(adapter);
-+}
-+
- /*
-  * This function handles events generated by firmware.
-  *
-@@ -636,6 +692,7 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
-  *      - EVENT_DELBA
-  *      - EVENT_BA_STREAM_TIEMOUT
-  *      - EVENT_AMSDU_AGGR_CTRL
-+ *      - EVENT_FW_DUMP_INFO
-  */
- int mwifiex_process_sta_event(struct mwifiex_private *priv)
- {
-@@ -1007,6 +1064,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 					    adapter->event_skb->len -
- 					    sizeof(eventcause));
- 		break;
-+	case EVENT_FW_DUMP_INFO:
-+		mwifiex_dbg(adapter, EVENT, "event: firmware debug info\n");
-+		mwifiex_fw_dump_info_event(priv, adapter->event_skb);
-+		break;
- 	/* Debugging event; not used, but let's not print an ERROR for it. */
- 	case EVENT_UNKNOWN_DEBUG:
- 		mwifiex_dbg(adapter, EVENT, "event: debug\n");
--- 
-1.9.1
+> Assuming you meant ieee80211_set_tx_power, then I'd have to check whether wdev
+> is a monitor interface and reject the configuration, if local->monitor_sdata
+> doesn't exist?
+
+Right.
+
+> But in ieee80211_set_tx_power no vif pointers get handed around, so I'm
+> confused. Sorry.
+
+You have a wdev, that's equivalent. See the "if (wdev)" clause that
+gets an sdata from the wdev, and then you have &sdata->vif as the vif.
+
+johannes
