@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46584 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755136AbdLOKdD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Dec 2017 05:33:03 -0500
-Date: Fri, 15 Dec 2017 11:32:16 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: BCM4356 does not initalize after firmware update
-Message-ID: <20171215103215.GA2742@redhat.com> (sfid-20171215_113423_102082_FAFAB04C)
-References: <20171213161257.GB2811@redhat.com>
- <5A3240B9.90007@broadcom.com>
- <20171214142243.GB2737@redhat.com>
- <5A339CB2.1040202@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5A339CB2.1040202@broadcom.com>
+Received: from s3.sipsolutions.net ([144.76.63.242]:40072 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751115AbdLIUNl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Dec 2017 15:13:41 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, Pavel Machek <pavel@ucw.cz>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix locking in ieee80211_sta_tear_down_BA_sessions
+Date: Sat,  9 Dec 2017 21:13:38 +0100
+Message-Id: <20171209201338.24931-1-johannes@sipsolutions.net> (sfid-20171209_211345_027665_71AB412F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 15, 2017 at 10:58:10AM +0100, Arend van Spriel wrote:
-> On 12/14/2017 3:22 PM, Stanislaw Gruszka wrote:
-> >On Thu, Dec 14, 2017 at 10:13:29AM +0100, Arend van Spriel wrote:
-> >>The cur_etheraddr is the first piece of info we try to get from the
-> >>firmware. Could you build the driver with CONFIG_BRCMDBG and load
-> >>the module with 'debug=0x181416'.
-> >
-> >dmesg attached.
-> 
-> So the firmware console output in the dmesg shows partial stack
-> trace which clearly means the firmware crashed.
-> 
-> [ 2685.701602] brcmfmac: brcmf_pcie_isr_thread Enter 100
-> [ 2685.701613] brcmfmac: brcmf_pcie_handle_mb_data D2H_MB_DATA: 0x10000000
-> [ 2685.701634] brcmfmac: CONSOLE: 0d
-> [ 2685.701706] brcmfmac: CONSOLE: 000000.049 sp+ec 00184635
-> [ 2685.701778] brcmfmac: CONSOLE: 000000.049 sp+f4 00182ca7
-> [ 2685.701854] brcmfmac: CONSOLE: 000000.049 sp+100 000001df
-> [ 2685.701928] brcmfmac: CONSOLE: 000000.049 sp+140 0000823f
-> [ 2685.702003] brcmfmac: CONSOLE: 000000.049 sp+150 0018b8d9
-> [ 2687.642667] brcmfmac: brcmf_msgbuf_query_dcmd: Timeout on
-> response for query command
-> [ 2687.650464] brcmfmac: brcmf_fil_cmd_data Failed: BCME_NOTDOWN (-5)
-> [ 2687.650469] brcmfmac: brcmf_fil_iovar_data_get ifidx=0,
-> name=cur_etheraddr, len=6
-> [ 2687.650471] brcmutil: data
-> [ 2687.650475] 00000000: 00 00 00 00 00 00   ......
-> [ 2687.650479] brcmfmac: brcmf_c_preinit_dcmds: Retreiving
-> cur_etheraddr failed, -5
-> 
-> I noticed you are not using a nvram file. Do you know if one was
-> orignally provided with the device?
+From: Johannes Berg <johannes.berg@intel.com>
 
-I think it was not. The device was bought and setup in Fedora/RHEL
-machine, which do not include any extra brcmfmac nvram file.
+Due to overlap between
+commit 1281103770e9 ("mac80211: Simplify locking in ieee80211_sta_tear_down_BA_sessions()")
+and the way that Luca modified
+commit 72e2c3438ba3 ("mac80211: tear down RX aggregations first")
+when sending it upstream from Intel's internal tree, we get
+the following warning:
 
-Thanks
-Stanislaw
+WARNING: CPU: 0 PID: 5472 at net/mac80211/agg-tx.c:315 ___ieee80211_stop_tx_ba_session+0x158/0x1f0
+
+since there's no appropriate locking around the call to
+___ieee80211_stop_tx_ba_session; Sara's original just had
+a call to the locked __ieee80211_stop_tx_ba_session (one
+less underscore) but it looks like Luca modified both of
+the calls when fixing it up for upstream, leading to the
+problem at hand.
+
+Move the locking appropriately to fix this problem.
+
+Reported-by: Kalle Valo <kvalo@codeaurora.org>
+Reported-by: Pavel Machek <pavel@ucw.cz>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ht.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 167f83b853e6..1621b6ab17ba 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -291,16 +291,15 @@ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
+ 	int i;
+ 
+ 	mutex_lock(&sta->ampdu_mlme.mtx);
+-	for (i = 0; i <  IEEE80211_NUM_TIDS; i++) {
++	for (i = 0; i <  IEEE80211_NUM_TIDS; i++)
+ 		___ieee80211_stop_rx_ba_session(sta, i, WLAN_BACK_RECIPIENT,
+ 						WLAN_REASON_QSTA_LEAVE_QBSS,
+ 						reason != AGG_STOP_DESTROY_STA &&
+ 						reason != AGG_STOP_PEER_REQUEST);
+-	}
+-	mutex_unlock(&sta->ampdu_mlme.mtx);
+ 
+ 	for (i = 0; i <  IEEE80211_NUM_TIDS; i++)
+ 		___ieee80211_stop_tx_ba_session(sta, i, reason);
++	mutex_unlock(&sta->ampdu_mlme.mtx);
+ 
+ 	/* stopping might queue the work again - so cancel only afterwards */
+ 	cancel_work_sync(&sta->ampdu_mlme.work);
+-- 
+2.14.2
