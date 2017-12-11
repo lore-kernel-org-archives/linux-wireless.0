@@ -1,105 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:40381 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751057AbdLaRbl (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:55614 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752629AbdLKN7M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Dec 2017 12:31:41 -0500
-Received: by mail-lf0-f65.google.com with SMTP id u84so32314899lff.7
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:40 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 07/18] ath10k: DMA related fixes for high latency devices
-Date: Sun, 31 Dec 2017 18:29:14 +0100
-Message-Id: <20171231172925.24014-8-erik.stromdahl@gmail.com> (sfid-20171231_183215_869628_3E11BF76)
-In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
-References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+        Mon, 11 Dec 2017 08:59:12 -0500
+Message-ID: <1513000750.26976.79.camel@sipsolutions.net> (sfid-20171211_145916_749100_94E7B955)
+Subject: Re: [PATCH v2 3/5] mac80211_hwsim: add generation count for netlink
+ dump operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 11 Dec 2017 14:59:10 +0100
+In-Reply-To: <8a26e55c-83ce-1395-ff9d-723e5b9fc82b@uni-rostock.de>
+References: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
+         <7ee141a4-8983-4da6-9c0f-f070fa6e5611@MAIL2.uni-rostock.de>
+         <1512994493.26976.74.camel@sipsolutions.net>
+         <8264ae6e-7db6-53b0-88c0-4ac4e51d0ba3@uni-rostock.de>
+         <1512996543.26976.76.camel@sipsolutions.net>
+         <5afe6ce9-5d7a-2b8e-f2bc-32088aacb9fe@uni-rostock.de>
+         <1512997665.26976.78.camel@sipsolutions.net>
+         <8a26e55c-83ce-1395-ff9d-723e5b9fc82b@uni-rostock.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several DMA related functions (such as the dma_map_xxx functions)
-are not used with high latency devices and don't need to be invoked
-in this case.
+On Mon, 2017-12-11 at 14:29 +0100, Benjamin Beichler wrote:
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c    | 19 ++++++++++++-------
- drivers/net/wireless/ath/ath10k/htt_tx.c |  3 ++-
- drivers/net/wireless/ath/ath10k/txrx.c   |  3 ++-
- 3 files changed, 16 insertions(+), 9 deletions(-)
+> I think we need to send something like an empty message, containing the
+> flag. Because there exist the corner case, that while a dump is
+> interrupted the complete list is deleted. Currently this could not
+> happen because of non-parallel netlink callbacks, but maybe in the
+> future parallel callbacks are enabled.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 492dc5b4bbf2..dd69345f911e 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -53,7 +53,8 @@ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
- {
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
- 
--	dma_unmap_single(htc->ar->dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
-+	if (!htc->ar->is_high_latency)
-+		dma_unmap_single(htc->ar->dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
- 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
- }
- 
-@@ -137,11 +138,14 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 	ath10k_htc_prepare_tx_skb(ep, skb);
- 
- 	skb_cb->eid = eid;
--	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
--	ret = dma_mapping_error(dev, skb_cb->paddr);
--	if (ret) {
--		ret = -EIO;
--		goto err_credits;
-+	if (!ar->is_high_latency) {
-+		skb_cb->paddr = dma_map_single(dev, skb->data, skb->len,
-+					       DMA_TO_DEVICE);
-+		ret = dma_mapping_error(dev, skb_cb->paddr);
-+		if (ret) {
-+			ret = -EIO;
-+			goto err_credits;
-+		}
- 	}
- 
- 	sg_item.transfer_id = ep->eid;
-@@ -157,7 +161,8 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 	return 0;
- 
- err_unmap:
--	dma_unmap_single(dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
-+	if (!ar->is_high_latency)
-+		dma_unmap_single(dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
- err_credits:
- 	if (ep->tx_credit_flow_enabled) {
- 		spin_lock_bh(&htc->tx_lock);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index a086958c39b6..4d0bfb47d162 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -1125,7 +1125,8 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	return 0;
- 
- err_unmap_msdu:
--	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
-+	if (!ar->is_high_latency)
-+		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- err_free_txdesc:
- 	dev_kfree_skb_any(txdesc);
- err_free_msdu_id:
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 5b3b021526ab..febc3eb93fbd 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -94,7 +94,8 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
--	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
-+	if (!ar->is_high_latency)
-+		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- 
- 	ath10k_report_offchan_tx(htt->ar, msdu);
- 
--- 
-2.15.1
+I don't know if we really want parallel, but I guess it's possible
+eventually.
+
+> Would it break things, if I simply create an header with
+> HWSIM_CMD_GET_RADIO, but put no other information in it? Or how could it
+> be done correctly?
+
+I think that's probably OK.
+
+johannes
