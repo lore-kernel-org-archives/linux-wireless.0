@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45532 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753292AbdLNPjV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 10:39:21 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 08/14] mt76x2: convert between per-chain tx power and combined output
-Date: Thu, 14 Dec 2017 16:39:12 +0100
-Message-Id: <20171214153918.43774-9-nbd@nbd.name> (sfid-20171214_163945_481294_673476C3)
-In-Reply-To: <20171214153918.43774-1-nbd@nbd.name>
-References: <20171214153918.43774-1-nbd@nbd.name>
+Received: from mx1.uni-rostock.de ([139.30.22.71]:62226 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751956AbdLKNHV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Dec 2017 08:07:21 -0500
+Subject: Re: [PATCH v2 1/5] mac80211_hwsim: wait for deferred radio deletion
+ on mod unload
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+References: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
+ <3a182eff-3f00-49bb-94ac-ec371ff1c26e@MAIL2.uni-rostock.de>
+ <1512992771.26976.73.camel@sipsolutions.net>
+ <d61a234d-6072-1714-0674-7981ef20b33a@uni-rostock.de>
+ <1512997053.26976.77.camel@sipsolutions.net>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Message-ID: <989966fe-2f61-5e71-5174-cb5d216944a4@uni-rostock.de> (sfid-20171211_140724_792519_3D4F4808)
+Date: Mon, 11 Dec 2017 14:07:39 +0100
+MIME-Version: 1.0
+In-Reply-To: <1512997053.26976.77.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using both chains adds max. 3 dBm. A similar worst-case calculation is
-being used in ath9k as well to ensure that the hardware stays within
-regulatory limits
+Am 11.12.2017 um 13:57 schrieb Johannes Berg:
+> On Mon, 2017-12-11 at 13:54 +0100, Benjamin Beichler wrote:
+>> Am 11.12.2017 um 12:46 schrieb Johannes Berg:
+>>>> +	spin=5Flock=5Fbh(&hwsim=5Fdelete=5Flock);
+>>>> +	while (!list=5Fempty(&delete=5Fradios)) {
+>>>> +		pr=5Fdebug("mac80211=5Fhwsim: wait for deferred radio remove\n");
+>>>> +		spin=5Funlock=5Fbh(&hwsim=5Fdelete=5Flock);
+>>>> +		flush=5Fwork(&list=5Fentry(&delete=5Fradios,
+>>>> +				       struct mac80211=5Fhwsim=5Fdata, list)
+>>>> +			   ->destroy=5Fwork);
+>>> This can't possibly be right ... you're locking the list=5Fempty which is
+>>> a trivial pointer comparison, but not the actual list=5Fentry() ...
+>> Maybe the first spin=5Flock is not needed, but since flush=5Fwork wait for
+>> the completion of the task, which at the end also deletes the item from
+>> the list, holding any spin=5Flock would be wrong.
+> But not holding it while taking things that are on the list also seems
+> wrong.
+Since at this place (Netlink is already unregistered so no new deletion
+requests) the only user of the delete list is the code deferred work
+items (which take itself the lock). Nonetheless, with a separate
+workqueue this is no problem anymore.
+>
+>>> I'd also prefer you actually didn't leave the problem in part as you
+>>> describe - and a new workqueue probably isn't that much overhead and
+>>> should introduce *less* new code than this, so IMHO that's worth it.
+>> I totally agree with you, but I don't know the actual policy for
+>> creating workqeues. I could also simply call flush=5Fscheduled=5Fwork,
+>> because we may have enough time at module unload. Some modules also do
+>> it, but the description an some mailing threads mark it like
+>> evil/deprecated. Which solution do you prefer=3F
+> Let's go with a new workqueue.
+Ok, I prepare a patch in the next few days.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 3 +++
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c | 7 +++++++
- 2 files changed, 10 insertions(+)
+>
+> johannes
+>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 0755b451829e..3e3a01b6f2ce 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -785,6 +785,9 @@ mt76x2_init_txpower(struct mt76x2_dev *dev,
- 		chan->max_power = mt76x2_get_max_rate_power(&t) +
- 				  target_power;
- 		chan->max_power /= 2;
-+
-+		/* convert to combined output power on 2x2 devices */
-+		chan->max_power += 3;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-index 02dd2cafa52f..8098a2b82c5b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-@@ -155,6 +155,9 @@ mt76x2_config(struct ieee80211_hw *hw, u32 changed)
- 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
- 		dev->txpower_conf = hw->conf.power_level * 2;
- 
-+		/* convert to per-chain power for 2x2 devices */
-+		dev->txpower_conf -= 6;
-+
- 		if (test_bit(MT76_STATE_RUNNING, &dev->mt76.state)) {
- 			mt76x2_phy_set_txpower(dev);
- 			mt76x2_tx_set_txpwr_auto(dev, dev->txpower_conf);
-@@ -443,6 +446,10 @@ mt76x2_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif, int *dbm)
- 	struct mt76x2_dev *dev = hw->priv;
- 
- 	*dbm = dev->txpower_cur / 2;
-+
-+	/* convert from per-chain power to combined output on 2x2 devices */
-+	*dbm += 3;
-+
- 	return 0;
- }
- 
 -- 
-2.14.2
+M.Sc. Benjamin Beichler
+
+Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrotechnik
+Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
+
+University of Rostock, Department of CS and EE
+Institute of Applied Microelectronics and CE
+
+Richard-Wagner-Stra=C3=9Fe 31
+18119 Rostock
+Deutschland/Germany
+
+phone: +49 (0) 381 498 - 7278
+email: Benjamin.Beichler@uni-rostock.de
+www: http://www.imd.uni-rostock.de/
