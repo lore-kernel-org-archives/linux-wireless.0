@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:39303 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbdLAIig (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 03:38:36 -0500
-Received: by mail-qk0-f196.google.com with SMTP id u184so12237650qkd.6
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Dec 2017 00:38:35 -0800 (PST)
-Subject: Re: [PATCH] brcmfmac: Add sg parameters dts parsing
-To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        linux-wireless@vger.kernel.org
-References: <20171201075542.GA31376@aremote07.aus.cypress.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, brcm80211-dev-list@cypress.com,
-        brcm80211-dev-list.pdl@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, Wright Feng <Wright.Feng@cypress.com>,
-        Stanley Hsu <Stanley.Hsu@cypress.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A211508.6030603@broadcom.com> (sfid-20171201_093839_655630_E35E9763)
-Date: Fri, 1 Dec 2017 09:38:32 +0100
+Received: from mail-bn3nam01on0125.outbound.protection.outlook.com ([104.47.33.125]:18656
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751307AbdLKHig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Dec 2017 02:38:36 -0500
+From: Wright Feng <wright.feng@cypress.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        chi-hsien.lin@cypress.com
+Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH] brcmfmac: enlarge buffer size of caps to 512 bytes
+Date: Mon, 11 Dec 2017 15:38:21 +0800
+Message-Id: <1512977901-12726-1-git-send-email-wright.feng@cypress.com> (sfid-20171211_083841_186772_EB726480)
 MIME-Version: 1.0
-In-Reply-To: <20171201075542.GA31376@aremote07.aus.cypress.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/1/2017 8:55 AM, Chi-Hsien Lin wrote:
-> broken_sg_support, sd_head_align, and sd_sgentry_align are used in
-> brcmfmac code but not configurable in dts file. Add the parsing logic.
-> Now they can be configured like below in dts:
-> 	brcm,broken_sg_support;
-> 	brcm,sd_head_align =/bits/  16 <4>;
-> 	brcm,sd_sgentry_align =/bits/  16 <4>;
+The buffer size of return of cap iovar is greater than 256 bytes in some
+firmwares. For instance, the return size of cap iovar is 271 bytes in 4373
+13.10.246.79 firmare. It makes feature capability parsing failed because
+caps buffer is default value.
+So we enlarge caps buffer size to 512 bytes and add the error print for
+cap iovar error.
 
-Hi Chi-Hsien,
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-For device tree support you should submit a separate commit on the dt 
-binding specification. For broadcom fullmac chipsets binding spec can be 
-found in 
-Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt.
-
-The alignment properties are to be specified in bytes, not bits.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 53ae302..47de35a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -130,13 +130,19 @@ static void brcmf_feat_iovar_data_set(struct brcmf_if *ifp,
+ 	}
+ }
+ 
++#define MAX_CAPS_BUFFER_SIZE	512
+ static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
+ {
+-	char caps[256];
++	char caps[MAX_CAPS_BUFFER_SIZE];
+ 	enum brcmf_feat_id id;
+-	int i;
++	int i, err;
++
++	err = brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
++	if (err) {
++		brcmf_err("could not get firmware cap (%d)\n", err);
++		return;
++	}
+ 
+-	brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
+ 	brcmf_dbg(INFO, "[ %s]\n", caps);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(brcmf_fwcap_map); i++) {
+-- 
+1.9.1
