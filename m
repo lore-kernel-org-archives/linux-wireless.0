@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48644 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752059AbdLBQ32 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:43098 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751281AbdLKLe3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 11:29:28 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  2 Dec 2017 18:28:54 +0200
-Message-Id: <20171202162858.4167-12-luca@coelho.fi> (sfid-20171202_174638_739872_4E9F2DD7)
-In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
-References: <20171202162858.4167-1-luca@coelho.fi>
-Subject: [PATCH 11/15] iwlwifi: mvm: rs: add sanity check when sending LQ command
+        Mon, 11 Dec 2017 06:34:29 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: fix nl80211_send_iface() error paths
+Date: Mon, 11 Dec 2017 12:34:26 +0100
+Message-Id: <20171211113426.32257-1-johannes@sipsolutions.net> (sfid-20171211_123433_187871_B6842119)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-When sending LQ command, verify the rate scaling is not in firmware.
+Evidently I introduced a locking bug in my change here,
+the nla_put_failure sometimes needs to unlock. Fix it.
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: 44905265bc15 ("nl80211: don't expose wdev->ssid for most interfaces")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/wireless/nl80211.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 280edf89e5eb..b7fc1b9fb605 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -912,7 +912,9 @@ int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool init)
- 		.data = { lq, },
- 	};
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b1ac23ca20c8..213d0c498c97 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2610,7 +2610,7 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 	case NL80211_IFTYPE_AP:
+ 		if (wdev->ssid_len &&
+ 		    nla_put(msg, NL80211_ATTR_SSID, wdev->ssid_len, wdev->ssid))
+-			goto nla_put_failure;
++			goto nla_put_failure_locked;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+@@ -2623,7 +2623,7 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 		if (!ssid_ie)
+ 			break;
+ 		if (nla_put(msg, NL80211_ATTR_SSID, ssid_ie[1], ssid_ie + 2))
+-			goto nla_put_failure;
++			goto nla_put_failure_locked;
+ 		break;
+ 		}
+ 	default:
+@@ -2635,6 +2635,8 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 	genlmsg_end(msg, hdr);
+ 	return 0;
  
--	if (WARN_ON(lq->sta_id == IWL_MVM_INVALID_STA))
-+	if (WARN_ON(lq->sta_id == IWL_MVM_INVALID_STA ||
-+		    fw_has_capa(&mvm->fw->ucode_capa,
-+				IWL_UCODE_TLV_CAPA_TLC_OFFLOAD)))
- 		return -EINVAL;
- 
- 	return iwl_mvm_send_cmd(mvm, &cmd);
++ nla_put_failure_locked:
++	wdev_unlock(wdev);
+  nla_put_failure:
+ 	genlmsg_cancel(msg, hdr);
+ 	return -EMSGSIZE;
 -- 
-2.15.0
+2.14.2
