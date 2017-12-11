@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35056 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967257AbdLSMr1 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:56696 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752470AbdLKOMq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 07:47:27 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 00/11] brcmfmac: restructuring sdio access functions - final drop
-Date: Tue, 19 Dec 2017 13:47:06 +0100
-Message-Id: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134810_587243_6DE1A86D)
+        Mon, 11 Dec 2017 09:12:46 -0500
+Message-ID: <1513001564.26976.81.camel@sipsolutions.net> (sfid-20171211_151250_724902_D93F1616)
+Subject: Re: 76f43b4 fix for stable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Stable <stable@vger.kernel.org>,
+        gregkh <gregkh@linuxfoundation.org>
+Date: Mon, 11 Dec 2017 15:12:44 +0100
+In-Reply-To: <c0a512a7-e615-bbab-5c88-4a85946fefb5@uni-koblenz.de> (sfid-20171211_145144_843553_B9CBDEA2)
+References: <c0a512a7-e615-bbab-5c88-4a85946fefb5@uni-koblenz.de>
+         (sfid-20171211_145144_843553_B9CBDEA2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the third series of patches which were originally submitted by
-Ian Molton. For some patches I reworded the commit message.
+On Mon, 2017-12-11 at 14:51 +0100, Richard Schütz wrote:
+> Hello,
+> 
+> as per netdev-FAQ.txt I'm requesting the submission of commit 
+> 57629915d568c522ac1422df7bba4bee5b5c7a7c ("mac80211: Fix addition of 
+> mesh configuration element") to stable. Because of automatic selection 
+> commit 76f43b4c0a9337af22827d78de4f2b8fd5328489 ("mac80211: Remove 
+> invalid flag operations in mesh TSF synchronization") was introduced 
+> into stable recently without this accompanying fix.
 
-The series is intended for 4.16 and applies to the master branch of
-the wireless-drivers-next repository.
+It seems that due to the Fixes: tag Greg should pick it up anyway, but
+in any case I don't really deal with stable myself (in that sense, I
+guess wireless isn't really part of netdev...)
 
-Arend van Spriel (5):
-  brcmfmac: Rename buscore to core for consistency
-  brcmfmac: More efficient and slightly easier to read fixup for 4339
-    chips
-  brcmfmac: Remove array of functions
-  brcmfmac: add comment block in brcmf_sdio_buscore_read()
-  brcmfmac: rename brcmf_sdiod_buff_{read,write}() functions
-
-Ian Molton (6):
-  brcmfmac: Remove {r,w}_sdreg32
-  brcmfmac: stabilise the value of ->sbwad in use for some xfer
-    routines.
-  brcmfmac: Correctly handle accesses to SDIO func0
-  brcmfmac: Remove func0 from function array
-  brcmfmac: Replace function index with function pointer
-  brcmfmac: Clean up interrupt macros
-
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 214 ++++++++--------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 275 +++++++++++----------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  31 ++-
- 3 files changed, 267 insertions(+), 253 deletions(-)
-
--- 
-1.9.1
+johannes
