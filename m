@@ -1,32 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:47044 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750915AbdLLJFG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 04:05:06 -0500
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [BUG] wl3501: a possible sleep-in-atomic bug in wl3501_reset
-To: kvalo@codeaurora.org, mhchen@golf.ccl.itri.org.tw,
-        acme@conectiva.com.br, niemeyer@conectiva.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-ID: <8b0519f9-e5f3-aa73-09be-f399f6a6865a@gmail.com> (sfid-20171212_100531_141567_F21CE0CD)
-Date: Tue, 12 Dec 2017 17:04:52 +0800
+Received: from mail-by2nam03on0090.outbound.protection.outlook.com ([104.47.42.90]:51760
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750707AbdLKIL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Dec 2017 03:11:58 -0500
+Date: Mon, 11 Dec 2017 02:11:50 -0600
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To: devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH] dt-bindings: net: wireless: Add sg parameters dts parsing
+Message-ID: <20171211081144.GA140567@aremote07.aus.cypress.com> (sfid-20171211_091202_786025_F8F03385)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to drivers/net/wireless/wl3501_cs.c, the driver may sleep 
-under a spinlock.
-The function call path is:
-wl3501_reset (acquire the spinlock)
-   free_irq --> may sleep
+broken_sg_support, sd_head_align, and sd_sgentry_align are used in
+brcmfmac code but not configurable in dts file. Add the parsing logic.
+Now they can be configured like below in dts:
+	brcm,broken_sg_support;
+	brcm,sd_head_align = <4>;
+	brcm,sd_sgentry_align = <4>;
 
-I do not find a good way to fix it, so I only report.
-This possible bug is found by my static analysis tool (DSAC) and checked 
-by my code review.
+Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
+---
+ .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt        | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-
-Thanks,
-Jia-Ju Bai
+diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+index 86602f2..4d42f0d 100644
+--- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
++++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+@@ -17,6 +17,11 @@ Optional properties:
+ 	When not specified the device will use in-band SDIO interrupts.
+  - interrupt-names : name of the out-of-band interrupt, which must be set
+ 	to "host-wake".
++ - broken_sg_support : flag for broken sg list support of SDIO host controller.
++	Set this to true if the SDIO host controller has higher align
++	requirement than 32 bytes for each scatterlist item.
++ - sg_head_align : alignment requirement for start of data buffer.
++ - sg_sgentry_align : length alignment requirement for each sg entry.
+ 
+ Example:
+ 
+@@ -36,5 +41,8 @@ mmc3: mmc@1c12000 {
+ 		interrupt-parent = <&pio>;
+ 		interrupts = <10 8>; /* PH10 / EINT10 */
+ 		interrupt-names = "host-wake";
++		brcm,broken_sg_support;
++		brcm,sd_head_align = <4>;
++		brcm,sd_sgentry_align = <4>;
+ 	};
+ };
+-- 
+2.1.0
