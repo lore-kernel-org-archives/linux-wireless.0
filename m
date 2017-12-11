@@ -1,160 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37113 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751403AbdLUJBu (ORCPT
+Received: from mail-yb0-f178.google.com ([209.85.213.178]:36362 "EHLO
+        mail-yb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752217AbdLKRof (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 04:01:50 -0500
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH 03/10] ath10k: Add support for 64 bit HTT in-order indication msg
-Date: Thu, 21 Dec 2017 14:30:52 +0530
-Message-Id: <1513846859-23639-4-git-send-email-govinds@qti.qualcomm.com> (sfid-20171221_100202_516622_2F461A7F)
-In-Reply-To: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
-References: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
+        Mon, 11 Dec 2017 12:44:35 -0500
+Received: by mail-yb0-f178.google.com with SMTP id j7so6315257ybl.3
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 09:44:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20171211154140.GD4803@minitux>
+References: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org>
+ <20171211153403.GA30332@codeaurora.org> <20171211154140.GD4803@minitux>
+From: Loic Poulain <loic.poulain@linaro.org>
+Date: Mon, 11 Dec 2017 18:43:54 +0100
+Message-ID: <CAMZdPi_9RSSxBzaLq07JcoZXMwztgcD=YfeJ1X4yzaZck-d+bg@mail.gmail.com> (sfid-20171211_184441_778296_27168348)
+Subject: Re: [PATCH v2] wcn36xx: Fix dynamic power saving
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: kvalo@codeaurora.org, linux-arm-msm@vger.kernel.org,
+        linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3990 target use 64bit msdu address in htt in-order
-indication message. Add support for 64 bit msdu address in
-HTT_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND message.
+Hi Ramon,
 
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    | 12 +++++-
- drivers/net/wireless/ath/ath10k/htt_rx.c | 67 +++++++++++++++++++++++++++++---
- 2 files changed, 72 insertions(+), 7 deletions(-)
+On 11 December 2017 at 16:41, Bjorn Andersson
+<bjorn.andersson@linaro.org> wrote:
+> On Mon 11 Dec 07:34 PST 2017, Ramon Fried wrote:
+>
+>> On Mon, Dec 11, 2017 at 10:52:22AM +0200, Loic Poulain wrote:
+>> > Since driver does not report hardware dynamic power saving cap,
+>> > this is up to the mac80211 to manage power saving timeout and
+>> > state machine, using the ieee80211 config callback to report
+>> > PS changes. This patch enables/disables PS mode according to
+>> > the new configuration.
+>> >
+>> > Remove old behaviour enabling PS mode in a static way, this make
+>> > the device unusable when power save is enabled since device is
+>> > forced to PS regardless RX/TX traffic.
+>> >
+>>
+>> Hi.
+>> I tried to see if this patch solves the ping delay once power save is
+>> turned on and it appears it doesn't (log below).
+>> I do see some change in the delay though in comparison to testing without the patch.
+>> Bjorn, How did you test it ?
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 6305308..f3d5883 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -855,13 +855,23 @@ struct htt_rx_in_ord_msdu_desc {
- 	u8 reserved;
- } __packed;
- 
-+struct htt_rx_in_ord_msdu_desc_ext {
-+	__le64 msdu_paddr;
-+	__le16 msdu_len;
-+	u8 fw_desc;
-+	u8 reserved;
-+} __packed;
-+
- struct htt_rx_in_ord_ind {
- 	u8 info;
- 	__le16 peer_id;
- 	u8 vdev_id;
- 	u8 reserved;
- 	__le16 msdu_count;
--	struct htt_rx_in_ord_msdu_desc msdu_descs[0];
-+	union {
-+		struct htt_rx_in_ord_msdu_desc msdu_descs32[0];
-+		struct htt_rx_in_ord_msdu_desc_ext msdu_descs64[0];
-+	} __packed;
- } __packed;
- 
- #define HTT_RX_IN_ORD_IND_INFO_TID_MASK		0x0000001f
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 7d295ee..6402189 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -408,12 +408,12 @@ static struct sk_buff *ath10k_htt_rx_pop_paddr(struct ath10k_htt *htt,
- 	return msdu;
- }
- 
--static int ath10k_htt_rx_pop_paddr_list(struct ath10k_htt *htt,
--					struct htt_rx_in_ord_ind *ev,
--					struct sk_buff_head *list)
-+static int ath10k_htt_rx_pop_paddr32_list(struct ath10k_htt *htt,
-+					  struct htt_rx_in_ord_ind *ev,
-+					  struct sk_buff_head *list)
- {
- 	struct ath10k *ar = htt->ar;
--	struct htt_rx_in_ord_msdu_desc *msdu_desc = ev->msdu_descs;
-+	struct htt_rx_in_ord_msdu_desc *msdu_desc = ev->msdu_descs32;
- 	struct htt_rx_desc *rxd;
- 	struct sk_buff *msdu;
- 	int msdu_count;
-@@ -458,6 +458,55 @@ static int ath10k_htt_rx_pop_paddr_list(struct ath10k_htt *htt,
- 	return 0;
- }
- 
-+static int ath10k_htt_rx_pop_paddr64_list(struct ath10k_htt *htt,
-+					  struct htt_rx_in_ord_ind *ev,
-+					  struct sk_buff_head *list)
-+{
-+	struct ath10k *ar = htt->ar;
-+	struct htt_rx_in_ord_msdu_desc_ext *msdu_desc = ev->msdu_descs64;
-+	struct htt_rx_desc *rxd;
-+	struct sk_buff *msdu;
-+	int msdu_count;
-+	bool is_offload;
-+	u64 paddr;
-+
-+	lockdep_assert_held(&htt->rx_ring.lock);
-+
-+	msdu_count = __le16_to_cpu(ev->msdu_count);
-+	is_offload = !!(ev->info & HTT_RX_IN_ORD_IND_INFO_OFFLOAD_MASK);
-+
-+	while (msdu_count--) {
-+		paddr = __le64_to_cpu(msdu_desc->msdu_paddr);
-+		msdu = ath10k_htt_rx_pop_paddr(htt, paddr);
-+		if (!msdu) {
-+			__skb_queue_purge(list);
-+			return -ENOENT;
-+		}
-+
-+		__skb_queue_tail(list, msdu);
-+
-+		if (!is_offload) {
-+			rxd = (void *)msdu->data;
-+
-+			trace_ath10k_htt_rx_desc(ar, rxd, sizeof(*rxd));
-+
-+			skb_put(msdu, sizeof(*rxd));
-+			skb_pull(msdu, sizeof(*rxd));
-+			skb_put(msdu, __le16_to_cpu(msdu_desc->msdu_len));
-+
-+			if (!(__le32_to_cpu(rxd->attention.flags) &
-+			      RX_ATTENTION_FLAGS_MSDU_DONE)) {
-+				ath10k_warn(htt->ar, "tried to pop an incomplete frame, oops!\n");
-+				return -EIO;
-+			}
-+		}
-+
-+		msdu_desc++;
-+	}
-+
-+	return 0;
-+}
-+
- int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
-@@ -1981,7 +2030,7 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 		   "htt rx in ord vdev %i peer %i tid %i offload %i frag %i msdu count %i\n",
- 		   vdev_id, peer_id, tid, offload, frag, msdu_count);
- 
--	if (skb->len < msdu_count * sizeof(*resp->rx_in_ord_ind.msdu_descs)) {
-+	if (skb->len < msdu_count * sizeof(*resp->rx_in_ord_ind.msdu_descs32)) {
- 		ath10k_warn(ar, "dropping invalid in order rx indication\n");
- 		return -EINVAL;
- 	}
-@@ -1990,7 +2039,13 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 	 * extracted and processed.
- 	 */
- 	__skb_queue_head_init(&list);
--	ret = ath10k_htt_rx_pop_paddr_list(htt, &resp->rx_in_ord_ind, &list);
-+	if (ar->hw_params.target_64bit)
-+		ret = ath10k_htt_rx_pop_paddr64_list(htt, &resp->rx_in_ord_ind,
-+						     &list);
-+	else
-+		ret = ath10k_htt_rx_pop_paddr32_list(htt, &resp->rx_in_ord_ind,
-+						     &list);
-+
- 	if (ret < 0) {
- 		ath10k_warn(ar, "failed to pop paddr list: %d\n", ret);
- 		htt->rx_confused = true;
--- 
-1.9.1
+For me this is the expected behavior, when station is in PS mode, some
+time is required
+to leave PS, this is the cost for saving power. Since ping is every
+second, station goes
+back to PS between each ping due to dynamic PS timeout, this indeed
+leads to some
+latency... I obtain same kind of results pinging my mobile phone. Note
+that the PS
+timeout can be changed (100ms by default).
+
+>>
+>
+> Without this patch I get ping times around a second and SSH is not
+> usable, with this patch I see similar ping times as you, but SSH is
+> usable.
+>
+> I have not been able to run iperf, because I keep hitting
+> https://bugs.96boards.org/show_bug.cgi?id=663
+
+Yes, improvement can be mainly observed with high traffic.
+
+Regards,
+Loic
