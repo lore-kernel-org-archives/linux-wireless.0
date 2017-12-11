@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24068 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752048AbdLLMlC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41338 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751281AbdLKLNB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 07:41:02 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Loic Poulain <loic.poulain@linaro.org>
-CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
-        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
-        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>
-Subject: Re: [PATCH v2] wcn36xx: Fix dynamic power saving
-Date: Tue, 12 Dec 2017 12:40:57 +0000
-Message-ID: <877etsqftz.fsf@kamboji.qca.qualcomm.com> (sfid-20171212_134105_715579_F05B5229)
-References: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org>
-        <87bmj4qhkm.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87bmj4qhkm.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Tue, 12 Dec 2017 14:03:21 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Mon, 11 Dec 2017 06:13:01 -0500
+Message-ID: <1512990779.26976.69.camel@sipsolutions.net> (sfid-20171211_121558_004692_2C447BC0)
+Subject: Re: [PATCH] nl80211: Update ERP info using
+ NL80211_CMD_UPDATE_CONNECT_PARAMS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+        vkanchan@qti.qualcomm.com, amarnath@qti.qualcomm.com,
+        usdutt@qti.qualcomm.com, vamsin@qti.qualcomm.com
+Date: Mon, 11 Dec 2017 12:12:59 +0100
+In-Reply-To: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
+References: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On Wed, 2017-10-25 at 14:50 +0530, Vidyullatha Kanchanapally wrote:
 
-> Loic Poulain <loic.poulain@linaro.org> writes:
->
->> Since driver does not report hardware dynamic power saving cap,
->> this is up to the mac80211 to manage power saving timeout and
->> state machine, using the ieee80211 config callback to report
->> PS changes. This patch enables/disables PS mode according to
->> the new configuration.
->>
->> Remove old behaviour enabling PS mode in a static way, this make
->> the device unusable when power save is enabled since device is
->> forced to PS regardless RX/TX traffic.
->>
->> Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
->
-> A fixes line would be nice for backporters. I can add that but need the
-> commit id.
+> + * @UPDATE_FILS_ERP_INFO: Indicates that FILS connection parameters (realm,
+> + *	username, erp sequence number and rrk) are updated
+> + * @UPDATE_AUTH_TYPE: Indicates that Authentication type is updated
 
-Or maybe this actually isn't a regression? Then of course a fixes line
-is not needed.
+These are new here, but you don't know if they were actually supported:
 
-Should I push this to v4.15 or v4.16, any preference?
+> +	if (wiphy_ext_feature_isset(&rdev->wiphy,
+> +				    NL80211_EXT_FEATURE_FILS_SK_OFFLOAD) &&
 
---=20
-Kalle Valo=
+here.
+
+> +	    info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] &&
+> +	    info->attrs[NL80211_ATTR_FILS_ERP_REALM] &&
+> +	    info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] &&
+> +	    info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
+[...]
+> +	} else if (info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] ||
+> +		   info->attrs[NL80211_ATTR_FILS_ERP_REALM] ||
+> +		   info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] ||
+> +		   info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
+> +		return -EINVAL;
+> +	}
+
+This logic is also really odd, why not
+
+if (attrs) {
+	if (not flag)
+		return -EINVAL;
+	/* use attrs etc. */
+}
+
+> +
+> +	if (info->attrs[NL80211_ATTR_AUTH_TYPE]) {
+> +		u32 auth_type =
+> +			nla_get_u32(info->attrs[NL80211_ATTR_AUTH_TYPE]);
+> +		if (!nl80211_valid_auth_type(rdev, auth_type,
+> +					     NL80211_CMD_CONNECT))
+> +			return -EINVAL;
+> +		connect.auth_type = auth_type;
+> +		changed |= UPDATE_AUTH_TYPE;
+> +	}
+
+Again, how do you know the driver will actually look at
+UPDATE_AUTH_TYPE?
+
+johannes
