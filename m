@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24125 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753291AbdLNPeH (ORCPT
+Received: from mail-yb0-f193.google.com ([209.85.213.193]:41576 "EHLO
+        mail-yb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752483AbdLKI60 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 10:34:07 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 11 Dec 2017 03:58:26 -0500
+Received: by mail-yb0-f193.google.com with SMTP id x83so196096ybg.8
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 00:58:26 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [v3,1/4] ath10k: WMI: modify svc bitmap parsing for wcn3990
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1513002175-2498-2-git-send-email-pillair@qti.qualcomm.com>
-References: <1513002175-2498-2-git-send-email-pillair@qti.qualcomm.com>
-To: Rakesh Pillai <pillair@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Rakesh Pillai" <pillair@qti.qualcomm.com>,
-        Govind Singh <govinds@qti.qualcomm.com>
-Message-ID: <12a3a3b39947470aa861362ca4e4dcbe@euamsexm01a.eu.qualcomm.com> (sfid-20171214_163643_364362_C8C2FFFA)
-Date: Thu, 14 Dec 2017 16:33:54 +0100
+In-Reply-To: <20171209003452.GA3441@builder>
+References: <1512725730-19188-1-git-send-email-loic.poulain@linaro.org> <20171209003452.GA3441@builder>
+From: Loic Poulain <loic.poulain@linaro.org>
+Date: Mon, 11 Dec 2017 09:57:45 +0100
+Message-ID: <CAMZdPi9N69vfFxDgEGQXowUd7accK-mCLCGS5Cg1d4p8LvZ6wA@mail.gmail.com> (sfid-20171211_095831_141631_5E34E484)
+Subject: Re: [PATCH] wcn36xx: Add hardware scan offload support
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: kvalo@codeaurora.org, linux-arm-msm@vger.kernel.org,
+        linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        Eugene Krasnikov <k.eugene.e@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rakesh Pillai <pillair@qti.qualcomm.com> wrote:
+Hi Bjorn,
 
-> Due to the limitation of wmi tlv parsing logic, if there are
-> two parameters in a wmi event with same tlv tag, we can get only
-> the last value, as it overwrites the prev value of the same tlv tag.
-> 
-> The service ready event in wcn3990 contains two parameters of the
-> same tag UINT32, due to which the svc bitmap is overwritten with the
-> DBS support parameter.
-> 
-> Refactor the service ready event parsing to allow parsing two tlv
-> of the same tag UINT32 for wcn3990.
-> 
-> Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-> Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+On 9 December 2017 at 01:34, Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
+>
+>> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> [..]
+>> +static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
+>> +{
+>> +     struct wcn36xx_hal_scan_offload_ind *rsp = buf;
+>> +     struct cfg80211_scan_info scan_info = {};
+>> +
+>> +     if (len != sizeof(*rsp)) {
+>> +             wcn36xx_warn("Corrupted delete scan indication\n");
+>> +             return -EIO;
+>> +     }
+>> +
+>> +     wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)", rsp->type);
+>> +
+>> +     switch (rsp->type) {
+>> +     case WCN36XX_HAL_SCAN_IND_FAILED:
+>> +             scan_info.aborted = true;
+>> +     case WCN36XX_HAL_SCAN_IND_COMPLETED:
+>> +             mutex_lock(&wcn->scan_lock);
+>
+> Grabbing this mutex with DEBUG_ATOMIC_SLEEP causes issues, but that's
+> because the locking in ind_smd_work() is to excessive. Will reply with a
+> fix for this.
 
-4 patches applied to ath-next branch of ath.git, thanks.
+Oops you're right, thanks for the patch.
 
-229329ff345f ath10k: wmi: modify svc bitmap parsing for wcn3990
-1807da49733e ath10k: wmi: add management tx by reference support over wmi
-9f2992fea580 ath10k: wmi: get wmi init parameter values from hw params
-03a72288c546 ath10k: wmi: add hw params entry for wcn3990
-
--- 
-https://patchwork.kernel.org/patch/10105283/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Loic
