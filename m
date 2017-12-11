@@ -1,76 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41598 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751520AbdLSLeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 06:34:17 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Enrico Mioso <mrkiko.rs@gmail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/2] rt2x00: do not pause queue unconditionally on error path
-Date: Tue, 19 Dec 2017 12:33:56 +0100
-Message-Id: <1513683236-13402-2-git-send-email-sgruszka@redhat.com> (sfid-20171219_123420_174844_58B2216C)
-In-Reply-To: <1513683236-13402-1-git-send-email-sgruszka@redhat.com>
-References: <1513683236-13402-1-git-send-email-sgruszka@redhat.com>
+Received: from s3.sipsolutions.net ([144.76.63.242]:34386 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750836AbdLKJwl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Dec 2017 04:52:41 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-12-11
+Date: Mon, 11 Dec 2017 10:52:35 +0100
+Message-Id: <20171211095236.10172-1-johannes@sipsolutions.net> (sfid-20171211_105255_968920_1D3256CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pausing queue without checking threshold is racy with txdone path.
-Moreover we do not need pause queue on any error, but only if queue
-is full - in case when we send RTS frame ( other cases of almost full
-queue are already handled in rt2x00queue_write_tx_frame() ).
+Hi Dave,
 
-Patch fixes of theoretically possible problem of pausing empty
-queue.
+Three fixes, two related to build issues with the new regdb stuff,
+and one for some patch overlap problem that caused locking to be
+missing which in turn caused lots of warnings.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00mac.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+Please pull and let me know if there's any problem.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-index c8a6f163102f..a971bc7a6b63 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-@@ -142,22 +142,28 @@ void rt2x00mac_tx(struct ieee80211_hw *hw,
- 	if (!rt2x00dev->ops->hw->set_rts_threshold &&
- 	    (tx_info->control.rates[0].flags & (IEEE80211_TX_RC_USE_RTS_CTS |
- 						IEEE80211_TX_RC_USE_CTS_PROTECT))) {
--		if (rt2x00queue_available(queue) <= 1)
--			goto exit_fail;
-+		if (rt2x00queue_available(queue) <= 1) {
-+			/*
-+			 * Recheck for full queue under lock to avoid race
-+			 * conditions with rt2x00lib_txdone().
-+			 */
-+			spin_lock(&queue->tx_lock);
-+			if (rt2x00queue_threshold(queue))
-+				rt2x00queue_pause_queue(queue);
-+			spin_unlock(&queue->tx_lock);
-+
-+			goto exit_free_skb;
-+		}
- 
- 		if (rt2x00mac_tx_rts_cts(rt2x00dev, queue, skb))
--			goto exit_fail;
-+			goto exit_free_skb;
- 	}
- 
- 	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, control->sta, false)))
--		goto exit_fail;
-+		goto exit_free_skb;
- 
- 	return;
- 
-- exit_fail:
--	spin_lock(&queue->tx_lock);
--	rt2x00queue_pause_queue(queue);
--	spin_unlock(&queue->tx_lock);
-  exit_free_skb:
- 	ieee80211_free_txskb(hw, skb);
- }
--- 
-1.9.3
+Thanks,
+johannes
+
+
+
+The following changes since commit ccab371f746abca05a599d074cb3b95a549ef590:
+
+  Merge branch 'sfp-phylink-fixes' (2017-12-01 15:18:42 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-12-11
+
+for you to fetch changes up to 0afe9d4ab9d40c281bdcdd118661fe8e4bdcef18:
+
+  mac80211: fix locking in ieee80211_sta_tear_down_BA_sessions (2017-12-11 10:50:00 +0100)
+
+----------------------------------------------------------------
+Three fixes:
+ * for certificate C file generation, don't use hexdump as it's
+   not always installed by default, use pure posix instead (od/sed)
+ * for certificate C file generation, don't write the file if
+   anything fails, so the build abort will not cause a bad build
+   upon a second attempt
+ * fix locking in ieee80211_sta_tear_down_BA_sessions() which had
+   been causing lots of locking warnings
+
+----------------------------------------------------------------
+Johannes Berg (3):
+      wireless: replace usage of hexdump with od/sed
+      wireless: don't write C files on failures
+      mac80211: fix locking in ieee80211_sta_tear_down_BA_sessions
+
+ net/mac80211/ht.c     |  5 ++---
+ net/wireless/Makefile | 48 ++++++++++++++++++++++++++++++++++++++----------
+ 2 files changed, 40 insertions(+), 13 deletions(-)
