@@ -1,77 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51392 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754985AbdLTLoi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:51458 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751400AbdLKNHr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Dec 2017 06:44:38 -0500
-Message-ID: <1513770274.4827.482.camel@coelho.fi> (sfid-20171220_124443_106759_DC55C089)
-From: Luca Coelho <luca@coelho.fi>
-To: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>,
-        sara.sharon@intel.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        it+linux-wireless@molgen.mpg.de,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>
-Date: Wed, 20 Dec 2017 13:44:34 +0200
-In-Reply-To: <a08aa1b3-9d75-2f38-a0f0-aefe181137da@molgen.mpg.de>
-References: <75bc638e-99a8-2f3f-6260-491f8a018af6@molgen.mpg.de>
-         <1513175552.4827.365.camel@intel.com> <1513621815.4827.430.camel@coelho.fi>
-         <a08aa1b3-9d75-2f38-a0f0-aefe181137da@molgen.mpg.de>
+        Mon, 11 Dec 2017 08:07:47 -0500
+Message-ID: <1512997665.26976.78.camel@sipsolutions.net> (sfid-20171211_140750_524323_772991FB)
+Subject: Re: [PATCH v2 3/5] mac80211_hwsim: add generation count for netlink
+ dump operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 11 Dec 2017 14:07:45 +0100
+In-Reply-To: <5afe6ce9-5d7a-2b8e-f2bc-32088aacb9fe@uni-rostock.de>
+References: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
+         <7ee141a4-8983-4da6-9c0f-f070fa6e5611@MAIL2.uni-rostock.de>
+         <1512994493.26976.74.camel@sipsolutions.net>
+         <8264ae6e-7db6-53b0-88c0-4ac4e51d0ba3@uni-rostock.de>
+         <1512996543.26976.76.camel@sipsolutions.net>
+         <5afe6ce9-5d7a-2b8e-f2bc-32088aacb9fe@uni-rostock.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: UBSAN: Undefined behaviour in
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c:838:5
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-12-20 at 12:00 +0100, Paul Menzel wrote:
-> Dear Luca,
+On Mon, 2017-12-11 at 14:02 +0100, Benjamin Beichler wrote:
 > 
-> 
-> Am 18.12.2017 um 19:30 schrieb Luca Coelho:
-> > On Wed, 2017-12-13 at 16:32 +0200, Luciano Coelho wrote:
-> > > On Wed, 2017-12-13 at 14:25 +0100, Paul Menzel wrote:
-> > > > I enabled the undefined behavior sanitizer, and built Linus’ 
-> > > > master branch under Ubuntu 17.10 with gcc (Ubuntu 7.2.0-
-> > > > 8ubuntu3)
-> > > > 7.2.0.
-> > > > 
-> > > > ``` $ grep UBSAN /boot/config-4.15.0-rc3+ 
-> > > > CONFIG_ARCH_HAS_UBSAN_SANITIZE_ALL=y #
-> > > > CONFIG_ARCH_WANTS_UBSAN_NO_NULL is not set CONFIG_UBSAN=y 
-> > > > CONFIG_UBSAN_SANITIZE_ALL=y # CONFIG_UBSAN_ALIGNMENT is not
-> > > > set 
-> > > > CONFIG_UBSAN_NULL=y ```
-> > > > 
-> > > > Starting the system the messages below are printed.
-> > > > 
-> > > > Starting the system and using the wireless device shows the 
-> > > > messages below.
-> > > 
-> > > Thanks for reporting! This shouldn't cause any problems, but I'll
-> > > fix it by checking that the mac80211_queue is not INVALID_QUEUE
-> > > (255) which seems to be the trigger for this warning.
+> > But you added this:
 > > 
-> > Can you try the following patch to see if the problem goes away?
+> > +       /* list changed */
+> > +       if (cb->prev_seq && cb->seq != cb->prev_seq)
+> > +               goto cleanup;
 > > 
-> > http://pastebin.coelho.fi/7b624f474846da52.txt
+> > which is mostly just a copy of the inline.
+> > 
+> > johannes
 > 
-> Thank you. The warning is gone now. Thank you.
+> Year you are right, but for nl_dump_check_consistent() I also need a
+> header struct to write the flag to it and I thought a ghost header only
+> to this function is also misleading. But if you think this is better, I
+> can do that. Or we introduce a function, which really only check
+> consistency and not also set the flag. I also thought the line is
+> readable at it's own, because it's simply inconsistent if the sequence
+> numbers are not equal.
 
-Thanks for testing! We are actually improving the fix a bit, because it
-seems that we should not have gotten INVALID_QUEUE there.  We will have
-a two-fold fix (Sari, whom I CCed, is working on the other patch).
+It's readable, but there should be an indication to userspace in this
+case, no?
 
-
->  For the next time, it’d 
-> be great to provide the output of `git format-patch -1`, which can
-> be 
-> applied with `git am`. The output of `git show` is with my knowledge 
-> hard to apply.
-
-Ah, sorry about that.  I didn't want to send a full patch here so that
-it wouldn't get picked up by patchworks, so I just pastebinned it.
-
---
-Luca.
+johannes
