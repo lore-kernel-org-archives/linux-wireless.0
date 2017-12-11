@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35432 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751039AbdLAT5L (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50618 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752439AbdLKM5f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 14:57:11 -0500
-Received: by mail-wm0-f68.google.com with SMTP id f9so5301571wmh.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Dec 2017 11:57:11 -0800 (PST)
-Subject: Re: [PATCH V2] brcm: add CYW4373 firmwares and Cypress license file
-To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        linux-firmware@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com
-References: <20171201084243.GA58942@aremote07.aus.cypress.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f96ddf93-0e1d-d6f1-570b-fd3c8ec711e0@broadcom.com> (sfid-20171201_205724_285727_AFFEDE30)
-Date: Fri, 1 Dec 2017 20:57:09 +0100
-MIME-Version: 1.0
-In-Reply-To: <20171201084243.GA58942@aremote07.aus.cypress.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 11 Dec 2017 07:57:35 -0500
+Message-ID: <1512997053.26976.77.camel@sipsolutions.net> (sfid-20171211_135738_720722_270269F2)
+Subject: Re: [PATCH v2 1/5] mac80211_hwsim: wait for deferred radio deletion
+ on mod unload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 11 Dec 2017 13:57:33 +0100
+In-Reply-To: <d61a234d-6072-1714-0674-7981ef20b33a@uni-rostock.de>
+References: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
+         <3a182eff-3f00-49bb-94ac-ec371ff1c26e@MAIL2.uni-rostock.de>
+         <1512992771.26976.73.camel@sipsolutions.net>
+         <d61a234d-6072-1714-0674-7981ef20b33a@uni-rostock.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01-12-17 09:43, Chi-Hsien Lin wrote:
-> Add the CYW4373 SDIO and USB firmware files, along with the corresponding
-> Cypress license file.
+On Mon, 2017-12-11 at 13:54 +0100, Benjamin Beichler wrote:
+> Am 11.12.2017 um 12:46 schrieb Johannes Berg:
+> > 
+> > > +	spin_lock_bh(&hwsim_delete_lock);
+> > > +	while (!list_empty(&delete_radios)) {
+> > > +		pr_debug("mac80211_hwsim: wait for deferred radio remove\n");
+> > > +		spin_unlock_bh(&hwsim_delete_lock);
+> > > +		flush_work(&list_entry(&delete_radios,
+> > > +				       struct mac80211_hwsim_data, list)
+> > > +			   ->destroy_work);
+> > 
+> > This can't possibly be right ... you're locking the list_empty which is
+> > a trivial pointer comparison, but not the actual list_entry() ...
+> 
+> Maybe the first spin_lock is not needed, but since flush_work wait for
+> the completion of the task, which at the end also deletes the item from
+> the list, holding any spin_lock would be wrong.
 
-Just wanted to be sure. These firmware files contain a CLM to get the 
-device operational, ie. no separate CLM download is needed.
+But not holding it while taking things that are on the list also seems
+wrong.
 
-Regards,
-Arend
+> > I'd also prefer you actually didn't leave the problem in part as you
+> > describe - and a new workqueue probably isn't that much overhead and
+> > should introduce *less* new code than this, so IMHO that's worth it.
+> 
+> I totally agree with you, but I don't know the actual policy for
+> creating workqeues. I could also simply call flush_scheduled_work,
+> because we may have enough time at module unload. Some modules also do
+> it, but the description an some mailing threads mark it like
+> evil/deprecated. Which solution do you prefer?
 
-> Signed-off-by: Chi-hsien Lin<chi-hsien.lin@cypress.com>
-> ---
->   LICENCE.cypress            | 139 +++++++++++++++++++++++++++++++++++++++++++++
->   WHENCE                     |   5 ++
->   brcm/brcmfmac4373-sdio.bin | Bin 0 -> 457994 bytes
->   brcm/brcmfmac4373.bin      | Bin 0 -> 479232 bytes
->   4 files changed, 144 insertions(+)
->   create mode 100644 LICENCE.cypress
->   create mode 100644 brcm/brcmfmac4373-sdio.bin
->   create mode 100644 brcm/brcmfmac4373.bin
+Let's go with a new workqueue.
+
+johannes
