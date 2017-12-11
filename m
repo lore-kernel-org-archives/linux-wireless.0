@@ -1,66 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:46901 "EHLO
-        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751069AbdLDRL7 (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:42387 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750707AbdLKRfB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 12:11:59 -0500
-Received: by mail-it0-f45.google.com with SMTP id t1so14502331ite.5
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Dec 2017 09:11:59 -0800 (PST)
-From: Li Jin <li.jin@broadcom.com>
-References: <1511313990-19334-1-git-send-email-li.jin@broadcom.com> <87o9nejzic.fsf@purkki.adurom.net>
-In-Reply-To: <87o9nejzic.fsf@purkki.adurom.net>
+        Mon, 11 Dec 2017 12:35:01 -0500
+Subject: Re: [PATCH 1/1] rtlwifi: always initialize variables given to
+ RT_TRACE()
+To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20171210195159.7454-1-nicolas.iooss_linux@m4x.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <20ca7de6-f99e-1c61-4157-c7ab32e85406@lwfinger.net> (sfid-20171211_183506_775702_5B5E4079)
+Date: Mon, 11 Dec 2017 11:34:59 -0600
 MIME-Version: 1.0
-Date: Mon, 4 Dec 2017 09:11:57 -0800
-Message-ID: <85e925b769ae5d0ed2f9c130a9e2955d@mail.gmail.com> (sfid-20171204_181204_733990_6EF0324F)
-Subject: RE: [PATCH INTERNAL V2 1/1] brcmfmac: add console log support with
- configurable read size
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Wright Feng <wright.feng@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        brcm80211-dev-list@cypress.com,
-        "BRCM80211-DEV-LIST,PDL" <brcm80211-dev-list.pdl@broadcom.com>,
-        linux-wireless@vger.kernel.org, Jason Uy <jason.uy@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20171210195159.7454-1-nicolas.iooss_linux@m4x.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On 12/10/2017 01:51 PM, Nicolas Iooss wrote:
+> In rtl_rx_ampdu_apply(), when rtlpriv->cfg->ops->get_btc_status()
+> returns false, RT_TRACE() is called with the values of variables
+> reject_agg and agg_size, which have not been initialized.
+> 
+> Always initialize these variables in order to prevent using
+> uninitialized values.
+> 
+> This issue has been found with clang. The compiler reported:
+> 
+>      drivers/net/wireless/realtek/rtlwifi/base.c:1665:6: error: variable
+>      'agg_size' is used uninitialized whenever 'if' condition is false
+>      [-Werror,-Wsometimes-uninitialized]
+>              if (rtlpriv->cfg->ops->get_btc_status())
+>                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>      drivers/net/wireless/realtek/rtlwifi/base.c:1671:31: note:
+>      uninitialized use occurs here
+>                       reject_agg, ctrl_agg_size, agg_size);
+>                                                  ^~~~~~~~
+> 
+>      drivers/net/wireless/realtek/rtlwifi/base.c:1665:6: error: variable
+>      'reject_agg' is used uninitialized whenever 'if' condition
+>            is false [-Werror,-Wsometimes-uninitialized]
+>              if (rtlpriv->cfg->ops->get_btc_status())
+>                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>      drivers/net/wireless/realtek/rtlwifi/base.c:1671:4: note:
+>      uninitialized use occurs here
+>                       reject_agg, ctrl_agg_size, agg_size);
+>                       ^~~~~~~~~~
+> 
+> Fixes: 2635664e6e4a ("rtlwifi: Add rx ampdu cfg for btcoexist.")
+> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 
-Apologies. The title of this patch should be EXTERNAL. I put down INTERNAL
-by mistake.
+Looks good. Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Thanks!
-Li
+Thanks,
 
------Original Message-----
-From: Kalle Valo [mailto:kvalo@codeaurora.org]
-Sent: Monday, December 4, 2017 7:15 AM
-To: Li Jin
-Cc: Wright Feng; Chi-Hsien Lin; Hante Meuleman; Franky Lin; Arend van
-Spriel; linux-kernel@vger.kernel.org; netdev@vger.kernel.org;
-brcm80211-dev-list@cypress.com; brcm80211-dev-list.pdl@broadcom.com;
-linux-wireless@vger.kernel.org; Jason Uy
-Subject: Re: [PATCH INTERNAL V2 1/1] brcmfmac: add console log support
-with configurable read size
+Larry
 
-Li Jin <li.jin@broadcom.com> writes:
-
-> From: Jason Uy <jason.uy@broadcom.com>
->
-> Add support for configurable read size so that older wifi chips that
-> have size restrictions can be supported.
->
-> Signed-off-by: Jason Uy <jason.uy@broadcom.com>
-> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> Signed-off-by: Li Jin <li.jin@broadcom.com>
-
-Arend, am I supposed to apply this even if there's this "INTERNAL" tag in
-the Subject?
-
---
-Kalle Valo
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/base.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+> index cad2272ae21b..704741d6f495 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+> @@ -1726,7 +1726,7 @@ int rtl_tx_agg_oper(struct ieee80211_hw *hw,
+>   void rtl_rx_ampdu_apply(struct rtl_priv *rtlpriv)
+>   {
+>   	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+> -	u8 reject_agg, ctrl_agg_size = 0, agg_size;
+> +	u8 reject_agg = 0, ctrl_agg_size = 0, agg_size = 0;
+>   
+>   	if (rtlpriv->cfg->ops->get_btc_status())
+>   		btc_ops->btc_get_ampdu_cfg(rtlpriv, &reject_agg,
+> 
