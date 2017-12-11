@@ -1,569 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:52213 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752227AbdLVQbW (ORCPT
+Received: from mx1.uni-rostock.de ([139.30.22.71]:58948 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752984AbdLKMxn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 11:31:22 -0500
-Subject: [PATCH] ath10k: update copyright year
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
+        Mon, 11 Dec 2017 07:53:43 -0500
+Subject: Re: [PATCH v2 1/5] mac80211_hwsim: wait for deferred radio deletion
+ on mod unload
+To: Johannes Berg <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Dec 2017 18:31:13 +0200
-Message-ID: <151396027273.24600.8839394576351249944.stgit@potku.adurom.net> (sfid-20171222_173127_264118_19E268A4)
+References: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
+ <3a182eff-3f00-49bb-94ac-ec371ff1c26e@MAIL2.uni-rostock.de>
+ <1512992771.26976.73.camel@sipsolutions.net>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Message-ID: <d61a234d-6072-1714-0674-7981ef20b33a@uni-rostock.de> (sfid-20171211_135348_007232_5C97FD82)
+Date: Mon, 11 Dec 2017 13:54:02 +0100
 MIME-Version: 1.0
+In-Reply-To: <1512992771.26976.73.camel@sipsolutions.net>
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update year for Qualcomm Atheros, Inc. copyrights.
+Am 11.12.2017 um 12:46 schrieb Johannes Berg:
+>
+>> +	spin_lock_bh(&hwsim_delete_lock);
+>> +	while (!list_empty(&delete_radios)) {
+>> +		pr_debug("mac80211_hwsim: wait for deferred radio remove\n");
+>> +		spin_unlock_bh(&hwsim_delete_lock);
+>> +		flush_work(&list_entry(&delete_radios,
+>> +				       struct mac80211_hwsim_data, list)
+>> +			   ->destroy_work);
+> This can't possibly be right ... you're locking the list_empty which is=
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/ahb.c         |    2 +-
- drivers/net/wireless/ath/ath10k/bmi.c         |    2 +-
- drivers/net/wireless/ath/ath10k/bmi.h         |    2 +-
- drivers/net/wireless/ath/ath10k/ce.c          |    2 +-
- drivers/net/wireless/ath/ath10k/ce.h          |    2 +-
- drivers/net/wireless/ath/ath10k/core.c        |    2 +-
- drivers/net/wireless/ath/ath10k/core.h        |    2 +-
- drivers/net/wireless/ath/ath10k/debug.c       |    2 +-
- drivers/net/wireless/ath/ath10k/debug.h       |    2 +-
- drivers/net/wireless/ath/ath10k/debugfs_sta.c |    2 +-
- drivers/net/wireless/ath/ath10k/hif.h         |    2 +-
- drivers/net/wireless/ath/ath10k/htc.c         |    2 +-
- drivers/net/wireless/ath/ath10k/htc.h         |    2 +-
- drivers/net/wireless/ath/ath10k/htt.c         |    2 +-
- drivers/net/wireless/ath/ath10k/htt.h         |    2 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c      |    2 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c      |    2 +-
- drivers/net/wireless/ath/ath10k/hw.c          |    2 +-
- drivers/net/wireless/ath/ath10k/hw.h          |    2 +-
- drivers/net/wireless/ath/ath10k/mac.c         |    2 +-
- drivers/net/wireless/ath/ath10k/mac.h         |    2 +-
- drivers/net/wireless/ath/ath10k/pci.c         |    2 +-
- drivers/net/wireless/ath/ath10k/pci.h         |    2 +-
- drivers/net/wireless/ath/ath10k/rx_desc.h     |    2 +-
- drivers/net/wireless/ath/ath10k/spectral.c    |    2 +-
- drivers/net/wireless/ath/ath10k/spectral.h    |    2 +-
- drivers/net/wireless/ath/ath10k/swap.c        |    2 +-
- drivers/net/wireless/ath/ath10k/swap.h        |    2 +-
- drivers/net/wireless/ath/ath10k/targaddrs.h   |    2 +-
- drivers/net/wireless/ath/ath10k/testmode.c    |    2 +-
- drivers/net/wireless/ath/ath10k/testmode_i.h  |    2 +-
- drivers/net/wireless/ath/ath10k/thermal.c     |    2 +-
- drivers/net/wireless/ath/ath10k/thermal.h     |    2 +-
- drivers/net/wireless/ath/ath10k/trace.h       |    2 +-
- drivers/net/wireless/ath/ath10k/txrx.c        |    2 +-
- drivers/net/wireless/ath/ath10k/txrx.h        |    2 +-
- drivers/net/wireless/ath/ath10k/wmi-ops.h     |    2 +-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c     |    2 +-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h     |    2 +-
- drivers/net/wireless/ath/ath10k/wmi.c         |    2 +-
- drivers/net/wireless/ath/ath10k/wmi.h         |    2 +-
- drivers/net/wireless/ath/ath10k/wow.c         |    2 +-
- drivers/net/wireless/ath/ath10k/wow.h         |    2 +-
- 43 files changed, 43 insertions(+), 43 deletions(-)
+> a trivial pointer comparison, but not the actual list_entry() ...
+Maybe the first spin_lock is not needed, but since flush_work wait for
+the completion of the task, which at the end also deletes the item from
+the list, holding any spin_lock would be wrong.
+>
+> I'd also prefer you actually didn't leave the problem in part as you
+> describe - and a new workqueue probably isn't that much overhead and
+> should introduce *less* new code than this, so IMHO that's worth it.
+I totally agree with you, but I don't know the actual policy for
+creating workqeues. I could also simply call flush_scheduled_work,
+because we may have enough time at module unload. Some modules also do
+it, but the description an some mailing threads mark it like
+evil/deprecated. Which solution do you prefer?
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index ff6815e95684..35d10490f6c3 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2016 Qualcomm Atheros, Inc. All rights reserved.
-+ * Copyright (c) 2016-2017 Qualcomm Atheros, Inc. All rights reserved.
-  * Copyright (c) 2015 The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.c b/drivers/net/wireless/ath/ath10k/bmi.c
-index 2d3a2f31123d..af4978d6a14b 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.c
-+++ b/drivers/net/wireless/ath/ath10k/bmi.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2014,2016-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
-index 9c0839b2ca8f..9a396817aa55 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.h
-+++ b/drivers/net/wireless/ath/ath10k/bmi.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2015,2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 48314b8fc2c3..b9def7bace2f 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index be1d218c6540..06ac2eb70bf5 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 0f88336c759d..9131868007e6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index a2f7833850aa..c0d7055d4637 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 48788c851217..6d836a26272f 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 58046f89dc52..e54308889e59 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index ff96f70d2282..b260b09dd4d3 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2014-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
-index 6679dd9cfd12..6da4e3369c5a 100644
---- a/drivers/net/wireless/ath/ath10k/hif.h
-+++ b/drivers/net/wireless/ath/ath10k/hif.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2015,2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index e5c80f582ff5..492dc5b4bbf2 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 24663b07eeac..a2f8814b3e53 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2016 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index 764fb2620ad7..625198dea18b 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 3d493d7578ca..783640032216 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 48804e1e46a2..6d96f9560950 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 8faab6259b0b..d334b7be1fea 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index c31eea632777..497ac33e0fbf 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2014-2015 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2014-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 2bd70a551557..6203bc65799b 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index de16cfd2b34f..1428ddf401ba 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
-index 553747bc19ed..81f8d6c0af35 100644
---- a/drivers/net/wireless/ath/ath10k/mac.h
-+++ b/drivers/net/wireless/ath/ath10k/mac.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 962310023126..8abaccc25227 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index 08704fbc11e3..e52fd83156b6 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
-index 210e4b1659e7..545deb6d7af1 100644
---- a/drivers/net/wireless/ath/ath10k/rx_desc.h
-+++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
-index 2048b1e5262b..af6995de7e00 100644
---- a/drivers/net/wireless/ath/ath10k/spectral.c
-+++ b/drivers/net/wireless/ath/ath10k/spectral.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2013-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/spectral.h b/drivers/net/wireless/ath/ath10k/spectral.h
-index b2a2e8ae04b8..13276f4dc12c 100644
---- a/drivers/net/wireless/ath/ath10k/spectral.h
-+++ b/drivers/net/wireless/ath/ath10k/spectral.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2013-2015 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/swap.c b/drivers/net/wireless/ath/ath10k/swap.c
-index adf4592374b4..e7f57efadae1 100644
---- a/drivers/net/wireless/ath/ath10k/swap.c
-+++ b/drivers/net/wireless/ath/ath10k/swap.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2015-2016 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/swap.h b/drivers/net/wireless/ath/ath10k/swap.h
-index f5dc0476493e..fa602f15fa93 100644
---- a/drivers/net/wireless/ath/ath10k/swap.h
-+++ b/drivers/net/wireless/ath/ath10k/swap.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2015-2016 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
-index 8bded5da9d0d..c2b5bad0459b 100644
---- a/drivers/net/wireless/ath/ath10k/targaddrs.h
-+++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2016 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
-index 9d3eb258ac2f..568810b41657 100644
---- a/drivers/net/wireless/ath/ath10k/testmode.c
-+++ b/drivers/net/wireless/ath/ath10k/testmode.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2014-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/testmode_i.h b/drivers/net/wireless/ath/ath10k/testmode_i.h
-index 191a8f34c8ea..6514d1a14242 100644
---- a/drivers/net/wireless/ath/ath10k/testmode_i.h
-+++ b/drivers/net/wireless/ath/ath10k/testmode_i.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2014,2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index ef717b631ff8..aa8978a8d751 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2014-2015 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
-index 3abb97f63b1e..65e2419543f9 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.h
-+++ b/drivers/net/wireless/ath/ath10k/thermal.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2014-2016 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index e0d00cef0bd8..e40edced1d82 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2016 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index d4986f626c35..5b3b021526ab 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2016 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.h b/drivers/net/wireless/ath/ath10k/txrx.h
-index e7ea1ae1c438..2bf401e436d3 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.h
-+++ b/drivers/net/wireless/ath/ath10k/txrx.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2014,2016 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 41eef942ab2c..14093cfdc505 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 06fde53aa679..ae77a007ae07 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 4faaa64a40d5..da89128e8dd6 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index b6cbc0281fe1..58dc2189ba49 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 0fe87abceebf..b0ed38c05bf8 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-- * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
-index 0d46d6dc7578..c4cbccb29b31 100644
---- a/drivers/net/wireless/ath/ath10k/wow.c
-+++ b/drivers/net/wireless/ath/ath10k/wow.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2015-2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-diff --git a/drivers/net/wireless/ath/ath10k/wow.h b/drivers/net/wireless/ath/ath10k/wow.h
-index 9745b9ddc7f5..6e810105b775 100644
---- a/drivers/net/wireless/ath/ath10k/wow.h
-+++ b/drivers/net/wireless/ath/ath10k/wow.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2015,2017 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
+kind regards
+
+Benjamin
+
+--=20
+M.Sc. Benjamin Beichler
+
+Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
+chnik
+Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
+
+University of Rostock, Department of CS and EE
+Institute of Applied Microelectronics and CE
+
+Richard-Wagner-Stra=C3=9Fe 31
+18119 Rostock
+Deutschland/Germany
+
+phone: +49 (0) 381 498 - 7278
+email: Benjamin.Beichler@uni-rostock.de
+www: http://www.imd.uni-rostock.de/
