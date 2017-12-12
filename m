@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46084 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751636AbdLDM55 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 07:57:57 -0500
-Message-ID: <1512392273.4827.127.camel@intel.com> (sfid-20171204_135800_245132_CB43350A)
-Subject: Re: [PATCH 13/15] iwlwifi: mvm: mark MIC stripped MPDUs
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
-Date: Mon, 04 Dec 2017 14:57:53 +0200
-In-Reply-To: <20171202162858.4167-14-luca@coelho.fi>
-References: <20171202162858.4167-1-luca@coelho.fi>
-         <20171202162858.4167-14-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:20536 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752161AbdLLTEG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Dec 2017 14:04:06 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 0/9] wil6210 patches
+Date: Tue, 12 Dec 2017 21:03:53 +0200
+Message-Id: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171212_200411_127067_25DCA600)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-12-02 at 18:28 +0200, Luca Coelho wrote:
-> From: Sara Sharon <sara.sharon@intel.com>
-> 
-> When RADA is active, the hardware decrypts the packets and strips off
-> the MIC as it is useless after decryption. Indicate that to mac80211.
-> 
-> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
->  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-> b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-> index 0e6a7dd30aa9..a81ff4163d05 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-> @@ -253,6 +253,8 @@ static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm,
-> struct ieee80211_hdr *hdr,
->  			return -1;
->  
->  		stats->flag |= RX_FLAG_DECRYPTED;
-> +		if (pkt_flags & FH_RSCSR_RADA_EN)
-> +			stats->flag |= RX_FLAG_MIC_STRIPPED;
->  		*crypt_len = IEEE80211_CCMP_HDR_LEN;
->  		return 0;
->  	case IWL_RX_MPDU_STATUS_SEC_TKIP:
+The following patches include several wil6210 fixes.
 
-Same thing here, I'll move it to the -fixes series, since it's needed
-by 9000-series NICs.
+Dedy Lansky (2):
+  wil6210: support Scheduled scan
+  wil6210: remove leftover "FIXME"s
 
---
-Cheers,
-Luca.
+Lazar Alexei (2):
+  wil6210: support 40bit DMA addresses
+  wil6210: add support for headroom configuration
+
+Lior David (2):
+  wil6210: configurable broadcast TX MCS
+  wil6210: remove reference to preset_chandef
+
+Maya Erez (3):
+  wil6210: add platform capabilities bitmap
+  wil6210: set platform features based on FW capabilities
+  wil6210: prevent parallel suspend and dump collection
+
+ drivers/net/wireless/ath/wil6210/cfg80211.c       |  68 +++++-
+ drivers/net/wireless/ath/wil6210/debugfs.c        |   1 -
+ drivers/net/wireless/ath/wil6210/interrupt.c      |   2 +-
+ drivers/net/wireless/ath/wil6210/main.c           |  67 +++++-
+ drivers/net/wireless/ath/wil6210/netdev.c         |   2 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c       |  36 +++-
+ drivers/net/wireless/ath/wil6210/pm.c             |  17 ++
+ drivers/net/wireless/ath/wil6210/pmc.c            |  11 +-
+ drivers/net/wireless/ath/wil6210/txrx.c           | 101 ++++++++-
+ drivers/net/wireless/ath/wil6210/wil6210.h        |  15 +-
+ drivers/net/wireless/ath/wil6210/wil_crash_dump.c |  11 +
+ drivers/net/wireless/ath/wil6210/wil_platform.h   |  15 +-
+ drivers/net/wireless/ath/wil6210/wmi.c            | 243 +++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/wmi.h            | 100 +++++++--
+ 14 files changed, 621 insertions(+), 68 deletions(-)
+
+-- 
+1.9.1
