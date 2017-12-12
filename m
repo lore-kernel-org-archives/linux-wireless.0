@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:49568 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751535AbdLAP6J (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55112 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752066AbdLLLqD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 10:58:09 -0500
-Message-ID: <1512143881.25588.18.camel@sipsolutions.net> (sfid-20171201_165835_875429_5C369282)
-Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "akolli@codeaurora.org" <akolli@codeaurora.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>,
-        "linux-wireless-owner@vger.kernel.org"
-        <linux-wireless-owner@vger.kernel.org>
-Date: Fri, 01 Dec 2017 16:58:01 +0100
-In-Reply-To: <87a7z230m3.fsf@toke.dk>
-References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
-         <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com>
-         <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com>
-         <DAB5EBB8-C820-4056-8AAB-063D05F38BD5@toke.dk>
-         <87bmjjzppd.fsf@kamboji.qca.qualcomm.com>
-         <5080a68538fd2d883e15bacaa969661b@codeaurora.org> <87r2se36rq.fsf@toke.dk>
-         <87k1y6y04i.fsf@kamboji.qca.qualcomm.com> <87d13y31r0.fsf@toke.dk>
-         <1512143142.25588.17.camel@sipsolutions.net> <87a7z230m3.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 12 Dec 2017 06:46:03 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        David Miller <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>
+Subject: Re: linux-next: build failure after merge of the mac80211-next tree
+References: <20171212125805.5f7813fd@canb.auug.org.au>
+        <1513068419.26976.86.camel@sipsolutions.net> <87r2s0uxry.fsf@toke.dk>
+Date: Tue, 12 Dec 2017 13:45:55 +0200
+In-Reply-To: <87r2s0uxry.fsf@toke.dk> ("Toke \=\?utf-8\?Q\?H\=C3\=B8iland-J\?\=
+ \=\?utf-8\?Q\?\=C3\=B8rgensen\=22's\?\= message of
+        "Tue, 12 Dec 2017 09:59:45 +0100")
+Message-ID: <87fu8gqido.fsf@kamboji.qca.qualcomm.com> (sfid-20171212_124623_649449_51653BCA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-12-01 at 16:54 +0100, Toke Høiland-Jørgensen wrote:
+Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
 
-> I guess that once we have an asynchronous scheduler task of some kind,
-> supporting the callback is easy, but pulling the data out of each packet
-> needs more work.
+>> Sorry for the inconvenience, I hadn't realized mt76 went in now.
+>
+> Yeah, hadn't expected these streams to cross either.
 
-Right.
+I did ask[1] if everyone are ok that I apply mt76 and I didn't get any
+comments, I guess I need to make more noise next time when I'm applying
+a new driver.
 
+[1] https://lkml.kernel.org/r/87wp22jzzb.fsf@purkki.adurom.net
 
-> But since we'll have to do that for ath9k anyway it
-> becomes more a question of whether it's something that should be
-> supported in mac80211 or if it should be implemented in each driver.
-> But since that logic will have to be written from scratch anyway, is
-> there any reason to not just do it in mac80211 from the beginning?
-
-I was thinking in the driver so that there's no overhead for the other
-drivers that don't want it that way.
-
-Dunno. It probably doesn't really matter.
-
-johannes
+--=20
+Kalle Valo
