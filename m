@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0125.outbound.protection.outlook.com ([104.47.33.125]:18656
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751307AbdLKHig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 02:38:36 -0500
-From: Wright Feng <wright.feng@cypress.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
-        chi-hsien.lin@cypress.com
-Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH] brcmfmac: enlarge buffer size of caps to 512 bytes
-Date: Mon, 11 Dec 2017 15:38:21 +0800
-Message-Id: <1512977901-12726-1-git-send-email-wright.feng@cypress.com> (sfid-20171211_083841_186772_EB726480)
+Received: from mail-ot0-f173.google.com ([74.125.82.173]:43866 "EHLO
+        mail-ot0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751123AbdLLCVs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Dec 2017 21:21:48 -0500
+Received: by mail-ot0-f173.google.com with SMTP id y10so16558442otg.10
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 18:21:48 -0800 (PST)
+Subject: Re: rtl8723bu support on Complex 11t
+To: James Hemsing <jhemsing@gmail.com>, linux-wireless@vger.kernel.org
+References: <CADBo=zzcMzFCOdbbskpPStJZdt4s7wdavPefqo9iHi_zVSzJTg@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <07a73398-fbc8-7c84-9512-edff9cbc5e89@lwfinger.net> (sfid-20171212_032151_681371_9BDC8AAF)
+Date: Mon, 11 Dec 2017 20:21:45 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CADBo=zzcMzFCOdbbskpPStJZdt4s7wdavPefqo9iHi_zVSzJTg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The buffer size of return of cap iovar is greater than 256 bytes in some
-firmwares. For instance, the return size of cap iovar is 271 bytes in 4373
-13.10.246.79 firmare. It makes feature capability parsing failed because
-caps buffer is default value.
-So we enlarge caps buffer size to 512 bytes and add the error print for
-cap iovar error.
+On 12/11/2017 06:59 PM, James Hemsing wrote:
+> Hello,
+> 
+> I have a Complex 11t tablet with this wireless card on USB. The kernel
+> driver supports it, but even at its best, it doesn't work at full
+> speed and frequently loses connections, whereas Windows 10 doesn't
+> have any problems. I'd be happy to test and debug code, and provide
+> whatever help I can to improve the driver for this device. Here is
+> some system information. The kernel I'm currently using is version
+> 4.13.0 on Ubuntu 17.10.
+> 
+> Thanks,
+> James
+> 
+> [    4.031513] Bluetooth: hci0: rtl: examining hci_ver=06 hci_rev=000b
+> lmp_ver=06 lmp_subver=8723
+> [    4.031515] Bluetooth: hci0: rtl: loading rtl_bt/rtl8723b_config.bin
+> [    4.032132] bluetooth hci0: Direct firmware load for
+> rtl_bt/rtl8723b_config.bin failed with error -2
+> [    4.032136] Bluetooth: hci0: rtl: loading rtl_bt/rtl8723b_fw.bin
+> [    4.160515] usb 1-6: rtl8723bu_parse_efuse: dumping efuse (0x200 bytes):
+> [    4.160667] usb 1-6: RTL8723BU rev E (SMIC) 1T1R, TX queues 3,
+> WiFi=1, BT=1, GPS=0, HI PA=0
+> [    4.160670] usb 1-6: RTL8723BU MAC: 7c:c7:09:69:b6:3a
+> [    4.160674] usb 1-6: rtl8xxxu: Loading firmware rtlwifi/rtl8723bu_nic.bin
+> [    5.038493] 8723bu: loading out-of-tree module taints kernel.
+> [    5.039092] 8723bu: module verification failed: signature and/or
+> required key missing - tainting kernel
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+Why are you loading BOTH rtl8xxxu and 8723bu? The conflict between them will 
+cause all kinds of problems.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 53ae302..47de35a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -130,13 +130,19 @@ static void brcmf_feat_iovar_data_set(struct brcmf_if *ifp,
- 	}
- }
- 
-+#define MAX_CAPS_BUFFER_SIZE	512
- static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
- {
--	char caps[256];
-+	char caps[MAX_CAPS_BUFFER_SIZE];
- 	enum brcmf_feat_id id;
--	int i;
-+	int i, err;
-+
-+	err = brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
-+	if (err) {
-+		brcmf_err("could not get firmware cap (%d)\n", err);
-+		return;
-+	}
- 
--	brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
- 	brcmf_dbg(INFO, "[ %s]\n", caps);
- 
- 	for (i = 0; i < ARRAY_SIZE(brcmf_fwcap_map); i++) {
--- 
-1.9.1
+Larry
