@@ -1,44 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55112 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752066AbdLLLqD (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:20536 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752425AbdLLTEK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 06:46:03 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Wireless <linux-wireless@vger.kernel.org>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the mac80211-next tree
-References: <20171212125805.5f7813fd@canb.auug.org.au>
-        <1513068419.26976.86.camel@sipsolutions.net> <87r2s0uxry.fsf@toke.dk>
-Date: Tue, 12 Dec 2017 13:45:55 +0200
-In-Reply-To: <87r2s0uxry.fsf@toke.dk> ("Toke \=\?utf-8\?Q\?H\=C3\=B8iland-J\?\=
- \=\?utf-8\?Q\?\=C3\=B8rgensen\=22's\?\= message of
-        "Tue, 12 Dec 2017 09:59:45 +0100")
-Message-ID: <87fu8gqido.fsf@kamboji.qca.qualcomm.com> (sfid-20171212_124623_649449_51653BCA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Tue, 12 Dec 2017 14:04:10 -0500
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 2/9] wil6210: support 40bit DMA addresses
+Date: Tue, 12 Dec 2017 21:03:55 +0200
+Message-Id: <1513105442-28041-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171212_200415_021313_5AEF6851)
+In-Reply-To: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
->> Sorry for the inconvenience, I hadn't realized mt76 went in now.
->
-> Yeah, hadn't expected these streams to cross either.
+Add the option to support 40bit addresses since some platforms
+may not support 48bits but support 40bits
 
-I did ask[1] if everyone are ok that I apply mt76 and I didn't get any
-comments, I guess I need to make more noise next time when I'm applying
-a new driver.
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 26 +++++++++++++++-----------
+ drivers/net/wireless/ath/wil6210/pmc.c      | 11 ++++++-----
+ drivers/net/wireless/ath/wil6210/txrx.c     | 11 ++++++-----
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +-
+ 4 files changed, 28 insertions(+), 22 deletions(-)
 
-[1] https://lkml.kernel.org/r/87wp22jzzb.fsf@purkki.adurom.net
-
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 42a5480..d4bb0bd 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -206,6 +206,8 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		.fw_recovery = wil_platform_rop_fw_recovery,
+ 	};
+ 	u32 bar_size = pci_resource_len(pdev, 0);
++	int dma_addr_size[] = {48, 40, 32}; /* keep descending order */
++	int i;
+ 
+ 	/* check HW */
+ 	dev_info(&pdev->dev, WIL_NAME
+@@ -241,21 +243,23 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 	/* rollback to err_plat */
+ 
+-	/* device supports 48bit addresses */
+-	rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
+-	if (rc) {
+-		dev_err(dev, "dma_set_mask_and_coherent(48) failed: %d\n", rc);
+-		rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
++	/* device supports >32bit addresses */
++	for (i = 0; i < ARRAY_SIZE(dma_addr_size); i++) {
++		rc = dma_set_mask_and_coherent(dev,
++					       DMA_BIT_MASK(dma_addr_size[i]));
+ 		if (rc) {
+-			dev_err(dev,
+-				"dma_set_mask_and_coherent(32) failed: %d\n",
+-				rc);
+-			goto err_plat;
++			dev_err(dev, "dma_set_mask_and_coherent(%d) failed: %d\n",
++				dma_addr_size[i], rc);
++			continue;
+ 		}
+-	} else {
+-		wil->use_extended_dma_addr = 1;
++		dev_info(dev, "using dma mask %d", dma_addr_size[i]);
++		wil->dma_addr_size = dma_addr_size[i];
++		break;
+ 	}
+ 
++	if (wil->dma_addr_size == 0)
++		goto err_plat;
++
+ 	rc = pci_enable_device(pdev);
+ 	if (rc && pdev->msi_enabled == 0) {
+ 		wil_err(wil,
+diff --git a/drivers/net/wireless/ath/wil6210/pmc.c b/drivers/net/wireless/ath/wil6210/pmc.c
+index 2e301b6..4ea27b0 100644
+--- a/drivers/net/wireless/ath/wil6210/pmc.c
++++ b/drivers/net/wireless/ath/wil6210/pmc.c
+@@ -111,14 +111,14 @@ void wil_pmc_alloc(struct wil6210_priv *wil,
+ 	 *
+ 	 * HW has limitation that all vrings addresses must share the same
+ 	 * upper 16 msb bits part of 48 bits address. To workaround that,
+-	 * if we are using 48 bit addresses switch to 32 bit allocation
+-	 * before allocating vring memory.
++	 * if we are using more than 32 bit addresses switch to 32 bit
++	 * allocation before allocating vring memory.
+ 	 *
+ 	 * There's no check for the return value of dma_set_mask_and_coherent,
+ 	 * since we assume if we were able to set the mask during
+ 	 * initialization in this system it will not fail if we set it again
+ 	 */
+-	if (wil->use_extended_dma_addr)
++	if (wil->dma_addr_size > 32)
+ 		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
+ 
+ 	pmc->pring_va = dma_alloc_coherent(dev,
+@@ -126,8 +126,9 @@ void wil_pmc_alloc(struct wil6210_priv *wil,
+ 			&pmc->pring_pa,
+ 			GFP_KERNEL);
+ 
+-	if (wil->use_extended_dma_addr)
+-		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
++	if (wil->dma_addr_size > 32)
++		dma_set_mask_and_coherent(dev,
++					  DMA_BIT_MASK(wil->dma_addr_size));
+ 
+ 	wil_dbg_misc(wil,
+ 		     "pmc_alloc: allocated pring %p => %pad. %zd x %d = total %zd bytes\n",
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 389c718..62c04f0 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -178,14 +178,14 @@ static int wil_vring_alloc(struct wil6210_priv *wil, struct vring *vring)
+ 	 *
+ 	 * HW has limitation that all vrings addresses must share the same
+ 	 * upper 16 msb bits part of 48 bits address. To workaround that,
+-	 * if we are using 48 bit addresses switch to 32 bit allocation
+-	 * before allocating vring memory.
++	 * if we are using more than 32 bit addresses switch to 32 bit
++	 * allocation before allocating vring memory.
+ 	 *
+ 	 * There's no check for the return value of dma_set_mask_and_coherent,
+ 	 * since we assume if we were able to set the mask during
+ 	 * initialization in this system it will not fail if we set it again
+ 	 */
+-	if (wil->use_extended_dma_addr)
++	if (wil->dma_addr_size > 32)
+ 		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
+ 
+ 	vring->va = dma_alloc_coherent(dev, sz, &vring->pa, GFP_KERNEL);
+@@ -195,8 +195,9 @@ static int wil_vring_alloc(struct wil6210_priv *wil, struct vring *vring)
+ 		return -ENOMEM;
+ 	}
+ 
+-	if (wil->use_extended_dma_addr)
+-		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
++	if (wil->dma_addr_size > 32)
++		dma_set_mask_and_coherent(dev,
++					  DMA_BIT_MASK(wil->dma_addr_size));
+ 
+ 	/* initially, all descriptors are SW owned
+ 	 * For Tx and Rx, ownership bit is at the same location, thus
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index aa85e9c..db68209 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -704,7 +704,7 @@ struct wil6210_priv {
+ 	struct wil_sta_info sta[WIL6210_MAX_CID];
+ 	int bcast_vring;
+ 	u32 vring_idle_trsh; /* HW fetches up to 16 descriptors at once  */
+-	bool use_extended_dma_addr; /* indicates whether we are using 48 bits */
++	u32 dma_addr_size; /* indicates dma addr size */
+ 	/* scan */
+ 	struct cfg80211_scan_request *scan_request;
+ 
+-- 
+1.9.1
