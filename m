@@ -1,296 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47424 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750774AbdLDGsN (ORCPT
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:43660 "EHLO
+        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751499AbdLLLnQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 01:48:13 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v3 1/3] mwifiex: refactor device dump code to make it generic for usb interface
-Date: Mon, 4 Dec 2017 14:47:56 +0800
-Message-ID: <1512370078-24245-1-git-send-email-huxm@marvell.com> (sfid-20171204_074832_413294_64219980)
+        Tue, 12 Dec 2017 06:43:16 -0500
+Received: by mail-oi0-f52.google.com with SMTP id f69so13777504oig.10
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Dec 2017 03:43:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAD8Lp455GLxVHves8gNbfm9dMUmhj1DOMyeiOk5Td7m2rAxYFA@mail.gmail.com>
+References: <20171110025415.7854-1-drake@endlessm.com> <87y3na7eei.fsf@qca.qualcomm.com>
+ <CAD8Lp47uJbB27xZPH3dDqNuJcaNCGEsbpdqfK-h4+nzVLGk1aw@mail.gmail.com>
+ <87bmk5hx9x.fsf@kamboji.qca.qualcomm.com> <CAD8Lp455GLxVHves8gNbfm9dMUmhj1DOMyeiOk5Td7m2rAxYFA@mail.gmail.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Tue, 12 Dec 2017 11:43:15 +0000
+Message-ID: <CAD8Lp44BWhK7j5dKzHqqXTaR4uG9=-6oJd2NEsdM8oQYw0D8Bw@mail.gmail.com> (sfid-20171212_124320_589370_2AACA6CD)
+Subject: Re: [v2] ath9k: add MSI support
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Russell Hu <rhu@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Robert Chang <rwchang@qti.qualcomm.com>,
+        Aeolus Yang <aeolus@qti.qualcomm.com>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux@endlessm.com" <linux@endlessm.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "andy@infradead.org" <andy@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch refactor current device dump code to make it generic
-for subsequent implementation on usb interface.
+On Wed, Nov 15, 2017 at 7:38 AM, Daniel Drake <drake@endlessm.com> wrote:
+> On Tue, Nov 14, 2017 at 8:15 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>> Can't be fixed in firmware, but it would be good to have confirmation
+>>> of the hardware behavivour, and maybe some other solution is possible?
+>>> Are you following this up within Qualcomm?
+>>
+>> No time to do that right now, sorry.
+>
+> I got several autoresponders from people on this thread from Qualcomm
+> Taiwan. Would it be useful for us to drop off a sample of the affected
+> product at your Taipei or Hsinchu office so that you can investigate
+> further?
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
-v2: Addressed below review comments from Brian Norris
-    a) use new API timer_setup/from_timer.
-    b) reset devdump_len during initization
-v3: Same as v2
----
- drivers/net/wireless/marvell/mwifiex/init.c |  1 +
- drivers/net/wireless/marvell/mwifiex/main.c | 87 +++++++++++++++--------------
- drivers/net/wireless/marvell/mwifiex/main.h | 11 +++-
- drivers/net/wireless/marvell/mwifiex/pcie.c | 13 +++--
- drivers/net/wireless/marvell/mwifiex/sdio.c | 14 +++--
- 5 files changed, 72 insertions(+), 54 deletions(-)
+Ping - how can we collaborate on this?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index e1aa860..b0d3d68 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -314,6 +314,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->iface_limit.p2p_intf = MWIFIEX_MAX_P2P_NUM;
- 	adapter->active_scan_triggered = false;
- 	timer_setup(&adapter->wakeup_timer, wakeup_timer_fn, 0);
-+	adapter->devdump_len = 0;
- }
- 
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index a96bd7e..f7d0299 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1051,9 +1051,23 @@ void mwifiex_multi_chan_resync(struct mwifiex_adapter *adapter)
- }
- EXPORT_SYMBOL_GPL(mwifiex_multi_chan_resync);
- 
--int mwifiex_drv_info_dump(struct mwifiex_adapter *adapter, void **drv_info)
-+void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter)
- {
--	void *p;
-+	/* Dump all the memory data into single file, a userspace script will
-+	 * be used to split all the memory data to multiple files
-+	 */
-+	mwifiex_dbg(adapter, MSG,
-+		    "== mwifiex dump information to /sys/class/devcoredump start");
-+	dev_coredumpv(adapter->dev, adapter->devdump_data, adapter->devdump_len,
-+		      GFP_KERNEL);
-+	mwifiex_dbg(adapter, MSG,
-+		    "== mwifiex dump information to /sys/class/devcoredump end");
-+}
-+EXPORT_SYMBOL_GPL(mwifiex_upload_device_dump);
-+
-+void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter)
-+{
-+	char *p;
- 	char drv_version[64];
- 	struct usb_card_rec *cardp;
- 	struct sdio_mmc_card *sdio_card;
-@@ -1061,17 +1075,12 @@ int mwifiex_drv_info_dump(struct mwifiex_adapter *adapter, void **drv_info)
- 	int i, idx;
- 	struct netdev_queue *txq;
- 	struct mwifiex_debug_info *debug_info;
--	void *drv_info_dump;
- 
- 	mwifiex_dbg(adapter, MSG, "===mwifiex driverinfo dump start===\n");
- 
--	/* memory allocate here should be free in mwifiex_upload_device_dump*/
--	drv_info_dump = vzalloc(MWIFIEX_DRV_INFO_SIZE_MAX);
--
--	if (!drv_info_dump)
--		return 0;
--
--	p = (char *)(drv_info_dump);
-+	p = adapter->devdump_data;
-+	strcpy(p, "========Start dump driverinfo========\n");
-+	p += strlen("========Start dump driverinfo========\n");
- 	p += sprintf(p, "driver_name = " "\"mwifiex\"\n");
- 
- 	mwifiex_drv_get_driver_version(adapter, drv_version,
-@@ -1155,21 +1164,18 @@ int mwifiex_drv_info_dump(struct mwifiex_adapter *adapter, void **drv_info)
- 		kfree(debug_info);
- 	}
- 
-+	strcpy(p, "\n========End dump========\n");
-+	p += strlen("\n========End dump========\n");
- 	mwifiex_dbg(adapter, MSG, "===mwifiex driverinfo dump end===\n");
--	*drv_info = drv_info_dump;
--	return p - drv_info_dump;
-+	adapter->devdump_len = p - (char *)adapter->devdump_data;
- }
- EXPORT_SYMBOL_GPL(mwifiex_drv_info_dump);
- 
--void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
--				int drv_info_size)
-+void mwifiex_prepare_fw_dump_info(struct mwifiex_adapter *adapter)
- {
--	u8 idx, *dump_data, *fw_dump_ptr;
--	u32 dump_len;
--
--	dump_len = (strlen("========Start dump driverinfo========\n") +
--		       drv_info_size +
--		       strlen("\n========End dump========\n"));
-+	u8 idx;
-+	char *fw_dump_ptr;
-+	u32 dump_len = 0;
- 
- 	for (idx = 0; idx < adapter->num_mem_types; idx++) {
- 		struct memory_type_mapping *entry =
-@@ -1184,24 +1190,24 @@ void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
- 		}
- 	}
- 
--	dump_data = vzalloc(dump_len + 1);
--	if (!dump_data)
--		goto done;
--
--	fw_dump_ptr = dump_data;
-+	if (dump_len + 1 + adapter->devdump_len > MWIFIEX_FW_DUMP_SIZE) {
-+		/* Realloc in case buffer overflow */
-+		fw_dump_ptr = vzalloc(dump_len + 1 + adapter->devdump_len);
-+		mwifiex_dbg(adapter, MSG, "Realloc device dump data.");
-+		if (!fw_dump_ptr) {
-+			vfree(adapter->devdump_data);
-+			mwifiex_dbg(adapter, ERROR,
-+				    "vzalloc devdump data failure!\n");
-+			return;
-+		}
- 
--	/* Dump all the memory data into single file, a userspace script will
--	 * be used to split all the memory data to multiple files
--	 */
--	mwifiex_dbg(adapter, MSG,
--		    "== mwifiex dump information to /sys/class/devcoredump start");
-+		memmove(fw_dump_ptr, adapter->devdump_data,
-+			adapter->devdump_len);
-+		vfree(adapter->devdump_data);
-+		adapter->devdump_data = fw_dump_ptr;
-+	}
- 
--	strcpy(fw_dump_ptr, "========Start dump driverinfo========\n");
--	fw_dump_ptr += strlen("========Start dump driverinfo========\n");
--	memcpy(fw_dump_ptr, drv_info, drv_info_size);
--	fw_dump_ptr += drv_info_size;
--	strcpy(fw_dump_ptr, "\n========End dump========\n");
--	fw_dump_ptr += strlen("\n========End dump========\n");
-+	fw_dump_ptr = (char *)adapter->devdump_data + adapter->devdump_len;
- 
- 	for (idx = 0; idx < adapter->num_mem_types; idx++) {
- 		struct memory_type_mapping *entry =
-@@ -1228,11 +1234,8 @@ void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
- 	/* device dump data will be free in device coredump release function
- 	 * after 5 min
- 	 */
--	dev_coredumpv(adapter->dev, dump_data, dump_len, GFP_KERNEL);
--	mwifiex_dbg(adapter, MSG,
--		    "== mwifiex dump information to /sys/class/devcoredump end");
-+	adapter->devdump_len = fw_dump_ptr - (char *)adapter->devdump_data;
- 
--done:
- 	for (idx = 0; idx < adapter->num_mem_types; idx++) {
- 		struct memory_type_mapping *entry =
- 			&adapter->mem_type_mapping_tbl[idx];
-@@ -1241,10 +1244,8 @@ void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
- 		entry->mem_ptr = NULL;
- 		entry->mem_size = 0;
- 	}
--
--	vfree(drv_info);
- }
--EXPORT_SYMBOL_GPL(mwifiex_upload_device_dump);
-+EXPORT_SYMBOL_GPL(mwifiex_prepare_fw_dump_info);
- 
- /*
-  * CFG802.11 network device handler for statistics retrieval.
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 154c079..8b6241a 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -94,6 +94,8 @@ enum {
- 
- #define MAX_EVENT_SIZE                  2048
- 
-+#define MWIFIEX_FW_DUMP_SIZE       (2 * 1024 * 1024)
-+
- #define ARP_FILTER_MAX_BUF_SIZE         68
- 
- #define MWIFIEX_KEY_BUFFER_SIZE			16
-@@ -1032,6 +1034,9 @@ struct mwifiex_adapter {
- 	bool wake_by_wifi;
- 	/* Aggregation parameters*/
- 	struct bus_aggr_params bus_aggr;
-+	/* Device dump data/length */
-+	void *devdump_data;
-+	int devdump_len;
- };
- 
- void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
-@@ -1656,9 +1661,9 @@ void mwifiex_hist_data_add(struct mwifiex_private *priv,
- u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
- 			    u8 rx_rate, u8 ht_info);
- 
--int mwifiex_drv_info_dump(struct mwifiex_adapter *adapter, void **drv_info);
--void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter, void *drv_info,
--				int drv_info_size);
-+void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter);
-+void mwifiex_prepare_fw_dump_info(struct mwifiex_adapter *adapter);
-+void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter);
- void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
- void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
- int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index cd31494..f666cb2 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2769,12 +2769,17 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
- 
- static void mwifiex_pcie_device_dump_work(struct mwifiex_adapter *adapter)
- {
--	int drv_info_size;
--	void *drv_info;
-+	adapter->devdump_data = vzalloc(MWIFIEX_FW_DUMP_SIZE);
-+	if (!adapter->devdump_data) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "vzalloc devdump data failure!\n");
-+		return;
-+	}
- 
--	drv_info_size = mwifiex_drv_info_dump(adapter, &drv_info);
-+	mwifiex_drv_info_dump(adapter);
- 	mwifiex_pcie_fw_dump(adapter);
--	mwifiex_upload_device_dump(adapter, drv_info, drv_info_size);
-+	mwifiex_prepare_fw_dump_info(adapter);
-+	mwifiex_upload_device_dump(adapter);
- }
- 
- static void mwifiex_pcie_card_reset_work(struct mwifiex_adapter *adapter)
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index fd5183c..a828801 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -2505,15 +2505,21 @@ static void mwifiex_sdio_generic_fw_dump(struct mwifiex_adapter *adapter)
- static void mwifiex_sdio_device_dump_work(struct mwifiex_adapter *adapter)
- {
- 	struct sdio_mmc_card *card = adapter->card;
--	int drv_info_size;
--	void *drv_info;
- 
--	drv_info_size = mwifiex_drv_info_dump(adapter, &drv_info);
-+	adapter->devdump_data = vzalloc(MWIFIEX_FW_DUMP_SIZE);
-+	if (!adapter->devdump_data) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "vzalloc devdump data failure!\n");
-+		return;
-+	}
-+
-+	mwifiex_drv_info_dump(adapter);
- 	if (card->fw_dump_enh)
- 		mwifiex_sdio_generic_fw_dump(adapter);
- 	else
- 		mwifiex_sdio_fw_dump(adapter);
--	mwifiex_upload_device_dump(adapter, drv_info, drv_info_size);
-+	mwifiex_prepare_fw_dump_info(adapter);
-+	mwifiex_upload_device_dump(adapter);
- }
- 
- static void mwifiex_sdio_work(struct work_struct *work)
--- 
-1.9.1
+Also, we have been testing the MSI support patch and while it seems to
+be working fine on AR9565, multiple users hit failures on AR9462. The
+most common report is that the system simply cannot maintain the
+connection with the AP for more than a few seconds. It hits a check in
+mac80211 where it sends a nullfunc to the AP and expects an ack in
+less than 500ms, but it disconnects since it doesn't see the ack.
+
+https://marc.info/?l=linux-wireless&m=151027741010422&w=2
+
+We also reproduced a problem in our office with AR9462. With the MSI
+support patch in use, we ping a server every second for 1000 seconds
+while monitoring "iw dev wlp2s0 link" output. With the MSI support
+patch in place, this test fails every time; the connection is dropped
+in less than 1000s.
+With the patch reverted everything is fine.
+
+We ran the same test with AR9565 in MSI mode and it worked fine.
+
+Daniel
