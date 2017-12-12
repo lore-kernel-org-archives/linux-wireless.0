@@ -1,66 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60494 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752035AbdKTTfy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2017 14:35:54 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, devicetree@vger.kernel.org,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v7 1/3] dt-bindings: net: add mt76 wireless device binding
-Date: Mon, 20 Nov 2017 20:35:47 +0100
-Message-Id: <20171120193549.80831-2-nbd@nbd.name> (sfid-20171120_203628_003339_BB19211A)
-In-Reply-To: <20171120193549.80831-1-nbd@nbd.name>
-References: <20171120193549.80831-1-nbd@nbd.name>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:59744 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752574AbdLLTEV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Dec 2017 14:04:21 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 9/9] wil6210: remove reference to preset_chandef
+Date: Tue, 12 Dec 2017 21:04:02 +0200
+Message-Id: <1513105442-28041-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171212_200428_312382_412D51A1)
+In-Reply-To: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation describing how device tree can be used to configure
-wireless chips supported by the mt76 driver.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+The field preset_chandef of wireless_dev must not be accessed
+by the driver because it is private to cfg80211. Store the
+monitor channel locally in wil6210_priv instead.
+
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- .../bindings/net/wireless/mediatek,mt76.txt        | 32 ++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 3 +--
+ drivers/net/wireless/ath/wil6210/debugfs.c  | 1 -
+ drivers/net/wireless/ath/wil6210/netdev.c   | 2 +-
+ drivers/net/wireless/ath/wil6210/txrx.c     | 3 +--
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 1 +
+ drivers/net/wireless/ath/wil6210/wmi.c      | 2 +-
+ 6 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-new file mode 100644
-index 000000000000..0c17a0ec9b7b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-@@ -0,0 +1,32 @@
-+* MediaTek mt76xx devices
-+
-+This node provides properties for configuring the MediaTek mt76xx wireless
-+device. The node is expected to be specified as a child node of the PCI
-+controller to which the wireless chip is connected.
-+
-+Optional properties:
-+
-+- mac-address: See ethernet.txt in the parent directory
-+- local-mac-address: See ethernet.txt in the parent directory
-+- ieee80211-freq-limit: See ieee80211.txt
-+- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
-+
-+Optional nodes:
-+- led: Properties for a connected LED
-+  Optional properties:
-+    - led-sources: See Documentation/devicetree/bindings/leds/common.txt
-+
-+&pcie {
-+	pcie0 {
-+		wifi@0,0 {
-+			compatible = "mediatek,mt76";
-+			reg = <0x0000 0 0 0 0>;
-+			ieee80211-freq-limit = <5000000 6000000>;
-+			mediatek,mtd-eeprom = <&factory 0x8000>;
-+
-+			led {
-+				led-sources = <2>;
-+			};
-+		};
-+	};
-+};
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 39509d0..768f63f38 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -956,9 +956,8 @@ static int wil_cfg80211_set_channel(struct wiphy *wiphy,
+ 				    struct cfg80211_chan_def *chandef)
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+-	struct wireless_dev *wdev = wil_to_wdev(wil);
+ 
+-	wdev->preset_chandef = *chandef;
++	wil->monitor_chandef = *chandef;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 4475937..4a48882 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -869,7 +869,6 @@ static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
+ 
+ 	params.buf = frame;
+ 	params.len = len;
+-	params.chan = wdev->preset_chandef.chan;
+ 
+ 	rc = wil_cfg80211_mgmt_tx(wiphy, wdev, &params, NULL);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index b641ac1..7ba4e0a 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -150,7 +150,7 @@ void *wil_if_alloc(struct device *dev)
+ 	wdev->iftype = NL80211_IFTYPE_STATION; /* TODO */
+ 	/* default monitor channel */
+ 	ch = wdev->wiphy->bands[NL80211_BAND_60GHZ]->channels;
+-	cfg80211_chandef_create(&wdev->preset_chandef, ch, NL80211_CHAN_NO_HT);
++	cfg80211_chandef_create(&wil->monitor_chandef, ch, NL80211_CHAN_NO_HT);
+ 
+ 	ndev = alloc_netdev(0, "wlan%d", NET_NAME_UNKNOWN, wil_dev_setup);
+ 	if (!ndev) {
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 4fc05f7..9f8c6087f 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -428,7 +428,6 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct vring *vring,
+ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
+ 				       struct sk_buff *skb)
+ {
+-	struct wireless_dev *wdev = wil->wdev;
+ 	struct wil6210_rtap {
+ 		struct ieee80211_radiotap_header rthdr;
+ 		/* fields should be in the order of bits in rthdr.it_present */
+@@ -455,7 +454,7 @@ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
+ 	int rtap_len = sizeof(struct wil6210_rtap);
+ 	int phy_length = 0; /* phy info header size, bytes */
+ 	static char phy_data[128];
+-	struct ieee80211_channel *ch = wdev->preset_chandef.chan;
++	struct ieee80211_channel *ch = wil->monitor_chandef.chan;
+ 
+ 	if (rtap_include_phy_info) {
+ 		rtap_len = sizeof(*rtap_vendor) + sizeof(*d);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 703e09e..1131893 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -655,6 +655,7 @@ struct wil6210_priv {
+ 	unsigned long last_fw_recovery; /* jiffies of last fw recovery */
+ 	wait_queue_head_t wq; /* for all wait_event() use */
+ 	/* profile */
++	struct cfg80211_chan_def monitor_chandef;
+ 	u32 monitor_flags;
+ 	u32 privacy; /* secure connection? */
+ 	u8 hidden_ssid; /* relevant in AP mode */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 4d7fb47..bee018d 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1780,7 +1780,7 @@ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
+ 	int rc;
+ 
+ 	if (wdev->iftype == NL80211_IFTYPE_MONITOR) {
+-		struct ieee80211_channel *ch = wdev->preset_chandef.chan;
++		struct ieee80211_channel *ch = wil->monitor_chandef.chan;
+ 
+ 		cmd.sniffer_cfg.mode = cpu_to_le32(WMI_SNIFFER_ON);
+ 		if (ch)
 -- 
-2.14.2
+1.9.1
