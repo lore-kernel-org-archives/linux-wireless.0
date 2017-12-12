@@ -1,47 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35069 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967273AbdLSMr2 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46926 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751803AbdLLHir (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 07:47:28 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 10/11] brcmfmac: add comment block in brcmf_sdio_buscore_read()
-Date: Tue, 19 Dec 2017 13:47:16 +0100
-Message-Id: <1513687637-5555-11-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134752_367780_06895244)
-In-Reply-To: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 12 Dec 2017 02:38:47 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v5 3/3] mwifiex: debugfs: trigger device dump for usb interface
+Date: Tue, 12 Dec 2017 15:38:13 +0800
+Message-ID: <1513064293-9400-3-git-send-email-huxm@marvell.com> (sfid-20171212_083849_842129_A2C3EC1F)
+In-Reply-To: <1513064293-9400-1-git-send-email-huxm@marvell.com>
+References: <1513064293-9400-1-git-send-email-huxm@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_sdio_buscore_read() there is some special handling upon
-register access to chipid register of the chipcommon core. Add
-comment explaining why it is done here.
+This patch extend device_dump debugfs function to make it
+works for usb interface.
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+For command timeouts, USB firmware will automatically emit
+firmware dump events, so we don't implement device_dump().
+
+For user-initiated dumps, we trigger it by issue firmware
+dump event command to firmware, as there is no command
+response, do not start 10s timer.
+
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+v2: Same as v1
+v3: Add more comments Regards the different dump mechanism
+    between usb and other interfaces.(Brian Norris)
+v5: Same as v3,v4
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c  | 11 +++++++----
+ drivers/net/wireless/marvell/mwifiex/debugfs.c | 13 +++++++++----
+ drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  4 ++++
+ 4 files changed, 21 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index fd9fbc8..714276e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3772,6 +3772,13 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index dcc529e..8746600 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -290,13 +290,16 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 	adapter->dbg.last_cmd_act[adapter->dbg.last_cmd_index] =
+ 			get_unaligned_le16((u8 *)host_cmd + S_DS_GEN);
  
- 	val = brcmf_sdiod_readl(sdiodev, addr, NULL);
- 
-+	/*
-+	 * this is a bit of special handling if reading the chipcommon chipid
-+	 * register. The 4339 is a next-gen of the 4335. It uses the same
-+	 * SDIO device id as 4335 and the chipid register returns 4335 as well.
-+	 * It can be identified as 4339 by looking at the chip revision. It
-+	 * is corrected here so the chip.c module has the right info.
++	/* Setup the timer after transmit command, except that specific
++	 * command might not have command response.
 +	 */
- 	if (addr == CORE_CC_REG(SI_ENUM_BASE, chipid) &&
- 	    (sdiodev->func1->device == SDIO_DEVICE_ID_BROADCOM_4339 ||
- 	     sdiodev->func1->device == SDIO_DEVICE_ID_BROADCOM_4335_4339)) {
++	if (cmd_code != HostCmd_CMD_FW_DUMP_EVENT)
++		mod_timer(&adapter->cmd_timer,
++			  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
++
+ 	/* Clear BSS_NO_BITS from HostCmd */
+ 	cmd_code &= HostCmd_CMD_ID_MASK;
+ 
+-	/* Setup the timer after transmit command */
+-	mod_timer(&adapter->cmd_timer,
+-		  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+index 6f4239b..db2872d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
++++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+@@ -168,10 +168,15 @@
+ {
+ 	struct mwifiex_private *priv = file->private_data;
+ 
+-	if (!priv->adapter->if_ops.device_dump)
+-		return -EIO;
+-
+-	priv->adapter->if_ops.device_dump(priv->adapter);
++	/* For command timeouts, USB firmware will automatically emit
++	 * firmware dump events, so we don't implement device_dump().
++	 * For user-initiated dumps, we trigger it ourselves.
++	 */
++	if (priv->adapter->iface_type == MWIFIEX_USB)
++		mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT,
++				 HostCmd_ACT_GEN_SET, 0, NULL, true);
++	else
++		priv->adapter->if_ops.device_dump(priv->adapter);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 4d5e686..9c2cdef 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -409,6 +409,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_TDLS_CONFIG                       0x0100
+ #define HostCmd_CMD_MC_POLICY                         0x0121
+ #define HostCmd_CMD_TDLS_OPER                         0x0122
++#define HostCmd_CMD_FW_DUMP_EVENT		      0x0125
+ #define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
+ #define HostCmd_CMD_CHAN_REGION_CFG		      0x0242
+ #define HostCmd_CMD_PACKET_AGGR_CTRL		      0x0251
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index fb09014..211e47d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -2206,6 +2206,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 	case HostCmd_CMD_CHAN_REGION_CFG:
+ 		ret = mwifiex_cmd_chan_region_cfg(priv, cmd_ptr, cmd_action);
+ 		break;
++	case HostCmd_CMD_FW_DUMP_EVENT:
++		cmd_ptr->command = cpu_to_le16(cmd_no);
++		cmd_ptr->size = cpu_to_le16(S_DS_GEN);
++		break;
+ 	default:
+ 		mwifiex_dbg(priv->adapter, ERROR,
+ 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
 -- 
 1.9.1
