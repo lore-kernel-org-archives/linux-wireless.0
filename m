@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0082.outbound.protection.outlook.com ([104.47.41.82]:13203
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751473AbdLEUbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 15:31:46 -0500
-Date: Tue, 5 Dec 2017 23:31:30 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Marianna Carrera <mcarrera@quantenna.com>
-Subject: Re: [RFC PATCH 2/2] nl80211: implement beacon change notifier
-Message-ID: <20171205203129.flqhqrwa5y7uhgoz@bars> (sfid-20171205_213154_033963_C639083E)
-References: <20171109094024.9085-1-sergey.matyukevich.os@quantenna.com>
- <20171109094024.9085-2-sergey.matyukevich.os@quantenna.com>
- <1510565429.30497.10.camel@sipsolutions.net>
- <20171113115841.3dcrcjqnp543kndi@bars>
- <1510575765.30497.38.camel@sipsolutions.net>
- <20171115153547.kkunkrfcivoqcsq2@bars>
- <1511784144.5456.12.camel@sipsolutions.net>
+Received: from mail-yb0-f179.google.com ([209.85.213.179]:42515 "EHLO
+        mail-yb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752298AbdLLNSI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Dec 2017 08:18:08 -0500
+Received: by mail-yb0-f179.google.com with SMTP id t127so8380927ybf.9
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Dec 2017 05:18:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1511784144.5456.12.camel@sipsolutions.net>
+In-Reply-To: <877etsqftz.fsf@kamboji.qca.qualcomm.com>
+References: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org>
+ <87bmj4qhkm.fsf@kamboji.qca.qualcomm.com> <877etsqftz.fsf@kamboji.qca.qualcomm.com>
+From: Loic Poulain <loic.poulain@linaro.org>
+Date: Tue, 12 Dec 2017 14:17:27 +0100
+Message-ID: <CAMZdPi_1METJ8+_dM-UWm8bT3-GfUkACMDBFF0_WoO6v5GBxvQ@mail.gmail.com> (sfid-20171212_141815_912783_575B9DC2)
+Subject: Re: [PATCH v2] wcn36xx: Fix dynamic power saving
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
+        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
+        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes,
+Hi Kalle,
 
-> > In our case, we are experimenting with applications running along with
-> > hostapd and enabling band steering and client roaming functionality.
-> > As I mentioned, various approaches are being examined, including
-> > both pure nl80211-based approach as well as adding direct hooks
-> > to hostapd.
-> 
-> To be honest, I'm torn on this.
-> 
-> On the one hand, I think it's fairly reasonable functionality, but on
-> the other hand I'm not sure we should encourage such separate
-> approaches - it seems to me that will lead to a lot of fragmentation
-> and much harder debuggability for upstream where these things get used.
-> 
-> It's also a bunch of code we have to maintain, for nothing that seems
-> of use to the community - since it's the sort of flexibility explicitly
-> designed for non-public code (otherwise it could just be part of
-> hostapd; actually it could even if it were non-public, at least in
-> theory, unless you're planning it as a value-add thing to go with an
-> open source hostapd ...).
-> 
-> So while I don't want to stop you entirely in your tracks with this,
-> I'd really prefer you explore other options regarding where to put your
-> client steering functionality, perhaps even working on hostapd.
+On 12 December 2017 at 13:40, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>
+>> Loic Poulain <loic.poulain@linaro.org> writes:
+>>
+>>> Since driver does not report hardware dynamic power saving cap,
+>>> this is up to the mac80211 to manage power saving timeout and
+>>> state machine, using the ieee80211 config callback to report
+>>> PS changes. This patch enables/disables PS mode according to
+>>> the new configuration.
+>>>
+>>> Remove old behaviour enabling PS mode in a static way, this make
+>>> the device unusable when power save is enabled since device is
+>>> forced to PS regardless RX/TX traffic.
+>>>
+>>> Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>>> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+>>
+>> A fixes line would be nice for backporters. I can add that but need the
+>> commit id.
+>
+> Or maybe this actually isn't a regression? Then of course a fixes line
+> is not needed.
 
-Well, our preferred approach for these experiments is going to be
-communication with hostapd instead of kernel. One of the reasons
-is that GET_CMD_BEACON is not enough. We have to enable multiple
-listeners of mgmt frames as well. However that feature was rejected
-earlier this year: https://patchwork.kernel.org/patch/9615697
+Yes, not really a regression since the issue came with the driver
+itself (8e84c258).
 
-By the way, speaking about GET_CMD_BEACON and its possible users in the
-community. There is already a stub for it in nl80211 uapi headers. What
-was the original idea for that ? Or was it just a placeholder added
-together with SET_BEACON ?
+>
+> Should I push this to v4.15 or v4.16, any preference?
 
-Regards,
-Sergey
+4.15 would be great.
+
+Thanks,
+Loic
