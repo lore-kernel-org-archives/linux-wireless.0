@@ -1,81 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.uni-rostock.de ([139.30.22.71]:50156 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752925AbdLKN2z (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:59744 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752527AbdLLTEO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 08:28:55 -0500
-Subject: Re: [PATCH v2 3/5] mac80211_hwsim: add generation count for netlink
- dump operation
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
- <7ee141a4-8983-4da6-9c0f-f070fa6e5611@MAIL2.uni-rostock.de>
- <1512994493.26976.74.camel@sipsolutions.net>
- <8264ae6e-7db6-53b0-88c0-4ac4e51d0ba3@uni-rostock.de>
- <1512996543.26976.76.camel@sipsolutions.net>
- <5afe6ce9-5d7a-2b8e-f2bc-32088aacb9fe@uni-rostock.de>
- <1512997665.26976.78.camel@sipsolutions.net>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-CC: <linux-wireless@vger.kernel.org>
-Message-ID: <8a26e55c-83ce-1395-ff9d-723e5b9fc82b@uni-rostock.de> (sfid-20171211_142859_557349_EFF4A717)
-Date: Mon, 11 Dec 2017 14:29:15 +0100
-MIME-Version: 1.0
-In-Reply-To: <1512997665.26976.78.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 12 Dec 2017 14:04:14 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 5/9] wil6210: prevent parallel suspend and dump collection
+Date: Tue, 12 Dec 2017 21:03:58 +0200
+Message-Id: <1513105442-28041-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171212_200421_403559_DF0386CD)
+In-Reply-To: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 11.12.2017 um 14:07 schrieb Johannes Berg:
-> On Mon, 2017-12-11 at 14:02 +0100, Benjamin Beichler wrote:
->>> But you added this:
->>>
->>> +       /* list changed */
->>> +       if (cb->prev_seq && cb->seq !=3D cb->prev_seq)
->>> +               goto cleanup;
->>>
->>> which is mostly just a copy of the inline.
->>>
->>> johannes
->> Year you are right, but for nl_dump_check_consistent() I also need a
->> header struct to write the flag to it and I thought a ghost header onl=
-y
->> to this function is also misleading. But if you think this is better, =
-I
->> can do that. Or we introduce a function, which really only check
->> consistency and not also set the flag. I also thought the line is
->> readable at it's own, because it's simply inconsistent if the sequence=
+Suspend and crash dump operations can happen simultaneously
+in case there is a FW assert during the suspend procedure
+or when SSR calls all the devices crashdump callbacks.
 
->> numbers are not equal.
-> It's readable, but there should be an indication to userspace in this
-> case, no?
->
-> johannes
->
-Mhh, OK you are totally right.
+To prevent that, a new flag is added, indicating that the
+dumps collection is in progress, in order to allow the
+suspend/reset decline if the dumps collection already started.
 
-I think we need to send something like an empty message, containing the
-flag. Because there exist the corner case, that while a dump is
-interrupted the complete list is deleted. Currently this could not
-happen because of non-parallel netlink callbacks, but maybe in the
-future parallel callbacks are enabled.
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c           | 33 +++++++++++++++++------
+ drivers/net/wireless/ath/wil6210/pm.c             | 17 ++++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h        |  1 +
+ drivers/net/wireless/ath/wil6210/wil_crash_dump.c | 11 ++++++++
+ 4 files changed, 54 insertions(+), 8 deletions(-)
 
-Would it break things, if I simply create an header with
-HWSIM_CMD_GET_RADIO, but put no other information in it? Or how could it
-be done correctly?
-
---=20
-M.Sc. Benjamin Beichler
-
-Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
-chnik
-Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
-
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Stra=C3=9Fe 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 7a8f8c2..aa6f9c4 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -998,6 +998,7 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
+ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ {
+ 	int rc;
++	unsigned long status_flags = BIT(wil_status_resetting);
+ 
+ 	wil_dbg_misc(wil, "reset\n");
+ 
+@@ -1037,6 +1038,14 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	}
+ 
+ 	set_bit(wil_status_resetting, wil->status);
++	if (test_bit(wil_status_collecting_dumps, wil->status)) {
++		/* Device collects crash dump, cancel the reset.
++		 * following crash dump collection, reset would take place.
++		 */
++		wil_dbg_misc(wil, "reject reset while collecting crash dump\n");
++		rc = -EBUSY;
++		goto out;
++	}
+ 
+ 	cancel_work_sync(&wil->disconnect_worker);
+ 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+@@ -1051,7 +1060,11 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 
+ 	/* prevent NAPI from being scheduled and prevent wmi commands */
+ 	mutex_lock(&wil->wmi_mutex);
+-	bitmap_zero(wil->status, wil_status_last);
++	if (test_bit(wil_status_suspending, wil->status))
++		status_flags |= BIT(wil_status_suspending);
++	bitmap_and(wil->status, wil->status, &status_flags,
++		   wil_status_last);
++	wil_dbg_misc(wil, "wil->status (0x%lx)\n", *wil->status);
+ 	mutex_unlock(&wil->wmi_mutex);
+ 
+ 	wil_mask_irq(wil);
+@@ -1069,14 +1082,14 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	wil_rx_fini(wil);
+ 	if (rc) {
+ 		wil_bl_crash_info(wil, true);
+-		return rc;
++		goto out;
+ 	}
+ 
+ 	rc = wil_get_bl_info(wil);
+ 	if (rc == -EAGAIN && !load_fw) /* ignore RF error if not going up */
+ 		rc = 0;
+ 	if (rc)
+-		return rc;
++		goto out;
+ 
+ 	wil_set_oob_mode(wil, oob_mode);
+ 	if (load_fw) {
+@@ -1088,10 +1101,10 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		/* Loading f/w from the file */
+ 		rc = wil_request_firmware(wil, wil->wil_fw_name, true);
+ 		if (rc)
+-			return rc;
++			goto out;
+ 		rc = wil_request_firmware(wil, WIL_BOARD_FILE_NAME, true);
+ 		if (rc)
+-			return rc;
++			goto out;
+ 
+ 		wil_pre_fw_config(wil);
+ 		wil_release_cpu(wil);
+@@ -1103,6 +1116,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	reinit_completion(&wil->wmi_call);
+ 	reinit_completion(&wil->halp.comp);
+ 
++	clear_bit(wil_status_resetting, wil->status);
++
+ 	if (load_fw) {
+ 		wil_configure_interrupt_moderation(wil);
+ 		wil_unmask_irq(wil);
+@@ -1136,6 +1151,10 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	}
+ 
+ 	return rc;
++
++out:
++	clear_bit(wil_status_resetting, wil->status);
++	return rc;
+ }
+ 
+ void wil_fw_error_recovery(struct wil6210_priv *wil)
+@@ -1241,9 +1260,7 @@ int __wil_down(struct wil6210_priv *wil)
+ 	wil_abort_scan(wil, false);
+ 	mutex_unlock(&wil->p2p_wdev_mutex);
+ 
+-	wil_reset(wil, false);
+-
+-	return 0;
++	return wil_reset(wil, false);
+ }
+ 
+ int wil_down(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/pm.c b/drivers/net/wireless/ath/wil6210/pm.c
+index 056b180..0a96518 100644
+--- a/drivers/net/wireless/ath/wil6210/pm.c
++++ b/drivers/net/wireless/ath/wil6210/pm.c
+@@ -145,6 +145,13 @@ static int wil_suspend_keep_radio_on(struct wil6210_priv *wil)
+ 
+ 	/* Prevent handling of new tx and wmi commands */
+ 	set_bit(wil_status_suspending, wil->status);
++	if (test_bit(wil_status_collecting_dumps, wil->status)) {
++		/* Device collects crash dump, cancel the suspend */
++		wil_dbg_pm(wil, "reject suspend while collecting crash dump\n");
++		clear_bit(wil_status_suspending, wil->status);
++		wil->suspend_stats.rejected_by_host++;
++		return -EBUSY;
++	}
+ 	wil_update_net_queues_bh(wil, NULL, true);
+ 
+ 	if (!wil_is_tx_idle(wil)) {
+@@ -255,6 +262,15 @@ static int wil_suspend_radio_off(struct wil6210_priv *wil)
+ 
+ 	wil_dbg_pm(wil, "suspend radio off\n");
+ 
++	set_bit(wil_status_suspending, wil->status);
++	if (test_bit(wil_status_collecting_dumps, wil->status)) {
++		/* Device collects crash dump, cancel the suspend */
++		wil_dbg_pm(wil, "reject suspend while collecting crash dump\n");
++		clear_bit(wil_status_suspending, wil->status);
++		wil->suspend_stats.rejected_by_host++;
++		return -EBUSY;
++	}
++
+ 	/* if netif up, hardware is alive, shut it down */
+ 	if (ndev->flags & IFF_UP) {
+ 		rc = wil_down(wil);
+@@ -281,6 +297,7 @@ static int wil_suspend_radio_off(struct wil6210_priv *wil)
+ 	set_bit(wil_status_suspended, wil->status);
+ 
+ out:
++	clear_bit(wil_status_suspending, wil->status);
+ 	wil_dbg_pm(wil, "suspend radio off: %d\n", rc);
+ 
+ 	return rc;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index f2bb55e..ca5abbd 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -445,6 +445,7 @@ enum { /* for wil6210_priv.status */
+ 	wil_status_suspending, /* suspend in progress */
+ 	wil_status_suspended, /* suspend completed, device is suspended */
+ 	wil_status_resuming, /* resume in progress */
++	wil_status_collecting_dumps, /* crashdump collection in progress */
+ 	wil_status_last /* keep last */
+ };
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
+index e53cf0c..1ed3306 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
++++ b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
+@@ -72,6 +72,15 @@ int wil_fw_copy_crash_dump(struct wil6210_priv *wil, void *dest, u32 size)
+ 		return -EINVAL;
+ 	}
+ 
++	set_bit(wil_status_collecting_dumps, wil->status);
++	if (test_bit(wil_status_suspending, wil->status) ||
++	    test_bit(wil_status_suspended, wil->status) ||
++	    test_bit(wil_status_resetting, wil->status)) {
++		wil_err(wil, "cannot collect fw dump during suspend/reset\n");
++		clear_bit(wil_status_collecting_dumps, wil->status);
++		return -EINVAL;
++	}
++
+ 	/* copy to crash dump area */
+ 	for (i = 0; i < ARRAY_SIZE(fw_mapping); i++) {
+ 		map = &fw_mapping[i];
+@@ -91,6 +100,8 @@ int wil_fw_copy_crash_dump(struct wil6210_priv *wil, void *dest, u32 size)
+ 				     (const void __iomem * __force)data, len);
+ 	}
+ 
++	clear_bit(wil_status_collecting_dumps, wil->status);
++
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
