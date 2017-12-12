@@ -1,61 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50054 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752209AbdLHMiu (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:59744 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752161AbdLLTEQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:38:50 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH v2 06/15] iwlwifi: mvm: rs: add ops for the new rate scaling in the FW
-References: <20171202162858.4167-7-luca@coelho.fi>
-        <20171202213603.12512-1-luca@coelho.fi>
-Date: Fri, 08 Dec 2017 14:38:46 +0200
-In-Reply-To: <20171202213603.12512-1-luca@coelho.fi> (Luca Coelho's message of
-        "Sat, 2 Dec 2017 23:36:03 +0200")
-Message-ID: <87374ls8bt.fsf@kamboji.qca.qualcomm.com> (sfid-20171208_133854_176013_5B0F1934)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 12 Dec 2017 14:04:16 -0500
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 6/9] wil6210: add support for headroom configuration
+Date: Tue, 12 Dec 2017 21:03:59 +0200
+Message-Id: <1513105442-28041-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171212_200421_973971_796591D4)
+In-Reply-To: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-> From: Gregory Greenman <gregory.greenman@intel.com>
->
-> This patch introduces a new instance of rate_control_ops for
-> the new API (adding only empty stubs here and the subsequent
-> patches in the series will fill in the implementation).
-> The decision which API to use is done during the register
-> step according to FW TLV.
->
-> Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Add module parameter for configuring the headroom size
+in the skb allocation.
 
-[...]
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
-> +void iwl_mvm_rs_add_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta)
-> +{
-> +	struct iwl_lq_sta_rs_fw *lq_sta = &mvmsta->lq_sta.rs_fw;
-> +
-> +	IWL_DEBUG_RATE(mvm, "create station rate scale window\n");
-> +
-> +	lq_sta->pers.drv = mvm;
-> +	lq_sta->pers.sta_id = mvmsta->sta_id;
-> +	lq_sta->pers.chains = 0;
-> +	memset(lq_sta->pers.chain_signal, 0, sizeof(lq_sta->pers.chain_signal));
-> +	lq_sta->pers.last_rssi = S8_MIN;
-> +	lq_sta->last_rate_n_flags = 0;
-> +
-> +#ifdef CPTCFG_MAC80211_DEBUGFS
-> +	lq_sta->pers.dbg_fixed_rate = 0;
-> +#endif
-> +}
-
-CPTCFG_ doesn't look right. But no need to resend just because of this,
-you can send a followup patch.
-
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 62c04f0..89967ce 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -41,6 +41,32 @@
+ module_param(rx_large_buf, bool, 0444);
+ MODULE_PARM_DESC(rx_large_buf, " allocate 8KB RX buffers, default - no");
+ 
++#define WIL6210_MAX_HEADROOM_SIZE	(256)
++
++static ushort headroom_size; /* = 0; */
++static int headroom_size_set(const char *val, const struct kernel_param *kp)
++{
++	int ret;
++
++	ret = param_set_uint(val, kp);
++	if (ret)
++		return ret;
++
++	if (headroom_size > WIL6210_MAX_HEADROOM_SIZE)
++		return -EINVAL;
++
++	return 0;
++}
++
++static const struct kernel_param_ops headroom_ops = {
++	.set = headroom_size_set,
++	.get = param_get_ushort,
++};
++
++module_param_cb(headroom_size, &headroom_ops, &headroom_size, 0644);
++MODULE_PARM_DESC(headroom_size,
++		 " headroom size for rx skb allocation, default - 0");
++
+ static inline uint wil_rx_snaplen(void)
+ {
+ 	return rx_align_2 ? 6 : 0;
+@@ -630,7 +656,7 @@ static int wil_rx_refill(struct wil6210_priv *wil, int count)
+ 	u32 next_tail;
+ 	int rc = 0;
+ 	int headroom = ndev->type == ARPHRD_IEEE80211_RADIOTAP ?
+-			WIL6210_RTAP_SIZE : 0;
++			WIL6210_RTAP_SIZE : headroom_size;
+ 
+ 	for (; next_tail = wil_vring_next_tail(v),
+ 			(next_tail != v->swhead) && (count-- > 0);
 -- 
-Kalle Valo
+1.9.1
