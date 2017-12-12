@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f179.google.com ([209.85.128.179]:40199 "EHLO
-        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755346AbdLTRuA (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:26528 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752373AbdLLMD1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Dec 2017 12:50:00 -0500
-Received: by mail-wr0-f179.google.com with SMTP id q9so23009278wre.7
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Dec 2017 09:49:59 -0800 (PST)
-Date: Wed, 20 Dec 2017 18:49:56 +0100 (CET)
-From: Enrico Mioso <mrkiko.rs@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        nbd@nbd.name
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-In-Reply-To: <20171219125431.GB2672@redhat.com>
-Message-ID: <alpine.LNX.2.21.99.1712201848250.21776@localhost.localdomain> (sfid-20171220_185003_962051_93987B5B)
-References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain> <20171213152017.GA3554@redhat.com> <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain> <20171218152142.GA15414@redhat.com> <20171219122707.GA2672@redhat.com>
- <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain> <20171219125431.GB2672@redhat.com>
+        Tue, 12 Dec 2017 07:03:27 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Loic Poulain <loic.poulain@linaro.org>
+CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
+        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
+        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>
+Subject: Re: [PATCH v2] wcn36xx: Fix dynamic power saving
+Date: Tue, 12 Dec 2017 12:03:22 +0000
+Message-ID: <87bmj4qhkm.fsf@kamboji.qca.qualcomm.com> (sfid-20171212_130332_738299_64FE34A0)
+References: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org>
+In-Reply-To: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org> (Loic
+        Poulain's message of "Mon, 11 Dec 2017 09:52:22 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
-First of all, thank you for your patience and work.
-Sorry if I am slow in testing, I am in a little bit of a complicated situation, and this is one of the reasons for why I am slow.
-With the two patches you sent me (thanks!), and removing the mmio workaround patch, I was not able to reproduce the errors. I plan to send you a precise response as soon as I am able to.
-thank you
+Loic Poulain <loic.poulain@linaro.org> writes:
 
-On Tue, 19 Dec 2017, Stanislaw Gruszka wrote:
+> Since driver does not report hardware dynamic power saving cap,
+> this is up to the mac80211 to manage power saving timeout and
+> state machine, using the ieee80211 config callback to report
+> PS changes. This patch enables/disables PS mode according to
+> the new configuration.
+>
+> Remove old behaviour enabling PS mode in a static way, this make
+> the device unusable when power save is enabled since device is
+> forced to PS regardless RX/TX traffic.
+>
+> Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
 
-> Date: Tue, 19 Dec 2017 13:54:32
-> From: Stanislaw Gruszka <sgruszka@redhat.com>
-> To: Enrico Mioso <mrkiko.rs@gmail.com>
-> Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
->     Daniel Golle <daniel@makrotopia.org>, Arnd Bergmann <arnd@arndb.de>,
->     John Crispin <john@phrozen.org>, nbd@nbd.name
-> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
->     frame due to full tx queue...?
-> 
-> On Tue, Dec 19, 2017 at 01:43:11PM +0100, Enrico Mioso wrote:
->> I am going to test this on a LEDE build.
->> Should I leave the mmio workaround patch applied as per OpenWRT default, or should I leave it off ?
->> I'll leave it off by default.
->
-> Please remove it. If things would work then retest with it and see if
-> if things still work.
->
-> Thanks
-> Stanislaw
->
+A fixes line would be nice for backporters. I can add that but need the
+commit id.
+
+--=20
+Kalle Valo=
