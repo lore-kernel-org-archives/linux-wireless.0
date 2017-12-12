@@ -1,161 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:54659 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753225AbdLUKnN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 05:43:13 -0500
-From: Anna-Maria Gleixner <anna-maria@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
-        Christoph Hellwig <hch@lst.de>,
-        John Stultz <john.stultz@linaro.org>,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v4 31/36] mac80211_hwsim: Replace hrtimer tasklet with softirq hrtimer
-Date: Thu, 21 Dec 2017 11:42:00 +0100
-Message-Id: <20171221104205.7269-32-anna-maria@linutronix.de> (sfid-20171221_114704_542421_13316299)
-In-Reply-To: <20171221104205.7269-1-anna-maria@linutronix.de>
-References: <20171221104205.7269-1-anna-maria@linutronix.de>
+Received: from ozlabs.org ([103.22.144.67]:37355 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751624AbdLLB6H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Dec 2017 20:58:07 -0500
+Date: Tue, 12 Dec 2017 12:58:05 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Toke =?UTF-8?B?SMO4aWxh?= =?UTF-8?B?bmQtSsO4cmdlbnNlbg==?=
+        <toke@toke.dk>, David Miller <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>
+Subject: linux-next: build failure after merge of the mac80211-next tree
+Message-ID: <20171212125805.5f7813fd@canb.auug.org.au> (sfid-20171212_025844_313354_81ADFE7C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+Hi Johannes,
 
-Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
-callback in softirq context and remove the hrtimer_tasklet.
+After merging the mac80211-next tree, today's linux-next build (x86_64
+allmodconfig) failed like this:
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>
+drivers/net/wireless/mediatek/mt76/mt76x2_main.c:539:19: error: initialization from incompatible pointer type [-Werror=incompatible-pointer-types]
+  .wake_tx_queue = mt76_wake_tx_queue,
+                   ^
+drivers/net/wireless/mediatek/mt76/mt76x2_main.c:539:19: note: (near initialization for 'mt76x2_ops.wake_tx_queue')
+
+Caused by commits
+
+  17f1de56df05 ("mt76: add common code shared between multiple chipsets")
+  7bc04215a66b ("mt76: add driver code for MT76x2e")
+
+from the wireless-drivers-next tree interacting with commit
+
+  e937b8da5a59 ("mac80211: Add TXQ scheduling API")
+
+from the mac80211-next tree.
+
+I applied the below hack merge fix ... please let me know if something
+more/better is required.  Someone needs to remember to tell Dave when
+these trees meet in his tree.
+
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Date: Tue, 12 Dec 2017 12:50:40 +1100
+Subject: [PATCH] mt76: fix up for "mac80211: Add TXQ scheduling API"
+
+Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 44 ++++++++++++++++-------------------
- 1 file changed, 20 insertions(+), 24 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h |  2 +-
+ drivers/net/wireless/mediatek/mt76/tx.c   | 10 +++++++---
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 10b075a46b26..d3f1861398a7 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -537,7 +537,7 @@ struct mac80211_hwsim_data {
- 	unsigned int rx_filter;
- 	bool started, idle, scanning;
- 	struct mutex mutex;
--	struct tasklet_hrtimer beacon_timer;
-+	struct hrtimer beacon_timer;
- 	enum ps_mode {
- 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
- 	} ps;
-@@ -1418,7 +1418,7 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
- {
- 	struct mac80211_hwsim_data *data = hw->priv;
- 	data->started = false;
--	tasklet_hrtimer_cancel(&data->beacon_timer);
-+	hrtimer_cancel(&data->beacon_timer);
- 	wiphy_dbg(hw->wiphy, "%s\n", __func__);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index aa0880bbea7f..e395d3859212 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -338,7 +338,7 @@ void mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
+ 	     struct mt76_wcid *wcid, struct sk_buff *skb);
+ void mt76_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq);
+ void mt76_txq_remove(struct mt76_dev *dev, struct ieee80211_txq *txq);
+-void mt76_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *txq);
++void mt76_wake_tx_queue(struct ieee80211_hw *hw);
+ void mt76_stop_tx_queues(struct mt76_dev *dev, struct ieee80211_sta *sta,
+ 			 bool send_bar);
+ void mt76_txq_schedule(struct mt76_dev *dev, struct mt76_queue *hwq);
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 4eef69bd8a9e..ad414af0750f 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -463,12 +463,16 @@ void mt76_stop_tx_queues(struct mt76_dev *dev, struct ieee80211_sta *sta,
  }
+ EXPORT_SYMBOL_GPL(mt76_stop_tx_queues);
  
-@@ -1541,14 +1541,12 @@ static enum hrtimer_restart
- mac80211_hwsim_beacon(struct hrtimer *timer)
+-void mt76_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
++void mt76_wake_tx_queue(struct ieee80211_hw *hw)
  {
- 	struct mac80211_hwsim_data *data =
--		container_of(timer, struct mac80211_hwsim_data,
--			     beacon_timer.timer);
-+		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
- 	struct ieee80211_hw *hw = data->hw;
- 	u64 bcn_int = data->beacon_int;
--	ktime_t next_bcn;
++	struct ieee80211_txq *txq;
+ 	struct mt76_dev *dev = hw->priv;
+-	struct mt76_txq *mtxq = (struct mt76_txq *) txq->drv_priv;
+-	struct mt76_queue *hwq = mtxq->hwq;
++	struct mt76_txq *mtxq;
++	struct mt76_queue *hwq;
  
- 	if (!data->started)
--		goto out;
-+		return HRTIMER_NORESTART;
- 
- 	ieee80211_iterate_active_interfaces_atomic(
- 		hw, IEEE80211_IFACE_ITER_NORMAL,
-@@ -1560,11 +1558,9 @@ mac80211_hwsim_beacon(struct hrtimer *timer)
- 		data->bcn_delta = 0;
- 	}
- 
--	next_bcn = ktime_add(hrtimer_get_expires(timer),
--			     ns_to_ktime(bcn_int * 1000));
--	tasklet_hrtimer_start(&data->beacon_timer, next_bcn, HRTIMER_MODE_ABS);
--out:
--	return HRTIMER_NORESTART;
-+	hrtimer_forward(&data->beacon_timer, hrtimer_get_expires(timer),
-+			ns_to_ktime(bcn_int * NSEC_PER_USEC));
-+	return HRTIMER_RESTART;
- }
- 
- static const char * const hwsim_chanwidths[] = {
-@@ -1638,15 +1634,15 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
- 	mutex_unlock(&data->mutex);
- 
- 	if (!data->started || !data->beacon_int)
--		tasklet_hrtimer_cancel(&data->beacon_timer);
--	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
-+		hrtimer_cancel(&data->beacon_timer);
-+	else if (!hrtimer_is_queued(&data->beacon_timer)) {
- 		u64 tsf = mac80211_hwsim_get_tsf(hw, NULL);
- 		u32 bcn_int = data->beacon_int;
- 		u64 until_tbtt = bcn_int - do_div(tsf, bcn_int);
- 
--		tasklet_hrtimer_start(&data->beacon_timer,
--				      ns_to_ktime(until_tbtt * 1000),
--				      HRTIMER_MODE_REL);
-+		hrtimer_start(&data->beacon_timer,
-+			      ns_to_ktime(until_tbtt * 1000),
-+			      HRTIMER_MODE_REL_SOFT);
- 	}
- 
- 	return 0;
-@@ -1709,7 +1705,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 			  info->enable_beacon, info->beacon_int);
- 		vp->bcn_en = info->enable_beacon;
- 		if (data->started &&
--		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
-+		    !hrtimer_is_queued(&data->beacon_timer) &&
- 		    info->enable_beacon) {
- 			u64 tsf, until_tbtt;
- 			u32 bcn_int;
-@@ -1717,9 +1713,9 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 			tsf = mac80211_hwsim_get_tsf(hw, vif);
- 			bcn_int = data->beacon_int;
- 			until_tbtt = bcn_int - do_div(tsf, bcn_int);
--			tasklet_hrtimer_start(&data->beacon_timer,
--					      ns_to_ktime(until_tbtt * 1000),
--					      HRTIMER_MODE_REL);
-+			hrtimer_start(&data->beacon_timer,
-+				      ns_to_ktime(until_tbtt * 1000),
-+				      HRTIMER_MODE_REL_SOFT);
- 		} else if (!info->enable_beacon) {
- 			unsigned int count = 0;
- 			ieee80211_iterate_active_interfaces_atomic(
-@@ -1728,7 +1724,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 			wiphy_dbg(hw->wiphy, "  beaconing vifs remaining: %u",
- 				  count);
- 			if (count == 0) {
--				tasklet_hrtimer_cancel(&data->beacon_timer);
-+				hrtimer_cancel(&data->beacon_timer);
- 				data->beacon_int = 0;
- 			}
- 		}
-@@ -2720,9 +2716,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 				    data->debugfs,
- 				    data, &hwsim_simulate_radar);
- 
--	tasklet_hrtimer_init(&data->beacon_timer,
--			     mac80211_hwsim_beacon,
--			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
-+	hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
-+		     HRTIMER_MODE_REL_SOFT);
-+	data->beacon_timer.function = mac80211_hwsim_beacon;
- 
- 	spin_lock_bh(&hwsim_radio_lock);
- 	list_add_tail(&data->list, &hwsim_radios);
++	txq = ieee80211_next_txq(hw);
++	mtxq = (struct mt76_txq *) txq->drv_priv;
++	hwq = mtxq->hwq;
+ 	spin_lock_bh(&hwq->lock);
+ 	if (list_empty(&mtxq->list))
+ 		list_add_tail(&mtxq->list, &hwq->swq);
 -- 
-2.11.0
+2.15.0
+
+-- 
+Cheers,
+Stephen Rothwell
