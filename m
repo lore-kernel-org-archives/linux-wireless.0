@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:44932 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750965AbdL3Stx (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24068 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752048AbdLLMlC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Dec 2017 13:49:53 -0500
-Subject: Re: [PATCH] b43: Replace mdelay with msleep in
- b43_radio_2057_init_post
-To: Jia-Ju Bai <baijiaju1990@gmail.com>, kvalo@codeaurora.org,
-        colin.king@canonical.com, johannes.berg@intel.com, tiwai@suse.de,
-        kstewart@linuxfoundation.org, gregkh@linuxfoundation.org,
-        andrew.zaborowski@intel.com
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1514632107-14698-1-git-send-email-baijiaju1990@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <906de5ba-b572-ada0-68ad-5e161ef6016e@lwfinger.net> (sfid-20171230_195020_091831_79CCB058)
-Date: Sat, 30 Dec 2017 12:49:50 -0600
+        Tue, 12 Dec 2017 07:41:02 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Loic Poulain <loic.poulain@linaro.org>
+CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
+        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
+        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>
+Subject: Re: [PATCH v2] wcn36xx: Fix dynamic power saving
+Date: Tue, 12 Dec 2017 12:40:57 +0000
+Message-ID: <877etsqftz.fsf@kamboji.qca.qualcomm.com> (sfid-20171212_134105_715579_F05B5229)
+References: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org>
+        <87bmj4qhkm.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87bmj4qhkm.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Tue, 12 Dec 2017 14:03:21 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <1514632107-14698-1-git-send-email-baijiaju1990@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/30/2017 05:08 AM, Jia-Ju Bai wrote:
-> b43_radio_2057_init_post is not called in an interrupt handler
-> nor holding a spinlock.
-> The function mdelay in it can be replaced with msleep, to reduce busy wait.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-checkpatch.pl reports the following warning for this patch:
+> Loic Poulain <loic.poulain@linaro.org> writes:
+>
+>> Since driver does not report hardware dynamic power saving cap,
+>> this is up to the mac80211 to manage power saving timeout and
+>> state machine, using the ieee80211 config callback to report
+>> PS changes. This patch enables/disables PS mode according to
+>> the new configuration.
+>>
+>> Remove old behaviour enabling PS mode in a static way, this make
+>> the device unusable when power save is enabled since device is
+>> forced to PS regardless RX/TX traffic.
+>>
+>> Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+>
+> A fixes line would be nice for backporters. I can add that but need the
+> commit id.
 
-WARNING: msleep < 20ms can sleep for up to 20ms; see 
-Documentation/timers/timers-howto.txt
-#26: FILE: drivers/net/wireless/broadcom/b43/phy_n.c:1034:
-+       msleep(2);
+Or maybe this actually isn't a regression? Then of course a fixes line
+is not needed.
 
-total: 0 errors, 1 warnings, 0 checks, 8 lines checked
+Should I push this to v4.15 or v4.16, any preference?
 
-Have you tested to verify that a sleep as long as 20 ms will not cause problems? 
-The referenced document suggests a usleep_range() call.
-
-In general, delay changes should never be proposed without testing.
-
-Larry
+--=20
+Kalle Valo=
