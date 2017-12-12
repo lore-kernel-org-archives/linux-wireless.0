@@ -1,161 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:64176 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752773AbdLRNqN (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:59744 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752567AbdLLTET (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 08:46:13 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Maya Erez <qca_merez@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Lazar Alexei <qca_ailizaro@qca.qualcomm.com>,
-        Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
-        Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>,
-        Lior David <qca_liord@qca.qualcomm.com>,
-        Gidon Studinski <qca_gidons@qca.qualcomm.com>,
+        Tue, 12 Dec 2017 14:04:19 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
         linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] wil6210: fix build warnings without CONFIG_PM
-Date: Mon, 18 Dec 2017 14:45:51 +0100
-Message-Id: <20171218134604.3087909-1-arnd@arndb.de> (sfid-20171218_144643_496483_E78E3E77)
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 8/9] wil6210: remove leftover "FIXME"s
+Date: Tue, 12 Dec 2017 21:04:01 +0200
+Message-Id: <1513105442-28041-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171212_200426_403610_C5BADB60)
+In-Reply-To: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The #ifdef checks are hard to get right, in this case some functions
-should have been left inside a CONFIG_PM_SLEEP check as seen by this
-message:
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-drivers/net/wireless/ath/wil6210/pcie_bus.c:489:12: error: 'wil6210_pm_resume' defined but not used [-Werror=unused-function]
-drivers/net/wireless/ath/wil6210/pcie_bus.c:484:12: error: 'wil6210_pm_suspend' defined but not used [-Werror=unused-function]
+"FIXME: IRQ mask debug" and "FIXME: interrupts enabled - for debug"
+can be removed because wil6210_debug_irq_mask() is now considered
+production feature.
 
-Using an __maybe_unused is easier here, so I'm replacing all the
-other #ifdef in this file as well for consistency.
+"FIXME FW can transmit only ucast frames to peer" and "FIXME real
+ring_id instead of hard coded 0" can be removed because FW/HW already
+support multicast transmission.
 
-Fixes: 94162666cd51 ("wil6210: run-time PM when interface down")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 25 ++++++++-----------------
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 --
- 2 files changed, 8 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/wil6210/interrupt.c | 2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h   | 2 +-
+ drivers/net/wireless/ath/wil6210/wmi.c       | 2 --
+ 3 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 42a5480c764d..9e622ddcc0bb 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -31,10 +31,8 @@ static bool ftm_mode;
- module_param(ftm_mode, bool, 0444);
- MODULE_PARM_DESC(ftm_mode, " Set factory test mode, default - false");
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 5cf3417..dcf87a7 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -565,7 +565,7 @@ static irqreturn_t wil6210_hardirq(int irq, void *cookie)
+ 	if (unlikely((pseudo_cause == 0) || ((pseudo_cause & 0xff) == 0xff)))
+ 		return IRQ_NONE;
  
--#ifdef CONFIG_PM
- static int wil6210_pm_notify(struct notifier_block *notify_block,
- 			     unsigned long mode, void *unused);
--#endif /* CONFIG_PM */
+-	/* FIXME: IRQ mask debug */
++	/* IRQ mask debug */
+ 	if (unlikely(wil6210_debug_irq_mask(wil, pseudo_cause)))
+ 		return IRQ_NONE;
  
- static
- void wil_set_capabilities(struct wil6210_priv *wil)
-@@ -307,15 +305,15 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto bus_disable;
- 	}
- 
--#ifdef CONFIG_PM
--	wil->pm_notify.notifier_call = wil6210_pm_notify;
-+	if (IS_ENABLED(CONFIG_PM))
-+		wil->pm_notify.notifier_call = wil6210_pm_notify;
-+
- 	rc = register_pm_notifier(&wil->pm_notify);
- 	if (rc)
- 		/* Do not fail the driver initialization, as suspend can
- 		 * be prevented in a later phase if needed
- 		 */
- 		wil_err(wil, "register_pm_notifier failed: %d\n", rc);
--#endif /* CONFIG_PM */
- 
- 	wil6210_debugfs_init(wil);
- 
-@@ -346,9 +344,7 @@ static void wil_pcie_remove(struct pci_dev *pdev)
- 
- 	wil_dbg_misc(wil, "pcie_remove\n");
- 
--#ifdef CONFIG_PM
- 	unregister_pm_notifier(&wil->pm_notify);
--#endif /* CONFIG_PM */
- 
- 	wil_pm_runtime_forbid(wil);
- 
-@@ -372,8 +368,6 @@ static const struct pci_device_id wil6210_pcie_ids[] = {
- };
- MODULE_DEVICE_TABLE(pci, wil6210_pcie_ids);
- 
--#ifdef CONFIG_PM
--
- static int wil6210_suspend(struct device *dev, bool is_runtime)
- {
- 	int rc = 0;
-@@ -481,17 +475,17 @@ static int wil6210_pm_notify(struct notifier_block *notify_block,
- 	return rc;
- }
- 
--static int wil6210_pm_suspend(struct device *dev)
-+static int __maybe_unused wil6210_pm_suspend(struct device *dev)
- {
- 	return wil6210_suspend(dev, false);
- }
- 
--static int wil6210_pm_resume(struct device *dev)
-+static int __maybe_unused wil6210_pm_resume(struct device *dev)
- {
- 	return wil6210_resume(dev, false);
- }
- 
--static int wil6210_pm_runtime_idle(struct device *dev)
-+static int __maybe_unused wil6210_pm_runtime_idle(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct wil6210_priv *wil = pci_get_drvdata(pdev);
-@@ -501,12 +495,12 @@ static int wil6210_pm_runtime_idle(struct device *dev)
- 	return wil_can_suspend(wil, true);
- }
- 
--static int wil6210_pm_runtime_resume(struct device *dev)
-+static int __maybe_unused wil6210_pm_runtime_resume(struct device *dev)
- {
- 	return wil6210_resume(dev, true);
- }
- 
--static int wil6210_pm_runtime_suspend(struct device *dev)
-+static int __maybe_unused wil6210_pm_runtime_suspend(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct wil6210_priv *wil = pci_get_drvdata(pdev);
-@@ -518,15 +512,12 @@ static int wil6210_pm_runtime_suspend(struct device *dev)
- 
- 	return wil6210_suspend(dev, true);
- }
--#endif /* CONFIG_PM */
- 
- static const struct dev_pm_ops wil6210_pm_ops = {
--#ifdef CONFIG_PM
- 	SET_SYSTEM_SLEEP_PM_OPS(wil6210_pm_suspend, wil6210_pm_resume)
- 	SET_RUNTIME_PM_OPS(wil6210_pm_runtime_suspend,
- 			   wil6210_pm_runtime_resume,
- 			   wil6210_pm_runtime_idle)
--#endif /* CONFIG_PM */
- };
- 
- static struct pci_driver wil6210_driver = {
 diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index cf27d9711dde..366a6ef222dc 100644
+index ca5abbd..703e09e 100644
 --- a/drivers/net/wireless/ath/wil6210/wil6210.h
 +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -742,9 +742,7 @@ struct wil6210_priv {
+@@ -439,7 +439,7 @@ enum { /* for wil6210_priv.status */
+ 	wil_status_fwconnected,
+ 	wil_status_dontscan,
+ 	wil_status_mbox_ready, /* MBOX structures ready */
+-	wil_status_irqen, /* FIXME: interrupts enabled - for debug */
++	wil_status_irqen, /* interrupts enabled - for debug */
+ 	wil_status_napi_en, /* NAPI enabled protected by wil->mutex */
+ 	wil_status_resetting, /* reset in progress */
+ 	wil_status_suspending, /* suspend in progress */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index ed7cdb7..4d7fb47 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -811,8 +811,6 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
+ 		}
+ 	}
  
- 	int fw_calib_result;
+-	/* FIXME FW can transmit only ucast frames to peer */
+-	/* FIXME real ring_id instead of hard coded 0 */
+ 	ether_addr_copy(wil->sta[evt->cid].addr, evt->bssid);
+ 	wil->sta[evt->cid].status = wil_sta_conn_pending;
  
--#ifdef CONFIG_PM
- 	struct notifier_block pm_notify;
--#endif /* CONFIG_PM */
- 
- 	bool suspend_resp_rcvd;
- 	bool suspend_resp_comp;
 -- 
-2.9.0
+1.9.1
