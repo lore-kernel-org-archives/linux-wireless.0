@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48328 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752001AbdLANFp (ORCPT
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:46846 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750749AbdLLLPv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 08:05:45 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Ihab Zhaika <ihab.zhaika@intel.com>, stable@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  1 Dec 2017 15:05:34 +0200
-Message-Id: <20171201130535.27656-2-luca@coelho.fi> (sfid-20171201_140549_243435_F44D1CAE)
-In-Reply-To: <20171201130535.27656-1-luca@coelho.fi>
-References: <20171201130535.27656-1-luca@coelho.fi>
-Subject: [PATCH 1/2] iwlwifi: add new cards for 9260 and 22000 series
+        Tue, 12 Dec 2017 06:15:51 -0500
+Received: by mail-qt0-f172.google.com with SMTP id r39so46151782qtr.13
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Dec 2017 03:15:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20171211153749.51d30b4b@lwn.net>
+References: <20171211153749.51d30b4b@lwn.net>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Date: Tue, 12 Dec 2017 12:15:50 +0100
+Message-ID: <CAF7Mx6pBReAgVz9FaU6tJ-jWi=HO8BnY_X=XDz50qX7Jx_tTNQ@mail.gmail.com> (sfid-20171212_121555_127951_9005B3E8)
+Subject: Re: nl80211: Remove obsolete kerneldoc line
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ihab Zhaika <ihab.zhaika@intel.com>
+On Mon, Dec 11, 2017 at 11:37 PM, Jonathan Corbet <corbet@lwn.net> wrote:
+> Commit ca986ad9bcd3 (nl80211: allow multiple active scheduled scan
+> requests) removed WIPHY_FLAG_SUPPORTS_SCHED_SCAN but left the kerneldoc
+> description in place, leading to this docs-build warning:
+>
+>    ./include/net/cfg80211.h:3278: warning: Excess enum value
+>            'WIPHY_FLAG_SUPPORTS_SCHED_SCAN' description in 'wiphy_flags'
+>
+> Remove the line and gain a bit of peace.
 
-add 1 PCI ID for 9260 series and 1 for 22000 series.
+My bad. Thanks for cleaning up.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index f21fe59faccf..ccd7c33c4c28 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -553,6 +553,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x271B, 0x0214, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x271C, 0x0214, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0034, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2720, 0x0038, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2720, 0x003C, iwl9560_2ac_cfg)},
-@@ -664,6 +665,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x2720, 0x0310, iwla000_2ac_cfg_hr_cdb)},
- 	{IWL_PCI_DEVICE(0x40C0, 0x0000, iwla000_2ax_cfg_hr)},
- 	{IWL_PCI_DEVICE(0x40C0, 0x0A10, iwla000_2ax_cfg_hr)},
-+	{IWL_PCI_DEVICE(0xA0F0, 0x0000, iwla000_2ax_cfg_hr)},
- 
- #endif /* CONFIG_IWLMVM */
- 
--- 
-2.15.0
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Jonathan Corbet <corbet@lwn.net>
+> ---
+>  include/net/cfg80211.h | 1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 8b8118a7fadb..cb4d92b79cd9 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -3226,7 +3226,6 @@ struct cfg80211_ops {
+>   * @WIPHY_FLAG_IBSS_RSN: The device supports IBSS RSN.
+>   * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
+>   *     auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
+> - * @WIPHY_FLAG_SUPPORTS_SCHED_SCAN: The device supports scheduled scans.
+>   * @WIPHY_FLAG_SUPPORTS_FW_ROAM: The device supports roaming feature in the
+>   *     firmware.
+>   * @WIPHY_FLAG_AP_UAPSD: The device supports uapsd on AP.
+> --
+> 2.14.3
+>
