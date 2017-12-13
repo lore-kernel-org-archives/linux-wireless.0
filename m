@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38567 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752121AbdLGBga (ORCPT
+Received: from pv43p53im-ztdg05051801.me.com ([17.139.149.167]:23720 "EHLO
+        pv43p53im-ztdg05051801.me.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751882AbdLMIxn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Dec 2017 20:36:30 -0500
-Date: Wed, 6 Dec 2017 17:36:29 -0800
-From: Kyle McMartin <kyle@infradead.org>
-To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-firmware@kernel.org
-Subject: Re: [PATCH V2] brcm: add CYW4373 firmwares and Cypress license file
-Message-ID: <20171207013629.GF1875@bombadil.infradead.org> (sfid-20171207_023634_273365_A060BE75)
-References: <20171201084243.GA58942@aremote07.aus.cypress.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171201084243.GA58942@aremote07.aus.cypress.com>
+        Wed, 13 Dec 2017 03:53:43 -0500
+Content-type: text/plain; charset=utf-8
+MIME-version: 1.0 (1.0)
+Subject: Re: net/wireless/shipped-certs.c:2:1: error: expected expression at
+ end of input
+From: Damian Tometzki <damian.tometzki@icloud.com>
+In-reply-to: <1512468219.26976.15.camel@sipsolutions.net>
+Date: Wed, 13 Dec 2017 08:53:39 +0100
+Cc: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-id: <8617D3B1-DE6C-4E75-AB44-1845806E18D6@icloud.com> (sfid-20171213_095349_045433_E5E063A8)
+References: <4006aefb-e9af-d809-b45a-201d20e75f9d@molgen.mpg.de>
+ <1512468219.26976.15.camel@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 01, 2017 at 02:43:00AM -0600, Chi-Hsien Lin wrote:
-> Add the CYW4373 SDIO and USB firmware files, along with the corresponding
-> Cypress license file.
-> 
-> Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
-> ---
->  LICENCE.cypress            | 139 +++++++++++++++++++++++++++++++++++++++++++++
->  WHENCE                     |   5 ++
->  brcm/brcmfmac4373-sdio.bin | Bin 0 -> 457994 bytes
->  brcm/brcmfmac4373.bin      | Bin 0 -> 479232 bytes
->  4 files changed, 144 insertions(+)
->  create mode 100644 LICENCE.cypress
->  create mode 100644 brcm/brcmfmac4373-sdio.bin
->  create mode 100644 brcm/brcmfmac4373.bin
-> 
+Hello Johannes,
 
-pulled, thanks chi-hsien.
+I got. the same Build error.=20
 
-regards, kyle
+
+VG Damian Tometzki
+
+
+
+
+
+> Am 05.12.2017 um 11:03 schrieb Johannes Berg <johannes@sipsolutions.net>:
+>=20
+>> On Tue, 2017-12-05 at 11:01 +0100, Paul Menzel wrote:
+>>=20
+>>=20
+>> ```
+>> $ git describe
+>> v4.15-rc2-79-gfd6d2e506ce6
+>> $ git log --oneline -1
+>> fd6d2e506ce6 Merge tag 'docs-4.15-fixes' of git://git.lwn.net/linux
+>> $ time ARCH=3Di386 make deb-pkg -j50
+>> [=E2=80=A6]
+>> net/wireless/shipped-certs.c:2:1: error: expected expression at end of in=
+put
+>>  const u8 shipped_regdb_certs[] =3D {
+>>  ^~~~~
+>> [=E2=80=A6]
+>> $ more net/wireless/shipped-certs.c
+>> #include "reg.h"
+>> const u8 shipped_regdb_certs[] =3D {
+>> ```
+>=20
+> Ah, here we go - you probably don't have "hexdump" installed on this
+> system?
+>=20
+> I thought about doing hexdump in posix shell/awk/sed/whatever
+> instead... maybe I should do that.
+>=20
+> johannes
