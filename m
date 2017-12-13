@@ -1,37 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:64175 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753983AbdLDM5Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 07:57:24 -0500
-Message-ID: <1512392240.4827.126.camel@intel.com> (sfid-20171204_135733_295942_AC17A95D)
-Subject: Re: [PATCH 12/15] iwlwifi: mvm: enable RX offloading with TKIP and
- WEP
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        David Spinadel <david.spinadel@intel.com>
-Date: Mon, 04 Dec 2017 14:57:20 +0200
-In-Reply-To: <20171202162858.4167-13-luca@coelho.fi>
-References: <20171202162858.4167-1-luca@coelho.fi>
-         <20171202162858.4167-13-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from james.theweblords.de ([217.11.55.87]:56259 "EHLO
+        james.theweblords.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752714AbdLMM7V (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Dec 2017 07:59:21 -0500
+From: =?UTF-8?q?Peter=20Gro=C3=9Fe?= <pegro@friiks.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ocb: Use common freqchan helper for setting the operating channel
+Date: Wed, 13 Dec 2017 13:58:40 +0100
+Message-Id: <20171213125840.1036-1-pegro@friiks.de> (sfid-20171213_135927_318860_CA260086)
+In-Reply-To: <1512991065.26976.70.camel@sipsolutions.net>
+References: <1512991065.26976.70.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-12-02 at 18:28 +0200, Luca Coelho wrote:
-> From: David Spinadel <david.spinadel@intel.com>
-> 
-> Set the flag that indicates that ICV was stripped on if
-> this option was enabled in the HW.
-> 
-> Signed-off-by: David Spinadel <david.spinadel@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
+Simplify code by using the helper which has been introduced earlier.
 
-I'll move this to my fixes series, because it's needed for the 9000
-series, which is currently broken upstream... :(
+Signed-off-by: Peter Große <pegro@friiks.de>
+---
 
---
-Cheers,
-Luca.
+Mh, the patch is against the full tree of iw, not the kernel, so there is no
+net/wireless/ path.
+
+But yeah, whitespace got mangled.
+
+Regards
+Peter
+
+ ocb.c | 50 ++++++++------------------------------------------
+ 1 file changed, 8 insertions(+), 42 deletions(-)
+
+diff --git a/ocb.c b/ocb.c
+index bcf0474..dfdaf59 100644
+--- a/ocb.c
++++ b/ocb.c
+@@ -10,56 +10,22 @@ static int join_ocb(struct nl80211_state *state,
+ 		    struct nl_msg *msg, int argc, char **argv,
+ 		    enum id_input id)
+ {
+-	unsigned long freq;
+-	char *end;
+-	unsigned int i;
+-	const struct chanmode *chanmode_selected = NULL;
+-	static const struct chanmode chanmode[] = {
+-		{ .name = "5MHz",
+-		  .width = NL80211_CHAN_WIDTH_5,
+-		  .freq1_diff = 0,
+-		  .chantype = -1 },
+-		{ .name = "10MHz",
+-		  .width = NL80211_CHAN_WIDTH_10,
+-		  .freq1_diff = 0,
+-		  .chantype = -1 },
+-	};
++	struct chandef chandef;
++	int err, parsed;
+ 
+ 	if (argc < 2)
+ 		return 1;
+ 
+-	/* freq */
+-	freq = strtoul(argv[0], &end, 10);
+-	if (*end != '\0')
+-		return 1;
+-
+-	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
+-	argv++;
+-	argc--;
++	err = parse_freqchan(&chandef, false, argc, argv, &parsed);
+ 
+-	/* channel width */
+-	for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
+-		if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
+-			chanmode_selected = &chanmode[i];
+-			break;
+-		}
+-	}
+-	if (chanmode_selected) {
+-		NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
+-			    chanmode_selected->width);
+-		NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
+-			    get_cf1(chanmode_selected, freq));
++	if (err)
++		return err;
+ 
+-		argv++;
+-		argc--;
+-	} else {
+-		return 1;
+-	}
++	put_chandef(msg, &chandef);
++	if (err)
++		return err;
+ 
+ 	return 0;
+-
+-nla_put_failure:
+-	return -ENOBUFS;
+ }
+ COMMAND(ocb, join, "<freq in MHz> <5MHz|10MHz>",
+ 	NL80211_CMD_JOIN_OCB, 0, CIB_NETDEV, join_ocb,
+-- 
+2.13.6
