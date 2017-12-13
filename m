@@ -1,159 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0045.outbound.protection.outlook.com ([104.47.42.45]:64231
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0135.outbound.protection.outlook.com ([104.47.33.135]:35360
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966988AbdLSL3g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 06:29:36 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: [PATCH v2 09/10] qtnfmac: keeping track of "generation" for STA info
-Date: Tue, 19 Dec 2017 14:28:55 +0300
-Message-Id: <20171219112856.22463-10-sergey.matyukevich.os@quantenna.com> (sfid-20171219_122952_405122_7FD6F991)
-In-Reply-To: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
-References: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
+        id S1751462AbdLMHNT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Dec 2017 02:13:19 -0500
+Subject: Re: [PATCH] brcmfmac: fix CLM load error for legacy chips when user
+ helper is enabled
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1513071596-17506-1-git-send-email-wright.feng@cypress.com>
+ <87shcgp0ih.fsf@kamboji.qca.qualcomm.com>
+From: Wright Feng <wright.feng@cypress.com>
+Message-ID: <9131f524-99ed-1e18-021b-480aacbe54ce@cypress.com> (sfid-20171213_081333_728302_0985DA74)
+Date: Wed, 13 Dec 2017 15:13:01 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87shcgp0ih.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Hi Kalle,
 
-Keep generation in per-VIF data structure and increment it whenever STA
-list is changed. Use generation value to fill struct station_info when
-required.
+On 2017/12/12 下午 08:57, Kalle Valo wrote:
+> Wright Feng <wright.feng@cypress.com> writes:
+> 
+>> For legacy chips w/o CLM blob files, kernel with user helper function
+>> enables returns -EAGAIN when we request_firmware() for blob file:
+>> "request_firmware() -> _request_firmware() -> fw_load_from_user_helper()
+>> -> _request_firmware_load() -> retval=-EAGAIN"
+>> We should do one more retry
+> 
+> Who says that we should do one more retry?
+> 
+>> and continue brcmf_c_process_clm_blob if getting -EAGAIN from
+>> request_firmware function.
+>>
+>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+> 
+> [...]
+> 
+>> @@ -180,11 +183,18 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
+>>   		return err;
+>>   	}
+>>   
+>> -	err = request_firmware(&clm, clm_name, dev);
+>> +	do {
+>> +		err = request_firmware(&clm, clm_name, dev);
+>> +	} while (err == -EAGAIN && retries++ < CLM_LOAD_RETRIES);
+> 
+> This looks like a REALLY ugly workaround, please think three times
+> before submitting something like this. And if you still decide to submit
+> it, put a good effort on the commit log to explain why the hack would be
+> acceptable.
+> 
+> Have you investigated why you are getting the -EGAIN, user space not
+> ready during boot or something like that?
+I didn't notice below commit 76098b36b5db ("firmware: send -EINTR on 
+signal abort on fallback mechanism") has been merged on July 2017, sorry 
+for that.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 5 ++++-
- drivers/net/wireless/quantenna/qtnfmac/core.h     | 1 +
- drivers/net/wireless/quantenna/qtnfmac/event.c    | 5 +++--
- drivers/net/wireless/quantenna/qtnfmac/util.c     | 8 ++++++--
- drivers/net/wireless/quantenna/qtnfmac/util.h     | 4 ++--
- 5 files changed, 16 insertions(+), 7 deletions(-)
+Before commit 76098b36b5db, user helper sent -EAGAIN for all errors 
+including "getting interrupted" and "file not found". The one more retry 
+was for the sysfs got interrupted, and what we expected was the driver 
+should get "-EAGAIN" when clm blob file was not found for legacy wifi chip.
+Since commit 76098b36b5db changed the error code for interrupted, I will 
+remove the retry mechanism and keep remaining change for Patch v2. 
+Thanks for the review.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index be15d0ed362c..cedb18e04bc2 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -418,6 +418,7 @@ qtnf_get_station(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
- 
-+	sinfo->generation = vif->generation;
- 	return qtnf_cmd_get_sta_info(vif, mac, sinfo);
- }
- 
-@@ -439,11 +440,13 @@ qtnf_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 	ret = qtnf_cmd_get_sta_info(vif, sta_node->mac_addr, sinfo);
- 
- 	if (unlikely(ret == -ENOENT)) {
--		qtnf_sta_list_del(&vif->sta_list, mac);
-+		qtnf_sta_list_del(vif, mac);
- 		cfg80211_del_sta(vif->netdev, mac, GFP_KERNEL);
- 		sinfo->filled = 0;
- 	}
- 
-+	sinfo->generation = vif->generation;
-+
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index d7e295efb07d..e7bd21ed371b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -88,6 +88,7 @@ struct qtnf_vif {
- 	struct work_struct reset_work;
- 	struct qtnf_sta_list sta_list;
- 	unsigned long cons_tx_timeout_cnt;
-+	int generation;
- };
- 
- struct qtnf_mac_info {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index b3489b5b5d9e..8a3d2b1194e4 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -59,10 +59,11 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- 	pr_debug("VIF%u.%u: MAC:%pM FC:%x\n", mac->macid, vif->vifid, sta_addr,
- 		 frame_control);
- 
--	qtnf_sta_list_add(&vif->sta_list, sta_addr);
-+	qtnf_sta_list_add(vif, sta_addr);
- 
- 	sinfo.assoc_req_ies = NULL;
- 	sinfo.assoc_req_ies_len = 0;
-+	sinfo.generation = vif->generation;
- 
- 	payload_len = len - sizeof(*sta_assoc);
- 	tlv = (const struct qlink_tlv_hdr *)sta_assoc->ies;
-@@ -132,7 +133,7 @@ qtnf_event_handle_sta_deauth(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- 	pr_debug("VIF%u.%u: MAC:%pM reason:%x\n", mac->macid, vif->vifid,
- 		 sta_addr, reason);
- 
--	if (qtnf_sta_list_del(&vif->sta_list, sta_addr))
-+	if (qtnf_sta_list_del(vif, sta_addr))
- 		cfg80211_del_sta(vif->netdev, sta_deauth->sta_addr,
- 				 GFP_KERNEL);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.c b/drivers/net/wireless/quantenna/qtnfmac/util.c
-index ed38e87471bf..e745733ba417 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/util.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/util.c
-@@ -57,9 +57,10 @@ struct qtnf_sta_node *qtnf_sta_list_lookup_index(struct qtnf_sta_list *list,
- 	return NULL;
- }
- 
--struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_sta_list *list,
-+struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_vif *vif,
- 					const u8 *mac)
- {
-+	struct qtnf_sta_list *list = &vif->sta_list;
- 	struct qtnf_sta_node *node;
- 
- 	if (unlikely(!mac))
-@@ -77,13 +78,15 @@ struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_sta_list *list,
- 	ether_addr_copy(node->mac_addr, mac);
- 	list_add_tail(&node->list, &list->head);
- 	atomic_inc(&list->size);
-+	++vif->generation;
- 
- done:
- 	return node;
- }
- 
--bool qtnf_sta_list_del(struct qtnf_sta_list *list, const u8 *mac)
-+bool qtnf_sta_list_del(struct qtnf_vif *vif, const u8 *mac)
- {
-+	struct qtnf_sta_list *list = &vif->sta_list;
- 	struct qtnf_sta_node *node;
- 	bool ret = false;
- 
-@@ -93,6 +96,7 @@ bool qtnf_sta_list_del(struct qtnf_sta_list *list, const u8 *mac)
- 		list_del(&node->list);
- 		atomic_dec(&list->size);
- 		kfree(node);
-+		++vif->generation;
- 		ret = true;
- 	}
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.h b/drivers/net/wireless/quantenna/qtnfmac/util.h
-index 0359eae8c24b..0d4d92b11540 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/util.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/util.h
-@@ -26,9 +26,9 @@ struct qtnf_sta_node *qtnf_sta_list_lookup(struct qtnf_sta_list *list,
- 					   const u8 *mac);
- struct qtnf_sta_node *qtnf_sta_list_lookup_index(struct qtnf_sta_list *list,
- 						 size_t index);
--struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_sta_list *list,
-+struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_vif *vif,
- 					const u8 *mac);
--bool qtnf_sta_list_del(struct qtnf_sta_list *list, const u8 *mac);
-+bool qtnf_sta_list_del(struct qtnf_vif *vif, const u8 *mac);
- 
- void qtnf_sta_list_free(struct qtnf_sta_list *list);
- 
--- 
-2.11.0
+commit 76098b36b5db1a509e5af94128b08f950692c7f8
+Author: Luis R. Rodriguez <mcgrof@kernel.org>
+Date:   Thu Jul 20 13:13:39 2017 -0700
+
+     firmware: send -EINTR on signal abort on fallback mechanism
+
+     Right now we send -EAGAIN to a syfs write which got interrupted.
+     Userspace can't tell what happened though, send -EINTR if we
+     were killed due to a signal so userspace can tell things apart.
+
+     This is only applicable to the fallback mechanism.
+
+Regards,
+Wright
