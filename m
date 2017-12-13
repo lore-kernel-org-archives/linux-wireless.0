@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0113.outbound.protection.outlook.com ([104.47.38.113]:10636
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752977AbdLDD42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 3 Dec 2017 22:56:28 -0500
-Reply-To: chi-hsien.lin@cypress.com
-Subject: Re: [PATCH V2] brcm: add CYW4373 firmwares and Cypress license file
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-firmware@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com
-References: <20171201084243.GA58942@aremote07.aus.cypress.com>
- <f96ddf93-0e1d-d6f1-570b-fd3c8ec711e0@broadcom.com>
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-ID: <b28125eb-c251-405b-c955-f87a0d7c6b25@cypress.com> (sfid-20171204_045640_435036_17CDD715)
-Date: Mon, 4 Dec 2017 11:56:20 +0800
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37991 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752816AbdLMRwU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Dec 2017 12:52:20 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Sunil Dutt <usdutt@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH] nl80211: Introduce scan flags to emphasize requested scan behavior
+Date: Wed, 13 Dec 2017 19:52:03 +0200
+Message-ID: <1513187523-24054-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20171213_185225_278263_0ABE8244)
 MIME-Version: 1.0
-In-Reply-To: <f96ddf93-0e1d-d6f1-570b-fd3c8ec711e0@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sunil Dutt <usdutt@qti.qualcomm.com>
 
+This commit defines new scan flags (LOW_SPAN, LOW_POWER, HIGH_LATENCY)
+to emphasize the requested scan behavior for the driver. These flags are
+optional and are mutually exclusive. Driver shall resort to default
+behavior if a respective flag is not supported. The implementation of
+the respective functionality can be driver/hardware specific.
 
-On 12/02/2017 3:57, Arend van Spriel wrote:
-> On 01-12-17 09:43, Chi-Hsien Lin wrote:
->> Add the CYW4373 SDIO and USB firmware files, along with the corresponding
->> Cypress license file.
-> 
-> Just wanted to be sure. These firmware files contain a CLM to get the 
-> device operational, ie. no separate CLM download is needed.
-> 
-Arend,
+These flags can be used to control the compromise between how long a
+scan takes, how much power it uses, and high accurate/complete the scan
+is in finding the BSSs.
 
-These files do not have CLM info built-in, so a clm_blob file is 
-expected to be delivered separately like nvram file.
+Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/uapi/linux/nl80211.h | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
-Regards,
-Chi-hsien Lin
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6dd6939..68fdb95 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -5059,6 +5059,11 @@ enum nl80211_timeout_reason {
+  * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
+  * requests.
+  *
++ * NL80211_SCAN_FLAG_LOW_SPAN, NL80211_SCAN_FLAG_LOW_POWER, and
++ * NL80211_SCAN_FLAG_HIGH_ACCURACY flags are exclusive of each other, i.e., only
++ * one of them can be used in the request. If the driver does not support the
++ * requested behavior, default scan behavior will be used instead.
++ *
+  * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
+  * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
+  * @NL80211_SCAN_FLAG_AP: force a scan even if the interface is configured
+@@ -5086,7 +5091,20 @@ enum nl80211_timeout_reason {
+  *	and suppression (if it has received a broadcast Probe Response frame,
+  *	Beacon frame or FILS Discovery frame from an AP that the STA considers
+  *	a suitable candidate for (re-)association - suitable in terms of
+- *	SSID and/or RSSI
++ *	SSID and/or RSSI.
++ * @NL80211_SCAN_FLAG_LOW_SPAN: Span corresponds to the total time taken to
++ *	accomplish the scan. Thus, this flag intends the driver to perform the
++ *	scan request with lesser span/duration. It is specific to the driver
++ *	implementations on how this is accomplished. Scan accuracy may get
++ *	impacted with this flag. This flag cannot be used with
++ * @NL80211_SCAN_FLAG_LOW_POWER: This flag intends the scan attempts to consume
++ *	optimal possible power. Drivers can resort to their specific means to
++ *	optimize the power. Scan accuracy may get impacted with this flag.
++ * @NL80211_SCAN_FLAG_HIGH_ACCURACY: Accuracy here intends to the extent of scan
++ *	results obtained. Thus HIGH_ACCURACY scan flag aims to get maximum
++ *	possible scan results. This flag hints the driver to use the best
++ *	possible scan configuration to improve the accuracy in scanning.
++ *	Latency and power use may get impacted with this flag.
+  */
+ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_PRIORITY				= 1<<0,
+@@ -5097,6 +5115,9 @@ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP		= 1<<5,
+ 	NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE		= 1<<6,
+ 	NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION	= 1<<7,
++	NL80211_SCAN_FLAG_LOW_SPAN				= 1<<8,
++	NL80211_SCAN_FLAG_LOW_POWER				= 1<<9,
++	NL80211_SCAN_FLAG_HIGH_ACCURACY				= 1<<10,
+ };
+ 
+ /**
+-- 
+2.7.4
