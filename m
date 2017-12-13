@@ -1,58 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:45582 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756207AbdLTTvb (ORCPT
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:45938 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752903AbdLMMvk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Dec 2017 14:51:31 -0500
-Received: by mail-pl0-f67.google.com with SMTP id o2so9611959plk.12
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Dec 2017 11:51:31 -0800 (PST)
-From: Amit Pundir <amit.pundir@linaro.org>
-To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Cc: Suren Baghdasaryan <surenb@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>
-Subject: [RFC][PATCH 0/4] Few NFC changes from experimental/android-4.14 tree
-Date: Thu, 21 Dec 2017 01:21:20 +0530
-Message-Id: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org> (sfid-20171220_205251_260277_C4FE0EB6)
+        Wed, 13 Dec 2017 07:51:40 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v5 3/8] rsi: add header file rsi_header
+Date: Wed, 13 Dec 2017 18:12:52 +0530
+Message-Id: <1513168977-2121-4-git-send-email-amitkarwar@gmail.com> (sfid-20171213_135145_571313_0F1D1796)
+In-Reply-To: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
+References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-I ran into following NFC fixes in experimental/android-4.14 tree[1]
-and they seem like reasonable upstream candidates. So posting them
-here for review and comments.
+The common parameters used by wlan and bt modules are added
+to a new header file "rsi_header.h" defined in '/include/linux'
 
-Also like to point out that I have not feature tested these patches
-at all. Only made a couple of small tweaks to the patches (removed
-Android-only tag and internal bug ID) and build tested for arm/arm64
-defconfigs, before posting them on the mailing list as is.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_main.h | 12 ++----------
+ include/linux/rsi_header.h          | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 10 deletions(-)
+ create mode 100644 include/linux/rsi_header.h
 
-Really appreciate any concerns or feedback.
-
-Regards,
-Amit Pundir
-[1] https://android.googlesource.com/kernel/common/+log/experimental/android-4.14
-
-
-Suren Baghdasaryan (4):
-  NFC: st21nfca: Fix out of bounds kernel access when handling ATR_REQ
-  NFC: st21nfca: Fix memory OOB and leak issues in connectivity events
-    handler
-  NFC: Fix possible memory corruption when handling SHDLC I-Frame
-    commands
-  NFC: fdp: Fix possible buffer overflow in WCS4000 NFC driver
-
- drivers/nfc/fdp/i2c.c      | 10 ++++++++++
- drivers/nfc/st21nfca/dep.c |  3 ++-
- drivers/nfc/st21nfca/se.c  | 18 ++++++++++++++----
- net/nfc/hci/core.c         | 10 ++++++++++
- 4 files changed, 36 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index ee469dc..ca02a4b 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -20,6 +20,7 @@
+ #include <linux/string.h>
+ #include <linux/skbuff.h>
+ #include <net/mac80211.h>
++#include <linux/rsi_header.h>
+ 
+ struct rsi_sta {
+ 	struct ieee80211_sta *sta;
+@@ -85,10 +86,6 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
+ #define MGMT_HW_Q			10
+ #define BEACON_HW_Q			11
+ 
+-/* Queue information */
+-#define RSI_COEX_Q			0x0
+-#define RSI_WIFI_MGMT_Q                 0x4
+-#define RSI_WIFI_DATA_Q                 0x5
+ #define IEEE80211_MGMT_FRAME            0x00
+ #define IEEE80211_CTL_FRAME             0x04
+ 
+@@ -293,11 +290,6 @@ struct rsi_common {
+ 	struct ieee80211_vif *roc_vif;
+ };
+ 
+-enum host_intf {
+-	RSI_HOST_INTF_SDIO = 0,
+-	RSI_HOST_INTF_USB
+-};
+-
+ struct eepromrw_info {
+ 	u32 offset;
+ 	u32 length;
+@@ -322,7 +314,7 @@ struct rsi_hw {
+ 	struct device *device;
+ 	u8 sc_nvifs;
+ 
+-	enum host_intf rsi_host_intf;
++	enum rsi_host_intf rsi_host_intf;
+ 	u16 block_size;
+ 	enum ps_state ps_state;
+ 	struct rsi_ps_info ps_info;
+diff --git a/include/linux/rsi_header.h b/include/linux/rsi_header.h
+new file mode 100644
+index 0000000..16a447b
+--- /dev/null
++++ b/include/linux/rsi_header.h
+@@ -0,0 +1,34 @@
++/**
++ * Copyright (c) 2017 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_HEADER_H__
++#define __RSI_HEADER_H__
++
++/* HAL queue information */
++#define RSI_COEX_Q			0x0
++#define RSI_BT_Q			0x2
++#define RSI_WLAN_Q                      0x3
++#define RSI_WIFI_MGMT_Q                 0x4
++#define RSI_WIFI_DATA_Q                 0x5
++#define RSI_BT_MGMT_Q			0x6
++#define RSI_BT_DATA_Q			0x7
++
++enum rsi_host_intf {
++	RSI_HOST_INTF_SDIO = 0,
++	RSI_HOST_INTF_USB
++};
++
++#endif
 -- 
 2.7.4
