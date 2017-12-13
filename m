@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35644 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756774AbdLTTvr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Dec 2017 14:51:47 -0500
-Received: by mail-pf0-f193.google.com with SMTP id j124so12995487pfc.2
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Dec 2017 11:51:47 -0800 (PST)
-From: Amit Pundir <amit.pundir@linaro.org>
-To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Cc: Suren Baghdasaryan <surenb@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>
-Subject: [RFC][PATCH 4/4] NFC: fdp: Fix possible buffer overflow in WCS4000 NFC driver
-Date: Thu, 21 Dec 2017 01:21:24 +0530
-Message-Id: <1513799484-12505-5-git-send-email-amit.pundir@linaro.org> (sfid-20171220_205200_438577_A90D9041)
-In-Reply-To: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
-References: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34264 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753144AbdLMQNm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Dec 2017 11:13:42 -0500
+Date: Wed, 13 Dec 2017 17:12:57 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: BCM4356 does not initalize after firmware update
+Message-ID: <20171213161257.GB2811@redhat.com> (sfid-20171213_171401_471060_7D1B423F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Suren Baghdasaryan <surenb@google.com>
+Hi
 
-Possible buffer overflow when reading next_read_size bytes into
-tmp buffer after next_read_size was extracted from a previous packet.
+After firmware update, this device:
 
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
----
- drivers/nfc/fdp/i2c.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+[0280]: Broadcom Limited BCM4356 802.11ac Wireless Network Adapter [14e4:43ec] (rev 02)
 
-diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
-index c4da50e07bbc..08a4f82a2965 100644
---- a/drivers/nfc/fdp/i2c.c
-+++ b/drivers/nfc/fdp/i2c.c
-@@ -176,6 +176,16 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy *phy, struct sk_buff **skb)
- 		/* Packet that contains a length */
- 		if (tmp[0] == 0 && tmp[1] == 0) {
- 			phy->next_read_size = (tmp[2] << 8) + tmp[3] + 3;
-+			/*
-+			 * Ensure next_read_size does not exceed sizeof(tmp)
-+			 * for reading that many bytes during next iteration
-+			 */
-+			if (phy->next_read_size > FDP_NCI_I2C_MAX_PAYLOAD) {
-+				dev_dbg(&client->dev, "%s: corrupted packet\n",
-+					__func__);
-+				phy->next_read_size = 5;
-+				goto flush;
-+			}
- 		} else {
- 			phy->next_read_size = FDP_NCI_I2C_MIN_PAYLOAD;
- 
--- 
-2.7.4
+no longer initialize. With the firmware update I have:
+
+[  272.063814] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
+[  272.529582] brcmfmac 0000:03:00.0: irq 31 for MSI/MSI-X
+[  274.529476] brcmfmac: brcmf_msgbuf_query_dcmd: Timeout on response for query command
+[  274.537356] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -5
+[  274.544881] brcmfmac: brcmf_bus_started: failed: -5
+[  274.549854] brcmfmac: brcmf_pcie_attach_bus: dongle is not responding
+
+and no wlan device is created. With older version of the firmware I have:
+
+[   10.716878] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
+[   11.312875] brcmfmac 0000:03:00.0: irq 31 for MSI/MSI-X
+[   11.314735] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015 06:16:41 version 7.35.180.119 (r594535) FWID 01-1a5c4016
+[   16.598211] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
+[   16.604416] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlp3s0 type 10 failed: err=-16
+
+and despite P2P errors, device works correctly.
+
+Regards
+Stanislaw
