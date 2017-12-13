@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([217.72.192.78]:52827 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750912AbdL3VHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Dec 2017 16:07:14 -0500
-Subject: [PATCH 1/2] at76c50x-usb: Delete an error message for a failed memory
- allocation in at76_submit_rx_urb()
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Kees Cook <keescook@chromium.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <1d76fe59-af15-ba4d-e05d-09dcd9ee38cd@users.sourceforge.net>
-Message-ID: <c50358b4-79e2-0861-9087-99104944a0b8@users.sourceforge.net> (sfid-20171230_220734_177230_BEA928DF)
-Date: Sat, 30 Dec 2017 22:07:05 +0100
-MIME-Version: 1.0
-In-Reply-To: <1d76fe59-af15-ba4d-e05d-09dcd9ee38cd@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Received: from pv33p00im-asmtp003.me.com ([17.142.194.252]:49700 "EHLO
+        pv33p00im-asmtp003.me.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752886AbdLMOdv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Dec 2017 09:33:51 -0500
+Date: Wed, 13 Dec 2017 14:33:33 +0100
+From: Damian Tometzki <damian.tometzki@icloud.com>
+To: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: net/wireless/shipped-certs.c:2:1: error: expected expression at
+ end of input
+Message-id: <20171213133333.GA25958@zrhn9910b> (sfid-20171213_153412_375492_0892E39A)
+References: <4006aefb-e9af-d809-b45a-201d20e75f9d@molgen.mpg.de>
+ <1512468219.26976.15.camel@sipsolutions.net>
+ <8617D3B1-DE6C-4E75-AB44-1845806E18D6@icloud.com>
+ <f091f30c-3681-6e6e-774c-3906026c573e@molgen.mpg.de>
+ <7AC5C6E6-E2EE-473D-A8C8-5D18646C93CD@icloud.com>
+ <05419671-31e3-f8d0-f293-55c9c22165e4@molgen.mpg.de>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+In-reply-to: <05419671-31e3-f8d0-f293-55c9c22165e4@molgen.mpg.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 30 Dec 2017 21:50:12 +0100
+On Wed, 13. Dec 12:07, Paul Menzel wrote:
+> Dear Damian,
+> 
+> 
+> On 12/13/17 12:00, Damian Tometzki wrote:
+> 
+> >Hexdump was already installed in the System.
+> >
+> >I commented out this step.
+> Please try to reproduce it from a clean environment (`git clean -dfx`, save
+> your .config before), and then please give more details.
 
-Omit an extra message for a memory allocation failure in this function.
-
-This issue was detected by using the Coccinelle software.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/atmel/at76c50x-usb.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-index ede89d4ffc88..2893d339b440 100644
---- a/drivers/net/wireless/atmel/at76c50x-usb.c
-+++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-@@ -1223,8 +1223,6 @@ static int at76_submit_rx_urb(struct at76_priv *priv)
- 	if (!skb) {
- 		skb = dev_alloc_skb(sizeof(struct at76_rx_buffer));
- 		if (!skb) {
--			wiphy_err(priv->hw->wiphy,
--				  "cannot allocate rx skbuff\n");
- 			ret = -ENOMEM;
- 			goto exit;
- 		}
--- 
-2.15.1
+After cleaning the environment with  'git clean -dfx' the build was successfully. 
+Thanks for you help
+ 
+> 
+> 
+> Kind regards,
+> 
+> Paul
