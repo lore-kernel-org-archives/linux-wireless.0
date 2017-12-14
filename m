@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:64067 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753728AbdLGPFG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 10:05:06 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rakesh Pillai <pillair@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Govind Singh <govinds@qti.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/4] ath10k: WMI: modify svc bitmap parsing for wcn3990
-Date: Thu, 7 Dec 2017 15:04:55 +0000
-Message-ID: <87y3metw8f.fsf@kamboji.qca.qualcomm.com> (sfid-20171207_160511_183800_11B6488E)
-References: <1512214248-17127-1-git-send-email-pillair@qti.qualcomm.com>
-        <1512214248-17127-2-git-send-email-pillair@qti.qualcomm.com>
-In-Reply-To: <1512214248-17127-2-git-send-email-pillair@qti.qualcomm.com>
-        (Rakesh Pillai's message of "Sat, 2 Dec 2017 17:00:45 +0530")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:45534 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753275AbdLNPjV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Dec 2017 10:39:21 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 00/14] mt76 fixes
+Date: Thu, 14 Dec 2017 16:39:04 +0100
+Message-Id: <20171214153918.43774-1-nbd@nbd.name> (sfid-20171214_163945_732830_22704DA9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rakesh Pillai <pillair@qti.qualcomm.com> writes:
+Felix Fietkau (10):
+  mt76x2: remove some harmless WARN_ONs in tx status and rx path
+  mt76x2: fix transmission of encrypted management frames
+  mt76x2: increase OFDM SIFS time
+  mt76x2: add channel argument to eeprom tx power functions
+  mt76x2: initialize channel power limits at probe time
+  mt76x2: convert between per-chain tx power and combined output
+  mt76x2: remove MAC address limitation for multi-vif setups
+  mt76x2: clean up MAC/BSSID address initialization
+  mt76x2: drop wiphy->addresses
+  mt76x2: configure rx filter based on monitor mode setting
 
-> Due to the limitation of wmi tlv parsing logic, if there are
-> two parameters in a wmi event with same tlv tag, we can get only
-> the last value, as it overwrites the prev value of the same tlv tag.
->
-> The service ready event in wcn3990 contains two parameters of the
-> same tag UINT32, due to which the svc bitmap is overwritten with the
-> DBS support parameter.
->
-> Refactor the service ready event parsing to allow parsing two tlv
-> of the same tag UINT32 for wcn3990.
->
-> Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-> Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+Fengguang Wu (2):
+  mt76: fix debugfs_simple_attr.cocci warnings
+  mt76: fix returnvar.cocci warnings
 
-ath10k-check found a warning in this patch:
+Lorenzo Bianconi (2):
+  mt76x2: init: disable APCLI by default
+  mt76x2: init: fix rx filter default value during init
 
-drivers/net/wireless/ath/ath10k/wmi-tlv.c:981: braces {} are not necessary =
-for single statement blocks
+ drivers/net/wireless/mediatek/mt76/debugfs.c       |  7 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h          |  1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        |  3 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 41 ++++++++---
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h |  7 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c   | 67 ++++++++++-------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    | 85 +++++++++++++++++-----
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   | 57 +++++++++------
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    | 30 ++------
+ drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   |  8 ++
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     |  6 +-
+ 12 files changed, 204 insertions(+), 109 deletions(-)
 
---=20
-Kalle Valo=
+-- 
+2.14.2
