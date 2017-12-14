@@ -1,40 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36464 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751877AbdLKUvl (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:11629 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750722AbdLNHLv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 15:51:41 -0500
-Received: by mail-wm0-f42.google.com with SMTP id b76so16697464wmg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 12:51:41 -0800 (PST)
-Date: Mon, 11 Dec 2017 21:51:29 +0100 (CET)
-From: Enrico Mioso <mrkiko.rs@gmail.com>
-To: linux-wireless@vger.kernel.org
-cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        nbd@nbd.name
-Subject: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame
- due to full tx queue...?
-Message-ID: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain> (sfid-20171211_215147_316465_64327477)
+        Thu, 14 Dec 2017 02:11:51 -0500
+From: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
+To: KAVITA MATHUR <kavitam@cdot.in>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: regulatory.db file for ath10k
+Date: Thu, 14 Dec 2017 07:11:42 +0000
+Message-ID: <08194d1468d345a59aa3ab462f71b408@aphydexm01f.ap.qualcomm.com> (sfid-20171214_081156_743916_C8D9F6F7)
+References: <20171213063219.M10289@cdot.in>
+ <240c63ef1f9745acaa0e7585be6a46de@aphydexm01f.ap.qualcomm.com>
+ <20171213081213.M75864@cdot.in>
+In-Reply-To: <20171213081213.M75864@cdot.in>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello guys, and sorry for the big CC list.
-I would like to point out about a bug who survived for years - at least from 2015 until now, regarding the Ralink driver getting stuck, and in some cases not being able to recover.
-The problem manifested with an MT7620A chip, and the wireless card inside the WL-330N3G device.
-The error message is in rt2x00/rt2x00queue.c .
-
-This bug was discussed, and a patch proposed, in this thread:
-https://lists.openwrt.org/pipermail/openwrt-devel/2015-September/thread.html#35778
-
-I would like to help if possible - I have the have both an Archer MR200, and the WL330n3G hardware.
-BTW, the Archer MR200 is a nice MT7610 device, and the problem manifests itself, see:
-https://forum.openwrt.org/viewtopic.php?id=64293&p=6
-
-Any help, hint, anything would be apreciated.
-thank you to all.
-
-Enrico
+VGhlcmUgaXMgbm8gc3BlY2lhbCBjb25maWcsIGJ1dCBhbnl3YXkgaGVyZSBpcyB0aGUgY29uZmln
+KG9ubHkgd2lyZWxlc3MpIHRoYXQgSSBoYXZlIHVzZWQsDQoNCkNPTkZJR19XSVJFTEVTUz15DQpD
+T05GSUdfQ0ZHODAyMTE9eQ0KIyBDT05GSUdfTkw4MDIxMV9URVNUTU9ERSBpcyBub3Qgc2V0DQoj
+IENPTkZJR19DRkc4MDIxMV9ERVZFTE9QRVJfV0FSTklOR1MgaXMgbm90IHNldA0KQ09ORklHX0NG
+RzgwMjExX1JFUVVJUkVfU0lHTkVEX1JFR0RCPXkNCkNPTkZJR19DRkc4MDIxMV9VU0VfS0VSTkVM
+X1JFR0RCX0tFWVM9eQ0KQ09ORklHX0NGRzgwMjExX0RFRkFVTFRfUFM9eQ0KIyBDT05GSUdfQ0ZH
+ODAyMTFfREVCVUdGUyBpcyBub3Qgc2V0DQpDT05GSUdfQ0ZHODAyMTFfQ1JEQV9TVVBQT1JUPXkN
+CiMgQ09ORklHX0NGRzgwMjExX1dFWFQgaXMgbm90IHNldA0KIyBDT05GSUdfTElCODAyMTEgaXMg
+bm90IHNldA0KQ09ORklHX01BQzgwMjExPXkNCkNPTkZJR19NQUM4MDIxMV9IQVNfUkM9eQ0KQ09O
+RklHX01BQzgwMjExX1JDX01JTlNUUkVMPXkNCkNPTkZJR19NQUM4MDIxMV9SQ19NSU5TVFJFTF9I
+VD15DQojIENPTkZJR19NQUM4MDIxMV9SQ19NSU5TVFJFTF9WSFQgaXMgbm90IHNldA0KQ09ORklH
+X01BQzgwMjExX1JDX0RFRkFVTFRfTUlOU1RSRUw9eQ0KQ09ORklHX01BQzgwMjExX1JDX0RFRkFV
+TFQ9Im1pbnN0cmVsX2h0Ig0KIyBDT05GSUdfTUFDODAyMTFfTUVTSCBpcyBub3Qgc2V0DQpDT05G
+SUdfTUFDODAyMTFfTEVEUz15DQojIENPTkZJR19NQUM4MDIxMV9ERUJVR0ZTIGlzIG5vdCBzZXQN
+CiMgQ09ORklHX01BQzgwMjExX01FU1NBR0VfVFJBQ0lORyBpcyBub3Qgc2V0DQojIENPTkZJR19N
+QUM4MDIxMV9ERUJVR19NRU5VIGlzIG5vdCBzZXQNCkNPTkZJR19NQUM4MDIxMV9TVEFfSEFTSF9N
+QVhfU0laRT0wDQpDT05GSUdfQVRIMTBLPW0NCkNPTkZJR19BVEgxMEtfUENJPW0NCkNPTkZJR19B
+VEgxMEtfVVNCPW0NCkNPTkZJR19BVEgxMEtfREVCVUc9eQ0KQ09ORklHX0FUSDEwS19ERUJVR0ZT
+PXkNCkNPTkZJR19BVEgxMEtfVFJBQ0lORz15DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0t
+LQ0KPkZyb206IGF0aDEwayBbbWFpbHRvOmF0aDEway1ib3VuY2VzQGxpc3RzLmluZnJhZGVhZC5v
+cmddIE9uIEJlaGFsZiBPZg0KPktBVklUQSBNQVRIVVINCj5TZW50OiBXZWRuZXNkYXksIERlY2Vt
+YmVyIDEzLCAyMDE3IDE6NDUgUE0NCj5UbzogTWFuaWthbnRhIFB1YmJpc2V0dHkgPG1wdWJiaXNl
+QHF0aS5xdWFsY29tbS5jb20+Ow0KPmF0aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnDQo+Q2M6IGxp
+bnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPlN1YmplY3Q6IFJFOiByZWd1bGF0b3J5LmRi
+IGZpbGUgZm9yIGF0aDEwaw0KPg0KPlRoYW5reW91IHNvIG11Y2ggZm9yIHRoaXMgaW5mb3JtYXRp
+b24uDQo+DQo+SSBkbyBub3Qgd2FudCB0byB1c2UgcmVndWxhdG9yeS5kYi4gQ2FuIHlvdSBwbGVh
+c2Ugc2hhcmUgeW91ciBhdGgxMGsgYnVpbGQNCj5jb25maWd1cmF0aW9uPyBJIG1heSBiZSBtaXNz
+aW5nIHNvbWV0aGluZyBpbiBjb25maWd1cmF0aW9uLg0KPg0KPlRoYW5rcyAmIFJlZ2FyZHMsDQo+
+S2F2aXRhDQo+DQo+DQo+T24gV2VkLCAxMyBEZWMgMjAxNyAwNzo1NDowMCArMDAwMCwgTWFuaWth
+bnRhIFB1YmJpc2V0dHkgd3JvdGUNCj4+IFBsZWFzZSBDQyBsaW51eCB3aXJlbGVzcyB3aGVuIHBv
+c3RpbmcgcXVlcmllcyBvbiBjZmcvbWFjODAyMTEuDQo+Pg0KPj4gQXQgbGVhc3QsIEkgaGF2ZSBu
+b3QgaGFkIGFueSBpc3N1ZXMgaW4gaW50ZXJmYWNlIGJyaW5nIHVwIGFmdGVyIHRoZQ0KPj4gbGF0
+ZXN0IHJlZ3VsYXRvcnkuZGIgY2hhbmdlLCBJIGhhdmUgdGVzdGVkIGl0IHdpdGggdmFuaWxsYSBh
+dGguZ2l0IGFuZA0KPj4gaXQgd29ya2VkIGV2ZW4gd2l0aG91dCByZWd1bGF0b3J5LmRiIGZpbGUu
+IElmIHlvdSBtYXkgd2FudCB0byByZWZlciwNCj4+IEpvaGFubmVzIHN1Ym1pdHRlZCBhIHBhdGNo
+WzFdIGZvciBjb252ZXJ0aW5nIGRiLnR4dCB0byBmaXJtd2FyZSBmaWxlIGZvcm1hdC4NCj4+DQo+
+PiBbMV0gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC85OTkyNDc3Lw0KPj4NCj4+
+IG1rcA0KPj4NCj4+ID4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPj4gPkZyb206IGF0aDEw
+ayBbbWFpbHRvOmF0aDEway1ib3VuY2VzQGxpc3RzLmluZnJhZGVhZC5vcmddIE9uIEJlaGFsZiBP
+Zg0KPj4gPktBVklUQSBNQVRIVVINCj4+ID5TZW50OiBXZWRuZXNkYXksIERlY2VtYmVyIDEzLCAy
+MDE3IDEyOjAyIFBNDQo+PiA+VG86IGF0aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnDQo+PiA+U3Vi
+amVjdDogcmVndWxhdG9yeS5kYiBmaWxlIGZvciBhdGgxMGsNCj4+ID4NCj4+ID5oaSwNCj4+ID4N
+Cj4+ID53aWZpIGludGVyZmFjZSBpcyBub3QgdXAgd2l0aCBhdGgxMGsgZHJpdmVyIGR1ZSB0byBt
+aXNzaW5nDQo+PiA+cmVndWxhdG9yeS5kYi5JIGhhdmUgdGFrZW4gYXRoMTBrIGxhdGVzdCBkcml2
+ZXIgY29kZSBmcm9tIGJhY2twb3J0cyBhbmQNCj5hdGgxMGsgZ2l0IG9uIDEyIERlYy4NCj4+ID4N
+Cj4+ID4NCj4+ID4NCj4+ID5Mb2FkaW5nIG1vZHVsZXMgYmFja3BvcnRlZCBmcm9tIExpbnV4IHZl
+cnNpb24gdjMuMTgtMjM5OTMwLWcxMzVkYTZkDQo+PiA+QmFja3BvcnQgZ2VuZXJhdGVkIGJ5IGJh
+Y2twb3J0cy5naXQgdjQuMTQtcmMyLTEtMzUtZzNkMTM0NzgNCj4+ID5hdGgxMGtfcGNpDQo+PiA+
+MDAwMjowMzowMC4wOiBwY2kgaXJxIGxlZ2FjeSBvcGVyX2lycV9tb2RlIDEgaXJxX21vZGUgMCBy
+ZXNldF9tb2RlIDANCj4+ID5jZmc4MDIxMTogZmFpbGVkIHRvIGxvYWQgcmVndWxhdG9yeS5kYiBh
+dGgxMGtfcGNpIDAwMDI6MDM6MDAuMDoNCj4+ID5xY2E5ODh4IGh3Mi4wIHRhcmdldCAweDQxMDAw
+MTZjIGNoaXBfaWQgMHgwNDMyMjJmZiBzdWIgMDAwMDowMDAwDQo+PiA+YXRoMTBrX3BjaSAwMDAy
+OjAzOjAwLjA6IGtjb25maWcgZGVidWcgMCBkZWJ1Z2ZzIDAgdHJhY2luZyAwIGRmcw0KPj4gPjAg
+dGVzdG1vZGUgMCBhdGgxMGtfcGNpIDAwMDI6MDM6MDAuMDogZmlybXdhcmUgdmVyIDEwLjIuNC43
+MC42NiBhcGkgNQ0KPj4gPmZlYXR1cmVzIG5vLXAycCxyYXctbW9kZSxtZnAsYWxsb3dzLW1lc2gt
+YmNhc3QgY3JjMzIgYzJkZDJhZDUNCj4+ID5hdGgxMGtfcGNpDQo+PiA+MDAwMjowMzowMC4wOiBi
+b2FyZF9maWxlIGFwaSAxIGJtaV9pZCBOL0EgY3JjMzIgYmViYzdjMDggYXRoMTBrX3BjaQ0KPj4g
+PjAwMDI6MDM6MDAuMDogaHR0LXZlciAyLjEgd21pLW9wIDUgaHR0LW9wIDIgY2FsIG90cCBtYXgt
+c3RhIDEyOCByYXcgMA0KPj4gPmh3Y3J5cHRvDQo+PiA+MQ0KPj4gPg0KPj4gPndpZmkNCj4+ID5y
+b290QENET1Q6LyMgSVB2NjogQUREUkNPTkYoTkVUREVWX1VQKTogd2xhbjA6IGxpbmsgaXMgbm90
+IHJlYWR5DQo+PiA+ZGV2aWNlDQo+PiA+d2xhbjAgZW50ZXJlZCBwcm9taXNjdW91cyBtb2RlIGRl
+dmljZSB3bGFuMCBsZWZ0IHByb21pc2N1b3VzIG1vZGUNCj4+ID5ici1sYW46IHBvcnQgMih3bGFu
+MCkgZW50ZXJlZCBkaXNhYmxlZCBzdGF0ZQ0KPj4gPg0KPj4gPkhvdyB0byBnZW5lcmF0ZSByZWd1
+bGF0b3J5LmRiIGZpbGUgb3IgaXMgaXQgYXZhaWxhYmxlIHRvIHVzZSBpdA0KPj4gPmRpcmVjdGx5
+PyBQbGVhc2UgaGVscCBtZSB0byBmaXggaXQuDQo+PiA+DQo+PiA+DQo+PiA+DQo+PiA+DQo+PiA+
+DQo+PiA+DQo+PiA+DQo+PiA+DQo+PiA+VGhhbmtzICYgUmVnYXJkcywNCj4+ID7gpJXgpLXgpL/g
+pKTgpL4g4KSu4KS+4KSl4KWB4KSwIEthdml0YSBNYXRodXINCj4+ID7gpLXgpLDgpL/gpLfgpY3g
+pKAg4KSF4KSo4KWB4KS44KSC4KSn4KS+4KSoIOCkheCkreCkv+Ckr+CkguCkpOCkviAgU2VuaW9y
+IFJlc2VhcmNoIEVuZ2luZWVyDQo+PiA+4KS44KWALeCkoeClieCknyAgICAgICAgICAgICAgICAg
+ICAgICBDLURPVA0KPj4gPuCkh+CksuCliOCkleCljeCkn+CljeCksOClieCkqOCkv+CkleCljeCk
+uCDgpLjgpL/gpJ/gpYAg4KSr4KWH4KSc4KS8IEkgICAgICAgICBFbGVjdHJvbmljcyBDaXR5IFBo
+YXNlIEkNCj4+ID7gpLngpYvgpLjgpYLgpLAg4KSw4KWL4KShLCDgpKzgpYfgpILgpJfgpLLgpYLg
+pLDgpYEgICAgICAgICAgICAgICBIb3N1ciBSb2FkLCBCZW5nYWx1cnUg4oCTIDU2MDEwMA0KPj4g
+PuCkq+Cli+CkqCAgUGggMDgwLTI4NTI5ODk2DQo+PiA+RGlzY2xhaW1lcjoNCj4+ID4tLS0tLS0t
+LS0tDQo+PiA+VGhpcyBlbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVkIHdpdGggaXQNCj4+
+ID4NCj4+ID4NCj4+ID5fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXw0KPj4gPmF0aDEwayBtYWlsaW5nIGxpc3QNCj4+ID5hdGgxMGtAbGlzdHMuaW5mcmFkZWFk
+Lm9yZw0KPj4gPmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vYXRo
+MTBrDQo+DQo+DQo+VGhhbmtzICYgUmVnYXJkcywNCj7gpJXgpLXgpL/gpKTgpL4g4KSu4KS+4KSl
+4KWB4KSwIEthdml0YSBNYXRodXINCj7gpLXgpLDgpL/gpLfgpY3gpKAg4KSF4KSo4KWB4KS44KSC
+4KSn4KS+4KSoIOCkheCkreCkv+Ckr+CkguCkpOCkviAgU2VuaW9yIFJlc2VhcmNoIEVuZ2luZWVy
+DQo+4KS44KWALeCkoeClieCknyAgICAgICAgICAgICAgICAgICAgICBDLURPVA0KPuCkh+CksuCl
+iOCkleCljeCkn+CljeCksOClieCkqOCkv+CkleCljeCkuCDgpLjgpL/gpJ/gpYAg4KSr4KWH4KSc
+4KS8IEkgICAgICAgICBFbGVjdHJvbmljcyBDaXR5IFBoYXNlIEkNCj7gpLngpYvgpLjgpYLgpLAg
+4KSw4KWL4KShLCDgpKzgpYfgpILgpJfgpLLgpYLgpLDgpYEgICAgICAgICAgICAgICBIb3N1ciBS
+b2FkLCBCZW5nYWx1cnUg4oCTIDU2MDEwMA0KPuCkq+Cli+CkqCAgUGggMDgwLTI4NTI5ODk2DQo+
+RGlzY2xhaW1lcjoNCj4tLS0tLS0tLS0tDQo+VGhpcyBlbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5z
+bWl0dGVkIHdpdGggaXQNCj4NCj4NCj5fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXw0KPmF0aDEwayBtYWlsaW5nIGxpc3QNCj5hdGgxMGtAbGlzdHMuaW5mcmFk
+ZWFkLm9yZw0KPmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vYXRo
+MTBrDQo=
