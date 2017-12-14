@@ -1,288 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32502 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751933AbdLULPG (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:55248 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751071AbdLNKNZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 06:15:06 -0500
-From: Rakesh Pillai <pillair@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@qti.qualcomm.com>
-Subject: [PATCH 3/3] ath10k: Add fw feature flag for non-bmi firmware load
-Date: Thu, 21 Dec 2017 16:44:47 +0530
-Message-Id: <1513854887-10759-4-git-send-email-pillair@qti.qualcomm.com> (sfid-20171221_121523_097997_662547DD)
-In-Reply-To: <1513854887-10759-1-git-send-email-pillair@qti.qualcomm.com>
-References: <1513854887-10759-1-git-send-email-pillair@qti.qualcomm.com>
+        Thu, 14 Dec 2017 05:13:25 -0500
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mt76: fix memcpy to potential null pointer on failed allocation
+Date: Thu, 14 Dec 2017 10:13:22 +0000
+Message-Id: <20171214101322.10178-1-colin.king@canonical.com> (sfid-20171214_111344_989768_53968583)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HL1.0 firmware is not loaded via bmi. The bmi specific
-code should not be executed for HL1.0
+From: Colin Ian King <colin.king@canonical.com>
 
-Add fw feature flag for non bmi targets and skip the bmi
-specific code for non bmi targets.
+Currently if the allocation of skb fails and returns NULL then the
+call to skb_put will cause a null pointer dereference. Fix this by
+checking for a null skb and returning NULL.  Note that calls to
+function mt76x2_mcu_msg_alloc don't directly check the null return
+but instead pass the NULL pointer to mt76x2_mcu_msg_send which
+checks for the NULL and returns ENOMEM in this case.
 
-Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
+Detected by CoverityScan, CID#1462624 ("Dereference null return value")
+
+Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 174 +++++++++++++++++++--------------
- drivers/net/wireless/ath/ath10k/core.h |   3 +
- 2 files changed, 105 insertions(+), 72 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 8374b05f72b2..58620f3a725a 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -471,6 +471,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
- 	[ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST] = "allows-mesh-bcast",
- 	[ATH10K_FW_FEATURE_NO_PS] = "no-ps",
- 	[ATH10K_FW_FEATURE_MGMT_TX_BY_REF] = "mgmt-tx-by-reference",
-+	[ATH10K_FW_FEATURE_NON_BMI] = "non-bmi",
- };
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+index d45737ee1412..15820b11f9db 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+@@ -45,6 +45,8 @@ static struct sk_buff *mt76x2_mcu_msg_alloc(const void *data, int len)
+ 	struct sk_buff *skb;
  
- static unsigned int ath10k_core_get_fw_feature_str(char *buf,
-@@ -1528,8 +1529,8 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
- 		data += ie_len;
- 	}
+ 	skb = alloc_skb(len, GFP_KERNEL);
++	if (!skb)
++		return NULL;
+ 	memcpy(skb_put(skb, len), data, len);
  
--	if (!fw_file->firmware_data ||
--	    !fw_file->firmware_len) {
-+	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI, fw_file->fw_features) &&
-+	    (!fw_file->firmware_data || !fw_file->firmware_len)) {
- 		ath10k_warn(ar, "No ATH10K_FW_IE_FW_IMAGE found from '%s/%s', skipping\n",
- 			    ar->hw_params.fw.dir, name);
- 		ret = -ENOMEDIUM;
-@@ -2083,43 +2084,47 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 
- 	ar->running_fw = fw;
- 
--	ath10k_bmi_start(ar);
-+	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
-+		      ar->running_fw->fw_file.fw_features)) {
-+		ath10k_bmi_start(ar);
- 
--	if (ath10k_init_configure_target(ar)) {
--		status = -EINVAL;
--		goto err;
--	}
--
--	status = ath10k_download_cal_data(ar);
--	if (status)
--		goto err;
-+		if (ath10k_init_configure_target(ar)) {
-+			status = -EINVAL;
-+			goto err;
-+		}
- 
--	/* Some of of qca988x solutions are having global reset issue
--	 * during target initialization. Bypassing PLL setting before
--	 * downloading firmware and letting the SoC run on REF_CLK is
--	 * fixing the problem. Corresponding firmware change is also needed
--	 * to set the clock source once the target is initialized.
--	 */
--	if (test_bit(ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT,
--		     ar->running_fw->fw_file.fw_features)) {
--		status = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
--		if (status) {
--			ath10k_err(ar, "could not write to skip_clock_init: %d\n",
--				   status);
-+		status = ath10k_download_cal_data(ar);
-+		if (status)
- 			goto err;
-+
-+		/* Some of of qca988x solutions are having global reset issue
-+		 * during target initialization. Bypassing PLL setting before
-+		 * downloading firmware and letting the SoC run on REF_CLK is
-+		 * fixing the problem. Corresponding firmware change is also
-+		 * needed to set the clock source once the target is
-+		 * initialized.
-+		 */
-+		if (test_bit(ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT,
-+			     ar->running_fw->fw_file.fw_features)) {
-+			status = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
-+			if (status) {
-+				ath10k_err(ar, "could not write to skip_clock_init: %d\n",
-+					   status);
-+				goto err;
-+			}
- 		}
--	}
- 
--	status = ath10k_download_fw(ar);
--	if (status)
--		goto err;
-+		status = ath10k_download_fw(ar);
-+		if (status)
-+			goto err;
- 
--	status = ath10k_init_uart(ar);
--	if (status)
--		goto err;
-+		status = ath10k_init_uart(ar);
-+		if (status)
-+			goto err;
- 
--	if (ar->hif.bus == ATH10K_BUS_SDIO)
--		ath10k_init_sdio(ar);
-+		if (ar->hif.bus == ATH10K_BUS_SDIO)
-+			ath10k_init_sdio(ar);
-+	}
- 
- 	ar->htc.htc_ops.target_send_suspend_complete =
- 		ath10k_send_suspend_complete;
-@@ -2130,9 +2135,12 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 		goto err;
- 	}
- 
--	status = ath10k_bmi_done(ar);
--	if (status)
--		goto err;
-+	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
-+		      ar->running_fw->fw_file.fw_features)) {
-+		status = ath10k_bmi_done(ar);
-+		if (status)
-+			goto err;
-+	}
- 
- 	status = ath10k_wmi_attach(ar);
- 	if (status) {
-@@ -2375,19 +2383,34 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		return ret;
- 	}
- 
--	memset(&target_info, 0, sizeof(target_info));
--	if (ar->hif.bus == ATH10K_BUS_SDIO)
-+	switch (ar->hif.bus) {
-+	case ATH10K_BUS_SDIO:
-+		memset(&target_info, 0, sizeof(target_info));
- 		ret = ath10k_bmi_get_target_info_sdio(ar, &target_info);
--	else
-+		if (ret) {
-+			ath10k_err(ar, "could not get target info (%d)\n", ret);
-+			goto err_power_down;
-+		}
-+		ar->target_version = target_info.version;
-+		ar->hw->wiphy->hw_version = target_info.version;
-+		break;
-+	case ATH10K_BUS_PCI:
-+	case ATH10K_BUS_AHB:
-+		memset(&target_info, 0, sizeof(target_info));
- 		ret = ath10k_bmi_get_target_info(ar, &target_info);
--	if (ret) {
--		ath10k_err(ar, "could not get target info (%d)\n", ret);
--		goto err_power_down;
-+		if (ret) {
-+			ath10k_err(ar, "could not get target info (%d)\n", ret);
-+			goto err_power_down;
-+		}
-+		ar->target_version = target_info.version;
-+		ar->hw->wiphy->hw_version = target_info.version;
-+		break;
-+	case ATH10K_BUS_SNOC:
-+		break;
-+	default:
-+		ath10k_err(ar, "incorrect hif bus type: %d\n", ar->hif.bus);
- 	}
- 
--	ar->target_version = target_info.version;
--	ar->hw->wiphy->hw_version = target_info.version;
--
- 	ret = ath10k_init_hw_params(ar);
- 	if (ret) {
- 		ath10k_err(ar, "could not get hw params (%d)\n", ret);
-@@ -2407,33 +2430,36 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 
- 	ath10k_debug_print_hwfw_info(ar);
- 
--	ret = ath10k_core_pre_cal_download(ar);
--	if (ret) {
--		/* pre calibration data download is not necessary
--		 * for all the chipsets. Ignore failures and continue.
--		 */
--		ath10k_dbg(ar, ATH10K_DBG_BOOT,
--			   "could not load pre cal data: %d\n", ret);
--	}
-+	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
-+		      ar->normal_mode_fw.fw_file.fw_features)) {
-+		ret = ath10k_core_pre_cal_download(ar);
-+		if (ret) {
-+			/* pre calibration data download is not necessary
-+			 * for all the chipsets. Ignore failures and continue.
-+			 */
-+			ath10k_dbg(ar, ATH10K_DBG_BOOT,
-+				   "could not load pre cal data: %d\n", ret);
-+		}
- 
--	ret = ath10k_core_get_board_id_from_otp(ar);
--	if (ret && ret != -EOPNOTSUPP) {
--		ath10k_err(ar, "failed to get board id from otp: %d\n",
--			   ret);
--		goto err_free_firmware_files;
--	}
-+		ret = ath10k_core_get_board_id_from_otp(ar);
-+		if (ret && ret != -EOPNOTSUPP) {
-+			ath10k_err(ar, "failed to get board id from otp: %d\n",
-+				   ret);
-+			goto err_free_firmware_files;
-+		}
- 
--	ret = ath10k_core_check_smbios(ar);
--	if (ret)
--		ath10k_dbg(ar, ATH10K_DBG_BOOT, "bdf variant name not set.\n");
-+		ret = ath10k_core_check_smbios(ar);
-+		if (ret)
-+			ath10k_dbg(ar, ATH10K_DBG_BOOT, "bdf variant name not set.\n");
- 
--	ret = ath10k_core_fetch_board_file(ar);
--	if (ret) {
--		ath10k_err(ar, "failed to fetch board file: %d\n", ret);
--		goto err_free_firmware_files;
--	}
-+		ret = ath10k_core_fetch_board_file(ar);
-+		if (ret) {
-+			ath10k_err(ar, "failed to fetch board file: %d\n", ret);
-+			goto err_free_firmware_files;
-+		}
- 
--	ath10k_debug_print_board_info(ar);
-+		ath10k_debug_print_board_info(ar);
-+	}
- 
- 	ret = ath10k_core_init_firmware_features(ar);
- 	if (ret) {
-@@ -2442,11 +2468,15 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		goto err_free_firmware_files;
- 	}
- 
--	ret = ath10k_swap_code_seg_init(ar, &ar->normal_mode_fw.fw_file);
--	if (ret) {
--		ath10k_err(ar, "failed to initialize code swap segment: %d\n",
--			   ret);
--		goto err_free_firmware_files;
-+	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
-+		      ar->normal_mode_fw.fw_file.fw_features)) {
-+		ret = ath10k_swap_code_seg_init(ar,
-+						&ar->normal_mode_fw.fw_file);
-+		if (ret) {
-+			ath10k_err(ar, "failed to initialize code swap segment: %d\n",
-+				   ret);
-+			goto err_free_firmware_files;
-+		}
- 	}
- 
- 	mutex_lock(&ar->conf_mutex);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index aeb446b4ff58..9f7efa82557a 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -621,6 +621,9 @@ enum ath10k_fw_features {
- 	/* Firmware allows management tx by reference instead of by value. */
- 	ATH10K_FW_FEATURE_MGMT_TX_BY_REF = 18,
- 
-+	/* Firmware load is done externally, not by bmi */
-+	ATH10K_FW_FEATURE_NON_BMI = 19,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
+ 	return skb;
 -- 
-2.11.0
+2.14.1
