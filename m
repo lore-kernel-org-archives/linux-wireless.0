@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sonic310-28.consmr.mail.ir2.yahoo.com ([77.238.177.49]:33606
-        "EHLO sonic310-28.consmr.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752779AbdLDWCm (ORCPT
+Received: from userp2120.oracle.com ([156.151.31.85]:45988 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750819AbdLNIJG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 17:02:42 -0500
-Date: Mon, 4 Dec 2017 22:02:39 +0000 (UTC)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: Hin-Tak Leung <htl10@users.sourceforge.net>
-To: Gabriele Gristina <gabriele.gristina@gmail.com>
-Cc: Herton Ronaldo Krzesinski <herton@canonical.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        <linux-wireless@vger.kernel.org>
-Message-ID: <1990723570.2726060.1512424959242@mail.yahoo.com> (sfid-20171204_230246_357410_EA02BFF4)
-Subject: Re: [PATCH] rtl8187: add master mode
+        Thu, 14 Dec 2017 03:09:06 -0500
+Date: Thu, 14 Dec 2017 11:02:02 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [bug report] mt76: add driver code for MT76x2e
+Message-ID: <20171214080158.azjhsjlwluw4iysl@mwanda> (sfid-20171214_090911_863616_60BA6439)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1990723570.2726060.1512424959242.ref@mail.yahoo.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------------------------------------
-On Mon, 4/12/17, Gabriele Gristina <gabriele.gristina@gmail.com> wrote:
- 
-> I use these few
-> byte from years and hostapd work like a charm.I
-> don't understand why you write "completely
-> wrong" but you are free to refuse this
-> patch.
-> Have a nice
-> day,Gabriele
+Hello Felix Fietkau,
 
-I think the issue was to do with hardware support of certain features - power-management (allowing the clients to sleep) and maintaining states across low-power states, and somewhat large number of clients. That it can work to some extent, and even to a very good extent, to serve a small number of clients - at full power, without power managrment - is not a surprise.
+This is a semi-automatic email about new static checker warnings.
 
-My impression that software (i.e. non-hardware) support was to improve to make it possible. Larry and others can comment on the current state.
+The patch 7bc04215a66b: "mt76: add driver code for MT76x2e" from Nov 
+21, 2017, leads to the following Smatch complaint:
 
- 
+    drivers/net/wireless/mediatek/mt76/mt76x2_mac.c:189 mt76x2_mac_write_txwi()
+    error: we previously assumed 'wcid' could be null (see line 180)
+
+drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+   179	
+   180		if (wcid)
+                    ^^^^
+Check for NULL
+
+   181			txwi->wcid = wcid->idx;
+   182		else
+   183			txwi->wcid = 0xff;
+   184	
+   185		txwi->pktid = 1;
+   186	
+   187		spin_lock_bh(&dev->mt76.lock);
+   188		if (rate->idx < 0 || !rate->count) {
+   189			txwi->rate = wcid->tx_rate;
+                                     ^^^^^^^^^^^^^
+Unchecked dereference
+
+   190			max_txpwr_adj = wcid->max_txpwr_adj;
+   191			nss = wcid->tx_rate_nss;
+
+regards,
+dan carpenter
