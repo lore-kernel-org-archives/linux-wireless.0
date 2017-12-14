@@ -1,89 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34626 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750854AbdLZSRf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Dec 2017 13:17:35 -0500
-Date: Tue, 26 Dec 2017 19:17:33 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Colin King <colin.king@canonical.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Cong Wang <xiyou.wangcong@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wl1251: check return from call to
- wl1251_acx_arp_ip_filter
-Message-ID: <20171226181733.GA20068@amd> (sfid-20171226_191752_816263_BDEC621F)
-References: <20171226173318.5076-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="6c2NcOVqGQ03X4Wi"
-In-Reply-To: <20171226173318.5076-1-colin.king@canonical.com>
+Received: from nbd.name ([46.4.11.11]:45518 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753192AbdLNPjU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Dec 2017 10:39:20 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 04/14] mt76x2: fix transmission of encrypted management frames
+Date: Thu, 14 Dec 2017 16:39:08 +0100
+Message-Id: <20171214153918.43774-5-nbd@nbd.name> (sfid-20171214_163953_019545_5DAAFDFB)
+In-Reply-To: <20171214153918.43774-1-nbd@nbd.name>
+References: <20171214153918.43774-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hardware encryption seems to break encrypted unicast mgmt tx.
+Unfortunately the hardware TXWI header does not have a bit to indicate
+that a frame is software encrypted, so sw-encrypted frames need to use a
+different WCID. For that to work, the CCMP PN needs to be generated in
+software, which makes things a bit slower, so only do it for keys that
+also need to tx management frames.
 
---6c2NcOVqGQ03X4Wi
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt76.h        |  1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c  | 16 ++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c |  8 +++++++-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c   |  6 ++++--
+ 4 files changed, 28 insertions(+), 3 deletions(-)
 
-On Tue 2017-12-26 17:33:18, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->=20
-> Currently the less than zero error check on ret is incorrect
-> as it is checking a far earlier ret assignment rather than the
-> return from the call to wl1251_acx_arp_ip_filter. Fix this by
-> adding in the missing assginment.
->=20
-> Detected by CoverityScan, CID#1164835 ("Logically dead code")
->=20
-> Fixes: 204cc5c44fb6 ("wl1251: implement hardware ARP filtering")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-
-Hmm. So yes, it might be correct. OTOH, this change may also break
-something. So... how was it tested?
-
-								Pavel
-
-> ---
->  drivers/net/wireless/ti/wl1251/main.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless=
-/ti/wl1251/main.c
-> index 6d02c660b4ab..037defd10b91 100644
-> --- a/drivers/net/wireless/ti/wl1251/main.c
-> +++ b/drivers/net/wireless/ti/wl1251/main.c
-> @@ -1200,8 +1200,7 @@ static void wl1251_op_bss_info_changed(struct ieee8=
-0211_hw *hw,
->  		WARN_ON(wl->bss_type !=3D BSS_TYPE_STA_BSS);
-> =20
->  		enable =3D bss_conf->arp_addr_cnt =3D=3D 1 && bss_conf->assoc;
-> -		wl1251_acx_arp_ip_filter(wl, enable, addr);
-> -
-> +		ret =3D wl1251_acx_arp_ip_filter(wl, enable, addr);
->  		if (ret < 0)
->  			goto out_sleep;
->  	}
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---6c2NcOVqGQ03X4Wi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlpCkj0ACgkQMOfwapXb+vLVowCeOA0Rjtsw4LnRwNJiNkfg7HtN
-DVYAoLoSk+haIRvza6qopc0KmurI9S/8
-=feMQ
------END PGP SIGNATURE-----
-
---6c2NcOVqGQ03X4Wi--
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index aa0880bbea7f..f88d9a15210a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -129,6 +129,7 @@ struct mt76_wcid {
+ 	bool tx_rate_set;
+ 	u8 tx_rate_nss;
+ 	s8 max_txpwr_adj;
++	bool sw_iv;
+ };
+ 
+ struct mt76_txq {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index f7c0df0759f7..a7416a01baa4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -171,10 +171,12 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_tx_rate *rate = &info->control.rates[0];
++	struct ieee80211_key_conf *key = info->control.hw_key;
+ 	u16 rate_ht_mask = FIELD_PREP(MT_RXWI_RATE_PHY, BIT(1) | BIT(2));
+ 	u16 txwi_flags = 0;
+ 	u8 nss;
+ 	s8 txpwr_adj, max_txpwr_adj;
++	u8 ccmp_pn[8];
+ 
+ 	memset(txwi, 0, sizeof(*txwi));
+ 
+@@ -185,6 +187,20 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
+ 
+ 	txwi->pktid = 1;
+ 
++	if (wcid && wcid->sw_iv && key) {
++		u64 pn = atomic64_inc_return(&key->tx_pn);
++		ccmp_pn[0] = pn;
++		ccmp_pn[1] = pn >> 8;
++		ccmp_pn[2] = 0;
++		ccmp_pn[3] = 0x20 | (key->keyidx << 6);
++		ccmp_pn[4] = pn >> 16;
++		ccmp_pn[5] = pn >> 24;
++		ccmp_pn[6] = pn >> 32;
++		ccmp_pn[7] = pn >> 40;
++		txwi->iv = *((u32 *) &ccmp_pn[0]);
++		txwi->eiv = *((u32 *) &ccmp_pn[1]);
++	}
++
+ 	spin_lock_bh(&dev->mt76.lock);
+ 	if (wcid && (rate->idx < 0 || !rate->count)) {
+ 		txwi->rate = wcid->tx_rate;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+index 88fe5e0de0b9..02dd2cafa52f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+@@ -343,9 +343,15 @@ mt76x2_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	if (cmd == SET_KEY) {
+ 		key->hw_key_idx = wcid->idx;
+ 		wcid->hw_key_idx = idx;
++		if (key->flags & IEEE80211_KEY_FLAG_RX_MGMT) {
++			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
++			wcid->sw_iv = true;
++		}
+ 	} else {
+-		if (idx == wcid->hw_key_idx)
++		if (idx == wcid->hw_key_idx) {
+ 			wcid->hw_key_idx = -1;
++			wcid->sw_iv = true;
++		}
+ 
+ 		key = NULL;
+ 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+index 1a32e1fb8743..534e4bf9a34c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+@@ -36,7 +36,9 @@ void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 
+ 		msta = (struct mt76x2_sta *) control->sta->drv_priv;
+ 		wcid = &msta->wcid;
+-	} else if (vif) {
++	}
++
++	if (vif || (!info->control.hw_key && wcid->hw_key_idx != -1)) {
+ 		struct mt76x2_vif *mvif;
+ 
+ 		mvif = (struct mt76x2_vif *) vif->drv_priv;
+@@ -166,7 +168,7 @@ int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
+ 	*tx_info = FIELD_PREP(MT_TXD_INFO_QSEL, qsel) |
+ 		   MT_TXD_INFO_80211;
+ 
+-	if (!wcid || wcid->hw_key_idx == 0xff)
++	if (!wcid || wcid->hw_key_idx == 0xff || wcid->sw_iv)
+ 		*tx_info |= MT_TXD_INFO_WIV;
+ 
+ 	return 0;
+-- 
+2.14.2
