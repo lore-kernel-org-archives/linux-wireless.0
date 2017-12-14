@@ -1,87 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37991 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752816AbdLMRwU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 12:52:20 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Sunil Dutt <usdutt@qti.qualcomm.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH] nl80211: Introduce scan flags to emphasize requested scan behavior
-Date: Wed, 13 Dec 2017 19:52:03 +0200
-Message-ID: <1513187523-24054-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20171213_185225_278263_0ABE8244)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:45532 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753292AbdLNPjV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Dec 2017 10:39:21 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 08/14] mt76x2: convert between per-chain tx power and combined output
+Date: Thu, 14 Dec 2017 16:39:12 +0100
+Message-Id: <20171214153918.43774-9-nbd@nbd.name> (sfid-20171214_163945_481294_673476C3)
+In-Reply-To: <20171214153918.43774-1-nbd@nbd.name>
+References: <20171214153918.43774-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sunil Dutt <usdutt@qti.qualcomm.com>
+Using both chains adds max. 3 dBm. A similar worst-case calculation is
+being used in ath9k as well to ensure that the hardware stays within
+regulatory limits
 
-This commit defines new scan flags (LOW_SPAN, LOW_POWER, HIGH_LATENCY)
-to emphasize the requested scan behavior for the driver. These flags are
-optional and are mutually exclusive. Driver shall resort to default
-behavior if a respective flag is not supported. The implementation of
-the respective functionality can be driver/hardware specific.
-
-These flags can be used to control the compromise between how long a
-scan takes, how much power it uses, and high accurate/complete the scan
-is in finding the BSSs.
-
-Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/uapi/linux/nl80211.h | 23 ++++++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c | 7 +++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 6dd6939..68fdb95 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -5059,6 +5059,11 @@ enum nl80211_timeout_reason {
-  * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
-  * requests.
-  *
-+ * NL80211_SCAN_FLAG_LOW_SPAN, NL80211_SCAN_FLAG_LOW_POWER, and
-+ * NL80211_SCAN_FLAG_HIGH_ACCURACY flags are exclusive of each other, i.e., only
-+ * one of them can be used in the request. If the driver does not support the
-+ * requested behavior, default scan behavior will be used instead.
-+ *
-  * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
-  * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
-  * @NL80211_SCAN_FLAG_AP: force a scan even if the interface is configured
-@@ -5086,7 +5091,20 @@ enum nl80211_timeout_reason {
-  *	and suppression (if it has received a broadcast Probe Response frame,
-  *	Beacon frame or FILS Discovery frame from an AP that the STA considers
-  *	a suitable candidate for (re-)association - suitable in terms of
-- *	SSID and/or RSSI
-+ *	SSID and/or RSSI.
-+ * @NL80211_SCAN_FLAG_LOW_SPAN: Span corresponds to the total time taken to
-+ *	accomplish the scan. Thus, this flag intends the driver to perform the
-+ *	scan request with lesser span/duration. It is specific to the driver
-+ *	implementations on how this is accomplished. Scan accuracy may get
-+ *	impacted with this flag. This flag cannot be used with
-+ * @NL80211_SCAN_FLAG_LOW_POWER: This flag intends the scan attempts to consume
-+ *	optimal possible power. Drivers can resort to their specific means to
-+ *	optimize the power. Scan accuracy may get impacted with this flag.
-+ * @NL80211_SCAN_FLAG_HIGH_ACCURACY: Accuracy here intends to the extent of scan
-+ *	results obtained. Thus HIGH_ACCURACY scan flag aims to get maximum
-+ *	possible scan results. This flag hints the driver to use the best
-+ *	possible scan configuration to improve the accuracy in scanning.
-+ *	Latency and power use may get impacted with this flag.
-  */
- enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_LOW_PRIORITY				= 1<<0,
-@@ -5097,6 +5115,9 @@ enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP		= 1<<5,
- 	NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE		= 1<<6,
- 	NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION	= 1<<7,
-+	NL80211_SCAN_FLAG_LOW_SPAN				= 1<<8,
-+	NL80211_SCAN_FLAG_LOW_POWER				= 1<<9,
-+	NL80211_SCAN_FLAG_HIGH_ACCURACY				= 1<<10,
- };
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index 0755b451829e..3e3a01b6f2ce 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -785,6 +785,9 @@ mt76x2_init_txpower(struct mt76x2_dev *dev,
+ 		chan->max_power = mt76x2_get_max_rate_power(&t) +
+ 				  target_power;
+ 		chan->max_power /= 2;
++
++		/* convert to combined output power on 2x2 devices */
++		chan->max_power += 3;
+ 	}
+ }
  
- /**
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+index 02dd2cafa52f..8098a2b82c5b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+@@ -155,6 +155,9 @@ mt76x2_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+ 		dev->txpower_conf = hw->conf.power_level * 2;
+ 
++		/* convert to per-chain power for 2x2 devices */
++		dev->txpower_conf -= 6;
++
+ 		if (test_bit(MT76_STATE_RUNNING, &dev->mt76.state)) {
+ 			mt76x2_phy_set_txpower(dev);
+ 			mt76x2_tx_set_txpwr_auto(dev, dev->txpower_conf);
+@@ -443,6 +446,10 @@ mt76x2_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif, int *dbm)
+ 	struct mt76x2_dev *dev = hw->priv;
+ 
+ 	*dbm = dev->txpower_cur / 2;
++
++	/* convert from per-chain power to combined output on 2x2 devices */
++	*dbm += 3;
++
+ 	return 0;
+ }
+ 
 -- 
-2.7.4
+2.14.2
