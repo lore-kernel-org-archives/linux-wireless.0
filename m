@@ -1,55 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f193.google.com ([209.85.213.193]:41576 "EHLO
-        mail-yb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752483AbdLKI60 (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753484AbdLNQxW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 03:58:26 -0500
-Received: by mail-yb0-f193.google.com with SMTP id x83so196096ybg.8
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 00:58:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20171209003452.GA3441@builder>
-References: <1512725730-19188-1-git-send-email-loic.poulain@linaro.org> <20171209003452.GA3441@builder>
-From: Loic Poulain <loic.poulain@linaro.org>
-Date: Mon, 11 Dec 2017 09:57:45 +0100
-Message-ID: <CAMZdPi9N69vfFxDgEGQXowUd7accK-mCLCGS5Cg1d4p8LvZ6wA@mail.gmail.com> (sfid-20171211_095831_141631_5E34E484)
-Subject: Re: [PATCH] wcn36xx: Add hardware scan offload support
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: kvalo@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        Eugene Krasnikov <k.eugene.e@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 14 Dec 2017 11:53:22 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 3/9] wil6210: add platform capabilities bitmap
+Date: Thu, 14 Dec 2017 18:53:07 +0200
+Message-Id: <1513270393-919-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175326_456457_CAC43237)
+In-Reply-To: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bjorn,
+Add get_capa callback to platform ops to allow reading the platform
+capabilities.
+Supported capabilities:
+- Keeping 11ad connection during suspend
+- T_POWER_ON 0 support
+- Usage of external clock
 
-On 9 December 2017 at 01:34, Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
->
->> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> [..]
->> +static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
->> +{
->> +     struct wcn36xx_hal_scan_offload_ind *rsp = buf;
->> +     struct cfg80211_scan_info scan_info = {};
->> +
->> +     if (len != sizeof(*rsp)) {
->> +             wcn36xx_warn("Corrupted delete scan indication\n");
->> +             return -EIO;
->> +     }
->> +
->> +     wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)", rsp->type);
->> +
->> +     switch (rsp->type) {
->> +     case WCN36XX_HAL_SCAN_IND_FAILED:
->> +             scan_info.aborted = true;
->> +     case WCN36XX_HAL_SCAN_IND_COMPLETED:
->> +             mutex_lock(&wcn->scan_lock);
->
-> Grabbing this mutex with DEBUG_ATOMIC_SLEEP causes issues, but that's
-> because the locking in ind_smd_work() is to excessive. Will reply with a
-> fix for this.
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c         | 15 ++++++++++++---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c     | 10 ++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h      |  5 +++++
+ drivers/net/wireless/ath/wil6210/wil_platform.h |  9 ++++++++-
+ 4 files changed, 35 insertions(+), 4 deletions(-)
 
-Oops you're right, thanks for the patch.
-
-Regards,
-Loic
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 5d69796..bafd8d5 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -773,9 +773,8 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
+ 	struct wiphy *wiphy = wil_to_wiphy(wil);
+ 
+ 	wil->keep_radio_on_during_sleep =
+-		wil->platform_ops.keep_radio_on_during_sleep &&
+-		wil->platform_ops.keep_radio_on_during_sleep(
+-			wil->platform_handle) &&
++		test_bit(WIL_PLATFORM_CAPA_RADIO_ON_IN_SUSPEND,
++			 wil->platform_capa) &&
+ 		test_bit(WMI_FW_CAPABILITY_D3_SUSPEND, wil->fw_capabilities);
+ 
+ 	wil_info(wil, "keep_radio_on_during_sleep (%d)\n",
+@@ -1008,6 +1007,16 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	if (wil->hw_version == HW_VER_UNKNOWN)
+ 		return -ENODEV;
+ 
++	if (test_bit(WIL_PLATFORM_CAPA_T_PWR_ON_0, wil->platform_capa)) {
++		wil_dbg_misc(wil, "Notify FW to set T_POWER_ON=0\n");
++		wil_s(wil, RGF_USER_USAGE_8, BIT_USER_SUPPORT_T_POWER_ON_0);
++	}
++
++	if (test_bit(WIL_PLATFORM_CAPA_EXT_CLK, wil->platform_capa)) {
++		wil_dbg_misc(wil, "Notify FW on ext clock configuration\n");
++		wil_s(wil, RGF_USER_USAGE_8, BIT_USER_EXT_CLK);
++	}
++
+ 	if (wil->platform_ops.notify) {
+ 		rc = wil->platform_ops.notify(wil->platform_handle,
+ 					      WIL_PLATFORM_EVT_PRE_RESET);
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index d4bb0bd..dc84001 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -43,9 +43,11 @@ void wil_set_capabilities(struct wil6210_priv *wil)
+ 	u32 jtag_id = wil_r(wil, RGF_USER_JTAG_DEV_ID);
+ 	u8 chip_revision = (wil_r(wil, RGF_USER_REVISION_ID) &
+ 			    RGF_USER_REVISION_ID_MASK);
++	int platform_capa;
+ 
+ 	bitmap_zero(wil->hw_capabilities, hw_capability_last);
+ 	bitmap_zero(wil->fw_capabilities, WMI_FW_CAPABILITY_MAX);
++	bitmap_zero(wil->platform_capa, WIL_PLATFORM_CAPA_MAX);
+ 	wil->wil_fw_name = ftm_mode ? WIL_FW_NAME_FTM_DEFAULT :
+ 			   WIL_FW_NAME_DEFAULT;
+ 	wil->chip_revision = chip_revision;
+@@ -81,6 +83,14 @@ void wil_set_capabilities(struct wil6210_priv *wil)
+ 
+ 	wil_info(wil, "Board hardware is %s\n", wil->hw_name);
+ 
++	/* Get platform capabilities */
++	if (wil->platform_ops.get_capa) {
++		platform_capa =
++			wil->platform_ops.get_capa(wil->platform_handle);
++		memcpy(wil->platform_capa, &platform_capa,
++		       min(sizeof(wil->platform_capa), sizeof(platform_capa)));
++	}
++
+ 	/* extract FW capabilities from file without loading the FW */
+ 	wil_request_firmware(wil, wil->wil_fw_name, false);
+ 	wil_refresh_fw_capabilities(wil);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index db68209..f2bb55e 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -161,6 +161,10 @@ struct RGF_ICR {
+ #define RGF_USER_USAGE_6		(0x880018)
+ 	#define BIT_USER_OOB_MODE		BIT(31)
+ 	#define BIT_USER_OOB_R2_MODE		BIT(30)
++#define RGF_USER_USAGE_8		(0x880020)
++	#define BIT_USER_PREVENT_DEEP_SLEEP	BIT(0)
++	#define BIT_USER_SUPPORT_T_POWER_ON_0	BIT(1)
++	#define BIT_USER_EXT_CLK		BIT(2)
+ #define RGF_USER_HW_MACHINE_STATE	(0x8801dc)
+ 	#define HW_MACHINE_BOOT_DONE	(0x3fffffd)
+ #define RGF_USER_USER_CPU_0		(0x8801e0)
+@@ -643,6 +647,7 @@ struct wil6210_priv {
+ 	const char *wil_fw_name;
+ 	DECLARE_BITMAP(hw_capabilities, hw_capability_last);
+ 	DECLARE_BITMAP(fw_capabilities, WMI_FW_CAPABILITY_MAX);
++	DECLARE_BITMAP(platform_capa, WIL_PLATFORM_CAPA_MAX);
+ 	u8 n_mids; /* number of additional MIDs as reported by FW */
+ 	u32 recovery_count; /* num of FW recovery attempts in a short time */
+ 	u32 recovery_state; /* FW recovery state machine */
+diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.h b/drivers/net/wireless/ath/wil6210/wil_platform.h
+index 5d9e4bf..5cfb946 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_platform.h
++++ b/drivers/net/wireless/ath/wil6210/wil_platform.h
+@@ -27,6 +27,13 @@ enum wil_platform_event {
+ 	WIL_PLATFORM_EVT_POST_SUSPEND = 4,
+ };
+ 
++enum wil_platform_capa {
++	WIL_PLATFORM_CAPA_RADIO_ON_IN_SUSPEND = 0,
++	WIL_PLATFORM_CAPA_T_PWR_ON_0 = 1,
++	WIL_PLATFORM_CAPA_EXT_CLK = 2,
++	WIL_PLATFORM_CAPA_MAX,
++};
++
+ /**
+  * struct wil_platform_ops - wil platform module calls from this
+  * driver to platform driver
+@@ -37,7 +44,7 @@ struct wil_platform_ops {
+ 	int (*resume)(void *handle, bool device_powered_on);
+ 	void (*uninit)(void *handle);
+ 	int (*notify)(void *handle, enum wil_platform_event evt);
+-	bool (*keep_radio_on_during_sleep)(void *handle);
++	int (*get_capa)(void *handle);
+ };
+ 
+ /**
+-- 
+1.9.1
