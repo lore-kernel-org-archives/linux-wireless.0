@@ -1,106 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.132]:40004 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750806AbdLZCh3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Dec 2017 21:37:29 -0500
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Xinming Hu <huxm@marvell.com>, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Heiko Stuebner <heiko@sntech.de>,
-        linux-rockchip@lists.infradead.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Klaus Goger <klaus.goger@theobroma-systems.com>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v12 0/5] PCI: rockchip: Move PCIe WAKE# handling into pci core
-Date: Tue, 26 Dec 2017 10:36:41 +0800
-Message-Id: <20171226023646.17722-1-jeffy.chen@rock-chips.com> (sfid-20171226_033915_009731_20F0901B)
+Received: from nbd.name ([46.4.11.11]:45558 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753344AbdLNPjV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Dec 2017 10:39:21 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 14/14] mt76x2: init: fix rx filter default value during init
+Date: Thu, 14 Dec 2017 16:39:18 +0100
+Message-Id: <20171214153918.43774-15-nbd@nbd.name> (sfid-20171214_163937_971656_B434E0B4)
+In-Reply-To: <20171214153918.43774-1-nbd@nbd.name>
+References: <20171214153918.43774-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
+mt76x2_mac_start writes dev->rxfilter to the hardware. It also happens
+during init, before dev->rxfilter is filled with the initval register
+value, leading to issues like promisc mode being enabled
+unconditionally.
 
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
+Fix this by reading the default value into dev->rxfilter earlier
 
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Changes in v13:
-Fix compiler error reported by kbuild test robot <fengguang.wu@intel.com>
-
-Changes in v12:
-Only add irq definitions for PCI devices and rewrite the commit message.
-Enable the wake irq in noirq stage to avoid possible irq storm.
-
-Changes in v11:
-Address Brian's comments.
-Only support 1-per-device PCIe WAKE# pin as suggested.
-Move to pcie port as Brian suggested.
-
-Changes in v10:
-Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
-since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
-
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-Fix check error in .cleanup().
-Move dedicated wakeirq setup to setup() callback and use
-device_set_wakeup_enable() to enable/disable.
-Rewrite the commit message.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-Rewrite the commit message.
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Move to pci.txt
-Rebase.
-Use "wakeup" instead of "wake"
-
-Changes in v3:
-Fix error handling.
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
-
-Jeffy Chen (5):
-  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-  of/irq: Adjust of_pci_irq parsing for multiple interrupts
-  mwifiex: Disable wakeup irq handling for pcie
-  PCI / PM: Add support for the PCIe WAKE# signal for OF
-  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie port for Gru
-
- Documentation/devicetree/bindings/pci/pci.txt | 10 ++++
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  | 11 ++--
- drivers/net/wireless/marvell/mwifiex/main.c   |  4 ++
- drivers/of/of_pci_irq.c                       | 71 +++++++++++++++++++++++--
- drivers/pci/Makefile                          |  1 +
- drivers/pci/pci-driver.c                      | 10 ++++
- drivers/pci/pci-of.c                          | 75 +++++++++++++++++++++++++++
- include/linux/of_pci.h                        |  9 ++++
- 8 files changed, 183 insertions(+), 8 deletions(-)
- create mode 100644 drivers/pci/pci-of.c
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index ad17f9462358..62d702164dfe 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -583,6 +583,8 @@ int mt76x2_init_hardware(struct mt76x2_dev *dev)
+ 	if (ret)
+ 		return ret;
+ 
++	dev->rxfilter = mt76_rr(dev, MT_RX_FILTR_CFG);
++
+ 	ret = mt76x2_dma_init(dev);
+ 	if (ret)
+ 		return ret;
+@@ -597,7 +599,6 @@ int mt76x2_init_hardware(struct mt76x2_dev *dev)
+ 		return ret;
+ 
+ 	mt76x2_mac_stop(dev, false);
+-	dev->rxfilter = mt76_rr(dev, MT_RX_FILTR_CFG);
+ 
+ 	return 0;
+ }
 -- 
-2.11.0
+2.14.2
