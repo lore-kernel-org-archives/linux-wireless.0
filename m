@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33610 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43492 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752911AbdLEJzD (ORCPT
+        with ESMTP id S1751755AbdLNMjo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 04:55:03 -0500
+        Thu, 14 Dec 2017 07:39:44 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v1] brcmfmac: Avoid build error with make W=1
+Subject: Re: brcmfmac: Support 43455 save-restore (SR) feature if FW include
+ -sr
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com>
-References: <20171123155704.44878-1-andriy.shevchenko@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
+In-Reply-To: <1512639183-3357-1-git-send-email-wright.feng@cypress.com>
+References: <1512639183-3357-1-git-send-email-wright.feng@cypress.com>
+To: Wright Feng <wright.feng@cypress.com>
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Message-Id: <20171205095502.E6B336087D@smtp.codeaurora.org> (sfid-20171205_105540_068859_E1D9D810)
-Date: Tue,  5 Dec 2017 09:55:02 +0000 (UTC)
+        Double Lo <double.lo@cypress.com>
+Message-Id: <20171214123944.12BEB6020A@smtp.codeaurora.org> (sfid-20171214_133948_387648_7E076939)
+Date: Thu, 14 Dec 2017 12:39:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+Wright Feng <wright.feng@cypress.com> wrote:
 
-> When I run make W=1 on gcc (Debian 7.2.0-16) 7.2.0 I got an error for
-> the first run, all next ones are okay.
+> From: Double Lo <double.lo@cypress.com>
 > 
->   CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:2078: error: Cannot parse struct or union!
-> scripts/Makefile.build:310: recipe for target 'drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.o' failed
+> This patch will add 43455 into the save-restore(SR) capable chip list, so
+> the SR engine will be enabled with 43455 FW which built-in the -sr
+> function.
 > 
-> Seems like something happened with W=1 and wrong kernel doc format.
-> As a quick fix remove dubious /** in the code.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Double Lo <double.lo@cypress.com>
 
-I'll queue this to v4.15.
+Wright's s-o-b is missing:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#signed-off-by_missing
 
 -- 
-https://patchwork.kernel.org/patch/10073021/
+https://patchwork.kernel.org/patch/10097897/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
