@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56690 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:49558 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751783AbdLBPXZ (ORCPT
+        with ESMTP id S1751914AbdLNMpR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 10:23:25 -0500
+        Thu, 14 Dec 2017 07:45:17 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [for-4.15] brcmfmac: change driver unbind order of the sdio
- function devices
+Subject: Re: wlcore: fix unused function warning
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1511642376-16279-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1511642376-16279-1-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20171202152325.5969A607EB@smtp.codeaurora.org> (sfid-20171202_162329_555924_D1A36765)
-Date: Sat,  2 Dec 2017 15:23:25 +0000 (UTC)
+In-Reply-To: <20171211114718.3637010-1-arnd@arndb.de>
+References: <20171211114718.3637010-1-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Arnd Bergmann <arnd@arndb.de>, "Reizer, Eyal" <eyalr@ti.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Iain Hunter <drhunter95@gmail.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kees Cook <keescook@chromium.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20171214124516.7D190600EC@smtp.codeaurora.org> (sfid-20171214_134553_015149_47BF1FFD)
+Date: Thu, 14 Dec 2017 12:45:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-> In the function brcmf_sdio_firmware_callback() the driver is
-> unbound from the sdio function devices in the error path.
-> However, the order in which it is done resulted in a use-after-free
-> issue (see brcmf_ops_sdio_remove() in bcmsdh.c). Hence change
-> the order and first unbind sdio function #2 device and then
-> unbind sdio function #1 device.
+> The newly added wlcore_fw_sleep function is called conditionally,
+> which causes a warning without CONFIG_PM:
 > 
-> Cc: stable@vger.kernel.org # v4.12.x
-> Fixes: 7a51461fc2da ("brcmfmac: unbind all devices upon failure in firmware callback")
-> Reported-by: Stefan Wahren <stefan.wahren@i2se.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> drivers/net/wireless/ti/wlcore/main.c:981:12: error: 'wlcore_fw_sleep' defined but not used [-Werror=unused-function]
+> 
+> Instead of trying to keep track of what should be in the #ifdef and what
+> should not, it's easier to mark the top-level suspend/resume functions
+> as __maybe_unused so the compiler can silently drop all the unused code.
+> 
+> Fixes: 37bf241b8e7b ("wlcore: allow elp during wowlan suspend")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Patch applied to wireless-drivers.git, thanks.
+Patch applied to wireless-drivers-next.git, thanks.
 
-5c3de777bdaf brcmfmac: change driver unbind order of the sdio function devices
+7de241f3b705 wlcore: fix unused function warning
 
 -- 
-https://patchwork.kernel.org/patch/10075091/
+https://patchwork.kernel.org/patch/10104839/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
