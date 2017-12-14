@@ -1,164 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50998 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1759302AbdLRMi1 (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:39747 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751799AbdLNMDk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 07:38:27 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 14:38:10 +0200
-Message-Id: <20171218123815.3968-7-luca@coelho.fi> (sfid-20171218_133843_036199_8F0BE50C)
-In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
-References: <20171218123815.3968-1-luca@coelho.fi>
-Subject: [PATCH 06/11] iwlwifi: fw: fix the enums in the rate scaling API
+        Thu, 14 Dec 2017 07:03:40 -0500
+Received: by mail-wm0-f66.google.com with SMTP id i11so10905159wmf.4
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Dec 2017 04:03:39 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: dan.carpenter@oracle.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] mt76: fix possible NULL pointer dereferencing in mt76x2_mac_write_txwi()
+Date: Thu, 14 Dec 2017 13:03:17 +0100
+Message-Id: <7eafce7c10c2fb570f59931f1febf4d0d9cde12c.1513252573.git.lorenzo.bianconi@redhat.com> (sfid-20171214_130344_712511_E06FA467)
+In-Reply-To: <cover.1513252573.git.lorenzo.bianconi@redhat.com>
+References: <cover.1513252573.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Verify wcid is not NULL before dereferencing the pointer to initialize
+txwi rate/power info
 
-We don't need the _enum suffix.
-Also refer to &enum iwl_tlc_mng_vht_he_types instead
-of %IWL_TLC_MNG_VALID_VHT_HE_TYPES_\*
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/rs.h | 34 +++++++++++++-------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-index e9a6e5627f94..e49a6f7be613 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-@@ -71,7 +71,7 @@
-  * @IWL_TLC_MNG_CFG_FLAGS_BF_MSK: enable BFER
-  * @IWL_TLC_MNG_CFG_FLAGS_DCM_MSK: enable DCM
-  */
--enum iwl_tlc_mng_cfg_flags_enum {
-+enum iwl_tlc_mng_cfg_flags {
- 	IWL_TLC_MNG_CFG_FLAGS_CCK_MSK	= BIT(0),
- 	IWL_TLC_MNG_CFG_FLAGS_DD_MSK	= BIT(1),
- 	IWL_TLC_MNG_CFG_FLAGS_STBC_MSK	= BIT(2),
-@@ -81,14 +81,14 @@ enum iwl_tlc_mng_cfg_flags_enum {
- };
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index 39fc1d7b65ce..a1f695e9b51c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -185,7 +185,7 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
+ 	txwi->pktid = 1;
  
- /**
-- * enum iwl_tlc_mng_cfg_cw_enum - channel width options
-+ * enum iwl_tlc_mng_cfg_cw - channel width options
-  * @IWL_TLC_MNG_MAX_CH_WIDTH_20MHZ: 20MHZ channel
-  * @IWL_TLC_MNG_MAX_CH_WIDTH_40MHZ: 40MHZ channel
-  * @IWL_TLC_MNG_MAX_CH_WIDTH_80MHZ: 80MHZ channel
-  * @IWL_TLC_MNG_MAX_CH_WIDTH_160MHZ: 160MHZ channel
-  * @IWL_TLC_MNG_MAX_CH_WIDTH_LAST: maximum value
-  */
--enum iwl_tlc_mng_cfg_cw_enum {
-+enum iwl_tlc_mng_cfg_cw {
- 	IWL_TLC_MNG_MAX_CH_WIDTH_20MHZ,
- 	IWL_TLC_MNG_MAX_CH_WIDTH_40MHZ,
- 	IWL_TLC_MNG_MAX_CH_WIDTH_80MHZ,
-@@ -97,25 +97,25 @@ enum iwl_tlc_mng_cfg_cw_enum {
- };
- 
- /**
-- * enum iwl_tlc_mng_cfg_chains_enum - possible chains
-+ * enum iwl_tlc_mng_cfg_chains - possible chains
-  * @IWL_TLC_MNG_CHAIN_A_MSK: chain A
-  * @IWL_TLC_MNG_CHAIN_B_MSK: chain B
-  * @IWL_TLC_MNG_CHAIN_C_MSK: chain C
-  */
--enum iwl_tlc_mng_cfg_chains_enum {
-+enum iwl_tlc_mng_cfg_chains {
- 	IWL_TLC_MNG_CHAIN_A_MSK = BIT(0),
- 	IWL_TLC_MNG_CHAIN_B_MSK = BIT(1),
- 	IWL_TLC_MNG_CHAIN_C_MSK = BIT(2),
- };
- 
- /**
-- * enum iwl_tlc_mng_cfg_gi_enum - guard interval options
-+ * enum iwl_tlc_mng_cfg_gi - guard interval options
-  * @IWL_TLC_MNG_SGI_20MHZ_MSK: enable short GI for 20MHZ
-  * @IWL_TLC_MNG_SGI_40MHZ_MSK: enable short GI for 40MHZ
-  * @IWL_TLC_MNG_SGI_80MHZ_MSK: enable short GI for 80MHZ
-  * @IWL_TLC_MNG_SGI_160MHZ_MSK: enable short GI for 160MHZ
-  */
--enum iwl_tlc_mng_cfg_gi_enum {
-+enum iwl_tlc_mng_cfg_gi {
- 	IWL_TLC_MNG_SGI_20MHZ_MSK  = BIT(0),
- 	IWL_TLC_MNG_SGI_40MHZ_MSK  = BIT(1),
- 	IWL_TLC_MNG_SGI_80MHZ_MSK  = BIT(2),
-@@ -123,7 +123,7 @@ enum iwl_tlc_mng_cfg_gi_enum {
- };
- 
- /**
-- * enum iwl_tlc_mng_cfg_mode_enum - supported modes
-+ * enum iwl_tlc_mng_cfg_mode - supported modes
-  * @IWL_TLC_MNG_MODE_CCK: enable CCK
-  * @IWL_TLC_MNG_MODE_OFDM_NON_HT: enable OFDM (non HT)
-  * @IWL_TLC_MNG_MODE_NON_HT: enable non HT
-@@ -133,7 +133,7 @@ enum iwl_tlc_mng_cfg_gi_enum {
-  * @IWL_TLC_MNG_MODE_INVALID: invalid value
-  * @IWL_TLC_MNG_MODE_NUM: a count of possible modes
-  */
--enum iwl_tlc_mng_cfg_mode_enum {
-+enum iwl_tlc_mng_cfg_mode {
- 	IWL_TLC_MNG_MODE_CCK = 0,
- 	IWL_TLC_MNG_MODE_OFDM_NON_HT = IWL_TLC_MNG_MODE_CCK,
- 	IWL_TLC_MNG_MODE_NON_HT = IWL_TLC_MNG_MODE_CCK,
-@@ -145,14 +145,14 @@ enum iwl_tlc_mng_cfg_mode_enum {
- };
- 
- /**
-- * enum iwl_tlc_mng_vht_he_types_enum - VHT HE types
-+ * enum iwl_tlc_mng_vht_he_types - VHT HE types
-  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_SU: VHT HT single user
-  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_SU_EXT: VHT HT single user extended
-  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_MU: VHT HT multiple users
-  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_TRIG_BASED: trigger based
-  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_NUM: a count of possible types
-  */
--enum iwl_tlc_mng_vht_he_types_enum {
-+enum iwl_tlc_mng_vht_he_types {
- 	IWL_TLC_MNG_VALID_VHT_HE_TYPES_SU = 0,
- 	IWL_TLC_MNG_VALID_VHT_HE_TYPES_SU_EXT,
- 	IWL_TLC_MNG_VALID_VHT_HE_TYPES_MU,
-@@ -163,7 +163,7 @@ enum iwl_tlc_mng_vht_he_types_enum {
- };
- 
- /**
-- * enum iwl_tlc_mng_ht_rates_enum - HT/VHT rates
-+ * enum iwl_tlc_mng_ht_rates - HT/VHT rates
-  * @IWL_TLC_MNG_HT_RATE_MCS0: index of MCS0
-  * @IWL_TLC_MNG_HT_RATE_MCS1: index of MCS1
-  * @IWL_TLC_MNG_HT_RATE_MCS2: index of MCS2
-@@ -176,7 +176,7 @@ enum iwl_tlc_mng_vht_he_types_enum {
-  * @IWL_TLC_MNG_HT_RATE_MCS9: index of MCS9
-  * @IWL_TLC_MNG_HT_RATE_MAX: maximal rate for HT/VHT
-  */
--enum iwl_tlc_mng_ht_rates_enum {
-+enum iwl_tlc_mng_ht_rates {
- 	IWL_TLC_MNG_HT_RATE_MCS0 = 0,
- 	IWL_TLC_MNG_HT_RATE_MCS1,
- 	IWL_TLC_MNG_HT_RATE_MCS2,
-@@ -198,13 +198,13 @@ enum iwl_tlc_mng_ht_rates_enum {
-  * @sta_id: station id
-  * @reserved1: reserved
-  * @max_supp_ch_width: channel width
-- * @flags: bitmask of %IWL_TLC_MNG_CONFIG_FLAGS_ENABLE_\*
-- * @chains: bitmask of %IWL_TLC_MNG_CHAIN_\*
-+ * @flags: bitmask of &enum iwl_tlc_mng_cfg_flags
-+ * @chains: bitmask of &enum iwl_tlc_mng_cfg_chains
-  * @max_supp_ss: valid values are 0-3, 0 - spatial streams are not supported
-- * @valid_vht_he_types: bitmap of %IWL_TLC_MNG_VALID_VHT_HE_TYPES_\*
-+ * @valid_vht_he_types: bitmap of &enum iwl_tlc_mng_vht_he_types
-  * @non_ht_supp_rates: bitmap of supported legacy rates
-  * @ht_supp_rates: bitmap of supported HT/VHT rates, valid bits are 0-9
-- * @mode: modulation type %IWL_TLC_MNG_MODE_\*
-+ * @mode: &enum iwl_tlc_mng_cfg_mode
-  * @reserved2: reserved
-  * @he_supp_rates: bitmap of supported HE rates
-  * @sgi_ch_width_supp: bitmap of SGI support per channel width
+ 	spin_lock_bh(&dev->mt76.lock);
+-	if (rate->idx < 0 || !rate->count) {
++	if (wcid && (rate->idx < 0 || !rate->count)) {
+ 		txwi->rate = wcid->tx_rate;
+ 		max_txpwr_adj = wcid->max_txpwr_adj;
+ 		nss = wcid->tx_rate_nss;
 -- 
-2.15.1
+2.13.6
