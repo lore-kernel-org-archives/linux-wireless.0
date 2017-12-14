@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:41724 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755093AbdLTLAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Dec 2017 06:00:52 -0500
-Subject: Re: UBSAN: Undefined behaviour in
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c:838:5
-To: Luca Coelho <luca@coelho.fi>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        it+linux-wireless@molgen.mpg.de
-References: <75bc638e-99a8-2f3f-6260-491f8a018af6@molgen.mpg.de>
- <1513175552.4827.365.camel@intel.com> <1513621815.4827.430.camel@coelho.fi>
-From: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
-Message-ID: <a08aa1b3-9d75-2f38-a0f0-aefe181137da@molgen.mpg.de> (sfid-20171220_120130_394009_703881DC)
-Date: Wed, 20 Dec 2017 12:00:48 +0100
+Received: from smtp.codeaurora.org ([198.145.29.96]:36612 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753353AbdLNQU2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Dec 2017 11:20:28 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, nbd@nbd.name,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt76x2: eeprom: fix typo in mt76x2_get_power_info_5g()
+References: <cover.1513248071.git.lorenzo.bianconi@redhat.com>
+        <2ae397aff0b058615a558a2352067fad2c9201e6.1513248071.git.lorenzo.bianconi@redhat.com>
+        <68bc67c3-9c9a-e059-2a2a-1e8ccd5b92f5@canonical.com>
+Date: Thu, 14 Dec 2017 18:20:19 +0200
+In-Reply-To: <68bc67c3-9c9a-e059-2a2a-1e8ccd5b92f5@canonical.com> (Colin Ian
+        King's message of "Thu, 14 Dec 2017 15:42:43 +0000")
+Message-ID: <87bmj1cmd8.fsf@purkki.adurom.net> (sfid-20171214_172317_872287_87CA4491)
 MIME-Version: 1.0
-In-Reply-To: <1513621815.4827.430.camel@coelho.fi>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Luca,
+Colin Ian King <colin.king@canonical.com> writes:
 
-
-Am 18.12.2017 um 19:30 schrieb Luca Coelho:
-> On Wed, 2017-12-13 at 16:32 +0200, Luciano Coelho wrote:
->> On Wed, 2017-12-13 at 14:25 +0100, Paul Menzel wrote:
-
->>> I enabled the undefined behavior sanitizer, and built Linus’ 
->>> master branch under Ubuntu 17.10 with gcc (Ubuntu 7.2.0-8ubuntu3)
->>> 7.2.0.
->>> 
->>> ``` $ grep UBSAN /boot/config-4.15.0-rc3+ 
->>> CONFIG_ARCH_HAS_UBSAN_SANITIZE_ALL=y #
->>> CONFIG_ARCH_WANTS_UBSAN_NO_NULL is not set CONFIG_UBSAN=y 
->>> CONFIG_UBSAN_SANITIZE_ALL=y # CONFIG_UBSAN_ALIGNMENT is not set 
->>> CONFIG_UBSAN_NULL=y ```
->>> 
->>> Starting the system the messages below are printed.
->>> 
->>> Starting the system and using the wireless device shows the 
->>> messages below.
+> On 14/12/17 10:46, Lorenzo Bianconi wrote:
+>> Fix typo in 5GHz power vs channel eeprom parsing
 >> 
->> Thanks for reporting! This shouldn't cause any problems, but I'll
->> fix it by checking that the mac80211_queue is not INVALID_QUEUE
->> (255) which seems to be the trigger for this warning.
-> 
-> Can you try the following patch to see if the problem goes away?
-> 
-> http://pastebin.coelho.fi/7b624f474846da52.txt
+>> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>> ---
+>>  drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> 
+>> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+>> index 440b7e7d73a9..29dc52ef629d 100644
+>> --- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+>> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+>> @@ -524,7 +524,7 @@ mt76x2_get_power_info_5g(struct mt76x2_dev *dev, struct mt76x2_tx_power_info *t,
+>>  
+>>  	if (channel >= 192)
+>>  		delta_idx = 4;
+>> -	else if (channel >= 484)
+>> +	else if (channel >= 184)
+>>  		delta_idx = 3;
+>>  	else if (channel < 44)
+>>  		delta_idx = 3;
+>> 
+> any possibility of adding:
+>
+> Reported-by: Colin Ian King <colin.king@canonical.com>
 
-Thank you. The warning is gone now. Thank you. For the next time, it’d 
-be great to provide the output of `git format-patch -1`, which can be 
-applied with `git am`. The output of `git show` is with my knowledge 
-hard to apply.
+Sure, I'll add that during commit.
 
-
-Kind regards,
-
-Paul
+-- 
+Kalle Valo
