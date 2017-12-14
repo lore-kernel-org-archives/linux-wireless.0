@@ -1,59 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:43138 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752457AbdLIAfN (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753524AbdLNQxc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 19:35:13 -0500
-Received: by mail-pg0-f67.google.com with SMTP id b18so7899246pgv.10
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Dec 2017 16:35:12 -0800 (PST)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Loic Poulain <loic.poulain@linaro.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] wcn36xx: Reduce spinlock in indication handler
-Date: Fri,  8 Dec 2017 16:35:08 -0800
-Message-Id: <20171209003508.3507-1-bjorn.andersson@linaro.org> (sfid-20171209_013534_899177_B37D1831)
-In-Reply-To: <1512725730-19188-1-git-send-email-loic.poulain@linaro.org>
+        Thu, 14 Dec 2017 11:53:32 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 9/9] wil6210: remove reference to preset_chandef
+Date: Thu, 14 Dec 2017 18:53:13 +0200
+Message-Id: <1513270393-919-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175337_063985_D6B72C0E)
+In-Reply-To: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The purpose of pushing indication on a list and handle these in a
-separate worker is to allow the handlers to sleep. It does therefor not
-make much sense to hold the queue spinlock through the entire indication
-worker function.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-By removing items from the queue early we don't need to hold the lock
-throughout the indication worker, allowing the individual handlers to
-sleep.
+The field preset_chandef of wireless_dev must not be accessed
+by the driver because it is private to cfg80211. Store the
+monitor channel locally in wil6210_priv instead.
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 3 +--
+ drivers/net/wireless/ath/wil6210/debugfs.c  | 1 -
+ drivers/net/wireless/ath/wil6210/netdev.c   | 2 +-
+ drivers/net/wireless/ath/wil6210/txrx.c     | 3 +--
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 1 +
+ drivers/net/wireless/ath/wil6210/wmi.c      | 2 +-
+ 6 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index fa88a2a460aa..52daae863aed 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -2414,6 +2414,8 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
- 	hal_ind_msg = list_first_entry(&wcn->hal_ind_queue,
- 				       struct wcn36xx_hal_ind_msg,
- 				       list);
-+	list_del(wcn->hal_ind_queue.next);
-+	spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 39509d0..768f63f38 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -956,9 +956,8 @@ static int wil_cfg80211_set_channel(struct wiphy *wiphy,
+ 				    struct cfg80211_chan_def *chandef)
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+-	struct wireless_dev *wdev = wil_to_wdev(wil);
  
- 	msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
+-	wdev->preset_chandef = *chandef;
++	wil->monitor_chandef = *chandef;
  
-@@ -2450,8 +2452,6 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
- 		wcn36xx_err("SMD_EVENT (%d) not supported\n",
- 			      msg_header->msg_type);
- 	}
--	list_del(wcn->hal_ind_queue.next);
--	spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
- 	kfree(hal_ind_msg);
+ 	return 0;
  }
- int wcn36xx_smd_open(struct wcn36xx *wcn)
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 4475937..4a48882 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -869,7 +869,6 @@ static ssize_t wil_write_file_txmgmt(struct file *file, const char __user *buf,
+ 
+ 	params.buf = frame;
+ 	params.len = len;
+-	params.chan = wdev->preset_chandef.chan;
+ 
+ 	rc = wil_cfg80211_mgmt_tx(wiphy, wdev, &params, NULL);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index b641ac1..7ba4e0a 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -150,7 +150,7 @@ void *wil_if_alloc(struct device *dev)
+ 	wdev->iftype = NL80211_IFTYPE_STATION; /* TODO */
+ 	/* default monitor channel */
+ 	ch = wdev->wiphy->bands[NL80211_BAND_60GHZ]->channels;
+-	cfg80211_chandef_create(&wdev->preset_chandef, ch, NL80211_CHAN_NO_HT);
++	cfg80211_chandef_create(&wil->monitor_chandef, ch, NL80211_CHAN_NO_HT);
+ 
+ 	ndev = alloc_netdev(0, "wlan%d", NET_NAME_UNKNOWN, wil_dev_setup);
+ 	if (!ndev) {
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 4fc05f7..9f8c6087f 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -428,7 +428,6 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct vring *vring,
+ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
+ 				       struct sk_buff *skb)
+ {
+-	struct wireless_dev *wdev = wil->wdev;
+ 	struct wil6210_rtap {
+ 		struct ieee80211_radiotap_header rthdr;
+ 		/* fields should be in the order of bits in rthdr.it_present */
+@@ -455,7 +454,7 @@ static void wil_rx_add_radiotap_header(struct wil6210_priv *wil,
+ 	int rtap_len = sizeof(struct wil6210_rtap);
+ 	int phy_length = 0; /* phy info header size, bytes */
+ 	static char phy_data[128];
+-	struct ieee80211_channel *ch = wdev->preset_chandef.chan;
++	struct ieee80211_channel *ch = wil->monitor_chandef.chan;
+ 
+ 	if (rtap_include_phy_info) {
+ 		rtap_len = sizeof(*rtap_vendor) + sizeof(*d);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 703e09e..1131893 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -655,6 +655,7 @@ struct wil6210_priv {
+ 	unsigned long last_fw_recovery; /* jiffies of last fw recovery */
+ 	wait_queue_head_t wq; /* for all wait_event() use */
+ 	/* profile */
++	struct cfg80211_chan_def monitor_chandef;
+ 	u32 monitor_flags;
+ 	u32 privacy; /* secure connection? */
+ 	u8 hidden_ssid; /* relevant in AP mode */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 9b9882c..2ab71bb 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1782,7 +1782,7 @@ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
+ 	int rc;
+ 
+ 	if (wdev->iftype == NL80211_IFTYPE_MONITOR) {
+-		struct ieee80211_channel *ch = wdev->preset_chandef.chan;
++		struct ieee80211_channel *ch = wil->monitor_chandef.chan;
+ 
+ 		cmd.sniffer_cfg.mode = cpu_to_le32(WMI_SNIFFER_ON);
+ 		if (ch)
 -- 
-2.15.0
+1.9.1
