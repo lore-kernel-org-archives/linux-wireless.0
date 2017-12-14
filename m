@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36919 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751631AbdLDSMu (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23697 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752777AbdLNPTy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 13:12:50 -0500
-Received: by mail-oi0-f66.google.com with SMTP id y75so12353020oie.4
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Dec 2017 10:12:50 -0800 (PST)
+        Thu, 14 Dec 2017 10:19:54 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-From: Gabriele Gristina <gabriele.gristina@gmail.com>
-Date: Mon, 4 Dec 2017 19:12:48 +0100
-Message-ID: <CAAQoy1SjfdOsLqNXXZwNydvSTRQ5LQARwvSoPs8+Vjnt+gXVsQ@mail.gmail.com> (sfid-20171204_191254_621766_9C84BBE0)
-Subject: [PATCH] rtl8187: add master mode
-To: linux-wireless@vger.kernel.org
-Cc: Herton Ronaldo Krzesinski <herton@canonical.com>,
-        Hin-Tak Leung <htl10@users.sourceforge.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: ath10k: handling qos at STA side based on AP WMM enable/disable
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
+References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
+To: <bpothuno@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Balaji Pothunoori" <bpothuno@qti.qualcomm.com>
+Message-ID: <da2cd6fa88db42ab94207e5551c9be69@euamsexm01a.eu.qualcomm.com> (sfid-20171214_162039_058674_A63AEB99)
+Date: Thu, 14 Dec 2017 16:19:41 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add the master mode to rtl8187 wireless driver.
+bpothuno@qti.qualcomm.com wrote:
 
-Signed-off-by: Gabriele Gristina <gabriele.gristina@gmail.com>
+> Data packets are not sent by STA in case of STA joined to
+> non QOS AP (WMM disabled AP). This is happening because of STA
+> is sending data packets to firmware from host with qos enabled
+> along with non qos queue value(TID = 16).
+> Due to qos enabled, firmware is discarding the packet.
+> 
+> This patch fixes this issue by updating the qos based on station
+> WME capability field if WMM is disabled in AP.
+> 
+> This patch is required by 10.4 family chipsets like
+> QCA4019/QCA9888/QCA9884/QCA99X0.
+> Firmware Versoin : 10.4-3.5.1-00018.
+> 
+> For 10.2.4 family chipsets QCA988X/QCA9887 and QCA6174 this patch
+> has no effect.
+> 
+> Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
----
+Patch applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-index 121b94f09714..8ef22f4382ae 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-@@ -1113,6 +1113,7 @@ static int rtl8187_add_interface(struct ieee80211_hw *dev,
-  goto exit;
+07ffb4497360 ath10k: handling qos at STA side based on AP WMM enable/disable
 
-  switch (vif->type) {
-+ case NL80211_IFTYPE_AP:
-  case NL80211_IFTYPE_STATION:
-  case NL80211_IFTYPE_ADHOC:
-  break;
-@@ -1602,7 +1603,8 @@ static int rtl8187_probe(struct usb_interface *intf,
-  priv->rfkill_mask = RFKILL_MASK_8198;
-  }
-  dev->vif_data_size = sizeof(struct rtl8187_vif);
-- dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+ dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_AP) |
-+       BIT(NL80211_IFTYPE_STATION) |
-        BIT(NL80211_IFTYPE_ADHOC) ;
+-- 
+https://patchwork.kernel.org/patch/10079089/
 
-  wiphy_ext_feature_set(dev->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
