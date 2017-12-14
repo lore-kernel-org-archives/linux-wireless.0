@@ -1,42 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:58911 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751271AbdLBJxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 04:53:52 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "akolli\@codeaurora.org" <akolli@codeaurora.org>,
-        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>,
-        "linux-wireless-owner\@vger.kernel.org"
-        <linux-wireless-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
-In-Reply-To: <1512143881.25588.18.camel@sipsolutions.net>
-References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com> <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com> <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com> <DAB5EBB8-C820-4056-8AAB-063D05F38BD5@toke.dk> <87bmjjzppd.fsf@kamboji.qca.qualcomm.com> <5080a68538fd2d883e15bacaa969661b@codeaurora.org> <87r2se36rq.fsf@toke.dk> <87k1y6y04i.fsf@kamboji.qca.qualcomm.com> <87d13y31r0.fsf@toke.dk> <1512143142.25588.17.camel@sipsolutions.net> <87a7z230m3.fsf@toke.dk> <1512143881.25588.18.camel@sipsolutions.net>
-Date: Sat, 02 Dec 2017 10:53:48 +0100
-Message-ID: <87374t3177.fsf@toke.dk> (sfid-20171202_105356_600489_BF7A9382)
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:15125 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753698AbdLNSQz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Dec 2017 13:16:55 -0500
+From: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+To: Dan Williams <dcbw@redhat.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] nl80211: Introduce scan flags to emphasize requested scan
+ behavior
+Date: Thu, 14 Dec 2017 18:16:47 +0000
+Message-ID: <a0d4d2861a90403f8be8fc4725f34087@aphydexm01f.ap.qualcomm.com> (sfid-20171214_192456_580615_4030E4FD)
+References: <1513187523-24054-1-git-send-email-jouni@qca.qualcomm.com>
+ <1513192172.28704.2.camel@redhat.com>
+In-Reply-To: <1513192172.28704.2.camel@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Fri, 2017-12-01 at 16:54 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->
->> But since we'll have to do that for ath9k anyway it
->> becomes more a question of whether it's something that should be
->> supported in mac80211 or if it should be implemented in each driver.
->> But since that logic will have to be written from scratch anyway, is
->> there any reason to not just do it in mac80211 from the beginning?
->
-> I was thinking in the driver so that there's no overhead for the other
-> drivers that don't want it that way.
->
-> Dunno. It probably doesn't really matter.
-
-I'll prototype something, then we can revisit this based on actual code :)
-
--Toke
+PiBDYW4ndCB3ZSBoYXZlIHNvbWUga2luZCBvZiBjYXBhYmlsaXR5IGluZGljYXRpb24gdGhhdCB0
+aGUgZHJpdmVyIHN1cHBvcnRzIGVhY2ggb2YgdGhlc2UgZmxhZ3Mgb3Igbm90PyAgT3RoZXJ3aXNl
+IHdlIGdldCBpbnRvIGEgc2l0dWF0aW9uIHdoZXJlIHlvdSBqdXN0IGhhdmUgdG8gdHJ5IHRoZSBm
+bGFnIGFuZCBob3BlIGl0IHdvcmtzLCBzaW5jZSBpdCBkb2Vzbid0IGxvb2sgbGlrZSBkcml2ZXJz
+IGFyZSByZXF1aXJlZCB0byBlcnJvciBvdXQgaWYgdGhleSBkb24ndCBzdXBwb3J0IHRoZSBmbGFn
+Lg0KU3VyZSBEYW4gLiBXZSBzaGFsbCBoYXZlIHRoZSBzdXBwb3J0IGZvciBjYXBhYmlsaXR5IGlu
+ZGljYXRpb24gZnJvbSB0aGUgZHJpdmVyLg0KDQpSZWdhcmRzLA0KU3VuaWwNCg0KIA0KDQotLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogRGFuIFdpbGxpYW1zIFttYWlsdG86ZGNid0By
+ZWRoYXQuY29tXSANClNlbnQ6IFRodXJzZGF5LCBEZWNlbWJlciAxNCwgMjAxNyAxMjo0MCBBTQ0K
+VG86IEpvdW5pIE1hbGluZW4gPGpvdW5pQHFjYS5xdWFsY29tbS5jb20+OyBKb2hhbm5lcyBCZXJn
+IDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0Pg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2Vy
+bmVsLm9yZzsgU3VuaWwgRHV0dCBVbmRla2FyaSA8dXNkdXR0QHF0aS5xdWFsY29tbS5jb20+DQpT
+dWJqZWN0OiBSZTogW1BBVENIXSBubDgwMjExOiBJbnRyb2R1Y2Ugc2NhbiBmbGFncyB0byBlbXBo
+YXNpemUgcmVxdWVzdGVkIHNjYW4gYmVoYXZpb3INCg0KT24gV2VkLCAyMDE3LTEyLTEzIGF0IDE5
+OjUyICswMjAwLCBKb3VuaSBNYWxpbmVuIHdyb3RlOg0KPiBGcm9tOiBTdW5pbCBEdXR0IDx1c2R1
+dHRAcXRpLnF1YWxjb21tLmNvbT4NCj4gDQo+IFRoaXMgY29tbWl0IGRlZmluZXMgbmV3IHNjYW4g
+ZmxhZ3MgKExPV19TUEFOLCBMT1dfUE9XRVIsDQo+IEhJR0hfTEFURU5DWSkNCj4gdG8gZW1waGFz
+aXplIHRoZSByZXF1ZXN0ZWQgc2NhbiBiZWhhdmlvciBmb3IgdGhlIGRyaXZlci4gVGhlc2UgZmxh
+Z3MgDQo+IGFyZSBvcHRpb25hbCBhbmQgYXJlIG11dHVhbGx5IGV4Y2x1c2l2ZS4gRHJpdmVyIHNo
+YWxsIHJlc29ydCB0byANCj4gZGVmYXVsdCBiZWhhdmlvciBpZiBhIHJlc3BlY3RpdmUgZmxhZyBp
+cyBub3Qgc3VwcG9ydGVkLiBUaGUgDQo+IGltcGxlbWVudGF0aW9uIG9mIHRoZSByZXNwZWN0aXZl
+IGZ1bmN0aW9uYWxpdHkgY2FuIGJlIGRyaXZlci9oYXJkd2FyZSANCj4gc3BlY2lmaWMuDQoNCkNh
+bid0IHdlIGhhdmUgc29tZSBraW5kIG9mIGNhcGFiaWxpdHkgaW5kaWNhdGlvbiB0aGF0IHRoZSBk
+cml2ZXIgc3VwcG9ydHMgZWFjaCBvZiB0aGVzZSBmbGFncyBvciBub3Q/ICBPdGhlcndpc2Ugd2Ug
+Z2V0IGludG8gYSBzaXR1YXRpb24gd2hlcmUgeW91IGp1c3QgaGF2ZSB0byB0cnkgdGhlIGZsYWcg
+YW5kIGhvcGUgaXQgd29ya3MsIHNpbmNlIGl0IGRvZXNuJ3QgbG9vayBsaWtlIGRyaXZlcnMgYXJl
+IHJlcXVpcmVkIHRvIGVycm9yIG91dCBpZiB0aGV5IGRvbid0IHN1cHBvcnQgdGhlIGZsYWcuDQoN
+CkRhbg0KDQo+IFRoZXNlIGZsYWdzIGNhbiBiZSB1c2VkIHRvIGNvbnRyb2wgdGhlIGNvbXByb21p
+c2UgYmV0d2VlbiBob3cgbG9uZyBhIA0KPiBzY2FuIHRha2VzLCBob3cgbXVjaCBwb3dlciBpdCB1
+c2VzLCBhbmQgaGlnaCBhY2N1cmF0ZS9jb21wbGV0ZSB0aGUgDQo+IHNjYW4gaXMgaW4gZmluZGlu
+ZyB0aGUgQlNTcy4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFN1bmlsIER1dHQgPHVzZHV0dEBxdGku
+cXVhbGNvbW0uY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBKb3VuaSBNYWxpbmVuIDxqb3VuaUBxY2Eu
+cXVhbGNvbW0uY29tPg0KPiAtLS0NCj4gwqBpbmNsdWRlL3VhcGkvbGludXgvbmw4MDIxMS5oIHwg
+MjMgKysrKysrKysrKysrKysrKysrKysrKy0NCj4gwqAxIGZpbGUgY2hhbmdlZCwgMjIgaW5zZXJ0
+aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvdWFwaS9s
+aW51eC9ubDgwMjExLmggDQo+IGIvaW5jbHVkZS91YXBpL2xpbnV4L25sODAyMTEuaCBpbmRleCA2
+ZGQ2OTM5Li42OGZkYjk1IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL3VhcGkvbGludXgvbmw4MDIx
+MS5oDQo+ICsrKyBiL2luY2x1ZGUvdWFwaS9saW51eC9ubDgwMjExLmgNCj4gQEAgLTUwNTksNiAr
+NTA1OSwxMSBAQCBlbnVtIG5sODAyMTFfdGltZW91dF9yZWFzb24gew0KPiDCoCAqIG9mIE5MODAy
+MTFfQ01EX1RSSUdHRVJfU0NBTiBhbmQgTkw4MDIxMV9DTURfU1RBUlRfU0NIRURfU0NBTg0KPiDC
+oCAqIHJlcXVlc3RzLg0KPiDCoCAqDQo+ICsgKiBOTDgwMjExX1NDQU5fRkxBR19MT1dfU1BBTiwg
+Tkw4MDIxMV9TQ0FOX0ZMQUdfTE9XX1BPV0VSLCBhbmQNCj4gKyAqIE5MODAyMTFfU0NBTl9GTEFH
+X0hJR0hfQUNDVVJBQ1kgZmxhZ3MgYXJlIGV4Y2x1c2l2ZSBvZiBlYWNoDQo+IG90aGVyLCBpLmUu
+LCBvbmx5DQo+ICsgKiBvbmUgb2YgdGhlbSBjYW4gYmUgdXNlZCBpbiB0aGUgcmVxdWVzdC4gSWYg
+dGhlIGRyaXZlciBkb2VzIG5vdA0KPiBzdXBwb3J0IHRoZQ0KPiArICogcmVxdWVzdGVkIGJlaGF2
+aW9yLCBkZWZhdWx0IHNjYW4gYmVoYXZpb3Igd2lsbCBiZSB1c2VkIGluc3RlYWQuDQo+ICsgKg0K
+PiDCoCAqIEBOTDgwMjExX1NDQU5fRkxBR19MT1dfUFJJT1JJVFk6IHNjYW4gcmVxdWVzdCBoYXMg
+bG93IHByaW9yaXR5DQo+IMKgICogQE5MODAyMTFfU0NBTl9GTEFHX0ZMVVNIOiBmbHVzaCBjYWNo
+ZSBiZWZvcmUgc2Nhbm5pbmcNCj4gwqAgKiBATkw4MDIxMV9TQ0FOX0ZMQUdfQVA6IGZvcmNlIGEg
+c2NhbiBldmVuIGlmIHRoZSBpbnRlcmZhY2UgaXMgDQo+IGNvbmZpZ3VyZWQgQEAgLTUwODYsNyAr
+NTA5MSwyMCBAQCBlbnVtIG5sODAyMTFfdGltZW91dF9yZWFzb24gew0KPiDCoCAqCWFuZCBzdXBw
+cmVzc2lvbiAoaWYgaXQgaGFzIHJlY2VpdmVkIGEgYnJvYWRjYXN0IFByb2JlDQo+IFJlc3BvbnNl
+IGZyYW1lLA0KPiDCoCAqCUJlYWNvbiBmcmFtZSBvciBGSUxTIERpc2NvdmVyeSBmcmFtZSBmcm9t
+IGFuIEFQIHRoYXQgdGhlDQo+IFNUQSBjb25zaWRlcnMNCj4gwqAgKglhIHN1aXRhYmxlIGNhbmRp
+ZGF0ZSBmb3IgKHJlLSlhc3NvY2lhdGlvbiAtIHN1aXRhYmxlIGluDQo+IHRlcm1zIG9mDQo+IC0g
+KglTU0lEIGFuZC9vciBSU1NJDQo+ICsgKglTU0lEIGFuZC9vciBSU1NJLg0KPiArICogQE5MODAy
+MTFfU0NBTl9GTEFHX0xPV19TUEFOOiBTcGFuIGNvcnJlc3BvbmRzIHRvIHRoZSB0b3RhbCB0aW1l
+DQo+IHRha2VuIHRvDQo+ICsgKglhY2NvbXBsaXNoIHRoZSBzY2FuLiBUaHVzLCB0aGlzIGZsYWcg
+aW50ZW5kcyB0aGUgZHJpdmVyIHRvDQo+IHBlcmZvcm0gdGhlDQo+ICsgKglzY2FuIHJlcXVlc3Qg
+d2l0aCBsZXNzZXIgc3Bhbi9kdXJhdGlvbi4gSXQgaXMgc3BlY2lmaWMgdG8NCj4gdGhlIGRyaXZl
+cg0KPiArICoJaW1wbGVtZW50YXRpb25zIG9uIGhvdyB0aGlzIGlzIGFjY29tcGxpc2hlZC4gU2Nh
+biBhY2N1cmFjeQ0KPiBtYXkgZ2V0DQo+ICsgKglpbXBhY3RlZCB3aXRoIHRoaXMgZmxhZy4gVGhp
+cyBmbGFnIGNhbm5vdCBiZSB1c2VkIHdpdGgNCj4gKyAqIEBOTDgwMjExX1NDQU5fRkxBR19MT1df
+UE9XRVI6IFRoaXMgZmxhZyBpbnRlbmRzIHRoZSBzY2FuIGF0dGVtcHRzDQo+IHRvIGNvbnN1bWUN
+Cj4gKyAqCW9wdGltYWwgcG9zc2libGUgcG93ZXIuIERyaXZlcnMgY2FuIHJlc29ydCB0byB0aGVp
+cg0KPiBzcGVjaWZpYyBtZWFucyB0bw0KPiArICoJb3B0aW1pemUgdGhlIHBvd2VyLiBTY2FuIGFj
+Y3VyYWN5IG1heSBnZXQgaW1wYWN0ZWQgd2l0aA0KPiB0aGlzIGZsYWcuDQo+ICsgKiBATkw4MDIx
+MV9TQ0FOX0ZMQUdfSElHSF9BQ0NVUkFDWTogQWNjdXJhY3kgaGVyZSBpbnRlbmRzIHRvIHRoZQ0K
+PiBleHRlbnQgb2Ygc2Nhbg0KPiArICoJcmVzdWx0cyBvYnRhaW5lZC4gVGh1cyBISUdIX0FDQ1VS
+QUNZIHNjYW4gZmxhZyBhaW1zIHRvIGdldA0KPiBtYXhpbXVtDQo+ICsgKglwb3NzaWJsZSBzY2Fu
+IHJlc3VsdHMuIFRoaXMgZmxhZyBoaW50cyB0aGUgZHJpdmVyIHRvIHVzZQ0KPiB0aGUgYmVzdA0K
+PiArICoJcG9zc2libGUgc2NhbiBjb25maWd1cmF0aW9uIHRvIGltcHJvdmUgdGhlIGFjY3VyYWN5
+IGluDQo+IHNjYW5uaW5nLg0KPiArICoJTGF0ZW5jeSBhbmQgcG93ZXIgdXNlIG1heSBnZXQgaW1w
+YWN0ZWQgd2l0aCB0aGlzIGZsYWcuDQo+IMKgICovDQo+IMKgZW51bSBubDgwMjExX3NjYW5fZmxh
+Z3Mgew0KPiDCoAlOTDgwMjExX1NDQU5fRkxBR19MT1dfUFJJT1JJVFkJCQkJDQo+ID0gMTw8MCwN
+Cj4gQEAgLTUwOTcsNiArNTExNSw5IEBAIGVudW0gbmw4MDIxMV9zY2FuX2ZsYWdzIHsNCj4gwqAJ
+Tkw4MDIxMV9TQ0FOX0ZMQUdfQUNDRVBUX0JDQVNUX1BST0JFX1JFU1AJCT0NCj4gMTw8NSwNCj4g
+wqAJTkw4MDIxMV9TQ0FOX0ZMQUdfT0NFX1BST0JFX1JFUV9ISUdIX1RYX1JBVEUJCQ0KPiA9IDE8
+PDYsDQo+IMKgCU5MODAyMTFfU0NBTl9GTEFHX09DRV9QUk9CRV9SRVFfREVGRVJSQUxfU1VQUFJF
+U1NJT04JDQo+ID0gMTw8NywNCj4gKwlOTDgwMjExX1NDQU5fRkxBR19MT1dfU1BBTgkJCQk9DQo+
+IDE8PDgsDQo+ICsJTkw4MDIxMV9TQ0FOX0ZMQUdfTE9XX1BPV0VSCQkJCT0NCj4gMTw8OSwNCj4g
+KwlOTDgwMjExX1NDQU5fRkxBR19ISUdIX0FDQ1VSQUNZCQkJCQ0KPiA9IDE8PDEwLA0KPiDCoH07
+DQo+IMKgDQo+IMKgLyoqDQo=
