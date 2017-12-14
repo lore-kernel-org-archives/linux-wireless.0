@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:46347 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753821AbdLLNes (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:38825 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752126AbdLNMwj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 08:34:48 -0500
-Received: by mail-pg0-f67.google.com with SMTP id b11so13409600pgu.13
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Dec 2017 05:34:48 -0800 (PST)
-From: venkat.prashanth2498@gmail.com
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-Cc: linux-wireless@vger.kernel.org,
-        Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
-Subject: [PATCH] Drivers:RTLWIFI:rtl8723ae: add the function name to the printouts
-Date: Tue, 12 Dec 2017 19:04:39 +0530
-Message-Id: <1513085679-6279-1-git-send-email-venkat.prashanth2498@gmail.com> (sfid-20171212_143506_631773_B53ADC74)
+        Thu, 14 Dec 2017 07:52:39 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: KAVITA MATHUR <kavitam@cdot.in>
+CC: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: regulatory.db file for ath10k
+Date: Thu, 14 Dec 2017 12:52:31 +0000
+Message-ID: <87fu8dmpyp.fsf@kamboji.qca.qualcomm.com> (sfid-20171214_135242_745078_D1665CCB)
+References: <20171213063219.M10289@cdot.in>
+        <240c63ef1f9745acaa0e7585be6a46de@aphydexm01f.ap.qualcomm.com>
+        <20171213081213.M75864@cdot.in>
+In-Reply-To: <20171213081213.M75864@cdot.in> (KAVITA MATHUR's message of "Wed,
+        13 Dec 2017 13:44:38 +0530")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
+(please don't top post)
 
-This is a patch to rtl8723ae/trx.c file that adds the
-function name to the printouts.
+"KAVITA MATHUR" <kavitam@cdot.in> writes:
 
-Signed-off-by: Venkat Prashanth B U <venkat.prashanth2498@gmail.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> I do not want to use regulatory.db. Can you please share your ath10k buil=
+d
+> configuration? I may be missing something in configuration.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-index 2f7c144..96c5385 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-@@ -389,7 +389,7 @@ void rtl8723e_tx_fill_desc(struct ieee80211_hw *hw,
+If you don't want to use regulatory.db you can just ignore the warning
+and continue to use CRDA as before.
 
- 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
--			 "DMA mapping error");
-+			 "%s():DMA mapping error", __func__);
- 		return;
- 	}
- 	if (mac->opmode == NL80211_IFTYPE_STATION) {
-@@ -557,7 +557,7 @@ void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw,
-
- 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE,
--			 "DMA mapping error");
-+			 "%s():DMA mapping error", __func__);
- 		return;
- 	}
- 	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE);
---
-1.9.1
+--=20
+Kalle Valo=
