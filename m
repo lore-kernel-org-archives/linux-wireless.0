@@ -1,78 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36108 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752847AbdLSJ5Q (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753258AbdLNQxY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 04:57:16 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-12-19
-Date: Tue, 19 Dec 2017 10:57:09 +0100
-Message-Id: <20171219095710.16889-1-johannes@sipsolutions.net> (sfid-20171219_105722_704889_F408BB59)
+        Thu, 14 Dec 2017 11:53:24 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 4/9] wil6210: set platform features based on FW capabilities
+Date: Thu, 14 Dec 2017 18:53:08 +0200
+Message-Id: <1513270393-919-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175329_886446_7A7CB504)
+In-Reply-To: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+In some cases the platform should be aware of the FW capabilities
+to decide which feature to enable.
+For example, FW can control the external REF clock for power saving.
+Driver should notify the platform about that, to allow platform
+power management optimization.
 
-Other work has been hectic, and I got caught by rc4. We still
-have a few more fixes though - and more build issues were
-reported.
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c         | 11 +++++++++++
+ drivers/net/wireless/ath/wil6210/wil_platform.h |  6 ++++++
+ drivers/net/wireless/ath/wil6210/wmi.h          |  1 +
+ 3 files changed, 18 insertions(+)
 
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 0afe9d4ab9d40c281bdcdd118661fe8e4bdcef18:
-
-  mac80211: fix locking in ieee80211_sta_tear_down_BA_sessions (2017-12-11 10:50:00 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-12-19
-
-for you to fetch changes up to 04a7279ff12fc47b657f70731d401c0064f5838a:
-
-  cfg80211: ship certificates as hex files (2017-12-19 09:28:01 +0100)
-
-----------------------------------------------------------------
-A few more fixes:
- * hwsim:
-   - set To-DS bit in some frames missing it
-   - fix sleeping in atomic
- * nl80211:
-   - doc cleanup
-   - fix locking in an error path
- * build:
-   - don't append to created certs C files
-   - ship certificate pre-hexdumped
-
-----------------------------------------------------------------
-Adiel Aloni (1):
-      mac80211_hwsim: enable TODS BIT in null data frame
-
-Jia-Ju Bai (1):
-      mac80211_hwsim: Fix a possible sleep-in-atomic bug in hwsim_get_radio_nl
-
-Johannes Berg (2):
-      nl80211: fix nl80211_send_iface() error paths
-      cfg80211: ship certificates as hex files
-
-Jonathan Corbet (1):
-      nl80211: Remove obsolete kerneldoc line
-
-Thierry Reding (1):
-      cfg80211: always rewrite generated files from scratch
-
- drivers/net/wireless/mac80211_hwsim.c |   3 +-
- include/net/cfg80211.h                |   1 -
- net/wireless/Makefile                 |  31 ++++--------
- net/wireless/certs/sforshee.hex       |  86 ++++++++++++++++++++++++++++++++++
- net/wireless/certs/sforshee.x509      | Bin 680 -> 0 bytes
- net/wireless/nl80211.c                |   6 ++-
- 6 files changed, 102 insertions(+), 25 deletions(-)
- create mode 100644 net/wireless/certs/sforshee.hex
- delete mode 100644 net/wireless/certs/sforshee.x509
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index bafd8d5..7a8f8c2 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -771,6 +771,7 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
+ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
+ {
+ 	struct wiphy *wiphy = wil_to_wiphy(wil);
++	int features;
+ 
+ 	wil->keep_radio_on_during_sleep =
+ 		test_bit(WIL_PLATFORM_CAPA_RADIO_ON_IN_SUSPEND,
+@@ -792,6 +793,16 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
+ 		wiphy->max_sched_scan_ie_len = WMI_MAX_IE_LEN;
+ 		wiphy->max_sched_scan_plans = WMI_MAX_PLANS_NUM;
+ 	}
++
++	if (wil->platform_ops.set_features) {
++		features = (test_bit(WMI_FW_CAPABILITY_REF_CLOCK_CONTROL,
++				     wil->fw_capabilities) &&
++			    test_bit(WIL_PLATFORM_CAPA_EXT_CLK,
++				     wil->platform_capa)) ?
++			BIT(WIL_PLATFORM_FEATURE_FW_EXT_CLK_CONTROL) : 0;
++
++		wil->platform_ops.set_features(wil->platform_handle, features);
++	}
+ }
+ 
+ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
+diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.h b/drivers/net/wireless/ath/wil6210/wil_platform.h
+index 5cfb946..177026e 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_platform.h
++++ b/drivers/net/wireless/ath/wil6210/wil_platform.h
+@@ -27,6 +27,11 @@ enum wil_platform_event {
+ 	WIL_PLATFORM_EVT_POST_SUSPEND = 4,
+ };
+ 
++enum wil_platform_features {
++	WIL_PLATFORM_FEATURE_FW_EXT_CLK_CONTROL = 0,
++	WIL_PLATFORM_FEATURE_MAX,
++};
++
+ enum wil_platform_capa {
+ 	WIL_PLATFORM_CAPA_RADIO_ON_IN_SUSPEND = 0,
+ 	WIL_PLATFORM_CAPA_T_PWR_ON_0 = 1,
+@@ -45,6 +50,7 @@ struct wil_platform_ops {
+ 	void (*uninit)(void *handle);
+ 	int (*notify)(void *handle, enum wil_platform_event evt);
+ 	int (*get_capa)(void *handle);
++	void (*set_features)(void *handle, int features);
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index c7b84d1..d3e75f0 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -72,6 +72,7 @@ enum wmi_fw_capability {
+ 	WMI_FW_CAPABILITY_SET_SILENT_RSSI_TABLE		= 13,
+ 	WMI_FW_CAPABILITY_LO_POWER_CALIB_FROM_OTP	= 14,
+ 	WMI_FW_CAPABILITY_PNO				= 15,
++	WMI_FW_CAPABILITY_REF_CLOCK_CONTROL		= 18,
+ 	WMI_FW_CAPABILITY_MAX,
+ };
+ 
+-- 
+1.9.1
