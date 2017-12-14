@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44304 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753634AbdLGNUs (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:46002 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752432AbdLNNdm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 08:20:48 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: wlcore: use boottime for fw time sync
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171127114903.2779545-1-arnd@arndb.de>
-References: <20171127114903.2779545-1-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Iain Hunter <drhunter95@gmail.com>,
-        "Reizer, Eyal" <eyalr@ti.com>,
-        "David S. Miller" <davem@davemloft.net>,
+        Thu, 14 Dec 2017 08:33:42 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S . Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Message-Id: <20171207132047.9770D6086A@smtp.codeaurora.org> (sfid-20171207_142135_416492_BD3DC95F)
-Date: Thu,  7 Dec 2017 13:20:46 +0000 (UTC)
+Subject: [PATCH] wireless: Always rewrite generated files from scratch
+Date: Thu, 14 Dec 2017 14:33:38 +0100
+Message-Id: <20171214133338.10551-1-thierry.reding@gmail.com> (sfid-20171214_143400_562769_81210641)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
+From: Thierry Reding <treding@nvidia.com>
 
-> Using getnstimeofday()/timespec_to_ns() causes an overflow on 32-bit
-> architectures in 2038, and may suffer from time jumps due to
-> settimeofday() or leap seconds.
-> 
-> I don't see a reason why this needs to be UTC, so either monotonic
-> or boot time would be better here. Assuming that the fw time keeps
-> running during suspend, boottime is better than monotonic, and
-> ktime_get_boot_ns() will also save the additional conversion to
-> nanoseconds.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Currently the certs C code generation appends to the generated files,
+which is most likely a leftover from commit 715a12334764 ("wireless:
+don't write C files on failures"). This causes duplicate code in the
+generated files if the certificates have their timestamps modified
+between builds and thereby trigger the generation rules.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Fixes: 715a12334764 ("wireless: don't write C files on failures")
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+Based on next-20171214
 
-99f6996d4cba wlcore: use boottime for fw time sync
+ net/wireless/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index d7d6cb00c47b..b662be3422e1 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -43,7 +43,7 @@ $(obj)/shipped-certs.c: $(wildcard $(srctree)/$(src)/certs/*.x509)
+ 	      echo "$$allf"; \
+ 	      echo '};'; \
+ 	      echo 'unsigned int shipped_regdb_certs_len = sizeof(shipped_regdb_certs);'; \
+-	  ) >> $@)
++	  ) > $@)
+ 
+ $(obj)/extra-certs.c: $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%) \
+ 		      $(wildcard $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%)/*.x509)
+@@ -66,4 +66,4 @@ $(obj)/extra-certs.c: $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%) \
+ 	      echo "$$allf"; \
+ 	      echo '};'; \
+ 	      echo 'unsigned int extra_regdb_certs_len = sizeof(extra_regdb_certs);'; \
+-	  ) >> $@)
++	  ) > $@)
 -- 
-https://patchwork.kernel.org/patch/10076691/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.15.1
