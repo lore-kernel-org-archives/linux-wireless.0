@@ -1,62 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pv43p53im-ztdg05051801.me.com ([17.139.149.167]:23720 "EHLO
-        pv43p53im-ztdg05051801.me.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751882AbdLMIxn (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753524AbdLNQx3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 03:53:43 -0500
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0 (1.0)
-Subject: Re: net/wireless/shipped-certs.c:2:1: error: expected expression at
- end of input
-From: Damian Tometzki <damian.tometzki@icloud.com>
-In-reply-to: <1512468219.26976.15.camel@sipsolutions.net>
-Date: Wed, 13 Dec 2017 08:53:39 +0100
-Cc: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-id: <8617D3B1-DE6C-4E75-AB44-1845806E18D6@icloud.com> (sfid-20171213_095349_045433_E5E063A8)
-References: <4006aefb-e9af-d809-b45a-201d20e75f9d@molgen.mpg.de>
- <1512468219.26976.15.camel@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+        Thu, 14 Dec 2017 11:53:29 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 7/9] wil6210: configurable broadcast TX MCS
+Date: Thu, 14 Dec 2017 18:53:11 +0200
+Message-Id: <1513270393-919-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175335_925495_D02A9B8D)
+In-Reply-To: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes,
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-I got. the same Build error.=20
+Add 2 module parameters that control broadcast/multicast
+TX packets:
+1. bcast_mcs0_limit - specify the maximum packet size
+that will be sent with MCS 0.
+2. bcast_mcs - specify the MCS index to use when sending
+packets larger than above limit.
 
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 59 +++++++++++++++++++++++++++++++--
+ 1 file changed, 57 insertions(+), 2 deletions(-)
 
-VG Damian Tometzki
-
-
-
-
-
-> Am 05.12.2017 um 11:03 schrieb Johannes Berg <johannes@sipsolutions.net>:
->=20
->> On Tue, 2017-12-05 at 11:01 +0100, Paul Menzel wrote:
->>=20
->>=20
->> ```
->> $ git describe
->> v4.15-rc2-79-gfd6d2e506ce6
->> $ git log --oneline -1
->> fd6d2e506ce6 Merge tag 'docs-4.15-fixes' of git://git.lwn.net/linux
->> $ time ARCH=3Di386 make deb-pkg -j50
->> [=E2=80=A6]
->> net/wireless/shipped-certs.c:2:1: error: expected expression at end of in=
-put
->>  const u8 shipped_regdb_certs[] =3D {
->>  ^~~~~
->> [=E2=80=A6]
->> $ more net/wireless/shipped-certs.c
->> #include "reg.h"
->> const u8 shipped_regdb_certs[] =3D {
->> ```
->=20
-> Ah, here we go - you probably don't have "hexdump" installed on this
-> system?
->=20
-> I thought about doing hexdump in posix shell/awk/sed/whatever
-> instead... maybe I should do that.
->=20
-> johannes
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 89967ce..4fc05f7 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -67,6 +67,60 @@ static int headroom_size_set(const char *val, const struct kernel_param *kp)
+ MODULE_PARM_DESC(headroom_size,
+ 		 " headroom size for rx skb allocation, default - 0");
+ 
++static uint bcast_mcs0_limit = WIL_BCAST_MCS0_LIMIT;
++static int bcast_mcs0_limit_set(const char *val, const struct kernel_param *kp)
++{
++	int ret;
++	uint saved = bcast_mcs0_limit;
++
++	ret = param_set_uint(val, kp);
++	if (ret)
++		return ret;
++
++	if (bcast_mcs0_limit > WIL_BCAST_MCS0_LIMIT) {
++		bcast_mcs0_limit = saved;
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
++static const struct kernel_param_ops bcast_mcs0_limit_ops = {
++	.set = bcast_mcs0_limit_set,
++	.get = param_get_uint,
++};
++
++module_param_cb(bcast_mcs0_limit_set, &bcast_mcs0_limit_ops,
++		&bcast_mcs0_limit, 0644);
++MODULE_PARM_DESC(bcast_mcs0_limit,
++		 " max broadcast packet size with MCS0, default - 1024 bytes");
++
++static uint bcast_mcs = 1;
++static int bcast_mcs_set(const char *val, const struct kernel_param *kp)
++{
++	int ret;
++	uint saved = bcast_mcs;
++
++	ret = param_set_uint(val, kp);
++	if (ret)
++		return ret;
++
++	if (bcast_mcs > WIL_MCS_MAX || bcast_mcs == 0) {
++		bcast_mcs = saved;
++		ret = -EINVAL;
++	}
++
++	return ret;
++}
++
++static const struct kernel_param_ops bcast_mcs_ops = {
++	.set = bcast_mcs_set,
++	.get = param_get_uint,
++};
++
++module_param_cb(bcast_mcs, &bcast_mcs_ops, &bcast_mcs, 0644);
++MODULE_PARM_DESC(bcast_mcs, " MCS index for large bcast TX, default - 1");
++
+ static inline uint wil_rx_snaplen(void)
+ {
+ 	return rx_align_2 ? 6 : 0;
+@@ -1783,8 +1837,9 @@ static int __wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	wil_tx_desc_map(d, pa, len, vring_index);
+ 	if (unlikely(mcast)) {
+ 		d->mac.d[0] |= BIT(MAC_CFG_DESC_TX_0_MCS_EN_POS); /* MCS 0 */
+-		if (unlikely(len > WIL_BCAST_MCS0_LIMIT)) /* set MCS 1 */
+-			d->mac.d[0] |= (1 << MAC_CFG_DESC_TX_0_MCS_INDEX_POS);
++		if (unlikely(len > bcast_mcs0_limit)) /* use bcast_mcs */
++			d->mac.d[0] |= (bcast_mcs <<
++					MAC_CFG_DESC_TX_0_MCS_INDEX_POS);
+ 	}
+ 	/* Process TCP/UDP checksum offloading */
+ 	if (unlikely(wil_tx_desc_offload_setup(d, skb))) {
+-- 
+1.9.1
