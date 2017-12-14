@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51506 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754506AbdLGNpM (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:56493 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752671AbdLNP1k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 08:45:12 -0500
+        Thu, 14 Dec 2017 10:27:40 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: ssb: make SSB a menuconfig to ease disabling it all
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171204222744.8817-2-vincent.legoll@gmail.com>
-References: <20171204222744.8817-2-vincent.legoll@gmail.com>
-To: Vincent Legoll <vincent.legoll@gmail.com>
-Cc: m@bues.ch, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Vincent Legoll <vincent.legoll@gmail.com>
-Message-Id: <20171207134511.E7853607EA@smtp.codeaurora.org> (sfid-20171207_144635_024248_5D5D2F06)
-Date: Thu,  7 Dec 2017 13:45:11 +0000 (UTC)
+Subject: Re: [PATCHv2, 1/3] ath10k: remove MAC80211_DEBUGFS dependency on
+ ath10k_sta_statistics
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1512480685-28471-2-git-send-email-akolli@qti.qualcomm.com>
+References: <1512480685-28471-2-git-send-email-akolli@qti.qualcomm.com>
+To: <akolli@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <akolli@codeaurora.org>, Anilkumar Kolli <akolli@qti.qualcomm.com>
+Message-ID: <7f4e7c29cceb41cd83a8aaa8188f4d0a@euamsexm01a.eu.qualcomm.com> (sfid-20171214_162745_006701_B33213BC)
+Date: Thu, 14 Dec 2017 16:27:15 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vincent Legoll <vincent.legoll@gmail.com> wrote:
+akolli@qti.qualcomm.com wrote:
 
-> No need to get into the submenu to disable all SSB-related
-> config entries.
+> Remove CONFIG_MAC80211_DEBUGFS dependency on ath10k_sta_statistics().
+> ath10k_sta_statistics() has per sta tx/rx stats and this should not
+> be dependent on MAC80211_DEBUGFS.
 > 
-> This makes it easier to disable all SSB config options
-> without entering the submenu. It will also enable one
-> to see that en/dis-abled state from the outside menu.
+> No changes in functionality.
 > 
-> This is only intended to change menuconfig UI, not change
-> the config dependencies.
-> 
-> Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+3 patches applied to ath-next branch of ath.git, thanks.
 
-8c9fdd7687d9 ssb: make SSB a menuconfig to ease disabling it all
+6a7f891178c2 ath10k: remove MAC80211_DEBUGFS dependency on ath10k_sta_statistics
+7f9befbb555d ath10k: move pktlog_filter out of ath10k_debug
+e8123bb74c4e ath10k: add per peer tx stats support for 10.2.4
 
 -- 
-https://patchwork.kernel.org/patch/10091683/
+https://patchwork.kernel.org/patch/10092915/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
