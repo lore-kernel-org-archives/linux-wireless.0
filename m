@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56382 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:45554 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751459AbdLSLeI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 06:34:08 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+        id S1753360AbdLNPjV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Dec 2017 10:39:21 -0500
+From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Enrico Mioso <mrkiko.rs@gmail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/2] rt2x00: pause almost full queue early
-Date: Tue, 19 Dec 2017 12:33:55 +0100
-Message-Id: <1513683236-13402-1-git-send-email-sgruszka@redhat.com> (sfid-20171219_123412_508117_7BD60C40)
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 13/14] mt76x2: configure rx filter based on monitor mode setting
+Date: Thu, 14 Dec 2017 16:39:17 +0100
+Message-Id: <20171214153918.43774-14-nbd@nbd.name> (sfid-20171214_163928_567650_AC3B7334)
+In-Reply-To: <20171214153918.43774-1-nbd@nbd.name>
+References: <20171214153918.43774-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not drop &queue->tx_lock and acquire it again to pause queue when
-available entries are below the threshold.
+Due to an unrelated issue, the MT_RX_FILTR_CFG_PROMISC flag is currently
+unset, which means that monitor mode is unconditionally enabled.
+Toggle this flag based on the mac80211 monitor mode setting instead
 
-Patch should mitigate problem of frequently printed errors:
-"Error - Dropping frame due to full tx queue"
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00mac.c   | 10 ----------
- drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |  8 ++++++++
- 2 files changed, 8 insertions(+), 10 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-index ecc96312a370..c8a6f163102f 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-@@ -152,16 +152,6 @@ void rt2x00mac_tx(struct ieee80211_hw *hw,
- 	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, control->sta, false)))
- 		goto exit_fail;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+index 240e11508ecd..a69d441d9a47 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+@@ -146,6 +146,15 @@ mt76x2_config(struct ieee80211_hw *hw, u32 changed)
  
--	/*
--	 * Pausing queue has to be serialized with rt2x00lib_txdone(). Note
--	 * we should not use spin_lock_bh variant as bottom halve was already
--	 * disabled before ieee80211_xmit() call.
--	 */
--	spin_lock(&queue->tx_lock);
--	if (rt2x00queue_threshold(queue))
--		rt2x00queue_pause_queue(queue);
--	spin_unlock(&queue->tx_lock);
--
- 	return;
+ 	mutex_lock(&dev->mutex);
  
-  exit_fail:
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-index a2c1ca5c76d1..1ad51e56bc59 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-@@ -715,6 +715,14 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 	rt2x00queue_kick_tx_queue(queue, &txdesc);
- 
- out:
-+	/*
-+	 * Pausing queue has to be serialized with rt2x00lib_txdone(), so we
-+	 * do this under queue->tx_lock. Bottom halve was already disabled
-+	 * before ieee80211_xmit() call.
-+	 */
-+	if (rt2x00queue_threshold(queue))
-+		rt2x00queue_pause_queue(queue);
++	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
++		if (!(hw->conf.flags & IEEE80211_CONF_MONITOR))
++			dev->rxfilter |= MT_RX_FILTR_CFG_PROMISC;
++		else
++			dev->rxfilter &= ~MT_RX_FILTR_CFG_PROMISC;
 +
- 	spin_unlock(&queue->tx_lock);
- 	return ret;
- }
++		mt76_wr(dev, MT_RX_FILTR_CFG, dev->rxfilter);
++	}
++
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+ 		dev->txpower_conf = hw->conf.power_level * 2;
+ 
 -- 
-1.9.3
+2.14.2
