@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55650 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752811AbdLENal (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51108 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751719AbdLNMQq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 08:30:41 -0500
-From: <akolli@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>
-Subject: [PATCHv2 0/3] ath10k: tx stats for 10.2.4 
-Date: Tue, 5 Dec 2017 19:01:22 +0530
-Message-ID: <1512480685-28471-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20171205_143109_609538_940FC7D1)
+        Thu, 14 Dec 2017 07:16:46 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        "open list\:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: Re: [v4 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
+References: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
+        <1512554197-19664-6-git-send-email-amitkarwar@gmail.com>
+        <282AE144-205D-4FF2-B28C-3E348D227342@holtmann.org>
+        <CAEhWJFnsPa2aP4_4X4ObY-2RnjYPTQ_mpJLqEd-d=FPE8EjqmQ@mail.gmail.com>
+        <92506E80-6329-4A53-BCB2-060AF1A1A396@holtmann.org>
+Date: Thu, 14 Dec 2017 14:16:40 +0200
+In-Reply-To: <92506E80-6329-4A53-BCB2-060AF1A1A396@holtmann.org> (Marcel
+        Holtmann's message of "Wed, 13 Dec 2017 14:47:14 +0100")
+Message-ID: <87r2rxmrmf.fsf@kamboji.qca.qualcomm.com> (sfid-20171214_131704_511997_2DF6B280)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+Marcel Holtmann <marcel@holtmann.org> writes:
 
-Add tx stats supoort for QCA988X.
-Parse peer stats from pktlog packets and update the tx rate
-information per STA.
-This way user space can query about transmit rate with iw.
+>> Thanks for your review.
+>> We have addressed these comments and submitted v5.
+>
+> minor comment from my side, but otherwise looks good to me. Due to the
+> dependency, I think this should go via wireless-drivers tree.
+>
+> Kalle, I think it is up to you to take the whole set.
 
-V2:
-  - Added  patch ath10k: remove MAC80211_DEBUGFS dependency on ath10k_sta_statistics
-  - No other changes
- 
-Anilkumar Kolli (3):
-  ath10k: remove MAC80211_DEBUGFS dependency on ath10k_sta_statistics
-  ath10k: move pktlog_filter out of ath10k_debug
-  ath10k: add per peer tx stats support for 10.2.4
-
- drivers/net/wireless/ath/ath10k/core.h        |    4 +-
- drivers/net/wireless/ath/ath10k/debug.c       |   16 +++----
- drivers/net/wireless/ath/ath10k/debug.h       |   21 +++++++--
- drivers/net/wireless/ath/ath10k/debugfs_sta.c |   27 -----------
- drivers/net/wireless/ath/ath10k/htt.h         |   17 +++++++
- drivers/net/wireless/ath/ath10k/htt_rx.c      |   60 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/mac.c         |   40 ++++++++++++++++-
- 7 files changed, 143 insertions(+), 42 deletions(-)
+Ok, thanks.. But please note that I haven't had a chance to review the
+wireless part yet.
 
 -- 
-1.7.9.5
+Kalle Valo
