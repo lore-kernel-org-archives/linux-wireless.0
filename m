@@ -1,156 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37110 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751318AbdLUJBu (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753524AbdLNQxa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 04:01:50 -0500
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@qti.qualcomm.com>,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH 01/10] ath10k: Add hw param for 64-bit address support
-Date: Thu, 21 Dec 2017 14:30:50 +0530
-Message-Id: <1513846859-23639-2-git-send-email-govinds@qti.qualcomm.com> (sfid-20171221_100201_954583_9E6CD7E9)
-In-Reply-To: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
-References: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
+        Thu, 14 Dec 2017 11:53:30 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 8/9] wil6210: remove leftover "FIXME"s
+Date: Thu, 14 Dec 2017 18:53:12 +0200
+Message-Id: <1513270393-919-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175336_505812_2044A81E)
+In-Reply-To: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rakesh Pillai <pillair@qti.qualcomm.com>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-WCN3990 target supports 37-bit addressing mode. In order
-to accommodate extended address support, add hw param to
-indicate if the target supports addressing above 32-bits.
+"FIXME: IRQ mask debug" and "FIXME: interrupts enabled - for debug"
+can be removed because wil6210_debug_irq_mask() is now considered
+production feature.
 
-Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+"FIXME FW can transmit only ucast frames to peer" and "FIXME real
+ring_id instead of hard coded 0" can be removed because FW/HW already
+support multicast transmission.
+
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 13 +++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  3 +++
- 2 files changed, 16 insertions(+)
+ drivers/net/wireless/ath/wil6210/interrupt.c | 2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h   | 2 +-
+ drivers/net/wireless/ath/wil6210/wmi.c       | 2 --
+ 3 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index ad61e64..031fe00 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -78,6 +78,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA9887_HW_1_0_VERSION,
-@@ -105,6 +106,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -131,6 +133,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -157,6 +160,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_0_VERSION,
-@@ -183,6 +187,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -212,6 +217,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA99X0_HW_2_0_DEV_VERSION,
-@@ -244,6 +250,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA9984_HW_1_0_DEV_VERSION,
-@@ -281,6 +288,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA9888_HW_2_0_DEV_VERSION,
-@@ -317,6 +325,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_0_DEV_VERSION,
-@@ -343,6 +352,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -371,6 +381,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
-@@ -404,6 +415,7 @@
- 		.num_peers = TARGET_TLV_NUM_PEERS,
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
-+		.target_64bit = false,
- 	},
- 	{
- 		.id = WCN3990_HW_1_0_DEV_VERSION,
-@@ -422,6 +434,7 @@
- 		.num_peers = TARGET_HL_10_TLV_NUM_PEERS,
- 		.ast_skid_limit = TARGET_HL_10_TLV_AST_SKID_LIMIT,
- 		.num_wds_entries = TARGET_HL_10_TLV_NUM_WDS_ENTRIES,
-+		.target_64bit = true,
- 	},
- };
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 5cf3417..dcf87a7 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -565,7 +565,7 @@ static irqreturn_t wil6210_hardirq(int irq, void *cookie)
+ 	if (unlikely((pseudo_cause == 0) || ((pseudo_cause & 0xff) == 0xff)))
+ 		return IRQ_NONE;
  
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 90ad39b..5d243f3 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -561,6 +561,9 @@ struct ath10k_hw_params {
- 	u32 num_peers;
- 	u32 ast_skid_limit;
- 	u32 num_wds_entries;
-+
-+	/* Targets supporting physical addressing capability above 32-bits */
-+	bool target_64bit;
- };
+-	/* FIXME: IRQ mask debug */
++	/* IRQ mask debug */
+ 	if (unlikely(wil6210_debug_irq_mask(wil, pseudo_cause)))
+ 		return IRQ_NONE;
  
- struct htt_rx_desc;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index ca5abbd..703e09e 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -439,7 +439,7 @@ enum { /* for wil6210_priv.status */
+ 	wil_status_fwconnected,
+ 	wil_status_dontscan,
+ 	wil_status_mbox_ready, /* MBOX structures ready */
+-	wil_status_irqen, /* FIXME: interrupts enabled - for debug */
++	wil_status_irqen, /* interrupts enabled - for debug */
+ 	wil_status_napi_en, /* NAPI enabled protected by wil->mutex */
+ 	wil_status_resetting, /* reset in progress */
+ 	wil_status_suspending, /* suspend in progress */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index d06090d..9b9882c 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -813,8 +813,6 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
+ 		}
+ 	}
+ 
+-	/* FIXME FW can transmit only ucast frames to peer */
+-	/* FIXME real ring_id instead of hard coded 0 */
+ 	ether_addr_copy(wil->sta[evt->cid].addr, evt->bssid);
+ 	wil->sta[evt->cid].status = wil_sta_conn_pending;
+ 
 -- 
 1.9.1
