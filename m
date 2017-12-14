@@ -1,76 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0074.outbound.protection.outlook.com ([104.47.33.74]:21089
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752604AbdLEQA0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 11:00:26 -0500
-Date: Tue, 5 Dec 2017 19:00:11 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
-Message-ID: <20171205160010.cytra3bqbttwz5db@bars> (sfid-20171205_170030_921749_A8B27950)
-References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
- <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
- <871skalepz.fsf@purkki.adurom.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48402 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751863AbdLNMoO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Dec 2017 07:44:14 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <871skalepz.fsf@purkki.adurom.net>
+Subject: Re: [1/1] rtlwifi: always initialize variables given to RT_TRACE()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171210195159.7454-1-nicolas.iooss_linux@m4x.org>
+References: <20171210195159.7454-1-nicolas.iooss_linux@m4x.org>
+To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Message-Id: <20171214124413.A4A5560A60@smtp.codeaurora.org> (sfid-20171214_134433_696062_E2F65E16)
+Date: Thu, 14 Dec 2017 12:44:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle,
+Nicolas Iooss <nicolas.iooss_linux@m4x.org> wrote:
 
-> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+> In rtl_rx_ampdu_apply(), when rtlpriv->cfg->ops->get_btc_status()
+> returns false, RT_TRACE() is called with the values of variables
+> reject_agg and agg_size, which have not been initialized.
 > 
-> > From: Vasily Ulyanov <vulyanov@quantenna.com>
-> >
-> > This allows a running AP to blacklist STAs by their MAC addresses
-> > respecting the configured policy (either accept or deny unless listed).
-> > It can be setup on .start_ap or with .set_mac_acl commands.
-> >
-> > Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
+> Always initialize these variables in order to prevent using
+> uninitialized values.
 > 
-> [...]
+> This issue has been found with clang. The compiler reported:
 > 
-> > @@ -918,6 +933,7 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
-> >       wiphy->max_scan_ie_len = QTNF_MAX_VSIE_LEN;
-> >       wiphy->mgmt_stypes = qtnf_mgmt_stypes;
-> >       wiphy->max_remain_on_channel_duration = 5000;
-> > +     wiphy->max_acl_mac_addrs = mac->macinfo.max_acl_mac_addrs;
-> >
-> >       wiphy->iface_combinations = iface_comb;
-> >       wiphy->n_iface_combinations = 1;
-> > @@ -932,6 +948,9 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
-> >                       WIPHY_FLAG_AP_UAPSD |
-> >                       WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-> >
-> > +     if (wiphy->max_acl_mac_addrs > 0)
-> > +             wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME;
+>     drivers/net/wireless/realtek/rtlwifi/base.c:1665:6: error: variable
+>     'agg_size' is used uninitialized whenever 'if' condition is false
+>     [-Werror,-Wsometimes-uninitialized]
+>             if (rtlpriv->cfg->ops->get_btc_status())
+>                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     drivers/net/wireless/realtek/rtlwifi/base.c:1671:31: note:
+>     uninitialized use occurs here
+>                      reject_agg, ctrl_agg_size, agg_size);
+>                                                 ^~~~~~~~
 > 
-> Conditonally enabling WIPHY_FLAG_HAVE_AP_SME looks somewhat suspicious
-> to me and from a quick search I don't see any other driver doing
-> something similar. Can you explain why AP_SME is related to MAC ACL?
+>     drivers/net/wireless/realtek/rtlwifi/base.c:1665:6: error: variable
+>     'reject_agg' is used uninitialized whenever 'if' condition
+>           is false [-Werror,-Wsometimes-uninitialized]
+>             if (rtlpriv->cfg->ops->get_btc_status())
+>                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>     drivers/net/wireless/realtek/rtlwifi/base.c:1671:4: note:
+>     uninitialized use occurs here
+>                      reject_agg, ctrl_agg_size, agg_size);
+>                      ^~~~~~~~~~
+> 
+> Fixes: 2635664e6e4a ("rtlwifi: Add rx ampdu cfg for btcoexist.")
+> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 
-Wireless core performs several sanity check on wiphy registration: see
-wiphy_register implementation in net/wireless/core.c. One of those
-checks is as follows: if max_acl_mac_addrs is non-zero, then two
-conditions should be fulfilled:
-- cfg80211 set_mac_acl callback should be available
-- WIPHY_FLAG_HAVE_AP_SME should be set
+Patch applied to wireless-drivers-next.git, thanks.
 
-The first condition is perfectly sane: it should be possible to
-set MACs to enable ACL feature. The second condition is that clear
-to me, but we have to comply in order to pass wiphy_registration.
-I assume that it somehow related to hostapd logic, but I haven't
-yet check that myself.
+e4779162f737 rtlwifi: always initialize variables given to RT_TRACE()
 
-The conditional enablement of WIPHY_FLAG_HAVE_AP_SME is easy to
-explain. We enable use firmware/hardware features to implement
-MAC-based ACL. So we enable it only if firmware report non-zero
-max_acl_mac_addrs value.
+-- 
+https://patchwork.kernel.org/patch/10103995/
 
-Regards,
-Sergey
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
