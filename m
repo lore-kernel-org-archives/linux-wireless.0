@@ -1,332 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:20880 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751318AbdLUJCE (ORCPT
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:34102 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754990AbdLOJWe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 04:02:04 -0500
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH 04/10] ath10k: Add support for 64 bit htt rx ring cfg
-Date: Thu, 21 Dec 2017 14:30:53 +0530
-Message-Id: <1513846859-23639-5-git-send-email-govinds@qti.qualcomm.com> (sfid-20171221_100217_068724_F39164C7)
-In-Reply-To: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
-References: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
+        Fri, 15 Dec 2017 04:22:34 -0500
+Received: by mail-qk0-f182.google.com with SMTP id d66so9581426qkg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Dec 2017 01:22:34 -0800 (PST)
+Subject: Re: [PATCH] nl80211: Introduce scan flags to emphasize requested scan
+ behavior
+To: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>,
+        Dan Williams <dcbw@redhat.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <1513187523-24054-1-git-send-email-jouni@qca.qualcomm.com>
+ <1513192172.28704.2.camel@redhat.com>
+ <a0d4d2861a90403f8be8fc4725f34087@aphydexm01f.ap.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A339457.60609@broadcom.com> (sfid-20171215_104526_094069_608E4214)
+Date: Fri, 15 Dec 2017 10:22:31 +0100
+MIME-Version: 1.0
+In-Reply-To: <a0d4d2861a90403f8be8fc4725f34087@aphydexm01f.ap.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3900 target uses 64bit rx_ring_base_paddr and
-fw_idx_shadow_reg_paddr fields in HTT rx ring cfg message.
-These address points to the memory region where remote
-ring empty buffers are allocated.
-In order to add 64 bit htt rx ring cfg, define separate
-64 bit htt rx ring cfg message and attach it in runtime
-based on target_64bit hw param flag.
+On 12/14/2017 7:16 PM, Sunil Dutt Undekari wrote:
+>> Can't we have some kind of capability indication that the driver supports each of these flags or not?  Otherwise we get into a situation where you just have to try the flag and hope it works, since it doesn't look like drivers are required to error out if they don't support the flag.
+> Sure Dan . We shall have the support for capability indication from the driver.
 
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt.c    |   4 +-
- drivers/net/wireless/ath/ath10k/htt.h    |  42 +++++++--
- drivers/net/wireless/ath/ath10k/htt_tx.c | 145 +++++++++++++++++++++++++++----
- 3 files changed, 168 insertions(+), 23 deletions(-)
+No top-post please. The capability indication should be done through the 
+nl80211 api so I would expect to see a patch for that or just included 
+in this patch. So maybe in struct wiphy add supported_scan_flags field 
+and provide that through NL80211_CMD_GET_WIPHY command.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index cd160b1..7176b0a 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -207,6 +207,8 @@ int ath10k_htt_init(struct ath10k *ar)
- 		WARN_ON(1);
- 		return -EINVAL;
- 	}
-+	ath10k_htt_set_tx_ops(htt);
-+
- 	return 0;
- }
- 
-@@ -258,7 +260,7 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
- 	if (status)
- 		return status;
- 
--	status = ath10k_htt_send_rx_ring_cfg_ll(htt);
-+	status = htt->tx_ops->htt_send_rx_ring_cfg(htt);
- 	if (status) {
- 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
- 			    status);
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index f3d5883..6aaf1d4 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -201,7 +201,7 @@ enum htt_rx_ring_flags {
- #define HTT_RX_RING_SIZE_MIN 128
- #define HTT_RX_RING_SIZE_MAX 2048
- 
--struct htt_rx_ring_setup_ring {
-+struct htt_rx_ring_setup_ring32 {
- 	__le32 fw_idx_shadow_reg_paddr;
- 	__le32 rx_ring_base_paddr;
- 	__le16 rx_ring_len; /* in 4-byte words */
-@@ -222,14 +222,40 @@ struct htt_rx_ring_setup_ring {
- 	__le16 frag_info_offset;
- } __packed;
- 
-+struct htt_rx_ring_setup_ring64 {
-+	__le64 fw_idx_shadow_reg_paddr;
-+	__le64 rx_ring_base_paddr;
-+	__le16 rx_ring_len; /* in 4-byte words */
-+	__le16 rx_ring_bufsize; /* rx skb size - in bytes */
-+	__le16 flags; /* %HTT_RX_RING_FLAGS_ */
-+	__le16 fw_idx_init_val;
-+
-+	/* the following offsets are in 4-byte units */
-+	__le16 mac80211_hdr_offset;
-+	__le16 msdu_payload_offset;
-+	__le16 ppdu_start_offset;
-+	__le16 ppdu_end_offset;
-+	__le16 mpdu_start_offset;
-+	__le16 mpdu_end_offset;
-+	__le16 msdu_start_offset;
-+	__le16 msdu_end_offset;
-+	__le16 rx_attention_offset;
-+	__le16 frag_info_offset;
-+} __packed;
-+
- struct htt_rx_ring_setup_hdr {
- 	u8 num_rings; /* supported values: 1, 2 */
- 	__le16 rsvd0;
- } __packed;
- 
--struct htt_rx_ring_setup {
-+struct htt_rx_ring_setup_32 {
- 	struct htt_rx_ring_setup_hdr hdr;
--	struct htt_rx_ring_setup_ring rings[0];
-+	struct htt_rx_ring_setup_ring32 rings[0];
-+} __packed;
-+
-+struct htt_rx_ring_setup_64 {
-+	struct htt_rx_ring_setup_hdr hdr;
-+	struct htt_rx_ring_setup_ring64 rings[0];
- } __packed;
- 
- /*
-@@ -1524,7 +1550,8 @@ struct htt_cmd {
- 		struct htt_ver_req ver_req;
- 		struct htt_mgmt_tx_desc mgmt_tx;
- 		struct htt_data_tx_desc data_tx;
--		struct htt_rx_ring_setup rx_setup;
-+		struct htt_rx_ring_setup_32 rx_setup_32;
-+		struct htt_rx_ring_setup_64 rx_setup_64;
- 		struct htt_stats_req stats_req;
- 		struct htt_oob_sync_req oob_sync_req;
- 		struct htt_aggr_conf aggr_conf;
-@@ -1734,6 +1761,11 @@ struct ath10k_htt {
- 	} tx_q_state;
- 
- 	bool tx_mem_allocated;
-+	const struct ath10k_htt_tx_ops *tx_ops;
-+};
-+
-+struct ath10k_htt_tx_ops {
-+	int (*htt_send_rx_ring_cfg)(struct ath10k_htt *htt);
- };
- 
- #define RX_HTT_HDR_STATUS_LEN 64
-@@ -1845,5 +1877,5 @@ int ath10k_htt_tx(struct ath10k_htt *htt,
- void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
- 					     struct sk_buff *skb);
- int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget);
--
-+void ath10k_htt_set_tx_ops(struct ath10k_htt *htt);
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 685faac..fad1664 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -607,12 +607,50 @@ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
- 	return 0;
- }
- 
--int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
-+static void ath10k_htt_fill_rx_desc_offset_32(void *rx_ring)
-+{
-+	struct htt_rx_ring_setup_ring32 *ring =
-+			(struct htt_rx_ring_setup_ring32 *)rx_ring;
-+
-+#define desc_offset(x) (offsetof(struct htt_rx_desc, x) / 4)
-+	ring->mac80211_hdr_offset = __cpu_to_le16(desc_offset(rx_hdr_status));
-+	ring->msdu_payload_offset = __cpu_to_le16(desc_offset(msdu_payload));
-+	ring->ppdu_start_offset = __cpu_to_le16(desc_offset(ppdu_start));
-+	ring->ppdu_end_offset = __cpu_to_le16(desc_offset(ppdu_end));
-+	ring->mpdu_start_offset = __cpu_to_le16(desc_offset(mpdu_start));
-+	ring->mpdu_end_offset = __cpu_to_le16(desc_offset(mpdu_end));
-+	ring->msdu_start_offset = __cpu_to_le16(desc_offset(msdu_start));
-+	ring->msdu_end_offset = __cpu_to_le16(desc_offset(msdu_end));
-+	ring->rx_attention_offset = __cpu_to_le16(desc_offset(attention));
-+	ring->frag_info_offset = __cpu_to_le16(desc_offset(frag_info));
-+#undef desc_offset
-+}
-+
-+static void ath10k_htt_fill_rx_desc_offset_64(void *rx_ring)
-+{
-+	struct htt_rx_ring_setup_ring64 *ring =
-+			(struct htt_rx_ring_setup_ring64 *)rx_ring;
-+
-+#define desc_offset(x) (offsetof(struct htt_rx_desc, x) / 4)
-+	ring->mac80211_hdr_offset = __cpu_to_le16(desc_offset(rx_hdr_status));
-+	ring->msdu_payload_offset = __cpu_to_le16(desc_offset(msdu_payload));
-+	ring->ppdu_start_offset = __cpu_to_le16(desc_offset(ppdu_start));
-+	ring->ppdu_end_offset = __cpu_to_le16(desc_offset(ppdu_end));
-+	ring->mpdu_start_offset = __cpu_to_le16(desc_offset(mpdu_start));
-+	ring->mpdu_end_offset = __cpu_to_le16(desc_offset(mpdu_end));
-+	ring->msdu_start_offset = __cpu_to_le16(desc_offset(msdu_start));
-+	ring->msdu_end_offset = __cpu_to_le16(desc_offset(msdu_end));
-+	ring->rx_attention_offset = __cpu_to_le16(desc_offset(attention));
-+	ring->frag_info_offset = __cpu_to_le16(desc_offset(frag_info));
-+#undef desc_offset
-+}
-+
-+static int ath10k_htt_send_rx_ring_cfg_32(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
- 	struct sk_buff *skb;
- 	struct htt_cmd *cmd;
--	struct htt_rx_ring_setup_ring *ring;
-+	struct htt_rx_ring_setup_ring32 *ring;
- 	const int num_rx_ring = 1;
- 	u16 flags;
- 	u32 fw_idx;
-@@ -626,7 +664,7 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
- 	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
- 	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
- 
--	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup.hdr)
-+	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup_32.hdr)
- 	    + (sizeof(*ring) * num_rx_ring);
- 	skb = ath10k_htc_alloc_skb(ar, len);
- 	if (!skb)
-@@ -635,10 +673,10 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
- 	skb_put(skb, len);
- 
- 	cmd = (struct htt_cmd *)skb->data;
--	ring = &cmd->rx_setup.rings[0];
-+	ring = &cmd->rx_setup_32.rings[0];
- 
- 	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
--	cmd->rx_setup.hdr.num_rings = 1;
-+	cmd->rx_setup_32.hdr.num_rings = 1;
- 
- 	/* FIXME: do we need all of this? */
- 	flags = 0;
-@@ -669,21 +707,76 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
- 	ring->flags = __cpu_to_le16(flags);
- 	ring->fw_idx_init_val = __cpu_to_le16(fw_idx);
- 
--#define desc_offset(x) (offsetof(struct htt_rx_desc, x) / 4)
-+	ath10k_htt_fill_rx_desc_offset_32(ring);
-+	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
-+	if (ret) {
-+		dev_kfree_skb_any(skb);
-+		return ret;
-+	}
- 
--	ring->mac80211_hdr_offset = __cpu_to_le16(desc_offset(rx_hdr_status));
--	ring->msdu_payload_offset = __cpu_to_le16(desc_offset(msdu_payload));
--	ring->ppdu_start_offset = __cpu_to_le16(desc_offset(ppdu_start));
--	ring->ppdu_end_offset = __cpu_to_le16(desc_offset(ppdu_end));
--	ring->mpdu_start_offset = __cpu_to_le16(desc_offset(mpdu_start));
--	ring->mpdu_end_offset = __cpu_to_le16(desc_offset(mpdu_end));
--	ring->msdu_start_offset = __cpu_to_le16(desc_offset(msdu_start));
--	ring->msdu_end_offset = __cpu_to_le16(desc_offset(msdu_end));
--	ring->rx_attention_offset = __cpu_to_le16(desc_offset(attention));
--	ring->frag_info_offset = __cpu_to_le16(desc_offset(frag_info));
-+	return 0;
-+}
- 
--#undef desc_offset
-+static int ath10k_htt_send_rx_ring_cfg_64(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	struct sk_buff *skb;
-+	struct htt_cmd *cmd;
-+	struct htt_rx_ring_setup_ring64 *ring;
-+	const int num_rx_ring = 1;
-+	u16 flags;
-+	u32 fw_idx;
-+	int len;
-+	int ret;
-+
-+	/* HW expects the buffer to be an integral number of 4-byte
-+	 * "words"
-+	 */
-+	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
-+	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
-+
-+	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup_64.hdr)
-+	    + (sizeof(*ring) * num_rx_ring);
-+	skb = ath10k_htc_alloc_skb(ar, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_put(skb, len);
-+
-+	cmd = (struct htt_cmd *)skb->data;
-+	ring = &cmd->rx_setup_64.rings[0];
-+
-+	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
-+	cmd->rx_setup_64.hdr.num_rings = 1;
-+
-+	flags = 0;
-+	flags |= HTT_RX_RING_FLAGS_MAC80211_HDR;
-+	flags |= HTT_RX_RING_FLAGS_MSDU_PAYLOAD;
-+	flags |= HTT_RX_RING_FLAGS_PPDU_START;
-+	flags |= HTT_RX_RING_FLAGS_PPDU_END;
-+	flags |= HTT_RX_RING_FLAGS_MPDU_START;
-+	flags |= HTT_RX_RING_FLAGS_MPDU_END;
-+	flags |= HTT_RX_RING_FLAGS_MSDU_START;
-+	flags |= HTT_RX_RING_FLAGS_MSDU_END;
-+	flags |= HTT_RX_RING_FLAGS_RX_ATTENTION;
-+	flags |= HTT_RX_RING_FLAGS_FRAG_INFO;
-+	flags |= HTT_RX_RING_FLAGS_UNICAST_RX;
-+	flags |= HTT_RX_RING_FLAGS_MULTICAST_RX;
-+	flags |= HTT_RX_RING_FLAGS_CTRL_RX;
-+	flags |= HTT_RX_RING_FLAGS_MGMT_RX;
-+	flags |= HTT_RX_RING_FLAGS_NULL_RX;
-+	flags |= HTT_RX_RING_FLAGS_PHY_DATA_RX;
-+
-+	fw_idx = __le32_to_cpu(*htt->rx_ring.alloc_idx.vaddr);
- 
-+	ring->fw_idx_shadow_reg_paddr = __cpu_to_le64(htt->rx_ring.alloc_idx.paddr);
-+	ring->rx_ring_base_paddr = __cpu_to_le64(htt->rx_ring.base_paddr);
-+	ring->rx_ring_len = __cpu_to_le16(htt->rx_ring.size);
-+	ring->rx_ring_bufsize = __cpu_to_le16(HTT_RX_BUF_SIZE);
-+	ring->flags = __cpu_to_le16(flags);
-+	ring->fw_idx_init_val = __cpu_to_le16(fw_idx);
-+
-+	ath10k_htt_fill_rx_desc_offset_64(ring);
- 	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
- 	if (ret) {
- 		dev_kfree_skb_any(skb);
-@@ -1093,3 +1186,21 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- err:
- 	return res;
- }
-+
-+static const struct ath10k_htt_tx_ops htt_tx_ops_32 = {
-+	.htt_send_rx_ring_cfg = ath10k_htt_send_rx_ring_cfg_32,
-+};
-+
-+static const struct ath10k_htt_tx_ops htt_tx_ops_64 = {
-+	.htt_send_rx_ring_cfg = ath10k_htt_send_rx_ring_cfg_64,
-+};
-+
-+void ath10k_htt_set_tx_ops(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+
-+	if (ar->hw_params.target_64bit)
-+		htt->tx_ops = &htt_tx_ops_64;
-+	else
-+		htt->tx_ops = &htt_tx_ops_32;
-+}
--- 
-1.9.1
+Regards,
+Arend
+
+> Regards,
+> Sunil
+>
+>
+>
+> -----Original Message-----
+> From: Dan Williams [mailto:dcbw@redhat.com]
+> Sent: Thursday, December 14, 2017 12:40 AM
+> To: Jouni Malinen <jouni@qca.qualcomm.com>; Johannes Berg <johannes@sipsolutions.net>
+> Cc: linux-wireless@vger.kernel.org; Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+> Subject: Re: [PATCH] nl80211: Introduce scan flags to emphasize requested scan behavior
+>
+> On Wed, 2017-12-13 at 19:52 +0200, Jouni Malinen wrote:
+>> From: Sunil Dutt <usdutt@qti.qualcomm.com>
+>>
+>> This commit defines new scan flags (LOW_SPAN, LOW_POWER,
+>> HIGH_LATENCY)
+>> to emphasize the requested scan behavior for the driver. These flags
+>> are optional and are mutually exclusive. Driver shall resort to
+>> default behavior if a respective flag is not supported. The
+>> implementation of the respective functionality can be driver/hardware
+>> specific.
+>
+> Can't we have some kind of capability indication that the driver supports each of these flags or not?  Otherwise we get into a situation where you just have to try the flag and hope it works, since it doesn't look like drivers are required to error out if they don't support the flag.
+>
+> Dan
+>
+>> These flags can be used to control the compromise between how long a
+>> scan takes, how much power it uses, and high accurate/complete the
+>> scan is in finding the BSSs.
+>>
+>> Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
+>> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+>> ---
+>>   include/uapi/linux/nl80211.h | 23 ++++++++++++++++++++++-
+>>   1 file changed, 22 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/include/uapi/linux/nl80211.h
+>> b/include/uapi/linux/nl80211.h index 6dd6939..68fdb95 100644
+>> --- a/include/uapi/linux/nl80211.h
+>> +++ b/include/uapi/linux/nl80211.h
+>> @@ -5059,6 +5059,11 @@ enum nl80211_timeout_reason {
+>>    * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
+>>    * requests.
+>>    *
+>> + * NL80211_SCAN_FLAG_LOW_SPAN, NL80211_SCAN_FLAG_LOW_POWER, and
+>> + * NL80211_SCAN_FLAG_HIGH_ACCURACY flags are exclusive of each
+>> other, i.e., only
+>> + * one of them can be used in the request. If the driver does not
+>> support the
+>> + * requested behavior, default scan behavior will be used instead.
+>> + *
+>>    * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
+>>    * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
+>>    * @NL80211_SCAN_FLAG_AP: force a scan even if the interface is
+>> configured @@ -5086,7 +5091,20 @@ enum nl80211_timeout_reason {
+>>    *	and suppression (if it has received a broadcast Probe
+>> Response frame,
+>>    *	Beacon frame or FILS Discovery frame from an AP that the
+>> STA considers
+>>    *	a suitable candidate for (re-)association - suitable in
+>> terms of
+>> - *	SSID and/or RSSI
+>> + *	SSID and/or RSSI.
+>> + * @NL80211_SCAN_FLAG_LOW_SPAN: Span corresponds to the total time
+>> taken to
+>> + *	accomplish the scan. Thus, this flag intends the driver to
+>> perform the
+>> + *	scan request with lesser span/duration. It is specific to
+>> the driver
+>> + *	implementations on how this is accomplished. Scan accuracy
+>> may get
+>> + *	impacted with this flag. This flag cannot be used with
+>> + * @NL80211_SCAN_FLAG_LOW_POWER: This flag intends the scan attempts
+>> to consume
+>> + *	optimal possible power. Drivers can resort to their
+>> specific means to
+>> + *	optimize the power. Scan accuracy may get impacted with
+>> this flag.
+>> + * @NL80211_SCAN_FLAG_HIGH_ACCURACY: Accuracy here intends to the
+>> extent of scan
+>> + *	results obtained. Thus HIGH_ACCURACY scan flag aims to get
+>> maximum
+>> + *	possible scan results. This flag hints the driver to use
+>> the best
+>> + *	possible scan configuration to improve the accuracy in
+>> scanning.
+>> + *	Latency and power use may get impacted with this flag.
+>>    */
+>>   enum nl80211_scan_flags {
+>>   	NL80211_SCAN_FLAG_LOW_PRIORITY				
+>> = 1<<0,
+>> @@ -5097,6 +5115,9 @@ enum nl80211_scan_flags {
+>>   	NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP		=
+>> 1<<5,
+>>   	NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE		
+>> = 1<<6,
+>>   	NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION	
+>> = 1<<7,
+>> +	NL80211_SCAN_FLAG_LOW_SPAN				=
+>> 1<<8,
+>> +	NL80211_SCAN_FLAG_LOW_POWER				=
+>> 1<<9,
+>> +	NL80211_SCAN_FLAG_HIGH_ACCURACY				
+>> = 1<<10,
+>>   };
+>>
+>>   /**
