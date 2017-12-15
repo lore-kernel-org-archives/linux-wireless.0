@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f182.google.com ([209.85.128.182]:41298 "EHLO
-        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750752AbdLWHj2 (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:37622 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755135AbdLOJ2W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Dec 2017 02:39:28 -0500
-Received: by mail-wr0-f182.google.com with SMTP id p69so20768591wrb.8
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2017 23:39:27 -0800 (PST)
-Date: Sat, 23 Dec 2017 08:39:24 +0100 (CET)
-From: Enrico Mioso <mrkiko.rs@gmail.com>
-To: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        nbd@nbd.name
-Subject: Re: MT7630 support
-In-Reply-To: <alpine.LNX.2.00.1712230819270.14868@Nettop>
-Message-ID: <alpine.LNX.2.21.99.1712230838330.18168@localhost.localdomain> (sfid-20171223_083933_047031_7F2E1375)
-References: <alpine.LNX.2.21.99.1712201832120.21664@localhost.localdomain> <20171221142026.GA4655@redhat.com> <alpine.LNX.2.00.1712230819270.14868@Nettop>
+        Fri, 15 Dec 2017 04:28:22 -0500
+Received: by mail-wm0-f67.google.com with SMTP id f140so16211459wmd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Dec 2017 01:28:21 -0800 (PST)
+Subject: Re: [PATCH 1/2] cfg80211/nl80211: Optional authentication offload to
+ userspace
+To: Srinivas Dasari <dasaris@qti.qualcomm.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+References: <1513187438-23967-1-git-send-email-jouni@qca.qualcomm.com>
+ <A0B39E95-DAA8-4676-A0C7-8C21DBFE7DE4@holtmann.org>
+ <829f69319fad450db616f02de781d1a8@aphydexm01b.ap.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A3395B3.7090501@broadcom.com> (sfid-20171215_102857_893676_B1DA5B10)
+Date: Fri, 15 Dec 2017 10:28:19 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+In-Reply-To: <829f69319fad450db616f02de781d1a8@aphydexm01b.ap.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Ulli!
+On 12/15/2017 9:51 AM, Srinivas Dasari wrote:
+>> don’t we actually need a flag in NL80211_CMD_CONNECT that indicates that userspace is able to actually handle NL80211_CMD_EXTERNAL_AUTH. It is nice >that there is feature for userspace to see if the driver supports it, but how is the driver able to offload successfully if it doesn’t know that userspace can do it.
+> Our idea was the driver to timeout the connect for the scenarios where the external auth (SAE) status is not indicated.
+> I agree with you on user space indicating this capability to the driver.
+> Is it a fair idea to extend enum cfg80211_assoc_req_flags for this ?
 
-First of all - thank you for the help and the precious info / link.
-I'll look at it now.
-Thank you very very much.
+Sounds like a good fit to me although strictly speaking this is not 
+about assoc behavior, but then again this enum is used for assoc and 
+connect commands.
 
-Enrico
+Regards,
+Arend
 
-
-On Sat, 23 Dec 2017, Hans Ulli Kroll wrote:
-
-> Date: Sat, 23 Dec 2017 08:28:22
-> From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-> To: Stanislaw Gruszka <sgruszka@redhat.com>
-> Cc: Enrico Mioso <mrkiko.rs@gmail.com>, linux-wireless@vger.kernel.org,
->     Johannes Berg <johannes.berg@intel.com>,
->     Daniel Golle <daniel@makrotopia.org>, Arnd Bergmann <arnd@arndb.de>,
->     John Crispin <john@phrozen.org>, nbd@nbd.name
-> Subject: Re: MT7630 support
-> 
-> Hi
+> Regards,
+> Srinivas
 >
-> On Thu, 21 Dec 2017, Stanislaw Gruszka wrote:
+> -----Original Message-----
+> From: Marcel Holtmann [mailto:marcel@holtmann.org]
+> Sent: Friday, December 15, 2017 1:29 AM
+> To: Jouni Malinen <jouni@qca.qualcomm.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>; linux-wireless@vger.kernel.org; Srinivas Dasari <dasaris@qti.qualcomm.com>
+> Subject: Re: [PATCH 1/2] cfg80211/nl80211: Optional authentication offload to userspace
 >
->> On Wed, Dec 20, 2017 at 06:39:34PM +0100, Enrico Mioso wrote:
->>> Hello guys.
->>> So, at some point I felt crazy enough to try to add support for the MT7630 chipset to the rt2xx ralink wireless drivers.
->>> I expected this to be a little bit of a challenge.
->>> I did begin adding some code paths around, reading from the mixed-up drivers here:
->>> https://github.com/neurobin/MT7630E
->>> (thanks a lot to the guys who are working on this, and who worked on this).
->>> and working on the kernel's git rt2xx tree. I am sending a raw diff that will for sure not compile. I am asking for guidance and help in going on.
+> Hi Jouni,
+>
+>> This interface allows the host driver to offload the authentication to
+>> user space. This is exclusively defined for host drivers that do not
+>> define separate commands for authentication and association, but rely
+>> on userspace SME (e.g., in wpa_supplicant for the
+>> ~WPA_DRIVER_FLAGS_SME
+>> case) for the authentication to happen. This can be used to implement
+>> SAE without full implementation in the kernel/firmware while still
+>> being able to use NL80211_CMD_CONNECT with driver-based BSS selection.
 >>
->> I think better way to add support for MT7630 chip to mailine kernel
->> would be via new Felix's mt76 driver, because there are less diffrence
->> between MT7630 and MT76x2 than between MT7630 and the old Ralink chips.
->>
+>> The host driver sends the NL80211_CMD_EXTERNAL_AUTH event to
+>> start/abort the authentication to userspace and status of
+>> authentication is further indicated by user space to host driver
+>> through the same command interface. Such drivers advertise the
+>> capability through NL80211_EXT_FEATURE_EXTERNAL_AUTH.
 >
-> MT7630e is part of the MT76x0 family
-> Felix's driver is missing the baseband/rf tables for MT76x0.
+> don’t we actually need a flag in NL80211_CMD_CONNECT that indicates that userspace is able to actually handle NL80211_CMD_EXTERNAL_AUTH. It is nice that there is feature for userspace to see if the driver supports it, but how is the driver able to offload successfully if it doesn’t know that userspace can do it.
 >
-> The full driver for MT7610E is here
-> https://github.com/i80s/mtk-sources
+> Regards
 >
-> /me now reading Felix code to adapot MT76x2 for mt7612u ...
->
-> Greetings
-> Ulli
+> Marcel
 >
