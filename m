@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:43362 "EHLO
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:43409 "EHLO
         alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752549AbdLVQIp (ORCPT
+        with ESMTP id S1753714AbdLOIvg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 11:08:45 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "silexcommon@gmail.com" <silexcommon@gmail.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Alagu Sankar <alagusankar@silex-india.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 03/11] ath10k_sdio: DMA bounce buffers for read write
-Date: Fri, 22 Dec 2017 16:08:40 +0000
-Message-ID: <87lghu9247.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_170849_708853_D4F660FB)
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-        <1506793068-27445-4-git-send-email-alagusankar@silex-india.com>
-In-Reply-To: <1506793068-27445-4-git-send-email-alagusankar@silex-india.com>
-        (silexcommon@gmail.com's message of "Sat, 30 Sep 2017 23:07:40 +0530")
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 15 Dec 2017 03:51:36 -0500
+From: Srinivas Dasari <dasaris@qti.qualcomm.com>
+To: Marcel Holtmann <marcel@holtmann.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Sunil Dutt Undekari" <usdutt@qti.qualcomm.com>
+Subject: RE: [PATCH 1/2] cfg80211/nl80211: Optional authentication offload to
+ userspace
+Date: Fri, 15 Dec 2017 08:51:29 +0000
+Message-ID: <829f69319fad450db616f02de781d1a8@aphydexm01b.ap.qualcomm.com> (sfid-20171215_095142_562975_011440BB)
+References: <1513187438-23967-1-git-send-email-jouni@qca.qualcomm.com>
+ <A0B39E95-DAA8-4676-A0C7-8C21DBFE7DE4@holtmann.org>
+In-Reply-To: <A0B39E95-DAA8-4676-A0C7-8C21DBFE7DE4@holtmann.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-silexcommon@gmail.com writes:
-
-> From: Alagu Sankar <alagusankar@silex-india.com>
->
-> Some SD host controllers still need bounce buffers for SDIO data
-> transfers. While the transfers worked fine on x86 platforms,
-> this is found to be required for i.MX6 based systems.
->
-> Changes are similar to and derived from the ath6kl sdio driver.
->
-> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-
-Why is the bounce buffer needed exactly, what are the symptoms etc? To
-me this sounds like an ugly workaround for a SDIO controller driver bug.
-
---=20
-Kalle Valo=
+PmRvbuKAmXQgd2UgYWN0dWFsbHkgbmVlZCBhIGZsYWcgaW4gTkw4MDIxMV9DTURfQ09OTkVDVCB0
+aGF0IGluZGljYXRlcyB0aGF0IHVzZXJzcGFjZSBpcyBhYmxlIHRvIGFjdHVhbGx5IGhhbmRsZSBO
+TDgwMjExX0NNRF9FWFRFUk5BTF9BVVRILiBJdCBpcyBuaWNlID50aGF0IHRoZXJlIGlzIGZlYXR1
+cmUgZm9yIHVzZXJzcGFjZSB0byBzZWUgaWYgdGhlIGRyaXZlciBzdXBwb3J0cyBpdCwgYnV0IGhv
+dyBpcyB0aGUgZHJpdmVyIGFibGUgdG8gb2ZmbG9hZCBzdWNjZXNzZnVsbHkgaWYgaXQgZG9lc27i
+gJl0IGtub3cgdGhhdCB1c2Vyc3BhY2UgY2FuIGRvIGl0Lg0KT3VyIGlkZWEgd2FzIHRoZSBkcml2
+ZXIgdG8gdGltZW91dCB0aGUgY29ubmVjdCBmb3IgdGhlIHNjZW5hcmlvcyB3aGVyZSB0aGUgZXh0
+ZXJuYWwgYXV0aCAoU0FFKSBzdGF0dXMgaXMgbm90IGluZGljYXRlZC4NCkkgYWdyZWUgd2l0aCB5
+b3Ugb24gdXNlciBzcGFjZSBpbmRpY2F0aW5nIHRoaXMgY2FwYWJpbGl0eSB0byB0aGUgZHJpdmVy
+LiANCklzIGl0IGEgZmFpciBpZGVhIHRvIGV4dGVuZCBlbnVtIGNmZzgwMjExX2Fzc29jX3JlcV9m
+bGFncyBmb3IgdGhpcyA/IA0KDQpSZWdhcmRzLA0KU3Jpbml2YXMNCg0KLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCkZyb206IE1hcmNlbCBIb2x0bWFubiBbbWFpbHRvOm1hcmNlbEBob2x0bWFu
+bi5vcmddIA0KU2VudDogRnJpZGF5LCBEZWNlbWJlciAxNSwgMjAxNyAxOjI5IEFNDQpUbzogSm91
+bmkgTWFsaW5lbiA8am91bmlAcWNhLnF1YWxjb21tLmNvbT4NCkNjOiBKb2hhbm5lcyBCZXJnIDxq
+b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PjsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
+OyBTcmluaXZhcyBEYXNhcmkgPGRhc2FyaXNAcXRpLnF1YWxjb21tLmNvbT4NClN1YmplY3Q6IFJl
+OiBbUEFUQ0ggMS8yXSBjZmc4MDIxMS9ubDgwMjExOiBPcHRpb25hbCBhdXRoZW50aWNhdGlvbiBv
+ZmZsb2FkIHRvIHVzZXJzcGFjZQ0KDQpIaSBKb3VuaSwNCg0KPiBUaGlzIGludGVyZmFjZSBhbGxv
+d3MgdGhlIGhvc3QgZHJpdmVyIHRvIG9mZmxvYWQgdGhlIGF1dGhlbnRpY2F0aW9uIHRvIA0KPiB1
+c2VyIHNwYWNlLiBUaGlzIGlzIGV4Y2x1c2l2ZWx5IGRlZmluZWQgZm9yIGhvc3QgZHJpdmVycyB0
+aGF0IGRvIG5vdCANCj4gZGVmaW5lIHNlcGFyYXRlIGNvbW1hbmRzIGZvciBhdXRoZW50aWNhdGlv
+biBhbmQgYXNzb2NpYXRpb24sIGJ1dCByZWx5IA0KPiBvbiB1c2Vyc3BhY2UgU01FIChlLmcuLCBp
+biB3cGFfc3VwcGxpY2FudCBmb3IgdGhlIA0KPiB+V1BBX0RSSVZFUl9GTEFHU19TTUUNCj4gY2Fz
+ZSkgZm9yIHRoZSBhdXRoZW50aWNhdGlvbiB0byBoYXBwZW4uIFRoaXMgY2FuIGJlIHVzZWQgdG8g
+aW1wbGVtZW50IA0KPiBTQUUgd2l0aG91dCBmdWxsIGltcGxlbWVudGF0aW9uIGluIHRoZSBrZXJu
+ZWwvZmlybXdhcmUgd2hpbGUgc3RpbGwgDQo+IGJlaW5nIGFibGUgdG8gdXNlIE5MODAyMTFfQ01E
+X0NPTk5FQ1Qgd2l0aCBkcml2ZXItYmFzZWQgQlNTIHNlbGVjdGlvbi4NCj4gDQo+IFRoZSBob3N0
+IGRyaXZlciBzZW5kcyB0aGUgTkw4MDIxMV9DTURfRVhURVJOQUxfQVVUSCBldmVudCB0byANCj4g
+c3RhcnQvYWJvcnQgdGhlIGF1dGhlbnRpY2F0aW9uIHRvIHVzZXJzcGFjZSBhbmQgc3RhdHVzIG9m
+IA0KPiBhdXRoZW50aWNhdGlvbiBpcyBmdXJ0aGVyIGluZGljYXRlZCBieSB1c2VyIHNwYWNlIHRv
+IGhvc3QgZHJpdmVyIA0KPiB0aHJvdWdoIHRoZSBzYW1lIGNvbW1hbmQgaW50ZXJmYWNlLiBTdWNo
+IGRyaXZlcnMgYWR2ZXJ0aXNlIHRoZSANCj4gY2FwYWJpbGl0eSB0aHJvdWdoIE5MODAyMTFfRVhU
+X0ZFQVRVUkVfRVhURVJOQUxfQVVUSC4NCg0KZG9u4oCZdCB3ZSBhY3R1YWxseSBuZWVkIGEgZmxh
+ZyBpbiBOTDgwMjExX0NNRF9DT05ORUNUIHRoYXQgaW5kaWNhdGVzIHRoYXQgdXNlcnNwYWNlIGlz
+IGFibGUgdG8gYWN0dWFsbHkgaGFuZGxlIE5MODAyMTFfQ01EX0VYVEVSTkFMX0FVVEguIEl0IGlz
+IG5pY2UgdGhhdCB0aGVyZSBpcyBmZWF0dXJlIGZvciB1c2Vyc3BhY2UgdG8gc2VlIGlmIHRoZSBk
+cml2ZXIgc3VwcG9ydHMgaXQsIGJ1dCBob3cgaXMgdGhlIGRyaXZlciBhYmxlIHRvIG9mZmxvYWQg
+c3VjY2Vzc2Z1bGx5IGlmIGl0IGRvZXNu4oCZdCBrbm93IHRoYXQgdXNlcnNwYWNlIGNhbiBkbyBp
+dC4NCg0KUmVnYXJkcw0KDQpNYXJjZWwNCg0K
