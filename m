@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0079.outbound.protection.outlook.com ([104.47.33.79]:64724
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753159AbdLSK3q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 05:29:46 -0500
-Date: Tue, 19 Dec 2017 13:29:33 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
-Message-ID: <20171219102932.xv7bxasvlvguy7jb@bars> (sfid-20171219_112953_231784_2278C787)
-References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
- <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
- <871skalepz.fsf@purkki.adurom.net>
- <20171205160010.cytra3bqbttwz5db@bars>
- <878te0kud2.fsf@kamboji.qca.qualcomm.com>
- <20171218161811.3f3sjhlxdfmsnljx@bars>
- <1513676321.26145.1.camel@sipsolutions.net>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:44685 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756385AbdLOJ6N (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Dec 2017 04:58:13 -0500
+Received: by mail-wm0-f53.google.com with SMTP id t8so16282163wmc.3
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Dec 2017 01:58:13 -0800 (PST)
+Subject: Re: BCM4356 does not initalize after firmware update
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+References: <20171213161257.GB2811@redhat.com> <5A3240B9.90007@broadcom.com>
+ <20171214142243.GB2737@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A339CB2.1040202@broadcom.com> (sfid-20171215_105914_192216_4EFBBCA0)
+Date: Fri, 15 Dec 2017 10:58:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1513676321.26145.1.camel@sipsolutions.net>
+In-Reply-To: <20171214142243.GB2737@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes,
+On 12/14/2017 3:22 PM, Stanislaw Gruszka wrote:
+> On Thu, Dec 14, 2017 at 10:13:29AM +0100, Arend van Spriel wrote:
+>> The cur_etheraddr is the first piece of info we try to get from the
+>> firmware. Could you build the driver with CONFIG_BRCMDBG and load
+>> the module with 'debug=0x181416'.
+>
+> dmesg attached.
 
-> > Meanwhile now it is not yet clear to me what should be done for driver which
-> > supports MAC-based ACL, but not full-fledged AP SME.
-> 
-> Are you sure that such a device can even exist? It'd have to drop the
-> auth frames, so they can't be handled by the host? Is there much point
-> in that?
+So the firmware console output in the dmesg shows partial stack trace 
+which clearly means the firmware crashed.
 
-I guess it should be possible to do some kind of source address filtering
-in hardware. But it looks like your question is whether it makes sense
-or not. Probably not, I have no idea.
+[ 2685.701602] brcmfmac: brcmf_pcie_isr_thread Enter 100
+[ 2685.701613] brcmfmac: brcmf_pcie_handle_mb_data D2H_MB_DATA: 0x10000000
+[ 2685.701634] brcmfmac: CONSOLE: 0d
+[ 2685.701706] brcmfmac: CONSOLE: 000000.049 sp+ec 00184635
+[ 2685.701778] brcmfmac: CONSOLE: 000000.049 sp+f4 00182ca7
+[ 2685.701854] brcmfmac: CONSOLE: 000000.049 sp+100 000001df
+[ 2685.701928] brcmfmac: CONSOLE: 000000.049 sp+140 0000823f
+[ 2685.702003] brcmfmac: CONSOLE: 000000.049 sp+150 0018b8d9
+[ 2687.642667] brcmfmac: brcmf_msgbuf_query_dcmd: Timeout on response 
+for query command
+[ 2687.650464] brcmfmac: brcmf_fil_cmd_data Failed: BCME_NOTDOWN (-5)
+[ 2687.650469] brcmfmac: brcmf_fil_iovar_data_get ifidx=0, 
+name=cur_etheraddr, len=6
+[ 2687.650471] brcmutil: data
+[ 2687.650475] 00000000: 00 00 00 00 00 00 
+   ......
+[ 2687.650479] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr 
+failed, -5
 
-By the way, what do you think about making MAC-based ACL capability the
-first bit in enum nl80211_ap_sme_features ?
+I noticed you are not using a nvram file. Do you know if one was 
+orignally provided with the device?
 
 Regards,
-Sergey
+Arend
