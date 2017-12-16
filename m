@@ -1,74 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:37622 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755135AbdLOJ2W (ORCPT
+Received: from mail-wr0-f169.google.com ([209.85.128.169]:38889 "EHLO
+        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753635AbdLPSdv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Dec 2017 04:28:22 -0500
-Received: by mail-wm0-f67.google.com with SMTP id f140so16211459wmd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Dec 2017 01:28:21 -0800 (PST)
-Subject: Re: [PATCH 1/2] cfg80211/nl80211: Optional authentication offload to
- userspace
-To: Srinivas Dasari <dasaris@qti.qualcomm.com>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-References: <1513187438-23967-1-git-send-email-jouni@qca.qualcomm.com>
- <A0B39E95-DAA8-4676-A0C7-8C21DBFE7DE4@holtmann.org>
- <829f69319fad450db616f02de781d1a8@aphydexm01b.ap.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A3395B3.7090501@broadcom.com> (sfid-20171215_102857_893676_B1DA5B10)
-Date: Fri, 15 Dec 2017 10:28:19 +0100
+        Sat, 16 Dec 2017 13:33:51 -0500
+Received: by mail-wr0-f169.google.com with SMTP id o2so10652185wro.5
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Dec 2017 10:33:51 -0800 (PST)
+Date: Sat, 16 Dec 2017 19:33:47 +0100 (CET)
+From: Enrico Mioso <mrkiko.rs@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+In-Reply-To: <20171213152017.GA3554@redhat.com>
+Message-ID: <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain> (sfid-20171216_193359_200151_FB5FBD50)
+References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain> <20171213152017.GA3554@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <829f69319fad450db616f02de781d1a8@aphydexm01b.ap.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/15/2017 9:51 AM, Srinivas Dasari wrote:
->> don’t we actually need a flag in NL80211_CMD_CONNECT that indicates that userspace is able to actually handle NL80211_CMD_EXTERNAL_AUTH. It is nice >that there is feature for userspace to see if the driver supports it, but how is the driver able to offload successfully if it doesn’t know that userspace can do it.
-> Our idea was the driver to timeout the connect for the scenarios where the external auth (SAE) status is not indicated.
-> I agree with you on user space indicating this capability to the driver.
-> Is it a fair idea to extend enum cfg80211_assoc_req_flags for this ?
+Hello!
+I tested the Archer MR200 device removing the patch as you suggested:
+package/kernel/mac80211/patches/600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
+... the error still appears, but the driver is still working as of now.
+Here - reporting my dmesg
+[  819.060392] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.069900] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.079369] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.088823] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.098277] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.107729] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.117174] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.126627] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.136080] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.145533] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.154987] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.164441] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.173890] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.183336] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.192782] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.202200] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.211644] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.221090] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.230537] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.239983] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+[  819.249430] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
 
-Sounds like a good fit to me although strictly speaking this is not 
-about assoc behavior, but then again this enum is used for assoc and 
-connect commands.
+To cause it, it seems a good technique to use a device as far as possible from the AP, but not enough to disconnect / stop working.
+A reauthentication may be required to use the AP again,
 
-Regards,
-Arend
+Sat Dec 16 17:59:01 2017 daemon.info hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: authenticated
+Sat Dec 16 17:59:01 2017 daemon.info hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: associated (aid 1)
+Sat Dec 16 17:59:01 2017 daemon.notice hostapd: wlan0: AP-STA-CONNECTED xx:xx:xx:xx:xx:xx
+Sat Dec 16 17:59:01 2017 daemon.info hostapd: wlan0: STA xx:xx:xx:xx:xx:xx WPA: pairwise key handshake completed (RSN)
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.060392] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.069900] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.079369] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.088823] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.098277] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.107729] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.117174] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.126627] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.136080] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.145533] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.154987] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.164441] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.173890] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.183336] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.192782] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.202200] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.211644] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.221090] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.230537] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.239983] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:04:20 2017 kern.err kernel: [  819.249430] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Sat Dec 16 18:11:11 2017 daemon.info hostapd: wlan0: STA x2:x2:x2:x2:x2:x2 IEEE 802.11: authenticated
+Sat Dec 16 18:11:11 2017 daemon.info hostapd: wlan0: STA x2:x2:x2:x2:x2:x2 IEEE 802.11: associated (aid 2)
+Sat Dec 16 18:11:11 2017 daemon.notice hostapd: wlan0: AP-STA-CONNECTED x2:x2:x2:x2:x2:x2
+Sat Dec 16 18:11:11 2017 daemon.info hostapd: wlan0: STA x2:x2:x2:x2:x2:x2 WPA: pairwise key handshake completed (RSN)
+Sat Dec 16 18:18:43 2017 daemon.notice hostapd: wlan0: AP-STA-DISCONNECTED x2:x2:x2:x2:x2:x2
+Sat Dec 16 18:18:43 2017 daemon.info hostapd: wlan0: STA x2:x2:x2:x2:x2:x2 IEEE 802.11: disassociated due to inactivity
+Sat Dec 16 18:18:44 2017 daemon.info hostapd: wlan0: STA x2:x2:x2:x2:x2:x2 IEEE 802.11: deauthenticated due to inactivity (timer DEAUTH/REMOVE)
+Sat Dec 16 18:19:03 2017 daemon.notice hostapd: wlan0: AP-STA-DISCONNECTED xx:xx:xx:xx:xx:xx
+Sat Dec 16 18:19:03 2017 daemon.info hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: disassociated due to inactivity
+Sat Dec 16 18:19:04 2017 daemon.info hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated due to inactivity (timer DEAUTH/REMOVE)
+Sat Dec 16 19:16:03 2017 daemon.info hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: authenticated
+Sat Dec 16 19:16:03 2017 daemon.info hostapd: wlan0: STA xx:xx:xx:xx:xx:xx IEEE 802.11: associated (aid 1)
+Sat Dec 16 19:16:03 2017 daemon.notice hostapd: wlan0: AP-STA-CONNECTED xx:xx:xx:xx:xx:xx
+Sat Dec 16 19:16:03 2017 daemon.info hostapd: wlan0: STA xx:xx:xx:xx:xx:xx WPA: pairwise key handshake completed (RSN)
 
-> Regards,
-> Srinivas
->
-> -----Original Message-----
-> From: Marcel Holtmann [mailto:marcel@holtmann.org]
-> Sent: Friday, December 15, 2017 1:29 AM
-> To: Jouni Malinen <jouni@qca.qualcomm.com>
-> Cc: Johannes Berg <johannes@sipsolutions.net>; linux-wireless@vger.kernel.org; Srinivas Dasari <dasaris@qti.qualcomm.com>
-> Subject: Re: [PATCH 1/2] cfg80211/nl80211: Optional authentication offload to userspace
->
-> Hi Jouni,
->
->> This interface allows the host driver to offload the authentication to
->> user space. This is exclusively defined for host drivers that do not
->> define separate commands for authentication and association, but rely
->> on userspace SME (e.g., in wpa_supplicant for the
->> ~WPA_DRIVER_FLAGS_SME
->> case) for the authentication to happen. This can be used to implement
->> SAE without full implementation in the kernel/firmware while still
->> being able to use NL80211_CMD_CONNECT with driver-based BSS selection.
+where the xx:xx... mac is an iPhone SE, the x2:x2... is an Android device.
+
+thank you very much for the help and all.
+For the moment I am not sure about the situation still, so I think further testing would be needed. Hoping someone experiencing this problem can come up and give some more hints / tests on different hw.
+Thank you to all,
+Enrico
+
+On Wed, 13 Dec 2017, Stanislaw Gruszka wrote:
+
+> Date: Wed, 13 Dec 2017 16:20:18
+> From: Stanislaw Gruszka <sgruszka@redhat.com>
+> To: Enrico Mioso <mrkiko.rs@gmail.com>
+> Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
+>     Daniel Golle <daniel@makrotopia.org>, Arnd Bergmann <arnd@arndb.de>,
+>     John Crispin <john@phrozen.org>, nbd@nbd.name
+> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+>     frame due to full tx queue...?
+> 
+> On Mon, Dec 11, 2017 at 09:51:29PM +0100, Enrico Mioso wrote:
+>> Hello guys, and sorry for the big CC list.
+>> I would like to point out about a bug who survived for years - at least from 2015 until now, regarding the Ralink driver getting stuck, and in some cases not being able to recover.
+>> The problem manifested with an MT7620A chip, and the wireless card inside the WL-330N3G device.
+>> The error message is in rt2x00/rt2x00queue.c .
 >>
->> The host driver sends the NL80211_CMD_EXTERNAL_AUTH event to
->> start/abort the authentication to userspace and status of
->> authentication is further indicated by user space to host driver
->> through the same command interface. Such drivers advertise the
->> capability through NL80211_EXT_FEATURE_EXTERNAL_AUTH.
+>> This bug was discussed, and a patch proposed, in this thread:
+>> https://lists.openwrt.org/pipermail/openwrt-devel/2015-September/thread.html#35778
+>>
+>> I would like to help if possible - I have the have both an Archer MR200, and the WL330n3G hardware.
+>> BTW, the Archer MR200 is a nice MT7610 device, and the problem manifests itself, see:
+>> https://forum.openwrt.org/viewtopic.php?id=64293&p=6
+>>
+>> Any help, hint, anything would be apreciated.
+>> thank you to all.
 >
-> don’t we actually need a flag in NL80211_CMD_CONNECT that indicates that userspace is able to actually handle NL80211_CMD_EXTERNAL_AUTH. It is nice that there is feature for userspace to see if the driver supports it, but how is the driver able to offload successfully if it doesn’t know that userspace can do it.
+> First I would try to remove this patch:
+> http://git.lede-project.org/?p=source.git;a=blob;f=package/kernel/mac80211/patches/600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
+> and see if it makes things better. However I think for the stuck problem
+> we need tx status timeout mechanism similar like for rt2800usb.
+>
+> Attached patch can mitigate "Dropping frame due to full tx queue"
+> errors. I did not test it, so it can be totally broken.
 >
 > Regards
->
-> Marcel
+> Stanislaw
 >
