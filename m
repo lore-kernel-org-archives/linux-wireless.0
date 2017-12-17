@@ -1,34 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:35844 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753054AbdLMNAI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 08:00:08 -0500
-Message-ID: <1513170005.26976.87.camel@sipsolutions.net> (sfid-20171213_140023_231958_8DF89D20)
-Subject: Re: [PATCH] ocb: Use common freqchan helper for setting the
- operating channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter =?ISO-8859-1?Q?Gro=DFe?= <pegro@friiks.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 13 Dec 2017 14:00:05 +0100
-In-Reply-To: <20171213125840.1036-1-pegro@friiks.de>
-References: <1512991065.26976.70.camel@sipsolutions.net>
-         <20171213125840.1036-1-pegro@friiks.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:44450 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752081AbdLQKnO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Dec 2017 05:43:14 -0500
+Subject: Re: [PATCH 09/14] mt76x2: remove MAC address limitation for multi-vif
+ setups
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+References: <20171214153918.43774-1-nbd@nbd.name>
+ <20171214153918.43774-10-nbd@nbd.name>
+Message-ID: <33ad3a83-bc51-ebf8-fc67-5cbacc7e07f4@nbd.name> (sfid-20171217_114338_135770_81326433)
+Date: Sun, 17 Dec 2017 11:43:12 +0100
+MIME-Version: 1.0
+In-Reply-To: <20171214153918.43774-10-nbd@nbd.name>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-12-13 at 13:58 +0100, Peter Große wrote:
-> Simplify code by using the helper which has been introduced earlier.
+On 2017-12-14 16:39, Felix Fietkau wrote:
+> The hardware has a separate set of registers to configure a
+> per-interface MAC address.
 > 
-> Signed-off-by: Peter Große <pegro@friiks.de>
-> ---
-> 
-> Mh, the patch is against the full tree of iw, not the kernel, so there is no
-> net/wireless/ path.
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Please drop patches 09-11, I'm currently investigating a performance
+regression. The rest should be fine.
 
-D'oh! I guess you should've mentioned "iw" somewhere - I actually tried
-to apply it to the kernel tree :)
-
-johannes
+- Felix
