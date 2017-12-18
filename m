@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:44138 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752790AbdLKLqN (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51014 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S933777AbdLRMi2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 06:46:13 -0500
-Message-ID: <1512992771.26976.73.camel@sipsolutions.net> (sfid-20171211_124617_743418_F4D4C2BE)
-Subject: Re: [PATCH v2 1/5] mac80211_hwsim: wait for deferred radio deletion
- on mod unload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 11 Dec 2017 12:46:11 +0100
-In-Reply-To: <3a182eff-3f00-49bb-94ac-ec371ff1c26e@MAIL2.uni-rostock.de>
-References: <20171121121744.23422-1-benjamin.beichler@uni-rostock.de>
-         <3a182eff-3f00-49bb-94ac-ec371ff1c26e@MAIL2.uni-rostock.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 18 Dec 2017 07:38:28 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 18 Dec 2017 14:38:12 +0200
+Message-Id: <20171218123815.3968-9-luca@coelho.fi> (sfid-20171218_133851_179290_8E99ED6B)
+In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
+References: <20171218123815.3968-1-luca@coelho.fi>
+Subject: [PATCH 08/11] iwlwifi: mvm: don't warn on multiple packets when opening a queue
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-11-21 at 13:17 +0100, Benjamin Beichler wrote:
-> 
-> +	/*wait for radios with deferred delete*/
+From: Sara Sharon <sara.sharon@intel.com>
 
-please add spaces there
+When we have TSO enabled, we might end up segmenting it and
+queuing multiple packets before the queue is even enabled.  This causes
+a warning.
 
-> +	spin_lock_bh(&hwsim_delete_lock);
-> +	while (!list_empty(&delete_radios)) {
-> +		pr_debug("mac80211_hwsim: wait for deferred radio remove\n");
-> +		spin_unlock_bh(&hwsim_delete_lock);
-> +		flush_work(&list_entry(&delete_radios,
-> +				       struct mac80211_hwsim_data, list)
-> +			   ->destroy_work);
+For example, when starting TCP traffic on a non-zero TID, the
+first packets may not have DSCP and will be sent on TID 0, while
+the actual data packets will be sent on the TID.
 
-This can't possibly be right ... you're locking the list_empty which is
-a trivial pointer comparison, but not the actual list_entry() ...
+To prevent this, simply remove the warning.
 
-I'd also prefer you actually didn't leave the problem in part as you
-describe - and a new workqueue probably isn't that much overhead and
-should introduce *less* new code than this, so IMHO that's worth it.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index b65b4e8f8606..b926fd49e734 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -887,10 +887,9 @@ static void iwl_mvm_tx_add_stream(struct iwl_mvm *mvm,
+ 	/*
+ 	 * The first deferred frame should've stopped the MAC queues, so we
+ 	 * should never get a second deferred frame for the RA/TID.
++	 * In case of GSO the first packet may have been split, so don't warn.
+ 	 */
+-	if (!WARN(skb_queue_len(deferred_tx_frames) != 1,
+-		  "RATID %d/%d has %d deferred frames\n", mvm_sta->sta_id, tid,
+-		  skb_queue_len(deferred_tx_frames))) {
++	if (skb_queue_len(deferred_tx_frames) == 1) {
+ 		iwl_mvm_stop_mac_queues(mvm, BIT(mac_queue));
+ 		schedule_work(&mvm->add_stream_wk);
+ 	}
+-- 
+2.15.1
