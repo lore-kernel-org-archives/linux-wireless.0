@@ -1,58 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:3932 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753762AbdLGOaV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56736 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752672AbdLROBu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 09:30:21 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Jakub Kicinski <kubakici@wp.pl>
-CC: Matthias Schiffer <mschiffer@universe-factory.net>,
-        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "nbd@nbd.name" <nbd@nbd.name>
-Subject: Re: [PATCH 1/3] ath9k: remove stray backslash in Makefile
-Date: Thu, 7 Dec 2017 14:30:14 +0000
-Message-ID: <87374mvcej.fsf@kamboji.qca.qualcomm.com> (sfid-20171207_153243_058284_E320D62C)
-References: <e60138924429ca428efc6e3154606887b3bc5201.1511804622.git.mschiffer@universe-factory.net>
-        <20171127193516.682827ea@cakuba.netronome.com>
-In-Reply-To: <20171127193516.682827ea@cakuba.netronome.com> (Jakub Kicinski's
-        message of "Mon, 27 Nov 2017 19:35:16 -0800")
-Content-Type: text/plain; charset="iso-8859-1"
+        Mon, 18 Dec 2017 09:01:50 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
+References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
+        <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
+        <871skalepz.fsf@purkki.adurom.net>
+        <20171205160010.cytra3bqbttwz5db@bars>
+Date: Mon, 18 Dec 2017 16:01:45 +0200
+In-Reply-To: <20171205160010.cytra3bqbttwz5db@bars> (Sergey Matyukevich's
+        message of "Tue, 5 Dec 2017 19:00:11 +0300")
+Message-ID: <878te0kud2.fsf@kamboji.qca.qualcomm.com> (sfid-20171218_150154_536225_A574D9AF)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jakub Kicinski <kubakici@wp.pl> writes:
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-> On Mon, 27 Nov 2017 18:56:21 +0100, Matthias Schiffer wrote:
->> Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
->> ---
->>  drivers/net/wireless/ath/ath9k/Makefile | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>=20
->> diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wirel=
-ess/ath/ath9k/Makefile
->> index 36a40ffdce15..90e4a341076c 100644
->> --- a/drivers/net/wireless/ath/ath9k/Makefile
->> +++ b/drivers/net/wireless/ath/ath9k/Makefile
->> @@ -59,7 +59,7 @@ obj-$(CONFIG_ATH9K_HW) +=3D ath9k_hw.o
->>  obj-$(CONFIG_ATH9K_COMMON) +=3D ath9k_common.o
->>  ath9k_common-y:=3D	common.o \
->>  			common-init.o \
->> -			common-beacon.o \
->> +			common-beacon.o
->> =20
+> Hello Kalle,
 >
-> It's not necessarily stray, there is nothing on the next line so it's
-> OK, and if you add \ at the end of all lines, you don't have to touch
-> the last line every time you add/remove something.  Sort of like
-> putting a , after last enum value.
+>> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+>> 
+>> > From: Vasily Ulyanov <vulyanov@quantenna.com>
+>> >
+>> > This allows a running AP to blacklist STAs by their MAC addresses
+>> > respecting the configured policy (either accept or deny unless listed).
+>> > It can be setup on .start_ap or with .set_mac_acl commands.
+>> >
+>> > Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
+>> 
+>> [...]
+>> 
+>> > @@ -918,6 +933,7 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
+>> >       wiphy->max_scan_ie_len = QTNF_MAX_VSIE_LEN;
+>> >       wiphy->mgmt_stypes = qtnf_mgmt_stypes;
+>> >       wiphy->max_remain_on_channel_duration = 5000;
+>> > +     wiphy->max_acl_mac_addrs = mac->macinfo.max_acl_mac_addrs;
+>> >
+>> >       wiphy->iface_combinations = iface_comb;
+>> >       wiphy->n_iface_combinations = 1;
+>> > @@ -932,6 +948,9 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
+>> >                       WIPHY_FLAG_AP_UAPSD |
+>> >                       WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+>> >
+>> > +     if (wiphy->max_acl_mac_addrs > 0)
+>> > +             wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME;
+>> 
+>> Conditonally enabling WIPHY_FLAG_HAVE_AP_SME looks somewhat suspicious
+>> to me and from a quick search I don't see any other driver doing
+>> something similar. Can you explain why AP_SME is related to MAC ACL?
+>
+> Wireless core performs several sanity check on wiphy registration: see
+> wiphy_register implementation in net/wireless/core.c. One of those
+> checks is as follows: if max_acl_mac_addrs is non-zero, then two
+> conditions should be fulfilled:
+> - cfg80211 set_mac_acl callback should be available
+> - WIPHY_FLAG_HAVE_AP_SME should be set
+>
+> The first condition is perfectly sane: it should be possible to
+> set MACs to enable ACL feature. The second condition is that clear
+> to me, but we have to comply in order to pass wiphy_registration.
+> I assume that it somehow related to hostapd logic, but I haven't
+> yet check that myself.
+>
+> The conditional enablement of WIPHY_FLAG_HAVE_AP_SME is easy to
+> explain. We enable use firmware/hardware features to implement
+> MAC-based ACL. So we enable it only if firmware report non-zero
+> max_acl_mac_addrs value.
 
-I agree with Jakub, I think the backslash is there on purpose so I
-dropped this patch.
+To me this looks like an ugly hack, either your firmware has AP_SME
+support or not. It should not be enabled based on what settings user
+space provides. If cfg80211 is giving you problems you should fix
+cfg80211, not try to a workaround it in the driver like the vendor
+drivers do. We work differently in upstream.
 
---=20
-Kalle Valo=
+But Johannes (CCed) might think differently, and if he acks this, then
+I'll of course take this.
+
+-- 
+Kalle Valo
