@@ -1,138 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pegase1.c-s.fr ([93.17.236.30]:44230 "EHLO pegase1.c-s.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750860AbdLXIzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Dec 2017 03:55:25 -0500
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-To: Guenter Roeck <linux@roeck-us.net>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Yisheng Xie <xieyisheng1@huawei.com>
-Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
-        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
-        boris.brezillon@free-electrons.com, richard@nod.at,
-        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
-        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
-        wim@iguana.be, linux-watchdog@vger.kernel.org,
-        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
-        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
-        ralf@linux-mips.org, linux-mips@linux-mips.org,
-        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
-        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
-        andriy.shevchenko@linux.intel.com,
-        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
-        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
-        linux-media@vger.kernel.org, a.zummo@towertech.it,
-        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie,
-        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
-        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
-        dvhart@infradead.org, andy@infradead.org,
-        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
-        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
-        netdev@vger.kernel.org, vinod.koul@intel.com,
-        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
-        jslaby@suse.com
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134831.GB10103@kroah.com>
- <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
-From: christophe leroy <christophe.leroy@c-s.fr>
-Message-ID: <c28ac0bc-8bd2-3dce-3167-8c0f80ec601e@c-s.fr> (sfid-20171224_095606_890844_B2F1235D)
-Date: Sun, 24 Dec 2017 09:55:18 +0100
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:38784 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935864AbdLRWEQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Dec 2017 17:04:16 -0500
+Received: by mail-lf0-f68.google.com with SMTP id w196so1518041lff.5
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Dec 2017 14:04:16 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1513556924.31581.51.camel@perches.com>
+References: <1513556924.31581.51.camel@perches.com>
+From: Paul Moore <paul@paul-moore.com>
+Date: Mon, 18 Dec 2017 17:04:14 -0500
+Message-ID: <CAHC9VhTEcj5o1789dZ2CR9W=buPGNa6gSJRc0m8GpUSpn1-xRA@mail.gmail.com> (sfid-20171218_230451_714510_2BE44773)
+Subject: Re: [trivial PATCH] treewide: Align function definition open/close braces
+To: Joe Perches <joe@perches.com>
+Cc: Jiri Kosina <trivial@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-rtc@vger.kernel.org, alsa-devel@alsa-project.org,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        acpi4asus-user@lists.sourceforge.net,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-audit@redhat.com,
+        amd-gfx@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
+        MPT-FusionLinux.pdl@broadcom.com, ocfs2-devel@oss.oracle.com,
+        linux-media@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Dec 17, 2017 at 7:28 PM, Joe Perches <joe@perches.com> wrote:
+> Some functions definitions have either the initial open brace and/or
+> the closing brace outside of column 1.
+>
+> Move those braces to column 1.
+>
+> This allows various function analyzers like gnu complexity to work
+> properly for these modified functions.
+>
+> Miscellanea:
+>
+> o Remove extra trailing ; and blank line from xfs_agf_verify
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+> git diff -w shows no difference other than the above 'Miscellanea'
+>
+> (this is against -next, but it applies against Linus' tree
+>  with a couple offsets)
+>
+>  arch/x86/include/asm/atomic64_32.h                   |  2 +-
+>  drivers/acpi/custom_method.c                         |  2 +-
+>  drivers/acpi/fan.c                                   |  2 +-
+>  drivers/gpu/drm/amd/display/dc/core/dc.c             |  2 +-
+>  drivers/media/i2c/msp3400-kthreads.c                 |  2 +-
+>  drivers/message/fusion/mptsas.c                      |  2 +-
+>  drivers/net/ethernet/qlogic/netxen/netxen_nic_init.c |  2 +-
+>  drivers/net/wireless/ath/ath9k/xmit.c                |  2 +-
+>  drivers/platform/x86/eeepc-laptop.c                  |  2 +-
+>  drivers/rtc/rtc-ab-b5ze-s3.c                         |  2 +-
+>  drivers/scsi/dpt_i2o.c                               |  2 +-
+>  drivers/scsi/sym53c8xx_2/sym_glue.c                  |  2 +-
+>  fs/locks.c                                           |  2 +-
+>  fs/ocfs2/stack_user.c                                |  2 +-
+>  fs/xfs/libxfs/xfs_alloc.c                            |  5 ++---
+>  fs/xfs/xfs_export.c                                  |  2 +-
+>  kernel/audit.c                                       |  6 +++---
+>  kernel/trace/trace_printk.c                          |  4 ++--
+>  lib/raid6/sse2.c                                     | 14 +++++++-------
+>  sound/soc/fsl/fsl_dma.c                              |  2 +-
+>  20 files changed, 30 insertions(+), 31 deletions(-)
 
+For the audit bits ...
 
-Le 23/12/2017 à 16:57, Guenter Roeck a écrit :
-> On 12/23/2017 05:48 AM, Greg KH wrote:
->> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->>> Hi all,
->>>
->>> When I tried to use devm_ioremap function and review related code, I 
->>> found
->>> devm_ioremap and devm_ioremap_nocache is almost the same with each 
->>> other,
->>> except one use ioremap while the other use ioremap_nocache.
->>
->> For all arches?  Really?  Look at MIPS, and x86, they have different
->> functions.
->>
-> 
-> Both mips and x86 end up mapping the same function, but other arches don't.
-> mn10300 is one where ioremap and ioremap_nocache are definitely different.
+Acked-by: Paul Moore <paul@paul-moore.com>
 
-alpha: identical
-arc: identical
-arm: identical
-arm64: identical
-cris: different        <==
-frv: identical
-hexagone: identical
-ia64: different        <==
-m32r: identical
-m68k: identical
-metag: identical
-microblaze: identical
-mips: identical
-mn10300: different     <==
-nios: identical
-openrisc: different    <==
-parisc: identical
-riscv: identical
-s390: identical
-sh: identical
-sparc: identical
-tile: identical
-um: rely on asm/generic
-unicore32: identical
-x86: identical
-asm/generic (no mmu): identical
-
-So 4 among all arches seems to have ioremap() and ioremap_nocache() 
-being different.
-
-Could we have a define set by the 4 arches on which ioremap() and 
-ioremap_nocache() are different, something like 
-HAVE_DIFFERENT_IOREMAP_NOCACHE ?
-
-Christophe
-
-> 
-> Guenter
-> 
->>> While ioremap's
->>> default function is ioremap_nocache, so devm_ioremap_nocache also 
->>> have the
->>> same function with devm_ioremap, which can just be killed to reduce 
->>> the size
->>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
->>>
->>> I have posted two versions, which use macro instead of function for
->>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->>> devm_ioremap_nocache for no need to keep a macro around for the 
->>> duplicate
->>> thing. So here comes v3 and please help to review.
->>
->> I don't think this can be done, what am I missing?  These functions are
->> not identical, sorry for missing that before.
->>
->> thanks,
->>
->> greg k-h
->>
-> 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-watchdog" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
----
-L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-https://www.avast.com/antivirus
+-- 
+paul moore
+www.paul-moore.com
