@@ -1,43 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34264 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753144AbdLMQNm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 11:13:42 -0500
-Date: Wed, 13 Dec 2017 17:12:57 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: BCM4356 does not initalize after firmware update
-Message-ID: <20171213161257.GB2811@redhat.com> (sfid-20171213_171401_471060_7D1B423F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from paleale.coelho.fi ([176.9.41.70]:50998 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1759302AbdLRMi1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Dec 2017 07:38:27 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 18 Dec 2017 14:38:10 +0200
+Message-Id: <20171218123815.3968-7-luca@coelho.fi> (sfid-20171218_133843_036199_8F0BE50C)
+In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
+References: <20171218123815.3968-1-luca@coelho.fi>
+Subject: [PATCH 06/11] iwlwifi: fw: fix the enums in the rate scaling API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-After firmware update, this device:
+We don't need the _enum suffix.
+Also refer to &enum iwl_tlc_mng_vht_he_types instead
+of %IWL_TLC_MNG_VALID_VHT_HE_TYPES_\*
 
-[0280]: Broadcom Limited BCM4356 802.11ac Wireless Network Adapter [14e4:43ec] (rev 02)
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/api/rs.h | 34 +++++++++++++-------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-no longer initialize. With the firmware update I have:
-
-[  272.063814] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
-[  272.529582] brcmfmac 0000:03:00.0: irq 31 for MSI/MSI-X
-[  274.529476] brcmfmac: brcmf_msgbuf_query_dcmd: Timeout on response for query command
-[  274.537356] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -5
-[  274.544881] brcmfmac: brcmf_bus_started: failed: -5
-[  274.549854] brcmfmac: brcmf_pcie_attach_bus: dongle is not responding
-
-and no wlan device is created. With older version of the firmware I have:
-
-[   10.716878] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
-[   11.312875] brcmfmac 0000:03:00.0: irq 31 for MSI/MSI-X
-[   11.314735] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015 06:16:41 version 7.35.180.119 (r594535) FWID 01-1a5c4016
-[   16.598211] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
-[   16.604416] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlp3s0 type 10 failed: err=-16
-
-and despite P2P errors, device works correctly.
-
-Regards
-Stanislaw
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+index e9a6e5627f94..e49a6f7be613 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+@@ -71,7 +71,7 @@
+  * @IWL_TLC_MNG_CFG_FLAGS_BF_MSK: enable BFER
+  * @IWL_TLC_MNG_CFG_FLAGS_DCM_MSK: enable DCM
+  */
+-enum iwl_tlc_mng_cfg_flags_enum {
++enum iwl_tlc_mng_cfg_flags {
+ 	IWL_TLC_MNG_CFG_FLAGS_CCK_MSK	= BIT(0),
+ 	IWL_TLC_MNG_CFG_FLAGS_DD_MSK	= BIT(1),
+ 	IWL_TLC_MNG_CFG_FLAGS_STBC_MSK	= BIT(2),
+@@ -81,14 +81,14 @@ enum iwl_tlc_mng_cfg_flags_enum {
+ };
+ 
+ /**
+- * enum iwl_tlc_mng_cfg_cw_enum - channel width options
++ * enum iwl_tlc_mng_cfg_cw - channel width options
+  * @IWL_TLC_MNG_MAX_CH_WIDTH_20MHZ: 20MHZ channel
+  * @IWL_TLC_MNG_MAX_CH_WIDTH_40MHZ: 40MHZ channel
+  * @IWL_TLC_MNG_MAX_CH_WIDTH_80MHZ: 80MHZ channel
+  * @IWL_TLC_MNG_MAX_CH_WIDTH_160MHZ: 160MHZ channel
+  * @IWL_TLC_MNG_MAX_CH_WIDTH_LAST: maximum value
+  */
+-enum iwl_tlc_mng_cfg_cw_enum {
++enum iwl_tlc_mng_cfg_cw {
+ 	IWL_TLC_MNG_MAX_CH_WIDTH_20MHZ,
+ 	IWL_TLC_MNG_MAX_CH_WIDTH_40MHZ,
+ 	IWL_TLC_MNG_MAX_CH_WIDTH_80MHZ,
+@@ -97,25 +97,25 @@ enum iwl_tlc_mng_cfg_cw_enum {
+ };
+ 
+ /**
+- * enum iwl_tlc_mng_cfg_chains_enum - possible chains
++ * enum iwl_tlc_mng_cfg_chains - possible chains
+  * @IWL_TLC_MNG_CHAIN_A_MSK: chain A
+  * @IWL_TLC_MNG_CHAIN_B_MSK: chain B
+  * @IWL_TLC_MNG_CHAIN_C_MSK: chain C
+  */
+-enum iwl_tlc_mng_cfg_chains_enum {
++enum iwl_tlc_mng_cfg_chains {
+ 	IWL_TLC_MNG_CHAIN_A_MSK = BIT(0),
+ 	IWL_TLC_MNG_CHAIN_B_MSK = BIT(1),
+ 	IWL_TLC_MNG_CHAIN_C_MSK = BIT(2),
+ };
+ 
+ /**
+- * enum iwl_tlc_mng_cfg_gi_enum - guard interval options
++ * enum iwl_tlc_mng_cfg_gi - guard interval options
+  * @IWL_TLC_MNG_SGI_20MHZ_MSK: enable short GI for 20MHZ
+  * @IWL_TLC_MNG_SGI_40MHZ_MSK: enable short GI for 40MHZ
+  * @IWL_TLC_MNG_SGI_80MHZ_MSK: enable short GI for 80MHZ
+  * @IWL_TLC_MNG_SGI_160MHZ_MSK: enable short GI for 160MHZ
+  */
+-enum iwl_tlc_mng_cfg_gi_enum {
++enum iwl_tlc_mng_cfg_gi {
+ 	IWL_TLC_MNG_SGI_20MHZ_MSK  = BIT(0),
+ 	IWL_TLC_MNG_SGI_40MHZ_MSK  = BIT(1),
+ 	IWL_TLC_MNG_SGI_80MHZ_MSK  = BIT(2),
+@@ -123,7 +123,7 @@ enum iwl_tlc_mng_cfg_gi_enum {
+ };
+ 
+ /**
+- * enum iwl_tlc_mng_cfg_mode_enum - supported modes
++ * enum iwl_tlc_mng_cfg_mode - supported modes
+  * @IWL_TLC_MNG_MODE_CCK: enable CCK
+  * @IWL_TLC_MNG_MODE_OFDM_NON_HT: enable OFDM (non HT)
+  * @IWL_TLC_MNG_MODE_NON_HT: enable non HT
+@@ -133,7 +133,7 @@ enum iwl_tlc_mng_cfg_gi_enum {
+  * @IWL_TLC_MNG_MODE_INVALID: invalid value
+  * @IWL_TLC_MNG_MODE_NUM: a count of possible modes
+  */
+-enum iwl_tlc_mng_cfg_mode_enum {
++enum iwl_tlc_mng_cfg_mode {
+ 	IWL_TLC_MNG_MODE_CCK = 0,
+ 	IWL_TLC_MNG_MODE_OFDM_NON_HT = IWL_TLC_MNG_MODE_CCK,
+ 	IWL_TLC_MNG_MODE_NON_HT = IWL_TLC_MNG_MODE_CCK,
+@@ -145,14 +145,14 @@ enum iwl_tlc_mng_cfg_mode_enum {
+ };
+ 
+ /**
+- * enum iwl_tlc_mng_vht_he_types_enum - VHT HE types
++ * enum iwl_tlc_mng_vht_he_types - VHT HE types
+  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_SU: VHT HT single user
+  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_SU_EXT: VHT HT single user extended
+  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_MU: VHT HT multiple users
+  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_TRIG_BASED: trigger based
+  * @IWL_TLC_MNG_VALID_VHT_HE_TYPES_NUM: a count of possible types
+  */
+-enum iwl_tlc_mng_vht_he_types_enum {
++enum iwl_tlc_mng_vht_he_types {
+ 	IWL_TLC_MNG_VALID_VHT_HE_TYPES_SU = 0,
+ 	IWL_TLC_MNG_VALID_VHT_HE_TYPES_SU_EXT,
+ 	IWL_TLC_MNG_VALID_VHT_HE_TYPES_MU,
+@@ -163,7 +163,7 @@ enum iwl_tlc_mng_vht_he_types_enum {
+ };
+ 
+ /**
+- * enum iwl_tlc_mng_ht_rates_enum - HT/VHT rates
++ * enum iwl_tlc_mng_ht_rates - HT/VHT rates
+  * @IWL_TLC_MNG_HT_RATE_MCS0: index of MCS0
+  * @IWL_TLC_MNG_HT_RATE_MCS1: index of MCS1
+  * @IWL_TLC_MNG_HT_RATE_MCS2: index of MCS2
+@@ -176,7 +176,7 @@ enum iwl_tlc_mng_vht_he_types_enum {
+  * @IWL_TLC_MNG_HT_RATE_MCS9: index of MCS9
+  * @IWL_TLC_MNG_HT_RATE_MAX: maximal rate for HT/VHT
+  */
+-enum iwl_tlc_mng_ht_rates_enum {
++enum iwl_tlc_mng_ht_rates {
+ 	IWL_TLC_MNG_HT_RATE_MCS0 = 0,
+ 	IWL_TLC_MNG_HT_RATE_MCS1,
+ 	IWL_TLC_MNG_HT_RATE_MCS2,
+@@ -198,13 +198,13 @@ enum iwl_tlc_mng_ht_rates_enum {
+  * @sta_id: station id
+  * @reserved1: reserved
+  * @max_supp_ch_width: channel width
+- * @flags: bitmask of %IWL_TLC_MNG_CONFIG_FLAGS_ENABLE_\*
+- * @chains: bitmask of %IWL_TLC_MNG_CHAIN_\*
++ * @flags: bitmask of &enum iwl_tlc_mng_cfg_flags
++ * @chains: bitmask of &enum iwl_tlc_mng_cfg_chains
+  * @max_supp_ss: valid values are 0-3, 0 - spatial streams are not supported
+- * @valid_vht_he_types: bitmap of %IWL_TLC_MNG_VALID_VHT_HE_TYPES_\*
++ * @valid_vht_he_types: bitmap of &enum iwl_tlc_mng_vht_he_types
+  * @non_ht_supp_rates: bitmap of supported legacy rates
+  * @ht_supp_rates: bitmap of supported HT/VHT rates, valid bits are 0-9
+- * @mode: modulation type %IWL_TLC_MNG_MODE_\*
++ * @mode: &enum iwl_tlc_mng_cfg_mode
+  * @reserved2: reserved
+  * @he_supp_rates: bitmap of supported HE rates
+  * @sgi_ch_width_supp: bitmap of SGI support per channel width
+-- 
+2.15.1
