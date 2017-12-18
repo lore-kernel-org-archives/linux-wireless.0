@@ -1,143 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49168 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752312AbdLETKY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 14:10:24 -0500
-Message-ID: <1512501020.4827.197.camel@coelho.fi> (sfid-20171205_201029_036567_6AFFD2A9)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, janet.morgan@intel.com, joe.konno@intel.com
-Date: Tue, 05 Dec 2017 21:10:20 +0200
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-kQ5p+XFQsxXasBA6BhVp"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi-next 2017-12-05
+Received: from mail-by2nam01on0052.outbound.protection.outlook.com ([104.47.34.52]:32109
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1759386AbdLRMnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Dec 2017 07:43:33 -0500
+Date: Mon, 18 Dec 2017 15:43:20 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
+Message-ID: <20171218124318.mbjrjzuiihp6ctdf@bars> (sfid-20171218_134339_805947_2CC527EC)
+References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
+ <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
+ <871skalepz.fsf@purkki.adurom.net>
+ <20171205160010.cytra3bqbttwz5db@bars>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171205160010.cytra3bqbttwz5db@bars>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Kalle,
 
---=-kQ5p+XFQsxXasBA6BhVp
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> > > This allows a running AP to blacklist STAs by their MAC addresses
+> > > respecting the configured policy (either accept or deny unless listed).
+> > > It can be setup on .start_ap or with .set_mac_acl commands.
+> > >
+> > > Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
+> >
+> > [...]
+> >
+> > > @@ -918,6 +933,7 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
+> > >       wiphy->max_scan_ie_len = QTNF_MAX_VSIE_LEN;
+> > >       wiphy->mgmt_stypes = qtnf_mgmt_stypes;
+> > >       wiphy->max_remain_on_channel_duration = 5000;
+> > > +     wiphy->max_acl_mac_addrs = mac->macinfo.max_acl_mac_addrs;
+> > >
+> > >       wiphy->iface_combinations = iface_comb;
+> > >       wiphy->n_iface_combinations = 1;
+> > > @@ -932,6 +948,9 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
+> > >                       WIPHY_FLAG_AP_UAPSD |
+> > >                       WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+> > >
+> > > +     if (wiphy->max_acl_mac_addrs > 0)
+> > > +             wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME;
+> >
+> > Conditonally enabling WIPHY_FLAG_HAVE_AP_SME looks somewhat suspicious
+> > to me and from a quick search I don't see any other driver doing
+> > something similar. Can you explain why AP_SME is related to MAC ACL?
+> 
+> Wireless core performs several sanity check on wiphy registration: see
+> wiphy_register implementation in net/wireless/core.c. One of those
+> checks is as follows: if max_acl_mac_addrs is non-zero, then two
+> conditions should be fulfilled:
+> - cfg80211 set_mac_acl callback should be available
+> - WIPHY_FLAG_HAVE_AP_SME should be set
+> 
+> The first condition is perfectly sane: it should be possible to
+> set MACs to enable ACL feature. The second condition is that clear
+> to me, but we have to comply in order to pass wiphy_registration.
+> I assume that it somehow related to hostapd logic, but I haven't
+> yet check that myself.
+> 
+> The conditional enablement of WIPHY_FLAG_HAVE_AP_SME is easy to
+> explain. We enable use firmware/hardware features to implement
+> MAC-based ACL. So we enable it only if firmware report non-zero
+> max_acl_mac_addrs value.
 
-Hi Kalle,
+I noticed that this patch series is marked as 'Deferred' in linux-wireless
+patchwork. Could you please take a look at my answers to your review comments.
+Let us know if you still have concerns, so that we could proceed accordingly,
+e.g. fix things and resubmit this series.
 
-This is my second batch of patches intended for v4.16.  As I mentioned
-in the patchset thread, I moved patches 5/15 and 6/16 to iwlwifi-fixes.=20
-Otherwise nothing major here, just the usual continued development.
-More details about the contents in the tag description.
-
-I have sent this out before and kbuildbot reported success.
-
-Please let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit 80b0ebd488b3edaf3e5ed08c34a952c804e3a635=
-:
-
-  Merge tag 'iwlwifi-next-for-kalle-2017-11-29' of git://git.kernel.org/pub=
-/scm/linux/kernel/git/iwlwifi/iwlwifi-next (2017-12-02 15:22:54 +0200)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
-gs/iwlwifi-next-for-kalle-2017-12-05
-
-for you to fetch changes up to 0190ff24e55efd3e02479537c2d91835602fffa3:
-
-  iwlwifi: mvm: request statistics when reading debugfs (2017-12-05 21:01:4=
-3 +0200)
-
-----------------------------------------------------------------
-Second batch of iwlwifi updates for v4.16
-
-* Initial work for rate-scaling offload;
-* Support for new FW API version;
-* Some fixes here and there;
-
-----------------------------------------------------------------
-Avraham Stern (1):
-      iwlwifi: mvm: add WFA vendor specific TPC report IE to probe request
-
-Emmanuel Grumbach (1):
-      iwlwifi: mvm: remove set but unused variable in iwl_mvm_roc_done_wk
-
-Gregory Greenman (7):
-      iwlwifi: mvm: rs: introduce new API for rate scaling
-      iwlwifi: mvm: rs: add ops for the new rate scaling in the FW
-      iwlwifi: mvm: rs: add basic implementation of the new RS API handlers
-      iwlwifi: mvm: rs: new rate scale API - add FW notifications
-      iwlwifi: mvm: rs: new rate scale API - add debugfs hooks
-      iwlwifi: mvm: rs: add size checks when printing to a buffer
-      iwlwifi: mvm: rs: add sanity check when sending LQ command
-
-Johannes Berg (1):
-      iwlwifi: mvm: request statistics when reading debugfs
-
-Liad Kaufman (1):
-      iwlwifi: mvm: make init_dbg effective only on failure
-
-Luca Coelho (1):
-      iwlwifi: bump FW API to 36 for 8000 and up
-
-Sara Sharon (1):
-      iwlwifi: mvm: avoid dumping assert log when device is stopped
-
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c       |   2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c        |   4 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c        |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h |  15 +++++
- drivers/net/wireless/intel/iwlwifi/fw/api/rs.h       | 262 +++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/fw/file.h         |   2 +
- drivers/net/wireless/intel/iwlwifi/mvm/Makefile      |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c     |  79 +++++++++++++++=
-+++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c          |   8 +--
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c    |  13 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         |  10 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c         |   9 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c       | 314 +++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
-+++++++
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c          | 230 +++++++++++++++=
-+++++++++++++++++++++++---------------------------------
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h          |  48 +++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c          |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c        |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c        |  35 ++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c         |  19 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h         |   7 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/time-event.c  |   9 +--
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c          |   8 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c       |  14 ++++-
- 23 files changed, 952 insertions(+), 144 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
---=-kQ5p+XFQsxXasBA6BhVp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlom7xwACgkQoUecoho8
-xfrFPQ//fRGRCDysGkn5dzwCdpeeqRDqWcsDln5driTgwtuNSYL0+/pjZezoLjns
-n0S7eNLzyxrjc4gCkvWQxwpmTsuR8M8YAeQVuadgWapgSkETDmUyBBXYSDf9zvDw
-qlHi8EizwLxPoXk2fs09TEeugeEgSg1JnpIMDJPyXyp7FhaHyNV3GfS1RPkk2B46
-wMwoVU1c5M2jANyf0s5eitsDDy7f00udv/5Y1O8Im1S7Pi5DfbHruIlE/yjfbkWz
-SB8YwKG3/DcHGgV2lVG3bYLVSvCxZItbItVzS3alPf/HMHmREHkP7zlreJQWNn7D
-YDr7+8JlX+gBMU5VykYtR/pvlAsCQiIOeSHneb6MnxfHeAvUZsxPT/mXK3YpZJoI
-4iJT6rhn8PsqZFZlj0f1XWa4saZygKktUbQioWT2fQziIgRUw9+Am79eKkOiLZdL
-6UVg9mJJERYjjjCZITld0jy1eivtD53Wmc/KdD50grQeGXnkcFho5fuTrbqEY85Z
-+LG6aZQ3kqr5Ccctvq0ZeRufrt+amABqd2wGEe65XiVTc5S0M6HnqUSYMC6bl5Da
-gwhhGt+xZUH7YdRqpNeHVudot4Pp54ecZhzOr/0TnPXsP45HgnQrw1NPuA+sOop/
-5DUHgo4hbYilRpbLxxq8dPQddpdYFebEkHvQXgZSh8eijkvdu9E=
-=ndD6
------END PGP SIGNATURE-----
-
---=-kQ5p+XFQsxXasBA6BhVp--
+Regards,
+Sergey
