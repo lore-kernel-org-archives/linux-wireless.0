@@ -1,68 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:57805 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750995AbdLDPzA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36322 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750830AbdLRNjs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 10:55:00 -0500
-Date: Mon, 4 Dec 2017 16:54:58 +0100
-From: Mylene JOSSERAND <mylene.josserand@free-electrons.com>
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Maxime Ripard <maxime.ripard@free-electrons.com>
-Subject: Re: Wifi RTL8723bu driver test: failed to scan
-Message-ID: <20171204165458.0bf87509@dell-desktop.home> (sfid-20171204_165508_295691_2E35AAA8)
-In-Reply-To: <75669dd0-1f25-fc7e-4a4d-a5549aeeb2cf@gmail.com>
-References: <20171122105116.57c3c000@dell-desktop.home>
-        <75669dd0-1f25-fc7e-4a4d-a5549aeeb2cf@gmail.com>
+        Mon, 18 Dec 2017 08:39:48 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Wright Feng <wright.feng@cypress.com>
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Double Lo <double.lo@cypress.com>
+Subject: Re: brcmfmac: Support 43455 save-restore (SR) feature if FW include -sr
+References: <1512639183-3357-1-git-send-email-wright.feng@cypress.com>
+        <20171214123944.12BEB6020A@smtp.codeaurora.org>
+        <96068b8b-2ce9-8a82-122a-0cfafce1cd98@cypress.com>
+Date: Mon, 18 Dec 2017 15:39:42 +0200
+In-Reply-To: <96068b8b-2ce9-8a82-122a-0cfafce1cd98@cypress.com> (Wright Feng's
+        message of "Mon, 18 Dec 2017 10:03:56 +0800")
+Message-ID: <87h8sokvdt.fsf@kamboji.qca.qualcomm.com> (sfid-20171218_143952_877177_F2515E64)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Wright Feng <wright.feng@cypress.com> writes:
 
-Le Tue, 28 Nov 2017 11:14:10 -0500,
-Jes Sorensen <jes.sorensen@gmail.com> a écrit :
+> On 2017/12/14 =E4=B8=8B=E5=8D=88 08:39, Kalle Valo wrote:
+>> Wright Feng <wright.feng@cypress.com> wrote:
+>>
+>>> From: Double Lo <double.lo@cypress.com>
+>>>
+>>> This patch will add 43455 into the save-restore(SR) capable chip list, =
+so
+>>> the SR engine will be enabled with 43455 FW which built-in the -sr
+>>> function.
+>>>
+>>> Signed-off-by: Double Lo <double.lo@cypress.com>
+> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+>>
+>> Wright's s-o-b is missing:
+>>
+>> https://wireless.wiki.kernel.org/en/developers/documentation/submittingp=
+atches#signed-off-by_missing
+>>
+> Kalle,
+> Thanks for reminding, please let me know if I have to send [Patch v2]
+> for this.
 
-> On 11/22/2017 04:51 AM, Mylene JOSSERAND wrote:
-> > Hello Jes Sorensen,
-> > 
-> > I am currently testing a LM811 Wifi/BT USB dongle [1] on a Sinlinx
-> > SinA33 Allwinner SoC board [2]. I saw that I should use the realtek
-> > driver RTL8723BU for this USB dongle.
-> > 
-> > Currently, I am only testing the Wifi and the mainline driver
-> > (kernel 4.14-rc7) does not seem to work. At least, the scanning
-> > does not output anything.
-> > 
-> > I tested the driver recommended by LM Technologies [3] and it works
-> > fine (scan, connect and ping are ok). Before investigating on the
-> > differences between these two drivers, do you have any idea about
-> > this issue?
-> > 
-> > Here are the commands and output I got with mainline's driver:  
-> 
-> I have not looked at the driver these LM Technologies people are
-> referring to, but I am guessing it's the vendor code.
+Yes, please send v2.
 
-Yes, it is.
+To save my time you can actually check this from patchwork:
 
-> 
-> 8723bu is a little dicey because it has BT in the chip and if you
-> enable that the two drivers need to interact, which rtl8xxxu
-> currently doesn't know about. Check your dmesg output to make sure
-> you don't have some BT thing loaded hijacking the chip.
+https://patchwork.kernel.org/patch/10097897/
 
-Okay, I was also testing the BT so maybe, it was the case. I will
-have a try without any BT drivers.
+If the state is "Changes Requested" it means that I'm expecting the
+author to submit a new version. More info:
 
-Anyway, thank you for your help!
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes#checking_state_of_patches_from_patchwork
 
-Best regards,
-
--- 
-Mylène Josserand, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+--=20
+Kalle Valo
