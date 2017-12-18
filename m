@@ -1,86 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:60147 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751966AbdLVQVh (ORCPT
+Received: from mail.free-electrons.com ([62.4.15.54]:52394 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751853AbdLRNrr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 11:21:37 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Gary Bisson <gary.bisson@boundarydevices.com>
-CC: Alagu Sankar <alagusankar@silex-india.com>,
-        "erik.stromdahl@gmail.com" <erik.stromdahl@gmail.com>,
-        "silexcommon@gmail.com" <silexcommon@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 00/11] SDIO support for ath10k
-Date: Fri, 22 Dec 2017 16:21:31 +0000
-Message-ID: <87a7ya91is.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_172141_521752_E7BE4828)
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-        <20171005151205.cymirl4wikuw4f7q@t450s.lan>     <59D66ACA.60801@silex-india.com>
-        <20171006111613.ulatu65gvmgrr2ie@t450s.lan>
-        <20171218161958.yi5ldohhdf2hadfy@t450s.lan>
-In-Reply-To: <20171218161958.yi5ldohhdf2hadfy@t450s.lan> (Gary Bisson's
-        message of "Mon, 18 Dec 2017 17:19:58 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
+        Mon, 18 Dec 2017 08:47:47 -0500
+Date: Mon, 18 Dec 2017 14:47:45 +0100
+From: Mylene JOSSERAND <mylene.josserand@free-electrons.com>
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Maxime Ripard <maxime.ripard@free-electrons.com>
+Subject: Re: Wifi RTL8723bu driver test: failed to scan
+Message-ID: <20171218144745.4f4c985b@dell-desktop.home> (sfid-20171218_144827_082908_F8E41E55)
+In-Reply-To: <75669dd0-1f25-fc7e-4a4d-a5549aeeb2cf@gmail.com>
+References: <20171122105116.57c3c000@dell-desktop.home>
+        <75669dd0-1f25-fc7e-4a4d-a5549aeeb2cf@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gary Bisson <gary.bisson@boundarydevices.com> writes:
+Hello Jes,
 
-> On Fri, Oct 06, 2017 at 01:16:13PM +0200, Gary Bisson wrote:
->> On Thu, Oct 05, 2017 at 10:54:26PM +0530, Alagu Sankar wrote:
->> > On 05-10-2017 20:42, Gary Bisson wrote:
->> > >=20
->> > > First of all, thank you for sharing your patches, this will be a ver=
-y
->> > > nice improvement to have SDIO QCA9377 working with ath10k.
->> > >=20
->> > > I've tried your series with Nitrogen7 [1] platform which is supporte=
-d in
->> > > mainline already. It uses BD-SDMAC [2] which uses the same module as=
- the
->> > > SX-SDMAC.
->> > >=20
->> > > Below are some questions/remarks I have after the testing.
->> > >=20
->> > > Quick question on the firmware, is it the one from Kalle's repositor=
-y?[3]
->> > >=20
->> > > If so, where does this firmware comes from? Is 00061 the firmware
->> > > version? So far I've only seen up to v0.0.0.60, see qcacld-2.0 outpu=
-t:
->> > > Host SW:4.5.20.037, FW:0.0.0.60, HW:QCA9377_REV1_1
->> >
->> > Yes, it is from
->> > https://github.com/kvalo/ath10k-firmware/tree/master/QCA9377/hw1.0/unt=
-ested.
->> > I have also used custom firmware from QCA/Silex as used in qcacld-2.0 =
-driver
->> > without any issue. You need to use the firmware merger tool from
->> > https://github.com/erstrom/linux-ath/wiki/Firmware to combine the
->> > qwlan30.bin and otp30.bin to generate the firmware-sdio.bin.
->>=20
->> Good to know, thanks. Maybe Kalle can tell us more about the firmware
->> itself, what's the difference between the version 0.0.0.60 and 0.0.0.61?
->
-> Any update on this, is there a release notes for this 0.0.0.61 firmware?
+Le Tue, 28 Nov 2017 11:14:10 -0500,
+Jes Sorensen <jes.sorensen@gmail.com> a écrit :
 
-Unfortunately I don't have any changelogs for the firmware releases.
+> On 11/22/2017 04:51 AM, Mylene JOSSERAND wrote:
+> > Hello Jes Sorensen,
+> > 
+> > I am currently testing a LM811 Wifi/BT USB dongle [1] on a Sinlinx
+> > SinA33 Allwinner SoC board [2]. I saw that I should use the realtek
+> > driver RTL8723BU for this USB dongle.
+> > 
+> > Currently, I am only testing the Wifi and the mainline driver (kernel
+> > 4.14-rc7) does not seem to work. At least, the scanning does not output
+> > anything.
+> > 
+> > I tested the driver recommended by LM Technologies [3] and it works
+> > fine (scan, connect and ping are ok). Before investigating on the
+> > differences between these two drivers, do you have any idea about this
+> > issue?
+> > 
+> > Here are the commands and output I got with mainline's driver:  
+> 
+> I have not looked at the driver these LM Technologies people are
+> referring to, but I am guessing it's the vendor code.
+> 
+> 8723bu is a little dicey because it has BT in the chip and if you enable
+> that the two drivers need to interact, which rtl8xxxu currently doesn't
+> know about. Check your dmesg output to make sure you don't have some BT
+> thing loaded hijacking the chip.
 
-> As a FYI, I've tried your ath10k patches (along with a few backported
-> patches from Erik) on the NXP-fork of 4.9 kernel [1].
->
-> I confirm that it provides pretty decent performances:
-> - ath10k: 110Mbit/s
-> - qcacld-2.0: 125Mbit/s
->
-> Here are some details about the setup:
-> - TPLink AC router
-> - Nitrogen7 (i.MX7) with BD-SDMAC
-> - Kernel 4.9.68 (NXP fork [1])
-> - FW 0.0.0.61 from ath10k-firmware repo
+I finally tested it again without any BT stuff enabled and I am still
+not having any output on scanning.
 
-Nice, thanks for the report. This is always helpful.
+I added DEBUG support to have all dev_dbg outputs for rtl8xxxu (core
+and 8723b). Here is the log of boot and different iw commands:
 
---=20
-Kalle Valo=
+http://code.bulix.org/56345t-242970?raw
+
+Do you have any idea/hint to give me?
+I checked the firmware: I am using the last one from linux-firmware's
+repository. Have you already tried this chip? With which firmware?
+
+Thank you very much for any help.
+
+Best regards,
+
+-- 
+Mylène Josserand, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
