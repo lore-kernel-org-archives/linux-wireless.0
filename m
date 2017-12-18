@@ -1,42 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:43994 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbdLAI2a (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50954 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1759272AbdLRMiW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 03:28:30 -0500
-Received: by mail-qt0-f177.google.com with SMTP id w10so12069317qtb.10
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Dec 2017 00:28:30 -0800 (PST)
-Subject: Re: [PATCH] brcm: add CYW4373 firmwares and Cypress license file
-To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        linux-firmware@kernel.org
-References: <20171201073300.GA13854@aremote07.aus.cypress.com>
+        Mon, 18 Dec 2017 07:38:22 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A2112AB.1050307@broadcom.com> (sfid-20171201_092835_468445_CFA1EC62)
-Date: Fri, 1 Dec 2017 09:28:27 +0100
-MIME-Version: 1.0
-In-Reply-To: <20171201073300.GA13854@aremote07.aus.cypress.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 18 Dec 2017 14:38:04 +0200
+Message-Id: <20171218123815.3968-1-luca@coelho.fi> (sfid-20171218_133826_697260_3259B1E4)
+Subject: [PATCH 00/11] iwlwifi: updates intended for v4.16 2017-12-18
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/1/2017 8:33 AM, Chi-Hsien Lin wrote:
-> Add the CYW4373 SDIO and USB firmware files, alone with the corresponding
+From: Luca Coelho <luciano.coelho@intel.com>
 
-'alone' should be 'along'.
+Hi,
 
-> Cypress license file.
+Here's the third batch of patches intended for 4.16.  Nothing major,
+just continued development, some cleanups and small fixes here and
+there.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Chi-hsien Lin<chi-hsien.lin@cypress.com>
-> ---
->   LICENCE.cypress            | 139 +++++++++++++++++++++++++++++++++++++++++++++
->   WHENCE                     |   5 ++
->   brcm/brcmfmac4373-sdio.bin | Bin 0 -> 457994 bytes
->   brcm/brcmfmac4373.bin      | Bin 0 -> 479232 bytes
->   4 files changed, 144 insertions(+)
->   create mode 100644 LICENCE.cypress
->   create mode 100644 brcm/brcmfmac4373-sdio.bin
->   create mode 100644 brcm/brcmfmac4373.bin
+* Small cleanups in the new rate-scaling code;
+* Some improvements in debugging;
+* New FW API changes;
+* Fix a bug where we got a false-positive warning;
+* Fix forced quota debugfs functionality;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Emmanuel Grumbach (2):
+  iwlwifi: fw: fix the enums in the rate scaling API
+  iwlwifi: define and use if iwl_mvm_has_tlc_offload
+
+Golan Ben Ami (2):
+  iwlwifi: support internal debug data collection for new devices
+  iwlwifi: avoid duplicate sw reset executions in the code
+
+Mordechay Goodstein (2):
+  iwlwifi: runtime: sync FW and host clocks for logs
+  iwlwifi: add skb address to tx cmd in trace events data
+
+Sara Sharon (2):
+  iwlwifi: mvm: support RX flags API change
+  iwlwifi: mvm: don't warn on multiple packets when opening a queue
+
+Shaul Triebitz (3):
+  iwlwifi: mvm: force quota update upon NoA setting
+  iwlwifi: mvm: adjust to quota offload
+  iwlwifi: mvm: send the low latency command
+
+ drivers/net/wireless/intel/iwlwifi/Makefile        |   1 +
+ drivers/net/wireless/intel/iwlwifi/fw/api/debug.h  |   4 +-
+ .../net/wireless/intel/iwlwifi/fw/api/mac-cfg.h    |  19 ++
+ drivers/net/wireless/intel/iwlwifi/fw/api/rs.h     |  34 ++--
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.c    | 195 +++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.h    |  87 +++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/file.h       |  33 +++-
+ drivers/net/wireless/intel/iwlwifi/fw/img.h        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/init.c       |  13 +-
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h    |  14 +-
+ .../wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h  |   7 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  99 +++++++++--
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   6 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/quota.c     |   4 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  30 +++-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   7 -
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |   4 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  77 +++++---
+ 27 files changed, 582 insertions(+), 104 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
+
+-- 
+2.15.1
