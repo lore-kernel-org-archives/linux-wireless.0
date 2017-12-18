@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f169.google.com ([74.125.82.169]:37558 "EHLO
-        mail-ot0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752484AbdLGQkj (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50908 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758122AbdLRKOM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 11:40:39 -0500
-Received: by mail-ot0-f169.google.com with SMTP id s4so6865130ote.4
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Dec 2017 08:40:39 -0800 (PST)
-Subject: Re: Where does rtlwifi/rtl8188ee identifies interrupt type?
-To: Farhan Khan <khanzf@gmail.com>, linux-wireless@vger.kernel.org
-References: <CAFd4kYCqPpL7HsOqkLsTVy8WGsiC7Dj0JnY1mNbKE3MZjcDBzQ@mail.gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <cb2c3c02-8d2d-b68f-9674-420e1a4f6a22@lwfinger.net> (sfid-20171207_174143_245904_71224D8C)
-Date: Thu, 7 Dec 2017 10:40:37 -0600
-MIME-Version: 1.0
-In-Reply-To: <CAFd4kYCqPpL7HsOqkLsTVy8WGsiC7Dj0JnY1mNbKE3MZjcDBzQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 18 Dec 2017 05:14:12 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Adiel Aloni <adiel.aloni@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 18 Dec 2017 12:14:04 +0200
+Message-Id: <20171218101405.9330-2-luca@coelho.fi> (sfid-20171218_111423_057361_AC090D5B)
+In-Reply-To: <20171218101405.9330-1-luca@coelho.fi>
+References: <20171218101405.9330-1-luca@coelho.fi>
+Subject: [PATCH 1/2] mac80211_hwsim: enable TODS BIT in null data frame
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/2017 11:01 PM, Farhan Khan wrote:
-> Hi all,
-> 
-> I am reading through the rtlwifi code, specifically rtl8188ee code. I
-> am trying to find the driver handles interrupts, reads from the card
-> and identifies what type of interrupt it receives.
-> 
-> I believe it will utilize the REG_HISR and REG_HIMR registers, but
-> only see writes to those register values, not reads which I was
-> expecting.
+From: Adiel Aloni <adiel.aloni@intel.com>
 
-Keep in mind that all of the rtlwifi family of drivers actually use the routines 
-in rtlwifi, and either rtl_pci or rtl_usb. They employ a lot more code than is 
-found in their specific directory.
+Same as in ieee80211_nullfunc_get, enable the TODS bit, otherwise the
+nullfunc packet will not be handled in ap rx path.
+(will be dropped in ieee80211_accept_frame()).
 
-I will not be answering every question like this, but in this case look at 
-_rtl_pci_interrupt().
+Signed-off-by: Adiel Aloni <adiel.aloni@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Larry
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 45cca54c05bf..3141b8e28b34 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -684,6 +684,7 @@ static void hwsim_send_nullfunc(struct mac80211_hwsim_data *data, u8 *mac,
+ 	hdr = skb_put(skb, sizeof(*hdr) - ETH_ALEN);
+ 	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
+ 					 IEEE80211_STYPE_NULLFUNC |
++					 IEEE80211_FCTL_TODS |
+ 					 (ps ? IEEE80211_FCTL_PM : 0));
+ 	hdr->duration_id = cpu_to_le16(0);
+ 	memcpy(hdr->addr1, vp->bssid, ETH_ALEN);
+-- 
+2.15.1
