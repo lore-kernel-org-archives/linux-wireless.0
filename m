@@ -1,99 +1,460 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58712 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753675AbdLHO3S (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50984 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1759273AbdLRMiZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 09:29:18 -0500
-Date: Fri, 8 Dec 2017 15:29:06 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Kalle Valo <kvalo@codeaurora.org>, sgruszka@redhat.com
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-        johannes.berg@intel.com, linville@tuxdriver.com,
-        linux-wireless@vger.kernel.org
-Subject: iwl3945: regression at 4.15-rc1 was Re: 4.15.0-rc1-next-20171201:
- WARNING: .... at net/mac80211/agg-tx.c:315
-Message-ID: <20171208142906.GF7793@amd> (sfid-20171208_152954_598799_1E9DA4D3)
-References: <20171205102434.GA12780@amd>
- <874lp5jwge.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="FeAIMMcddNRN4P4/"
-In-Reply-To: <874lp5jwge.fsf@purkki.adurom.net>
+        Mon, 18 Dec 2017 07:38:25 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 18 Dec 2017 14:38:08 +0200
+Message-Id: <20171218123815.3968-5-luca@coelho.fi> (sfid-20171218_133842_495074_8072D05C)
+In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
+References: <20171218123815.3968-1-luca@coelho.fi>
+Subject: [PATCH 04/11] iwlwifi: runtime: sync FW and host clocks for logs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
---FeAIMMcddNRN4P4/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+For sync we send a marker cmd every <defined throughout debugfs> seconds.
+The trigger for getting gp2 clock values from the FW is set by
+writing to debugfs a periodic time in seconds,
+if value zero is written, only one request would be sent
+and the timer would be canceled.
 
-Hi!
+Also added a small infrastructure for debugfs runtime code.
 
-> > This is quite annoying: repeated
-> >
-> > [ 4169.591529] ---[ end trace e65d97cf1d20b84d ]---
-> > [ 4169.591565] WARNING: CPU: 0 PID: 5472 at net/mac80211/agg-tx.c:315
-> > ___ieee80211_stop_tx_\
-> > ba_session+0x158/0x1f0
-> >
-> > Hardware is thinkpad x60. Git blame says cfcdbde35 introduced the
-> > test.
->=20
-> To save time for others, the driver is iwl3945:
->=20
-> > [    0.970687] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connec=
-tion driver for Linux, in-tree:ds
-> > [    0.970690] iwl3945: Copyright(c) 2003-2011 Intel Corporation
-> > [    0.970692] iwl3945: hw_scan is disabled
-> > [    0.971082] iwl3945 0000:03:00.0: can't disable ASPM; OS doesn't hav=
-e ASPM control
-> > [    1.026281] iwl3945 0000:03:00.0: Tunable channels: 11 802.11bg, 13 =
-802.11a channels
-> > [    1.026287] iwl3945 0000:03:00.0: Detected Intel Wireless WiFi Link =
-3945ABG
-> > [    1.027866] ieee80211 phy0: Selected rate control algorithm 'iwl-394=
-5-rs'
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/Makefile       |   1 +
+ drivers/net/wireless/intel/iwlwifi/fw/api/debug.h |   4 +-
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.c   | 195 ++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.h   |  87 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/init.c      |  13 +-
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h   |  14 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |   6 +-
+ 7 files changed, 313 insertions(+), 7 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
 
-And same problem is there in 4.15-rc1. It is regression from 4.14.
-
-[  530.816390] WARNING: CPU: 1 PID: 3193 at net/mac80211/agg-tx.c:315
-___ieee802
-11_stop_tx_ba_session+0x158/0x1f0
-[  530.816395] Modules linked in:
-[  530.816405] CPU: 1 PID: 3193 Comm: wpa_supplicant Tainted: G
-W
-4.15.0-rc1+ #447
-[  530.816410] Hardware name: LENOVO 17097HU/17097HU, BIOS 7BETD8WW
-(2.19 ) 03/3
-1/2011
-[  530.816416] task: 17453748 task.stack: 79a41831
-[  530.816422] EIP: ___ieee80211_stop_tx_ba_session+0x158/0x1f0
-[  530.816427] EFLAGS: 00010246 CPU: 1
-[  530.816433] EAX: 00000000 EBX: f5c19000 ECX: f5eff670 EDX: f5eff040
-[  530.816438] ESI: 0000000f EDI: 00000003 EBP: ef32dbb4 ESP: ef32db8c
-[  530.816444]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-[  530.816450] CR0: 80050033 CR2: 091a4008 CR3: 34d412c0 CR4: 000006b0
-[  530.816455] Call Trace:
-[  530.816463]  ieee80211_sta_tear_down_BA_sessions+0x6e/0xd0
-[  530.816470]  __sta_info_destroy_part1+0x3d/0x1f0
-
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---FeAIMMcddNRN4P4/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAloqobIACgkQMOfwapXb+vLHwgCgqljnkfvdo7GFFbw8iJlqB0ny
-FoUAnjqc4fnytnhfvOMRFY4Eoc1JdLH6
-=uI8V
------END PGP SIGNATURE-----
-
---FeAIMMcddNRN4P4/--
+diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
+index e2c151ae8649..e6205eae51fd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/Makefile
+@@ -15,6 +15,7 @@ iwlwifi-objs		+= fw/notif-wait.o
+ iwlwifi-$(CONFIG_IWLMVM) += fw/paging.o fw/smem.o fw/init.o fw/dbg.o
+ iwlwifi-$(CONFIG_IWLMVM) += fw/common_rx.o fw/nvm.o
+ iwlwifi-$(CONFIG_ACPI) += fw/acpi.o
++iwlwifi-$(CONFIG_IWLWIFI_DEBUGFS) += fw/debugfs.o
+ 
+ iwlwifi-objs += $(iwlwifi-m)
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
+index 0a81fb1b6ed4..106782341544 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
+@@ -250,10 +250,12 @@ struct iwl_mfu_assert_dump_notif {
+  * The ids for different type of markers to insert into the usniffer logs
+  *
+  * @MARKER_ID_TX_FRAME_LATENCY: TX latency marker
++ * @MARKER_ID_SYNC_CLOCK: sync FW time and systime
+  */
+ enum iwl_mvm_marker_id {
+ 	MARKER_ID_TX_FRAME_LATENCY = 1,
+-}; /* MARKER_ID_API_E_VER_1 */
++	MARKER_ID_SYNC_CLOCK = 2,
++}; /* MARKER_ID_API_E_VER_2 */
+ 
+ /**
+  * struct iwl_mvm_marker - mark info into the usniffer logs
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+new file mode 100644
+index 000000000000..e2ded29a145d
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+@@ -0,0 +1,195 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called COPYING.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <linuxwifi@intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++#include "api/commands.h"
++#include "debugfs.h"
++
++#define FWRT_DEBUGFS_READ_FILE_OPS(name)				\
++static ssize_t iwl_dbgfs_##name##_read(struct iwl_fw_runtime *fwrt,	\
++				       char *buf, size_t count,		\
++				       loff_t *ppos);			\
++static const struct file_operations iwl_dbgfs_##name##_ops = {		\
++	.read = iwl_dbgfs_##name##_read,				\
++	.open = simple_open,						\
++	.llseek = generic_file_llseek,					\
++}
++
++#define FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen)			\
++static ssize_t iwl_dbgfs_##name##_write(struct iwl_fw_runtime *fwrt,	\
++					char *buf, size_t count,	\
++					loff_t *ppos);			\
++static ssize_t _iwl_dbgfs_##name##_write(struct file *file,		\
++					 const char __user *user_buf,	\
++					 size_t count, loff_t *ppos)	\
++{									\
++	struct iwl_fw_runtime *fwrt = file->private_data;		\
++	char buf[buflen] = {};						\
++	size_t buf_size = min(count, sizeof(buf) -  1);			\
++									\
++	if (copy_from_user(buf, user_buf, buf_size))			\
++		return -EFAULT;						\
++									\
++	return iwl_dbgfs_##name##_write(fwrt, buf, buf_size, ppos);	\
++}
++
++#define FWRT_DEBUGFS_READ_WRITE_FILE_OPS(name, buflen)			\
++FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen)				\
++static const struct file_operations iwl_dbgfs_##name##_ops = {		\
++	.write = _iwl_dbgfs_##name##_write,				\
++	.read = iwl_dbgfs_##name##_read,				\
++	.open = simple_open,						\
++	.llseek = generic_file_llseek,					\
++}
++
++#define FWRT_DEBUGFS_WRITE_FILE_OPS(name, buflen)			\
++FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen)				\
++static const struct file_operations iwl_dbgfs_##name##_ops = {		\
++	.write = _iwl_dbgfs_##name##_write,				\
++	.open = simple_open,						\
++	.llseek = generic_file_llseek,					\
++}
++
++#define FWRT_DEBUGFS_ADD_FILE_ALIAS(alias, name, parent, mode) do {	\
++		if (!debugfs_create_file(alias, mode, parent, fwrt,	\
++					 &iwl_dbgfs_##name##_ops))	\
++			goto err;					\
++	} while (0)
++#define FWRT_DEBUGFS_ADD_FILE(name, parent, mode) \
++	FWRT_DEBUGFS_ADD_FILE_ALIAS(#name, name, parent, mode)
++
++static int iwl_fw_send_timestamp_marker_cmd(struct iwl_fw_runtime *fwrt)
++{
++	struct iwl_mvm_marker marker = {
++		.dw_len = sizeof(struct iwl_mvm_marker) / 4,
++		.marker_id = MARKER_ID_SYNC_CLOCK,
++
++		/* the real timestamp is taken from the ftrace clock
++		 * this is for finding the match between fw and kernel logs
++		 */
++		.timestamp = cpu_to_le64(fwrt->timestamp.seq++),
++	};
++
++	struct iwl_host_cmd hcmd = {
++		.id = MARKER_CMD,
++		.flags = CMD_ASYNC,
++		.data[0] = &marker,
++		.len[0] = sizeof(marker),
++	};
++
++	return iwl_trans_send_cmd(fwrt->trans, &hcmd);
++}
++
++static void iwl_fw_timestamp_marker_wk(struct work_struct *work)
++{
++	int ret;
++	struct iwl_fw_runtime *fwrt =
++		container_of(work, struct iwl_fw_runtime, timestamp.wk.work);
++	unsigned long delay = fwrt->timestamp.delay;
++
++	ret = iwl_fw_send_timestamp_marker_cmd(fwrt);
++	if (!ret && delay)
++		schedule_delayed_work(&fwrt->timestamp.wk,
++				      round_jiffies_relative(delay));
++	else
++		IWL_INFO(fwrt,
++			 "stopping timestamp_marker, ret: %d, delay: %u\n",
++			 ret, jiffies_to_msecs(delay) / 1000);
++}
++
++static ssize_t iwl_dbgfs_timestamp_marker_write(struct iwl_fw_runtime *fwrt,
++						char *buf, size_t count,
++						loff_t *ppos)
++{
++	int ret;
++	u32 delay;
++
++	ret = kstrtou32(buf, 10, &delay);
++	if (ret < 0)
++		return ret;
++
++	IWL_INFO(fwrt,
++		 "starting timestamp_marker trigger with delay: %us\n",
++		 delay);
++
++	iwl_fw_cancel_timestamp(fwrt);
++
++	fwrt->timestamp.delay = msecs_to_jiffies(delay * 1000);
++
++	schedule_delayed_work(&fwrt->timestamp.wk,
++			      round_jiffies_relative(fwrt->timestamp.delay));
++	return count;
++}
++
++FWRT_DEBUGFS_WRITE_FILE_OPS(timestamp_marker, 10);
++
++int iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
++			    struct dentry *dbgfs_dir)
++{
++	INIT_DELAYED_WORK(&fwrt->timestamp.wk, iwl_fw_timestamp_marker_wk);
++	FWRT_DEBUGFS_ADD_FILE(timestamp_marker, dbgfs_dir, S_IWUSR);
++	return 0;
++err:
++	IWL_ERR(fwrt, "Can't create the fwrt debugfs directory\n");
++	return -ENOMEM;
++}
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
+new file mode 100644
+index 000000000000..e57ff92a68ae
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
+@@ -0,0 +1,87 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called COPYING.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <linuxwifi@intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++
++#include "runtime.h"
++
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++int iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
++			    struct dentry *dbgfs_dir);
++
++static inline void iwl_fw_cancel_timestamp(struct iwl_fw_runtime *fwrt)
++{
++	fwrt->timestamp.delay = 0;
++	cancel_delayed_work_sync(&fwrt->timestamp.wk);
++}
++
++#else
++static inline int iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
++					  struct dentry *dbgfs_dir)
++{
++	return 0;
++}
++
++static inline void iwl_fw_cancel_timestamp(struct iwl_fw_runtime *fwrt) {}
++
++#endif /* CONFIG_IWLWIFI_DEBUGFS */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/init.c b/drivers/net/wireless/intel/iwlwifi/fw/init.c
+index bfe5316bbb6a..c39fe84bb4c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/init.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/init.c
+@@ -58,10 +58,12 @@
+ #include "iwl-drv.h"
+ #include "runtime.h"
+ #include "dbg.h"
++#include "debugfs.h"
+ 
+ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
+-			 const struct iwl_fw *fw,
+-			 const struct iwl_fw_runtime_ops *ops, void *ops_ctx)
++			const struct iwl_fw *fw,
++			const struct iwl_fw_runtime_ops *ops, void *ops_ctx,
++			struct dentry *dbgfs_dir)
+ {
+ 	memset(fwrt, 0, sizeof(*fwrt));
+ 	fwrt->trans = trans;
+@@ -71,5 +73,12 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
+ 	fwrt->ops = ops;
+ 	fwrt->ops_ctx = ops_ctx;
+ 	INIT_DELAYED_WORK(&fwrt->dump.wk, iwl_fw_error_dump_wk);
++	iwl_fwrt_dbgfs_register(fwrt, dbgfs_dir);
+ }
+ IWL_EXPORT_SYMBOL(iwl_fw_runtime_init);
++
++void iwl_fw_runtime_exit(struct iwl_fw_runtime *fwrt)
++{
++	iwl_fw_cancel_timestamp(fwrt);
++}
++IWL_EXPORT_SYMBOL(iwl_fw_runtime_exit);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index 50cfb6d795a5..e25c049f980f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -134,11 +134,21 @@ struct iwl_fw_runtime {
+ 		/* ts of the beginning of a non-collect fw dbg data period */
+ 		unsigned long non_collect_ts_start[FW_DBG_TRIGGER_MAX - 1];
+ 	} dump;
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++	struct {
++		struct delayed_work wk;
++		u32 delay;
++		u64 seq;
++	} timestamp;
++#endif /* CONFIG_IWLWIFI_DEBUGFS */
+ };
+ 
+ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
+-			 const struct iwl_fw *fw,
+-			 const struct iwl_fw_runtime_ops *ops, void *ops_ctx);
++			const struct iwl_fw *fw,
++			const struct iwl_fw_runtime_ops *ops, void *ops_ctx,
++			struct dentry *dbgfs_dir);
++
++void iwl_fw_runtime_exit(struct iwl_fw_runtime *fwrt);
+ 
+ static inline void iwl_fw_set_current_image(struct iwl_fw_runtime *fwrt,
+ 					    enum iwl_ucode_type cur_fw_img)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index f32edc1709d1..1d4d499c7ba3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -602,7 +602,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	mvm->fw = fw;
+ 	mvm->hw = hw;
+ 
+-	iwl_fw_runtime_init(&mvm->fwrt, trans, fw, &iwl_mvm_fwrt_ops, mvm);
++	iwl_fw_runtime_init(&mvm->fwrt, trans, fw, &iwl_mvm_fwrt_ops, mvm,
++			    dbgfs_dir);
+ 
+ 	mvm->init_status = 0;
+ 
+@@ -800,6 +801,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	iwl_mvm_leds_exit(mvm);
+ 	iwl_mvm_thermal_exit(mvm);
+  out_free:
++	iwl_fw_runtime_exit(&mvm->fwrt);
+ 	iwl_fw_flush_dump(&mvm->fwrt);
+ 
+ 	if (iwlmvm_mod_params.init_dbg)
+@@ -840,7 +842,7 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
+ #if defined(CONFIG_PM_SLEEP) && defined(CONFIG_IWLWIFI_DEBUGFS)
+ 	kfree(mvm->d3_resume_sram);
+ #endif
+-
++	iwl_fw_runtime_exit(&mvm->fwrt);
+ 	iwl_trans_op_mode_leave(mvm->trans);
+ 
+ 	iwl_phy_db_free(mvm->phy_db);
+-- 
+2.15.1
