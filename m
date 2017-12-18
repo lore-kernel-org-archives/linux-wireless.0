@@ -1,47 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57770 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755528AbdLGNMZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50992 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1759296AbdLRMi0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 08:12:25 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [01/10] brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1510605347-7629-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1510605347-7629-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20171207131224.A57486081C@smtp.codeaurora.org> (sfid-20171207_141422_556075_0CA26BEE)
-Date: Thu,  7 Dec 2017 13:12:24 +0000 (UTC)
+        Mon, 18 Dec 2017 07:38:26 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 18 Dec 2017 14:38:09 +0200
+Message-Id: <20171218123815.3968-6-luca@coelho.fi> (sfid-20171218_133831_774041_BBC9BA06)
+In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
+References: <20171218123815.3968-1-luca@coelho.fi>
+Subject: [PATCH 05/11] iwlwifi: mvm: support RX flags API change
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> From: Ian Molton <ian@mnementh.co.uk>
-> 
-> All the other IO functions are the other way round in this
-> driver. Make this one match.
-> 
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Latest firmware calculates both phases of the TKIP
+field, so the TTAK ok flag is not needed and deprecated.
 
-10 patches applied to wireless-drivers-next.git, thanks.
+Support this API change.
 
-1fd3ae124d5e brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
-1e6f676f43aa brcmfmac: Register sizes on hardware are not dependent on compiler types
-0fcc9fe00484 brcmfmac: Split brcmf_sdiod_regrw_helper() up.
-b9b0d290bc0c brcmfmac: Clean up brcmf_sdiod_set_sbaddr_window()
-ea243e9077b3 brcmfmac: Remove dead IO code
-4a3338ba2a74 brcmfmac: Remove bandaid for SleepCSR
-993a98a42e6e brcmfmac: Remove brcmf_sdiod_request_data()
-3508a056a1f4 brcmfmac: Fix asymmetric IO functions.
-12e3e74e2820 brcmfmac: Remove noisy debugging.
-dd8a2d49e4ed brcmfmac: Rename bcmerror to err
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  | 3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 4 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 +++-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 0824c007b6f8..12f97a2fc7ea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -248,6 +248,8 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
+  * @IWL_UCODE_TLV_API_NEW_RX_STATS: should new RX STATISTICS API be used
+  * @IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY: Quota command includes a field
+  *	indicating low latency direction.
++ * @IWL_UCODE_TLV_API_DEPRECATE_TTAK: RX status flag TTAK ok (bit 7) is
++ *	deprecated.
+  *
+  * @NUM_IWL_UCODE_TLV_API: number of bits used
+  */
+@@ -266,6 +268,7 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
+ 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
+ 	IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY	= (__force iwl_ucode_tlv_api_t)38,
++	IWL_UCODE_TLV_API_DEPRECATE_TTAK	= (__force iwl_ucode_tlv_api_t)41,
+ 
+ 	NUM_IWL_UCODE_TLV_API
+ #ifdef __CHECKER__
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 63a57f0a16ef..d26833c5ce1f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -222,7 +222,9 @@ static u32 iwl_mvm_set_mac80211_rx_flag(struct iwl_mvm *mvm,
+ 
+ 	case RX_MPDU_RES_STATUS_SEC_TKIP_ENC:
+ 		/* Don't drop the frame and decrypt it in SW */
+-		if (!(rx_pkt_status & RX_MPDU_RES_STATUS_TTAK_OK))
++		if (!fw_has_api(&mvm->fw->ucode_capa,
++				IWL_UCODE_TLV_API_DEPRECATE_TTAK) &&
++		    !(rx_pkt_status & RX_MPDU_RES_STATUS_TTAK_OK))
+ 			return 0;
+ 		*crypt_len = IEEE80211_TKIP_IV_LEN;
+ 		/* fall through if TTAK OK */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 00d048bd2d35..858465838355 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -257,7 +257,9 @@ static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
+ 		return 0;
+ 	case IWL_RX_MPDU_STATUS_SEC_TKIP:
+ 		/* Don't drop the frame and decrypt it in SW */
+-		if (!(status & IWL_RX_MPDU_RES_STATUS_TTAK_OK))
++		if (!fw_has_api(&mvm->fw->ucode_capa,
++				IWL_UCODE_TLV_API_DEPRECATE_TTAK) &&
++		    !(status & IWL_RX_MPDU_RES_STATUS_TTAK_OK))
+ 			return 0;
+ 
+ 		*crypt_len = IEEE80211_TKIP_IV_LEN;
 -- 
-https://patchwork.kernel.org/patch/10056667/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.15.1
