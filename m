@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0118.outbound.protection.outlook.com ([104.47.32.118]:5507
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932857AbdLSG4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 01:56:44 -0500
-From: Wright Feng <wright.feng@cypress.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
-        chi-hsien.lin@cypress.com
-Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Double Lo <double.lo@cypress.com>
-Subject: [PATCH v2] brcmfmac: Support 43455 save-restore (SR) feature if FW include -sr
-Date: Tue, 19 Dec 2017 14:56:44 +0800
-Message-Id: <1513666604-24592-1-git-send-email-wright.feng@cypress.com> (sfid-20171219_075648_969359_B26FD195)
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:36284 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751520AbdLSLgl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 06:36:41 -0500
+Received: by mail-qk0-f176.google.com with SMTP id 8so22062250qkj.3
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2017 03:36:41 -0800 (PST)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: BCM4356 does not initalize after firmware update
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+References: <20171213161257.GB2811@redhat.com> <5A3240B9.90007@broadcom.com>
+ <20171214142243.GB2737@redhat.com> <5A339CB2.1040202@broadcom.com>
+ <20171215103215.GA2742@redhat.com> <5A33ADAA.9060008@broadcom.com>
+ <20171215122045.GB2742@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <5A38F9C4.3050202@broadcom.com> (sfid-20171219_123646_547224_1B14358E)
+Date: Tue, 19 Dec 2017 12:36:36 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20171215122045.GB2742@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Double Lo <double.lo@cypress.com>
+On 12/15/2017 1:20 PM, Stanislaw Gruszka wrote:
+> On Fri, Dec 15, 2017 at 12:10:34PM +0100, Arend van Spriel wrote:
+>> # cat /sys/kernel/debug/brcmfmac/0000:03:00.0/revinfo
+>
+> vendorid: 0x14e4
+> deviceid: 0x43ec
+> radiorev: 0.41.32.105
+> chipnum: 17238 (4356)
+> chiprev: 2
+> chippkg: 2
+> corerev: 48
+> boardid: 0x0777
+> boardvendor: 0x14e4
+> boardrev: P103
+> driverrev: 7.35.180.119
+> ucoderev: 0
+> bus: 0
+> phytype: 11
+> phyrev: 17
+> anarev: 0
+> nvramrev: 00000000
 
-This patch will add 43455 into the save-restore(SR) capable chip list, so
-the SR engine will be enabled with 43455 FW which built-in the -sr
-function.
+Thanks for the info. I was looking for the board info. It seems we do 
+not have an nvram file for that specific board.
 
-Signed-off-by: Double Lo <double.lo@cypress.com>
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
----
-v2: Add Wright's signed-off-by
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 1 +
- 1 file changed, 1 insertion(+)
+For SDIO devices I would suggest to use the module parameter 
+'ignore_probe_fail' so we could do post-mortem stuff with the driver 
+bound to the device, but for PCIe there are not much debug options. Let 
+me work on that. May take a bit longer though.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index c5d1a1c..f7b30ce 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -1338,6 +1338,7 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
- 	switch (pub->chip) {
- 	case BRCM_CC_4354_CHIP_ID:
- 	case BRCM_CC_4356_CHIP_ID:
-+	case BRCM_CC_4345_CHIP_ID:
- 		/* explicitly check SR engine enable bit */
- 		pmu_cc3_mask = BIT(2);
- 		/* fall-through */
--- 
-1.9.1
+Regards,
+Arend
