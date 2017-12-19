@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([217.72.192.78]:51461 "EHLO mout.web.de"
+Received: from mx1.redhat.com ([209.132.183.28]:9296 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750974AbdL3VGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Dec 2017 16:06:16 -0500
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Kees Cook <keescook@chromium.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 0/2] at76c50x-usb: Adjustments for two function
- implementations
-Message-ID: <1d76fe59-af15-ba4d-e05d-09dcd9ee38cd@users.sourceforge.net> (sfid-20171230_220637_920309_04BDDCAE)
-Date: Sat, 30 Dec 2017 22:06:00 +0100
+        id S1762822AbdLSMzU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 07:55:20 -0500
+Date: Tue, 19 Dec 2017 13:54:32 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Enrico Mioso <mrkiko.rs@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20171219125431.GB2672@redhat.com> (sfid-20171219_135524_189362_E3C442E6)
+References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain>
+ <20171213152017.GA3554@redhat.com>
+ <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain>
+ <20171218152142.GA15414@redhat.com>
+ <20171219122707.GA2672@redhat.com>
+ <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 30 Dec 2017 22:01:23 +0100
+On Tue, Dec 19, 2017 at 01:43:11PM +0100, Enrico Mioso wrote:
+> I am going to test this on a LEDE build.
+> Should I leave the mmio workaround patch applied as per OpenWRT default, or should I leave it off ?
+> I'll leave it off by default.
 
-Two update suggestions were taken into account
-from static source code analysis.
+Please remove it. If things would work then retest with it and see if
+if things still work.
 
-Markus Elfring (2):
-  Delete an error message for a failed memory allocation in at76_submit_rx_urb()
-  Improve size determinations in at76_usbdfu_download()
-
- drivers/net/wireless/atmel/at76c50x-usb.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
--- 
-2.15.1
+Thanks
+Stanislaw
