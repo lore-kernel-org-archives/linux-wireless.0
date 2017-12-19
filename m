@@ -1,108 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51042 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:51318 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933751AbdLRMij (ORCPT
+        with ESMTP id S1751704AbdLSPOB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 07:38:39 -0500
+        Tue, 19 Dec 2017 10:14:01 -0500
+Message-ID: <1513696434.4827.450.camel@coelho.fi> (sfid-20171219_161407_135309_F527FAFE)
 From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 14:38:14 +0200
-Message-Id: <20171218123815.3968-11-luca@coelho.fi> (sfid-20171218_133845_243820_CEA0D420)
-In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
-References: <20171218123815.3968-1-luca@coelho.fi>
-Subject: [PATCH 10/11] iwlwifi: mvm: send the low latency command
+To: sedat.dilek@gmail.com
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        linuxwifi <linuxwifi@intel.com>
+Date: Tue, 19 Dec 2017 17:13:54 +0200
+In-Reply-To: <CA+icZUUuqoEuvwG9PE8LHT=3vFLf4FmkNUqMUOweE9s-1bcftg@mail.gmail.com>
+References: <1511175768.4011.261.camel@coelho.fi>
+         <CA+icZUVqhmH3dyMXkHKsHus5qyfMqQfcOctvHRDf4x=6+ndfPw@mail.gmail.com>
+         <1511259055.4011.268.camel@coelho.fi>
+         <CA+icZUVPzwX6hyPZaUJWwn7zOGMaRAkQ7SA6haw6p0F-YX7kBw@mail.gmail.com>
+         <1511943649.4827.20.camel@coelho.fi>
+         <CA+icZUUuqoEuvwG9PE8LHT=3vFLf4FmkNUqMUOweE9s-1bcftg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi 2017-11-19
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+On Tue, 2017-12-19 at 14:52 +0100, Sedat Dilek wrote:
+> On Wed, Nov 29, 2017 at 9:20 AM, Luca Coelho <luca@coelho.fi> wrote:
+> > On Wed, 2017-11-29 at 08:51 +0100, Sedat Dilek wrote:
+> > > On Tue, Nov 21, 2017 at 11:10 AM, Luca Coelho <luca@coelho.fi>
+> > > wrote:
+> > > > On Tue, 2017-11-21 at 10:30 +0100, Sedat Dilek wrote:
+> > > > > On Mon, Nov 20, 2017 at 12:02 PM, Luca Coelho <luca@coelho.fi
+> > > > > >
+> > > > > wrote:
+> > > > > [..]
+> > > > > > ---------------------------------------------------------
+> > > > > > ----
+> > > > > > ---
+> > > > > > iwlwifi: first set of fixes for 4.15
+> > > > > > 
+> > > > > > * Support new FW API version of scan cmd (used in FW
+> > > > > > version
+> > > > > > 34);
+> > > > > 
+> > > > > While seeing this...
+> > > > > I have here a iwlwifi-8265 hardware and have seen a recently
+> > > > > uploaded
+> > > > > FW-version 34 in iwlwifi-firmware Git.
+> > > > > Can you explain the dependence of iwlwifi firmware-version /
+> > > > > Linux
+> > > > > kernel-release and especially probing?
+> > > > > Currently, I am using Linux v4.14 from Debian/experimental.
+> > > > 
+> > > > Mostly for backwards-compatibility, the driver is able to work
+> > > > with
+> > > > a
+> > > > range of firmware versions.  It only uses one of them at a time
+> > > > (i.e.
+> > > > the highest supported version it finds).
+> > > > 
+> > > > The driver in v4.14 support version 34 and below.  So it starts
+> > > > looking
+> > > > for that one and, if not found, falls back to the next lower
+> > > > version
+> > > > (i.e. 33) and so on, until it finds one.
+> > > > 
+> > > 
+> > > Isn't Linux v4.14.3 (here: -rc1) minimum to completely support
+> > > new
+> > > features in v34 firmware?
+> > 
+> > Yes, it is.  But this was a bug and we can't go back and fix
+> > v4.14.0-2,
+> > right? So it's the best we can do and whoever is using v4.14,
+> > should
+> > update to v4.14.3 when it comes out to be able to use version 34 of
+> > the
+> > firmware.
+> > 
+> 
+> Thanks for the confirmation.
+> 
+> I have added the patch from v4.14.3 to latest Debian-kernel v4.14.2
+> and rebuild the corresponding iwlwifi kernel-modules.
+> v34 firmware works fine now.
+> 
+> # dmesg | egrep iwlwifi
+> [   21.178769] iwlwifi: loading out-of-tree module taints kernel.
+> [   21.184459] iwlwifi 0000:04:00.0: enabling device (0000 -> 0002)
+> [   21.217170] iwlwifi 0000:04:00.0: firmware: direct-loading
+> firmware
+> iwlwifi-8265-34.ucode
+> [   21.218061] iwlwifi 0000:04:00.0: loaded firmware version 34.0.1
+> op_mode iwlmvm
+> [   21.271000] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+> Wireless AC 8265, REV=0x230
+> [   21.340242] iwlwifi 0000:04:00.0: base HW address:
+> bc:a8:a6:d1:3f:49
+> [   21.432118] iwlwifi 0000:04:00.0 wlp4s0: renamed from wlan0
 
-Recently a new command was added to the firmware
-for setting a MAC's low-latency mode.  Use it.
+Great! Thanks for confirming.
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/fw/api/mac-cfg.h    | 19 +++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 24 +++++++++++++++++++++-
- 2 files changed, 42 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-index ec42c84e5df2..17c7ef1662a9 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-@@ -67,6 +67,10 @@
-  * enum iwl_mac_conf_subcmd_ids - mac configuration command IDs
-  */
- enum iwl_mac_conf_subcmd_ids {
-+	/**
-+	 * @LOW_LATENCY_CMD: &struct iwl_mac_low_latency_cmd
-+	 */
-+	LOW_LATENCY_CMD = 0x3,
- 	/**
- 	 * @CHANNEL_SWITCH_NOA_NOTIF: &struct iwl_channel_switch_noa_notif
- 	 */
-@@ -82,4 +86,19 @@ struct iwl_channel_switch_noa_notif {
- 	__le32 id_and_color;
- } __packed; /* CHANNEL_SWITCH_START_NTFY_API_S_VER_1 */
- 
-+/**
-+ * struct iwl_mac_low_latency_cmd - set/clear mac to 'low-latency mode'
-+ *
-+ * @mac_id: MAC ID to whom to apply the low-latency configurations
-+ * @low_latency_rx: 1/0 to set/clear Rx low latency direction
-+ * @low_latency_tx: 1/0 to set/clear Tx low latency direction
-+ * @reserved: reserved for alignment purposes
-+ */
-+struct iwl_mac_low_latency_cmd {
-+	__le32 mac_id;
-+	u8 low_latency_rx;
-+	u8 low_latency_tx;
-+	__le16 reserved;
-+} __packed; /* MAC_LOW_LATENCY_API_S_VER_1 */
-+
- #endif /* __iwl_fw_api_mac_cfg_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index b2410eb68123..e94fcf16c513 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -1032,12 +1032,34 @@ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	int res;
-+	bool low_latency;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	if (iwl_mvm_vif_low_latency(mvmvif) == prev)
-+	low_latency = iwl_mvm_vif_low_latency(mvmvif);
-+
-+	if (low_latency == prev)
- 		return 0;
- 
-+	if (fw_has_capa(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_CAPA_DYNAMIC_QUOTA)) {
-+		struct iwl_mac_low_latency_cmd cmd = {
-+			.mac_id = cpu_to_le32(mvmvif->id)
-+		};
-+
-+		if (low_latency) {
-+			/* currently we don't care about the direction */
-+			cmd.low_latency_rx = 1;
-+			cmd.low_latency_tx = 1;
-+		}
-+		res = iwl_mvm_send_cmd_pdu(mvm,
-+					   iwl_cmd_id(LOW_LATENCY_CMD,
-+						      MAC_CONF_GROUP, 0),
-+					   0, sizeof(cmd), &cmd);
-+		if (res)
-+			IWL_ERR(mvm, "Failed to send low latency command\n");
-+	}
-+
- 	res = iwl_mvm_update_quotas(mvm, false, NULL);
- 	if (res)
- 		return res;
--- 
-2.15.1
+--
+Luca.
