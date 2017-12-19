@@ -1,83 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:37412 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756615AbdLTTvj (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35081 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S967246AbdLSMra (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Dec 2017 14:51:39 -0500
-Received: by mail-pl0-f68.google.com with SMTP id s3so9608559plp.4
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Dec 2017 11:51:39 -0800 (PST)
-From: Amit Pundir <amit.pundir@linaro.org>
-To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Cc: Suren Baghdasaryan <surenb@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>
-Subject: [RFC][PATCH 2/4] NFC: st21nfca: Fix memory OOB and leak issues in connectivity events handler
-Date: Thu, 21 Dec 2017 01:21:22 +0530
-Message-Id: <1513799484-12505-3-git-send-email-amit.pundir@linaro.org> (sfid-20171220_205149_538568_6B160C15)
-In-Reply-To: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
-References: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
+        Tue, 19 Dec 2017 07:47:30 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 04/11] brcmfmac: Correctly handle accesses to SDIO func0
+Date: Tue, 19 Dec 2017 13:47:10 +0100
+Message-Id: <1513687637-5555-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134748_949999_DC058D73)
+In-Reply-To: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Suren Baghdasaryan <surenb@google.com>
+From: Ian Molton <ian@mnementh.co.uk>
 
-Overflow on memcpy is possible in kernel driver for st21nfca's
-NFC HCI layer when handling connectivity events if aid_len or
-params_len are bigger than the buffer size.
-Memory leak is possible when parameter tag is invalid.
+Rather than workaround the restrictions on func0 addressing in the
+driver, set MMC_QUIRK_LENIENT_FN0
 
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/nfc/st21nfca/se.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 4 ++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 4 ++--
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nfc/st21nfca/se.c b/drivers/nfc/st21nfca/se.c
-index 4bed9e842db3..acdce231e227 100644
---- a/drivers/nfc/st21nfca/se.c
-+++ b/drivers/nfc/st21nfca/se.c
-@@ -322,23 +322,33 @@ int st21nfca_connectivity_event_received(struct nfc_hci_dev *hdev, u8 host,
- 		 * AID		81	5 to 16
- 		 * PARAMETERS	82	0 to 255
- 		 */
--		if (skb->len < NFC_MIN_AID_LENGTH + 2 &&
-+		if (skb->len < NFC_MIN_AID_LENGTH + 2 ||
- 		    skb->data[0] != NFC_EVT_TRANSACTION_AID_TAG)
- 			return -EPROTO;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 29a2d1e..b6d0757 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -995,6 +995,10 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	brcmf_dbg(SDIO, "Function#: %d\n", func->num);
  
-+		/*
-+		 * Buffer should have enough space for at least
-+		 * two tag fields + two length fields + aid_len (skb->data[1])
-+		 */
-+		if (skb->len < skb->data[1] + 4)
-+			return -EPROTO;
+ 	dev = &func->dev;
 +
- 		transaction = (struct nfc_evt_transaction *)devm_kzalloc(dev,
- 						   skb->len - 2, GFP_KERNEL);
++	/* Set MMC_QUIRK_LENIENT_FN0 for this card */
++	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
++
+ 	/* prohibit ACPI power management for this device */
+ 	brcmf_sdiod_acpi_set_power_manageable(dev, 0);
  
- 		transaction->aid_len = skb->data[1];
- 		memcpy(transaction->aid, &skb->data[2],
- 		       transaction->aid_len);
-+		transaction->params_len = skb->data[transaction->aid_len + 3];
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index ac5f814..d113c7d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -297,10 +297,10 @@ struct sdpcmd_regs {
+ /* SDIO device register access interface */
+ /* Accessors for SDIO Function 0 */
+ #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
+-	sdio_readb((sdiodev)->func[0], (addr), (r))
++	sdio_f0_readb((sdiodev)->func[0], (addr), (r))
  
--		/* Check next byte is PARAMETERS tag (82) */
-+		/* Check next byte is PARAMETERS tag (82) and the length field */
- 		if (skb->data[transaction->aid_len + 2] !=
--		    NFC_EVT_TRANSACTION_PARAMS_TAG)
-+		    NFC_EVT_TRANSACTION_PARAMS_TAG ||
-+		    skb->len < transaction->aid_len + transaction->params_len + 4) {
-+			devm_kfree(dev, transaction);
- 			return -EPROTO;
-+		}
+ #define brcmf_sdiod_func0_wb(sdiodev, addr, v, ret) \
+-	sdio_writeb((sdiodev)->func[0], (v), (addr), (ret))
++	sdio_f0_writeb((sdiodev)->func[0], (v), (addr), (ret))
  
--		transaction->params_len = skb->data[transaction->aid_len + 3];
- 		memcpy(transaction->params, skb->data +
- 		       transaction->aid_len + 4, transaction->params_len);
- 
+ /* Accessors for SDIO Function 1 */
+ #define brcmf_sdiod_readb(sdiodev, addr, r) \
 -- 
-2.7.4
+1.9.1
