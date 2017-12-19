@@ -1,237 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48598 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752014AbdLBQ3M (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:33807 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751488AbdLSTXM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 11:29:12 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  2 Dec 2017 18:28:52 +0200
-Message-Id: <20171202162858.4167-10-luca@coelho.fi> (sfid-20171202_172920_547633_B8F6FF10)
-In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
-References: <20171202162858.4167-1-luca@coelho.fi>
-Subject: [PATCH 09/15] iwlwifi: mvm: rs: new rate scale API - add debugfs hooks
+        Tue, 19 Dec 2017 14:23:12 -0500
+Received: by mail-it0-f66.google.com with SMTP id m11so9238307iti.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2017 11:23:11 -0800 (PST)
+From: Brian Norris <briannorris@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>,
+        Damian Tometzki <damian.tometzki@icloud.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH for-4.15] wireless: create, don't append, to shipped-certs.c
+Date: Tue, 19 Dec 2017 11:23:03 -0800
+Message-Id: <20171219192303.31395-1-briannorris@chromium.org> (sfid-20171219_202341_687489_14BA47D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+The current rule for generating the {shipped,extra}-certs.c source files
+might create an invalid C source file, containing redefinitions of the
+same variables:
 
-This patch adds basic debugfs hooks for rate scaling.
+  CC [M]  net/wireless/shipped-certs.o
+net/wireless/shipped-certs.c:686:10: error: redefinition of 'shipped_regdb_certs'
+ const u8 shipped_regdb_certs[] = {
+          ^
+net/wireless/shipped-certs.c:2:10: note: previous definition of 'shipped_regdb_certs' was here
+ const u8 shipped_regdb_certs[] = {
+          ^
+net/wireless/shipped-certs.c:1368:14: error: redefinition of 'shipped_regdb_certs_len'
+ unsigned int shipped_regdb_certs_len = sizeof(shipped_regdb_certs);
+              ^
+net/wireless/shipped-certs.c:684:14: note: previous definition of 'shipped_regdb_certs_len' was here
+ unsigned int shipped_regdb_certs_len = sizeof(shipped_regdb_certs);
+              ^
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+This can be easily triggered by forcing a rebuild of these files:
+
+  $ touch net/wireless/certs/sforshee.x509
+  $ make
+
+In practice, this is seen often by having a separate source and build
+directory, where the build artifacts remain but the source tree changes
+(even if Seth's cert doesn't change, it might get created/removed when
+checking out different source revisions).
+
+I don't see why this rule should be an append; we're writing the file
+all in one go.
+
+Fixes: 90a53e4432b1 ("cfg80211: implement regdb signature checking")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/rs.h    | 60 +++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  | 72 +++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  3 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  6 ++
- 4 files changed, 141 insertions(+)
+This is an error introduced in 4.15-rc1.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-index 71707e1c78a1..e9a6e5627f94 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-@@ -263,6 +263,66 @@ struct iwl_tlc_update_notif {
- 	__le32 values[16];
- } __packed; /* TLC_MNG_UPDATE_NTFY_API_S_VER_1 */
+I've seen other errors reported by Paul and Damian (CC'd); I think Paul's
+failure was fixed already, but Damian might have still been having problems
+with not having a "clean" environment. Perhaps he was hitting this bug?
+
+ net/wireless/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index d7d6cb00c47b..b662be3422e1 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -43,7 +43,7 @@ $(obj)/shipped-certs.c: $(wildcard $(srctree)/$(src)/certs/*.x509)
+ 	      echo "$$allf"; \
+ 	      echo '};'; \
+ 	      echo 'unsigned int shipped_regdb_certs_len = sizeof(shipped_regdb_certs);'; \
+-	  ) >> $@)
++	  ) > $@)
  
-+/**
-+ * enum iwl_tlc_debug_flags - debug options
-+ * @IWL_TLC_DEBUG_FIXED_RATE: set fixed rate for rate scaling
-+ * @IWL_TLC_DEBUG_STATS_TH: threshold for sending statistics to the driver, in
-+ *	frames
-+ * @IWL_TLC_DEBUG_STATS_TIME_TH: threshold for sending statistics to the
-+ *	driver, in msec
-+ * @IWL_TLC_DEBUG_AGG_TIME_LIM: time limit for a BA session
-+ * @IWL_TLC_DEBUG_AGG_DIS_START_TH: frame with try-count greater than this
-+ *	threshold should not start an aggregation session
-+ * @IWL_TLC_DEBUG_AGG_FRAME_CNT_LIM: set max number of frames in an aggregation
-+ * @IWL_TLC_DEBUG_RENEW_ADDBA_DELAY: delay between retries of ADD BA
-+ * @IWL_TLC_DEBUG_START_AC_RATE_IDX: frames per second to start a BA session
-+ * @IWL_TLC_DEBUG_NO_FAR_RANGE_TWEAK: disable BW scaling
-+ */
-+enum iwl_tlc_debug_flags {
-+	IWL_TLC_DEBUG_FIXED_RATE,
-+	IWL_TLC_DEBUG_STATS_TH,
-+	IWL_TLC_DEBUG_STATS_TIME_TH,
-+	IWL_TLC_DEBUG_AGG_TIME_LIM,
-+	IWL_TLC_DEBUG_AGG_DIS_START_TH,
-+	IWL_TLC_DEBUG_AGG_FRAME_CNT_LIM,
-+	IWL_TLC_DEBUG_RENEW_ADDBA_DELAY,
-+	IWL_TLC_DEBUG_START_AC_RATE_IDX,
-+	IWL_TLC_DEBUG_NO_FAR_RANGE_TWEAK,
-+}; /* TLC_MNG_DEBUG_FLAGS_API_E_VER_1 */
-+
-+/**
-+ * struct iwl_dhc_tlc_dbg - fixed debug config
-+ * @sta_id: bit 0 - enable/disable, bits 1 - 7 hold station id
-+ * @reserved1: reserved
-+ * @flags: bitmap of %IWL_TLC_DEBUG_\*
-+ * @fixed_rate: rate value
-+ * @stats_threshold: if number of tx-ed frames is greater, send statistics
-+ * @time_threshold: statistics threshold in usec
-+ * @agg_time_lim: max agg time
-+ * @agg_dis_start_threshold: frames with try-cont greater than this count will
-+ *			     not be aggregated
-+ * @agg_frame_count_lim: agg size
-+ * @addba_retry_delay: delay between retries of ADD BA
-+ * @start_ac_rate_idx: frames per second to start a BA session
-+ * @no_far_range_tweak: disable BW scaling
-+ * @reserved2: reserved
-+ */
-+struct iwl_dhc_tlc_cmd {
-+	u8 sta_id;
-+	u8 reserved1[3];
-+	__le32 flags;
-+	__le32 fixed_rate;
-+	__le16 stats_threshold;
-+	__le16 time_threshold;
-+	__le16 agg_time_lim;
-+	__le16 agg_dis_start_threshold;
-+	__le16 agg_frame_count_lim;
-+	__le16 addba_retry_delay;
-+	u8 start_ac_rate_idx[IEEE80211_NUM_ACS];
-+	u8 no_far_range_tweak;
-+	u8 reserved2[3];
-+} __packed;
-+
- /*
-  * These serve as indexes into
-  * struct iwl_rate_info fw_rate_idx_to_plcp[IWL_RATE_COUNT];
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index dad18a609d9a..366fa75f9091 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -425,6 +425,49 @@ static ssize_t iwl_dbgfs_stations_read(struct file *file, char __user *user_buf,
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- }
- 
-+static ssize_t iwl_dbgfs_rs_data_read(struct file *file, char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+	struct iwl_lq_sta_rs_fw *lq_sta = &mvmsta->lq_sta.rs_fw;
-+	struct iwl_mvm *mvm = lq_sta->pers.drv;
-+	static const size_t bufsz = 2048;
-+	char *buff;
-+	int desc = 0;
-+	ssize_t ret;
-+
-+	buff = kmalloc(bufsz, GFP_KERNEL);
-+	if (!buff)
-+		return -ENOMEM;
-+
-+	mutex_lock(&mvm->mutex);
-+
-+	desc += scnprintf(buff + desc, bufsz - desc, "sta_id %d\n",
-+			  lq_sta->pers.sta_id);
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "fixed rate 0x%X\n",
-+			  lq_sta->pers.dbg_fixed_rate);
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "A-MPDU size limit %d\n",
-+			  lq_sta->pers.dbg_agg_frame_count_lim);
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "valid_tx_ant %s%s%s\n",
-+		(iwl_mvm_get_valid_tx_ant(mvm) & ANT_A) ? "ANT_A," : "",
-+		(iwl_mvm_get_valid_tx_ant(mvm) & ANT_B) ? "ANT_B," : "",
-+		(iwl_mvm_get_valid_tx_ant(mvm) & ANT_C) ? "ANT_C" : "");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "last tx rate=0x%X ",
-+			  lq_sta->last_rate_n_flags);
-+
-+	desc += rs_pretty_print_rate(buff + desc, lq_sta->last_rate_n_flags);
-+	mutex_unlock(&mvm->mutex);
-+
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
-+	kfree(buff);
-+	return ret;
-+}
-+
- static ssize_t iwl_dbgfs_disable_power_off_read(struct file *file,
- 						char __user *user_buf,
- 						size_t count, loff_t *ppos)
-@@ -1597,6 +1640,19 @@ static ssize_t iwl_dbgfs_d0i3_refs_write(struct iwl_mvm *mvm, char *buf,
- #define MVM_DEBUGFS_ADD_FILE(name, parent, mode) \
- 	MVM_DEBUGFS_ADD_FILE_ALIAS(#name, name, parent, mode)
- 
-+#define MVM_DEBUGFS_WRITE_STA_FILE_OPS(name, bufsz) \
-+	_MVM_DEBUGFS_WRITE_FILE_OPS(name, bufsz, struct ieee80211_sta)
-+#define MVM_DEBUGFS_READ_WRITE_STA_FILE_OPS(name, bufsz) \
-+	_MVM_DEBUGFS_READ_WRITE_FILE_OPS(name, bufsz, struct ieee80211_sta)
-+
-+#define MVM_DEBUGFS_ADD_STA_FILE_ALIAS(alias, name, parent, mode) do {	\
-+		if (!debugfs_create_file(alias, mode, parent, sta,	\
-+					 &iwl_dbgfs_##name##_ops))	\
-+			goto err;					\
-+	} while (0)
-+#define MVM_DEBUGFS_ADD_STA_FILE(name, parent, mode) \
-+	MVM_DEBUGFS_ADD_STA_FILE_ALIAS(#name, name, parent, mode)
-+
- static ssize_t
- iwl_dbgfs_prph_reg_read(struct file *file,
- 			char __user *user_buf,
-@@ -1681,6 +1737,7 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(sram, 64);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(set_nic_temperature, 64);
- MVM_DEBUGFS_READ_FILE_OPS(nic_temp);
- MVM_DEBUGFS_READ_FILE_OPS(stations);
-+MVM_DEBUGFS_READ_FILE_OPS(rs_data);
- MVM_DEBUGFS_READ_FILE_OPS(bt_notif);
- MVM_DEBUGFS_READ_FILE_OPS(bt_cmd);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(disable_power_off, 64);
-@@ -1845,6 +1902,21 @@ static const struct file_operations iwl_dbgfs_mem_ops = {
- 	.llseek = default_llseek,
- };
- 
-+void iwl_mvm_sta_add_debugfs(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_sta *sta,
-+			     struct dentry *dir)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+
-+	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_TLC_OFFLOAD))
-+		MVM_DEBUGFS_ADD_STA_FILE(rs_data, dir, S_IRUSR);
-+
-+	return;
-+err:
-+	IWL_ERR(mvm, "Can't create the mvm station debugfs entry\n");
-+}
-+
- int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- {
- 	struct dentry *bcast_dir __maybe_unused;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index e7abca2441a3..4f5686526d4b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4402,4 +4402,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
- #endif
- 	.get_survey = iwl_mvm_mac_get_survey,
- 	.sta_statistics = iwl_mvm_mac_sta_statistics,
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+	.sta_add_debugfs = iwl_mvm_sta_add_debugfs,
-+#endif
- };
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index a565bae770b8..3690cfd738fb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1873,5 +1873,11 @@ void iwl_mvm_event_frame_timeout_callback(struct iwl_mvm *mvm,
- 
- int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b);
- int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm);
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+void iwl_mvm_sta_add_debugfs(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_sta *sta,
-+			     struct dentry *dir);
-+#endif
- 
- #endif /* __IWL_MVM_H__ */
+ $(obj)/extra-certs.c: $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%) \
+ 		      $(wildcard $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%)/*.x509)
+@@ -66,4 +66,4 @@ $(obj)/extra-certs.c: $(CONFIG_CFG80211_EXTRA_REGDB_KEYDIR:"%"=%) \
+ 	      echo "$$allf"; \
+ 	      echo '};'; \
+ 	      echo 'unsigned int extra_regdb_certs_len = sizeof(extra_regdb_certs);'; \
+-	  ) >> $@)
++	  ) > $@)
 -- 
-2.15.0
+2.15.1.504.g5279b80103-goog
