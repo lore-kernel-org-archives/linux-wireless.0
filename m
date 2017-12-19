@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:44457 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751661AbdLAHuD (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:38267 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752426AbdLSNZY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 02:50:03 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org
-Subject: [v3 8/8] rsi: sdio changes to support BT
-Date: Fri,  1 Dec 2017 13:11:25 +0530
-Message-Id: <1512114085-2615-9-git-send-email-amitkarwar@gmail.com> (sfid-20171201_085012_363029_D41F7D0D)
-In-Reply-To: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com>
-References: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com>
+        Tue, 19 Dec 2017 08:25:24 -0500
+Received: by mail-wm0-f47.google.com with SMTP id 64so3656945wme.3
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2017 05:25:24 -0800 (PST)
+Date: Tue, 19 Dec 2017 14:25:19 +0100 (CET)
+From: Enrico Mioso <mrkiko.rs@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+In-Reply-To: <20171219125431.GB2672@redhat.com>
+Message-ID: <alpine.LNX.2.21.99.1712191424570.17763@localhost.localdomain> (sfid-20171219_142535_542802_AA29EC7C)
+References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain> <20171213152017.GA3554@redhat.com> <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain> <20171218152142.GA15414@redhat.com> <20171219122707.GA2672@redhat.com>
+ <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain> <20171219125431.GB2672@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Thank you very much.
+I'll let you know. Compiling now.
 
-Queue number is correctly updated for BT traffic. Also, kzalloc
-instead of kmalloc is used for Rx packet allocation.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio.c     | 2 ++
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+On Tue, 19 Dec 2017, Stanislaw Gruszka wrote:
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index 5722736..beb18d0 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -763,6 +763,8 @@ static int rsi_sdio_host_intf_write_pkt(struct rsi_hw *adapter,
- 	int status;
- 
- 	queueno = ((pkt[1] >> 4) & 0xf);
-+	if (queueno == RSI_BT_MGMT_Q || queueno == RSI_BT_DATA_Q)
-+		queueno = RSI_BT_Q;
- 
- 	num_blocks = len / block_size;
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 26abe51..83652bd 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -103,7 +103,7 @@ static int rsi_process_pkt(struct rsi_common *common)
- 
- 	rcv_pkt_len = (num_blks * 256);
- 
--	common->rx_data_pkt = kmalloc(rcv_pkt_len, GFP_KERNEL);
-+	common->rx_data_pkt = kzalloc(rcv_pkt_len, GFP_KERNEL);
- 	if (!common->rx_data_pkt) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in memory allocation\n",
- 			__func__);
--- 
-2.7.4
+> Date: Tue, 19 Dec 2017 13:54:32
+> From: Stanislaw Gruszka <sgruszka@redhat.com>
+> To: Enrico Mioso <mrkiko.rs@gmail.com>
+> Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
+>     Daniel Golle <daniel@makrotopia.org>, Arnd Bergmann <arnd@arndb.de>,
+>     John Crispin <john@phrozen.org>, nbd@nbd.name
+> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+>     frame due to full tx queue...?
+> 
+> On Tue, Dec 19, 2017 at 01:43:11PM +0100, Enrico Mioso wrote:
+>> I am going to test this on a LEDE build.
+>> Should I leave the mmio workaround patch applied as per OpenWRT default, or should I leave it off ?
+>> I'll leave it off by default.
+>
+> Please remove it. If things would work then retest with it and see if
+> if things still work.
+>
+> Thanks
+> Stanislaw
+>
