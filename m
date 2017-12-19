@@ -1,85 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:53203 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756350AbdLVPrr (ORCPT
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:35697 "EHLO
+        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751496AbdLSWNY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 10:47:47 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v3 09/11] ath10k: add QCA9377 sdio hw_param item
-Date: Fri, 22 Dec 2017 15:47:01 +0000
-Message-ID: <877eteahoq.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_164753_273152_FD59E106)
-References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
-        <20170917194013.8658-10-erik.stromdahl@gmail.com>
-In-Reply-To: <20170917194013.8658-10-erik.stromdahl@gmail.com> (Erik
-        Stromdahl's message of "Sun, 17 Sep 2017 21:40:11 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
+        Tue, 19 Dec 2017 17:13:24 -0500
+Received: by mail-qk0-f171.google.com with SMTP id 143so9754579qki.2
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2017 14:13:24 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1513702727.26145.17.camel@sipsolutions.net>
+References: <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
+ <871skalepz.fsf@purkki.adurom.net> <20171205160010.cytra3bqbttwz5db@bars>
+ <878te0kud2.fsf@kamboji.qca.qualcomm.com> <20171218161811.3f3sjhlxdfmsnljx@bars>
+ <1513676321.26145.1.camel@sipsolutions.net> <20171219102932.xv7bxasvlvguy7jb@bars>
+ <1513679705.26145.13.camel@sipsolutions.net> <20171219104233.wcyemlr3gp4rq5ae@bars>
+ <1513681186.26145.14.camel@sipsolutions.net> <20171219111919.7uoupifxeizqs3x3@bars>
+ <5A390813.40400@broadcom.com> <1513702727.26145.17.camel@sipsolutions.net>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Date: Tue, 19 Dec 2017 23:13:23 +0100
+Message-ID: <CAF7Mx6o8r_XpCY6-V-EycTDW+FwBTxe2iTKrLpmx=WQBiNmbbw@mail.gmail.com> (sfid-20171219_231346_974555_AB790D0D)
+Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
-
-> Hardware parameters for QCA9377 sdio devices.
+On Tue, Dec 19, 2017 at 5:58 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2017-12-19 at 13:37 +0100, Arend van Spriel wrote:
+>> On 12/19/2017 12:19 PM, Sergey Matyukevich wrote:
+>> > > > Not yet. At the moment enum nl80211_ap_sme_features in uapi/linux/nl80211.h
+>> > > > is commented out. For MAC-based ACL the following things are being checked
+>> > > > on wiphy registration: complete flag WIPHY_FLAG_HAVE_AP_SME, non-zero
+>> > > > max_acl_mac_addrs, and set_mac_acl cfg80211 callback.
+>> > >
+>> > > I guess that's enough then? Userspace can check max_acl_mac_addrs as
+>> > > well, so it can just use that?
+>> >
+>> > Correct, that is what hostapd is doing. I was simply surprised by the fact
+>> > that MAC-based ACL support implies full-fledged AP SME support. Though
+>> > your almost convinced me that this is ok and other wireless cards simply
+>> > do not exist.
+>>
+>> So the question seems to be here: what shall drivers/firmware implement
+>> to allow flag WIPHY_FLAG_HAVE_AP_SME being set. The kerneldoc is a bit
+>> short in providing guidance:
+>>
+>>   * @WIPHY_FLAG_HAVE_AP_SME: device integrates AP SME
 >
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c | 25 +++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath10k/hw.h   |  1 +
->  2 files changed, 26 insertions(+)
+> They should implement the AP SME? :)
 >
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireles=
-s/ath/ath10k/core.c
-> index b6893254ef53..146a9f61b5f0 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -351,6 +351,31 @@ static const struct ath10k_hw_params ath10k_hw_param=
-s_list[] =3D {
->  		.bus =3D ATH10K_BUS_USB,
->  		.start_once =3D true,
->  	},
-> +	{
-> +		.id =3D QCA9377_HW_1_1_DEV_VERSION,
-> +		.dev_id =3D QCA9377_1_0_DEVICE_ID,
-> +		.name =3D "qca9377 hw1.1 sdio",
-> +		.patch_load_addr =3D QCA9377_HW_1_0_PATCH_LOAD_ADDR,
-> +		.uart_pin =3D 19,
-> +		.otp_exe_param =3D 0,
-> +		.channel_counters_freq_hz =3D 88000,
-> +		.max_probe_resp_desc_thres =3D 0,
-> +		.cal_data_len =3D 8124,
-> +		.fw =3D {
-> +			.dir =3D QCA9377_HW_1_0_FW_DIR,
-> +			.board =3D QCA9377_HW_1_0_BOARD_DATA_FILE_SDIO,
-> +			.board_size =3D QCA9377_BOARD_DATA_SZ,
-> +			.board_ext_size =3D QCA9377_BOARD_EXT_DATA_SZ,
-> +		},
-> +		.hw_ops =3D &qca6174_ops,
-> +		.hw_clk =3D qca6174_clk,
-> +		.target_cpu_freq =3D 176000000,
-> +		.decap_align_bytes =3D 4,
-> +		.max_num_peers =3D TARGET_QCA9377_HL_NUM_PEERS,
-> +		.is_high_latency =3D true,
-> +		.bus =3D ATH10K_BUS_SDIO,
-> +		.start_once =3D true,
-> +	},
->  	{
->  		.id =3D QCA4019_HW_1_0_DEV_VERSION,
->  		.dev_id =3D 0,
-> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/=
-ath/ath10k/hw.h
-> index 420851e26a09..77011a6cafa1 100644
-> --- a/drivers/net/wireless/ath/ath10k/hw.h
-> +++ b/drivers/net/wireless/ath/ath10k/hw.h
-> @@ -128,6 +128,7 @@ enum qca9377_chip_id_rev {
->  #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
->  #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
->  #define QCA9377_HW_1_0_BOARD_DATA_FILE_USB "board-usb.bin"
-> +#define QCA9377_HW_1_0_BOARD_DATA_FILE_SDIO "board-sdio.bin"
+> That is, handling auth/assoc/etc.
 
-Similar comment about not sure about having separate board.bin for sdio.
+So basically everything to setup 802.11 connection. So what about the
+.*_station() callbacks? Anyway, I can understand that people start
+looking at the checks done in wiphy_register() as a last resort in
+finding (some sort of) documentation.
 
---=20
-Kalle Valo=
+> With the SAE-"offload"-to-host those lines are blurring again though.
+
+Yeah. Thanks for (inadvertently) reminding me to chime in on that.
+
+Regards,
+Arend
