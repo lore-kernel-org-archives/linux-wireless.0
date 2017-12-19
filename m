@@ -1,89 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45550 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753335AbdLNPjV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 10:39:21 -0500
-From: Felix Fietkau <nbd@nbd.name>
+Received: from mail-by2nam03on0052.outbound.protection.outlook.com ([104.47.42.52]:40224
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965342AbdLSL33 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 06:29:29 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 10/14] mt76x2: clean up MAC/BSSID address initialization
-Date: Thu, 14 Dec 2017 16:39:14 +0100
-Message-Id: <20171214153918.43774-11-nbd@nbd.name> (sfid-20171214_163935_518794_8DE30AAD)
-In-Reply-To: <20171214153918.43774-1-nbd@nbd.name>
-References: <20171214153918.43774-1-nbd@nbd.name>
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 06/10] qtnfmac: fix rssi data passed to wireless core
+Date: Tue, 19 Dec 2017 14:28:52 +0300
+Message-Id: <20171219112856.22463-7-sergey.matyukevich.os@quantenna.com> (sfid-20171219_122939_603044_FA8AACF7)
+In-Reply-To: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
+References: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop the use of the EEPROM address entirely, rely on interface address
-only
+Fix RSSI values passed to wireless core by qtnfmac driver:
+- fix RSSI values in scan results:
+  driver registers wiphy with CFG80211_SIGNAL_TYPE_MBM signal type,
+  so mBm should be passed using DBM_TO_MBM macro
+- accompany firmware changes fixing RSSI values in received mgmt frames
+  update qlink message format and pass correct signed values to core
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 11 ++++-------
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c  | 14 ++++++++++++++
- 2 files changed, 18 insertions(+), 7 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/event.c |  7 +++----
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h | 11 ++++++-----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index ac4eeaf2c993..f54dc67a13d0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -231,7 +231,6 @@ mt76x2_init_beacon_offsets(struct mt76x2_dev *dev)
- int mt76x2_mac_reset(struct mt76x2_dev *dev, bool hard)
- {
- 	static const u8 null_addr[ETH_ALEN] = {};
--	const u8 *macaddr = dev->mt76.macaddr;
- 	u32 val;
- 	int i, k;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index 9843ca36b74b..b3489b5b5d9e 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -237,9 +237,8 @@ qtnf_event_handle_mgmt_received(struct qtnf_vif *vif,
+ 	pr_debug("%s LEN:%u FC:%.4X SA:%pM\n", vif->netdev->name, frame_len,
+ 		 le16_to_cpu(frame->frame_control), frame->addr2);
  
-@@ -271,13 +270,11 @@ int mt76x2_mac_reset(struct mt76x2_dev *dev, bool hard)
- 	mt76_wr(dev, MT_MCU_CLOCK_CTL, 0x1401);
- 	mt76_clear(dev, MT_FCE_L2_STUFF, MT_FCE_L2_STUFF_WR_MPDU_LEN_EN);
+-	cfg80211_rx_mgmt(&vif->wdev, le32_to_cpu(rxmgmt->freq),
+-			 le32_to_cpu(rxmgmt->sig_dbm), rxmgmt->frame_data,
+-			 frame_len, flags);
++	cfg80211_rx_mgmt(&vif->wdev, le32_to_cpu(rxmgmt->freq), rxmgmt->sig_dbm,
++			 rxmgmt->frame_data, frame_len, flags);
  
--	mt76_wr(dev, MT_MAC_ADDR_DW0, get_unaligned_le32(macaddr));
--	mt76_wr(dev, MT_MAC_ADDR_DW1, get_unaligned_le16(macaddr + 4));
-+	mt76_wr(dev, MT_MAC_ADDR_DW0, 0);
-+	mt76_wr(dev, MT_MAC_ADDR_DW1, 0);
+ 	return 0;
+ }
+@@ -324,7 +323,7 @@ qtnf_event_handle_scan_results(struct qtnf_vif *vif,
+ 				  sr->bssid, get_unaligned_le64(&sr->tsf),
+ 				  le16_to_cpu(sr->capab),
+ 				  le16_to_cpu(sr->bintval), ies, ies_len,
+-				  sr->signal, GFP_KERNEL);
++				  DBM_TO_MBM(sr->sig_dbm), GFP_KERNEL);
+ 	if (!bss)
+ 		return -ENOMEM;
  
--	mt76_wr(dev, MT_MAC_BSSID_DW0, get_unaligned_le32(macaddr));
--	mt76_wr(dev, MT_MAC_BSSID_DW1, get_unaligned_le16(macaddr + 4) |
--		FIELD_PREP(MT_MAC_BSSID_DW1_MBSS_MODE, 3) | /* 8 beacons */
--		MT_MAC_BSSID_DW1_MBSS_LOCAL_BIT);
-+	mt76_wr(dev, MT_MAC_BSSID_DW0, 0);
-+	mt76_wr(dev, MT_MAC_BSSID_DW1, 0);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index 3e3de4629a53..1f150be98820 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -19,7 +19,7 @@
  
- 	mt76_set(dev, MT_MAC_ADDR_EXT_CTL, MT_MAC_ADDR_EXT_CTL_EN);
+ #include <linux/ieee80211.h>
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-index 60cee4abed7c..d2ae093b7092 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-@@ -27,6 +27,15 @@ void mt76x2_mac_set_bssid(struct mt76x2_dev *dev, u8 idx, const u8 *addr)
- 	if (addr) {
- 		lo = get_unaligned_le32(addr);
- 		hi = get_unaligned_le16(addr + 4);
-+
-+		if (!idx) {
-+			mt76_wr(dev, MT_MAC_BSSID_DW0, lo);
-+
-+			mt76_rmw_field(dev, MT_MAC_BSSID_DW1,
-+				       MT_MAC_BSSID_DW1_ADDR,
-+				       hi);
-+		}
-+
- 		hi |= MT_MAC_APC_BSSID0_H_EN;
- 	}
+-#define QLINK_PROTO_VER		7
++#define QLINK_PROTO_VER		8
  
-@@ -41,6 +50,11 @@ void mt76x2_mac_set_ext_mac(struct mt76x2_dev *dev, u8 idx, const u8 *addr)
- 	if (addr) {
- 		lo = get_unaligned_le32(addr);
- 		hi = get_unaligned_le16(addr + 4);
-+
-+		if (!idx) {
-+			mt76_wr(dev, MT_MAC_ADDR_DW0, lo);
-+			mt76_wr(dev, MT_MAC_ADDR_DW1, hi);
-+		}
- 	}
+ #define QLINK_MACID_RSVD		0xFF
+ #define QLINK_VIFID_RSVD		0xFF
+@@ -916,15 +916,16 @@ enum qlink_rxmgmt_flags {
+  * struct qlink_event_rxmgmt - data for QLINK_EVENT_MGMT_RECEIVED event
+  *
+  * @freq: Frequency on which the frame was received in MHz.
+- * @sig_dbm: signal strength in dBm.
+  * @flags: bitmap of &enum qlink_rxmgmt_flags.
++ * @sig_dbm: signal strength in dBm.
+  * @frame_data: data of Rx'd frame itself.
+  */
+ struct qlink_event_rxmgmt {
+ 	struct qlink_event ehdr;
+ 	__le32 freq;
+-	__le32 sig_dbm;
+ 	__le32 flags;
++	s8 sig_dbm;
++	u8 rsvd[3];
+ 	u8 frame_data[0];
+ } __packed;
  
- 	mt76_wr(dev, MT_MAC_ADDR_EXT_L(idx), lo);
+@@ -936,7 +937,7 @@ struct qlink_event_rxmgmt {
+  *	event was generated was discovered.
+  * @capab: capabilities field.
+  * @bintval: beacon interval announced by discovered BSS.
+- * @signal: signal strength.
++ * @sig_dbm: signal strength in dBm.
+  * @bssid: BSSID announced by discovered BSS.
+  * @ssid_len: length of SSID announced by BSS.
+  * @ssid: SSID announced by discovered BSS.
+@@ -948,7 +949,7 @@ struct qlink_event_scan_result {
+ 	__le16 freq;
+ 	__le16 capab;
+ 	__le16 bintval;
+-	s8 signal;
++	s8 sig_dbm;
+ 	u8 ssid_len;
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	u8 bssid[ETH_ALEN];
 -- 
-2.14.2
+2.11.0
