@@ -1,68 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59562 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751823AbdLDSuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 13:50:15 -0500
-Subject: Re: [PATCH v8 0/3] mt76: add new wireless driver for MediaTek MT76x2
- PCIe chips
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-References: <20171121095053.82673-1-nbd@nbd.name>
- <87wp22jzzb.fsf@purkki.adurom.net>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <753050de-c306-838e-98fc-b970cc77ebcf@nbd.name> (sfid-20171204_195019_827925_8531970F)
-Date: Mon, 4 Dec 2017 19:50:13 +0100
+Received: from mail-by2nam03on0052.outbound.protection.outlook.com ([104.47.42.52]:40224
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965110AbdLSL32 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 06:29:28 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: [PATCH v2 04/10] qtnfmac: change default interface mode from AP to STA
+Date: Tue, 19 Dec 2017 14:28:50 +0300
+Message-Id: <20171219112856.22463-5-sergey.matyukevich.os@quantenna.com> (sfid-20171219_122934_476486_6502353E)
+In-Reply-To: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
+References: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <87wp22jzzb.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-12-04 16:04, Kalle Valo wrote:
-> Felix Fietkau <nbd@nbd.name> writes:
-> 
->> Changes since v7:
->> - Fix build errors
->>
->> Changes since v6:
->> - DT documentation fixes
->> - Add LED configuration
->> - PHY gain calibration fixes
->> - Endian fixes
->> - Tx status processing fixes
->> - EEPROM validation fixes
->> - IBSS RSN fix
->> - AP mode powersave delivery fix
->>
->> Changes since v5:
->> - Adjust for mac80211 API changes
->> - EEPROM parsing fixes
->> - Ad-hoc mode WPA2 fixes
->>
->> Changes since v4:
->> - Cleanups suggested by Stanislaw Gruszka
->> - Device tree fixes suggested by Rob Herring
->> - EEPROM MAC address parsing fix
->>
->> Changes since v3:
->> - DFS fixes
->> - stability fixes
->> - use wiphy_read_of_freq_limits
->>
->> Changes since v2:
->> - lots of checkpatch cleanups
->> - various tx path (and other) fixes
->> - use the new bitfield API
->> - documented device tree bindings
->>
->> Felix Fietkau (3):
->>   Documentation: dt: net: add mt76 wireless device binding
->>   mt76: add common code shared between multiple chipsets
->>   mt76: add driver code for MT76x2e
-> 
-> Looking very good to me. Unless I hear any objections I'm planning to
-> apply this within the next few days.
-Great news, thanks. Please also apply the two patches from "kbuild test
-robot" that were sent in response to v7 - they still apply to v8.
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-- Felix
+To mimic mac80211 behaviour, change default interface type from AP to STA.
+
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |  2 +-
+ drivers/net/wireless/quantenna/qtnfmac/core.c     | 11 ++++-------
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |  3 +--
+ 3 files changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index d4a98d62ecbe..c026882bf9c7 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -190,7 +190,7 @@ static struct wireless_dev *qtnf_add_virtual_intf(struct wiphy *wiphy,
+ 		goto err_mac;
+ 	}
+ 
+-	if (qtnf_core_net_attach(mac, vif, name, name_assign_t, type)) {
++	if (qtnf_core_net_attach(mac, vif, name, name_assign_t)) {
+ 		pr_err("VIF%u.%u: failed to attach netdev\n", mac->macid,
+ 		       vif->vifid);
+ 		goto err_net;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index 3423dc51198b..518a2fe927f7 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -258,7 +258,7 @@ static void qtnf_mac_init_primary_intf(struct qtnf_wmac *mac)
+ {
+ 	struct qtnf_vif *vif = &mac->iflist[QTNF_PRIMARY_VIF_IDX];
+ 
+-	vif->wdev.iftype = NL80211_IFTYPE_AP;
++	vif->wdev.iftype = NL80211_IFTYPE_STATION;
+ 	vif->bss_priority = QTNF_DEF_BSS_PRIORITY;
+ 	vif->wdev.wiphy = priv_to_wiphy(mac);
+ 	INIT_WORK(&vif->reset_work, qtnf_vif_reset_handler);
+@@ -298,8 +298,7 @@ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
+ }
+ 
+ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+-			 const char *name, unsigned char name_assign_type,
+-			 enum nl80211_iftype iftype)
++			 const char *name, unsigned char name_assign_type)
+ {
+ 	struct wiphy *wiphy = priv_to_wiphy(mac);
+ 	struct net_device *dev;
+@@ -320,7 +319,6 @@ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+ 	dev->needs_free_netdev = true;
+ 	dev_net_set(dev, wiphy_net(wiphy));
+ 	dev->ieee80211_ptr = &vif->wdev;
+-	dev->ieee80211_ptr->iftype = iftype;
+ 	ether_addr_copy(dev->dev_addr, vif->mac_addr);
+ 	SET_NETDEV_DEV(dev, wiphy_dev(wiphy));
+ 	dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
+@@ -418,7 +416,7 @@ static int qtnf_core_mac_attach(struct qtnf_bus *bus, unsigned int macid)
+ 		goto error;
+ 	}
+ 
+-	ret = qtnf_cmd_send_add_intf(vif, NL80211_IFTYPE_AP, vif->mac_addr);
++	ret = qtnf_cmd_send_add_intf(vif, vif->wdev.iftype, vif->mac_addr);
+ 	if (ret) {
+ 		pr_err("MAC%u: failed to add VIF\n", macid);
+ 		goto error;
+@@ -446,8 +444,7 @@ static int qtnf_core_mac_attach(struct qtnf_bus *bus, unsigned int macid)
+ 
+ 	rtnl_lock();
+ 
+-	ret = qtnf_core_net_attach(mac, vif, "wlan%d", NET_NAME_ENUM,
+-				   NL80211_IFTYPE_AP);
++	ret = qtnf_core_net_attach(mac, vif, "wlan%d", NET_NAME_ENUM);
+ 	rtnl_unlock();
+ 
+ 	if (ret) {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 1b7bc0318f3e..8e42d1bdc65f 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -144,8 +144,7 @@ struct qtnf_vif *qtnf_mac_get_free_vif(struct qtnf_wmac *mac);
+ struct qtnf_vif *qtnf_mac_get_base_vif(struct qtnf_wmac *mac);
+ struct wiphy *qtnf_wiphy_allocate(struct qtnf_bus *bus);
+ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct qtnf_vif *priv,
+-			 const char *name, unsigned char name_assign_type,
+-			 enum nl80211_iftype iftype);
++			 const char *name, unsigned char name_assign_type);
+ void qtnf_main_work_queue(struct work_struct *work);
+ int qtnf_cmd_send_update_phy_params(struct qtnf_wmac *mac, u32 changed);
+ int qtnf_cmd_send_get_phy_params(struct qtnf_wmac *mac);
+-- 
+2.11.0
