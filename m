@@ -1,77 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:42879 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753260AbdLHQeK (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36108 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752847AbdLSJ5Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 11:34:10 -0500
-Received: by mail-wr0-f193.google.com with SMTP id s66so11347103wrc.9
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Dec 2017 08:34:09 -0800 (PST)
-From: Loic Poulain <loic.poulain@linaro.org>
-To: kvalo@codeaurora.org
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, nicolas.dechesne@linaro.org,
-        k.eugene.e@gmail.com, Loic Poulain <loic.poulain@linaro.org>
-Subject: [PATCH] wcn36xx: Fix dynamic power saving
-Date: Fri,  8 Dec 2017 17:34:06 +0100
-Message-Id: <1512750846-13591-1-git-send-email-loic.poulain@linaro.org> (sfid-20171208_173430_812210_C500C2BB)
+        Tue, 19 Dec 2017 04:57:16 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-12-19
+Date: Tue, 19 Dec 2017 10:57:09 +0100
+Message-Id: <20171219095710.16889-1-johannes@sipsolutions.net> (sfid-20171219_105722_704889_F408BB59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since driver does not report hardware dynamic power saving cap,
-this is up to the mac80211 to manage power saving timeout and
-state machine, using the ieee80211 config callback to report
-PS changes. This patch enables/disables PS mode according to
-the new configuration.
+Hi Dave,
 
-Remove old behaviour enabling PS mode in a static way, this make
-the device unusable when power save is enabled since device is
-forced to PS regardless RX/TX traffic.
+Other work has been hectic, and I got caught by rc4. We still
+have a few more fixes though - and more build issues were
+reported.
 
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+Please pull and let me know if there's any problem.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index f0b4d43..436b8ea 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -384,6 +384,18 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 	}
- 
-+	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		list_for_each_entry(tmp, &wcn->vif_list, list) {
-+			vif = wcn36xx_priv_to_vif(tmp);
-+			if (hw->conf.flags & IEEE80211_CONF_PS) {
-+				if (vif->bss_conf.ps) /* ps allowed ? */
-+					wcn36xx_pmc_enter_bmps_state(wcn, vif);
-+			} else {
-+				wcn36xx_pmc_exit_bmps_state(wcn, vif);
-+			}
-+		}
-+	}
-+
- 	mutex_unlock(&wcn->conf_mutex);
- 
- 	return 0;
-@@ -747,17 +759,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
- 		vif_priv->dtim_period = bss_conf->dtim_period;
- 	}
- 
--	if (changed & BSS_CHANGED_PS) {
--		wcn36xx_dbg(WCN36XX_DBG_MAC,
--			    "mac bss PS set %d\n",
--			    bss_conf->ps);
--		if (bss_conf->ps) {
--			wcn36xx_pmc_enter_bmps_state(wcn, vif);
--		} else {
--			wcn36xx_pmc_exit_bmps_state(wcn, vif);
--		}
--	}
--
- 	if (changed & BSS_CHANGED_BSSID) {
- 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM\n",
- 			    bss_conf->bssid);
--- 
-2.7.4
+Thanks,
+johannes
+
+
+
+The following changes since commit 0afe9d4ab9d40c281bdcdd118661fe8e4bdcef18:
+
+  mac80211: fix locking in ieee80211_sta_tear_down_BA_sessions (2017-12-11 10:50:00 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-12-19
+
+for you to fetch changes up to 04a7279ff12fc47b657f70731d401c0064f5838a:
+
+  cfg80211: ship certificates as hex files (2017-12-19 09:28:01 +0100)
+
+----------------------------------------------------------------
+A few more fixes:
+ * hwsim:
+   - set To-DS bit in some frames missing it
+   - fix sleeping in atomic
+ * nl80211:
+   - doc cleanup
+   - fix locking in an error path
+ * build:
+   - don't append to created certs C files
+   - ship certificate pre-hexdumped
+
+----------------------------------------------------------------
+Adiel Aloni (1):
+      mac80211_hwsim: enable TODS BIT in null data frame
+
+Jia-Ju Bai (1):
+      mac80211_hwsim: Fix a possible sleep-in-atomic bug in hwsim_get_radio_nl
+
+Johannes Berg (2):
+      nl80211: fix nl80211_send_iface() error paths
+      cfg80211: ship certificates as hex files
+
+Jonathan Corbet (1):
+      nl80211: Remove obsolete kerneldoc line
+
+Thierry Reding (1):
+      cfg80211: always rewrite generated files from scratch
+
+ drivers/net/wireless/mac80211_hwsim.c |   3 +-
+ include/net/cfg80211.h                |   1 -
+ net/wireless/Makefile                 |  31 ++++--------
+ net/wireless/certs/sforshee.hex       |  86 ++++++++++++++++++++++++++++++++++
+ net/wireless/certs/sforshee.x509      | Bin 680 -> 0 bytes
+ net/wireless/nl80211.c                |   6 ++-
+ 6 files changed, 102 insertions(+), 25 deletions(-)
+ create mode 100644 net/wireless/certs/sforshee.hex
+ delete mode 100644 net/wireless/certs/sforshee.x509
