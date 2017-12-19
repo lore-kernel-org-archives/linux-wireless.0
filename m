@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:40242 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:35014 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdLIUPi (ORCPT
+        with ESMTP id S934756AbdLSJoz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Dec 2017 15:15:38 -0500
-Message-ID: <1512850533.26976.48.camel@sipsolutions.net> (sfid-20171209_211559_269452_2C7A3EE3)
-Subject: Re: Wireless regressions in v4.15-rc1
+        Tue, 19 Dec 2017 04:44:55 -0500
+Message-ID: <1513676688.26145.7.camel@sipsolutions.net> (sfid-20171219_104459_563705_F15868E0)
+Subject: Re: [PATCH v3 1/3] mac80211: Add TXQ scheduling API
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Thorsten Leemhuis <regressions@leemhuis.info>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ath10k@lists.infradead.org
-Date: Sat, 09 Dec 2017 21:15:33 +0100
-In-Reply-To: <87po7xwajg.fsf@kamboji.qca.qualcomm.com> (sfid-20171202_135939_841463_D1ADD367)
-References: <87po7xwajg.fsf@kamboji.qca.qualcomm.com>
-         (sfid-20171202_135939_841463_D1ADD367)
+To: Felix Fietkau <nbd@nbd.name>,
+        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Tue, 19 Dec 2017 10:44:48 +0100
+In-Reply-To: <78c2f69c-fafa-6270-33b5-fbce57f4a278@nbd.name>
+References: <20171027141451.22768-1-toke@toke.dk>
+         <20171031112747.5778-1-toke@toke.dk>
+         <b2ed2696-db3d-4797-b5e2-161172fd2413@nbd.name> <87lgi5jyka.fsf@toke.dk>
+         <78c2f69c-fafa-6270-33b5-fbce57f4a278@nbd.name>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-12-02 at 14:59 +0200, Kalle Valo wrote:
+On Thu, 2017-12-14 at 13:44 +0100, Felix Fietkau wrote:
 > 
-> net: netlink: Update attr validation to require exact length for some types
-> https://git.kernel.org/linus/28033ae4e0f5
+> First we should revert these patches.
 
-This was reverted, more or less, to print only a warning:
+FWIW, I've just done that, if only to make the mt76 merge possible.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git/commit/?id=6e237d099fac1f73a7b6d7287bb9191f29585a4e
+> We can respin them shortly after in a modified form where
+> ieee80211_next_txq takes a 'queue' argument.
 
-> Jouni fixed this already in hostapd but we also need a fix for kernel so
-> that old hostapd versions continue to work:
+I'll leave the two of you to discuss that :-)
+
+> I'm almost done with the incremental change for that, and it also
+> supports passing -1 for queue so incrementally switching to the
+> scheduling that you're proposing will also work.
+
+Sounds fine to me.
+
+> With that in place we can replace the ath9k change with a much smaller
+> patch that is easier to verify for correctness and won't introduce the
+> potential regressions that I pointed out.
 > 
-> https://w1.fi/cgit/hostap/commit/?id=a2426829ce426de82d2fa47071ca41ea81c43307
-> 
-> Jouni also found a similar problem with mesh:
-> 
-> https://w1.fi/cgit/hostap/commit/?id=963d3149abfcbab5b83f9023bc50321f777360d1
+> I will take care of the mt76 porting today and I'll also help with
+> sorting out the ath10k issues.
 
-See above for the kernel revert to let old hostapd versions continue to
-work (properly only on little endian platforms) when they don't have
-these fixes.
+So are you going to resend Toke's patches with your adjustments folded
+in? Or just one of them?
 
-> And Johannes already submitted a revert related to wpa_supplicant:
-> 
-> [net] Revert "net: core: maybe return -EEXIST in __dev_alloc_name" diffmboxseries
-> https://patchwork.ozlabs.org/patch/843863/
-
-That was applied.
-
-> And with ath10k I'm now seeing this:
-> 
-> [  133.175508] WARNING: CPU: 2 PID: 1743 at net/mac80211/agg-tx.c:315 ___ieee80211_stop_tx_ba_session+0x1ab/0x280 [mac80211]
-
-Just sent a fix for this, kinda a merge/patch failure.
-
-> johannes
+johannes
