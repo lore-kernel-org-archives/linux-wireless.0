@@ -1,552 +1,1065 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46458 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752789AbdLRORa (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35060 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S967264AbdLSMr1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 09:17:30 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, luciano.coelho@intel.com
-Subject: pull-request: wireless-drivers-next 2017-12-18
-Date: Mon, 18 Dec 2017 16:17:24 +0200
-Message-ID: <874looktmz.fsf@kamboji.qca.qualcomm.com> (sfid-20171218_151737_508037_10BB5EE2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Tue, 19 Dec 2017 07:47:27 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>
+Subject: [PATCH 09/11] brcmfmac: Remove array of functions
+Date: Tue, 19 Dec 2017 13:47:15 +0100
+Message-Id: <1513687637-5555-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134800_344690_EC82282E)
+In-Reply-To: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
-
-a pull request for 4.16 to net-next tree. This is a big one, but on the
-other hand most of the stuff here has been some time on linux-next so
-hopefully there are no nasty surprises. Even though Arnd just send a
-patch[1] five minutes ago about fixing a wcn36xx build warning, but I
-don't think that's critical enough to hold up this, so I'll send it to
-you in the next pull request.
-
-But this time we actually have a merge conflict due to a000 hardware
-rename in iwlwifi:
-
-CONFLICT (content): Merge conflict in drivers/net/wireless/intel/iwlwifi/pc=
-ie/drv.c
-
-The fix is quite straightforward, take the 22000 versions and manually
-add an entry for 0xA0F0 device:
-
-{IWL_PCI_DEVICE(0xA0F0, 0x0000, iwl22000_2ax_cfg_hr)},
-
-I put the 'git diff' output of my test resolution below, hopefully it
-helps. I'll also Cc Luca so he can correct any mistakes I did :)
-
-Please let me know if you have any problems.
-
-[1] https://patchwork.kernel.org/patch/10119565/
-
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@@ -652,20 -651,19 +652,20 @@@ static const struct pci_device_id iwl_h
-        {IWL_PCI_DEVICE(0xA370, 0x4034, iwl9560_2ac_cfg_soc)},
-        {IWL_PCI_DEVICE(0xA370, 0x40A4, iwl9462_2ac_cfg_soc)},
-=20=20
-- /* a000 Series */
--       {IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg_hr_cdb)},
--       {IWL_PCI_DEVICE(0x34F0, 0x0310, iwla000_2ac_cfg_jf)},
--       {IWL_PCI_DEVICE(0x2720, 0x0000, iwla000_2ax_cfg_hr)},
--       {IWL_PCI_DEVICE(0x34F0, 0x0070, iwla000_2ax_cfg_hr)},
--       {IWL_PCI_DEVICE(0x2720, 0x0078, iwla000_2ax_cfg_hr)},
--       {IWL_PCI_DEVICE(0x2720, 0x0070, iwla000_2ac_cfg_hr_cdb)},
--       {IWL_PCI_DEVICE(0x2720, 0x0030, iwla000_2ac_cfg_hr_cdb)},
--       {IWL_PCI_DEVICE(0x2720, 0x1080, iwla000_2ax_cfg_hr)},
--       {IWL_PCI_DEVICE(0x2720, 0x0090, iwla000_2ac_cfg_hr_cdb)},
--       {IWL_PCI_DEVICE(0x2720, 0x0310, iwla000_2ac_cfg_hr_cdb)},
--       {IWL_PCI_DEVICE(0x40C0, 0x0000, iwla000_2ax_cfg_hr)},
--       {IWL_PCI_DEVICE(0x40C0, 0x0A10, iwla000_2ax_cfg_hr)},
--       {IWL_PCI_DEVICE(0xA0F0, 0x0000, iwla000_2ax_cfg_hr)},
-+ /* 22000 Series */
-+       {IWL_PCI_DEVICE(0x2720, 0x0A10, iwl22000_2ac_cfg_hr_cdb)},
-+       {IWL_PCI_DEVICE(0x34F0, 0x0310, iwl22000_2ac_cfg_jf)},
-+       {IWL_PCI_DEVICE(0x2720, 0x0000, iwl22000_2ax_cfg_hr)},
-+       {IWL_PCI_DEVICE(0x34F0, 0x0070, iwl22000_2ax_cfg_hr)},
-+       {IWL_PCI_DEVICE(0x2720, 0x0078, iwl22000_2ax_cfg_hr)},
-+       {IWL_PCI_DEVICE(0x2720, 0x0070, iwl22000_2ac_cfg_hr_cdb)},
-+       {IWL_PCI_DEVICE(0x2720, 0x0030, iwl22000_2ac_cfg_hr_cdb)},
-+       {IWL_PCI_DEVICE(0x2720, 0x1080, iwl22000_2ax_cfg_hr)},
-+       {IWL_PCI_DEVICE(0x2720, 0x0090, iwl22000_2ac_cfg_hr_cdb)},
-+       {IWL_PCI_DEVICE(0x2720, 0x0310, iwl22000_2ac_cfg_hr_cdb)},
-+       {IWL_PCI_DEVICE(0x40C0, 0x0000, iwl22000_2ax_cfg_hr)},
-+       {IWL_PCI_DEVICE(0x40C0, 0x0A10, iwl22000_2ax_cfg_hr)},
-++      {IWL_PCI_DEVICE(0xA0F0, 0x0000, iwl22000_2ax_cfg_hr)},
-=20=20
-  #endif /* CONFIG_IWLMVM */
-
-
-The following changes since commit 0fc66ddfaf8bb8f73c965f24928f8815b470304e:
-
-  Documentation: net: dsa: Cut set_addr() documentation (2017-11-30 10:10:1=
-6 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next=
-.git tags/wireless-drivers-next-for-davem-2017-12-18
-
-for you to fetch changes up to 1dde35d0b8e3a9fbf24e13d16dc583f1cc5d027b:
-
-  Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/a=
-th.git (2017-12-14 18:38:48 +0200)
-
-----------------------------------------------------------------
-wireless-drivers-next patches for 4.16
-
-A bigger pull request this time, the most visible change being the new
-driver mt76. But there's also Kconfig refactoring in ath9k and ath10k,
-work beginning in iwlwifi to have rate scaling in firmware/hardware,
-wcn3990 support getting closer in ath10k and lots of smaller changes.
-
-mt76
-
-* a new driver for MT76x2e, a 2x2 PCIe 802.11ac chipset by MediaTek
-
-ath10k
-
-* enable multiqueue support for all hw using mac80211 wake_tx_queue op
-
-* new Kconfig option ATH10K_SPECTRAL to save RAM
-
-* show tx stats on QCA9880
-
-* new qcom,ath10k-calibration-variant DT entry
-
-* WMI layer support for wcn3990
-
-ath9k
-
-* new Kconfig option ATH9K_COMMON_SPECTRAL to save RAM
-
-wcn36xx
-
-* hardware scan offload support
-
-wil6210
-
-* run-time PM support when interface is down
-
-iwlwifi
-
-* initial work for rate-scaling offload
-
-* Support for new FW API version 36
-
-* Rename the temporary hw name A000 to 22000
-
-ssb
-
-* make SSB a menuconfig to ease disabling it all
-
-mwl8k
-
-* enable non-DFS 5G channels 149-165
-
-----------------------------------------------------------------
-Anilkumar Kolli (3):
-      ath10k: remove MAC80211_DEBUGFS dependency on ath10k_sta_statistics
-      ath10k: move pktlog_filter out of ath10k_debug
-      ath10k: add per peer tx stats support for 10.2.4
-
-Arnd Bergmann (3):
-      wlcore: use boottime for fw time sync
-      ath10k: use 64-bit crash dump timestamps
-      wlcore: fix unused function warning
-
-Ashish Kalra (1):
-      bcma: Adjust block comment
-
-Avraham Stern (1):
-      iwlwifi: mvm: add WFA vendor specific TPC report IE to probe request
-
-Balaji Pothunoori (1):
-      ath10k: handling qos at STA side based on AP WMM enable/disable
-
-Ben Greear (1):
-      ath10k: fix invalid STS_CAP_OFFSET_MASK
-
-Bjorn Andersson (1):
-      wcn36xx: Reduce spinlock in indication handler
-
-Colin Ian King (3):
-      rtlwifi: rtl818x: remove redundant check for cck_power > 15
-      wlcore, wl1251: fix spelling: "Couldnt" -> "Couldn't" and remove erro=
-r on -ENOMEM
-      brcmsmac: use ARRAY_SIZE on rfseq_updategainu_events
-
-Dan Carpenter (1):
-      ath9k_htc: Add a sanity check in ath9k_htc_ampdu_action()
-
-Dedy Lansky (1):
-      wil6210: print human readable names of WMI commands and events
-
-Emmanuel Grumbach (5):
-      iwlwifi: mvm: rs: don't override the rate history in the search cycle
-      iwlwifi: mvm: revert support new Coex firmware API
-      iwlwifi: print the version number of the firmware in hex
-      iwlwifi: fix the ALIVE notification layout
-      iwlwifi: mvm: remove set but unused variable in iwl_mvm_roc_done_wk
-
-Eyal Ilsar (1):
-      wcn36xx: set default BTLE coexistence config
-
-Felix Fietkau (3):
-      dt-bindings: net: add mt76 wireless device binding
-      mt76: add common code shared between multiple chipsets
-      mt76: add driver code for MT76x2e
-
-Gregory Greenman (7):
-      iwlwifi: mvm: rs: introduce new API for rate scaling
-      iwlwifi: mvm: rs: add ops for the new rate scaling in the FW
-      iwlwifi: mvm: rs: add basic implementation of the new RS API handlers
-      iwlwifi: mvm: rs: new rate scale API - add FW notifications
-      iwlwifi: mvm: rs: new rate scale API - add debugfs hooks
-      iwlwifi: mvm: rs: add size checks when printing to a buffer
-      iwlwifi: mvm: rs: add sanity check when sending LQ command
-
-Gustavo A. R. Silva (1):
-      ath9k: dfs: use swap macro in ath9k_check_chirping
-
-Hamad Kadmany (1):
-      wil6210: abort properly in cfg suspend
-
-Ian Molton (20):
-      brcmfmac: Fix parameter order in brcmf_sdiod_f0_writeb()
-      brcmfmac: Register sizes on hardware are not dependent on compiler ty=
-pes
-      brcmfmac: Split brcmf_sdiod_regrw_helper() up.
-      brcmfmac: Clean up brcmf_sdiod_set_sbaddr_window()
-      brcmfmac: Remove dead IO code
-      brcmfmac: Remove bandaid for SleepCSR
-      brcmfmac: Remove brcmf_sdiod_request_data()
-      brcmfmac: Fix asymmetric IO functions.
-      brcmfmac: Remove noisy debugging.
-      brcmfmac: Rename bcmerror to err
-      brcmfmac: Split brcmf_sdiod_buffrw function up.
-      brcmfmac: whitespace fixes in brcmf_sdiod_send_buf()
-      brcmfmac: Clarify if using braces.
-      brcmfmac: Rename / replace old IO functions with simpler ones.
-      brcmfmac: Tidy register definitions a little
-      brcmfmac: Remove brcmf_sdiod_addrprep()
-      brcmfmac: remove unnecessary call to brcmf_sdiod_set_backplane_window=
-()
-      brcmfmac: Cleanup offsetof()
-      brcmfmac: Remove unused macro.
-      brcmfmac: Remove repeated calls to brcmf_chip_get_core()
-
-Johannes Berg (3):
-      iwlwifi: mvm: remove TCP wakeup support
-      iwlwifi: mvm: remove superfluous flush_work()
-      iwlwifi: mvm: request statistics when reading debugfs
-
-J=C3=A9r=C3=A9my Lefaure (1):
-      wireless: use ARRAY_SIZE
-
-Kalle Valo (3):
-      Merge tag 'iwlwifi-next-for-kalle-2017-11-29' of git://git.kernel.org=
-/.../iwlwifi/iwlwifi-next
-      Merge tag 'iwlwifi-next-for-kalle-2017-12-05' of git://git.kernel.org=
-/.../iwlwifi/iwlwifi-next
-      Merge ath-next from git://git.kernel.org/.../kvalo/ath.git
-
-Kenneth Lu (2):
-      ath6kl: remove redundant variable ies_len
-      ath6kl: improve endianness handling
-
-Larry Finger (1):
-      rtlwifi: Convert individual interrupt results to struct
-
-Lazar Alexei (5):
-      wil6210: run-time PM when interface down
-      wil6210: get suspend reject reason and resume triggers from FW
-      wil6210: fix PCIe bus mastering in case of interface down
-      wil6210: remove suspend time statistics
-      wil6210: update statistics for suspend
-
-Liad Kaufman (3):
-      iwlwifi: mvm: support MGMT frames in compressed BA
-      iwlwifi: dbg: allow wrt collection before ALIVE
-      iwlwifi: mvm: make init_dbg effective only on failure
-
-Limin Zhu (1):
-      mwifiex: cfg80211: do not change virtual interface during scan proces=
-sing
-
-Lior David (5):
-      wil6210: refresh FW capabilities during interface up
-      wil6210: fix length check in __wmi_send
-      wil6210: add block size checks during FW load
-      wil6210: missing length check in wmi_set_ie
-      wil6210: missing length check in wil_cfg80211_mgmt_tx
-
-Loic Poulain (1):
-      wcn36xx: Add hardware scan offload support
-
-Luca Coelho (3):
-      iwlwifi: rename the temporary name of A000 to the official 22000
-      iwlwifi: bump FW API to 36 for 8000 and up
-      iwlwifi: mvm: fix wrong #ifdef that uses a macro from backports
-
-Manikanta Pubbisetty (2):
-      ath10k: update tdls teardown state to target
-      ath10k: handle tdls peer events
-
-Matthias Schiffer (2):
-      ath9k: move spectral scan support under a separate config symbol
-      ath10k: move spectral scan support under a separate config symbol
-
-Nicolas Iooss (1):
-      rtlwifi: always initialize variables given to RT_TRACE()
-
-Ping-Ke Shih (4):
-      rtlwifi: Reduce IO in RX interrupt to boost throughput
-      rtlwifi: fix the wrong size to calculate fifo space
-      rtlwifi: cleanup the code that check whether TX ring is available
-      rtlwifi: rtl_pci: 8822BE puts broadcast and multicast packet to HIQ
-
-Rajkumar Manoharan (1):
-      ath10k: unify rx processing in napi_poll
-
-Rakesh Pillai (4):
-      ath10k: wmi: modify svc bitmap parsing for wcn3990
-      ath10k: wmi: add management tx by reference support over wmi
-      ath10k: wmi: get wmi init parameter values from hw params
-      ath10k: wmi: add hw params entry for wcn3990
-
-Reizer, Eyal (1):
-      wlcore: allow elp during wowlan suspend
-
-Sara Sharon (2):
-      iwlwifi: mvm: check for short GI only for OFDM
-      iwlwifi: mvm: avoid dumping assert log when device is stopped
-
-Sven Eckelmann (2):
-      dt: bindings: add new dt entry for ath10k calibration variant
-      ath10k: search DT for qcom,ath10k-calibration-variant
-
-Toke H=C3=B8iland-J=C3=B8rgensen (1):
-      ath10k: re-enable TXQs for all devices
-
-Tsang-Shian Lin (1):
-      rtlwifi: rtl_pci: Fix the bug when inactiveps is enabled.
-
-Vincent Legoll (1):
-      ssb: make SSB a menuconfig to ease disabling it all
-
-Weixiao Zhang (1):
-      mwl8k: Expand non-DFS 5G channels
-
-Wright Feng (1):
-      brcmfmac: enlarge buffer size of caps to 512 bytes
-
-Xinming Hu (1):
-      mwifiex: do not support change AP interface to station mode
-
- .../bindings/net/wireless/mediatek,mt76.txt        |  32 +
- .../bindings/net/wireless/qcom,ath10k.txt          |   3 +
- drivers/bcma/driver_pcie2.c                        |   3 +-
- drivers/net/wireless/ath/ath10k/Kconfig            |   9 +-
- drivers/net/wireless/ath/ath10k/Makefile           |   2 +-
- drivers/net/wireless/ath/ath10k/core.c             |  95 ++-
- drivers/net/wireless/ath/ath10k/core.h             |  10 +-
- drivers/net/wireless/ath/ath10k/debug.c            |  18 +-
- drivers/net/wireless/ath/ath10k/debug.h            |  21 +-
- drivers/net/wireless/ath/ath10k/debugfs_sta.c      |  27 -
- drivers/net/wireless/ath/ath10k/htt.h              |  19 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c           | 181 +++--
- drivers/net/wireless/ath/ath10k/hw.c               |   2 +
- drivers/net/wireless/ath/ath10k/hw.h               |  14 +
- drivers/net/wireless/ath/ath10k/mac.c              |  65 +-
- drivers/net/wireless/ath/ath10k/spectral.h         |   4 +-
- drivers/net/wireless/ath/ath10k/wmi-ops.h          |   9 +-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c          | 146 +++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h          | 113 +++
- drivers/net/wireless/ath/ath10k/wmi.c              |  72 ++
- drivers/net/wireless/ath/ath10k/wmi.h              |   5 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |   2 -
- drivers/net/wireless/ath/ath6kl/txrx.c             |   2 +-
- drivers/net/wireless/ath/ath9k/Kconfig             |  14 +-
- drivers/net/wireless/ath/ath9k/Makefile            |   4 +-
- drivers/net/wireless/ath/ath9k/common-spectral.h   |   4 +-
- drivers/net/wireless/ath/ath9k/dfs.c               |   8 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   4 +
- drivers/net/wireless/ath/wcn36xx/hal.h             | 107 ++-
- drivers/net/wireless/ath/wcn36xx/main.c            |  16 +-
- drivers/net/wireless/ath/wcn36xx/smd.c             | 126 +++-
- drivers/net/wireless/ath/wcn36xx/smd.h             |   3 +
- drivers/net/wireless/ath/wil6210/cfg80211.c        |  17 +-
- drivers/net/wireless/ath/wil6210/debugfs.c         | 150 +++-
- drivers/net/wireless/ath/wil6210/ethtool.c         |  15 +
- drivers/net/wireless/ath/wil6210/fw_inc.c          |  79 +-
- drivers/net/wireless/ath/wil6210/interrupt.c       |  22 +-
- drivers/net/wireless/ath/wil6210/main.c            |  26 +-
- drivers/net/wireless/ath/wil6210/netdev.c          |  18 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c        |  97 ++-
- drivers/net/wireless/ath/wil6210/pm.c              | 104 ++-
- drivers/net/wireless/ath/wil6210/wil6210.h         |  40 +-
- drivers/net/wireless/ath/wil6210/wmi.c             | 304 +++++++-
- drivers/net/wireless/ath/wil6210/wmi.h             |  17 +-
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 377 +++------
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  12 +-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 248 +++---
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  52 +-
- .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        |   3 +-
- .../broadcom/brcm80211/brcmsmac/phy/phytbl_n.c     | 462 +++---------
- drivers/net/wireless/intel/iwlwifi/Makefile        |   2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c     | 216 ++++++
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |   4 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |   2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/a000.c      | 216 ------
- drivers/net/wireless/intel/iwlwifi/fw/api/alive.h  |   4 +-
- drivers/net/wireless/intel/iwlwifi/fw/api/coex.h   |  30 -
- .../net/wireless/intel/iwlwifi/fw/api/commands.h   |   2 +-
- .../net/wireless/intel/iwlwifi/fw/api/datapath.h   |  15 +
- drivers/net/wireless/intel/iwlwifi/fw/api/rs.h     | 262 ++++++-
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h     |   4 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c        |  15 +-
- drivers/net/wireless/intel/iwlwifi/fw/file.h       |   5 +-
- drivers/net/wireless/intel/iwlwifi/fw/smem.c       |   8 +-
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  20 +-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  11 +-
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h        |  12 +-
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/Makefile    |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/coex.c      |  33 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c        | 232 +-----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |  91 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  14 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  43 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  18 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   9 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c     | 314 ++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 234 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h        |  48 ++
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   5 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |  35 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  29 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |   7 +-
- .../net/wireless/intel/iwlwifi/mvm/time-event.c    |  15 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  20 +-
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  14 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  36 +-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |   4 +-
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    |   7 +-
- drivers/net/wireless/marvell/mwl8k.c               |   7 +-
- drivers/net/wireless/mediatek/Kconfig              |   1 +
- drivers/net/wireless/mediatek/Makefile             |   1 +
- drivers/net/wireless/mediatek/mt76/Kconfig         |  10 +
- drivers/net/wireless/mediatek/mt76/Makefile        |  15 +
- drivers/net/wireless/mediatek/mt76/debugfs.c       |  77 ++
- drivers/net/wireless/mediatek/mt76/dma.c           | 451 +++++++++++
- drivers/net/wireless/mediatek/mt76/dma.h           |  38 +
- drivers/net/wireless/mediatek/mt76/eeprom.c        | 112 +++
- drivers/net/wireless/mediatek/mt76/mac80211.c      | 393 ++++++++++
- drivers/net/wireless/mediatek/mt76/mmio.c          |  61 ++
- drivers/net/wireless/mediatek/mt76/mt76.h          | 360 +++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2.h        | 227 ++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_core.c   |  88 +++
- .../net/wireless/mediatek/mt76/mt76x2_debugfs.c    | 133 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c    | 493 ++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h    |  80 ++
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    | 183 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.h    |  68 ++
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 647 ++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h | 182 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c   | 839 +++++++++++++++++=
-++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    | 755 ++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    | 190 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c   | 545 +++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c    | 451 +++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h    | 155 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2_pci.c    | 110 +++
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    | 758 +++++++++++++++++=
-++
- drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   | 587 ++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_trace.c  |  23 +
- drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  | 144 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     | 258 +++++++
- drivers/net/wireless/mediatek/mt76/trace.c         |  23 +
- drivers/net/wireless/mediatek/mt76/trace.h         |  71 ++
- drivers/net/wireless/mediatek/mt76/tx.c            | 511 +++++++++++++
- drivers/net/wireless/mediatek/mt76/util.c          |  78 ++
- drivers/net/wireless/mediatek/mt76/util.h          |  44 ++
- .../net/wireless/realtek/rtl818x/rtl8187/rtl8225.c |   5 +-
- drivers/net/wireless/realtek/rtlwifi/base.c        |   2 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c         |  75 +-
- drivers/net/wireless/realtek/rtlwifi/pci.h         |   5 +-
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |  11 +-
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    |  12 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |  12 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |  11 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |  57 +-
- .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    |  12 +-
- .../net/wireless/realtek/rtlwifi/rtl8192se/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    |   7 +-
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |  22 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   |  12 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/table.c |  14 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |  11 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.h    |   3 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/table.c |  34 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  11 +-
- drivers/net/wireless/ti/wl1251/init.c              |   4 +-
- drivers/net/wireless/ti/wlcore/acx.c               |   2 +-
- drivers/net/wireless/ti/wlcore/acx.h               |   2 -
- drivers/net/wireless/ti/wlcore/main.c              |  41 +-
- drivers/net/wireless/ti/wlcore/tx.c                |   4 +-
- drivers/ssb/Kconfig                                |   9 +-
- 159 files changed, 12700 insertions(+), 2097 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek=
-,mt76.txt
- create mode 100644 drivers/net/wireless/intel/iwlwifi/cfg/22000.c
- delete mode 100644 drivers/net/wireless/intel/iwlwifi/cfg/a000.c
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/Kconfig
- create mode 100644 drivers/net/wireless/mediatek/mt76/Makefile
- create mode 100644 drivers/net/wireless/mediatek/mt76/debugfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/dma.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/dma.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/eeprom.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mac80211.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mmio.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_core.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_init.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_main.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_pci.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_regs.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/trace.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/trace.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/tx.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/util.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/util.h
+Replace the array of functions with a pair of pointers to the
+relevant functions.
+
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 115 +++++++-------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 168 ++++++++++-----------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  15 +-
+ 3 files changed, 146 insertions(+), 152 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index e3366ab..a47b252 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -118,7 +118,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 
+ 		ret = request_irq(pdata->oob_irq_nr, brcmf_sdiod_oob_irqhandler,
+ 				  pdata->oob_irq_flags, "brcmf_oob_intr",
+-				  &sdiodev->func[1]->dev);
++				  &sdiodev->func1->dev);
+ 		if (ret != 0) {
+ 			brcmf_err("request_irq failed %d\n", ret);
+ 			return ret;
+@@ -132,7 +132,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 		}
+ 		sdiodev->irq_wake = true;
+ 
+-		sdio_claim_host(sdiodev->func[1]);
++		sdio_claim_host(sdiodev->func1);
+ 
+ 		if (sdiodev->bus_if->chip == BRCM_CC_43362_CHIP_ID) {
+ 			/* assign GPIO to SDIO core */
+@@ -159,13 +159,13 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 			data |= SDIO_CCCR_BRCM_SEPINT_ACT_HI;
+ 		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_BRCM_SEPINT,
+ 				     data, &ret);
+-		sdio_release_host(sdiodev->func[1]);
++		sdio_release_host(sdiodev->func1);
+ 	} else {
+ 		brcmf_dbg(SDIO, "Entering\n");
+-		sdio_claim_host(sdiodev->func[1]);
+-		sdio_claim_irq(sdiodev->func[1], brcmf_sdiod_ib_irqhandler);
+-		sdio_claim_irq(sdiodev->func[2], brcmf_sdiod_dummy_irqhandler);
+-		sdio_release_host(sdiodev->func[1]);
++		sdio_claim_host(sdiodev->func1);
++		sdio_claim_irq(sdiodev->func1, brcmf_sdiod_ib_irqhandler);
++		sdio_claim_irq(sdiodev->func2, brcmf_sdiod_dummy_irqhandler);
++		sdio_release_host(sdiodev->func1);
+ 		sdiodev->sd_irq_requested = true;
+ 	}
+ 
+@@ -183,26 +183,26 @@ void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
+ 		struct brcmfmac_sdio_pd *pdata;
+ 
+ 		pdata = &sdiodev->settings->bus.sdio;
+-		sdio_claim_host(sdiodev->func[1]);
++		sdio_claim_host(sdiodev->func1);
+ 		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_BRCM_SEPINT, 0, NULL);
+ 		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, 0, NULL);
+-		sdio_release_host(sdiodev->func[1]);
++		sdio_release_host(sdiodev->func1);
+ 
+ 		sdiodev->oob_irq_requested = false;
+ 		if (sdiodev->irq_wake) {
+ 			disable_irq_wake(pdata->oob_irq_nr);
+ 			sdiodev->irq_wake = false;
+ 		}
+-		free_irq(pdata->oob_irq_nr, &sdiodev->func[1]->dev);
++		free_irq(pdata->oob_irq_nr, &sdiodev->func1->dev);
+ 		sdiodev->irq_en = false;
+ 		sdiodev->oob_irq_requested = false;
+ 	}
+ 
+ 	if (sdiodev->sd_irq_requested) {
+-		sdio_claim_host(sdiodev->func[1]);
+-		sdio_release_irq(sdiodev->func[2]);
+-		sdio_release_irq(sdiodev->func[1]);
+-		sdio_release_host(sdiodev->func[1]);
++		sdio_claim_host(sdiodev->func1);
++		sdio_release_irq(sdiodev->func2);
++		sdio_release_irq(sdiodev->func1);
++		sdio_release_host(sdiodev->func1);
+ 		sdiodev->sd_irq_requested = false;
+ 	}
+ }
+@@ -264,7 +264,7 @@ u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
+ 	addr &= SBSDIO_SB_OFT_ADDR_MASK;
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+-	data = sdio_readl(sdiodev->func[1], addr, &retval);
++	data = sdio_readl(sdiodev->func1, addr, &retval);
+ 
+ out:
+ 	if (ret)
+@@ -285,7 +285,7 @@ void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	addr &= SBSDIO_SB_OFT_ADDR_MASK;
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+-	sdio_writel(sdiodev->func[1], data, addr, &retval);
++	sdio_writel(sdiodev->func1, data, addr, &retval);
+ 
+ out:
+ 	if (ret)
+@@ -550,7 +550,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ 	addr &= SBSDIO_SB_OFT_ADDR_MASK;
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+-	err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[2], addr, pkt);
++	err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func2, addr, pkt);
+ 
+ done:
+ 	return err;
+@@ -575,13 +575,13 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (pktq->qlen == 1)
+-		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[2], addr,
++		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func2, addr,
+ 					    pktq->next);
+ 	else if (!sdiodev->sg_support) {
+ 		glom_skb = brcmu_pkt_buf_get_skb(totlen);
+ 		if (!glom_skb)
+ 			return -ENOMEM;
+-		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[2], addr,
++		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func2, addr,
+ 					    glom_skb);
+ 		if (err)
+ 			goto done;
+@@ -591,7 +591,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 			skb_pull(glom_skb, skb->len);
+ 		}
+ 	} else
+-		err = brcmf_sdiod_sglist_rw(sdiodev, sdiodev->func[2], false,
++		err = brcmf_sdiod_sglist_rw(sdiodev, sdiodev->func2, false,
+ 					    addr, pktq);
+ 
+ done:
+@@ -623,7 +623,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (!err)
+-		err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func[2], addr,
++		err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func2, addr,
+ 					     mypkt);
+ 
+ 	brcmu_pkt_buf_free_skb(mypkt);
+@@ -649,13 +649,13 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	if (pktq->qlen == 1 || !sdiodev->sg_support) {
+ 		skb_queue_walk(pktq, skb) {
+-			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func[2],
++			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func2,
+ 						     addr, skb);
+ 			if (err)
+ 				break;
+ 		}
+ 	} else {
+-		err = brcmf_sdiod_sglist_rw(sdiodev, sdiodev->func[2], true,
++		err = brcmf_sdiod_sglist_rw(sdiodev, sdiodev->func2, true,
+ 					    addr, pktq);
+ 	}
+ 
+@@ -686,7 +686,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 	else
+ 		dsize = size;
+ 
+-	sdio_claim_host(sdiodev->func[1]);
++	sdio_claim_host(sdiodev->func1);
+ 
+ 	/* Do the transfer(s) */
+ 	while (size) {
+@@ -706,10 +706,10 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 		if (write) {
+ 			memcpy(pkt->data, data, dsize);
+-			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func[1],
++			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func1,
+ 						     sdaddr, pkt);
+ 		} else {
+-			err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func[1],
++			err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func1,
+ 						    sdaddr, pkt);
+ 		}
+ 
+@@ -733,7 +733,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	dev_kfree_skb(pkt);
+ 
+-	sdio_release_host(sdiodev->func[1]);
++	sdio_release_host(sdiodev->func1);
+ 
+ 	return err;
+ }
+@@ -757,7 +757,7 @@ void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
+ 	uint nents;
+ 	int err;
+ 
+-	func = sdiodev->func[2];
++	func = sdiodev->func2;
+ 	host = func->card->host;
+ 	sdiodev->sg_support = host->max_segs > 1;
+ 	max_blocks = min_t(uint, host->max_blk_count, 511u);
+@@ -818,17 +818,17 @@ static int brcmf_sdiod_freezer_on(struct brcmf_sdio_dev *sdiodev)
+ 	brcmf_sdio_trigger_dpc(sdiodev->bus);
+ 	wait_event(sdiodev->freezer->thread_freeze,
+ 		   atomic_read(expect) == sdiodev->freezer->frozen_count);
+-	sdio_claim_host(sdiodev->func[1]);
++	sdio_claim_host(sdiodev->func1);
+ 	res = brcmf_sdio_sleep(sdiodev->bus, true);
+-	sdio_release_host(sdiodev->func[1]);
++	sdio_release_host(sdiodev->func1);
+ 	return res;
+ }
+ 
+ static void brcmf_sdiod_freezer_off(struct brcmf_sdio_dev *sdiodev)
+ {
+-	sdio_claim_host(sdiodev->func[1]);
++	sdio_claim_host(sdiodev->func1);
+ 	brcmf_sdio_sleep(sdiodev->bus, false);
+-	sdio_release_host(sdiodev->func[1]);
++	sdio_release_host(sdiodev->func1);
+ 	atomic_set(&sdiodev->freezer->freezing, 0);
+ 	complete_all(&sdiodev->freezer->resumed);
+ }
+@@ -878,19 +878,19 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
+ 	brcmf_sdiod_freezer_detach(sdiodev);
+ 
+ 	/* Disable Function 2 */
+-	sdio_claim_host(sdiodev->func[2]);
+-	sdio_disable_func(sdiodev->func[2]);
+-	sdio_release_host(sdiodev->func[2]);
++	sdio_claim_host(sdiodev->func2);
++	sdio_disable_func(sdiodev->func2);
++	sdio_release_host(sdiodev->func2);
+ 
+ 	/* Disable Function 1 */
+-	sdio_claim_host(sdiodev->func[1]);
+-	sdio_disable_func(sdiodev->func[1]);
+-	sdio_release_host(sdiodev->func[1]);
++	sdio_claim_host(sdiodev->func1);
++	sdio_disable_func(sdiodev->func1);
++	sdio_release_host(sdiodev->func1);
+ 
+ 	sg_free_table(&sdiodev->sgtable);
+ 	sdiodev->sbwad = 0;
+ 
+-	pm_runtime_allow(sdiodev->func[1]->card->host->parent);
++	pm_runtime_allow(sdiodev->func1->card->host->parent);
+ 	return 0;
+ }
+ 
+@@ -906,29 +906,27 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret = 0;
+ 
+-	sdiodev->num_funcs = 2;
++	sdio_claim_host(sdiodev->func1);
+ 
+-	sdio_claim_host(sdiodev->func[1]);
+-
+-	ret = sdio_set_block_size(sdiodev->func[1], SDIO_FUNC1_BLOCKSIZE);
++	ret = sdio_set_block_size(sdiodev->func1, SDIO_FUNC1_BLOCKSIZE);
+ 	if (ret) {
+ 		brcmf_err("Failed to set F1 blocksize\n");
+-		sdio_release_host(sdiodev->func[1]);
++		sdio_release_host(sdiodev->func1);
+ 		goto out;
+ 	}
+-	ret = sdio_set_block_size(sdiodev->func[2], SDIO_FUNC2_BLOCKSIZE);
++	ret = sdio_set_block_size(sdiodev->func2, SDIO_FUNC2_BLOCKSIZE);
+ 	if (ret) {
+ 		brcmf_err("Failed to set F2 blocksize\n");
+-		sdio_release_host(sdiodev->func[1]);
++		sdio_release_host(sdiodev->func1);
+ 		goto out;
+ 	}
+ 
+ 	/* increase F2 timeout */
+-	sdiodev->func[2]->enable_timeout = SDIO_WAIT_F2RDY;
++	sdiodev->func2->enable_timeout = SDIO_WAIT_F2RDY;
+ 
+ 	/* Enable Function 1 */
+-	ret = sdio_enable_func(sdiodev->func[1]);
+-	sdio_release_host(sdiodev->func[1]);
++	ret = sdio_enable_func(sdiodev->func1);
++	sdio_release_host(sdiodev->func1);
+ 	if (ret) {
+ 		brcmf_err("Failed to enable F1: err=%d\n", ret);
+ 		goto out;
+@@ -944,7 +942,7 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
+ 		ret = -ENODEV;
+ 		goto out;
+ 	}
+-	brcmf_sdiod_host_fixup(sdiodev->func[2]->card->host);
++	brcmf_sdiod_host_fixup(sdiodev->func2->card->host);
+ out:
+ 	if (ret)
+ 		brcmf_sdiod_remove(sdiodev);
+@@ -1032,16 +1030,15 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	/* store refs to functions used. mmc_card does
+ 	 * not hold the F0 function pointer.
+ 	 */
+-	sdiodev->func[0] = NULL;
+-	sdiodev->func[1] = func->card->sdio_func[0];
+-	sdiodev->func[2] = func;
++	sdiodev->func1 = func->card->sdio_func[0];
++	sdiodev->func2 = func;
+ 
+ 	sdiodev->bus_if = bus_if;
+ 	bus_if->bus_priv.sdio = sdiodev;
+ 	bus_if->proto_type = BRCMF_PROTO_BCDC;
+ 	dev_set_drvdata(&func->dev, bus_if);
+-	dev_set_drvdata(&sdiodev->func[1]->dev, bus_if);
+-	sdiodev->dev = &sdiodev->func[1]->dev;
++	dev_set_drvdata(&sdiodev->func1->dev, bus_if);
++	sdiodev->dev = &sdiodev->func1->dev;
+ 
+ 	brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_DOWN);
+ 
+@@ -1057,7 +1054,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 
+ fail:
+ 	dev_set_drvdata(&func->dev, NULL);
+-	dev_set_drvdata(&sdiodev->func[1]->dev, NULL);
++	dev_set_drvdata(&sdiodev->func1->dev, NULL);
+ 	kfree(sdiodev);
+ 	kfree(bus_if);
+ 	return err;
+@@ -1086,8 +1083,8 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
+ 		/* only proceed with rest of cleanup if func 1 */
+ 		brcmf_sdiod_remove(sdiodev);
+ 
+-		dev_set_drvdata(&sdiodev->func[1]->dev, NULL);
+-		dev_set_drvdata(&sdiodev->func[2]->dev, NULL);
++		dev_set_drvdata(&sdiodev->func1->dev, NULL);
++		dev_set_drvdata(&sdiodev->func2->dev, NULL);
+ 
+ 		kfree(bus_if);
+ 		kfree(sdiodev);
+@@ -1132,7 +1129,7 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ 		else
+ 			sdio_flags |= MMC_PM_WAKE_SDIO_IRQ;
+ 	}
+-	if (sdio_set_host_pm_flags(sdiodev->func[1], sdio_flags))
++	if (sdio_set_host_pm_flags(sdiodev->func1, sdio_flags))
+ 		brcmf_err("Failed to set pm_flags %x\n", sdio_flags);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 41f46bb..fd9fbc8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -979,7 +979,7 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
+ 	struct sdpcm_shared_le sh_le;
+ 	__le32 addr_le;
+ 
+-	sdio_claim_host(bus->sdiodev->func[1]);
++	sdio_claim_host(bus->sdiodev->func1);
+ 	brcmf_sdio_bus_sleep(bus, false, false);
+ 
+ 	/*
+@@ -1013,7 +1013,7 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
+ 	if (rv < 0)
+ 		goto fail;
+ 
+-	sdio_release_host(bus->sdiodev->func[1]);
++	sdio_release_host(bus->sdiodev->func1);
+ 
+ 	/* Endianness */
+ 	sh->flags = le32_to_cpu(sh_le.flags);
+@@ -1035,7 +1035,7 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
+ fail:
+ 	brcmf_err("unable to obtain sdpcm_shared info: rv=%d (addr=0x%x)\n",
+ 		  rv, addr);
+-	sdio_release_host(bus->sdiodev->func[1]);
++	sdio_release_host(bus->sdiodev->func1);
+ 	return rv;
+ }
+ 
+@@ -1157,7 +1157,7 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 		  rtx ? ", send NAK" : "");
+ 
+ 	if (abort)
+-		brcmf_sdiod_abort(bus->sdiodev, bus->sdiodev->func[2]);
++		brcmf_sdiod_abort(bus->sdiodev, bus->sdiodev->func2);
+ 
+ 	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_RF_TERM,
+ 			   &err);
+@@ -1209,7 +1209,7 @@ static void brcmf_sdio_txfail(struct brcmf_sdio *bus)
+ 	brcmf_err("sdio error, abort command and terminate frame\n");
+ 	bus->sdcnt.tx_sderrs++;
+ 
+-	brcmf_sdiod_abort(sdiodev, sdiodev->func[2]);
++	brcmf_sdiod_abort(sdiodev, sdiodev->func2);
+ 	brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_FRAMECTRL, SFC_WF_TERM, NULL);
+ 	bus->sdcnt.f1regdata++;
+ 
+@@ -1565,10 +1565,10 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 		 * read directly into the chained packet, or allocate a large
+ 		 * packet and and copy into the chain.
+ 		 */
+-		sdio_claim_host(bus->sdiodev->func[1]);
++		sdio_claim_host(bus->sdiodev->func1);
+ 		errcode = brcmf_sdiod_recv_chain(bus->sdiodev,
+ 						 &bus->glom, dlen);
+-		sdio_release_host(bus->sdiodev->func[1]);
++		sdio_release_host(bus->sdiodev->func1);
+ 		bus->sdcnt.f2rxdata++;
+ 
+ 		/* On failure, kill the superframe */
+@@ -1576,11 +1576,11 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 			brcmf_err("glom read of %d bytes failed: %d\n",
+ 				  dlen, errcode);
+ 
+-			sdio_claim_host(bus->sdiodev->func[1]);
++			sdio_claim_host(bus->sdiodev->func1);
+ 			brcmf_sdio_rxfail(bus, true, false);
+ 			bus->sdcnt.rxglomfail++;
+ 			brcmf_sdio_free_glom(bus);
+-			sdio_release_host(bus->sdiodev->func[1]);
++			sdio_release_host(bus->sdiodev->func1);
+ 			return 0;
+ 		}
+ 
+@@ -1590,10 +1590,10 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 
+ 		rd_new.seq_num = rxseq;
+ 		rd_new.len = dlen;
+-		sdio_claim_host(bus->sdiodev->func[1]);
++		sdio_claim_host(bus->sdiodev->func1);
+ 		errcode = brcmf_sdio_hdparse(bus, pfirst->data, &rd_new,
+ 					     BRCMF_SDIO_FT_SUPER);
+-		sdio_release_host(bus->sdiodev->func[1]);
++		sdio_release_host(bus->sdiodev->func1);
+ 		bus->cur_read.len = rd_new.len_nxtfrm << 4;
+ 
+ 		/* Remove superframe header, remember offset */
+@@ -1609,10 +1609,10 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 
+ 			rd_new.len = pnext->len;
+ 			rd_new.seq_num = rxseq++;
+-			sdio_claim_host(bus->sdiodev->func[1]);
++			sdio_claim_host(bus->sdiodev->func1);
+ 			errcode = brcmf_sdio_hdparse(bus, pnext->data, &rd_new,
+ 						     BRCMF_SDIO_FT_SUB);
+-			sdio_release_host(bus->sdiodev->func[1]);
++			sdio_release_host(bus->sdiodev->func1);
+ 			brcmf_dbg_hex_dump(BRCMF_GLOM_ON(),
+ 					   pnext->data, 32, "subframe:\n");
+ 
+@@ -1621,11 +1621,11 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 
+ 		if (errcode) {
+ 			/* Terminate frame on error */
+-			sdio_claim_host(bus->sdiodev->func[1]);
++			sdio_claim_host(bus->sdiodev->func1);
+ 			brcmf_sdio_rxfail(bus, true, false);
+ 			bus->sdcnt.rxglomfail++;
+ 			brcmf_sdio_free_glom(bus);
+-			sdio_release_host(bus->sdiodev->func[1]);
++			sdio_release_host(bus->sdiodev->func1);
+ 			bus->cur_read.len = 0;
+ 			return 0;
+ 		}
+@@ -1833,7 +1833,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 
+ 		rd->len_left = rd->len;
+ 		/* read header first for unknow frame length */
+-		sdio_claim_host(bus->sdiodev->func[1]);
++		sdio_claim_host(bus->sdiodev->func1);
+ 		if (!rd->len) {
+ 			ret = brcmf_sdiod_recv_buf(bus->sdiodev,
+ 						   bus->rxhdr, BRCMF_FIRSTREAD);
+@@ -1843,7 +1843,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 					  ret);
+ 				bus->sdcnt.rx_hdrfail++;
+ 				brcmf_sdio_rxfail(bus, true, true);
+-				sdio_release_host(bus->sdiodev->func[1]);
++				sdio_release_host(bus->sdiodev->func1);
+ 				continue;
+ 			}
+ 
+@@ -1853,7 +1853,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 
+ 			if (brcmf_sdio_hdparse(bus, bus->rxhdr, rd,
+ 					       BRCMF_SDIO_FT_NORMAL)) {
+-				sdio_release_host(bus->sdiodev->func[1]);
++				sdio_release_host(bus->sdiodev->func1);
+ 				if (!bus->rxpending)
+ 					break;
+ 				else
+@@ -1869,7 +1869,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 				rd->len_nxtfrm = 0;
+ 				/* treat all packet as event if we don't know */
+ 				rd->channel = SDPCM_EVENT_CHANNEL;
+-				sdio_release_host(bus->sdiodev->func[1]);
++				sdio_release_host(bus->sdiodev->func1);
+ 				continue;
+ 			}
+ 			rd->len_left = rd->len > BRCMF_FIRSTREAD ?
+@@ -1886,7 +1886,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 			brcmf_err("brcmu_pkt_buf_get_skb failed\n");
+ 			brcmf_sdio_rxfail(bus, false,
+ 					    RETRYCHAN(rd->channel));
+-			sdio_release_host(bus->sdiodev->func[1]);
++			sdio_release_host(bus->sdiodev->func1);
+ 			continue;
+ 		}
+ 		skb_pull(pkt, head_read);
+@@ -1894,16 +1894,16 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 
+ 		ret = brcmf_sdiod_recv_pkt(bus->sdiodev, pkt);
+ 		bus->sdcnt.f2rxdata++;
+-		sdio_release_host(bus->sdiodev->func[1]);
++		sdio_release_host(bus->sdiodev->func1);
+ 
+ 		if (ret < 0) {
+ 			brcmf_err("read %d bytes from channel %d failed: %d\n",
+ 				  rd->len, rd->channel, ret);
+ 			brcmu_pkt_buf_free_skb(pkt);
+-			sdio_claim_host(bus->sdiodev->func[1]);
++			sdio_claim_host(bus->sdiodev->func1);
+ 			brcmf_sdio_rxfail(bus, true,
+ 					    RETRYCHAN(rd->channel));
+-			sdio_release_host(bus->sdiodev->func[1]);
++			sdio_release_host(bus->sdiodev->func1);
+ 			continue;
+ 		}
+ 
+@@ -1914,7 +1914,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 		} else {
+ 			memcpy(bus->rxhdr, pkt->data, SDPCM_HDRLEN);
+ 			rd_new.seq_num = rd->seq_num;
+-			sdio_claim_host(bus->sdiodev->func[1]);
++			sdio_claim_host(bus->sdiodev->func1);
+ 			if (brcmf_sdio_hdparse(bus, bus->rxhdr, &rd_new,
+ 					       BRCMF_SDIO_FT_NORMAL)) {
+ 				rd->len = 0;
+@@ -1927,11 +1927,11 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 					  roundup(rd_new.len, 16) >> 4);
+ 				rd->len = 0;
+ 				brcmf_sdio_rxfail(bus, true, true);
+-				sdio_release_host(bus->sdiodev->func[1]);
++				sdio_release_host(bus->sdiodev->func1);
+ 				brcmu_pkt_buf_free_skb(pkt);
+ 				continue;
+ 			}
+-			sdio_release_host(bus->sdiodev->func[1]);
++			sdio_release_host(bus->sdiodev->func1);
+ 			rd->len_nxtfrm = rd_new.len_nxtfrm;
+ 			rd->channel = rd_new.channel;
+ 			rd->dat_offset = rd_new.dat_offset;
+@@ -1947,9 +1947,9 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 					  rd_new.seq_num);
+ 				/* Force retry w/normal header read */
+ 				rd->len = 0;
+-				sdio_claim_host(bus->sdiodev->func[1]);
++				sdio_claim_host(bus->sdiodev->func1);
+ 				brcmf_sdio_rxfail(bus, false, true);
+-				sdio_release_host(bus->sdiodev->func[1]);
++				sdio_release_host(bus->sdiodev->func1);
+ 				brcmu_pkt_buf_free_skb(pkt);
+ 				continue;
+ 			}
+@@ -1972,9 +1972,9 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 			} else {
+ 				brcmf_err("%s: glom superframe w/o "
+ 					  "descriptor!\n", __func__);
+-				sdio_claim_host(bus->sdiodev->func[1]);
++				sdio_claim_host(bus->sdiodev->func1);
+ 				brcmf_sdio_rxfail(bus, false, false);
+-				sdio_release_host(bus->sdiodev->func[1]);
++				sdio_release_host(bus->sdiodev->func1);
+ 			}
+ 			/* prepare the descriptor for the next read */
+ 			rd->len = rd->len_nxtfrm << 4;
+@@ -2072,7 +2072,7 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
+ 	int ntail, ret;
+ 
+ 	sdiodev = bus->sdiodev;
+-	blksize = sdiodev->func[2]->cur_blksize;
++	blksize = sdiodev->func2->cur_blksize;
+ 	/* sg entry alignment should be a divisor of block size */
+ 	WARN_ON(blksize % bus->sgentry_align);
+ 
+@@ -2251,14 +2251,14 @@ static int brcmf_sdio_txpkt(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
+ 	if (ret)
+ 		goto done;
+ 
+-	sdio_claim_host(bus->sdiodev->func[1]);
++	sdio_claim_host(bus->sdiodev->func1);
+ 	ret = brcmf_sdiod_send_pkt(bus->sdiodev, pktq);
+ 	bus->sdcnt.f2txdata++;
+ 
+ 	if (ret < 0)
+ 		brcmf_sdio_txfail(bus);
+ 
+-	sdio_release_host(bus->sdiodev->func[1]);
++	sdio_release_host(bus->sdiodev->func1);
+ 
+ done:
+ 	brcmf_sdio_txpkt_postp(bus, pktq);
+@@ -2314,10 +2314,11 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 		/* In poll mode, need to check for other events */
+ 		if (!bus->intr) {
+ 			/* Check device status, signal pending interrupt */
+-			sdio_claim_host(bus->sdiodev->func[1]);
++			sdio_claim_host(bus->sdiodev->func1);
+ 			intstatus = brcmf_sdiod_readl(bus->sdiodev,
+ 						      intstat_addr, &ret);
+-			sdio_release_host(bus->sdiodev->func[1]);
++			sdio_release_host(bus->sdiodev->func1);
++
+ 			bus->sdcnt.f2txdata++;
+ 			if (ret != 0)
+ 				break;
+@@ -2417,7 +2418,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 	}
+ 
+ 	if (sdiodev->state != BRCMF_SDIOD_NOMEDIUM) {
+-		sdio_claim_host(sdiodev->func[1]);
++		sdio_claim_host(sdiodev->func1);
+ 
+ 		/* Enable clock for device interrupts */
+ 		brcmf_sdio_bus_sleep(bus, false, false);
+@@ -2441,13 +2442,13 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 
+ 		/* Turn off the bus (F2), free any pending packets */
+ 		brcmf_dbg(INTR, "disable SDIO interrupts\n");
+-		sdio_disable_func(sdiodev->func[2]);
++		sdio_disable_func(sdiodev->func2);
+ 
+ 		/* Clear any pending interrupts now that F2 is disabled */
+ 		brcmf_sdiod_writel(sdiodev, core->base + SD_REG(intstatus),
+ 				   local_hostintmask, NULL);
+ 
+-		sdio_release_host(sdiodev->func[1]);
++		sdio_release_host(sdiodev->func1);
+ 	}
+ 	/* Clear the data packet queues */
+ 	brcmu_pktq_flush(&bus->txq, true, NULL, NULL);
+@@ -2522,7 +2523,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	sdio_claim_host(bus->sdiodev->func[1]);
++	sdio_claim_host(bus->sdiodev->func1);
+ 
+ 	/* If waiting for HTAVAIL, check status */
+ 	if (!bus->sr_enabled && bus->clkstate == CLK_PENDING) {
+@@ -2585,7 +2586,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 		intstatus |= brcmf_sdio_hostmail(bus);
+ 	}
+ 
+-	sdio_release_host(bus->sdiodev->func[1]);
++	sdio_release_host(bus->sdiodev->func1);
+ 
+ 	/* Generally don't ask for these, can get CRC errors... */
+ 	if (intstatus & I_WR_OOSYNC) {
+@@ -2628,7 +2629,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 
+ 	if (bus->ctrl_frame_stat && (bus->clkstate == CLK_AVAIL) &&
+ 	    data_ok(bus)) {
+-		sdio_claim_host(bus->sdiodev->func[1]);
++		sdio_claim_host(bus->sdiodev->func1);
+ 		if (bus->ctrl_frame_stat) {
+ 			err = brcmf_sdio_tx_ctrlframe(bus,  bus->ctrl_frame_buf,
+ 						      bus->ctrl_frame_len);
+@@ -2636,7 +2637,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 			wmb();
+ 			bus->ctrl_frame_stat = false;
+ 		}
+-		sdio_release_host(bus->sdiodev->func[1]);
++		sdio_release_host(bus->sdiodev->func1);
+ 		brcmf_sdio_wait_event_wakeup(bus);
+ 	}
+ 	/* Send queued frames (limit 1 if rx may still be pending) */
+@@ -2652,14 +2653,14 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 		brcmf_err("failed backplane access over SDIO, halting operation\n");
+ 		atomic_set(&bus->intstatus, 0);
+ 		if (bus->ctrl_frame_stat) {
+-			sdio_claim_host(bus->sdiodev->func[1]);
++			sdio_claim_host(bus->sdiodev->func1);
+ 			if (bus->ctrl_frame_stat) {
+ 				bus->ctrl_frame_err = -ENODEV;
+ 				wmb();
+ 				bus->ctrl_frame_stat = false;
+ 				brcmf_sdio_wait_event_wakeup(bus);
+ 			}
+-			sdio_release_host(bus->sdiodev->func[1]);
++			sdio_release_host(bus->sdiodev->func1);
+ 		}
+ 	} else if (atomic_read(&bus->intstatus) ||
+ 		   atomic_read(&bus->ipend) > 0 ||
+@@ -2874,13 +2875,13 @@ static int brcmf_sdio_readconsole(struct brcmf_sdio *bus)
+ 					 CTL_DONE_TIMEOUT);
+ 	ret = 0;
+ 	if (bus->ctrl_frame_stat) {
+-		sdio_claim_host(bus->sdiodev->func[1]);
++		sdio_claim_host(bus->sdiodev->func1);
+ 		if (bus->ctrl_frame_stat) {
+ 			brcmf_dbg(SDIO, "ctrl_frame timeout\n");
+ 			bus->ctrl_frame_stat = false;
+ 			ret = -ETIMEDOUT;
+ 		}
+-		sdio_release_host(bus->sdiodev->func[1]);
++		sdio_release_host(bus->sdiodev->func1);
+ 	}
+ 	if (!ret) {
+ 		brcmf_dbg(SDIO, "ctrl_frame complete, err=%d\n",
+@@ -3004,7 +3005,7 @@ static int brcmf_sdio_assert_info(struct seq_file *seq, struct brcmf_sdio *bus,
+ 		return 0;
+ 	}
+ 
+-	sdio_claim_host(bus->sdiodev->func[1]);
++	sdio_claim_host(bus->sdiodev->func1);
+ 	if (sh->assert_file_addr != 0) {
+ 		error = brcmf_sdiod_ramrw(bus->sdiodev, false,
+ 					  sh->assert_file_addr, (u8 *)file, 80);
+@@ -3017,7 +3018,7 @@ static int brcmf_sdio_assert_info(struct seq_file *seq, struct brcmf_sdio *bus,
+ 		if (error < 0)
+ 			return error;
+ 	}
+-	sdio_release_host(bus->sdiodev->func[1]);
++	sdio_release_host(bus->sdiodev->func1);
+ 
+ 	seq_printf(seq, "dongle assert: %s:%d: assert(%s)\n",
+ 		   file, sh->assert_line, expr);
+@@ -3291,7 +3292,7 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
+ 	int bcmerror;
+ 	u32 rstvec;
+ 
+-	sdio_claim_host(bus->sdiodev->func[1]);
++	sdio_claim_host(bus->sdiodev->func1);
+ 	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+ 
+ 	rstvec = get_unaligned_le32(fw->data);
+@@ -3320,7 +3321,7 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
+ 
+ err:
+ 	brcmf_sdio_clkctl(bus, CLK_SDONLY, false);
+-	sdio_release_host(bus->sdiodev->func[1]);
++	sdio_release_host(bus->sdiodev->func1);
+ 	return bcmerror;
+ }
+ 
+@@ -3435,7 +3436,7 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+ 	if (sdiodev->sg_support) {
+ 		bus->txglom = false;
+ 		value = 1;
+-		pad_size = bus->sdiodev->func[2]->cur_blksize << 1;
++		pad_size = bus->sdiodev->func2->cur_blksize << 1;
+ 		err = brcmf_iovar_data_set(bus->sdiodev->dev, "bus:rxglom",
+ 					   &value, sizeof(u32));
+ 		if (err < 0) {
+@@ -3477,7 +3478,7 @@ static int brcmf_sdio_bus_get_memdump(struct device *dev, void *data,
+ 
+ 	address = bus->ci->rambase;
+ 	offset = err = 0;
+-	sdio_claim_host(sdiodev->func[1]);
++	sdio_claim_host(sdiodev->func1);
+ 	while (offset < mem_size) {
+ 		len = ((offset + MEMBLOCK) < mem_size) ? MEMBLOCK :
+ 		      mem_size - offset;
+@@ -3493,7 +3494,7 @@ static int brcmf_sdio_bus_get_memdump(struct device *dev, void *data,
+ 	}
+ 
+ done:
+-	sdio_release_host(sdiodev->func[1]);
++	sdio_release_host(sdiodev->func1);
+ 	return err;
+ }
+ 
+@@ -3550,11 +3551,10 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 			if (!bus->dpc_triggered) {
+ 				u8 devpend;
+ 
+-				sdio_claim_host(bus->sdiodev->func[1]);
++				sdio_claim_host(bus->sdiodev->func1);
+ 				devpend = brcmf_sdiod_func0_rb(bus->sdiodev,
+-							       SDIO_CCCR_INTx,
+-							       NULL);
+-				sdio_release_host(bus->sdiodev->func[1]);
++						  SDIO_CCCR_INTx, NULL);
++				sdio_release_host(bus->sdiodev->func1);
+ 				intstatus = devpend & (INTR_STATUS_FUNC1 |
+ 						       INTR_STATUS_FUNC2);
+ 			}
+@@ -3580,13 +3580,13 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 		bus->console.count += jiffies_to_msecs(BRCMF_WD_POLL);
+ 		if (bus->console.count >= bus->console_interval) {
+ 			bus->console.count -= bus->console_interval;
+-			sdio_claim_host(bus->sdiodev->func[1]);
++			sdio_claim_host(bus->sdiodev->func1);
+ 			/* Make sure backplane clock is on */
+ 			brcmf_sdio_bus_sleep(bus, false, false);
+ 			if (brcmf_sdio_readconsole(bus) < 0)
+ 				/* stop on error */
+ 				bus->console_interval = 0;
+-			sdio_release_host(bus->sdiodev->func[1]);
++			sdio_release_host(bus->sdiodev->func1);
+ 		}
+ 	}
+ #endif				/* DEBUG */
+@@ -3599,11 +3599,11 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 			bus->idlecount++;
+ 			if (bus->idlecount > bus->idletime) {
+ 				brcmf_dbg(SDIO, "idle\n");
+-				sdio_claim_host(bus->sdiodev->func[1]);
++				sdio_claim_host(bus->sdiodev->func1);
+ 				brcmf_sdio_wd_timer(bus, false);
+ 				bus->idlecount = 0;
+ 				brcmf_sdio_bus_sleep(bus, true, false);
+-				sdio_release_host(bus->sdiodev->func[1]);
++				sdio_release_host(bus->sdiodev->func1);
+ 			}
+ 		} else {
+ 			bus->idlecount = 0;
+@@ -3773,8 +3773,8 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
+ 	val = brcmf_sdiod_readl(sdiodev, addr, NULL);
+ 
+ 	if (addr == CORE_CC_REG(SI_ENUM_BASE, chipid) &&
+-	    (sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4339 ||
+-	     sdiodev->func[1]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339)) {
++	    (sdiodev->func1->device == SDIO_DEVICE_ID_BROADCOM_4339 ||
++	     sdiodev->func1->device == SDIO_DEVICE_ID_BROADCOM_4335_4339)) {
+ 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
+ 		if (rev >= 2) {
+ 			val &= ~CID_ID_MASK;
+@@ -3810,7 +3810,7 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
+ 	u32 drivestrength;
+ 
+ 	sdiodev = bus->sdiodev;
+-	sdio_claim_host(sdiodev->func[1]);
++	sdio_claim_host(sdiodev->func1);
+ 
+ 	pr_debug("F1 signature read @0x18000000=0x%4x\n",
+ 		 brcmf_sdiod_readl(sdiodev, SI_ENUM_BASE, NULL));
+@@ -3877,8 +3877,8 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
+ 	/* wowl can be supported when KEEP_POWER is true and (WAKE_SDIO_IRQ
+ 	 * is true or when platform data OOB irq is true).
+ 	 */
+-	if ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_KEEP_POWER) &&
+-	    ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_WAKE_SDIO_IRQ) ||
++	if ((sdio_get_host_pm_caps(sdiodev->func1) & MMC_PM_KEEP_POWER) &&
++	    ((sdio_get_host_pm_caps(sdiodev->func1) & MMC_PM_WAKE_SDIO_IRQ) ||
+ 	     (sdiodev->settings->bus.sdio.oob_irq_supported)))
+ 		sdiodev->bus_if->wowl_supported = true;
+ #endif
+@@ -3917,7 +3917,7 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
+ 	if (err)
+ 		goto fail;
+ 
+-	sdio_release_host(sdiodev->func[1]);
++	sdio_release_host(sdiodev->func1);
+ 
+ 	brcmu_pktq_init(&bus->txq, (PRIOMASK + 1), TXQLEN);
+ 
+@@ -3938,7 +3938,7 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
+ 	return true;
+ 
+ fail:
+-	sdio_release_host(sdiodev->func[1]);
++	sdio_release_host(sdiodev->func1);
+ 	return false;
+ }
+ 
+@@ -4044,7 +4044,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	bus->sdcnt.tickcnt = 0;
+ 	brcmf_sdio_wd_timer(bus, true);
+ 
+-	sdio_claim_host(sdiodev->func[1]);
++	sdio_claim_host(sdiodev->func1);
+ 
+ 	/* Make sure backplane clock is on, needed to generate F2 interrupt */
+ 	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+@@ -4066,7 +4066,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	brcmf_sdiod_writel(sdiod, core->base + SD_REG(tosbmailboxdata),
+ 			   SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT, NULL);
+ 
+-	err = sdio_enable_func(sdiodev->func[2]);
++	err = sdio_enable_func(sdiodev->func2);
+ 
+ 	brcmf_dbg(INFO, "enable F2: err=%d\n", err);
+ 
+@@ -4081,7 +4081,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
+ 	} else {
+ 		/* Disable F2 again */
+-		sdio_disable_func(sdiodev->func[2]);
++		sdio_disable_func(sdiodev->func2);
+ 		goto release;
+ 	}
+ 
+@@ -4106,7 +4106,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	if (err != 0)
+ 		brcmf_sdio_clkctl(bus, CLK_NONE, false);
+ 
+-	sdio_release_host(sdiodev->func[1]);
++	sdio_release_host(sdiodev->func1);
+ 
+ 	err = brcmf_bus_started(dev);
+ 	if (err != 0) {
+@@ -4116,11 +4116,11 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	return;
+ 
+ release:
+-	sdio_release_host(sdiodev->func[1]);
++	sdio_release_host(sdiodev->func1);
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
+ 	device_release_driver(dev);
+-	device_release_driver(&sdiodev->func[2]->dev);
++	device_release_driver(&sdiodev->func2->dev);
+ }
+ 
+ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+@@ -4146,7 +4146,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 
+ 	/* single-threaded workqueue */
+ 	wq = alloc_ordered_workqueue("brcmf_wq/%s", WQ_MEM_RECLAIM,
+-				     dev_name(&sdiodev->func[1]->dev));
++				     dev_name(&sdiodev->func1->dev));
+ 	if (!wq) {
+ 		brcmf_err("insufficient memory to create txworkqueue\n");
+ 		goto fail;
+@@ -4172,7 +4172,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	init_completion(&bus->watchdog_wait);
+ 	bus->watchdog_tsk = kthread_run(brcmf_sdio_watchdog_thread,
+ 					bus, "brcmf_wdog/%s",
+-					dev_name(&sdiodev->func[1]->dev));
++					dev_name(&sdiodev->func1->dev));
+ 	if (IS_ERR(bus->watchdog_tsk)) {
+ 		pr_warn("brcmf_watchdog thread failed to start\n");
+ 		bus->watchdog_tsk = NULL;
+@@ -4198,7 +4198,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	}
+ 
+ 	/* Query the F2 block size, set roundup accordingly */
+-	bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
++	bus->blocksize = bus->sdiodev->func2->cur_blksize;
+ 	bus->roundup = min(max_roundup, bus->blocksize);
+ 
+ 	/* Allocate buffers */
+@@ -4214,17 +4214,17 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 		}
+ 	}
+ 
+-	sdio_claim_host(bus->sdiodev->func[1]);
++	sdio_claim_host(bus->sdiodev->func1);
+ 
+ 	/* Disable F2 to clear any intermediate frame state on the dongle */
+-	sdio_disable_func(bus->sdiodev->func[2]);
++	sdio_disable_func(bus->sdiodev->func2);
+ 
+ 	bus->rxflow = false;
+ 
+ 	/* Done with backplane-dependent accesses, can drop clock... */
+ 	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, 0, NULL);
+ 
+-	sdio_release_host(bus->sdiodev->func[1]);
++	sdio_release_host(bus->sdiodev->func1);
+ 
+ 	/* ...and initialize clock/power states */
+ 	bus->clkstate = CLK_SDONLY;
+@@ -4276,7 +4276,7 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ 
+ 		if (bus->ci) {
+ 			if (bus->sdiodev->state != BRCMF_SDIOD_NOMEDIUM) {
+-				sdio_claim_host(bus->sdiodev->func[1]);
++				sdio_claim_host(bus->sdiodev->func1);
+ 				brcmf_sdio_wd_timer(bus, false);
+ 				brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+ 				/* Leave the device in state where it is
+@@ -4286,7 +4286,7 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ 				msleep(20);
+ 				brcmf_chip_set_passive(bus->ci);
+ 				brcmf_sdio_clkctl(bus, CLK_NONE, false);
+-				sdio_release_host(bus->sdiodev->func[1]);
++				sdio_release_host(bus->sdiodev->func1);
+ 			}
+ 			brcmf_chip_detach(bus->ci);
+ 		}
+@@ -4333,9 +4333,9 @@ int brcmf_sdio_sleep(struct brcmf_sdio *bus, bool sleep)
+ {
+ 	int ret;
+ 
+-	sdio_claim_host(bus->sdiodev->func[1]);
++	sdio_claim_host(bus->sdiodev->func1);
+ 	ret = brcmf_sdio_bus_sleep(bus, sleep, false);
+-	sdio_release_host(bus->sdiodev->func[1]);
++	sdio_release_host(bus->sdiodev->func1);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 04661ec..7faed83 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -21,9 +21,6 @@
+ #include <linux/firmware.h>
+ #include "firmware.h"
+ 
+-/* Maximum number of I/O funcs */
+-#define NUM_SDIO_FUNCS	3
+-
+ #define SDIOD_FBR_SIZE		0x100
+ 
+ /* io_en */
+@@ -173,8 +170,8 @@ struct brcmf_sdreg {
+ struct brcmf_sdiod_freezer;
+ 
+ struct brcmf_sdio_dev {
+-	struct sdio_func *func[NUM_SDIO_FUNCS];
+-	u8 num_funcs;			/* Supported funcs on client */
++	struct sdio_func *func1;
++	struct sdio_func *func2;
+ 	u32 sbwad;			/* Save backplane window address */
+ 	struct brcmf_core *cc_core;	/* chipcommon core info struct */
+ 	struct brcmf_sdio *bus;
+@@ -295,17 +292,17 @@ struct sdpcmd_regs {
+ /* SDIO device register access interface */
+ /* Accessors for SDIO Function 0 */
+ #define brcmf_sdiod_func0_rb(sdiodev, addr, r) \
+-	sdio_f0_readb((sdiodev)->func[1], (addr), (r))
++	sdio_f0_readb((sdiodev)->func1, (addr), (r))
+ 
+ #define brcmf_sdiod_func0_wb(sdiodev, addr, v, ret) \
+-	sdio_f0_writeb((sdiodev)->func[1], (v), (addr), (ret))
++	sdio_f0_writeb((sdiodev)->func1, (v), (addr), (ret))
+ 
+ /* Accessors for SDIO Function 1 */
+ #define brcmf_sdiod_readb(sdiodev, addr, r) \
+-	sdio_readb((sdiodev)->func[1], (addr), (r))
++	sdio_readb((sdiodev)->func1, (addr), (r))
+ 
+ #define brcmf_sdiod_writeb(sdiodev, addr, v, ret) \
+-	sdio_writeb((sdiodev)->func[1], (v), (addr), (ret))
++	sdio_writeb((sdiodev)->func1, (v), (addr), (ret))
+ 
+ u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret);
+ void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr, u32 data,
+-- 
+1.9.1
