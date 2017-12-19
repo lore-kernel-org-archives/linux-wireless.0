@@ -1,93 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:9111 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750850AbdLPHy6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Dec 2017 02:54:58 -0500
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ganesh.krishna@microchip.com>, <gregkh@linuxfoundation.org>,
-        <devel@driverdev.osuosl.org>, <Claudiu.Beznea@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH v2] staging: wilc1000: Fix problems reported by checkpatch
-Date: Sat, 16 Dec 2017 13:24:24 +0530
-Message-ID: <1513410864-6566-1-git-send-email-aditya.shankar@microchip.com> (sfid-20171216_085503_395119_80975480)
+Received: from mail-sn1nam01on0118.outbound.protection.outlook.com ([104.47.32.118]:5507
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932857AbdLSG4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 01:56:44 -0500
+From: Wright Feng <wright.feng@cypress.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        chi-hsien.lin@cypress.com
+Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Double Lo <double.lo@cypress.com>
+Subject: [PATCH v2] brcmfmac: Support 43455 save-restore (SR) feature if FW include -sr
+Date: Tue, 19 Dec 2017 14:56:44 +0800
+Message-Id: <1513666604-24592-1-git-send-email-wright.feng@cypress.com> (sfid-20171219_075648_969359_B26FD195)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit fixes below style problems in multiple lines
-Fix checkpatch WARNING: line over 80 characters
+From: Double Lo <double.lo@cypress.com>
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+This patch will add 43455 into the save-restore(SR) capable chip list, so
+the SR engine will be enabled with 43455 FW which built-in the -sr
+function.
+
+Signed-off-by: Double Lo <double.lo@cypress.com>
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
 ---
- drivers/staging/wilc1000/linux_mon.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+v2: Add Wright's signed-off-by
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 91d49c4..1c740af 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -69,7 +69,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
- 		/* hostapd callback mgmt frame */
- 
--		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
-+		skb = dev_alloc_skb(size +
-+				    sizeof(struct wilc_wfi_radiotap_cb_hdr));
- 		if (!skb)
- 			return;
- 
-@@ -80,7 +81,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 
- 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
- 
--		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
-+		cb_hdr->hdr.it_len =
-+			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
- 
- 		cb_hdr->hdr.it_present = cpu_to_le32(
- 				(1 << IEEE80211_RADIOTAP_RATE) |
-@@ -96,7 +98,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 		}
- 
- 	} else {
--		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
-+		skb = dev_alloc_skb(size +
-+				    sizeof(struct wilc_wfi_radiotap_hdr));
- 
- 		if (!skb)
- 			return;
-@@ -105,7 +108,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 		hdr = skb_push(skb, sizeof(*hdr));
- 		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
- 		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
--		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
-+		hdr->hdr.it_len =
-+			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
- 		hdr->hdr.it_present = cpu_to_le32
- 				(1 << IEEE80211_RADIOTAP_RATE); /* | */
- 		hdr->rate = 5; /* txrate->bitrate / 5; */
-@@ -197,7 +201,8 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	skb_pull(skb, rtap_len);
- 
- 	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
--		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
-+		skb2 = dev_alloc_skb(skb->len +
-+				     sizeof(struct wilc_wfi_radiotap_cb_hdr));
- 		if (!skb2)
- 			return -ENOMEM;
- 
-@@ -208,7 +213,8 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 
- 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
- 
--		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
-+		cb_hdr->hdr.it_len =
-+			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
- 
- 		cb_hdr->hdr.it_present = cpu_to_le32(
- 				(1 << IEEE80211_RADIOTAP_RATE) |
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index c5d1a1c..f7b30ce 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -1338,6 +1338,7 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
+ 	switch (pub->chip) {
+ 	case BRCM_CC_4354_CHIP_ID:
+ 	case BRCM_CC_4356_CHIP_ID:
++	case BRCM_CC_4345_CHIP_ID:
+ 		/* explicitly check SR engine enable bit */
+ 		pmu_cc3_mask = BIT(2);
+ 		/* fall-through */
 -- 
-2.7.4
+1.9.1
