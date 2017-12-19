@@ -1,80 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:4531 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753735AbdLVPoB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 10:44:01 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v3 07/11] ath10k: various fixes for high latency devices
-Date: Fri, 22 Dec 2017 15:43:55 +0000
-Message-ID: <87fu82ahtw.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_164405_351809_9EF5382E)
-References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
-        <20170917194013.8658-8-erik.stromdahl@gmail.com>
-In-Reply-To: <20170917194013.8658-8-erik.stromdahl@gmail.com> (Erik
-        Stromdahl's message of "Sun, 17 Sep 2017 21:40:09 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mail-by2nam03on0045.outbound.protection.outlook.com ([104.47.42.45]:64231
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965176AbdLSL33 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 06:29:29 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: [PATCH v2 05/10] qtnfmac: check for passed channel being NULL in MGMT_TX command
+Date: Tue, 19 Dec 2017 14:28:51 +0300
+Message-Id: <20171219112856.22463-6-sergey.matyukevich.os@quantenna.com> (sfid-20171219_122937_062425_D8A04DDA)
+In-Reply-To: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
+References: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-> Several DMA related functions (such as the dma_map_xxx functions)
-> are not used with high latency devices and don't need to be invoked
-> in this case.
->
-> A few other execution paths are not applicable for high latency
-> devices and can be skipped.
->
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Parameters passed into .mgmt_tx callback may have a NULL channel in case
+userspace wants to send a frame on current channel. Make sure this case
+is handled, pass "freq==0" in case channel is not specififed to tell
+wlan device to use current channel.
 
-This and patch 6 are somehow connected but the division is not clear. I
-think at least dma map/unmap changes should be split into their own
-patch.=20
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-I recommend revisiting both patches 6 and 7. The htt layer can be quite
-tricky so better to have smaller logical changes to make it easier
-review them.
-
-> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-> @@ -409,6 +409,9 @@ int ath10k_htt_tx_start(struct ath10k_htt *htt)
->  	if (htt->tx_mem_allocated)
->  		return 0;
-> =20
-> +	if (ar->is_high_latency)
-> +		return 0;
-> +
->  	ret =3D ath10k_htt_tx_alloc_buf(htt);
->  	if (ret)
->  		goto free_idr_pending_tx;
-> @@ -445,7 +448,8 @@ void ath10k_htt_tx_destroy(struct ath10k_htt *htt)
->  		return;
-> =20
->  	ath10k_htt_tx_free_cont_txbuf(htt);
-> -	ath10k_htt_tx_free_txq(htt);
-> +	if (!htt->ar->is_high_latency)
-> +		ath10k_htt_tx_free_txq(htt);
->  	ath10k_htt_tx_free_cont_frag_desc(htt);
->  	ath10k_htt_tx_free_txdone_fifo(htt);
->  	htt->tx_mem_allocated =3D false;
-
-These two don't look symmetric. You prevent calling these functions:
-
-ath10k_htt_tx_alloc_cont_txbuf(htt);
-ath10k_htt_tx_alloc_cont_frag_desc(htt);
-ath10k_htt_tx_alloc_txq(htt);
-ath10k_htt_tx_alloc_txdone_fifo(htt);
-
-But during destroy you only prevent calling ath10k_htt_tx_free_txq(htt)
-and allow these functions:
-
-ath10k_htt_tx_free_cont_txbuf(htt);
-ath10k_htt_tx_free_cont_frag_desc(htt);
-ath10k_htt_tx_free_txdone_fifo(htt);
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index c026882bf9c7..be15d0ed362c 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -381,6 +381,7 @@ qtnf_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	const struct ieee80211_mgmt *mgmt_frame = (void *)params->buf;
+ 	u32 short_cookie = prandom_u32();
+ 	u16 flags = 0;
++	u16 freq;
+ 
+ 	*cookie = short_cookie;
+ 
+@@ -393,13 +394,21 @@ qtnf_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	if (params->dont_wait_for_ack)
+ 		flags |= QLINK_MGMT_FRAME_TX_FLAG_ACK_NOWAIT;
+ 
++	/* If channel is not specified, pass "freq = 0" to tell device
++	 * firmware to use current channel.
++	 */
++	if (params->chan)
++		freq = params->chan->center_freq;
++	else
++		freq = 0;
++
+ 	pr_debug("%s freq:%u; FC:%.4X; DA:%pM; len:%zu; C:%.8X; FL:%.4X\n",
+-		 wdev->netdev->name, params->chan->center_freq,
++		 wdev->netdev->name, freq,
+ 		 le16_to_cpu(mgmt_frame->frame_control), mgmt_frame->da,
+ 		 params->len, short_cookie, flags);
+ 
+ 	return qtnf_cmd_send_mgmt_frame(vif, short_cookie, flags,
+-					params->chan->center_freq,
++					freq,
+ 					params->buf, params->len);
+ }
+ 
+-- 
+2.11.0
