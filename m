@@ -1,145 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from james.theweblords.de ([217.11.55.87]:57014 "EHLO
-        james.theweblords.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753356AbdLMR3v (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:55138 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750798AbdLSTGP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 12:29:51 -0500
-From: =?UTF-8?q?Peter=20Gro=C3=9Fe?= <pegro@friiks.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: Fix setting TX power on monitor interfaces
-Date: Wed, 13 Dec 2017 18:29:46 +0100
-Message-Id: <20171213172946.19976-1-pegro@friiks.de> (sfid-20171213_182955_732480_49AB0D6E)
-In-Reply-To: <1512849236.26976.43.camel@sipsolutions.net>
-References: <1512849236.26976.43.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Tue, 19 Dec 2017 14:06:15 -0500
+Date: Tue, 19 Dec 2017 14:06:13 -0500 (EST)
+Message-Id: <20171219.140613.787406975531411549.davem@davemloft.net> (sfid-20171219_200619_912464_1F10EFA8)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, luciano.coelho@intel.com
+Subject: Re: pull-request: wireless-drivers-next 2017-12-18
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <874looktmz.fsf@kamboji.qca.qualcomm.com>
+References: <874looktmz.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of calling ieee80211_recalc_txpower on monitor interfaces
-directly, call it using the virtual monitor interface, if one exists.
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Mon, 18 Dec 2017 16:17:24 +0200
 
-In case of a single monitor interface given, reject setting TX power,
-if no virtual monitor interface exists.
+> a pull request for 4.16 to net-next tree. This is a big one, but on the
+> other hand most of the stuff here has been some time on linux-next so
+> hopefully there are no nasty surprises. Even though Arnd just send a
+> patch[1] five minutes ago about fixing a wcn36xx build warning, but I
+> don't think that's critical enough to hold up this, so I'll send it to
+> you in the next pull request.
+> 
+> But this time we actually have a merge conflict due to a000 hardware
+> rename in iwlwifi:
+> 
+> CONFLICT (content): Merge conflict in drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+> 
+> The fix is quite straightforward, take the 22000 versions and manually
+> add an entry for 0xA0F0 device:
+> 
+> {IWL_PCI_DEVICE(0xA0F0, 0x0000, iwl22000_2ax_cfg_hr)},
+> 
+> I put the 'git diff' output of my test resolution below, hopefully it
+> helps. I'll also Cc Luca so he can correct any mistakes I did :)
+> 
+> Please let me know if you have any problems.
 
-That being checked, don't warn in ieee80211_bss_info_change_notify,
-after setting TX power on a monitor interface.
-
-Fixes warning:
-------------[ cut here ]------------
- WARNING: CPU: 0 PID: 2193 at net/mac80211/driver-ops.h:167
- ieee80211_bss_info_change_notify+0x111/0x190 Modules linked in: uvcvideo
- videobuf2_vmalloc videobuf2_memops videobuf2_v4l2 videobuf2_core
-rndis_host cdc_ether usbnet mii tp_smapi(O) thinkpad_ec(O) ohci_hcd vboxpci(O)
- vboxnetadp(O) vboxnetflt(O) v boxdrv(O) x86_pkg_temp_thermal kvm_intel kvm
- irqbypass iwldvm iwlwifi ehci_pci ehci_hcd tpm_tis tpm_tis_core tpm CPU: 0
- PID: 2193 Comm: iw Tainted: G           O    4.12.12-gentoo #2 task:
- ffff880186fd5cc0 task.stack: ffffc90001b54000 RIP:
- 0010:ieee80211_bss_info_change_notify+0x111/0x190 RSP: 0018:ffffc90001b57a10
- EFLAGS: 00010246 RAX: 0000000000000006 RBX: ffff8801052ce840 RCX:
- 0000000000000064 RDX: 00000000fffffffc RSI: 0000000000040000 RDI:
- ffff8801052ce840 RBP: ffffc90001b57a38 R08: 0000000000000062 R09:
- 0000000000000000 R10: ffff8802144b5000 R11: ffff880049dc4614 R12:
- 0000000000040000 R13: 0000000000000064 R14: ffff8802105f0760 R15:
- ffffc90001b57b48 FS:  00007f92644b4580(0000) GS:ffff88021e200000(0000)
- knlGS:0000000000000000 CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 00007f9263c109f0 CR3: 00000001df850000 CR4: 00000000000406f0
- Call Trace:
-  ieee80211_recalc_txpower+0x33/0x40
-  ieee80211_set_tx_power+0x40/0x180
-  nl80211_set_wiphy+0x32e/0x950
-
-Reported-by: Peter Große <pegro@friiks.de>
-Signed-off-by: Peter Große <pegro@friiks.de>
----
-
-Since monitor_sdata->vif.type is also NL80211_IFTYPE_MONITOR,
-the warning would still appear with the patch to cfg.c, so I excluded 
-that case from the WARN_ON_ONCE condition.
-
-I hope that makes sense?!
-
-It fixes the warning for me though.
-
-Regards
-Peter
-
- net/mac80211/cfg.c        | 28 +++++++++++++++++++++++++++-
- net/mac80211/driver-ops.h |  3 ++-
- 2 files changed, 29 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a354f1939e49..29874052e162 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2373,10 +2373,17 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
- 	struct ieee80211_sub_if_data *sdata;
- 	enum nl80211_tx_power_setting txp_type = type;
- 	bool update_txp_type = false;
-+	bool has_monitor = false;
- 
- 	if (wdev) {
- 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
- 
-+		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
-+			sdata = rtnl_dereference(local->monitor_sdata);
-+			if (!sdata)
-+				return -EOPNOTSUPP;
-+		}
-+
- 		switch (type) {
- 		case NL80211_TX_POWER_AUTOMATIC:
- 			sdata->user_power_level = IEEE80211_UNSET_POWER_LEVEL;
-@@ -2415,15 +2422,34 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
- 
- 	mutex_lock(&local->iflist_mtx);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
-+			has_monitor = true;
-+			continue;
-+		}
- 		sdata->user_power_level = local->user_power_level;
- 		if (txp_type != sdata->vif.bss_conf.txpower_type)
- 			update_txp_type = true;
- 		sdata->vif.bss_conf.txpower_type = txp_type;
- 	}
--	list_for_each_entry(sdata, &local->interfaces, list)
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
-+			continue;
- 		ieee80211_recalc_txpower(sdata, update_txp_type);
-+	}
- 	mutex_unlock(&local->iflist_mtx);
- 
-+	if (has_monitor) {
-+		sdata = rtnl_dereference(local->monitor_sdata);
-+		if (sdata) {
-+			sdata->user_power_level = local->user_power_level;
-+			if (txp_type != sdata->vif.bss_conf.txpower_type)
-+				update_txp_type = true;
-+			sdata->vif.bss_conf.txpower_type = txp_type;
-+
-+			ieee80211_recalc_txpower(sdata, update_txp_type);
-+		}
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 09f77e4a8a79..49c8a9c9b91f 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -164,7 +164,8 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
- 	if (WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
- 			 sdata->vif.type == NL80211_IFTYPE_NAN ||
- 			 (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
--			  !sdata->vif.mu_mimo_owner)))
-+			  !sdata->vif.mu_mimo_owner &&
-+			  !(changed & BSS_CHANGED_TXPOWER))))
- 		return;
- 
- 	if (!check_sdata_in_driver(sdata))
--- 
-2.13.6
+Pulled, and thanks for the resolution diff.  It helped a lot.
