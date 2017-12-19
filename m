@@ -1,57 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:33880 "EHLO
-        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753088AbdLESPg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Dec 2017 13:15:36 -0500
-Subject: Re: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
-To: David Miller <davem@davemloft.net>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, j@w1.fi
-References: <1512491661.26976.19.camel@sipsolutions.net>
- <20171205.114106.1013322969674769159.davem@davemloft.net>
- <1512495010.26976.24.camel@sipsolutions.net>
- <20171205.124038.2265447675450126665.davem@davemloft.net>
-From: David Ahern <dsahern@gmail.com>
-Message-ID: <c9bbb3a1-4a94-fece-478f-7e347734ddd2@gmail.com> (sfid-20171205_191543_695490_780A6D9B)
-Date: Tue, 5 Dec 2017 11:15:29 -0700
+Received: from mail-by2nam03on0045.outbound.protection.outlook.com ([104.47.42.45]:64231
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965110AbdLSL3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 06:29:31 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>
+Subject: [PATCH v2 07/10] qtnfmac: fill wiphy's extended capabilities
+Date: Tue, 19 Dec 2017 14:28:53 +0300
+Message-Id: <20171219112856.22463-8-sergey.matyukevich.os@quantenna.com> (sfid-20171219_122942_213306_FB0A1541)
+In-Reply-To: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
+References: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <20171205.124038.2265447675450126665.davem@davemloft.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/5/17 10:40 AM, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Tue, 05 Dec 2017 18:30:10 +0100
-> 
->> On Tue, 2017-12-05 at 11:41 -0500, David Miller wrote:
->>>
->>> There is no reasonable interpretation for what that application is
->>> doing, so I think we can safely call that case as buggy.
->>>
->>> We are only trying to handle the situation where a U8 attribute
->>> is presented as a bonafide U32 or a correct U8.
->>>
->>> Does this make sense?
->>
->> Well the application is buggy, but we don't really know in what way?
->> Perhaps somebody even did the equivalent of
->>     nla_put_u32(ATTR, cpu_to_le32(x))
->> when they noticed it was broken on BE, and end up with a similar case
->> as I had above.
->>
->> I don't think there's a good solution to this, applications must be
->> fixed anyhow. I'm just saying that I'd save the extra code and stay
->> compatible with applications as written today, even if they're now
->> broken on BE - and rely on the warning to fix it. Trying to fix it up
->> seems to have the potential to just break something else.
+From: Vasily Ulyanov <vulyanov@quantenna.com>
 
-+1
+These are needed to inform userspace about features the hardware
+supports (e.g. BSS Transition Management 802.11v)
 
-> 
-> You might be right.
-> 
-> Ok let's just go with the warning + existing behavior for now.
+Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 44 +++++++++++++++++++++++
+ drivers/net/wireless/quantenna/qtnfmac/core.c     |  2 ++
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |  3 ++
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  1 +
+ 4 files changed, 50 insertions(+)
 
-Is the patch I sent as an attachment good or should I re-send
-standalone? (don't see it in patchwork)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index 7089f3eb7a87..839e86b99837 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -1029,6 +1029,10 @@ static int qtnf_parse_variable_mac_info(struct qtnf_wmac *mac,
+ 	struct qlink_iface_comb_num *comb;
+ 	size_t tlv_full_len;
+ 	const struct qlink_tlv_hdr *tlv;
++	u8 *ext_capa = NULL;
++	u8 *ext_capa_mask = NULL;
++	u8 ext_capa_len = 0;
++	u8 ext_capa_mask_len = 0;
+ 
+ 	mac->macinfo.n_limits = 0;
+ 
+@@ -1092,6 +1096,18 @@ static int qtnf_parse_variable_mac_info(struct qtnf_wmac *mac,
+ 			if (limits[rec].types)
+ 				rec++;
+ 			break;
++		case WLAN_EID_EXT_CAPABILITY:
++			if (unlikely(tlv_value_len > U8_MAX))
++				return -EINVAL;
++			ext_capa = (u8 *)tlv->val;
++			ext_capa_len = tlv_value_len;
++			break;
++		case QTN_TLV_ID_EXT_CAPABILITY_MASK:
++			if (unlikely(tlv_value_len > U8_MAX))
++				return -EINVAL;
++			ext_capa_mask = (u8 *)tlv->val;
++			ext_capa_mask_len = tlv_value_len;
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -1112,6 +1128,34 @@ static int qtnf_parse_variable_mac_info(struct qtnf_wmac *mac,
+ 		return -EINVAL;
+ 	}
+ 
++	if (ext_capa_len != ext_capa_mask_len) {
++		pr_err("MAC%u: ext_capa/_mask lengths mismatch: %u != %u\n",
++		       mac->macid, ext_capa_len, ext_capa_mask_len);
++		return -EINVAL;
++	}
++
++	if (ext_capa_len > 0) {
++		ext_capa = kmemdup(ext_capa, ext_capa_len, GFP_KERNEL);
++		if (!ext_capa)
++			return -ENOMEM;
++
++		ext_capa_mask =
++			kmemdup(ext_capa_mask, ext_capa_mask_len, GFP_KERNEL);
++		if (!ext_capa_mask) {
++			kfree(ext_capa);
++			return -ENOMEM;
++		}
++	} else {
++		ext_capa = NULL;
++		ext_capa_mask = NULL;
++	}
++
++	kfree(mac->macinfo.extended_capabilities);
++	kfree(mac->macinfo.extended_capabilities_mask);
++	mac->macinfo.extended_capabilities = ext_capa;
++	mac->macinfo.extended_capabilities_mask = ext_capa_mask;
++	mac->macinfo.extended_capabilities_len = ext_capa_len;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index 518a2fe927f7..ccd982b1c957 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -381,6 +381,8 @@ static void qtnf_core_mac_detach(struct qtnf_bus *bus, unsigned int macid)
+ 	}
+ 
+ 	kfree(mac->macinfo.limits);
++	kfree(mac->macinfo.extended_capabilities);
++	kfree(mac->macinfo.extended_capabilities_mask);
+ 	kfree(wiphy->iface_combinations);
+ 	wiphy_free(wiphy);
+ 	bus->mac[macid] = NULL;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index 8e42d1bdc65f..d7e295efb07d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -106,6 +106,9 @@ struct qtnf_mac_info {
+ 	struct ieee80211_vht_cap vht_cap_mod_mask;
+ 	struct ieee80211_iface_limit *limits;
+ 	size_t n_limits;
++	u8 *extended_capabilities;
++	u8 *extended_capabilities_mask;
++	u8 extended_capabilities_len;
+ };
+ 
+ struct qtnf_chan_stats {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+index 1f150be98820..f4d7d1603e3c 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -1020,6 +1020,7 @@ enum qlink_tlv_id {
+ 	QTN_TLV_ID_KEY			= 0x0302,
+ 	QTN_TLV_ID_SEQ			= 0x0303,
+ 	QTN_TLV_ID_IE_SET		= 0x0305,
++	QTN_TLV_ID_EXT_CAPABILITY_MASK	= 0x0306,
+ };
+ 
+ struct qlink_tlv_hdr {
+-- 
+2.11.0
