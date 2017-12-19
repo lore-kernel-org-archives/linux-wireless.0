@@ -1,245 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35058 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967261AbdLSMr1 (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:39868 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934444AbdLSMnQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 07:47:27 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 01/11] brcmfmac: Remove {r,w}_sdreg32
-Date: Tue, 19 Dec 2017 13:47:07 +0100
-Message-Id: <1513687637-5555-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134803_407141_D4667D16)
-In-Reply-To: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 19 Dec 2017 07:43:16 -0500
+Received: by mail-wm0-f67.google.com with SMTP id i11so3417254wmf.4
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2017 04:43:15 -0800 (PST)
+Date: Tue, 19 Dec 2017 13:43:11 +0100 (CET)
+From: Enrico Mioso <mrkiko.rs@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+In-Reply-To: <20171219122707.GA2672@redhat.com>
+Message-ID: <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain> (sfid-20171219_134319_924713_30C287C9)
+References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain> <20171213152017.GA3554@redhat.com> <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain> <20171218152142.GA15414@redhat.com> <20171219122707.GA2672@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+I am going to test this on a LEDE build.
+Should I leave the mmio workaround patch applied as per OpenWRT default, or should I leave it off ?
+I'll leave it off by default.
+thank you again,
+Enrico
 
-Remove yet another IO function from the code and replace with one
-that already exists.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-[arend: keep address calculation, ie. (base + offset) in one line]
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 88 +++++++++++-----------
- 1 file changed, 42 insertions(+), 46 deletions(-)
+On Tue, 19 Dec 2017, Stanislaw Gruszka wrote:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 93a1a0c..9d3a662 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -660,30 +660,6 @@ static bool data_ok(struct brcmf_sdio *bus)
- 	       ((u8)(bus->tx_max - bus->tx_seq) & 0x80) == 0;
- }
- 
--/*
-- * Reads a register in the SDIO hardware block. This block occupies a series of
-- * adresses on the 32 bit backplane bus.
-- */
--static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
--{
--	struct brcmf_core *core = bus->sdio_core;
--	int ret;
--
--	*regvar = brcmf_sdiod_readl(bus->sdiodev, core->base + offset, &ret);
--
--	return ret;
--}
--
--static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
--{
--	struct brcmf_core *core = bus->sdio_core;
--	int ret;
--
--	brcmf_sdiod_writel(bus->sdiodev, core->base + reg_offset, regval, &ret);
--
--	return ret;
--}
--
- static int
- brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
- {
-@@ -1078,6 +1054,8 @@ static void brcmf_sdio_get_console_addr(struct brcmf_sdio *bus)
- 
- static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- {
-+	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
-+	struct brcmf_core *core = bus->sdio_core;
- 	u32 intstatus = 0;
- 	u32 hmb_data;
- 	u8 fcbits;
-@@ -1086,10 +1064,14 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 	brcmf_dbg(SDIO, "Enter\n");
- 
- 	/* Read mailbox data and ack that we did so */
--	ret = r_sdreg32(bus, &hmb_data,	SD_REG(tohostmailboxdata));
-+	hmb_data = brcmf_sdiod_readl(sdiod,
-+				     core->base + SD_REG(tohostmailboxdata),
-+				     &ret);
-+
-+	if (!ret)
-+		brcmf_sdiod_writel(sdiod, core->base + SD_REG(tosbmailbox),
-+				   SMB_INT_ACK, &ret);
- 
--	if (ret == 0)
--		w_sdreg32(bus, SMB_INT_ACK, SD_REG(tosbmailbox));
- 	bus->sdcnt.f1regdata += 2;
- 
- 	/* dongle indicates the firmware has halted/crashed */
-@@ -1163,6 +1145,8 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 
- static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- {
-+	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
-+	struct brcmf_core *core = bus->sdio_core;
- 	uint retries = 0;
- 	u16 lastrbc;
- 	u8 hi, lo;
-@@ -1204,7 +1188,8 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- 
- 	if (rtx) {
- 		bus->sdcnt.rxrtx++;
--		err = w_sdreg32(bus, SMB_NAK, SD_REG(tosbmailbox));
-+		brcmf_sdiod_writel(sdiod, core->base + SD_REG(tosbmailbox),
-+				   SMB_NAK, &err);
- 
- 		bus->sdcnt.f1regdata++;
- 		if (err == 0)
-@@ -2291,6 +2276,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- {
- 	struct sk_buff *pkt;
- 	struct sk_buff_head pktq;
-+	u32 intstat_addr = bus->sdio_core->base + SD_REG(intstatus);
- 	u32 intstatus = 0;
- 	int ret = 0, prec_out, i;
- 	uint cnt = 0;
-@@ -2329,7 +2315,8 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		if (!bus->intr) {
- 			/* Check device status, signal pending interrupt */
- 			sdio_claim_host(bus->sdiodev->func[1]);
--			ret = r_sdreg32(bus, &intstatus, SD_REG(intstatus));
-+			intstatus = brcmf_sdiod_readl(bus->sdiodev,
-+						      intstat_addr, &ret);
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			bus->sdcnt.f2txdata++;
- 			if (ret != 0)
-@@ -2413,12 +2400,13 @@ static int brcmf_sdio_tx_ctrlframe(struct brcmf_sdio *bus, u8 *frame, u16 len)
- 
- static void brcmf_sdio_bus_stop(struct device *dev)
- {
--	u32 local_hostintmask;
--	u8 saveclk;
--	int err;
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 	struct brcmf_sdio *bus = sdiodev->bus;
-+	struct brcmf_core *core = bus->sdio_core;
-+	u32 local_hostintmask;
-+	u8 saveclk;
-+	int err;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -2435,7 +2423,9 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		brcmf_sdio_bus_sleep(bus, false, false);
- 
- 		/* Disable and clear interrupts at the chip level also */
--		w_sdreg32(bus, 0, SD_REG(hostintmask));
-+		brcmf_sdiod_writel(sdiodev, core->base + SD_REG(hostintmask),
-+				   0, NULL);
-+
- 		local_hostintmask = bus->hostintmask;
- 		bus->hostintmask = 0;
- 
-@@ -2454,7 +2444,8 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
- 
- 		/* Clear any pending interrupts now that F2 is disabled */
--		w_sdreg32(bus, local_hostintmask, SD_REG(intstatus));
-+		brcmf_sdiod_writel(sdiodev, core->base + SD_REG(intstatus),
-+				   local_hostintmask, NULL);
- 
- 		sdio_release_host(sdiodev->func[1]);
- 	}
-@@ -2521,7 +2512,9 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 
- static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- {
-+	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
- 	u32 newstatus = 0;
-+	u32 intstat_addr = bus->sdio_core->base + SD_REG(intstatus);
- 	unsigned long intstatus;
- 	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
- 	uint framecnt;			/* Temporary counter of tx/rx frames */
-@@ -2576,9 +2569,10 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	 */
- 	if (intstatus & I_HMB_FC_CHANGE) {
- 		intstatus &= ~I_HMB_FC_CHANGE;
--		err = w_sdreg32(bus, I_HMB_FC_CHANGE, SD_REG(intstatus));
-+		brcmf_sdiod_writel(sdiod, intstat_addr, I_HMB_FC_CHANGE, &err);
-+
-+		newstatus = brcmf_sdiod_readl(sdiod, intstat_addr, &err);
- 
--		err = r_sdreg32(bus, &newstatus, SD_REG(intstatus));
- 		bus->sdcnt.f1regdata += 2;
- 		atomic_set(&bus->fcstate,
- 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
-@@ -4017,22 +4011,21 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 					 const struct firmware *code,
- 					 void *nvram, u32 nvram_len)
- {
--	struct brcmf_bus *bus_if;
--	struct brcmf_sdio_dev *sdiodev;
--	struct brcmf_sdio *bus;
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct brcmf_sdio *bus = sdiodev->bus;
-+	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
-+	struct brcmf_core *core = bus->sdio_core;
- 	u8 saveclk;
- 
- 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
--	bus_if = dev_get_drvdata(dev);
--	sdiodev = bus_if->bus_priv.sdio;
-+
- 	if (err)
- 		goto fail;
- 
- 	if (!bus_if->drvr)
- 		return;
- 
--	bus = sdiodev->bus;
--
- 	/* try to download image and nvram to the dongle */
- 	bus->alp_only = true;
- 	err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
-@@ -4063,8 +4056,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	}
- 
- 	/* Enable function 2 (frame transfers) */
--	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
--		  SD_REG(tosbmailboxdata));
-+	brcmf_sdiod_writel(sdiod, core->base + SD_REG(tosbmailboxdata),
-+			   SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT, NULL);
-+
- 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
- 
- 
-@@ -4074,7 +4068,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	if (!err) {
- 		/* Set up the interrupt mask and enable interrupts */
- 		bus->hostintmask = HOSTINTMASK;
--		w_sdreg32(bus, bus->hostintmask, SD_REG(hostintmask));
-+		brcmf_sdiod_writel(sdiod, core->base + SD_REG(hostintmask),
-+				   bus->hostintmask, NULL);
-+
- 
- 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
- 	} else {
--- 
-1.9.1
+> Date: Tue, 19 Dec 2017 13:27:07
+> From: Stanislaw Gruszka <sgruszka@redhat.com>
+> To: Enrico Mioso <mrkiko.rs@gmail.com>
+> Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
+>     Daniel Golle <daniel@makrotopia.org>, Arnd Bergmann <arnd@arndb.de>,
+>     John Crispin <john@phrozen.org>, nbd@nbd.name
+> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+>     frame due to full tx queue...?
+> 
+> On Mon, Dec 18, 2017 at 04:21:42PM +0100, Stanislaw Gruszka wrote:
+>> Hi
+>>
+>> On Sat, Dec 16, 2017 at 07:33:47PM +0100, Enrico Mioso wrote:
+>>> I tested the Archer MR200 device removing the patch as you suggested:
+>>> package/kernel/mac80211/patches/600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
+>>> ... the error still appears, but the driver is still working as of now.
+>>> Here - reporting my dmesg
+>>> [  819.060392] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+>>> [  819.069900] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+>
+> Please test two patches I posted today:
+> https://marc.info/?l=linux-wireless&m=151368325114059&w=2
+> https://marc.info/?l=linux-wireless&m=151368325914062&w=2
+>
+> If they do not work, please try the queue->threshold change.
+>
+> Thanks
+> Stanislaw
+>
+>
+>> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+>> index a2c1ca5c76d1..9e65b8f285e9 100644
+>> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+>> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+>> @@ -1224,7 +1224,7 @@ static void rt2x00queue_init(struct rt2x00_dev *rt2x00dev,
+>>
+>>  	rt2x00dev->ops->queue_init(queue);
+>>
+>> -	queue->threshold = DIV_ROUND_UP(queue->limit, 10);
+>> +	queue->threshold = DIV_ROUND_UP(queue->limit, 8);
+>>  }
+>>
+>>  int rt2x00queue_allocate(struct rt2x00_dev *rt2x00dev)
+>
