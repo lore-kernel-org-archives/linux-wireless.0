@@ -1,88 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:38705 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752594AbdLVQZg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 11:25:36 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "silexcommon@gmail.com" <silexcommon@gmail.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Alagu Sankar <alagusankar@silex-india.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/11] SDIO support for ath10k
-Date: Fri, 22 Dec 2017 16:25:31 +0000
-Message-ID: <87608y91c5.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_172539_865935_7A999023)
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
-        (silexcommon@gmail.com's message of "Sat, 30 Sep 2017 23:07:37 +0530")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:56382 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751459AbdLSLeI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 06:34:08 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Enrico Mioso <mrkiko.rs@gmail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/2] rt2x00: pause almost full queue early
+Date: Tue, 19 Dec 2017 12:33:55 +0100
+Message-Id: <1513683236-13402-1-git-send-email-sgruszka@redhat.com> (sfid-20171219_123412_508117_7BD60C40)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-silexcommon@gmail.com writes:
+Do not drop &queue->tx_lock and acquire it again to pause queue when
+available entries are below the threshold.
 
-> From: Alagu Sankar <alagusankar@silex-india.com>
->
-> This patchset, generated against master-pending branch, enables a fully
-> functional SDIO interface driver for ath10k.  Patches have been verified =
-on
-> QCA9377-3 WB396 and Silex's SX-SDCAC reference cards with Station, Access=
- Point
-> and P2P modes.
->
-> The driver is verified with the firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1
-> with the board data from respective SDIO card vendors. Receive performanc=
-e
-> matches the QCA reference driver when used with SDIO3.0 enabled platforms=
-.
-> iperf tests indicate a downlink UDP of 275Mbit/s and TCP of 150Mbit/s
->
-> This patchset differs from the previous high latency patches, specific to=
- SDIO.
-> HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET is enabled for HI_ACS. This instruc=
-ts the
-> firmware to use HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing packets. Witho=
-ut
-> this flag, the management frames are not sent out by the firmware. Possib=
-ility
-> of management frames being sent via WMI and data frames through the reduc=
-ed Tx
-> completion needs to be probed further.
->
-> Further improvements can be done on the transmit path by implementing pac=
-ket
-> bundle. Scatter Gather is another area of improvement for both Transmit a=
-nd
-> Receive, but may not work on all platforms
->
-> Known issues: Surprise removal of the card, when the device is in connect=
-ed
-> state, delays sdio function remove due to delayed WMI command failures.
-> Existing ath10k framework can not differentiate between a kernel module
-> removal and the surprise removal of teh card.
->
-> Alagu Sankar (11):
->   ath10k_sdio: sdio htt data transfer fixes
->   ath10k_sdio: wb396 reference card fix
->   ath10k_sdio: DMA bounce buffers for read write
->   ath10k_sdio: reduce transmit msdu count
->   ath10k_sdio: use clean packet headers
->   ath10k_sdio: high latency fixes for beacon buffer
->   ath10k_sdio: fix rssi indication
->   ath10k_sdio: common read write
->   ath10k_sdio: virtual scatter gather for receive
->   ath10k_sdio: enable firmware crash dump
->   ath10k_sdio: hif start once addition
+Patch should mitigate problem of frequently printed errors:
+"Error - Dropping frame due to full tx queue"
 
-Sorry, I run out of time to review this in detail. To make the review
-easier I recommend to split this patchset into two sets, first set
-containing only the bare essential to get basic functionality working
-(for example ping working on x86) and the second set containing all the
-optimisations (the bounce buffer stuff etc).
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c   | 10 ----------
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |  8 ++++++++
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-And try to make the first set as small as possible so that we can get it
-faster applied.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+index ecc96312a370..c8a6f163102f 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+@@ -152,16 +152,6 @@ void rt2x00mac_tx(struct ieee80211_hw *hw,
+ 	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, control->sta, false)))
+ 		goto exit_fail;
+ 
+-	/*
+-	 * Pausing queue has to be serialized with rt2x00lib_txdone(). Note
+-	 * we should not use spin_lock_bh variant as bottom halve was already
+-	 * disabled before ieee80211_xmit() call.
+-	 */
+-	spin_lock(&queue->tx_lock);
+-	if (rt2x00queue_threshold(queue))
+-		rt2x00queue_pause_queue(queue);
+-	spin_unlock(&queue->tx_lock);
+-
+ 	return;
+ 
+  exit_fail:
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+index a2c1ca5c76d1..1ad51e56bc59 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+@@ -715,6 +715,14 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
+ 	rt2x00queue_kick_tx_queue(queue, &txdesc);
+ 
+ out:
++	/*
++	 * Pausing queue has to be serialized with rt2x00lib_txdone(), so we
++	 * do this under queue->tx_lock. Bottom halve was already disabled
++	 * before ieee80211_xmit() call.
++	 */
++	if (rt2x00queue_threshold(queue))
++		rt2x00queue_pause_queue(queue);
++
+ 	spin_unlock(&queue->tx_lock);
+ 	return ret;
+ }
+-- 
+1.9.3
