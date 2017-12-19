@@ -1,55 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:52786 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755263AbdL2Ibk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Dec 2017 03:31:40 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <yhchuang@realtek.com>, <Larry.Finger@lwfinger.net>,
-        <johannes.berg@intel.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/11] MAINTAINERS: Change maintainer for rtlwifi
-Date: Fri, 29 Dec 2017 16:31:02 +0800
-Message-ID: <20171229083112.31540-2-pkshih@realtek.com> (sfid-20171229_093322_102271_B0027C18)
-In-Reply-To: <20171229083112.31540-1-pkshih@realtek.com>
-References: <20171229083112.31540-1-pkshih@realtek.com>
+Received: from mail-by2nam03on0045.outbound.protection.outlook.com ([104.47.42.45]:64231
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S966988AbdLSL3g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 06:29:36 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: [PATCH v2 09/10] qtnfmac: keeping track of "generation" for STA info
+Date: Tue, 19 Dec 2017 14:28:55 +0300
+Message-Id: <20171219112856.22463-10-sergey.matyukevich.os@quantenna.com> (sfid-20171219_122952_405122_7FD6F991)
+In-Reply-To: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
+References: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-This section is also modified to include the entire rtlwifi family,
-not just RTL8192CE.
+Keep generation in per-VIF data structure and increment it whenever STA
+list is changed. Use generation value to fill struct station_info when
+required.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- MAINTAINERS | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 5 ++++-
+ drivers/net/wireless/quantenna/qtnfmac/core.h     | 1 +
+ drivers/net/wireless/quantenna/qtnfmac/event.c    | 5 +++--
+ drivers/net/wireless/quantenna/qtnfmac/util.c     | 8 ++++++--
+ drivers/net/wireless/quantenna/qtnfmac/util.h     | 4 ++--
+ 5 files changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 129c591e0f34..5f6415573fd3 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11775,15 +11775,13 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.g
- S:	Maintained
- F:	drivers/net/wireless/realtek/rtl818x/rtl8187/
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index be15d0ed362c..cedb18e04bc2 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -418,6 +418,7 @@ qtnf_get_station(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
  
--RTL8192CE WIRELESS DRIVER
--M:	Larry Finger <Larry.Finger@lwfinger.net>
--M:	Chaoming Li <chaoming_li@realsil.com.cn>
-+REALTEK WIRELESS DRIVER (rtlwifi family)
-+M:	Ping-Ke Shih <pkshih@realtek.com>
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org/
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
- F:	drivers/net/wireless/realtek/rtlwifi/
--F:	drivers/net/wireless/realtek/rtlwifi/rtl8192ce/
++	sinfo->generation = vif->generation;
+ 	return qtnf_cmd_get_sta_info(vif, mac, sinfo);
+ }
  
- RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
- M:	Jes Sorensen <Jes.Sorensen@gmail.com>
+@@ -439,11 +440,13 @@ qtnf_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 	ret = qtnf_cmd_get_sta_info(vif, sta_node->mac_addr, sinfo);
+ 
+ 	if (unlikely(ret == -ENOENT)) {
+-		qtnf_sta_list_del(&vif->sta_list, mac);
++		qtnf_sta_list_del(vif, mac);
+ 		cfg80211_del_sta(vif->netdev, mac, GFP_KERNEL);
+ 		sinfo->filled = 0;
+ 	}
+ 
++	sinfo->generation = vif->generation;
++
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
+index d7e295efb07d..e7bd21ed371b 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -88,6 +88,7 @@ struct qtnf_vif {
+ 	struct work_struct reset_work;
+ 	struct qtnf_sta_list sta_list;
+ 	unsigned long cons_tx_timeout_cnt;
++	int generation;
+ };
+ 
+ struct qtnf_mac_info {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index b3489b5b5d9e..8a3d2b1194e4 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -59,10 +59,11 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+ 	pr_debug("VIF%u.%u: MAC:%pM FC:%x\n", mac->macid, vif->vifid, sta_addr,
+ 		 frame_control);
+ 
+-	qtnf_sta_list_add(&vif->sta_list, sta_addr);
++	qtnf_sta_list_add(vif, sta_addr);
+ 
+ 	sinfo.assoc_req_ies = NULL;
+ 	sinfo.assoc_req_ies_len = 0;
++	sinfo.generation = vif->generation;
+ 
+ 	payload_len = len - sizeof(*sta_assoc);
+ 	tlv = (const struct qlink_tlv_hdr *)sta_assoc->ies;
+@@ -132,7 +133,7 @@ qtnf_event_handle_sta_deauth(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+ 	pr_debug("VIF%u.%u: MAC:%pM reason:%x\n", mac->macid, vif->vifid,
+ 		 sta_addr, reason);
+ 
+-	if (qtnf_sta_list_del(&vif->sta_list, sta_addr))
++	if (qtnf_sta_list_del(vif, sta_addr))
+ 		cfg80211_del_sta(vif->netdev, sta_deauth->sta_addr,
+ 				 GFP_KERNEL);
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.c b/drivers/net/wireless/quantenna/qtnfmac/util.c
+index ed38e87471bf..e745733ba417 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/util.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/util.c
+@@ -57,9 +57,10 @@ struct qtnf_sta_node *qtnf_sta_list_lookup_index(struct qtnf_sta_list *list,
+ 	return NULL;
+ }
+ 
+-struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_sta_list *list,
++struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_vif *vif,
+ 					const u8 *mac)
+ {
++	struct qtnf_sta_list *list = &vif->sta_list;
+ 	struct qtnf_sta_node *node;
+ 
+ 	if (unlikely(!mac))
+@@ -77,13 +78,15 @@ struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_sta_list *list,
+ 	ether_addr_copy(node->mac_addr, mac);
+ 	list_add_tail(&node->list, &list->head);
+ 	atomic_inc(&list->size);
++	++vif->generation;
+ 
+ done:
+ 	return node;
+ }
+ 
+-bool qtnf_sta_list_del(struct qtnf_sta_list *list, const u8 *mac)
++bool qtnf_sta_list_del(struct qtnf_vif *vif, const u8 *mac)
+ {
++	struct qtnf_sta_list *list = &vif->sta_list;
+ 	struct qtnf_sta_node *node;
+ 	bool ret = false;
+ 
+@@ -93,6 +96,7 @@ bool qtnf_sta_list_del(struct qtnf_sta_list *list, const u8 *mac)
+ 		list_del(&node->list);
+ 		atomic_dec(&list->size);
+ 		kfree(node);
++		++vif->generation;
+ 		ret = true;
+ 	}
+ 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.h b/drivers/net/wireless/quantenna/qtnfmac/util.h
+index 0359eae8c24b..0d4d92b11540 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/util.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/util.h
+@@ -26,9 +26,9 @@ struct qtnf_sta_node *qtnf_sta_list_lookup(struct qtnf_sta_list *list,
+ 					   const u8 *mac);
+ struct qtnf_sta_node *qtnf_sta_list_lookup_index(struct qtnf_sta_list *list,
+ 						 size_t index);
+-struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_sta_list *list,
++struct qtnf_sta_node *qtnf_sta_list_add(struct qtnf_vif *vif,
+ 					const u8 *mac);
+-bool qtnf_sta_list_del(struct qtnf_sta_list *list, const u8 *mac);
++bool qtnf_sta_list_del(struct qtnf_vif *vif, const u8 *mac);
+ 
+ void qtnf_sta_list_free(struct qtnf_sta_list *list);
+ 
 -- 
-2.14.1
+2.11.0
