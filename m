@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:38267 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752426AbdLSNZY (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36840 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934845AbdLSKFk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 08:25:24 -0500
-Received: by mail-wm0-f47.google.com with SMTP id 64so3656945wme.3
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2017 05:25:24 -0800 (PST)
-Date: Tue, 19 Dec 2017 14:25:19 +0100 (CET)
-From: Enrico Mioso <mrkiko.rs@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        nbd@nbd.name
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-In-Reply-To: <20171219125431.GB2672@redhat.com>
-Message-ID: <alpine.LNX.2.21.99.1712191424570.17763@localhost.localdomain> (sfid-20171219_142535_542802_AA29EC7C)
-References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain> <20171213152017.GA3554@redhat.com> <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain> <20171218152142.GA15414@redhat.com> <20171219122707.GA2672@redhat.com>
- <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain> <20171219125431.GB2672@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+        Tue, 19 Dec 2017 05:05:40 -0500
+Message-ID: <1513677938.26145.12.camel@sipsolutions.net> (sfid-20171219_110547_565244_7607276C)
+Subject: Re: oops on cloned-mac 802.11s stations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gui Iribarren <gui@altermundi.net>, linux-wireless@vger.kernel.org
+Date: Tue, 19 Dec 2017 11:05:38 +0100
+In-Reply-To: <39d50d91-ac83-611d-6709-021757686206@altermundi.net> (sfid-20171218_035222_838601_77D93FC5)
+References: <39d50d91-ac83-611d-6709-021757686206@altermundi.net>
+         (sfid-20171218_035222_838601_77D93FC5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you very much.
-I'll let you know. Compiling now.
-
-
-On Tue, 19 Dec 2017, Stanislaw Gruszka wrote:
-
-> Date: Tue, 19 Dec 2017 13:54:32
-> From: Stanislaw Gruszka <sgruszka@redhat.com>
-> To: Enrico Mioso <mrkiko.rs@gmail.com>
-> Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
->     Daniel Golle <daniel@makrotopia.org>, Arnd Bergmann <arnd@arndb.de>,
->     John Crispin <john@phrozen.org>, nbd@nbd.name
-> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
->     frame due to full tx queue...?
+On Mon, 2017-12-18 at 03:44 +0100, Gui Iribarren wrote:
+> Steps to reproduce:
+> join a 802.11s mesh with a nodeA, and then join the same 802.11s mesh
+> with another nodeB, so that both nodes MAC addresses are exactly the
+> same (i.e. nodeB is "cloning" nodeA MAC)
 > 
-> On Tue, Dec 19, 2017 at 01:43:11PM +0100, Enrico Mioso wrote:
->> I am going to test this on a LEDE build.
->> Should I leave the mmio workaround patch applied as per OpenWRT default, or should I leave it off ?
->> I'll leave it off by default.
->
-> Please remove it. If things would work then retest with it and see if
-> if things still work.
->
-> Thanks
-> Stanislaw
->
+> Expected result:
+> nodeA and nodeB coexist in a conflicting state, silently
+> (not saying that this is a desired scenario, of course; just came across
+> this while testing radios that accidentally had the same (fake) address.
+> the warning might ring a bell to someone, so reporting it here just for
+> the record)
+> 
+> What actually happens:
+> both on nodeA and nodeB, the log is flooded with these warnings:
+
+That's hardly an "oops", but yeah, not nice.
+
+Somewhere we should drop packets if they appear to come from ourselves.
+Perhaps like this:
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b3cff69bfd66..fd580614085b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3625,6 +3625,8 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 		}
+ 		return true;
+ 	case NL80211_IFTYPE_MESH_POINT:
++		if (ether_addr_equal(sdata->vif.addr, hdr->addr2))
++			return false;
+ 		if (multicast)
+ 			return true;
+ 		return ether_addr_equal(sdata->vif.addr, hdr->addr1);
+
+johannes
