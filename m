@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52088 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:34332 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752317AbdLBUXg (ORCPT
+        with ESMTP id S1760132AbdLSJin (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 15:23:36 -0500
+        Tue, 19 Dec 2017 04:38:43 -0500
+Message-ID: <1513676321.26145.1.camel@sipsolutions.net> (sfid-20171219_103848_547223_A849E6CB)
+Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: j@w1.fi, David Ahern <dsahern@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH net 2/2] nl80211: use NLA_U8_BUGGY for two attributes
-Date: Sat,  2 Dec 2017 21:23:32 +0100
-Message-Id: <20171202202332.10205-2-johannes@sipsolutions.net> (sfid-20171202_212359_352827_2F1DAFA7)
-In-Reply-To: <20171202202332.10205-1-johannes@sipsolutions.net>
-References: <20171202202332.10205-1-johannes@sipsolutions.net>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Date: Tue, 19 Dec 2017 10:38:41 +0100
+In-Reply-To: <20171218161811.3f3sjhlxdfmsnljx@bars>
+References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
+         <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
+         <871skalepz.fsf@purkki.adurom.net> <20171205160010.cytra3bqbttwz5db@bars>
+         <878te0kud2.fsf@kamboji.qca.qualcomm.com>
+         <20171218161811.3f3sjhlxdfmsnljx@bars>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2017-12-18 at 19:18 +0300, Sergey Matyukevich wrote:
 
-We discovered that these are set incorrectly by the
-corresponding userspace code, so keep compatible with
-their bugs even if they'd always set the value to 0.
+> Meanwhile now it is not yet clear to me what should be done for driver which
+> supports MAC-based ACL, but not full-fledged AP SME.
 
-Reported-by: Jouni Malinen <j@w1.fi>
-Fixes: 28033ae4e0f5 ("net: netlink: Update attr validation to require exact length for some types")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Are you sure that such a device can even exist? It'd have to drop the
+auth frames, so they can't be handled by the host? Is there much point
+in that?
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b1ac23ca20c8..751b4efbf09a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -384,7 +384,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_TSID] = { .type = NLA_U8 },
- 	[NL80211_ATTR_USER_PRIO] = { .type = NLA_U8 },
- 	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
--	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
-+	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8_BUGGY },
- 	[NL80211_ATTR_MAC_MASK] = { .len = ETH_ALEN },
- 	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_NETNS_FD] = { .type = NLA_U32 },
-@@ -5830,7 +5830,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
- 	[NL80211_MESHCONF_MAX_RETRIES] = { .type = NLA_U8 },
- 	[NL80211_MESHCONF_TTL] = { .type = NLA_U8 },
- 	[NL80211_MESHCONF_ELEMENT_TTL] = { .type = NLA_U8 },
--	[NL80211_MESHCONF_AUTO_OPEN_PLINKS] = { .type = NLA_U8 },
-+	[NL80211_MESHCONF_AUTO_OPEN_PLINKS] = { .type = NLA_U8_BUGGY },
- 	[NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR] = { .type = NLA_U32 },
- 	[NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES] = { .type = NLA_U8 },
- 	[NL80211_MESHCONF_PATH_REFRESH_TIME] = { .type = NLA_U32 },
--- 
-2.14.2
+johannes
