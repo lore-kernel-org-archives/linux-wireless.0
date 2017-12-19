@@ -1,44 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:52690 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753981AbdLGOcs (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35059 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S967265AbdLSMr1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 09:32:48 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [2/3] ath9k: move spectral scan support under a separate config
- symbol
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1c982c915065a9b5ed3232eedb567f589eca261b.1511804622.git.mschiffer@universe-factory.net>
-References: <1c982c915065a9b5ed3232eedb567f589eca261b.1511804622.git.mschiffer@universe-factory.net>
-To: Matthias Schiffer <mschiffer@universe-factory.net>
-CC: <ath9k-devel@qca.qualcomm.com>, <ath10k@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nbd@nbd.name>
-Message-ID: <39b862cad21f42aa9cf855c465216cab@euamsexm01a.eu.qualcomm.com> (sfid-20171207_153327_158450_CB4974C2)
-Date: Thu, 7 Dec 2017 15:32:36 +0100
+        Tue, 19 Dec 2017 07:47:27 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 08/11] brcmfmac: Clean up interrupt macros
+Date: Tue, 19 Dec 2017 13:47:14 +0100
+Message-Id: <1513687637-5555-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134800_928094_01BA29A7)
+In-Reply-To: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthias Schiffer <mschiffer@universe-factory.net> wrote:
+From: Ian Molton <ian@mnementh.co.uk>
 
-> At the moment, spectral scan support, and with it RELAY, is always enabled
-> with ATH9K[_HTC]_DEBUGFS. Spectral scan support is currently the only user
-> of RELAY in ath9k, and it unconditionally reserves a relay channel.
-> 
-> Having debugfs support in ath9k is often useful even on very small embedded
-> routers, where we'd rather like to avoid the code size and RAM usage of the
-> relay support.
-> 
-> Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Make it more obvious that this code acually enables interrupts, and
+provide nice definitions for the bits in the register.
 
-2 patches applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 3 ++-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 8 +++++---
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-9df7ddc3ed25 ath9k: move spectral scan support under a separate config symbol
-42e01cb9cb10 ath10k: move spectral scan support under a separate config symbol
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index d357c5c..e3366ab 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -149,7 +149,8 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 
+ 		/* must configure SDIO_CCCR_IENx to enable irq */
+ 		data = brcmf_sdiod_func0_rb(sdiodev, SDIO_CCCR_IENx, &ret);
+-		data |= 1 << SDIO_FUNC_1 | 1 << SDIO_FUNC_2 | 1;
++		data |= SDIO_CCCR_IEN_FUNC1 | SDIO_CCCR_IEN_FUNC2 |
++			SDIO_CCCR_IEN_FUNC0;
+ 		brcmf_sdiod_func0_wb(sdiodev, SDIO_CCCR_IENx, data, &ret);
+ 
+ 		/* redirect, configure and enable io for interrupt signal */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 54a0303..04661ec 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -24,9 +24,6 @@
+ /* Maximum number of I/O funcs */
+ #define NUM_SDIO_FUNCS	3
+ 
+-#define SDIO_FUNC_1		1
+-#define SDIO_FUNC_2		2
+-
+ #define SDIOD_FBR_SIZE		0x100
+ 
+ /* io_en */
+@@ -52,6 +49,11 @@
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD14_EXT	BIT(2)
+ #define SDIO_CCCR_BRCM_CARDCAP_CMD_NODEC	BIT(3)
+ 
++/* Interrupt enable bits for each function */
++#define SDIO_CCCR_IEN_FUNC0			BIT(0)
++#define SDIO_CCCR_IEN_FUNC1			BIT(1)
++#define SDIO_CCCR_IEN_FUNC2			BIT(2)
++
+ #define SDIO_CCCR_BRCM_CARDCTRL			0xf1
+ #define SDIO_CCCR_BRCM_CARDCTRL_WLANRESET	BIT(1)
+ 
 -- 
-https://patchwork.kernel.org/patch/10077735/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
