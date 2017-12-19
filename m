@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51006 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933751AbdLRMi1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 07:38:27 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 14:38:11 +0200
-Message-Id: <20171218123815.3968-8-luca@coelho.fi> (sfid-20171218_133850_037785_2BC2D6C5)
-In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
-References: <20171218123815.3968-1-luca@coelho.fi>
-Subject: [PATCH 07/11] iwlwifi: add skb address to tx cmd in trace events data
+Received: from mail-by2nam03on0052.outbound.protection.outlook.com ([104.47.42.52]:40224
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S937682AbdLSL3T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 06:29:19 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: [PATCH v2 01/10] qtnfmac: check that MAC exists in regulatory notifier
+Date: Tue, 19 Dec 2017 14:28:47 +0300
+Message-Id: <20171219112856.22463-2-sergey.matyukevich.os@quantenna.com> (sfid-20171219_122925_818560_98841BF5)
+In-Reply-To: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
+References: <20171219112856.22463-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-This helps matching tx cmd with other trace events, like net_dev_xmit
-and net_dev_queue etc.
+It is possible that regulatory notifier is called before MAC data
+was allocated. We need to verify that MAC data exists before trying
+to send a regulatory change event.
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
-index 7f16dcce0995..9518a82f44c2 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
-@@ -95,7 +95,7 @@ TRACE_EVENT(iwlwifi_dev_tx,
- 	TP_ARGS(dev, skb, tfd, tfdlen, buf0, buf0_len, hdr_len),
- 	TP_STRUCT__entry(
- 		DEV_ENTRY
--
-+		__field(void *, skbaddr)
- 		__field(size_t, framelen)
- 		__dynamic_array(u8, tfd, tfdlen)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 6711e7fb6926..63d274c3f2f7 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -802,6 +802,9 @@ static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
+ 			continue;
  
-@@ -110,6 +110,7 @@ TRACE_EVENT(iwlwifi_dev_tx,
- 	),
- 	TP_fast_assign(
- 		DEV_ASSIGN;
-+		__entry->skbaddr = skb;
- 		__entry->framelen = buf0_len;
- 		if (hdr_len > 0)
- 			__entry->framelen += skb->len - hdr_len;
-@@ -120,9 +121,9 @@ TRACE_EVENT(iwlwifi_dev_tx,
- 				      __get_dynamic_array(buf1),
- 				      skb->len - hdr_len);
- 	),
--	TP_printk("[%s] TX %.2x (%zu bytes)",
-+	TP_printk("[%s] TX %.2x (%zu bytes) skbaddr=%p",
- 		  __get_str(dev), ((u8 *)__get_dynamic_array(buf0))[0],
--		  __entry->framelen)
-+		  __entry->framelen, __entry->skbaddr)
- );
+ 		mac = bus->mac[mac_idx];
++		if (!mac)
++			continue;
++
+ 		wiphy = priv_to_wiphy(mac);
  
- TRACE_EVENT(iwlwifi_dev_ucode_error,
+ 		for (band = 0; band < NUM_NL80211_BANDS; ++band) {
 -- 
-2.15.1
+2.11.0
