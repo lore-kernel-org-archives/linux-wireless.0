@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60474 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750757AbdLUO0B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 09:26:01 -0500
-Date: Thu, 21 Dec 2017 15:25:59 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Enrico Mioso <mrkiko.rs@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        nbd@nbd.name
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-Message-ID: <20171221142558.GB4655@redhat.com> (sfid-20171221_152606_097949_5EA743A8)
-References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain>
- <20171213152017.GA3554@redhat.com>
- <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain>
- <20171218152142.GA15414@redhat.com>
- <20171219122707.GA2672@redhat.com>
- <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain>
- <20171219125431.GB2672@redhat.com>
- <alpine.LNX.2.21.99.1712201848250.21776@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.2.21.99.1712201848250.21776@localhost.localdomain>
+Received: from s3.sipsolutions.net ([144.76.63.242]:35772 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933388AbdLSJxc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Dec 2017 04:53:32 -0500
+Message-ID: <1513677210.26145.10.camel@sipsolutions.net> (sfid-20171219_105337_622327_2ACDEC26)
+Subject: Re: [PATCH] mac80211: Fix setting TX power on monitor interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Peter =?ISO-8859-1?Q?Gro=DFe?= <pegro@friiks.de>,
+        linux-wireless@vger.kernel.org
+Date: Tue, 19 Dec 2017 10:53:30 +0100
+In-Reply-To: <20171213172946.19976-1-pegro@friiks.de>
+References: <1512849236.26976.43.camel@sipsolutions.net>
+         <20171213172946.19976-1-pegro@friiks.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 20, 2017 at 06:49:56PM +0100, Enrico Mioso wrote:
-> Hello.
-> First of all, thank you for your patience and work.
-> Sorry if I am slow in testing, I am in a little bit of a complicated situation, and this is one of the reasons for why I am slow.
-> With the two patches you sent me (thanks!), and removing the mmio workaround patch, I was not able to reproduce the errors. I plan to send you a precise response as soon as I am able to.
-> thank you
+Hi,
 
-No worries, we are not under deadline :-) You can just respond
-to patches email with:
+> Since monitor_sdata->vif.type is also NL80211_IFTYPE_MONITOR,
+> the warning would still appear with the patch to cfg.c, so I excluded 
+> that case from the WARN_ON_ONCE condition.
+> 
+> I hope that makes sense?!
 
-Tested-by: Enrico Mioso <mrkiko.rs@gmail.com>
+Yeah, looks good.
 
-tag. That will mean that you tested patches and that information will be
-added to the commit changelog.
+>  	if (wdev) {
+>  		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+>  
+> +		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
+> +			sdata = rtnl_dereference(local->monitor_sdata);
+> +			if (!sdata)
+> +				return -EOPNOTSUPP;
+> +		}
 
-Regards
-Stanislaw
+This part makes perfect sense.
+
+>  	mutex_lock(&local->iflist_mtx);
+>  	list_for_each_entry(sdata, &local->interfaces, list) {
+> +		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
+> +			has_monitor = true;
+> +			continue;
+> +		}
+>  		sdata->user_power_level = local->user_power_level;
+>  		if (txp_type != sdata->vif.bss_conf.txpower_type)
+>  			update_txp_type = true;
+>  		sdata->vif.bss_conf.txpower_type = txp_type;
+>  	}
+> -	list_for_each_entry(sdata, &local->interfaces, list)
+> +	list_for_each_entry(sdata, &local->interfaces, list) {
+> +		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
+> +			continue;
+>  		ieee80211_recalc_txpower(sdata, update_txp_type);
+> +	}
+>  	mutex_unlock(&local->iflist_mtx);
+>  
+> +	if (has_monitor) {
+> +		sdata = rtnl_dereference(local->monitor_sdata);
+> +		if (sdata) {
+> +			sdata->user_power_level = local->user_power_level;
+> +			if (txp_type != sdata->vif.bss_conf.txpower_type)
+> +				update_txp_type = true;
+> +			sdata->vif.bss_conf.txpower_type = txp_type;
+> +
+> +			ieee80211_recalc_txpower(sdata, update_txp_type);
+> +		}
+> +	}
+
+But do we really need this? I think we can probably live with just not
+having monitor handled here, i.e. only have the "if monitor continue;"
+part?
+
+johannes
