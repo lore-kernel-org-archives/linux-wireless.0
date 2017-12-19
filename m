@@ -1,121 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:56869 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752163AbdLDOO5 (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35058 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S967261AbdLSMr1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 09:14:57 -0500
-Subject: Re: [PATCH] staging: wilc1000: Fix problems reported by checkpatch
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <ganesh.krishna@microchip.com>, <gregkh@linuxfoundation.org>,
-        <devel@driverdev.osuosl.org>
-References: <1512160034-6400-1-git-send-email-aditya.shankar@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <ce856e7c-230e-748d-a41d-9c5943cddae1@microchip.com> (sfid-20171204_151501_123881_34F96CE0)
-Date: Mon, 4 Dec 2017 16:14:54 +0200
-MIME-Version: 1.0
-In-Reply-To: <1512160034-6400-1-git-send-email-aditya.shankar@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 19 Dec 2017 07:47:27 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 01/11] brcmfmac: Remove {r,w}_sdreg32
+Date: Tue, 19 Dec 2017 13:47:07 +0100
+Message-Id: <1513687637-5555-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134803_407141_D4667D16)
+In-Reply-To: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Aditya,
+From: Ian Molton <ian@mnementh.co.uk>
 
-On 01.12.2017 22:27, Aditya Shankar wrote:
-> This commit fixes below style problems in multiple lines
-> Fix checkpatch WARNING: line over 80 characters
-> Fix CHECK: Lines should not end with a '('
-You should fix only one issue per patch. Would be better to have
-a patch with "line over 80 characters fixes" and one with 
-"Lines should not end with a '('" fixes. Please see [1].
+Remove yet another IO function from the code and replace with one
+that already exists.
 
-Thanks,
-Claudiu
+Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+[arend: keep address calculation, ie. (base + offset) in one line]
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 88 +++++++++++-----------
+ 1 file changed, 42 insertions(+), 46 deletions(-)
 
-[1] https://www.kernel.org/doc/html/latest/process/submitting-patches.html#split-changes
-
-> 
-> Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
-> ---
->  drivers/staging/wilc1000/linux_mon.c | 30 ++++++++++++++++++------------
->  1 file changed, 18 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-> index 91d49c4..a793c42 100644
-> --- a/drivers/staging/wilc1000/linux_mon.c
-> +++ b/drivers/staging/wilc1000/linux_mon.c
-> @@ -69,7 +69,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
->  	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
->  		/* hostapd callback mgmt frame */
->  
-> -		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
-> +		skb = dev_alloc_skb(size +
-> +				    sizeof(struct wilc_wfi_radiotap_cb_hdr));
->  		if (!skb)
->  			return;
->  
-> @@ -80,11 +81,12 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
->  
->  		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
->  
-> -		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
-> +		cb_hdr->hdr.it_len =
-> +			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
->  
-> -		cb_hdr->hdr.it_present = cpu_to_le32(
-> -				(1 << IEEE80211_RADIOTAP_RATE) |
-> -				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
-> +		cb_hdr->hdr.it_present =
-> +			cpu_to_le32((1 << IEEE80211_RADIOTAP_RATE) |
-> +				    (1 << IEEE80211_RADIOTAP_TX_FLAGS));
->  
->  		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
->  
-> @@ -96,7 +98,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
->  		}
->  
->  	} else {
-> -		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
-> +		skb = dev_alloc_skb(size +
-> +				    sizeof(struct wilc_wfi_radiotap_hdr));
->  
->  		if (!skb)
->  			return;
-> @@ -105,7 +108,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
->  		hdr = skb_push(skb, sizeof(*hdr));
->  		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
->  		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
-> -		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
-> +		hdr->hdr.it_len =
-> +			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
->  		hdr->hdr.it_present = cpu_to_le32
->  				(1 << IEEE80211_RADIOTAP_RATE); /* | */
->  		hdr->rate = 5; /* txrate->bitrate / 5; */
-> @@ -197,7 +201,8 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
->  	skb_pull(skb, rtap_len);
->  
->  	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
-> -		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
-> +		skb2 = dev_alloc_skb(skb->len +
-> +				     sizeof(struct wilc_wfi_radiotap_cb_hdr));
->  		if (!skb2)
->  			return -ENOMEM;
->  
-> @@ -208,11 +213,12 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
->  
->  		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
->  
-> -		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
-> +		cb_hdr->hdr.it_len =
-> +			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
->  
-> -		cb_hdr->hdr.it_present = cpu_to_le32(
-> -				(1 << IEEE80211_RADIOTAP_RATE) |
-> -				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
-> +		cb_hdr->hdr.it_present =
-> +			cpu_to_le32((1 << IEEE80211_RADIOTAP_RATE) |
-> +				    (1 << IEEE80211_RADIOTAP_TX_FLAGS));
->  
->  		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
->  		cb_hdr->tx_flags = 0x0004;
-> 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 93a1a0c..9d3a662 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -660,30 +660,6 @@ static bool data_ok(struct brcmf_sdio *bus)
+ 	       ((u8)(bus->tx_max - bus->tx_seq) & 0x80) == 0;
+ }
+ 
+-/*
+- * Reads a register in the SDIO hardware block. This block occupies a series of
+- * adresses on the 32 bit backplane bus.
+- */
+-static int r_sdreg32(struct brcmf_sdio *bus, u32 *regvar, u32 offset)
+-{
+-	struct brcmf_core *core = bus->sdio_core;
+-	int ret;
+-
+-	*regvar = brcmf_sdiod_readl(bus->sdiodev, core->base + offset, &ret);
+-
+-	return ret;
+-}
+-
+-static int w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
+-{
+-	struct brcmf_core *core = bus->sdio_core;
+-	int ret;
+-
+-	brcmf_sdiod_writel(bus->sdiodev, core->base + reg_offset, regval, &ret);
+-
+-	return ret;
+-}
+-
+ static int
+ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+ {
+@@ -1078,6 +1054,8 @@ static void brcmf_sdio_get_console_addr(struct brcmf_sdio *bus)
+ 
+ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ {
++	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
++	struct brcmf_core *core = bus->sdio_core;
+ 	u32 intstatus = 0;
+ 	u32 hmb_data;
+ 	u8 fcbits;
+@@ -1086,10 +1064,14 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 
+ 	/* Read mailbox data and ack that we did so */
+-	ret = r_sdreg32(bus, &hmb_data,	SD_REG(tohostmailboxdata));
++	hmb_data = brcmf_sdiod_readl(sdiod,
++				     core->base + SD_REG(tohostmailboxdata),
++				     &ret);
++
++	if (!ret)
++		brcmf_sdiod_writel(sdiod, core->base + SD_REG(tosbmailbox),
++				   SMB_INT_ACK, &ret);
+ 
+-	if (ret == 0)
+-		w_sdreg32(bus, SMB_INT_ACK, SD_REG(tosbmailbox));
+ 	bus->sdcnt.f1regdata += 2;
+ 
+ 	/* dongle indicates the firmware has halted/crashed */
+@@ -1163,6 +1145,8 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 
+ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ {
++	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
++	struct brcmf_core *core = bus->sdio_core;
+ 	uint retries = 0;
+ 	u16 lastrbc;
+ 	u8 hi, lo;
+@@ -1204,7 +1188,8 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 
+ 	if (rtx) {
+ 		bus->sdcnt.rxrtx++;
+-		err = w_sdreg32(bus, SMB_NAK, SD_REG(tosbmailbox));
++		brcmf_sdiod_writel(sdiod, core->base + SD_REG(tosbmailbox),
++				   SMB_NAK, &err);
+ 
+ 		bus->sdcnt.f1regdata++;
+ 		if (err == 0)
+@@ -2291,6 +2276,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ {
+ 	struct sk_buff *pkt;
+ 	struct sk_buff_head pktq;
++	u32 intstat_addr = bus->sdio_core->base + SD_REG(intstatus);
+ 	u32 intstatus = 0;
+ 	int ret = 0, prec_out, i;
+ 	uint cnt = 0;
+@@ -2329,7 +2315,8 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 		if (!bus->intr) {
+ 			/* Check device status, signal pending interrupt */
+ 			sdio_claim_host(bus->sdiodev->func[1]);
+-			ret = r_sdreg32(bus, &intstatus, SD_REG(intstatus));
++			intstatus = brcmf_sdiod_readl(bus->sdiodev,
++						      intstat_addr, &ret);
+ 			sdio_release_host(bus->sdiodev->func[1]);
+ 			bus->sdcnt.f2txdata++;
+ 			if (ret != 0)
+@@ -2413,12 +2400,13 @@ static int brcmf_sdio_tx_ctrlframe(struct brcmf_sdio *bus, u8 *frame, u16 len)
+ 
+ static void brcmf_sdio_bus_stop(struct device *dev)
+ {
+-	u32 local_hostintmask;
+-	u8 saveclk;
+-	int err;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
++	struct brcmf_core *core = bus->sdio_core;
++	u32 local_hostintmask;
++	u8 saveclk;
++	int err;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -2435,7 +2423,9 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		brcmf_sdio_bus_sleep(bus, false, false);
+ 
+ 		/* Disable and clear interrupts at the chip level also */
+-		w_sdreg32(bus, 0, SD_REG(hostintmask));
++		brcmf_sdiod_writel(sdiodev, core->base + SD_REG(hostintmask),
++				   0, NULL);
++
+ 		local_hostintmask = bus->hostintmask;
+ 		bus->hostintmask = 0;
+ 
+@@ -2454,7 +2444,8 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
+ 
+ 		/* Clear any pending interrupts now that F2 is disabled */
+-		w_sdreg32(bus, local_hostintmask, SD_REG(intstatus));
++		brcmf_sdiod_writel(sdiodev, core->base + SD_REG(intstatus),
++				   local_hostintmask, NULL);
+ 
+ 		sdio_release_host(sdiodev->func[1]);
+ 	}
+@@ -2521,7 +2512,9 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 
+ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ {
++	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
+ 	u32 newstatus = 0;
++	u32 intstat_addr = bus->sdio_core->base + SD_REG(intstatus);
+ 	unsigned long intstatus;
+ 	uint txlimit = bus->txbound;	/* Tx frames to send before resched */
+ 	uint framecnt;			/* Temporary counter of tx/rx frames */
+@@ -2576,9 +2569,10 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 	 */
+ 	if (intstatus & I_HMB_FC_CHANGE) {
+ 		intstatus &= ~I_HMB_FC_CHANGE;
+-		err = w_sdreg32(bus, I_HMB_FC_CHANGE, SD_REG(intstatus));
++		brcmf_sdiod_writel(sdiod, intstat_addr, I_HMB_FC_CHANGE, &err);
++
++		newstatus = brcmf_sdiod_readl(sdiod, intstat_addr, &err);
+ 
+-		err = r_sdreg32(bus, &newstatus, SD_REG(intstatus));
+ 		bus->sdcnt.f1regdata += 2;
+ 		atomic_set(&bus->fcstate,
+ 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
+@@ -4017,22 +4011,21 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 					 const struct firmware *code,
+ 					 void *nvram, u32 nvram_len)
+ {
+-	struct brcmf_bus *bus_if;
+-	struct brcmf_sdio_dev *sdiodev;
+-	struct brcmf_sdio *bus;
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio *bus = sdiodev->bus;
++	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
++	struct brcmf_core *core = bus->sdio_core;
+ 	u8 saveclk;
+ 
+ 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
+-	bus_if = dev_get_drvdata(dev);
+-	sdiodev = bus_if->bus_priv.sdio;
++
+ 	if (err)
+ 		goto fail;
+ 
+ 	if (!bus_if->drvr)
+ 		return;
+ 
+-	bus = sdiodev->bus;
+-
+ 	/* try to download image and nvram to the dongle */
+ 	bus->alp_only = true;
+ 	err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
+@@ -4063,8 +4056,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	}
+ 
+ 	/* Enable function 2 (frame transfers) */
+-	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
+-		  SD_REG(tosbmailboxdata));
++	brcmf_sdiod_writel(sdiod, core->base + SD_REG(tosbmailboxdata),
++			   SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT, NULL);
++
+ 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
+ 
+ 
+@@ -4074,7 +4068,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	if (!err) {
+ 		/* Set up the interrupt mask and enable interrupts */
+ 		bus->hostintmask = HOSTINTMASK;
+-		w_sdreg32(bus, bus->hostintmask, SD_REG(hostintmask));
++		brcmf_sdiod_writel(sdiod, core->base + SD_REG(hostintmask),
++				   bus->hostintmask, NULL);
++
+ 
+ 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
+ 	} else {
+-- 
+1.9.1
