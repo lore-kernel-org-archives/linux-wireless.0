@@ -1,93 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50954 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1759272AbdLRMiW (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:42671 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756746AbdLTTvn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 07:38:22 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 14:38:04 +0200
-Message-Id: <20171218123815.3968-1-luca@coelho.fi> (sfid-20171218_133826_697260_3259B1E4)
-Subject: [PATCH 00/11] iwlwifi: updates intended for v4.16 2017-12-18
+        Wed, 20 Dec 2017 14:51:43 -0500
+Received: by mail-pg0-f66.google.com with SMTP id q67so3092573pga.9
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Dec 2017 11:51:43 -0800 (PST)
+From: Amit Pundir <amit.pundir@linaro.org>
+To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Cc: Suren Baghdasaryan <surenb@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        John Stultz <john.stultz@linaro.org>,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        Todd Kjos <tkjos@google.com>,
+        Android Kernel Team <kernel-team@android.com>
+Subject: [RFC][PATCH 3/4] NFC: Fix possible memory corruption when handling SHDLC I-Frame commands
+Date: Thu, 21 Dec 2017 01:21:23 +0530
+Message-Id: <1513799484-12505-4-git-send-email-amit.pundir@linaro.org> (sfid-20171220_205150_085665_9F9A7D25)
+In-Reply-To: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
+References: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Suren Baghdasaryan <surenb@google.com>
 
-Hi,
+When handling SHDLC I-Frame commands "pipe" field used for indexing
+into an array should be checked before usage. If left unchecked it
+might access memory outside of the array of size NFC_HCI_MAX_PIPES(127).
 
-Here's the third batch of patches intended for 4.16.  Nothing major,
-just continued development, some cleanups and small fixes here and
-there.
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+---
+ net/nfc/hci/core.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-* Small cleanups in the new rate-scaling code;
-* Some improvements in debugging;
-* New FW API changes;
-* Fix a bug where we got a false-positive warning;
-* Fix forced quota debugfs functionality;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Emmanuel Grumbach (2):
-  iwlwifi: fw: fix the enums in the rate scaling API
-  iwlwifi: define and use if iwl_mvm_has_tlc_offload
-
-Golan Ben Ami (2):
-  iwlwifi: support internal debug data collection for new devices
-  iwlwifi: avoid duplicate sw reset executions in the code
-
-Mordechay Goodstein (2):
-  iwlwifi: runtime: sync FW and host clocks for logs
-  iwlwifi: add skb address to tx cmd in trace events data
-
-Sara Sharon (2):
-  iwlwifi: mvm: support RX flags API change
-  iwlwifi: mvm: don't warn on multiple packets when opening a queue
-
-Shaul Triebitz (3):
-  iwlwifi: mvm: force quota update upon NoA setting
-  iwlwifi: mvm: adjust to quota offload
-  iwlwifi: mvm: send the low latency command
-
- drivers/net/wireless/intel/iwlwifi/Makefile        |   1 +
- drivers/net/wireless/intel/iwlwifi/fw/api/debug.h  |   4 +-
- .../net/wireless/intel/iwlwifi/fw/api/mac-cfg.h    |  19 ++
- drivers/net/wireless/intel/iwlwifi/fw/api/rs.h     |  34 ++--
- drivers/net/wireless/intel/iwlwifi/fw/debugfs.c    | 195 +++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/debugfs.h    |  87 +++++++++
- drivers/net/wireless/intel/iwlwifi/fw/file.h       |  33 +++-
- drivers/net/wireless/intel/iwlwifi/fw/img.h        |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/init.c       |  13 +-
- drivers/net/wireless/intel/iwlwifi/fw/runtime.h    |  14 +-
- .../wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h  |   7 +-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  99 +++++++++--
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   9 +-
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   6 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/quota.c     |   4 +
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |   5 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   8 +-
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  30 +++-
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   7 -
- .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |   4 +-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  77 +++++---
- 27 files changed, 582 insertions(+), 104 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
- create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
-
+diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
+index ac8030c4bcf8..19cb2e473ea6 100644
+--- a/net/nfc/hci/core.c
++++ b/net/nfc/hci/core.c
+@@ -209,6 +209,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
+ 		}
+ 		create_info = (struct hci_create_pipe_resp *)skb->data;
+ 
++		if (create_info->pipe >= NFC_HCI_MAX_PIPES) {
++			status = NFC_HCI_ANY_E_NOK;
++			goto exit;
++		}
++
+ 		/* Save the new created pipe and bind with local gate,
+ 		 * the description for skb->data[3] is destination gate id
+ 		 * but since we received this cmd from host controller, we
+@@ -232,6 +237,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
+ 		}
+ 		delete_info = (struct hci_delete_pipe_noti *)skb->data;
+ 
++		if (delete_info->pipe >= NFC_HCI_MAX_PIPES) {
++			status = NFC_HCI_ANY_E_NOK;
++			goto exit;
++		}
++
+ 		hdev->pipes[delete_info->pipe].gate = NFC_HCI_INVALID_GATE;
+ 		hdev->pipes[delete_info->pipe].dest_host = NFC_HCI_INVALID_HOST;
+ 		break;
 -- 
-2.15.1
+2.7.4
