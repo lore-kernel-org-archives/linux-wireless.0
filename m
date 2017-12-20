@@ -1,79 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:45774 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751119AbdLaRbv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Dec 2017 12:31:51 -0500
-Received: by mail-lf0-f65.google.com with SMTP id y71so1215342lfd.12
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:50 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v4 18/18] ath10k: add QCA9377 sdio hw_param item
-Date: Sun, 31 Dec 2017 18:29:25 +0100
-Message-Id: <20171231172925.24014-19-erik.stromdahl@gmail.com> (sfid-20171231_183157_147121_41CAD233)
-In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
-References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:41724 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755093AbdLTLAw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Dec 2017 06:00:52 -0500
+Subject: Re: UBSAN: Undefined behaviour in
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c:838:5
+To: Luca Coelho <luca@coelho.fi>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        it+linux-wireless@molgen.mpg.de
+References: <75bc638e-99a8-2f3f-6260-491f8a018af6@molgen.mpg.de>
+ <1513175552.4827.365.camel@intel.com> <1513621815.4827.430.camel@coelho.fi>
+From: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
+Message-ID: <a08aa1b3-9d75-2f38-a0f0-aefe181137da@molgen.mpg.de> (sfid-20171220_120130_394009_703881DC)
+Date: Wed, 20 Dec 2017 12:00:48 +0100
+MIME-Version: 1.0
+In-Reply-To: <1513621815.4827.430.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware parameters for QCA9377 sdio devices.
+Dear Luca,
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 26 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  1 +
- 2 files changed, 27 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index bc22d8c46252..038f58152a83 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -438,6 +438,32 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 	},
-+	{
-+		.id = QCA9377_HW_1_1_DEV_VERSION,
-+		.dev_id = QCA9377_1_0_DEVICE_ID,
-+		.bus = ATH10K_BUS_SDIO,
-+		.name = "qca9377 hw1.1 sdio",
-+		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
-+		.uart_pin = 19,
-+		.otp_exe_param = 0,
-+		.channel_counters_freq_hz = 88000,
-+		.max_probe_resp_desc_thres = 0,
-+		.cal_data_len = 8124,
-+		.fw = {
-+			.dir = QCA9377_HW_1_0_FW_DIR,
-+			.board = QCA9377_HW_1_0_BOARD_DATA_FILE_SDIO,
-+			.board_size = QCA9377_BOARD_DATA_SZ,
-+			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
-+		},
-+		.hw_ops = &qca6174_ops,
-+		.hw_clk = qca6174_clk,
-+		.target_cpu_freq = 176000000,
-+		.decap_align_bytes = 4,
-+		.start_once = true,
-+		.num_peers = TARGET_QCA9377_HL_NUM_PEERS,
-+		.ast_skid_limit = 0x10,
-+		.num_wds_entries = 0x20,
-+	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
- 		.dev_id = 0,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 38cecbe4ddd9..d610b9cff812 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -129,6 +129,7 @@ enum qca9377_chip_id_rev {
- #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
- #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
- #define QCA9377_HW_1_0_BOARD_DATA_FILE_USB "board-usb.bin"
-+#define QCA9377_HW_1_0_BOARD_DATA_FILE_SDIO "board-sdio.bin"
- #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
- 
- /* QCA4019 1.0 definitions */
--- 
-2.15.1
+Am 18.12.2017 um 19:30 schrieb Luca Coelho:
+> On Wed, 2017-12-13 at 16:32 +0200, Luciano Coelho wrote:
+>> On Wed, 2017-12-13 at 14:25 +0100, Paul Menzel wrote:
+
+>>> I enabled the undefined behavior sanitizer, and built Linus’ 
+>>> master branch under Ubuntu 17.10 with gcc (Ubuntu 7.2.0-8ubuntu3)
+>>> 7.2.0.
+>>> 
+>>> ``` $ grep UBSAN /boot/config-4.15.0-rc3+ 
+>>> CONFIG_ARCH_HAS_UBSAN_SANITIZE_ALL=y #
+>>> CONFIG_ARCH_WANTS_UBSAN_NO_NULL is not set CONFIG_UBSAN=y 
+>>> CONFIG_UBSAN_SANITIZE_ALL=y # CONFIG_UBSAN_ALIGNMENT is not set 
+>>> CONFIG_UBSAN_NULL=y ```
+>>> 
+>>> Starting the system the messages below are printed.
+>>> 
+>>> Starting the system and using the wireless device shows the 
+>>> messages below.
+>> 
+>> Thanks for reporting! This shouldn't cause any problems, but I'll
+>> fix it by checking that the mac80211_queue is not INVALID_QUEUE
+>> (255) which seems to be the trigger for this warning.
+> 
+> Can you try the following patch to see if the problem goes away?
+> 
+> http://pastebin.coelho.fi/7b624f474846da52.txt
+
+Thank you. The warning is gone now. Thank you. For the next time, it’d 
+be great to provide the output of `git format-patch -1`, which can be 
+applied with `git am`. The output of `git show` is with my knowledge 
+hard to apply.
+
+
+Kind regards,
+
+Paul
