@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27540 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752481AbdLHMkz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:40:55 -0500
-Message-ID: <1512736850.4827.288.camel@intel.com> (sfid-20171208_134059_625542_24627C1B)
-Subject: Re: [PATCH v2 06/15] iwlwifi: mvm: rs: add ops for the new rate
- scaling in the FW
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>
-Date: Fri, 08 Dec 2017 14:40:50 +0200
-In-Reply-To: <87374ls8bt.fsf@kamboji.qca.qualcomm.com>
-References: <20171202162858.4167-7-luca@coelho.fi>
-         <20171202213603.12512-1-luca@coelho.fi>
-         <87374ls8bt.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wr0-f179.google.com ([209.85.128.179]:40199 "EHLO
+        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755346AbdLTRuA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Dec 2017 12:50:00 -0500
+Received: by mail-wr0-f179.google.com with SMTP id q9so23009278wre.7
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Dec 2017 09:49:59 -0800 (PST)
+Date: Wed, 20 Dec 2017 18:49:56 +0100 (CET)
+From: Enrico Mioso <mrkiko.rs@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+In-Reply-To: <20171219125431.GB2672@redhat.com>
+Message-ID: <alpine.LNX.2.21.99.1712201848250.21776@localhost.localdomain> (sfid-20171220_185003_962051_93987B5B)
+References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain> <20171213152017.GA3554@redhat.com> <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain> <20171218152142.GA15414@redhat.com> <20171219122707.GA2672@redhat.com>
+ <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain> <20171219125431.GB2672@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-12-08 at 14:38 +0200, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > From: Gregory Greenman <gregory.greenman@intel.com>
-> > 
-> > This patch introduces a new instance of rate_control_ops for
-> > the new API (adding only empty stubs here and the subsequent
-> > patches in the series will fill in the implementation).
-> > The decision which API to use is done during the register
-> > step according to FW TLV.
-> > 
-> > Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> 
-> [...]
-> 
-> > +void iwl_mvm_rs_add_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta
-> > *mvmsta)
-> > +{
-> > +	struct iwl_lq_sta_rs_fw *lq_sta = &mvmsta->lq_sta.rs_fw;
-> > +
-> > +	IWL_DEBUG_RATE(mvm, "create station rate scale window\n");
-> > +
-> > +	lq_sta->pers.drv = mvm;
-> > +	lq_sta->pers.sta_id = mvmsta->sta_id;
-> > +	lq_sta->pers.chains = 0;
-> > +	memset(lq_sta->pers.chain_signal, 0, sizeof(lq_sta-
-> > >pers.chain_signal));
-> > +	lq_sta->pers.last_rssi = S8_MIN;
-> > +	lq_sta->last_rate_n_flags = 0;
-> > +
-> > +#ifdef CPTCFG_MAC80211_DEBUGFS
-> > +	lq_sta->pers.dbg_fixed_rate = 0;
-> > +#endif
-> > +}
-> 
-> CPTCFG_ doesn't look right. But no need to resend just because of
-> this,
-> you can send a followup patch.
+Hello.
+First of all, thank you for your patience and work.
+Sorry if I am slow in testing, I am in a little bit of a complicated situation, and this is one of the reasons for why I am slow.
+With the two patches you sent me (thanks!), and removing the mmio workaround patch, I was not able to reproduce the errors. I plan to send you a precise response as soon as I am able to.
+thank you
 
-Gack, how come I let this go through? My (actually Emmanuel's ;)
-checker script should catch this.  Maybe I forgot to run it on v2?
-Sorry, dude!
+On Tue, 19 Dec 2017, Stanislaw Gruszka wrote:
 
---
-Luca.
+> Date: Tue, 19 Dec 2017 13:54:32
+> From: Stanislaw Gruszka <sgruszka@redhat.com>
+> To: Enrico Mioso <mrkiko.rs@gmail.com>
+> Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
+>     Daniel Golle <daniel@makrotopia.org>, Arnd Bergmann <arnd@arndb.de>,
+>     John Crispin <john@phrozen.org>, nbd@nbd.name
+> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+>     frame due to full tx queue...?
+> 
+> On Tue, Dec 19, 2017 at 01:43:11PM +0100, Enrico Mioso wrote:
+>> I am going to test this on a LEDE build.
+>> Should I leave the mmio workaround patch applied as per OpenWRT default, or should I leave it off ?
+>> I'll leave it off by default.
+>
+> Please remove it. If things would work then retest with it and see if
+> if things still work.
+>
+> Thanks
+> Stanislaw
+>
