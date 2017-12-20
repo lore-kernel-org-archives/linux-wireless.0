@@ -1,27 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nsmtp.uni-koblenz.de ([141.26.64.14]:43051 "EHLO
-        nsmtp.uni-koblenz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752367AbdLKNvg (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51392 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754985AbdLTLoi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 08:51:36 -0500
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-From: =?UTF-8?Q?Richard_Sch=c3=bctz?= <rschuetz@uni-koblenz.de>
-Subject: 76f43b4 fix for stable
-Message-ID: <c0a512a7-e615-bbab-5c88-4a85946fefb5@uni-koblenz.de> (sfid-20171211_145144_843553_B9CBDEA2)
-Date: Mon, 11 Dec 2017 14:51:33 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 20 Dec 2017 06:44:38 -0500
+Message-ID: <1513770274.4827.482.camel@coelho.fi> (sfid-20171220_124443_106759_DC55C089)
+From: Luca Coelho <luca@coelho.fi>
+To: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>,
+        sara.sharon@intel.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        it+linux-wireless@molgen.mpg.de,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>
+Date: Wed, 20 Dec 2017 13:44:34 +0200
+In-Reply-To: <a08aa1b3-9d75-2f38-a0f0-aefe181137da@molgen.mpg.de>
+References: <75bc638e-99a8-2f3f-6260-491f8a018af6@molgen.mpg.de>
+         <1513175552.4827.365.camel@intel.com> <1513621815.4827.430.camel@coelho.fi>
+         <a08aa1b3-9d75-2f38-a0f0-aefe181137da@molgen.mpg.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: UBSAN: Undefined behaviour in
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c:838:5
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, 2017-12-20 at 12:00 +0100, Paul Menzel wrote:
+> Dear Luca,
+> 
+> 
+> Am 18.12.2017 um 19:30 schrieb Luca Coelho:
+> > On Wed, 2017-12-13 at 16:32 +0200, Luciano Coelho wrote:
+> > > On Wed, 2017-12-13 at 14:25 +0100, Paul Menzel wrote:
+> > > > I enabled the undefined behavior sanitizer, and built Linus’ 
+> > > > master branch under Ubuntu 17.10 with gcc (Ubuntu 7.2.0-
+> > > > 8ubuntu3)
+> > > > 7.2.0.
+> > > > 
+> > > > ``` $ grep UBSAN /boot/config-4.15.0-rc3+ 
+> > > > CONFIG_ARCH_HAS_UBSAN_SANITIZE_ALL=y #
+> > > > CONFIG_ARCH_WANTS_UBSAN_NO_NULL is not set CONFIG_UBSAN=y 
+> > > > CONFIG_UBSAN_SANITIZE_ALL=y # CONFIG_UBSAN_ALIGNMENT is not
+> > > > set 
+> > > > CONFIG_UBSAN_NULL=y ```
+> > > > 
+> > > > Starting the system the messages below are printed.
+> > > > 
+> > > > Starting the system and using the wireless device shows the 
+> > > > messages below.
+> > > 
+> > > Thanks for reporting! This shouldn't cause any problems, but I'll
+> > > fix it by checking that the mac80211_queue is not INVALID_QUEUE
+> > > (255) which seems to be the trigger for this warning.
+> > 
+> > Can you try the following patch to see if the problem goes away?
+> > 
+> > http://pastebin.coelho.fi/7b624f474846da52.txt
+> 
+> Thank you. The warning is gone now. Thank you.
 
-as per netdev-FAQ.txt I'm requesting the submission of commit 
-57629915d568c522ac1422df7bba4bee5b5c7a7c ("mac80211: Fix addition of 
-mesh configuration element") to stable. Because of automatic selection 
-commit 76f43b4c0a9337af22827d78de4f2b8fd5328489 ("mac80211: Remove 
-invalid flag operations in mesh TSF synchronization") was introduced 
-into stable recently without this accompanying fix.
+Thanks for testing! We are actually improving the fix a bit, because it
+seems that we should not have gotten INVALID_QUEUE there.  We will have
+a two-fold fix (Sari, whom I CCed, is working on the other patch).
 
--- 
-Richard
+
+>  For the next time, it’d 
+> be great to provide the output of `git format-patch -1`, which can
+> be 
+> applied with `git am`. The output of `git show` is with my knowledge 
+> hard to apply.
+
+Ah, sorry about that.  I didn't want to send a full patch here so that
+it wouldn't get picked up by patchworks, so I just pastebinned it.
+
+--
+Luca.
