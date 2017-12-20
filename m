@@ -1,92 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49590 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752468AbdLHM21 (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35636 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756207AbdLTTvf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:28:27 -0500
-Message-ID: <1512736104.4827.283.camel@coelho.fi> (sfid-20171208_132831_520568_399BEF70)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
-Date: Fri, 08 Dec 2017 14:28:24 +0200
-In-Reply-To: <87efo5s93p.fsf@kamboji.qca.qualcomm.com>
-References: <20171125153510.25359-1-luca@coelho.fi>
-         <20171125153510.25359-7-luca@coelho.fi>
-         <87mv351iys.fsf@kamboji.qca.qualcomm.com>
-         <1511951353.4827.27.camel@coelho.fi>
-         <87efo5s93p.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 6/6] iwlwifi: fix access to prph when transport is
- stopped
+        Wed, 20 Dec 2017 14:51:35 -0500
+Received: by mail-pf0-f194.google.com with SMTP id j124so12995288pfc.2
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Dec 2017 11:51:35 -0800 (PST)
+From: Amit Pundir <amit.pundir@linaro.org>
+To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Cc: Suren Baghdasaryan <surenb@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        John Stultz <john.stultz@linaro.org>,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        Todd Kjos <tkjos@google.com>,
+        Android Kernel Team <kernel-team@android.com>
+Subject: [RFC][PATCH 1/4] NFC: st21nfca: Fix out of bounds kernel access when handling ATR_REQ
+Date: Thu, 21 Dec 2017 01:21:21 +0530
+Message-Id: <1513799484-12505-2-git-send-email-amit.pundir@linaro.org> (sfid-20171220_205252_079771_E58F3904)
+In-Reply-To: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
+References: <1513799484-12505-1-git-send-email-amit.pundir@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-12-08 at 14:22 +0200, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > On Wed, 2017-11-29 at 12:23 +0200, Kalle Valo wrote:
-> > 
-> > > But no wonder I called gnus-article-fill-cited-article, the
-> > > commit
-> > > log is just weirdly wrapped. Are you using outlook or how do you
-> > > get
-> > > it so ugly? :)
-> > 
-> > Heh! I don't think it's wrapped weirdly, it's just that the
-> > paragraphs
-> > don't have spaces between them, right? ;)
-> 
-> Sorry, don't get what you mean with missing spaces. To me (and
-> patchwork[1] and git[2] seem to agree) the word wrapping is just
-> broken
-> for this commit log, and I have seen it also with other iwlwifi
-> commits.
-> For example, there are just two words in the second line "two paths."
+From: Suren Baghdasaryan <surenb@google.com>
 
-That depends on how many characters per line you want to include.  "two
-paths." is the last part of the first paragraph, I guess Sari's editor
-is wrapping somewhere at <70 chars per line.
+Out of bounds kernel accesses in st21nfca's NFC HCI layer
+might happen when handling ATR_REQ events if user-specified
+atr_req->length is bigger than the buffer size. In
+that case memcpy() inside st21nfca_tm_send_atr_res() will
+read extra bytes resulting in OOB read from the kernel heap.
 
-Then that is accentuated a bit by the lack of an empty line between
-paragraphs.  But with those lines added, besides being a bit narrow, it
-would look quite clear:
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+---
+ drivers/nfc/st21nfca/dep.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
------8<-----
-When getting HW rfkill we get stop_device being called from
-two paths.
-
-One path is the IRQ calling stop device, and updating op
-mode and stack.
-
-As a result, cfg80211 is running rfkill sync work that shuts
-down all devices (second path).
-
-In the second path, we eventually get to iwl_mvm_stop_device
-which calls iwl_fw_dump_conf_clear->iwl_fw_dbg_stop_recording,
-that access periphery registers.
-
-The device may be stopped at this point from the first path,
-which will result with a failure to access those registers.
-
-Simply checking for the trans status is insufficient, since
-the race will still exist, only minimized.
-
-Instead, move the stop from iwl_fw_dump_conf_clear (which is
-getting called only from stop path) to the transport stop
-device function, where the access is always safe.
-
-This has the added value, of actually stopping dbgc before
-stopping device even when the stop is initiated from the
-transport.
------>8-----
-
-Does it make sense?
-
-I've already told Sari about your preference and I'll make sure the
-next patches will look cleaner.  I can fix this patch if you want, but
-is it worth remaking my pull-request just for this?
-
---
-Cheers,
-Luca.
+diff --git a/drivers/nfc/st21nfca/dep.c b/drivers/nfc/st21nfca/dep.c
+index fd08be2917e6..3420c5104c94 100644
+--- a/drivers/nfc/st21nfca/dep.c
++++ b/drivers/nfc/st21nfca/dep.c
+@@ -217,7 +217,8 @@ static int st21nfca_tm_recv_atr_req(struct nfc_hci_dev *hdev,
+ 
+ 	atr_req = (struct st21nfca_atr_req *)skb->data;
+ 
+-	if (atr_req->length < sizeof(struct st21nfca_atr_req)) {
++	if (atr_req->length < sizeof(struct st21nfca_atr_req) ||
++	    atr_req->length > skb->len) {
+ 		r = -EPROTO;
+ 		goto exit;
+ 	}
+-- 
+2.7.4
