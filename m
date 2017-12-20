@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:34951 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751123AbdLIRhR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50544 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754664AbdLTPuB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Dec 2017 12:37:17 -0500
-Received: by mail-ot0-f194.google.com with SMTP id q3so11620007oth.2
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Dec 2017 09:37:16 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 1/3] rtlwifi: rtl_pci: 8822BE puts broadcast and multicast packet to HIQ
-Date: Sat,  9 Dec 2017 11:37:08 -0600
-Message-Id: <20171209173710.9879-2-Larry.Finger@lwfinger.net> (sfid-20171209_183721_943049_EEF3ECB9)
-In-Reply-To: <20171209173710.9879-1-Larry.Finger@lwfinger.net>
-References: <20171209173710.9879-1-Larry.Finger@lwfinger.net>
+        Wed, 20 Dec 2017 10:50:01 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH 07/11] iwlwifi: add skb address to tx cmd in trace events data
+References: <20171218123815.3968-1-luca@coelho.fi>
+        <20171218123815.3968-8-luca@coelho.fi>
+Date: Wed, 20 Dec 2017 17:49:56 +0200
+In-Reply-To: <20171218123815.3968-8-luca@coelho.fi> (Luca Coelho's message of
+        "Mon, 18 Dec 2017 14:38:11 +0200")
+Message-ID: <878tdxh00r.fsf@kamboji.qca.qualcomm.com> (sfid-20171220_165006_872106_DC02C289)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Luca Coelho <luca@coelho.fi> writes:
 
-Making this change to HIQ, which has high priority, improves the response
-time for transmission after TBTT or beacon.
+> From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+>
+> This helps matching tx cmd with other trace events, like net_dev_xmit
+> and net_dev_queue etc.
+>
+> Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/pci.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+[...]
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index 3e9eb11a38f9..8ae36a263426 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -59,6 +59,7 @@ static u8 _rtl_mac_to_hwqueue(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 	__le16 fc = rtl_get_fc(skb);
- 	u8 queue_index = skb_get_queue_mapping(skb);
-+	struct ieee80211_hdr *hdr;
- 
- 	if (unlikely(ieee80211_is_beacon(fc)))
- 		return BEACON_QUEUE;
-@@ -67,6 +68,13 @@ static u8 _rtl_mac_to_hwqueue(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
- 		if (ieee80211_is_nullfunc(fc))
- 			return HIGH_QUEUE;
-+	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8822BE) {
-+		hdr = rtl_get_hdr(skb);
-+
-+		if (is_multicast_ether_addr(hdr->addr1) ||
-+		    is_broadcast_ether_addr(hdr->addr1))
-+			return HIGH_QUEUE;
-+	}
- 
- 	return ac_to_hwq[queue_index];
- }
+> @@ -120,9 +121,9 @@ TRACE_EVENT(iwlwifi_dev_tx,
+>  				      __get_dynamic_array(buf1),
+>  				      skb->len - hdr_len);
+>  	),
+> -	TP_printk("[%s] TX %.2x (%zu bytes)",
+> +	TP_printk("[%s] TX %.2x (%zu bytes) skbaddr=%p",
+>  		  __get_str(dev), ((u8 *)__get_dynamic_array(buf0))[0],
+> -		  __entry->framelen)
+> +		  __entry->framelen, __entry->skbaddr)
+>  );
+
+Just so that you know there has been a lot of changes recently about %p,
+I think the addresses are nowadays hashed due to security reasons. No
+idea if it afffects tracing events, but just wanted to point out this.
+
 -- 
-2.15.1
+Kalle Valo
