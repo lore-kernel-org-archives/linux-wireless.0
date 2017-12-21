@@ -1,42 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35543 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751630AbdLDUxK (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:20880 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751318AbdLUJCE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Dec 2017 15:53:10 -0500
-Received: by mail-wm0-f66.google.com with SMTP id f9so16783765wmh.0
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Dec 2017 12:53:09 -0800 (PST)
-From: Jelle van der Waa <jelle@vdwaa.nl>
-To: "Luis R . Rodriguez" <mcgrof@kernel.org>
-Cc: linux-wireless@vger.kernel.org, Jelle van der Waa <jelle@vdwaa.nl>
-Subject: [PATCH] =?UTF-8?q?crda:=20Fix=20error:=20`keys=E2=80=99=20defined?= =?UTF-8?q?=20but=20not=20used?=
-Date: Mon,  4 Dec 2017 21:52:39 +0100
-Message-Id: <20171204205239.6296-1-jelle@vdwaa.nl> (sfid-20171204_215313_579493_97A40BB1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Thu, 21 Dec 2017 04:02:04 -0500
+From: Govind Singh <govinds@qti.qualcomm.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@qti.qualcomm.com>
+Subject: [PATCH 04/10] ath10k: Add support for 64 bit htt rx ring cfg
+Date: Thu, 21 Dec 2017 14:30:53 +0530
+Message-Id: <1513846859-23639-5-git-send-email-govinds@qti.qualcomm.com> (sfid-20171221_100217_068724_F39164C7)
+In-Reply-To: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
+References: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix error: ‘keys’ defined but not used [-Werror=unused-const-variable=]
-by informing GCC keys is unused.
+WCN3900 target uses 64bit rx_ring_base_paddr and
+fw_idx_shadow_reg_paddr fields in HTT rx ring cfg message.
+These address points to the memory region where remote
+ring empty buffers are allocated.
+In order to add 64 bit htt rx ring cfg, define separate
+64 bit htt rx ring cfg message and attach it in runtime
+based on target_64bit hw param flag.
 
-Signed-off-by: Jelle van der Waa <jelle@vdwaa.nl>
+Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
 ---
- utils/key2pub.py | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htt.c    |   4 +-
+ drivers/net/wireless/ath/ath10k/htt.h    |  42 +++++++--
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 145 +++++++++++++++++++++++++++----
+ 3 files changed, 168 insertions(+), 23 deletions(-)
 
-diff --git a/utils/key2pub.py b/utils/key2pub.py
-index 3e84cd2..9bb04cd 100755
---- a/utils/key2pub.py
-+++ b/utils/key2pub.py
-@@ -115,7 +115,7 @@ struct key_params {
- 	.n = _n, .len_n = sizeof(_n),	\
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index cd160b1..7176b0a 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -207,6 +207,8 @@ int ath10k_htt_init(struct ath10k *ar)
+ 		WARN_ON(1);
+ 		return -EINVAL;
+ 	}
++	ath10k_htt_set_tx_ops(htt);
++
+ 	return 0;
  }
  
--static const struct key_params keys[] = {
-+static const struct key_params __attribute__ ((unused)) keys[] = {
- ''')
-     for n in xrange(n + 1):
-         output.write('	KEYS(e_%d, n_%d),\n' % (n, n))
+@@ -258,7 +260,7 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+ 	if (status)
+ 		return status;
+ 
+-	status = ath10k_htt_send_rx_ring_cfg_ll(htt);
++	status = htt->tx_ops->htt_send_rx_ring_cfg(htt);
+ 	if (status) {
+ 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
+ 			    status);
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index f3d5883..6aaf1d4 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -201,7 +201,7 @@ enum htt_rx_ring_flags {
+ #define HTT_RX_RING_SIZE_MIN 128
+ #define HTT_RX_RING_SIZE_MAX 2048
+ 
+-struct htt_rx_ring_setup_ring {
++struct htt_rx_ring_setup_ring32 {
+ 	__le32 fw_idx_shadow_reg_paddr;
+ 	__le32 rx_ring_base_paddr;
+ 	__le16 rx_ring_len; /* in 4-byte words */
+@@ -222,14 +222,40 @@ struct htt_rx_ring_setup_ring {
+ 	__le16 frag_info_offset;
+ } __packed;
+ 
++struct htt_rx_ring_setup_ring64 {
++	__le64 fw_idx_shadow_reg_paddr;
++	__le64 rx_ring_base_paddr;
++	__le16 rx_ring_len; /* in 4-byte words */
++	__le16 rx_ring_bufsize; /* rx skb size - in bytes */
++	__le16 flags; /* %HTT_RX_RING_FLAGS_ */
++	__le16 fw_idx_init_val;
++
++	/* the following offsets are in 4-byte units */
++	__le16 mac80211_hdr_offset;
++	__le16 msdu_payload_offset;
++	__le16 ppdu_start_offset;
++	__le16 ppdu_end_offset;
++	__le16 mpdu_start_offset;
++	__le16 mpdu_end_offset;
++	__le16 msdu_start_offset;
++	__le16 msdu_end_offset;
++	__le16 rx_attention_offset;
++	__le16 frag_info_offset;
++} __packed;
++
+ struct htt_rx_ring_setup_hdr {
+ 	u8 num_rings; /* supported values: 1, 2 */
+ 	__le16 rsvd0;
+ } __packed;
+ 
+-struct htt_rx_ring_setup {
++struct htt_rx_ring_setup_32 {
+ 	struct htt_rx_ring_setup_hdr hdr;
+-	struct htt_rx_ring_setup_ring rings[0];
++	struct htt_rx_ring_setup_ring32 rings[0];
++} __packed;
++
++struct htt_rx_ring_setup_64 {
++	struct htt_rx_ring_setup_hdr hdr;
++	struct htt_rx_ring_setup_ring64 rings[0];
+ } __packed;
+ 
+ /*
+@@ -1524,7 +1550,8 @@ struct htt_cmd {
+ 		struct htt_ver_req ver_req;
+ 		struct htt_mgmt_tx_desc mgmt_tx;
+ 		struct htt_data_tx_desc data_tx;
+-		struct htt_rx_ring_setup rx_setup;
++		struct htt_rx_ring_setup_32 rx_setup_32;
++		struct htt_rx_ring_setup_64 rx_setup_64;
+ 		struct htt_stats_req stats_req;
+ 		struct htt_oob_sync_req oob_sync_req;
+ 		struct htt_aggr_conf aggr_conf;
+@@ -1734,6 +1761,11 @@ struct ath10k_htt {
+ 	} tx_q_state;
+ 
+ 	bool tx_mem_allocated;
++	const struct ath10k_htt_tx_ops *tx_ops;
++};
++
++struct ath10k_htt_tx_ops {
++	int (*htt_send_rx_ring_cfg)(struct ath10k_htt *htt);
+ };
+ 
+ #define RX_HTT_HDR_STATUS_LEN 64
+@@ -1845,5 +1877,5 @@ int ath10k_htt_tx(struct ath10k_htt *htt,
+ void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
+ 					     struct sk_buff *skb);
+ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget);
+-
++void ath10k_htt_set_tx_ops(struct ath10k_htt *htt);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 685faac..fad1664 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -607,12 +607,50 @@ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
+ 	return 0;
+ }
+ 
+-int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
++static void ath10k_htt_fill_rx_desc_offset_32(void *rx_ring)
++{
++	struct htt_rx_ring_setup_ring32 *ring =
++			(struct htt_rx_ring_setup_ring32 *)rx_ring;
++
++#define desc_offset(x) (offsetof(struct htt_rx_desc, x) / 4)
++	ring->mac80211_hdr_offset = __cpu_to_le16(desc_offset(rx_hdr_status));
++	ring->msdu_payload_offset = __cpu_to_le16(desc_offset(msdu_payload));
++	ring->ppdu_start_offset = __cpu_to_le16(desc_offset(ppdu_start));
++	ring->ppdu_end_offset = __cpu_to_le16(desc_offset(ppdu_end));
++	ring->mpdu_start_offset = __cpu_to_le16(desc_offset(mpdu_start));
++	ring->mpdu_end_offset = __cpu_to_le16(desc_offset(mpdu_end));
++	ring->msdu_start_offset = __cpu_to_le16(desc_offset(msdu_start));
++	ring->msdu_end_offset = __cpu_to_le16(desc_offset(msdu_end));
++	ring->rx_attention_offset = __cpu_to_le16(desc_offset(attention));
++	ring->frag_info_offset = __cpu_to_le16(desc_offset(frag_info));
++#undef desc_offset
++}
++
++static void ath10k_htt_fill_rx_desc_offset_64(void *rx_ring)
++{
++	struct htt_rx_ring_setup_ring64 *ring =
++			(struct htt_rx_ring_setup_ring64 *)rx_ring;
++
++#define desc_offset(x) (offsetof(struct htt_rx_desc, x) / 4)
++	ring->mac80211_hdr_offset = __cpu_to_le16(desc_offset(rx_hdr_status));
++	ring->msdu_payload_offset = __cpu_to_le16(desc_offset(msdu_payload));
++	ring->ppdu_start_offset = __cpu_to_le16(desc_offset(ppdu_start));
++	ring->ppdu_end_offset = __cpu_to_le16(desc_offset(ppdu_end));
++	ring->mpdu_start_offset = __cpu_to_le16(desc_offset(mpdu_start));
++	ring->mpdu_end_offset = __cpu_to_le16(desc_offset(mpdu_end));
++	ring->msdu_start_offset = __cpu_to_le16(desc_offset(msdu_start));
++	ring->msdu_end_offset = __cpu_to_le16(desc_offset(msdu_end));
++	ring->rx_attention_offset = __cpu_to_le16(desc_offset(attention));
++	ring->frag_info_offset = __cpu_to_le16(desc_offset(frag_info));
++#undef desc_offset
++}
++
++static int ath10k_htt_send_rx_ring_cfg_32(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
+ 	struct sk_buff *skb;
+ 	struct htt_cmd *cmd;
+-	struct htt_rx_ring_setup_ring *ring;
++	struct htt_rx_ring_setup_ring32 *ring;
+ 	const int num_rx_ring = 1;
+ 	u16 flags;
+ 	u32 fw_idx;
+@@ -626,7 +664,7 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
+ 	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
+ 	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
+ 
+-	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup.hdr)
++	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup_32.hdr)
+ 	    + (sizeof(*ring) * num_rx_ring);
+ 	skb = ath10k_htc_alloc_skb(ar, len);
+ 	if (!skb)
+@@ -635,10 +673,10 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
+ 	skb_put(skb, len);
+ 
+ 	cmd = (struct htt_cmd *)skb->data;
+-	ring = &cmd->rx_setup.rings[0];
++	ring = &cmd->rx_setup_32.rings[0];
+ 
+ 	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
+-	cmd->rx_setup.hdr.num_rings = 1;
++	cmd->rx_setup_32.hdr.num_rings = 1;
+ 
+ 	/* FIXME: do we need all of this? */
+ 	flags = 0;
+@@ -669,21 +707,76 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
+ 	ring->flags = __cpu_to_le16(flags);
+ 	ring->fw_idx_init_val = __cpu_to_le16(fw_idx);
+ 
+-#define desc_offset(x) (offsetof(struct htt_rx_desc, x) / 4)
++	ath10k_htt_fill_rx_desc_offset_32(ring);
++	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
++	if (ret) {
++		dev_kfree_skb_any(skb);
++		return ret;
++	}
+ 
+-	ring->mac80211_hdr_offset = __cpu_to_le16(desc_offset(rx_hdr_status));
+-	ring->msdu_payload_offset = __cpu_to_le16(desc_offset(msdu_payload));
+-	ring->ppdu_start_offset = __cpu_to_le16(desc_offset(ppdu_start));
+-	ring->ppdu_end_offset = __cpu_to_le16(desc_offset(ppdu_end));
+-	ring->mpdu_start_offset = __cpu_to_le16(desc_offset(mpdu_start));
+-	ring->mpdu_end_offset = __cpu_to_le16(desc_offset(mpdu_end));
+-	ring->msdu_start_offset = __cpu_to_le16(desc_offset(msdu_start));
+-	ring->msdu_end_offset = __cpu_to_le16(desc_offset(msdu_end));
+-	ring->rx_attention_offset = __cpu_to_le16(desc_offset(attention));
+-	ring->frag_info_offset = __cpu_to_le16(desc_offset(frag_info));
++	return 0;
++}
+ 
+-#undef desc_offset
++static int ath10k_htt_send_rx_ring_cfg_64(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	struct sk_buff *skb;
++	struct htt_cmd *cmd;
++	struct htt_rx_ring_setup_ring64 *ring;
++	const int num_rx_ring = 1;
++	u16 flags;
++	u32 fw_idx;
++	int len;
++	int ret;
++
++	/* HW expects the buffer to be an integral number of 4-byte
++	 * "words"
++	 */
++	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
++	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
++
++	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup_64.hdr)
++	    + (sizeof(*ring) * num_rx_ring);
++	skb = ath10k_htc_alloc_skb(ar, len);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_put(skb, len);
++
++	cmd = (struct htt_cmd *)skb->data;
++	ring = &cmd->rx_setup_64.rings[0];
++
++	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
++	cmd->rx_setup_64.hdr.num_rings = 1;
++
++	flags = 0;
++	flags |= HTT_RX_RING_FLAGS_MAC80211_HDR;
++	flags |= HTT_RX_RING_FLAGS_MSDU_PAYLOAD;
++	flags |= HTT_RX_RING_FLAGS_PPDU_START;
++	flags |= HTT_RX_RING_FLAGS_PPDU_END;
++	flags |= HTT_RX_RING_FLAGS_MPDU_START;
++	flags |= HTT_RX_RING_FLAGS_MPDU_END;
++	flags |= HTT_RX_RING_FLAGS_MSDU_START;
++	flags |= HTT_RX_RING_FLAGS_MSDU_END;
++	flags |= HTT_RX_RING_FLAGS_RX_ATTENTION;
++	flags |= HTT_RX_RING_FLAGS_FRAG_INFO;
++	flags |= HTT_RX_RING_FLAGS_UNICAST_RX;
++	flags |= HTT_RX_RING_FLAGS_MULTICAST_RX;
++	flags |= HTT_RX_RING_FLAGS_CTRL_RX;
++	flags |= HTT_RX_RING_FLAGS_MGMT_RX;
++	flags |= HTT_RX_RING_FLAGS_NULL_RX;
++	flags |= HTT_RX_RING_FLAGS_PHY_DATA_RX;
++
++	fw_idx = __le32_to_cpu(*htt->rx_ring.alloc_idx.vaddr);
+ 
++	ring->fw_idx_shadow_reg_paddr = __cpu_to_le64(htt->rx_ring.alloc_idx.paddr);
++	ring->rx_ring_base_paddr = __cpu_to_le64(htt->rx_ring.base_paddr);
++	ring->rx_ring_len = __cpu_to_le16(htt->rx_ring.size);
++	ring->rx_ring_bufsize = __cpu_to_le16(HTT_RX_BUF_SIZE);
++	ring->flags = __cpu_to_le16(flags);
++	ring->fw_idx_init_val = __cpu_to_le16(fw_idx);
++
++	ath10k_htt_fill_rx_desc_offset_64(ring);
+ 	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
+ 	if (ret) {
+ 		dev_kfree_skb_any(skb);
+@@ -1093,3 +1186,21 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ err:
+ 	return res;
+ }
++
++static const struct ath10k_htt_tx_ops htt_tx_ops_32 = {
++	.htt_send_rx_ring_cfg = ath10k_htt_send_rx_ring_cfg_32,
++};
++
++static const struct ath10k_htt_tx_ops htt_tx_ops_64 = {
++	.htt_send_rx_ring_cfg = ath10k_htt_send_rx_ring_cfg_64,
++};
++
++void ath10k_htt_set_tx_ops(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++
++	if (ar->hw_params.target_64bit)
++		htt->tx_ops = &htt_tx_ops_64;
++	else
++		htt->tx_ops = &htt_tx_ops_32;
++}
 -- 
-2.15.1
+1.9.1
