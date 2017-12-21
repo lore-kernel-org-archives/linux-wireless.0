@@ -1,106 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:64306 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751678AbdLKOX0 (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:54659 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753225AbdLUKnN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 09:23:26 -0500
-From: Rakesh Pillai <pillair@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@qti.qualcomm.com>,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH v3 4/4] ath10k: WMI: add hw params entry for wcn3990
-Date: Mon, 11 Dec 2017 19:52:55 +0530
-Message-Id: <1513002175-2498-5-git-send-email-pillair@qti.qualcomm.com> (sfid-20171211_152337_432428_956E6F9D)
-In-Reply-To: <1513002175-2498-1-git-send-email-pillair@qti.qualcomm.com>
-References: <1513002175-2498-1-git-send-email-pillair@qti.qualcomm.com>
+        Thu, 21 Dec 2017 05:43:13 -0500
+From: Anna-Maria Gleixner <anna-maria@linutronix.de>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
+        Christoph Hellwig <hch@lst.de>,
+        John Stultz <john.stultz@linaro.org>,
+        Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v4 31/36] mac80211_hwsim: Replace hrtimer tasklet with softirq hrtimer
+Date: Thu, 21 Dec 2017 11:42:00 +0100
+Message-Id: <20171221104205.7269-32-anna-maria@linutronix.de> (sfid-20171221_114704_542421_13316299)
+In-Reply-To: <20171221104205.7269-1-anna-maria@linutronix.de>
+References: <20171221104205.7269-1-anna-maria@linutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add hw params entry for wcn3990 and populate various
-target specific values for wcn3990.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
+callback in softirq context and remove the hrtimer_tasklet.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 18 ++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.c   |  2 ++
- drivers/net/wireless/ath/ath10k/hw.h   | 10 ++++++++++
- 3 files changed, 30 insertions(+)
+ drivers/net/wireless/mac80211_hwsim.c | 44 ++++++++++++++++-------------------
+ 1 file changed, 20 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index be189132623d..6abffb530027 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -405,6 +405,24 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 	},
-+	{
-+		.id = WCN3990_HW_1_0_DEV_VERSION,
-+		.dev_id = 0,
-+		.name = "wcn3990 hw1.0",
-+		.continuous_frag_desc = true,
-+		.tx_chain_mask = 0x7,
-+		.rx_chain_mask = 0x7,
-+		.max_spatial_stream = 4,
-+		.fw = {
-+			.dir = WCN3990_HW_1_0_FW_DIR,
-+		},
-+		.sw_decrypt_mcast_mgmt = true,
-+		.hw_ops = &wcn3990_ops,
-+		.decap_align_bytes = 1,
-+		.num_peers = TARGET_HL_10_TLV_NUM_PEERS,
-+		.ast_skid_limit = TARGET_HL_10_TLV_AST_SKID_LIMIT,
-+		.num_wds_entries = TARGET_HL_10_TLV_NUM_WDS_ENTRIES,
-+	},
- };
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 10b075a46b26..d3f1861398a7 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -537,7 +537,7 @@ struct mac80211_hwsim_data {
+ 	unsigned int rx_filter;
+ 	bool started, idle, scanning;
+ 	struct mutex mutex;
+-	struct tasklet_hrtimer beacon_timer;
++	struct hrtimer beacon_timer;
+ 	enum ps_mode {
+ 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
+ 	} ps;
+@@ -1418,7 +1418,7 @@ static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
+ {
+ 	struct mac80211_hwsim_data *data = hw->priv;
+ 	data->started = false;
+-	tasklet_hrtimer_cancel(&data->beacon_timer);
++	hrtimer_cancel(&data->beacon_timer);
+ 	wiphy_dbg(hw->wiphy, "%s\n", __func__);
+ }
  
- static const char *const ath10k_core_fw_feature_str[] = {
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index 88955bbe20bd..c31eea632777 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -931,3 +931,5 @@ const struct ath10k_hw_ops qca6174_ops = {
- 	.set_coverage_class = ath10k_hw_qca988x_set_coverage_class,
- 	.enable_pll_clk = ath10k_hw_qca6174_enable_pll_clock,
- };
-+
-+const struct ath10k_hw_ops wcn3990_ops = {};
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index fedb6c799374..90ad39bdeec4 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -128,6 +128,10 @@ enum qca9377_chip_id_rev {
- #define QCA4019_HW_1_0_BOARD_DATA_FILE "board.bin"
- #define QCA4019_HW_1_0_PATCH_LOAD_ADDR  0x1234
+@@ -1541,14 +1541,12 @@ static enum hrtimer_restart
+ mac80211_hwsim_beacon(struct hrtimer *timer)
+ {
+ 	struct mac80211_hwsim_data *data =
+-		container_of(timer, struct mac80211_hwsim_data,
+-			     beacon_timer.timer);
++		container_of(timer, struct mac80211_hwsim_data, beacon_timer);
+ 	struct ieee80211_hw *hw = data->hw;
+ 	u64 bcn_int = data->beacon_int;
+-	ktime_t next_bcn;
  
-+/* WCN3990 1.0 definitions */
-+#define WCN3990_HW_1_0_DEV_VERSION	ATH10K_HW_WCN3990
-+#define WCN3990_HW_1_0_FW_DIR		ATH10K_FW_DIR "/WCN3990/hw3.0"
-+
- #define ATH10K_FW_FILE_BASE		"firmware"
- #define ATH10K_FW_API_MAX		6
- #define ATH10K_FW_API_MIN		2
-@@ -571,6 +575,7 @@ struct ath10k_hw_ops {
- extern const struct ath10k_hw_ops qca988x_ops;
- extern const struct ath10k_hw_ops qca99x0_ops;
- extern const struct ath10k_hw_ops qca6174_ops;
-+extern const struct ath10k_hw_ops wcn3990_ops;
+ 	if (!data->started)
+-		goto out;
++		return HRTIMER_NORESTART;
  
- extern const struct ath10k_hw_clk_params qca6174_clk[];
+ 	ieee80211_iterate_active_interfaces_atomic(
+ 		hw, IEEE80211_IFACE_ITER_NORMAL,
+@@ -1560,11 +1558,9 @@ mac80211_hwsim_beacon(struct hrtimer *timer)
+ 		data->bcn_delta = 0;
+ 	}
  
-@@ -667,6 +672,11 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
- #define TARGET_TLV_NUM_WOW_PATTERNS		22
+-	next_bcn = ktime_add(hrtimer_get_expires(timer),
+-			     ns_to_ktime(bcn_int * 1000));
+-	tasklet_hrtimer_start(&data->beacon_timer, next_bcn, HRTIMER_MODE_ABS);
+-out:
+-	return HRTIMER_NORESTART;
++	hrtimer_forward(&data->beacon_timer, hrtimer_get_expires(timer),
++			ns_to_ktime(bcn_int * NSEC_PER_USEC));
++	return HRTIMER_RESTART;
+ }
  
-+/* Target specific defines for WMI-HL-1.0 firmware */
-+#define TARGET_HL_10_TLV_NUM_PEERS		14
-+#define TARGET_HL_10_TLV_AST_SKID_LIMIT		6
-+#define TARGET_HL_10_TLV_NUM_WDS_ENTRIES	2
-+
- /* Diagnostic Window */
- #define CE_DIAG_PIPE	7
+ static const char * const hwsim_chanwidths[] = {
+@@ -1638,15 +1634,15 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_unlock(&data->mutex);
  
+ 	if (!data->started || !data->beacon_int)
+-		tasklet_hrtimer_cancel(&data->beacon_timer);
+-	else if (!hrtimer_is_queued(&data->beacon_timer.timer)) {
++		hrtimer_cancel(&data->beacon_timer);
++	else if (!hrtimer_is_queued(&data->beacon_timer)) {
+ 		u64 tsf = mac80211_hwsim_get_tsf(hw, NULL);
+ 		u32 bcn_int = data->beacon_int;
+ 		u64 until_tbtt = bcn_int - do_div(tsf, bcn_int);
+ 
+-		tasklet_hrtimer_start(&data->beacon_timer,
+-				      ns_to_ktime(until_tbtt * 1000),
+-				      HRTIMER_MODE_REL);
++		hrtimer_start(&data->beacon_timer,
++			      ns_to_ktime(until_tbtt * 1000),
++			      HRTIMER_MODE_REL_SOFT);
+ 	}
+ 
+ 	return 0;
+@@ -1709,7 +1705,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 			  info->enable_beacon, info->beacon_int);
+ 		vp->bcn_en = info->enable_beacon;
+ 		if (data->started &&
+-		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
++		    !hrtimer_is_queued(&data->beacon_timer) &&
+ 		    info->enable_beacon) {
+ 			u64 tsf, until_tbtt;
+ 			u32 bcn_int;
+@@ -1717,9 +1713,9 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 			tsf = mac80211_hwsim_get_tsf(hw, vif);
+ 			bcn_int = data->beacon_int;
+ 			until_tbtt = bcn_int - do_div(tsf, bcn_int);
+-			tasklet_hrtimer_start(&data->beacon_timer,
+-					      ns_to_ktime(until_tbtt * 1000),
+-					      HRTIMER_MODE_REL);
++			hrtimer_start(&data->beacon_timer,
++				      ns_to_ktime(until_tbtt * 1000),
++				      HRTIMER_MODE_REL_SOFT);
+ 		} else if (!info->enable_beacon) {
+ 			unsigned int count = 0;
+ 			ieee80211_iterate_active_interfaces_atomic(
+@@ -1728,7 +1724,7 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 			wiphy_dbg(hw->wiphy, "  beaconing vifs remaining: %u",
+ 				  count);
+ 			if (count == 0) {
+-				tasklet_hrtimer_cancel(&data->beacon_timer);
++				hrtimer_cancel(&data->beacon_timer);
+ 				data->beacon_int = 0;
+ 			}
+ 		}
+@@ -2720,9 +2716,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 				    data->debugfs,
+ 				    data, &hwsim_simulate_radar);
+ 
+-	tasklet_hrtimer_init(&data->beacon_timer,
+-			     mac80211_hwsim_beacon,
+-			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
++	hrtimer_init(&data->beacon_timer, CLOCK_MONOTONIC,
++		     HRTIMER_MODE_REL_SOFT);
++	data->beacon_timer.function = mac80211_hwsim_beacon;
+ 
+ 	spin_lock_bh(&hwsim_radio_lock);
+ 	list_add_tail(&data->list, &hwsim_radios);
 -- 
 2.11.0
