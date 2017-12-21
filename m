@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45907 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751687AbdLBOQz (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:54313 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751381AbdLUN5f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 09:16:55 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCHv2,1/2] ath10k: update tdls teardown state to target
+        Thu, 21 Dec 2017 08:57:35 -0500
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1509955772-4941-2-git-send-email-mpubbise@qti.qualcomm.com>
-References: <1509955772-4941-2-git-send-email-mpubbise@qti.qualcomm.com>
-To: <mpubbise@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Manikanta Pubbisetty" <mpubbise@qti.qualcomm.com>
-Message-ID: <a6995e7c81634331a4c7f07d3d5b205b@euamsexm01a.eu.qualcomm.com> (sfid-20171202_151658_789397_957197FA)
-Date: Sat, 2 Dec 2017 15:16:48 +0100
+To: Rakesh Pillai <pillair@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/3] Core changes for wcn3990
+Date: Thu, 21 Dec 2017 13:57:26 +0000
+Message-ID: <87tvwkchfe.fsf@kamboji.qca.qualcomm.com> (sfid-20171221_145740_776536_7859E0C7)
+References: <1513854887-10759-1-git-send-email-pillair@qti.qualcomm.com>
+In-Reply-To: <1513854887-10759-1-git-send-email-pillair@qti.qualcomm.com>
+        (Rakesh Pillai's message of "Thu, 21 Dec 2017 16:44:44 +0530")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mpubbise@qti.qualcomm.com wrote:
+Rakesh Pillai <pillair@qti.qualcomm.com> writes:
 
-> It is required to update the teardown state of the peer when
-> a tdls link with that peer is terminated. This information is
-> useful for the target to perform some cleanups wrt the tdls peer.
-> 
-> Without proper cleanup, target assumes that the peer is connected and
-> blocks future connection requests, updating the teardown state of the
-> peer addresses the problem.
-> 
-> Tested this change on QCA9888 with 10.4-3.5.1-00018 fw version.
-> 
-> Signed-off-by: Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> This patchset includes the core changes for wcn3990 to
+> - Add SNOC bus type used for wcn3990 target
+> - Add the debug mask for SNOC bus type
+> - Adding fw feature flag for non-bmi firmware load, since wcn3990
+>   firmware is not loaded by bmi
+>
+> Govind Singh (2):
+>   ath10k: Add SNOC bus type for WCN3990 target
+>   ath10k: Add debug mask for SNOC bus type
+>
+> Rakesh Pillai (1):
+>   ath10k: Add fw feature flag for non-bmi firmware load
 
-2 patches applied to ath-next branch of ath.git, thanks.
+What did you use as the baseline for these patches? While I was trying
+to get these to the pending branch for build testing I noticed they
+don't apply to any of ath.git branches and git can't even find the
+baseline sha1 information:
 
-424ea0d174e8 ath10k: update tdls teardown state to target
-8ed05ed06fca ath10k: handle tdls peer events
+$ git am -s -3 10127467.mbox
+Applying: ath10k: Add SNOC bus type for WCN3990 target
+Applying: ath10k: Add debug mask for SNOC bus type
+Applying: ath10k: Add fw feature flag for non-bmi firmware load
+fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath=
+10k/core.c).
+error: could not build fake ancestor
+Patch failed at 0003 ath10k: Add fw feature flag for non-bmi firmware load
+The copy of the patch that failed is found in: .git/rebase-apply/patch
+When you have resolved this problem, run "git am --continue".
+If you prefer to skip this patch, run "git am --skip" instead.
+To restore the original branch and stop patching, run "git am --abort".
 
--- 
-https://patchwork.kernel.org/patch/10042737/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+Kalle Valo=
