@@ -1,48 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60594 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752272AbdLBVlR (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:44513 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750757AbdLUObG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 16:41:17 -0500
-Subject: Re: [v3] ath10k: rebuild crypto header in rx data frames
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-References: <1509035774-26553-1-git-send-email-kvalo@qca.qualcomm.com>
- <59b2ec22dc9c4db0bd30a65dba660b1c@euamsexm01a.eu.qualcomm.com>
- <154f13b8-1e77-dbe5-4cb0-81c534dbc40b@dd-wrt.com>
- <e98b52a7-ac14-81da-1fab-0c66befcf6d2@candelatech.com>
- <878telw65j.fsf@kamboji.qca.qualcomm.com>
-Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <73dae55c-4feb-b573-9d02-4942b201bec8@candelatech.com> (sfid-20171202_224122_067121_BB795EE5)
-Date: Sat, 2 Dec 2017 13:41:07 -0800
+        Thu, 21 Dec 2017 09:31:06 -0500
+From: <bpothuno@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+Subject: [PATCH] ath10k: advertising tdls wider bandwidth support for 5GHz
+Date: Thu, 21 Dec 2017 20:00:42 +0530
+Message-ID: <1513866642-709-1-git-send-email-bpothuno@qti.qualcomm.com> (sfid-20171221_153110_760732_8673C9F6)
 MIME-Version: 1.0
-In-Reply-To: <878telw65j.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
 
+This patch advertise tdls wider bandwidth support for 5GHz
+based on firmware wmi capabilties.
 
-On 12/02/2017 06:34 AM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> Is this patch destined for stable?
->>
->> I was expecting to see it show up in the older stable releases,
->> but it has not so far as far as I can tell.
->
-> We are working on it, but not sure yet to which releases, it doesn't
-> directly apply to all active stable releases.
+This patch is required for chipset QCA9888.
+Firmware Versoin : 10.4-3.5.1-00018.
 
-I had no luck trying to apply it to a 3.17-ish ath10k.  Gave up after
-a bit and tried backporting the whole stack instead :P
+Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 3 ++-
+ drivers/net/wireless/ath/ath10k/wmi.h | 5 +++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0298cce..9df455f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8271,7 +8271,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	if (test_bit(WMI_SERVICE_TDLS, ar->wmi.svc_map) ||
+ 	    test_bit(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY, ar->wmi.svc_map)) {
+ 		ar->hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+-		ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
++		if (test_bit(WMI_SERVICE_TDLS_WIDER_BANDWIDTH, ar->wmi.svc_map))
++			ieee80211_hw_set(ar->hw, TDLS_WIDER_BW);
+ 	}
+ 
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index f6d60dc..0fe87ab 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -196,6 +196,7 @@ enum wmi_service {
+ 	WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
+ 	WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
+ 	WMI_SERVICE_MGMT_TX_WMI,
++	WMI_SERVICE_TDLS_WIDER_BANDWIDTH,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -337,6 +338,7 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_TDLS_UAPSD_SLEEP_STA,
+ 	WMI_10_4_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
+ 	WMI_10_4_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
++	WMI_10_4_SERVICE_TDLS_WIDER_BANDWIDTH,
+ };
+ 
+ static inline char *wmi_service_name(int service_id)
+@@ -445,6 +447,7 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_SMART_LOGGING_SUPPORT);
+ 	SVCSTR(WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE);
+ 	SVCSTR(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY);
++	SVCSTR(WMI_SERVICE_TDLS_WIDER_BANDWIDTH);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -741,6 +744,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE, len);
+ 	SVCMAP(WMI_10_4_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
+ 	       WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY, len);
++	SVCMAP(WMI_10_4_SERVICE_TDLS_WIDER_BANDWIDTH,
++	       WMI_SERVICE_TDLS_WIDER_BANDWIDTH, len);
+ }
+ 
+ #undef SVCMAP
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
