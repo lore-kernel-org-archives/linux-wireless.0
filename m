@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:55138 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750798AbdLSTGP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 14:06:15 -0500
-Date: Tue, 19 Dec 2017 14:06:13 -0500 (EST)
-Message-Id: <20171219.140613.787406975531411549.davem@davemloft.net> (sfid-20171219_200619_912464_1F10EFA8)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, luciano.coelho@intel.com
-Subject: Re: pull-request: wireless-drivers-next 2017-12-18
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <874looktmz.fsf@kamboji.qca.qualcomm.com>
-References: <874looktmz.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:60474 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750757AbdLUO0B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Dec 2017 09:26:01 -0500
+Date: Thu, 21 Dec 2017 15:25:59 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Enrico Mioso <mrkiko.rs@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20171221142558.GB4655@redhat.com> (sfid-20171221_152606_097949_5EA743A8)
+References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain>
+ <20171213152017.GA3554@redhat.com>
+ <alpine.LNX.2.21.99.1712161924030.11214@localhost.localdomain>
+ <20171218152142.GA15414@redhat.com>
+ <20171219122707.GA2672@redhat.com>
+ <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain>
+ <20171219125431.GB2672@redhat.com>
+ <alpine.LNX.2.21.99.1712201848250.21776@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.21.99.1712201848250.21776@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Mon, 18 Dec 2017 16:17:24 +0200
+On Wed, Dec 20, 2017 at 06:49:56PM +0100, Enrico Mioso wrote:
+> Hello.
+> First of all, thank you for your patience and work.
+> Sorry if I am slow in testing, I am in a little bit of a complicated situation, and this is one of the reasons for why I am slow.
+> With the two patches you sent me (thanks!), and removing the mmio workaround patch, I was not able to reproduce the errors. I plan to send you a precise response as soon as I am able to.
+> thank you
 
-> a pull request for 4.16 to net-next tree. This is a big one, but on the
-> other hand most of the stuff here has been some time on linux-next so
-> hopefully there are no nasty surprises. Even though Arnd just send a
-> patch[1] five minutes ago about fixing a wcn36xx build warning, but I
-> don't think that's critical enough to hold up this, so I'll send it to
-> you in the next pull request.
-> 
-> But this time we actually have a merge conflict due to a000 hardware
-> rename in iwlwifi:
-> 
-> CONFLICT (content): Merge conflict in drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-> 
-> The fix is quite straightforward, take the 22000 versions and manually
-> add an entry for 0xA0F0 device:
-> 
-> {IWL_PCI_DEVICE(0xA0F0, 0x0000, iwl22000_2ax_cfg_hr)},
-> 
-> I put the 'git diff' output of my test resolution below, hopefully it
-> helps. I'll also Cc Luca so he can correct any mistakes I did :)
-> 
-> Please let me know if you have any problems.
+No worries, we are not under deadline :-) You can just respond
+to patches email with:
 
-Pulled, and thanks for the resolution diff.  It helped a lot.
+Tested-by: Enrico Mioso <mrkiko.rs@gmail.com>
+
+tag. That will mean that you tested patches and that information will be
+added to the commit changelog.
+
+Regards
+Stanislaw
