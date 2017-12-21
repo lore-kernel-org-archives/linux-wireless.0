@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49558 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751914AbdLNMpR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 07:45:17 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: wlcore: fix unused function warning
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171211114718.3637010-1-arnd@arndb.de>
-References: <20171211114718.3637010-1-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arnd Bergmann <arnd@arndb.de>, "Reizer, Eyal" <eyalr@ti.com>,
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:37367 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752683AbdLUKtP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Dec 2017 05:49:15 -0500
+Subject: Re: UBSAN: Undefined behaviour in
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c:838:5
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Luca Coelho <luca@coelho.fi>,
         Johannes Berg <johannes.berg@intel.com>,
-        Iain Hunter <drhunter95@gmail.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Kees Cook <keescook@chromium.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20171214124516.7D190600EC@smtp.codeaurora.org> (sfid-20171214_134553_015149_47BF1FFD)
-Date: Thu, 14 Dec 2017 12:45:16 +0000 (UTC)
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        it+linux-wireless@molgen.mpg.de
+References: <75bc638e-99a8-2f3f-6260-491f8a018af6@molgen.mpg.de>
+ <1513175552.4827.365.camel@intel.com> <1513621815.4827.430.camel@coelho.fi>
+ <a08aa1b3-9d75-2f38-a0f0-aefe181137da@molgen.mpg.de>
+ <87r2ro9xhq.fsf@purkki.adurom.net>
+From: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
+Message-ID: <4e18369a-4f39-3988-2072-5c7b9490b614@molgen.mpg.de> (sfid-20171221_114936_131514_1E56F7DE)
+Date: Thu, 21 Dec 2017 11:49:13 +0100
+MIME-Version: 1.0
+In-Reply-To: <87r2ro9xhq.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
+Dear Kalle,
 
-> The newly added wlcore_fw_sleep function is called conditionally,
-> which causes a warning without CONFIG_PM:
+
+On 12/21/17 11:38, Kalle Valo wrote:
+> Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de> writes:
 > 
-> drivers/net/wireless/ti/wlcore/main.c:981:12: error: 'wlcore_fw_sleep' defined but not used [-Werror=unused-function]
+>>> http://pastebin.coelho.fi/7b624f474846da52.txt
+>>
+>> Thank you. The warning is gone now. Thank you. For the next time, it’d
+>> be great to provide the output of `git format-patch -1`, which can be
+>> applied with `git am`. The output of `git show` is with my knowledge
+>> hard to apply.
 > 
-> Instead of trying to keep track of what should be in the #ifdef and what
-> should not, it's easier to mark the top-level suspend/resume functions
-> as __maybe_unused so the compiler can silently drop all the unused code.
-> 
-> Fixes: 37bf241b8e7b ("wlcore: allow elp during wowlan suspend")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> 'patch -p1 < foo.patch' should work. Of course it omits the commit log
+> but is usually enough for testing purposes.
 
-Patch applied to wireless-drivers-next.git, thanks.
+That’s what I did in the end. And then I have to do `git commit -a` to 
+get the tree in a clean state.
 
-7de241f3b705 wlcore: fix unused function warning
+So `git format-patch -1` and uploading of that, for example with some 
+CLI tool, for the win. ;-)
 
--- 
-https://patchwork.kernel.org/patch/10104839/
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kind regards,
+
+Paul
