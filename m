@@ -1,587 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:20536 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752161AbdLLTEI (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51550 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751903AbdLUK5N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 14:04:08 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 1/9] wil6210: support Scheduled scan
-Date: Tue, 12 Dec 2017 21:03:54 +0200
-Message-Id: <1513105442-28041-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171212_200414_424257_7AB29F68)
-In-Reply-To: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 21 Dec 2017 05:57:13 -0500
+Message-ID: <1513853827.4827.504.camel@coelho.fi> (sfid-20171221_115741_073255_EB398E96)
+From: Luca Coelho <luca@coelho.fi>
+To: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        it+linux-wireless@molgen.mpg.de
+Date: Thu, 21 Dec 2017 12:57:07 +0200
+In-Reply-To: <4e18369a-4f39-3988-2072-5c7b9490b614@molgen.mpg.de>
+References: <75bc638e-99a8-2f3f-6260-491f8a018af6@molgen.mpg.de>
+         <1513175552.4827.365.camel@intel.com> <1513621815.4827.430.camel@coelho.fi>
+         <a08aa1b3-9d75-2f38-a0f0-aefe181137da@molgen.mpg.de>
+         <87r2ro9xhq.fsf@purkki.adurom.net>
+         <4e18369a-4f39-3988-2072-5c7b9490b614@molgen.mpg.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: UBSAN: Undefined behaviour in
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c:838:5
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+On Thu, 2017-12-21 at 11:49 +0100, Paul Menzel wrote:
+> Dear Kalle,
+> 
+> 
+> On 12/21/17 11:38, Kalle Valo wrote:
+> > Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de> writes:
+> > 
+> > > > http://pastebin.coelho.fi/7b624f474846da52.txt
+> > > 
+> > > Thank you. The warning is gone now. Thank you. For the next time,
+> > > it’d
+> > > be great to provide the output of `git format-patch -1`, which
+> > > can be
+> > > applied with `git am`. The output of `git show` is with my
+> > > knowledge
+> > > hard to apply.
+> > 
+> > 'patch -p1 < foo.patch' should work. Of course it omits the commit
+> > log
+> > but is usually enough for testing purposes.
+> 
+> That’s what I did in the end. And then I have to do `git commit -a`
+> to 
+> get the tree in a clean state.
+> 
+> So `git format-patch -1` and uploading of that, for example with
+> some 
+> CLI tool, for the win. ;-)
 
-Add support for sched_scan_start/stop by sending PNO commands to FW.
-Driver reports WIPHY_FLAG_SUPPORTS_SCHED_SCAN and invokes
-cfg80211_sched_scan_results upon receiving
-WMI_SCHED_SCAN_RESULT_EVENTID from FW.
+The choice here is: more work for me vs. more work for you. :) But I
+guess I can easily do "git format-patch -1 --stdout" and pipe it to my
+pastebin script...
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c |  65 ++++++++
- drivers/net/wireless/ath/wil6210/main.c     |   8 +
- drivers/net/wireless/ath/wil6210/wil6210.h  |   4 +
- drivers/net/wireless/ath/wil6210/wmi.c      | 239 +++++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wmi.h      |  99 +++++++++---
- 5 files changed, 395 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 771a534..39509d0 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1751,6 +1751,69 @@ static int wil_cfg80211_resume(struct wiphy *wiphy)
- 	return 0;
- }
- 
-+static int
-+wil_cfg80211_sched_scan_start(struct wiphy *wiphy,
-+			      struct net_device *dev,
-+			      struct cfg80211_sched_scan_request *request)
-+{
-+	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	int i, rc;
-+
-+	wil_dbg_misc(wil,
-+		     "sched scan start: n_ssids %d, ie_len %zu, flags 0x%x\n",
-+		     request->n_ssids, request->ie_len, request->flags);
-+	for (i = 0; i < request->n_ssids; i++) {
-+		wil_dbg_misc(wil, "SSID[%d]:", i);
-+		wil_hex_dump_misc("SSID ", DUMP_PREFIX_OFFSET, 16, 1,
-+				  request->ssids[i].ssid,
-+				  request->ssids[i].ssid_len, true);
-+	}
-+	wil_dbg_misc(wil, "channels:");
-+	for (i = 0; i < request->n_channels; i++)
-+		wil_dbg_misc(wil, " %d%s", request->channels[i]->hw_value,
-+			     i == request->n_channels - 1 ? "\n" : "");
-+	wil_dbg_misc(wil, "n_match_sets %d, min_rssi_thold %d, delay %d\n",
-+		     request->n_match_sets, request->min_rssi_thold,
-+		     request->delay);
-+	for (i = 0; i < request->n_match_sets; i++) {
-+		struct cfg80211_match_set *ms = &request->match_sets[i];
-+
-+		wil_dbg_misc(wil, "MATCHSET[%d]: rssi_thold %d\n",
-+			     i, ms->rssi_thold);
-+		wil_hex_dump_misc("SSID ", DUMP_PREFIX_OFFSET, 16, 1,
-+				  ms->ssid.ssid,
-+				  ms->ssid.ssid_len, true);
-+	}
-+	wil_dbg_misc(wil, "n_scan_plans %d\n", request->n_scan_plans);
-+	for (i = 0; i < request->n_scan_plans; i++) {
-+		struct cfg80211_sched_scan_plan *sp = &request->scan_plans[i];
-+
-+		wil_dbg_misc(wil, "SCAN PLAN[%d]: interval %d iterations %d\n",
-+			     i, sp->interval, sp->iterations);
-+	}
-+
-+	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_REQ, request->ie_len, request->ie);
-+	if (rc)
-+		return rc;
-+	return wmi_start_sched_scan(wil, request);
-+}
-+
-+static int
-+wil_cfg80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev,
-+			     u64 reqid)
-+{
-+	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	int rc;
-+
-+	rc = wmi_stop_sched_scan(wil);
-+	/* device would return error if it thinks PNO is already stopped.
-+	 * ignore the return code so user space and driver gets back in-sync
-+	 */
-+	wil_dbg_misc(wil, "sched scan stopped (%d)\n", rc);
-+
-+	return 0;
-+}
-+
- static const struct cfg80211_ops wil_cfg80211_ops = {
- 	.add_virtual_intf = wil_cfg80211_add_iface,
- 	.del_virtual_intf = wil_cfg80211_del_iface,
-@@ -1784,6 +1847,8 @@ static int wil_cfg80211_resume(struct wiphy *wiphy)
- 	.set_power_mgmt = wil_cfg80211_set_power_mgmt,
- 	.suspend = wil_cfg80211_suspend,
- 	.resume = wil_cfg80211_resume,
-+	.sched_scan_start = wil_cfg80211_sched_scan_start,
-+	.sched_scan_stop = wil_cfg80211_sched_scan_stop,
- };
- 
- static void wil_wiphy_init(struct wiphy *wiphy)
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 1b53cd3..5d69796 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -785,6 +785,14 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
- 		wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	else
- 		wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
-+
-+	if (test_bit(WMI_FW_CAPABILITY_PNO, wil->fw_capabilities)) {
-+		wiphy->max_sched_scan_reqs = 1;
-+		wiphy->max_sched_scan_ssids = WMI_MAX_PNO_SSID_NUM;
-+		wiphy->max_match_sets = WMI_MAX_PNO_SSID_NUM;
-+		wiphy->max_sched_scan_ie_len = WMI_MAX_IE_LEN;
-+		wiphy->max_sched_scan_plans = WMI_MAX_PLANS_NUM;
-+	}
- }
- 
- void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index cf27d97..aa85e9c 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -1032,4 +1032,8 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
- void wil6210_set_halp(struct wil6210_priv *wil);
- void wil6210_clear_halp(struct wil6210_priv *wil);
- 
-+int wmi_start_sched_scan(struct wil6210_priv *wil,
-+			 struct cfg80211_sched_scan_request *request);
-+int wmi_stop_sched_scan(struct wil6210_priv *wil);
-+
- #endif /* __WIL6210_H__ */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 8ace618..ed7cdb7 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -38,6 +38,7 @@
- 		 " 60G device led enablement. Set the led ID (0-2) to enable");
- 
- #define WIL_WAIT_FOR_SUSPEND_RESUME_COMP 200
-+#define WIL_WMI_CALL_GENERAL_TO_MS 100
- 
- /**
-  * WMI event receiving - theory of operations
-@@ -314,6 +315,10 @@ static const char *cmdid2name(u16 cmdid)
- 		return "WMI_LINK_MAINTAIN_CFG_WRITE_CMD";
- 	case WMI_LO_POWER_CALIB_FROM_OTP_CMDID:
- 		return "WMI_LO_POWER_CALIB_FROM_OTP_CMD";
-+	case WMI_START_SCHED_SCAN_CMDID:
-+		return "WMI_START_SCHED_SCAN_CMD";
-+	case WMI_STOP_SCHED_SCAN_CMDID:
-+		return "WMI_STOP_SCHED_SCAN_CMD";
- 	default:
- 		return "Untracked CMD";
- 	}
-@@ -428,6 +433,12 @@ static const char *eventid2name(u16 eventid)
- 		return "WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENT";
- 	case WMI_LO_POWER_CALIB_FROM_OTP_EVENTID:
- 		return "WMI_LO_POWER_CALIB_FROM_OTP_EVENT";
-+	case WMI_START_SCHED_SCAN_EVENTID:
-+		return "WMI_START_SCHED_SCAN_EVENT";
-+	case WMI_STOP_SCHED_SCAN_EVENTID:
-+		return "WMI_STOP_SCHED_SCAN_EVENT";
-+	case WMI_SCHED_SCAN_RESULT_EVENTID:
-+		return "WMI_SCHED_SCAN_RESULT_EVENT";
- 	default:
- 		return "Untracked EVENT";
- 	}
-@@ -658,8 +669,6 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
- 		wil_hex_dump_wmi("IE ", DUMP_PREFIX_OFFSET, 16, 1, ie_buf,
- 				 ie_len, true);
- 
--		wil_dbg_wmi(wil, "Capability info : 0x%04x\n", cap);
--
- 		bss = cfg80211_inform_bss_frame(wiphy, channel, rx_mgmt_frame,
- 						d_len, signal, GFP_KERNEL);
- 		if (bss) {
-@@ -1066,6 +1075,75 @@ static void wmi_evt_delba(struct wil6210_priv *wil, int id, void *d, int len)
- 	spin_unlock_bh(&sta->tid_rx_lock);
- }
- 
-+static void
-+wmi_evt_sched_scan_result(struct wil6210_priv *wil, int id, void *d, int len)
-+{
-+	struct wmi_sched_scan_result_event *data = d;
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
-+	struct ieee80211_mgmt *rx_mgmt_frame =
-+		(struct ieee80211_mgmt *)data->payload;
-+	int flen = len - offsetof(struct wmi_sched_scan_result_event, payload);
-+	int ch_no;
-+	u32 freq;
-+	struct ieee80211_channel *channel;
-+	s32 signal;
-+	__le16 fc;
-+	u32 d_len;
-+	struct cfg80211_bss *bss;
-+
-+	if (flen < 0) {
-+		wil_err(wil, "sched scan result event too short, len %d\n",
-+			len);
-+		return;
-+	}
-+
-+	d_len = le32_to_cpu(data->info.len);
-+	if (d_len != flen) {
-+		wil_err(wil,
-+			"sched scan result length mismatch, d_len %d should be %d\n",
-+			d_len, flen);
-+		return;
-+	}
-+
-+	fc = rx_mgmt_frame->frame_control;
-+	if (!ieee80211_is_probe_resp(fc)) {
-+		wil_err(wil, "sched scan result invalid frame, fc 0x%04x\n",
-+			fc);
-+		return;
-+	}
-+
-+	ch_no = data->info.channel + 1;
-+	freq = ieee80211_channel_to_frequency(ch_no, NL80211_BAND_60GHZ);
-+	channel = ieee80211_get_channel(wiphy, freq);
-+	if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING, wil->fw_capabilities))
-+		signal = 100 * data->info.rssi;
-+	else
-+		signal = data->info.sqi;
-+
-+	wil_dbg_wmi(wil, "sched scan result: channel %d MCS %d RSSI %d\n",
-+		    data->info.channel, data->info.mcs, data->info.rssi);
-+	wil_dbg_wmi(wil, "len %d qid %d mid %d cid %d\n",
-+		    d_len, data->info.qid, data->info.mid, data->info.cid);
-+	wil_hex_dump_wmi("PROBE ", DUMP_PREFIX_OFFSET, 16, 1, rx_mgmt_frame,
-+			 d_len, true);
-+
-+	if (!channel) {
-+		wil_err(wil, "Frame on unsupported channel\n");
-+		return;
-+	}
-+
-+	bss = cfg80211_inform_bss_frame(wiphy, channel, rx_mgmt_frame,
-+					d_len, signal, GFP_KERNEL);
-+	if (bss) {
-+		wil_dbg_wmi(wil, "Added BSS %pM\n", rx_mgmt_frame->bssid);
-+		cfg80211_put_bss(wiphy, bss);
-+	} else {
-+		wil_err(wil, "cfg80211_inform_bss_frame() failed\n");
-+	}
-+
-+	cfg80211_sched_scan_results(wiphy, 0);
-+}
-+
- /**
-  * Some events are ignored for purpose; and need not be interpreted as
-  * "unhandled events"
-@@ -1093,6 +1171,7 @@ static void wmi_evt_ignore(struct wil6210_priv *wil, int id, void *d, int len)
- 	{WMI_DELBA_EVENTID,		wmi_evt_delba},
- 	{WMI_VRING_EN_EVENTID,		wmi_evt_vring_en},
- 	{WMI_DATA_PORT_OPEN_EVENTID,		wmi_evt_ignore},
-+	{WMI_SCHED_SCAN_RESULT_EVENTID,		wmi_evt_sched_scan_result},
- };
- 
- /*
-@@ -2284,3 +2363,159 @@ bool wil_is_wmi_idle(struct wil6210_priv *wil)
- 	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
- 	return rc;
- }
-+
-+static void
-+wmi_sched_scan_set_ssids(struct wil6210_priv *wil,
-+			 struct wmi_start_sched_scan_cmd *cmd,
-+			 struct cfg80211_ssid *ssids, int n_ssids,
-+			 struct cfg80211_match_set *match_sets,
-+			 int n_match_sets)
-+{
-+	int i;
-+
-+	if (n_match_sets > WMI_MAX_PNO_SSID_NUM) {
-+		wil_dbg_wmi(wil, "too many match sets (%d), use first %d\n",
-+			    n_match_sets, WMI_MAX_PNO_SSID_NUM);
-+		n_match_sets = WMI_MAX_PNO_SSID_NUM;
-+	}
-+	cmd->num_of_ssids = n_match_sets;
-+
-+	for (i = 0; i < n_match_sets; i++) {
-+		struct wmi_sched_scan_ssid_match *wmi_match =
-+			&cmd->ssid_for_match[i];
-+		struct cfg80211_match_set *cfg_match = &match_sets[i];
-+		int j;
-+
-+		wmi_match->ssid_len = cfg_match->ssid.ssid_len;
-+		memcpy(wmi_match->ssid, cfg_match->ssid.ssid,
-+		       min_t(u8, wmi_match->ssid_len, WMI_MAX_SSID_LEN));
-+		wmi_match->rssi_threshold = S8_MIN;
-+		if (cfg_match->rssi_thold >= S8_MIN &&
-+		    cfg_match->rssi_thold <= S8_MAX)
-+			wmi_match->rssi_threshold = cfg_match->rssi_thold;
-+
-+		for (j = 0; j < n_ssids; j++)
-+			if (wmi_match->ssid_len == ssids[j].ssid_len &&
-+			    memcmp(wmi_match->ssid, ssids[j].ssid,
-+				   wmi_match->ssid_len) == 0)
-+				wmi_match->add_ssid_to_probe = true;
-+	}
-+}
-+
-+static void
-+wmi_sched_scan_set_channels(struct wil6210_priv *wil,
-+			    struct wmi_start_sched_scan_cmd *cmd,
-+			    u32 n_channels,
-+			    struct ieee80211_channel **channels)
-+{
-+	int i;
-+
-+	if (n_channels > WMI_MAX_CHANNEL_NUM) {
-+		wil_dbg_wmi(wil, "too many channels (%d), use first %d\n",
-+			    n_channels, WMI_MAX_CHANNEL_NUM);
-+		n_channels = WMI_MAX_CHANNEL_NUM;
-+	}
-+	cmd->num_of_channels = n_channels;
-+
-+	for (i = 0; i < n_channels; i++) {
-+		struct ieee80211_channel *cfg_chan = channels[i];
-+
-+		cmd->channel_list[i] = cfg_chan->hw_value - 1;
-+	}
-+}
-+
-+static void
-+wmi_sched_scan_set_plans(struct wil6210_priv *wil,
-+			 struct wmi_start_sched_scan_cmd *cmd,
-+			 struct cfg80211_sched_scan_plan *scan_plans,
-+			 int n_scan_plans)
-+{
-+	int i;
-+
-+	if (n_scan_plans > WMI_MAX_PLANS_NUM) {
-+		wil_dbg_wmi(wil, "too many plans (%d), use first %d\n",
-+			    n_scan_plans, WMI_MAX_PLANS_NUM);
-+		n_scan_plans = WMI_MAX_PLANS_NUM;
-+	}
-+
-+	for (i = 0; i < n_scan_plans; i++) {
-+		struct cfg80211_sched_scan_plan *cfg_plan = &scan_plans[i];
-+
-+		cmd->scan_plans[i].interval_sec =
-+			cpu_to_le16(cfg_plan->interval);
-+		cmd->scan_plans[i].num_of_iterations =
-+			cpu_to_le16(cfg_plan->iterations);
-+	}
-+}
-+
-+int wmi_start_sched_scan(struct wil6210_priv *wil,
-+			 struct cfg80211_sched_scan_request *request)
-+{
-+	int rc;
-+	struct wmi_start_sched_scan_cmd cmd = {
-+		.min_rssi_threshold = S8_MIN,
-+		.initial_delay_sec = cpu_to_le16(request->delay),
-+	};
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_start_sched_scan_event evt;
-+	} __packed reply;
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_PNO, wil->fw_capabilities))
-+		return -ENOTSUPP;
-+
-+	if (request->min_rssi_thold >= S8_MIN &&
-+	    request->min_rssi_thold <= S8_MAX)
-+		cmd.min_rssi_threshold = request->min_rssi_thold;
-+
-+	wmi_sched_scan_set_ssids(wil, &cmd, request->ssids, request->n_ssids,
-+				 request->match_sets, request->n_match_sets);
-+	wmi_sched_scan_set_channels(wil, &cmd,
-+				    request->n_channels, request->channels);
-+	wmi_sched_scan_set_plans(wil, &cmd,
-+				 request->scan_plans, request->n_scan_plans);
-+
-+	reply.evt.result = PNO_REJECT;
-+
-+	rc = wmi_call(wil, WMI_START_SCHED_SCAN_CMDID, &cmd, sizeof(cmd),
-+		      WMI_START_SCHED_SCAN_EVENTID, &reply, sizeof(reply),
-+		      WIL_WMI_CALL_GENERAL_TO_MS);
-+	if (rc)
-+		return rc;
-+
-+	if (reply.evt.result != PNO_SUCCESS) {
-+		wil_err(wil, "start sched scan failed, result %d\n",
-+			reply.evt.result);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+int wmi_stop_sched_scan(struct wil6210_priv *wil)
-+{
-+	int rc;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_stop_sched_scan_event evt;
-+	} __packed reply;
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_PNO, wil->fw_capabilities))
-+		return -ENOTSUPP;
-+
-+	reply.evt.result = PNO_REJECT;
-+
-+	rc = wmi_call(wil, WMI_STOP_SCHED_SCAN_CMDID, NULL, 0,
-+		      WMI_STOP_SCHED_SCAN_EVENTID, &reply, sizeof(reply),
-+		      WIL_WMI_CALL_GENERAL_TO_MS);
-+	if (rc)
-+		return rc;
-+
-+	if (reply.evt.result != PNO_SUCCESS) {
-+		wil_err(wil, "stop sched scan failed, result %d\n",
-+			reply.evt.result);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index d9e220a..7c6ac9c 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -71,6 +71,7 @@ enum wmi_fw_capability {
- 	WMI_FW_CAPABILITY_RSSI_REPORTING		= 12,
- 	WMI_FW_CAPABILITY_SET_SILENT_RSSI_TABLE		= 13,
- 	WMI_FW_CAPABILITY_LO_POWER_CALIB_FROM_OTP	= 14,
-+	WMI_FW_CAPABILITY_PNO				= 15,
- 	WMI_FW_CAPABILITY_MAX,
- };
- 
-@@ -87,6 +88,8 @@ enum wmi_command_id {
- 	WMI_CONNECT_CMDID				= 0x01,
- 	WMI_DISCONNECT_CMDID				= 0x03,
- 	WMI_DISCONNECT_STA_CMDID			= 0x04,
-+	WMI_START_SCHED_SCAN_CMDID			= 0x05,
-+	WMI_STOP_SCHED_SCAN_CMDID			= 0x06,
- 	WMI_START_SCAN_CMDID				= 0x07,
- 	WMI_SET_BSS_FILTER_CMDID			= 0x09,
- 	WMI_SET_PROBED_SSID_CMDID			= 0x0A,
-@@ -385,6 +388,38 @@ struct wmi_start_scan_cmd {
- 	} channel_list[0];
- } __packed;
- 
-+#define WMI_MAX_PNO_SSID_NUM	(16)
-+#define WMI_MAX_CHANNEL_NUM	(6)
-+#define WMI_MAX_PLANS_NUM	(2)
-+
-+/* WMI_START_SCHED_SCAN_CMDID */
-+struct wmi_sched_scan_ssid_match {
-+	u8 ssid_len;
-+	u8 ssid[WMI_MAX_SSID_LEN];
-+	s8 rssi_threshold;
-+	/* boolean */
-+	u8 add_ssid_to_probe;
-+	u8 reserved;
-+} __packed;
-+
-+/* WMI_START_SCHED_SCAN_CMDID */
-+struct wmi_sched_scan_plan {
-+	__le16 interval_sec;
-+	__le16 num_of_iterations;
-+} __packed;
-+
-+/* WMI_START_SCHED_SCAN_CMDID */
-+struct wmi_start_sched_scan_cmd {
-+	struct wmi_sched_scan_ssid_match ssid_for_match[WMI_MAX_PNO_SSID_NUM];
-+	u8 num_of_ssids;
-+	s8 min_rssi_threshold;
-+	u8 channel_list[WMI_MAX_CHANNEL_NUM];
-+	u8 num_of_channels;
-+	u8 reserved;
-+	__le16 initial_delay_sec;
-+	struct wmi_sched_scan_plan scan_plans[WMI_MAX_PLANS_NUM];
-+} __packed;
-+
- /* WMI_SET_PROBED_SSID_CMDID */
- #define MAX_PROBED_SSID_INDEX	(3)
- 
-@@ -1238,6 +1273,9 @@ enum wmi_event_id {
- 	WMI_READY_EVENTID				= 0x1001,
- 	WMI_CONNECT_EVENTID				= 0x1002,
- 	WMI_DISCONNECT_EVENTID				= 0x1003,
-+	WMI_START_SCHED_SCAN_EVENTID			= 0x1005,
-+	WMI_STOP_SCHED_SCAN_EVENTID			= 0x1006,
-+	WMI_SCHED_SCAN_RESULT_EVENTID			= 0x1007,
- 	WMI_SCAN_COMPLETE_EVENTID			= 0x100A,
- 	WMI_REPORT_STATISTICS_EVENTID			= 0x100B,
- 	WMI_RD_MEM_RSP_EVENTID				= 0x1800,
-@@ -1600,6 +1638,49 @@ struct wmi_scan_complete_event {
- 	__le32 status;
- } __packed;
- 
-+/* wmi_rx_mgmt_info */
-+struct wmi_rx_mgmt_info {
-+	u8 mcs;
-+	s8 rssi;
-+	u8 range;
-+	u8 sqi;
-+	__le16 stype;
-+	__le16 status;
-+	__le32 len;
-+	/* Not resolved when == 0xFFFFFFFF == > Broadcast to all MIDS */
-+	u8 qid;
-+	/* Not resolved when == 0xFFFFFFFF == > Broadcast to all MIDS */
-+	u8 mid;
-+	u8 cid;
-+	/* From Radio MNGR */
-+	u8 channel;
-+} __packed;
-+
-+/* WMI_START_SCHED_SCAN_EVENTID */
-+enum pno_result {
-+	PNO_SUCCESS		= 0x00,
-+	PNO_REJECT		= 0x01,
-+	PNO_INVALID_PARAMETERS	= 0x02,
-+	PNO_NOT_ENABLED		= 0x03,
-+};
-+
-+struct wmi_start_sched_scan_event {
-+	/* pno_result */
-+	u8 result;
-+	u8 reserved[3];
-+} __packed;
-+
-+struct wmi_stop_sched_scan_event {
-+	/* pno_result */
-+	u8 result;
-+	u8 reserved[3];
-+} __packed;
-+
-+struct wmi_sched_scan_result_event {
-+	struct wmi_rx_mgmt_info info;
-+	u8 payload[0];
-+} __packed;
-+
- /* WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENT */
- enum wmi_acs_info_bitmask {
- 	WMI_ACS_INFO_BITMASK_BEACON_FOUND	= 0x01,
-@@ -1814,24 +1895,6 @@ struct wmi_get_ssid_event {
- 	u8 ssid[WMI_MAX_SSID_LEN];
- } __packed;
- 
--/* wmi_rx_mgmt_info */
--struct wmi_rx_mgmt_info {
--	u8 mcs;
--	s8 rssi;
--	u8 range;
--	u8 sqi;
--	__le16 stype;
--	__le16 status;
--	__le32 len;
--	/* Not resolved when == 0xFFFFFFFF == > Broadcast to all MIDS */
--	u8 qid;
--	/* Not resolved when == 0xFFFFFFFF == > Broadcast to all MIDS */
--	u8 mid;
--	u8 cid;
--	/* From Radio MNGR */
--	u8 channel;
--} __packed;
--
- /* EVENT: WMI_RF_XPM_READ_RESULT_EVENTID */
- struct wmi_rf_xpm_read_result_event {
- 	/* enum wmi_fw_status_e - success=0 or fail=1 */
--- 
-1.9.1
+--
+Luca.
