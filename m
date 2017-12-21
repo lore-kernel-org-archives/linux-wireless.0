@@ -1,49 +1,281 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23697 "EHLO
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37114 "EHLO
         sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752777AbdLNPTy (ORCPT
+        with ESMTP id S1751972AbdLUJBw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 10:19:54 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: handling qos at STA side based on AP WMM enable/disable
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
-References: <1511863650-9419-1-git-send-email-bpothuno@qti.qualcomm.com>
-To: <bpothuno@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Balaji Pothunoori" <bpothuno@qti.qualcomm.com>
-Message-ID: <da2cd6fa88db42ab94207e5551c9be69@euamsexm01a.eu.qualcomm.com> (sfid-20171214_162039_058674_A63AEB99)
-Date: Thu, 14 Dec 2017 16:19:41 +0100
+        Thu, 21 Dec 2017 04:01:52 -0500
+From: Govind Singh <govinds@qti.qualcomm.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@qti.qualcomm.com>
+Subject: [PATCH 08/10] ath10k: Add paddrs_ring_64 support for 64bit target
+Date: Thu, 21 Dec 2017 14:30:57 +0530
+Message-Id: <1513846859-23639-9-git-send-email-govinds@qti.qualcomm.com> (sfid-20171221_100204_450870_B496CF6C)
+In-Reply-To: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
+References: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bpothuno@qti.qualcomm.com wrote:
+paddrs_ring_64 holds the physical device address of the
+rx buffers that host SW provides for the MAC HW to fill.
+Since this field is used in rx ring setup and rx ring
+replenish in rx data path. Define separate methods
+for handling 64 bit ring paddr and attach them dynamically
+based on target_64bit hw param flag. Use u64 type
+while popping paddr from the rx hash table for 64bit target.
 
-> Data packets are not sent by STA in case of STA joined to
-> non QOS AP (WMM disabled AP). This is happening because of STA
-> is sending data packets to firmware from host with qos enabled
-> along with non qos queue value(TID = 16).
-> Due to qos enabled, firmware is discarding the packet.
-> 
-> This patch fixes this issue by updating the qos based on station
-> WME capability field if WMM is disabled in AP.
-> 
-> This patch is required by 10.4 family chipsets like
-> QCA4019/QCA9888/QCA9884/QCA99X0.
-> Firmware Versoin : 10.4-3.5.1-00018.
-> 
-> For 10.2.4 family chipsets QCA988X/QCA9887 and QCA6174 this patch
-> has no effect.
-> 
-> Signed-off-by: Balaji Pothunoori <bpothuno@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.c    |   1 +
+ drivers/net/wireless/ath/ath10k/htt.h    |  15 ++++-
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 110 ++++++++++++++++++++++++++-----
+ 3 files changed, 109 insertions(+), 17 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-07ffb4497360 ath10k: handling qos at STA side based on AP WMM enable/disable
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 8dc96a1..764fb26 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -208,6 +208,7 @@ int ath10k_htt_init(struct ath10k *ar)
+ 		return -EINVAL;
+ 	}
+ 	ath10k_htt_set_tx_ops(htt);
++	ath10k_htt_set_rx_ops(htt);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 3a43a48..805ff89 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1708,7 +1708,10 @@ struct ath10k_htt {
+ 		 * rx buffers the host SW provides for the MAC HW to
+ 		 * fill.
+ 		 */
+-		__le32 *paddrs_ring;
++		union {
++			__le64 *paddrs_ring_64;
++			__le32 *paddrs_ring_32;
++		};
+ 
+ 		/*
+ 		 * Base address of ring, as a "physical" device address
+@@ -1814,6 +1817,7 @@ struct ath10k_htt {
+ 
+ 	bool tx_mem_allocated;
+ 	const struct ath10k_htt_tx_ops *tx_ops;
++	const struct ath10k_htt_rx_ops *rx_ops;
+ };
+ 
+ struct ath10k_htt_tx_ops {
+@@ -1827,6 +1831,14 @@ struct ath10k_htt_tx_ops {
+ 	void (*htt_free_txbuff)(struct ath10k_htt *htt);
+ };
+ 
++struct ath10k_htt_rx_ops {
++	size_t (*htt_get_rx_ring_size)(struct ath10k_htt *htt);
++	void (*htt_config_paddrs_ring)(struct ath10k_htt *htt, void *vaddr);
++	void (*htt_set_paddrs_ring)(struct ath10k_htt *htt, dma_addr_t paddr,
++				    int idx);
++	void* (*htt_get_vaddr_ring)(struct ath10k_htt *htt);
++	void (*htt_reset_paddrs_ring)(struct ath10k_htt *htt, int idx);
++};
+ #define RX_HTT_HDR_STATUS_LEN 64
+ 
+ /* This structure layout is programmed via rx ring setup
+@@ -1933,4 +1945,5 @@ void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
+ 					     struct sk_buff *skb);
+ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget);
+ void ath10k_htt_set_tx_ops(struct ath10k_htt *htt);
++void ath10k_htt_set_rx_ops(struct ath10k_htt *htt);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6fb6751..a53e3b6 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -33,7 +33,7 @@
+ static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb);
+ 
+ static struct sk_buff *
+-ath10k_htt_rx_find_skb_paddr(struct ath10k *ar, u32 paddr)
++ath10k_htt_rx_find_skb_paddr(struct ath10k *ar, u64 paddr)
+ {
+ 	struct ath10k_skb_rxcb *rxcb;
+ 
+@@ -81,6 +81,60 @@ static void ath10k_htt_rx_ring_free(struct ath10k_htt *htt)
+ 	       htt->rx_ring.size * sizeof(htt->rx_ring.netbufs_ring[0]));
+ }
+ 
++static size_t ath10k_htt_get_rx_ring_size_32(struct ath10k_htt *htt)
++{
++	return htt->rx_ring.size * sizeof(htt->rx_ring.paddrs_ring_32);
++}
++
++static size_t ath10k_htt_get_rx_ring_size_64(struct ath10k_htt *htt)
++{
++	return htt->rx_ring.size * sizeof(htt->rx_ring.paddrs_ring_64);
++}
++
++static void ath10k_htt_config_paddrs_ring_32(struct ath10k_htt *htt,
++					     void *vaddr)
++{
++	htt->rx_ring.paddrs_ring_32 = vaddr;
++}
++
++static void ath10k_htt_config_paddrs_ring_64(struct ath10k_htt *htt,
++					     void *vaddr)
++{
++	htt->rx_ring.paddrs_ring_64 = vaddr;
++}
++
++static void ath10k_htt_set_paddrs_ring_32(struct ath10k_htt *htt,
++					  dma_addr_t paddr, int idx)
++{
++	htt->rx_ring.paddrs_ring_32[idx] = __cpu_to_le32(paddr);
++}
++
++static void ath10k_htt_set_paddrs_ring_64(struct ath10k_htt *htt,
++					  dma_addr_t paddr, int idx)
++{
++	htt->rx_ring.paddrs_ring_64[idx] = __cpu_to_le64(paddr);
++}
++
++static void ath10k_htt_reset_paddrs_ring_32(struct ath10k_htt *htt, int idx)
++{
++	htt->rx_ring.paddrs_ring_32[idx] = 0;
++}
++
++static void ath10k_htt_reset_paddrs_ring_64(struct ath10k_htt *htt, int idx)
++{
++	htt->rx_ring.paddrs_ring_64[idx] = 0;
++}
++
++static void *ath10k_htt_get_vaddr_ring_32(struct ath10k_htt *htt)
++{
++	return (void *)htt->rx_ring.paddrs_ring_32;
++}
++
++static void *ath10k_htt_get_vaddr_ring_64(struct ath10k_htt *htt)
++{
++	return (void *)htt->rx_ring.paddrs_ring_64;
++}
++
+ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+ {
+ 	struct htt_rx_desc *rx_desc;
+@@ -126,13 +180,13 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+ 		rxcb = ATH10K_SKB_RXCB(skb);
+ 		rxcb->paddr = paddr;
+ 		htt->rx_ring.netbufs_ring[idx] = skb;
+-		htt->rx_ring.paddrs_ring[idx] = __cpu_to_le32(paddr);
++		htt->rx_ops->htt_set_paddrs_ring(htt, paddr, idx);
+ 		htt->rx_ring.fill_cnt++;
+ 
+ 		if (htt->rx_ring.in_ord_rx) {
+ 			hash_add(htt->rx_ring.skb_table,
+ 				 &ATH10K_SKB_RXCB(skb)->hlist,
+-				 (u32)paddr);
++				 paddr);
+ 		}
+ 
+ 		num--;
+@@ -231,9 +285,8 @@ void ath10k_htt_rx_free(struct ath10k_htt *htt)
+ 	ath10k_htt_rx_ring_free(htt);
+ 
+ 	dma_free_coherent(htt->ar->dev,
+-			  (htt->rx_ring.size *
+-			   sizeof(htt->rx_ring.paddrs_ring)),
+-			  htt->rx_ring.paddrs_ring,
++			  htt->rx_ops->htt_get_rx_ring_size(htt),
++			  htt->rx_ops->htt_get_vaddr_ring(htt),
+ 			  htt->rx_ring.base_paddr);
+ 
+ 	dma_free_coherent(htt->ar->dev,
+@@ -260,7 +313,7 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
+ 	idx = htt->rx_ring.sw_rd_idx.msdu_payld;
+ 	msdu = htt->rx_ring.netbufs_ring[idx];
+ 	htt->rx_ring.netbufs_ring[idx] = NULL;
+-	htt->rx_ring.paddrs_ring[idx] = 0;
++	htt->rx_ops->htt_reset_paddrs_ring(htt, idx);
+ 
+ 	idx++;
+ 	idx &= htt->rx_ring.size_mask;
+@@ -380,7 +433,7 @@ static int ath10k_htt_rx_amsdu_pop(struct ath10k_htt *htt,
+ }
+ 
+ static struct sk_buff *ath10k_htt_rx_pop_paddr(struct ath10k_htt *htt,
+-					       u32 paddr)
++					       u64 paddr)
+ {
+ 	struct ath10k *ar = htt->ar;
+ 	struct ath10k_skb_rxcb *rxcb;
+@@ -508,7 +561,7 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
+ 	dma_addr_t paddr;
+-	void *vaddr;
++	void *vaddr, *vaddr_ring;
+ 	size_t size;
+ 	struct timer_list *timer = &htt->rx_ring.refill_retry_timer;
+ 
+@@ -532,13 +585,13 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 	if (!htt->rx_ring.netbufs_ring)
+ 		goto err_netbuf;
+ 
+-	size = htt->rx_ring.size * sizeof(htt->rx_ring.paddrs_ring);
++	size = htt->rx_ops->htt_get_rx_ring_size(htt);
+ 
+-	vaddr = dma_alloc_coherent(htt->ar->dev, size, &paddr, GFP_KERNEL);
+-	if (!vaddr)
++	vaddr_ring = dma_alloc_coherent(htt->ar->dev, size, &paddr, GFP_KERNEL);
++	if (!vaddr_ring)
+ 		goto err_dma_ring;
+ 
+-	htt->rx_ring.paddrs_ring = vaddr;
++	htt->rx_ops->htt_config_paddrs_ring(htt, vaddr_ring);
+ 	htt->rx_ring.base_paddr = paddr;
+ 
+ 	vaddr = dma_alloc_coherent(htt->ar->dev,
+@@ -572,9 +625,8 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 
+ err_dma_idx:
+ 	dma_free_coherent(htt->ar->dev,
+-			  (htt->rx_ring.size *
+-			   sizeof(htt->rx_ring.paddrs_ring)),
+-			  htt->rx_ring.paddrs_ring,
++			  htt->rx_ops->htt_get_rx_ring_size(htt),
++			  vaddr_ring,
+ 			  htt->rx_ring.base_paddr);
+ err_dma_ring:
+ 	kfree(htt->rx_ring.netbufs_ring);
+@@ -2784,3 +2836,29 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
+ 	return done;
+ }
+ EXPORT_SYMBOL(ath10k_htt_txrx_compl_task);
++
++static const struct ath10k_htt_rx_ops htt_rx_ops_32 = {
++	.htt_get_rx_ring_size = ath10k_htt_get_rx_ring_size_32,
++	.htt_config_paddrs_ring = ath10k_htt_config_paddrs_ring_32,
++	.htt_set_paddrs_ring = ath10k_htt_set_paddrs_ring_32,
++	.htt_get_vaddr_ring = ath10k_htt_get_vaddr_ring_32,
++	.htt_reset_paddrs_ring = ath10k_htt_reset_paddrs_ring_32,
++};
++
++static const struct ath10k_htt_rx_ops htt_rx_ops_64 = {
++	.htt_get_rx_ring_size = ath10k_htt_get_rx_ring_size_64,
++	.htt_config_paddrs_ring = ath10k_htt_config_paddrs_ring_64,
++	.htt_set_paddrs_ring = ath10k_htt_set_paddrs_ring_64,
++	.htt_get_vaddr_ring = ath10k_htt_get_vaddr_ring_64,
++	.htt_reset_paddrs_ring = ath10k_htt_reset_paddrs_ring_64,
++};
++
++void ath10k_htt_set_rx_ops(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++
++	if (ar->hw_params.target_64bit)
++		htt->rx_ops = &htt_rx_ops_64;
++	else
++		htt->rx_ops = &htt_rx_ops_32;
++}
 -- 
-https://patchwork.kernel.org/patch/10079089/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
