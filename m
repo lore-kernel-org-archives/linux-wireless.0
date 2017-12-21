@@ -1,78 +1,298 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:38697 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751912AbdLVGDP (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58150 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753794AbdLUQFm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 01:03:15 -0500
-Received: from mail-it0-f69.google.com ([209.85.214.69])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1eSGQM-0002eY-En
-        for linux-wireless@vger.kernel.org; Fri, 22 Dec 2017 06:03:14 +0000
-Received: by mail-it0-f69.google.com with SMTP id p144so9668079itc.9
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2017 22:03:14 -0800 (PST)
-From: Seth Forshee <seth.forshee@canonical.com>
-To: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 4/6] wireless-regdb: Better support for generating public certificates
-Date: Fri, 22 Dec 2017 00:03:01 -0600
-Message-Id: <20171222060303.14478-5-seth.forshee@canonical.com> (sfid-20171222_070347_501251_879EB8B2)
-In-Reply-To: <20171222060303.14478-1-seth.forshee@canonical.com>
-References: <20171222060303.14478-1-seth.forshee@canonical.com>
+        Thu, 21 Dec 2017 11:05:42 -0500
+From: Rakesh Pillai <pillair@qti.qualcomm.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>,
+        Rakesh Pillai <pillair@qti.qualcomm.com>
+Subject: [PATCH v2 3/3] ath10k: Add fw feature flag for non-bmi firmware load
+Date: Thu, 21 Dec 2017 21:35:22 +0530
+Message-Id: <1513872322-26636-4-git-send-email-pillair@qti.qualcomm.com> (sfid-20171221_170554_451810_360CB236)
+In-Reply-To: <1513872322-26636-1-git-send-email-pillair@qti.qualcomm.com>
+References: <1513872322-26636-1-git-send-email-pillair@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current makefile rule for the public certificate calls for an
-openssl config file which is not provided. Let's put the pubcert
-generation into a script named gen-pubcert.sh and embed the
-openssl configuration file there.
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+HL1.0 firmware is not loaded via bmi. The bmi specific
+code should not be executed for HL1.0
+
+Add fw feature flag for non bmi targets and skip the bmi
+specific code for non bmi targets.
+
+Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
 ---
- Makefile       |  4 +---
- gen-pubcert.sh | 18 ++++++++++++++++++
- 2 files changed, 19 insertions(+), 3 deletions(-)
- create mode 100755 gen-pubcert.sh
+ drivers/net/wireless/ath/ath10k/core.c | 180 +++++++++++++++++++--------------
+ drivers/net/wireless/ath/ath10k/core.h |   3 +
+ 2 files changed, 108 insertions(+), 75 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 9532c29a1dc2..044251f64785 100644
---- a/Makefile
-+++ b/Makefile
-@@ -79,9 +79,7 @@ $(REGDB_PUBKEY): $(REGDB_PRIVKEY)
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index b6d5bad6f5ec..188efa8dcfc0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -445,6 +445,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST] = "allows-mesh-bcast",
+ 	[ATH10K_FW_FEATURE_NO_PS] = "no-ps",
+ 	[ATH10K_FW_FEATURE_MGMT_TX_BY_REF] = "mgmt-tx-by-reference",
++	[ATH10K_FW_FEATURE_NON_BMI] = "non-bmi",
+ };
  
- $(REGDB_PUBCERT): $(REGDB_PRIVKEY)
- 	@echo "Generating certificate for $(REGDB_AUTHOR)..."
--	@openssl req -config regulatory.openssl.conf \
--		-key $(REGDB_PRIVKEY) -days 36500 -utf8 -nodes -batch \
--		-x509 -outform PEM -out $(REGDB_PUBCERT)
-+	./gen-pubcert.sh $(REGDB_PRIVKEY) $(REGDB_PUBCERT)
- 	@echo $(REGDB_PUBKEY) > .custom
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+@@ -1524,8 +1525,8 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 		data += ie_len;
+ 	}
  
+-	if (!fw_file->firmware_data ||
+-	    !fw_file->firmware_len) {
++	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI, fw_file->fw_features) &&
++	    (!fw_file->firmware_data || !fw_file->firmware_len)) {
+ 		ath10k_warn(ar, "No ATH10K_FW_IE_FW_IMAGE found from '%s/%s', skipping\n",
+ 			    ar->hw_params.fw.dir, name);
+ 		ret = -ENOMEDIUM;
+@@ -2079,43 +2080,47 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
  
-diff --git a/gen-pubcert.sh b/gen-pubcert.sh
-new file mode 100755
-index 000000000000..1a4d57999e5d
---- /dev/null
-+++ b/gen-pubcert.sh
-@@ -0,0 +1,18 @@
-+#!/bin/bash
+ 	ar->running_fw = fw;
+ 
+-	ath10k_bmi_start(ar);
++	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
++		      ar->running_fw->fw_file.fw_features)) {
++		ath10k_bmi_start(ar);
+ 
+-	if (ath10k_init_configure_target(ar)) {
+-		status = -EINVAL;
+-		goto err;
+-	}
+-
+-	status = ath10k_download_cal_data(ar);
+-	if (status)
+-		goto err;
++		if (ath10k_init_configure_target(ar)) {
++			status = -EINVAL;
++			goto err;
++		}
+ 
+-	/* Some of of qca988x solutions are having global reset issue
+-	 * during target initialization. Bypassing PLL setting before
+-	 * downloading firmware and letting the SoC run on REF_CLK is
+-	 * fixing the problem. Corresponding firmware change is also needed
+-	 * to set the clock source once the target is initialized.
+-	 */
+-	if (test_bit(ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT,
+-		     ar->running_fw->fw_file.fw_features)) {
+-		status = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
+-		if (status) {
+-			ath10k_err(ar, "could not write to skip_clock_init: %d\n",
+-				   status);
++		status = ath10k_download_cal_data(ar);
++		if (status)
+ 			goto err;
 +
-+if [[ $# -ne 2 ]]; then
-+	echo "Usage: $0 priv-key out-file"
-+	exit 1
-+fi
++		/* Some of of qca988x solutions are having global reset issue
++		 * during target initialization. Bypassing PLL setting before
++		 * downloading firmware and letting the SoC run on REF_CLK is
++		 * fixing the problem. Corresponding firmware change is also
++		 * needed to set the clock source once the target is
++		 * initialized.
++		 */
++		if (test_bit(ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT,
++			     ar->running_fw->fw_file.fw_features)) {
++			status = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
++			if (status) {
++				ath10k_err(ar, "could not write to skip_clock_init: %d\n",
++					   status);
++				goto err;
++			}
+ 		}
+-	}
+ 
+-	status = ath10k_download_fw(ar);
+-	if (status)
+-		goto err;
++		status = ath10k_download_fw(ar);
++		if (status)
++			goto err;
+ 
+-	status = ath10k_init_uart(ar);
+-	if (status)
+-		goto err;
++		status = ath10k_init_uart(ar);
++		if (status)
++			goto err;
+ 
+-	if (ar->hif.bus == ATH10K_BUS_SDIO)
+-		ath10k_init_sdio(ar);
++		if (ar->hif.bus == ATH10K_BUS_SDIO)
++			ath10k_init_sdio(ar);
++	}
+ 
+ 	ar->htc.htc_ops.target_send_suspend_complete =
+ 		ath10k_send_suspend_complete;
+@@ -2126,9 +2131,12 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 		goto err;
+ 	}
+ 
+-	status = ath10k_bmi_done(ar);
+-	if (status)
+-		goto err;
++	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
++		      ar->running_fw->fw_file.fw_features)) {
++		status = ath10k_bmi_done(ar);
++		if (status)
++			goto err;
++	}
+ 
+ 	status = ath10k_wmi_attach(ar);
+ 	if (status) {
+@@ -2371,19 +2379,34 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
+-	memset(&target_info, 0, sizeof(target_info));
+-	if (ar->hif.bus == ATH10K_BUS_SDIO)
++	switch (ar->hif.bus) {
++	case ATH10K_BUS_SDIO:
++		memset(&target_info, 0, sizeof(target_info));
+ 		ret = ath10k_bmi_get_target_info_sdio(ar, &target_info);
+-	else
++		if (ret) {
++			ath10k_err(ar, "could not get target info (%d)\n", ret);
++			goto err_power_down;
++		}
++		ar->target_version = target_info.version;
++		ar->hw->wiphy->hw_version = target_info.version;
++		break;
++	case ATH10K_BUS_PCI:
++	case ATH10K_BUS_AHB:
++		memset(&target_info, 0, sizeof(target_info));
+ 		ret = ath10k_bmi_get_target_info(ar, &target_info);
+-	if (ret) {
+-		ath10k_err(ar, "could not get target info (%d)\n", ret);
+-		goto err_power_down;
++		if (ret) {
++			ath10k_err(ar, "could not get target info (%d)\n", ret);
++			goto err_power_down;
++		}
++		ar->target_version = target_info.version;
++		ar->hw->wiphy->hw_version = target_info.version;
++		break;
++	case ATH10K_BUS_SNOC:
++		break;
++	default:
++		ath10k_err(ar, "incorrect hif bus type: %d\n", ar->hif.bus);
+ 	}
+ 
+-	ar->target_version = target_info.version;
+-	ar->hw->wiphy->hw_version = target_info.version;
+-
+ 	ret = ath10k_init_hw_params(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "could not get hw params (%d)\n", ret);
+@@ -2403,37 +2426,40 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 
+ 	ath10k_debug_print_hwfw_info(ar);
+ 
+-	ret = ath10k_core_pre_cal_download(ar);
+-	if (ret) {
+-		/* pre calibration data download is not necessary
+-		 * for all the chipsets. Ignore failures and continue.
+-		 */
+-		ath10k_dbg(ar, ATH10K_DBG_BOOT,
+-			   "could not load pre cal data: %d\n", ret);
+-	}
++	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
++		      ar->normal_mode_fw.fw_file.fw_features)) {
++		ret = ath10k_core_pre_cal_download(ar);
++		if (ret) {
++			/* pre calibration data download is not necessary
++			 * for all the chipsets. Ignore failures and continue.
++			 */
++			ath10k_dbg(ar, ATH10K_DBG_BOOT,
++				   "could not load pre cal data: %d\n", ret);
++		}
+ 
+-	ret = ath10k_core_get_board_id_from_otp(ar);
+-	if (ret && ret != -EOPNOTSUPP) {
+-		ath10k_err(ar, "failed to get board id from otp: %d\n",
+-			   ret);
+-		goto err_free_firmware_files;
+-	}
++		ret = ath10k_core_get_board_id_from_otp(ar);
++		if (ret && ret != -EOPNOTSUPP) {
++			ath10k_err(ar, "failed to get board id from otp: %d\n",
++				   ret);
++			goto err_free_firmware_files;
++		}
+ 
+-	ret = ath10k_core_check_smbios(ar);
+-	if (ret)
+-		ath10k_dbg(ar, ATH10K_DBG_BOOT, "SMBIOS bdf variant name not set.\n");
++		ret = ath10k_core_check_smbios(ar);
++		if (ret)
++			ath10k_dbg(ar, ATH10K_DBG_BOOT, "SMBIOS bdf variant name not set.\n");
+ 
+-	ret = ath10k_core_check_dt(ar);
+-	if (ret)
+-		ath10k_dbg(ar, ATH10K_DBG_BOOT, "DT bdf variant name not set.\n");
++		ret = ath10k_core_check_dt(ar);
++		if (ret)
++			ath10k_dbg(ar, ATH10K_DBG_BOOT, "DT bdf variant name not set.\n");
+ 
+-	ret = ath10k_core_fetch_board_file(ar);
+-	if (ret) {
+-		ath10k_err(ar, "failed to fetch board file: %d\n", ret);
+-		goto err_free_firmware_files;
+-	}
++		ret = ath10k_core_fetch_board_file(ar);
++		if (ret) {
++			ath10k_err(ar, "failed to fetch board file: %d\n", ret);
++			goto err_free_firmware_files;
++		}
+ 
+-	ath10k_debug_print_board_info(ar);
++		ath10k_debug_print_board_info(ar);
++	}
+ 
+ 	ret = ath10k_core_init_firmware_features(ar);
+ 	if (ret) {
+@@ -2442,11 +2468,15 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 		goto err_free_firmware_files;
+ 	}
+ 
+-	ret = ath10k_swap_code_seg_init(ar, &ar->normal_mode_fw.fw_file);
+-	if (ret) {
+-		ath10k_err(ar, "failed to initialize code swap segment: %d\n",
+-			   ret);
+-		goto err_free_firmware_files;
++	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
++		      ar->normal_mode_fw.fw_file.fw_features)) {
++		ret = ath10k_swap_code_seg_init(ar,
++						&ar->normal_mode_fw.fw_file);
++		if (ret) {
++			ath10k_err(ar, "failed to initialize code swap segment: %d\n",
++				   ret);
++			goto err_free_firmware_files;
++		}
+ 	}
+ 
+ 	mutex_lock(&ar->conf_mutex);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 81285ab30a7d..b747ef52c186 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -618,6 +618,9 @@ enum ath10k_fw_features {
+ 	/* Firmware allows management tx by reference instead of by value. */
+ 	ATH10K_FW_FEATURE_MGMT_TX_BY_REF = 18,
+ 
++	/* Firmware load is done externally, not by bmi */
++	ATH10K_FW_FEATURE_NON_BMI = 19,
 +
-+openssl req -new -key "$1" -days 36500 -utf8 -nodes -batch \
-+	-x509 -outform PEM -out "$2" \
-+	-config <(cat <<-EOF
-+		[ req ]
-+		distinguished_name = req_distinguished_name
-+		string_mask = utf8only
-+		prompt = no
-+		[ req_distinguished_name ]
-+		commonName = sforshee
-+		EOF
-+	)
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
 -- 
-2.14.1
+2.11.0
