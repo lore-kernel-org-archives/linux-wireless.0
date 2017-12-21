@@ -1,60 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:35638 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752318AbdLLIrR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51560 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751705AbdLULAS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 03:47:17 -0500
-Message-ID: <1513068419.26976.86.camel@sipsolutions.net> (sfid-20171212_094742_751264_B994A2B3)
-Subject: Re: linux-next: build failure after merge of the mac80211-next tree
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>
-Date: Tue, 12 Dec 2017 09:46:59 +0100
-In-Reply-To: <20171212125805.5f7813fd@canb.auug.org.au>
-References: <20171212125805.5f7813fd@canb.auug.org.au>
+        Thu, 21 Dec 2017 06:00:18 -0500
+Message-ID: <1513854015.4827.506.camel@coelho.fi> (sfid-20171221_120319_424226_7FFAC097)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>
+Date: Thu, 21 Dec 2017 13:00:15 +0200
+In-Reply-To: <87wp1he5dh.fsf@kamboji.qca.qualcomm.com>
+References: <20171218123815.3968-1-luca@coelho.fi>
+         <20171218123815.3968-8-luca@coelho.fi>
+         <878tdxh00r.fsf@kamboji.qca.qualcomm.com>
+         <1513786686.4827.485.camel@coelho.fi>
+         <87wp1he5dh.fsf@kamboji.qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: [PATCH 07/11] iwlwifi: add skb address to tx cmd in trace
+ events data
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephen,
+On Wed, 2017-12-20 at 18:22 +0200, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> 
+> > On Wed, 2017-12-20 at 17:49 +0200, Kalle Valo wrote:
+> > > Luca Coelho <luca@coelho.fi> writes:
+> > > 
+> > > > From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+> > > > 
+> > > > This helps matching tx cmd with other trace events, like
+> > > > net_dev_xmit
+> > > > and net_dev_queue etc.
+> > > > 
+> > > > Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.c
+> > > > om>
+> > > > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> > > 
+> > > [...]
+> > > 
+> > > > @@ -120,9 +121,9 @@ TRACE_EVENT(iwlwifi_dev_tx,
+> > > >  				      __get_dynamic_array(buf1
+> > > > ),
+> > > >  				      skb->len - hdr_len);
+> > > >  	),
+> > > > -	TP_printk("[%s] TX %.2x (%zu bytes)",
+> > > > +	TP_printk("[%s] TX %.2x (%zu bytes) skbaddr=%p",
+> > > >  		  __get_str(dev), ((u8
+> > > > *)__get_dynamic_array(buf0))[0],
+> > > > -		  __entry->framelen)
+> > > > +		  __entry->framelen, __entry->skbaddr)
+> > > >  );
+> > > 
+> > > Just so that you know there has been a lot of changes recently
+> > > about
+> > > %p,
+> > > I think the addresses are nowadays hashed due to security
+> > > reasons. No
+> > > idea if it afffects tracing events, but just wanted to point out
+> > > this.
+> > 
+> > Yeah, I've seen some discussions and I even commented that in our
+> > internal review.  But I reckoned that if they are all hash, it
+> > should
+> > still be possible to match them.
+> 
+> Good point, matching is of course possible with hashes.
+> 
+> > It would be good to check if that's done also for traces...
+> 
+> Yeah, please let me know if you find out that.
 
-Thanks!
+Moti investigated this a bit further.  This is what he concluded:
 
-Felix made me aware of this yesterday evening and said he's going to
-work out the required changes to mt76.
+---8<---
+Hi from my checking in the trace code it looks like
 
-Kalle and I will make sure to submit the trees to Dave one by one so he
-doesn't have to deal with it :)
+Tracepoins infrastructure copies as is the skbaddr to the cyclic buffer
+User space tools get the content as is, from the cyclic buffer but you
+need to be root to read it.  The use of tp_printk is for dumping the
+output without userspace tools. (trace-cmd)
+It's when you do cat trace in debugfs.
 
-Unfortunately, this might take a few days to resolve.
+Like
+>> cd /sys/kernel/debug/tracing
+>> [enable the tracing points]
+>> cat trace
 
-> -void mt76_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
-> +void mt76_wake_tx_queue(struct ieee80211_hw *hw)
->  {
-> +	struct ieee80211_txq *txq;
->  	struct mt76_dev *dev = hw->priv;
-> -	struct mt76_txq *mtxq = (struct mt76_txq *) txq->drv_priv;
-> -	struct mt76_queue *hwq = mtxq->hwq;
-> +	struct mt76_txq *mtxq;
-> +	struct mt76_queue *hwq;
->  
-> +	txq = ieee80211_next_txq(hw);
-> +	mtxq = (struct mt76_txq *) txq->drv_priv;
-> +	hwq = mtxq->hwq;
+It calls
+kernel/trace/trace_seq.c :void trace_seq_printf
+lib/seq_buf.c: int seq_buf_vprintf
+lib/vsprintf.c : int vsnprintf
 
+so if printk is changing to print hash (%p) also tp_printk would print
+the hash https://patchwork.kernel.org/patch/10031785/ the changed are
+done on vsnprintf but the user that has access to the cyclic buffer
+would still have the ability to get the address itself.
+--->8---
 
-Looks pretty much right to me - perhaps for safety there should be a
-NULL check on txq, but OTOH when you get here it should be non-NULL.
+Thanks for checking Moti!
 
-Sorry for the inconvenience, I hadn't realized mt76 went in now.
-
-johannes
+--
+Cheers,
+Luca.
