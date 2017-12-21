@@ -1,131 +1,956 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.innerrange.com.au ([203.222.77.226]:17892 "EHLO
-        mail.innerrange.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750745AbdLMXjf (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37114 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751318AbdLUJBy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 18:39:35 -0500
-From: Craig McQueen <craig.mcqueen@innerrange.com.au>
-To: Craig McQueen <craig.mcqueen@innerrange.com.au>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: rt2800usb firmware rt2870.bin 0.36 not scanning
-Date: Wed, 13 Dec 2017 23:24:28 +0000
-Message-ID: <17dbd0476f1e45c7af0cb70efb15d75f@innerrange.com.au> (sfid-20171214_003943_375332_68BB4DC7)
-References: <f2d6e3de-826a-c7b6-ac29-16b83be758e8@gmail.com>
- <5500469A22567C4BAF673A6E86AFA3A4022D2A096849@IR-CENTRAL.corp.innerrange.com>
- <5500469A22567C4BAF673A6E86AFA3A4022D2BB5ED6C@IR-CENTRAL.corp.innerrange.com>
-In-Reply-To: <5500469A22567C4BAF673A6E86AFA3A4022D2BB5ED6C@IR-CENTRAL.corp.innerrange.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Thu, 21 Dec 2017 04:01:54 -0500
+From: Govind Singh <govinds@qti.qualcomm.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@qti.qualcomm.com>
+Subject: [PATCH 10/10] ath10k: Add support for 64 bit ce descriptor
+Date: Thu, 21 Dec 2017 14:30:59 +0530
+Message-Id: <1513846859-23639-11-git-send-email-govinds@qti.qualcomm.com> (sfid-20171221_100205_852871_7C2F3C9B)
+In-Reply-To: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
+References: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SSB3cm90ZToNCj4gSSB3cm90ZToNCj4gPiBJIHdyb3RlOg0KPiA+ID4gSSB3cm90ZToNCj4gPiA+
-ID4gWG9zZSBWYXpxdWV6IFBlcmV6IHdyb3RlOg0KPiA+ID4gPiA+IENyYWlnIE1jUXVlZW4gd3Jv
-dGU6DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IEkgaGF2ZSBhIEQtTGluayBEV0EtMTQwIFVTQiBX
-aS1GaSBkZXZpY2Ugd2hpY2ggaXMgcnQyODAwIGJhc2VkDQo+ID4gPiA+ID4gPiAoNTM5MiBjaGlw
-c2V0KS4gSSdtIHRyeWluZyB0byB1c2UgaXQgb24gYSBCZWFnbGVCb25lIEJsYWNrDQo+ID4gPiA+
-ID4gPiBiYXNlZCBzeXN0ZW0gd2l0aCAzLjE0Lngga2VybmVsIGJ1aWx0IHdpdGggWW9jdG8uIFdl
-J3JlIHVzaW5nDQo+ID4gPiA+ID4gPiBDb25uTWFuDQo+ID4gPiA+ID4gPiAxLjMwIGF0IHRoZQ0K
-PiA+ID4gPiBtb21lbnQuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBUcnkgaXQgd2l0aCBhIF9kZXNr
-dG9wIHg4Nl82NCBkaXN0cmlidXRpb25fICwgd2l0aCBhICpyZWNlbnQNCj4gPiA+ID4gPiBrZXJu
-ZWwqIGFzDQo+ID4gPiA+ID4gRmVkb3JhOiAoV09SSyBpcyBnbm9tZSkNCj4gPiA+ID4gPiBodHRw
-czovL2FsdC5mZWRvcmFwcm9qZWN0Lm9yZy9wdWIvYWx0L2xpdmUtcmVzcGlucy8NCj4gPiA+ID4N
-Cj4gPiA+ID4gSG1tLCB0aGF0IGlzIG5vbi10cml2aWFsIGJ1dCBJIG1heSB0cnkgaXQuDQo+ID4g
-PiA+DQo+ID4gPiA+IEZvciBub3csIEknbGwgYWxzbyB0cnkgYSA0LjQuNiBrZXJuZWwgcnVubmlu
-ZyBvbiBhIEJlYWdsZUJvbmUNCj4gPiA+ID4gQmxhY2sgKHdpdGggYSBVU0IgaHViIHRvIHdvcmsg
-YXJvdW5kIGFub3RoZXIgaXNzdWUgd2l0aCB0aGUNCj4gPiA+ID4gcnQyODAwdXNiIGRyaXZlciBj
-cmFzaGluZyBhcyBkZXNjcmliZWQgaW4gYW5vdGhlciBlLW1haWwpLg0KPiA+ID4gPg0KPiA+ID4g
-PiA+ID4gV2UndmUgYmVlbiBmaW5kaW5nIHNvbWUgaW5zdGFiaWxpdGllcyB3aXRoIGl0IHBlcmlv
-ZGljYWxseQ0KPiA+ID4gPiA+ID4gZGlzY29ubmVjdGluZyBmcm9tIHNvbWUgbmV0d29ya3MuIFNv
-IHdlIHRyaWVkIHVwZ3JhZGluZyB0aGUNCj4gPiA+ID4gPiA+IGZpcm13YXJlIGZpbGUgcnQyODcw
-LmJpbiBmcm9tIHZlcnNpb24gMC4yOSB0byAwLjM2LiBUaGF0IHNlZW1zDQo+ID4gPiA+ID4gPiB0
-byBiZSBtb3JlIHN0YWJsZSB3aXRoIHRoZSBuZXR3b3JrLiBIb3dldmVyLCB3ZSdyZSBmaW5kaW5n
-DQo+ID4gPiA+ID4gPiB0aGF0IGl0IGluaXRpYWxseSBkb2Vzbid0IGNvbm5lY3QsIHVudGlsIHRo
-ZSBXaS1GaSBoYXMgYmVlbg0KPiA+ID4gPiA+ID4gZGlzYWJsZWQgYW5kIHRoZW4gcmUtDQo+ID4g
-PiBlbmFibGVkLiAnDQo+ID4gPiA+ID4gc2NhbiB3aWZpJw0KPiA+ID4gPiA+ID4gYW5kICdpd2xp
-c3Qgc2NhbicgZG9uJ3QgcmV0dXJuIGFueXRoaW5nIHVudGlsIFdpLUZpIGhhcyBiZWVuDQo+ID4g
-PiA+ID4gPiBkaXNhYmxlZCBhbmQgdGhlbiByZS1lbmFibGVkLg0KPiA+ID4gPiA+DQo+ID4gPiA+
-ID4gRG9uJ3QgdXNlIGFueSB3cmFwcGVyKE5NLCBDb25uTWFuLCB3aWNkLCAuLi4pLCB1c3VhbGx5
-IGFyZSBidWdneS4NCj4gPiA+ID4gPiBZb3Ugc2hvdWxkIHVzZSByYXcgY29tbWFuZHMgIml3IiBh
-bmQgIndwYV9zdXBwbGljYW50Ii4gSGludHM6DQo+ID4gPiA+ID4gaHR0cHM6Ly93aXJlbGVzcy53
-aWtpLmtlcm5lbC5vcmcvZW4vdXNlcnMvZG9jdW1lbnRhdGlvbi9pdyBhbmQNCj4gPiA+ID4gPiB3
-cGFfc3VwcGxpY2FudCBhbHdheXMgcnVubmluZyB3aXRoICItRG5sODAyMTEiDQo+ID4gPiA+DQo+
-ID4gPiA+IE9rYXksIEkndmUgc3RyaXBwZWQgZG93biB0aGUgc3lzdGVtIHNvIENvbm5NYW4sIHVk
-ZXYgcnVsZXMgYXJlbid0DQo+ID4gPiBydW5uaW5nLg0KPiA+ID4gPg0KPiA+ID4gPiBPbiBhbGwg
-c3lzdGVtcywgYWZ0ZXIgcGx1Z2dpbmcgaW4gdGhlIGRldmljZSwgSSBoYXZlIHRvIGlzc3VlOg0K
-PiA+ID4gPg0KPiA+ID4gPiAgICAgaXAgbGluayBzZXQgd2xhbjAgdXANCj4gPiA+ID4NCj4gPiA+
-ID4gQWZ0ZXIgdGhpcywgSSB0cnkgdG8gZG8gYSBzY2FuOg0KPiA+ID4gPg0KPiA+ID4gPiAgICAg
-aXcgZGV2IHdsYW4wIHNjYW4NCj4gPiA+ID4NCj4gPiA+ID4gT24ga2VybmVsIDQuNC42LCB3aXRo
-IGZpcm13YXJlIDAuMzYsIGl0IHdvcmtzIGZpbmUgKGxpc3RzIEFQcyBpdA0KPiA+ID4gPiBmaW5k
-cykuIE9uIGtlcm5lbCAzLjE0LngsIHdpdGggZmlybXdhcmUgMC4yOSwgaXQgd29ya3MgZmluZS4g
-QnV0DQo+ID4gPiA+IG9uIGtlcm5lbCAzLjE0LngsIHdpdGggZmlybXdhcmUgMC4zNiwgaXQgcmV0
-dXJucyBub3RoaW5nLiBCdXQgdGhlbiwgaWYgSSBkbw0KPiB0aGlzOg0KPiA+ID4gPg0KPiA+ID4g
-PiAgICAgaXAgbGluayBzZXQgd2xhbjAgZG93bg0KPiA+ID4gPiAgICAgaXAgbGluayBzZXQgd2xh
-bjAgdXANCj4gPiA+ID4gICAgIGl3IGRldiB3bGFuMCBzY2FuDQo+ID4gPiA+DQo+ID4gPiA+IFRo
-ZW4gaXQgd29ya3MgZmluZS4NCj4gPiA+ID4NCj4gPiA+ID4gU28sIHRoZSBxdWVzdGlvbiBpcywg
-d2h5IGRvZXMgZmlybXdhcmUgMC4zNiB3aXRoIGtlcm5lbCAzLjE0Lnggbm90DQo+ID4gPiA+IHdv
-cmsgdW50aWwgSSd2ZSBtYWRlIHRoZSBpbnRlcmZhY2UgZ28gdXAsIHRoZW4gZG93biwgYW5kIHRo
-ZW4gdXANCj4gYWdhaW4/DQo+ID4gPg0KPiA+ID4gSSd2ZSBtYW5hZ2VkIHRvIGJ1aWxkLCB1c2lu
-ZyBZb2N0bywga2VybmVsIDQuNC4xMiBmb3IgQmVhZ2xlQm9uZS4NCj4gPiA+IFdoZW4gSSBydW4g
-aXQsIGl0IGhhcyB0aGUgc2FtZSBwcm9ibGVtLiBUaGF0J3MgZGlmZmVyZW50IGZyb20gdGhlDQo+
-ID4gPiBVYnVudHUNCj4gPiA+IDE2LjA0IGZvciBCZWFnbGVCb25lIHVzaW5nIDQuNC42IGtlcm5l
-bC4NCj4gPiA+DQo+ID4gPiBXaXRoIG15IFlvY3RvIGJ1aWxkLCBpdCBoYWQgYSBkaWZmZXJlbnQg
-dmVyc2lvbiBvZiB0aGUgJ2lwJyBhbmQgJ2l3Jw0KPiA+IGNvbW1hbmRzLg0KPiA+ID4gU28gSSB0
-cmllZCBjb3B5aW5nIHRoZSBVYnVudHUgdmVyc2lvbnMsIGJ1dCB0aGF0IGRpZG4ndCBtYWtlIGEN
-Cj4gPiA+IGRpZmZlcmVuY2UuIEkgdHJpZWQgdXNpbmcgdGhlIFlvY3RvIGJ1aWx0IDQuNC4xMiBr
-ZXJuZWwgd2l0aCB0aGUNCj4gPiA+IFVidW50dSByb290IGZpbGVzeXN0ZW0sIGJ1dCBpdCBoYWx0
-ZWQgZHVyaW5nIHRoZSBib290IHByb2Nlc3MgKGRvbid0DQo+ID4gPiBrbm93IHdoeSkuIE15IGJl
-c3QgZ3Vlc3MgaXMgdGhhdCB0aGVyZSdzIHNvbWUga2VybmVsIGNvbmZpZw0KPiA+ID4gZGlmZmVy
-ZW5jZSB0aGF0IG1ha2VzIGEgZGlmZmVyZW5jZSwgYnV0IHRoZXJlIGFyZSBtYW55IGRpZmZlcmVu
-Y2VzLA0KPiA+ID4gc28gSSdtIG5vdCBzdXJlDQo+ID4gd2hpY2ggb25lIGl0IG1pZ2h0IGJlLg0K
-PiA+ID4NCj4gPiA+IEknbSBub3Qgc3VyZSBhdCB0aGlzIHBvaW50IGhvdyB0byBuYXJyb3cgaXQg
-ZG93biB0byB0aGUgcm9vdCBjYXVzZS4NCj4gPiA+IEFueSBhZHZpY2U/DQo+ID4gPg0KPiA+ID4g
-SSB3b25kZXIgaWYgbWF5YmUgdGhlcmUncyBhIHJhY2UgY29uZGl0aW9uIGluIHRoZSBydDI4MDB1
-c2IgZHJpdmVyDQo+ID4gPiBiZXR3ZWVuIGxvYWRpbmcgdGhlIHJ0Mjg3MC5iaW4gZmlybXdhcmUg
-YW5kIGRvaW5nIHRoZSBpbnRlcmZhY2UtdXANCj4gPiBpbml0aWFsaXNhdGlvbi4NCj4gPiA+IE5v
-cm1hbGx5IHRoZSBmaXJtd2FyZSBsb2FkcyBhdCB0aGUgcG9pbnQgb2YgZG9pbmcgdGhlICdpdyBs
-aW5rIHNldCB3bGFuMA0KPiB1cCcNCj4gPiA+IGNvbW1hbmQuIElzIHRoZXJlIGEgd2F5IHRvIGZv
-cmNlIHRoZSBmaXJtd2FyZSB0byBsb2FkIGJlZm9yZSB0aGF0DQo+ID4gPiBjb21tYW5kPw0KPiA+
-DQo+ID4gSSd2ZSBnb3QgdHdvIHJ0MjgwMCBkZXZpY2VzOg0KPiA+DQo+ID4gKiBELUxpbmsgRFdB
-LTE0MCB3aXRoIFJUIGNoaXBzZXQgNTM5MiwgcmV2IDAyMjMsIGFuZCBSRiBjaGlwc2V0IDUzNzIN
-Cj4gPiAqIEVkdXAgRVAtTjg1Mzcgd2l0aCBSVCBjaGlwc2V0IDUzOTAsIHJldiAwNTAyLCBhbmQg
-UkYgY2hpcHNldCA1MzcwDQo+ID4NCj4gPiBJJ3ZlIGFsc28gZm91bmQgdGhhdCB3aXRoIHRoZSBZ
-b2N0by1idWlsdCA0LjQuMTIga2VybmVsLCB0aGlzIG5vLXNjYW4NCj4gPiBpc3N1ZSBvbmx5IGhh
-cHBlbnMgdG8gdGhlIEVkdXAgd2l0aCB0aGUgNTM5MCBjaGlwc2V0LiBUaGUgRC1MaW5rIGlzIGZp
-bmUuDQo+IA0KPiBBY3R1YWxseSwgSSB3YXMgd3JvbmcuIFdpdGggdGhlIDMuMTQueCBZb2N0by1i
-dWlsdCBrZXJuZWwsIHRoaXMgbm8tc2NhbiBpc3N1ZQ0KPiBvbmx5IGhhcHBlbnMgd2l0aCB0aGUg
-RWR1cCB3aXRoIHRoZSA1MzkwIGNoaXBzZXQsIGFuZCB0aGUgRC1MaW5rIGlzIGZpbmUuDQo+IA0K
-PiBCdXQgZnVydGhlciB0ZXN0aW5nIHdpdGggdGhlIDQuNC4xMiBZb2N0by1idWlsdCBrZXJuZWwg
-c2hvd3MgdGhhdCBpdCByYW5kb21seQ0KPiBzb21ldGltZXMgaGFwcGVucyBhbmQgc29tZXRpbWVz
-IGRvZXNuJ3Qgd2l0aCBlaXRoZXIgdGhlIEVkdXAgb3IgRC1MaW5rDQo+IGRldmljZXMuIFRoYXQn
-cyBlc3BlY2lhbGx5IGludGVyZXN0aW5nLCBiZWNhdXNlIGl0IHN1Z2dlc3RzIHRoYXQgdGhlcmUg
-bWF5IGJlIGENCj4gcmFjZSBjb25kaXRpb24gaGFwcGVuaW5nIGR1cmluZyB0aGUgZHJpdmVyIGlu
-aXRpYWxpc2F0aW9uIGNvZGUgKGNhbGxlZCBmcm9tDQo+IHJ0MngwMGxpYl9zdGFydCgpKS4gQXQg
-Zmlyc3QgSSB0aG91Z2h0IGl0IHdhcyBhIHJhY2UgY29uZGl0aW9uIGJldHdlZW4gdGhlIGNhbGxz
-DQo+IHRvIHJ0MngwMGxpYl9sb2FkX2Zpcm13YXJlKCkgYW5kIHJ0MngwMGxpYl9pbml0aWFsaXpl
-KCksIGJ1dCBhZGRpbmcgYSB0aW1lDQo+IGRlbGF5IGJldHdlZW4gdGhvc2UgY2FsbHMgZGlkbid0
-IGhlbHAuDQo+IA0KPiBJJ20gd29uZGVyaW5nIHdoYXQgdGhlIGRpZmZlcmVuY2UgaXMgYmV0d2Vl
-biB0aGUgdHdvIGNoaXBzZXRzLCBzbyB0aGF0IHRoZQ0KPiBwcm9ibGVtIGhhcHBlbnMgbW9yZSBv
-biBvbmUgY2hpcHNldCB0aGFuIHRoZSBvdGhlci4gQnV0IG5vdCBleGNsdXNpdmVseSwgYXMNCj4g
-SSBtZW50aW9uZWQgYWJvdmUsIHNvIGFnYWluLCB0aGlzIHBvaW50cyB0byBhIG1hcmdpbmFsIHRp
-bWluZyBpc3N1ZSB0aGF0DQo+IGFmZmVjdHMgb25lIG1vcmUgdGhhbiB0aGUgb3RoZXIuDQo+IA0K
-PiA+IFdpdGggdGhlIFVidW50dSA0LjQuNiBrZXJuZWwsIGJvdGggZGV2aWNlcyB3b3JrIGZpbmUs
-IHdpdGhvdXQgdGhpcw0KPiA+IG5vLXNjYW4gcHJvYmxlbS4NCj4gPiAuLi4NCg0KTm93IEknbSB1
-c2luZyBhIDQuOS42NSBrZXJuZWwsIGFuZCB0aGlzIHByb2JsZW0gaXMgc3RpbGwgcHJlc2VudC4g
-V2hlbiB0aGUgVVNCIFdpLUZpIGRvbmdsZSBpcyBwbHVnZ2VkIGluLCBpdCBqdXN0IGRvZXNuJ3Qg
-ZG8gYW55dGhpbmcgLS0gZG9lc24ndCBzY2FuIGZvciBXaS1GaSBuZXR3b3JrcywgZG9lc24ndCBj
-b25uZWN0IHRvIGFueXRoaW5nLg0KDQpNeSBwcm9qZWN0IGlzIHVzaW5nIENvbm5NYW4sIHNvIEkn
-dmUgcGF0Y2hlZCBDb25uTWFuIHNvIHRoYXQgaXQgdGFrZXMgdGhlIGRldmljZSB1cCwgdGhlbiBk
-b3duLCB0aGVuIHVwIGFnYWluLiBUaGVuIGl0IHJlbGlhYmx5IHdvcmtzLiBCdXQgb2YgY291cnNl
-IHRoaXMgaXMgYW4gdWdseSBoYWNrLg0KDQpCYXNlZCBvbiBteSBpbml0aWFsIGludmVzdGlnYXRp
-b24sIG15IGh5cG90aGVzaXMgd2FzIHRoYXQgdGhlcmUncyBhIHJhY2UgY29uZGl0aW9uIGR1cmlu
-ZyBydDJ4MDBsaWJfc3RhcnQoKSBpbiBydDJ4MDBkZXYuYy4gQXQgZmlyc3QgSSB0aG91Z2h0IGl0
-IHdhcyBiZXR3ZWVuIGZpcm13YXJlIGxvYWRpbmcgYW5kIGluaXRpYWxpc2F0aW9uLiBCdXQgYWRk
-aW5nIGEgdGltZSBkZWxheSBiZXR3ZWVuIHRoZSBjYWxscyB0byBydDJ4MDBsaWJfbG9hZF9maXJt
-d2FyZSgpIGFuZCBydDJ4MDBsaWJfaW5pdGlhbGl6ZSgpIGRpZG4ndCBoZWxwLiBBZGRpbmcgdGlt
-ZSBkZWxheXMgYXQgbWFueSBwb3NzaWJsZSBwb2ludHMgaW4gdGhlIGluaXRpYWxpc2F0aW9uIGRp
-ZG4ndCBzZWVtIHRvIGhlbHAuIEkgdGhvdWdodCB0aGVyZSBtdXN0IGJlIGEgcmFjZSBjb25kaXRp
-b24gaW4gYSB2ZXJ5IHNwZWNpZmljIGxvY2F0aW9uIGluIHRoZSBpbml0aWFsaXNhdGlvbiBzZXF1
-ZW5jZSwgYnV0IGNvdWxkIG5vdCBjb25maXJtIHRoYXQgaHlwb3RoZXNpcy4gU28gbm93IEkndmUg
-ZHJhd24gYSBibGFuay4NCg0KQW55IGFkdmljZSBvbiBob3cgdG8gZGlhZ25vc2UgYW5kIHJlbWVk
-eSB0aGlzIGlzc3VlPw0KDQotLSANCkNyYWlnIE1jUXVlZW4NCg0K
+WCN3990 CE descriptor uses 64bit address for
+src/dst ring buffer. It has extended field for toeplitz
+hash result, which is being used for HW assisted
+hash results.
+
+To accommodate WCN3990 descriptor, define new CE
+descriptor for extended addressing mode and related
+methods to handle the descriptor data.
+
+Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c  | 630 +++++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/ce.h  |  48 ++-
+ drivers/net/wireless/ath/ath10k/pci.c |   6 +-
+ 3 files changed, 587 insertions(+), 97 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 9aa214b..48314b8 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -327,12 +327,12 @@ static inline void ath10k_ce_engine_int_status_clear(struct ath10k *ar,
+  * Guts of ath10k_ce_send.
+  * The caller takes responsibility for any needed locking.
+  */
+-int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
+-			  void *per_transfer_context,
+-			  dma_addr_t buffer,
+-			  unsigned int nbytes,
+-			  unsigned int transfer_id,
+-			  unsigned int flags)
++static int _ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
++				  void *per_transfer_context,
++				  dma_addr_t buffer,
++				  unsigned int nbytes,
++				  unsigned int transfer_id,
++				  unsigned int flags)
+ {
+ 	struct ath10k *ar = ce_state->ar;
+ 	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
+@@ -384,6 +384,87 @@ int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
+ 	return ret;
+ }
+ 
++static int _ath10k_ce_send_nolock_64(struct ath10k_ce_pipe *ce_state,
++				     void *per_transfer_context,
++				     dma_addr_t buffer,
++				     unsigned int nbytes,
++				     unsigned int transfer_id,
++				     unsigned int flags)
++{
++	struct ath10k *ar = ce_state->ar;
++	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
++	struct ce_desc_64 *desc, sdesc;
++	unsigned int nentries_mask = src_ring->nentries_mask;
++	unsigned int sw_index = src_ring->sw_index;
++	unsigned int write_index = src_ring->write_index;
++	u32 ctrl_addr = ce_state->ctrl_addr;
++	__le32 *addr;
++	u32 desc_flags = 0;
++	int ret = 0;
++
++	if (test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags))
++		return -ESHUTDOWN;
++
++	if (nbytes > ce_state->src_sz_max)
++		ath10k_warn(ar, "%s: send more we can (nbytes: %d, max: %d)\n",
++			    __func__, nbytes, ce_state->src_sz_max);
++
++	if (unlikely(CE_RING_DELTA(nentries_mask,
++				   write_index, sw_index - 1) <= 0)) {
++		ret = -ENOSR;
++		goto exit;
++	}
++
++	desc = CE_SRC_RING_TO_DESC_64(src_ring->base_addr_owner_space,
++				      write_index);
++
++	desc_flags |= SM(transfer_id, CE_DESC_FLAGS_META_DATA);
++
++	if (flags & CE_SEND_FLAG_GATHER)
++		desc_flags |= CE_DESC_FLAGS_GATHER;
++
++	if (flags & CE_SEND_FLAG_BYTE_SWAP)
++		desc_flags |= CE_DESC_FLAGS_BYTE_SWAP;
++
++	addr = (__le32 *)&sdesc.addr;
++
++	flags |= upper_32_bits(buffer) & CE_DESC_FLAGS_GET_MASK;
++	addr[0] = __cpu_to_le32(buffer);
++	addr[1] = __cpu_to_le32(flags);
++	if (flags & CE_SEND_FLAG_GATHER)
++		addr[1] |= __cpu_to_le32(CE_WCN3990_DESC_FLAGS_GATHER);
++	else
++		addr[1] &= ~(__cpu_to_le32(CE_WCN3990_DESC_FLAGS_GATHER));
++
++	sdesc.nbytes = __cpu_to_le16(nbytes);
++	sdesc.flags  = __cpu_to_le16(desc_flags);
++
++	*desc = sdesc;
++
++	src_ring->per_transfer_context[write_index] = per_transfer_context;
++
++	/* Update Source Ring Write Index */
++	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
++
++	if (!(flags & CE_SEND_FLAG_GATHER))
++		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
++
++	src_ring->write_index = write_index;
++exit:
++	return ret;
++}
++
++int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
++			  void *per_transfer_context,
++			  dma_addr_t buffer,
++			  unsigned int nbytes,
++			  unsigned int transfer_id,
++			  unsigned int flags)
++{
++	return ce_state->ops->ce_send_nolock(ce_state, per_transfer_context,
++				    buffer, nbytes, transfer_id, flags);
++}
++
+ void __ath10k_ce_send_revert(struct ath10k_ce_pipe *pipe)
+ {
+ 	struct ath10k *ar = pipe->ar;
+@@ -413,7 +494,7 @@ void __ath10k_ce_send_revert(struct ath10k_ce_pipe *pipe)
+ 
+ int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
+ 		   void *per_transfer_context,
+-		    dma_addr_t buffer,
++		   dma_addr_t buffer,
+ 		   unsigned int nbytes,
+ 		   unsigned int transfer_id,
+ 		   unsigned int flags)
+@@ -459,8 +540,8 @@ int __ath10k_ce_rx_num_free_bufs(struct ath10k_ce_pipe *pipe)
+ 	return CE_RING_DELTA(nentries_mask, write_index, sw_index - 1);
+ }
+ 
+-int __ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
+-			    dma_addr_t paddr)
++static int __ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
++				   dma_addr_t paddr)
+ {
+ 	struct ath10k *ar = pipe->ar;
+ 	struct ath10k_ce *ce = ath10k_ce_priv(ar);
+@@ -489,6 +570,39 @@ int __ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
+ 	return 0;
+ }
+ 
++static int __ath10k_ce_rx_post_buf_64(struct ath10k_ce_pipe *pipe,
++				      void *ctx,
++				      dma_addr_t paddr)
++{
++	struct ath10k *ar = pipe->ar;
++	struct ath10k_ce *ce = ath10k_ce_priv(ar);
++	struct ath10k_ce_ring *dest_ring = pipe->dest_ring;
++	unsigned int nentries_mask = dest_ring->nentries_mask;
++	unsigned int write_index = dest_ring->write_index;
++	unsigned int sw_index = dest_ring->sw_index;
++	struct ce_desc_64 *base = dest_ring->base_addr_owner_space;
++	struct ce_desc_64 *desc =
++			CE_DEST_RING_TO_DESC_64(base, write_index);
++	u32 ctrl_addr = pipe->ctrl_addr;
++
++	lockdep_assert_held(&ce->ce_lock);
++
++	if (CE_RING_DELTA(nentries_mask, write_index, sw_index - 1) == 0)
++		return -ENOSPC;
++
++	desc->addr = __cpu_to_le64(paddr);
++	desc->addr &= __cpu_to_le64(CE_DESC_37BIT_ADDR_MASK);
++
++	desc->nbytes = 0;
++
++	dest_ring->per_transfer_context[write_index] = ctx;
++	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
++	ath10k_ce_dest_ring_write_index_set(ar, ctrl_addr, write_index);
++	dest_ring->write_index = write_index;
++
++	return 0;
++}
++
+ void ath10k_ce_rx_update_write_idx(struct ath10k_ce_pipe *pipe, u32 nentries)
+ {
+ 	struct ath10k *ar = pipe->ar;
+@@ -517,7 +631,7 @@ int ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
+ 	int ret;
+ 
+ 	spin_lock_bh(&ce->ce_lock);
+-	ret = __ath10k_ce_rx_post_buf(pipe, ctx, paddr);
++	ret = pipe->ops->ce_rx_post_buf(pipe, ctx, paddr);
+ 	spin_unlock_bh(&ce->ce_lock);
+ 
+ 	return ret;
+@@ -527,9 +641,10 @@ int ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
+  * Guts of ath10k_ce_completed_recv_next.
+  * The caller takes responsibility for any necessary locking.
+  */
+-int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
+-					 void **per_transfer_contextp,
+-					 unsigned int *nbytesp)
++static int
++	 _ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
++					       void **per_transfer_contextp,
++					       unsigned int *nbytesp)
+ {
+ 	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
+ 	unsigned int nentries_mask = dest_ring->nentries_mask;
+@@ -576,6 +691,64 @@ int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
+ 	return 0;
+ }
+ 
++static int
++_ath10k_ce_completed_recv_next_nolock_64(struct ath10k_ce_pipe *ce_state,
++					 void **per_transfer_contextp,
++					 unsigned int *nbytesp)
++{
++	struct ath10k_ce_ring *dest_ring = ce_state->dest_ring;
++	unsigned int nentries_mask = dest_ring->nentries_mask;
++	unsigned int sw_index = dest_ring->sw_index;
++	struct ce_desc_64 *base = dest_ring->base_addr_owner_space;
++	struct ce_desc_64 *desc =
++		CE_DEST_RING_TO_DESC_64(base, sw_index);
++	struct ce_desc_64 sdesc;
++	u16 nbytes;
++
++	/* Copy in one go for performance reasons */
++	sdesc = *desc;
++
++	nbytes = __le16_to_cpu(sdesc.nbytes);
++	if (nbytes == 0) {
++		/* This closes a relatively unusual race where the Host
++		 * sees the updated DRRI before the update to the
++		 * corresponding descriptor has completed. We treat this
++		 * as a descriptor that is not yet done.
++		 */
++		return -EIO;
++	}
++
++	desc->nbytes = 0;
++
++	/* Return data from completed destination descriptor */
++	*nbytesp = nbytes;
++
++	if (per_transfer_contextp)
++		*per_transfer_contextp =
++			dest_ring->per_transfer_context[sw_index];
++
++	/* Copy engine 5 (HTT Rx) will reuse the same transfer context.
++	 * So update transfer context all CEs except CE5.
++	 */
++	if (ce_state->id != 5)
++		dest_ring->per_transfer_context[sw_index] = NULL;
++
++	/* Update sw_index */
++	sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
++	dest_ring->sw_index = sw_index;
++
++	return 0;
++}
++
++int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
++					 void **per_transfer_ctx,
++					 unsigned int *nbytesp)
++{
++	return ce_state->ops->ce_completed_recv_next_nolock(ce_state,
++							    per_transfer_ctx,
++							    nbytesp);
++}
++
+ int ath10k_ce_completed_recv_next(struct ath10k_ce_pipe *ce_state,
+ 				  void **per_transfer_contextp,
+ 				  unsigned int *nbytesp)
+@@ -585,17 +758,18 @@ int ath10k_ce_completed_recv_next(struct ath10k_ce_pipe *ce_state,
+ 	int ret;
+ 
+ 	spin_lock_bh(&ce->ce_lock);
+-	ret = ath10k_ce_completed_recv_next_nolock(ce_state,
++	ret = ce_state->ops->ce_completed_recv_next_nolock(ce_state,
+ 						   per_transfer_contextp,
+ 						   nbytesp);
++
+ 	spin_unlock_bh(&ce->ce_lock);
+ 
+ 	return ret;
+ }
+ 
+-int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
+-			       void **per_transfer_contextp,
+-			       dma_addr_t *bufferp)
++static int _ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
++				       void **per_transfer_contextp,
++				       dma_addr_t *bufferp)
+ {
+ 	struct ath10k_ce_ring *dest_ring;
+ 	unsigned int nentries_mask;
+@@ -646,6 +820,69 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
+ 	return ret;
+ }
+ 
++static int _ath10k_ce_revoke_recv_next_64(struct ath10k_ce_pipe *ce_state,
++					  void **per_transfer_contextp,
++					  dma_addr_t *bufferp)
++{
++	struct ath10k_ce_ring *dest_ring;
++	unsigned int nentries_mask;
++	unsigned int sw_index;
++	unsigned int write_index;
++	int ret;
++	struct ath10k *ar;
++	struct ath10k_ce *ce;
++
++	dest_ring = ce_state->dest_ring;
++
++	if (!dest_ring)
++		return -EIO;
++
++	ar = ce_state->ar;
++	ce = ath10k_ce_priv(ar);
++
++	spin_lock_bh(&ce->ce_lock);
++
++	nentries_mask = dest_ring->nentries_mask;
++	sw_index = dest_ring->sw_index;
++	write_index = dest_ring->write_index;
++	if (write_index != sw_index) {
++		struct ce_desc_64 *base = dest_ring->base_addr_owner_space;
++		struct ce_desc_64 *desc =
++			CE_DEST_RING_TO_DESC_64(base, sw_index);
++
++		/* Return data from completed destination descriptor */
++		*bufferp = __le64_to_cpu(desc->addr);
++
++		if (per_transfer_contextp)
++			*per_transfer_contextp =
++				dest_ring->per_transfer_context[sw_index];
++
++		/* sanity */
++		dest_ring->per_transfer_context[sw_index] = NULL;
++		desc->nbytes = 0;
++
++		/* Update sw_index */
++		sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
++		dest_ring->sw_index = sw_index;
++		ret = 0;
++	} else {
++		ret = -EIO;
++	}
++
++	spin_unlock_bh(&ce->ce_lock);
++
++	return ret;
++}
++
++int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
++			       void **per_transfer_contextp,
++			       dma_addr_t *bufferp)
++{
++	return ce_state->ops->ce_revoke_recv_next(ce_state,
++						  per_transfer_contextp,
++						  bufferp);
++}
++
+ /*
+  * Guts of ath10k_ce_completed_send_next.
+  * The caller takes responsibility for any necessary locking.
+@@ -700,6 +937,41 @@ int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
+ 	return 0;
+ }
+ 
++static void ath10k_ce_extract_desc_data(struct ath10k *ar,
++					struct ath10k_ce_ring *src_ring,
++					u32 sw_index,
++					dma_addr_t *bufferp,
++					u32 *nbytesp,
++					u32 *transfer_idp)
++{
++		struct ce_desc *base = src_ring->base_addr_owner_space;
++		struct ce_desc *desc = CE_SRC_RING_TO_DESC(base, sw_index);
++
++		/* Return data from completed source descriptor */
++		*bufferp = __le32_to_cpu(desc->addr);
++		*nbytesp = __le16_to_cpu(desc->nbytes);
++		*transfer_idp = MS(__le16_to_cpu(desc->flags),
++				   CE_DESC_FLAGS_META_DATA);
++}
++
++static void ath10k_ce_extract_desc_data_64(struct ath10k *ar,
++					   struct ath10k_ce_ring *src_ring,
++					   u32 sw_index,
++					   dma_addr_t *bufferp,
++					   u32 *nbytesp,
++					   u32 *transfer_idp)
++{
++		struct ce_desc_64 *base = src_ring->base_addr_owner_space;
++		struct ce_desc_64 *desc =
++			CE_SRC_RING_TO_DESC_64(base, sw_index);
++
++		/* Return data from completed source descriptor */
++		*bufferp = __le64_to_cpu(desc->addr);
++		*nbytesp = __le16_to_cpu(desc->nbytes);
++		*transfer_idp = MS(__le16_to_cpu(desc->flags),
++				   CE_DESC_FLAGS_META_DATA);
++}
++
+ /* NB: Modeled after ath10k_ce_completed_send_next */
+ int ath10k_ce_cancel_send_next(struct ath10k_ce_pipe *ce_state,
+ 			       void **per_transfer_contextp,
+@@ -730,14 +1002,9 @@ int ath10k_ce_cancel_send_next(struct ath10k_ce_pipe *ce_state,
+ 	write_index = src_ring->write_index;
+ 
+ 	if (write_index != sw_index) {
+-		struct ce_desc *base = src_ring->base_addr_owner_space;
+-		struct ce_desc *desc = CE_SRC_RING_TO_DESC(base, sw_index);
+-
+-		/* Return data from completed source descriptor */
+-		*bufferp = __le32_to_cpu(desc->addr);
+-		*nbytesp = __le16_to_cpu(desc->nbytes);
+-		*transfer_idp = MS(__le16_to_cpu(desc->flags),
+-						CE_DESC_FLAGS_META_DATA);
++		ce_state->ops->ce_extract_desc_data(ar, src_ring, sw_index,
++						    bufferp, nbytesp,
++						    transfer_idp);
+ 
+ 		if (per_transfer_contextp)
+ 			*per_transfer_contextp =
+@@ -899,8 +1166,12 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
+ 
+ 	nentries = roundup_pow_of_two(attr->src_nentries);
+ 
+-	memset(src_ring->base_addr_owner_space, 0,
+-	       nentries * sizeof(struct ce_desc));
++	if (ar->hw_params.target_64bit)
++		memset(src_ring->base_addr_owner_space, 0,
++		       nentries * sizeof(struct ce_desc_64));
++	else
++		memset(src_ring->base_addr_owner_space, 0,
++		       nentries * sizeof(struct ce_desc));
+ 
+ 	src_ring->sw_index = ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
+ 	src_ring->sw_index &= src_ring->nentries_mask;
+@@ -936,8 +1207,12 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 
+ 	nentries = roundup_pow_of_two(attr->dest_nentries);
+ 
+-	memset(dest_ring->base_addr_owner_space, 0,
+-	       nentries * sizeof(struct ce_desc));
++	if (ar->hw_params.target_64bit)
++		memset(dest_ring->base_addr_owner_space, 0,
++		       nentries * sizeof(struct ce_desc_64));
++	else
++		memset(dest_ring->base_addr_owner_space, 0,
++		       nentries * sizeof(struct ce_desc));
+ 
+ 	dest_ring->sw_index = ath10k_ce_dest_ring_read_index_get(ar, ctrl_addr);
+ 	dest_ring->sw_index &= dest_ring->nentries_mask;
+@@ -995,12 +1270,57 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 
+ 	src_ring->base_addr_ce_space_unaligned = base_addr;
+ 
+-	src_ring->base_addr_owner_space = PTR_ALIGN(
+-			src_ring->base_addr_owner_space_unaligned,
+-			CE_DESC_RING_ALIGN);
+-	src_ring->base_addr_ce_space = ALIGN(
+-			src_ring->base_addr_ce_space_unaligned,
+-			CE_DESC_RING_ALIGN);
++	src_ring->base_addr_owner_space =
++			PTR_ALIGN(src_ring->base_addr_owner_space_unaligned,
++				  CE_DESC_RING_ALIGN);
++	src_ring->base_addr_ce_space =
++			ALIGN(src_ring->base_addr_ce_space_unaligned,
++			      CE_DESC_RING_ALIGN);
++
++	return src_ring;
++}
++
++static struct ath10k_ce_ring *
++ath10k_ce_alloc_src_ring_64(struct ath10k *ar, unsigned int ce_id,
++			    const struct ce_attr *attr)
++{
++	struct ath10k_ce_ring *src_ring;
++	u32 nentries = attr->src_nentries;
++	dma_addr_t base_addr;
++
++	nentries = roundup_pow_of_two(nentries);
++
++	src_ring = kzalloc(sizeof(*src_ring) +
++			   (nentries *
++			    sizeof(*src_ring->per_transfer_context)),
++			   GFP_KERNEL);
++	if (!src_ring)
++		return ERR_PTR(-ENOMEM);
++
++	src_ring->nentries = nentries;
++	src_ring->nentries_mask = nentries - 1;
++
++	/* Legacy platforms that do not support cache
++	 * coherent DMA are unsupported
++	 */
++	src_ring->base_addr_owner_space_unaligned =
++		dma_alloc_coherent(ar->dev,
++				   (nentries * sizeof(struct ce_desc_64) +
++				    CE_DESC_RING_ALIGN),
++				   &base_addr, GFP_KERNEL);
++	if (!src_ring->base_addr_owner_space_unaligned) {
++		kfree(src_ring);
++		return ERR_PTR(-ENOMEM);
++	}
++
++	src_ring->base_addr_ce_space_unaligned = base_addr;
++
++	src_ring->base_addr_owner_space =
++			PTR_ALIGN(src_ring->base_addr_owner_space_unaligned,
++				  CE_DESC_RING_ALIGN);
++	src_ring->base_addr_ce_space =
++			ALIGN(src_ring->base_addr_ce_space_unaligned,
++			      CE_DESC_RING_ALIGN);
+ 
+ 	return src_ring;
+ }
+@@ -1041,12 +1361,63 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
+ 
+ 	dest_ring->base_addr_ce_space_unaligned = base_addr;
+ 
+-	dest_ring->base_addr_owner_space = PTR_ALIGN(
+-			dest_ring->base_addr_owner_space_unaligned,
+-			CE_DESC_RING_ALIGN);
+-	dest_ring->base_addr_ce_space = ALIGN(
+-			dest_ring->base_addr_ce_space_unaligned,
+-			CE_DESC_RING_ALIGN);
++	dest_ring->base_addr_owner_space =
++			PTR_ALIGN(dest_ring->base_addr_owner_space_unaligned,
++				  CE_DESC_RING_ALIGN);
++	dest_ring->base_addr_ce_space =
++				ALIGN(dest_ring->base_addr_ce_space_unaligned,
++				      CE_DESC_RING_ALIGN);
++
++	return dest_ring;
++}
++
++static struct ath10k_ce_ring *
++ath10k_ce_alloc_dest_ring_64(struct ath10k *ar, unsigned int ce_id,
++			     const struct ce_attr *attr)
++{
++	struct ath10k_ce_ring *dest_ring;
++	u32 nentries;
++	dma_addr_t base_addr;
++
++	nentries = roundup_pow_of_two(attr->dest_nentries);
++
++	dest_ring = kzalloc(sizeof(*dest_ring) +
++			    (nentries *
++			     sizeof(*dest_ring->per_transfer_context)),
++			    GFP_KERNEL);
++	if (!dest_ring)
++		return ERR_PTR(-ENOMEM);
++
++	dest_ring->nentries = nentries;
++	dest_ring->nentries_mask = nentries - 1;
++
++	/* Legacy platforms that do not support cache
++	 * coherent DMA are unsupported
++	 */
++	dest_ring->base_addr_owner_space_unaligned =
++		dma_alloc_coherent(ar->dev,
++				   (nentries * sizeof(struct ce_desc_64) +
++				    CE_DESC_RING_ALIGN),
++				   &base_addr, GFP_KERNEL);
++	if (!dest_ring->base_addr_owner_space_unaligned) {
++		kfree(dest_ring);
++		return ERR_PTR(-ENOMEM);
++	}
++
++	dest_ring->base_addr_ce_space_unaligned = base_addr;
++
++	/* Correctly initialize memory to 0 to prevent garbage
++	 * data crashing system when download firmware
++	 */
++	memset(dest_ring->base_addr_owner_space_unaligned, 0,
++	       nentries * sizeof(struct ce_desc_64) + CE_DESC_RING_ALIGN);
++
++	dest_ring->base_addr_owner_space =
++			PTR_ALIGN(dest_ring->base_addr_owner_space_unaligned,
++				  CE_DESC_RING_ALIGN);
++	dest_ring->base_addr_ce_space =
++			ALIGN(dest_ring->base_addr_ce_space_unaligned,
++			      CE_DESC_RING_ALIGN);
+ 
+ 	return dest_ring;
+ }
+@@ -1109,65 +1480,36 @@ void ath10k_ce_deinit_pipe(struct ath10k *ar, unsigned int ce_id)
+ 	ath10k_ce_deinit_dest_ring(ar, ce_id);
+ }
+ 
+-int ath10k_ce_alloc_pipe(struct ath10k *ar, int ce_id,
+-			 const struct ce_attr *attr)
++static void _ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
+ {
+ 	struct ath10k_ce *ce = ath10k_ce_priv(ar);
+ 	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
+-	int ret;
+-
+-	/*
+-	 * Make sure there's enough CE ringbuffer entries for HTT TX to avoid
+-	 * additional TX locking checks.
+-	 *
+-	 * For the lack of a better place do the check here.
+-	 */
+-	BUILD_BUG_ON(2 * TARGET_NUM_MSDU_DESC >
+-		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
+-	BUILD_BUG_ON(2 * TARGET_10_4_NUM_MSDU_DESC_PFC >
+-		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
+-	BUILD_BUG_ON(2 * TARGET_TLV_NUM_MSDU_DESC >
+-		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
+ 
+-	ce_state->ar = ar;
+-	ce_state->id = ce_id;
+-	ce_state->ctrl_addr = ath10k_ce_base_address(ar, ce_id);
+-	ce_state->attr_flags = attr->flags;
+-	ce_state->src_sz_max = attr->src_sz_max;
+-
+-	if (attr->src_nentries)
+-		ce_state->send_cb = attr->send_cb;
+-
+-	if (attr->dest_nentries)
+-		ce_state->recv_cb = attr->recv_cb;
+-
+-	if (attr->src_nentries) {
+-		ce_state->src_ring = ath10k_ce_alloc_src_ring(ar, ce_id, attr);
+-		if (IS_ERR(ce_state->src_ring)) {
+-			ret = PTR_ERR(ce_state->src_ring);
+-			ath10k_err(ar, "failed to allocate copy engine source ring %d: %d\n",
+-				   ce_id, ret);
+-			ce_state->src_ring = NULL;
+-			return ret;
+-		}
++	if (ce_state->src_ring) {
++		dma_free_coherent(ar->dev,
++				  (ce_state->src_ring->nentries *
++				   sizeof(struct ce_desc) +
++				   CE_DESC_RING_ALIGN),
++				  ce_state->src_ring->base_addr_owner_space,
++				  ce_state->src_ring->base_addr_ce_space);
++		kfree(ce_state->src_ring);
+ 	}
+ 
+-	if (attr->dest_nentries) {
+-		ce_state->dest_ring = ath10k_ce_alloc_dest_ring(ar, ce_id,
+-								attr);
+-		if (IS_ERR(ce_state->dest_ring)) {
+-			ret = PTR_ERR(ce_state->dest_ring);
+-			ath10k_err(ar, "failed to allocate copy engine destination ring %d: %d\n",
+-				   ce_id, ret);
+-			ce_state->dest_ring = NULL;
+-			return ret;
+-		}
++	if (ce_state->dest_ring) {
++		dma_free_coherent(ar->dev,
++				  (ce_state->dest_ring->nentries *
++				   sizeof(struct ce_desc) +
++				   CE_DESC_RING_ALIGN),
++				  ce_state->dest_ring->base_addr_owner_space,
++				  ce_state->dest_ring->base_addr_ce_space);
++		kfree(ce_state->dest_ring);
+ 	}
+ 
+-	return 0;
++	ce_state->src_ring = NULL;
++	ce_state->dest_ring = NULL;
+ }
+ 
+-void ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
++static void _ath10k_ce_free_pipe_64(struct ath10k *ar, int ce_id)
+ {
+ 	struct ath10k_ce *ce = ath10k_ce_priv(ar);
+ 	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
+@@ -1175,7 +1517,7 @@ void ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
+ 	if (ce_state->src_ring) {
+ 		dma_free_coherent(ar->dev,
+ 				  (ce_state->src_ring->nentries *
+-				   sizeof(struct ce_desc) +
++				   sizeof(struct ce_desc_64) +
+ 				   CE_DESC_RING_ALIGN),
+ 				  ce_state->src_ring->base_addr_owner_space,
+ 				  ce_state->src_ring->base_addr_ce_space);
+@@ -1185,7 +1527,7 @@ void ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
+ 	if (ce_state->dest_ring) {
+ 		dma_free_coherent(ar->dev,
+ 				  (ce_state->dest_ring->nentries *
+-				   sizeof(struct ce_desc) +
++				   sizeof(struct ce_desc_64) +
+ 				   CE_DESC_RING_ALIGN),
+ 				  ce_state->dest_ring->base_addr_owner_space,
+ 				  ce_state->dest_ring->base_addr_ce_space);
+@@ -1196,6 +1538,14 @@ void ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
+ 	ce_state->dest_ring = NULL;
+ }
+ 
++void ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
++{
++	struct ath10k_ce *ce = ath10k_ce_priv(ar);
++	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
++
++	ce_state->ops->ce_free_pipe(ar, ce_id);
++}
++
+ void ath10k_ce_dump_registers(struct ath10k *ar,
+ 			      struct ath10k_fw_crash_data *crash_data)
+ {
+@@ -1234,3 +1584,99 @@ void ath10k_ce_dump_registers(struct ath10k *ar,
+ 
+ 	spin_unlock_bh(&ce->ce_lock);
+ }
++
++static const struct ath10k_ce_ops ce_ops = {
++	.ce_alloc_src_ring = ath10k_ce_alloc_src_ring,
++	.ce_alloc_dst_ring = ath10k_ce_alloc_dest_ring,
++	.ce_rx_post_buf = __ath10k_ce_rx_post_buf,
++	.ce_completed_recv_next_nolock = _ath10k_ce_completed_recv_next_nolock,
++	.ce_revoke_recv_next = _ath10k_ce_revoke_recv_next,
++	.ce_extract_desc_data = ath10k_ce_extract_desc_data,
++	.ce_free_pipe = _ath10k_ce_free_pipe,
++	.ce_send_nolock = _ath10k_ce_send_nolock,
++};
++
++static const struct ath10k_ce_ops ce_64_ops = {
++	.ce_alloc_src_ring = ath10k_ce_alloc_src_ring_64,
++	.ce_alloc_dst_ring = ath10k_ce_alloc_dest_ring_64,
++	.ce_rx_post_buf = __ath10k_ce_rx_post_buf_64,
++	.ce_completed_recv_next_nolock =
++				_ath10k_ce_completed_recv_next_nolock_64,
++	.ce_revoke_recv_next = _ath10k_ce_revoke_recv_next_64,
++	.ce_extract_desc_data = ath10k_ce_extract_desc_data_64,
++	.ce_free_pipe = _ath10k_ce_free_pipe_64,
++	.ce_send_nolock = _ath10k_ce_send_nolock_64,
++};
++
++static void ath10k_ce_set_ops(struct ath10k *ar,
++			      struct ath10k_ce_pipe *ce_state)
++{
++	switch (ar->hw_rev) {
++	case ATH10K_HW_WCN3990:
++		ce_state->ops = &ce_64_ops;
++		break;
++	default:
++		ce_state->ops = &ce_ops;
++		break;
++	}
++}
++
++int ath10k_ce_alloc_pipe(struct ath10k *ar, int ce_id,
++			 const struct ce_attr *attr)
++{
++	struct ath10k_ce *ce = ath10k_ce_priv(ar);
++	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
++	int ret;
++
++	ath10k_ce_set_ops(ar, ce_state);
++	/* Make sure there's enough CE ringbuffer entries for HTT TX to avoid
++	 * additional TX locking checks.
++	 *
++	 * For the lack of a better place do the check here.
++	 */
++	BUILD_BUG_ON(2 * TARGET_NUM_MSDU_DESC >
++		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
++	BUILD_BUG_ON(2 * TARGET_10_4_NUM_MSDU_DESC_PFC >
++		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
++	BUILD_BUG_ON(2 * TARGET_TLV_NUM_MSDU_DESC >
++		     (CE_HTT_H2T_MSG_SRC_NENTRIES - 1));
++
++	ce_state->ar = ar;
++	ce_state->id = ce_id;
++	ce_state->ctrl_addr = ath10k_ce_base_address(ar, ce_id);
++	ce_state->attr_flags = attr->flags;
++	ce_state->src_sz_max = attr->src_sz_max;
++
++	if (attr->src_nentries)
++		ce_state->send_cb = attr->send_cb;
++
++	if (attr->dest_nentries)
++		ce_state->recv_cb = attr->recv_cb;
++
++	if (attr->src_nentries) {
++		ce_state->src_ring =
++			ce_state->ops->ce_alloc_src_ring(ar, ce_id, attr);
++		if (IS_ERR(ce_state->src_ring)) {
++			ret = PTR_ERR(ce_state->src_ring);
++			ath10k_err(ar, "failed to alloc CE src ring %d: %d\n",
++				   ce_id, ret);
++			ce_state->src_ring = NULL;
++			return ret;
++		}
++	}
++
++	if (attr->dest_nentries) {
++		ce_state->dest_ring = ce_state->ops->ce_alloc_dst_ring(ar,
++									ce_id,
++									attr);
++		if (IS_ERR(ce_state->dest_ring)) {
++			ret = PTR_ERR(ce_state->dest_ring);
++			ath10k_err(ar, "failed to alloc CE dest ring %d: %d\n",
++				   ce_id, ret);
++			ce_state->dest_ring = NULL;
++			return ret;
++		}
++	}
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index f36ad51..be1d218 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -36,6 +36,10 @@
+ 
+ #define CE_DESC_FLAGS_GATHER         (1 << 0)
+ #define CE_DESC_FLAGS_BYTE_SWAP      (1 << 1)
++#define CE_WCN3990_DESC_FLAGS_GATHER BIT(31)
++
++#define CE_DESC_FLAGS_GET_MASK		GENMASK(4, 0)
++#define CE_DESC_37BIT_ADDR_MASK		GENMASK_ULL(37, 0)
+ 
+ /* Following desc flags are used in QCA99X0 */
+ #define CE_DESC_FLAGS_HOST_INT_DIS	(1 << 2)
+@@ -50,6 +54,16 @@ struct ce_desc {
+ 	__le16 flags; /* %CE_DESC_FLAGS_ */
+ };
+ 
++struct ce_desc_64 {
++	__le64 addr;
++	__le16 nbytes; /* length in register map */
++	__le16 flags; /* fw_metadata_high */
++	__le32 toeplitz_hash_result;
++};
++
++#define CE_DESC_SIZE sizeof(struct ce_desc)
++#define CE_DESC_SIZE_64 sizeof(struct ce_desc_64)
++
+ struct ath10k_ce_ring {
+ 	/* Number of entries in this ring; must be power of 2 */
+ 	unsigned int nentries;
+@@ -117,6 +131,7 @@ struct ath10k_ce_pipe {
+ 	unsigned int src_sz_max;
+ 	struct ath10k_ce_ring *src_ring;
+ 	struct ath10k_ce_ring *dest_ring;
++	const struct ath10k_ce_ops *ops;
+ };
+ 
+ /* Copy Engine settable attributes */
+@@ -180,8 +195,6 @@ int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
+ /*==================Recv=======================*/
+ 
+ int __ath10k_ce_rx_num_free_bufs(struct ath10k_ce_pipe *pipe);
+-int __ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
+-			    dma_addr_t paddr);
+ int ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
+ 			  dma_addr_t paddr);
+ void ath10k_ce_rx_update_write_idx(struct ath10k_ce_pipe *pipe, u32 nentries);
+@@ -283,6 +296,31 @@ struct ce_attr {
+ 	void (*recv_cb)(struct ath10k_ce_pipe *);
+ };
+ 
++struct ath10k_ce_ops {
++	struct ath10k_ce_ring *(*ce_alloc_src_ring)(struct ath10k *ar,
++						    u32 ce_id,
++						    const struct ce_attr *attr);
++	struct ath10k_ce_ring *(*ce_alloc_dst_ring)(struct ath10k *ar,
++						    u32 ce_id,
++						    const struct ce_attr *attr);
++	int (*ce_rx_post_buf)(struct ath10k_ce_pipe *pipe, void *ctx,
++			      dma_addr_t paddr);
++	int (*ce_completed_recv_next_nolock)(struct ath10k_ce_pipe *ce_state,
++					     void **per_transfer_contextp,
++					     u32 *nbytesp);
++	int (*ce_revoke_recv_next)(struct ath10k_ce_pipe *ce_state,
++				   void **per_transfer_contextp,
++				   dma_addr_t *nbytesp);
++	void (*ce_extract_desc_data)(struct ath10k *ar,
++				     struct ath10k_ce_ring *src_ring,
++				     u32 sw_index, dma_addr_t *bufferp,
++				     u32 *nbytesp, u32 *transfer_idp);
++	void (*ce_free_pipe)(struct ath10k *ar, int ce_id);
++	int (*ce_send_nolock)(struct ath10k_ce_pipe *pipe,
++			      void *per_transfer_context,
++			      dma_addr_t buffer, u32 nbytes,
++			      u32 transfer_id, u32 flags);
++};
+ static inline u32 ath10k_ce_base_address(struct ath10k *ar, unsigned int ce_id)
+ {
+ 	return CE0_BASE_ADDRESS + (CE1_BASE_ADDRESS - CE0_BASE_ADDRESS) * ce_id;
+@@ -294,6 +332,12 @@ static inline u32 ath10k_ce_base_address(struct ath10k *ar, unsigned int ce_id)
+ #define CE_DEST_RING_TO_DESC(baddr, idx) \
+ 	(&(((struct ce_desc *)baddr)[idx]))
+ 
++#define CE_SRC_RING_TO_DESC_64(baddr, idx) \
++	(&(((struct ce_desc_64 *)baddr)[idx]))
++
++#define CE_DEST_RING_TO_DESC_64(baddr, idx) \
++	(&(((struct ce_desc_64 *)baddr)[idx]))
++
+ /* Ring arithmetic (modulus number of entries in ring, which is a pwr of 2). */
+ #define CE_RING_DELTA(nentries_mask, fromidx, toidx) \
+ 	(((int)(toidx) - (int)(fromidx)) & (nentries_mask))
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 4e3e7a8..b056107 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -785,7 +785,7 @@ static int __ath10k_pci_rx_post_buf(struct ath10k_pci_pipe *pipe)
+ 	ATH10K_SKB_RXCB(skb)->paddr = paddr;
+ 
+ 	spin_lock_bh(&ce->ce_lock);
+-	ret = __ath10k_ce_rx_post_buf(ce_pipe, skb, paddr);
++	ret = ce_pipe->ops->ce_rx_post_buf(ce_pipe, skb, paddr);
+ 	spin_unlock_bh(&ce->ce_lock);
+ 	if (ret) {
+ 		dma_unmap_single(ar->dev, paddr, skb->len + skb_tailroom(skb),
+@@ -923,7 +923,7 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
+ 		nbytes = min_t(unsigned int, remaining_bytes,
+ 			       DIAG_TRANSFER_LIMIT);
+ 
+-		ret = __ath10k_ce_rx_post_buf(ce_diag, &ce_data, ce_data);
++		ret = ce_diag->ops->ce_rx_post_buf(ce_diag, &ce_data, ce_data);
+ 		if (ret != 0)
+ 			goto done;
+ 
+@@ -1089,7 +1089,7 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ 		nbytes = min_t(int, remaining_bytes, DIAG_TRANSFER_LIMIT);
+ 
+ 		/* Set up to receive directly into Target(!) address */
+-		ret = __ath10k_ce_rx_post_buf(ce_diag, &address, address);
++		ret = ce_diag->ops->ce_rx_post_buf(ce_diag, &address, address);
+ 		if (ret != 0)
+ 			goto done;
+ 
+-- 
+1.9.1
