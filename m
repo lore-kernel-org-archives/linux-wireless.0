@@ -1,48 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:9165 "EHLO
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:52557 "EHLO
         alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756091AbdLVPzp (ORCPT
+        with ESMTP id S1752039AbdLVNkM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 10:55:45 -0500
+        Fri, 22 Dec 2017 08:40:12 -0500
+Subject: [PATCH v2 6/6] ath10k: add memory dump support QCA988X
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v3 00/11] ath10k high latency
-Date: Fri, 22 Dec 2017 15:55:40 +0000
-Message-ID: <87r2rm92pw.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_165549_424573_B169C715)
-References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
-In-Reply-To: <20170917194013.8658-1-erik.stromdahl@gmail.com> (Erik
-        Stromdahl's message of "Sun, 17 Sep 2017 21:40:02 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Dec 2017 15:39:58 +0200
+Message-ID: <151394999831.9382.1345333242357335846.stgit@potku.adurom.net> (sfid-20171222_144017_845276_EC0D5F77)
+In-Reply-To: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net>
+References: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+Copy two regions of registers and bigger DRAM region to the dump file.
 
-> This is the third version of the high latency patches (stuff common for
-> usb and sdio).
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/coredump.c |   40 ++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-Sorry for the late review, this fall I have had difficulties to keep up
-with all the patches. This set looks pretty good, I had few smaller
-comments but nothing major really.
-
-> One major difference between this version and the previous is that the
-> num_pending_tx counter has been disabled for high latency devices (last p=
-atch).
->
-> This fixes the previous issue with the halted USB RX.
-> I have tested these patches with a Linksys WUSB6100M and it looks
-> much better than the previous version.
-
-I quickly tested this set few weeks ago on my test laptop and the kernel
-was crashing a lot, I don't know was it because I usually try to run all
-kernel debug features enabled or what. I don't have the logs at hand
-right now. I think we should try to investigate that before adding the
-hw_params entry for the usb device, but rest of the patches in this set
-can go in even before. Most important is that we don't create any
-regressions (including kernel crashes).
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
+index 2f4cb6c473f5..4dde126dab17 100644
+--- a/drivers/net/wireless/ath/ath10k/coredump.c
++++ b/drivers/net/wireless/ath/ath10k/coredump.c
+@@ -667,6 +667,39 @@ static const struct ath10k_mem_region qca6174_hw30_mem_regions[] = {
+ 	},
+ };
+ 
++static const struct ath10k_mem_region qca988x_hw20_mem_regions[] = {
++	{
++		.type = ATH10K_MEM_REGION_TYPE_DRAM,
++		.start = 0x400000,
++		.len = 0x50000,
++		.name = "DRAM",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++	{
++		.type = ATH10K_MEM_REGION_TYPE_REG,
++		.start = 0x4000,
++		.len = 0x2000,
++		.name = "REG_PART1",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++	{
++		.type = ATH10K_MEM_REGION_TYPE_REG,
++		.start = 0x8000,
++		.len = 0x58000,
++		.name = "REG_PART2",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++};
++
+ static const struct ath10k_hw_mem_layout hw_mem_layouts[] = {
+ 	{
+ 		.hw_id = QCA6174_HW_1_0_VERSION,
+@@ -717,6 +750,13 @@ static const struct ath10k_hw_mem_layout hw_mem_layouts[] = {
+ 			.size = ARRAY_SIZE(qca6174_hw30_mem_regions),
+ 		},
+ 	},
++	{
++		.hw_id = QCA988X_HW_2_0_VERSION,
++		.region_table = {
++			.regions = qca988x_hw20_mem_regions,
++			.size = ARRAY_SIZE(qca988x_hw20_mem_regions),
++		},
++	},
+ };
+ 
+ static u32 ath10k_coredump_get_ramdump_size(struct ath10k *ar)
