@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:46858 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750727AbdLWH2Z (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:38701 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752324AbdLVGDR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Dec 2017 02:28:25 -0500
-Received: by mail-wm0-f47.google.com with SMTP id r78so25335978wme.5
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2017 23:28:24 -0800 (PST)
-Date: Sat, 23 Dec 2017 08:28:22 +0100 (CET)
-From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: Enrico Mioso <mrkiko.rs@gmail.com>, linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        nbd@nbd.name
-Subject: Re: MT7630 support
-In-Reply-To: <20171221142026.GA4655@redhat.com>
-Message-ID: <alpine.LNX.2.00.1712230819270.14868@Nettop> (sfid-20171223_082832_277117_99799313)
-References: <alpine.LNX.2.21.99.1712201832120.21664@localhost.localdomain> <20171221142026.GA4655@redhat.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+        Fri, 22 Dec 2017 01:03:17 -0500
+Received: from mail-io0-f197.google.com ([209.85.223.197])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1eSGQO-0002et-2d
+        for linux-wireless@vger.kernel.org; Fri, 22 Dec 2017 06:03:16 +0000
+Received: by mail-io0-f197.google.com with SMTP id 79so3271469iou.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2017 22:03:16 -0800 (PST)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 5/6] wireless-regdb: Install regulatory.db and regulatory.db.p7s to /lib/firmware
+Date: Fri, 22 Dec 2017 00:03:02 -0600
+Message-Id: <20171222060303.14478-6-seth.forshee@canonical.com> (sfid-20171222_070346_304873_FAA91747)
+In-Reply-To: <20171222060303.14478-1-seth.forshee@canonical.com>
+References: <20171222060303.14478-1-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+regulatory.db is being installed to the CRDA path, however the
+kernel expects it to be in /lib/firmware. Install it to the
+proper location. Also install the detached signature, which is
+needed for the kernel to check verify the database authenticity.
 
-On Thu, 21 Dec 2017, Stanislaw Gruszka wrote:
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ Makefile | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-> On Wed, Dec 20, 2017 at 06:39:34PM +0100, Enrico Mioso wrote:
-> > Hello guys.
-> > So, at some point I felt crazy enough to try to add support for the MT7630 chipset to the rt2xx ralink wireless drivers.
-> > I expected this to be a little bit of a challenge.
-> > I did begin adding some code paths around, reading from the mixed-up drivers here:
-> > https://github.com/neurobin/MT7630E
-> > (thanks a lot to the guys who are working on this, and who worked on this).
-> > and working on the kernel's git rt2xx tree. I am sending a raw diff that will for sure not compile. I am asking for guidance and help in going on.
-> 
-> I think better way to add support for MT7630 chip to mailine kernel
-> would be via new Felix's mt76 driver, because there are less diffrence
-> between MT7630 and MT76x2 than between MT7630 and the old Ralink chips.
-> 
-
-MT7630e is part of the MT76x0 family
-Felix's driver is missing the baseband/rf tables for MT76x0.
-
-The full driver for MT7610E is here
-https://github.com/i80s/mtk-sources
-
-/me now reading Felix code to adapot MT76x2 for mt7612u ...
-
-Greetings
-Ulli
+diff --git a/Makefile b/Makefile
+index 044251f64785..1e8e84c64149 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,6 +2,7 @@
+ PREFIX ?= /usr
+ CRDA_PATH ?= $(PREFIX)/lib/crda
+ CRDA_KEY_PATH ?= $(CRDA_PATH)/pubkeys
++FIRMWARE_PATH ?= /lib/firmware
+ 
+ MANDIR ?= $(PREFIX)/share/man/
+ 
+@@ -117,10 +118,12 @@ install-distro-key: maintainer-clean $(DISTRO_PRIVKEY)
+ install: regulatory.bin.5.gz regulatory.db.5.gz
+ 	install -m 755 -d $(DESTDIR)/$(CRDA_PATH)
+ 	install -m 755 -d $(DESTDIR)/$(CRDA_KEY_PATH)
++	install -m 755 -d $(DESTDIR)/$(FIRMWARE_PATH)
+ 	if [ -f .custom ]; then \
+ 		install -m 644 -t $(DESTDIR)/$(CRDA_KEY_PATH)/ $(shell cat .custom); \
+ 	fi
+ 	install -m 644 -t $(DESTDIR)/$(CRDA_KEY_PATH)/ $(REGDB_UPSTREAM_PUBKEY)
+-	install -m 644 -t $(DESTDIR)/$(CRDA_PATH)/ regulatory.bin regulatory.db
++	install -m 644 -t $(DESTDIR)/$(CRDA_PATH)/ regulatory.bin
++	install -m 644 -t $(DESTDIR)/$(FIRMWARE_PATH) regulatory.db regulatory.db.p7s
+ 	install -m 755 -d $(DESTDIR)/$(MANDIR)/man5/
+ 	install -m 644 -t $(DESTDIR)/$(MANDIR)/man5/ regulatory.bin.5.gz
+-- 
+2.14.1
