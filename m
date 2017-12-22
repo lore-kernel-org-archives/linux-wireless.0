@@ -1,103 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35072 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S967274AbdLSMr3 (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:41302 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752871AbdLVQef (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 07:47:29 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 03/11] brcmfmac: stabilise the value of ->sbwad in use for some xfer routines.
-Date: Tue, 19 Dec 2017 13:47:09 +0100
-Message-Id: <1513687637-5555-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171219_134748_368626_2B241B4C)
-In-Reply-To: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1513687637-5555-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 22 Dec 2017 11:34:35 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Sunil Dutt <usdutt@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 3/3] nl80211: Introduce scan flags to emphasize requested scan behavior
+Date: Fri, 22 Dec 2017 18:33:39 +0200
+Message-ID: <1513960419-24780-3-git-send-email-jouni@qca.qualcomm.com> (sfid-20171222_173438_131853_C96E0BF9)
+In-Reply-To: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+From: Sunil Dutt <usdutt@qti.qualcomm.com>
 
-The IO functions operate within the Chipcommon IO window. Explicitly
-set this, rather than relying on the last initialisation IO access to
-leave it set to the right value by chance.
+This commit defines new scan flags (LOW_SPAN, LOW_POWER, HIGH_LATENCY)
+to emphasize the requested scan behavior for the driver. These flags are
+optional and are mutually exclusive. The implementation of the
+respective functionality can be driver/hardware specific.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+These flags can be used to control the compromise between how long a
+scan takes, how much power it uses, and high accurate/complete the scan
+is in finding the BSSs.
+
+Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 ++++----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 5 +++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h   | 1 +
- 3 files changed, 10 insertions(+), 4 deletions(-)
+ include/uapi/linux/nl80211.h | 28 +++++++++++++++++++++++++++-
+ net/wireless/nl80211.c       | 13 +++++++++++--
+ 2 files changed, 38 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index f8b47c1..29a2d1e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -529,7 +529,7 @@ int brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+v2:
+- added driver capability flags to indicate which of the options are
+  supported
+- added to this patch series due to a new dependency in one of the
+  header files
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 083c6c1..56e6bc0 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4979,6 +4979,9 @@ enum nl80211_feature_flags {
+  * @NL80211_EXT_FEATURE_MFP_OPTIONAL: Driver supports the %NL80211_MFP_OPTIONAL
+  *	value in %NL80211_ATTR_USE_MFP.
+  * @NL80211_EXT_FEATURE_EXTERNAL_AUTH: Driver supports external authentication
++ * @NL80211_EXT_FEATURE_LOW_SPAN_SCAN: Driver supports low span scan.
++ * @NL80211_EXT_FEATURE_LOW_POWER_SCAN: Driver supports low power scan.
++ * @NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN: Driver supports high accuracy scan.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -5007,6 +5010,9 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION,
+ 	NL80211_EXT_FEATURE_MFP_OPTIONAL,
+ 	NL80211_EXT_FEATURE_EXTERNAL_AUTH,
++	NL80211_EXT_FEATURE_LOW_SPAN_SCAN,
++	NL80211_EXT_FEATURE_LOW_POWER_SCAN,
++	NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
  
- int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- {
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err = 0;
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+@@ -5067,6 +5073,10 @@ enum nl80211_timeout_reason {
+  * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
+  * requests.
+  *
++ * NL80211_SCAN_FLAG_LOW_SPAN, NL80211_SCAN_FLAG_LOW_POWER, and
++ * NL80211_SCAN_FLAG_HIGH_ACCURACY flags are exclusive of each other, i.e., only
++ * one of them can be used in the request.
++ *
+  * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
+  * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
+  * @NL80211_SCAN_FLAG_AP: force a scan even if the interface is configured
+@@ -5094,7 +5104,20 @@ enum nl80211_timeout_reason {
+  *	and suppression (if it has received a broadcast Probe Response frame,
+  *	Beacon frame or FILS Discovery frame from an AP that the STA considers
+  *	a suitable candidate for (re-)association - suitable in terms of
+- *	SSID and/or RSSI
++ *	SSID and/or RSSI.
++ * @NL80211_SCAN_FLAG_LOW_SPAN: Span corresponds to the total time taken to
++ *	accomplish the scan. Thus, this flag intends the driver to perform the
++ *	scan request with lesser span/duration. It is specific to the driver
++ *	implementations on how this is accomplished. Scan accuracy may get
++ *	impacted with this flag.
++ * @NL80211_SCAN_FLAG_LOW_POWER: This flag intends the scan attempts to consume
++ *	optimal possible power. Drivers can resort to their specific means to
++ *	optimize the power. Scan accuracy may get impacted with this flag.
++ * @NL80211_SCAN_FLAG_HIGH_ACCURACY: Accuracy here intends to the extent of scan
++ *	results obtained. Thus HIGH_ACCURACY scan flag aims to get maximum
++ *	possible scan results. This flag hints the driver to use the best
++ *	possible scan configuration to improve the accuracy in scanning.
++ *	Latency and power use may get impacted with this flag.
+  */
+ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_PRIORITY				= 1<<0,
+@@ -5105,6 +5128,9 @@ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP		= 1<<5,
+ 	NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE		= 1<<6,
+ 	NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION	= 1<<7,
++	NL80211_SCAN_FLAG_LOW_SPAN				= 1<<8,
++	NL80211_SCAN_FLAG_LOW_POWER				= 1<<9,
++	NL80211_SCAN_FLAG_HIGH_ACCURACY				= 1<<10,
+ };
  
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
-@@ -552,7 +552,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- {
- 	struct sk_buff *glom_skb = NULL;
- 	struct sk_buff *skb;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err = 0;
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ea36514..8a53e6e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6712,8 +6712,17 @@ nl80211_check_scan_flags(struct wiphy *wiphy, struct wireless_dev *wdev,
  
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
-@@ -593,7 +593,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- {
- 	struct sk_buff *mypkt;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err;
+ 	*flags = nla_get_u32(attrs[NL80211_ATTR_SCAN_FLAGS]);
  
- 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
-@@ -625,7 +625,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 			 struct sk_buff_head *pktq)
- {
- 	struct sk_buff *skb;
--	u32 addr = sdiodev->sbwad;
-+	u32 addr = sdiodev->cc_core->base;
- 	int err;
+-	if ((*flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
+-	    !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN))
++	if (((*flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
++	     !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) ||
++	    ((*flags & NL80211_SCAN_FLAG_LOW_SPAN) &&
++	     !wiphy_ext_feature_isset(wiphy,
++				      NL80211_EXT_FEATURE_LOW_SPAN_SCAN)) ||
++	    ((*flags & NL80211_SCAN_FLAG_LOW_POWER) &&
++	     !wiphy_ext_feature_isset(wiphy,
++				      NL80211_EXT_FEATURE_LOW_POWER_SCAN)) ||
++	    ((*flags & NL80211_SCAN_FLAG_HIGH_ACCURACY) &&
++	     !wiphy_ext_feature_isset(wiphy,
++				      NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN)))
+ 		return -EOPNOTSUPP;
  
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index cc409c7..e334476 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3842,6 +3842,11 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
- 	if (!bus->sdio_core)
- 		goto fail;
- 
-+	/* Pick up the CHIPCOMMON core info struct, for bulk IO in bcmsdh.c */
-+	sdiodev->cc_core = brcmf_chip_get_core(bus->ci, BCMA_CORE_CHIPCOMMON);
-+	if (!sdiodev->cc_core)
-+		goto fail;
-+
- 	sdiodev->settings = brcmf_get_module_param(sdiodev->dev,
- 						   BRCMF_BUSTYPE_SDIO,
- 						   bus->ci->chip,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index 01def16..ac5f814 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -178,6 +178,7 @@ struct brcmf_sdio_dev {
- 	struct sdio_func *func[SDIO_MAX_FUNCS];
- 	u8 num_funcs;			/* Supported funcs on client */
- 	u32 sbwad;			/* Save backplane window address */
-+	struct brcmf_core *cc_core;	/* chipcommon core info struct */
- 	struct brcmf_sdio *bus;
- 	struct device *dev;
- 	struct brcmf_bus *bus_if;
+ 	if (*flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
 -- 
-1.9.1
+2.7.4
