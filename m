@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:35772 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933388AbdLSJxc (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:9165 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756091AbdLVPzp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 04:53:32 -0500
-Message-ID: <1513677210.26145.10.camel@sipsolutions.net> (sfid-20171219_105337_622327_2ACDEC26)
-Subject: Re: [PATCH] mac80211: Fix setting TX power on monitor interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter =?ISO-8859-1?Q?Gro=DFe?= <pegro@friiks.de>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 19 Dec 2017 10:53:30 +0100
-In-Reply-To: <20171213172946.19976-1-pegro@friiks.de>
-References: <1512849236.26976.43.camel@sipsolutions.net>
-         <20171213172946.19976-1-pegro@friiks.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 22 Dec 2017 10:55:45 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v3 00/11] ath10k high latency
+Date: Fri, 22 Dec 2017 15:55:40 +0000
+Message-ID: <87r2rm92pw.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_165549_424573_B169C715)
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+In-Reply-To: <20170917194013.8658-1-erik.stromdahl@gmail.com> (Erik
+        Stromdahl's message of "Sun, 17 Sep 2017 21:40:02 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-> Since monitor_sdata->vif.type is also NL80211_IFTYPE_MONITOR,
-> the warning would still appear with the patch to cfg.c, so I excluded 
-> that case from the WARN_ON_ONCE condition.
-> 
-> I hope that makes sense?!
+> This is the third version of the high latency patches (stuff common for
+> usb and sdio).
 
-Yeah, looks good.
+Sorry for the late review, this fall I have had difficulties to keep up
+with all the patches. This set looks pretty good, I had few smaller
+comments but nothing major really.
 
->  	if (wdev) {
->  		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
->  
-> +		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
-> +			sdata = rtnl_dereference(local->monitor_sdata);
-> +			if (!sdata)
-> +				return -EOPNOTSUPP;
-> +		}
+> One major difference between this version and the previous is that the
+> num_pending_tx counter has been disabled for high latency devices (last p=
+atch).
+>
+> This fixes the previous issue with the halted USB RX.
+> I have tested these patches with a Linksys WUSB6100M and it looks
+> much better than the previous version.
 
-This part makes perfect sense.
+I quickly tested this set few weeks ago on my test laptop and the kernel
+was crashing a lot, I don't know was it because I usually try to run all
+kernel debug features enabled or what. I don't have the logs at hand
+right now. I think we should try to investigate that before adding the
+hw_params entry for the usb device, but rest of the patches in this set
+can go in even before. Most important is that we don't create any
+regressions (including kernel crashes).
 
->  	mutex_lock(&local->iflist_mtx);
->  	list_for_each_entry(sdata, &local->interfaces, list) {
-> +		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
-> +			has_monitor = true;
-> +			continue;
-> +		}
->  		sdata->user_power_level = local->user_power_level;
->  		if (txp_type != sdata->vif.bss_conf.txpower_type)
->  			update_txp_type = true;
->  		sdata->vif.bss_conf.txpower_type = txp_type;
->  	}
-> -	list_for_each_entry(sdata, &local->interfaces, list)
-> +	list_for_each_entry(sdata, &local->interfaces, list) {
-> +		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
-> +			continue;
->  		ieee80211_recalc_txpower(sdata, update_txp_type);
-> +	}
->  	mutex_unlock(&local->iflist_mtx);
->  
-> +	if (has_monitor) {
-> +		sdata = rtnl_dereference(local->monitor_sdata);
-> +		if (sdata) {
-> +			sdata->user_power_level = local->user_power_level;
-> +			if (txp_type != sdata->vif.bss_conf.txpower_type)
-> +				update_txp_type = true;
-> +			sdata->vif.bss_conf.txpower_type = txp_type;
-> +
-> +			ieee80211_recalc_txpower(sdata, update_txp_type);
-> +		}
-> +	}
-
-But do we really need this? I think we can probably live with just not
-having monitor handled here, i.e. only have the "if monitor continue;"
-part?
-
-johannes
+--=20
+Kalle Valo=
