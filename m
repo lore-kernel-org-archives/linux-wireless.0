@@ -1,302 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:64306 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752265AbdLKOXV (ORCPT
+Received: from mail-wr0-f169.google.com ([209.85.128.169]:34662 "EHLO
+        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752224AbdLVTdy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 09:23:21 -0500
-From: Rakesh Pillai <pillair@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@qti.qualcomm.com>,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH v3 2/4] ath10k: WMI: Add management tx by reference support over wmi
-Date: Mon, 11 Dec 2017 19:52:53 +0530
-Message-Id: <1513002175-2498-3-git-send-email-pillair@qti.qualcomm.com> (sfid-20171211_152340_039469_EB53EF52)
-In-Reply-To: <1513002175-2498-1-git-send-email-pillair@qti.qualcomm.com>
-References: <1513002175-2498-1-git-send-email-pillair@qti.qualcomm.com>
+        Fri, 22 Dec 2017 14:33:54 -0500
+Received: by mail-wr0-f169.google.com with SMTP id y21so28756010wrc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2017 11:33:53 -0800 (PST)
+Date: Fri, 22 Dec 2017 20:33:49 +0100 (CET)
+From: Enrico Mioso <mrkiko.rs@gmail.com>
+To: linux-wireless@vger.kernel.org
+cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: mt76x0 support
+Message-ID: <alpine.LNX.2.21.99.1712222018070.2576@localhost.localdomain> (sfid-20171222_203358_862450_06C1F6E2)
+MIME-Version: 1.0
+Content-Type: text/plain; format=flowed; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HL1.0 firmware branch, used in wcn3990, transmits management
-frames by reference over WMI.
+Hello Felix, Stanislaw, linux-wireless list, and everybody reading this message.
+So I am trying to see if it's possible to get an MT7630 device to a "workable" state.
 
-Add support for management tx by reference over WMI.
+So I used this
+https://github.com/neurobin/MT7630E
+as a reference, the MT7601u to look how things where done (upstream version in drivers/net/wireless/mediatek/mt7601u ).
 
-Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c    |  1 +
- drivers/net/wireless/ath/ath10k/core.h    |  3 ++
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  9 +++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 78 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h | 67 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |  1 +
- 6 files changed, 158 insertions(+), 1 deletion(-)
+Here is the diff I came up with. The diff is relative to mt76.git. Any idea and / or hint would be greatly apreciated.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index b29fdbd21ead..1e4e18e5edcb 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -390,6 +390,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
- 	[ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR] = "skip-null-func-war",
- 	[ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST] = "allows-mesh-bcast",
- 	[ATH10K_FW_FEATURE_NO_PS] = "no-ps",
-+	[ATH10K_FW_FEATURE_MGMT_TX_BY_REF] = "mgmt-tx-by-reference",
- };
- 
- static unsigned int ath10k_core_get_fw_feature_str(char *buf,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 643041ef3271..30c4c07658d5 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -615,6 +615,9 @@ enum ath10k_fw_features {
- 	/* Firmware does not support power save in station mode. */
- 	ATH10K_FW_FEATURE_NO_PS = 17,
- 
-+	/* Firmware allows management tx by reference instead of by value. */
-+	ATH10K_FW_FEATURE_MGMT_TX_BY_REF = 18,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 2fc3f24ff1ca..41eef942ab2c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -377,6 +377,7 @@ ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
- 	struct sk_buff *skb;
- 	int ret;
-+	u32 mgmt_tx_cmdid;
- 
- 	if (!ar->wmi.ops->gen_mgmt_tx)
- 		return -EOPNOTSUPP;
-@@ -385,7 +386,13 @@ ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
- 
--	ret = ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->mgmt_tx_cmdid);
-+	if (test_bit(ATH10K_FW_FEATURE_MGMT_TX_BY_REF,
-+		     ar->running_fw->fw_file.fw_features))
-+		mgmt_tx_cmdid = ar->wmi.cmd->mgmt_tx_send_cmdid;
-+	else
-+		mgmt_tx_cmdid = ar->wmi.cmd->mgmt_tx_cmdid;
-+
-+	ret = ath10k_wmi_cmd_send(ar, skb, mgmt_tx_cmdid);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index c3683bc5a6a4..9910cc65af90 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2483,6 +2483,82 @@ ath10k_wmi_tlv_op_gen_request_stats(struct ath10k *ar, u32 stats_mask)
- }
- 
- static struct sk_buff *
-+ath10k_wmi_tlv_op_gen_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
+I have some difficulties in understanding how to access the EEPROM to read e.g.: the MAC address and other data if needed (calibration etc).
+The device is on a MIPS device, so unfortunately I will have to test my code there, since opening up the device and desoldering / removing the card is not easily done.
+Is there some way I can debug things, get more infos on the device?
+Thank you very much for your help and patience, and hints. They allowed me to get here, try this new approach.
+
+For now I am modifying the code, but the palan would be to clean up things at the end a create a new module, and mark common functions as such.
+
+Enrico
+
+diff --git a/mt76x2_init.c b/mt76x2_init.c
+index 6f942e5..1b321e2 100644
+--- a/mt76x2_init.c
++++ b/mt76x2_init.c
+@@ -330,6 +330,14 @@ int mt76x2_mac_reset(struct mt76x2_dev *dev, bool hard)
+  	return 0;
+  }
+
++int mt76x0_mac_reset(struct mt76x2_dev *dev)
 +{
-+	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(msdu);
-+	struct wmi_tlv_mgmt_tx_cmd *cmd;
-+	struct wmi_tlv *tlv;
-+	struct ieee80211_hdr *hdr;
-+	struct sk_buff *skb;
-+	void *ptr;
-+	int len;
-+	u32 buf_len = msdu->len;
-+	u16 fc;
-+	struct ath10k_vif *arvif;
-+	dma_addr_t mgmt_frame_dma;
-+	u32 vdev_id;
-+
-+	if (!cb->vif)
-+		return ERR_PTR(-EINVAL);
-+
-+	hdr = (struct ieee80211_hdr *)msdu->data;
-+	fc = le16_to_cpu(hdr->frame_control);
-+	arvif = (void *)cb->vif->drv_priv;
-+	vdev_id = arvif->vdev_id;
-+
-+	if (WARN_ON_ONCE(!ieee80211_is_mgmt(hdr->frame_control)))
-+		return ERR_PTR(-EINVAL);
-+
-+	len = sizeof(*cmd) + 2 * sizeof(*tlv);
-+
-+	if ((ieee80211_is_action(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control) ||
-+	     ieee80211_is_disassoc(hdr->frame_control)) &&
-+	     ieee80211_has_protected(hdr->frame_control)) {
-+		len += IEEE80211_CCMP_MIC_LEN;
-+		buf_len += IEEE80211_CCMP_MIC_LEN;
-+	}
-+
-+	buf_len = min_t(u32, buf_len, WMI_TLV_MGMT_TX_FRAME_MAX_LEN);
-+	buf_len = round_up(buf_len, 4);
-+
-+	len += buf_len;
-+	len = round_up(len, 4);
-+	skb = ath10k_wmi_alloc_skb(ar, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ptr = (void *)skb->data;
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_MGMT_TX_CMD);
-+	tlv->len = __cpu_to_le16(sizeof(*cmd));
-+	cmd = (void *)tlv->value;
-+	cmd->vdev_id = __cpu_to_le32(vdev_id);
-+	cmd->desc_id = 0;
-+	cmd->chanfreq = 0;
-+	cmd->buf_len = __cpu_to_le32(buf_len);
-+	cmd->frame_len = __cpu_to_le32(msdu->len);
-+	mgmt_frame_dma = dma_map_single(arvif->ar->dev, msdu->data,
-+					msdu->len, DMA_TO_DEVICE);
-+	if (!mgmt_frame_dma)
-+		return ERR_PTR(-ENOMEM);
-+
-+	cmd->paddr = __cpu_to_le64(mgmt_frame_dma);
-+
-+	ptr += sizeof(*tlv);
-+	ptr += sizeof(*cmd);
-+
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_BYTE);
-+	tlv->len = __cpu_to_le16(buf_len);
-+
-+	ptr += sizeof(*tlv);
-+	memcpy(ptr, msdu->data, buf_len);
-+
-+	return skb;
++	mt76_set(dev, MT_MAC_SYS_CTRL, MT_MAC_SYS_CTRL_RESET_CSR);
++	udelay(50);
++	mt76_clear(dev, MT_MAC_SYS_CTRL, MT_MAC_SYS_CTRL_RESET_CSR);
++	return 0;
 +}
 +
-+static struct sk_buff *
- ath10k_wmi_tlv_op_gen_force_fw_hang(struct ath10k *ar,
- 				    enum wmi_force_fw_hang_type type,
- 				    u32 delay_ms)
-@@ -3291,6 +3367,7 @@ static struct wmi_cmd_map wmi_tlv_cmd_map = {
- 	.bcn_filter_rx_cmdid = WMI_TLV_BCN_FILTER_RX_CMDID,
- 	.prb_req_filter_rx_cmdid = WMI_TLV_PRB_REQ_FILTER_RX_CMDID,
- 	.mgmt_tx_cmdid = WMI_TLV_MGMT_TX_CMDID,
-+	.mgmt_tx_send_cmdid = WMI_TLV_MGMT_TX_SEND_CMD,
- 	.prb_tmpl_cmdid = WMI_TLV_PRB_TMPL_CMDID,
- 	.addba_clear_resp_cmdid = WMI_TLV_ADDBA_CLEAR_RESP_CMDID,
- 	.addba_send_cmdid = WMI_TLV_ADDBA_SEND_CMDID,
-@@ -3625,6 +3702,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	.gen_request_stats = ath10k_wmi_tlv_op_gen_request_stats,
- 	.gen_force_fw_hang = ath10k_wmi_tlv_op_gen_force_fw_hang,
- 	/* .gen_mgmt_tx = not implemented; HTT is used */
-+	.gen_mgmt_tx =  ath10k_wmi_tlv_op_gen_mgmt_tx,
- 	.gen_dbglog_cfg = ath10k_wmi_tlv_op_gen_dbglog_cfg,
- 	.gen_pktlog_enable = ath10k_wmi_tlv_op_gen_pktlog_enable,
- 	.gen_pktlog_disable = ath10k_wmi_tlv_op_gen_pktlog_disable,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 77327a2384be..4faaa64a40d5 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -22,6 +22,7 @@
- #define WMI_TLV_CMD_UNSUPPORTED 0
- #define WMI_TLV_PDEV_PARAM_UNSUPPORTED 0
- #define WMI_TLV_VDEV_PARAM_UNSUPPORTED 0
-+#define WMI_TLV_MGMT_TX_FRAME_MAX_LEN	64
- 
- enum wmi_tlv_grp_id {
- 	WMI_TLV_GRP_START = 0x3,
-@@ -132,6 +133,7 @@ enum wmi_tlv_cmd_id {
- 	WMI_TLV_PRB_REQ_FILTER_RX_CMDID,
- 	WMI_TLV_MGMT_TX_CMDID,
- 	WMI_TLV_PRB_TMPL_CMDID,
-+	WMI_TLV_MGMT_TX_SEND_CMD,
- 	WMI_TLV_ADDBA_CLEAR_RESP_CMDID = WMI_TLV_CMD(WMI_TLV_GRP_BA_NEG),
- 	WMI_TLV_ADDBA_SEND_CMDID,
- 	WMI_TLV_ADDBA_STATUS_CMDID,
-@@ -890,6 +892,63 @@ enum wmi_tlv_tag {
- 	WMI_TLV_TAG_STRUCT_SAP_OFL_DEL_STA_EVENT,
- 	WMI_TLV_TAG_STRUCT_APFIND_CMD_PARAM,
- 	WMI_TLV_TAG_STRUCT_APFIND_EVENT_HDR,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_SCHED_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_SCHED_EVENT,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_CONFIG_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_CONFIG_RESP_EVENT,
-+	WMI_TLV_TAG_STRUCT_OCB_SET_UTC_TIME_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_START_TIMING_ADVERT_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_STOP_TIMING_ADVERT_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_GET_TSF_TIMER_CMD,
-+	WMI_TLV_TAG_STRUCT_OCB_GET_TSF_TIMER_RESP_EVENT,
-+	WMI_TLV_TAG_STRUCT_DCC_GET_STATS_CMD,
-+	WMI_TLV_TAG_STRUCT_DCC_CHANNEL_STATS_REQUEST,
-+	WMI_TLV_TAG_STRUCT_DCC_GET_STATS_RESP_EVENT,
-+	WMI_TLV_TAG_STRUCT_DCC_CLEAR_STATS_CMD,
-+	WMI_TLV_TAG_STRUCT_DCC_UPDATE_NDL_CMD,
-+	WMI_TLV_TAG_STRUCT_DCC_UPDATE_NDL_RESP_EVENT,
-+	WMI_TLV_TAG_STRUCT_DCC_STATS_EVENT,
-+	WMI_TLV_TAG_STRUCT_OCB_CHANNEL,
-+	WMI_TLV_TAG_STRUCT_OCB_SCHEDULE_ELEMENT,
-+	WMI_TLV_TAG_STRUCT_DCC_NDL_STATS_PER_CHANNEL,
-+	WMI_TLV_TAG_STRUCT_DCC_NDL_CHAN,
-+	WMI_TLV_TAG_STRUCT_QOS_PARAMETER,
-+	WMI_TLV_TAG_STRUCT_DCC_NDL_ACTIVE_STATE_CONFIG,
-+	WMI_TLV_TAG_STRUCT_ROAM_SCAN_EXTENDED_THRESHOLD_PARAM,
-+	WMI_TLV_TAG_STRUCT_ROAM_FILTER_FIXED_PARAM,
-+	WMI_TLV_TAG_STRUCT_PASSPOINT_CONFIG_CMD,
-+	WMI_TLV_TAG_STRUCT_PASSPOINT_EVENT_HDR,
-+	WMI_TLV_TAG_STRUCT_EXTSCAN_CONFIGURE_HOTLIST_SSID_MONITOR_CMD,
-+	WMI_TLV_TAG_STRUCT_EXTSCAN_HOTLIST_SSID_MATCH_EVENT,
-+	WMI_TLV_TAG_STRUCT_VDEV_TSF_TSTAMP_ACTION_CMD,
-+	WMI_TLV_TAG_STRUCT_VDEV_TSF_REPORT_EVENT,
-+	WMI_TLV_TAG_STRUCT_GET_FW_MEM_DUMP,
-+	WMI_TLV_TAG_STRUCT_UPDATE_FW_MEM_DUMP,
-+	WMI_TLV_TAG_STRUCT_FW_MEM_DUMP_PARAMS,
-+	WMI_TLV_TAG_STRUCT_DEBUG_MESG_FLUSH,
-+	WMI_TLV_TAG_STRUCT_DEBUG_MESG_FLUSH_COMPLETE,
-+	WMI_TLV_TAG_STRUCT_PEER_SET_RATE_REPORT_CONDITION,
-+	WMI_TLV_TAG_STRUCT_ROAM_SUBNET_CHANGE_CONFIG,
-+	WMI_TLV_TAG_STRUCT_VDEV_SET_IE_CMD,
-+	WMI_TLV_TAG_STRUCT_RSSI_BREACH_MONITOR_CONFIG,
-+	WMI_TLV_TAG_STRUCT_RSSI_BREACH_EVENT,
-+	WMI_TLV_TAG_STRUCT_EVENT_INITIAL_WAKEUP,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_PCL_CMD,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_HW_MODE_CMD,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_HW_MODE_RESPONSE_EVENT,
-+	WMI_TLV_TAG_STRUCT_SOC_HW_MODE_TRANSITION_EVENT,
-+	WMI_TLV_TAG_STRUCT_VDEV_TXRX_STREAMS,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_HW_MODE_RESPONSE_VDEV_MAC_ENTRY,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_DUAL_MAC_CONFIG_CMD,
-+	WMI_TLV_TAG_STRUCT_SOC_SET_DUAL_MAC_CONFIG_RESPONSE_EVENT,
-+	WMI_TLV_TAG_STRUCT_IOAC_SOCK_PATTERN_T,
-+	WMI_TLV_TAG_STRUCT_WOW_ENABLE_ICMPV6_NA_FLT_CMD,
-+	WMI_TLV_TAG_STRUCT_DIAG_EVENT_LOG_CONFIG,
-+	WMI_TLV_TAG_STRUCT_DIAG_EVENT_LOG_SUPPORTED_EVENT,
-+	WMI_TLV_TAG_STRUCT_PACKET_FILTER_CONFIG,
-+	WMI_TLV_TAG_STRUCT_PACKET_FILTER_ENABLE,
-+	WMI_TLV_TAG_STRUCT_SAP_SET_BLACKLIST_PARAM_CMD,
-+	WMI_TLV_TAG_STRUCT_MGMT_TX_CMD,
- 
- 	WMI_TLV_TAG_MAX
- };
-@@ -1689,4 +1748,12 @@ struct wmi_tlv_tx_pause_ev {
- 
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
- 
-+struct wmi_tlv_mgmt_tx_cmd {
-+	__le32 vdev_id;
-+	__le32 desc_id;
-+	__le32 chanfreq;
-+	__le64 paddr;
-+	__le32 frame_len;
-+	__le32 buf_len;
-+} __packed;
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 6c11b36abb69..6259bd6df198 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -798,6 +798,7 @@ struct wmi_cmd_map {
- 	u32 bcn_filter_rx_cmdid;
- 	u32 prb_req_filter_rx_cmdid;
- 	u32 mgmt_tx_cmdid;
-+	u32 mgmt_tx_send_cmdid;
- 	u32 prb_tmpl_cmdid;
- 	u32 addba_clear_resp_cmdid;
- 	u32 addba_send_cmdid;
--- 
-2.11.0
+  int mt76x2_mac_start(struct mt76x2_dev *dev)
+  {
+  	int i;
+@@ -364,6 +372,34 @@ int mt76x2_mac_start(struct mt76x2_dev *dev)
+  	return 0;
+  }
+
++int mt76x0_mac_start(struct mt76x2_dev *dev)
++{
++	mt76_wr(dev, MT_MAC_SYS_CTRL, MT_MAC_SYS_CTRL_ENABLE_TX);
++
++	if (!mt76_poll(dev, MT_WPDMA_GLO_CFG, MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
++						MT_WPDMA_GLO_CFG_RX_DMA_BUSY, 0, 200000))
++  	return -ETIMEDOUT;
++
++	dev->rxfilter = MT_RX_FILTR_CFG_CRC_ERR |
++		MT_RX_FILTR_CFG_PHY_ERR | MT_RX_FILTR_CFG_PROMISC |
++		MT_RX_FILTR_CFG_VER_ERR | MT_RX_FILTR_CFG_DUP |
++		MT_RX_FILTR_CFG_CFACK | MT_RX_FILTR_CFG_CFEND |
++		MT_RX_FILTR_CFG_ACK | MT_RX_FILTR_CFG_CTS |
++		MT_RX_FILTR_CFG_RTS | MT_RX_FILTR_CFG_PSPOLL |
++		MT_RX_FILTR_CFG_BA | MT_RX_FILTR_CFG_CTRL_RSV;
++
++	mt76_wr(dev, MT_RX_FILTR_CFG, dev->rxfilter);
++
++	mt76_wr(dev, MT_MAC_SYS_CTRL,
++		MT_MAC_SYS_CTRL_ENABLE_TX | MT_MAC_SYS_CTRL_ENABLE_RX);
++
++	if (!mt76_poll(dev, MT_WPDMA_GLO_CFG, MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
++		MT_WPDMA_GLO_CFG_RX_DMA_BUSY, 0, 50))
++  return -ETIMEDOUT;
++
++	return 0;
++}
++
+  void mt76x2_mac_stop(struct mt76x2_dev *dev, bool force)
+  {
+  	bool stopped = false;
+@@ -399,6 +435,38 @@ void mt76x2_mac_stop(struct mt76x2_dev *dev, bool force)
+  	mt76_wr(dev, MT_TX_RTS_CFG, rts_cfg);
+  }
+
++void mt76x0_mac_stop(struct mt76x2_dev *dev) {
++	int i, ok;
++
++	mt76_clear(dev, MT_BEACON_TIME_CFG, MT_BEACON_TIME_CFG_TIMER_EN |
++		MT_BEACON_TIME_CFG_SYNC_MODE | MT_BEACON_TIME_CFG_TBTT_EN |
++		MT_BEACON_TIME_CFG_BEACON_TX);
++
++	/* Page count on TxQ */
++	i = 200;
++	while (i-- && ((mt76_rr(dev, 0x0438) & 0xffffffff) ||
++		(mt76_rr(dev, 0x0a30) & 0x000000ff) ||
++		(mt76_rr(dev, 0x0a34) & 0x00ff00ff)))
++		msleep(10);
++
++	mt76_clear(dev, MT_MAC_SYS_CTRL, MT_MAC_SYS_CTRL_ENABLE_RX |
++		MT_MAC_SYS_CTRL_ENABLE_TX);
++
++	/* Page count on RxQ */
++	ok = 0;
++	i = 200;
++	while (i--) {
++		if (!(mt76_rr(dev, MT_RXQ_STA) & 0x00ff0000) &&
++			!mt76_rr(dev, 0x0a30) &&
++			!mt76_rr(dev, 0x0a34)) {
++				if (ok++ > 5)
++					break;
++				continue;
++			}
++			msleep(1);
++	}
++}
++
+  void mt76x2_mac_resume(struct mt76x2_dev *dev)
+  {
+  	mt76_wr(dev, MT_MAC_SYS_CTRL,
+@@ -485,6 +553,34 @@ mt76x2_power_on(struct mt76x2_dev *dev)
+  	mt76x2_power_on_rf(dev, 1);
+  }
+
++/* Big thanks to the author(s?) of mt7601U, upstream version */
++static void
++mt76x2_power_on_76x0(struct mt76x2_dev *dev)
++{
++	int i;
++	u32 val;
++
++	val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
++
++	/* Note: we don't turn off WLAN_CLK because that may make the device not responsive. */
++	val |= (MT_WLAN_FUN_CTRL_WLAN_EN |
++		MT_WLAN_FUN_CTRL_WLAN_CLK_EN);
++
++	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
++	udelay(50);
++
++	for (i = 200; i; i--) {
++		val = mt76_rr(dev, MT_CMB_CTRL);
++		if (val & MT_CMB_CTRL_XTAL_RDY && val & MT_CMB_CTRL_PLL_LD)
++			break;
++
++		udelay(50);
++	}
++
++	if (!i)
++		dev_err(dev->mt76.dev, "Error: PLL and XTAL check failed!\n");
++}
++
+  void mt76x2_set_tx_ackto(struct mt76x2_dev *dev)
+  {
+  	u8 ackto, sifs, slottime = dev->slottime;
+@@ -543,23 +639,21 @@ int mt76x2_init_hardware(struct mt76x2_dev *dev)
+  	static const u16 beacon_offsets[16] = {
+  		/* 1024 byte per beacon */
+  		0xc000,
++		0xc200,
+  		0xc400,
++		0xc600,
+  		0xc800,
++		0xca00,
+  		0xcc00,
++		0xce00,
+  		0xd000,
++		0xd200,
+  		0xd400,
++		0xd600,
+  		0xd800,
++		0xda00,
+  		0xdc00,
+-
+-		/* BSS idx 8-15 not used for beacons */
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
++		0xde00,
+  	};
+  	u32 val;
+  	int ret;
+@@ -581,24 +675,28 @@ int mt76x2_init_hardware(struct mt76x2_dev *dev)
+  	mt76_wr(dev, MT_WPDMA_GLO_CFG, val);
+
+  	mt76x2_reset_wlan(dev, true);
+-	mt76x2_power_on(dev);
++	mt76x2_power_on_76x0(dev);
+
+-	ret = mt76x2_eeprom_init(dev);
++	/* Note: at this point the vendor driver does write some things to MT_CMB_CTRL; we aren't. */
++
++	/* Note: at this point the vendor driver does write some things to MT_CMB_CTRL; we aren't. */
++
++	/* ret = mt76x2_eeprom_init(dev);
+  	if (ret)
+-		return ret;
++		return ret; */
+
+-	ret = mt76x2_mac_reset(dev, true);
++	ret = mt76x0_mac_reset(dev);
+  	if (ret)
+  		return ret;
+
+  	dev->rxfilter = mt76_rr(dev, MT_RX_FILTR_CFG);
+
+-	ret = mt76x2_dma_init(dev);
++	//ret = mt76x0_dma_init(dev); XXX MISSING BUT NEEDED
+  	if (ret)
+  		return ret;
+
+  	set_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
+-	ret = mt76x2_mac_start(dev);
++	ret = mt76x0_mac_start(dev);
+  	if (ret)
+  		return ret;
+
+diff --git a/mt76x2_regs.h b/mt76x2_regs.h
+index 95c1e95..ca2bca4 100644
+--- a/mt76x2_regs.h
++++ b/mt76x2_regs.h
+@@ -47,6 +47,7 @@
+  #define MT_WLAN_FUN_CTRL_WLAN_RESET_RF	BIT(2)
+
+  #define MT_WLAN_FUN_CTRL_WLAN_RESET	BIT(3) /* MT76x0 */
++#define MT_RXQ_STA 0x0430
+  #define MT_WLAN_FUN_CTRL_CSR_F20M_CKEN	BIT(3) /* MT76x2 */
+
+  #define MT_WLAN_FUN_CTRL_PCIE_CLK_REQ	BIT(4)
