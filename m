@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48300 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752124AbdLALvC (ORCPT
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:39817 "EHLO
+        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752148AbdLVAM2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 06:51:02 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Adiel Aloni <adiel.aloni@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  1 Dec 2017 13:50:53 +0200
-Message-Id: <20171201115053.29608-4-luca@coelho.fi> (sfid-20171201_125108_438839_92663106)
-In-Reply-To: <20171201115053.29608-1-luca@coelho.fi>
-References: <20171201115053.29608-1-luca@coelho.fi>
-Subject: [PATCH 3/3] mac80211_hwsim: enforce PS_MANUAL_POLL to be set after PS_ENABLED
+        Thu, 21 Dec 2017 19:12:28 -0500
+Received: by mail-qk0-f170.google.com with SMTP id u184so33003794qkd.6
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2017 16:12:28 -0800 (PST)
+Received: from ?IPv6:2804:7f1:2280:b90b:d178:8601:6582:fd3c? ([2804:7f1:2280:b90b:d178:8601:6582:fd3c])
+        by smtp.gmail.com with ESMTPSA id p191sm4462560qke.43.2017.12.21.16.12.25
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 21 Dec 2017 16:12:26 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+From: =?UTF-8?Q?Fl=c3=a1vio_Silveira?= <flavioguiraldo@gmail.com>
+Subject: ath9k dropping connections
+Message-ID: <f5b539a5-5365-7a1d-101d-591b5face78a@gmail.com> (sfid-20171222_011233_205072_B5F0EF0D)
+Date: Thu, 21 Dec 2017 22:12:18 -0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Adiel Aloni <adiel.aloni@intel.com>
+Good evening,
 
-Enforce using PS_MANUAL_POLL in ps hwsim debugfs to trigger a poll,
-only if PS_ENABLED was set before.
-This is required due to commit c9491367b759 ("mac80211: always update the
-PM state of a peer on MGMT / DATA frames") that enforces the ap to
-check only mgmt/data frames ps bit, and then update station's power save
-accordingly.
-When sending only ps-poll (control frame) the ap will not be aware that
-the station entered power save.
-Setting ps enable before triggering ps_poll, will send NDP with PM bit
-enabled first.
+   I have a wireless router running LEDE Reboot (SNAPSHOT, 
+r5445-04127f0fec), with kernel 4.9.65 and I'm seeing connections being 
+dropped without any error in dmesg. To fix I have to restart wifi by 
+issuing "wifi down; wifi up"
 
-Signed-off-by: Adiel Aloni <adiel.aloni@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+   It was previously running OpenWrt Barrier Breaker and was presenting 
+the same issue, except it would give me an error similar to this one: 
+"ath: phy0: Failed to stop TX DMA, queues=0x005!"
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ec2f4c31425a..719ce06007c6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -727,16 +727,21 @@ static int hwsim_fops_ps_write(void *dat, u64 val)
- 	    val != PS_MANUAL_POLL)
- 		return -EINVAL;
- 
--	old_ps = data->ps;
--	data->ps = val;
--
--	local_bh_disable();
- 	if (val == PS_MANUAL_POLL) {
-+		if (data->ps != PS_ENABLED)
-+			return -EINVAL;
-+		local_bh_disable();
- 		ieee80211_iterate_active_interfaces_atomic(
- 			data->hw, IEEE80211_IFACE_ITER_NORMAL,
- 			hwsim_send_ps_poll, data);
--		data->ps_poll_pending = true;
--	} else if (old_ps == PS_DISABLED && val != PS_DISABLED) {
-+		local_bh_enable();
-+		return 0;
-+	}
-+	old_ps = data->ps;
-+	data->ps = val;
-+
-+	local_bh_disable();
-+	if (old_ps == PS_DISABLED && val != PS_DISABLED) {
- 		ieee80211_iterate_active_interfaces_atomic(
- 			data->hw, IEEE80211_IFACE_ITER_NORMAL,
- 			hwsim_send_nullfunc_ps, data);
--- 
-2.15.0
+   After doing some research it seems this error is related to 
+environment interference and it was fixed in later kernel versions, the 
+reason I gave LEDE a try. It makes sense, because this router worked 
+wonderfully for at least a year before giving this issue.
+
+   The reason I am sending this e-mail is to receive suggestions on how 
+can I debug it properly, because, as pointed above, dmesg shows no errors.
+
+Regards,
+   Flavio Silveira
