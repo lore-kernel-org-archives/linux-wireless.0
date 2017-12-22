@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:58234 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751613AbdLBLbV (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18657 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758427AbdLVKGo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 06:31:21 -0500
-From: Rakesh Pillai <pillair@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@qti.qualcomm.com>
-Subject: [PATCH v2 0/4] WMI changes for wcn3990
-Date: Sat,  2 Dec 2017 17:00:44 +0530
-Message-Id: <1512214248-17127-1-git-send-email-pillair@qti.qualcomm.com> (sfid-20171202_123136_756829_28284C33)
+        Fri, 22 Dec 2017 05:06:44 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rakesh Pillai <pillair@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Rakesh Pillai" <pillair@codeaurora.org>
+Subject: Re: [PATCH v2 3/3] ath10k: Add fw feature flag for non-bmi firmware
+ load
+Date: Fri, 22 Dec 2017 10:05:26 +0000
+Message-ID: <87a7ybaxi2.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_110708_692176_BC7024F5)
+References: <1513872322-26636-1-git-send-email-pillair@qti.qualcomm.com>
+        <1513872322-26636-4-git-send-email-pillair@qti.qualcomm.com>
+        <85c2eb6d18d44dbba6d6b0a1fef87ccc@aphydexm01b.ap.qualcomm.com>
+In-Reply-To: <85c2eb6d18d44dbba6d6b0a1fef87ccc@aphydexm01b.ap.qualcomm.com>
+        (Rakesh Pillai's message of "Thu, 21 Dec 2017 16:18:57 +0000")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset includes the WMI changes for wcn3390 to
-Refactor service ready event parsing,
-Add management frame tx by refernce over wmi,
-Add hw parameters for wcn3990.
+Rakesh Pillai <pillair@qti.qualcomm.com> writes:
 
-Changes since v1:
-- Make code endian safe by using __cpu_to_le32 for hw parameters.
+> I have sent a v3 for this patch with the corrected ownership.
 
-Rakesh Pillai (4):
-  ath10k: WMI: modify svc bitmap parsing for wcn3990
-  ath10k: WMI: Add management tx by reference support over wmi
-  ath10k: WMI: get wmi init parameter values from hw params
-  ath10k: WMI: add hw params entry for wcn3990
+Please always resend the whole patch series[1], not just the individual
+patch. It's just too much work for me try to fish the correct versions
+from different places in patchwork.
 
- drivers/net/wireless/ath/ath10k/core.c    |  55 ++++++++++++
- drivers/net/wireless/ath/ath10k/core.h    |   3 +
- drivers/net/wireless/ath/ath10k/hw.c      |   2 +
- drivers/net/wireless/ath/ath10k/hw.h      |  14 +++
- drivers/net/wireless/ath/ath10k/mac.c     |   4 +-
- drivers/net/wireless/ath/ath10k/wmi-ops.h |   9 +-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 143 ++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/wmi-tlv.h | 113 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |   2 +
- 9 files changed, 328 insertions(+), 17 deletions(-)
+But no need to resend this time, I already took the v3 version in
+pending branch. But in the future keep this in mind.
 
--- 
-1.9.1
+[1] https://wireless.wiki.kernel.org/en/developers/documentation/submitting=
+patches#resubmit_the_whole_patchset
+
+--=20
+Kalle Valo=
