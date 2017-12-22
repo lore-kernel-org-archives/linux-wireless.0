@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:1253 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750914AbdLAPok (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:28818 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752871AbdLVQeY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 10:44:40 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "akolli@codeaurora.org" <akolli@codeaurora.org>
-CC: "mbizon@freebox.fr" <mbizon@freebox.fr>,
-        "linux-wireless-owner@vger.kernel.org"
-        <linux-wireless-owner@vger.kernel.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
-Date: Fri, 1 Dec 2017 15:44:33 +0000
-Message-ID: <87374uxxjy.fsf@kamboji.qca.qualcomm.com> (sfid-20171201_164443_961430_828F6275)
-References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
-        <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com>
-        <1512125137.38490.70.camel@sakura.staff.proxad.net>
-        <7792e2fb2c546d8745c65e48945f2535@codeaurora.org>
-In-Reply-To: <7792e2fb2c546d8745c65e48945f2535@codeaurora.org>
-        (akolli@codeaurora.org's message of "Fri, 01 Dec 2017 19:18:00 +0530")
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 22 Dec 2017 11:34:24 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Srinivas Dasari <dasaris@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 2/3] nl80211: Allow SAE Authentication for NL80211_CMD_CONNECT
+Date: Fri, 22 Dec 2017 18:33:38 +0200
+Message-ID: <1513960419-24780-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20171222_173427_454434_20035843)
+In-Reply-To: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-akolli@codeaurora.org writes:
+From: Srinivas Dasari <dasaris@qti.qualcomm.com>
 
->>> Parse peer stats from pktlog packets and update the tx rate
->>> information
->>> per STA. This way user space can query about transmit rate with iw:
->>
->> everything works ok, ath10k_update_per_peer_tx_stats() is called and
->> ath10k_sta fields are updated correctly
->>
->> but tx bitrate is still 6 MBit/s in station dump
->>
-> Hope CONFIG_MAC80211_DEBUGFS is enabled in your build.
-> Please Run ping traffic and see and 'station dump'
+This commit allows SAE Authentication for NL80211_CMD_CONNECT
+interface, provided this is supported by the host driver.
 
-This feature should not depend on debugfs. Why is it needed? In patch 1
-you already moved pktlog_filter to struct ath10k, does it need something
-else as well?
+Signed-off-by: Srinivas Dasari <dasaris@qti.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ net/wireless/nl80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
---=20
-Kalle Valo=
+v2:
+- no changes; just rebased and included in the full patch series
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 41a0373..ea36514 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3917,7 +3917,8 @@ static bool nl80211_valid_auth_type(struct cfg80211_registered_device *rdev,
+ 		return true;
+ 	case NL80211_CMD_CONNECT:
+ 		/* SAE not supported yet */
+-		if (auth_type == NL80211_AUTHTYPE_SAE)
++		if (!(rdev->wiphy.features & NL80211_FEATURE_SAE) &&
++		    auth_type == NL80211_AUTHTYPE_SAE)
+ 			return false;
+ 		/* FILS with SK PFS or PK not supported yet */
+ 		if (auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
+-- 
+2.7.4
