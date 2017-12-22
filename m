@@ -1,56 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:36284 "EHLO
-        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751520AbdLSLgl (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55075 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751770AbdLVNj1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 06:36:41 -0500
-Received: by mail-qk0-f176.google.com with SMTP id 8so22062250qkj.3
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2017 03:36:41 -0800 (PST)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: BCM4356 does not initalize after firmware update
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-References: <20171213161257.GB2811@redhat.com> <5A3240B9.90007@broadcom.com>
- <20171214142243.GB2737@redhat.com> <5A339CB2.1040202@broadcom.com>
- <20171215103215.GA2742@redhat.com> <5A33ADAA.9060008@broadcom.com>
- <20171215122045.GB2742@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <5A38F9C4.3050202@broadcom.com> (sfid-20171219_123646_547224_1B14358E)
-Date: Tue, 19 Dec 2017 12:36:36 +0100
+        Fri, 22 Dec 2017 08:39:27 -0500
+Subject: [PATCH v2 4/6] ath10k: add coredump_mask module parameter
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Dec 2017 15:39:15 +0200
+Message-ID: <151394995496.9382.16429094208656149148.stgit@potku.adurom.net> (sfid-20171222_143933_233484_799C0634)
+In-Reply-To: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net>
+References: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <20171215122045.GB2742@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/15/2017 1:20 PM, Stanislaw Gruszka wrote:
-> On Fri, Dec 15, 2017 at 12:10:34PM +0100, Arend van Spriel wrote:
->> # cat /sys/kernel/debug/brcmfmac/0000:03:00.0/revinfo
->
-> vendorid: 0x14e4
-> deviceid: 0x43ec
-> radiorev: 0.41.32.105
-> chipnum: 17238 (4356)
-> chiprev: 2
-> chippkg: 2
-> corerev: 48
-> boardid: 0x0777
-> boardvendor: 0x14e4
-> boardrev: P103
-> driverrev: 7.35.180.119
-> ucoderev: 0
-> bus: 0
-> phytype: 11
-> phyrev: 17
-> anarev: 0
-> nvramrev: 00000000
+For memory dump support (it consumes quite a lot of memory) we need to control
+what is exactly stored to the crash dump. Add a module parameter call
+coredump_mask to do that. It's a bit mask of these values:
 
-Thanks for the info. I was looking for the board info. It seems we do 
-not have an nvram file for that specific board.
+enum ath10k_fw_crash_dump_type {
+	ATH10K_FW_CRASH_DUMP_REGISTERS = 0,
+	ATH10K_FW_CRASH_DUMP_CE_DATA = 1,
 
-For SDIO devices I would suggest to use the module parameter 
-'ignore_probe_fail' so we could do post-mortem stuff with the driver 
-bound to the device, but for PCIe there are not much debug options. Let 
-me work on that. May take a bit longer though.
+	ATH10K_FW_CRASH_DUMP_MAX,
+};
 
-Regards,
-Arend
+For example, if we only want to store CE_DATA we would enable bit 2:
+
+modprobe ath10k_core coredump_mask=0x2
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c     |    8 ++++
+ drivers/net/wireless/ath/ath10k/core.h     |    2 +
+ drivers/net/wireless/ath/ath10k/coredump.c |   63 ++++++++++++++++++----------
+ 3 files changed, 51 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c42e74e03ba5..cd921821bbd0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -40,17 +40,25 @@ static bool uart_print;
+ static bool skip_otp;
+ static bool rawmode;
+ 
++/* Enable ATH10K_FW_CRASH_DUMP_REGISTERS and ATH10K_FW_CRASH_DUMP_CE_DATA
++ * by default.
++ */
++unsigned long ath10k_coredump_mask = 0x3;
++
++/* FIXME: most of these should be readonly */
+ module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
+ module_param_named(cryptmode, ath10k_cryptmode_param, uint, 0644);
+ module_param(uart_print, bool, 0644);
+ module_param(skip_otp, bool, 0644);
+ module_param(rawmode, bool, 0644);
++module_param_named(coredump_mask, ath10k_coredump_mask, ulong, 0444);
+ 
+ MODULE_PARM_DESC(debug_mask, "Debugging mask");
+ MODULE_PARM_DESC(uart_print, "Uart target debugging");
+ MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
+ MODULE_PARM_DESC(cryptmode, "Crypto mode: 0-hardware, 1-software");
+ MODULE_PARM_DESC(rawmode, "Use raw 802.11 frame datapath");
++MODULE_PARM_DESC(coredump_mask, "Bitfield of what to include in firmware crash file");
+ 
+ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	{
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 5e7705f59962..0df92006159c 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -1017,6 +1017,8 @@ static inline bool ath10k_peer_stats_enabled(struct ath10k *ar)
+ 	return false;
+ }
+ 
++extern unsigned long ath10k_coredump_mask;
++
+ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 				  enum ath10k_bus bus,
+ 				  enum ath10k_hw_rev hw_rev,
+diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
+index 968ab2f74d83..5e32a11184d2 100644
+--- a/drivers/net/wireless/ath/ath10k/coredump.c
++++ b/drivers/net/wireless/ath/ath10k/coredump.c
+@@ -27,6 +27,10 @@ struct ath10k_fw_crash_data *ath10k_coredump_new(struct ath10k *ar)
+ 
+ 	lockdep_assert_held(&ar->data_lock);
+ 
++	if (ath10k_coredump_mask == 0)
++		/* coredump disabled */
++		return NULL;
++
+ 	guid_gen(&crash_data->guid);
+ 	ktime_get_real_ts64(&crash_data->timestamp);
+ 
+@@ -45,9 +49,13 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar)
+ 	unsigned char *buf;
+ 
+ 	len = hdr_len;
+-	len += sizeof(*dump_tlv) + sizeof(crash_data->registers);
+-	len += sizeof(*dump_tlv) + sizeof(*ce_hdr) +
+-		CE_COUNT * sizeof(ce_hdr->entries[0]);
++
++	if (test_bit(ATH10K_FW_CRASH_DUMP_REGISTERS, &ath10k_coredump_mask))
++		len += sizeof(*dump_tlv) + sizeof(crash_data->registers);
++
++	if (test_bit(ATH10K_FW_CRASH_DUMP_CE_DATA, &ath10k_coredump_mask))
++		len += sizeof(*dump_tlv) + sizeof(*ce_hdr) +
++			CE_COUNT * sizeof(ce_hdr->entries[0]);
+ 
+ 	sofar += hdr_len;
+ 
+@@ -92,25 +100,28 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar)
+ 	dump_data->tv_sec = cpu_to_le64(crash_data->timestamp.tv_sec);
+ 	dump_data->tv_nsec = cpu_to_le64(crash_data->timestamp.tv_nsec);
+ 
+-	/* Gather crash-dump */
+-	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
+-	dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_REGISTERS);
+-	dump_tlv->tlv_len = cpu_to_le32(sizeof(crash_data->registers));
+-	memcpy(dump_tlv->tlv_data, &crash_data->registers,
+-	       sizeof(crash_data->registers));
+-	sofar += sizeof(*dump_tlv) + sizeof(crash_data->registers);
+-
+-	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
+-	dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_CE_DATA);
+-	dump_tlv->tlv_len = cpu_to_le32(sizeof(*ce_hdr) +
+-					CE_COUNT * sizeof(ce_hdr->entries[0]));
+-	ce_hdr = (struct ath10k_ce_crash_hdr *)(dump_tlv->tlv_data);
+-	ce_hdr->ce_count = cpu_to_le32(CE_COUNT);
+-	memset(ce_hdr->reserved, 0, sizeof(ce_hdr->reserved));
+-	memcpy(ce_hdr->entries, crash_data->ce_crash_data,
+-	       CE_COUNT * sizeof(ce_hdr->entries[0]));
+-	sofar += sizeof(*dump_tlv) + sizeof(*ce_hdr) +
+-		 CE_COUNT * sizeof(ce_hdr->entries[0]);
++	if (test_bit(ATH10K_FW_CRASH_DUMP_REGISTERS, &ath10k_coredump_mask)) {
++		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++		dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_REGISTERS);
++		dump_tlv->tlv_len = cpu_to_le32(sizeof(crash_data->registers));
++		memcpy(dump_tlv->tlv_data, &crash_data->registers,
++		       sizeof(crash_data->registers));
++		sofar += sizeof(*dump_tlv) + sizeof(crash_data->registers);
++	}
++
++	if (test_bit(ATH10K_FW_CRASH_DUMP_CE_DATA, &ath10k_coredump_mask)) {
++		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++		dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_CE_DATA);
++		dump_tlv->tlv_len = cpu_to_le32(sizeof(*ce_hdr) +
++						CE_COUNT * sizeof(ce_hdr->entries[0]));
++		ce_hdr = (struct ath10k_ce_crash_hdr *)(dump_tlv->tlv_data);
++		ce_hdr->ce_count = cpu_to_le32(CE_COUNT);
++		memset(ce_hdr->reserved, 0, sizeof(ce_hdr->reserved));
++		memcpy(ce_hdr->entries, crash_data->ce_crash_data,
++		       CE_COUNT * sizeof(ce_hdr->entries[0]));
++		sofar += sizeof(*dump_tlv) + sizeof(*ce_hdr) +
++			CE_COUNT * sizeof(ce_hdr->entries[0]);
++	}
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+@@ -121,6 +132,10 @@ int ath10k_coredump_submit(struct ath10k *ar)
+ {
+ 	struct ath10k_dump_file_data *dump;
+ 
++	if (ath10k_coredump_mask == 0)
++		/* coredump disabled */
++		return 0;
++
+ 	dump = ath10k_coredump_build(ar);
+ 	if (!dump) {
+ 		ath10k_warn(ar, "no crash dump data found for devcoredump");
+@@ -134,6 +149,10 @@ int ath10k_coredump_submit(struct ath10k *ar)
+ 
+ int ath10k_coredump_create(struct ath10k *ar)
+ {
++	if (ath10k_coredump_mask == 0)
++		/* coredump disabled */
++		return 0;
++
+ 	ar->coredump.fw_crash_data = vzalloc(sizeof(*ar->coredump.fw_crash_data));
+ 	if (!ar->coredump.fw_crash_data)
+ 		return -ENOMEM;
