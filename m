@@ -1,80 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:49590 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751432AbdL2UwX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Dec 2017 15:52:23 -0500
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Solomon Peachy <pizza@shaftnet.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] cw1200: Delete an error message for a failed memory
- allocation in three functions
-Message-ID: <b000d5f0-c659-0d04-2c40-e70e25b68b13@users.sourceforge.net> (sfid-20171229_215249_996433_7372DEB2)
-Date: Fri, 29 Dec 2017 21:52:15 +0100
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:46085 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751737AbdLVNi1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Dec 2017 08:38:27 -0500
+Subject: [PATCH v2 0/6] ath10k: firmware ramdump support
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Dec 2017 15:38:12 +0200
+Message-ID: <151394982311.9382.1300230032038350642.stgit@potku.adurom.net> (sfid-20171222_143837_645766_31DD87A7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 29 Dec 2017 21:48:05 +0100
+Hi,
 
-Omit an extra message for a memory allocation failure in these functions.
+here are patches adding firmware ramdump support to make it easier to
+debug firmware crashes. This also removes the depracated fw_crash_dump
+debugfs file.
 
-This issue was detected by using the Coccinelle software.
+Kalle
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+v2:
+
+o patch 2: fix conflict in due to commit dafa42036012 ("ath10k: use 64-bit crash dump timestamps")
+
+o patch 2: fix build errors when CONFIG_DEV_COREDUMP is disabled:
+
+drivers/net/wireless/ath/ath10k/coredump.c:24:30: error: redefinition of 'ath10k_coredump_new'
+drivers/net/wireless/ath/ath10k/coredump.c:130:5: error: redefinition of 'ath10k_coredump_submit'
+
+o patch 5: fix coccinelli warning:
+
+drivers/net/wireless/ath/ath10k/pci.c:1561:2-3: Unneeded semicolon
+
+o patch 5: fix coccinelli warning:
+  
+drivers/net/wireless/ath/ath10k/pci.c:1522:6-15: WARNING: Unsigned expression compared with zero: skip_size < 0
+
+  by changing the check to:
+
+  if (cur_section->end > next_section->start) {
+
+o patch 5: fix error handling when calling ath10k_pci_set_ram_config()
+
 ---
- drivers/net/wireless/st/cw1200/cw1200_sdio.c | 4 +---
- drivers/net/wireless/st/cw1200/cw1200_spi.c  | 4 +---
- drivers/net/wireless/st/cw1200/fwio.c        | 1 -
- 3 files changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/cw1200_sdio.c b/drivers/net/wireless/st/cw1200/cw1200_sdio.c
-index 1037ec62659d..82c6827579a9 100644
---- a/drivers/net/wireless/st/cw1200/cw1200_sdio.c
-+++ b/drivers/net/wireless/st/cw1200/cw1200_sdio.c
-@@ -289,10 +289,8 @@ static int cw1200_sdio_probe(struct sdio_func *func,
- 		return -ENODEV;
- 
- 	self = kzalloc(sizeof(*self), GFP_KERNEL);
--	if (!self) {
--		pr_err("Can't allocate SDIO hwbus_priv.\n");
-+	if (!self)
- 		return -ENOMEM;
--	}
- 
- 	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
- 
-diff --git a/drivers/net/wireless/st/cw1200/cw1200_spi.c b/drivers/net/wireless/st/cw1200/cw1200_spi.c
-index 412fb6e49aed..7b6d5e5c5a62 100644
---- a/drivers/net/wireless/st/cw1200/cw1200_spi.c
-+++ b/drivers/net/wireless/st/cw1200/cw1200_spi.c
-@@ -399,10 +399,8 @@ static int cw1200_spi_probe(struct spi_device *func)
- 	}
- 
- 	self = devm_kzalloc(&func->dev, sizeof(*self), GFP_KERNEL);
--	if (!self) {
--		pr_err("Can't allocate SPI hwbus_priv.");
-+	if (!self)
- 		return -ENOMEM;
--	}
- 
- 	self->pdata = plat_data;
- 	self->func = func;
-diff --git a/drivers/net/wireless/st/cw1200/fwio.c b/drivers/net/wireless/st/cw1200/fwio.c
-index 30e7646d04af..79dd7a8ffb05 100644
---- a/drivers/net/wireless/st/cw1200/fwio.c
-+++ b/drivers/net/wireless/st/cw1200/fwio.c
-@@ -153,7 +153,6 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 
- 	buf = kmalloc(DOWNLOAD_BLOCK_SIZE, GFP_KERNEL | GFP_DMA);
- 	if (!buf) {
--		pr_err("Can't allocate firmware load buffer.\n");
- 		ret = -ENOMEM;
- 		goto firmware_release;
- 	}
--- 
-2.15.1
+Alan Liu (1):
+      ath10k: add memory dump support for QCA6174/QCA9377
+
+Kalle Valo (5):
+      ath10k: remove deprecated fw_crash_dump debugfs file
+      ath10k: refactor firmware crashdump code to coredump.c
+      ath10k: detach coredump.c from debug.c
+      ath10k: add coredump_mask module parameter
+      ath10k: add memory dump support QCA988X
+
+
+ drivers/net/wireless/ath/ath10k/Makefile   |    1 
+ drivers/net/wireless/ath/ath10k/core.c     |   31 +
+ drivers/net/wireless/ath/ath10k/core.h     |   18 -
+ drivers/net/wireless/ath/ath10k/coredump.c |  993 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/coredump.h |  225 ++++++
+ drivers/net/wireless/ath/ath10k/debug.c    |  275 --------
+ drivers/net/wireless/ath/ath10k/debug.h    |   16 
+ drivers/net/wireless/ath/ath10k/hw.h       |    1 
+ drivers/net/wireless/ath/ath10k/pci.c      |  221 ++++++
+ 9 files changed, 1482 insertions(+), 299 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/coredump.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/coredump.h
