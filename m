@@ -1,103 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:35116 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750880AbdLaMHM (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:38705 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752594AbdLVQZg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 Dec 2017 07:07:12 -0500
+        Fri, 22 Dec 2017 11:25:36 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "silexcommon@gmail.com" <silexcommon@gmail.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Alagu Sankar <alagusankar@silex-india.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/11] SDIO support for ath10k
+Date: Fri, 22 Dec 2017 16:25:31 +0000
+Message-ID: <87608y91c5.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_172539_865935_7A999023)
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+In-Reply-To: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+        (silexcommon@gmail.com's message of "Sat, 30 Sep 2017 23:07:37 +0530")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <1514649113-7366-1-git-send-email-himanshujha199640@gmail.com>
-References: <1514649113-7366-1-git-send-email-himanshujha199640@gmail.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Sun, 31 Dec 2017 14:07:10 +0200
-Message-ID: <CAHp75VcFFfMp=nNDNyN3SNHnFXXXGGCobtKL2xaP+OqefmH5JQ@mail.gmail.com> (sfid-20171231_130733_217018_04BDB974)
-Subject: Re: [PATCH] brcmfmac: Use zeroing memory allocator than allocator/memset
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list@cypress.com, netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 30, 2017 at 5:51 PM, Himanshu Jha
-<himanshujha199640@gmail.com> wrote:
-> Use dma_zalloc_coherent for allocating zeroed
-> memory and remove unnecessary memset function.
->
-> Done using Coccinelle.
-> Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
-> 0-day tested with no failures.
->
+silexcommon@gmail.com writes:
 
-Makes sense.
+> From: Alagu Sankar <alagusankar@silex-india.com>
+>
+> This patchset, generated against master-pending branch, enables a fully
+> functional SDIO interface driver for ath10k.  Patches have been verified =
+on
+> QCA9377-3 WB396 and Silex's SX-SDCAC reference cards with Station, Access=
+ Point
+> and P2P modes.
+>
+> The driver is verified with the firmware WLAN.TF.1.1.1-00061-QCATFSWPZ-1
+> with the board data from respective SDIO card vendors. Receive performanc=
+e
+> matches the QCA reference driver when used with SDIO3.0 enabled platforms=
+.
+> iperf tests indicate a downlink UDP of 275Mbit/s and TCP of 150Mbit/s
+>
+> This patchset differs from the previous high latency patches, specific to=
+ SDIO.
+> HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET is enabled for HI_ACS. This instruc=
+ts the
+> firmware to use HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing packets. Witho=
+ut
+> this flag, the management frames are not sent out by the firmware. Possib=
+ility
+> of management frames being sent via WMI and data frames through the reduc=
+ed Tx
+> completion needs to be probed further.
+>
+> Further improvements can be done on the transmit path by implementing pac=
+ket
+> bundle. Scatter Gather is another area of improvement for both Transmit a=
+nd
+> Receive, but may not work on all platforms
+>
+> Known issues: Surprise removal of the card, when the device is in connect=
+ed
+> state, delays sdio function remove due to delayed WMI command failures.
+> Existing ath10k framework can not differentiate between a kernel module
+> removal and the surprise removal of teh card.
+>
+> Alagu Sankar (11):
+>   ath10k_sdio: sdio htt data transfer fixes
+>   ath10k_sdio: wb396 reference card fix
+>   ath10k_sdio: DMA bounce buffers for read write
+>   ath10k_sdio: reduce transmit msdu count
+>   ath10k_sdio: use clean packet headers
+>   ath10k_sdio: high latency fixes for beacon buffer
+>   ath10k_sdio: fix rssi indication
+>   ath10k_sdio: common read write
+>   ath10k_sdio: virtual scatter gather for receive
+>   ath10k_sdio: enable firmware crash dump
+>   ath10k_sdio: hif start once addition
 
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Sorry, I run out of time to review this in detail. To make the review
+easier I recommend to split this patchset into two sets, first set
+containing only the bare essential to get basic functionality working
+(for example ping working on x86) and the second set containing all the
+optimisations (the bounce buffer stuff etc).
 
-> Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 18 ++++++++----------
->  1 file changed, 8 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> index 3c87157..bdef2ac 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> @@ -1251,14 +1251,13 @@ static int brcmf_pcie_init_scratchbuffers(struct brcmf_pciedev_info *devinfo)
->         u64 address;
->         u32 addr;
->
-> -       devinfo->shared.scratch = dma_alloc_coherent(&devinfo->pdev->dev,
-> -               BRCMF_DMA_D2H_SCRATCH_BUF_LEN,
-> -               &devinfo->shared.scratch_dmahandle, GFP_KERNEL);
-> +       devinfo->shared.scratch =
-> +               dma_zalloc_coherent(&devinfo->pdev->dev,
-> +                                       BRCMF_DMA_D2H_SCRATCH_BUF_LEN,
-> +                                       &devinfo->shared.scratch_dmahandle,
-> +                                       GFP_KERNEL);
->         if (!devinfo->shared.scratch)
->                 goto fail;
->
-> -       memset(devinfo->shared.scratch, 0, BRCMF_DMA_D2H_SCRATCH_BUF_LEN);
-> -
->         addr = devinfo->shared.tcm_base_address +
->                BRCMF_SHARED_DMA_SCRATCH_ADDR_OFFSET;
->         address = (u64)devinfo->shared.scratch_dmahandle;
-> @@ -1268,14 +1267,13 @@ static int brcmf_pcie_init_scratchbuffers(struct brcmf_pciedev_info *devinfo)
->                BRCMF_SHARED_DMA_SCRATCH_LEN_OFFSET;
->         brcmf_pcie_write_tcm32(devinfo, addr, BRCMF_DMA_D2H_SCRATCH_BUF_LEN);
->
-> -       devinfo->shared.ringupd = dma_alloc_coherent(&devinfo->pdev->dev,
-> -               BRCMF_DMA_D2H_RINGUPD_BUF_LEN,
-> -               &devinfo->shared.ringupd_dmahandle, GFP_KERNEL);
-> +       devinfo->shared.ringupd =
-> +               dma_zalloc_coherent(&devinfo->pdev->dev,
-> +                                       BRCMF_DMA_D2H_RINGUPD_BUF_LEN,
-> +                                       &devinfo->shared.ringupd_dmahandle,
-> +                                       GFP_KERNEL);
->         if (!devinfo->shared.ringupd)
->                 goto fail;
->
-> -       memset(devinfo->shared.ringupd, 0, BRCMF_DMA_D2H_RINGUPD_BUF_LEN);
-> -
->         addr = devinfo->shared.tcm_base_address +
->                BRCMF_SHARED_DMA_RINGUPD_ADDR_OFFSET;
->         address = (u64)devinfo->shared.ringupd_dmahandle;
-> --
-> 2.7.4
->
+And try to make the first set as small as possible so that we can get it
+faster applied.
 
-
-
--- 
-With Best Regards,
-Andy Shevchenko
+--=20
+Kalle Valo=
