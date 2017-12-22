@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:53203 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756218AbdLVPro (ORCPT
+Received: from mail-qt0-f171.google.com ([209.85.216.171]:42093 "EHLO
+        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752224AbdLVTuU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 10:47:44 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v3 10/11] ath10k: wmi: disable softirq's while calling
- ieee80211_rx
-Date: Fri, 22 Dec 2017 15:47:39 +0000
-Message-ID: <873742ahno.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_164748_704988_46C8D509)
-References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
-        <20170917194013.8658-11-erik.stromdahl@gmail.com>
-In-Reply-To: <20170917194013.8658-11-erik.stromdahl@gmail.com> (Erik
-        Stromdahl's message of "Sun, 17 Sep 2017 21:40:12 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 22 Dec 2017 14:50:20 -0500
+Received: by mail-qt0-f171.google.com with SMTP id g9so37533905qth.9
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2017 11:50:19 -0800 (PST)
+Subject: Re: ath9k dropping connections
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+References: <f5b539a5-5365-7a1d-101d-591b5face78a@gmail.com>
+ <CAKxU2N_t2asjvfEmTtER-x6MBnUrWhxGZR9c-Nk0AfOG-woOKA@mail.gmail.com>
+From: =?UTF-8?Q?Fl=c3=a1vio_Silveira?= <flavioguiraldo@gmail.com>
+Message-ID: <e5f903d1-6229-2d25-2f32-e4c093cb697d@gmail.com> (sfid-20171222_205023_666239_9738AC40)
+Date: Fri, 22 Dec 2017 17:50:15 -0200
 MIME-Version: 1.0
+In-Reply-To: <CAKxU2N_t2asjvfEmTtER-x6MBnUrWhxGZR9c-Nk0AfOG-woOKA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-Please explain in the commit log why this is needed.
+On 22/12/2017 04:28, Rosen Penev wrote:
+> On Thu, Dec 21, 2017 at 4:12 PM, Flávio Silveira
+> <flavioguiraldo@gmail.com> wrote:
+>> Good evening,
+>>
+>>    I have a wireless router running LEDE Reboot (SNAPSHOT, r5445-04127f0fec),
+>> with kernel 4.9.65 and I'm seeing connections being dropped without any
+>> error in dmesg. To fix I have to restart wifi by issuing "wifi down; wifi
+>> up"
+>>
+>>    It was previously running OpenWrt Barrier Breaker and was presenting the
+>> same issue, except it would give me an error similar to this one: "ath:
+>> phy0: Failed to stop TX DMA, queues=0x005!"
+>>
+>  From a quick glance at the code, it used to be implemented as ath_err.
+> It now seems to be implemented as ath_dbg. In other words, if you turn
+> on debugging, you should see it.
+Thank you Rosen for your quick reply!
 
-> ---
->  drivers/net/wireless/ath/ath10k/wmi.c | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless=
-/ath/ath10k/wmi.c
-> index 38a97086708b..10bb5be6ab00 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -2408,7 +2408,10 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, st=
-ruct sk_buff *skb)
->  		   status->freq, status->band, status->signal,
->  		   status->rate_idx);
-> =20
-> +	local_bh_disable();
->  	ieee80211_rx(ar->hw, skb);
-> +	local_bh_enable();
+   I will check how can I turn on this debugging in LEDE to understand 
+what is the issue.
 
-ieee80211_rx_ni()?
-
---=20
-Kalle Valo=
+Regards,
+   Flavio Silveira
