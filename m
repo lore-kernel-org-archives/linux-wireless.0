@@ -1,74 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:45142 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751187AbdL0StM (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52583 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756354AbdLVJgo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Dec 2017 13:49:12 -0500
-Received: by mail-wm0-f66.google.com with SMTP id 9so40697047wme.4
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Dec 2017 10:49:11 -0800 (PST)
-Subject: Re: [PATCH 03/11] ath10k_sdio: DMA bounce buffers for read write
-To: Alagu Sankar <alagusankar@silex-india.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
- <1506793068-27445-4-git-send-email-alagusankar@silex-india.com>
- <87lghu9247.fsf@kamboji.qca.qualcomm.com>
- <5281f48b04f8f593ec06e72a041ec021@silex-india.com>
-Cc: silexcommon@gmail.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A43EB27.9040100@broadcom.com> (sfid-20171227_194916_213041_BD3E625F)
-Date: Wed, 27 Dec 2017 19:49:11 +0100
+        Fri, 22 Dec 2017 04:36:44 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rakesh Pillai <pillair@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/3] Core changes for wcn3990
+Date: Fri, 22 Dec 2017 09:36:23 +0000
+Message-ID: <87zi6bayui.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_103654_139759_EC33BC52)
+References: <1513854887-10759-1-git-send-email-pillair@qti.qualcomm.com>
+        <87tvwkchfe.fsf@kamboji.qca.qualcomm.com>
+        <7cf8b9f490ca47c4958d1bb5df439b04@aphydexm01b.ap.qualcomm.com>
+In-Reply-To: <7cf8b9f490ca47c4958d1bb5df439b04@aphydexm01b.ap.qualcomm.com>
+        (Rakesh Pillai's message of "Thu, 21 Dec 2017 16:14:35 +0000")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <5281f48b04f8f593ec06e72a041ec021@silex-india.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/25/2017 1:26 PM, Alagu Sankar wrote:
-> On 2017-12-22 21:38, Kalle Valo wrote:
->> silexcommon@gmail.com writes:
->>
->>> From: Alagu Sankar <alagusankar@silex-india.com>
->>>
->>> Some SD host controllers still need bounce buffers for SDIO data
->>> transfers. While the transfers worked fine on x86 platforms,
->>> this is found to be required for i.MX6 based systems.
->>>
->>> Changes are similar to and derived from the ath6kl sdio driver.
->>>
->>> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
->>
->> Why is the bounce buffer needed exactly, what are the symptoms etc? To
->> me this sounds like an ugly workaround for a SDIO controller driver bug.
->
-> We faced problems with i.MX6. The authentication frame sent by the
-> driver never reached the air. The host driver accepted the buffer, but
-> did not send out the packet to the sdio module. No errors reported
-> anywhere, but the buffer is not accepted due to alignment. The same
-> driver however works fine without bounce buffer on x86 platform with
-> stdhci drivers. To make it compliant with all host controllers, we
-> introduced the bounce buffers, similar to what was done in ath6kl_sdio
-> drivers.
+Rakesh Pillai <pillair@qti.qualcomm.com> writes:
 
-As mentioned by Adrian the comment from Kalle is that you are solving an 
-issue caused by the sdio host controller. Although strictly speaking it 
-may not be a driver bug, but a requirement of the host controller 
-hardware. Either way it seems the obvious place to solve this is in the 
-sdio host controller driver to which the issue applies. Or make it a 
-generic quirk which can be enabled for sdio host controller drivers that 
-need it. However, there may reasons to do it in the networking driver. 
-For instance, the buffer you want to transfer might be the data buffer 
-of an sk_buff you got from the networking stack and you want to have a 
-zero-copy solution towards the wireless device.
+> I have rebased the patchset on the latest ath.git and sent v2 for the cha=
+nge.
 
-Your solution checks for 4-byte alignment which is a requirement for 
-ADMA as per SDIO spec. However, I have come across host controllers 
-which have different alignment requirements. Also when 
-CONFIG_ARCH_DMA_ADDR_T_64BIT is enabled the alignment changes from 4 to 
-8 bytes. So it seems you are solving a specific case you have come 
-across, but you may want to design for more flexibility.
+Thanks, v2 applied without problems and it was overnight in the pending
+branch without any build errors.
 
-Hope this helps.
-
-Regards,
-Arend
+--=20
+Kalle Valo=
