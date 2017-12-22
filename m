@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:44448 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751038AbdLIRhQ (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:65469 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753347AbdLVPZN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Dec 2017 12:37:16 -0500
-Received: by mail-ot0-f193.google.com with SMTP id d27so11606657ote.11
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Dec 2017 09:37:16 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>, Steven Ting <steventing@realtek.com>
-Subject: [PATCH 0/3] rtlwifi: rtl_pci: More updates to mini driver for RTL8822BE
-Date: Sat,  9 Dec 2017 11:37:07 -0600
-Message-Id: <20171209173710.9879-1-Larry.Finger@lwfinger.net> (sfid-20171209_183720_599979_307CE1C1)
+        Fri, 22 Dec 2017 10:25:13 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v3 04/11] ath10k: add start_once support
+Date: Fri, 22 Dec 2017 15:25:08 +0000
+Message-ID: <87shc2aip8.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_162518_202851_1A50152D)
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+        <20170917194013.8658-5-erik.stromdahl@gmail.com>
+In-Reply-To: <20170917194013.8658-5-erik.stromdahl@gmail.com> (Erik
+        Stromdahl's message of "Sun, 17 Sep 2017 21:40:06 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These changes are for the 4.16 stream.
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-The modifications implement nearly all the changes needed to allow the
-RTL8822BE in staging to use rtl_pci in the wireless tree. The only
-exceptions are related to BT coexistence, which will be added once btcoex
-is updated.
+> Add possibility to configure the driver to only start target once.
+> This can reduce startup time of SDIO devices significantly since
+> loading the firmware can take a substantial amount of time.
 
-Once these patches reach mainline, I will submit a patch to staging that
-changes r8822be to use the standard rtl_pci, and deletes the duplicated
-code.
+But it also makes it impossible to restart the firmware if it crashes,
+right? Good to mention that in the commit log.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Cc: Birming Chiu <birming@realtek.com>
-Cc: Shaofu <shaofu@realtek.com>
-Cc: Steven Ting <steventing@realtek.com>
+> The patch is also necessary for high latency devices in general since
+> it does not seem to be possible to rerun the BMI phase (fw upload)
+> without power-cycling the device.
+>
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-Ping-Ke Shih (1):
-  rtlwifi: rtl_pci: 8822BE puts broadcast and multicast packet to HIQ
+[...]
 
-Tsang-Shian Lin (2):
-  rtlwifi: Add beacon check mechanism to check if AP settings changed.
-  rtlwifi: rtl_pci: Fix the bug when inactiveps is enabled.
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -784,6 +784,8 @@ struct ath10k {
+> =20
+>  	bool is_high_latency;
+> =20
+> +	bool is_started;
 
- drivers/net/wireless/realtek/rtlwifi/base.c | 179 ++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtlwifi/base.h |   3 +-
- drivers/net/wireless/realtek/rtlwifi/core.c |  48 ++++++++
- drivers/net/wireless/realtek/rtlwifi/pci.c  |  17 +++
- drivers/net/wireless/realtek/rtlwifi/wifi.h |  13 ++
- 5 files changed, 259 insertions(+), 1 deletion(-)
+Is a separate boolean really needed? State management becomes really
+difficult if an enum ath10k_state and this boolean to define the state
+of the device. Can't you use ar->state?
 
--- 
-2.15.1
+> --- a/drivers/net/wireless/ath/ath10k/hw.h
+> +++ b/drivers/net/wireless/ath/ath10k/hw.h
+> @@ -569,6 +569,12 @@ struct ath10k_hw_params {
+>  	bool is_high_latency;
+> =20
+>  	enum ath10k_bus bus;
+> +
+> +	/* Specifies whether or not the device should be started once.
+> +	 * If set, the device will be started once by the early fw probe
+> +	 * and it will not be terminated afterwards.
+> +	 */
+> +	bool start_once;
+>  };
+
+I would actually prefer that the bus driver (eg. usb.c) decides this and
+provides it though ath10k_core_register(). It might be that some SDIO
+devices have a GPIO line to reset the device etc.
+
+The struct ath10k_bus_params I mentioned earlier might be handy also
+here.
+
+--=20
+Kalle Valo=
