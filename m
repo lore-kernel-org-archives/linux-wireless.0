@@ -1,208 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43794 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753082AbdLHMKq (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:46152 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752871AbdLVQiO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:10:46 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 06/10] brcmfmac: Remove brcmf_sdiod_addrprep()
-Date: Fri,  8 Dec 2017 13:10:31 +0100
-Message-Id: <1512735035-342-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131106_623967_2C0A0BC4)
-In-Reply-To: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 22 Dec 2017 11:38:14 -0500
+Received: from mail-io0-f198.google.com ([209.85.223.198])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1eSQKr-0002Dg-UW
+        for linux-wireless@vger.kernel.org; Fri, 22 Dec 2017 16:38:14 +0000
+Received: by mail-io0-f198.google.com with SMTP id s23so7742985ioa.16
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2017 08:38:13 -0800 (PST)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+        Per Mejdal Rasmussen <pmr@its.aau.dk>
+Subject: [PATCH] wireless-regdb: Update rules for Denmark (DK)
+Date: Fri, 22 Dec 2017 10:38:08 -0600
+Message-Id: <20171222163808.27862-1-seth.forshee@canonical.com> (sfid-20171222_173818_551673_BBA7A289)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+Refresh the frequency ranges and power limits based on the
+following sources:
 
-This function has become trivial enough that it may as well be pushed into
-its callers, which has the side-benefit of clarifying what's going on.
+ https://erhvervsstyrelsen.dk/sites/default/files/007_interface-datanet_5-6_ghz.pdf.pdf
+ https://erhvervsstyrelsen.dk/sites/default/files/radiograenseflader-63.pdf
 
-Remove it, and rename brcmf_sdiod_set_sbaddr_window() to
-brcmf_sdiod_set_backplane_window() as it's easier to understand.
-
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Per Mejdal Rasmussen <pmr@its.aau.dk>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 84 ++++++++++++----------
- 1 file changed, 46 insertions(+), 38 deletions(-)
+ db.txt | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index e0b201f..5fcd193 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -230,41 +230,25 @@ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 	sdiodev->state = state;
- }
+diff --git a/db.txt b/db.txt
+index 10c84ee1ca5d..990abf997a12 100644
+--- a/db.txt
++++ b/db.txt
+@@ -371,13 +371,16 @@ country DE: DFS-ETSI
+ 	# 60 GHz band channels 1-4 (ETSI EN 302 567)
+ 	(57000 - 66000 @ 2160), (40)
  
--static int brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev,
--					 u32 address)
-+static int brcmf_sdiod_set_backplane_window(struct brcmf_sdio_dev *sdiodev,
-+					    u32 addr)
- {
-+	u32 v, bar0 = addr & SBSDIO_SBWINDOW_MASK;
- 	int err = 0, i;
--	u32 addr;
++# Sources:
++# 5GHz: https://erhvervsstyrelsen.dk/sites/default/files/007_interface-datanet_5-6_ghz.pdf.pdf
++# 60GHz: https://erhvervsstyrelsen.dk/sites/default/files/radiograenseflader-63.pdf
+ country DK: DFS-ETSI
+-	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (20), AUTO-BW
+-	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+-	(5490 - 5710 @ 160), (27), DFS
+-	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+-	(57000 - 66000 @ 2160), (40)
++	(2400 - 2483.5 @ 40), (20)
++	(5150 - 5250 @ 80), (23), AUTO-BW
++	(5250 - 5350 @ 80), (20), DFS, AUTO-BW
++	(5470 - 5725 @ 160), (27), DFS
++	# 60 GHz band channels 1-4 (ETSI EN 302 567)
++	(57000 - 66000 @ 2160), (40), NO-OUTDOOR
  
--	if (sdiodev->state == BRCMF_SDIOD_NOMEDIUM)
--		return -ENOMEDIUM;
-+	if (bar0 == sdiodev->sbwad)
-+		return 0;
- 
--	addr = (address & SBSDIO_SBWINDOW_MASK) >> 8;
-+	v = bar0 >> 8;
- 
--	for (i = 0 ; i < 3 && !err ; i++, addr >>= 8)
-+	for (i = 0 ; i < 3 && !err ; i++, v >>= 8)
- 		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_SBADDRLOW + i,
--				   addr & 0xff, &err);
--
--	return err;
--}
--
--static int brcmf_sdiod_addrprep(struct brcmf_sdio_dev *sdiodev, u32 *addr)
--{
--	uint bar0 = *addr & ~SBSDIO_SB_OFT_ADDR_MASK;
--	int err = 0;
--
--	if (bar0 != sdiodev->sbwad) {
--		err = brcmf_sdiod_set_sbaddr_window(sdiodev, bar0);
--		if (err)
--			return err;
-+				   v & 0xff, &err);
- 
-+	if (!err)
- 		sdiodev->sbwad = bar0;
--	}
--
--	*addr &= SBSDIO_SB_OFT_ADDR_MASK;
--	*addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
--	return 0;
-+	return err;
- }
- 
- u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
-@@ -272,11 +256,16 @@ u32 brcmf_sdiod_readl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
- 	u32 data = 0;
- 	int retval;
- 
--	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	retval = brcmf_sdiod_set_backplane_window(sdiodev, addr);
-+	if (retval)
-+		goto out;
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
--	if (!retval)
--		data = sdio_readl(sdiodev->func[1], addr, &retval);
-+	data = sdio_readl(sdiodev->func[1], addr, &retval);
- 
-+out:
- 	if (ret)
- 		*ret = retval;
- 
-@@ -288,11 +277,16 @@ void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr,
- {
- 	int retval;
- 
--	retval = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	retval = brcmf_sdiod_set_backplane_window(sdiodev, addr);
-+	if (retval)
-+		goto out;
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
--	if (!retval)
--		sdio_writel(sdiodev->func[1], data, addr, &retval);
-+	sdio_writel(sdiodev->func[1], data, addr, &retval);
- 
-+out:
- 	if (ret)
- 		*ret = retval;
- }
-@@ -540,10 +534,13 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
- 	if (err)
- 		goto done;
- 
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
- 	err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr, pkt);
- 
- done:
-@@ -561,10 +558,13 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
- 		  addr, pktq->qlen);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
- 	if (err)
- 		goto done;
- 
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
- 	if (pktq->qlen == 1)
- 		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
- 					    pktq->next);
-@@ -606,7 +606,12 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 
- 	memcpy(mypkt->data, buf, nbytes);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
-+	if (err)
-+		return err;
-+
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
- 	if (!err)
- 		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
-@@ -625,10 +630,13 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 
- 	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
- 
--	err = brcmf_sdiod_addrprep(sdiodev, &addr);
-+	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
- 	if (err)
- 		return err;
- 
-+	addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+
- 	if (pktq->qlen == 1 || !sdiodev->sg_support) {
- 		skb_queue_walk(pktq, skb) {
- 			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
-@@ -673,7 +681,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 	/* Do the transfer(s) */
- 	while (size) {
- 		/* Set the backplane window to include the start address */
--		err = brcmf_sdiod_set_sbaddr_window(sdiodev, address);
-+		err = brcmf_sdiod_set_backplane_window(sdiodev, address);
- 		if (err)
- 			break;
- 
-@@ -716,7 +724,7 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 	dev_kfree_skb(pkt);
- 
- 	/* Return the window to backplane enumeration space for core access */
--	if (brcmf_sdiod_set_sbaddr_window(sdiodev, sdiodev->sbwad))
-+	if (brcmf_sdiod_set_backplane_window(sdiodev, sdiodev->sbwad))
- 		brcmf_err("FAILED to set window back to 0x%x\n",
- 			  sdiodev->sbwad);
- 
+ # Source:
+ # http://www.ntrcdom.org/index.php?option=com_content&view=category&layout=blog&id=10&Itemid=55
 -- 
-1.9.1
+2.14.1
