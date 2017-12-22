@@ -1,154 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:2776 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750984AbdLYBJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Dec 2017 20:09:54 -0500
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-To: christophe leroy <christophe.leroy@c-s.fr>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Greg KH <gregkh@linuxfoundation.org>
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134831.GB10103@kroah.com>
- <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
- <c28ac0bc-8bd2-3dce-3167-8c0f80ec601e@c-s.fr>
-CC: <linux-kernel@vger.kernel.org>, <ysxie@foxmail.com>,
-        <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
-        <boris.brezillon@free-electrons.com>, <richard@nod.at>,
-        <marek.vasut@gmail.com>, <cyrille.pitchen@wedev4u.fr>,
-        <linux-mtd@lists.infradead.org>, <alsa-devel@alsa-project.org>,
-        <wim@iguana.be>, <linux-watchdog@vger.kernel.org>,
-        <b.zolnierkie@samsung.com>, <linux-fbdev@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <linux-gpio@vger.kernel.org>,
-        <ralf@linux-mips.org>, <linux-mips@linux-mips.org>,
-        <lgirdwood@gmail.com>, <broonie@kernel.org>, <tglx@linutronix.de>,
-        <jason@lakedaemon.net>, <marc.zyngier@arm.com>, <arnd@arndb.de>,
-        <andriy.shevchenko@linux.intel.com>,
-        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
-        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
-        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
-        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
-        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
-        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
-        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
-        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
-        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <dvhart@infradead.org>, <andy@infradead.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
-        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
-        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
-        <dmaengine@vger.kernel.org>, <jslaby@suse.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <6c0ade63-f4d3-d44d-c622-b091eb2ba902@huawei.com> (sfid-20171225_021028_153659_9D7D28AA)
-Date: Mon, 25 Dec 2017 09:09:10 +0800
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:13202 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752063AbdLVPGI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Dec 2017 10:06:08 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v3 01/11] ath10k: high_latency detection
+Date: Fri, 22 Dec 2017 15:06:02 +0000
+Message-ID: <871sjmby5h.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_160613_439621_A5618FF0)
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+        <20170917194013.8658-2-erik.stromdahl@gmail.com>
+In-Reply-To: <20170917194013.8658-2-erik.stromdahl@gmail.com> (Erik
+        Stromdahl's message of "Sun, 17 Sep 2017 21:40:03 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <c28ac0bc-8bd2-3dce-3167-8c0f80ec601e@c-s.fr>
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Christophe and Greg,
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-On 2017/12/24 16:55, christophe leroy wrote:
-> 
-> 
-> Le 23/12/2017 à 16:57, Guenter Roeck a écrit :
->> On 12/23/2017 05:48 AM, Greg KH wrote:
->>> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->>>> Hi all,
->>>>
->>>> When I tried to use devm_ioremap function and review related code, I found
->>>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
->>>> except one use ioremap while the other use ioremap_nocache.
->>>
->>> For all arches?  Really?  Look at MIPS, and x86, they have different
->>> functions.
->>>
->>
->> Both mips and x86 end up mapping the same function, but other arches don't.
->> mn10300 is one where ioremap and ioremap_nocache are definitely different.
-> 
-> alpha: identical
-> arc: identical
-> arm: identical
-> arm64: identical
-> cris: different        <==
-> frv: identical
-> hexagone: identical
-> ia64: different        <==
-> m32r: identical
-> m68k: identical
-> metag: identical
-> microblaze: identical
-> mips: identical
-> mn10300: different     <==
-> nios: identical
-> openrisc: different    <==
-> parisc: identical
-> riscv: identical
-> s390: identical
-> sh: identical
-> sparc: identical
-> tile: identical
-> um: rely on asm/generic
-> unicore32: identical
-> x86: identical
-> asm/generic (no mmu): identical
-
-Wow, that's correct, sorry for I have just checked the main archs, I means
-x86,arm, arm64, mips.
-
-However, I stall have no idea about why these 4 archs want different ioremap
-function with others. Drivers seems cannot aware this? If driver call ioremap
-want he really want for there 4 archs, cache or nocache?
-
-> 
-> So 4 among all arches seems to have ioremap() and ioremap_nocache() being different.
-> 
-> Could we have a define set by the 4 arches on which ioremap() and ioremap_nocache() are different, something like HAVE_DIFFERENT_IOREMAP_NOCACHE ?
-
-Then, what the HAVE_DIFFERENT_IOREMAP_NOCACHE is uesed for ?
-
-Thanks
-Yisheng
-> 
-> Christophe
-> 
->>
->> Guenter
->>
->>>> While ioremap's
->>>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
->>>> same function with devm_ioremap, which can just be killed to reduce the size
->>>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
->>>>
->>>> I have posted two versions, which use macro instead of function for
->>>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->>>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
->>>> thing. So here comes v3 and please help to review.
->>>
->>> I don't think this can be done, what am I missing?  These functions are
->>> not identical, sorry for missing that before.
-
-Never mind, I should checked all the arches, sorry about that.
-
->>>
->>> thanks,
->>>
->>> greg k-h
->>>
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-watchdog" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> The setup of high latency chips (USB and SDIO) is
+> sometimes different than for chips using low latency
+> interfaces.
+>
+> The bus type is used to determine if the interface is
+> a high latency interface.
+>
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 > ---
-> L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-> https://www.avast.com/antivirus
-> 
-> 
-> .
-> 
+>  drivers/net/wireless/ath/ath10k/core.c | 1 +
+>  drivers/net/wireless/ath/ath10k/core.h | 7 +++++++
+>  2 files changed, 8 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireles=
+s/ath/ath10k/core.c
+> index a4f635820f35..f1924c974a12 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -2496,6 +2496,7 @@ struct ath10k *ath10k_core_create(size_t priv_size,=
+ struct device *dev,
+>  	ar->hw_rev =3D hw_rev;
+>  	ar->hif.ops =3D hif_ops;
+>  	ar->hif.bus =3D bus;
+> +	ar->is_high_latency =3D ath10k_is_high_latency(bus);
+
+I would prefer the bus driver to provide this via a parameter in
+ath10k_core_register() call.
+
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -789,6 +789,8 @@ struct ath10k {
+> =20
+>  	bool p2p;
+> =20
+> +	bool is_high_latency;
+> +
+>  	struct {
+>  		enum ath10k_bus bus;
+>  		const struct ath10k_hif_ops *ops;
+> @@ -1013,6 +1015,11 @@ static inline bool ath10k_peer_stats_enabled(struc=
+t ath10k *ar)
+>  	return false;
+>  }
+> =20
+> +static inline bool ath10k_is_high_latency(enum ath10k_bus bus)
+> +{
+> +	return ((bus =3D=3D ATH10K_BUS_SDIO) || (bus =3D=3D ATH10K_BUS_USB));
+> +}
+
+That way this function is not needed.
+
+Also I'm wondering should the parameter be actually 'struct
+ath10k_bus_params' (or something like that) to make it easier to extend.
+
+--=20
+Kalle Valo=
