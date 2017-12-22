@@ -1,98 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:17927 "EHLO
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:8720 "EHLO
         alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753258AbdLNQxY (ORCPT
+        with ESMTP id S1753347AbdLVP01 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 11:53:24 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 4/9] wil6210: set platform features based on FW capabilities
-Date: Thu, 14 Dec 2017 18:53:08 +0200
-Message-Id: <1513270393-919-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171214_175329_886446_7A7CB504)
-In-Reply-To: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513270393-919-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 22 Dec 2017 10:26:27 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v3 05/11] ath10k: htt: High latency TX support
+Date: Fri, 22 Dec 2017 15:26:22 +0000
+Message-ID: <87o9mqain5.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_162631_519327_FA17BE02)
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+        <20170917194013.8658-6-erik.stromdahl@gmail.com>
+In-Reply-To: <20170917194013.8658-6-erik.stromdahl@gmail.com> (Erik
+        Stromdahl's message of "Sun, 17 Sep 2017 21:40:07 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some cases the platform should be aware of the FW capabilities
-to decide which feature to enable.
-For example, FW can control the external REF clock for power saving.
-Driver should notify the platform about that, to allow platform
-power management optimization.
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c         | 11 +++++++++++
- drivers/net/wireless/ath/wil6210/wil_platform.h |  6 ++++++
- drivers/net/wireless/ath/wil6210/wmi.h          |  1 +
- 3 files changed, 18 insertions(+)
+> Add HTT TX function for HL interfaces.
+> Intended for SDIO and USB.
+>
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index bafd8d5..7a8f8c2 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -771,6 +771,7 @@ static void wil_collect_fw_info(struct wil6210_priv *wil)
- void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
- {
- 	struct wiphy *wiphy = wil_to_wiphy(wil);
-+	int features;
- 
- 	wil->keep_radio_on_during_sleep =
- 		test_bit(WIL_PLATFORM_CAPA_RADIO_ON_IN_SUSPEND,
-@@ -792,6 +793,16 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
- 		wiphy->max_sched_scan_ie_len = WMI_MAX_IE_LEN;
- 		wiphy->max_sched_scan_plans = WMI_MAX_PLANS_NUM;
- 	}
-+
-+	if (wil->platform_ops.set_features) {
-+		features = (test_bit(WMI_FW_CAPABILITY_REF_CLOCK_CONTROL,
-+				     wil->fw_capabilities) &&
-+			    test_bit(WIL_PLATFORM_CAPA_EXT_CLK,
-+				     wil->platform_capa)) ?
-+			BIT(WIL_PLATFORM_FEATURE_FW_EXT_CLK_CONTROL) : 0;
-+
-+		wil->platform_ops.set_features(wil->platform_handle, features);
-+	}
- }
- 
- void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
-diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.h b/drivers/net/wireless/ath/wil6210/wil_platform.h
-index 5cfb946..177026e 100644
---- a/drivers/net/wireless/ath/wil6210/wil_platform.h
-+++ b/drivers/net/wireless/ath/wil6210/wil_platform.h
-@@ -27,6 +27,11 @@ enum wil_platform_event {
- 	WIL_PLATFORM_EVT_POST_SUSPEND = 4,
- };
- 
-+enum wil_platform_features {
-+	WIL_PLATFORM_FEATURE_FW_EXT_CLK_CONTROL = 0,
-+	WIL_PLATFORM_FEATURE_MAX,
-+};
-+
- enum wil_platform_capa {
- 	WIL_PLATFORM_CAPA_RADIO_ON_IN_SUSPEND = 0,
- 	WIL_PLATFORM_CAPA_T_PWR_ON_0 = 1,
-@@ -45,6 +50,7 @@ struct wil_platform_ops {
- 	void (*uninit)(void *handle);
- 	int (*notify)(void *handle, enum wil_platform_event evt);
- 	int (*get_capa)(void *handle);
-+	void (*set_features)(void *handle, int features);
- };
- 
- /**
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index c7b84d1..d3e75f0 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -72,6 +72,7 @@ enum wmi_fw_capability {
- 	WMI_FW_CAPABILITY_SET_SILENT_RSSI_TABLE		= 13,
- 	WMI_FW_CAPABILITY_LO_POWER_CALIB_FROM_OTP	= 14,
- 	WMI_FW_CAPABILITY_PNO				= 15,
-+	WMI_FW_CAPABILITY_REF_CLOCK_CONTROL		= 18,
- 	WMI_FW_CAPABILITY_MAX,
- };
- 
--- 
-1.9.1
+[...]
+
+> +	/* Prepend the HTT header and TX desc struct to the data message
+> +	 * and realloc the skb if it does not have enough headroom.
+> +	 */
+> +	if (skb_headroom(msdu) < HTT_TX_HL_NEEDED_HEADROOM) {
+> +		struct sk_buff *tmp_skb =3D msdu;
+
+Style: please have the variable declaration in the beginning of the
+function.
+
+--=20
+Kalle Valo=
