@@ -1,94 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:57205 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752566AbdLKLrf (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:38680 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751349AbdLVGDI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 06:47:35 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, "Reizer, Eyal" <eyalr@ti.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Iain Hunter <drhunter95@gmail.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Kees Cook <keescook@chromium.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] wlcore: fix unused function warning
-Date: Mon, 11 Dec 2017 12:46:29 +0100
-Message-Id: <20171211114718.3637010-1-arnd@arndb.de> (sfid-20171211_124740_379480_3261BC61)
+        Fri, 22 Dec 2017 01:03:08 -0500
+Received: from mail-it0-f70.google.com ([209.85.214.70])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1eSGQE-0002dI-Vd
+        for linux-wireless@vger.kernel.org; Fri, 22 Dec 2017 06:03:07 +0000
+Received: by mail-it0-f70.google.com with SMTP id a3so9799276itg.7
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2017 22:03:06 -0800 (PST)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 0/6] wireless-regdb: Support for new binary database format
+Date: Fri, 22 Dec 2017 00:02:57 -0600
+Message-Id: <20171222060303.14478-1-seth.forshee@canonical.com> (sfid-20171222_070343_262039_288D675B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The newly added wlcore_fw_sleep function is called conditionally,
-which causes a warning without CONFIG_PM:
+This series starts with Johannes' patch for generating regulatory
+databases using the new format and adds various fixes and pieces which
+were missing such as installation to the firmware path, manual page
+updates, etc. It also restores support for the older database format to
+maintain compatibility with using CRDA on older kernels.
 
-drivers/net/wireless/ti/wlcore/main.c:981:12: error: 'wlcore_fw_sleep' defined but not used [-Werror=unused-function]
+I've tested the results with 4.15 and things look to be working. I want
+to apply this in the next couple of days and get a new release out, so
+please let me know soon if you seen any issues.
 
-Instead of trying to keep track of what should be in the #ifdef and what
-should not, it's easier to mark the top-level suspend/resume functions
-as __maybe_unused so the compiler can silently drop all the unused code.
+Thanks,
+Seth
 
-Fixes: 37bf241b8e7b ("wlcore: allow elp during wowlan suspend")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/ti/wlcore/acx.h  | 2 --
- drivers/net/wireless/ti/wlcore/main.c | 8 +++-----
- 2 files changed, 3 insertions(+), 7 deletions(-)
+Johannes Berg (1):
+  regdb: write firmware file format (version code 20)
 
-diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
-index f46d7fdf9a00..7011c5d9599f 100644
---- a/drivers/net/wireless/ti/wlcore/acx.h
-+++ b/drivers/net/wireless/ti/wlcore/acx.h
-@@ -1129,10 +1129,8 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl);
- int wlcore_acx_average_rssi(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			    s8 *avg_rssi);
- 
--#ifdef CONFIG_PM
- int wl1271_acx_default_rx_filter_enable(struct wl1271 *wl, bool enable,
- 					enum rx_filter_action action);
- int wl1271_acx_set_rx_filter(struct wl1271 *wl, u8 index, bool enable,
- 			     struct wl12xx_rx_filter *filter);
--#endif /* CONFIG_PM */
- #endif /* __WL1271_ACX_H__ */
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 6ce457022dc9..09714034dbf1 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1343,7 +1343,6 @@ static struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
- }
- 
- 
--#ifdef CONFIG_PM
- static int
- wl1271_validate_wowlan_pattern(struct cfg80211_pkt_pattern *p)
- {
-@@ -1715,8 +1714,8 @@ static void wl1271_configure_resume(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	}
- }
- 
--static int wl1271_op_suspend(struct ieee80211_hw *hw,
--			    struct cfg80211_wowlan *wow)
-+static int __maybe_unused wl1271_op_suspend(struct ieee80211_hw *hw,
-+					    struct cfg80211_wowlan *wow)
- {
- 	struct wl1271 *wl = hw->priv;
- 	struct wl12xx_vif *wlvif;
-@@ -1810,7 +1809,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
--static int wl1271_op_resume(struct ieee80211_hw *hw)
-+static int __maybe_unused wl1271_op_resume(struct ieee80211_hw *hw)
- {
- 	struct wl1271 *wl = hw->priv;
- 	struct wl12xx_vif *wlvif;
-@@ -1894,7 +1893,6 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
- 
- 	return 0;
- }
--#endif
- 
- static int wl1271_op_start(struct ieee80211_hw *hw)
- {
--- 
-2.9.0
+Seth Forshee (5):
+  wireless-regdb: Restore generation of old format database files
+  wireless-regdb: Add sforshee's x509 certificate
+  wireless-regdb: Better support for generating public certificates
+  wireless-regdb: Install regulatory.db and regulatory.db.p7s to
+    /lib/firmware
+  wireless-regdb: Document regulatory.db in the manual page
+
+ Makefile          |  37 +++++++++++----
+ README            |   4 +-
+ db2fw.py          | 133 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ gen-pubcert.sh    |  18 ++++++++
+ regulatory.bin.5  |  32 +++++++++----
+ regulatory.db.5   |   1 +
+ sforshee.x509.pem |  17 +++++++
+ 7 files changed, 220 insertions(+), 22 deletions(-)
+ create mode 100755 db2fw.py
+ create mode 100755 gen-pubcert.sh
+ create mode 100644 regulatory.db.5
+ create mode 100644 sforshee.x509.pem
