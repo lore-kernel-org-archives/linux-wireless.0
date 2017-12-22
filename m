@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43785 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753047AbdLHMKp (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:49296 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751428AbdLVIpm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:10:45 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 09/10] brcmfmac: Remove unused macro.
-Date: Fri,  8 Dec 2017 13:10:34 +0100
-Message-Id: <1512735035-342-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131109_096944_E6AF79B3)
-In-Reply-To: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 22 Dec 2017 03:45:42 -0500
+Message-ID: <1513932339.17825.0.camel@sipsolutions.net> (sfid-20171222_094546_590908_24725D39)
+Subject: Re: [PATCH 0/6] wireless-regdb: Support for new binary database
+ format
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>,
+        linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Date: Fri, 22 Dec 2017 09:45:39 +0100
+In-Reply-To: <20171222060303.14478-1-seth.forshee@canonical.com>
+References: <20171222060303.14478-1-seth.forshee@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+On Fri, 2017-12-22 at 00:02 -0600, Seth Forshee wrote:
+> This series starts with Johannes' patch for generating regulatory
+> databases using the new format and adds various fixes and pieces which
+> were missing such as installation to the firmware path, manual page
+> updates, etc. It also restores support for the older database format to
+> maintain compatibility with using CRDA on older kernels.
+> 
+> I've tested the results with 4.15 and things look to be working. I want
+> to apply this in the next couple of days and get a new release out, so
+> please let me know soon if you seen any issues.
 
-This macro is used exactly nowhere in the code. Delete it.
+Thanks!
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index b938407..1e1e198 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -159,8 +159,6 @@ struct rte_console {
- /* manfid tuple length, include tuple, link bytes */
- #define SBSDIO_CIS_MANFID_TUPLE_LEN	6
- 
--#define CORE_BUS_REG(base, field) \
--		(base + offsetof(struct sdpcmd_regs, field))
- #define SD_REG(field) \
- 		(offsetof(struct sdpcmd_regs, field))
- 
--- 
-1.9.1
+johannes
