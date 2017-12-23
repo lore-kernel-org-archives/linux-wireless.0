@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([217.72.192.78]:55346 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750888AbdL3VIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Dec 2017 16:08:32 -0500
-Subject: [PATCH 2/2] at76c50x-usb: Improve size determinations in
- at76_usbdfu_download()
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Kees Cook <keescook@chromium.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <1d76fe59-af15-ba4d-e05d-09dcd9ee38cd@users.sourceforge.net>
-Message-ID: <08f4f979-481c-2861-cf59-408c49f3f627@users.sourceforge.net> (sfid-20171230_220851_085994_67FFAD37)
-Date: Sat, 30 Dec 2017 22:08:23 +0100
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:40982 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750752AbdLWKYo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 23 Dec 2017 05:24:44 -0500
+Received: by mail-wm0-f48.google.com with SMTP id g75so25791015wme.0
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Dec 2017 02:24:44 -0800 (PST)
+Date: Sat, 23 Dec 2017 11:24:40 +0100 (CET)
+From: Enrico Mioso <mrkiko.rs@gmail.com>
+To: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: MT7630 support
+In-Reply-To: <alpine.LNX.2.00.1712231039540.12974@T420s>
+Message-ID: <alpine.LNX.2.21.99.1712231124070.17845@localhost.localdomain> (sfid-20171223_112449_772534_82D2359E)
+References: <alpine.LNX.2.21.99.1712201832120.21664@localhost.localdomain> <20171221142026.GA4655@redhat.com> <alpine.LNX.2.00.1712230819270.14868@Nettop> <alpine.LNX.2.21.99.1712230838330.18168@localhost.localdomain>
+ <alpine.LNX.2.00.1712231039540.12974@T420s>
 MIME-Version: 1.0
-In-Reply-To: <1d76fe59-af15-ba4d-e05d-09dcd9ee38cd@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 30 Dec 2017 21:56:56 +0100
+Hello!
+Oh - this is great!
+thank you very very much! Grabbing the repository right now.
+I am really thankful. Thanks for your work, also.
 
-Replace the specification of two data types by pointer dereferences
-as the parameter for the operator "sizeof" to make the corresponding size
-determination a bit safer according to the Linux coding style convention.
+Enrico
 
-This issue was detected by using the Coccinelle software.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/atmel/at76c50x-usb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Sat, 23 Dec 2017, Hans Ulli Kroll wrote:
 
-diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-index 2893d339b440..6144d4a258ca 100644
---- a/drivers/net/wireless/atmel/at76c50x-usb.c
-+++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-@@ -383,7 +383,7 @@ static int at76_usbdfu_download(struct usb_device *udev, u8 *buf, u32 size,
- 		return -EINVAL;
- 	}
- 
--	dfu_stat_buf = kmalloc(sizeof(struct dfu_status), GFP_KERNEL);
-+	dfu_stat_buf = kmalloc(sizeof(*dfu_stat_buf), GFP_KERNEL);
- 	if (!dfu_stat_buf) {
- 		ret = -ENOMEM;
- 		goto exit;
-@@ -395,7 +395,7 @@ static int at76_usbdfu_download(struct usb_device *udev, u8 *buf, u32 size,
- 		goto exit;
- 	}
- 
--	dfu_state = kmalloc(sizeof(u8), GFP_KERNEL);
-+	dfu_state = kmalloc(sizeof(*dfu_state), GFP_KERNEL);
- 	if (!dfu_state) {
- 		ret = -ENOMEM;
- 		goto exit;
--- 
-2.15.1
+> Date: Sat, 23 Dec 2017 10:47:38
+> From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+> To: Enrico Mioso <mrkiko.rs@gmail.com>
+> Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+>     Stanislaw Gruszka <sgruszka@redhat.com>, linux-wireless@vger.kernel.org,
+>     Johannes Berg <johannes.berg@intel.com>,
+>     Daniel Golle <daniel@makrotopia.org>, Arnd Bergmann <arnd@arndb.de>,
+>     John Crispin <john@phrozen.org>, nbd@nbd.name
+> Subject: Re: MT7630 support
+> 
+> Hi Enrico
+>
+> On Sat, 23 Dec 2017, Enrico Mioso wrote:
+>
+>> Hello Ulli!
+>>
+>> First of all - thank you for the help and the precious info / link.
+>> I'll look at it now.
+>> Thank you very very much.
+>>
+>> Enrico
+>>
+>
+> On
+> https://github.com/ulli-kroll/mt7610u
+> I have a reworked mt7610u driver, of course PCIe code is missing here.
+>
+> Ulli
+>
+>
+>
