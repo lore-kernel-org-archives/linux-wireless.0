@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 4.mo68.mail-out.ovh.net ([46.105.59.63]:54861 "EHLO
-        4.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751125AbdL2TQN (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:46858 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750727AbdLWH2Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Dec 2017 14:16:13 -0500
-Received: from player750.ha.ovh.net (b6.ovh.net [213.186.33.56])
-        by mo68.mail-out.ovh.net (Postfix) with ESMTP id 4BCB5AD5B2
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Dec 2017 19:00:05 +0100 (CET)
-Reply-To: alexander@wetzel-home.de
-Subject: Re: ath9k dropping connections
-To: =?UTF-8?Q?Fl=c3=a1vio_Silveira?= <flavioguiraldo@gmail.com>,
-        linux-wireless@vger.kernel.org
-References: <f5b539a5-5365-7a1d-101d-591b5face78a@gmail.com>
-From: Alexander Wetzel <alexander@wetzel-home.de>
-Message-ID: <e04a6de7-4582-d0be-75d7-ce27eb621a1f@wetzel-home.de> (sfid-20171229_201620_528243_35FE7089)
-Date: Fri, 29 Dec 2017 18:59:56 +0100
+        Sat, 23 Dec 2017 02:28:25 -0500
+Received: by mail-wm0-f47.google.com with SMTP id r78so25335978wme.5
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2017 23:28:24 -0800 (PST)
+Date: Sat, 23 Dec 2017 08:28:22 +0100 (CET)
+From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: Enrico Mioso <mrkiko.rs@gmail.com>, linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: MT7630 support
+In-Reply-To: <20171221142026.GA4655@redhat.com>
+Message-ID: <alpine.LNX.2.00.1712230819270.14868@Nettop> (sfid-20171223_082832_277117_99799313)
+References: <alpine.LNX.2.21.99.1712201832120.21664@localhost.localdomain> <20171221142026.GA4655@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <f5b539a5-5365-7a1d-101d-591b5face78a@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi
 
-I guess there are quite some potential issues which could cause that.
-Since you do not see any error logs one of them could be the WPA rekey IV poisoning one I encountered in the past.
+On Thu, 21 Dec 2017, Stanislaw Gruszka wrote:
 
-Do you have wpa rekey enabled? If so please check if disabling it fixes the issue for you.
-Assuming you are only using a WPA passoword and not EAP you can check if you have rekey enabled from a CLI on the router with the folowing command:
-"uci show wireless | grep wpa_pair_rekey"
-
-You have to delete any config statements found by the command and restart the router (or wifi) to apply the changes.
-
-If that helps, at least one STA is sending frames using wrong IV's and tricks the other end into dropping valid frames.
-In that case I can offer some options how to work around that, but I'm not aware of a real fix and disabling rekey is still probably the best...
-
-Regards,
-
-Alexander
-
-Am 22.12.2017 um 01:12 schrieb Flávio Silveira:
-> Good evening,
+> On Wed, Dec 20, 2017 at 06:39:34PM +0100, Enrico Mioso wrote:
+> > Hello guys.
+> > So, at some point I felt crazy enough to try to add support for the MT7630 chipset to the rt2xx ralink wireless drivers.
+> > I expected this to be a little bit of a challenge.
+> > I did begin adding some code paths around, reading from the mixed-up drivers here:
+> > https://github.com/neurobin/MT7630E
+> > (thanks a lot to the guys who are working on this, and who worked on this).
+> > and working on the kernel's git rt2xx tree. I am sending a raw diff that will for sure not compile. I am asking for guidance and help in going on.
 > 
->   I have a wireless router running LEDE Reboot (SNAPSHOT, r5445-04127f0fec), with kernel 4.9.65 and I'm seeing connections being dropped without any error in dmesg. To fix I have to restart wifi by issuing "wifi down; wifi up"
+> I think better way to add support for MT7630 chip to mailine kernel
+> would be via new Felix's mt76 driver, because there are less diffrence
+> between MT7630 and MT76x2 than between MT7630 and the old Ralink chips.
 > 
->   It was previously running OpenWrt Barrier Breaker and was presenting the same issue, except it would give me an error similar to this one: "ath: phy0: Failed to stop TX DMA, queues=0x005!"
-> 
->   After doing some research it seems this error is related to environment interference and it was fixed in later kernel versions, the reason I gave LEDE a try. It makes sense, because this router worked wonderfully for at least a year before giving this issue.
-> 
->   The reason I am sending this e-mail is to receive suggestions on how can I debug it properly, because, as pointed above, dmesg shows no errors.
-> 
-> Regards,
->   Flavio Silveira
+
+MT7630e is part of the MT76x0 family
+Felix's driver is missing the baseband/rf tables for MT76x0.
+
+The full driver for MT7610E is here
+https://github.com/i80s/mtk-sources
+
+/me now reading Felix code to adapot MT76x2 for mt7612u ...
+
+Greetings
+Ulli
