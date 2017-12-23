@@ -1,192 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:4293 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751406AbdLUJBw (ORCPT
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:47030 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751279AbdLWP5q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 04:01:52 -0500
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH 07/10] ath10k: Add hw param for rx ring size support
-Date: Thu, 21 Dec 2017 14:30:56 +0530
-Message-Id: <1513846859-23639-8-git-send-email-govinds@qti.qualcomm.com> (sfid-20171221_100203_058962_6A82096F)
-In-Reply-To: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
-References: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
+        Sat, 23 Dec 2017 10:57:46 -0500
+Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
+To: Greg KH <gregkh@linuxfoundation.org>,
+        Yisheng Xie <xieyisheng1@huawei.com>
+Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
+        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
+        boris.brezillon@free-electrons.com, richard@nod.at,
+        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
+        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
+        wim@iguana.be, linux-watchdog@vger.kernel.org,
+        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
+        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
+        ralf@linux-mips.org, linux-mips@linux-mips.org,
+        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
+        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
+        andriy.shevchenko@linux.intel.com,
+        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
+        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
+        linux-media@vger.kernel.org, a.zummo@towertech.it,
+        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie,
+        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
+        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
+        dvhart@infradead.org, andy@infradead.org,
+        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
+        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
+        netdev@vger.kernel.org, vinod.koul@intel.com,
+        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
+        jslaby@suse.com
+References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+ <20171223134831.GB10103@kroah.com>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net> (sfid-20171223_165811_559767_2710A253)
+Date: Sat, 23 Dec 2017 07:57:40 -0800
+MIME-Version: 1.0
+In-Reply-To: <20171223134831.GB10103@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3990 uses larger ring size in comparison to existing
-ring size value.
-Add rx ring size hw param for supporting different rx ring
-size across multiple target.
+On 12/23/2017 05:48 AM, Greg KH wrote:
+> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
+>> Hi all,
+>>
+>> When I tried to use devm_ioremap function and review related code, I found
+>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
+>> except one use ioremap while the other use ioremap_nocache.
+> 
+> For all arches?  Really?  Look at MIPS, and x86, they have different
+> functions.
+> 
 
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c   | 13 +++++++++++++
- drivers/net/wireless/ath/ath10k/htt.h    |  3 +++
- drivers/net/wireless/ath/ath10k/htt_rx.c |  5 +----
- drivers/net/wireless/ath/ath10k/hw.h     |  3 +++
- 4 files changed, 20 insertions(+), 4 deletions(-)
+Both mips and x86 end up mapping the same function, but other arches don't.
+mn10300 is one where ioremap and ioremap_nocache are definitely different.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 031fe00..8374b05 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -79,6 +79,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA9887_HW_1_0_VERSION,
-@@ -107,6 +108,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -134,6 +136,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -161,6 +164,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA6174_HW_3_0_VERSION,
-@@ -188,6 +192,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -218,6 +223,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA99X0_HW_2_0_DEV_VERSION,
-@@ -251,6 +257,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA9984_HW_1_0_DEV_VERSION,
-@@ -289,6 +296,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA9888_HW_2_0_DEV_VERSION,
-@@ -326,6 +334,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA9377_HW_1_0_DEV_VERSION,
-@@ -353,6 +362,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -382,6 +392,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
-@@ -416,6 +427,7 @@
- 		.ast_skid_limit = 0x10,
- 		.num_wds_entries = 0x20,
- 		.target_64bit = false,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 	},
- 	{
- 		.id = WCN3990_HW_1_0_DEV_VERSION,
-@@ -435,6 +447,7 @@
- 		.ast_skid_limit = TARGET_HL_10_TLV_AST_SKID_LIMIT,
- 		.num_wds_entries = TARGET_HL_10_TLV_NUM_WDS_ENTRIES,
- 		.target_64bit = true,
-+		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL_DUAL_MAC,
- 	},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index ac5d720..3a43a48 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -224,6 +224,9 @@ enum htt_rx_ring_flags {
- 
- #define HTT_RX_RING_SIZE_MIN 128
- #define HTT_RX_RING_SIZE_MAX 2048
-+#define HTT_RX_RING_SIZE HTT_RX_RING_SIZE_MAX
-+#define HTT_RX_RING_FILL_LEVEL (((HTT_RX_RING_SIZE) / 2) - 1)
-+#define HTT_RX_RING_FILL_LEVEL_DUAL_MAC (HTT_RX_RING_SIZE - 1)
- 
- struct htt_rx_ring_setup_ring32 {
- 	__le32 fw_idx_shadow_reg_paddr;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 6402189..6fb6751 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -25,9 +25,6 @@
- 
- #include <linux/log2.h>
- 
--#define HTT_RX_RING_SIZE HTT_RX_RING_SIZE_MAX
--#define HTT_RX_RING_FILL_LEVEL (((HTT_RX_RING_SIZE) / 2) - 1)
--
- /* when under memory pressure rx ring refill may fail and needs a retry */
- #define HTT_RX_RING_REFILL_RETRY_MS 50
- 
-@@ -522,7 +519,7 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
- 	 */
- 	htt->rx_ring.size = HTT_RX_RING_SIZE;
- 	htt->rx_ring.size_mask = htt->rx_ring.size - 1;
--	htt->rx_ring.fill_level = HTT_RX_RING_FILL_LEVEL;
-+	htt->rx_ring.fill_level = ar->hw_params.rx_ring_fill_level;
- 
- 	if (!is_power_of_2(htt->rx_ring.size)) {
- 		ath10k_warn(ar, "htt rx ring size is not power of 2\n");
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 5d243f3..84aedaa 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -564,6 +564,9 @@ struct ath10k_hw_params {
- 
- 	/* Targets supporting physical addressing capability above 32-bits */
- 	bool target_64bit;
-+
-+	/* Target rx ring fill level */
-+	u32 rx_ring_fill_level;
- };
- 
- struct htt_rx_desc;
--- 
-1.9.1
+Guenter
+
+>> While ioremap's
+>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
+>> same function with devm_ioremap, which can just be killed to reduce the size
+>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
+>>
+>> I have posted two versions, which use macro instead of function for
+>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
+>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
+>> thing. So here comes v3 and please help to review.
+> 
+> I don't think this can be done, what am I missing?  These functions are
+> not identical, sorry for missing that before.
+> 
+> thanks,
+> 
+> greg k-h
+> 
