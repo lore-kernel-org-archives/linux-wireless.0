@@ -1,65 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38394 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752209AbdLHMWP (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51808 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751033AbdLWJWI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:22:15 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
-Subject: Re: [PATCH 6/6] iwlwifi: fix access to prph when transport is stopped
-References: <20171125153510.25359-1-luca@coelho.fi>
-        <20171125153510.25359-7-luca@coelho.fi>
-        <87mv351iys.fsf@kamboji.qca.qualcomm.com>
-        <1511951353.4827.27.camel@coelho.fi>
-Date: Fri, 08 Dec 2017 14:22:02 +0200
-In-Reply-To: <1511951353.4827.27.camel@coelho.fi> (Luca Coelho's message of
-        "Wed, 29 Nov 2017 12:29:13 +0200")
-Message-ID: <87efo5s93p.fsf@kamboji.qca.qualcomm.com> (sfid-20171208_132221_472808_0B2912F1)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 23 Dec 2017 04:22:08 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 23 Dec 2017 11:21:56 +0200
+Message-Id: <20171223092200.30270-2-luca@coelho.fi> (sfid-20171223_102213_573677_6F2D298E)
+In-Reply-To: <20171223092200.30270-1-luca@coelho.fi>
+References: <20171223092200.30270-1-luca@coelho.fi>
+Subject: [PATCH 1/5] iwlwifi: mvm: flip AMSDU addresses only for 9000 family
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> On Wed, 2017-11-29 at 12:23 +0200, Kalle Valo wrote:
->
->> But no wonder I called gnus-article-fill-cited-article, the commit
->> log is just weirdly wrapped. Are you using outlook or how do you get
->> it so ugly? :)
->
-> Heh! I don't think it's wrapped weirdly, it's just that the paragraphs
-> don't have spaces between them, right? ;)
+Hardware bug was fixed in later generation.
 
-Sorry, don't get what you mean with missing spaces. To me (and
-patchwork[1] and git[2] seem to agree) the word wrapping is just broken
-for this commit log, and I have seen it also with other iwlwifi commits.
-For example, there are just two words in the second line "two paths."
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-The standard format for git commit logs is something like this:
-
-----------------------------------------------------------------------
-When getting HW rfkill we get stop_device being called from two paths.
-One path is the IRQ calling stop device, and updating op mode and stack.
-As a result, cfg80211 is running rfkill sync work that shuts down all
-devices (second path). In the second path, we eventually get to
-iwl_mvm_stop_device which calls iwl_fw_dump_conf_clear->iwl_fw_dbg_stop_recording,
-that access periphery registers.
-
-The device may be stopped at this point from the first path,
-which will result with a failure to access those registers. Simply
-checking for the trans status is insufficient, since the race will still
-exist, only minimized. Instead, move the stop from
-iwl_fw_dump_conf_clear (which is getting called only from stop path) to
-the transport stop device function, where the access is always safe.
-This has the added value, of actually stopping dbgc before stopping
-device even when the stop is initiated from the transport.
-----------------------------------------------------------------------
-
-[1] https://patchwork.kernel.org/patch/10074849/
-
-[2] https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=0232d2cd7aa8e1b810fe84fb4059a0bd1eabe2ba
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index a3f7c1bf3cc8..71d6660c48e1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -830,6 +830,16 @@ static void iwl_mvm_agg_rx_received(struct iwl_mvm *mvm,
+ 	rcu_read_unlock();
+ }
+ 
++static void iwl_mvm_flip_address(u8 *addr)
++{
++	int i;
++	u8 mac_addr[ETH_ALEN];
++
++	for (i = 0; i < ETH_ALEN; i++)
++		mac_addr[i] = addr[ETH_ALEN - i - 1];
++	ether_addr_copy(addr, mac_addr);
++}
++
+ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			struct iwl_rx_cmd_buffer *rxb, int queue)
+ {
+@@ -984,21 +994,16 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		 */
+ 		if ((desc->mac_flags2 & IWL_RX_MPDU_MFLG2_AMSDU) &&
+ 		    !WARN_ON(!ieee80211_is_data_qos(hdr->frame_control))) {
+-			int i;
+ 			u8 *qc = ieee80211_get_qos_ctl(hdr);
+-			u8 mac_addr[ETH_ALEN];
+ 
+ 			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
+ 
+-			for (i = 0; i < ETH_ALEN; i++)
+-				mac_addr[i] = hdr->addr3[ETH_ALEN - i - 1];
+-			ether_addr_copy(hdr->addr3, mac_addr);
++			if (mvm->trans->cfg->device_family ==
++			    IWL_DEVICE_FAMILY_9000) {
++				iwl_mvm_flip_address(hdr->addr3);
+ 
+-			if (ieee80211_has_a4(hdr->frame_control)) {
+-				for (i = 0; i < ETH_ALEN; i++)
+-					mac_addr[i] =
+-						hdr->addr4[ETH_ALEN - i - 1];
+-				ether_addr_copy(hdr->addr4, mac_addr);
++				if (ieee80211_has_a4(hdr->frame_control))
++					iwl_mvm_flip_address(hdr->addr4);
+ 			}
+ 		}
+ 		if (baid != IWL_RX_REORDER_DATA_INVALID_BAID) {
 -- 
-Kalle Valo
+2.15.1
