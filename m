@@ -1,161 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43766 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752895AbdLHMKn (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60060 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750810AbdLWNpe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:10:43 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 01/10] brcmfmac: Split brcmf_sdiod_buffrw function up.
-Date: Fri,  8 Dec 2017 13:10:26 +0100
-Message-Id: <1512735035-342-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131057_441314_C7D8F328)
-In-Reply-To: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sat, 23 Dec 2017 08:45:34 -0500
+Date: Sat, 23 Dec 2017 14:45:32 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
+        ulf.hansson@linaro.org, jakub.kicinski@netronome.com,
+        airlied@linux.ie, linux-wireless@vger.kernel.org,
+        linus.walleij@linaro.org, alsa-devel@alsa-project.org,
+        dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-mtd@lists.infradead.org, daniel.vetter@intel.com,
+        dan.j.williams@intel.com, jason@lakedaemon.net,
+        linux-rtc@vger.kernel.org, boris.brezillon@free-electrons.com,
+        mchehab@kernel.org, dmaengine@vger.kernel.org,
+        vinod.koul@intel.com, richard@nod.at, marek.vasut@gmail.com,
+        industrypack-devel@lists.sourceforge.net,
+        linux-pci@vger.kernel.org, dvhart@infradead.org,
+        linux@roeck-us.net, linux-media@vger.kernel.org,
+        seanpaul@chromium.org, devel@driverdev.osuosl.org,
+        linux-watchdog@vger.kernel.org, arnd@arndb.de,
+        b.zolnierkie@samsung.com, marc.zyngier@arm.com, jslaby@suse.com,
+        jani.nikula@linux.intel.com, linux-can@vger.kernel.org,
+        linux-gpio@vger.kernel.org, broonie@kernel.org, mkl@pengutronix.de,
+        linux-fbdev@vger.kernel.org, nios2-dev@lists.rocketboards.org,
+        bhelgaas@google.com, tglx@linutronix.de,
+        andriy.shevchenko@linux.intel.com, kvalo@codeaurora.org,
+        a.zummo@towertech.it, netdev@vger.kernel.org,
+        linux-mmc@vger.kernel.org, lgirdwood@gmail.com,
+        ralf@linux-mips.org, linux-spi@vger.kernel.org, ysxie@foxmail.com,
+        wg@grandegger.com, cyrille.pitchen@wedev4u.fr, tj@kernel.org,
+        alexandre.belloni@free-electrons.com, davem@davemloft.net,
+        andy@infradead.org
+Subject: Re: [PATCH v3 27/27] devres: kill devm_ioremap_nocache
+Message-ID: <20171223134532.GA10103@kroah.com> (sfid-20171223_144601_241368_746F94BE)
+References: <1514026979-33838-1-git-send-email-xieyisheng1@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1514026979-33838-1-git-send-email-xieyisheng1@huawei.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+On Sat, Dec 23, 2017 at 07:02:59PM +0800, Yisheng Xie wrote:
+> --- a/lib/devres.c
+> +++ b/lib/devres.c
+> @@ -44,35 +44,6 @@ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+>  EXPORT_SYMBOL(devm_ioremap);
+>  
+>  /**
+> - * devm_ioremap_nocache - Managed ioremap_nocache()
+> - * @dev: Generic device to remap IO address for
+> - * @offset: Resource address to map
+> - * @size: Size of map
+> - *
+> - * Managed ioremap_nocache().  Map is automatically unmapped on driver
+> - * detach.
+> - */
+> -void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+> -				   resource_size_t size)
+> -{
+> -	void __iomem **ptr, *addr;
+> -
+> -	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
+> -	if (!ptr)
+> -		return NULL;
+> -
+> -	addr = ioremap_nocache(offset, size);
 
-This function needs to be split up into separate read / write variants
-for clarity.
+Wait, devm_ioremap() calls ioremap(), not ioremap_nocache(), are you
+_SURE_ that these are all identical?  For all arches?  If so, then
+ioremap_nocache() can also be removed, right?
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 67 +++++++++++++++-------
- 1 file changed, 45 insertions(+), 22 deletions(-)
+In my quick glance, I don't think you can do this series at all :(
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 30ab0aa..d9ecc69 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -414,8 +414,8 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		*ret = retval;
- }
- 
--static int brcmf_sdiod_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
--			     bool write, u32 addr, struct sk_buff *pkt)
-+static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev, uint fn,
-+				 u32 addr, struct sk_buff *pkt)
- {
- 	unsigned int req_sz;
- 	int err;
-@@ -424,18 +424,36 @@ static int brcmf_sdiod_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	req_sz = pkt->len + 3;
- 	req_sz &= (uint)~3;
- 
--	if (write)
--		err = sdio_memcpy_toio(sdiodev->func[fn], addr,
--				       ((u8 *)(pkt->data)), req_sz);
--	else if (fn == 1)
--		err = sdio_memcpy_fromio(sdiodev->func[fn], ((u8 *)(pkt->data)),
--					 addr, req_sz);
-+	if (fn == 1)
-+		err = sdio_memcpy_fromio(sdiodev->func[fn],
-+					 ((u8 *)(pkt->data)), addr, req_sz);
- 	else
- 		/* function 2 read is FIFO operation */
--		err = sdio_readsb(sdiodev->func[fn], ((u8 *)(pkt->data)), addr,
--				  req_sz);
-+		err = sdio_readsb(sdiodev->func[fn],
-+				  ((u8 *)(pkt->data)), addr, req_sz);
-+
-+	if (err == -ENOMEDIUM)
-+		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-+
-+	return err;
-+}
-+
-+static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev, uint fn,
-+				  u32 addr, struct sk_buff *pkt)
-+{
-+	unsigned int req_sz;
-+	int err;
-+
-+	/* Single skb use the standard mmc interface */
-+	req_sz = pkt->len + 3;
-+	req_sz &= (uint)~3;
-+
-+	err = sdio_memcpy_toio(sdiodev->func[fn], addr,
-+			       ((u8 *)(pkt->data)), req_sz);
-+
- 	if (err == -ENOMEDIUM)
- 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
-+
- 	return err;
- }
- 
-@@ -643,7 +661,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- 	if (err)
- 		goto done;
- 
--	err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr, pkt);
-+	err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr, pkt);
- 
- done:
- 	return err;
-@@ -665,14 +683,14 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
- 		goto done;
- 
- 	if (pktq->qlen == 1)
--		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
--					 pktq->next);
-+		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
-+					    pktq->next);
- 	else if (!sdiodev->sg_support) {
- 		glom_skb = brcmu_pkt_buf_get_skb(totlen);
- 		if (!glom_skb)
- 			return -ENOMEM;
--		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
--					 glom_skb);
-+		err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_2, addr,
-+					    glom_skb);
- 		if (err)
- 			goto done;
- 
-@@ -707,8 +725,7 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- 	err = brcmf_sdiod_addrprep(sdiodev, &addr);
- 
- 	if (!err)
--		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true, addr,
--					 mypkt);
-+		err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2, addr, mypkt);
- 
- 	brcmu_pkt_buf_free_skb(mypkt);
- 	return err;
-@@ -730,8 +747,8 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 
- 	if (pktq->qlen == 1 || !sdiodev->sg_support)
- 		skb_queue_walk(pktq, skb) {
--			err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true,
--						 addr, skb);
-+			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_2,
-+						     addr, skb);
- 			if (err)
- 				break;
- 		}
-@@ -783,10 +800,16 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
- 		sdaddr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
- 		skb_put(pkt, dsize);
--		if (write)
-+
-+		if (write) {
- 			memcpy(pkt->data, data, dsize);
--		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_1, write, sdaddr,
--					 pkt);
-+			err = brcmf_sdiod_buff_write(sdiodev, SDIO_FUNC_1,
-+						     sdaddr, pkt);
-+		} else {
-+			err = brcmf_sdiod_buff_read(sdiodev, SDIO_FUNC_1,
-+						    sdaddr, pkt);
-+		}
-+
- 		if (err) {
- 			brcmf_err("membytes transfer failed\n");
- 			break;
--- 
-1.9.1
+greg k-h
