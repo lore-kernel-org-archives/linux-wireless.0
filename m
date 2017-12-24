@@ -1,63 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:28086 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753253AbdLAOtM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 09:49:12 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: =?utf-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-CC: "akolli@codeaurora.org" <akolli@codeaurora.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Anilkumar Kolli" <akolli@qti.qualcomm.com>,
-        "linux-wireless-owner@vger.kernel.org"
-        <linux-wireless-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
-Date: Fri, 1 Dec 2017 14:49:02 +0000
-Message-ID: <87k1y6y04i.fsf@kamboji.qca.qualcomm.com> (sfid-20171201_154933_498091_F6F7486D)
-References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com>
-        <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com>
-        <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com>
-        <DAB5EBB8-C820-4056-8AAB-063D05F38BD5@toke.dk>
-        <87bmjjzppd.fsf@kamboji.qca.qualcomm.com>
-        <5080a68538fd2d883e15bacaa969661b@codeaurora.org>       <87r2se36rq.fsf@toke.dk>
-In-Reply-To: <87r2se36rq.fsf@toke.dk> ("Toke
- \=\?utf-8\?Q\?H\=C3\=B8iland-J\?\= \=\?utf-8\?Q\?\=C3\=B8rgensen\=22's\?\=
- message of     "Fri, 01 Dec 2017 14:41:13 +0100")
-Content-Type: text/plain; charset="utf-8"
+Received: from pegase1.c-s.fr ([93.17.236.30]:44230 "EHLO pegase1.c-s.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750860AbdLXIzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 Dec 2017 03:55:25 -0500
+Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
+To: Guenter Roeck <linux@roeck-us.net>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Yisheng Xie <xieyisheng1@huawei.com>
+Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
+        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
+        boris.brezillon@free-electrons.com, richard@nod.at,
+        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
+        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
+        wim@iguana.be, linux-watchdog@vger.kernel.org,
+        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
+        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
+        ralf@linux-mips.org, linux-mips@linux-mips.org,
+        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
+        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
+        andriy.shevchenko@linux.intel.com,
+        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
+        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
+        linux-media@vger.kernel.org, a.zummo@towertech.it,
+        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie,
+        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
+        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
+        dvhart@infradead.org, andy@infradead.org,
+        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
+        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
+        netdev@vger.kernel.org, vinod.koul@intel.com,
+        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
+        jslaby@suse.com
+References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+ <20171223134831.GB10103@kroah.com>
+ <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
+From: christophe leroy <christophe.leroy@c-s.fr>
+Message-ID: <c28ac0bc-8bd2-3dce-3167-8c0f80ec601e@c-s.fr> (sfid-20171224_095606_890844_B2F1235D)
+Date: Sun, 24 Dec 2017 09:55:18 +0100
 MIME-Version: 1.0
+In-Reply-To: <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2VuIDx0b2tlQHRva2UuZGs+IHdyaXRlczoNCg0KPiBha29s
-bGlAY29kZWF1cm9yYS5vcmcgd3JpdGVzOg0KPg0KPj4gT24gMjAxNy0xMS0zMCAyMjowOCwgS2Fs
-bGUgVmFsbyB3cm90ZToNCj4+PiBUb2tlIEjDuGlsYW5kLUrDuHJnZW5zZW4gPHRva2VAdG9rZS5k
-az4gd3JpdGVzOg0KPj4+IA0KPj4+Pj4+ICtzdHJ1Y3QgYXRoMTBrXzEwXzJfcGVlcl90eF9zdGF0
-cyB7DQo+Pj4+Pj4gKwl1OCByYXRlY29kZVtQRUVSX1NUQVRTX0ZPUl9OT19PRl9QUERVU107DQo+
-Pj4+Pj4gKwl1OCBzdWNjZXNzX3BrdHNbUEVFUl9TVEFUU19GT1JfTk9fT0ZfUFBEVVNdOw0KPj4+
-Pj4+ICsJX19sZTE2IHN1Y2Nlc3NfYnl0ZXNbUEVFUl9TVEFUU19GT1JfTk9fT0ZfUFBEVVNdOw0K
-Pj4+Pj4+ICsJdTggcmV0cnlfcGt0c1tQRUVSX1NUQVRTX0ZPUl9OT19PRl9QUERVU107DQo+Pj4+
-Pj4gKwlfX2xlMTYgcmV0cnlfYnl0ZXNbUEVFUl9TVEFUU19GT1JfTk9fT0ZfUFBEVVNdOw0KPj4+
-Pj4+ICsJdTggZmFpbGVkX3BrdHNbUEVFUl9TVEFUU19GT1JfTk9fT0ZfUFBEVVNdOw0KPj4+Pj4+
-ICsJX19sZTE2IGZhaWxlZF9ieXRlc1tQRUVSX1NUQVRTX0ZPUl9OT19PRl9QUERVU107DQo+Pj4+
-Pj4gKwl1OCBmbGFnc1tQRUVSX1NUQVRTX0ZPUl9OT19PRl9QUERVU107DQo+Pj4+Pj4gKwlfX2xl
-MzIgdHhfZHVyYXRpb247DQo+Pj4+Pj4gKwl1OCB0eF9wcGR1X2NudDsNCj4+Pj4+PiArCXU4IHBl
-ZXJfaWQ7DQo+Pj4+Pj4gK30gX19wYWNrZWQ7DQo+Pj4+PiANCj4+Pj4+IFRva2UsIGhvcGVmdWxs
-eSB0aGUgdHhfZHVyYXRpb24gdmFsdWUgaGVyZSBoZWxwcyB3aXRoIEFURg0KPj4+Pj4gaW1wbGVt
-ZW50YXRpb24NCj4+Pj4+IHVzaW5nIFFDQTk4OFguDQo+Pj4+IA0KPj4+PiBBd2Vzb21lISBXaGF0
-J3MgdGhlIHNlbWFudGljcyBvZiB0aGlzIGZpZWxkPyBKdXN0IHRvdGFsDQo+Pj4+IGR1cmF0aW9u
-IHNwZW50IHNlcnZpbmcgdGhhdCBzdGF0aW9uIGluIHRoZSByZXBvcnRpbmcgaW50ZXJ2YWw/DQo+
-Pj4+IERvZXMgaXQgaW5jbHVkZSByZXRyeSBhdHRlbXB0cz8NCj4+PiANCj4+PiBJIGhhdmUgbm8g
-Y2x1ZSA6KSBJIGp1c3Qgbm90aWNlZCB0aGlzIHdoaWxlIEkgd2FzIHJldmlld2luZyB0aGUgcGF0
-Y2gNCj4+PiBpbnRlcm5hbGx5IGFuZCBpbW1lZGlhdGVseSByZWNhbGxlZCBvdXIgZGlzY3Vzc2lv
-bnMgYXQgU2VvdWwuIEkgY2FuIHRyeQ0KPj4+IHRvIGZpbmQgb3V0LCBidXQgdGhhdCB3aWxsIHRh
-a2UgYSBsb25nIHRpbWUgYXMgSSBoYXZlIHdheSB0b28gbXVjaCANCj4+PiBzdHVmZg0KPj4+IHBl
-bmRpbmcgYXQgdGhlIG1vbWVudC4gSG9wZWZ1bGx5IHNvbWVvbmUgbW9yZSBrbm93bGVkZ2VhYmxl
-IA0KPj4+IChBbmlsa3VtYXI/KQ0KPj4+IGNhbiBjaGltZSBpbiBhbmQgaGVscC4NCj4+DQo+PiB0
-eF9kdXJhdGlvbiBpcyBhZ2dyZWdhdGUgdGltZSBkdXJhdGlvbiBvZiA0IFBQRFUgc2VudCB0byBT
-VEEuDQo+PiBGVyBzZW5kcyB0aGVzZSB2YWx1ZXMgZm9yIHJldHJ5IHBhY2tldHMgYWxzby4NCj4N
-Cj4gR3JlYXQsIHRoYXQgc291bmRzIGxpa2UganVzdCB3aGF0IHdlIG5lZWQuDQoNCkV4Y2VwdCBt
-YXBwaW5nIHRvIHRoZSBpZWU4MDIxMV90eF9zdGF0dXMoKSBtaWdodCBiZSBkaWZmaWN1bHQuIEkn
-bSBub3QNCnN1cmUgaG93IEhUVF9UMkhfTVNHX1RZUEVfUEtUTE9HIGV2ZW50cyBhcmUgc2VudCBp
-biByZWxhdGlvbiB0bw0KSFRUX1QySF9NU0dfVFlQRV9UWF9DT01QTF9JTkQuDQoNCi0tIA0KS2Fs
-bGUgVmFsbw==
+
+
+Le 23/12/2017 à 16:57, Guenter Roeck a écrit :
+> On 12/23/2017 05:48 AM, Greg KH wrote:
+>> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
+>>> Hi all,
+>>>
+>>> When I tried to use devm_ioremap function and review related code, I 
+>>> found
+>>> devm_ioremap and devm_ioremap_nocache is almost the same with each 
+>>> other,
+>>> except one use ioremap while the other use ioremap_nocache.
+>>
+>> For all arches?  Really?  Look at MIPS, and x86, they have different
+>> functions.
+>>
+> 
+> Both mips and x86 end up mapping the same function, but other arches don't.
+> mn10300 is one where ioremap and ioremap_nocache are definitely different.
+
+alpha: identical
+arc: identical
+arm: identical
+arm64: identical
+cris: different        <==
+frv: identical
+hexagone: identical
+ia64: different        <==
+m32r: identical
+m68k: identical
+metag: identical
+microblaze: identical
+mips: identical
+mn10300: different     <==
+nios: identical
+openrisc: different    <==
+parisc: identical
+riscv: identical
+s390: identical
+sh: identical
+sparc: identical
+tile: identical
+um: rely on asm/generic
+unicore32: identical
+x86: identical
+asm/generic (no mmu): identical
+
+So 4 among all arches seems to have ioremap() and ioremap_nocache() 
+being different.
+
+Could we have a define set by the 4 arches on which ioremap() and 
+ioremap_nocache() are different, something like 
+HAVE_DIFFERENT_IOREMAP_NOCACHE ?
+
+Christophe
+
+> 
+> Guenter
+> 
+>>> While ioremap's
+>>> default function is ioremap_nocache, so devm_ioremap_nocache also 
+>>> have the
+>>> same function with devm_ioremap, which can just be killed to reduce 
+>>> the size
+>>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
+>>>
+>>> I have posted two versions, which use macro instead of function for
+>>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
+>>> devm_ioremap_nocache for no need to keep a macro around for the 
+>>> duplicate
+>>> thing. So here comes v3 and please help to review.
+>>
+>> I don't think this can be done, what am I missing?  These functions are
+>> not identical, sorry for missing that before.
+>>
+>> thanks,
+>>
+>> greg k-h
+>>
+> 
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-watchdog" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+---
+L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
+https://www.avast.com/antivirus
