@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:41988 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751461AbdLNJNb (ORCPT
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:39133 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752042AbdLXEAv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 04:13:31 -0500
-Received: by mail-qt0-f177.google.com with SMTP id g9so7102903qth.9
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Dec 2017 01:13:31 -0800 (PST)
-Subject: Re: BCM4356 does not initalize after firmware update
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-References: <20171213161257.GB2811@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A3240B9.90007@broadcom.com> (sfid-20171214_101337_675835_21335BB9)
-Date: Thu, 14 Dec 2017 10:13:29 +0100
-MIME-Version: 1.0
-In-Reply-To: <20171213161257.GB2811@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Sat, 23 Dec 2017 23:00:51 -0500
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+To: kvalo@codeaurora.org, colin.king@canonical.com,
+        johannes.berg@intel.com, tiwai@suse.de,
+        kstewart@linuxfoundation.org, gregkh@linuxfoundation.org,
+        andrew.zaborowski@intel.com
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] b43: Replace mdelay with msleep in b43_radio_2057_init_post
+Date: Sun, 24 Dec 2017 12:03:43 +0800
+Message-Id: <1514088223-7411-1-git-send-email-baijiaju1990@gmail.com> (sfid-20171224_050113_784354_CD8DA4EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2017 5:12 PM, Stanislaw Gruszka wrote:
-> Hi
->
-> After firmware update, this device:
->
-> [0280]: Broadcom Limited BCM4356 802.11ac Wireless Network Adapter [14e4:43ec] (rev 02)
->
-> no longer initialize. With the firmware update I have:
->
-> [  272.063814] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
-> [  272.529582] brcmfmac 0000:03:00.0: irq 31 for MSI/MSI-X
-> [  274.529476] brcmfmac: brcmf_msgbuf_query_dcmd: Timeout on response for query command
-> [  274.537356] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -5
-> [  274.544881] brcmfmac: brcmf_bus_started: failed: -5
-> [  274.549854] brcmfmac: brcmf_pcie_attach_bus: dongle is not responding
->
-> and no wlan device is created. With older version of the firmware I have:
->
-> [   10.716878] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
-> [   11.312875] brcmfmac 0000:03:00.0: irq 31 for MSI/MSI-X
-> [   11.314735] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015 06:16:41 version 7.35.180.119 (r594535) FWID 01-1a5c4016
-> [   16.598211] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
-> [   16.604416] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlp3s0 type 10 failed: err=-16
->
-> and despite P2P errors, device works correctly.
+b43_radio_2057_init_post is not called in an interrupt handler 
+nor holding a spinlock.
+The function mdelay in it can be replaced with msleep, to reduce busy wait.
 
-The cur_etheraddr is the first piece of info we try to get from the 
-firmware. Could you build the driver with CONFIG_BRCMDBG and load the 
-module with 'debug=0x181416'.
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+---
+ drivers/net/wireless/broadcom/b43/phy_n.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+index a5557d7..5bc838e 100644
+--- a/drivers/net/wireless/broadcom/b43/phy_n.c
++++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+@@ -1031,7 +1031,7 @@ static void b43_radio_2057_init_post(struct b43_wldev *dev)
+ 
+ 	b43_radio_set(dev, R2057_RFPLL_MISC_CAL_RESETN, 0x78);
+ 	b43_radio_set(dev, R2057_XTAL_CONFIG2, 0x80);
+-	mdelay(2);
++	msleep(2);
+ 	b43_radio_mask(dev, R2057_RFPLL_MISC_CAL_RESETN, ~0x78);
+ 	b43_radio_mask(dev, R2057_XTAL_CONFIG2, ~0x80);
+ 
+-- 
+1.7.9.5
