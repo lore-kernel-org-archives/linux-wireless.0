@@ -1,185 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36339 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750854AbdLAF3R (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:32775 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751040AbdLXDYN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 00:29:17 -0500
-Received: by mail-wm0-f65.google.com with SMTP id b76so1421897wmg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Nov 2017 21:29:17 -0800 (PST)
+        Sat, 23 Dec 2017 22:24:13 -0500
+Received: from mail-io0-f197.google.com ([209.85.223.197])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1eSwtY-0002JB-4h
+        for linux-wireless@vger.kernel.org; Sun, 24 Dec 2017 03:24:12 +0000
+Received: by mail-io0-f197.google.com with SMTP id n62so9733699iod.17
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Dec 2017 19:24:12 -0800 (PST)
+Date: Sat, 23 Dec 2017 21:24:08 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 0/6] wireless-regdb: Support for new binary database
+ format
+Message-ID: <20171224032408.GA31806@ubuntu-xps13> (sfid-20171224_042417_334732_7EBD0C35)
+References: <20171222060303.14478-1-seth.forshee@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB4CAwf6uBbMgT_=Qb5uo+2g_sNSLdRhnjJt-C9vB6OgSjphyg@mail.gmail.com>
-References: <CAB4CAwdO0dKAinnPk+ihJyDgOJ1z=2D=+pLMrObJYH+QiaDRqA@mail.gmail.com>
- <1509434718.4492.195.camel@coelho.fi> <CAB4CAwc43h5g+zLYd3hv=STELNGH+NEeQOMAXd-Gm0xj+TNuyA@mail.gmail.com>
- <1509952948.4492.360.camel@coelho.fi> <CAB4CAwc0G0j1zb+Z4z6iCJ2hzMznUsSVxyF8G3dbZn9pxzffng@mail.gmail.com>
- <CAB4CAwcwVEyFX=7KJcAT9eXQoof_M+U+tB+FRQCnoP5WgK-MrQ@mail.gmail.com>
- <1510825750.4011.179.camel@coelho.fi> <CAB4CAwfg73wRoNca2GBaMn4eN04vf+uR3xdzYO0UWG1Nmaqo=w@mail.gmail.com>
- <1510901207.4011.197.camel@coelho.fi> <CAB4CAwcit2jqHXs7x2cowHdi31OH3wKnmyW4=v-6RGO-+1gjog@mail.gmail.com>
- <CAB4CAwdZHwC0kiaGU5A1u_P8y0anw58o6KiOXAWbjwUtB=uLuQ@mail.gmail.com>
- <1511689749.4011.357.camel@coelho.fi> <CAB4CAwf6uBbMgT_=Qb5uo+2g_sNSLdRhnjJt-C9vB6OgSjphyg@mail.gmail.com>
-From: Chris Chiu <chiu@endlessm.com>
-Date: Fri, 1 Dec 2017 13:29:15 +0800
-Message-ID: <CAB4CAweoq=PAqjPW_POLy5+9tHFquunoY6h5xNJ9EU=xY5zcxg@mail.gmail.com> (sfid-20171201_062922_552215_999C82AE)
-Subject: Re: [linuxwifi] Need support for Intel new wifi module 9462NGW
-To: Luca Coelho <luca@coelho.fi>
-Cc: johannes.berg@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171222060303.14478-1-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
-    I think the problem is not missing DHCP reply. I installed tcpdump
-on the machine with Intel 9461NGW and start monitoring on the wlan
-interface.
-The result is following
-https://gist.github.com/mschiu77/f4cc14ddae6adf137da15675cca59b30
+On Fri, Dec 22, 2017 at 12:02:57AM -0600, Seth Forshee wrote:
+> This series starts with Johannes' patch for generating regulatory
+> databases using the new format and adds various fixes and pieces which
+> were missing such as installation to the firmware path, manual page
+> updates, etc. It also restores support for the older database format to
+> maintain compatibility with using CRDA on older kernels.
+> 
+> I've tested the results with 4.15 and things look to be working. I want
+> to apply this in the next couple of days and get a new release out, so
+> please let me know soon if you seen any issues.
 
-I also attach the ifconfig result at the end of the above url. Hope
-this can help a little.
-
-Chris
-
-On Thu, Nov 30, 2017 at 9:18 PM, Chris Chiu <chiu@endlessm.com> wrote:
-> Hi Luca,
->     I got another machine which has Intel 9461NGW (31dc:0264) and
-> stuck at the same problem. I can't see the DHCP response on the air.
-> However, the router does respond to the DHCP discover. Please check
-> the following tcpdump here. The 9461's mac address is
-> 60:f6:77:9a:f4:ed
-> https://gist.github.com/mschiu77/8f613ba6e3c41a3bd5206f1e903b0bbd
->
->     Then I go to AP and do tcpdump, I can still see the DHCP reply
-> packet on the corresponding interface. Don't know why can't I see this
-> packet on the air? maybe wrong channel?
->
-> Chris
->
-> On Sun, Nov 26, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi> wrote:
->> On Wed, 2017-11-22 at 21:48 +0800, Chris Chiu wrote:
->>> On Fri, Nov 17, 2017 at 3:38 PM, Chris Chiu <chiu@endlessm.com>
->>> wrote:
->>> > On Fri, Nov 17, 2017 at 2:46 PM, Luca Coelho <luca@coelho.fi>
->>> > wrote:
->>> > > On Fri, 2017-11-17 at 14:39 +0800, Chris Chiu wrote:
->>> > > > On Thu, Nov 16, 2017 at 5:49 PM, Luca Coelho <luca@coelho.fi>
->>> > > > wrote:
->>> > > > > Hi Chris,
->>> > > > >
->>> > > > > On Thu, 2017-11-09 at 11:11 +0800, Chris Chiu wrote:
->>> > > > > > Hi Luca,
->>> > > > > >     Any suggestion for the "Failed to start INIT ucode:
->>> > > > > > -110"
->>> > > > > > issue
->>> > > > > > for the firmware?
->>> > > > >
->>> > > > > There were a few problems which should now be fixed.  We
->>> > > > > published
->>> > > > > new
->>> > > > > firmwares in our linux-firmware.git tree[1] and also made
->>> > > > > some
->>> > > > > fixes in
->>> > > > > the driver[2].  Please update your system accordingly and let
->>> > > > > me
->>> > > > > know
->>> > > > > if it works for you.
->>> > > > >
->>> > > > > Thanks!
->>> > > > >
->>> > > > > [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/l
->>> > > > > inux-f
->>> > > > > irmware.git/
->>> > > > > [2] https://patchwork.kernel.org/patch/10059871/
->>> > > > >     https://patchwork.kernel.org/patch/10059875/
->>> > > > >     https://patchwork.kernel.org/patch/10059873/
->>> > > > >
->>> > > > > --
->>> > > > > Cheers,
->>> > > > > Luca.
->>> > > >
->>> > > > Hi Luca,
->>> > >
->>> > > Hi Chris,
->>> > >
->>> > >
->>> > > >     Thanks for your patch and updated firmware. The driver can
->>> > > > initialize w/o error now. However, it always fails on ip-config
->>> > > > after
->>> > > > 4-way handshake complete. I have to mention that I removed the
->>> > > > field
->>> > > > ".soc_latency" in all new iwl_cfg you added in
->>> > > > https://patchwork.kernel.org/patch/10059875/ to remove compile
->>> > > > error
->>> > > > based on the linux mainline 4.14.
->>> > > >     I don't know whether if this causes the problem. Do you
->>> > > > need me
->>> > > > to
->>> > > > do anything for more information?
->>> > >
->>> > > That was my fault, I forgot to include one file in my commit.  I
->>> > > have
->>> > > sent v2 of the two last patches to solve the problem.  Can you
->>> > > try
->>> > > them?
->>> > >
->>> > > The problem you're seeing could be related to that, because we
->>> > > use a
->>> > > bit longer wait period for HW stabilization with integrated
->>> > > devices.
->>> > > And if you remove it, you may encounter random problems...
->>> > >
->>> > > --
->>> > > Cheers,
->>> > > Luca.
->>> >
->>> > Hi Luca,
->>> >     Thanks for your quick response. I  tried your v2 patch but
->>> > things
->>> > remain the same. The signal strength and scan results seems nothing
->>> > wrong but still fail to get ip from DHCP server. Please let me know
->>> > what I can help here.
->>> >
->>> > Chris
->>>
->>> Hi Luca,
->>>     Some more observation I want to point out and maybe you can
->>> suggest.
->>> After your v2 patch and the latest firmware. I'm pretty sure there's
->>> no problem
->>> on my 9462NGW module to associate to an AP (4-way handshaking
->>> complete)
->>> dmesg in https://gist.github.com/mschiu77/1fe1f5128f1c49a93055ce23976
->>> c09b5
->>> here also shows
->>> [   59.338785] wlp0s12f0: associated
->>>
->>> Then I do air sniffer with my mac book air and only dump DHCP packets
->>> in
->>> https://gist.github.com/mschiu77/677b5fbfdea0fea2eda4a36a84bcac8e
->>>
->>> As you see, 4 DHCP Discovery here but no response. I do the same
->>> thing on
->>> the other laptop to associate to the same AP SSID, there's no
->>> problem.
->>>
->>> And yet another interesting thing is, every time I was trying to
->>> associate
->>> The ifconfig always give me a totally different ether address. I log
->>> 5 times in
->>> https://gist.github.com/mschiu77/54169d52b9fcf205d5c26752988f8a3d
->>>
->>> The read HW address should be 34:13:e8:6f:34:25 and it's also true in
->>> tcpdump
->>> log.
->>>
->>> I think maybe it's related. Can you suggest anything that I can try?
->>
->> Hey Chris,
->>
->> Thanks for the update and sorry for the delay.  I'll take a look into
->> this in the coming week, there's probably something missing in the
->> driver that is causing this issue...
->>
->> --
->> Cheers,
->> Luca.
+Applied.
