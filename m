@@ -1,115 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pegase1.c-s.fr ([93.17.236.30]:11200 "EHLO pegase1.c-s.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750860AbdLXJFR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Dec 2017 04:05:17 -0500
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-To: Greg KH <gregkh@linuxfoundation.org>,
-        Yisheng Xie <xieyisheng1@huawei.com>
-Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
-        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
-        boris.brezillon@free-electrons.com, richard@nod.at,
-        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
-        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
-        wim@iguana.be, linux@roeck-us.net, linux-watchdog@vger.kernel.org,
-        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
-        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
-        ralf@linux-mips.org, linux-mips@linux-mips.org,
-        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
-        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
-        andriy.shevchenko@linux.intel.com,
-        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
-        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
-        linux-media@vger.kernel.org, a.zummo@towertech.it,
-        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie,
-        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
-        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
-        dvhart@infradead.org, andy@infradead.org,
-        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
-        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
-        netdev@vger.kernel.org, vinod.koul@intel.com,
-        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
-        jslaby@suse.com
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134831.GB10103@kroah.com>
-From: christophe leroy <christophe.leroy@c-s.fr>
-Message-ID: <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr> (sfid-20171224_100637_886675_279E41CB)
-Date: Sun, 24 Dec 2017 10:05:08 +0100
+Received: from youngberry.canonical.com ([91.189.89.112]:32979 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752619AbdLXDyg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 23 Dec 2017 22:54:36 -0500
+Received: from mail-io0-f198.google.com ([209.85.223.198])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1eSxMx-0004sp-Bq
+        for linux-wireless@vger.kernel.org; Sun, 24 Dec 2017 03:54:35 +0000
+Received: by mail-io0-f198.google.com with SMTP id c196so23771313ioc.3
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Dec 2017 19:54:35 -0800 (PST)
+Date: Sat, 23 Dec 2017 21:54:31 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [ANN] wireless-regdb: master-2017-12-23
+Message-ID: <20171224035431.GA5626@ubuntu-xps13> (sfid-20171224_045440_355323_D6893655)
 MIME-Version: 1.0
-In-Reply-To: <20171223134831.GB10103@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A new release of wireless-regdb (master-2017-12-23) is available at:
 
+https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2017.12.23.tar.gz
 
-Le 23/12/2017 à 14:48, Greg KH a écrit :
-> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->> Hi all,
->>
->> When I tried to use devm_ioremap function and review related code, I found
->> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
->> except one use ioremap while the other use ioremap_nocache.
-> 
-> For all arches?  Really?  Look at MIPS, and x86, they have different
-> functions.
-> 
->> While ioremap's
->> default function is ioremap_nocache, so devm_ioremap_nocache also have the
->> same function with devm_ioremap, which can just be killed to reduce the size
->> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
->>
->> I have posted two versions, which use macro instead of function for
->> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->> devm_ioremap_nocache for no need to keep a macro around for the duplicate
->> thing. So here comes v3 and please help to review.
-> 
-> I don't think this can be done, what am I missing?  These functions are
-> not identical, sorry for missing that before.
+Note that this is the first release to include the new regulatory
+database format, supporting direct loading of the database by the
+kernel. The short log of changes since the 2017-03-07 release is below.
 
-devm_ioremap() and devm_ioremap_nocache() are quite similar, both use 
-devm_ioremap_release() for the release, why not just defining:
-
-static void __iomem *__devm_ioremap(struct device *dev, resource_size_t 
-offset,
-			   resource_size_t size, bool nocache)
-{
-[...]
-	if (nocache)
-		addr = ioremap_nocache(offset, size);
-	else
-		addr = ioremap(offset, size);
-[...]
-}
-
-then in include/linux/io.h
-
-static inline void __iomem *devm_ioremap(struct device *dev, 
-resource_size_t offset,
-			   resource_size_t size)
-{return __devm_ioremap(dev, offset, size, false);}
-
-static inline void __iomem *devm_ioremap_nocache(struct device *dev, 
-resource_size_t offset,
-				   resource_size_t size);
-{return __devm_ioremap(dev, offset, size, true);}
-
-Christophe
-
-> 
-> thanks,
-> 
-> greg k-h
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-watchdog" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Thanks,
+Seth
 
 ---
-L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-https://www.avast.com/antivirus
+
+Andreas Mohr (1):
+      wireless-regdb: reduce power level limit of KR (Korea) 802.11b/g/n to the certification-requested "20mW" (13dBm).
+
+Aron Rosenberg (1):
+      Set NO-OUTDOOR Flag on Canada 5Ghz 5150 to 5250
+
+Chen-Yu Tsai (2):
+      wireless-regdb: Update regulatory document references for Taiwan (TW)
+      wireless-regdb: Add 60 GHz rule for Taiwan (TW)
+
+Edwin Steele (1):
+      wireless-regdb: Update rules for Turkey 5ghz
+
+Johannes Berg (1):
+      regdb: write firmware file format (version code 20)
+
+Seth Forshee (8):
+      wireless-regdb: Add 5 Ghz rules for Kazakhstan (KZ)
+      wireless-regdb: Update rules for Denmark (DK)
+      wireless-regdb: Restore generation of old format database files
+      wireless-regdb: Add sforshee's x509 certificate
+      wireless-regdb: Better support for generating public certificates
+      wireless-regdb: Install regulatory.db and regulatory.db.p7s to /lib/firmware
+      wireless-regdb: Document regulatory.db in the manual page
+      wireless-regdb: update regulatory database based on preceding changes
+
+Sven Eckelmann (1):
+      wireless-regdb: Update regulatory rules for Singapore (SG)
+
+Xose Vazquez Perez (1):
+      wireless-regdb: add Short Range Devices (SRD) (ETSI EN 300 440) for Spain
