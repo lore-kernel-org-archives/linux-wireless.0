@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40552 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754922AbdLGNfJ (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:32778 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751040AbdLXDYf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Dec 2017 08:35:09 -0500
-Content-Type: text/plain; charset="utf-8"
+        Sat, 23 Dec 2017 22:24:35 -0500
+Received: from mail-it0-f72.google.com ([209.85.214.72])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1eSwtu-0002Ml-1c
+        for linux-wireless@vger.kernel.org; Sun, 24 Dec 2017 03:24:34 +0000
+Received: by mail-it0-f72.google.com with SMTP id r6so14484163itr.1
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Dec 2017 19:24:34 -0800 (PST)
+Date: Sat, 23 Dec 2017 21:24:31 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Per Mejdal Rasmussen <pmr@its.aau.dk>
+Subject: Re: [PATCH] wireless-regdb: Update rules for Denmark (DK)
+Message-ID: <20171224032431.GA32049@ubuntu-xps13> (sfid-20171224_042437_903687_F3462723)
+References: <20171222163808.27862-1-seth.forshee@canonical.com>
 MIME-Version: 1.0
-Subject: Re: [v3] bcma: Adjust block comment
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171128155458.1036-1-eashishkalra@gmail.com>
-References: <20171128155458.1036-1-eashishkalra@gmail.com>
-To: Ashish Kalra <eashishkalra@gmail.com>
-Cc: zajec5@gmail.com, himanshujha199640@gmail.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        eashishkalra@gmail.com
-Message-Id: <20171207133508.C7E91608C8@smtp.codeaurora.org> (sfid-20171207_143539_112374_BC810034)
-Date: Thu,  7 Dec 2017 13:35:08 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171222163808.27862-1-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashish Kalra <eashishkalra@gmail.com> wrote:
-
-> use * for block comments in multiple lines according to kernel coding
-> style
+On Fri, Dec 22, 2017 at 10:38:08AM -0600, Seth Forshee wrote:
+> Refresh the frequency ranges and power limits based on the
+> following sources:
 > 
-> Reported by: checkpatch.pl
+>  https://erhvervsstyrelsen.dk/sites/default/files/007_interface-datanet_5-6_ghz.pdf.pdf
+>  https://erhvervsstyrelsen.dk/sites/default/files/radiograenseflader-63.pdf
 > 
-> Signed-off-by: Ashish Kalra <eashishkalra@gmail.com>
-> Reviewed-by: Himanshu Jha <himanshujha199640@gmail.com>
+> Cc: Per Mejdal Rasmussen <pmr@its.aau.dk>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-a765c8fdc869 bcma: Adjust block comment
-
--- 
-https://patchwork.kernel.org/patch/10080747/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Applied.
