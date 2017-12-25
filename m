@@ -1,513 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37114 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751220AbdLUJBv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Dec 2017 04:01:51 -0500
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@qti.qualcomm.com>
-Subject: [PATCH 06/10] ath10k: Add support for htt_data_tx_desc_64 descriptor
-Date: Thu, 21 Dec 2017 14:30:55 +0530
-Message-Id: <1513846859-23639-7-git-send-email-govinds@qti.qualcomm.com> (sfid-20171221_100203_816288_7523AF5C)
-In-Reply-To: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
-References: <1513846859-23639-1-git-send-email-govinds@qti.qualcomm.com>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2726 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751112AbdLYBoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 Dec 2017 20:44:06 -0500
+Subject: Re: [PATCH v3 27/27] devres: kill devm_ioremap_nocache
+To: Greg KH <gregkh@linuxfoundation.org>
+References: <1514026979-33838-1-git-send-email-xieyisheng1@huawei.com>
+ <20171223134532.GA10103@kroah.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-mips@linux-mips.org>,
+        <ulf.hansson@linaro.org>, <jakub.kicinski@netronome.com>,
+        <airlied@linux.ie>, <linux-wireless@vger.kernel.org>,
+        <linus.walleij@linaro.org>, <alsa-devel@alsa-project.org>,
+        <dri-devel@lists.freedesktop.org>,
+        <platform-driver-x86@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-mtd@lists.infradead.org>, <daniel.vetter@intel.com>,
+        <dan.j.williams@intel.com>, <jason@lakedaemon.net>,
+        <linux-rtc@vger.kernel.org>, <boris.brezillon@free-electrons.com>,
+        <mchehab@kernel.org>, <dmaengine@vger.kernel.org>,
+        <vinod.koul@intel.com>, <richard@nod.at>, <marek.vasut@gmail.com>,
+        <industrypack-devel@lists.sourceforge.net>,
+        <linux-pci@vger.kernel.org>, <dvhart@infradead.org>,
+        <linux@roeck-us.net>, <linux-media@vger.kernel.org>,
+        <seanpaul@chromium.org>, <devel@driverdev.osuosl.org>,
+        <linux-watchdog@vger.kernel.org>, <arnd@arndb.de>,
+        <b.zolnierkie@samsung.com>, <marc.zyngier@arm.com>,
+        <jslaby@suse.com>, <jani.nikula@linux.intel.com>,
+        <linux-can@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
+        <broonie@kernel.org>, <mkl@pengutronix.de>,
+        <linux-fbdev@vger.kernel.org>, <nios2-dev@lists.rocketboards.org>,
+        <bhelgaas@google.com>, <tglx@linutronix.de>,
+        <andriy.shevchenko@linux.intel.com>, <kvalo@codeaurora.org>,
+        <a.zummo@towertech.it>, <netdev@vger.kernel.org>,
+        <linux-mmc@vger.kernel.org>, <lgirdwood@gmail.com>,
+        <ralf@linux-mips.org>, <linux-spi@vger.kernel.org>,
+        <ysxie@foxmail.com>, <wg@grandegger.com>,
+        <cyrille.pitchen@wedev4u.fr>, <tj@kernel.org>,
+        <alexandre.belloni@free-electrons.com>, <davem@davemloft.net>,
+        <andy@infradead.org>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <4d0991ec-9cd4-0c33-5560-ae9c2c762765@huawei.com> (sfid-20171225_024439_718216_9851C156)
+Date: Mon, 25 Dec 2017 09:43:40 +0800
+MIME-Version: 1.0
+In-Reply-To: <20171223134532.GA10103@kroah.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3990 target uses 64 bit frags_paddr in htt tx descriptor,
-which holds the physical address of SKB fragments in tx data path.
 
-In order to support 64 bit bit frags_paddr in htt tx descriptor, define
-htt_data_tx_desc_64 descriptor and ath10k_htt_tx_64 method for handling
-tx data path with new descriptor fields.
 
-Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    |  38 +++-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 294 ++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath10k/mac.c    |   2 +-
- 3 files changed, 307 insertions(+), 27 deletions(-)
+On 2017/12/23 21:45, Greg KH wrote:
+> On Sat, Dec 23, 2017 at 07:02:59PM +0800, Yisheng Xie wrote:
+>> --- a/lib/devres.c
+>> +++ b/lib/devres.c
+>> @@ -44,35 +44,6 @@ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+>>  EXPORT_SYMBOL(devm_ioremap);
+>>  
+>>  /**
+>> - * devm_ioremap_nocache - Managed ioremap_nocache()
+>> - * @dev: Generic device to remap IO address for
+>> - * @offset: Resource address to map
+>> - * @size: Size of map
+>> - *
+>> - * Managed ioremap_nocache().  Map is automatically unmapped on driver
+>> - * detach.
+>> - */
+>> -void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+>> -				   resource_size_t size)
+>> -{
+>> -	void __iomem **ptr, *addr;
+>> -
+>> -	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
+>> -	if (!ptr)
+>> -		return NULL;
+>> -
+>> -	addr = ioremap_nocache(offset, size);
+> 
+> Wait, devm_ioremap() calls ioremap(), not ioremap_nocache(), are you
+> _SURE_ that these are all identical?  For all arches?  If so, then
+> ioremap_nocache() can also be removed, right?
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 881af77..ac5d720 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -187,6 +187,22 @@ struct htt_data_tx_desc {
- 	u8 prefetch[0]; /* start of frame, for FW classification engine */
- } __packed;
- 
-+struct htt_data_tx_desc_64 {
-+	u8 flags0; /* %HTT_DATA_TX_DESC_FLAGS0_ */
-+	__le16 flags1; /* %HTT_DATA_TX_DESC_FLAGS1_ */
-+	__le16 len;
-+	__le16 id;
-+	__le64 frags_paddr;
-+	union {
-+		__le32 peerid;
-+		struct {
-+			__le16 peerid;
-+			__le16 freq;
-+		} __packed offchan_tx;
-+	} __packed;
-+	u8 prefetch[0]; /* start of frame, for FW classification engine */
-+} __packed;
-+
- enum htt_rx_ring_flags {
- 	HTT_RX_RING_FLAGS_MAC80211_HDR = 1 << 0,
- 	HTT_RX_RING_FLAGS_MSDU_PAYLOAD = 1 << 1,
-@@ -1631,13 +1647,20 @@ struct htt_peer_unmap_event {
- 	u16 peer_id;
- };
- 
--struct ath10k_htt_txbuf {
-+struct ath10k_htt_txbuf_32 {
- 	struct htt_data_tx_desc_frag frags[2];
- 	struct ath10k_htc_hdr htc_hdr;
- 	struct htt_cmd_hdr cmd_hdr;
- 	struct htt_data_tx_desc cmd_tx;
- } __packed;
- 
-+struct ath10k_htt_txbuf_64 {
-+	struct htt_data_tx_desc_frag frags[2];
-+	struct ath10k_htc_hdr htc_hdr;
-+	struct htt_cmd_hdr cmd_hdr;
-+	struct htt_data_tx_desc_64 cmd_tx;
-+} __packed;
-+
- struct ath10k_htt {
- 	struct ath10k *ar;
- 	enum ath10k_htc_ep_id eid;
-@@ -1768,7 +1791,11 @@ struct ath10k_htt {
- 
- 	struct {
- 		dma_addr_t paddr;
--		struct ath10k_htt_txbuf *vaddr;
-+		union {
-+			struct ath10k_htt_txbuf_32 *vaddr_txbuff_32;
-+			struct ath10k_htt_txbuf_64 *vaddr_txbuff_64;
-+		};
-+		size_t size;
- 	} txbuf;
- 
- 	struct {
-@@ -1791,6 +1818,10 @@ struct ath10k_htt_tx_ops {
- 	int (*htt_send_frag_desc_bank_cfg)(struct ath10k_htt *htt);
- 	int (*htt_alloc_frag_desc)(struct ath10k_htt *htt);
- 	void (*htt_free_frag_desc)(struct ath10k_htt *htt);
-+	int (*htt_tx)(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
-+		      struct sk_buff *msdu);
-+	int (*htt_alloc_txbuff)(struct ath10k_htt *htt);
-+	void (*htt_free_txbuff)(struct ath10k_htt *htt);
- };
- 
- #define RX_HTT_HDR_STATUS_LEN 64
-@@ -1895,9 +1926,6 @@ int ath10k_htt_tx_mgmt_inc_pending(struct ath10k_htt *htt, bool is_mgmt,
- int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
- void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
- int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu);
--int ath10k_htt_tx(struct ath10k_htt *htt,
--		  enum ath10k_hw_txrx_mode txmode,
--		  struct sk_buff *msdu);
- void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
- 					     struct sk_buff *skb);
- int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 5989489..8faab62 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -229,30 +229,69 @@ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id)
- 	idr_remove(&htt->pending_tx, msdu_id);
- }
- 
--static void ath10k_htt_tx_free_cont_txbuf(struct ath10k_htt *htt)
-+static void ath10k_htt_tx_free_cont_txbuf_32(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
- 	size_t size;
- 
--	if (!htt->txbuf.vaddr)
-+	if (!htt->txbuf.vaddr_txbuff_32)
- 		return;
- 
--	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
--	dma_free_coherent(ar->dev, size, htt->txbuf.vaddr, htt->txbuf.paddr);
--	htt->txbuf.vaddr = NULL;
-+	size = htt->txbuf.size;
-+	dma_free_coherent(ar->dev, size, htt->txbuf.vaddr_txbuff_32,
-+			  htt->txbuf.paddr);
-+	htt->txbuf.vaddr_txbuff_32 = NULL;
- }
- 
--static int ath10k_htt_tx_alloc_cont_txbuf(struct ath10k_htt *htt)
-+static int ath10k_htt_tx_alloc_cont_txbuf_32(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
- 	size_t size;
- 
--	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
--	htt->txbuf.vaddr = dma_alloc_coherent(ar->dev, size, &htt->txbuf.paddr,
--					      GFP_KERNEL);
--	if (!htt->txbuf.vaddr)
-+	size = htt->max_num_pending_tx *
-+			sizeof(struct ath10k_htt_txbuf_32);
-+
-+	htt->txbuf.vaddr_txbuff_32 = dma_alloc_coherent(ar->dev, size,
-+							&htt->txbuf.paddr,
-+							GFP_KERNEL);
-+	if (!htt->txbuf.vaddr_txbuff_32)
-+		return -ENOMEM;
-+
-+	htt->txbuf.size = size;
-+
-+	return 0;
-+}
-+
-+static void ath10k_htt_tx_free_cont_txbuf_64(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	size_t size;
-+
-+	if (!htt->txbuf.vaddr_txbuff_64)
-+		return;
-+
-+	size = htt->txbuf.size;
-+	dma_free_coherent(ar->dev, size, htt->txbuf.vaddr_txbuff_64,
-+			  htt->txbuf.paddr);
-+	htt->txbuf.vaddr_txbuff_64 = NULL;
-+}
-+
-+static int ath10k_htt_tx_alloc_cont_txbuf_64(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	size_t size;
-+
-+	size = htt->max_num_pending_tx *
-+			sizeof(struct ath10k_htt_txbuf_64);
-+
-+	htt->txbuf.vaddr_txbuff_64 = dma_alloc_coherent(ar->dev, size,
-+							&htt->txbuf.paddr,
-+							GFP_KERNEL);
-+	if (!htt->txbuf.vaddr_txbuff_64)
- 		return -ENOMEM;
- 
-+	htt->txbuf.size = size;
-+
- 	return 0;
- }
- 
-@@ -404,7 +443,7 @@ static int ath10k_htt_tx_alloc_buf(struct ath10k_htt *htt)
- 	struct ath10k *ar = htt->ar;
- 	int ret;
- 
--	ret = ath10k_htt_tx_alloc_cont_txbuf(htt);
-+	ret = htt->tx_ops->htt_alloc_txbuff(htt);
- 	if (ret) {
- 		ath10k_err(ar, "failed to alloc cont tx buffer: %d\n", ret);
- 		return ret;
-@@ -437,7 +476,7 @@ static int ath10k_htt_tx_alloc_buf(struct ath10k_htt *htt)
- 	htt->tx_ops->htt_free_frag_desc(htt);
- 
- free_txbuf:
--	ath10k_htt_tx_free_cont_txbuf(htt);
-+	htt->tx_ops->htt_free_txbuff(htt);
- 
- 	return ret;
- }
-@@ -491,7 +530,7 @@ void ath10k_htt_tx_destroy(struct ath10k_htt *htt)
- 	if (!htt->tx_mem_allocated)
- 		return;
- 
--	ath10k_htt_tx_free_cont_txbuf(htt);
-+	htt->tx_ops->htt_free_txbuff(htt);
- 	ath10k_htt_tx_free_txq(htt);
- 	htt->tx_ops->htt_free_frag_desc(htt);
- 	ath10k_htt_tx_free_txdone_fifo(htt);
-@@ -1097,8 +1136,9 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	return res;
- }
- 
--int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
--		  struct sk_buff *msdu)
-+static int ath10k_htt_tx_32(struct ath10k_htt *htt,
-+			    enum ath10k_hw_txrx_mode txmode,
-+			    struct sk_buff *msdu)
- {
- 	struct ath10k *ar = htt->ar;
- 	struct device *dev = ar->dev;
-@@ -1106,7 +1146,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
- 	struct ath10k_hif_sg_item sg_items[2];
--	struct ath10k_htt_txbuf *txbuf;
-+	struct ath10k_htt_txbuf_32 *txbuf;
- 	struct htt_data_tx_desc_frag *frags;
- 	bool is_eth = (txmode == ATH10K_HW_TXRX_ETHERNET);
- 	u8 vdev_id = ath10k_htt_tx_get_vdev_id(ar, msdu);
-@@ -1132,9 +1172,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	prefetch_len = min(htt->prefetch_len, msdu->len);
- 	prefetch_len = roundup(prefetch_len, 4);
- 
--	txbuf = &htt->txbuf.vaddr[msdu_id];
-+	txbuf = htt->txbuf.vaddr_txbuff_32 + msdu_id;
- 	txbuf_paddr = htt->txbuf.paddr +
--		      (sizeof(struct ath10k_htt_txbuf) * msdu_id);
-+		      (sizeof(struct ath10k_htt_txbuf_32) * msdu_id);
- 
- 	if ((ieee80211_is_action(hdr->frame_control) ||
- 	     ieee80211_is_deauth(hdr->frame_control) ||
-@@ -1259,9 +1299,215 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 
- 	trace_ath10k_htt_tx(ar, msdu_id, msdu->len, vdev_id, tid);
- 	ath10k_dbg(ar, ATH10K_DBG_HTT,
--		   "htt tx flags0 %hhu flags1 %hu len %d id %hu frags_paddr %08x, msdu_paddr %08x vdev %hhu tid %hhu freq %hu\n",
--		   flags0, flags1, msdu->len, msdu_id, frags_paddr,
--		   (u32)skb_cb->paddr, vdev_id, tid, freq);
-+		   "htt tx flags0 %hhu flags1 %hu len %d id %hu frags_paddr %pad, msdu_paddr %pad vdev %hhu tid %hhu freq %hu\n",
-+		   flags0, flags1, msdu->len, msdu_id, &frags_paddr,
-+		   &skb_cb->paddr, vdev_id, tid, freq);
-+	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt tx msdu: ",
-+			msdu->data, msdu->len);
-+	trace_ath10k_tx_hdr(ar, msdu->data, msdu->len);
-+	trace_ath10k_tx_payload(ar, msdu->data, msdu->len);
-+
-+	sg_items[0].transfer_id = 0;
-+	sg_items[0].transfer_context = NULL;
-+	sg_items[0].vaddr = &txbuf->htc_hdr;
-+	sg_items[0].paddr = txbuf_paddr +
-+			    sizeof(txbuf->frags);
-+	sg_items[0].len = sizeof(txbuf->htc_hdr) +
-+			  sizeof(txbuf->cmd_hdr) +
-+			  sizeof(txbuf->cmd_tx);
-+
-+	sg_items[1].transfer_id = 0;
-+	sg_items[1].transfer_context = NULL;
-+	sg_items[1].vaddr = msdu->data;
-+	sg_items[1].paddr = skb_cb->paddr;
-+	sg_items[1].len = prefetch_len;
-+
-+	res = ath10k_hif_tx_sg(htt->ar,
-+			       htt->ar->htc.endpoint[htt->eid].ul_pipe_id,
-+			       sg_items, ARRAY_SIZE(sg_items));
-+	if (res)
-+		goto err_unmap_msdu;
-+
-+	return 0;
-+
-+err_unmap_msdu:
-+	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
-+err_free_msdu_id:
-+	ath10k_htt_tx_free_msdu_id(htt, msdu_id);
-+err:
-+	return res;
-+}
-+
-+static int ath10k_htt_tx_64(struct ath10k_htt *htt,
-+			    enum ath10k_hw_txrx_mode txmode,
-+			    struct sk_buff *msdu)
-+{
-+	struct ath10k *ar = htt->ar;
-+	struct device *dev = ar->dev;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
-+	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
-+	struct ath10k_hif_sg_item sg_items[2];
-+	struct ath10k_htt_txbuf_64 *txbuf;
-+	struct htt_data_tx_desc_frag *frags;
-+	bool is_eth = (txmode == ATH10K_HW_TXRX_ETHERNET);
-+	u8 vdev_id = ath10k_htt_tx_get_vdev_id(ar, msdu);
-+	u8 tid = ath10k_htt_tx_get_tid(msdu, is_eth);
-+	int prefetch_len;
-+	int res;
-+	u8 flags0 = 0;
-+	u16 msdu_id, flags1 = 0;
-+	u16 freq = 0;
-+	dma_addr_t frags_paddr = 0;
-+	u32 txbuf_paddr;
-+	struct htt_msdu_ext_desc_64 *ext_desc = NULL;
-+	struct htt_msdu_ext_desc_64 *ext_desc_t = NULL;
-+
-+	spin_lock_bh(&htt->tx_lock);
-+	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
-+	spin_unlock_bh(&htt->tx_lock);
-+	if (res < 0)
-+		goto err;
-+
-+	msdu_id = res;
-+
-+	prefetch_len = min(htt->prefetch_len, msdu->len);
-+	prefetch_len = roundup(prefetch_len, 4);
-+
-+	txbuf = htt->txbuf.vaddr_txbuff_64 + msdu_id;
-+	txbuf_paddr = htt->txbuf.paddr +
-+		      (sizeof(struct ath10k_htt_txbuf_64) * msdu_id);
-+
-+	if ((ieee80211_is_action(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control) ||
-+	     ieee80211_is_disassoc(hdr->frame_control)) &&
-+	     ieee80211_has_protected(hdr->frame_control)) {
-+		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+	} else if (!(skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT) &&
-+		   txmode == ATH10K_HW_TXRX_RAW &&
-+		   ieee80211_has_protected(hdr->frame_control)) {
-+		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+	}
-+
-+	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
-+				       DMA_TO_DEVICE);
-+	res = dma_mapping_error(dev, skb_cb->paddr);
-+	if (res) {
-+		res = -EIO;
-+		goto err_free_msdu_id;
-+	}
-+
-+	if (unlikely(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN))
-+		freq = ar->scan.roc_freq;
-+
-+	switch (txmode) {
-+	case ATH10K_HW_TXRX_RAW:
-+	case ATH10K_HW_TXRX_NATIVE_WIFI:
-+		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
-+		/* pass through */
-+	case ATH10K_HW_TXRX_ETHERNET:
-+		if (ar->hw_params.continuous_frag_desc) {
-+			ext_desc_t = htt->frag_desc.vaddr_desc_64;
-+			memset(&ext_desc_t[msdu_id], 0,
-+			       sizeof(struct htt_msdu_ext_desc_64));
-+			frags = (struct htt_data_tx_desc_frag *)
-+				&ext_desc_t[msdu_id].frags;
-+			ext_desc = &ext_desc_t[msdu_id];
-+			frags[0].tword_addr.paddr_lo =
-+				__cpu_to_le32(skb_cb->paddr);
-+			frags[0].tword_addr.paddr_hi =
-+				__cpu_to_le16(upper_32_bits(skb_cb->paddr));
-+			frags[0].tword_addr.len_16 = __cpu_to_le16(msdu->len);
-+
-+			frags_paddr =  htt->frag_desc.paddr +
-+			   (sizeof(struct htt_msdu_ext_desc_64) * msdu_id);
-+		} else {
-+			frags = txbuf->frags;
-+			frags[0].tword_addr.paddr_lo =
-+						__cpu_to_le32(skb_cb->paddr);
-+			frags[0].tword_addr.paddr_hi =
-+				__cpu_to_le16(upper_32_bits(skb_cb->paddr));
-+			frags[0].tword_addr.len_16 = __cpu_to_le16(msdu->len);
-+			frags[1].tword_addr.paddr_lo = 0;
-+			frags[1].tword_addr.paddr_hi = 0;
-+			frags[1].tword_addr.len_16 = 0;
-+		}
-+		flags0 |= SM(txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
-+		break;
-+	case ATH10K_HW_TXRX_MGMT:
-+		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
-+			     HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
-+		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
-+
-+		frags_paddr = skb_cb->paddr;
-+		break;
-+	}
-+
-+	/* Normally all commands go through HTC which manages tx credits for
-+	 * each endpoint and notifies when tx is completed.
-+	 *
-+	 * HTT endpoint is creditless so there's no need to care about HTC
-+	 * flags. In that case it is trivial to fill the HTC header here.
-+	 *
-+	 * MSDU transmission is considered completed upon HTT event. This
-+	 * implies no relevant resources can be freed until after the event is
-+	 * received. That's why HTC tx completion handler itself is ignored by
-+	 * setting NULL to transfer_context for all sg items.
-+	 *
-+	 * There is simply no point in pushing HTT TX_FRM through HTC tx path
-+	 * as it's a waste of resources. By bypassing HTC it is possible to
-+	 * avoid extra memory allocations, compress data structures and thus
-+	 * improve performance.
-+	 */
-+
-+	txbuf->htc_hdr.eid = htt->eid;
-+	txbuf->htc_hdr.len = __cpu_to_le16(sizeof(txbuf->cmd_hdr) +
-+					   sizeof(txbuf->cmd_tx) +
-+					   prefetch_len);
-+	txbuf->htc_hdr.flags = 0;
-+
-+	if (skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT)
-+		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
-+
-+	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
-+	flags1 |= SM((u16)tid, HTT_DATA_TX_DESC_FLAGS1_EXT_TID);
-+	if (msdu->ip_summed == CHECKSUM_PARTIAL &&
-+	    !test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
-+		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
-+		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
-+		if (ar->hw_params.continuous_frag_desc)
-+			ext_desc->flags |= HTT_MSDU_CHECKSUM_ENABLE;
-+	}
-+
-+	/* Prevent firmware from sending up tx inspection requests. There's
-+	 * nothing ath10k can do with frames requested for inspection so force
-+	 * it to simply rely a regular tx completion with discard status.
-+	 */
-+	flags1 |= HTT_DATA_TX_DESC_FLAGS1_POSTPONED;
-+
-+	txbuf->cmd_hdr.msg_type = HTT_H2T_MSG_TYPE_TX_FRM;
-+	txbuf->cmd_tx.flags0 = flags0;
-+	txbuf->cmd_tx.flags1 = __cpu_to_le16(flags1);
-+	txbuf->cmd_tx.len = __cpu_to_le16(msdu->len);
-+	txbuf->cmd_tx.id = __cpu_to_le16(msdu_id);
-+
-+	/* fill fragment descriptor */
-+	txbuf->cmd_tx.frags_paddr = __cpu_to_le64(frags_paddr);
-+	if (ath10k_mac_tx_frm_has_freq(ar)) {
-+		txbuf->cmd_tx.offchan_tx.peerid =
-+				__cpu_to_le16(HTT_INVALID_PEERID);
-+		txbuf->cmd_tx.offchan_tx.freq =
-+				__cpu_to_le16(freq);
-+	} else {
-+		txbuf->cmd_tx.peerid =
-+				__cpu_to_le32(HTT_INVALID_PEERID);
-+	}
-+
-+	trace_ath10k_htt_tx(ar, msdu_id, msdu->len, vdev_id, tid);
-+	ath10k_dbg(ar, ATH10K_DBG_HTT,
-+		   "htt tx flags0 %hhu flags1 %hu len %d id %hu frags_paddr %pad, msdu_paddr %pad vdev %hhu tid %hhu freq %hu\n",
-+		   flags0, flags1, msdu->len, msdu_id, &frags_paddr,
-+		   &skb_cb->paddr, vdev_id, tid, freq);
- 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt tx msdu: ",
- 			msdu->data, msdu->len);
- 	trace_ath10k_tx_hdr(ar, msdu->data, msdu->len);
-@@ -1303,6 +1549,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	.htt_send_frag_desc_bank_cfg = ath10k_htt_send_frag_desc_bank_cfg_32,
- 	.htt_alloc_frag_desc = ath10k_htt_tx_alloc_cont_frag_desc_32,
- 	.htt_free_frag_desc = ath10k_htt_tx_free_cont_frag_desc_32,
-+	.htt_tx = ath10k_htt_tx_32,
-+	.htt_alloc_txbuff = ath10k_htt_tx_alloc_cont_txbuf_32,
-+	.htt_free_txbuff = ath10k_htt_tx_free_cont_txbuf_32,
- };
- 
- static const struct ath10k_htt_tx_ops htt_tx_ops_64 = {
-@@ -1310,6 +1559,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	.htt_send_frag_desc_bank_cfg = ath10k_htt_send_frag_desc_bank_cfg_64,
- 	.htt_alloc_frag_desc = ath10k_htt_tx_alloc_cont_frag_desc_64,
- 	.htt_free_frag_desc = ath10k_htt_tx_free_cont_frag_desc_64,
-+	.htt_tx = ath10k_htt_tx_64,
-+	.htt_alloc_txbuff = ath10k_htt_tx_alloc_cont_txbuf_64,
-+	.htt_free_txbuff = ath10k_htt_tx_free_cont_txbuf_64,
- };
- 
- void ath10k_htt_set_tx_ops(struct ath10k_htt *htt)
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 57ad885..5cbff15 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3597,7 +3597,7 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
- 
- 	switch (txpath) {
- 	case ATH10K_MAC_TX_HTT:
--		ret = ath10k_htt_tx(htt, txmode, skb);
-+		ret = htt->tx_ops->htt_tx(htt, txmode, skb);
- 		break;
- 	case ATH10K_MAC_TX_HTT_MGMT:
- 		ret = ath10k_htt_mgmt_tx(htt, skb);
--- 
-1.9.1
+Yeah, As Christophe pointed out, that 4 archs do not have the same function.
+But I do not why they do not want do the same thing. Driver may no know about
+this? right?
+
+> 
+> In my quick glance, I don't think you can do this series at all :(
+
+Yes, maybe should take Christophe suggestion and use a bool or enum to distinguish them?
+
+Thanks
+Yisheng
+> 
+> greg k-h
+> 
+> .
+> 
