@@ -1,80 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39972 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751489AbdLNLdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 06:33:07 -0500
-Subject: Re: [PATCH v3 1/3] mac80211: Add TXQ scheduling API
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-References: <20171027141451.22768-1-toke@toke.dk>
- <20171031112747.5778-1-toke@toke.dk>
-From: Felix Fietkau <nbd@nbd.name>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Message-ID: <b2ed2696-db3d-4797-b5e2-161172fd2413@nbd.name> (sfid-20171214_123311_222037_50997587)
-Date: Thu, 14 Dec 2017 12:33:04 +0100
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2777 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751097AbdLYBew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 Dec 2017 20:34:52 -0500
+Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
+To: christophe leroy <christophe.leroy@c-s.fr>,
+        Greg KH <gregkh@linuxfoundation.org>
+References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+ <20171223134831.GB10103@kroah.com>
+ <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
+CC: <linux-kernel@vger.kernel.org>, <ysxie@foxmail.com>,
+        <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
+        <boris.brezillon@free-electrons.com>, <richard@nod.at>,
+        <marek.vasut@gmail.com>, <cyrille.pitchen@wedev4u.fr>,
+        <linux-mtd@lists.infradead.org>, <alsa-devel@alsa-project.org>,
+        <wim@iguana.be>, <linux@roeck-us.net>,
+        <linux-watchdog@vger.kernel.org>, <b.zolnierkie@samsung.com>,
+        <linux-fbdev@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <linux-gpio@vger.kernel.org>, <ralf@linux-mips.org>,
+        <linux-mips@linux-mips.org>, <lgirdwood@gmail.com>,
+        <broonie@kernel.org>, <tglx@linutronix.de>, <jason@lakedaemon.net>,
+        <marc.zyngier@arm.com>, <arnd@arndb.de>,
+        <andriy.shevchenko@linux.intel.com>,
+        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
+        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
+        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
+        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
+        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
+        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
+        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
+        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
+        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <dvhart@infradead.org>, <andy@infradead.org>,
+        <platform-driver-x86@vger.kernel.org>,
+        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
+        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
+        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
+        <dmaengine@vger.kernel.org>, <jslaby@suse.com>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <8dd19411-5b06-0aa4-fd0e-e5b112c25dcb@huawei.com> (sfid-20171225_023520_287749_0A725C15)
+Date: Mon, 25 Dec 2017 09:34:25 +0800
 MIME-Version: 1.0
-In-Reply-To: <20171031112747.5778-1-toke@toke.dk>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-10-31 12:27, Toke Høiland-Jørgensen wrote:
-> This adds an API to mac80211 to handle scheduling of TXQs and changes the
-> interface between driver and mac80211 for TXQ handling as follows:
+
+
+On 2017/12/24 17:05, christophe leroy wrote:
 > 
-> - The wake_tx_queue callback interface no longer includes the TXQ. Instead,
->   the driver is expected to retrieve that from ieee80211_next_txq()
 > 
-> - Two new mac80211 functions are added: ieee80211_next_txq() and
->   ieee80211_schedule_txq(). The former returns the next TXQ that should be
->   scheduled, and is how the driver gets a queue to pull packets from. The
->   latter is called internally by mac80211 to start scheduling a queue, and
->   the driver is supposed to call it to re-schedule the TXQ after it is
->   finished pulling packets from it (unless the queue emptied).
+> Le 23/12/2017 à 14:48, Greg KH a écrit :
+>> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
+>>> Hi all,
+>>>
+>>> When I tried to use devm_ioremap function and review related code, I found
+>>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
+>>> except one use ioremap while the other use ioremap_nocache.
+>>
+>> For all arches?  Really?  Look at MIPS, and x86, they have different
+>> functions.
+>>
+>>> While ioremap's
+>>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
+>>> same function with devm_ioremap, which can just be killed to reduce the size
+>>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
+>>>
+>>> I have posted two versions, which use macro instead of function for
+>>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
+>>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
+>>> thing. So here comes v3 and please help to review.
+>>
+>> I don't think this can be done, what am I missing?  These functions are
+>> not identical, sorry for missing that before.
 > 
-> The ath9k and ath10k drivers are changed to use the new API.
+> devm_ioremap() and devm_ioremap_nocache() are quite similar, both use devm_ioremap_release() for the release, why not just defining:
 > 
-> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
-Sorry that I didn't have time to give this a thorough review earlier,
-since I was pretty busy with other projects. Now that I'm working on
-porting mt76 to this new API, some things in this patch strike me as
-rather odd, and there might be some bugs and nasty limitations here:
+> static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
+>                resource_size_t size, bool nocache)
+> {
+> [...]
+>     if (nocache)
+>         addr = ioremap_nocache(offset, size);
+>     else
+>         addr = ioremap(offset, size);
+> [...]
+> }
+> 
+> then in include/linux/io.h
+> 
+> static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+>                resource_size_t size)
+> {return __devm_ioremap(dev, offset, size, false);}
+> 
+> static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+>                    resource_size_t size);
+> {return __devm_ioremap(dev, offset, size, true);}
 
-In the new API you can no longer select txq entries by hardware queue.
-When using multiple WMM queues, this could lead to station entries being
-requeued unnecessarily (because there is no room in the hw queue for the
-txq entry that ieee80211_next_txq happens to return).
-Since ieee80211_next_txq also refills the airtime fairness quantum, this
-might lead to some minor fairness issues.
+Yeah, this seems good to me, right now we have devm_ioremap, devm_ioremap_wc, devm_ioremap_nocache
+May be we can use an enum like:
+typedef enum {
+	DEVM_IOREMAP = 0,
+	DEVM_IOREMAP_NOCACHE,
+	DEVM_IOREMAP_WC,
+} devm_ioremap_type;
 
-In ath9k the code used to have a loop that goes through all pending txq
-entries until it has filled the hw queues again. You replaced that with
-some calls to ath_txq_schedule which now only considers one single txq.
-There are several reasons why this queue could potentially not be serviced:
-- ieee80211_tx_dequeue returned no frame
-- frame does not fit within BA window
-- txq was for another queue which is already filled
-Depending on the exact circumstances with enough stations this might
-lead to hardware queues getting starved.
+static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+                resource_size_t size)
+ {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP);}
 
-In ath10k the issues are different. You left a loop to service queues in
-place, and if I'm reading it correctly, you could be facing an infinite
-loop here:
-Let's assume that ath10k_mac_tx_push_pending gets called and there are
-multiple txqs pending.
-The first txq has 16 frames pending, gets serviced, requeued.
-Second txq has lots of frames pending, 16 frames are pushed out, the txq
-is requeued.
-Back to the first one, ath10k_mac_tx_push_txq returns -ENOENT, so no
-requeue.
-Back to the second one, hardware queues are filled,
-ath10k_mac_tx_can_push returns false, so ret stays 0, txq gets requeued.
-By now first == txq can never happen anymore because the first txq is
-not scheduled anymore.
-Seems like an infinite loop to me.
+ static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+                    resource_size_t size);
+ {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_NOCACHE);}
 
-I think dealing with these corner cases will be easier if we support
-filtering by queue in ieee80211_next_txq, so I will send a patch for that.
+ static inline void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
+                    resource_size_t size);
+ {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_WC);}
 
-- Felix
+ static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
+                resource_size_t size, devm_ioremap_type type)
+ {
+     void __iomem **ptr, *addr = NULL;
+ [...]
+     switch (type){
+     case DEVM_IOREMAP:
+         addr = ioremap(offset, size);
+         break;
+     case DEVM_IOREMAP_NOCACHE:
+         addr = ioremap_nocache(offset, size);
+         break;
+     case DEVM_IOREMAP_WC:
+         addr = ioremap_wc(offset, size);
+         break;
+     }
+ [...]
+ }
+
+Thanks
+Yisheng
+
+> 
+> Christophe
+> 
+>>
+>> thanks,
+>>
+>> greg k-h
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-watchdog" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> ---
+> L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
+> https://www.avast.com/antivirus
+> 
+> 
+> .
+> 
