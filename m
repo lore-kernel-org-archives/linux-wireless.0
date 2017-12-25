@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:3668 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752864AbdLMOcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 09:32:36 -0500
-Message-ID: <1513175552.4827.365.camel@intel.com> (sfid-20171213_153304_199120_B54CF8F8)
-Subject: Re: UBSAN: Undefined behaviour in
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c:838:5
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        it+linux-wireless@molgen.mpg.de
-Date: Wed, 13 Dec 2017 16:32:32 +0200
-In-Reply-To: <75bc638e-99a8-2f3f-6260-491f8a018af6@molgen.mpg.de>
-References: <75bc638e-99a8-2f3f-6260-491f8a018af6@molgen.mpg.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from regular1.263xmail.com ([211.150.99.141]:50692 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752288AbdLYL4H (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Dec 2017 06:56:07 -0500
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev@vger.kernel.org
+Subject: [RFC PATCH v11 3/5] mwifiex: Disable wakeup irq handling for pcie
+Date: Mon, 25 Dec 2017 19:47:40 +0800
+Message-Id: <20171225114742.18920-4-jeffy.chen@rock-chips.com> (sfid-20171225_125652_411849_A4E39D1F)
+In-Reply-To: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-12-13 at 14:25 +0100, Paul Menzel wrote:
-> Dear Linux folks,
-> 
-> 
-> I enabled the undefined behavior sanitizer, and built Linus’ master 
-> branch under Ubuntu 17.10 with gcc (Ubuntu 7.2.0-8ubuntu3) 7.2.0.
-> 
-> ```
-> $ grep UBSAN /boot/config-4.15.0-rc3+
-> CONFIG_ARCH_HAS_UBSAN_SANITIZE_ALL=y
-> # CONFIG_ARCH_WANTS_UBSAN_NO_NULL is not set
-> CONFIG_UBSAN=y
-> CONFIG_UBSAN_SANITIZE_ALL=y
-> # CONFIG_UBSAN_ALIGNMENT is not set
-> CONFIG_UBSAN_NULL=y
-> ```
-> 
-> Starting the system the messages below are printed.
-> 
-> Starting the system and using the wireless device shows the messages
-> below.
+We are going to handle the wakeup irq in the pci core.
 
-Thanks for reporting! This shouldn't cause any problems, but I'll fix
-it by checking that the mac80211_queue is not INVALID_QUEUE (255) which
-seems to be the trigger for this warning.
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
---
-Cheers,
-Luca.
+Changes in v11: None
+Changes in v10: None
+Changes in v9: None
+Changes in v8: None
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/net/wireless/marvell/mwifiex/main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index a96bd7e653bf..3cc3403b977a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1567,6 +1567,10 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
+ 		goto err_exit;
+ 
+ 	adapter->dt_node = dev->of_node;
++
++	if (adapter->iface_type != MWIFIEX_PCIE)
++		goto err_exit;
++
+ 	adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
+ 	if (!adapter->irq_wakeup) {
+ 		dev_dbg(dev, "fail to parse irq_wakeup from device tree\n");
+-- 
+2.11.0
