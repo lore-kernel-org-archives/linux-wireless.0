@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:38059 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751274AbdLKO2n (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 09:28:43 -0500
-Received: by mail-wm0-f68.google.com with SMTP id 64so14460522wme.3
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 06:28:43 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: akolli@codeaurora.org
-Cc: akolli@qti.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Add BMI parameters to fix calibration from DT/pre-cal
-Date: Mon, 11 Dec 2017 15:28:37 +0100
-Message-ID: <108074068.BxyvveCqUm@bentobox> (sfid-20171211_152847_590202_D9DB2066)
-In-Reply-To: <6b494081c2606c8e523e2c426ab949ed@codeaurora.org>
-References: <1495709483-29793-1-git-send-email-akolli@qti.qualcomm.com> <3432385.m9oFIzB3n7@sven-edge> <6b494081c2606c8e523e2c426ab949ed@codeaurora.org>
+Received: from up.icubehost.com ([185.62.36.194]:58526 "EHLO up.icubehost.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751786AbdLYNVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Dec 2017 08:21:47 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart3046730.7gPZ9c07nJ"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 25 Dec 2017 17:56:50 +0530
+From: Alagu Sankar <alagusankar@silex-india.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: silexcommon@gmail.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH 03/11] ath10k_sdio: DMA bounce buffers for read write
+In-Reply-To: <87lghu9247.fsf@kamboji.qca.qualcomm.com>
+References: <1506793068-27445-1-git-send-email-alagusankar@silex-india.com>
+ <1506793068-27445-4-git-send-email-alagusankar@silex-india.com>
+ <87lghu9247.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <5281f48b04f8f593ec06e72a041ec021@silex-india.com> (sfid-20171225_142157_806730_3D798E42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3046730.7gPZ9c07nJ
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-
-On Montag, 11. Dezember 2017 18:50:09 CET akolli@codeaurora.org wrote:
-[...]
-> >> > Just tried this on an QCA9984 which doesn't seem to have the
-> >> > calibration data in the PCI EEPROM.
-> >> >
-> >> >     [   71.728929] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0
-> >> > target 0x01000000 chip_id 0x00000000 sub 168c:cafe
-> >> >     [   71.732926] ath10k_pci 0000:01:00.0: kconfig debug 1 debugfs 1
-> >> > tracing 0 dfs 1 testmode 1
-> >> >     [   71.752282] ath10k_pci 0000:01:00.0: firmware ver
-> >> > 10.4-ct-9984-fW-009-dfa0083 api 5 features peer-flow-ctrl crc32
-> >> > 7198d117
-> >> >     [   73.805730] ath10k_pci 0000:01:00.0: unable to read from the
-> >> > device
-> >> >     [   73.805769] ath10k_pci 0000:01:00.0: could not execute otp for
-> >> > board id check: -110
-[...]
+On 2017-12-22 21:38, Kalle Valo wrote:
+> silexcommon@gmail.com writes:
 > 
-> I tested this on QCA9984 and it worked with below config,
-[...]
+>> From: Alagu Sankar <alagusankar@silex-india.com>
+>> 
+>> Some SD host controllers still need bounce buffers for SDIO data
+>> transfers. While the transfers worked fine on x86 platforms,
+>> this is found to be required for i.MX6 based systems.
+>> 
+>> Changes are similar to and derived from the ath6kl sdio driver.
+>> 
+>> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
 > 
-> Kindly try with the latest firmware from Kalle's git mentioned above.
+> Why is the bounce buffer needed exactly, what are the symptoms etc? To
+> me this sounds like an ugly workaround for a SDIO controller driver 
+> bug.
 
-This didn't change the behavior. It was actually the OTP timeout problem on 
-the QCA9984 which Ben Greear fixed [1]. Luckily, LEDE added this patch with 
-your patch [2]
-
-Kind regards,
-	Sven
-
-[1] https://git.lede-project.org/?p=source.git;a=blob;f=package/kernel/mac80211/patches/327-ath10k-increase-BMI-timeout.patch;h=c9f493bcd8fe29afe1e08dc31b6370507b95fc72;hb=025cb640cdf27f7c68fc1d89d0698605daa06c43
-[2] https://git.lede-project.org/?p=source.git;a=commit;h=025cb640cdf27f7c68fc1d89d0698605daa06c43
---nextPart3046730.7gPZ9c07nJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAloulhUACgkQXYcKB8Em
-e0Zx2w/9EJfcfAf4FZBcCdJp36qSreUUy8nN1wr7/gZZHcpN2NXrAnLJ5bUGUBK8
-EF/hLS+mBHMxE0whD5TpzZaffZMdFtnTLVfj6VorRTYkun0WgWEq4reShCa6NuKh
-u9mS5hFOgT/MOOACZOIrYr76DSfj3vyLraogOlSFuJCxu48tfIaTvwEaP5vVSJT6
-kcucOZTkE6xXfTAmfwNAfmQwTSK1QJbFCOTjyOsH0oLI4OTBVGgm1aMC0cSZ+6gn
-HM0povvX/BMXRgOAFkxOC0uMRE3KAVLnDh88i5h4+flSFAeE4v+6v8Eie33oalXr
-GtTVmt2cJ3Dbvpo5iDpf+0PY4t+1+MhZ8PQE9lgYDxcg16XY2mzO2C/K/mMAs6+0
-SQ4dvHF4Hw8boLJWmvXjQYa3X/E/aGdYpgV1ofJYb9DzYYNNDEy+fKpOuhRUWMLR
-i/p9VWeDAG6OV8/oWanqb4uo32CR8mrKm6O2EER7autnW5CAS4b8MuEo3YoEipQO
-zzKREhW7rs74FBEl3/DaXfiYaLAI3ZWw4ohu7nbhvTHDNzBzusjypnG3rwWNYntu
-mDoxKHtoZ1Ly8P+EWQD5E3MT1LgFxAHvD0teC3slayVfzSTw2z1c16QcFV978ubb
-5pLiNT5KEhAlz5Bp3kaOijoWYEWYPcXqFw1xYGtAL48YzC5M4+A=
-=5npb
------END PGP SIGNATURE-----
-
---nextPart3046730.7gPZ9c07nJ--
+We faced problems with i.MX6. The authentication frame sent by the 
+driver never reached the air. The host driver accepted the buffer, but 
+did not send out the packet to the sdio module. No errors reported 
+anywhere, but the buffer is not accepted due to alignment. The same 
+driver however works fine without bounce buffer on x86 platform with 
+stdhci drivers. To make it compliant with all host controllers, we 
+introduced the bounce buffers, similar to what was done in ath6kl_sdio 
+drivers.
