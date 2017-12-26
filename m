@@ -1,105 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:5800 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753841AbdLHJuV (ORCPT
+Received: from regular1.263xmail.com ([211.150.99.132]:40004 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750806AbdLZCh3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 04:50:21 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Sven Eckelmann <sven.eckelmann@openmesh.com>,
-        "ext.waldemar.rymarkiewicz@tieto.com"
-        <ext.waldemar.rymarkiewicz@tieto.com>,
-        Aeolus Yang <aeolus@qti.qualcomm.com>,
-        Adrian Chadd <adrian@freebsd.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 2/2] ath10k: search DT for qcom,
- ath10k-calibration-variant
-Date: Fri, 8 Dec 2017 09:50:12 +0000
-Message-ID: <87bmj9tup8.fsf@kamboji.qca.qualcomm.com> (sfid-20171208_105222_625694_34FD75C8)
-References: <20170310080615.22958-1-sven.eckelmann@openmesh.com>
-        <20170310080615.22958-2-sven.eckelmann@openmesh.com>
-        <3853747.Q0JJmSnsYM@debian64>
-In-Reply-To: <3853747.Q0JJmSnsYM@debian64> (Christian Lamparter's message of
-        "Fri, 10 Mar 2017 19:20:54 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Mon, 25 Dec 2017 21:37:29 -0500
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Xinming Hu <huxm@marvell.com>, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        linux-rockchip@lists.infradead.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Klaus Goger <klaus.goger@theobroma-systems.com>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [RFC PATCH v12 0/5] PCI: rockchip: Move PCIe WAKE# handling into pci core
+Date: Tue, 26 Dec 2017 10:36:41 +0800
+Message-Id: <20171226023646.17722-1-jeffy.chen@rock-chips.com> (sfid-20171226_033915_009731_20F0901B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> writes:
 
-> On Friday, March 10, 2017 9:06:15 AM CET Sven Eckelmann wrote:
->> Board Data File (BDF) is loaded upon driver boot-up procedure. The right
->> board data file is identified on QCA4019 using bus, bmi-chip-id and
->> bmi-board-id.
->>=20
->> The problem, however, can occur when the (default) board data file canno=
-t
->> fulfill with the vendor requirements and it is necessary to use a differ=
-ent
->> board data file.
->>=20
->> This problem was solved for SMBIOS by adding a special SMBIOS type 0xF8.
->> Something similar has to be provided for systems without SMBIOS but with
->> device trees. No solution was specified by QCA and therefore a new one h=
-as
->> to be found for ath10k.
->>=20
->> The device tree requires addition strings to define the variant name
->>=20
->>     wifi@a000000 {
->>     	status =3D "okay";
->>     	qcom,ath10k-calibration-variant =3D "RT-AC58U";
->>     };
->>=20
->>     wifi@a800000 {
->>     	status =3D "okay";
->>     	qcom,ath10k-calibration-variant =3D "RT-AC58U";
->>     };
->>=20
->> This would create the boarddata identifiers for the board-2.bin search
->>=20
->>  *  bus=3Dahb,bmi-chip-id=3D0,bmi-board-id=3D16,variant=3DRT-AC58U
->>  *  bus=3Dahb,bmi-chip-id=3D0,bmi-board-id=3D17,variant=3DRT-AC58U
->>=20
->> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Currently we are handling wake irq in mrvl wifi driver. Move it into
+pci core.
 
-[...]
-
-> @Aeolus Yang / Kalle / QCA: Would it be possible to assign a variant stri=
-ng to
-> the Asus RT-AC58U?
-
-What do you mean? Add qcom,ath10k-calibration-variant to that board's
-device tree or something else?
-
-> I've attached the necessary bmi-board-id=3D16 and bmi-board-id=3D17 board=
-=20
-> files to this mail as well. So, all that needs to be done is to add
-> them to the board-2.bin on your codeaurora / ath10k-firmware project.
->
-> Kalle: Can you please update the board-2.bin for the IPQ40XX on your
-> ath10k-firmware project on github?
-
-Where did you get these board files from?
-
-BTW, it seems lots of people want to add board files so I wrote
-instruction how I prefer them submitted:
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/boardfiles
-
-> https://source.codeaurora.org/quic/qsdk/oss/firmware/ath10k-firmware/plai=
-n/ath10k/QCA40XX/hw1.0/board-2.bin
->
-> It looks like this board-2.bin has support for a few more boards.
-
-I checked and that should be in ath10k-firmware.git now:
-
-$ ath10k-bdencoder --diff ../board-2.bin board-2.bin  | tail -1
-0 board image(s) added, 0 changed, 0 deleted, 9 in total
+Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
 
 
+Changes in v13:
+Fix compiler error reported by kbuild test robot <fengguang.wu@intel.com>
 
---=20
-Kalle Valo=
+Changes in v12:
+Only add irq definitions for PCI devices and rewrite the commit message.
+Enable the wake irq in noirq stage to avoid possible irq storm.
+
+Changes in v11:
+Address Brian's comments.
+Only support 1-per-device PCIe WAKE# pin as suggested.
+Move to pcie port as Brian suggested.
+
+Changes in v10:
+Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
+since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
+
+Changes in v9:
+Add section for PCI devices and rewrite the commit message.
+Fix check error in .cleanup().
+Move dedicated wakeirq setup to setup() callback and use
+device_set_wakeup_enable() to enable/disable.
+Rewrite the commit message.
+
+Changes in v8:
+Add optional "pci", and rewrite commit message.
+Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
+Rewrite the commit message.
+
+Changes in v7:
+Move PCIE_WAKE handling into pci core.
+
+Changes in v6:
+Fix device_init_wake error handling, and add some comments.
+
+Changes in v5:
+Move to pci.txt
+Rebase.
+Use "wakeup" instead of "wake"
+
+Changes in v3:
+Fix error handling.
+
+Changes in v2:
+Use dev_pm_set_dedicated_wake_irq.
+
+Jeffy Chen (5):
+  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
+  of/irq: Adjust of_pci_irq parsing for multiple interrupts
+  mwifiex: Disable wakeup irq handling for pcie
+  PCI / PM: Add support for the PCIe WAKE# signal for OF
+  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie port for Gru
+
+ Documentation/devicetree/bindings/pci/pci.txt | 10 ++++
+ arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  | 11 ++--
+ drivers/net/wireless/marvell/mwifiex/main.c   |  4 ++
+ drivers/of/of_pci_irq.c                       | 71 +++++++++++++++++++++++--
+ drivers/pci/Makefile                          |  1 +
+ drivers/pci/pci-driver.c                      | 10 ++++
+ drivers/pci/pci-of.c                          | 75 +++++++++++++++++++++++++++
+ include/linux/of_pci.h                        |  9 ++++
+ 8 files changed, 183 insertions(+), 8 deletions(-)
+ create mode 100644 drivers/pci/pci-of.c
+
+-- 
+2.11.0
