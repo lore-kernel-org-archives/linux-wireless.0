@@ -1,317 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:37146 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754395AbdLFKFX (ORCPT
+Received: from mail-wr0-f179.google.com ([209.85.128.179]:38384 "EHLO
+        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751107AbdLZRUg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Dec 2017 05:05:23 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [v4 6/8] rsi: handle BT traffic in driver
-Date: Wed,  6 Dec 2017 15:26:35 +0530
-Message-Id: <1512554197-19664-7-git-send-email-amitkarwar@gmail.com> (sfid-20171206_110531_137610_6E4443A8)
-In-Reply-To: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
-References: <1512554197-19664-1-git-send-email-amitkarwar@gmail.com>
+        Tue, 26 Dec 2017 12:20:36 -0500
+Received: by mail-wr0-f179.google.com with SMTP id o2so34978216wro.5
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Dec 2017 09:20:35 -0800 (PST)
+Date: Tue, 26 Dec 2017 18:20:22 +0100 (CET)
+From: Enrico Mioso <mrkiko.rs@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+In-Reply-To: <20171213152017.GA3554@redhat.com>
+Message-ID: <alpine.LNX.2.21.99.1712261820080.22705@localhost.localdomain> (sfid-20171226_182041_710107_537E55B8)
+References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain> <20171213152017.GA3554@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Ok, observing a stall. Unfortunately, it still happens.
+Ufh...
+dmesg:
 
-BT frames are passed through coex and hal modules to BUS.
-After firmware is loaded, based on the operating mode CARD
-READY frame comes for each protocol. When BT card ready is
-received, BT attach is called.
-Protocol operations are exchanged between the modules
-at initialization time.
+may I do something else?
 
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
-v3: bt_ops need not be present structure g_proto_ops. It is removed.
-v2: WLAN module depends on BT module. Updated in Kconfig
----
- drivers/net/wireless/rsi/Kconfig            |  2 +-
- drivers/net/wireless/rsi/rsi_91x_coex.c     |  4 ++-
- drivers/net/wireless/rsi/rsi_91x_core.c     | 16 ++++++++----
- drivers/net/wireless/rsi/rsi_91x_hal.c      | 39 +++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_main.c     | 31 +++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  1 +
- drivers/net/wireless/rsi/rsi_common.h       |  1 +
- drivers/net/wireless/rsi/rsi_hal.h          | 10 ++++++++
- drivers/net/wireless/rsi/rsi_main.h         |  3 +++
- 9 files changed, 100 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/Kconfig b/drivers/net/wireless/rsi/Kconfig
-index 7c5e4ca..ad72c80 100644
---- a/drivers/net/wireless/rsi/Kconfig
-+++ b/drivers/net/wireless/rsi/Kconfig
-@@ -13,7 +13,7 @@ if WLAN_VENDOR_RSI
- 
- config RSI_91X
- 	tristate "Redpine Signals Inc 91x WLAN driver support"
--	depends on MAC80211
-+	depends on MAC80211 && BT_RSI
- 	---help---
- 	  This option enabes support for RSI 1x1 devices.
- 	  Select M (recommended), if you have a RSI 1x1 wireless module.
-diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
-index 914a0c5..f502cf9 100644
---- a/drivers/net/wireless/rsi/rsi_91x_coex.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
-@@ -48,8 +48,10 @@ static void rsi_coex_sched_tx_pkts(struct rsi_coex_ctrl_block *coex_cb)
- 			break;
- 		}
- 
--		if (coex_q == RSI_COEX_Q_BT)
-+		if (coex_q == RSI_COEX_Q_BT) {
- 			skb = skb_dequeue(&coex_cb->coex_tx_qs[RSI_COEX_Q_BT]);
-+			rsi_send_bt_pkt(coex_cb->priv, skb);
-+		}
- 	}
- }
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index d0d2201..046ace8 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -17,6 +17,7 @@
- #include "rsi_mgmt.h"
- #include "rsi_common.h"
- #include "rsi_hal.h"
-+#include "rsi_coex.h"
- 
- /**
-  * rsi_determine_min_weight_queue() - This function determines the queue with
-@@ -301,14 +302,19 @@ void rsi_core_qos_processor(struct rsi_common *common)
- 			mutex_unlock(&common->tx_lock);
- 			break;
- 		}
--
--		if (q_num == MGMT_SOFT_Q) {
--			status = rsi_send_mgmt_pkt(common, skb);
--		} else if (q_num == MGMT_BEACON_Q) {
-+		if (q_num == MGMT_BEACON_Q) {
- 			status = rsi_send_pkt_to_bus(common, skb);
- 			dev_kfree_skb(skb);
- 		} else {
--			status = rsi_send_data_pkt(common, skb);
-+			if (common->coex_mode > 1) {
-+				status = rsi_coex_send_pkt(common, skb,
-+							   RSI_WLAN_Q);
-+			} else {
-+				if (q_num == MGMT_SOFT_Q)
-+					status = rsi_send_mgmt_pkt(common, skb);
-+				else
-+					status = rsi_send_data_pkt(common, skb);
-+			}
- 		}
- 
- 		if (status) {
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index 8b30448..883dba1 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -15,6 +15,7 @@
-  */
- 
- #include <linux/firmware.h>
-+#include <net/bluetooth/bluetooth.h>
- #include "rsi_mgmt.h"
- #include "rsi_hal.h"
- #include "rsi_sdio.h"
-@@ -24,6 +25,7 @@
- static struct ta_metadata metadata_flash_content[] = {
- 	{"flash_content", 0x00010000},
- 	{"rsi/rs9113_wlan_qspi.rps", 0x00010000},
-+	{"rsi/rs9113_wlan_bt_dual_mode.rps", 0x00010000},
- };
- 
- int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb)
-@@ -357,6 +359,43 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
- 	return status;
- }
- 
-+int rsi_send_bt_pkt(struct rsi_common *common, struct sk_buff *skb)
-+{
-+	int status = -EINVAL;
-+	u8 header_size = 0;
-+	struct rsi_bt_desc *bt_desc;
-+	u8 queueno = ((skb->data[1] >> 4) & 0xf);
-+
-+	if (queueno == RSI_BT_MGMT_Q) {
-+		status = rsi_send_pkt_to_bus(common, skb);
-+		if (status)
-+			rsi_dbg(ERR_ZONE, "%s: Failed to write bt mgmt pkt\n",
-+				__func__);
-+		goto out;
-+	}
-+	header_size = FRAME_DESC_SZ;
-+	if (header_size > skb_headroom(skb)) {
-+		rsi_dbg(ERR_ZONE, "%s: Not enough headroom\n", __func__);
-+		status = -ENOSPC;
-+		goto out;
-+	}
-+	skb_push(skb, header_size);
-+	memset(skb->data, 0, header_size);
-+	bt_desc = (struct rsi_bt_desc *)skb->data;
-+
-+	rsi_set_len_qno(&bt_desc->len_qno, (skb->len - FRAME_DESC_SZ),
-+			RSI_BT_DATA_Q);
-+	bt_desc->bt_pkt_type = cpu_to_le16(bt_cb(skb)->pkt_type);
-+
-+	status = rsi_send_pkt_to_bus(common, skb);
-+	if (status)
-+		rsi_dbg(ERR_ZONE, "%s: Failed to write bt pkt\n", __func__);
-+
-+out:
-+	dev_kfree_skb(skb);
-+	return status;
-+}
-+
- int rsi_prepare_beacon(struct rsi_common *common, struct sk_buff *skb)
- {
- 	struct rsi_hw *adapter = (struct rsi_hw *)common->priv;
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 7dce533..375b725 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -18,6 +18,7 @@
- 
- #include <linux/module.h>
- #include <linux/firmware.h>
-+#include <linux/rsi_header.h>
- #include "rsi_mgmt.h"
- #include "rsi_common.h"
- #include "rsi_coex.h"
-@@ -35,6 +36,12 @@ u32 rsi_zone_enabled = /* INFO_ZONE |
- 			0;
- EXPORT_SYMBOL_GPL(rsi_zone_enabled);
- 
-+static struct rsi_proto_ops g_proto_ops = {
-+	.coex_send_pkt = rsi_coex_send_pkt,
-+	.get_host_intf = rsi_get_host_intf,
-+	.set_bt_context = rsi_set_bt_context,
-+};
-+
- /**
-  * rsi_dbg() - This function outputs informational messages.
-  * @zone: Zone of interest for output message.
-@@ -144,6 +151,7 @@ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
- 	u32 index, length = 0, queueno = 0;
- 	u16 actual_length = 0, offset;
- 	struct sk_buff *skb = NULL;
-+	u8 bt_pkt_type;
- 
- 	index = 0;
- 	do {
-@@ -183,6 +191,22 @@ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
- 			rsi_mgmt_pkt_recv(common, (frame_desc + offset));
- 			break;
- 
-+		case RSI_BT_MGMT_Q:
-+		case RSI_BT_DATA_Q:
-+#define BT_RX_PKT_TYPE_OFST	14
-+#define BT_CARD_READY_IND	0x89
-+			bt_pkt_type = frame_desc[offset + BT_RX_PKT_TYPE_OFST];
-+			if (bt_pkt_type == BT_CARD_READY_IND) {
-+				rsi_dbg(INFO_ZONE, "BT Card ready recvd\n");
-+				if (rsi_bt_ops.attach(common, &g_proto_ops))
-+					rsi_dbg(ERR_ZONE,
-+						"Failed to attach BT module\n");
-+			} else {
-+				rsi_bt_ops.recv_pkt(common->bt_adapter,
-+						    frame_desc + offset);
-+			}
-+			break;
-+
- 		default:
- 			rsi_dbg(ERR_ZONE, "%s: pkt from invalid queue: %d\n",
- 				__func__,   queueno);
-@@ -230,6 +254,13 @@ enum rsi_host_intf rsi_get_host_intf(void *priv)
- 	return common->priv->rsi_host_intf;
- }
- 
-+void rsi_set_bt_context(void *priv, void *bt_context)
-+{
-+	struct rsi_common *common = (struct rsi_common *)priv;
-+
-+	common->bt_adapter = bt_context;
-+}
-+
- /**
-  * rsi_91x_init() - This function initializes os interface operations.
-  * @void: Void.
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 9fbc0ef..26abe51 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -16,6 +16,7 @@
-  */
- 
- #include <linux/firmware.h>
-+#include <linux/rsi_header.h>
- #include "rsi_sdio.h"
- #include "rsi_common.h"
- 
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index 1d8af41..4616585 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -62,6 +62,7 @@ static inline int rsi_create_kthread(struct rsi_common *common,
- 				     u8 *name)
- {
- 	init_completion(&thread->completion);
-+	atomic_set(&thread->thread_done, 0);
- 	thread->task = kthread_run(func_ptr, common, "%s", name);
- 	if (IS_ERR(thread->task))
- 		return (int)PTR_ERR(thread->task);
-diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
-index a09d36b..e712223 100644
---- a/drivers/net/wireless/rsi/rsi_hal.h
-+++ b/drivers/net/wireless/rsi/rsi_hal.h
-@@ -145,8 +145,18 @@ struct rsi_data_desc {
- 	u8 sta_id;
- } __packed;
- 
-+struct rsi_bt_desc {
-+	__le16 len_qno;
-+	__le16 reserved1;
-+	__le32 reserved2;
-+	__le32 reserved3;
-+	__le16 reserved4;
-+	__le16 bt_pkt_type;
-+} __packed;
-+
- int rsi_hal_device_init(struct rsi_hw *adapter);
- int rsi_prepare_beacon(struct rsi_common *common, struct sk_buff *skb);
- int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb);
-+int rsi_send_bt_pkt(struct rsi_common *common, struct sk_buff *skb);
- 
- #endif
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index e1c1dc8..69a604e 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -290,6 +290,8 @@ struct rsi_common {
- 	bool p2p_enabled;
- 	struct timer_list roc_timer;
- 	struct ieee80211_vif *roc_vif;
-+
-+	void *bt_adapter;
- };
- 
- struct eepromrw_info {
-@@ -363,5 +365,6 @@ struct rsi_host_intf_ops {
- };
- 
- enum rsi_host_intf rsi_get_host_intf(void *priv);
-+void rsi_set_bt_context(void *priv, void *bt_context);
- 
- #endif
--- 
-2.7.4
+
+Linux version 4.9.70 (mrkiko@gatosaldo) (gcc version 5.5.0 (OpenWrt GCC 5.5.0 r5616-67c1c145f0) ) #0 Sun Dec 24 16:06:16 2017
+SoC Type: Ralink RT3350 id:1 rev:2
+bootconsole [early0] enabled
+CPU0 revision is: 0001964c (MIPS 24KEc)
+MIPS: machine is Asus WL-330N3G
+Determined physical RAM map:
+  memory: 02000000 @ 00000000 (usable)
+Initrd not found or empty - disabling initrd
+Primary instruction cache 32kB, VIPT, 4-way, linesize 32 bytes.
+Primary data cache 16kB, 4-way, VIPT, no aliases, linesize 32 bytes
+Zone ranges:
+   Normal   [mem 0x0000000000000000-0x0000000001ffffff]
+Movable zone start for each node
+Early memory node ranges
+   node   0: [mem 0x0000000000000000-0x0000000001ffffff]
+Initmem setup node 0 [mem 0x0000000000000000-0x0000000001ffffff]
+On node 0 totalpages: 8192
+free_area_init_node: node 0, pgdat 8037e834, node_mem_map 81000020
+   Normal zone: 64 pages used for memmap
+   Normal zone: 0 pages reserved
+   Normal zone: 8192 pages, LIFO batch:0
+pcpu-alloc: s0 r0 d32768 u32768 alloc=1*32768
+pcpu-alloc: [0] 0 
+Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 8128
+Kernel command line: console=ttyS0,57600 rootfstype=squashfs,jffs2
+PID hash table entries: 128 (order: -3, 512 bytes)
+Dentry cache hash table entries: 4096 (order: 2, 16384 bytes)
+Inode-cache hash table entries: 2048 (order: 1, 8192 bytes)
+Writing ErrCtl register=0003c00b
+Readback ErrCtl register=0003c00b
+Memory: 28436K/32768K available (3061K kernel code, 147K rwdata, 372K rodata, 188K init, 200K bss, 4332K reserved, 0K cma-reserved)
+SLUB: HWalign=32, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+NR_IRQS:256
+CPU Clock: 320MHz
+clocksource_probe: no matching clocksources found
+clocksource: MIPS: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 11945377789 ns
+sched_clock: 32 bits at 160MHz, resolution 6ns, wraps every 13421772796ns
+Calibrating delay loop... 212.58 BogoMIPS (lpj=1062912)
+pid_max: default: 32768 minimum: 301
+Mount-cache hash table entries: 1024 (order: 0, 4096 bytes)
+Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes)
+clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+futex hash table entries: 256 (order: -1, 3072 bytes)
+pinctrl core: initialized pinctrl subsystem
+NET: Registered protocol family 16
+Can't analyze schedule() prologue at 802f97f0
+rt2880_gpio 10000600.gpio: registering 24 gpios
+rt2880_gpio 10000600.gpio: registering 24 irq handlers
+clocksource: Switched to clocksource MIPS
+NET: Registered protocol family 2
+TCP established hash table entries: 1024 (order: 0, 4096 bytes)
+TCP bind hash table entries: 1024 (order: 0, 4096 bytes)
+TCP: Hash tables configured (established 1024 bind 1024)
+UDP hash table entries: 256 (order: 0, 4096 bytes)
+UDP-Lite hash table entries: 256 (order: 0, 4096 bytes)
+NET: Registered protocol family 1
+rt-timer 10000100.timer: maximum frequency is 3255Hz
+workingset: timestamp_bits=30 max_order=13 bucket_order=0
+squashfs: version 4.0 (2009/01/31) Phillip Lougher
+jffs2: version 2.2 (NAND) (SUMMARY) (LZMA) (RTIME) (CMODE_PRIORITY) (c) 2001-2006 Red Hat, Inc.
+io scheduler noop registered
+io scheduler deadline registered (default)
+Serial: 8250/16550 driver, 2 ports, IRQ sharing disabled
+console [ttyS0] disabled
+10000c00.uartlite: ttyS0 at MMIO 0x10000c00 (irq = 20, base_baud = 6666666) is a Palmchip BK-3103
+console [ttyS0] enabled
+bootconsole [early0] disabled
+spi spi0.0: force spi mode3
+m25p80 spi0.0: w25q32 (4096 Kbytes)
+4 ofpart partitions found on MTD device spi0.0
+Creating 4 MTD partitions on "spi0.0":
+0x000000000000-0x000000030000 : "u-boot"
+0x000000030000-0x000000040000 : "u-boot-env"
+0x000000040000-0x000000050000 : "factory"
+0x000000050000-0x000000400000 : "firmware"
+2 uimage-fw partitions found on MTD device firmware
+0x000000050000-0x0000001758ed : "kernel"
+0x0000001758ed-0x000000400000 : "rootfs"
+mtd: device 5 (rootfs) set to be root filesystem
+1 squashfs-split partitions found on MTD device rootfs
+0x00000032c000-0x000000400000 : "rootfs_data"
+libphy: Fixed MDIO Bus: probed
+rt3050-esw 10110000.esw: link changed 0x10
+mtk_soc_eth 10100000.ethernet eth0: mediatek frame engine at 0xb0100000, irq 5
+rt2880_wdt 10000120.watchdog: Initialized
+NET: Registered protocol family 10
+NET: Registered protocol family 17
+8021q: 802.1Q VLAN Support v1.8
+VFS: Mounted root (squashfs filesystem) readonly on device 31:5.
+Freeing unused kernel memory: 188K
+This architecture does not have kernel memory protection.
+random: fast init done
+init: Console is alive
+init: - watchdog -
+kmodloader: loading kernel modules from /etc/modules-boot.d/*
+usbcore: registered new interface driver usbfs
+usbcore: registered new interface driver hub
+usbcore: registered new device driver usb
+dwc2 101c0000.otg: Configuration mismatch. dr_mode forced to host
+dwc2 101c0000.otg: DWC OTG Controller
+dwc2 101c0000.otg: new USB bus registered, assigned bus number 1
+dwc2 101c0000.otg: irq 26, io mem 0x00000000
+hub 1-0:1.0: USB hub found
+hub 1-0:1.0: 1 port detected
+kmodloader: done loading kernel modules from /etc/modules-boot.d/*
+init: - preinit -
+8021q: adding VLAN 0 to HW filter on device eth0
+jffs2: notice: (311) jffs2_build_xattr_subsystem: complete building xattr subsystem, 0 of xdatum (0 unchecked, 0 orphan) and 0 of xref (0 dead, 0 orphan) found.
+mount_root: switching to jffs2 overlay
+urandom-seed: Seeding with /etc/urandom.seed
+procd: - early -
+procd: - watchdog -
+procd: - watchdog -
+procd: - ubus -
+procd: - init -
+kmodloader: loading kernel modules from /etc/modules.d/*
+ip6_tables: (C) 2000-2006 Netfilter Core Team
+Loading modules backported from Linux version wt-2017-11-01-0-gfe248fc2c180
+Backport generated by backports.git v4.14-rc2-1-31-g86cf0e5d
+ip_tables: (C) 2000-2006 Netfilter Core Team
+nf_conntrack version 0.5.0 (1024 buckets, 4096 max)
+xt_time: kernel timezone is -0000
+rt2800_wmac 10180000.wmac: loaded eeprom from mtd device "factory"
+ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 2872, rev 0200 detected
+ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 0005 detected
+ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+kmodloader: done loading kernel modules from /etc/modules.d/*
+8021q: adding VLAN 0 to HW filter on device eth0
+br-lan: port 1(eth0.1) entered blocking state
+br-lan: port 1(eth0.1) entered disabled state
+device eth0.1 entered promiscuous mode
+device eth0 entered promiscuous mode
+br-lan: port 1(eth0.1) entered blocking state
+br-lan: port 1(eth0.1) entered forwarding state
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+br-lan: port 2(wlan0) entered blocking state
+br-lan: port 2(wlan0) entered disabled state
+device wlan0 entered promiscuous mode
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+br-lan: port 2(wlan0) entered blocking state
+br-lan: port 2(wlan0) entered forwarding state
+random: crng init done
+rt3050-esw 10110000.esw: link changed 0x00
+rt3050-esw 10110000.esw: link changed 0x10
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
