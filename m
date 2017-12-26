@@ -1,92 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47600 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752209AbdLHMfk (ORCPT
+Received: from regular1.263xmail.com ([211.150.99.136]:33009 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752082AbdLZCiJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:35:40 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 08 Dec 2017 18:05:38 +0530
-From: akolli@codeaurora.org
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>
-Cc: akolli@qti.qualcomm.com, ath10k@lists.infradead.org,
+        Mon, 25 Dec 2017 21:38:09 -0500
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
         linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Add BMI parameters to fix calibration from
- DT/pre-cal
-In-Reply-To: <6476910.M9FJQ0px1r@bentobox>
-References: <1495709483-29793-1-git-send-email-akolli@qti.qualcomm.com>
- <6476910.M9FJQ0px1r@bentobox>
-Message-ID: <637ab47b1794b409e595b7e219cd904f@codeaurora.org> (sfid-20171208_133543_654008_23F26AB3)
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev@vger.kernel.org
+Subject: [RFC PATCH v12 3/5] mwifiex: Disable wakeup irq handling for pcie
+Date: Tue, 26 Dec 2017 10:36:44 +0800
+Message-Id: <20171226023646.17722-4-jeffy.chen@rock-chips.com> (sfid-20171226_033830_302621_E9D54ABC)
+In-Reply-To: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
+References: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-12-08 17:42, Sven Eckelmann wrote:
-> On Donnerstag, 25. Mai 2017 16:21:23 CET akolli@qti.qualcomm.com wrote:
->> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
->> 
->> QCA99X0, QCA9888, QCA9984 supports calibration data in
->> either OTP or DT/pre-cal file. Current ath10k supports
->> Calibration data from OTP only.
->> 
->> If caldata is loaded from DT/pre-cal file, fetching board id
->> and applying calibration parameters like tx power gets failed.
->> 
->> error log:
->> [   15.733663] ath10k_pci 0000:01:00.0: failed to fetch board file: -2
->> [   15.741474] ath10k_pci 0000:01:00.0: could not probe fw (-2)
->> 
->> This patch adds calibration data support from DT/pre-cal
->> file.  Below parameters are used to get board id and
->> applying calibration parameters from cal data.
->> 
->> 		EEPROM[OTP]	FLASH[DT/pre-cal file]
->> Cal param	0x700		0x10000
->> Board id	0x10		0x8000
->> 
->> Tested on QCA9888 with pre-cal file.
->> 
->> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/bmi.h  |    2 ++
->>  drivers/net/wireless/ath/ath10k/core.c |   16 +++++++++++++---
->>  2 files changed, 15 insertions(+), 3 deletions(-)
-> 
-> Just tried this on an QCA9984 which doesn't seem to have the
-> calibration data in the PCI EEPROM.
-> 
->     [   71.728929] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0
-> target 0x01000000 chip_id 0x00000000 sub 168c:cafe
->     [   71.732926] ath10k_pci 0000:01:00.0: kconfig debug 1 debugfs 1
-> tracing 0 dfs 1 testmode 1
->     [   71.752282] ath10k_pci 0000:01:00.0: firmware ver
-> 10.4-ct-9984-fW-009-dfa0083 api 5 features peer-flow-ctrl crc32
-> 7198d117
->     [   73.805730] ath10k_pci 0000:01:00.0: unable to read from the 
-> device
->     [   73.805769] ath10k_pci 0000:01:00.0: could not execute otp for
-> board id check: -110
-> 
+We are going to handle the wakeup irq in the pci core.
 
-'ATH10K driver <-> 10.4 firmware' expects cal data to be either in 
-EEPROM or pre-cal-file or DT.
-Hope the error is observed when there is no cal data loaded.
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-> It works when I use the pre-cal data as calibration data. The checksum 
-> in the
-> pre-cal seems to be correct. Also the pre-cal data from 0:ART for the 
-> 2.4GHz
-> and 5GHz QCA4019 seem to work perfectly fine.
-> 
+Changes in v13: None
+Changes in v12: None
+Changes in v11: None
+Changes in v10: None
+Changes in v9: None
+Changes in v8: None
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v3: None
+Changes in v2: None
 
-Do you mean this patch works for only QCA4019 and not working for 
-QCA9984 ?
+ drivers/net/wireless/marvell/mwifiex/main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> Anything which I could have missed or what I could test? Btw. I've also 
-> tested
-> the non-ct firmware (aka the official one from QCA).
-> 
-
-Thanks,
-Anil.
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index a96bd7e653bf..3cc3403b977a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1567,6 +1567,10 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
+ 		goto err_exit;
+ 
+ 	adapter->dt_node = dev->of_node;
++
++	if (adapter->iface_type != MWIFIEX_PCIE)
++		goto err_exit;
++
+ 	adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
+ 	if (!adapter->irq_wakeup) {
+ 		dev_dbg(dev, "fail to parse irq_wakeup from device tree\n");
+-- 
+2.11.0
