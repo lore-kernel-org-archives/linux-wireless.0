@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:47215 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750928AbdLWLLQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Dec 2017 06:11:16 -0500
-From: Yisheng Xie <xieyisheng1@huawei.com>
-To: <linux-kernel@vger.kernel.org>, <gregkh@linuxfoundation.org>
-CC: <ysxie@foxmail.com>, Yisheng Xie <xieyisheng1@huawei.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH v3 25/27] wireless: replace devm_ioremap_nocache with devm_ioremap
-Date: Sat, 23 Dec 2017 19:02:27 +0800
-Message-ID: <1514026947-33753-1-git-send-email-xieyisheng1@huawei.com> (sfid-20171223_121138_260394_22C2FB64)
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:28334 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750919AbdL0KDk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Dec 2017 05:03:40 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [next] ath10k: wmi: remove redundant integer fc
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20171218150245.9073-1-colin.king@canonical.com>
+References: <20171218150245.9073-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Message-ID: <9a6c9d36025e46fd9b22e985d3662d93@euamsexm01a.eu.qualcomm.com> (sfid-20171227_110418_875367_95637A28)
+Date: Wed, 27 Dec 2017 11:03:31 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Default ioremap is ioremap_nocache, so devm_ioremap has the same
-function with devm_ioremap_nocache, which can just be killed to
-save the size of devres.o
+Colin Ian King <colin.king@canonical.com> wrote:
 
-This patch is to use use devm_ioremap instead of devm_ioremap_nocache,
-which should not have any function change but prepare for killing
-devm_ioremap_nocache.
+> Variable fc is being assigned but never used, so remove it. Cleans
+> up the clang warning:
+> 
+> warning: Value stored to 'fc' is never read
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
----
- drivers/net/wireless/ath/ath9k/ahb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Patch applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 2bd982c..6e13e62 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -91,7 +91,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 		return -ENXIO;
- 	}
- 
--	mem = devm_ioremap_nocache(&pdev->dev, res->start, resource_size(res));
-+	mem = devm_ioremap(&pdev->dev, res->start, resource_size(res));
- 	if (mem == NULL) {
- 		dev_err(&pdev->dev, "ioremap failed\n");
- 		return -ENOMEM;
+a0709dfd7ff8 ath10k: wmi: remove redundant integer fc
+
 -- 
-1.8.3.1
+https://patchwork.kernel.org/patch/10119831/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
