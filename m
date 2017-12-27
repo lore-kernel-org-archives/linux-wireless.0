@@ -1,92 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48636 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752605AbdLBQ3Z (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:37039 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750947AbdL0KH7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 11:29:25 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        David Spinadel <david.spinadel@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  2 Dec 2017 18:28:55 +0200
-Message-Id: <20171202162858.4167-13-luca@coelho.fi> (sfid-20171202_172928_402173_1BC30F16)
-In-Reply-To: <20171202162858.4167-1-luca@coelho.fi>
-References: <20171202162858.4167-1-luca@coelho.fi>
-Subject: [PATCH 12/15] iwlwifi: mvm: enable RX offloading with TKIP and WEP
+        Wed, 27 Dec 2017 05:07:59 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [01/10] ath10k: Add hw param for 64-bit address support
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1513846859-23639-2-git-send-email-govinds@qti.qualcomm.com>
+References: <1513846859-23639-2-git-send-email-govinds@qti.qualcomm.com>
+To: Govind Singh <govinds@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Rakesh Pillai" <pillair@qti.qualcomm.com>,
+        Govind Singh <govinds@qti.qualcomm.com>
+Message-ID: <b76f2a5377bf41aaa386645b432a2177@euamsexm01a.eu.qualcomm.com> (sfid-20171227_110804_106620_CE78648E)
+Date: Wed, 27 Dec 2017 11:07:52 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Govind Singh <govinds@qti.qualcomm.com> wrote:
 
-Set the flag that indicates that ICV was stripped on if
-this option was enabled in the HW.
+> WCN3990 target supports 37-bit addressing mode. In order
+> to accommodate extended address support, add hw param to
+> indicate if the target supports addressing above 32-bits.
+> 
+> Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
+> Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  4 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c  | 12 +++++++++---
- 2 files changed, 12 insertions(+), 4 deletions(-)
+10 patches applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 196b90b0451f..84ae1e274d38 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -117,6 +117,7 @@
- #define FH_RSCSR_FRAME_INVALID		0x55550000
- #define FH_RSCSR_FRAME_ALIGN		0x40
- #define FH_RSCSR_RPA_EN			BIT(25)
-+#define FH_RSCSR_RADA_EN		BIT(26)
- #define FH_RSCSR_RXQ_POS		16
- #define FH_RSCSR_RXQ_MASK		0x3F0000
- 
-@@ -128,7 +129,8 @@ struct iwl_rx_packet {
- 	 * 31:    flag flush RB request
- 	 * 30:    flag ignore TC (terminal counter) request
- 	 * 29:    flag fast IRQ request
--	 * 28-26: Reserved
-+	 * 28-27: Reserved
-+	 * 26:    RADA enabled
- 	 * 25:    Offload enabled
- 	 * 24:    RPF enabled
- 	 * 23:    RSS enabled
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 00d048bd2d35..0e6a7dd30aa9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -232,8 +232,8 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
- 
- static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
- 			     struct ieee80211_rx_status *stats,
--			     struct iwl_rx_mpdu_desc *desc, int queue,
--			     u8 *crypt_len)
-+			     struct iwl_rx_mpdu_desc *desc, u32 pkt_flags,
-+			     int queue, u8 *crypt_len)
- {
- 	u16 status = le16_to_cpu(desc->status);
- 
-@@ -270,6 +270,10 @@ static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
- 		if ((status & IWL_RX_MPDU_STATUS_SEC_MASK) ==
- 				IWL_RX_MPDU_STATUS_SEC_WEP)
- 			*crypt_len = IEEE80211_WEP_IV_LEN;
-+
-+		if (pkt_flags & FH_RSCSR_RADA_EN)
-+			stats->flag |= RX_FLAG_ICV_STRIPPED;
-+
- 		return 0;
- 	case IWL_RX_MPDU_STATUS_SEC_EXT_ENC:
- 		if (!(status & IWL_RX_MPDU_STATUS_MIC_OK))
-@@ -848,7 +852,9 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 
- 	rx_status = IEEE80211_SKB_RXCB(skb);
- 
--	if (iwl_mvm_rx_crypto(mvm, hdr, rx_status, desc, queue, &crypt_len)) {
-+	if (iwl_mvm_rx_crypto(mvm, hdr, rx_status, desc,
-+			      le32_to_cpu(pkt->len_n_flags), queue,
-+			      &crypt_len)) {
- 		kfree_skb(skb);
- 		return;
- 	}
+f13cc6bd68ba ath10k: Add hw param for 64-bit address support
+e3def6f7ddf8 ath10k: Update rx descriptor for WCN3990 target
+3b0b55b19d1d ath10k: Add support for 64 bit HTT in-order indication msg
+9abe68535ad8 ath10k: Add support for 64 bit htt rx ring cfg
+71ad70961093 ath10k: Add support for 64 bit HTT frag descriptor
+e62ee5c381c5 ath10k: Add support for htt_data_tx_desc_64 descriptor
+bb8d0d15fc6a ath10k: Add hw param for rx ring size support
+a91a626baa15 ath10k: Add paddrs_ring_64 support for 64bit target
+5dac5f3772f6 ath10k: Use dma_addr_t for ce buffers to support 64bit target
+2a1e1ad3fd37 ath10k: Add support for 64 bit ce descriptor
+
 -- 
-2.15.0
+https://patchwork.kernel.org/patch/10127165/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
