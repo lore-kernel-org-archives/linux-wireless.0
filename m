@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:40743 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751121AbdLMLHH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 06:07:07 -0500
-Subject: Re: net/wireless/shipped-certs.c:2:1: error: expected expression at
- end of input
-To: Damian Tometzki <damian.tometzki@icloud.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <4006aefb-e9af-d809-b45a-201d20e75f9d@molgen.mpg.de>
- <1512468219.26976.15.camel@sipsolutions.net>
- <8617D3B1-DE6C-4E75-AB44-1845806E18D6@icloud.com>
- <f091f30c-3681-6e6e-774c-3906026c573e@molgen.mpg.de>
- <7AC5C6E6-E2EE-473D-A8C8-5D18646C93CD@icloud.com>
-From: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
-Message-ID: <05419671-31e3-f8d0-f293-55c9c22165e4@molgen.mpg.de> (sfid-20171213_120714_135147_EB68956A)
-Date: Wed, 13 Dec 2017 12:07:06 +0100
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:32922 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751002AbdL0KWi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Dec 2017 05:22:38 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <7AC5C6E6-E2EE-473D-A8C8-5D18646C93CD@icloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: ath10k: update copyright year
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <151396027273.24600.8839394576351249944.stgit@potku.adurom.net>
+References: <151396027273.24600.8839394576351249944.stgit@potku.adurom.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <70cd54183d42490aa9558fcb5a808859@euamsexm01a.eu.qualcomm.com> (sfid-20171227_112242_488116_5B3CEC33)
+Date: Wed, 27 Dec 2017 11:22:32 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Damian,
+Kalle Valo <kvalo@qca.qualcomm.com> wrote:
 
-
-On 12/13/17 12:00, Damian Tometzki wrote:
-
-> Hexdump was already installed in the System.
+> Update year for Qualcomm Atheros, Inc. copyrights.
 > 
-> I commented out this step.
-Please try to reproduce it from a clean environment (`git clean -dfx`, 
-save your .config before), and then please give more details.
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
+Patch applied to ath-next branch of ath.git, thanks.
 
-Kind regards,
+8b1083d61882 ath10k: update copyright year
 
-Paul
+-- 
+https://patchwork.kernel.org/patch/10130915/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
