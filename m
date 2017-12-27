@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:55978 "EHLO ms.lwn.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750759AbdLKWhu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 17:37:50 -0500
-Date: Mon, 11 Dec 2017 15:37:49 -0700
-From: Jonathan Corbet <corbet@lwn.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: nl80211: Remove obsolete kerneldoc line
-Message-ID: <20171211153749.51d30b4b@lwn.net> (sfid-20171211_233754_242497_70746249)
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:13467 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751871AbdL0UCl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Dec 2017 15:02:41 -0500
+From: <ryanhsu@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+CC: <ryanhsu@qti.qualcomm.com>
+Subject: [PATCH] ath10k: add sanity check to ie_len before parsing fw/board ie
+Date: Wed, 27 Dec 2017 12:02:11 -0800
+Message-ID: <1514404931-9078-1-git-send-email-ryanhsu@qti.qualcomm.com> (sfid-20171227_210245_424200_F55E5AE7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit ca986ad9bcd3 (nl80211: allow multiple active scheduled scan
-requests) removed WIPHY_FLAG_SUPPORTS_SCHED_SCAN but left the kerneldoc
-description in place, leading to this docs-build warning:
+From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
 
-   ./include/net/cfg80211.h:3278: warning: Excess enum value
-           'WIPHY_FLAG_SUPPORTS_SCHED_SCAN' description in 'wiphy_flags'
+Validate ie_len after the alignment padding before access the buffer
+to avoid potential overflow.
 
-Remove the line and gain a bit of peace.
-
-Signed-off-by: Jonathan Corbet <corbet@lwn.net>
+Signed-off-by: Ryan Hsu <ryanhsu@qti.qualcomm.com>
 ---
- include/net/cfg80211.h | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/core.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8b8118a7fadb..cb4d92b79cd9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3226,7 +3226,6 @@ struct cfg80211_ops {
-  * @WIPHY_FLAG_IBSS_RSN: The device supports IBSS RSN.
-  * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
-  *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
-- * @WIPHY_FLAG_SUPPORTS_SCHED_SCAN: The device supports scheduled scans.
-  * @WIPHY_FLAG_SUPPORTS_FW_ROAM: The device supports roaming feature in the
-  *	firmware.
-  * @WIPHY_FLAG_AP_UAPSD: The device supports uapsd on AP.
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 042175a..2f24c17 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1240,7 +1240,10 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
+ 		len -= sizeof(*hdr);
+ 		data = hdr->data;
+ 
+-		if (len < ALIGN(ie_len, 4)) {
++		/* jump over the padding */
++		ie_len = ALIGN(ie_len, 4);
++
++		if (len < ie_len) {
+ 			ath10k_err(ar, "invalid length for board ie_id %d ie_len %zu len %zu\n",
+ 				   ie_id, ie_len, len);
+ 			ret = -EINVAL;
+@@ -1279,8 +1282,6 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
+ 			goto out;
+ 		}
+ 
+-		/* jump over the padding */
+-		ie_len = ALIGN(ie_len, 4);
+ 
+ 		len -= ie_len;
+ 		data += ie_len;
+@@ -1412,6 +1413,9 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 		len -= sizeof(*hdr);
+ 		data += sizeof(*hdr);
+ 
++		/* jump over the padding */
++		ie_len = ALIGN(ie_len, 4);
++
+ 		if (len < ie_len) {
+ 			ath10k_err(ar, "invalid length for FW IE %d (%zu < %zu)\n",
+ 				   ie_id, len, ie_len);
+@@ -1517,9 +1521,6 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 			break;
+ 		}
+ 
+-		/* jump over the padding */
+-		ie_len = ALIGN(ie_len, 4);
+-
+ 		len -= ie_len;
+ 		data += ie_len;
+ 	}
 -- 
-2.14.3
+1.9.1
