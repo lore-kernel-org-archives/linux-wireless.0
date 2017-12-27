@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:49784 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750865AbdL3UeL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Dec 2017 15:34:11 -0500
-To: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] wireless: b43: Delete an error message for a failed memory
- allocation in b43_sdio_probe()
-Message-ID: <175d361f-0c00-2a32-c860-a5ad198e74ba@users.sourceforge.net> (sfid-20171230_213430_285492_2571CE77)
-Date: Sat, 30 Dec 2017 21:33:44 +0100
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:44297 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751002AbdL0KKC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Dec 2017 05:10:02 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [v2,1/3] ath10k: Add SNOC bus type for WCN3990 target
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1513872322-26636-2-git-send-email-pillair@qti.qualcomm.com>
+References: <1513872322-26636-2-git-send-email-pillair@qti.qualcomm.com>
+To: Rakesh Pillai <pillair@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Govind Singh" <govinds@qti.qualcomm.com>,
+        Rakesh Pillai <pillair@qti.qualcomm.com>
+Message-ID: <aa68f584e8744ab68fcf2f39edf13fe4@euamsexm01a.eu.qualcomm.com> (sfid-20171227_111005_741231_A52226A7)
+Date: Wed, 27 Dec 2017 11:09:55 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 30 Dec 2017 21:23:47 +0100
+Rakesh Pillai <pillair@qti.qualcomm.com> wrote:
 
-Omit an extra message for a memory allocation failure in this function.
+> WCN3990 is integrated chipset which uses system NOC.
+> Add SNOC bus type and related definitions.
+> 
+> Signed-off-by: Govind Singh <govinds@qti.qualcomm.com>
+> Signed-off-by: Rakesh Pillai <pillair@qti.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-This issue was detected by using the Coccinelle software.
+3 patches applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/broadcom/b43/sdio.c | 1 -
- 1 file changed, 1 deletion(-)
+63855e3d6e7a ath10k: Add SNOC bus type for WCN3990 target
+b796240409b3 ath10k: Add debug mask for SNOC bus type
+71e9c29fbd28 ath10k: Add fw feature flag for non-bmi firmware load
 
-diff --git a/drivers/net/wireless/broadcom/b43/sdio.c b/drivers/net/wireless/broadcom/b43/sdio.c
-index 59a521800694..5a6dbcf170f9 100644
---- a/drivers/net/wireless/broadcom/b43/sdio.c
-+++ b/drivers/net/wireless/broadcom/b43/sdio.c
-@@ -146,7 +146,6 @@ static int b43_sdio_probe(struct sdio_func *func,
- 	sdio = kzalloc(sizeof(*sdio), GFP_KERNEL);
- 	if (!sdio) {
- 		error = -ENOMEM;
--		dev_err(&func->dev, "failed to allocate ssb bus\n");
- 		goto err_disable_func;
- 	}
- 	error = ssb_bus_sdiobus_register(&sdio->ssb, func,
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10127929/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
