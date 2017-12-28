@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45019 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933147AbdLRWPu (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:45808 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751074AbdL1THq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 17:15:50 -0500
-Date: Tue, 19 Dec 2017 09:10:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Joe Perches <joe@perches.com>
-Cc: Jiri Kosina <trivial@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        acpi4asus-user@lists.sourceforge.net,
-        platform-driver-x86@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        linux-xfs@vger.kernel.org, linux-audit@redhat.com,
-        alsa-devel@alsa-project.org,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [trivial PATCH] treewide: Align function definition open/close
- braces
-Message-ID: <20171218221040.GG4094@dastard> (sfid-20171218_231611_736484_B81B5E06)
-References: <1513556924.31581.51.camel@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1513556924.31581.51.camel@perches.com>
+        Thu, 28 Dec 2017 14:07:46 -0500
+Received: by mail-lf0-f68.google.com with SMTP id f13so46136829lff.12
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Dec 2017 11:07:45 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH 2/3] ath10k: remove unused prototype
+Date: Thu, 28 Dec 2017 20:06:44 +0100
+Message-Id: <20171228190645.25773-3-erik.stromdahl@gmail.com> (sfid-20171228_200751_144651_56BA81E6)
+In-Reply-To: <20171228190645.25773-1-erik.stromdahl@gmail.com>
+References: <20171228190645.25773-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 17, 2017 at 04:28:44PM -0800, Joe Perches wrote:
-> Some functions definitions have either the initial open brace and/or
-> the closing brace outside of column 1.
-> 
-> Move those braces to column 1.
-> 
-> This allows various function analyzers like gnu complexity to work
-> properly for these modified functions.
-> 
-> Miscellanea:
-> 
-> o Remove extra trailing ; and blank line from xfs_agf_verify
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
-....
+The function does not exist and thus, the prototype can be removed.
 
-XFS bits look fine.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-Acked-by: Dave Chinner <dchinner@redhat.com>
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 783640032216..360c71b106d7 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1933,7 +1933,6 @@ void ath10k_htt_htc_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb);
+ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb);
+ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
+-int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.15.1
