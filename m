@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:26233 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751749AbdLBOXu (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:41133 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751074AbdL1THo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 09:23:50 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v3,01/12] wil6210: run-time PM when interface down
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1510665944-30198-2-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1510665944-30198-2-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Message-ID: <adcde2a0d5074b1f98251ef6a0acfeee@euamsexm01a.eu.qualcomm.com> (sfid-20171202_152354_494242_3A986DBF)
-Date: Sat, 2 Dec 2017 15:23:43 +0100
+        Thu, 28 Dec 2017 14:07:44 -0500
+Received: by mail-lf0-f68.google.com with SMTP id h137so1975803lfe.8
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Dec 2017 11:07:43 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH 0/3] ath10k: a few minor fixes
+Date: Thu, 28 Dec 2017 20:06:42 +0100
+Message-Id: <20171228190645.25773-1-erik.stromdahl@gmail.com> (sfid-20171228_200748_737005_6A033E22)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+I discovered these issues while working with the next round of
+patches for High Latency devices.
 
-> Allow run-time suspend when interface is down, keep card alive when
-> interface is up.
-> If driver is in wmi only or debug_fw mode run-time PM won't suspend.
-> 
-> Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+In order to reduce the size of that patchset, I think it is best
+if these patches could be added in advance.
 
-12 patches applied to ath-next branch of ath.git, thanks.
+The last patch fixes an actual bug that was introduced in
+commit 71e9c29fbd28ec14bb8f920c7afd515a75c00234
 
-94162666cd51 wil6210: run-time PM when interface down
-5fad7241e821 wil6210: print human readable names of WMI commands and events
-3ead1e016c25 wil6210: refresh FW capabilities during interface up
-144a12a6d83f wil6210: abort properly in cfg suspend
-26a6d5274865 wil6210: fix length check in __wmi_send
-705d2fde94b2 wil6210: add block size checks during FW load
-b5a8ffcae410 wil6210: missing length check in wmi_set_ie
-51a58709495b wil6210: missing length check in wil_cfg80211_mgmt_tx
-6804cd101c50 wil6210: get suspend reject reason and resume triggers from FW
-680c242dc25e wil6210: fix PCIe bus mastering in case of interface down
-05898dd98830 wil6210: remove suspend time statistics
-bd8bdc6ca818 wil6210: update statistics for suspend
+The other two are just cleanups.
+
+Erik Stromdahl (3):
+  ath10k: fix spelling error
+  ath10k: remove unused prototype
+  ath10k: bugfix: add USB case in ath10k_core_probe_fw
+
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ drivers/net/wireless/ath/ath10k/htt.h  | 1 -
+ drivers/net/wireless/ath/ath10k/wmi.h  | 2 +-
+ 3 files changed, 2 insertions(+), 2 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/10057625/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.15.1
