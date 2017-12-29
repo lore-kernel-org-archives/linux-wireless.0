@@ -1,116 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:33580 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756955AbdLPMIH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Dec 2017 07:08:07 -0500
-Received: by mail-pl0-f66.google.com with SMTP id 1so575004plv.0
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Dec 2017 04:08:07 -0800 (PST)
-Date: Sat, 16 Dec 2017 17:38:00 +0530
-From: Morgan Freeman <morganfreeman6991@gmail.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>
-Cc: linux-wireless@vger.kernel.org, ganesh.krishna@microchip.com,
-        gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-        Claudiu.Beznea@microchip.com
-Subject: Re: [PATCH v2] staging: wilc1000: Fix problems reported by checkpatch
-Message-ID: <20171216120800.GA4457@himanshu-Vostro-3559> (sfid-20171216_130816_305154_7B2621F2)
-References: <1513410864-6566-1-git-send-email-aditya.shankar@microchip.com>
+Received: from mout.web.de ([212.227.15.14]:63774 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751412AbdL2TvY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Dec 2017 14:51:24 -0500
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, Eyal Reizer <eyalr@ti.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        Iain Hunter <drhunter95@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Tony Lindgren <tony@atomide.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] wlcore: Delete an error message for a failed memory
+ allocation in three functions
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Message-ID: <a5e86825-a5e2-a9e7-9036-b7ef3a1814fe@users.sourceforge.net> (sfid-20171229_205149_385796_46081B5E)
+Date: Fri, 29 Dec 2017 20:50:54 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1513410864-6566-1-git-send-email-aditya.shankar@microchip.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Aditya,
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 29 Dec 2017 20:40:49 +0100
 
-On Sat, Dec 16, 2017 at 01:24:24PM +0530, Aditya Shankar wrote:
-> This commit fixes below style problems in multiple lines
-> Fix checkpatch WARNING: line over 80 characters
-> 
-> Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
-> ---
+Omit an extra message for a memory allocation failure in these functions.
 
-The patch subject is not correct!
-I'm pretty sure checkpatch will complain if you run it through:
+This issue was detected by using the Coccinelle software.
 
-WARNING: A patch subject line should describe the change not the tool
-that found it
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 8 ++------
+ drivers/net/wireless/ti/wlcore/spi.c  | 4 +---
+ 2 files changed, 3 insertions(+), 9 deletions(-)
 
-Take a look at:
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
-
-
-Thanks
-Himanshu Jha
-
->  drivers/staging/wilc1000/linux_mon.c | 18 ++++++++++++------
->  1 file changed, 12 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-> index 91d49c4..1c740af 100644
-> --- a/drivers/staging/wilc1000/linux_mon.c
-> +++ b/drivers/staging/wilc1000/linux_mon.c
-> @@ -69,7 +69,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
->  	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
->  		/* hostapd callback mgmt frame */
->  
-> -		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
-> +		skb = dev_alloc_skb(size +
-> +				    sizeof(struct wilc_wfi_radiotap_cb_hdr));
->  		if (!skb)
->  			return;
->  
-> @@ -80,7 +81,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
->  
->  		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
->  
-> -		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
-> +		cb_hdr->hdr.it_len =
-> +			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
->  
->  		cb_hdr->hdr.it_present = cpu_to_le32(
->  				(1 << IEEE80211_RADIOTAP_RATE) |
-> @@ -96,7 +98,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
->  		}
->  
->  	} else {
-> -		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
-> +		skb = dev_alloc_skb(size +
-> +				    sizeof(struct wilc_wfi_radiotap_hdr));
->  
->  		if (!skb)
->  			return;
-> @@ -105,7 +108,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
->  		hdr = skb_push(skb, sizeof(*hdr));
->  		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
->  		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
-> -		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
-> +		hdr->hdr.it_len =
-> +			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
->  		hdr->hdr.it_present = cpu_to_le32
->  				(1 << IEEE80211_RADIOTAP_RATE); /* | */
->  		hdr->rate = 5; /* txrate->bitrate / 5; */
-> @@ -197,7 +201,8 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
->  	skb_pull(skb, rtap_len);
->  
->  	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
-> -		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
-> +		skb2 = dev_alloc_skb(skb->len +
-> +				     sizeof(struct wilc_wfi_radiotap_cb_hdr));
->  		if (!skb2)
->  			return -ENOMEM;
->  
-> @@ -208,7 +213,8 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
->  
->  		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
->  
-> -		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
-> +		cb_hdr->hdr.it_len =
-> +			cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
->  
->  		cb_hdr->hdr.it_present = cpu_to_le32(
->  				(1 << IEEE80211_RADIOTAP_RATE) |
-> -- 
-> 2.7.4
-> 
-> 
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index c346c021b999..970e59871547 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1301,10 +1301,8 @@ static struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
+ 			    sizeof(struct wl1271_tx_hw_descr) - sizeof(*hdr);
+ 
+ 	skb = dev_alloc_skb(TOTAL_TX_DUMMY_PACKET_SIZE);
+-	if (!skb) {
+-		wl1271_warning("Failed to allocate a dummy packet skb");
++	if (!skb)
+ 		return NULL;
+-	}
+ 
+ 	skb_reserve(skb, sizeof(struct wl1271_tx_hw_descr));
+ 
+@@ -1421,10 +1419,8 @@ int wl1271_rx_filter_alloc_field(struct wl12xx_rx_filter *filter,
+ 	field = &filter->fields[filter->num_fields];
+ 
+ 	field->pattern = kzalloc(len, GFP_KERNEL);
+-	if (!field->pattern) {
+-		wl1271_warning("Failed to allocate RX filter pattern");
++	if (!field->pattern)
+ 		return -ENOMEM;
+-	}
+ 
+ 	filter->num_fields++;
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index 62ce54a949e9..fc94a0d1a01d 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -489,10 +489,8 @@ static int wl1271_probe(struct spi_device *spi)
+ 	pdev_data->if_ops = &spi_ops;
+ 
+ 	glue = devm_kzalloc(&spi->dev, sizeof(*glue), GFP_KERNEL);
+-	if (!glue) {
+-		dev_err(&spi->dev, "can't allocate glue\n");
++	if (!glue)
+ 		return -ENOMEM;
+-	}
+ 
+ 	glue->dev = &spi->dev;
+ 
+-- 
+2.15.1
