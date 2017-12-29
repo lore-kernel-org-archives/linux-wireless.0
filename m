@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pv43p53im-ztdg05051801.me.com ([17.139.149.167]:44762 "EHLO
-        pv43p53im-ztdg05051801.me.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753141AbdLMOTk (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:52797 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755478AbdL2Ibl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 09:19:40 -0500
-Content-type: text/plain; charset=utf-8
-MIME-version: 1.0 (1.0)
-Subject: Re: net/wireless/shipped-certs.c:2:1: error: expected expression at
- end of input
-From: Damian Tometzki <damian.tometzki@icloud.com>
-In-reply-to: <05419671-31e3-f8d0-f293-55c9c22165e4@molgen.mpg.de>
-Date: Wed, 13 Dec 2017 15:19:36 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-id: <48E54445-A9F8-4622-97FA-629DF65716D8@icloud.com> (sfid-20171213_151956_068427_48C48991)
-References: <4006aefb-e9af-d809-b45a-201d20e75f9d@molgen.mpg.de>
- <1512468219.26976.15.camel@sipsolutions.net>
- <8617D3B1-DE6C-4E75-AB44-1845806E18D6@icloud.com>
- <f091f30c-3681-6e6e-774c-3906026c573e@molgen.mpg.de>
- <7AC5C6E6-E2EE-473D-A8C8-5D18646C93CD@icloud.com>
- <05419671-31e3-f8d0-f293-55c9c22165e4@molgen.mpg.de>
-To: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
+        Fri, 29 Dec 2017 03:31:41 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <yhchuang@realtek.com>, <Larry.Finger@lwfinger.net>,
+        <johannes.berg@intel.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/11] rtlwifi: mark expected switch fall-through in rtl_make_smps_action
+Date: Fri, 29 Dec 2017 16:31:07 +0800
+Message-ID: <20171229083112.31540-7-pkshih@realtek.com> (sfid-20171229_093250_577683_472E515C)
+In-Reply-To: <20171229083112.31540-1-pkshih@realtek.com>
+References: <20171229083112.31540-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Paul,
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 
-with the cleanup the Build was succesfully.=20
+This is merged by Ping-Ke Shih from commit 640019bba419 ("staging:
+rtlwifi: mark expected switch fall-through in rtl_make_smps_action"),
+and original commit log is reserved below.
 
-Thanks f=C3=BCr you help.=20
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-VG Damian Tometzki
-Itelligence AG
-+41 79 304 2745
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-
-
-> Am 13.12.2017 um 12:07 schrieb Paul Menzel <pmenzel+linux-wireless@molgen.=
-mpg.de>:
->=20
-> Dear Damian,
->=20
->=20
->> On 12/13/17 12:00, Damian Tometzki wrote:
->>=20
->> Hexdump was already installed in the System.
->> I commented out this step.
-> Please try to reproduce it from a clean environment (`git clean -dfx`, sav=
-e your .config before), and then please give more details.
->=20
->=20
-> Kind regards,
->=20
-> Paul
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 2052e0e5e083..c01c5ca767a4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -2229,9 +2229,7 @@ static struct sk_buff *rtl_make_smps_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_SMPS_AUTOMATIC:/* 0 */
+ 	case IEEE80211_SMPS_NUM_MODES:/* 4 */
+ 		WARN_ON(1);
+-	/* Here will get a 'MISSING_BREAK' in Coverity Test, just ignore it.
+-	 * According to Kernel Code, here is right.
+-	 */
++	/* fall through */
+ 	case IEEE80211_SMPS_OFF:/* 1 */ /*MIMO_PS_NOLIMIT*/
+ 		action_frame->u.action.u.ht_smps.smps_control =
+ 				WLAN_HT_SMPS_CONTROL_DISABLED;/* 0 */
+-- 
+2.14.1
