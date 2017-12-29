@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:34332 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760132AbdLSJin (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:52791 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755389AbdL2Ibk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 04:38:43 -0500
-Message-ID: <1513676321.26145.1.camel@sipsolutions.net> (sfid-20171219_103848_547223_A849E6CB)
-Subject: Re: [PATCH 10/10] qtnfmac: support MAC address based access control
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Date: Tue, 19 Dec 2017 10:38:41 +0100
-In-Reply-To: <20171218161811.3f3sjhlxdfmsnljx@bars>
-References: <20171113102815.11254-1-sergey.matyukevich.os@quantenna.com>
-         <20171113102815.11254-11-sergey.matyukevich.os@quantenna.com>
-         <871skalepz.fsf@purkki.adurom.net> <20171205160010.cytra3bqbttwz5db@bars>
-         <878te0kud2.fsf@kamboji.qca.qualcomm.com>
-         <20171218161811.3f3sjhlxdfmsnljx@bars>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 29 Dec 2017 03:31:40 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <yhchuang@realtek.com>, <Larry.Finger@lwfinger.net>,
+        <johannes.berg@intel.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/11] rtlwifi: fix parenthesis alignment
+Date: Fri, 29 Dec 2017 16:31:04 +0800
+Message-ID: <20171229083112.31540-4-pkshih@realtek.com> (sfid-20171229_093321_014668_AF28ECD8)
+In-Reply-To: <20171229083112.31540-1-pkshih@realtek.com>
+References: <20171229083112.31540-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-12-18 at 19:18 +0300, Sergey Matyukevich wrote:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> Meanwhile now it is not yet clear to me what should be done for driver which
-> supports MAC-based ACL, but not full-fledged AP SME.
+This is merged by Ping-Ke Shih from commit 688a0206cfb8 ("staging:
+rtlwifi: fix parenthesis alignment"), and original commit log is
+reserved below.
 
-Are you sure that such a device can even exist? It'd have to drop the
-auth frames, so they can't be handled by the host? Is there much point
-in that?
+Checkpatch emits multiple warnings of type
 
-johannes
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+
+Fix parenthesis alignment in line with checkpatch suggestion.
+
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 3cb88825473e..ac606d678ee3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1775,7 +1775,7 @@ bool rtl_hal_pwrseqcmdparsing(struct rtl_priv *rtlpriv, u8 cut_version,
+ 				break;
+ 			case PWR_CMD_WRITE:
+ 				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+-					"rtl_hal_pwrseqcmdparsing(): PWR_CMD_WRITE\n");
++					 "%s(): PWR_CMD_WRITE\n", __func__);
+ 				offset = GET_PWR_CFG_OFFSET(cfg_cmd);
+ 
+ 				/*Read the value from system register*/
+-- 
+2.14.1
