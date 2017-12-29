@@ -1,164 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:2777 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751097AbdLYBew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Dec 2017 20:34:52 -0500
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-To: christophe leroy <christophe.leroy@c-s.fr>,
-        Greg KH <gregkh@linuxfoundation.org>
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134831.GB10103@kroah.com>
- <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
-CC: <linux-kernel@vger.kernel.org>, <ysxie@foxmail.com>,
-        <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
-        <boris.brezillon@free-electrons.com>, <richard@nod.at>,
-        <marek.vasut@gmail.com>, <cyrille.pitchen@wedev4u.fr>,
-        <linux-mtd@lists.infradead.org>, <alsa-devel@alsa-project.org>,
-        <wim@iguana.be>, <linux@roeck-us.net>,
-        <linux-watchdog@vger.kernel.org>, <b.zolnierkie@samsung.com>,
-        <linux-fbdev@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <linux-gpio@vger.kernel.org>, <ralf@linux-mips.org>,
-        <linux-mips@linux-mips.org>, <lgirdwood@gmail.com>,
-        <broonie@kernel.org>, <tglx@linutronix.de>, <jason@lakedaemon.net>,
-        <marc.zyngier@arm.com>, <arnd@arndb.de>,
-        <andriy.shevchenko@linux.intel.com>,
-        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
-        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
-        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
-        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
-        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
-        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
-        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
-        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
-        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <dvhart@infradead.org>, <andy@infradead.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
-        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
-        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
-        <dmaengine@vger.kernel.org>, <jslaby@suse.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <8dd19411-5b06-0aa4-fd0e-e5b112c25dcb@huawei.com> (sfid-20171225_023520_287749_0A725C15)
-Date: Mon, 25 Dec 2017 09:34:25 +0800
+Received: from rtits2.realtek.com ([211.75.126.72]:52799 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756021AbdL2Ibo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Dec 2017 03:31:44 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <yhchuang@realtek.com>, <Larry.Finger@lwfinger.net>,
+        <johannes.berg@intel.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/11] rtlwifi: Remove unnecessary parentheses
+Date: Fri, 29 Dec 2017 16:31:08 +0800
+Message-ID: <20171229083112.31540-8-pkshih@realtek.com> (sfid-20171229_093249_314141_6C50126F)
+In-Reply-To: <20171229083112.31540-1-pkshih@realtek.com>
+References: <20171229083112.31540-1-pkshih@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Frank A. Cancio Bello" <frank@generalsoftwareinc.com>
 
+This is merged by Ping-Ke Shih from commit a221cb0911b8 ("staging:
+rtlwifi: Remove unnecessary parentheses"), and original commit log
+is reserved below.
 
-On 2017/12/24 17:05, christophe leroy wrote:
-> 
-> 
-> Le 23/12/2017 à 14:48, Greg KH a écrit :
->> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->>> Hi all,
->>>
->>> When I tried to use devm_ioremap function and review related code, I found
->>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
->>> except one use ioremap while the other use ioremap_nocache.
->>
->> For all arches?  Really?  Look at MIPS, and x86, they have different
->> functions.
->>
->>> While ioremap's
->>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
->>> same function with devm_ioremap, which can just be killed to reduce the size
->>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
->>>
->>> I have posted two versions, which use macro instead of function for
->>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
->>> thing. So here comes v3 and please help to review.
->>
->> I don't think this can be done, what am I missing?  These functions are
->> not identical, sorry for missing that before.
-> 
-> devm_ioremap() and devm_ioremap_nocache() are quite similar, both use devm_ioremap_release() for the release, why not just defining:
-> 
-> static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
->                resource_size_t size, bool nocache)
-> {
-> [...]
->     if (nocache)
->         addr = ioremap_nocache(offset, size);
->     else
->         addr = ioremap(offset, size);
-> [...]
-> }
-> 
-> then in include/linux/io.h
-> 
-> static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
->                resource_size_t size)
-> {return __devm_ioremap(dev, offset, size, false);}
-> 
-> static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
->                    resource_size_t size);
-> {return __devm_ioremap(dev, offset, size, true);}
+Remove unnecessary parentheses to comply with preferred coding style for
+the linux kernel and avoid the following checkpatch's message:
+'CHECK: Unnecessary parentheses around'.
 
-Yeah, this seems good to me, right now we have devm_ioremap, devm_ioremap_wc, devm_ioremap_nocache
-May be we can use an enum like:
-typedef enum {
-	DEVM_IOREMAP = 0,
-	DEVM_IOREMAP_NOCACHE,
-	DEVM_IOREMAP_WC,
-} devm_ioremap_type;
+Credits to checkpatch.
 
-static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
-                resource_size_t size)
- {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP);}
+Signed-off-by: Frank A. Cancio Bello <frank@generalsoftwareinc.com>
+Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c  | 12 ++++++------
+ drivers/net/wireless/realtek/rtlwifi/core.c  | 26 +++++++++++++-------------
+ drivers/net/wireless/realtek/rtlwifi/debug.c |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rc.c    | 10 +++++-----
+ 4 files changed, 26 insertions(+), 26 deletions(-)
 
- static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
-                    resource_size_t size);
- {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_NOCACHE);}
-
- static inline void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
-                    resource_size_t size);
- {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_WC);}
-
- static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
-                resource_size_t size, devm_ioremap_type type)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index c01c5ca767a4..5605fa14aa4c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -859,8 +859,8 @@ static u8 _rtl_get_highest_n_rate(struct ieee80211_hw *hw,
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
+ 	u8 hw_rate;
+ 
+-	if ((get_rf_type(rtlphy) == RF_2T2R) &&
+-	    (sta->ht_cap.mcs.rx_mask[1] != 0))
++	if (get_rf_type(rtlphy) == RF_2T2R &&
++	    sta->ht_cap.mcs.rx_mask[1] != 0)
+ 		hw_rate = rtlpriv->cfg->maps[RTL_RC_HT_RATEMCS15];
+ 	else
+ 		hw_rate = rtlpriv->cfg->maps[RTL_RC_HT_RATEMCS7];
+@@ -1180,7 +1180,7 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 				tcb_desc->hw_rate =
+ 				_rtl_get_vht_highest_n_rate(hw, sta);
+ 			} else {
+-				if (sta && (sta->ht_cap.ht_supported)) {
++				if (sta && sta->ht_cap.ht_supported) {
+ 					tcb_desc->hw_rate =
+ 						_rtl_get_highest_n_rate(hw, sta);
+ 				} else {
+@@ -1976,9 +1976,9 @@ void rtl_watchdog_wq_callback(void *data)
+ 		    rtlpriv->btcoexist.btc_ops->btc_is_bt_ctrl_lps(rtlpriv))
+ 			goto label_lps_done;
+ 
+-		if (((rtlpriv->link_info.num_rx_inperiod +
+-		      rtlpriv->link_info.num_tx_inperiod) > 8) ||
+-		    (rtlpriv->link_info.num_rx_inperiod > 2))
++		if (rtlpriv->link_info.num_rx_inperiod +
++		      rtlpriv->link_info.num_tx_inperiod > 8 ||
++		    rtlpriv->link_info.num_rx_inperiod > 2)
+ 			rtl_lps_leave(hw);
+ 		else
+ 			rtl_lps_enter(hw);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index ac606d678ee3..a78b828f531a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -345,9 +345,9 @@ static void rtl_op_remove_interface(struct ieee80211_hw *hw,
+ 	mutex_lock(&rtlpriv->locks.conf_mutex);
+ 
+ 	/* Free beacon resources */
+-	if ((vif->type == NL80211_IFTYPE_AP) ||
+-	    (vif->type == NL80211_IFTYPE_ADHOC) ||
+-	    (vif->type == NL80211_IFTYPE_MESH_POINT)) {
++	if (vif->type == NL80211_IFTYPE_AP ||
++	    vif->type == NL80211_IFTYPE_ADHOC ||
++	    vif->type == NL80211_IFTYPE_MESH_POINT) {
+ 		if (mac->beacon_enabled == 1) {
+ 			mac->beacon_enabled = 0;
+ 			rtlpriv->cfg->ops->update_interrupt_mask(hw, 0,
+@@ -858,8 +858,8 @@ static void rtl_op_configure_filter(struct ieee80211_hw *hw,
+ 	 * here just used for linked scanning, & linked
+ 	 * and nolink check bssid is set in set network_type
+ 	 */
+-	if ((changed_flags & FIF_BCN_PRBRESP_PROMISC) &&
+-	    (mac->link_state >= MAC80211_LINKED)) {
++	if (changed_flags & FIF_BCN_PRBRESP_PROMISC &&
++	    mac->link_state >= MAC80211_LINKED) {
+ 		if (mac->opmode != NL80211_IFTYPE_AP &&
+ 		    mac->opmode != NL80211_IFTYPE_MESH_POINT) {
+ 			if (*new_flags & FIF_BCN_PRBRESP_PROMISC)
+@@ -1044,10 +1044,10 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 
+ 	mutex_lock(&rtlpriv->locks.conf_mutex);
+-	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
+-	    (vif->type == NL80211_IFTYPE_AP) ||
+-	    (vif->type == NL80211_IFTYPE_MESH_POINT)) {
+-		if ((changed & BSS_CHANGED_BEACON) ||
++	if (vif->type == NL80211_IFTYPE_ADHOC ||
++	    vif->type == NL80211_IFTYPE_AP ||
++	    vif->type == NL80211_IFTYPE_MESH_POINT) {
++		if (changed & BSS_CHANGED_BEACON ||
+ 		    (changed & BSS_CHANGED_BEACON_ENABLED &&
+ 		     bss_conf->enable_beacon)) {
+ 			if (mac->beacon_enabled == 0) {
+@@ -1513,9 +1513,9 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		return -ENOSPC;	/*User disabled HW-crypto */
+ 	}
+ 	/* To support IBSS, use sw-crypto for GTK */
+-	if (((vif->type == NL80211_IFTYPE_ADHOC) ||
+-	    (vif->type == NL80211_IFTYPE_MESH_POINT)) &&
+-	   !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
++	if ((vif->type == NL80211_IFTYPE_ADHOC ||
++	     vif->type == NL80211_IFTYPE_MESH_POINT) &&
++	    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
+ 		return -ENOSPC;
+ 	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
+ 		 "%s hardware based encryption for keyidx: %d, mac: %pM\n",
+@@ -1588,7 +1588,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			rtlpriv->cfg->ops->enable_hw_sec(hw);
+ 		}
+ 	} else {
+-		if ((!group_key) || (vif->type == NL80211_IFTYPE_ADHOC) ||
++		if (!group_key || vif->type == NL80211_IFTYPE_ADHOC ||
+ 		    rtlpriv->sec.pairwise_enc_algorithm == NO_ENCRYPTION) {
+ 			if (rtlpriv->sec.pairwise_enc_algorithm ==
+ 			    NO_ENCRYPTION &&
+diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
+index 38fef6dbb44b..c4e1da887941 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/debug.c
++++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
+@@ -31,7 +31,7 @@ void _rtl_dbg_trace(struct rtl_priv *rtlpriv, u64 comp, int level,
+ 		    const char *fmt, ...)
  {
-     void __iomem **ptr, *addr = NULL;
- [...]
-     switch (type){
-     case DEVM_IOREMAP:
-         addr = ioremap(offset, size);
-         break;
-     case DEVM_IOREMAP_NOCACHE:
-         addr = ioremap_nocache(offset, size);
-         break;
-     case DEVM_IOREMAP_WC:
-         addr = ioremap_wc(offset, size);
-         break;
-     }
- [...]
- }
-
-Thanks
-Yisheng
-
-> 
-> Christophe
-> 
->>
->> thanks,
->>
->> greg k-h
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-watchdog" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> 
-> ---
-> L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-> https://www.avast.com/antivirus
-> 
-> 
-> .
-> 
+ 	if (unlikely((comp & rtlpriv->cfg->mod_params->debug_mask) &&
+-		     (level <= rtlpriv->cfg->mod_params->debug_level))) {
++		     level <= rtlpriv->cfg->mod_params->debug_level)) {
+ 		struct va_format vaf;
+ 		va_list args;
+ 
+@@ -51,7 +51,7 @@ void _rtl_dbg_print(struct rtl_priv *rtlpriv, u64 comp, int level,
+ 		    const char *fmt, ...)
+ {
+ 	if (unlikely((comp & rtlpriv->cfg->mod_params->debug_mask) &&
+-		     (level <= rtlpriv->cfg->mod_params->debug_level))) {
++		     level <= rtlpriv->cfg->mod_params->debug_level)) {
+ 		struct va_format vaf;
+ 		va_list args;
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
+index 9638bf4a96f7..d1cb7d405618 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
+@@ -123,7 +123,7 @@ static void _rtl_rc_rate_set_series(struct rtl_priv *rtlpriv,
+ 			if (sta && (sta->ht_cap.cap &
+ 				    IEEE80211_HT_CAP_SUP_WIDTH_20_40))
+ 				rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
+-			if (sta && (sta->vht_cap.vht_supported))
++			if (sta && sta->vht_cap.vht_supported)
+ 				rate->flags |= IEEE80211_TX_RC_80_MHZ_WIDTH;
+ 		} else {
+ 			if (mac->bw_40)
+@@ -135,8 +135,8 @@ static void _rtl_rc_rate_set_series(struct rtl_priv *rtlpriv,
+ 		if (sgi_20 || sgi_40 || sgi_80)
+ 			rate->flags |= IEEE80211_TX_RC_SHORT_GI;
+ 		if (sta && sta->ht_cap.ht_supported &&
+-		    ((wireless_mode == WIRELESS_MODE_N_5G) ||
+-		     (wireless_mode == WIRELESS_MODE_N_24G)))
++		    (wireless_mode == WIRELESS_MODE_N_5G ||
++		     wireless_mode == WIRELESS_MODE_N_24G))
+ 			rate->flags |= IEEE80211_TX_RC_MCS;
+ 		if (sta && sta->vht_cap.vht_supported &&
+ 		    (wireless_mode == WIRELESS_MODE_AC_5G ||
+@@ -216,8 +216,8 @@ static void rtl_tx_status(void *ppriv,
+ 
+ 	if (sta) {
+ 		/* Check if aggregation has to be enabled for this tid */
+-		sta_entry = (struct rtl_sta_info *) sta->drv_priv;
+-		if ((sta->ht_cap.ht_supported) &&
++		sta_entry = (struct rtl_sta_info *)sta->drv_priv;
++		if (sta->ht_cap.ht_supported &&
+ 		    !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
+ 			if (ieee80211_is_data_qos(fc)) {
+ 				u8 tid = rtl_get_tid(skb);
+-- 
+2.14.1
