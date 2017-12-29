@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:8720 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753347AbdLVP01 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59542 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751543AbdL2JHh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Dec 2017 10:26:27 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v3 05/11] ath10k: htt: High latency TX support
-Date: Fri, 22 Dec 2017 15:26:22 +0000
-Message-ID: <87o9mqain5.fsf@kamboji.qca.qualcomm.com> (sfid-20171222_162631_519327_FA17BE02)
-References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
-        <20170917194013.8658-6-erik.stromdahl@gmail.com>
-In-Reply-To: <20170917194013.8658-6-erik.stromdahl@gmail.com> (Erik
-        Stromdahl's message of "Sun, 17 Sep 2017 21:40:07 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 29 Dec 2017 04:07:37 -0500
+From: Colin King <colin.king@canonical.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][V2] wcn36xx: fix incorrect assignment to msg_body.min_ch_time
+Date: Fri, 29 Dec 2017 09:07:32 +0000
+Message-Id: <20171229090732.14928-2-colin.king@canonical.com> (sfid-20171229_100840_354821_EDCA6601)
+In-Reply-To: <20171229090732.14928-1-colin.king@canonical.com>
+References: <20171229090732.14928-1-colin.king@canonical.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
-> Add HTT TX function for HL interfaces.
-> Intended for SDIO and USB.
->
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+The second assignment to msg_body.min_ch_time is incorrect, it
+should actually be to msg_body.max_ch_time.
 
-[...]
+Thanks to Bjorn Andersson for identifying the correct way to fix
+this as my original fix was incorrect.
 
-> +	/* Prepend the HTT header and TX desc struct to the data message
-> +	 * and realloc the skb if it does not have enough headroom.
-> +	 */
-> +	if (skb_headroom(msdu) < HTT_TX_HL_NEEDED_HEADROOM) {
-> +		struct sk_buff *tmp_skb =3D msdu;
+Detected by CoverityScan, CID#1463042 ("Unused Value")
 
-Style: please have the variable declaration in the beginning of the
-function.
+Fixes: 2f3bef4b247e ("wcn36xx: Add hardware scan offload support")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 2914618a0335..2a4871ca9c72 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -626,7 +626,7 @@ int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 
+ 	msg_body.scan_type = WCN36XX_HAL_SCAN_TYPE_ACTIVE;
+ 	msg_body.min_ch_time = 30;
+-	msg_body.min_ch_time = 100;
++	msg_body.max_ch_time = 100;
+ 	msg_body.scan_hidden = 1;
+ 	memcpy(msg_body.mac, vif->addr, ETH_ALEN);
+ 	msg_body.p2p_search = vif->p2p;
+-- 
+2.14.1
