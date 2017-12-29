@@ -1,44 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:26528 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752373AbdLLMD1 (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:52787 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755289AbdL2Ibj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 07:03:27 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Loic Poulain <loic.poulain@linaro.org>
-CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
-        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
-        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>
-Subject: Re: [PATCH v2] wcn36xx: Fix dynamic power saving
-Date: Tue, 12 Dec 2017 12:03:22 +0000
-Message-ID: <87bmj4qhkm.fsf@kamboji.qca.qualcomm.com> (sfid-20171212_130332_738299_64FE34A0)
-References: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org>
-In-Reply-To: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org> (Loic
-        Poulain's message of "Mon, 11 Dec 2017 09:52:22 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 29 Dec 2017 03:31:39 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <yhchuang@realtek.com>, <Larry.Finger@lwfinger.net>,
+        <johannes.berg@intel.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/11] rtlwifi: change rtlwifi maintainer and merge commits from staging
+Date: Fri, 29 Dec 2017 16:31:01 +0800
+Message-ID: <20171229083112.31540-1-pkshih@realtek.com> (sfid-20171229_093323_752378_54328DCB)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Loic Poulain <loic.poulain@linaro.org> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> Since driver does not report hardware dynamic power saving cap,
-> this is up to the mac80211 to manage power saving timeout and
-> state machine, using the ieee80211 config callback to report
-> PS changes. This patch enables/disables PS mode according to
-> the new configuration.
->
-> Remove old behaviour enabling PS mode in a static way, this make
-> the device unusable when power save is enabled since device is
-> forced to PS regardless RX/TX traffic.
->
-> Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+Hello Kalle,
 
-A fixes line would be nice for backporters. I can add that but need the
-commit id.
+This patchset contain a patch written by Larry to change maintainer.
+Since I'm a newbie maintainer, need your comments on my mistakes in the
+future. Second part is the commits existed in staging's rtlwifi, and most
+of them fix coding style issues so I merge them to make code consistent.
+Finally, I put developing patches in third part.
 
---=20
-Kalle Valo=
+Part 1: Change maintainer
+  MAINTAINERS: Change maintainer for rtlwifi
+
+Part 2: Merge commits from staing's rtlwifi
+  The original logs are reserved, if this isn't appropriate, please give me
+  comments.
+
+  rtlwifi: check for array overflow
+  rtlwifi: fix parenthesis alignment
+  rtlwifi: use kcalloc instead of multiply
+  rtlwifi: Remove unnecessary 'out of memory' message
+  rtlwifi: mark expected switch fall-through in rtl_make_smps_action
+  rtlwifi: Remove unnecessary parentheses
+
+Part 3:
+  We continue to develop and submit rtl8822be, and it is welcome to give us
+  comments on rtlwifi RFC of the new components (ie. phydm and halamc).
+
+  rtlwifi: rtl8723: Add error handling to no existing firmware
+  rtlwifi: Improve debugging by using debugfs
+  rtlwifi: btcoex: Use seq_file to dump btcoex status
+  rtlwifi: fill FW version and subversion
+
+---
+
+Dan Carpenter (1):
+  rtlwifi: check for array overflow
+
+Frank A. Cancio Bello (1):
+  rtlwifi: Remove unnecessary parentheses
+
+Gustavo A. R. Silva (1):
+  rtlwifi: mark expected switch fall-through in rtl_make_smps_action
+
+Larry Finger (1):
+  MAINTAINERS: Change maintainer for rtlwifi
+
+Ping-Ke Shih (5):
+  rtlwifi: fix parenthesis alignment
+  rtlwifi: rtl8723: Add error handling to no existing firmware
+  rtlwifi: Improve debugging by using debugfs
+  rtlwifi: btcoex: Use seq_file to dump btcoex status
+  rtlwifi: fill FW version and subversion
+
+Shreeya Patel (1):
+  rtlwifi: Remove unnecessary 'out of memory' message
+
+Tobin C. Harding (1):
+  rtlwifi: use kcalloc instead of multiply
+
+ MAINTAINERS                                        |   6 +-
+ drivers/net/wireless/realtek/rtlwifi/base.c        |  26 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 203 ++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 269 ++++++------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 206 ++++-----
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 285 ++++++------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 177 ++++----
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |   3 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 133 +++++-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  14 +-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |   6 +
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   1 +
+ drivers/net/wireless/realtek/rtlwifi/core.c        |  28 +-
+ drivers/net/wireless/realtek/rtlwifi/debug.c       | 483 ++++++++++++++++++++-
+ drivers/net/wireless/realtek/rtlwifi/debug.h       |  12 +
+ drivers/net/wireless/realtek/rtlwifi/efuse.c       |   4 +-
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |   6 +
+ drivers/net/wireless/realtek/rtlwifi/rc.c          |  16 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/fw.c    |   2 +
+ .../realtek/rtlwifi/rtl8723com/fw_common.c         |   4 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |   9 +
+ 25 files changed, 1230 insertions(+), 675 deletions(-)
+
+-- 
+2.14.1
