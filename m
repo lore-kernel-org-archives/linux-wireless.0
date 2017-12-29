@@ -1,87 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50992 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1759296AbdLRMi0 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59541 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754860AbdL2JHh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Dec 2017 07:38:26 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 18 Dec 2017 14:38:09 +0200
-Message-Id: <20171218123815.3968-6-luca@coelho.fi> (sfid-20171218_133831_774041_BBC9BA06)
-In-Reply-To: <20171218123815.3968-1-luca@coelho.fi>
-References: <20171218123815.3968-1-luca@coelho.fi>
-Subject: [PATCH 05/11] iwlwifi: mvm: support RX flags API change
+        Fri, 29 Dec 2017 04:07:37 -0500
+From: Colin King <colin.king@canonical.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][V2] wcn36xx: fix incorrect assignment to msg_body.min_ch_time
+Date: Fri, 29 Dec 2017 09:07:31 +0000
+Message-Id: <20171229090732.14928-1-colin.king@canonical.com> (sfid-20171229_100814_616881_7004E963)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Latest firmware calculates both phases of the TKIP
-field, so the TTAK ok flag is not needed and deprecated.
+The second assignment to msg_body.min_ch_time is incorrect, it
+should actually be to msg_body.max_ch_time.
 
-Support this API change.
+Thanks to Bjorn Andersson for identifying the correct way to fix
+this as my original fix was incorrect.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Detected by CoverityScan, CID#1463042 ("Unused Value")
+
+Fixes: 2f3bef4b247e ("wcn36xx: Add hardware scan offload support")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/file.h  | 3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 4 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 +++-
- 3 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 0824c007b6f8..12f97a2fc7ea 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -248,6 +248,8 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
-  * @IWL_UCODE_TLV_API_NEW_RX_STATS: should new RX STATISTICS API be used
-  * @IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY: Quota command includes a field
-  *	indicating low latency direction.
-+ * @IWL_UCODE_TLV_API_DEPRECATE_TTAK: RX status flag TTAK ok (bit 7) is
-+ *	deprecated.
-  *
-  * @NUM_IWL_UCODE_TLV_API: number of bits used
-  */
-@@ -266,6 +268,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
- 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
- 	IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY	= (__force iwl_ucode_tlv_api_t)38,
-+	IWL_UCODE_TLV_API_DEPRECATE_TTAK	= (__force iwl_ucode_tlv_api_t)41,
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 2914618a0335..2a4871ca9c72 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -626,7 +626,7 @@ int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
  
- 	NUM_IWL_UCODE_TLV_API
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 63a57f0a16ef..d26833c5ce1f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -222,7 +222,9 @@ static u32 iwl_mvm_set_mac80211_rx_flag(struct iwl_mvm *mvm,
- 
- 	case RX_MPDU_RES_STATUS_SEC_TKIP_ENC:
- 		/* Don't drop the frame and decrypt it in SW */
--		if (!(rx_pkt_status & RX_MPDU_RES_STATUS_TTAK_OK))
-+		if (!fw_has_api(&mvm->fw->ucode_capa,
-+				IWL_UCODE_TLV_API_DEPRECATE_TTAK) &&
-+		    !(rx_pkt_status & RX_MPDU_RES_STATUS_TTAK_OK))
- 			return 0;
- 		*crypt_len = IEEE80211_TKIP_IV_LEN;
- 		/* fall through if TTAK OK */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 00d048bd2d35..858465838355 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -257,7 +257,9 @@ static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
- 		return 0;
- 	case IWL_RX_MPDU_STATUS_SEC_TKIP:
- 		/* Don't drop the frame and decrypt it in SW */
--		if (!(status & IWL_RX_MPDU_RES_STATUS_TTAK_OK))
-+		if (!fw_has_api(&mvm->fw->ucode_capa,
-+				IWL_UCODE_TLV_API_DEPRECATE_TTAK) &&
-+		    !(status & IWL_RX_MPDU_RES_STATUS_TTAK_OK))
- 			return 0;
- 
- 		*crypt_len = IEEE80211_TKIP_IV_LEN;
+ 	msg_body.scan_type = WCN36XX_HAL_SCAN_TYPE_ACTIVE;
+ 	msg_body.min_ch_time = 30;
+-	msg_body.min_ch_time = 100;
++	msg_body.max_ch_time = 100;
+ 	msg_body.scan_hidden = 1;
+ 	memcpy(msg_body.mac, vif->addr, ETH_ALEN);
+ 	msg_body.p2p_search = vif->p2p;
 -- 
-2.15.1
+2.14.1
