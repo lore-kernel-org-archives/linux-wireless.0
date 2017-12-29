@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:59313 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752368AbdLAP3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 10:29:44 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "akolli\@codeaurora.org" <akolli@codeaurora.org>,
-        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>,
-        "linux-wireless-owner\@vger.kernel.org"
-        <linux-wireless-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: add per peer tx stats support for 10.2.4
-In-Reply-To: <87k1y6y04i.fsf@kamboji.qca.qualcomm.com>
-References: <1512046701-14435-1-git-send-email-akolli@qti.qualcomm.com> <1512046701-14435-3-git-send-email-akolli@qti.qualcomm.com> <87k1y7zqtj.fsf@kamboji.qca.qualcomm.com> <DAB5EBB8-C820-4056-8AAB-063D05F38BD5@toke.dk> <87bmjjzppd.fsf@kamboji.qca.qualcomm.com> <5080a68538fd2d883e15bacaa969661b@codeaurora.org> <87r2se36rq.fsf@toke.dk> <87k1y6y04i.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 01 Dec 2017 16:29:39 +0100
-Message-ID: <87d13y31r0.fsf@toke.dk> (sfid-20171201_162958_526202_5A4E3A79)
+Received: from rtits2.realtek.com ([211.75.126.72]:52800 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756063AbdL2Ibo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Dec 2017 03:31:44 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <yhchuang@realtek.com>, <Larry.Finger@lwfinger.net>,
+        <johannes.berg@intel.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 11/11] rtlwifi: fill FW version and subversion
+Date: Fri, 29 Dec 2017 16:31:12 +0800
+Message-ID: <20171229083112.31540-12-pkshih@realtek.com> (sfid-20171229_093248_745303_51547285)
+In-Reply-To: <20171229083112.31540-1-pkshih@realtek.com>
+References: <20171229083112.31540-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
->>> tx_duration is aggregate time duration of 4 PPDU sent to STA.
->>> FW sends these values for retry packets also.
->>
->> Great, that sounds like just what we need.
->
-> Except mapping to the iee80211_tx_status() might be difficult. I'm not
-> sure how HTT_T2H_MSG_TYPE_PKTLOG events are sent in relation to
-> HTT_T2H_MSG_TYPE_TX_COMPL_IND.
+This commit fills FW version information of RTL8188EE and RTL8723, so
+the btcoex can cooperate with FW correctly.
+Also, we can display this version in debugfs.
 
-Yeah, figures. Well, maybe we'll just have to support an asynchronous
-callback into mac80211 to register airtime usage. Will probably have to
-add some asynchronicity anyway to avoid doing too much work in the fast
-path.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c         | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c | 2 ++
+ 2 files changed, 4 insertions(+)
 
-Will keep that in mind when I get around to revisiting those patches :)
-
--Toke
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+index a2eca669873b..63874512598b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+@@ -141,6 +141,8 @@ int rtl88e_download_fw(struct ieee80211_hw *hw,
+ 		return 1;
+ 
+ 	pfwheader = (struct rtlwifi_firmware_header *)rtlhal->pfirmware;
++	rtlhal->fw_version = le16_to_cpu(pfwheader->version);
++	rtlhal->fw_subversion = pfwheader->subversion;
+ 	pfwdata = rtlhal->pfirmware;
+ 	fwsize = rtlhal->fwsize;
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+index 0d1ebc861720..521039c5d4ce 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+@@ -200,6 +200,8 @@ int rtl8723_download_fw(struct ieee80211_hw *hw,
+ 		return 1;
+ 
+ 	pfwheader = (struct rtlwifi_firmware_header *)rtlhal->pfirmware;
++	rtlhal->fw_version = le16_to_cpu(pfwheader->version);
++	rtlhal->fw_subversion = pfwheader->subversion;
+ 	pfwdata = rtlhal->pfirmware;
+ 	fwsize = rtlhal->fwsize;
+ 
+-- 
+2.14.1
