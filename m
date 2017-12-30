@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44568 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751839AbdLNMlZ (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:46682 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750841AbdL3LFU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Dec 2017 07:41:25 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [01/10] brcmfmac: Split brcmf_sdiod_buffrw function up.
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1512735035-342-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1512735035-342-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20171214124125.1824B60A54@smtp.codeaurora.org> (sfid-20171214_134129_277007_E75088CD)
-Date: Thu, 14 Dec 2017 12:41:25 +0000 (UTC)
+        Sat, 30 Dec 2017 06:05:20 -0500
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+To: kvalo@codeaurora.org, colin.king@canonical.com,
+        johannes.berg@intel.com, tiwai@suse.de,
+        kstewart@linuxfoundation.org, gregkh@linuxfoundation.org,
+        andrew.zaborowski@intel.com
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] b43: Replace mdelay with msleep in b43_radio_2057_init_post
+Date: Sat, 30 Dec 2017 19:08:27 +0800
+Message-Id: <1514632107-14698-1-git-send-email-baijiaju1990@gmail.com> (sfid-20171230_120540_243852_70673DD6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+b43_radio_2057_init_post is not called in an interrupt handler 
+nor holding a spinlock.
+The function mdelay in it can be replaced with msleep, to reduce busy wait.
 
-> From: Ian Molton <ian@mnementh.co.uk>
-> 
-> This function needs to be split up into separate read / write variants
-> for clarity.
-> 
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+---
+ drivers/net/wireless/broadcom/b43/phy_n.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-10 patches applied to wireless-drivers-next.git, thanks.
-
-8f13c87ccc49 brcmfmac: Split brcmf_sdiod_buffrw function up.
-6e24dd012bfd brcmfmac: whitespace fixes in brcmf_sdiod_send_buf()
-a7323378dcf1 brcmfmac: Clarify if using braces.
-71bd508d7ded brcmfmac: Rename / replace old IO functions with simpler ones.
-eeef8a5da781 brcmfmac: Tidy register definitions a little
-a7c3aa1509e2 brcmfmac: Remove brcmf_sdiod_addrprep()
-c900072bd6fa brcmfmac: remove unnecessary call to brcmf_sdiod_set_backplane_window()
-e4c05fc3c0a6 brcmfmac: Cleanup offsetof()
-5cfe38f1f8d3 brcmfmac: Remove unused macro.
-21a10846d09d brcmfmac: Remove repeated calls to brcmf_chip_get_core()
-
+diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+index a5557d7..5bc838e 100644
+--- a/drivers/net/wireless/broadcom/b43/phy_n.c
++++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+@@ -1031,7 +1031,7 @@ static void b43_radio_2057_init_post(struct b43_wldev *dev)
+ 
+ 	b43_radio_set(dev, R2057_RFPLL_MISC_CAL_RESETN, 0x78);
+ 	b43_radio_set(dev, R2057_XTAL_CONFIG2, 0x80);
+-	mdelay(2);
++	msleep(2);
+ 	b43_radio_mask(dev, R2057_RFPLL_MISC_CAL_RESETN, ~0x78);
+ 	b43_radio_mask(dev, R2057_XTAL_CONFIG2, ~0x80);
+ 
 -- 
-https://patchwork.kernel.org/patch/10102409/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
