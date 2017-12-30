@@ -1,152 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43777 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752998AbdLHMKo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Dec 2017 07:10:44 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 08/10] brcmfmac: Cleanup offsetof()
-Date: Fri,  8 Dec 2017 13:10:33 +0100
-Message-Id: <1512735035-342-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20171208_131103_416169_3C7D1D52)
-In-Reply-To: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1512735035-342-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mout.web.de ([217.72.192.78]:52827 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750912AbdL3VHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Dec 2017 16:07:14 -0500
+Subject: [PATCH 1/2] at76c50x-usb: Delete an error message for a failed memory
+ allocation in at76_submit_rx_urb()
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Kees Cook <keescook@chromium.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+References: <1d76fe59-af15-ba4d-e05d-09dcd9ee38cd@users.sourceforge.net>
+Message-ID: <c50358b4-79e2-0861-9087-99104944a0b8@users.sourceforge.net> (sfid-20171230_220734_177230_BEA928DF)
+Date: Sat, 30 Dec 2017 22:07:05 +0100
+MIME-Version: 1.0
+In-Reply-To: <1d76fe59-af15-ba4d-e05d-09dcd9ee38cd@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ian Molton <ian@mnementh.co.uk>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sat, 30 Dec 2017 21:50:12 +0100
 
-Create a macro to make the code a bit more readable, whilst we're stuck
-with using struct element offsets as register offsets.
+Omit an extra message for a memory allocation failure in this function.
 
-Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-[arend: rename macro to SD_REG]
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+This issue was detected by using the Coccinelle software.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 35 +++++++++-------------
- 1 file changed, 14 insertions(+), 21 deletions(-)
+ drivers/net/wireless/atmel/at76c50x-usb.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 752e0fb..b938407 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -161,6 +161,8 @@ struct rte_console {
- 
- #define CORE_BUS_REG(base, field) \
- 		(base + offsetof(struct sdpcmd_regs, field))
-+#define SD_REG(field) \
-+		(offsetof(struct sdpcmd_regs, field))
- 
- /* SDIO function 1 register CHIPCLKCSR */
- /* Force ALP request to backplane */
-@@ -1087,12 +1089,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 	brcmf_dbg(SDIO, "Enter\n");
- 
- 	/* Read mailbox data and ack that we did so */
--	ret = r_sdreg32(bus, &hmb_data,
--			offsetof(struct sdpcmd_regs, tohostmailboxdata));
-+	ret = r_sdreg32(bus, &hmb_data,	SD_REG(tohostmailboxdata));
- 
- 	if (ret == 0)
--		w_sdreg32(bus, SMB_INT_ACK,
--			  offsetof(struct sdpcmd_regs, tosbmailbox));
-+		w_sdreg32(bus, SMB_INT_ACK, SD_REG(tosbmailbox));
- 	bus->sdcnt.f1regdata += 2;
- 
- 	/* dongle indicates the firmware has halted/crashed */
-@@ -1207,8 +1207,7 @@ static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- 
- 	if (rtx) {
- 		bus->sdcnt.rxrtx++;
--		err = w_sdreg32(bus, SMB_NAK,
--				offsetof(struct sdpcmd_regs, tosbmailbox));
-+		err = w_sdreg32(bus, SMB_NAK, SD_REG(tosbmailbox));
- 
- 		bus->sdcnt.f1regdata++;
- 		if (err == 0)
-@@ -2333,9 +2332,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		if (!bus->intr) {
- 			/* Check device status, signal pending interrupt */
- 			sdio_claim_host(bus->sdiodev->func[1]);
--			ret = r_sdreg32(bus, &intstatus,
--					offsetof(struct sdpcmd_regs,
--						 intstatus));
-+			ret = r_sdreg32(bus, &intstatus, SD_REG(intstatus));
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			bus->sdcnt.f2txdata++;
- 			if (ret != 0)
-@@ -2441,7 +2438,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		brcmf_sdio_bus_sleep(bus, false, false);
- 
- 		/* Disable and clear interrupts at the chip level also */
--		w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask));
-+		w_sdreg32(bus, 0, SD_REG(hostintmask));
- 		local_hostintmask = bus->hostintmask;
- 		bus->hostintmask = 0;
- 
-@@ -2460,8 +2457,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 		sdio_disable_func(sdiodev->func[SDIO_FUNC_2]);
- 
- 		/* Clear any pending interrupts now that F2 is disabled */
--		w_sdreg32(bus, local_hostintmask,
--			  offsetof(struct sdpcmd_regs, intstatus));
-+		w_sdreg32(bus, local_hostintmask, SD_REG(intstatus));
- 
- 		sdio_release_host(sdiodev->func[1]);
- 	}
-@@ -2507,7 +2503,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	int ret;
- 
- 	buscore = brcmf_chip_get_core(bus->ci, BCMA_CORE_SDIO_DEV);
--	addr = buscore->base + offsetof(struct sdpcmd_regs, intstatus);
-+	addr = buscore->base + SD_REG(intstatus);
- 
- 	val = brcmf_sdiod_readl(bus->sdiodev, addr, &ret);
- 	bus->sdcnt.f1regdata++;
-@@ -2584,11 +2580,9 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- 	 */
- 	if (intstatus & I_HMB_FC_CHANGE) {
- 		intstatus &= ~I_HMB_FC_CHANGE;
--		err = w_sdreg32(bus, I_HMB_FC_CHANGE,
--				offsetof(struct sdpcmd_regs, intstatus));
-+		err = w_sdreg32(bus, I_HMB_FC_CHANGE, SD_REG(intstatus));
- 
--		err = r_sdreg32(bus, &newstatus,
--				offsetof(struct sdpcmd_regs, intstatus));
-+		err = r_sdreg32(bus, &newstatus, SD_REG(intstatus));
- 		bus->sdcnt.f1regdata += 2;
- 		atomic_set(&bus->fcstate,
- 			   !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE)));
-@@ -3771,7 +3765,7 @@ static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
- 
- 	/* clear all interrupts */
- 	core = brcmf_chip_get_core(chip, BCMA_CORE_SDIO_DEV);
--	reg_addr = core->base + offsetof(struct sdpcmd_regs, intstatus);
-+	reg_addr = core->base + SD_REG(intstatus);
- 	brcmf_sdiod_writel(sdiodev, reg_addr, 0xFFFFFFFF, NULL);
- 
- 	if (rstvec)
-@@ -4067,7 +4061,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 
- 	/* Enable function 2 (frame transfers) */
- 	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
--		  offsetof(struct sdpcmd_regs, tosbmailboxdata));
-+		  SD_REG(tosbmailboxdata));
- 	err = sdio_enable_func(sdiodev->func[SDIO_FUNC_2]);
- 
- 
-@@ -4077,8 +4071,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	if (!err) {
- 		/* Set up the interrupt mask and enable interrupts */
- 		bus->hostintmask = HOSTINTMASK;
--		w_sdreg32(bus, bus->hostintmask,
--			  offsetof(struct sdpcmd_regs, hostintmask));
-+		w_sdreg32(bus, bus->hostintmask, SD_REG(hostintmask));
- 
- 		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
- 	} else {
+diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+index ede89d4ffc88..2893d339b440 100644
+--- a/drivers/net/wireless/atmel/at76c50x-usb.c
++++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+@@ -1223,8 +1223,6 @@ static int at76_submit_rx_urb(struct at76_priv *priv)
+ 	if (!skb) {
+ 		skb = dev_alloc_skb(sizeof(struct at76_rx_buffer));
+ 		if (!skb) {
+-			wiphy_err(priv->hw->wiphy,
+-				  "cannot allocate rx skbuff\n");
+ 			ret = -ENOMEM;
+ 			goto exit;
+ 		}
 -- 
-1.9.1
+2.15.1
