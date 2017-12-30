@@ -1,78 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:59744 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752567AbdLLTET (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:44932 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750965AbdL3Stx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Dec 2017 14:04:19 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 8/9] wil6210: remove leftover "FIXME"s
-Date: Tue, 12 Dec 2017 21:04:01 +0200
-Message-Id: <1513105442-28041-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20171212_200426_403610_C5BADB60)
-In-Reply-To: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513105442-28041-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Sat, 30 Dec 2017 13:49:53 -0500
+Subject: Re: [PATCH] b43: Replace mdelay with msleep in
+ b43_radio_2057_init_post
+To: Jia-Ju Bai <baijiaju1990@gmail.com>, kvalo@codeaurora.org,
+        colin.king@canonical.com, johannes.berg@intel.com, tiwai@suse.de,
+        kstewart@linuxfoundation.org, gregkh@linuxfoundation.org,
+        andrew.zaborowski@intel.com
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1514632107-14698-1-git-send-email-baijiaju1990@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <906de5ba-b572-ada0-68ad-5e161ef6016e@lwfinger.net> (sfid-20171230_195020_091831_79CCB058)
+Date: Sat, 30 Dec 2017 12:49:50 -0600
+MIME-Version: 1.0
+In-Reply-To: <1514632107-14698-1-git-send-email-baijiaju1990@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+On 12/30/2017 05:08 AM, Jia-Ju Bai wrote:
+> b43_radio_2057_init_post is not called in an interrupt handler
+> nor holding a spinlock.
+> The function mdelay in it can be replaced with msleep, to reduce busy wait.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 
-"FIXME: IRQ mask debug" and "FIXME: interrupts enabled - for debug"
-can be removed because wil6210_debug_irq_mask() is now considered
-production feature.
+checkpatch.pl reports the following warning for this patch:
 
-"FIXME FW can transmit only ucast frames to peer" and "FIXME real
-ring_id instead of hard coded 0" can be removed because FW/HW already
-support multicast transmission.
+WARNING: msleep < 20ms can sleep for up to 20ms; see 
+Documentation/timers/timers-howto.txt
+#26: FILE: drivers/net/wireless/broadcom/b43/phy_n.c:1034:
++       msleep(2);
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/interrupt.c | 2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h   | 2 +-
- drivers/net/wireless/ath/wil6210/wmi.c       | 2 --
- 3 files changed, 2 insertions(+), 4 deletions(-)
+total: 0 errors, 1 warnings, 0 checks, 8 lines checked
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 5cf3417..dcf87a7 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -565,7 +565,7 @@ static irqreturn_t wil6210_hardirq(int irq, void *cookie)
- 	if (unlikely((pseudo_cause == 0) || ((pseudo_cause & 0xff) == 0xff)))
- 		return IRQ_NONE;
- 
--	/* FIXME: IRQ mask debug */
-+	/* IRQ mask debug */
- 	if (unlikely(wil6210_debug_irq_mask(wil, pseudo_cause)))
- 		return IRQ_NONE;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index ca5abbd..703e09e 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -439,7 +439,7 @@ enum { /* for wil6210_priv.status */
- 	wil_status_fwconnected,
- 	wil_status_dontscan,
- 	wil_status_mbox_ready, /* MBOX structures ready */
--	wil_status_irqen, /* FIXME: interrupts enabled - for debug */
-+	wil_status_irqen, /* interrupts enabled - for debug */
- 	wil_status_napi_en, /* NAPI enabled protected by wil->mutex */
- 	wil_status_resetting, /* reset in progress */
- 	wil_status_suspending, /* suspend in progress */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index ed7cdb7..4d7fb47 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -811,8 +811,6 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
- 		}
- 	}
- 
--	/* FIXME FW can transmit only ucast frames to peer */
--	/* FIXME real ring_id instead of hard coded 0 */
- 	ether_addr_copy(wil->sta[evt->cid].addr, evt->bssid);
- 	wil->sta[evt->cid].status = wil_sta_conn_pending;
- 
--- 
-1.9.1
+Have you tested to verify that a sleep as long as 20 ms will not cause problems? 
+The referenced document suggests a usleep_range() call.
+
+In general, delay changes should never be proposed without testing.
+
+Larry
