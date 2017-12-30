@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52084 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752308AbdLBUXg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Dec 2017 15:23:36 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: j@w1.fi, David Ahern <dsahern@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH net 1/2] netlink: add NLA_U8_BUGGY attribute type
-Date: Sat,  2 Dec 2017 21:23:31 +0100
-Message-Id: <20171202202332.10205-1-johannes@sipsolutions.net> (sfid-20171202_212358_779029_838D8F16)
+Received: from mout.web.de ([212.227.17.12]:58224 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750968AbdL3T6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Dec 2017 14:58:04 -0500
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        David Howells <dhowells@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Ingo Molnar <mingo@kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] wireless: airo: Delete an error message for a failed memory
+ allocation in airo_networks_allocate()
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Message-ID: <33444ac1-9a8b-bd7d-fd22-f299add190df@users.sourceforge.net> (sfid-20171230_205828_351977_C8589F5D)
+Date: Sat, 30 Dec 2017 20:57:15 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sat, 30 Dec 2017 20:48:44 +0100
 
-This netlink type is used only for backwards compatibility
-with broken userspace that used the wrong size for a given
-u8 attribute, which is now rejected. It would've been wrong
-before already, since on big endian the wrong value (always
-zero) would be used by the kernel, but we can't break the
-existing deployed userspace - hostapd for example now fails
-to initialize entirely.
+Omit an extra message for a memory allocation failure in this function.
 
-We could try to fix up the big endian problem here, but we
-don't know *how* userspace misbehaved - if using nla_put_u32
-then we could, but we also found a debug tool (which we'll
-ignore for the purposes of this regression) that was putting
-the padding into the length.
+This issue was detected by using the Coccinelle software.
 
-Fixes: 28033ae4e0f5 ("net: netlink: Update attr validation to require exact length for some types")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- include/net/netlink.h | 1 +
- lib/nlattr.c          | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/net/wireless/cisco/airo.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 0c154f98e987..448a9b86c959 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -180,6 +180,7 @@ enum {
- 	NLA_S32,
- 	NLA_S64,
- 	NLA_BITFIELD32,
-+	NLA_U8_BUGGY, /* don't use this - only for bug-ward compatibility */
- 	__NLA_TYPE_MAX,
- };
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 86e795de6760..a65d82d26eaa 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -2714,12 +2714,7 @@ static int airo_networks_allocate(struct airo_info *ai)
  
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index 8bf78b4b78f0..2b89d25d4745 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -28,6 +28,7 @@ static const u8 nla_attr_len[NLA_TYPE_MAX+1] = {
- };
+ 	ai->networks = kcalloc(AIRO_MAX_NETWORK_COUNT, sizeof(BSSListElement),
+ 			       GFP_KERNEL);
+-	if (!ai->networks) {
+-		airo_print_warn("", "Out of memory allocating beacons");
+-		return -ENOMEM;
+-	}
+-
+-	return 0;
++	return ai->networks ? 0 : -ENOMEM;
+ }
  
- static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
-+	[NLA_U8_BUGGY]	= sizeof(u8),
- 	[NLA_MSECS]	= sizeof(u64),
- 	[NLA_NESTED]	= NLA_HDRLEN,
- };
+ static void airo_networks_free(struct airo_info *ai)
 -- 
-2.14.2
+2.15.1
