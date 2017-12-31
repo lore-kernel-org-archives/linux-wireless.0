@@ -1,36 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:49444 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751861AbdLMJQk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 04:16:40 -0500
-Subject: Re: net/wireless/shipped-certs.c:2:1: error: expected expression at
- end of input
-To: Damian Tometzki <damian.tometzki@icloud.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <4006aefb-e9af-d809-b45a-201d20e75f9d@molgen.mpg.de>
- <1512468219.26976.15.camel@sipsolutions.net>
- <8617D3B1-DE6C-4E75-AB44-1845806E18D6@icloud.com>
-From: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
-Message-ID: <f091f30c-3681-6e6e-774c-3906026c573e@molgen.mpg.de> (sfid-20171213_101645_851701_236FFD7E)
-Date: Wed, 13 Dec 2017 10:16:38 +0100
-MIME-Version: 1.0
-In-Reply-To: <8617D3B1-DE6C-4E75-AB44-1845806E18D6@icloud.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:38670 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751021AbdLaRbg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 31 Dec 2017 12:31:36 -0500
+Received: by mail-lf0-f65.google.com with SMTP id w196so34314548lff.5
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:36 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 02/18] ath10k: add inlined wrappers for htt rx ops
+Date: Sun, 31 Dec 2017 18:29:09 +0100
+Message-Id: <20171231172925.24014-3-erik.stromdahl@gmail.com> (sfid-20171231_183216_938037_CCD94D65)
+In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Damian,
+Added for the same reason as the TX wrappers.
 
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h    | 38 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 14 ++++++------
+ 2 files changed, 45 insertions(+), 7 deletions(-)
 
-On 12/13/17 08:53, Damian Tometzki wrote:
-
-> I got. the same Build error.
-
-So first you didn’t have hexdump installed, and then after installing it 
-you got it? Removing the generated file fixed the build?
-
-
-Kind regards,
-
-Paul
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index cdd87ef86c00..3fa1be7749b2 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1907,6 +1907,44 @@ struct ath10k_htt_rx_ops {
+ 	void* (*htt_get_vaddr_ring)(struct ath10k_htt *htt);
+ 	void (*htt_reset_paddrs_ring)(struct ath10k_htt *htt, int idx);
+ };
++
++static inline size_t ath10k_htt_get_rx_ring_size(struct ath10k_htt *htt)
++{
++	if (!htt->rx_ops->htt_get_rx_ring_size)
++		return 0;
++
++	return htt->rx_ops->htt_get_rx_ring_size(htt);
++}
++
++static inline void ath10k_htt_config_paddrs_ring(struct ath10k_htt *htt,
++						 void *vaddr)
++{
++	if (htt->rx_ops->htt_config_paddrs_ring)
++		htt->rx_ops->htt_config_paddrs_ring(htt, vaddr);
++}
++
++static inline void ath10k_htt_set_paddrs_ring(struct ath10k_htt *htt,
++					      dma_addr_t paddr,
++					      int idx)
++{
++	if (htt->rx_ops->htt_set_paddrs_ring)
++		htt->rx_ops->htt_set_paddrs_ring(htt, paddr, idx);
++}
++
++static inline void *ath10k_htt_get_vaddr_ring(struct ath10k_htt *htt)
++{
++	if (!htt->rx_ops->htt_get_vaddr_ring)
++		return NULL;
++
++	return htt->rx_ops->htt_get_vaddr_ring(htt);
++}
++
++static inline void ath10k_htt_reset_paddrs_ring(struct ath10k_htt *htt, int idx)
++{
++	if (htt->rx_ops->htt_reset_paddrs_ring)
++		htt->rx_ops->htt_reset_paddrs_ring(htt, idx);
++}
++
+ #define RX_HTT_HDR_STATUS_LEN 64
+ 
+ /* This structure layout is programmed via rx ring setup
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6d96f9560950..7b3d6bf015c7 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -180,7 +180,7 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+ 		rxcb = ATH10K_SKB_RXCB(skb);
+ 		rxcb->paddr = paddr;
+ 		htt->rx_ring.netbufs_ring[idx] = skb;
+-		htt->rx_ops->htt_set_paddrs_ring(htt, paddr, idx);
++		ath10k_htt_set_paddrs_ring(htt, paddr, idx);
+ 		htt->rx_ring.fill_cnt++;
+ 
+ 		if (htt->rx_ring.in_ord_rx) {
+@@ -285,8 +285,8 @@ void ath10k_htt_rx_free(struct ath10k_htt *htt)
+ 	ath10k_htt_rx_ring_free(htt);
+ 
+ 	dma_free_coherent(htt->ar->dev,
+-			  htt->rx_ops->htt_get_rx_ring_size(htt),
+-			  htt->rx_ops->htt_get_vaddr_ring(htt),
++			  ath10k_htt_get_rx_ring_size(htt),
++			  ath10k_htt_get_vaddr_ring(htt),
+ 			  htt->rx_ring.base_paddr);
+ 
+ 	dma_free_coherent(htt->ar->dev,
+@@ -313,7 +313,7 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
+ 	idx = htt->rx_ring.sw_rd_idx.msdu_payld;
+ 	msdu = htt->rx_ring.netbufs_ring[idx];
+ 	htt->rx_ring.netbufs_ring[idx] = NULL;
+-	htt->rx_ops->htt_reset_paddrs_ring(htt, idx);
++	ath10k_htt_reset_paddrs_ring(htt, idx);
+ 
+ 	idx++;
+ 	idx &= htt->rx_ring.size_mask;
+@@ -585,13 +585,13 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 	if (!htt->rx_ring.netbufs_ring)
+ 		goto err_netbuf;
+ 
+-	size = htt->rx_ops->htt_get_rx_ring_size(htt);
++	size = ath10k_htt_get_rx_ring_size(htt);
+ 
+ 	vaddr_ring = dma_alloc_coherent(htt->ar->dev, size, &paddr, GFP_KERNEL);
+ 	if (!vaddr_ring)
+ 		goto err_dma_ring;
+ 
+-	htt->rx_ops->htt_config_paddrs_ring(htt, vaddr_ring);
++	ath10k_htt_config_paddrs_ring(htt, vaddr_ring);
+ 	htt->rx_ring.base_paddr = paddr;
+ 
+ 	vaddr = dma_alloc_coherent(htt->ar->dev,
+@@ -625,7 +625,7 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 
+ err_dma_idx:
+ 	dma_free_coherent(htt->ar->dev,
+-			  htt->rx_ops->htt_get_rx_ring_size(htt),
++			  ath10k_htt_get_rx_ring_size(htt),
+ 			  vaddr_ring,
+ 			  htt->rx_ring.base_paddr);
+ err_dma_ring:
+-- 
+2.15.1
