@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from james.theweblords.de ([217.11.55.87]:47995 "EHLO
-        james.theweblords.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752621AbdLSTZk (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:39803 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751058AbdLaRbo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Dec 2017 14:25:40 -0500
-Date: Tue, 19 Dec 2017 20:25:26 +0100
-From: Peter =?UTF-8?B?R3Jvw59l?= <pegro@friiks.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Peter =?UTF-8?B?R3Jvw59l?= <pegro@friiks.de>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix setting TX power on monitor interfaces
-Message-ID: <20171219202526.5bd4568c@fem-net.de> (sfid-20171219_202550_432046_ADE387CB)
-In-Reply-To: <1513677210.26145.10.camel@sipsolutions.net>
-References: <1512849236.26976.43.camel@sipsolutions.net>
-        <20171213172946.19976-1-pegro@friiks.de>
-        <1513677210.26145.10.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/vMzBpRKuJWVn2Z+A9R_ACUa"; protocol="application/pgp-signature"
+        Sun, 31 Dec 2017 12:31:44 -0500
+Received: by mail-lf0-f67.google.com with SMTP id m20so39145406lfi.6
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:44 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 11/18] ath10k: add HTT RX HL ops
+Date: Sun, 31 Dec 2017 18:29:18 +0100
+Message-Id: <20171231172925.24014-12-erik.stromdahl@gmail.com> (sfid-20171231_183210_558346_FE987D34)
+In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/vMzBpRKuJWVn2Z+A9R_ACUa
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Initial (empty) HTT RX ops for high latency devices.
 
-On Tue, 19 Dec 2017 10:53:30 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-> > +	if (has_monitor) {
-> > +		sdata =3D rtnl_dereference(local->monitor_sdata);
-> > +		if (sdata) {
-> > +			sdata->user_power_level =3D local->user_power_level;
-> > +			if (txp_type !=3D sdata->vif.bss_conf.txpower_type)
-> > +				update_txp_type =3D true;
-> > +			sdata->vif.bss_conf.txpower_type =3D txp_type;
-> > +
-> > +			ieee80211_recalc_txpower(sdata, update_txp_type);
-> > +		}
-> > +	} =20
->=20
-> But do we really need this? I think we can probably live with just not
-> having monitor handled here, i.e. only have the "if monitor continue;"
-> part?
-
-I don't mind. I just thought, if I call ieee80211_recalc_txpower on the
-monitor_sdata interface when called explicitly, I would also do it when
-iterating over all interfaces, just to be consistent. I don't know, whether
-there are drivers out there, that store power limits on monitor interfaces
-separately for injection or whatever.
-
-I can send a patch without the quoted part.
-
-Regards
-Peter
-
---Sig_/vMzBpRKuJWVn2Z+A9R_ACUa
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEFBMm5T0HjV/btb+Q2Ws8k4f65hoFAlo5Z6YACgkQ2Ws8k4f6
-5hq2FQf9EmZAVhmPM5wTrHMfnC/2pBWFeHMSmHjoaznGb6umM2PHHFoR2/nW1MHN
-/U6ug9DaqQESCATLwNCCrwEstPHExpcSLYg/hTh+8fXqrGzuW6tw3nGsbo3Q0JEx
-wbPkAcFpSb80R1UecINuRL9NTBIIywYCVEZD5MAnAXgcQqwLzJrPuNW4yJnE7nKQ
-ZBD0pThx4nLT3D06Dnkj6g1h92ZR2TSV43EQ7SuhdeZoak3PEeI7bhguwso+TiVB
-vRjdqqPEcWuUfXNrHGJxxdjniOEJB2yVrADPsVW7S94aJJD7rO1Y8KB/+a/dAWew
-xVnQkFjFWkIJjf7NKAAsCspNcsxT5A==
-=w91O
------END PGP SIGNATURE-----
-
---Sig_/vMzBpRKuJWVn2Z+A9R_ACUa--
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 1432d5b3e9d3..f7d071ca8b76 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2917,11 +2917,16 @@ static const struct ath10k_htt_rx_ops htt_rx_ops_64 = {
+ 	.htt_reset_paddrs_ring = ath10k_htt_reset_paddrs_ring_64,
+ };
+ 
++static const struct ath10k_htt_rx_ops htt_rx_ops_hl = {
++};
++
+ void ath10k_htt_set_rx_ops(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
+ 
+-	if (ar->hw_params.target_64bit)
++	if (ar->is_high_latency)
++		htt->rx_ops = &htt_rx_ops_hl;
++	else if (ar->hw_params.target_64bit)
+ 		htt->rx_ops = &htt_rx_ops_64;
+ 	else
+ 		htt->rx_ops = &htt_rx_ops_32;
+-- 
+2.15.1
