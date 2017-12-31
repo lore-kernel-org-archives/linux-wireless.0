@@ -1,72 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f178.google.com ([209.85.213.178]:36362 "EHLO
-        mail-yb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752217AbdLKRof (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:40381 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751057AbdLaRbl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Dec 2017 12:44:35 -0500
-Received: by mail-yb0-f178.google.com with SMTP id j7so6315257ybl.3
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Dec 2017 09:44:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20171211154140.GD4803@minitux>
-References: <1512982342-10343-1-git-send-email-loic.poulain@linaro.org>
- <20171211153403.GA30332@codeaurora.org> <20171211154140.GD4803@minitux>
-From: Loic Poulain <loic.poulain@linaro.org>
-Date: Mon, 11 Dec 2017 18:43:54 +0100
-Message-ID: <CAMZdPi_9RSSxBzaLq07JcoZXMwztgcD=YfeJ1X4yzaZck-d+bg@mail.gmail.com> (sfid-20171211_184441_778296_27168348)
-Subject: Re: [PATCH v2] wcn36xx: Fix dynamic power saving
-To: Ramon Fried <rfried@codeaurora.org>
-Cc: kvalo@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 31 Dec 2017 12:31:41 -0500
+Received: by mail-lf0-f65.google.com with SMTP id u84so32314899lff.7
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:40 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 07/18] ath10k: DMA related fixes for high latency devices
+Date: Sun, 31 Dec 2017 18:29:14 +0100
+Message-Id: <20171231172925.24014-8-erik.stromdahl@gmail.com> (sfid-20171231_183215_869628_3E11BF76)
+In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ramon,
+Several DMA related functions (such as the dma_map_xxx functions)
+are not used with high latency devices and don't need to be invoked
+in this case.
 
-On 11 December 2017 at 16:41, Bjorn Andersson
-<bjorn.andersson@linaro.org> wrote:
-> On Mon 11 Dec 07:34 PST 2017, Ramon Fried wrote:
->
->> On Mon, Dec 11, 2017 at 10:52:22AM +0200, Loic Poulain wrote:
->> > Since driver does not report hardware dynamic power saving cap,
->> > this is up to the mac80211 to manage power saving timeout and
->> > state machine, using the ieee80211 config callback to report
->> > PS changes. This patch enables/disables PS mode according to
->> > the new configuration.
->> >
->> > Remove old behaviour enabling PS mode in a static way, this make
->> > the device unusable when power save is enabled since device is
->> > forced to PS regardless RX/TX traffic.
->> >
->>
->> Hi.
->> I tried to see if this patch solves the ping delay once power save is
->> turned on and it appears it doesn't (log below).
->> I do see some change in the delay though in comparison to testing without the patch.
->> Bjorn, How did you test it ?
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c    | 19 ++++++++++++-------
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  3 ++-
+ drivers/net/wireless/ath/ath10k/txrx.c   |  3 ++-
+ 3 files changed, 16 insertions(+), 9 deletions(-)
 
-For me this is the expected behavior, when station is in PS mode, some
-time is required
-to leave PS, this is the cost for saving power. Since ping is every
-second, station goes
-back to PS between each ping due to dynamic PS timeout, this indeed
-leads to some
-latency... I obtain same kind of results pinging my mobile phone. Note
-that the PS
-timeout can be changed (100ms by default).
-
->>
->
-> Without this patch I get ping times around a second and SSH is not
-> usable, with this patch I see similar ping times as you, but SSH is
-> usable.
->
-> I have not been able to run iperf, because I keep hitting
-> https://bugs.96boards.org/show_bug.cgi?id=663
-
-Yes, improvement can be mainly observed with high traffic.
-
-Regards,
-Loic
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 492dc5b4bbf2..dd69345f911e 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -53,7 +53,8 @@ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
+ {
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
+ 
+-	dma_unmap_single(htc->ar->dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
++	if (!htc->ar->is_high_latency)
++		dma_unmap_single(htc->ar->dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
+ 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
+ }
+ 
+@@ -137,11 +138,14 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 	ath10k_htc_prepare_tx_skb(ep, skb);
+ 
+ 	skb_cb->eid = eid;
+-	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
+-	ret = dma_mapping_error(dev, skb_cb->paddr);
+-	if (ret) {
+-		ret = -EIO;
+-		goto err_credits;
++	if (!ar->is_high_latency) {
++		skb_cb->paddr = dma_map_single(dev, skb->data, skb->len,
++					       DMA_TO_DEVICE);
++		ret = dma_mapping_error(dev, skb_cb->paddr);
++		if (ret) {
++			ret = -EIO;
++			goto err_credits;
++		}
+ 	}
+ 
+ 	sg_item.transfer_id = ep->eid;
+@@ -157,7 +161,8 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 	return 0;
+ 
+ err_unmap:
+-	dma_unmap_single(dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
++	if (!ar->is_high_latency)
++		dma_unmap_single(dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
+ err_credits:
+ 	if (ep->tx_credit_flow_enabled) {
+ 		spin_lock_bh(&htc->tx_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index a086958c39b6..4d0bfb47d162 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -1125,7 +1125,8 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	return 0;
+ 
+ err_unmap_msdu:
+-	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
++	if (!ar->is_high_latency)
++		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ err_free_txdesc:
+ 	dev_kfree_skb_any(txdesc);
+ err_free_msdu_id:
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 5b3b021526ab..febc3eb93fbd 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -94,7 +94,8 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		wake_up(&htt->empty_tx_wq);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 
+-	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
++	if (!ar->is_high_latency)
++		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
+ 	ath10k_report_offchan_tx(htt->ar, msdu);
+ 
+-- 
+2.15.1
