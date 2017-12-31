@@ -1,223 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:44704 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752990AbdLMMvz (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34601 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750950AbdLaRbg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Dec 2017 07:51:55 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [v5 7/8] rsi: add module parameter operating mode
-Date: Wed, 13 Dec 2017 18:12:56 +0530
-Message-Id: <1513168977-2121-8-git-send-email-amitkarwar@gmail.com> (sfid-20171213_135200_818265_3035ADE9)
-In-Reply-To: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
-References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
+        Sun, 31 Dec 2017 12:31:36 -0500
+Received: by mail-lf0-f65.google.com with SMTP id h140so1449451lfg.1
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:35 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 01/18] ath10k: add inlined wrappers for htt tx ops
+Date: Sun, 31 Dec 2017 18:29:08 +0100
+Message-Id: <20171231172925.24014-2-erik.stromdahl@gmail.com> (sfid-20171231_183148_799576_BAAE35F0)
+In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+These wrappers makes the HTT ops align better with the HIF ops
+(where similar wrappers are used).
 
-Operating mode determines the support for other protocols.
-This is made as module parameter for better usage.
+It also makes it easier for a target to have unsupported ops
+(by letting the corresponding function pointer be NULL).
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_main.c | 57 ++++++++++++++++++++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 10 +++++-
- drivers/net/wireless/rsi/rsi_91x_usb.c  | 10 +++++-
- drivers/net/wireless/rsi/rsi_common.h   |  2 +-
- drivers/net/wireless/rsi/rsi_hal.h      | 11 +++++++
- 5 files changed, 79 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.c    |  4 +--
+ drivers/net/wireless/ath/ath10k/htt.h    | 51 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 12 ++++----
+ drivers/net/wireless/ath/ath10k/mac.c    |  2 +-
+ 4 files changed, 60 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 375b725..4a0f5a18 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -68,8 +68,24 @@ EXPORT_SYMBOL_GPL(rsi_dbg);
- static char *opmode_str(int oper_mode)
- {
- 	switch (oper_mode) {
--	case RSI_DEV_OPMODE_WIFI_ALONE:
-+	case DEV_OPMODE_WIFI_ALONE:
- 		return "Wi-Fi alone";
-+	case DEV_OPMODE_BT_ALONE:
-+		return "BT EDR alone";
-+	case DEV_OPMODE_BT_LE_ALONE:
-+		return "BT LE alone";
-+	case DEV_OPMODE_BT_DUAL:
-+		return "BT Dual";
-+	case DEV_OPMODE_STA_BT:
-+		return "Wi-Fi STA + BT EDR";
-+	case DEV_OPMODE_STA_BT_LE:
-+		return "Wi-Fi STA + BT LE";
-+	case DEV_OPMODE_STA_BT_DUAL:
-+		return "Wi-Fi STA + BT DUAL";
-+	case DEV_OPMODE_AP_BT:
-+		return "Wi-Fi AP + BT EDR";
-+	case DEV_OPMODE_AP_BT_DUAL:
-+		return "Wi-Fi AP + BT DUAL";
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 625198dea18b..21a67f82f037 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -257,11 +257,11 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+ 		return status;
  	}
  
- 	return "Unknown";
-@@ -267,7 +283,7 @@ void rsi_set_bt_context(void *priv, void *bt_context)
-  *
-  * Return: Pointer to the adapter structure on success, NULL on failure .
-  */
--struct rsi_hw *rsi_91x_init(void)
-+struct rsi_hw *rsi_91x_init(u16 oper_mode)
- {
- 	struct rsi_hw *adapter = NULL;
- 	struct rsi_common *common = NULL;
-@@ -309,11 +325,34 @@ struct rsi_hw *rsi_91x_init(void)
- 	spin_lock_init(&adapter->ps_lock);
- 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
- 	init_completion(&common->wlan_init_completion);
-+	common->oper_mode = oper_mode;
- 	common->init_done = true;
--
--	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
--	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
- 	adapter->device_model = RSI_DEV_9113;
+-	status = htt->tx_ops->htt_send_frag_desc_bank_cfg(htt);
++	status = ath10k_htt_send_frag_desc_bank_cfg(htt);
+ 	if (status)
+ 		return status;
+ 
+-	status = htt->tx_ops->htt_send_rx_ring_cfg(htt);
++	status = ath10k_htt_send_rx_ring_cfg(htt);
+ 	if (status) {
+ 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
+ 			    status);
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 360c71b106d7..cdd87ef86c00 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1848,6 +1848,57 @@ struct ath10k_htt_tx_ops {
+ 	void (*htt_free_txbuff)(struct ath10k_htt *htt);
+ };
+ 
++static inline int ath10k_htt_send_rx_ring_cfg(struct ath10k_htt *htt)
++{
++	if (!htt->tx_ops->htt_send_rx_ring_cfg)
++		return -EOPNOTSUPP;
 +
-+	/* Determine coex mode */
-+	switch (common->oper_mode) {
-+	case DEV_OPMODE_STA_BT_DUAL:
-+	case DEV_OPMODE_STA_BT:
-+	case DEV_OPMODE_STA_BT_LE:
-+	case DEV_OPMODE_BT_ALONE:
-+	case DEV_OPMODE_BT_LE_ALONE:
-+	case DEV_OPMODE_BT_DUAL:
-+		common->coex_mode = 2;
-+		break;
-+	case DEV_OPMODE_AP_BT_DUAL:
-+	case DEV_OPMODE_AP_BT:
-+		common->coex_mode = 4;
-+		break;
-+	case DEV_OPMODE_WIFI_ALONE:
-+		common->coex_mode = 1;
-+		break;
-+	default:
-+		common->oper_mode = 1;
-+		common->coex_mode = 1;
-+	}
-+	rsi_dbg(INFO_ZONE, "%s: oper_mode = %d, coex_mode = %d\n",
-+		__func__, common->oper_mode, common->coex_mode);
++	return htt->tx_ops->htt_send_rx_ring_cfg(htt);
++}
 +
- 	if (common->coex_mode > 1) {
- 		if (rsi_coex_attach(common)) {
- 			rsi_dbg(ERR_ZONE, "Failed to init coex module\n");
-@@ -348,10 +387,12 @@ void rsi_91x_deinit(struct rsi_hw *adapter)
- 	for (ii = 0; ii < NUM_SOFT_QUEUES; ii++)
- 		skb_queue_purge(&common->tx_queue[ii]);
- 
--	common->init_done = false;
--
--	if (common->coex_mode > 1)
-+	if (common->coex_mode > 1) {
- 		rsi_coex_detach(common);
-+		rsi_bt_ops.detach(common->bt_adapter);
-+	}
++static inline int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
++{
++	if (!htt->tx_ops->htt_send_frag_desc_bank_cfg)
++		return -EOPNOTSUPP;
 +
-+	common->init_done = false;
- 
- 	kfree(common);
- 	kfree(adapter->rsi_dev);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index ba38c6d..5722736 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -21,6 +21,14 @@
- #include "rsi_coex.h"
- #include "rsi_hal.h"
- 
-+/* Default operating mode is wlan STA + BT */
-+static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
-+module_param(dev_oper_mode, ushort, 0444);
-+MODULE_PARM_DESC(dev_oper_mode,
-+		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
-+		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
-+		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++	return htt->tx_ops->htt_send_frag_desc_bank_cfg(htt);
++}
 +
- /**
-  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
-  * @rw: Read/write
-@@ -926,7 +934,7 @@ static int rsi_probe(struct sdio_func *pfunction,
- 
- 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
- 
--	adapter = rsi_91x_init();
-+	adapter = rsi_91x_init(dev_oper_mode);
- 	if (!adapter) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
- 			__func__);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index aec9d2c..a326162 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -21,6 +21,14 @@
- #include "rsi_hal.h"
- #include "rsi_coex.h"
- 
-+/* Default operating mode is wlan STA + BT */
-+static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
-+module_param(dev_oper_mode, ushort, 0444);
-+MODULE_PARM_DESC(dev_oper_mode,
-+		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
-+		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
-+		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++static inline int ath10k_htt_alloc_frag_desc(struct ath10k_htt *htt)
++{
++	if (!htt->tx_ops->htt_alloc_frag_desc)
++		return -EOPNOTSUPP;
 +
- /**
-  * rsi_usb_card_write() - This function writes to the USB Card.
-  * @adapter: Pointer to the adapter structure.
-@@ -708,7 +716,7 @@ static int rsi_probe(struct usb_interface *pfunction,
- 
- 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
- 
--	adapter = rsi_91x_init();
-+	adapter = rsi_91x_init(dev_oper_mode);
- 	if (!adapter) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
- 			__func__);
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index 4616585..d9ff3b8 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -81,7 +81,7 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
- 
- void rsi_mac80211_detach(struct rsi_hw *hw);
- u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
--struct rsi_hw *rsi_91x_init(void);
-+struct rsi_hw *rsi_91x_init(u16 oper_mode);
- void rsi_91x_deinit(struct rsi_hw *adapter);
- int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
- #ifdef CONFIG_PM
-diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
-index e712223..a7d3011 100644
---- a/drivers/net/wireless/rsi/rsi_hal.h
-+++ b/drivers/net/wireless/rsi/rsi_hal.h
-@@ -17,6 +17,17 @@
- #ifndef __RSI_HAL_H__
- #define __RSI_HAL_H__
- 
-+/* Device Operating modes */
-+#define DEV_OPMODE_WIFI_ALONE		1
-+#define DEV_OPMODE_BT_ALONE		4
-+#define DEV_OPMODE_BT_LE_ALONE		8
-+#define DEV_OPMODE_BT_DUAL		12
-+#define DEV_OPMODE_STA_BT		5
-+#define DEV_OPMODE_STA_BT_LE		9
-+#define DEV_OPMODE_STA_BT_DUAL		13
-+#define DEV_OPMODE_AP_BT		6
-+#define DEV_OPMODE_AP_BT_DUAL		14
++	return htt->tx_ops->htt_alloc_frag_desc(htt);
++}
 +
- #define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
- #define FLASH_SECTOR_SIZE		(4 * 1024)
++static inline void ath10k_htt_free_frag_desc(struct ath10k_htt *htt)
++{
++	if (htt->tx_ops->htt_free_frag_desc)
++		htt->tx_ops->htt_free_frag_desc(htt);
++}
++
++static inline int ath10k_htt_tx(struct ath10k_htt *htt,
++				enum ath10k_hw_txrx_mode txmode,
++				struct sk_buff *msdu)
++{
++	return htt->tx_ops->htt_tx(htt, txmode, msdu);
++}
++
++static inline int ath10k_htt_alloc_txbuff(struct ath10k_htt *htt)
++{
++	if (!htt->tx_ops->htt_alloc_txbuff)
++		return -EOPNOTSUPP;
++
++	return htt->tx_ops->htt_alloc_txbuff(htt);
++}
++
++static inline void ath10k_htt_free_txbuff(struct ath10k_htt *htt)
++{
++	if (htt->tx_ops->htt_free_txbuff)
++		htt->tx_ops->htt_free_txbuff(htt);
++}
++
+ struct ath10k_htt_rx_ops {
+ 	size_t (*htt_get_rx_ring_size)(struct ath10k_htt *htt);
+ 	void (*htt_config_paddrs_ring)(struct ath10k_htt *htt, void *vaddr);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index d334b7be1fea..a086958c39b6 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -443,13 +443,13 @@ static int ath10k_htt_tx_alloc_buf(struct ath10k_htt *htt)
+ 	struct ath10k *ar = htt->ar;
+ 	int ret;
  
+-	ret = htt->tx_ops->htt_alloc_txbuff(htt);
++	ret = ath10k_htt_alloc_txbuff(htt);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to alloc cont tx buffer: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	ret = htt->tx_ops->htt_alloc_frag_desc(htt);
++	ret = ath10k_htt_alloc_frag_desc(htt);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to alloc cont frag desc: %d\n", ret);
+ 		goto free_txbuf;
+@@ -473,10 +473,10 @@ static int ath10k_htt_tx_alloc_buf(struct ath10k_htt *htt)
+ 	ath10k_htt_tx_free_txq(htt);
+ 
+ free_frag_desc:
+-	htt->tx_ops->htt_free_frag_desc(htt);
++	ath10k_htt_free_frag_desc(htt);
+ 
+ free_txbuf:
+-	htt->tx_ops->htt_free_txbuff(htt);
++	ath10k_htt_free_txbuff(htt);
+ 
+ 	return ret;
+ }
+@@ -530,9 +530,9 @@ void ath10k_htt_tx_destroy(struct ath10k_htt *htt)
+ 	if (!htt->tx_mem_allocated)
+ 		return;
+ 
+-	htt->tx_ops->htt_free_txbuff(htt);
++	ath10k_htt_free_txbuff(htt);
+ 	ath10k_htt_tx_free_txq(htt);
+-	htt->tx_ops->htt_free_frag_desc(htt);
++	ath10k_htt_free_frag_desc(htt);
+ 	ath10k_htt_tx_free_txdone_fifo(htt);
+ 	htt->tx_mem_allocated = false;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ebb3f1b046f3..dcf6574f217c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3597,7 +3597,7 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
+ 
+ 	switch (txpath) {
+ 	case ATH10K_MAC_TX_HTT:
+-		ret = htt->tx_ops->htt_tx(htt, txmode, skb);
++		ret = ath10k_htt_tx(htt, txmode, skb);
+ 		break;
+ 	case ATH10K_MAC_TX_HTT_MGMT:
+ 		ret = ath10k_htt_mgmt_tx(htt, skb);
 -- 
-2.7.4
+2.15.1
