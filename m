@@ -1,223 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:37395 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751582AbdLAHt7 (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:40387 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751063AbdLaRbt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Dec 2017 02:49:59 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [v3 7/8] rsi: add module parameter operating mode
-Date: Fri,  1 Dec 2017 13:11:24 +0530
-Message-Id: <1512114085-2615-8-git-send-email-amitkarwar@gmail.com> (sfid-20171201_085011_824158_89AB8DF2)
-In-Reply-To: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com>
-References: <1512114085-2615-1-git-send-email-amitkarwar@gmail.com>
+        Sun, 31 Dec 2017 12:31:49 -0500
+Received: by mail-lf0-f65.google.com with SMTP id u84so32315054lff.7
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:48 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 16/18] ath10k: remove htt pending TX count for high latency
+Date: Sun, 31 Dec 2017 18:29:23 +0100
+Message-Id: <20171231172925.24014-17-erik.stromdahl@gmail.com> (sfid-20171231_183159_487179_0D4810A9)
+In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+High latency chipsets does not seem to send any
+HTT_T2H_MSG_TYPE_TX_COMPL_IND for outgoing frames.
 
-Operating mode determines the support for other protocols.
-This is made as module parameter for better usage.
+This means that htt->num_pending_tx will never be
+decremented and we will eventually hit the maximum
+limit. All outgoing packets will then be discarded.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_main.c | 57 ++++++++++++++++++++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 10 +++++-
- drivers/net/wireless/rsi/rsi_91x_usb.c  | 10 +++++-
- drivers/net/wireless/rsi/rsi_common.h   |  2 +-
- drivers/net/wireless/rsi/rsi_hal.h      | 11 +++++++
- 5 files changed, 79 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 375b725..4a0f5a18 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -68,8 +68,24 @@ EXPORT_SYMBOL_GPL(rsi_dbg);
- static char *opmode_str(int oper_mode)
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 7ea27454ef3f..0c14fb3b7181 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -153,6 +153,9 @@ void ath10k_htt_tx_txq_update(struct ieee80211_hw *hw,
+ 
+ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
  {
- 	switch (oper_mode) {
--	case RSI_DEV_OPMODE_WIFI_ALONE:
-+	case DEV_OPMODE_WIFI_ALONE:
- 		return "Wi-Fi alone";
-+	case DEV_OPMODE_BT_ALONE:
-+		return "BT EDR alone";
-+	case DEV_OPMODE_BT_LE_ALONE:
-+		return "BT LE alone";
-+	case DEV_OPMODE_BT_DUAL:
-+		return "BT Dual";
-+	case DEV_OPMODE_STA_BT:
-+		return "Wi-Fi STA + BT EDR";
-+	case DEV_OPMODE_STA_BT_LE:
-+		return "Wi-Fi STA + BT LE";
-+	case DEV_OPMODE_STA_BT_DUAL:
-+		return "Wi-Fi STA + BT DUAL";
-+	case DEV_OPMODE_AP_BT:
-+		return "Wi-Fi AP + BT EDR";
-+	case DEV_OPMODE_AP_BT_DUAL:
-+		return "Wi-Fi AP + BT DUAL";
- 	}
++	if (htt->ar->is_high_latency)
++		return;
++
+ 	lockdep_assert_held(&htt->tx_lock);
  
- 	return "Unknown";
-@@ -267,7 +283,7 @@ void rsi_set_bt_context(void *priv, void *bt_context)
-  *
-  * Return: Pointer to the adapter structure on success, NULL on failure .
-  */
--struct rsi_hw *rsi_91x_init(void)
-+struct rsi_hw *rsi_91x_init(u16 oper_mode)
+ 	htt->num_pending_tx--;
+@@ -162,6 +165,9 @@ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
+ 
+ int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
  {
- 	struct rsi_hw *adapter = NULL;
- 	struct rsi_common *common = NULL;
-@@ -309,11 +325,34 @@ struct rsi_hw *rsi_91x_init(void)
- 	spin_lock_init(&adapter->ps_lock);
- 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
- 	init_completion(&common->wlan_init_completion);
-+	common->oper_mode = oper_mode;
- 	common->init_done = true;
--
--	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
--	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
- 	adapter->device_model = RSI_DEV_9113;
++	if (htt->ar->is_high_latency)
++		return 0;
 +
-+	/* Determine coex mode */
-+	switch (common->oper_mode) {
-+	case DEV_OPMODE_STA_BT_DUAL:
-+	case DEV_OPMODE_STA_BT:
-+	case DEV_OPMODE_STA_BT_LE:
-+	case DEV_OPMODE_BT_ALONE:
-+	case DEV_OPMODE_BT_LE_ALONE:
-+	case DEV_OPMODE_BT_DUAL:
-+		common->coex_mode = 2;
-+		break;
-+	case DEV_OPMODE_AP_BT_DUAL:
-+	case DEV_OPMODE_AP_BT:
-+		common->coex_mode = 4;
-+		break;
-+	case DEV_OPMODE_WIFI_ALONE:
-+		common->coex_mode = 1;
-+		break;
-+	default:
-+		common->oper_mode = 1;
-+		common->coex_mode = 1;
-+	}
-+	rsi_dbg(INFO_ZONE, "%s: oper_mode = %d, coex_mode = %d\n",
-+		__func__, common->oper_mode, common->coex_mode);
-+
- 	if (common->coex_mode > 1) {
- 		if (rsi_coex_attach(common)) {
- 			rsi_dbg(ERR_ZONE, "Failed to init coex module\n");
-@@ -348,10 +387,12 @@ void rsi_91x_deinit(struct rsi_hw *adapter)
- 	for (ii = 0; ii < NUM_SOFT_QUEUES; ii++)
- 		skb_queue_purge(&common->tx_queue[ii]);
+ 	lockdep_assert_held(&htt->tx_lock);
  
--	common->init_done = false;
--
--	if (common->coex_mode > 1)
-+	if (common->coex_mode > 1) {
- 		rsi_coex_detach(common);
-+		rsi_bt_ops.detach(common->bt_adapter);
-+	}
-+
-+	common->init_done = false;
- 
- 	kfree(common);
- 	kfree(adapter->rsi_dev);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index ba38c6d..5722736 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -21,6 +21,14 @@
- #include "rsi_coex.h"
- #include "rsi_hal.h"
- 
-+/* Default operating mode is wlan STA + BT */
-+static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
-+module_param(dev_oper_mode, ushort, 0444);
-+MODULE_PARM_DESC(dev_oper_mode,
-+		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
-+		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
-+		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
-+
- /**
-  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
-  * @rw: Read/write
-@@ -926,7 +934,7 @@ static int rsi_probe(struct sdio_func *pfunction,
- 
- 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
- 
--	adapter = rsi_91x_init();
-+	adapter = rsi_91x_init(dev_oper_mode);
- 	if (!adapter) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
- 			__func__);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index b09c7da..a30305e 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -21,6 +21,14 @@
- #include "rsi_hal.h"
- #include "rsi_coex.h"
- 
-+/* Default operating mode is wlan STA + BT */
-+static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
-+module_param(dev_oper_mode, ushort, 0444);
-+MODULE_PARM_DESC(dev_oper_mode,
-+		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
-+		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
-+		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
-+
- /**
-  * rsi_usb_card_write() - This function writes to the USB Card.
-  * @adapter: Pointer to the adapter structure.
-@@ -708,7 +716,7 @@ static int rsi_probe(struct usb_interface *pfunction,
- 
- 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
- 
--	adapter = rsi_91x_init();
-+	adapter = rsi_91x_init(dev_oper_mode);
- 	if (!adapter) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
- 			__func__);
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index 4616585..d9ff3b8 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -81,7 +81,7 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
- 
- void rsi_mac80211_detach(struct rsi_hw *hw);
- u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
--struct rsi_hw *rsi_91x_init(void);
-+struct rsi_hw *rsi_91x_init(u16 oper_mode);
- void rsi_91x_deinit(struct rsi_hw *adapter);
- int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
- #ifdef CONFIG_PM
-diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
-index e712223..a7d3011 100644
---- a/drivers/net/wireless/rsi/rsi_hal.h
-+++ b/drivers/net/wireless/rsi/rsi_hal.h
-@@ -17,6 +17,17 @@
- #ifndef __RSI_HAL_H__
- #define __RSI_HAL_H__
- 
-+/* Device Operating modes */
-+#define DEV_OPMODE_WIFI_ALONE		1
-+#define DEV_OPMODE_BT_ALONE		4
-+#define DEV_OPMODE_BT_LE_ALONE		8
-+#define DEV_OPMODE_BT_DUAL		12
-+#define DEV_OPMODE_STA_BT		5
-+#define DEV_OPMODE_STA_BT_LE		9
-+#define DEV_OPMODE_STA_BT_DUAL		13
-+#define DEV_OPMODE_AP_BT		6
-+#define DEV_OPMODE_AP_BT_DUAL		14
-+
- #define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
- #define FLASH_SECTOR_SIZE		(4 * 1024)
- 
+ 	if (htt->num_pending_tx >= htt->max_num_pending_tx)
 -- 
-2.7.4
+2.15.1
