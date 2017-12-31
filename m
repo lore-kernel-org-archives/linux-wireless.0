@@ -1,75 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:32926 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751351AbdLJIgN (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:35116 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750880AbdLaMHM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Dec 2017 03:36:13 -0500
-Date: Sun, 10 Dec 2017 09:36:11 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: fix locking in
- ieee80211_sta_tear_down_BA_sessions
-Message-ID: <20171210083611.GA3742@amd> (sfid-20171210_093616_354410_36D2BAE7)
-References: <20171209201338.24931-1-johannes@sipsolutions.net>
+        Sun, 31 Dec 2017 07:07:12 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="qMm9M+Fa2AknHoGS"
-In-Reply-To: <20171209201338.24931-1-johannes@sipsolutions.net>
+In-Reply-To: <1514649113-7366-1-git-send-email-himanshujha199640@gmail.com>
+References: <1514649113-7366-1-git-send-email-himanshujha199640@gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Sun, 31 Dec 2017 14:07:10 +0200
+Message-ID: <CAHp75VcFFfMp=nNDNyN3SNHnFXXXGGCobtKL2xaP+OqefmH5JQ@mail.gmail.com> (sfid-20171231_130733_217018_04BDB974)
+Subject: Re: [PATCH] brcmfmac: Use zeroing memory allocator than allocator/memset
+To: Himanshu Jha <himanshujha199640@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com, netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Dec 30, 2017 at 5:51 PM, Himanshu Jha
+<himanshujha199640@gmail.com> wrote:
+> Use dma_zalloc_coherent for allocating zeroed
+> memory and remove unnecessary memset function.
+>
+> Done using Coccinelle.
+> Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
+> 0-day tested with no failures.
+>
 
---qMm9M+Fa2AknHoGS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Makes sense.
 
-On Sat 2017-12-09 21:13:38, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->=20
-> Due to overlap between
-> commit 1281103770e9 ("mac80211: Simplify locking in ieee80211_sta_tear_do=
-wn_BA_sessions()")
-> and the way that Luca modified
-> commit 72e2c3438ba3 ("mac80211: tear down RX aggregations first")
-> when sending it upstream from Intel's internal tree, we get
-> the following warning:
->=20
-> WARNING: CPU: 0 PID: 5472 at net/mac80211/agg-tx.c:315 ___ieee80211_stop_=
-tx_ba_session+0x158/0x1f0
->=20
-> since there's no appropriate locking around the call to
-> ___ieee80211_stop_tx_ba_session; Sara's original just had
-> a call to the locked __ieee80211_stop_tx_ba_session (one
-> less underscore) but it looks like Luca modified both of
-> the calls when fixing it up for upstream, leading to the
-> problem at hand.
->=20
-> Move the locking appropriately to fix this problem.
->=20
-> Reported-by: Kalle Valo <kvalo@codeaurora.org>
-> Reported-by: Pavel Machek <pavel@ucw.cz>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-Tested-by: Pavel Machek <pavel@ucw.cz>
+> Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+> ---
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 18 ++++++++----------
+>  1 file changed, 8 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> index 3c87157..bdef2ac 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> @@ -1251,14 +1251,13 @@ static int brcmf_pcie_init_scratchbuffers(struct brcmf_pciedev_info *devinfo)
+>         u64 address;
+>         u32 addr;
+>
+> -       devinfo->shared.scratch = dma_alloc_coherent(&devinfo->pdev->dev,
+> -               BRCMF_DMA_D2H_SCRATCH_BUF_LEN,
+> -               &devinfo->shared.scratch_dmahandle, GFP_KERNEL);
+> +       devinfo->shared.scratch =
+> +               dma_zalloc_coherent(&devinfo->pdev->dev,
+> +                                       BRCMF_DMA_D2H_SCRATCH_BUF_LEN,
+> +                                       &devinfo->shared.scratch_dmahandle,
+> +                                       GFP_KERNEL);
+>         if (!devinfo->shared.scratch)
+>                 goto fail;
+>
+> -       memset(devinfo->shared.scratch, 0, BRCMF_DMA_D2H_SCRATCH_BUF_LEN);
+> -
+>         addr = devinfo->shared.tcm_base_address +
+>                BRCMF_SHARED_DMA_SCRATCH_ADDR_OFFSET;
+>         address = (u64)devinfo->shared.scratch_dmahandle;
+> @@ -1268,14 +1267,13 @@ static int brcmf_pcie_init_scratchbuffers(struct brcmf_pciedev_info *devinfo)
+>                BRCMF_SHARED_DMA_SCRATCH_LEN_OFFSET;
+>         brcmf_pcie_write_tcm32(devinfo, addr, BRCMF_DMA_D2H_SCRATCH_BUF_LEN);
+>
+> -       devinfo->shared.ringupd = dma_alloc_coherent(&devinfo->pdev->dev,
+> -               BRCMF_DMA_D2H_RINGUPD_BUF_LEN,
+> -               &devinfo->shared.ringupd_dmahandle, GFP_KERNEL);
+> +       devinfo->shared.ringupd =
+> +               dma_zalloc_coherent(&devinfo->pdev->dev,
+> +                                       BRCMF_DMA_D2H_RINGUPD_BUF_LEN,
+> +                                       &devinfo->shared.ringupd_dmahandle,
+> +                                       GFP_KERNEL);
+>         if (!devinfo->shared.ringupd)
+>                 goto fail;
+>
+> -       memset(devinfo->shared.ringupd, 0, BRCMF_DMA_D2H_RINGUPD_BUF_LEN);
+> -
+>         addr = devinfo->shared.tcm_base_address +
+>                BRCMF_SHARED_DMA_RINGUPD_ADDR_OFFSET;
+>         address = (u64)devinfo->shared.ringupd_dmahandle;
+> --
+> 2.7.4
+>
 
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
 
---qMm9M+Fa2AknHoGS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlos8fsACgkQMOfwapXb+vJJoQCgsxVyl2+Qvt4DavUFgUzfz+bg
-3dkAoKxrSczT4I9yFu+WqVt+ki+lLQEf
-=1zEa
------END PGP SIGNATURE-----
-
---qMm9M+Fa2AknHoGS--
+-- 
+With Best Regards,
+Andy Shevchenko
