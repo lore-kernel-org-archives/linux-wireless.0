@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:46528 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755824AbdLOVqz (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34612 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751091AbdLaRbu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Dec 2017 16:46:55 -0500
-Date: Fri, 15 Dec 2017 15:46:53 -0600
-From: Rob Herring <robh@kernel.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH] dt-bindings: net: wireless: Add sg parameters dts parsing
-Message-ID: <20171215214653.fqbw5epxtd5j6jml@rob-hp-laptop> (sfid-20171215_224701_623527_0B98CD7F)
-References: <20171211081144.GA140567@aremote07.aus.cypress.com>
- <5A2E5606.8010707@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5A2E5606.8010707@broadcom.com>
+        Sun, 31 Dec 2017 12:31:50 -0500
+Received: by mail-lf0-f65.google.com with SMTP id h140so1449729lfg.1
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2017 09:31:49 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v4 17/18] ath10k: add QCA9377 usb hw_param item
+Date: Sun, 31 Dec 2017 18:29:24 +0100
+Message-Id: <20171231172925.24014-18-erik.stromdahl@gmail.com> (sfid-20171231_183154_345737_ACCDD836)
+In-Reply-To: <20171231172925.24014-1-erik.stromdahl@gmail.com>
+References: <20171231172925.24014-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 11, 2017 at 10:55:18AM +0100, Arend van Spriel wrote:
-> On 12/11/2017 9:11 AM, Chi-Hsien Lin wrote:
-> > broken_sg_support, sd_head_align, and sd_sgentry_align are used in
-> > brcmfmac code but not configurable in dts file. Add the parsing logic.
-> > Now they can be configured like below in dts:
-> > 	brcm,broken_sg_support;
-> > 	brcm,sd_head_align = <4>;
-> > 	brcm,sd_sgentry_align = <4>;
-> > 
-> > Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
-> > ---
-> >   .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt        | 8 ++++++++
-> >   1 file changed, 8 insertions(+)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > index 86602f2..4d42f0d 100644
-> > --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> > @@ -17,6 +17,11 @@ Optional properties:
-> >   	When not specified the device will use in-band SDIO interrupts.
-> >    - interrupt-names : name of the out-of-band interrupt, which must be set
-> >   	to "host-wake".
-> > + - broken_sg_support : flag for broken sg list support of SDIO host controller.
-> > +	Set this to true if the SDIO host controller has higher align
-> > +	requirement than 32 bytes for each scatterlist item.
-> 
-> In DT context, this does not characterize the device but as described it is
-> about the SDIO host controller. I think the same applies to the properties
-> below, but not entirely sure about that.
+Hardware parameters for QCA9377 usb devices.
 
-Yes. However, all of this should be implied by the host controller's 
-compatible property.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 24 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  1 +
+ 2 files changed, 25 insertions(+)
 
-For future reference, don't use '_' in property names either.
-
-Rob
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index d42f6a1e5bfc..bc22d8c46252 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -414,6 +414,30 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 	},
++	{
++		.id = QCA9377_HW_1_1_DEV_VERSION,
++		.dev_id = QCA9377_1_0_DEVICE_ID,
++		.bus = ATH10K_BUS_USB,
++		.name = "qca9377 hw1.1 usb",
++		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
++		.uart_pin = 6,
++		.otp_exe_param = 0,
++		.channel_counters_freq_hz = 88000,
++		.max_probe_resp_desc_thres = 0,
++		.cal_data_len = 8124,
++		.fw = {
++			.dir = QCA9377_HW_1_0_FW_DIR,
++			.board = QCA9377_HW_1_0_BOARD_DATA_FILE_USB,
++			.board_size = QCA9377_BOARD_DATA_SZ,
++			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
++		},
++		.hw_ops = &qca988x_ops,
++		.decap_align_bytes = 4,
++		.start_once = true,
++		.num_peers = TARGET_QCA9377_HL_NUM_PEERS,
++		.ast_skid_limit = 0x10,
++		.num_wds_entries = 0x20,
++	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+ 		.dev_id = 0,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 98f9f3ccbf96..38cecbe4ddd9 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -128,6 +128,7 @@ enum qca9377_chip_id_rev {
+ /* QCA9377 1.0 definitions */
+ #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
+ #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
++#define QCA9377_HW_1_0_BOARD_DATA_FILE_USB "board-usb.bin"
+ #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
+ 
+ /* QCA4019 1.0 definitions */
+-- 
+2.15.1
