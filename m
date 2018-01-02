@@ -1,128 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39014 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752022AbeAZHrL (ORCPT
+Received: from mail-pg0-f46.google.com ([74.125.83.46]:34440 "EHLO
+        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751063AbeABSW7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 02:47:11 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/10] rtlwifi: btcoex: Add 8822be btcoex supported files for wifi only
-Date: Fri, 26 Jan 2018 15:46:45 +0800
-Message-ID: <20180126074645.27201-11-pkshih@realtek.com> (sfid-20180126_084719_479174_87F7DFBA)
-In-Reply-To: <20180126074645.27201-1-pkshih@realtek.com>
-References: <20180126074645.27201-1-pkshih@realtek.com>
+        Tue, 2 Jan 2018 13:22:59 -0500
+Received: by mail-pg0-f46.google.com with SMTP id j4so24595439pgp.1
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Jan 2018 10:22:59 -0800 (PST)
+Subject: Re: [RFC 4/4] nl80211: Implement TX of control port frames
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20171228175832.3253-1-denkenz@gmail.com>
+ <20171228175832.3253-5-denkenz@gmail.com>
+ <1514899804.2024.5.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <c73dcadb-bd96-fa82-b857-b5e2432fbadb@gmail.com> (sfid-20180102_192304_540837_6311AE85)
+Date: Tue, 2 Jan 2018 12:22:55 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1514899804.2024.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Hi Johannes,
 
-The wifi only btcoex is used to solo card (without BT), and it is also
-useful to exclude the interference with BT to make debug easier.
-There are only four ops for wifi only btcoex to initialze antenna and
-switch the settings while band is changed.
+On 01/02/2018 07:30 AM, Johannes Berg wrote:
+> On Thu, 2017-12-28 at 11:58 -0600, Denis Kenzior wrote:
+>> This commit implements the TX side of NL80211_CMD_CONTROL_PORT_FRAME.
+>> Userspace provides the raw EAPoL frame using NL80211_ATTR_FRAME.  A
+>> skbuf is built and then injected onto the netdev of the wireless device.
+>> The CONTROL_PORT_ETHERTYPE_NO_ENCRYPT will still in theory be honored by
+> 
+> You mean CONTROL_PORT_NO_ENCRYPT :-)
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../rtlwifi/btcoexist/halbtc8822bwifionly.c        | 55 ++++++++++++++++++++++
- .../rtlwifi/btcoexist/halbtc8822bwifionly.h        | 25 ++++++++++
- 2 files changed, 80 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
+Right
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
-new file mode 100644
-index 000000000000..951b8c1e0153
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
-@@ -0,0 +1,55 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016-2017  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ *****************************************************************************/
-+#include "halbt_precomp.h"
-+
-+void ex_hal8822b_wifi_only_hw_config(struct wifi_only_cfg *wifionlycfg)
-+{
-+	/*BB control*/
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x4c, 0x01800000, 0x2);
-+	/*SW control*/
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0xcb4, 0xff, 0x77);
-+	/*antenna mux switch */
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x974, 0x300, 0x3);
-+
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x1990, 0x300, 0x0);
-+
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0xcbc, 0x80000, 0x0);
-+	/*switch to WL side controller and gnt_wl gnt_bt debug signal */
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x70, 0xff000000, 0x0e);
-+	/*gnt_wl=1 , gnt_bt=0*/
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x1704, 0xffffffff, 0x7700);
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x1700, 0xffffffff, 0xc00f0038);
-+}
-+
-+void ex_hal8822b_wifi_only_scannotify(struct wifi_only_cfg *wifionlycfg,
-+				      u8 is_5g)
-+{
-+	hal8822b_wifi_only_switch_antenna(wifionlycfg, is_5g);
-+}
-+
-+void ex_hal8822b_wifi_only_switchbandnotify(struct wifi_only_cfg *wifionlycfg,
-+					    u8 is_5g)
-+{
-+	hal8822b_wifi_only_switch_antenna(wifionlycfg, is_5g);
-+}
-+
-+void hal8822b_wifi_only_switch_antenna(struct wifi_only_cfg *wifionlycfg,
-+				       u8 is_5g)
-+{
-+	if (is_5g)
-+		halwifionly_phy_set_bb_reg(wifionlycfg, 0xcbc, 0x300, 0x1);
-+	else
-+		halwifionly_phy_set_bb_reg(wifionlycfg, 0xcbc, 0x300, 0x2);
-+}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
-new file mode 100644
-index 000000000000..6ec356542eea
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
-@@ -0,0 +1,25 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016-2017  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ *****************************************************************************/
-+#ifndef __INC_HAL8822BWIFIONLYHWCFG_H
-+#define __INC_HAL8822BWIFIONLYHWCFG_H
-+
-+void ex_hal8822b_wifi_only_hw_config(struct wifi_only_cfg *wifionlycfg);
-+void ex_hal8822b_wifi_only_scannotify(struct wifi_only_cfg *wifionlycfg,
-+				      u8 is_5g);
-+void ex_hal8822b_wifi_only_switchbandnotify(struct wifi_only_cfg *wifionlycfg,
-+					    u8 is_5g);
-+void hal8822b_wifi_only_switch_antenna(struct wifi_only_cfg *wifionlycfg,
-+				       u8 is_5g);
-+#endif
--- 
-2.15.1
+> 
+>> the underlying TX path code.
+> 
+> I think this isn't good enough.
+> 
+
+That was my thinking as well
+
+> There are cases where CONTROL_PORT_ETHERTYPE_NO_ENCRYPT should be
+> unset, but specific frames still shouldn't be encrypted.
+> 
+> So I think for this particular path it would be better to deprecate
+> CONTROL_PORT_ETHERTYPE_NO_ENCRYPT entirely, and have a separate per-
+> frame flag.
+> 
+> That also means that we can't really implement it fully in cfg80211,
+> but have to provide some functionality for the driver to do things to
+> be able to honour such flags.
+
+Here's another thought I had while poking around.  Given the above I 
+don't want to pursue it too seriously unless you think it might work:
+
+We already have the IEEE80211_TX_INTFL_DONT_ENCRYPT flag on the skb and 
+some drivers seem to honor this.  At least that seems to be the intent 
+as the CONTROL_PORT_NO_ENCRYPT flag ends up being translated to this 
+somewhere in net/mac80211/tx.c.  Are the drivers supposed to honor that 
+flag?
+
+If so, can we do something like what ieee80211_process_sa_query_req in 
+net/mac80211/rx.c or ieee80211_tdls_prep_mgmt_packet in 
+net/mac80211/tdls.c do?  E.g. use ieee80211_tx_skb or 
+__ieee80211_subif_start_xmit or similar to inject the skb with the 
+DONT_ENCRYPT flag?
+
+> 
+> Perhaps a new operation, where we pass a pre-built SKB and control
+> flags?
+> 
+
+This would likely mean that legacy behavior would still have to be 
+supported for quite some time (forever?) for drivers that don't get 
+around to implementing this, which would be unfortunate.
+
+Regards,
+-Denis
