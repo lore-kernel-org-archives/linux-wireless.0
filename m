@@ -1,87 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42398 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751760AbeAILm2 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:42174 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751014AbeABTsV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 06:42:28 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Dmitry Torokhov <dtor@google.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>
-Subject: Re: Re: [PATCH] mwifiex: cancel pcie/sdio work in remove/shutdown
- handler
-Date: Tue, 9 Jan 2018 11:42:21 +0000
-Message-ID: <120235b5b7fb4b2286a32dcca2a3878a@SC-EXCH02.marvell.com> (sfid-20180109_124232_635932_D634C233)
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+        Tue, 2 Jan 2018 14:48:21 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Report and display mem use for 10.4, 10.2 firmware.
+Date: Tue,  2 Jan 2018 11:48:16 -0800
+Message-Id: <1514922496-7952-1-git-send-email-greearb@candelatech.com> (sfid-20180102_204824_833778_45621589)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2FsbGUgVmFsbyBb
-bWFpbHRvOmt2YWxvQGNvZGVhdXJvcmEub3JnXQ0KPiBTZW50OiAyMDE4xOox1MI5yNUgMTU6NDAN
-Cj4gVG86IEJyaWFuIE5vcnJpcyA8YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnPg0KPiBDYzogWGlu
-bWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT47IExpbnV4IFdpcmVsZXNzDQo+IDxsaW51eC13aXJl
-bGVzc0B2Z2VyLmtlcm5lbC5vcmc+OyBEbWl0cnkgVG9yb2tob3YgPGR0b3JAZ29vZ2xlLmNvbT47
-DQo+IHJhamF0amFAZ29vZ2xlLmNvbTsgWmhpeXVhbiBZYW5nIDx5YW5nenlAbWFydmVsbC5jb20+
-OyBUaW0gU29uZw0KPiA8c29uZ3Rhb0BtYXJ2ZWxsLmNvbT47IENhdGh5IEx1byA8Y2x1b0BtYXJ2
-ZWxsLmNvbT47IEphbWVzIENhbw0KPiA8amNhb0BtYXJ2ZWxsLmNvbT47IEdhbmFwYXRoaSBCaGF0
-IDxnYmhhdEBtYXJ2ZWxsLmNvbT47IEVsbGllIFJlZXZlcw0KPiA8ZWxsaWVyZXZ2ZXNAZ21haWwu
-Y29tPg0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIXSBtd2lmaWV4OiBjYW5jZWwgcGNpZS9z
-ZGlvIHdvcmsgaW4gcmVtb3ZlL3NodXRkb3duDQo+IGhhbmRsZXINCj4gDQo+IEV4dGVybmFsIEVt
-YWlsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IEJyaWFuIE5vcnJpcyA8YnJpYW5ub3JyaXNAY2hy
-b21pdW0ub3JnPiB3cml0ZXM6DQo+IA0KPiA+PiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9t
-YXJ2ZWxsL213aWZpZXgvcGNpZS5jDQo+ID4+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21h
-cnZlbGwvbXdpZmlleC9wY2llLmMNCj4gPj4gQEAgLTMxMCw2ICszMTAsOCBAQCBzdGF0aWMgdm9p
-ZCBtd2lmaWV4X3BjaWVfcmVtb3ZlKHN0cnVjdCBwY2lfZGV2DQo+ICpwZGV2KQ0KPiA+PiAgCQlt
-d2lmaWV4X2luaXRfc2h1dGRvd25fZncocHJpdiwgTVdJRklFWF9GVU5DX1NIVVRET1dOKTsNCj4g
-Pj4gIAl9DQo+ID4+DQo+ID4+ICsJY2FuY2VsX3dvcmtfc3luYygmY2FyZC0+d29yayk7DQo+ID4+
-ICsNCj4gPg0KPiA+IEp1c3QgRllJLCB0aGlzICJmaXgiIGlzIG5vdCBhIHJlYWwgZml4LiBJdCB3
-aWxsIGxpa2VseSBwYXBlciBvdmVyIHNvbWUNCj4gPiBvZiB5b3VyIGJ1Z3MgKHdoZXJlLCBlLmcu
-LCB0aGUgRlcgc2h1dGRvd24gY29tbWFuZCB0aW1lcyBvdXQgaW4gdGhlDQo+ID4gcHJldmlvdXMg
-Y291cGxlIG9mIGxpbmVzKSwgYnV0IHRoaXMgaGlnaGxpZ2h0cyB0aGUgZmFjdCB0aGF0IHRoZXJl
-IGFyZQ0KPiA+IG90aGVyIHJhY2VzIHRoYXQgY291bGQgdHJpZ2dlciB0aGUgc2FtZSBiZWhhdmlv
-ci4gWW91J3JlIG5vdCBmaXhpbmcNCj4gPiB0aG9zZS4NCj4gPg0KPiA+IEZvciBleGFtcGxlLCB3
-aGF0IGlmIHNvbWVib2R5IGluaXRpYXRlcyBhIHNjYW4gb3Igb3RoZXIgbmw4MDIxMQ0KPiA+IGNv
-bW1hbmQgYmV0d2VlbiB0aGUgYWJvdmUgbGluZSBhbmQgbXdpZmlleF9yZW1vdmVfY2FyZCgpPyBU
-aGF0DQo+IGNvbW1hbmQNCj4gPiBjb3VsZCBwb3RlbnRpYWxseSB0aW1lIG91dCB0b28uDQo+ID4N
-Cg0KVGhlIGhhcmR3YXJlIHN0YXR1cyBoYXZlIGJlZW4gcmVzZXQgYmVmb3JlIGRvd25sb2FkaW5n
-IHRoZSBsYXN0IGNvbW1hbmQoRlVOQyBTSFVURE9XTiksIGluIHRoaXMgd2F5LCBmb2xsb3cgY29t
-bWFuZHMgIGRvd25sb2FkIHdpbGwgYmUgaWdub3JlZCBhbmQgd2FybmVkLg0KDQo+ID4gVGhlIHBy
-b3BlciBmaXggd291bGQgYmUgdG8gaW5zdGl0dXRlIHNvbWUga2luZCBvZiBtdXR1YWwgZXhjbHVz
-aW9uDQo+ID4gKGxvY2tpbmcpIGJldHdlZW4gbXdpZmlleF9zaHV0ZG93bl9zdygpIGFuZCBtd2lm
-aWV4X3JlbW92ZV9jYXJkKCksIHNvDQo+ID4gdGhhdCB0aGV5IGNhbid0IG9jY3VyIGF0IHRoZSBz
-YW1lIHRpbWUuDQo+ID4NCg0KSSBhbSBub3Qgc3VyZSB3aGV0aGVyIHRoZXJlIGlzIGFueSBtdXR1
-YWwgZXhjbHVzaW9uIHByb3RlY3QgYmV0d2VlbiBwY2llX3Jlc2V0IGFuZCBwY2llX3JlbW92ZSBp
-biBwY2llIGNvcmUuDQpCdXQgaXQgbG9va3MgYSBkaWZmZXJlbnQgcmFjZS4NCldlIHN0aWxsIG5l
-ZWQgdGhpcyBmaXgsIHJpZ2h0Pw0KDQpSZWdhcmRzLA0KU2ltb24NCj4gPiBVbmZvcnR1bmF0ZWx5
-LCBJIG9ubHkgcGFpZCBhdHRlbnRpb24gdG8gdGhpcyBhZnRlciBLYWxsZSBhbHJlYWR5DQo+ID4g
-YXBwbGllZCB0aGlzIHBhdGNoLiBQZXJzb25hbGx5LCBJJ2QgcHJlZmVyIHRoaXMgcGF0Y2ggbm90
-IGdldCBhcHBsaWVkLA0KPiA+IHNpbmNlIGl0J3MgYSBiYWQgc29sdXRpb24gdG8gYW4gb2J2aW91
-cyBwcm9ibGVtLCB3aGljaCBpbnN0ZWFkIGxlYXZlcw0KPiA+IGEgc3VidGxlIHByb2JsZW0gdGhh
-dCBwZXJoYXBzIG5vIG9uZSB3aWxsIGJvdGhlciBmaXhpbmcuDQo+IA0KPiBJIGNhbiByZXZlcnQg
-aXQsIHRoYXQncyBub3QgYSBwcm9ibGVtLiBDYW4gSSB1c2UgdGhlIHRleHQgYmVsb3cgYXMgZXhw
-bGFuYXRpb24gZm9yDQo+IHRoZSByZXZlcnQ/DQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IEJyaWFu
-IE5vcnJpcyA8YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnPiBzYXlzOg0KPiANCj4gSnVzdCBGWUks
-IHRoaXMgImZpeCIgaXMgbm90IGEgcmVhbCBmaXguIEl0IHdpbGwgbGlrZWx5IHBhcGVyIG92ZXIg
-c29tZSBvZiB5b3VyIGJ1Z3MNCj4gKHdoZXJlLCBlLmcuLCB0aGUgRlcgc2h1dGRvd24gY29tbWFu
-ZCB0aW1lcyBvdXQgaW4gdGhlIHByZXZpb3VzIGNvdXBsZSBvZg0KPiBsaW5lcyksIGJ1dCB0aGlz
-IGhpZ2hsaWdodHMgdGhlIGZhY3QgdGhhdCB0aGVyZSBhcmUgb3RoZXIgcmFjZXMgdGhhdCBjb3Vs
-ZCB0cmlnZ2VyDQo+IHRoZSBzYW1lIGJlaGF2aW9yLiBZb3UncmUgbm90IGZpeGluZyB0aG9zZS4N
-Cj4gDQo+IEZvciBleGFtcGxlLCB3aGF0IGlmIHNvbWVib2R5IGluaXRpYXRlcyBhIHNjYW4gb3Ig
-b3RoZXIgbmw4MDIxMSBjb21tYW5kDQo+IGJldHdlZW4gdGhlIGFib3ZlIGxpbmUgYW5kIG13aWZp
-ZXhfcmVtb3ZlX2NhcmQoKT8gVGhhdCBjb21tYW5kIGNvdWxkDQo+IHBvdGVudGlhbGx5IHRpbWUg
-b3V0IHRvby4NCj4gDQo+IFRoZSBwcm9wZXIgZml4IHdvdWxkIGJlIHRvIGluc3RpdHV0ZSBzb21l
-IGtpbmQgb2YgbXV0dWFsIGV4Y2x1c2lvbg0KPiAobG9ja2luZykgYmV0d2VlbiBtd2lmaWV4X3No
-dXRkb3duX3N3KCkgYW5kIG13aWZpZXhfcmVtb3ZlX2NhcmQoKSwgc28gdGhhdA0KPiB0aGV5IGNh
-bid0IG9jY3VyIGF0IHRoZSBzYW1lIHRpbWUuDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IA0KPiAt
-LQ0KPiBLYWxsZSBWYWxvDQo=
+From: Ben Greear <greearb@candelatech.com>
+
+The 10.4 'mem' reporting struct had the wrong order vs the 10.2,
+so just make a new _10_4 specific struct.  Save these reported
+values and make them available via debugfs.
+
+Stock 10.4 firmware probably reports zero values
+for this currently, but they will be notified of a fix
+for this shortly.
+
+I did not test 10.2 firmware, so not sure what it reports.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h |  5 +++++
+ drivers/net/wireless/ath/ath10k/wmi.c  | 13 +++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h  |  9 +++++++--
+ 3 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1aacc9b8..bcee3ec 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -289,6 +289,11 @@ struct ath10k_fw_stats_pdev {
+ 	s32 mpdu_errs;
+ 	s32 rx_ovfl_errs;
+ 	s32 rx_timeout_errs;
++
++	/* Other PDEV stats */
++	s32 dram_free;
++	s32 iram_free;
++	s32 sram_free;
+ };
+ 
+ struct ath10k_fw_stats {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index cba6dad..f29ce83 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3046,6 +3046,9 @@ static int ath10k_wmi_10_2_op_pull_fw_stats(struct ath10k *ar,
+ 		ath10k_wmi_pull_pdev_stats_base(&src->base, dst);
+ 		ath10k_wmi_pull_pdev_stats_tx(&src->tx, dst);
+ 		ath10k_wmi_pull_pdev_stats_rx(&src->rx, dst);
++		dst->rx_timeout_errs = __le32_to_cpu(src->pdev_rx_timeout);
++		dst->dram_free = __le32_to_cpu(src->mem.dram_free);
++		dst->iram_free = __le32_to_cpu(src->mem.iram_free);
+ 		ath10k_wmi_pull_pdev_stats_extra(&src->extra, dst);
+ 		/* FIXME: expose 10.2 specific values */
+ 
+@@ -3219,6 +3222,9 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
+ 		ath10k_wmi_pull_pdev_stats_rx(&src->rx, dst);
+ 		dst->rx_timeout_errs = __le32_to_cpu(src->pdev_rx_timeout);
+ 		dst->rx_ovfl_errs = __le32_to_cpu(src->rx_ovfl_errs);
++		dst->dram_free = __le32_to_cpu(src->mem.dram_free);
++		dst->iram_free = __le32_to_cpu(src->mem.iram_free);
++		dst->sram_free = __le32_to_cpu(src->mem.sram_free);
+ 		ath10k_wmi_pull_pdev_stats_extra(&src->extra, dst);
+ 
+ 		list_add_tail(&dst->list, &stats->pdevs);
+@@ -8249,6 +8255,13 @@ void ath10k_wmi_10_4_op_fw_stats_fill(struct ath10k *ar,
+ 	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
+ 			"Num Rx Overflow errors", pdev->rx_ovfl_errs);
+ 
++	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
++			 "DRAM Free", pdev->dram_free);
++	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
++			 "IRAM Free", pdev->iram_free);
++	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
++			 "SRAM Free", pdev->sram_free);
++
+ 	len += scnprintf(buf + len, buf_len - len, "\n");
+ 	len += scnprintf(buf + len, buf_len - len, "%30s (%zu)\n",
+ 			"ath10k VDEV stats", num_vdevs);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 93ca8e8..a3ba191 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4419,6 +4419,12 @@ struct wmi_pdev_stats_mem {
+ 	__le32 iram_free;
+ } __packed;
+ 
++struct wmi_pdev_stats_mem_10_4 {
++	__le32 iram_free;
++	__le32 dram_free;
++	__le32 sram_free;
++} __packed;
++
+ struct wmi_10_2_pdev_stats {
+ 	struct wmi_pdev_stats_base base;
+ 	struct wmi_pdev_stats_tx tx;
+@@ -4436,8 +4442,7 @@ struct wmi_10_4_pdev_stats {
+ 	struct wmi_pdev_stats_rx rx;
+ 	__le32 pdev_rx_timeout;
+ 	__le32 rx_ovfl_errs;
+-	struct wmi_pdev_stats_mem mem;
+-	__le32 sram_free_size;
++	struct wmi_pdev_stats_mem_10_4 mem;
+ 	struct wmi_pdev_stats_extra extra;
+ } __packed;
+ 
+-- 
+2.4.11
