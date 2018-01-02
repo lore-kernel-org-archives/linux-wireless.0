@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39000 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751542AbeAZHrG (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:54082 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750787AbeABUWL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 02:47:06 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/10] rtlwifi: Extend tx_power_by_rate_offset size for newer IC
-Date: Fri, 26 Jan 2018 15:46:39 +0800
-Message-ID: <20180126074645.27201-5-pkshih@realtek.com> (sfid-20180126_084724_652205_E7EB847C)
-In-Reply-To: <20180126074645.27201-1-pkshih@realtek.com>
-References: <20180126074645.27201-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 2 Jan 2018 15:22:11 -0500
+Message-ID: <1514924529.10342.4.camel@sipsolutions.net> (sfid-20180102_212214_981861_1A71DE03)
+Subject: Re: [RFC 4/4] nl80211: Implement TX of control port frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Tue, 02 Jan 2018 21:22:09 +0100
+In-Reply-To: <c73dcadb-bd96-fa82-b857-b5e2432fbadb@gmail.com> (sfid-20180102_192300_834715_F98D3C68)
+References: <20171228175832.3253-1-denkenz@gmail.com>
+         <20171228175832.3253-5-denkenz@gmail.com>
+         <1514899804.2024.5.camel@sipsolutions.net>
+         <c73dcadb-bd96-fa82-b857-b5e2432fbadb@gmail.com>
+         (sfid-20180102_192300_834715_F98D3C68)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Tue, 2018-01-02 at 12:22 -0600, Denis Kenzior wrote:
 
-In older design, the TX power is grouped into rate section (smaller array
-size), but new design groups them into rate (larger array size). Thus,
-we extend the size for both cases, and add compile time assertion.
+> > There are cases where CONTROL_PORT_ETHERTYPE_NO_ENCRYPT should be
+> > unset, but specific frames still shouldn't be encrypted.
+> > 
+> > So I think for this particular path it would be better to deprecate
+> > CONTROL_PORT_ETHERTYPE_NO_ENCRYPT entirely, and have a separate per-
+> > frame flag.
+> > 
+> > That also means that we can't really implement it fully in cfg80211,
+> > but have to provide some functionality for the driver to do things to
+> > be able to honour such flags.
+> 
+> Here's another thought I had while poking around.  Given the above I 
+> don't want to pursue it too seriously unless you think it might work:
+> 
+> We already have the IEEE80211_TX_INTFL_DONT_ENCRYPT flag on the skb and 
+> some drivers seem to honor this.  At least that seems to be the intent 
+> as the CONTROL_PORT_NO_ENCRYPT flag ends up being translated to this 
+> somewhere in net/mac80211/tx.c.  Are the drivers supposed to honor that 
+> flag?
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 3 ++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+Drivers don't have a choice, and don't need to check the flag. What
+happens internally in mac80211 is that either txinfo->control.key is
+assigned, or not, and drivers make encryption decisions based on that.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 92f99a303920..c000c85a3ded 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -2646,6 +2646,8 @@ EXPORT_SYMBOL_GPL(rtl_global_var);
- 
- static int __init rtl_core_module_init(void)
- {
-+	BUILD_BUG_ON(TX_PWR_BY_RATE_NUM_RATE < TX_PWR_BY_RATE_NUM_SECTION);
-+
- 	if (rtl_rate_control_register())
- 		pr_err("rtl: Unable to register rtl_rc, use default RC !!\n");
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index be45420f34d3..5b29502a2864 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -173,6 +173,7 @@ enum rtl8192c_h2c_cmd {
- #define TX_PWR_BY_RATE_NUM_BAND		2
- #define TX_PWR_BY_RATE_NUM_RF		4
- #define TX_PWR_BY_RATE_NUM_SECTION	12
-+#define TX_PWR_BY_RATE_NUM_RATE		84 /* >= TX_PWR_BY_RATE_NUM_SECTION */
- #define MAX_BASE_NUM_IN_PHY_REG_PG_24G  6
- #define MAX_BASE_NUM_IN_PHY_REG_PG_5G	5
- 
-@@ -1285,7 +1286,7 @@ struct rtl_phy {
- 	u32 tx_power_by_rate_offset[TX_PWR_BY_RATE_NUM_BAND]
- 				   [TX_PWR_BY_RATE_NUM_RF]
- 				   [TX_PWR_BY_RATE_NUM_RF]
--				   [TX_PWR_BY_RATE_NUM_SECTION];
-+				   [TX_PWR_BY_RATE_NUM_RATE];
- 	u8 txpwr_by_rate_base_24g[TX_PWR_BY_RATE_NUM_RF]
- 				 [TX_PWR_BY_RATE_NUM_RF]
- 				 [MAX_BASE_NUM_IN_PHY_REG_PG_24G];
--- 
-2.15.1
+> If so, can we do something like what ieee80211_process_sa_query_req in 
+> net/mac80211/rx.c or ieee80211_tdls_prep_mgmt_packet in 
+> net/mac80211/tdls.c do?  E.g. use ieee80211_tx_skb or 
+> __ieee80211_subif_start_xmit or similar to inject the skb with the 
+> DONT_ENCRYPT flag?
+
+Yes, this will work - but like I said, it requires more control over
+the SKB than cfg80211 has today, and than you can get through the
+regular netdev xmit.
+
+> > Perhaps a new operation, where we pass a pre-built SKB and control
+> > flags?
+
+> 
+> This would likely mean that legacy behavior would still have to be 
+> supported for quite some time (forever?) for drivers that don't get 
+> around to implementing this, which would be unfortunate.
+
+What do you mean by "legacy behaviour"? *Drivers* don't really need to
+do anything one way or the other, and mac80211 is the only thing
+implementing control port encrypt/ethertype right now, I suspect.
+
+johannes
