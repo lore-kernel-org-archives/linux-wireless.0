@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:38999 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751852AbeAZHrG (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50018 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752080AbeABNaG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 02:47:06 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/10] rtlwifi: enable mac80211 fast-tx support
-Date: Fri, 26 Jan 2018 15:46:36 +0800
-Message-ID: <20180126074645.27201-2-pkshih@realtek.com> (sfid-20180126_084729_860106_C1E804E4)
-In-Reply-To: <20180126074645.27201-1-pkshih@realtek.com>
-References: <20180126074645.27201-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 2 Jan 2018 08:30:06 -0500
+Message-ID: <1514899804.2024.5.camel@sipsolutions.net> (sfid-20180102_143010_359264_E32CA8D8)
+Subject: Re: [RFC 4/4] nl80211: Implement TX of control port frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Tue, 02 Jan 2018 14:30:04 +0100
+In-Reply-To: <20171228175832.3253-5-denkenz@gmail.com> (sfid-20171228_185853_252453_1C65EE95)
+References: <20171228175832.3253-1-denkenz@gmail.com>
+         <20171228175832.3253-5-denkenz@gmail.com>
+         (sfid-20171228_185853_252453_1C65EE95)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Thu, 2017-12-28 at 11:58 -0600, Denis Kenzior wrote:
+> This commit implements the TX side of NL80211_CMD_CONTROL_PORT_FRAME.
+> Userspace provides the raw EAPoL frame using NL80211_ATTR_FRAME.  A
+> skbuf is built and then injected onto the netdev of the wireless device.
+> The CONTROL_PORT_ETHERTYPE_NO_ENCRYPT will still in theory be honored by
 
-Enable the mac80211 fast-tx feature, since our driver already support
-hw_flags required by fast-tx and is able to let mac80211 stack to transmit
-packet through fast-xmit path.
+You mean CONTROL_PORT_NO_ENCRYPT :-)
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 1 +
- 1 file changed, 1 insertion(+)
+> the underlying TX path code.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index d6c03bd5cc65..e461eed32699 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -397,6 +397,7 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, MFP_CAPABLE);
- 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
- 	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
-+	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
- 
- 	/* swlps or hwlps has been set in diff chip in init_sw_vars */
- 	if (rtlpriv->psc.swctrl_lps) {
--- 
-2.15.1
+I think this isn't good enough.
+
+There are cases where CONTROL_PORT_ETHERTYPE_NO_ENCRYPT should be
+unset, but specific frames still shouldn't be encrypted.
+
+So I think for this particular path it would be better to deprecate
+CONTROL_PORT_ETHERTYPE_NO_ENCRYPT entirely, and have a separate per-
+frame flag.
+
+That also means that we can't really implement it fully in cfg80211,
+but have to provide some functionality for the driver to do things to
+be able to honour such flags.
+
+Perhaps a new operation, where we pass a pre-built SKB and control
+flags?
+
+johannes
