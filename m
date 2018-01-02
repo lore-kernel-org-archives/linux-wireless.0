@@ -1,92 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0088.outbound.protection.outlook.com ([104.47.0.88]:61248
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751257AbeAZWCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 17:02:55 -0500
-From: peter.oh@bowerswilkins.com
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: Peter Oh <peter.oh@bowerswilkins.com>, johannes.berg@intel.com
-Subject: [PATCH v4] mac80211: mesh: fix wrong mesh TTL offset calculation
-Date: Fri, 26 Jan 2018 14:02:37 -0800
-Message-Id: <5622ae154b32eab5fdba46fee9b0b7ca2e8fed23.1517004051.git.peter.oh@bowerswilkins.com> (sfid-20180126_230259_718169_01CEA7EF)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail2.candelatech.com ([208.74.158.173]:40176 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751029AbeABSUf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Jan 2018 13:20:35 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Report rx-timeout errors.
+Date: Tue,  2 Jan 2018 10:20:29 -0800
+Message-Id: <1514917229-7839-1-git-send-email-greearb@candelatech.com> (sfid-20180102_192039_548999_A302698E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Peter Oh <peter.oh@bowerswilkins.com>
+From: Ben Greear <greearb@candelatech.com>
 
-mesh TTL offset in Mesh Channel Switch Parameters element depends on
-not only Secondary Channel Offset element, but also affected by
-HT Control field and Wide Bandwidth Channel Switch element.
-So use element structure to manipulate mesh channel swich param IE
-after removing its constant attribution to correct the miscalculation.
+The rx pdev related stats do not match the 10.4 firmware stats
+struct.  The pdev-rx-timeout field needs to be added.
 
-Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
+Stock firmware may not actually ever increment that value,
+but this should at least help the other stats be aligned properly.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/mesh.c        | 17 ++++++-----------
- 2 files changed, 7 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h | 1 +
+ drivers/net/wireless/ath/ath10k/wmi.c  | 3 +++
+ drivers/net/wireless/ath/ath10k/wmi.h  | 1 +
+ 3 files changed, 5 insertions(+)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 2690002..ae9c33c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1467,7 +1467,7 @@ struct ieee802_11_elems {
- 	const struct ieee80211_timeout_interval_ie *timeout_int;
- 	const u8 *opmode_notif;
- 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
--	const struct ieee80211_mesh_chansw_params_ie *mesh_chansw_params_ie;
-+	struct ieee80211_mesh_chansw_params_ie *mesh_chansw_params_ie;
- 	const struct ieee80211_bss_max_idle_period_ie *max_idle_period_ie;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index a6b0894..1aacc9b8 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -288,6 +288,7 @@ struct ath10k_fw_stats_pdev {
+ 	s32 phy_err_drop;
+ 	s32 mpdu_errs;
+ 	s32 rx_ovfl_errs;
++	s32 rx_timeout_errs;
+ };
  
- 	/* length of them, respectively */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 73ac607..6a381cb 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1255,13 +1255,12 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
- }
+ struct ath10k_fw_stats {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index f3e6c67..cba6dad 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3217,6 +3217,7 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
+ 		ath10k_wmi_pull_pdev_stats_base(&src->base, dst);
+ 		ath10k_wmi_10_4_pull_pdev_stats_tx(&src->tx, dst);
+ 		ath10k_wmi_pull_pdev_stats_rx(&src->rx, dst);
++		dst->rx_timeout_errs = __le32_to_cpu(src->pdev_rx_timeout);
+ 		dst->rx_ovfl_errs = __le32_to_cpu(src->rx_ovfl_errs);
+ 		ath10k_wmi_pull_pdev_stats_extra(&src->extra, dst);
  
- static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
--			       struct ieee80211_mgmt *mgmt, size_t len)
-+			       struct ieee80211_mgmt *mgmt, size_t len,
-+			       struct ieee802_11_elems *elems)
- {
- 	struct ieee80211_mgmt *mgmt_fwd;
- 	struct sk_buff *skb;
- 	struct ieee80211_local *local = sdata->local;
--	u8 *pos = mgmt->u.action.u.chan_switch.variable;
--	size_t offset_ttl;
+@@ -8244,6 +8245,8 @@ void ath10k_wmi_10_4_op_fw_stats_fill(struct ath10k *ar,
  
- 	skb = dev_alloc_skb(local->tx_headroom + len);
- 	if (!skb)
-@@ -1269,13 +1268,9 @@ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
- 	skb_reserve(skb, local->tx_headroom);
- 	mgmt_fwd = skb_put(skb, len);
+ 	ath10k_wmi_fw_pdev_rx_stats_fill(pdev, buf, &len);
+ 	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
++			"Num Rx Timeout errors", pdev->rx_timeout_errs);
++	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
+ 			"Num Rx Overflow errors", pdev->rx_ovfl_errs);
  
--	/* offset_ttl is based on whether the secondary channel
--	 * offset is available or not. Subtract 1 from the mesh TTL
--	 * and disable the initiator flag before forwarding.
--	 */
--	offset_ttl = (len < 42) ? 7 : 10;
--	*(pos + offset_ttl) -= 1;
--	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
-+	elems->mesh_chansw_params_ie->mesh_ttl--;
-+	elems->mesh_chansw_params_ie->mesh_flags &=
-+		~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
- 
- 	memcpy(mgmt_fwd, mgmt, len);
- 	eth_broadcast_addr(mgmt_fwd->da);
-@@ -1323,7 +1318,7 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
- 
- 	/* forward or re-broadcast the CSA frame */
- 	if (fwd_csa) {
--		if (mesh_fwd_csa_frame(sdata, mgmt, len) < 0)
-+		if (mesh_fwd_csa_frame(sdata, mgmt, len, &elems) < 0)
- 			mcsa_dbg(sdata, "Failed to forward the CSA frame");
- 	}
- }
+ 	len += scnprintf(buf + len, buf_len - len, "\n");
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 66b446d..93ca8e8 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4434,6 +4434,7 @@ struct wmi_10_4_pdev_stats {
+ 	struct wmi_pdev_stats_base base;
+ 	struct wmi_10_4_pdev_stats_tx tx;
+ 	struct wmi_pdev_stats_rx rx;
++	__le32 pdev_rx_timeout;
+ 	__le32 rx_ovfl_errs;
+ 	struct wmi_pdev_stats_mem mem;
+ 	__le32 sram_free_size;
 -- 
-2.7.4
+2.4.11
