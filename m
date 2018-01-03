@@ -1,82 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47360 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751838AbeAIHjp (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:46483 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751149AbeACDAp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 02:39:45 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Xinming Hu <huxm@marvell.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>
-Subject: Re: [PATCH] mwifiex: cancel pcie/sdio work in remove/shutdown handler
-References: <1513164473-13827-1-git-send-email-huxm@marvell.com>
-        <20180108181117.GA129772@google.com>
-Date: Tue, 09 Jan 2018 09:39:39 +0200
-In-Reply-To: <20180108181117.GA129772@google.com> (Brian Norris's message of
-        "Mon, 8 Jan 2018 10:11:18 -0800")
-Message-ID: <87373f32h0.fsf@kamboji.qca.qualcomm.com> (sfid-20180109_083950_037615_40C9C89B)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 2 Jan 2018 22:00:45 -0500
+From: Hao Chen <flank3rsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Hao Chen <flank3rsky@gmail.com>
+Subject: [PATCH] nl80211: Check for the required netlink attribute presence
+Date: Wed,  3 Jan 2018 11:00:31 +0800
+Message-Id: <1514948431-20893-1-git-send-email-flank3rsky@gmail.com> (sfid-20180103_040058_967261_C90EDE54)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+nl80211_nan_add_func() does not check if the required attribute
+NL80211_NAN_FUNC_FOLLOW_UP_DEST is present when processing
+NL80211_CMD_ADD_NAN_FUNCTION request. This request can be issued
+by users with CAP_NET_ADMIN privilege and may result in NULL dereference
+and a system crash. Add a check for the required attribute presence.
 
->> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
->> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
->> @@ -310,6 +310,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
->>  		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
->>  	}
->>  
->> +	cancel_work_sync(&card->work);
->> +
->
-> Just FYI, this "fix" is not a real fix. It will likely paper over some
-> of your bugs (where, e.g., the FW shutdown command times out in the
-> previous couple of lines), but this highlights the fact that there are
-> other races that could trigger the same behavior. You're not fixing
-> those.
->
-> For example, what if somebody initiates a scan or other nl80211 command
-> between the above line and mwifiex_remove_card()? That command could
-> potentially time out too.
->
-> The proper fix would be to institute some kind of mutual exclusion
-> (locking) between mwifiex_shutdown_sw() and mwifiex_remove_card(), so
-> that they can't occur at the same time.
->
-> Unfortunately, I only paid attention to this after Kalle already applied
-> this patch. Personally, I'd prefer this patch not get applied, since
-> it's a bad solution to an obvious problem, which instead leaves a subtle
-> problem that perhaps no one will bother fixing.
+Signed-off-by: Hao Chen <flank3rsky@gmail.com>
+---
+ net/wireless/nl80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I can revert it, that's not a problem. Can I use the text below as
-explanation for the revert?
-
-----------------------------------------------------------------------
-Brian Norris <briannorris@chromium.org> says:
-
-Just FYI, this "fix" is not a real fix. It will likely paper over some
-of your bugs (where, e.g., the FW shutdown command times out in the
-previous couple of lines), but this highlights the fact that there are
-other races that could trigger the same behavior. You're not fixing
-those.
-
-For example, what if somebody initiates a scan or other nl80211 command
-between the above line and mwifiex_remove_card()? That command could
-potentially time out too.
-
-The proper fix would be to institute some kind of mutual exclusion
-(locking) between mwifiex_shutdown_sw() and mwifiex_remove_card(), so
-that they can't occur at the same time.
-
-----------------------------------------------------------------------
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 213d0c4..2b3dbcd 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11361,7 +11361,8 @@ static int nl80211_nan_add_func(struct sk_buff *skb,
+ 		break;
+ 	case NL80211_NAN_FUNC_FOLLOW_UP:
+ 		if (!tb[NL80211_NAN_FUNC_FOLLOW_UP_ID] ||
+-		    !tb[NL80211_NAN_FUNC_FOLLOW_UP_REQ_ID]) {
++		    !tb[NL80211_NAN_FUNC_FOLLOW_UP_REQ_ID] ||
++		    !tb[NL80211_NAN_FUNC_FOLLOW_UP_DEST]) {
+ 			err = -EINVAL;
+ 			goto out;
+ 		}
 -- 
-Kalle Valo
+1.9.1
