@@ -1,45 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53154 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752363AbeAZQr7 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:45696 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751008AbeACAvI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 11:47:59 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers 2018-01-26
-References: <87zi50shpe.fsf@kamboji.qca.qualcomm.com>
-        <20180126.114147.1744158511340132301.davem@davemloft.net>
-Date: Fri, 26 Jan 2018 18:47:54 +0200
-In-Reply-To: <20180126.114147.1744158511340132301.davem@davemloft.net> (David
-        Miller's message of "Fri, 26 Jan 2018 11:41:47 -0500 (EST)")
-Message-ID: <87r2qcsh1h.fsf@kamboji.qca.qualcomm.com> (sfid-20180126_174830_175206_CB49747F)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 2 Jan 2018 19:51:08 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Support use of channel 173
+Date: Tue,  2 Jan 2018 16:51:01 -0800
+Message-Id: <1514940661-13590-1-git-send-email-greearb@candelatech.com> (sfid-20180103_015112_591855_0345B73E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> From: Kalle Valo <kvalo@codeaurora.org>
-> Date: Fri, 26 Jan 2018 18:33:33 +0200
->
->> this is a pull request to the net tree for 4.15. I hate to do late pull
->> requests like this but today Sven Joachim found a serious regression in
->> one of ssb patches, I hope there's still enough time to get this to
->> 4.15.
->> 
->> But if it's too late, just let me know and I'll queue this for 4.16.
->
-> I think this is going to have to wait for 4.16, I just sent what I hope
-> is my last pull to Linus for this cycle.
+The India regulatory domain allows CH 173, so add that to the
+available channel list.  I verified basic connectivity between
+a 9880 and 9984 NIC.
 
-Yeah, I guessed that when I noticed you sent your pull request just 3
-minutes after mine :)
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h | 3 ++-
+ drivers/net/wireless/ath/ath10k/mac.c  | 3 +++
+ drivers/net/wireless/ath/ath10k/wmi.c  | 2 +-
+ 3 files changed, 6 insertions(+), 2 deletions(-)
 
-I'll send this to you next week in another pull request, please drop
-this one.
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index bcee3ec..cdcdff1 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -46,7 +46,8 @@
+ #define WMI_READY_TIMEOUT (5 * HZ)
+ #define ATH10K_FLUSH_TIMEOUT_HZ (5 * HZ)
+ #define ATH10K_CONNECTION_LOSS_HZ (3 * HZ)
+-#define ATH10K_NUM_CHANS 40
++#define ATH10K_NUM_CHANS 41
++#define ATH10K_MAX_5G_CHAN 173
+ 
+ /* Antenna noise floor */
+ #define ATH10K_DEFAULT_NOISE_FLOOR -95
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index c715ba1..3c03edf 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8540,6 +8540,9 @@ static const struct ieee80211_channel ath10k_5ghz_channels[] = {
+ 	CHAN5G(161, 5805, 0),
+ 	CHAN5G(165, 5825, 0),
+ 	CHAN5G(169, 5845, 0),
++	CHAN5G(173, 5865, 0),
++	/* If you add more, you may need to change ATH10K_MAX_5G_CHAN */
++	/* And you will definitely need to change ATH10K_NUM_CHANS in core.h */
+ };
+ 
+ struct ath10k *ath10k_mac_create(size_t priv_size)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index f29ce83..905af93 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2398,7 +2398,7 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	 */
+ 	if (channel >= 1 && channel <= 14) {
+ 		status->band = NL80211_BAND_2GHZ;
+-	} else if (channel >= 36 && channel <= 169) {
++	} else if (channel >= 36 && channel <= ATH10K_MAX_5G_CHAN) {
+ 		status->band = NL80211_BAND_5GHZ;
+ 	} else {
+ 		/* Shouldn't happen unless list of advertised channels to
 -- 
-Kalle Valo
+2.4.11
