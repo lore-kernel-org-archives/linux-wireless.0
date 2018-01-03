@@ -1,142 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from orthanc.universe-factory.net ([104.238.176.138]:48620 "EHLO
-        orthanc.universe-factory.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751509AbeAZW0y (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:39670 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751286AbeACU0k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 17:26:54 -0500
-Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
-To: =?UTF-8?Q?Richard_Sch=c3=bctz?= <rschuetz@uni-koblenz.de>,
-        Johannes Berg <johannes@sipsolutions.net>
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
-Cc: linux-wireless@vger.kernel.org
-From: Matthias Schiffer <mschiffer@universe-factory.net>
-Message-ID: <2f3b9bd7-f083-f46c-8c47-051019a6f495@universe-factory.net> (sfid-20180126_232658_364993_BD328A0D)
-Date: Fri, 26 Jan 2018 23:17:24 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="MoxVCABf2F429fyxa4XuuuWS1ui9s1Tjl"
+        Wed, 3 Jan 2018 15:26:40 -0500
+Message-ID: <1515011196.10342.8.camel@sipsolutions.net> (sfid-20180103_212649_626756_B2B829DC)
+Subject: Re: [RFC 4/4] nl80211: Implement TX of control port frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Wed, 03 Jan 2018 21:26:36 +0100
+In-Reply-To: <00fc2806-3e2c-811e-0f00-6774dc37d843@gmail.com> (sfid-20180103_181741_570171_25A40738)
+References: <20171228175832.3253-1-denkenz@gmail.com>
+         <20171228175832.3253-5-denkenz@gmail.com>
+         <1514899804.2024.5.camel@sipsolutions.net>
+         <c73dcadb-bd96-fa82-b857-b5e2432fbadb@gmail.com>
+         <1514924529.10342.4.camel@sipsolutions.net>
+         <00fc2806-3e2c-811e-0f00-6774dc37d843@gmail.com>
+         (sfid-20180103_181741_570171_25A40738)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---MoxVCABf2F429fyxa4XuuuWS1ui9s1Tjl
-Content-Type: multipart/mixed; boundary="4GTVpdpjtfavVn6M5UVVFvFYV7tCAJ4eE";
- protected-headers="v1"
-From: Matthias Schiffer <mschiffer@universe-factory.net>
-To: =?UTF-8?Q?Richard_Sch=c3=bctz?= <rschuetz@uni-koblenz.de>,
- Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <2f3b9bd7-f083-f46c-8c47-051019a6f495@universe-factory.net>
-Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
-In-Reply-To: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
+Hi,
 
---4GTVpdpjtfavVn6M5UVVFvFYV7tCAJ4eE
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+> > > If so, can we do something like what ieee80211_process_sa_query_req in
+> > > net/mac80211/rx.c or ieee80211_tdls_prep_mgmt_packet in
+> > > net/mac80211/tdls.c do?  E.g. use ieee80211_tx_skb or
+> > > __ieee80211_subif_start_xmit or similar to inject the skb with the
+> > > DONT_ENCRYPT flag?
+> > 
+> > Yes, this will work - but like I said, it requires more control over
+> > the SKB than cfg80211 has today, and than you can get through the
+> > regular netdev xmit.
+> 
+> So, I'm a bit lost here.  You're saying this will work but then it 
+> won't.  Are you saying this would only work for mac80211 based devices 
+> (e.g. ones that implement ieee80211_ops) but not ones that implement 
+> cfg80211_ops?  I presume because those provide their own net_device_ops?
 
-On 09/07/2017 05:47 PM, Richard Sch=C3=BCtz wrote:
-> According to IEEE Std 802.11-2016 (16.2.3.4 Long PHY SIGNAL field) all =
-of
-> the following rates are mandatory for a HR/DSSS PHY: 1 Mb/s, 2 Mb/s,
-> 5.5 Mb/s and 11 Mb/s. Set IEEE80211_RATE_MANDATORY_B flag for all of th=
-ese
-> instead of just 1 Mb/s to correctly reflect this.
->=20
-> Signed-off-by: Richard Sch=C3=BCtz <rschuetz@uni-koblenz.de>
+Heh, yeah, badly phrased. It'll work to do it like process_sa_query or
+similar code, for mac80211 drivers. What will *not* work is actually
+building and submitting the SKB in cfg80211 though, since you can't
+even set the DONT_ENCRYPT flag from there.
 
-We've noticed that this is breaking interoperability of 11s nodes in
-OpenWrt: association is only possible when neither or both peers have thi=
-s
-patch. I have not tested interop with non-Linux 11s peers.
+> > > This would likely mean that legacy behavior would still have to be
+> > > supported for quite some time (forever?) for drivers that don't get
+> > > around to implementing this, which would be unfortunate.
+> > 
+> > What do you mean by "legacy behaviour"? *Drivers* don't really need to
+> > do anything one way or the other, and mac80211 is the only thing
+> > implementing control port encrypt/ethertype right now, I suspect.
+> > 
+> 
+> When I say legacy I mean 'over netdev', e.g. not over nl80211.
 
-I propose to revert this for now (I assume it's too late for 4.15, but
-hopefully the regression can be fixed in 4.15.1).
+We need to support that behaviour forever anyway, for existing versions
+of userspace software.
 
-Regards,
-Matthias
+> Okay, so what you're saying is that the current CONTROL_PORT_* stuff 
+> doesn't work on anything besides mac80211 since drivers can completely 
+> ignore stuff inside cfg80211_connect_params.  And there's no way for 
+> userspace to know this ahead of time?
 
+Yes, NL80211_ATTR_CONTROL_PORT_ETHERTYPE is an attribute set in the
+wiphy info - see WIPHY_FLAG_CONTROL_PORT_PROTOCOL in the code.
 
-> ---
->  net/wireless/util.c | 22 +++++++++-------------
->  1 file changed, 9 insertions(+), 13 deletions(-)
->=20
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-> index bcb1284c3415..c69b5c31caf8 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -157,32 +157,28 @@ static void set_mandatory_flags_band(struct ieee8=
-0211_supported_band *sband)
->  	case NL80211_BAND_2GHZ:
->  		want =3D 7;
->  		for (i =3D 0; i < sband->n_bitrates; i++) {
-> -			if (sband->bitrates[i].bitrate =3D=3D 10) {
-> +			if (sband->bitrates[i].bitrate =3D=3D 10 ||
-> +			    sband->bitrates[i].bitrate =3D=3D 20 ||
-> +			    sband->bitrates[i].bitrate =3D=3D 55 ||
-> +			    sband->bitrates[i].bitrate =3D=3D 110) {
->  				sband->bitrates[i].flags |=3D
->  					IEEE80211_RATE_MANDATORY_B |
->  					IEEE80211_RATE_MANDATORY_G;
->  				want--;
-> +			} else {
-> +				sband->bitrates[i].flags |=3D
-> +					IEEE80211_RATE_ERP_G;
->  			}
-> =20
-> -			if (sband->bitrates[i].bitrate =3D=3D 20 ||
-> -			    sband->bitrates[i].bitrate =3D=3D 55 ||
-> -			    sband->bitrates[i].bitrate =3D=3D 110 ||
-> -			    sband->bitrates[i].bitrate =3D=3D 60 ||
-> +			if (sband->bitrates[i].bitrate =3D=3D 60 ||
->  			    sband->bitrates[i].bitrate =3D=3D 120 ||
->  			    sband->bitrates[i].bitrate =3D=3D 240) {
->  				sband->bitrates[i].flags |=3D
->  					IEEE80211_RATE_MANDATORY_G;
->  				want--;
->  			}
-> -
-> -			if (sband->bitrates[i].bitrate !=3D 10 &&
-> -			    sband->bitrates[i].bitrate !=3D 20 &&
-> -			    sband->bitrates[i].bitrate !=3D 55 &&
-> -			    sband->bitrates[i].bitrate !=3D 110)
-> -				sband->bitrates[i].flags |=3D
-> -					IEEE80211_RATE_ERP_G;
->  		}
-> -		WARN_ON(want !=3D 0 && want !=3D 3 && want !=3D 6);
-> +		WARN_ON(want !=3D 0 && want !=3D 3);
->  		break;
->  	case NL80211_BAND_60GHZ:
->  		/* check for mandatory HT MCS 1..4 */
->=20
+> So essentially we'd need a new operation in cfg80211_ops that would 
+> accept the control port frame data and some control flags.  Do we want 
+> to pass in an skb with all the 802.11 headers set or a 802.3 formatted 
+> skb (since that is what other data frames look like initially on the 
+> netdev).
 
+I think 802.3 format would be better - matches better for full-MAC
+devices that might do all header conversion in the device, and getting
+the BSSID might even be difficult from cfg80211, etc.
 
-
---4GTVpdpjtfavVn6M5UVVFvFYV7tCAJ4eE--
-
---MoxVCABf2F429fyxa4XuuuWS1ui9s1Tjl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEZmTnvaa2aYgexS51Fu8/ZMsgHZwFAlprqPUACgkQFu8/ZMsg
-HZz/ZxAA2uHJqwi6HVgPIU1sryUqBkKBanL2EhGxLEacuVlcuNO0D/9kXZt/8+gu
-rZgudRwDNMZhyJfJRarrenViKIkoKQSUhGppzBrFA8hSBBSmvoXIEoO3XsnstMwt
-Xib+ma3261kR64Ld21QnD3W2PmUDZ4y6iRoFRv9a4M3SWytdOb0W+92U/SkGHOou
-ozzz/MhBHBw+HtQzZzAsWTe5N0fU/wj8UkKx4XvNh/HPMGFI4CkaH0QkkONpEwme
-deByyQf3hQ0rAB9u+MBwhCNR3hzxkTGLjx4n3PCsMJTSkmhWCY4Hfg/TBFs2PkO/
-Q8aF7q6GgMUIkDJBJwf286SMvT4M6LInBA3/Cgo82Za+qFLw+uLu6kTuThut5XlU
-f1gdiuVmJspBrBg5vZR7KdwJjP8OJNMHgm9VNfTWStE8Smf6jOSkbskHS6ut/eeO
-lEm33yKjtPabtfVXAWbJkAXSuDf9ZjkCNNmEY2KAz1myvnJ+w1BuoZPbUFGjUf3P
-xP98OVLTl7MqMj8wjKP9xxwzGpOlDfe7ap0mJQT/HqfjmRgCKrqxXLPYe+x7Sp4Z
-Cy6imxS0fdna7NXNA9wYT0Sh7f3V+wBpQNH/f/u8qlCdylmuOLJZDWqV2DgTLdZ1
-Br20kXdNCoCsWjJg/YB26PK1UXLAly/NysgZ8cKA7y8ASauChBE=
-=mPK4
------END PGP SIGNATURE-----
-
---MoxVCABf2F429fyxa4XuuuWS1ui9s1Tjl--
+johannes
