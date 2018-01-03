@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:45100 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751081AbeAYHmF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 02:42:05 -0500
-From: Tobias Schramm <tobleminer@gmail.com>
-To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Cc: Tobias Schramm <tobleminer@gmail.com>
-Subject: [PATCH v2 0/2] ath10k: Add support for Ubiquiti-branded QCA988X
-Date: Thu, 25 Jan 2018 08:41:29 +0100
-Message-Id: <20180125074131.30622-1-tobleminer@gmail.com> (sfid-20180125_084212_501488_01F26FB6)
+Received: from mx1.redhat.com ([209.132.183.28]:39572 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751428AbeACLpi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Jan 2018 06:45:38 -0500
+Date: Wed, 3 Jan 2018 12:45:37 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Enrico Mioso <mrkiko.rs@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        nbd@nbd.name
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20180103114536.GB10306@redhat.com> (sfid-20180103_124542_471881_3C0A551D)
+References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain>
+ <20171213152017.GA3554@redhat.com>
+ <alpine.LNX.2.21.99.1712261820080.22705@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.21.99.1712261820080.22705@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A lot of more modern Ubiquiti AirMAX wireless devices contain a rebranded
-QCA988X with changed PCI vendor and device id.
-This patch adds support for those chips by treating them as QCA988X rev2
-radios.
+On Tue, Dec 26, 2017 at 06:20:22PM +0100, Enrico Mioso wrote:
+> Ok, observing a stall. Unfortunately, it still happens.
+<snip>
+> rt2800_wmac 10180000.wmac: loaded eeprom from mtd device "factory"
+> ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 2872, rev 0200 detected
+> ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 0005 detected
 
-Changes since v1:
- * Send patch to more people and lists
+Is possible that this is the FW problem for this particular RT2872
+device or we do not correctly program registers for it. 
 
+I think the issue is that at some point HW/FW is not capable to sent 
+frames and do not report to driver failure of sending frames, hence
+driver queue can not be moved forward. The solution to this will be
+timeout mechanism for TX, similar like for rt2800usb, however this will
+require substantial rt2800pci/mmio driver rewrite. I'm going to look
+at this, but not sure when.
 
-Tobias Schramm (2):
-  pci: Add vendor id of Ubiquiti Networks
-  ath10k: Add support for Uiquiti rebranded QCA988X v2
-
- drivers/net/wireless/ath/ath10k/core.c | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  1 +
- drivers/net/wireless/ath/ath10k/pci.c  |  4 ++++
- include/linux/pci_ids.h                |  2 ++
- 4 files changed, 31 insertions(+)
-
--- 
-2.16.0
+Cheers
+Stanislaw
