@@ -1,102 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:43703 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754937AbeAHSLW (ORCPT
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:33825 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751276AbeACUYM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 13:11:22 -0500
-Received: by mail-pf0-f195.google.com with SMTP id e3so6511403pfi.10
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jan 2018 10:11:21 -0800 (PST)
-Date: Mon, 8 Jan 2018 10:11:18 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>
-Subject: Re: [PATCH] mwifiex: cancel pcie/sdio work in remove/shutdown handler
-Message-ID: <20180108181117.GA129772@google.com> (sfid-20180108_191127_098326_1AE5BC27)
-References: <1513164473-13827-1-git-send-email-huxm@marvell.com>
+        Wed, 3 Jan 2018 15:24:12 -0500
+Received: by mail-qt0-f175.google.com with SMTP id 33so3618952qtv.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jan 2018 12:24:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1513164473-13827-1-git-send-email-huxm@marvell.com>
+In-Reply-To: <1514899630.2024.2.camel@sipsolutions.net>
+References: <20171228175832.3253-1-denkenz@gmail.com> <5A460B01.7060603@broadcom.com>
+ <186d4469-fffb-45b2-1ea7-53a4eaf1c966@gmail.com> <1514899630.2024.2.camel@sipsolutions.net>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Date: Wed, 3 Jan 2018 21:24:11 +0100
+Message-ID: <CAF7Mx6q+y5R4uPwXEERMSL-_8pUqBcWGr5V7ORJQiMFy_s4PEg@mail.gmail.com> (sfid-20180103_212418_610596_178DDAE0)
+Subject: Re: [RFC 0/4] EAPoL over NL80211
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Denis Kenzior <denkenz@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Jan 2, 2018 at 2:27 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2017-12-29 at 12:29 -0600, Denis Kenzior wrote:
+>
+>> Agreed, requiring both attributes is less than ideal, but I tried to
+>> make the initial RFC as minimal as possible.  It also helped that iwd
+>> uses SOCKET_OWNER by default.  What can be done is to always set
+>> conn_owner_nlportid and introduce another flag that would indicate
+>> whether 'connection tear-down on application exit' was requested.
+>>
+>> However, my opinion is that the current SOCKET_OWNER behavior should
+>> just be made default, especially for control port over nl80211
+>> connections, even if SOCKET_OWNER was not requested.  Once the
+>> controlling application dies, there's no hope of salvaging the
+>> connection, perform rekeys, etc.
+>
+> I think we should keep both attributes; it's better to be explicit that
+> both are needed than to set socket-owner automatically.
 
-On Wed, Dec 13, 2017 at 07:27:53PM +0800, Xinming Hu wrote:
-> The last command used to shutdown firmware might be timeout,
-> and trigger firmware dump in asynchronous pcie/sdio work.
-> 
-> The remove/shutdown handler will continue free core data
-> structure private/adapter, which might be dereferenced in
-> pcie/sdio work, finally crash the kernel.
-> 
-> Sync and Cancel pcie/sdio work, could be a fix for above
-> cornel case. In this way, the last command timeout could
+As I see it the problem is that SOCKET_OWNER behavior is actually two
+behaviors wrapped in one, ie. 1) make notifications unicast, and 2)
+tear-down on socket disconnect. So what is the reason for requiring
+this attribute. In the cover letter you mention it is for unicast
+notifications, but above you seem to put more weight in the tear-down
+behavior. From earlier discussion I recall that multicast netlink
+messages may not be received. Is that the reason for opting for
+unicast here. If so, I would suggest to mention that in the commit
+message.
 
-s/cornel/corner/
+>> The biggest issue was that each driver defines a set of management
+>> frames it can accept via this mechanism.
+>
+> I'm not sure this is "the biggest issue", but I tend to agree with
+> keeping them separate.
 
-> be handled properly.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 2 ++
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 2 ++
->  2 files changed, 4 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index f666cb2..23209c5 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -310,6 +310,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
->  		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
->  	}
->  
-> +	cancel_work_sync(&card->work);
-> +
+Yes. Seems like dealing with mgmt and data adds quite a bit of
+complexity and/or redesign.
 
-Just FYI, this "fix" is not a real fix. It will likely paper over some
-of your bugs (where, e.g., the FW shutdown command times out in the
-previous couple of lines), but this highlights the fact that there are
-other races that could trigger the same behavior. You're not fixing
-those.
+Just another note. In the cover letter it is mentioned that
+eapol-over-nl80211 solves some long standing races. Now the example
+mentioned is indeed one for which wpa_supplicant temporarily stores M1
+or at least that is what I suspect you are referring to. Another
+issue, for which we have a hack in brcmfmac, is a race between
+installing the keys through nl80211 and M4 being passed through the
+netdev which can result in M4 being sent out encrypted. Not sure if
+your discussion about DONT_CRYPT is about that.
 
-For example, what if somebody initiates a scan or other nl80211 command
-between the above line and mwifiex_remove_card()? That command could
-potentially time out too.
-
-The proper fix would be to institute some kind of mutual exclusion
-(locking) between mwifiex_shutdown_sw() and mwifiex_remove_card(), so
-that they can't occur at the same time.
-
-Unfortunately, I only paid attention to this after Kalle already applied
-this patch. Personally, I'd prefer this patch not get applied, since
-it's a bad solution to an obvious problem, which instead leaves a subtle
-problem that perhaps no one will bother fixing.
-
-Brian
-
->  	mwifiex_remove_card(adapter);
->  }
->  
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> index a828801..2488587 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -399,6 +399,8 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
->  		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
->  	}
->  
-> +	cancel_work_sync(&card->work);
-> +
->  	mwifiex_remove_card(adapter);
->  }
->  
-> -- 
-> 1.9.1
-> 
+Gr. AvS
