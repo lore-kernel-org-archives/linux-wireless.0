@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:54052 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750847AbeAQGPu (ORCPT
+Received: from esa4.dell-outbound.iphmx.com ([68.232.149.214]:10371 "EHLO
+        esa4.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750820AbeACQZu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 01:15:50 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 04/10] rtlwifi: enable mac80211 fast-tx support
-Date: Wed, 17 Jan 2018 14:15:24 +0800
-Message-ID: <20180117061530.30049-5-pkshih@realtek.com> (sfid-20180117_071555_709604_FA916240)
-In-Reply-To: <20180117061530.30049-1-pkshih@realtek.com>
-References: <20180117061530.30049-1-pkshih@realtek.com>
+        Wed, 3 Jan 2018 11:25:50 -0500
+From: <Mario.Limonciello@dell.com>
+To: <pmenzel+linux-wireless@molgen.mpg.de>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <it+linux-wireless@molgen.mpg.de>, <linux@leemhuis.info>
+Subject: RE: UBSAN: Undefined behaviour in net/wireless/nl80211.c:718:4:
+ -1665903437 * 100 cannot be represented in type 'int'
+Date: Wed, 3 Jan 2018 16:25:47 +0000
+Message-ID: <bff3b1403a344bccbdec84c60f20d638@ausx13mpc120.AMER.DELL.COM> (sfid-20180103_172605_925303_5070A6CE)
+References: <f58ac367-9b22-a7dc-7d45-7e9d19e179c0@molgen.mpg.de>
+In-Reply-To: <f58ac367-9b22-a7dc-7d45-7e9d19e179c0@molgen.mpg.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
-
-To enable the mac80211 fast-tx feature, the hw/driver needs to support
-dynamic power saving and fragmentation. Since our driver does not
-need to fragment packet into smaller pieces, we just hook an empty
-callback of set_frag_threshold to avoid fragmentation in mac80211.
-
-After this, the mac80211 will not fragment the packets and can transmit
-them faster by cache the header information.
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 2 ++
- drivers/net/wireless/realtek/rtlwifi/core.c | 6 ++++++
- 2 files changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 89ec318598ea..e902cd7adbfe 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -395,6 +395,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, CONNECTION_MONITOR);
- 	ieee80211_hw_set(hw, MFP_CAPABLE);
- 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
-+	ieee80211_hw_set(hw, SUPPORTS_TX_FRAG);
-+	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
- 
- 	/* swlps or hwlps has been set in diff chip in init_sw_vars */
- 	if (rtlpriv->psc.swctrl_lps) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index a16aa94273e8..cef511f7aa05 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -992,6 +992,11 @@ static int _rtl_get_hal_qnum(u16 queue)
- 	return qnum;
- }
- 
-+static int rtl_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
- /*
-  *for mac80211 VO = 0, VI = 1, BE = 2, BK = 3
-  *for rtl819x  BE = 0, BK = 1, VI = 2, VO = 3
-@@ -1896,6 +1901,7 @@ const struct ieee80211_ops rtl_ops = {
- 	.config = rtl_op_config,
- 	.configure_filter = rtl_op_configure_filter,
- 	.set_key = rtl_op_set_key,
-+	.set_frag_threshold = rtl_op_set_frag_threshold,
- 	.conf_tx = rtl_op_conf_tx,
- 	.bss_info_changed = rtl_op_bss_info_changed,
- 	.get_tsf = rtl_op_get_tsf,
--- 
-2.15.1
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBQYXVsIE1lbnplbCBbbWFpbHRv
+OnBtZW56ZWwrbGludXgtd2lyZWxlc3NAbW9sZ2VuLm1wZy5kZV0NCj4gU2VudDogV2VkbmVzZGF5
+LCBKYW51YXJ5IDMsIDIwMTggMTA6MjAgQU0NCj4gVG86IEpvaGFubmVzIEJlcmcgPGpvaGFubmVz
+QHNpcHNvbHV0aW9ucy5uZXQ+DQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7
+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGl0K2xpbnV4LQ0KPiB3aXJlbGVzc0Btb2xn
+ZW4ubXBnLmRlOyBMaW1vbmNpZWxsbywgTWFyaW8gPE1hcmlvX0xpbW9uY2llbGxvQERlbGwuY29t
+PjsNCj4gVGhvcnN0ZW4gTGVlbWh1aXMgPGxpbnV4QGxlZW1odWlzLmluZm8+DQo+IFN1YmplY3Q6
+IFVCU0FOOiBVbmRlZmluZWQgYmVoYXZpb3VyIGluIG5ldC93aXJlbGVzcy9ubDgwMjExLmM6NzE4
+OjQ6IC0NCj4gMTY2NTkwMzQzNyAqIDEwMCBjYW5ub3QgYmUgcmVwcmVzZW50ZWQgaW4gdHlwZSAn
+aW50Jw0KDQo8c25pcD4NCg0KPiBbICAxMTkuODY2OTIzXSBkZWxsX3NtYmlvczogTm8gZGVsbC1z
+bWJpb3MgZHJpdmVycyBhcmUgbG9hZGVkDQo+IFsgIDExOS44NjY5MzBdIGRlbGxfc21iaW9zOiBO
+byBkZWxsLXNtYmlvcyBkcml2ZXJzIGFyZSBsb2FkZWQNCj4gWyAgMTE5Ljg2NjkzMl0gZGVsbF9z
+bWJpb3M6IE5vIGRlbGwtc21iaW9zIGRyaXZlcnMgYXJlIGxvYWRlZA0KPiBbICAxMTkuODY2OTM3
+XSBkZWxsX3NtYmlvczogTm8gZGVsbC1zbWJpb3MgZHJpdmVycyBhcmUgbG9hZGVkDQo+IFsgIDEx
+OS44NjY5MzldIGRlbGxfc21iaW9zOiBObyBkZWxsLXNtYmlvcyBkcml2ZXJzIGFyZSBsb2FkZWQN
+Cj4gWyAgMTE5Ljg2Njk0MV0gZGVsbF9zbWJpb3M6IE5vIGRlbGwtc21iaW9zIGRyaXZlcnMgYXJl
+IGxvYWRlZA0KPiBbICAxMjAuNzY3NzIxXSBkZWxsX3NtYmlvczogTm8gZGVsbC1zbWJpb3MgZHJp
+dmVycyBhcmUgbG9hZGVkDQo+IFsgIDEyMC43Njc3MjldIGRlbGxfc21iaW9zOiBObyBkZWxsLXNt
+YmlvcyBkcml2ZXJzIGFyZSBsb2FkZWQNCj4gWyAgMTIwLjc2NzczMV0gZGVsbF9zbWJpb3M6IE5v
+IGRlbGwtc21iaW9zIGRyaXZlcnMgYXJlIGxvYWRlZA0KPiBbICAxMjAuNzY3NzM2XSBkZWxsX3Nt
+YmlvczogTm8gZGVsbC1zbWJpb3MgZHJpdmVycyBhcmUgbG9hZGVkDQo+IFsgIDEyMC43Njc3Mzhd
+IGRlbGxfc21iaW9zOiBObyBkZWxsLXNtYmlvcyBkcml2ZXJzIGFyZSBsb2FkZWQNCj4gWyAgMTIw
+Ljc2Nzc0MF0gZGVsbF9zbWJpb3M6IE5vIGRlbGwtc21iaW9zIGRyaXZlcnMgYXJlIGxvYWRlZA0K
+PiBbICAxMjEuMDc1Mzg3XSBkZWxsX3NtYmlvczogTm8gZGVsbC1zbWJpb3MgZHJpdmVycyBhcmUg
+bG9hZGVkDQo+IFsgIDEyMS4wNzUzOTRdIGRlbGxfc21iaW9zOiBObyBkZWxsLXNtYmlvcyBkcml2
+ZXJzIGFyZSBsb2FkZWQNCj4gWyAgMTIxLjA3NTM5Nl0gZGVsbF9zbWJpb3M6IE5vIGRlbGwtc21i
+aW9zIGRyaXZlcnMgYXJlIGxvYWRlZA0KPiBbICAxMjEuMDc1NDAxXSBkZWxsX3NtYmlvczogTm8g
+ZGVsbC1zbWJpb3MgZHJpdmVycyBhcmUgbG9hZGVkDQo+IFsgIDEyMS4wNzU0MDNdIGRlbGxfc21i
+aW9zOiBObyBkZWxsLXNtYmlvcyBkcml2ZXJzIGFyZSBsb2FkZWQNCj4gWyAgMTIxLjA3NTQwNV0g
+ZGVsbF9zbWJpb3M6IE5vIGRlbGwtc21iaW9zIGRyaXZlcnMgYXJlIGxvYWRlZA0KDQpJIGtub3cg
+dGhpcyBpc24ndCB0aGUgZm9jYWwgcG9pbnQgb2YgeW91ciBtZXNzYWdlLCBidXQgdGhlc2UgYXJl
+IA0KZXhwZWN0ZWQgbWVzc2FnZXMgaWYgeW91IGRvbid0IGhhdmUgZGVsbC1zbWJpb3Mtc21tIG9y
+IA0KZGVsbC1zbWJpb3Mtd21pIGxvYWRlZC4gIFRoYXQgbWVhbnMgdGhhdCBhbm90aGVyIG1vZHVs
+ZSBpbiB0aGUNCmtlcm5lbCBpcyB0cnlpbmcgdG8gcnVuIGEgU01CSU9TIGNhbGwgYnV0IGNhbid0
+IGR1ZSB0byBubyBkaXNwYXRjaGVyLg0KDQo=
