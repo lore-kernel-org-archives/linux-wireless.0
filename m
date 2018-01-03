@@ -1,99 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:45215 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759159AbeAIToH (ORCPT
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:46143 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752343AbeACUNx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 14:44:07 -0500
-Received: by mail-ot0-f195.google.com with SMTP id o1so12322324oti.12
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 11:44:07 -0800 (PST)
+        Wed, 3 Jan 2018 15:13:53 -0500
+Received: by mail-qt0-f175.google.com with SMTP id r39so3547480qtr.13
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jan 2018 12:13:52 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.00.1801092017330.27010@gjva.wvxbf.pm>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <alpine.LRH.2.00.1801092017330.27010@gjva.wvxbf.pm>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 9 Jan 2018 11:44:05 -0800
-Message-ID: <CAPcyv4gccDQYx9urpagnBo-TqNLoQ00gEoE7kp+JXNKsmFxcHw@mail.gmail.com> (sfid-20180109_204449_177698_2538E001)
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative execution
-To: Jiri Kosina <jikos@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Alan Cox <alan.cox@intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Zhang Rui <rui.zhang@intel.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
-        Eduardo Valentin <edubezval@gmail.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Netdev <netdev@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+In-Reply-To: <00fc2806-3e2c-811e-0f00-6774dc37d843@gmail.com>
+References: <20171228175832.3253-1-denkenz@gmail.com> <20171228175832.3253-5-denkenz@gmail.com>
+ <1514899804.2024.5.camel@sipsolutions.net> <c73dcadb-bd96-fa82-b857-b5e2432fbadb@gmail.com>
+ <1514924529.10342.4.camel@sipsolutions.net> <00fc2806-3e2c-811e-0f00-6774dc37d843@gmail.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Date: Wed, 3 Jan 2018 21:13:51 +0100
+Message-ID: <CAF7Mx6oKi3gAiyjTOCcZX3Y--=xFV9NuiCdSbVTL7R0A=NYKcQ@mail.gmail.com> (sfid-20180103_212350_946783_F2641AC3)
+Subject: Re: [RFC 4/4] nl80211: Implement TX of control port frames
+To: Denis Kenzior <denkenz@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 9, 2018 at 11:34 AM, Jiri Kosina <jikos@kernel.org> wrote:
-> On Fri, 5 Jan 2018, Dan Williams wrote:
+On Wed, Jan 3, 2018 at 6:17 PM, Denis Kenzior <denkenz@gmail.com> wrote:
+> Hi Johannes,
 >
-> [ ... snip ... ]
->> Andi Kleen (1):
->>       x86, barrier: stop speculation for failed access_ok
+> <snip>
+>
+>>> If so, can we do something like what ieee80211_process_sa_query_req in
+>>> net/mac80211/rx.c or ieee80211_tdls_prep_mgmt_packet in
+>>> net/mac80211/tdls.c do?  E.g. use ieee80211_tx_skb or
+>>> __ieee80211_subif_start_xmit or similar to inject the skb with the
+>>> DONT_ENCRYPT flag?
 >>
->> Dan Williams (13):
->>       x86: implement nospec_barrier()
->>       [media] uvcvideo: prevent bounds-check bypass via speculative execution
->>       carl9170: prevent bounds-check bypass via speculative execution
->>       p54: prevent bounds-check bypass via speculative execution
->>       qla2xxx: prevent bounds-check bypass via speculative execution
->>       cw1200: prevent bounds-check bypass via speculative execution
->>       Thermal/int340x: prevent bounds-check bypass via speculative execution
->>       ipv6: prevent bounds-check bypass via speculative execution
->>       ipv4: prevent bounds-check bypass via speculative execution
->>       vfs, fdtable: prevent bounds-check bypass via speculative execution
->>       net: mpls: prevent bounds-check bypass via speculative execution
->>       udf: prevent bounds-check bypass via speculative execution
->>       userns: prevent bounds-check bypass via speculative execution
 >>
->> Mark Rutland (4):
->>       asm-generic/barrier: add generic nospec helpers
->>       Documentation: document nospec helpers
->>       arm64: implement nospec_ptr()
->>       arm: implement nospec_ptr()
+>> Yes, this will work - but like I said, it requires more control over
+>> the SKB than cfg80211 has today, and than you can get through the
+>> regular netdev xmit.
 >
-> So considering the recent publication of [1], how come we all of a sudden
-> don't need the barriers in ___bpf_prog_run(), namely for LD_IMM_DW and
-> LDX_MEM_##SIZEOP, and something comparable for eBPF JIT?
 >
-> Is this going to be handled in eBPF in some other way?
+> So, I'm a bit lost here.  You're saying this will work but then it won't.
+> Are you saying this would only work for mac80211 based devices (e.g. ones
+> that implement ieee80211_ops) but not ones that implement cfg80211_ops?  I
+> presume because those provide their own net_device_ops?
+
+That is my assumption as well.
+
+>>
+>>>> Perhaps a new operation, where we pass a pre-built SKB and control
+>>>> flags?
+>>
+>>
+>>>
+>>> This would likely mean that legacy behavior would still have to be
+>>> supported for quite some time (forever?) for drivers that don't get
+>>> around to implementing this, which would be unfortunate.
+>>
+>>
+>> What do you mean by "legacy behaviour"? *Drivers* don't really need to
+>> do anything one way or the other, and mac80211 is the only thing
+>> implementing control port encrypt/ethertype right now, I suspect.
+>>
 >
-> Without that in place, and considering Jann Horn's paper, it would seem
-> like PTI doesn't really lock it down fully, right?
+> When I say legacy I mean 'over netdev', e.g. not over nl80211.
+>
+> Okay, so what you're saying is that the current CONTROL_PORT_* stuff doesn't
+> work on anything besides mac80211 since drivers can completely ignore stuff
+> inside cfg80211_connect_params.  And there's no way for userspace to know
+> this ahead of time?
+>
+> So essentially we'd need a new operation in cfg80211_ops that would accept
+> the control port frame data and some control flags.  Do we want to pass in
+> an skb with all the 802.11 headers set or a 802.3 formatted skb (since that
+> is what other data frames look like initially on the netdev).
 
-Here is the latest (v3) bpf fix:
+Our firmware expects EAPOL stuff to come in as 802.3 packet, which
+probably applies to the other full-mac devices as well. Is there any
+reason for passing 802.11 packets.
 
-https://patchwork.ozlabs.org/patch/856645/
-
-I currently have v2 on my 'nospec' branch and will move that to v3 for
-the next update, unless it goes upstream before then.
+Regards,
+Arend
