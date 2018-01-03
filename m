@@ -1,67 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:44506 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751656AbeADRkm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jan 2018 12:40:42 -0500
-Received: by mail-pl0-f66.google.com with SMTP id n13so1412252plp.11
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jan 2018 09:40:42 -0800 (PST)
-Date: Thu, 4 Jan 2018 09:40:39 -0800
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Colin King <colin.king@canonical.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH][V2] wcn36xx: fix incorrect assignment to
- msg_body.min_ch_time
-Message-ID: <20180104174039.GL12655@minitux> (sfid-20180104_184114_889955_8641273C)
-References: <20171229090732.14928-1-colin.king@canonical.com>
+Received: from mout.web.de ([212.227.17.11]:57478 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752180AbeACUNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Jan 2018 15:13:25 -0500
+Subject: [PATCH 2/2] wireless: libertas_tf: Improve a size determination in
+ two functions
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Kees Cook <keescook@chromium.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+References: <e8b93aae-8dea-7089-43fe-9222054f0749@users.sourceforge.net>
+Message-ID: <2887651c-f571-120e-1a63-1768db668ee4@users.sourceforge.net> (sfid-20180103_212621_027087_6AC7DE55)
+Date: Wed, 3 Jan 2018 21:13:19 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171229090732.14928-1-colin.king@canonical.com>
+In-Reply-To: <e8b93aae-8dea-7089-43fe-9222054f0749@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri 29 Dec 01:07 PST 2017, Colin King wrote:
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Wed, 3 Jan 2018 21:02:17 +0100
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The second assignment to msg_body.min_ch_time is incorrect, it
-> should actually be to msg_body.max_ch_time.
-> 
-> Thanks to Bjorn Andersson for identifying the correct way to fix
-> this as my original fix was incorrect.
-> 
-> Detected by CoverityScan, CID#1463042 ("Unused Value")
-> 
-> Fixes: 2f3bef4b247e ("wcn36xx: Add hardware scan offload support")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Replace the specification of data structures by variable references
+as the parameter for the operator "sizeof" to make the corresponding size
+determination a bit safer according to the Linux coding style convention.
 
-Thanks Colin,
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-
-Regards,
-Bjorn
-
-> ---
->  drivers/net/wireless/ath/wcn36xx/smd.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index 2914618a0335..2a4871ca9c72 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> @@ -626,7 +626,7 @@ int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
->  
->  	msg_body.scan_type = WCN36XX_HAL_SCAN_TYPE_ACTIVE;
->  	msg_body.min_ch_time = 30;
-> -	msg_body.min_ch_time = 100;
-> +	msg_body.max_ch_time = 100;
->  	msg_body.scan_hidden = 1;
->  	memcpy(msg_body.mac, vif->addr, ETH_ALEN);
->  	msg_body.p2p_search = vif->p2p;
-> -- 
-> 2.14.1
-> 
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index 9eebc84cd15a..98e81a6f2338 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -152,7 +152,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	lbtf_deb_enter(LBTF_DEB_USB);
+ 	udev = interface_to_usbdev(intf);
+ 
+-	cardp = kzalloc(sizeof(struct if_usb_card), GFP_KERNEL);
++	cardp = kzalloc(sizeof(*cardp), GFP_KERNEL);
+ 	if (!cardp)
+ 		goto error;
+ 
+@@ -536,8 +536,7 @@ static void if_usb_receive_fwload(struct urb *urb)
+ 		return;
+ 	}
+ 
+-	syncfwheader = kmemdup(skb->data, sizeof(struct fwsyncheader),
+-			       GFP_ATOMIC);
++	syncfwheader = kmemdup(skb->data, sizeof(*syncfwheader), GFP_ATOMIC);
+ 	if (!syncfwheader) {
+ 		lbtf_deb_usbd(&cardp->udev->dev,
+ 			"Failure to allocate syncfwheader\n");
+-- 
+2.15.1
