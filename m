@@ -1,72 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:32798 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966069AbeAOPYm (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52432 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753141AbeADPIh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 10:24:42 -0500
-Received: by mail-ot0-f195.google.com with SMTP id x15so10933392ote.0
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 07:24:41 -0800 (PST)
-Subject: Re: [RFC v2 3/5] mac80211: Send control port frames over nl80211
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20180110170938.2341-1-denkenz@gmail.com>
- <20180110170938.2341-4-denkenz@gmail.com>
- <1516021789.410.28.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <a7b47de8-ad2c-2b73-1e71-d70c47281845@gmail.com> (sfid-20180115_162446_055028_6069C848)
-Date: Mon, 15 Jan 2018 09:24:39 -0600
-MIME-Version: 1.0
-In-Reply-To: <1516021789.410.28.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 4 Jan 2018 10:08:37 -0500
+Message-ID: <1515078514.10342.29.camel@sipsolutions.net> (sfid-20180104_161324_118888_E0A7C4A2)
+Subject: Re: UBSAN: Undefined behaviour in net/wireless/nl80211.c:718:4:
+ -1665903437 * 100 cannot be represented in type 'int'
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        it+linux-wireless@molgen.mpg.de,
+        Mario Limonciello <mario.limonciello@dell.com>,
+        Thorsten Leemhuis <linux@leemhuis.info>
+Date: Thu, 04 Jan 2018 16:08:34 +0100
+In-Reply-To: <f58ac367-9b22-a7dc-7d45-7e9d19e179c0@molgen.mpg.de>
+References: <f58ac367-9b22-a7dc-7d45-7e9d19e179c0@molgen.mpg.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi,
 
-On 01/15/2018 07:09 AM, Johannes Berg wrote:
-> On Wed, 2018-01-10 at 11:09 -0600, Denis Kenzior wrote:
-> 
->> Pre-authentication type frames (protocol: 0x88c7) are also forwarded
->> over nl80211.
-> 
-> Interesting - maybe userspace should be able to configure a(n) (list
-> of) ethertype(s)?
-> 
+Can you reproduce this?
 
-I'm not so sure.  Preauthentication is different from EAPoL frames and 
-most of the special-case checks for control_port_ethertype inside 
-mac80211 do not apply to it.  I think it might be safer to carry it as a 
-special case to the special case :P
+> [   54.426491] UBSAN: Undefined behaviour in net/wireless/nl80211.c:718:4
+> [   54.426492] signed integer overflow:
+> [   54.426493] -1665903437 * 100 cannot be represented in type 'int'
 
->> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
->> ---
->>   net/mac80211/cfg.c         |  2 ++
->>   net/mac80211/ieee80211_i.h |  1 +
->>   net/mac80211/mlme.c        |  2 ++
->>   net/mac80211/rx.c          | 31 ++++++++++++++++++++++++++++---
->>   4 files changed, 33 insertions(+), 3 deletions(-)
->>
->> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
->> index 46028e12e216..f53bfb27295f 100644
->> --- a/net/mac80211/cfg.c
->> +++ b/net/mac80211/cfg.c
->> @@ -925,6 +925,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
->>   	 */
->>   	sdata->control_port_protocol = params->crypto.control_port_ethertype;
->>   	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
->> +	sdata->control_port_over_nl80211 = false;
-> 
-> It's probably better to reset this at interface type switching, if it's
-> not done anyway (we zero a lot of memory there, but not sure precisely
-> what)
-> 
-> Otherwise we'll surely forget this in some place like mesh or OCB ...
-> 
-> Initially it must be false (0) anyway.
-> 
+Obviously.
 
-Where do I look?  Right now I'm mostly following the precedent of other 
-control_port_* stuff.
+However, it looks like the real reason is that there's some garbage (-
+1665903437) in chan->max_power, which is just stack memory being leaked
+out...
 
-Regards,
--Denis
+This should help?
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 78e71b0390be..7b42f0bacfd8 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1769,8 +1769,7 @@ static void handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
+ 	if (wiphy->regulatory_flags & REGULATORY_DISABLE_BEACON_HINTS)
+ 		return;
+ 
+-	chan_before.center_freq = chan->center_freq;
+-	chan_before.flags = chan->flags;
++	chan_before = *chan;
+ 
+ 	if (chan->flags & IEEE80211_CHAN_NO_IR) {
+ 		chan->flags &= ~IEEE80211_CHAN_NO_IR;
+
+johannes
