@@ -1,52 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43886 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933953AbeAXPoU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 10:44:20 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pkshih <pkshih@realtek.com>
-Cc: "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 10/10] rtlwifi: Add spec_ver to check whether use new rate-id or not
-References: <20180119064551.10084-1-pkshih@realtek.com>
-        <20180119064551.10084-11-pkshih@realtek.com>
-        <a213209f-e597-d700-6c8b-cadb35af63cc@lwfinger.net>
-        <1516668104.2764.1.camel@realtek.com>
-Date: Wed, 24 Jan 2018 17:44:16 +0200
-In-Reply-To: <1516668104.2764.1.camel@realtek.com> (pkshih@realtek.com's
-        message of "Tue, 23 Jan 2018 00:41:44 +0000")
-Message-ID: <87a7x3tg6n.fsf@purkki.adurom.net> (sfid-20180124_164459_822970_E8852B9B)
+Received: from mx4.wp.pl ([212.77.101.11]:30583 "EHLO mx4.wp.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753141AbeADOZh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Jan 2018 09:25:37 -0500
+Date: Thu, 04 Jan 2018 15:25:35 +0100
+From: "Dawid Stawiarski" <neeo@xl.wp.pl>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Odp: Re: iwlwifi: mvm: rx ops with kernel >= 4.14
+Message-ID: <5a4e395f16e5b3.92275484@wp.pl> (sfid-20180104_152547_856311_67E4EAA4)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pkshih <pkshih@realtek.com> writes:
+> > after updating to kernel >= 4.14 (from 4.13.X) my wifi stops working every couple hours with the following stacktrace (I've already updated firmware to latest version):
+> >
+> > jan 03 13:28:17 tmi kernel: iwlwifi 0000:3b:00.0: loaded firmware version 17.608620.0 op_mode iwlmvm
+> > jan 03 13:28:17 tmi kernel: iwlwifi 0000:3b:00.0: Detected Intel(R) Dual Band Wireless AC 7260, REV=0x144
+> > jan 03 13:28:17 tmi kernel: iwlwifi 0000:3b:00.0: base HW address: d8:fc:93:14:cc:15
+> > jan 03 13:28:17 tmi kernel: ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
+> > [...]
+> > jan 03 16:14:05 tmi kernel: iwlwifi 0000:3b:00.0: iwl_pcie_cmdq_reclaim: Read index for DMA queue txq id (0), index 0 is out of range [0-256] 70 70.
+> > jan 03 16:14:05 tmi kernel: iwlwifi 0000:3b:00.0: HCMD_ACTIVE already clear for command LQ_CMD
+> > jan 03 16:14:05 tmi kernel: frame on invalid queue - is on 0 and indicates 1
+> > jan 03 16:14:05 tmi kernel: ------------[ cut here ]------------
+>  
+> Can you please check if the patch in
+> https://bugzilla.kernel.org/show_bug.cgi?id=198265 helps?
 
-> On Mon, 2018-01-22 at 13:10 -0600, Larry Finger wrote:
->> On 01/19/2018 12:45 AM, pkshih@realtek.com wrote:
->> >=C2=A0
->> > From: Ping-Ke Shih <pkshih@realtek.com>
->> >=C2=A0
->> > The field spec_ver is IC's specification mask for common code to do pr=
-oper
->> > process to specified IC. This commit add a field new rate ID for new
->> > generation IC.
->> >=C2=A0
->> > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
->> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
->>=C2=A0
->
-> Shall I append "Acked-by" in v2?
-
-Yes, you can add Acked-by in the next version (if the patch in question
-is not modified after the ack).
-
-But do note that patchwork can automatically take Acked-by from the
-mailing list, for example that happened in the 9 patches I just applied
-from this series. So you no need to resend the rtlwifi patches for just
-to add the Acked-by line.
-
---=20
-Kalle Valo
+I've been testing it since yesterday, and so far so good - no ops. Thanks.
