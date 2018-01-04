@@ -1,80 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:53033 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752828AbeAKBXR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 20:23:17 -0500
-From: Pkshih <pkshih@realtek.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        =?big5?B?svir26vF?= <yhchuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 02/10] rtlwifi: fix scan channel 1 fail after IPS
-Date: Thu, 11 Jan 2018 01:22:57 +0000
-Message-ID: <5B2DA6FDDF928F4E855344EE0A5C39D13BE66AAD@RTITMBSV07.realtek.com.tw> (sfid-20180111_022522_562298_B1BF0EA7)
-References: <20180110052002.9544-1-pkshih@realtek.com>
- <20180110052002.9544-3-pkshih@realtek.com> <5A55CB01.5040504@broadcom.com>
- <5B2DA6FDDF928F4E855344EE0A5C39D13BE66622@RTITMBSV07.realtek.com.tw>
- <5A561E4B.6080105@broadcom.com>
-In-Reply-To: <5A561E4B.6080105@broadcom.com>
-Content-Type: text/plain; charset="big5"
-MIME-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:36822 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751493AbeADHTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Jan 2018 02:19:15 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, luca@coelho.fi,
+        sara.sharon@intel.com, stable@vger.kernel.org
+Subject: [PATCH] iwlwifi: pcie: fix DMA memory mapping / unmapping
+Date: Thu,  4 Jan 2018 09:19:13 +0200
+Message-Id: <20180104071913.15470-1-emmanuel.grumbach@intel.com> (sfid-20180104_081920_037849_24C48996)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEFyZW5kIHZhbiBTcHJpZWwg
-W21haWx0bzphcmVuZC52YW5zcHJpZWxAYnJvYWRjb20uY29tXQ0KPiBTZW50OiBXZWRuZXNkYXks
-IEphbnVhcnkgMTAsIDIwMTggMTA6MDggUE0NCj4gVG86IFBrc2hpaDsga3ZhbG9AY29kZWF1cm9y
-YS5vcmcNCj4gQ2M6IExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ7ILL4q9urxTsgbGludXgtd2ly
-ZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDIvMTBdIHJ0bHdp
-Zmk6IGZpeCBzY2FuIGNoYW5uZWwgMSBmYWlsIGFmdGVyIElQUw0KPiANCj4gT24gMS8xMC8yMDE4
-IDEwOjM4IEFNLCBQa3NoaWggd3JvdGU6DQo+ID4NCj4gPg0KPiA+PiAtLS0tLU9yaWdpbmFsIE1l
-c3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBBcmVuZCB2YW4gU3ByaWVsIFttYWlsdG86YXJlbmQudmFu
-c3ByaWVsQGJyb2FkY29tLmNvbV0NCj4gPj4gU2VudDogV2VkbmVzZGF5LCBKYW51YXJ5IDEwLCAy
-MDE4IDQ6MTMgUE0NCj4gPj4gVG86IFBrc2hpaDsga3ZhbG9AY29kZWF1cm9yYS5vcmcNCj4gPj4g
-Q2M6IExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ7ILL4q9urxTsgbGludXgtd2lyZWxlc3NAdmdl
-ci5rZXJuZWwub3JnDQo+ID4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDIvMTBdIHJ0bHdpZmk6IGZp
-eCBzY2FuIGNoYW5uZWwgMSBmYWlsIGFmdGVyIElQUw0KPiA+Pg0KPiA+PiBPbiAxLzEwLzIwMTgg
-NjoxOSBBTSwgcGtzaGloQHJlYWx0ZWsuY29tIHdyb3RlOg0KPiA+Pj4gRnJvbTogUGluZy1LZSBT
-aGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQo+ID4+Pg0KPiA+Pj4gSWYgdGhlcmUgaXMgbm8gY29u
-bmVjdGlvbiwgZHJpdmVyIHdpbGwgZW50ZXIgSVBTIHN0YXRlLiBNZWFud2hpbGUsIGl0DQo+ID4+
-PiBmYWlscyB0byBzY2FuIGNoYW5uZWwgMSBieSB0aGUgY29tbWFuZCAnaXcgZGV2IHdsYW4wIHNj
-YW4gZnJlcSAyNDEyJywNCj4gPj4+IGJlY2F1c2UgaGFyZHdhcmUgY2hhbm5lbCBzZXR0aW5nIGxv
-c2UgYWZ0ZXIgSVBTLiBUaHVzLCByZXN0b3JlIGNoYW5uZWwNCj4gPj4+IHNldHRpbmcgZnJvbSBo
-dy0+Y29uZi5jaGFubmVsIHNldCBieSBsYXN0IHJ0bF9vcF9jb25maWcoKS4NCj4gPj4+DQo+ID4+
-PiBTaWduZWQtb2ZmLWJ5OiBUaW0gTGVlIDx0aW1sZWVAcmVhbHRlay5jb20+DQo+ID4+DQo+ID4+
-IFlvdSBuZWVkIHRvIGFkZCB5b3VyIHNvYiBoZXJlIGFzIHdlbGwgYXMgeW91IGFyZSBzdWJtaXR0
-aW5nIHRoZW0uDQo+ID4+DQo+ID4NCj4gPiBJJ2xsIGFkZCBpdCBpbiB2Mi4NCj4gPg0KPiA+Pj4g
-LS0tDQo+ID4+PiAgICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcHMuYyB8
-IDYgKysrKysrDQo+ID4+PiAgICAxIGZpbGUgY2hhbmdlZCwgNiBpbnNlcnRpb25zKCspDQo+ID4+
-Pg0KPiA+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lm
-aS9wcy5jDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3BzLmMNCj4g
-Pj4+IGluZGV4IDZhNDAwODg0NWY0OS4uMGZmZTQzNzcyYzlhIDEwMDY0NA0KPiA+Pj4gLS0tIGEv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3BzLmMNCj4gPj4+ICsrKyBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9wcy5jDQo+ID4+PiBAQCAtNTEsNiAr
-NTEsMTIgQEAgYm9vbCBydGxfcHNfZW5hYmxlX25pYyhzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodykN
-Cj4gPj4+ICAgIAkJCSZydGxtYWMtPnJldHJ5X2xvbmcpOw0KPiA+Pj4gICAgCVJUX0NMRUFSX1BT
-X0xFVkVMKHBwc2MsIFJUX1JGX09GRl9MRVZMX0hBTFRfTklDKTsNCj4gPj4+DQo+ID4+PiArCS8q
-PDIuMT4gU3dpdGNoIENoYW5uZWwgJiBCYW5kd2lkdGggdG8gbGFzdCBydGxfb3BfY29uZmlnIHNl
-dHRpbmcqLw0KPiA+Pg0KPiA+PiBJcyB0aGlzIHR5cGUgb2YgY29tbWVudCByZWFsbHkgaGVscGZ1
-bD8gVG8gbWUgaXQgc2VlbXMgdGhlIGNhbGxiYWNrDQo+ID4+IG5hbWVzIHByb3ZpZGUgZW5vdWdo
-IGNvbnRleHQuDQo+ID4+DQo+ID4NCj4gPiBEbyB5b3UgbWVhbiB0aGUgIjwyLjE+IiBpc24ndCBu
-ZWVkZWQ/DQo+ID4gVGhpcyBpcyBiZWNhdXNlICI8MT4sIDwyPiwgPDM+Li4uIiBleGlzdCBpbiB0
-aGUgZnVuY3Rpb24sIHNvDQo+ID4gd2Ugd2FudCB0byBtYWtlIGl0IHRvIGJlIGNvbnNpc3RlbnQu
-DQo+IA0KPiBUaGF0IGlzIG5vdCB3aGF0IEkgbWVhbi4gSSBtZWFuIHdoeSBoYXZlIGEgY29tbWVu
-dCBkZXNjcmliaW5nIHdoYXQgaXMNCj4gb2J2aW91cyBmcm9tIHJlYWRpbmcgdGhlIGNvZGUgaXRz
-ZWxmLiBTbyBpbiB0aGlzIGV4YW1wbGU6DQo+IA0KPiBPbiAxLzEwLzIwMTggNjoxOSBBTSwgcGtz
-aGloQHJlYWx0ZWsuY29tIHdyb3RlOg0KPiA+ICsJLyo8Mi4xPiBTd2l0Y2ggQ2hhbm5lbCAmIEJh
-bmR3aWR0aCB0byBsYXN0IHJ0bF9vcF9jb25maWcgc2V0dGluZyovDQo+ID4gKwlydGxwcml2LT5j
-ZmctPm9wcy0+c3dpdGNoX2NoYW5uZWwoaHcpOw0KPiA+ICsJcnRscHJpdi0+Y2ZnLT5vcHMtPnNl
-dF9jaGFubmVsX2FjY2Vzcyhodyk7DQo+ID4gKwlydGxwcml2LT5jZmctPm9wcy0+c2V0X2J3X21v
-ZGUoaHcsDQo+ID4gKwkJCWNmZzgwMjExX2dldF9jaGFuZGVmX3R5cGUoJmh3LT5jb25mLmNoYW5k
-ZWYpKTsNCj4gPiArDQo+ID4gICAJLyo8Mz4gRW5hYmxlIEludGVycnVwdCAqLw0KPiA+ICAgCXJ0
-bHByaXYtPmNmZy0+b3BzLT5lbmFibGVfaW50ZXJydXB0KGh3KTsNCj4gDQo+IHRoZSBjb2RlIGFm
-dGVyIHRoZSA8Mi4xPiBjb21tZW50IGNhbGxzIGEgc3dpdGNoX2NoYW5uZWwoKSBjYWxsYmFjayBh
-bmQgYQ0KPiBzZXRfYndfbW9kZSgpIGNhbGxiYWNrLiBJbiBteSBvcGluaW9uIHRob3NlIG5hbWVz
-IGFyZSBwcmV0dHkNCj4gc2VsZi1leHBsYW5hdG9yeSBmb3IgdGhlIHJlYWRlciBtYWtpbmcgdGhl
-IGNvbW1lbnQgcHJlY2VkaW5nIGl0IG9ubHkNCj4gbm9pc2UuIFRoZSBzYW1lIGFwcGxpZXMgdG8g
-c3RlcCA8Mz4uDQo+IA0KDQpHb3QgaXQhIEknbGwgZm9sbG93IHRoaXMgY29kaW5nIGNvbnZlbnRp
-b24uDQpUaGFua3MNCg0KUEsNCg0KDQo=
+22000 devices (previously referenced as A000) can support
+short transmit queues. This means that we have less DMA
+descriptors (TFD) for those shorter queues.
+Previous devices must still have 256 TFDs for each queue
+even if those 256 TFDs point to fewer buffers.
+
+When I introduced support for the short queues for 22000
+I broke older devices by assuming that they can also have
+less TFDs in their queues. This led to several problems:
+
+1) the payload of the commands weren't unmapped properly
+   which caused the SWIOTLB to complain at some point.
+2) the hardware could get confused and we get hardware
+   crashes.
+
+The corresponding bugzilla entries are:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=198201
+https://bugzilla.kernel.org/show_bug.cgi?id=198265
+
+Cc: stable@vger.kernel.org # 4.14+
+Fixes: 4ecab5616023 ("iwlwifi: pcie: support short Tx queues for A000 device family")
+Reviewed-by: Sharon, Sara <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+Hi Kalle,
+
+Luca is on vacation is 4.15 will be closed soon.
+I am fixing here a bug that caused much troube on our side.
+There are two bugzillas on it. Users on both bugs validated
+this fix.
+Please apply this on wireless-drivers.git directly and I'll sync
+with Luca when he'll be back.
+
+Thank you!
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 10 +++++++---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 11 +++--------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  8 ++++----
+ 3 files changed, 14 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index d749abeca3ae..403e65c309d0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -670,11 +670,15 @@ static inline u8 iwl_pcie_get_cmd_index(struct iwl_txq *q, u32 index)
+ 	return index & (q->n_window - 1);
+ }
+ 
+-static inline void *iwl_pcie_get_tfd(struct iwl_trans_pcie *trans_pcie,
++static inline void *iwl_pcie_get_tfd(struct iwl_trans *trans,
+ 				     struct iwl_txq *txq, int idx)
+ {
+-	return txq->tfds + trans_pcie->tfd_size * iwl_pcie_get_cmd_index(txq,
+-									 idx);
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++
++	if (trans->cfg->use_tfh)
++		idx = iwl_pcie_get_cmd_index(txq, idx);
++
++	return txq->tfds + trans_pcie->tfd_size * idx;
+ }
+ 
+ static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 16b345f54ff0..6d0a907d5ba5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -171,8 +171,6 @@ static void iwl_pcie_gen2_tfd_unmap(struct iwl_trans *trans,
+ 
+ static void iwl_pcie_gen2_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq)
+ {
+-	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-
+ 	/* rd_ptr is bounded by TFD_QUEUE_SIZE_MAX and
+ 	 * idx is bounded by n_window
+ 	 */
+@@ -181,7 +179,7 @@ static void iwl_pcie_gen2_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq)
+ 	lockdep_assert_held(&txq->lock);
+ 
+ 	iwl_pcie_gen2_tfd_unmap(trans, &txq->entries[idx].meta,
+-				iwl_pcie_get_tfd(trans_pcie, txq, idx));
++				iwl_pcie_get_tfd(trans, txq, idx));
+ 
+ 	/* free SKB */
+ 	if (txq->entries) {
+@@ -364,11 +362,9 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 					    struct sk_buff *skb,
+ 					    struct iwl_cmd_meta *out_meta)
+ {
+-	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
+-	struct iwl_tfh_tfd *tfd =
+-		iwl_pcie_get_tfd(trans_pcie, txq, idx);
++	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, idx);
+ 	dma_addr_t tb_phys;
+ 	bool amsdu;
+ 	int i, len, tb1_len, tb2_len, hdr_len;
+@@ -565,8 +561,7 @@ static int iwl_pcie_gen2_enqueue_hcmd(struct iwl_trans *trans,
+ 	u8 group_id = iwl_cmd_groupid(cmd->id);
+ 	const u8 *cmddata[IWL_MAX_CMD_TBS_PER_TFD];
+ 	u16 cmdlen[IWL_MAX_CMD_TBS_PER_TFD];
+-	struct iwl_tfh_tfd *tfd =
+-		iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr);
++	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, txq->write_ptr);
+ 
+ 	memset(tfd, 0, sizeof(*tfd));
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index fed6d842a5e1..3f85713c41dc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -373,7 +373,7 @@ static void iwl_pcie_tfd_unmap(struct iwl_trans *trans,
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int i, num_tbs;
+-	void *tfd = iwl_pcie_get_tfd(trans_pcie, txq, index);
++	void *tfd = iwl_pcie_get_tfd(trans, txq, index);
+ 
+ 	/* Sanity check on number of chunks */
+ 	num_tbs = iwl_pcie_tfd_get_num_tbs(trans, tfd);
+@@ -2018,7 +2018,7 @@ static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
+ 	}
+ 
+ 	trace_iwlwifi_dev_tx(trans->dev, skb,
+-			     iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr),
++			     iwl_pcie_get_tfd(trans, txq, txq->write_ptr),
+ 			     trans_pcie->tfd_size,
+ 			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
+ 			     hdr_len);
+@@ -2092,7 +2092,7 @@ static int iwl_fill_data_tbs_amsdu(struct iwl_trans *trans, struct sk_buff *skb,
+ 		IEEE80211_CCMP_HDR_LEN : 0;
+ 
+ 	trace_iwlwifi_dev_tx(trans->dev, skb,
+-			     iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr),
++			     iwl_pcie_get_tfd(trans, txq, txq->write_ptr),
+ 			     trans_pcie->tfd_size,
+ 			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len, 0);
+ 
+@@ -2425,7 +2425,7 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 	memcpy(&txq->first_tb_bufs[txq->write_ptr], &dev_cmd->hdr,
+ 	       IWL_FIRST_TB_SIZE);
+ 
+-	tfd = iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr);
++	tfd = iwl_pcie_get_tfd(trans, txq, txq->write_ptr);
+ 	/* Set up entry for this TFD in Tx byte-count array */
+ 	iwl_pcie_txq_update_byte_cnt_tbl(trans, txq, le16_to_cpu(tx_cmd->len),
+ 					 iwl_pcie_tfd_get_num_tbs(trans, tfd));
+-- 
+2.9.3
