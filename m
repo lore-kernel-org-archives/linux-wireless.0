@@ -1,100 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:40383 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752955AbeAIQm2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40128 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932079AbeADOmo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 11:42:28 -0500
-Received: by mail-it0-f41.google.com with SMTP id f190so12627355ita.5
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 08:42:28 -0800 (PST)
+        Thu, 4 Jan 2018 09:42:44 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, luca@coelho.fi,
+        sara.sharon@intel.com, stable@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: pcie: fix DMA memory mapping / unmapping
+References: <20180104071913.15470-1-emmanuel.grumbach@intel.com>
+Date: Thu, 04 Jan 2018 16:42:40 +0200
+In-Reply-To: <20180104071913.15470-1-emmanuel.grumbach@intel.com> (Emmanuel
+        Grumbach's message of "Thu, 4 Jan 2018 09:19:13 +0200")
+Message-ID: <87r2r57kin.fsf@kamboji.qca.qualcomm.com> (sfid-20180104_154257_537225_DFB30C65)
 MIME-Version: 1.0
-In-Reply-To: <CAFv23Qm-VLgfdKPrxCS6rA_kJZD0PJAOc01qvAaKU7VTuAJ+Xw@mail.gmail.com>
-References: <CAFv23Qmb3myLgexGJ+9-yx2P+3ku-A5pSyrCxA-mU1HCGbuBsQ@mail.gmail.com>
- <CAFv23Qm-VLgfdKPrxCS6rA_kJZD0PJAOc01qvAaKU7VTuAJ+Xw@mail.gmail.com>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Tue, 9 Jan 2018 18:42:27 +0200
-Message-ID: <CANUX_P1vZnOdzBvEFw6ayagDg=-eruOdGjM1yWio_==5eUXc5Q@mail.gmail.com> (sfid-20180109_174237_184392_0F3DA084)
-Subject: Re: Poor performance on 5G network with Intel 9000 series cards
-To: AceLan Kao <acelan.kao@canonical.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Emily Chien <emily.chien@canonical.com>,
-        William Kao <william.kao@canonical.com>,
-        Anthony Wong <anthony.wong@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 8, 2018 at 8:34 AM, AceLan Kao <acelan.kao@canonical.com> wrote:
->
-> Hi all,
->
-> Forgot to append the device info, here it is.
->
-> 02:00.0 Network controller [0280]: Intel Corporation Device [8086:2526] (rev 29)
->         Subsystem: Intel Corporation Device [8086:4010]
->
-> Best regards,
-> AceLan Kao.
->
-> 2018-01-08 14:25 GMT+08:00 AceLan Kao <acelan.kao@canonical.com>:
-> > Hi all,
-> >
-> > We found that Intel 9000 series wifi cards have tx performance issue
-> > on 5G network.
-> > Here are the test result.
-> >
-> > Client(10.101.46.25) is the platform with 9260 wifi card on 5G
-> > network, and server(10.101.46.219) is another machine with ethernet
-> > network.
-> >
+Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
 
-I think this matches this bug:
-https://bugzilla.kernel.org/show_bug.cgi?id=198351
+> 22000 devices (previously referenced as A000) can support
+> short transmit queues. This means that we have less DMA
+> descriptors (TFD) for those shorter queues.
+> Previous devices must still have 256 TFDs for each queue
+> even if those 256 TFDs point to fewer buffers.
+>
+> When I introduced support for the short queues for 22000
+> I broke older devices by assuming that they can also have
+> less TFDs in their queues. This led to several problems:
+>
+> 1) the payload of the commands weren't unmapped properly
+>    which caused the SWIOTLB to complain at some point.
+> 2) the hardware could get confused and we get hardware
+>    crashes.
+>
+> The corresponding bugzilla entries are:
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=198201
+> https://bugzilla.kernel.org/show_bug.cgi?id=198265
+>
+> Cc: stable@vger.kernel.org # 4.14+
+> Fixes: 4ecab5616023 ("iwlwifi: pcie: support short Tx queues for A000 device family")
+> Reviewed-by: Sharon, Sara <sara.sharon@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+> Hi Kalle,
+>
+> Luca is on vacation is 4.15 will be closed soon.
+> I am fixing here a bug that caused much troube on our side.
+> There are two bugzillas on it. Users on both bugs validated
+> this fix.
+> Please apply this on wireless-drivers.git directly and I'll sync
+> with Luca when he'll be back.
 
-> > kernel v4.15-rc5 with firmware API 33
-> >
-> > acelan@u-Kabylake-Client-platform ~ % iperf -c 10.101.46.219 -er
-> > ------------------------------------------------------------
-> > Server listening on TCP port 5001 with pid 2248
-> > Read buffer size: 1.44 KByte
-> > TCP window size: 85.3 KByte (default)
-> > ------------------------------------------------------------
-> > ------------------------------------------------------------
-> > Client connecting to 10.101.46.219, TCP port 5001 with pid 2248
-> > Write buffer size: 128 KByte
-> > TCP window size: 85.0 KByte (default)
-> > ------------------------------------------------------------
-> > [ 5] local 10.101.46.25 port 54308 connected with 10.101.46.219 port 5001
-> > [ ID] Interval Transfer Bandwidth Write/Err Rtry Cwnd/RTT
-> > [ 5] 0.00-11.06 sec 7.75 MBytes 5.88 Mbits/sec 1/0 77 7K/165143 us
-> > [ 4] local 10.101.46.25 port 5001 connected with 10.101.46.219 port 38816
-> > [ ID] Interval Transfer Bandwidth Reads Dist(bin=0.2K)
-> > [ 4] 0.00-10.31 sec 77.0 MBytes 62.7 Mbits/sec 55729
-> > 49:23:176:59:1140:294:168:53820
-> >
-> > ------------------------------------------------------------
-> >
-> > With firmware API 34, no luck
-> >
-> > acelan@u-Kabylake-Client-platform ~ % iperf -c 10.101.46.219 -er
-> > ------------------------------------------------------------
-> > Server listening on TCP port 5001 with pid 2138
-> > Read buffer size: 1.44 KByte
-> > TCP window size: 85.3 KByte (default)
-> > ------------------------------------------------------------
-> > ------------------------------------------------------------
-> > Client connecting to 10.101.46.219, TCP port 5001 with pid 2138
-> > Write buffer size: 128 KByte
-> > TCP window size: 187 KByte (default)
-> > ------------------------------------------------------------
-> > [ 5] local 10.101.46.25 port 43560 connected with 10.101.46.219 port 5001
-> > [ ID] Interval Transfer Bandwidth Write/Err Rtry Cwnd/RTT
-> > [ 5] 0.00-10.01 sec 896 KBytes 733 Kbits/sec 1/0 58 7K/140474 us
-> > [ 4] local 10.101.46.25 port 5001 connected with 10.101.46.219 port 38844
-> > [ ID] Interval Transfer Bandwidth Reads Dist(bin=0.2K)
-> > [ 4] 0.00-10.11 sec 79.8 MBytes 66.2 Mbits/sec 57744
-> > 37:6:191:52:1236:413:143:55666
-> >
-> > Any ideas?
-> >
-> > Best regards,
-> > AceLan Kao.
+Ok, I'll queue this for 4.15.
+
+-- 
+Kalle Valo
