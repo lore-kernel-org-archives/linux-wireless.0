@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:33156 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751121AbeAVTL7 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52252 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753135AbeADOuC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 14:11:59 -0500
-Received: by mail-oi0-f45.google.com with SMTP id y141so6727990oia.0
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jan 2018 11:11:59 -0800 (PST)
-Subject: Re: [PATCH 05/10] rtlwifi: btcoex: Add wifi_only series ops to
- control solo card
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180119064551.10084-1-pkshih@realtek.com>
- <20180119064551.10084-6-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <6a16a732-6828-41d1-97bd-645e06951316@lwfinger.net> (sfid-20180122_201203_066071_326B9B01)
-Date: Mon, 22 Jan 2018 13:11:56 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180119064551.10084-6-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 4 Jan 2018 09:50:02 -0500
+Message-ID: <1515077400.10342.26.camel@sipsolutions.net> (sfid-20180104_155005_667089_78404E74)
+Subject: Re: [PATCH v2 3/3] nl80211: Introduce scan flags to emphasize
+ requested scan behavior
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        Sunil Dutt <usdutt@qti.qualcomm.com>
+Date: Thu, 04 Jan 2018 15:50:00 +0100
+In-Reply-To: <1513960419-24780-3-git-send-email-jouni@qca.qualcomm.com>
+References: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
+         <1513960419-24780-3-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/19/2018 12:45 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
+On Fri, 2017-12-22 at 18:33 +0200, Jouni Malinen wrote:
+> From: Sunil Dutt <usdutt@qti.qualcomm.com>
 > 
-> Originally, btcoex controls the antenna of combo card, but solo card
-> is also needed to setup properly. The new ops are named with suffix
-> '_wifi_only' opposited to original btc_ops, and new structures and
-> definitions are also introduced. The wifi_only oly contains four ops that
-> are initial variable, hw config, scan notify, and switch band notify.
+> This commit defines new scan flags (LOW_SPAN, LOW_POWER, HIGH_LATENCY)
+> to emphasize the requested scan behavior for the driver. These flags are
+> optional and are mutually exclusive. The implementation of the
+> respective functionality can be driver/hardware specific.
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> These flags can be used to control the compromise between how long a
+> scan takes, how much power it uses, and high accurate/complete the scan
+> is in finding the BSSs.
+> 
+> Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
+> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 > ---
->   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 48 +++++++++++++++++++
->   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       | 47 +++++++++++++++++++
->   .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 54 +++++++++++++++++++++-
->   .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |  5 ++
->   drivers/net/wireless/realtek/rtlwifi/core.c        |  6 +++
->   drivers/net/wireless/realtek/rtlwifi/pci.c         |  8 +++-
->   drivers/net/wireless/realtek/rtlwifi/wifi.h        |  7 +++
->   7 files changed, 172 insertions(+), 3 deletions(-)
+>  include/uapi/linux/nl80211.h | 28 +++++++++++++++++++++++++++-
+>  net/wireless/nl80211.c       | 13 +++++++++++--
+>  2 files changed, 38 insertions(+), 3 deletions(-)
+> 
+> v2:
+> - added driver capability flags to indicate which of the options are
+>   supported
+> - added to this patch series due to a new dependency in one of the
+>   header files
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Looks fine, but I guess I should wait for a rebase.
+
+johannes
