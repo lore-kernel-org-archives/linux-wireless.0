@@ -1,34 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f178.google.com ([74.125.82.178]:35060 "EHLO
-        mail-ot0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751946AbeA0TYj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52326 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753230AbeADO4i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Jan 2018 14:24:39 -0500
-Received: by mail-ot0-f178.google.com with SMTP id j45so774181ota.2
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Jan 2018 11:24:39 -0800 (PST)
-Subject: Re: [PATCH 10/10] rtlwifi: btcoex: Add 8822be btcoex supported files
- for wifi only
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180126074645.27201-1-pkshih@realtek.com>
- <20180126074645.27201-11-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <4aef0077-1b9a-8090-32c0-58b3ed690d34@lwfinger.net> (sfid-20180127_202503_096612_CDF957A6)
-Date: Sat, 27 Jan 2018 13:24:37 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180126074645.27201-11-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 4 Jan 2018 09:56:38 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2018-01-04
+Date: Thu,  4 Jan 2018 15:56:31 +0100
+Message-Id: <20180104145632.9866-1-johannes@sipsolutions.net> (sfid-20180104_155650_292414_B0948518)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2018 01:46 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> The wifi only btcoex is used to solo card (without BT), and it is also
-> useful to exclude the interference with BT to make debug easier.
-> There are only four ops for wifi only btcoex to initialze antenna and
-> switch the settings while band is changed.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Hi Dave,
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+It's probably getting quite late for the current cycle, but
+these fixes seemed important enough to send them to you
+separately anyway.
+
+Please pull and let me know if there's any problem.
+
+Thanks,
+johannes
+
+
+
+The following changes since commit 820d1d5eba5e0db88432f4b19149d87523ee193c:
+
+  Merge branch '40GbE' of git://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/net-queue (2018-01-03 13:49:24 -0500)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-01-04
+
+for you to fetch changes up to 736a80bbfda709fb3631f5f62056f250a38e5804:
+
+  mac80211: mesh: drop frames appearing to be from us (2018-01-04 15:51:53 +0100)
+
+----------------------------------------------------------------
+Two fixes:
+ * drop mesh frames appearing to be from ourselves
+ * check another netlink attribute for existence
+
+----------------------------------------------------------------
+Hao Chen (1):
+      nl80211: Check for the required netlink attribute presence
+
+Johannes Berg (1):
+      mac80211: mesh: drop frames appearing to be from us
+
+ net/mac80211/rx.c      | 2 ++
+ net/wireless/nl80211.c | 3 ++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
