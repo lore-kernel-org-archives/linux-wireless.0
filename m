@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:35102 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750714AbeAOUED (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52292 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753092AbeADOx6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 15:04:03 -0500
-Received: by mail-wm0-f44.google.com with SMTP id r78so4278354wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 12:04:02 -0800 (PST)
-Date: Mon, 15 Jan 2018 21:03:51 +0100
-From: William Dauchy <wdauchy@gmail.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: brcmfmac: set p2p_disc error on BCM4350
-Message-ID: <20180115200351.GA5577@paf> (sfid-20180115_210413_494600_E3A3229D)
-References: <CAJ75kXYLOV8aVZpftBFRbMv=KCaxCoQpJFaL0m0QDjVOytq3Vg@mail.gmail.com>
- <5A533A88.1000804@broadcom.com>
- <20180108103012.GA1957@paf>
- <20180115102938.GA29421@paf>
- <5A5D05A2.3010604@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5A5D05A2.3010604@broadcom.com>
+        Thu, 4 Jan 2018 09:53:58 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: mesh: drop frames appearing to be from us
+Date: Thu,  4 Jan 2018 15:53:54 +0100
+Message-Id: <20180104145354.7943-1-johannes@sipsolutions.net> (sfid-20180104_155402_555989_B128464C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Arend,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Mon, Jan 15, 2018 at 08:48:50PM +0100, Arend van Spriel wrote:
-> Now the error is only an issue if you intend to setup a P2P connection with
-> some other device. For running in station or AP mode you can ignore this. So
-> if you have any specific issue and suspect this to be causing it, please
-> elaborate on the specific issue you see.
+If there are multiple mesh stations with the same MAC address,
+they will both get confused and start throwing warnings.
 
-no specific issue, just wanted to fix issue/error and avoid other users
-to report it.
+Obviously in this case nothing can actually work anyway, so just
+drop frames that look like they're from ourselves early on.
 
-Thanks,
+Reported-by: Gui Iribarren <gui@altermundi.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 70e9d2ca8bbe..4daafb07602f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3632,6 +3632,8 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 		}
+ 		return true;
+ 	case NL80211_IFTYPE_MESH_POINT:
++		if (ether_addr_equal(sdata->vif.addr, hdr->addr2))
++			return false;
+ 		if (multicast)
+ 			return true;
+ 		return ether_addr_equal(sdata->vif.addr, hdr->addr1);
 -- 
-William
+2.15.1
