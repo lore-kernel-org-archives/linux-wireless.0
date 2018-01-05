@@ -1,60 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60330 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750734AbeAYHKx (ORCPT
+Received: from [195.159.176.226] ([195.159.176.226]:36809 "EHLO
+        blaine.gmane.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1752162AbeAETrO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 02:10:53 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] mwifiex: schedule rx_work on RX interrupt for USB
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1516633497-6584-2-git-send-email-gbhat@marvell.com>
-References: <1516633497-6584-2-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Shrenik Shikhare <shrenik@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20180125071053.29F1C6032C@smtp.codeaurora.org> (sfid-20180125_081057_190624_0AC05310)
-Date: Thu, 25 Jan 2018 07:10:53 +0000 (UTC)
+        Fri, 5 Jan 2018 14:47:14 -0500
+Received: from list by blaine.gmane.org with local (Exim 4.84_2)
+        (envelope-from <glkwg-linux-wireless@m.gmane.org>)
+        id 1eXXvK-0006gV-Oa
+        for linux-wireless@vger.kernel.org; Fri, 05 Jan 2018 20:45:02 +0100
+To: linux-wireless@vger.kernel.org
+From: Heorhi Valakhanovich <valahanovich@tut.by>
+Subject: Re: ath9k: insufficient skb len
+Date: Fri, 5 Jan 2018 22:13:51 +0300
+Message-ID: <1c0cb645-e286-0813-94c9-86768decc215@tut.by> (sfid-20180105_204717_848130_3816B128)
+References: <60275295-6296-d84b-2ddb-9b84145cbad6@odi.ch>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <60275295-6296-d84b-2ddb-9b84145cbad6@odi.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
+This warning triggered constantly (several times per second) if I use 
+hostapd with my TP-LINK TL-WDN4800 card (chip: Atheros AR9380). It 
+floods my kernel logs.
 
-> From: Shrenik Shikhare <shrenik@marvell.com>
-> 
-> There is race for data_received flag between main thread and
-> RX data interrupt(mwifiex_usb_rx_complete()):
-> 1. USB received an RX data interrupt, set data_received flag
-> 2. main thread checks data_received, if set queues rx_work
-> 3. rx worker thread independently start processing rx_data_q
-> 4. rx work exits (once rx_data_q is empty)
-> 5. main thread resets the data_received flag(after #2)
-> 6. Now at the corner case there will be high RX data interrupts
-> between #4 and #5
-> 7. Driver stops submitting URBs to firmware, once rx_pending
-> exceeds HIGH_RX_PENDING
-> 8. The flag data_received(cleared in #5) will remain unset since
-> there will be no interrupts from firmware to set it(after #7)
-> 
-> Above scenario causes RX stall in driver, which will finally
-> result in command/TX timeouts in firmware.
-> 
-> As a fix, queue rx_work directly in mwifiex_usb_rx_complete()
-> callback, instead in the main thread. This removes dependency
-> of RX processing on data_received flag.
-> 
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Since it works anyway I suggest change WARN_ON to WARN_ON_ONCE until 
+this bug is fixed.
 
-Brian, did you have a chance to review these two?
-
--- 
-https://patchwork.kernel.org/patch/10178731/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+On 07/11/2017 10:55 AM, Ortwin Glück wrote:
+> Hi,
+> 
+> I saw this WARN_ON splat on ath9k in hostap mode. The code triggering 
+> the warning says it's a driver bug.
+> 
+> Thanks for checking.
+> 
+> Ortwin
+> 
+> [629805.015640] ------------[ cut here ]------------
+> [629805.015695] WARNING: CPU: 2 PID: 0 at net/mac80211/rx.c:630 
+> ieee80211_rx_napi+0x8a5/0xa70
+> [629805.015735] Modules linked in: radeon ttm
+> [629805.015740] CPU: 2 PID: 0 Comm: swapper/2 Not tainted 4.12.0 #1
+> [629805.015750] Hardware name: Apple Inc. iMac11,2/Mac-F2238AC8, BIOS 
+> IM112.88Z.0057.B00.1005031455 05/03/10
+> [629805.015752] task: ffffa35a370e6300 task.stack: ffffa58840074000
+> [629805.015754] RIP: 0010:ieee80211_rx_napi+0x8a5/0xa70
+> [629805.015755] RSP: 0018:ffffa35a3bc83d38 EFLAGS: 00010246
+> [629805.015756] RAX: 0000000000010000 RBX: ffffa3593987f700 RCX: 
+> 0000000000000000
+> [629805.015771] RDX: 0000000000000004 RSI: 0000000000000001 RDI: 
+> ffffa35a29d0c740
+> [629805.015772] RBP: ffffa35a3bc83e08 R08: 0000000000000000 R09: 
+> 0000000000000001
+> [629805.015773] R10: 0000000000000000 R11: 0000000000000000 R12: 
+> ffffa35a29d0c740
+> [629805.015773] R13: 0000000000000000 R14: 0000000000000000 R15: 
+> ffffa35a29d0d500
+> [629805.015775] FS:  0000000000000000(0000) GS:ffffa35a3bc80000(0000) 
+> knlGS:0000000000000000
+> [629805.015776] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [629805.015777] CR2: 0000000001f3b038 CR3: 0000000006e0a000 CR4: 
+> 00000000000006e0
+> [629805.015790] Call Trace:
+> [629805.015792]  <IRQ>
+> [629805.015797]  ? swiotlb_tbl_map_single+0x21d/0x2f0
+> [629805.015812]  ? ath9k_cmn_rx_skb_postprocess+0x47/0x130
+> [629805.015814]  ? swiotlb_tbl_unmap_single+0xf0/0x120
+> [629805.015816]  ath_rx_tasklet+0xa28/0xed0
+> [629805.015819]  ath9k_tasklet+0x1db/0x240
+> [629805.015822]  tasklet_action+0x91/0xb0
+> [629805.015824]  __do_softirq+0xd7/0x1d0
+> [629805.015825]  irq_exit+0xab/0xb0
+> [629805.015828]  do_IRQ+0x4a/0xc0
+> [629805.015831]  common_interrupt+0x86/0x86
+> [629805.015835] RIP: 0010:cpuidle_enter_state+0x15f/0x1f0
+> [629805.015836] RSP: 0018:ffffa58840077e70 EFLAGS: 00000282 ORIG_RAX: 
+> ffffffffffffff2e
+> [629805.015837] RAX: ffffa35a3bc98740 RBX: ffffa35a3bc9efb0 RCX: 
+> 000000000000001f
+> [629805.015838] RDX: 20c49ba5e353f7cf RSI: ffffa35a3bc95f58 RDI: 
+> 0000000000000000
+> [629805.015839] RBP: ffffa58840077ea0 R08: ffffa35a3bc959a4 R09: 
+> 0000000000000018
+> [629805.015840] R10: 0000000000000eca R11: 00000000000011e5 R12: 
+> 00023ccde83b6cf0
+> [629805.015841] R13: 0000000000000004 R14: ffffffff84e56e18 R15: 
+> 0000000000000004
+> [629805.015842]  </IRQ>
+> [629805.015845]  cpuidle_enter+0x12/0x20
+> [629805.015848]  call_cpuidle+0x1e/0x30
+> [629805.015849]  do_idle+0xdb/0x170
+> [629805.015850]  cpu_startup_entry+0x6c/0x70
+> [629805.015853]  start_secondary+0x143/0x160
+> [629805.015857]  secondary_startup_64+0x9f/0x9f
+> [629805.015858] Code: ff ff 48 8b 8b d0 00 00 00 4c 8b 82 d0 00 00 00 e9 
+> 02 fa ff ff 4c 89 ff 44 8b ad 48 ff ff ff 4c 8b a5 38 ff ff ff e9 5a ff 
+> ff ff <0f> ff 48 89 df e8 11 e5 de ff e9 fb fa ff ff 0f ff e9 2e f8 ff
+> [629805.015876] ---[ end trace e4857df16afbdba0 ]---
+> 
+> 
+> rx.c:
+>          if (ieee80211_hw_check(&local->hw, RX_INCLUDES_FCS)) {
+>                  if (unlikely(origskb->len <= FCS_LEN)) {
+>                          /* driver bug */
+>                          WARN_ON(1);
+>                          dev_kfree_skb(origskb);
+>                          return NULL;
+>                  }
+>                  present_fcs_len = FCS_LEN;
+>          }
+> 
