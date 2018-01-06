@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:56204 "EHLO v3-1039.vlinux.de"
+Received: from www.llwyncelyn.cymru ([82.70.14.225]:55358 "EHLO fuzix.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752068AbeAQQDB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 11:03:01 -0500
-From: Sven Eckelmann <sven@narfation.org>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [1/2] mt76: fix possible NULL pointer dereferencing in mt76x2_ampdu_action()
-Date: Wed, 17 Jan 2018 16:56:46 +0100
-Message-ID: <9978263.24XfVAzbPX@bentobox> (sfid-20180117_170306_150118_166D3506)
-In-Reply-To: <87o9lsczf4.fsf@kamboji.qca.qualcomm.com>
-References: <18a56326d68a7d53f3197e450cae0e28382d8d2c.1513252573.git.lorenzo.bianconi@redhat.com> <5835442f-9e10-69bb-3b6d-d207d540181f@nbd.name> <87o9lsczf4.fsf@kamboji.qca.qualcomm.com>
+        id S1753340AbeAFPGx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 6 Jan 2018 10:06:53 -0500
+Date: Sat, 6 Jan 2018 15:06:21 +0000
+From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+To: Christian Lamparter <chunkeey@gmail.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        peterz@infradead.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        gregkh@linuxfoundation.org, tglx@linutronix.de,
+        torvalds@linux-foundation.org, Kalle Valo <kvalo@codeaurora.org>,
+        alan@linux.intel.com
+Subject: Re: [PATCH 08/18] carl9170: prevent bounds-check bypass via
+ speculative execution
+Message-ID: <20180106150621.2221a646@alans-desktop> (sfid-20180106_160712_462314_C945DDC4)
+In-Reply-To: <3586343.KJymplWpZW@debian64>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <151520103755.32271.6819511294540882298.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <3586343.KJymplWpZW@debian64>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart8025479.GqWdGYHKZd"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart8025479.GqWdGYHKZd
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+> The only way a user can set this in any meaningful way would be via
+> a NL80211_CMD_SET_WIPHY netlink message. However, the value will get
+> vetted there by cfg80211's parse_txq_params [0]. This is long before
 
-On Mittwoch, 17. Januar 2018 16:50:23 CET Kalle Valo wrote:
-[...]
-> >> I didn't see Felix's ack, at least not on patchwork.
-> >
-> > I sent my ack (for both patches) as a reply to 0/2
+Far more than a couple of hundred instructions ? The problem is that the
+processor will speculate that the parameter is valid and continue on that
+basis until the speculation resolves or it hits some other limit that
+stops it speculating further. That can be quite a distance on a modern
+x86 processor, and for all we know could be even more on some of the
+other CPUs involved.
+
+> it reaches any of the *_op_conf_tx functions.
 > 
-> Ah. patchwork is annoying as it doesn't show the cover letter at all so
-> I missed that.
+> And Furthermore a invalid queue (param->ac) would cause a crash in 
+> this line in mac80211 before it even reaches the driver [1]:
+> |	sdata->tx_conf[params->ac] = p;
+> |                   ^^^^^^^^
 
-Newer version at least can track the series and their cover letters. This is 
-not completely what you want but at least there is hope. Here is an example: 
-https://patchwork.open-mesh.org/cover/17240/ (you can use "Related" to see all 
-the patches in the series).
+Firstly it might not because the address you get as a result could be
+valid kernel memory. In fact your attackers wants it to be valid kernel
+memory since they are trying to find the value of a piece of that memory.
 
-Kind regards,
-	Sven
---nextPart8025479.GqWdGYHKZd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Secondly the processor is doing this speculatively so it won't fault. It
+will eventually decide it went the wrong way and throw all the
+speculative work away - leaving footprints. It won't fault unless the
+speculative resolves that was the real path the code took.
 
------BEGIN PGP SIGNATURE-----
+If it's not a performance critical path then it's better to be safe.
 
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlpfcj4ACgkQXYcKB8Em
-e0azVQ//UozFchriLSAsK4GdjGy6MZkfJxWbUVYY8LcOMZ+sDiGnxZbe8p8U+QFH
-Agm27i+/Xb8gqEvsonx2edRuqRt7UmBAC2eS/HRu3UO7PMW8bMEhsbVShTydIT3/
-Yv5tfYe59SXM5cpQ04Y9Y3MHgzh5UvxwwsXIskE94jDgL9my8a0+rtHLMaN4fYgY
-nmEfDxfO5XBcW4j/+BXkYVGFI/NcXJsbNK/1PMpBuVFPf9KW+Snzxqm5J+dREI+0
-kw4CvlWOP43dPTsOtIb2NMgd+Ht26Y6Ih3C3XQAI6exvNG9q4EGtgvD6rMBAU5t2
-8TP0TKdHQIPB8o/HNSydRIdERST0JeuLOpuwH8WL29IhM4Tz0x5DZ1DtyOSSdOue
-rJn3nGi72xmkErjAGPHpjSIPmntDRDGYPVKzCVTYZxYn2q1/I2PDPrLjNOcW/ulW
-9SvIpD8aKK4oNk68qWoKiEVcVavM0iE9Lyz2DroDq8h2Zq4tXouetgFj+fsLJrlz
-AHiJcGKkKh5X0aw+is7sBDOdmSZWORT/6snm7CS+IlxuqgJAyJw5ttHtaI/hfKjU
-/I6SpD3PTEKRcoYJtuyeBtl9VSa2ZMGbpO9rvlC0AJEQJ492YwRE6nAxq/nZ2fdC
-8zBKSD2hBwG2f+WRwhOhmEzvMrFkk/XBmp1CbJvqFq185+s0AOQ=
-=Qh+d
------END PGP SIGNATURE-----
-
---nextPart8025479.GqWdGYHKZd--
+Alan
