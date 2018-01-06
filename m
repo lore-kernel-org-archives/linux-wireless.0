@@ -1,116 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48672 "EHLO nbd.name"
+Received: from mga07.intel.com ([134.134.136.100]:23197 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934107AbeAXPTV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 10:19:21 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 3/8] mt76: add an intermediate struct for rx status information
-Date: Wed, 24 Jan 2018 16:19:12 +0100
-Message-Id: <20180124151917.70962-3-nbd@nbd.name> (sfid-20180124_161942_553926_2BB265FD)
-In-Reply-To: <20180124151917.70962-1-nbd@nbd.name>
-References: <20180124151917.70962-1-nbd@nbd.name>
+        id S1753141AbeAFS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 6 Jan 2018 13:59:09 -0500
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
+ execution
+To: Florian Fainelli <f.fainelli@gmail.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        linux-kernel@vger.kernel.org
+Cc: Mark Rutland <mark.rutland@arm.com>, peterz@infradead.org,
+        Alan Cox <alan.cox@intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        x86@kernel.org, Ingo Molnar <mingo@redhat.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Zhang Rui <rui.zhang@intel.com>, linux-media@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        tglx@linutronix.de, Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        netdev@vger.kernel.org, torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+        dan.carpenter@oracle.com
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <ca6f24c0-d6cf-e309-aa68-92f1378ee75a@gmail.com>
+From: Arjan van de Ven <arjan@linux.intel.com>
+Message-ID: <e567c704-e141-63db-5d59-7294e0c78e26@linux.intel.com> (sfid-20180106_195932_595259_304968B4)
+Date: Sat, 6 Jan 2018 10:59:06 -0800
+MIME-Version: 1.0
+In-Reply-To: <ca6f24c0-d6cf-e309-aa68-92f1378ee75a@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preparation for passing in more internal rx data via skb->cb
+> It sounds like Coverity was used to produce these patches? If so, is
+> there a plan to have smatch (hey Dan) or other open source static
+> analysis tool be possibly enhanced to do a similar type of work?
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c   | 29 ++++++++++++++++++++++++-
- drivers/net/wireless/mediatek/mt76/mt76.h       | 13 +++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c |  4 ++--
- 3 files changed, 43 insertions(+), 3 deletions(-)
+I'd love for that to happen; the tricky part is being able to have even a
+sort of sensible concept of "trusted" vs "untrusted" value...
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 3acf0e175d71..258d2623d1bf 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -384,10 +384,37 @@ int mt76_get_survey(struct ieee80211_hw *hw, int idx,
- }
- EXPORT_SYMBOL_GPL(mt76_get_survey);
- 
-+static void
-+mt76_rx_convert(struct sk_buff *skb)
-+{
-+	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-+	struct mt76_rx_status mstat;
-+
-+	mstat = *((struct mt76_rx_status *) skb->cb);
-+	memset(status, 0, sizeof(*status));
-+
-+	status->flag = mstat.flag;
-+	status->freq = mstat.freq;
-+	status->enc_flags = mstat.enc_flags;
-+	status->encoding = mstat.encoding;
-+	status->bw = mstat.bw;
-+	status->rate_idx = mstat.rate_idx;
-+	status->nss = mstat.nss;
-+	status->band = mstat.band;
-+	status->signal = mstat.signal;
-+	status->chains = mstat.chains;
-+
-+	BUILD_BUG_ON(sizeof(mstat) > sizeof(skb->cb));
-+	BUILD_BUG_ON(sizeof(status->chain_signal) != sizeof(mstat.chain_signal));
-+	memcpy(status->chain_signal, mstat.chain_signal, sizeof(mstat.chain_signal));
-+}
-+
- void mt76_rx_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
- {
- 	struct sk_buff *skb;
- 
--	while ((skb = __skb_dequeue(&dev->rx_skb[q])) != NULL)
-+	while ((skb = __skb_dequeue(&dev->rx_skb[q])) != NULL) {
-+		mt76_rx_convert(skb);
- 		ieee80211_rx_napi(dev->hw, NULL, skb, &dev->napi[q]);
-+	}
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index f88d9a15210a..be4846ee4828 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -250,6 +250,19 @@ struct mt76_rate_power {
- 	};
- };
- 
-+struct mt76_rx_status {
-+	u32 flag;
-+	u16 freq;
-+	u8 enc_flags;
-+	u8 encoding:2, bw:3;
-+	u8 rate_idx;
-+	u8 nss;
-+	u8 band;
-+	u8 signal;
-+	u8 chains;
-+	s8 chain_signal[IEEE80211_MAX_CHAINS];
-+};
-+
- #define mt76_rr(dev, ...)	(dev)->mt76.bus->rr(&((dev)->mt76), __VA_ARGS__)
- #define mt76_wr(dev, ...)	(dev)->mt76.bus->wr(&((dev)->mt76), __VA_ARGS__)
- #define mt76_rmw(dev, ...)	(dev)->mt76.bus->rmw(&((dev)->mt76), __VA_ARGS__)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-index 98219b971463..2e12fc0d5c9e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-@@ -29,7 +29,7 @@ void mt76x2_mac_set_bssid(struct mt76x2_dev *dev, u8 idx, const u8 *addr)
- }
- 
- static int
--mt76x2_mac_process_rate(struct ieee80211_rx_status *status, u16 rate)
-+mt76x2_mac_process_rate(struct mt76_rx_status *status, u16 rate)
- {
- 	u8 idx = FIELD_GET(MT_RXWI_RATE_INDEX, rate);
- 
-@@ -268,7 +268,7 @@ static void mt76x2_remove_hdr_pad(struct sk_buff *skb)
- int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
- 			  void *rxi)
- {
--	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-+	struct mt76_rx_status *status = (struct mt76_rx_status *) skb->cb;
- 	struct mt76x2_rxwi *rxwi = rxi;
- 	u32 ctl = le32_to_cpu(rxwi->ctl);
- 	u16 rate = le16_to_cpu(rxwi->rate);
--- 
-2.14.2
+if you look at a very small window of code, that does not work well;
+you likely need to even look (as tool) across .c file boundaries
