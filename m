@@ -1,103 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35914 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933445AbeAJRJr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 12:09:47 -0500
-Received: by mail-pg0-f68.google.com with SMTP id j2so10091743pgv.3
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jan 2018 09:09:47 -0800 (PST)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v2 0/5] EAPoL over NL80211
-Date: Wed, 10 Jan 2018 11:09:33 -0600
-Message-Id: <20180110170938.2341-1-denkenz@gmail.com> (sfid-20180110_180952_052586_8DFB07EE)
+Received: from mga06.intel.com ([134.134.136.31]:15544 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753389AbeAFBSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Jan 2018 20:18:08 -0500
+Subject: [PATCH 00/18] prevent bounds-check bypass via speculative execution
+From: Dan Williams <dan.j.williams@intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: Mark Rutland <mark.rutland@arm.com>, peterz@infradead.org,
+        Alan Cox <alan.cox@intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        x86@kernel.org, Ingo Molnar <mingo@redhat.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Zhang Rui <rui.zhang@intel.com>, linux-media@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        tglx@linutronix.de, Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        netdev@vger.kernel.org, torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Date: Fri, 05 Jan 2018 17:09:53 -0800
+Message-ID: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180106_022413_905687_D118395D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds support for running 802.11 authentication mechanisms (e.g.
-802.1X, 4-Way Handshake, etc) over NL80211 instead of putting them onto the
-network device.  This has the advantage of fixing several long-standing race
-conditions that result from userspace operating on multiple transports in order
-to manage a 802.11 connection (e.g. NL80211 and wireless netdev, wlan0, etc).
+Quoting Mark's original RFC:
 
-For example, userspace would sometimes see 4-Way handshake packets before
-NL80211 signaled that the connection has been established.  Leading to ugly
-hacks or having the STA wait for retransmissions from the AP.
+"Recently, Google Project Zero discovered several classes of attack
+against speculative execution. One of these, known as variant-1, allows
+explicit bounds checks to be bypassed under speculation, providing an
+arbitrary read gadget. Further details can be found on the GPZ blog [1]
+and the Documentation patch in this series."
 
-This also provides a way to mitigate a particularly nasty race condition where
-the encryption key could be set prior to the 4-way handshake packet 4/4 being
-sent.  This would result in the packet being sent encrypted and discarded by
-the peer.  The mitigation strategy for this race is for userspace to explicitly
-tell the kernel that a particular EAPoL packet should not be encrypted.
+This series incorporates Mark Rutland's latest api and adds the x86
+specific implementation of nospec_barrier. The
+nospec_{array_ptr,ptr,barrier} helpers are then combined with a kernel
+wide analysis performed by Elena Reshetova to address static analysis
+reports where speculative execution on a userspace controlled value
+could bypass a bounds check. The patches address a precondition for the
+attack discussed in the Spectre paper [2].
 
-To make this possible this patchset introduces a new NL80211 command and several
-new attributes.  A userspace that is capable of processing EAPoL packets over
-NL80211 includes a new NL80211_ATTR_CONTROL_PORT_OVER_NL80211 attribute in its
-NL80211_CMD_ASSOCIATE or NL80211_CMD_CONNECT requests being sent to the kernel.
-The previously added NL80211_ATTR_SOCKET_OWNER attribute must also be included.
-The latter is used by the kernel to send NL80211_CMD_CONTROL_PORT_FRAME
-notifications back to userspace via a netlink unicast.  If the
-NL80211_ATTR_CONTROL_PORT_OVER_NL80211 attribute is not specified, then legacy
-behavior is kept and control port packets continue to flow over the network
-interface.
+A consideration worth noting for reviewing these patches is to weigh the
+dramatic cost of being wrong about whether a given report is exploitable
+vs the overhead nospec_{array_ptr,ptr} may introduce. In other words,
+lets make the bar for applying these patches be "can you prove that the
+bounds check bypass is *not* exploitable". Consider that the Spectre
+paper reports one example of a speculation window being ~180 cycles.
 
-If control port over nl80211 transport is requested, then control port packets
-are intercepted just prior to being handed to the network device and sent over
-netlink via the NL80211_CMD_CONTROL_PORT_FRAME notification.  NL80211_ATTR_CONTROL_PORT_ETHERTYPE and NL80211_ATTR_MAC are included to specify the control port
-frame protocol and source address respectively.  If the control port frame was
-received unencrypted then NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT flag is also
-included.  NL80211_ATTR_FRAME attribute contains the raw control port frame with
-all transport layer headers stripped (e.g. this would be the raw EAPoL frame).
+Note that there is also a proposal from Linus, array_access [3], that
+attempts to quash speculative execution past a bounds check without
+introducing an lfence instruction. That may be a future optimization
+possibility that is compatible with this api, but it would appear to
+need guarantees from the compiler that it is not clear the kernel can
+rely on at this point. It is also not clear that it would be a
+significant performance win vs lfence.
 
-Userspace can reply to control port frames either via legacy methods (by sending
-frames to the network device) or via NL80211_CMD_CONTROL_PORT_FRAME request.
-Userspace would included NL80211_ATTR_FRAME with the raw control port frame as
-well as NL80211_Attr_MAC and NL80211_ATTR_CONTROL_PORT_ETHERTYPE attributes to
-specify the destination address and protocol respectively.  This allows
-Pre-Authentication (protocol 0x88c7) frames to be sent via this mechanism as
-well.  Finally, NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT flag can be included to
-tell the driver to send the frame unencrypted, e.g. for 4-Way handshake 4/4
-frames.
+These patches also will also be available via the 'nospec' git branch
+here:
 
-The proposed patchset has been tested in a mac80211_hwsim based environment with
-hostapd and iwd.
+    git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec
 
-ChangeLog
+[1]: https://googleprojectzero.blogspot.co.uk/2018/01/reading-privileged-memory-with-side.html
+[2]: https://spectreattack.com/spectre.pdf
+[3]: https://marc.info/?l=linux-kernel&m=151510446027625&w=2
 
-v2
+---
 
-- Added WIPHY_FLAG_CONTROL_PORT_OVER_NL80211 flag.  This is a capability flag
-used by the drivers, e.g. that the driver supports control port over nl80211
-capability.  This capability is now checked when CONTROL_PORT_OVER_NL80211 is
-requested.
+Andi Kleen (1):
+      x86, barrier: stop speculation for failed access_ok
 
-- mac80211 rx path now forwards Pre-Authentication frames over NL80211 as well,
-if requested.  Tweaked the signature of cfg80211_rx_control_port.
+Dan Williams (13):
+      x86: implement nospec_barrier()
+      [media] uvcvideo: prevent bounds-check bypass via speculative execution
+      carl9170: prevent bounds-check bypass via speculative execution
+      p54: prevent bounds-check bypass via speculative execution
+      qla2xxx: prevent bounds-check bypass via speculative execution
+      cw1200: prevent bounds-check bypass via speculative execution
+      Thermal/int340x: prevent bounds-check bypass via speculative execution
+      ipv6: prevent bounds-check bypass via speculative execution
+      ipv4: prevent bounds-check bypass via speculative execution
+      vfs, fdtable: prevent bounds-check bypass via speculative execution
+      net: mpls: prevent bounds-check bypass via speculative execution
+      udf: prevent bounds-check bypass via speculative execution
+      userns: prevent bounds-check bypass via speculative execution
 
-- TX path reworked completely.  tx_control_port method has been introduced to
-cfg80211_ops.  An implementation of tx_control_port for mac80211 was added.
+Mark Rutland (4):
+      asm-generic/barrier: add generic nospec helpers
+      Documentation: document nospec helpers
+      arm64: implement nospec_ptr()
+      arm: implement nospec_ptr()
 
-
-Denis Kenzior (5):
-  nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
-  nl80211: Add CMD_CONTROL_PORT_FRAME API
-  mac80211: Send control port frames over nl80211
-  nl80211: Implement TX of control port frames
-  mac80211: Add support for tx_control_port
-
- include/net/cfg80211.h       |  32 ++++++++++
- include/uapi/linux/nl80211.h |  29 ++++++++-
- net/mac80211/cfg.c           |   3 +
- net/mac80211/ieee80211_i.h   |   4 ++
- net/mac80211/main.c          |   1 +
- net/mac80211/mlme.c          |   2 +
- net/mac80211/rx.c            |  31 +++++++++-
- net/mac80211/tx.c            |  46 ++++++++++++++
- net/wireless/nl80211.c       | 139 ++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/rdev-ops.h      |  15 +++++
- net/wireless/trace.h         |  46 ++++++++++++++
- 11 files changed, 343 insertions(+), 5 deletions(-)
-
--- 
-2.13.5
+ Documentation/speculation.txt                      |  166 ++++++++++++++++++++
+ arch/arm/include/asm/barrier.h                     |   75 +++++++++
+ arch/arm64/include/asm/barrier.h                   |   55 +++++++
+ arch/x86/include/asm/barrier.h                     |    6 +
+ arch/x86/include/asm/uaccess.h                     |   17 ++
+ drivers/media/usb/uvc/uvc_v4l2.c                   |    7 +
+ drivers/net/wireless/ath/carl9170/main.c           |    6 -
+ drivers/net/wireless/intersil/p54/main.c           |    8 +
+ drivers/net/wireless/st/cw1200/sta.c               |   10 +
+ drivers/net/wireless/st/cw1200/wsm.h               |    4 
+ drivers/scsi/qla2xxx/qla_mr.c                      |   15 +-
+ .../thermal/int340x_thermal/int340x_thermal_zone.c |   14 +-
+ fs/udf/misc.c                                      |   39 +++--
+ include/asm-generic/barrier.h                      |   68 ++++++++
+ include/linux/fdtable.h                            |    5 -
+ kernel/user_namespace.c                            |   10 -
+ net/ipv4/raw.c                                     |    9 +
+ net/ipv6/raw.c                                     |    9 +
+ net/mpls/af_mpls.c                                 |   12 +
+ 19 files changed, 466 insertions(+), 69 deletions(-)
+ create mode 100644 Documentation/speculation.txt
