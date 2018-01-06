@@ -1,45 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shrek-s3.podlesie.net ([85.14.110.209]:53589 "EHLO
-        shrek.podlesie.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751136AbeA0AEb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 19:04:31 -0500
-From: Krzysztof Mazur <krzysiek@podlesie.net>
-To: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, James Hogan <jhogan@kernel.org>
-Cc: Guenter Roeck <linux@roeck-us.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Krzysztof Mazur <krzysiek@podlesie.net>
-Subject: [PATCH] ssb: Reenable PCI host on !MIPS
-Date: Sat, 27 Jan 2018 00:58:49 +0100
-Message-Id: <20180126235849.3177-1-krzysiek@podlesie.net> (sfid-20180127_010435_225397_7672E977)
+Received: from mga04.intel.com ([192.55.52.120]:27018 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753439AbeAFBS5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Jan 2018 20:18:57 -0500
+Subject: [PATCH 09/18] p54: prevent bounds-check bypass via speculative
+ execution
+From: Dan Williams <dan.j.williams@intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, peterz@infradead.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        gregkh@linuxfoundation.org,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        tglx@linutronix.de, torvalds@linux-foundation.org,
+        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com
+Date: Fri, 05 Jan 2018 17:10:43 -0800
+Message-ID: <151520104323.32271.6614158873750932410.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180106_022210_950892_EB6BA182)
+In-Reply-To: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit 58eae1416b804d900014d84feadda7195007cc30
-("ssb: Disable PCI host for PCI_DRIVERS_GENERIC") disabled
-CONFIG_SSB_PCIHOST and CONFIG_SSB_B43_PCI_BRIDGE, which are
-required for SSB-based b43 PCI cards, on everything except MIPS
-with PCI_DRIVERS_LEGACY, including x86 (only MIPS defines
-that config option). Reenable it.
+Static analysis reports that 'queue' may be a user controlled value that
+is used as a data dependency to read from the 'priv->qos_params' array.
+In order to avoid potential leaks of kernel memory values, block
+speculative execution of the instruction stream that could issue reads
+based on an invalid result of 'priv->qos_params[queue]'.
 
-Signed-off-by: Krzysztof Mazur <krzysiek@podlesie.net>
+Based on an original patch by Elena Reshetova.
+
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/ssb/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intersil/p54/main.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-index 71c73766ee22..3dc57414e06b 100644
---- a/drivers/ssb/Kconfig
-+++ b/drivers/ssb/Kconfig
-@@ -32,7 +32,7 @@ config SSB_BLOCKIO
+diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
+index ab6d39e12069..85c9cbee35fc 100644
+--- a/drivers/net/wireless/intersil/p54/main.c
++++ b/drivers/net/wireless/intersil/p54/main.c
+@@ -20,6 +20,7 @@
+ #include <linux/firmware.h>
+ #include <linux/etherdevice.h>
+ #include <linux/module.h>
++#include <linux/compiler.h>
  
- config SSB_PCIHOST_POSSIBLE
- 	bool
--	depends on SSB && (PCI = y || PCI = SSB) && PCI_DRIVERS_LEGACY
-+	depends on SSB && (PCI = y || PCI = SSB) && (!MIPS || PCI_DRIVERS_LEGACY)
- 	default y
+ #include <net/mac80211.h>
  
- config SSB_PCIHOST
--- 
-2.16.0.rc1.238.g530d649a7
+@@ -411,12 +412,13 @@ static int p54_conf_tx(struct ieee80211_hw *dev,
+ 		       const struct ieee80211_tx_queue_params *params)
+ {
+ 	struct p54_common *priv = dev->priv;
++	struct p54_edcf_queue_param *p54_q;
+ 	int ret;
+ 
+ 	mutex_lock(&priv->conf_mutex);
+-	if (queue < dev->queues) {
+-		P54_SET_QUEUE(priv->qos_params[queue], params->aifs,
+-			params->cw_min, params->cw_max, params->txop);
++	if ((p54_q = nospec_array_ptr(priv->qos_params, queue, dev->queues))) {
++		P54_SET_QUEUE(p54_q[0], params->aifs, params->cw_min,
++				params->cw_max, params->txop);
+ 		ret = p54_set_edcf(priv);
+ 	} else
+ 		ret = -EINVAL;
