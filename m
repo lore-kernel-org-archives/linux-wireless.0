@@ -1,236 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:44293 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965373AbeAMJTW (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:46666 "EHLO
+        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753500AbeAFQii (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Jan 2018 04:19:22 -0500
-Received: by mail-wm0-f51.google.com with SMTP id t8so16271726wmc.3
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Jan 2018 01:19:22 -0800 (PST)
-Subject: Re: brcmfmac4329-sdio firmware load failed.
-To: Kyle Evans <kvans32@gmail.com>, linux-wireless@vger.kernel.org
-References: <7c73dc36-5b7a-729e-4656-b45839c1360d@gmail.com>
- <5A55D325.60805@broadcom.com>
- <3842a299-cd14-65db-1222-6849bc95ef74@gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A59CF17.6040706@broadcom.com> (sfid-20180113_101933_039460_3B1A80A8)
-Date: Sat, 13 Jan 2018 10:19:19 +0100
+        Sat, 6 Jan 2018 11:38:38 -0500
+From: Christian Lamparter <chunkeey@gmail.com>
+To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        peterz@infradead.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        gregkh@linuxfoundation.org, tglx@linutronix.de,
+        torvalds@linux-foundation.org, Kalle Valo <kvalo@codeaurora.org>,
+        alan@linux.intel.com
+Subject: Re: [PATCH 08/18] carl9170: prevent bounds-check bypass via speculative execution
+Date: Sat, 06 Jan 2018 17:38:34 +0100
+Message-ID: <2038096.RuDH0FGIcm@debian64> (sfid-20180106_173919_695612_C40DACE3)
+In-Reply-To: <20180106150621.2221a646@alans-desktop>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com> <3586343.KJymplWpZW@debian64> <20180106150621.2221a646@alans-desktop>
 MIME-Version: 1.0
-In-Reply-To: <3842a299-cd14-65db-1222-6849bc95ef74@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/12/2018 9:18 PM, Kyle Evans wrote:
-> Thank you Arend. I updated to master again, v4.15-rc7+, and applied your
-> patch. All log snips are grabbed with dmesg|grep -E 'mmc0|brcm', as the
-> sdio device is on mmc0.
+On Saturday, January 6, 2018 4:06:21 PM CET Alan Cox wrote:
+> > The only way a user can set this in any meaningful way would be via
+> > a NL80211_CMD_SET_WIPHY netlink message. However, the value will get
+> > vetted there by cfg80211's parse_txq_params [0]. This is long before
+> 
+> Far more than a couple of hundred instructions ?
+Well, the user would have to send a netlink message each time. So
+cfg80211 can parse it (this is where the initial "if queue >= 4 " check
+happen). So the CPU would have to continue through and into 
+rdev_set_txq_params() to get to mac80211's ieee80211_set_txq_params().
+Then pass through that before gets to the driver's op_tx_conf. Once
+there the driver code aquires a mutex_lock too before it gets to
+check the queue value again.
 
-Could you follow the reply convention of not top-posting.
+Is this enough and how would the mutex_lock fit in there? Or can
+the CPU skip past this as well? 
+> The problem is that the processor will speculate that the parameter
+> is valid and continue on that basis until the speculation resolves
+> or it hits some other limit that stops it speculating further.
+> That can be quite a distance on a modern x86 processor, and for all
+> we know could be even more on some of the other CPUs involved.
+ 
+> > it reaches any of the *_op_conf_tx functions.
+> > 
+> > And Furthermore a invalid queue (param->ac) would cause a crash in 
+> > this line in mac80211 before it even reaches the driver [1]:
+> > |	sdata->tx_conf[params->ac] = p;
+> > |                   ^^^^^^^^
+> 
+> Firstly it might not because the address you get as a result could be
+> valid kernel memory. In fact your attackers wants it to be valid kernel
+> memory since they are trying to find the value of a piece of that memory.
+> 
+> Secondly the processor is doing this speculatively so it won't fault. It
+> will eventually decide it went the wrong way and throw all the
+> speculative work away - leaving footprints. It won't fault unless the
+> speculative resolves that was the real path the code took.
+> 
+> If it's not a performance critical path then it's better to be safe.
+Thank you for reading the canary too.
 
-> Without patch [1], for reference...
->
-> [    0.000000] Kernel command line: console=tty0 selinux=0
-> video=1280x800 root=/dev/mmcblk1p1 brcmfmac.bebug=0x20000
-
-You made a type in the kernel command line, ie. "bebug" should be 
-"debug". Anyway, that is not that important for now.
-
-> [    3.952561] mmc0: Invalid maximum block size, assuming 512 bytes
-> [    4.010466] mmc0: SDHCI controller on c8000000.sdhci [c8000000.sdhci]
-> using ADMA
-> [    4.338545] mmc0: queuing unknown CIS tuple 0x80 (50 bytes)
-> [    4.347098] mmc0: queuing unknown CIS tuple 0x80 (7 bytes)
-> [    4.350099] mmc0: queuing unknown CIS tuple 0x80 (7 bytes)
-> [    4.378430] mmc0: queuing unknown CIS tuple 0x02 (1 bytes)
-> [    4.388387] mmc0: new SDIO card at address 0001
-> [    4.401773] brcmfmac: F1 signature read @0x18000000=0x9934329
-> [    4.407624] brcmfmac: brcmf_sdiod_regrw_helper: failed to read data
-> F1@0x080ac, err: -84
-> [    4.410159] brcmfmac: brcmf_fw_map_chip_to_name: using
-> brcm/brcmfmac4329-sdio.bin for chip 0x004329(17193) rev 0x000003
-> [    4.781374] brcmfmac mmc0:0001:1: Direct firmware load for
-> brcm/brcmfmac4329-sdio.clm_blob failed with error -2
-> [    4.781491] brcmfmac mmc0:0001:1: Falling back to user helper
-> [   69.601645] brcmfmac: brcmf_c_process_clm_blob: request CLM blob file
-> failed (-11)
-> [   69.601668] brcmfmac: brcmf_c_preinit_dcmds: download CLM blob file
-> failed, -11
-> [   69.601685] brcmfmac: brcmf_bus_started: failed: -11
-> [   69.601728] brcmfmac: brcmf_sdio_firmware_callback: dongle is not
-> responding
->
->
-> With patch [1]...
->
-> [    0.000000] Kernel command line: console=tty0 selinux=0
-> video=1280x800 root=/dev/mmcblk1p1 brcmfmac.bebug=0x20000
-> [    3.954628] mmc0: Invalid maximum block size, assuming 512 bytes
-> [    4.010608] mmc0: SDHCI controller on c8000000.sdhci [c8000000.sdhci]
-> using ADMA
-> [    4.341727] mmc0: queuing unknown CIS tuple 0x80 (50 bytes)
-> [    4.349595] mmc0: queuing unknown CIS tuple 0x80 (7 bytes)
-> [    4.352695] mmc0: queuing unknown CIS tuple 0x80 (7 bytes)
-> [    4.381292] mmc0: queuing unknown CIS tuple 0x02 (1 bytes)
-> [    4.387377] mmc0: new SDIO card at address 0001
-> [    4.399393] brcmfmac: F1 signature read @0x18000000=0x9934329
-> [    4.405883] brcmfmac: brcmf_sdiod_regrw_helper: failed to read data
-> F1@0x080ac, err: -84
-> [    4.407207] brcmfmac: brcmf_fw_map_chip_to_name: using
-> brcm/brcmfmac4329-sdio.bin for chip 0x004329(17193) rev 0x000003
-> [    4.709436] brcmfmac mmc0:0001:1: Direct firmware load for
-> brcm/brcmfmac4329-sdio.clm_blob failed with error -2
-> [    4.709517] brcmfmac mmc0:0001:1: Falling back to user helper
-> [   69.710122] brcmfmac mmc0:0001:1: Direct firmware load for
-> brcm/brcmfmac4329-sdio.clm_blob failed with error -2
-> [   69.710137] brcmfmac mmc0:0001:1: Falling back to user helper
-> [  131.054899] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
-> Sep  2 2011 14:48:19 version 4.220.48
-> [  131.072561] brcmfmac: brcmf_setup_wiphybands: rxchain error (-23)
-> [  131.388384] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  131.392390] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  131.920861] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  131.924183] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  132.593074] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  133.135973] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  133.138223] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  133.152149] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  134.311983] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  134.458577] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  134.461640] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
-> [  134.555048] brcmfmac: _brcmf_set_multicast_list: Setting
-> BRCMF_C_SET_PROMISC failed, -23
->
->
-> I can now connect to an AP with the following caveats:
->
-> 1) It takes about two minutes before the wlan device is available. For a
-> long while I didn't think it was working because I would check dmesg and
-> check ifconfig -a before the wlan would be present.
-
-Those two minutes are a direct result of the clm_blob requests. Your 
-kernel config has user-mode helper fallback selected, which causes 60 
-seconds timeout waiting for user-space to provide the blob. You could 
-try and disable it. It is CONFIG_FW_LOADER_USER_HELPER_FALLBACK in your 
-.config.
-
-> 2) After reboot I get this nasty error...
-> [    0.000000] Kernel command line: console=tty0 selinux=0
-> video=1280x800 root=/dev/mmcblk1p1 brcmfmac.bebug=0x20000
-> [    2.269750] mmc0: Invalid maximum block size, assuming 512 bytes
-> [    2.330010] mmc0: SDHCI controller on c8000000.sdhci [c8000000.sdhci]
-> using ADMA
-> [    2.645242] mmc0: error -110 whilst initialising SDIO card
-
-Ok. I suppose you mean a warm reboot. So I suppose the card is not 
-properly power cycled. If your SDHCI controller driver (is it 
-sdhci-acpi?) is loaded as a module, you could try to unload it and load 
-it again. Let me know if that works for you to confirm my guess.
-
-> Regarding the patch, brcmfmac tries to load a firmware file twice for a
-> device which the firmware file does not exist. Is there a know list of
-> devices which do not need it that we can use to bypass
-> brcmf_c_process_clm_blob()?
-
-It is unclear to me why the firmware load is done twice. Could it be in 
-the firmware class itself? In brcmfmac there is only one 
-request_firmware() call for the clm blob. At least in my version of it. 
-Do you have something else?
-
-Regards,
-Arend
-
-> Thanks,
-> Kyle
->
-> On 01/10/2018 03:47 AM, Arend van Spriel wrote:
->> On 1/9/2018 1:51 PM, Kyle Evans wrote:
->>> This is linux-4.15-rc2 on an ASUS TF101. This device was shipped with
->>> Android and a custom kernel using bcmdhd. I have taken nvram.txt from
->>> /system/etc/ on the stock filesystem and copied to
->>> /lib/firmware/brcm/brcmfmac4329-sdio.txt. Below is the result.
->>
->> Ok. So far so good as that nvram.txt is indeed what you want to use.
->>> [    2.729157] brcmfmac: F1 signature read @0x18000000=0x9934329
->>> [    2.734313] brcmfmac: brcmf_sdiod_regrw_helper: failed to read data
->>> F1@0x080ac, err: -84
->>
->> The read failure is a bit concerning, but I ignore it for now.
->>
->>> [    2.739952] brcmfmac: brcmf_fw_map_chip_to_name: using
->>> brcm/brcmfmac4329-sdio.bin for chip 0x004329(17193) rev 0x000003
->>> [    2.965820] brcmfmac mmc0:0001:1: Direct firmware load for
->>> brcm/brcmfmac4329-sdio.clm_blob failed with error -2
->>
->> Expected as you did not put a clm_blob file in /lib/firmware/brcm/.
->> However, ...
->>
->>> [    2.969658] brcmfmac mmc0:0001:1: Falling back to user helper
->>> [   64.489695] brcmfmac: brcmf_c_process_clm_blob: request CLM blob file
->>> failed (-11)
->>
->> ...in one of the review cycles for the CLM blob feature it was made
->> clear that this should not result in a probe failure...
->>
->>> [   64.489720] brcmfmac: brcmf_c_preinit_dcmds: download CLM blob file
->>> failed, -11
->>> [   64.489739] brcmfmac: brcmf_bus_started: failed: -11
->>
->> ... but it does bail out. Turns out the driver is checking for a
->> specific error code -ENOENT (-2) and not -EAGAIN(-11). A patch has
->> been submitted for it earlier [1], but it was rejected. I have taken
->> another stab at it (see below). Let me know if it works for you.
->>
->>> [   64.489783] brcmfmac: brcmf_sdio_firmware_callback: dongle is not
->>> responding
->>> [   64.596281] [<c061fd98>] (device_release_driver_internal) from
->>> [<c068f394>] (brcmf_sdio_firmware_callback+0x244/0x5b8)
->>> [   64.596500] [<c068f394>] (brcmf_sdio_firmware_callback) from
->>> [<c0686870>] (brcmf_fw_request_nvram_done+0x1cc/0x73c)
->>> [   64.596716] [<c0686870>] (brcmf_fw_request_nvram_done) from
->>> [<c063337c>] (request_firmware_work_func+0x3c/0x64)
->>
->> This stack trace is from a driver bug that has been fixed in later -rc
->> [2].
->>
->> Regards,
->> Arend
->>
->> [1] https://patchwork.kernel.org/patch/10106571/
->> [2] https://patchwork.kernel.org/patch/10075091/
->>
->> ---
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> b/driver
->> index 6a59d06..f805600 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> @@ -182,12 +182,8 @@ static int brcmf_c_process_clm_blob(struct
->> brcmf_if *ifp)
->>
->>          err = request_firmware(&clm, clm_name, dev);
->>          if (err) {
->> -               if (err == -ENOENT) {
->> -                       brcmf_dbg(INFO, "continue with CLM data
->> currently prese
->> -                       return 0;
->> -               }
->> -               brcmf_err("request CLM blob file failed (%d)\n", err);
->> -               return err;
->> +               brcmf_info("no CLM blob. Firmware may still need it.\n");
->> +               return 0;
->>          }
->>
->>          chunk_buf = kzalloc(sizeof(*chunk_buf) + MAX_CHUNK_LEN - 1,
->> GFP_KERNEL)
->>
+Christian
