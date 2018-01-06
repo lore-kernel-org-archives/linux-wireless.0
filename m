@@ -1,54 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:33886 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965204AbeAJJjD (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:42801 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752108AbeAFS4d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 04:39:03 -0500
-From: Pkshih <pkshih@realtek.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        =?big5?B?svir26vF?= <yhchuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 02/10] rtlwifi: fix scan channel 1 fail after IPS
-Date: Wed, 10 Jan 2018 09:38:48 +0000
-Message-ID: <5B2DA6FDDF928F4E855344EE0A5C39D13BE66622@RTITMBSV07.realtek.com.tw> (sfid-20180110_103909_676458_10056778)
-References: <20180110052002.9544-1-pkshih@realtek.com>
- <20180110052002.9544-3-pkshih@realtek.com> <5A55CB01.5040504@broadcom.com>
-In-Reply-To: <5A55CB01.5040504@broadcom.com>
-Content-Type: text/plain; charset="big5"
+        Sat, 6 Jan 2018 13:56:33 -0500
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
+ execution
+To: Dan Williams <dan.j.williams@intel.com>,
+        linux-kernel@vger.kernel.org
+Cc: Mark Rutland <mark.rutland@arm.com>, peterz@infradead.org,
+        Alan Cox <alan.cox@intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        x86@kernel.org, Ingo Molnar <mingo@redhat.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Zhang Rui <rui.zhang@intel.com>, linux-media@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        tglx@linutronix.de, Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        netdev@vger.kernel.org, torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+        dan.carpenter@oracle.com
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <ca6f24c0-d6cf-e309-aa68-92f1378ee75a@gmail.com> (sfid-20180106_195703_077594_C4736C0C)
+Date: Sat, 6 Jan 2018 10:56:25 -0800
 MIME-Version: 1.0
+In-Reply-To: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQXJlbmQgdmFuIFNwcmll
-bCBbbWFpbHRvOmFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb21dDQo+IFNlbnQ6IFdlZG5lc2Rh
-eSwgSmFudWFyeSAxMCwgMjAxOCA0OjEzIFBNDQo+IFRvOiBQa3NoaWg7IGt2YWxvQGNvZGVhdXJv
-cmEub3JnDQo+IENjOiBMYXJyeS5GaW5nZXJAbHdmaW5nZXIubmV0OyCy+Kvbq8U7IGxpbnV4LXdp
-cmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDAyLzEwXSBydGx3
-aWZpOiBmaXggc2NhbiBjaGFubmVsIDEgZmFpbCBhZnRlciBJUFMNCj4gDQo+IE9uIDEvMTAvMjAx
-OCA2OjE5IEFNLCBwa3NoaWhAcmVhbHRlay5jb20gd3JvdGU6DQo+ID4gRnJvbTogUGluZy1LZSBT
-aGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQo+ID4NCj4gPiBJZiB0aGVyZSBpcyBubyBjb25uZWN0
-aW9uLCBkcml2ZXIgd2lsbCBlbnRlciBJUFMgc3RhdGUuIE1lYW53aGlsZSwgaXQNCj4gPiBmYWls
-cyB0byBzY2FuIGNoYW5uZWwgMSBieSB0aGUgY29tbWFuZCAnaXcgZGV2IHdsYW4wIHNjYW4gZnJl
-cSAyNDEyJywNCj4gPiBiZWNhdXNlIGhhcmR3YXJlIGNoYW5uZWwgc2V0dGluZyBsb3NlIGFmdGVy
-IElQUy4gVGh1cywgcmVzdG9yZSBjaGFubmVsDQo+ID4gc2V0dGluZyBmcm9tIGh3LT5jb25mLmNo
-YW5uZWwgc2V0IGJ5IGxhc3QgcnRsX29wX2NvbmZpZygpLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1i
-eTogVGltIExlZSA8dGltbGVlQHJlYWx0ZWsuY29tPg0KPiANCj4gWW91IG5lZWQgdG8gYWRkIHlv
-dXIgc29iIGhlcmUgYXMgd2VsbCBhcyB5b3UgYXJlIHN1Ym1pdHRpbmcgdGhlbS4NCj4gDQoNCkkn
-bGwgYWRkIGl0IGluIHYyLg0KDQo+ID4gLS0tDQo+ID4gICBkcml2ZXJzL25ldC93aXJlbGVzcy9y
-ZWFsdGVrL3J0bHdpZmkvcHMuYyB8IDYgKysrKysrDQo+ID4gICAxIGZpbGUgY2hhbmdlZCwgNiBp
-bnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-cmVhbHRlay9ydGx3aWZpL3BzLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdp
-ZmkvcHMuYw0KPiA+IGluZGV4IDZhNDAwODg0NWY0OS4uMGZmZTQzNzcyYzlhIDEwMDY0NA0KPiA+
-IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9wcy5jDQo+ID4gKysr
-IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3BzLmMNCj4gPiBAQCAtNTEs
-NiArNTEsMTIgQEAgYm9vbCBydGxfcHNfZW5hYmxlX25pYyhzdHJ1Y3QgaWVlZTgwMjExX2h3ICpo
-dykNCj4gPiAgIAkJCSZydGxtYWMtPnJldHJ5X2xvbmcpOw0KPiA+ICAgCVJUX0NMRUFSX1BTX0xF
-VkVMKHBwc2MsIFJUX1JGX09GRl9MRVZMX0hBTFRfTklDKTsNCj4gPg0KPiA+ICsJLyo8Mi4xPiBT
-d2l0Y2ggQ2hhbm5lbCAmIEJhbmR3aWR0aCB0byBsYXN0IHJ0bF9vcF9jb25maWcgc2V0dGluZyov
-DQo+IA0KPiBJcyB0aGlzIHR5cGUgb2YgY29tbWVudCByZWFsbHkgaGVscGZ1bD8gVG8gbWUgaXQg
-c2VlbXMgdGhlIGNhbGxiYWNrDQo+IG5hbWVzIHByb3ZpZGUgZW5vdWdoIGNvbnRleHQuDQo+IA0K
-DQpEbyB5b3UgbWVhbiB0aGUgIjwyLjE+IiBpc24ndCBuZWVkZWQ/IA0KVGhpcyBpcyBiZWNhdXNl
-ICI8MT4sIDwyPiwgPDM+Li4uIiBleGlzdCBpbiB0aGUgZnVuY3Rpb24sIHNvDQp3ZSB3YW50IHRv
-IG1ha2UgaXQgdG8gYmUgY29uc2lzdGVudC4NCg0KUEsNCg0K
+Le 01/05/18 à 17:09, Dan Williams a écrit :
+> Quoting Mark's original RFC:
+> 
+> "Recently, Google Project Zero discovered several classes of attack
+> against speculative execution. One of these, known as variant-1, allows
+> explicit bounds checks to be bypassed under speculation, providing an
+> arbitrary read gadget. Further details can be found on the GPZ blog [1]
+> and the Documentation patch in this series."
+> 
+> This series incorporates Mark Rutland's latest api and adds the x86
+> specific implementation of nospec_barrier. The
+> nospec_{array_ptr,ptr,barrier} helpers are then combined with a kernel
+> wide analysis performed by Elena Reshetova to address static analysis
+> reports where speculative execution on a userspace controlled value
+> could bypass a bounds check. The patches address a precondition for the
+> attack discussed in the Spectre paper [2].
+> 
+> A consideration worth noting for reviewing these patches is to weigh the
+> dramatic cost of being wrong about whether a given report is exploitable
+> vs the overhead nospec_{array_ptr,ptr} may introduce. In other words,
+> lets make the bar for applying these patches be "can you prove that the
+> bounds check bypass is *not* exploitable". Consider that the Spectre
+> paper reports one example of a speculation window being ~180 cycles.
+> 
+> Note that there is also a proposal from Linus, array_access [3], that
+> attempts to quash speculative execution past a bounds check without
+> introducing an lfence instruction. That may be a future optimization
+> possibility that is compatible with this api, but it would appear to
+> need guarantees from the compiler that it is not clear the kernel can
+> rely on at this point. It is also not clear that it would be a
+> significant performance win vs lfence.
+> 
+> These patches also will also be available via the 'nospec' git branch
+> here:
+> 
+>     git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec
+
+Although I suppose -stable and distribution maintainers will keep a
+close eye on these patches, is there a particular reason why they don't
+include the relevant CVE number in their commit messages?
+
+It sounds like Coverity was used to produce these patches? If so, is
+there a plan to have smatch (hey Dan) or other open source static
+analysis tool be possibly enhanced to do a similar type of work?
+
+Thanks!
+-- 
+Florian
