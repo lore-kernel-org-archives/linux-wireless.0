@@ -1,133 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39012 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752018AbeAZHrL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 02:47:11 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/10] rtlwifi: Fix VHT NSS in RC
-Date: Fri, 26 Jan 2018 15:46:41 +0800
-Message-ID: <20180126074645.27201-7-pkshih@realtek.com> (sfid-20180126_084720_638627_6DBDAA68)
-In-Reply-To: <20180126074645.27201-1-pkshih@realtek.com>
-References: <20180126074645.27201-1-pkshih@realtek.com>
+Received: from mga03.intel.com ([134.134.136.65]:7066 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753794AbeAFBSw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Jan 2018 20:18:52 -0500
+Subject: [PATCH 08/18] carl9170: prevent bounds-check bypass via speculative
+ execution
+From: Dan Williams <dan.j.williams@intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, peterz@infradead.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        gregkh@linuxfoundation.org,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        tglx@linutronix.de, torvalds@linux-foundation.org,
+        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com
+Date: Fri, 05 Jan 2018 17:10:37 -0800
+Message-ID: <151520103755.32271.6819511294540882298.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180106_022227_120572_864EB35F)
+In-Reply-To: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Static analysis reports that 'queue' may be a user controlled value that
+is used as a data dependency to read from the 'ar9170_qmap' array. In
+order to avoid potential leaks of kernel memory values, block
+speculative execution of the instruction stream that could issue reads
+based on an invalid result of 'ar9170_qmap[queue]'. In this case the
+value of 'ar9170_qmap[queue]' is immediately reused as an index to the
+'ar->edcf' array.
 
-NSS is a argument of highest rate in RC, and it occupies bit 4-7 so use
-ieee80211_rate_set_vht() to fill the values. Since it got correct rate
-index, we don't need to check chips to assign NSS in set function anymore.
+Based on an original patch by Elena Reshetova.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rc.c | 49 +++++++++++++++++++++++++------
- 1 file changed, 40 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/carl9170/main.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
-index d1cb7d405618..396bed8d3d51 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
-@@ -42,6 +42,17 @@ static u8 _rtl_rc_get_highest_rix(struct rtl_priv *rtlpriv,
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_sta_info *sta_entry = NULL;
- 	u16 wireless_mode = 0;
-+	u8 nss;
-+	struct ieee80211_tx_rate rate;
-+
-+	if (get_rf_type(rtlphy) >= RF_4T4R)
-+		nss = 4;
-+	else if (get_rf_type(rtlphy) >= RF_3T3R)
-+		nss = 3;
-+	else if (get_rf_type(rtlphy) >= RF_2T2R)
-+		nss = 2;
-+	else
-+		nss = 1;
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 988c8857d78c..0ff34cbe2b62 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -41,6 +41,7 @@
+ #include <linux/module.h>
+ #include <linux/etherdevice.h>
+ #include <linux/random.h>
++#include <linux/compiler.h>
+ #include <net/mac80211.h>
+ #include <net/cfg80211.h>
+ #include "hw.h"
+@@ -1384,11 +1385,12 @@ static int carl9170_op_conf_tx(struct ieee80211_hw *hw,
+ 			       const struct ieee80211_tx_queue_params *param)
+ {
+ 	struct ar9170 *ar = hw->priv;
++	const u8 *elem;
+ 	int ret;
  
- 	/*
- 	 *this rate is no use for true rate, firmware
-@@ -66,28 +77,51 @@ static u8 _rtl_rc_get_highest_rix(struct rtl_priv *rtlpriv,
- 			} else if (wireless_mode == WIRELESS_MODE_G) {
- 				return G_MODE_MAX_RIX;
- 			} else if (wireless_mode == WIRELESS_MODE_N_24G) {
--				if (get_rf_type(rtlphy) != RF_2T2R)
-+				if (nss == 1)
- 					return N_MODE_MCS7_RIX;
- 				else
- 					return N_MODE_MCS15_RIX;
- 			} else if (wireless_mode == WIRELESS_MODE_AC_24G) {
--				return AC_MODE_MCS9_RIX;
-+				if (sta->bandwidth == IEEE80211_STA_RX_BW_20) {
-+					ieee80211_rate_set_vht(&rate,
-+							       AC_MODE_MCS8_RIX,
-+							       nss);
-+					goto out;
-+				} else {
-+					ieee80211_rate_set_vht(&rate,
-+							       AC_MODE_MCS9_RIX,
-+							       nss);
-+					goto out;
-+				}
- 			}
- 			return 0;
- 		} else {
- 			if (wireless_mode == WIRELESS_MODE_A) {
- 				return A_MODE_MAX_RIX;
- 			} else if (wireless_mode == WIRELESS_MODE_N_5G) {
--				if (get_rf_type(rtlphy) != RF_2T2R)
-+				if (nss == 1)
- 					return N_MODE_MCS7_RIX;
- 				else
- 					return N_MODE_MCS15_RIX;
- 			} else if (wireless_mode == WIRELESS_MODE_AC_5G) {
--				return AC_MODE_MCS9_RIX;
-+				if (sta->bandwidth == IEEE80211_STA_RX_BW_20) {
-+					ieee80211_rate_set_vht(&rate,
-+							       AC_MODE_MCS8_RIX,
-+							       nss);
-+					goto out;
-+				} else {
-+					ieee80211_rate_set_vht(&rate,
-+							       AC_MODE_MCS9_RIX,
-+							       nss);
-+					goto out;
-+				}
- 			}
- 			return 0;
- 		}
- 	}
-+
-+out:
-+	return rate.idx;
- }
- 
- static void _rtl_rc_rate_set_series(struct rtl_priv *rtlpriv,
-@@ -111,9 +145,6 @@ static void _rtl_rc_rate_set_series(struct rtl_priv *rtlpriv,
- 	}
- 	rate->count = tries;
- 	rate->idx = rix >= 0x00 ? rix : 0x00;
--	if (rtlpriv->rtlhal.hw_type == HARDWARE_TYPE_RTL8812AE &&
--	    wireless_mode == WIRELESS_MODE_AC_5G)
--		rate->idx += 0x10;/*2NSS for 8812AE*/
- 
- 	if (!not_data) {
- 		if (txrc->short_preamble)
-@@ -126,10 +157,10 @@ static void _rtl_rc_rate_set_series(struct rtl_priv *rtlpriv,
- 			if (sta && sta->vht_cap.vht_supported)
- 				rate->flags |= IEEE80211_TX_RC_80_MHZ_WIDTH;
- 		} else {
--			if (mac->bw_40)
--				rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
- 			if (mac->bw_80)
- 				rate->flags |= IEEE80211_TX_RC_80_MHZ_WIDTH;
-+			else if (mac->bw_40)
-+				rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
- 		}
- 
- 		if (sgi_20 || sgi_40 || sgi_80)
--- 
-2.15.1
+ 	mutex_lock(&ar->mutex);
+-	if (queue < ar->hw->queues) {
+-		memcpy(&ar->edcf[ar9170_qmap[queue]], param, sizeof(*param));
++	if ((elem = nospec_array_ptr(ar9170_qmap, queue, ar->hw->queues))) {
++		memcpy(&ar->edcf[*elem], param, sizeof(*param));
+ 		ret = carl9170_set_qos(ar);
+ 	} else {
+ 		ret = -EINVAL;
