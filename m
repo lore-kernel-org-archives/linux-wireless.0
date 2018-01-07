@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33014 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752358AbeAQHeg (ORCPT
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:38304 "EHLO
+        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754649AbeAGXtd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 02:34:36 -0500
-From: tamizhr@codeaurora.org
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 2/4] cfg80211: enable setting cqm config for AP mode
-Date: Wed, 17 Jan 2018 13:01:14 +0530
-Message-Id: <1516174276-16789-3-git-send-email-tamizhr@codeaurora.org> (sfid-20180117_083447_220115_78782993)
-In-Reply-To: <1516174276-16789-1-git-send-email-tamizhr@codeaurora.org>
-References: <1516174276-16789-1-git-send-email-tamizhr@codeaurora.org>
+        Sun, 7 Jan 2018 18:49:33 -0500
+Received: by mail-lf0-f45.google.com with SMTP id d19so2070765lfj.5
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Jan 2018 15:49:33 -0800 (PST)
+MIME-Version: 1.0
+From: William Dauchy <wdauchy@gmail.com>
+Date: Mon, 8 Jan 2018 00:49:11 +0100
+Message-ID: <CAJ75kXYLOV8aVZpftBFRbMv=KCaxCoQpJFaL0m0QDjVOytq3Vg@mail.gmail.com> (sfid-20180108_004937_995338_02F3315F)
+Subject: brcmfmac: set p2p_disc error on BCM4350
+To: linux-wireless@vger.kernel.org
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Hello,
 
-Enable connection monitoring for AP mode which makes it possible to
-track signal strength of connected stations.
+Using the last v4.14.x I am getting this error at each boot, on my
+BCM4350 802.11ac Wireless Network Adapter:
 
-Co-Developed-by: Tamizh Chelvam <tamizhr@codeaurora.org>
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- net/wireless/nl80211.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
+brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlp58s0 type 10
+failed: err=-16
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ce5ee6f..3bb8eaa 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9884,7 +9884,10 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 	}
- 
- 	if (wdev->iftype != NL80211_IFTYPE_STATION &&
--	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-+	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT &&
-+	    wdev->iftype != NL80211_IFTYPE_AP &&
-+	    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
-+	    wdev->iftype != NL80211_IFTYPE_AP_VLAN)
- 		return -EOPNOTSUPP;
- 
- 	wdev_lock(wdev);
+The firmware used is:
+brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015
+06:16:26 version 7.35.180.119 (r594535) FWID 01-e791c176
+
+I was wondering if this error could be fixed?
+
+Best,
 -- 
-1.9.1
+William
