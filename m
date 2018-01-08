@@ -1,107 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53224 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751384AbeAIU4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 15:56:09 -0500
-Date: Tue, 9 Jan 2018 14:55:49 -0600
-From: Josh Poimboeuf <jpoimboe@redhat.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jiri Kosina <jikos@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Alan Cox <alan.cox@intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Zhang Rui <rui.zhang@intel.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
-        Eduardo Valentin <edubezval@gmail.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Netdev <netdev@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
- execution
-Message-ID: <20180109205549.osb25c4r2h2n2wqx@treble> (sfid-20180109_215641_418510_3F9D2586)
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <alpine.LRH.2.00.1801092017330.27010@gjva.wvxbf.pm>
- <CAPcyv4gccDQYx9urpagnBo-TqNLoQ00gEoE7kp+JXNKsmFxcHw@mail.gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57550 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751026AbeAHRl5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Jan 2018 12:41:57 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAPcyv4gccDQYx9urpagnBo-TqNLoQ00gEoE7kp+JXNKsmFxcHw@mail.gmail.com>
+Subject: Re: [linux-next] rt2x00: Fix a typo in printk
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180104150800.1972-1-standby24x7@gmail.com>
+References: <20180104150800.1972-1-standby24x7@gmail.com>
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Masanari Iida <standby24x7@gmail.com>
+Message-Id: <20180108174157.419F260215@smtp.codeaurora.org> (sfid-20180108_184220_770773_A1AC0C16)
+Date: Mon,  8 Jan 2018 17:41:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 09, 2018 at 11:44:05AM -0800, Dan Williams wrote:
-> On Tue, Jan 9, 2018 at 11:34 AM, Jiri Kosina <jikos@kernel.org> wrote:
-> > On Fri, 5 Jan 2018, Dan Williams wrote:
-> >
-> > [ ... snip ... ]
-> >> Andi Kleen (1):
-> >>       x86, barrier: stop speculation for failed access_ok
-> >>
-> >> Dan Williams (13):
-> >>       x86: implement nospec_barrier()
-> >>       [media] uvcvideo: prevent bounds-check bypass via speculative execution
-> >>       carl9170: prevent bounds-check bypass via speculative execution
-> >>       p54: prevent bounds-check bypass via speculative execution
-> >>       qla2xxx: prevent bounds-check bypass via speculative execution
-> >>       cw1200: prevent bounds-check bypass via speculative execution
-> >>       Thermal/int340x: prevent bounds-check bypass via speculative execution
-> >>       ipv6: prevent bounds-check bypass via speculative execution
-> >>       ipv4: prevent bounds-check bypass via speculative execution
-> >>       vfs, fdtable: prevent bounds-check bypass via speculative execution
-> >>       net: mpls: prevent bounds-check bypass via speculative execution
-> >>       udf: prevent bounds-check bypass via speculative execution
-> >>       userns: prevent bounds-check bypass via speculative execution
-> >>
-> >> Mark Rutland (4):
-> >>       asm-generic/barrier: add generic nospec helpers
-> >>       Documentation: document nospec helpers
-> >>       arm64: implement nospec_ptr()
-> >>       arm: implement nospec_ptr()
-> >
-> > So considering the recent publication of [1], how come we all of a sudden
-> > don't need the barriers in ___bpf_prog_run(), namely for LD_IMM_DW and
-> > LDX_MEM_##SIZEOP, and something comparable for eBPF JIT?
-> >
-> > Is this going to be handled in eBPF in some other way?
-> >
-> > Without that in place, and considering Jann Horn's paper, it would seem
-> > like PTI doesn't really lock it down fully, right?
-> 
-> Here is the latest (v3) bpf fix:
-> 
-> https://patchwork.ozlabs.org/patch/856645/
-> 
-> I currently have v2 on my 'nospec' branch and will move that to v3 for
-> the next update, unless it goes upstream before then.
+Masanari Iida <standby24x7@gmail.com> wrote:
 
-That patch seems specific to CONFIG_BPF_SYSCALL.  Is the bpf() syscall
-the only attack vector?  Or are there other ways to run bpf programs
-that we should be worried about?
+> This patch fix a typo in rt2800lib.c
+> 
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+83476cd5871c rt2x00: Fix a typo in printk
 
 -- 
-Josh
+https://patchwork.kernel.org/patch/10144897/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
