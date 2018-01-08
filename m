@@ -1,66 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:53774 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752942AbeA3UJM (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:43703 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754937AbeAHSLW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 15:09:12 -0500
-Subject: Re: ath9k will not tx packets sometimes.
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com>
- <87a7wzv43j.fsf@toke.dk>
- <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com>
- <87d11stk0i.fsf@toke.dk>
- <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com>
- <871si81eev.fsf@toke.dk> <5A6FA79B.1080206@candelatech.com>
- <87h8r335yz.fsf@toke.dk>
- <712ee959-4e41-f4fd-e765-523d024fa7fc@candelatech.com>
- <87wozzyy5e.fsf@toke.dk>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <0e4aa72c-83da-e879-052d-505d8658177d@dd-wrt.com> (sfid-20180130_210921_171085_FE5114CF)
-Date: Tue, 30 Jan 2018 21:09:06 +0100
+        Mon, 8 Jan 2018 13:11:22 -0500
+Received: by mail-pf0-f195.google.com with SMTP id e3so6511403pfi.10
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jan 2018 10:11:21 -0800 (PST)
+Date: Mon, 8 Jan 2018 10:11:18 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Subject: Re: [PATCH] mwifiex: cancel pcie/sdio work in remove/shutdown handler
+Message-ID: <20180108181117.GA129772@google.com> (sfid-20180108_191127_098326_1AE5BC27)
+References: <1513164473-13827-1-git-send-email-huxm@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <87wozzyy5e.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1513164473-13827-1-git-send-email-huxm@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 30.01.2018 um 19:55 schrieb Toke Høiland-Jørgensen:
-> Ben Greear <greearb@candelatech.com> writes:
->
->>> I'm actually working on reworking that whole scheduler logic, and move
->>> some of it into mac80211. Could you test this (WiP) patch and see if
->>> that has the same problem?
->> It had some serious conflicts in ath10k, due to my local changes, so
->> I did not actually test this.
-> Can send you a version without the ath10k changes tomorrow if you'd like
-> to test - but will try to reproduce myself as well...
->
->> But, a revert of the atf patches (a6e56d749 and 63fefa050) appear to
->> have resolved the issue. I'll test more with these reverted, and maybe
->> will have time to work more on actually fixing upstream code next time
->> I move to a newer kernel (and/or after your pending changes get in).
-> Ah, that narrows it down some. Well, that is the code I'm hacking on
-> currently anyway, so let's see if we can't get it fixed as part of that
-> series :)
-i have some addition information for you maybe. in the same timeframe i 
-noticed a increased memory usage for ath9k devices.
-maybe that helps. so i hit memory boundaries on embedded devices with 
-dual interfaces and just 32 mb  ram now which wasnt the case before
-is this patch worth to try from my side?
+Hi,
 
-Sebastian
+On Wed, Dec 13, 2017 at 07:27:53PM +0800, Xinming Hu wrote:
+> The last command used to shutdown firmware might be timeout,
+> and trigger firmware dump in asynchronous pcie/sdio work.
+> 
+> The remove/shutdown handler will continue free core data
+> structure private/adapter, which might be dereferenced in
+> pcie/sdio work, finally crash the kernel.
+> 
+> Sync and Cancel pcie/sdio work, could be a fix for above
+> cornel case. In this way, the last command timeout could
 
--- 
-Mit freundlichen Grüssen / Regards
+s/cornel/corner/
 
-Sebastian Gottschall / CTO
+> be handled properly.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 2 ++
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 2 ++
+>  2 files changed, 4 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index f666cb2..23209c5 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -310,6 +310,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+>  		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+>  	}
+>  
+> +	cancel_work_sync(&card->work);
+> +
 
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Just FYI, this "fix" is not a real fix. It will likely paper over some
+of your bugs (where, e.g., the FW shutdown command times out in the
+previous couple of lines), but this highlights the fact that there are
+other races that could trigger the same behavior. You're not fixing
+those.
+
+For example, what if somebody initiates a scan or other nl80211 command
+between the above line and mwifiex_remove_card()? That command could
+potentially time out too.
+
+The proper fix would be to institute some kind of mutual exclusion
+(locking) between mwifiex_shutdown_sw() and mwifiex_remove_card(), so
+that they can't occur at the same time.
+
+Unfortunately, I only paid attention to this after Kalle already applied
+this patch. Personally, I'd prefer this patch not get applied, since
+it's a bad solution to an obvious problem, which instead leaves a subtle
+problem that perhaps no one will bother fixing.
+
+Brian
+
+>  	mwifiex_remove_card(adapter);
+>  }
+>  
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> index a828801..2488587 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> @@ -399,6 +399,8 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+>  		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+>  	}
+>  
+> +	cancel_work_sync(&card->work);
+> +
+>  	mwifiex_remove_card(adapter);
+>  }
+>  
+> -- 
+> 1.9.1
+> 
