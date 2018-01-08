@@ -1,82 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36056 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750757AbeAOTSB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37278 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754259AbeAHRc2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 14:18:01 -0500
-Received: by mail-oi0-f66.google.com with SMTP id w135so9004554oie.3
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 11:18:01 -0800 (PST)
-Subject: Re: [PATCH v2 10/10] rtlwifi: btcoex: add rfe_type parameter to
- btcoex
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: yhchuang@realtek.com, linux-wireless@vger.kernel.org
-References: <20180111070932.9929-1-pkshih@realtek.com>
- <20180111070932.9929-11-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <df218d06-7f5d-7552-aa4a-4a140629205d@lwfinger.net> (sfid-20180115_201809_294012_D954F2A5)
-Date: Mon, 15 Jan 2018 13:17:59 -0600
+        Mon, 8 Jan 2018 12:32:28 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, nbd@nbd.name,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt76x2: eeprom: fix typo in mt76x2_get_power_info_5g()
+References: <cover.1513248071.git.lorenzo.bianconi@redhat.com>
+        <2ae397aff0b058615a558a2352067fad2c9201e6.1513248071.git.lorenzo.bianconi@redhat.com>
+        <68bc67c3-9c9a-e059-2a2a-1e8ccd5b92f5@canonical.com>
+        <87bmj1cmd8.fsf@purkki.adurom.net>
+Date: Mon, 08 Jan 2018 19:32:22 +0200
+In-Reply-To: <87bmj1cmd8.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu,
+        14 Dec 2017 18:20:19 +0200")
+Message-ID: <87wp0s5k9l.fsf@purkki.adurom.net> (sfid-20180108_183235_568460_C0C09E8A)
 MIME-Version: 1.0
-In-Reply-To: <20180111070932.9929-11-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> btcoex configure antenna by rfe_type that is RF type programmed in efuse.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
->   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 10 ++++++++++
->   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h |  2 ++
->   2 files changed, 12 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> index 30d940cf3abf..7b7099cbb1c7 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> @@ -207,6 +207,14 @@ u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
->   	return rtlhal->package_type;
->   }
->   
-> +static
-> +u8 rtl_get_hwpg_rfe_type(struct rtl_priv *rtlpriv)
-> +{
-> +	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-> +
-> +	return rtlhal->rfe_type;
-> +}
-> +
->   static
->   bool halbtc_is_hw_mailbox_exist(struct btc_coexist *btcoexist)
->   {
-> @@ -1309,6 +1317,8 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
->   		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
->   			 "[BTCoex], Package Type = Non-TFBGA\n");
->   
-> +	btcoexist->board_info.rfe_type = rtl_get_hwpg_rfe_type(rtlpriv);
-> +
->   	return true;
->   }
->   
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> index cbbf5e5a9c9b..ee7bbbd87eae 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> @@ -151,6 +151,8 @@ struct btc_board_info {
->   	u8 btdm_ant_pos;
->   	u8 single_ant_path; /* current used for 8723b only, 1=>s0,  0=>s1 */
->   	bool tfbga_package;
-> +
-> +	u8 rfe_type;
->   };
->   
->   enum btc_dbg_opcode {
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Colin Ian King <colin.king@canonical.com> writes:
+>
+>> On 14/12/17 10:46, Lorenzo Bianconi wrote:
+>>> Fix typo in 5GHz power vs channel eeprom parsing
+>>> 
+>>> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+>>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Of course, until HP starts encoding efuse correctly, the special ant_sel code is 
-still needed.
+[...]
 
-Larry
+>> any possibility of adding:
+>>
+>> Reported-by: Colin Ian King <colin.king@canonical.com>
+>
+> Sure, I'll add that during commit.
+
+Actually patchwork added that automatically based on your email, just as
+it does with Acked-by. Very nice!
+
+-- 
+Kalle Valo
