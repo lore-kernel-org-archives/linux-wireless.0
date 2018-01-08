@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:58232 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753295AbeAaWBA (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:44386 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754560AbeAHSY6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 17:01:00 -0500
-Message-ID: <1517436058.28814.5.camel@sipsolutions.net> (sfid-20180131_230103_639826_E3A3701C)
-Subject: Re: [PATCH 5/6] nl80211: Implement TX of control port frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Date: Wed, 31 Jan 2018 23:00:58 +0100
-In-Reply-To: <e8e2aeba-edd3-30f6-3960-0578ae127336@gmail.com> (sfid-20180131_225807_098372_0F471554)
-References: <20180131213329.25322-1-denkenz@gmail.com>
-         <20180131213329.25322-6-denkenz@gmail.com>
-         <1517435621.2189.67.camel@sipsolutions.net>
-         <e8e2aeba-edd3-30f6-3960-0578ae127336@gmail.com>
-         (sfid-20180131_225807_098372_0F471554)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 8 Jan 2018 13:24:58 -0500
+Date: Mon, 8 Jan 2018 23:54:47 +0530
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org
+Subject: Re: brcmfmac: Use zeroing memory allocator than allocator/memset
+Message-ID: <20180108182447.GA31020@himanshu-Vostro-3559> (sfid-20180108_192515_108663_175DFF44)
+References: <1514649113-7366-1-git-send-email-himanshujha199640@gmail.com>
+ <20180108172322.6AD8560B1B@smtp.codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180108172322.6AD8560B1B@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-01-31 at 15:58 -0600, Denis Kenzior wrote:
-
-> > Actually, then again, that's awkward because doing events and commands
-> > on the same socket doesn't mix all _that_ well. Perhaps we just need to
-> > fix that problem in libnl or something and be done with it ...
-> > 
+On Mon, Jan 08, 2018 at 05:23:22PM +0000, Kalle Valo wrote:
+> Himanshu Jha <himanshujha199640@gmail.com> wrote:
 > 
-> There are no issues on our side..
+> > Use dma_zalloc_coherent for allocating zeroed
+> > memory and remove unnecessary memset function.
+> > 
+> > Done using Coccinelle.
+> > Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
+> > 0-day tested with no failures.
+> > 
+> > Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+> > Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> 
+> Failed to apply:
+> 
+> fatal: corrupt patch at line 29
+> error: could not build fake ancestor
+> Applying: brcmfmac: Use zeroing memory allocator than allocator/memset
+> Patch failed at 0001 brcmfmac: Use zeroing memory allocator than allocator/memset
+> The copy of the patch that failed is found in: .git/rebase-apply/patch
+> 
+> Patch set to Changes Requested.
 
-I guess you don't use libnl then :-) It doesn't exactly make it easy to
-receive events while waiting for an ACK.
+Sorry! That failed because I manually adjusted the arguments to prevent
+80 character limit in the patch generated.
 
-johannes
+I will rebase and send v2 with updates.
+
+-- 
+Thanks
+Himanshu Jha
