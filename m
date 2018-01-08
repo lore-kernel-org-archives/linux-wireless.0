@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:44364 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932103AbeAXHkz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50594 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753381AbeAHRid (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 02:40:55 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] mac80211_hwsim: don't use WQ_MEM_RECLAIM
-Date: Wed, 24 Jan 2018 08:40:51 +0100
-Message-Id: <20180124074051.19939-1-johannes@sipsolutions.net> (sfid-20180124_084058_197640_C09D6B74)
+        Mon, 8 Jan 2018 12:38:33 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: cancel pcie/sdio work in remove/shutdown handler
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1513164473-13827-1-git-send-email-huxm@marvell.com>
+References: <1513164473-13827-1-git-send-email-huxm@marvell.com>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Message-Id: <20180108173833.5B3046077A@smtp.codeaurora.org> (sfid-20180108_183839_415257_AC96A796)
+Date: Mon,  8 Jan 2018 17:38:33 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Xinming Hu <huxm@marvell.com> wrote:
 
-We're obviously not part of a memory reclaim path, so don't set the flag.
+> The last command used to shutdown firmware might be timeout,
+> and trigger firmware dump in asynchronous pcie/sdio work.
+> 
+> The remove/shutdown handler will continue free core data
+> structure private/adapter, which might be dereferenced in
+> pcie/sdio work, finally crash the kernel.
+> 
+> Sync and Cancel pcie/sdio work, could be a fix for above
+> cornel case. In this way, the last command timeout could
+> be handled properly.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
 
-This also causes a warning in check_flush_dependency() since we end up
-in a code path that flushes a non-reclaim workqueue, and we shouldn't do
-that if we were really part of reclaim.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Reported-by: syzbot+41cdaf4232c50e658934@syzkaller.appspotmail.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+b713bbf1471b mwifiex: cancel pcie/sdio work in remove/shutdown handler
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 1cf22e62e3dd..6e0af815f25e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3516,7 +3516,7 @@ static int __init init_mac80211_hwsim(void)
- 
- 	spin_lock_init(&hwsim_radio_lock);
- 
--	hwsim_wq = alloc_workqueue("hwsim_wq",WQ_MEM_RECLAIM,0);
-+	hwsim_wq = alloc_workqueue("hwsim_wq", 0, 0);
- 	if (!hwsim_wq)
- 		return -ENOMEM;
- 	rhashtable_init(&hwsim_radios_rht, &hwsim_rht_params);
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10109773/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
