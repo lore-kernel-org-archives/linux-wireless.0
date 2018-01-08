@@ -1,43 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:34044 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752100AbeARVUO (ORCPT
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:20342 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932349AbeAHQUV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 16:20:14 -0500
-Message-ID: <1516310411.410.57.camel@sipsolutions.net> (sfid-20180118_222018_850187_5BDA602E)
-Subject: Re: [PATCH] cfg80211: stop demanding lots of new stuff
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hugh Dickins <hughd@google.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 18 Jan 2018 22:20:11 +0100
-In-Reply-To: <alpine.LSU.2.11.1801181242280.14771@eggly.anvils> (sfid-20180118_220757_478148_167925B3)
-References: <alpine.LSU.2.11.1801171448510.5433@eggly.anvils>
-         (sfid-20180117_235601_216213_A3BA62CE) <1516258057.410.55.camel@sipsolutions.net>
-         <alpine.LSU.2.11.1801181242280.14771@eggly.anvils>
-         (sfid-20180118_220757_478148_167925B3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 8 Jan 2018 11:20:21 -0500
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
+ execution
+To: Dan Williams <dan.j.williams@intel.com>,
+        "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Zhang Rui <rui.zhang@intel.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <87y3lbpvzp.fsf@xmission.com>
+ <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Message-ID: <c2fd13f6-a2c9-d11f-d439-abb847ebed3c@wdc.com> (sfid-20180108_172111_165343_BB5C20DF)
+Date: Mon, 8 Jan 2018 08:20:19 -0800
+MIME-Version: 1.0
+In-Reply-To: <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-01-18 at 13:07 -0800, Hugh Dickins wrote:
-
-> Perhaps you did not try on a system without SYSTEM_DATA_VERIFICATION
-> already enabled - that "select SYSTEM_DATA_VERIFICATION" seems to be
-> taking effect even when CFG80211_REQUIRE_SIGNED_REGDB is not enabled,
-> and pulls in a boatload.
-
-I kinda know actually.
-
-> In fact, I cannot even build the resulting config, without scurrying
-> around to update userspace with stuff I never needed before:
+On 01/05/18 22:30, Dan Williams wrote:
+> On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:
+>> Please expand this.
+>>
+>> It is not clear what the static analysis is looking for.  Have a clear
+>> description of what is being fixed is crucial for allowing any of these
+>> changes.
+>>
+>> For the details given in the change description what I read is magic
+>> changes because a magic process says this code is vulnerable.
 > 
->   HOSTCC  scripts/extract-cert
-> scripts/extract-cert.c:21:25: fatal error: openssl/bio.h: No such file or directory
+> Yes, that was my first reaction to the patches as well, I try below to
+> add some more background and guidance, but in the end these are static
+> analysis reports across a wide swath of sub-systems. It's going to
+> take some iteration with domain experts to improve the patch
+> descriptions, and that's the point of this series, to get the better
+> trained eyes from the actual sub-system owners to take a look at these
+> reports.
 
-Fun.
+More information about what the static analysis is looking for would 
+definitely be welcome.
 
-I think the only thing we can do is make REGDB_AS_FW a (new) Kconfig
-option that you can then turn off.
+Additionally, since the analysis tool is not publicly available, how are 
+authors of new kernel code assumed to verify whether or not their code 
+needs to use nospec_array_ptr()? How are reviewers of kernel code 
+assumed to verify whether or not nospec_array_ptr() is missing where it 
+should be used?
 
-johannes
+Since this patch series only modifies the upstream kernel, how will 
+out-of-tree drivers be fixed, e.g. the nVidia driver and the Android 
+drivers?
+
+Thanks,
+
+Bart.
