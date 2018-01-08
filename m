@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47894 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753739AbeAZQNF (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:43483 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755975AbeAHKaQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 11:13:05 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: zajec5@gmail.com, hauke@hauke-m.de, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] bcma: Replace mdelay with usleep_range in bcma_pmu_resources_init
-References: <1516958011-303-1-git-send-email-baijiaju1990@gmail.com>
-Date: Fri, 26 Jan 2018 18:13:01 +0200
-In-Reply-To: <1516958011-303-1-git-send-email-baijiaju1990@gmail.com> (Jia-Ju
-        Bai's message of "Fri, 26 Jan 2018 17:13:31 +0800")
-Message-ID: <87y3kkr436.fsf@purkki.adurom.net> (sfid-20180126_171325_534759_AAAF836E)
+        Mon, 8 Jan 2018 05:30:16 -0500
+Received: by mail-wm0-f50.google.com with SMTP id n138so13114549wmg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jan 2018 02:30:16 -0800 (PST)
+Date: Mon, 8 Jan 2018 11:30:12 +0100
+From: William Dauchy <wdauchy@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: brcmfmac: set p2p_disc error on BCM4350
+Message-ID: <20180108103012.GA1957@paf> (sfid-20180108_113043_350764_5C841C91)
+References: <CAJ75kXYLOV8aVZpftBFRbMv=KCaxCoQpJFaL0m0QDjVOytq3Vg@mail.gmail.com>
+ <5A533A88.1000804@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5A533A88.1000804@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jia-Ju Bai <baijiaju1990@gmail.com> writes:
+Hello Arend,
 
-> After checking all possible call chains to bcma_pmu_resources_init() here,
-> my tool finds that this function is never called in atomic context,
-> namely never in an interrupt handler or holding a spinlock.
-> Thus mdelay can be replaced with usleep_range to avoid busy wait.
->
-> This is found by a static analysis tool named DCNS written by myself.
->
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-> ---
->  drivers/bcma/driver_chipcommon_pmu.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-> index f1eb4d3..478948c 100644
-> --- a/drivers/bcma/driver_chipcommon_pmu.c
-> +++ b/drivers/bcma/driver_chipcommon_pmu.c
-> @@ -203,7 +203,7 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
->  	 * Add some delay; allow resources to come up and settle.
->  	 * Delay is required for SoC (early init).
->  	 */
-> -	mdelay(2);
-> +	usleep_range(1500, 2000);
+Thanks for your quick answer.
 
-I would like to have an ack from someone familiar with bcma before I
-apply this.
+On Mon, Jan 08, 2018 at 10:31:52AM +0100, Arend van Spriel wrote:
+> This has been reported before, but not been able to look into it. Diving
+> into firmware it seems that error can only occur if the mac address for the
+> p2pdev interface is already used. So if possible can you rebuild the driver
+> with the patch below applied and provide dmesg output and output of
+> 'ifconfig -a'.
+> 
+> Regards,
+> Arend
+> ---8<----------------------------------------------------------------
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> b/drivers/n
+> index 2ee5413..f96ad37 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> @@ -2065,6 +2065,7 @@ static struct wireless_dev
+> *brcmf_p2p_create_p2pdev(struc
+>         int err;
+>         u32 bsscfgidx;
+> 
+> +       brcmf_err("enter: mac=%pM\n", addr);
+>         if (p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
+>                 return ERR_PTR(-ENOSPC);
+> 
+>
 
+Here is my brcmfmac dmesg output with patch applied
+(please tell me if you need complete dmesg)
+
+brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4350-pcie.bin for chip 0x004350(17232) rev 0x000008
+brcmfmac 0000:3a:00.0: Direct firmware load for brcm/brcmfmac4350-pcie.txt failed with error -2
+brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015 06:16:26 version 7.35.180.119 (r594535) FWID 01-e791c176
+brcmfmac 0000:3a:00.0 wlp58s0: renamed from wlan0
+brcmfmac: brcmf_p2p_create_p2pdev: enter: mac=00:00:00:00:00:00
+brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
+brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlp58s0 type 10 failed: err=-16
+
+ifconfig shows:
+
+wlp58s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.18.77  netmask 255.255.255.0  broadcast 192.168.18.255
+        inet6 fe80::3517:e1be:5bc7:899  prefixlen 64  scopeid 0x20<link>
+        ether 30:52:cb:83:71:33  txqueuelen 1000  (Ethernet)
+        RX packets 26557  bytes 34149730 (32.5 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 14965  bytes 2298777 (2.1 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+Best,
 -- 
-Kalle Valo
+William
