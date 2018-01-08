@@ -1,53 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:54659 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751514AbeA2DBV (ORCPT
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:38159 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755541AbeAHSdn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Jan 2018 22:01:21 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 06/10] rtlwifi: Fix VHT NSS in RC
-Date: Mon, 29 Jan 2018 03:01:10 +0000
-Message-ID: <1517194870.2618.5.camel@realtek.com> (sfid-20180129_040204_230847_9EE52B6B)
-References: <20180126074645.27201-1-pkshih@realtek.com>
-         <20180126074645.27201-7-pkshih@realtek.com>
-         <940c2aa9-67c3-7058-7e25-665a56eb4b1b@lwfinger.net>
-In-Reply-To: <940c2aa9-67c3-7058-7e25-665a56eb4b1b@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 8 Jan 2018 13:33:43 -0500
+Date: Mon, 8 Jan 2018 19:33:37 +0100
+From: Ingo Molnar <mingo@kernel.org>
+To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Alan Cox <alan.cox@intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Zhang Rui <rui.zhang@intel.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
+ execution
+Message-ID: <20180108183337.iq7xjxf2dkbkzig6@gmail.com> (sfid-20180108_193636_106382_E720B406)
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <87y3lbpvzp.fsf@xmission.com>
+ <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
+ <20180108100836.GF3040@hirez.programming.kicks-ass.net>
+ <20180108114342.3b2d99fb@alans-desktop>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180108114342.3b2d99fb@alans-desktop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU2F0LCAyMDE4LTAxLTI3IGF0IDEzOjM5IC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IE9uIDAxLzI2LzIwMTggMDE6NDYgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiBG
-cm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPsKgDQo+ID4gTlNTIGlz
-IGEgYXJndW1lbnQgb2YgaGlnaGVzdCByYXRlIGluIFJDLCBhbmQgaXQgb2NjdXBpZXMgYml0IDQt
-NyBzbyB1c2UNCj4gPiBpZWVlODAyMTFfcmF0ZV9zZXRfdmh0KCkgdG8gZmlsbCB0aGUgdmFsdWVz
-LiBTaW5jZSBpdCBnb3QgY29ycmVjdCByYXRlDQo+ID4gaW5kZXgsIHdlIGRvbid0IG5lZWQgdG8g
-Y2hlY2sgY2hpcHMgdG8gYXNzaWduIE5TUyBpbiBzZXQgZnVuY3Rpb24gYW55bW9yZS4NCj4gPsKg
-DQo+ID4gU2lnbmVkLW9mZi1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQo+
-ID4gLS0tDQo+ID7CoMKgwqBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcmMu
-YyB8IDQ5ICsrKysrKysrKysrKysrKysrKysrKysrKysNCj4gLS0tLS0tDQo+ID7CoMKgwqAxIGZp
-bGUgY2hhbmdlZCwgNDAgaW5zZXJ0aW9ucygrKSwgOSBkZWxldGlvbnMoLSkNCj4gPsKgDQo+ID4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9yYy5jDQo+
-IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3JjLmMNCj4gPiBpbmRleCBk
-MWNiN2Q0MDU2MTguLjM5NmJlZDhkM2Q1MSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcmMuYw0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL3JlYWx0ZWsvcnRsd2lmaS9yYy5jDQo+ID4gQEAgLTQyLDYgKzQyLDE3IEBAIHN0YXRpYyB1
-OCBfcnRsX3JjX2dldF9oaWdoZXN0X3JpeChzdHJ1Y3QgcnRsX3ByaXYNCj4gKnJ0bHByaXYsDQo+
-ID7CoMKgwqAJc3RydWN0IHJ0bF9waHkgKnJ0bHBoeSA9ICYocnRscHJpdi0+cGh5KTsNCj4gPsKg
-wqDCoAlzdHJ1Y3QgcnRsX3N0YV9pbmZvICpzdGFfZW50cnkgPSBOVUxMOw0KPiA+wqDCoMKgCXUx
-NiB3aXJlbGVzc19tb2RlID0gMDsNCj4gPiArCXU4IG5zczsNCj4gPiArCXN0cnVjdCBpZWVlODAy
-MTFfdHhfcmF0ZSByYXRlOw0KPiA+ICsNCj4gPiArCWlmIChnZXRfcmZfdHlwZShydGxwaHkpID49
-IFJGXzRUNFIpDQo+ID4gKwkJbnNzID0gNDsNCj4gPiArCWVsc2UgaWYgKGdldF9yZl90eXBlKHJ0
-bHBoeSkgPj0gUkZfM1QzUikNCj4gPiArCQluc3MgPSAzOw0KPiA+ICsJZWxzZSBpZiAoZ2V0X3Jm
-X3R5cGUocnRscGh5KSA+PSBSRl8yVDJSKQ0KPiA+ICsJCW5zcyA9IDI7DQo+ID4gKwllbHNlDQo+
-ID4gKwkJbnNzID0gMTsNCj7CoA0KPiBBcyBhIGdlbmVyYWwgcnVsZSwgSSB0aGluayB0aGF0IGlm
-IC4uLiBlbHNlIGlmIC4uLiBlbHNlIGlmIC4uLiBlbHNlIC4uLsKgDQo+IGNvbnN0cnVjdGlvbnMg
-c2hvdWxkIGJlIGNoYW5nZWQgdG8gc3dpdGNoIHN0YXRlbWVudHMuIFRoaXMgb25lIGlzIHNpbXBs
-ZQ0KPiBlbm91Z2jCoA0KPiB0aGF0IHRoZXJlIHdpbGwgYmUgbm8gY29tcGxpY2F0aW9ucywgYnV0
-IGtlZXAgdGhpcyBpbiBtaW5kIGluIHRoZSBmdXR1cmUuDQo+wqANCg0KVGhlIGNvZGUgYWxzbyBj
-b25mdXNlZCBtZSwgc28gSSdsbCBjaGFuZ2UgdGhlbSB0byAnc3dpdGNoLi4uY2FzZScgaW4gdjIu
-DQoNClBLDQoNCg==
+
+* Alan Cox <gnomes@lxorguk.ukuu.org.uk> wrote:
+
+> On Mon, 8 Jan 2018 11:08:36 +0100
+> Peter Zijlstra <peterz@infradead.org> wrote:
+> 
+> > On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
+> > > On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:  
+> > > > In at least one place (mpls) you are patching a fast path.  Compile out
+> > > > or don't load mpls by all means.  But it is not acceptable to change the
+> > > > fast path without even considering performance.  
+> > > 
+> > > Performance matters greatly, but I need help to identify a workload
+> > > that is representative for this fast path to see what, if any, impact
+> > > is incurred. Even better is a review that says "nope, 'index' is not
+> > > subject to arbitrary userspace control at this point, drop the patch."  
+> > 
+> > I think we're focussing a little too much on pure userspace. That is, we
+> > should be saying under the attackers control. Inbound network packets
+> > could equally be under the attackers control.
+> 
+> Inbound network packets don't come with a facility to read back and do
+> cache timimg. [...]
+
+But the reply packets can be measured on the sending side, and the total delay 
+timing would thus carry the timing information.
+
+Yes, a lot of noise gets added that way if we think 'packet goes through the 
+Internet' - but with gigabit local network access or even through localhost
+access a lot of noise can be removed as well.
+
+It's not as dangerous as a near instantaneous local attack, but 'needs a day of 
+runtime to brute-force through localhost or 10GigE' is still worrying in many 
+real-world security contexts.
+
+So I concur with Peter that we should generally consider making all of our 
+responses to external data (maybe with the exception of pigeon post messages) 
+Spectre-safe.
+
+Thanks,
+
+	Ingo
