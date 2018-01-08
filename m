@@ -1,207 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36195 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753209AbeAaVdp (ORCPT
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:42470 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752659AbeAHRoI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 16:33:45 -0500
-Received: by mail-pg0-f67.google.com with SMTP id k68so11131858pga.3
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jan 2018 13:33:45 -0800 (PST)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH 5/6] nl80211: Implement TX of control port frames
-Date: Wed, 31 Jan 2018 15:33:28 -0600
-Message-Id: <20180131213329.25322-6-denkenz@gmail.com> (sfid-20180131_223349_476233_D75A8C24)
-In-Reply-To: <20180131213329.25322-1-denkenz@gmail.com>
-References: <20180131213329.25322-1-denkenz@gmail.com>
+        Mon, 8 Jan 2018 12:44:08 -0500
+Received: by mail-yw0-f194.google.com with SMTP id z132so4595339ywd.9
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jan 2018 09:44:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20180108173523.B23C360B22@smtp.codeaurora.org>
+References: <18a56326d68a7d53f3197e450cae0e28382d8d2c.1513252573.git.lorenzo.bianconi@redhat.com>
+ <20180108173523.B23C360B22@smtp.codeaurora.org>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date: Mon, 8 Jan 2018 18:44:07 +0100
+Message-ID: <CAJ0CqmWEgC07iBkkt92fKTpagMx+_oim_3qcPoc=B6ttsUzoOA@mail.gmail.com> (sfid-20180108_184412_289545_38650D12)
+Subject: Re: [1/2] mt76: fix possible NULL pointer dereferencing in mt76x2_ampdu_action()
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Felix Fietkau <nbd@nbd.name>, dan.carpenter@oracle.com,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit implements the TX side of NL80211_CMD_CONTROL_PORT_FRAME.
-Userspace provides the raw EAPoL frame using NL80211_ATTR_FRAME.
-Userspace should also provide the destination address and the protocol
-type to use when sending the frame.  This is used to implement TX of
-Pre-authentication frames.  If CONTROL_PORT_ETHERTYPE_NO_ENCRYPT is
-specified, then the driver will be asked not to encrypt the outgoing
-frame.
+> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+>
+>> Initialize mt76_txq pointer after ieee80211_txq pointer check.
+>> Remove space after the pointer cast
+>>
+>> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>
+> What am I supposed to do with this and patch 2? Drop?
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/net/cfg80211.h  |  9 +++++++
- net/wireless/nl80211.c  | 63 ++++++++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/rdev-ops.h | 15 ++++++++++++
- net/wireless/trace.h    | 25 ++++++++++++++++++++
- 4 files changed, 111 insertions(+), 1 deletion(-)
+Hi Kalle,
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 60a38543b830..dc6d37b40574 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2961,6 +2961,9 @@ struct cfg80211_external_auth_params {
-  *
-  * @external_auth: indicates result of offloaded authentication processing from
-  *     user space
-+ *
-+ * @tx_control_port: TX a control port frame (EAPoL).  The noencrypt parameter
-+ *	tells the driver that the frame should not be encrypted.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3256,6 +3259,12 @@ struct cfg80211_ops {
- 			   const u8 *aa);
- 	int     (*external_auth)(struct wiphy *wiphy, struct net_device *dev,
- 				 struct cfg80211_external_auth_params *params);
-+
-+	int	(*tx_control_port)(struct wiphy *wiphy,
-+				   struct net_device *dev,
-+				   const u8 *buf, size_t len,
-+				   const u8 *dest, const u16 proto,
-+				   const bool noencrypt);
- };
- 
- /*
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 840dada2cca3..ed5752a99951 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -12527,6 +12527,60 @@ static int nl80211_external_auth(struct sk_buff *skb, struct genl_info *info)
- 	return rdev_external_auth(rdev, dev, &params);
- }
- 
-+static int nl80211_tx_control_port(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	const u8 *buf;
-+	size_t len;
-+	u8 *dest;
-+	u16 proto;
-+	bool noencrypt;
-+	int err;
-+
-+	if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211))
-+		return -EOPNOTSUPP;
-+
-+	if (!rdev->ops->tx_control_port)
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_FRAME] ||
-+	    !info->attrs[NL80211_ATTR_MAC] ||
-+	    !info->attrs[NL80211_ATTR_CONTROL_PORT_ETHERTYPE])
-+		return -EINVAL;
-+
-+	wdev_lock(wdev);
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_STATION:
-+		if (wdev->current_bss)
-+			break;
-+		err = -ENOTCONN;
-+		goto out;
-+	default:
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	wdev_unlock(wdev);
-+
-+	buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
-+	len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
-+	dest = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+	proto = nla_get_u16(info->attrs[NL80211_ATTR_CONTROL_PORT_ETHERTYPE]);
-+	noencrypt =
-+		nla_get_flag(info->attrs[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT]);
-+
-+	return rdev_tx_control_port(rdev, dev, buf, len,
-+				    dest, cpu_to_be16(proto), noencrypt);
-+
-+ out:
-+	wdev_unlock(wdev);
-+	return err;
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -13430,7 +13484,14 @@ static const struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
--
-+	{
-+		.cmd = NL80211_CMD_CONTROL_PORT_FRAME,
-+		.doit = nl80211_tx_control_port,
-+		.policy = nl80211_policy,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_family nl80211_fam __ro_after_init = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 84f23ae015fc..ced82e2350f4 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -714,6 +714,21 @@ static inline int rdev_mgmt_tx(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
-+static inline int rdev_tx_control_port(struct cfg80211_registered_device *rdev,
-+				       struct net_device *dev,
-+				       const void *buf, size_t len,
-+				       const u8 *dest, u16 proto,
-+				       const bool noencrypt)
-+{
-+	int ret;
-+	trace_rdev_tx_control_port(&rdev->wiphy, dev, buf, len,
-+				   dest, proto, noencrypt);
-+	ret = rdev->ops->tx_control_port(&rdev->wiphy, dev, buf, len,
-+					 dest, proto, noencrypt);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
- static inline int
- rdev_mgmt_tx_cancel_wait(struct cfg80211_registered_device *rdev,
- 			 struct wireless_dev *wdev, u64 cookie)
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 24e84dfe54fd..d781aa68ac07 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1882,6 +1882,31 @@ TRACE_EVENT(rdev_mgmt_tx,
- 		  BOOL_TO_STR(__entry->dont_wait_for_ack))
- );
- 
-+TRACE_EVENT(rdev_tx_control_port,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 const u8 *buf, size_t len, const u8 *dest, u16 proto,
-+		 bool unencrypted),
-+	TP_ARGS(wiphy, netdev, buf, len, dest, proto, unencrypted),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(dest)
-+		__field(u16, proto)
-+		__field(bool, unencrypted)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(dest, dest);
-+		__entry->proto = proto;
-+		__entry->unencrypted = unencrypted;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT ","
-+		  " proto: %x, unencrypted: %s",
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(dest),
-+		  __entry->proto, BOOL_TO_STR(__entry->unencrypted))
-+);
-+
- TRACE_EVENT(rdev_set_noack_map,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
- 		 u16 noack_map),
--- 
-2.13.5
+What do you mean? Why drop?
+
+Regards,
+Lorenzo
+
+>
+> --
+> https://patchwork.kernel.org/patch/10111937/
+>
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+>
