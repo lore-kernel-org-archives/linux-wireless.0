@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38078 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:37046 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755937AbeAIIHI (ORCPT
+        with ESMTP id S932282AbeAHPqz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 03:07:08 -0500
+        Mon, 8 Jan 2018 10:46:55 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v2,6/9] wil6210: add support for headroom configuration
+Subject: Re: rt2x00: Delete an error message for a failed memory allocation in
+ rt2x00queue_allocate()
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1513270393-919-7-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513270393-919-7-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Message-Id: <20180109080707.B05B66081B@smtp.codeaurora.org> (sfid-20180109_090713_885588_28916B36)
-Date: Tue,  9 Jan 2018 08:07:07 +0000 (UTC)
+In-Reply-To: <cdeaa8a2-06bb-10e9-05d7-f531c00eef5d@users.sourceforge.net>
+References: <cdeaa8a2-06bb-10e9-05d7-f531c00eef5d@users.sourceforge.net>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Message-Id: <20180108154654.7975660215@smtp.codeaurora.org> (sfid-20180108_164720_016621_4BC03794)
+Date: Mon,  8 Jan 2018 15:46:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+SF Markus Elfring <elfring@users.sourceforge.net> wrote:
 
-> Add module parameter for configuring the headroom size
-> in the skb allocation.
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Fri, 29 Dec 2017 22:11:42 +0100
 > 
-> Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Omit an extra message for a memory allocation failure in this function.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Why?
+Patch applied to wireless-drivers-next.git, thanks.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_log_does_not_answer_why
-
-And I'm a bit skeptic about this, controlling headroom via a module parameter
-is not really making any sense to me.
+cd7c0cdab7ff rt2x00: Delete an error message for a failed memory allocation in rt2x00queue_allocate()
 
 -- 
-https://patchwork.kernel.org/patch/10112703/
+https://patchwork.kernel.org/patch/10137399/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
