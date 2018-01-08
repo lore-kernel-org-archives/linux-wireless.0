@@ -1,125 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f43.google.com ([209.85.160.43]:34333 "EHLO
-        mail-pl0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932230AbeAOJM1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39956 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755200AbeAHNl4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 04:12:27 -0500
-Received: by mail-pl0-f43.google.com with SMTP id d21so3240574pll.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 01:12:27 -0800 (PST)
+        Mon, 8 Jan 2018 08:41:56 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Rakesh Pillai <pillair@qti.qualcomm.com>,
+        Govind Singh <govinds@qti.qualcomm.com>
+Subject: Re: [RFC v3 03/11] ath10k: per target configurablity of various items
+References: <20170917194013.8658-1-erik.stromdahl@gmail.com>
+        <20170917194013.8658-4-erik.stromdahl@gmail.com>
+        <87wp1eaiz0.fsf@kamboji.qca.qualcomm.com>
+        <c34f5c79-61a9-28b2-439c-f02045d06299@gmail.com>
+Date: Mon, 08 Jan 2018 15:41:51 +0200
+In-Reply-To: <c34f5c79-61a9-28b2-439c-f02045d06299@gmail.com> (Erik
+        Stromdahl's message of "Thu, 28 Dec 2017 13:43:10 +0100")
+Message-ID: <87wp0s31sw.fsf@kamboji.qca.qualcomm.com> (sfid-20180108_144200_711428_7F93FFA0)
 MIME-Version: 1.0
-In-Reply-To: <1516006661.410.6.camel@sipsolutions.net>
-References: <089e08282cc03493040562b0079c@google.com> <1516006661.410.6.camel@sipsolutions.net>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Mon, 15 Jan 2018 10:12:06 +0100
-Message-ID: <CACT4Y+aO8kwS+ketv3rr0x3EecZ6j+7ep8Ag6PuTirO00SqRtw@mail.gmail.com> (sfid-20180115_101311_424928_B75D9CEC)
-Subject: Re: WARNING in rfkill_alloc
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: syzbot <syzbot+1ddfb3357e1d7bb5b5d3@syzkaller.appspotmail.com>,
-        David Miller <davem@davemloft.net>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 15, 2018 at 9:57 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi,
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+
+> On 2017-12-22 16:19, Kalle Valo wrote:
 >
->> RIP: 0010:rfkill_alloc+0x2c0/0x380 net/rfkill/core.c:930
+>> I was a bit torn about this, I definitely see the need for this but on
+>> the other hand it creates duplicate data (for example two entries for
+>> QCA9377 chip). I guess this is the right approach, at least I cannot
+>> come up anything better.
+>>
+>> But this patch should be split into two:
+>>
+>> 1) add bus field to struct ath10k_hw_params
+>>
+>> 2) add max_num_peers field to struct ath10k_hw_params
+>>
+>> And it seems 2) is already implemented in commit 9f2992fea580 ("ath10k:
+>> wmi: get wmi init parameter values from hw params"), so hopefully we
+>> only need 1) anymore.
+>>
 >
-> This seems pretty obvious - there's no name given.
+> Before commit 9f2992fea580a48135591873e5e3ac7e01444207,
+> TARGET_TLV_NUM_PEERS was used both in the WMI TLV init command
+> and as the value of *max_num_peers* in *struct ath10k* (ar->max_num_peers).
 >
->>   wiphy_new_nm+0x159c/0x21d0 net/wireless/core.c:487
->>   ieee80211_alloc_hw_nm+0x4b4/0x2140 net/mac80211/main.c:531
+> commit 9f2992fea580a48135591873e5e3ac7e01444207 does not set
+> *ar->max_num_peers* to the value of *ar->hw_param->num_peers*.
 >
-> which is strange, because we try to validate the name here.
+> Is this correct?
 >
-> Can you help me read this?
+> As I see it, there is a possible mismatch between what is written
+> to the device in the WMI init message and the value of *ar->max_num_peers*.
 >
-> sendmsg$nl_generic(r1, &(0x7f0000b3e000-0x38)={&(0x7f0000d4a000-
-> 0xc)={0x10, 0x0, 0x0, 0x0}, 0xc,
-> &(0x7f0000007000)={&(0x7f00001ca000)={0x14, 0x1c, 0x109,
-> 0xffffffffffffffff, 0xffffffffffffffff, {0x4, 0x0, 0x0}, []}, 0x14},
-> 0x1, 0x0, 0x0, 0x0}, 0x0)
+> Do we still need *max_num_peers* in *struct ath10k* now that we have the
+> *num_peers* member in *struct ath10k_hw_params*?
+
+A good point, I didn't thought of that during review. No time to
+investigate this right now, but maybe Rakesh and Govind (CCed) can
+comment?
+
+> I am currently rewriting my HL patches and I was thinking about adding
+> a separate patch related to this.
+
+Yeah, a separate patch to sort that out is a good idea.
+
+>>> --- a/drivers/net/wireless/ath/ath10k/core.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/core.c
+>>> @@ -1663,9 +1663,19 @@ static int ath10k_init_hw_params(struct ath10k *ar)
+>>>   	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
+>>>   		hw_params = &ath10k_hw_params_list[i];
+>>>   -		if (hw_params->id == ar->target_version &&
+>>> -		    hw_params->dev_id == ar->dev_id)
+>>> -			break;
+>>> +		if (ar->is_high_latency) {
+>>> +			/* High latency devices will use different fw depending
+>>> +			 * on if it is a USB or SDIO device.
+>>> +			 */
+>>> +			if (hw_params->bus == ar->hif.bus &&
+>>> +			    hw_params->id == ar->target_version &&
+>>> +			    hw_params->dev_id == ar->dev_id)
+>>> +				break;
+>>> +		} else {
+>>> +			if (hw_params->id == ar->target_version &&
+>>> +			    hw_params->dev_id == ar->dev_id)
+>>> +				break;
+>>> +		}
+>>
+>> I don't like the is_high_latency test here at all. The bus field should
+>> be checked with all entries, not just high latency ones. And because of
+>> this even most of the hw_param bus field entries were not initialised.
+>>
+>> So only thing to do is to initialise the bus field for all the entries
+>> and the ugly test here can be removed. Just remember that QCA4019 uses
+>> AHB, I think all the rest is PCI. Or do we have AHB devices supported?
 >
-> I've reformatted it as
->
-> sendmsg$nl_generic(
-> r1,
-> &(0x7f0000b3e000-0x38)={
-> addr=   &(0x7f0000d4a000-0xc)={
->                 0x10, 0x0, 0x0, 0x0
->         },
-> addrlen=0xc,
-> vec=    &(0x7f0000007000)={
->         ptr=    &(0x7f00001ca000)={
->                         0x14, 0x1c, 0x109, 0xffffffffffffffff,
-> 0xffffffffffffffff, {0x4, 0x0, 0x0}, []
->                 },
->         len=    0x14
->         },
-> vlen=   0x1,
-> ctrl=   0x0,
-> ctrllen=0x0,
-> f=      0x0
-> },
-> 0x0
-> )
->
-> but am still getting lost - what exactly is the *byte* sequence inside
-> the (full) message (including headers)?
+> I noticed that there has been introduced a new bus type (SNOC).
+> Do you know which devices are SNOC devices?
 
-Hi,
+SNOC is for wcn3990.
 
-I think you decoded it correctly. The netlink message is:
+> Btw, what the heck is SNOC anyway?
 
-{0x14, 0x1c, 0x109, 0xffffffffffffffff, 0xffffffffffffffff, {0x4, 0x0, 0x0}, []}
+I have forgetten already what the acronym meant but it's basically some
+sort of shared memory communication method with the firmware.
 
-0x14 length, 0x1c is type, etc
-
-These numbers are input data for there descriptions:
-https://github.com/google/syzkaller/blob/master/sys/linux/socket_netlink.txt
-which generally match C structures as you expect.
-
-However, there can be some surprising things, for example, executing
-one ioctl/setsockopt with data meant for another one, or these
-0xffffffffffffffff are actually mean 0 (for involved reasons), or we
-can simply have bugs in these descriptions so they don't match C
-structures and then all data is messed/shifted.
-
-If this representation does not make sense to you right away, your
-best bet is looking at/running the C reproducer where you can see true
-data layout:
-
-  *(uint64_t*)0x20b3dfc8 = 0x20d49ff4;
-  *(uint32_t*)0x20b3dfd0 = 0xc;
-  *(uint64_t*)0x20b3dfd8 = 0x20007000;
-  *(uint64_t*)0x20b3dfe0 = 1;
-  *(uint64_t*)0x20b3dfe8 = 0;
-  *(uint64_t*)0x20b3dff0 = 0;
-  *(uint32_t*)0x20b3dff8 = 0;
-  *(uint16_t*)0x20d49ff4 = 0x10;
-  *(uint16_t*)0x20d49ff6 = 0;
-  *(uint32_t*)0x20d49ff8 = 0;
-  *(uint32_t*)0x20d49ffc = 0;
-  *(uint64_t*)0x20007000 = 0x201ca000;
-  *(uint64_t*)0x20007008 = 0x14;
-  *(uint32_t*)0x201ca000 = 0x14;
-  *(uint16_t*)0x201ca004 = 0x1c;
-  *(uint16_t*)0x201ca006 = 0x109;
-  *(uint32_t*)0x201ca008 = 0;
-  *(uint32_t*)0x201ca00c = 0;
-  *(uint8_t*)0x201ca010 = 4;
-  *(uint8_t*)0x201ca011 = 0;
-  *(uint16_t*)0x201ca012 = 0;
-  syscall(__NR_sendmsg, r[1], 0x20b3dfc8, 0);
-
-
-> Ah, then again, now I see the fault injection - I guess dev_set_name()
-> just failed and we didn't check the return value, will fix that.
-
-Yes, it's highly likely the root cause. The raw.log file shows there
-there was an immediately preceding fault in kmalloc in the same
-process, in a close stack.
+-- 
+Kalle Valo
