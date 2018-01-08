@@ -1,65 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:24964 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755666AbeAJLOY (ORCPT
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:40376 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757011AbeAHOQX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 06:14:24 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 9/9] staging: wilc1000: removed enum typedef BUS_RELEASE_T
-Date: Wed, 10 Jan 2018 16:42:51 +0530
-Message-ID: <1515582771-28408-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180110_121447_474895_35CD1317)
-In-Reply-To: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
-References: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 8 Jan 2018 09:16:23 -0500
+Received: by mail-qt0-f195.google.com with SMTP id u42so13716274qte.7
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Jan 2018 06:16:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87bmi45yim.fsf@kamboji.qca.qualcomm.com>
+References: <20171110025415.7854-1-drake@endlessm.com> <87y3na7eei.fsf@qca.qualcomm.com>
+ <CAD8Lp47uJbB27xZPH3dDqNuJcaNCGEsbpdqfK-h4+nzVLGk1aw@mail.gmail.com>
+ <87bmk5hx9x.fsf@kamboji.qca.qualcomm.com> <CAD8Lp455GLxVHves8gNbfm9dMUmhj1DOMyeiOk5Td7m2rAxYFA@mail.gmail.com>
+ <CAD8Lp44BWhK7j5dKzHqqXTaR4uG9=-6oJd2NEsdM8oQYw0D8Bw@mail.gmail.com> <87bmi45yim.fsf@kamboji.qca.qualcomm.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Mon, 8 Jan 2018 16:16:21 +0200
+Message-ID: <CAHp75VchLbC5qYpxqh0qoxsS9X27Jyn8MA5aJZHw+wToqJJOAg@mail.gmail.com> (sfid-20180108_151629_113031_F9873AB1)
+Subject: Re: [v2] ath9k: add MSI support
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Daniel Drake <drake@endlessm.com>,
+        Russell Hu <rhu@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Ryan Hsu <ryanhsu@qti.qualcomm.com>,
+        Robert Chang <rwchang@qti.qualcomm.com>,
+        Aeolus Yang <aeolus@qti.qualcomm.com>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux@endlessm.com" <linux@endlessm.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "andy@infradead.org" <andy@infradead.org>,
+        "acelan.kao@canonical.com" <acelan.kao@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes enum typedef BUS_RELEASE_T and define
-"enum bus_release" to use instead of typedef.
+On Mon, Jan 8, 2018 at 2:24 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> (Adding AceLan)
+>
+> Daniel Drake <drake@endlessm.com> writes:
+>
+>> On Wed, Nov 15, 2017 at 7:38 AM, Daniel Drake <drake@endlessm.com> wrote:
+>>> On Tue, Nov 14, 2017 at 8:15 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>>>> Can't be fixed in firmware, but it would be good to have confirmation
+>>>>> of the hardware behavivour, and maybe some other solution is possible?
+>>>>> Are you following this up within Qualcomm?
+>>>>
+>>>> No time to do that right now, sorry.
+>>>
+>>> I got several autoresponders from people on this thread from Qualcomm
+>>> Taiwan. Would it be useful for us to drop off a sample of the affected
+>>> product at your Taipei or Hsinchu office so that you can investigate
+>>> further?
+>>
+>> Ping - how can we collaborate on this?
+>
+> Are you asking me? While looking at my todo list for this year I doubt I
+> can find time to help with the MSI implementation or bugfixing.
+>
+> But my plan is that first I would apply Russel's patch which makes it
+> possible to enable MSI with a module parameter:
+>
+> https://patchwork.kernel.org/patch/9999249/
 
-checkpatch.pl not to add new typedef warning is fixed with this patch.
+Just in case it was missed during review:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c    | 2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+The variables like
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 80a5a0b..a2b26ec 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -13,7 +13,7 @@ static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
- 		chip_wakeup(wilc);
- }
- 
--static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
-+static inline void release_bus(struct wilc *wilc, enum bus_release release)
- {
- 	if (release == RELEASE_ALLOW_SLEEP)
- 		chip_allow_sleep(wilc);
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 65cb53d..c1483c8 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -148,10 +148,10 @@ enum bus_acquire {
- 	ACQUIRE_AND_WAKEUP	= 1,
- };
- 
--typedef enum {
-+enum bus_release {
- 	RELEASE_ONLY		= 0,
- 	RELEASE_ALLOW_SLEEP	= 1,
--} BUS_RELEASE_T;
-+};
- 
- enum {
- 	NO_SECURITY		= 0,
++ bool msi_enabled;
+
+usually are redundant because PCI core keeps track of MSI/MSI-X status
+(enabled/disabled)
+So, if there is no MSI-X involved or MSI-X is handled in the same way
+as MSI in the driver, one can use
+
+pci_dev_msi_enabled() instead.
+
+> Are everyone happy with this plan?
+
+Sounds reasonable.
+
 -- 
-2.7.4
+With Best Regards,
+Andy Shevchenko
