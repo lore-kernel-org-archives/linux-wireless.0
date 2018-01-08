@@ -1,36 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45904 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751041AbeAVNB4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48986 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932905AbeAHXvu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 08:01:56 -0500
-Message-ID: <1516626114.2508.27.camel@sipsolutions.net> (sfid-20180122_140220_373429_5774F2F5)
-Subject: Re: [PATCH 4/4] mac80211: implement cqm using rx data signal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: tamizhr@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com
-Date: Mon, 22 Jan 2018 14:01:54 +0100
-In-Reply-To: <1516174276-16789-5-git-send-email-tamizhr@codeaurora.org>
-References: <1516174276-16789-1-git-send-email-tamizhr@codeaurora.org>
-         <1516174276-16789-5-git-send-email-tamizhr@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 8 Jan 2018 18:51:50 -0500
+From: ryanhsu@codeaurora.org
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: ryanhsu@codeaurora.org
+Subject: [PATCH] ath10k: add sanity check to ie_len before parsing fw/board ie
+Date: Mon,  8 Jan 2018 15:51:01 -0800
+Message-Id: <1515455461-19286-1-git-send-email-ryanhsu@codeaurora.org> (sfid-20180109_005155_690330_8A7310AA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-01-17 at 13:01 +0530, tamizhr@codeaurora.org wrote:
-> 
-> +		if (!fast_rx->uses_rss) {
->  			ewma_signal_add(&sta->rx_stats_avg.signal,
->  					-status->signal);
-> +			sta->count_rx_signal++;
-> +			if (sta->count_rx_signal >=
-> +			    IEEE80211_STA_SIGNAL_AVE_MIN_COUNT)
-> +				ieee80211_sta_rx_signal_thold_check(rx);
-> +		}
-> 
-Obviously this also means that not all mac80211 drivers will get the
-feature, which also means we really do need a feature bit for it, and
-one that mac80211 can only set if the driver promised not to use RSS.
+From: Ryan Hsu <ryanhsu@codeaurora.org>
 
-johannes
+Validate ie_len after the alignment padding before access the buffer
+to avoid potential overflow.
+
+Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 51444d3..64713d1 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1276,7 +1276,10 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
+ 		len -= sizeof(*hdr);
+ 		data = hdr->data;
+ 
+-		if (len < ALIGN(ie_len, 4)) {
++		/* jump over the padding */
++		ie_len = ALIGN(ie_len, 4);
++
++		if (len < ie_len) {
+ 			ath10k_err(ar, "invalid length for board ie_id %d ie_len %zu len %zu\n",
+ 				   ie_id, ie_len, len);
+ 			ret = -EINVAL;
+@@ -1315,8 +1318,6 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
+ 			goto out;
+ 		}
+ 
+-		/* jump over the padding */
+-		ie_len = ALIGN(ie_len, 4);
+ 
+ 		len -= ie_len;
+ 		data += ie_len;
+@@ -1448,6 +1449,9 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 		len -= sizeof(*hdr);
+ 		data += sizeof(*hdr);
+ 
++		/* jump over the padding */
++		ie_len = ALIGN(ie_len, 4);
++
+ 		if (len < ie_len) {
+ 			ath10k_err(ar, "invalid length for FW IE %d (%zu < %zu)\n",
+ 				   ie_id, len, ie_len);
+@@ -1553,9 +1557,6 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 			break;
+ 		}
+ 
+-		/* jump over the padding */
+-		ie_len = ALIGN(ie_len, 4);
+-
+ 		len -= ie_len;
+ 		data += ie_len;
+ 	}
+-- 
+1.9.1
