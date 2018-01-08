@@ -1,87 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:32986 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754134AbeALBTx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48880 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754933AbeAHSQ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jan 2018 20:19:53 -0500
+        Mon, 8 Jan 2018 13:16:59 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: Felix Fietkau <nbd@nbd.name>, dan.carpenter@oracle.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: [1/2] mt76: fix possible NULL pointer dereferencing in mt76x2_ampdu_action()
+References: <18a56326d68a7d53f3197e450cae0e28382d8d2c.1513252573.git.lorenzo.bianconi@redhat.com>
+        <20180108173523.B23C360B22@smtp.codeaurora.org>
+        <CAJ0CqmWEgC07iBkkt92fKTpagMx+_oim_3qcPoc=B6ttsUzoOA@mail.gmail.com>
+Date: Mon, 08 Jan 2018 20:16:51 +0200
+In-Reply-To: <CAJ0CqmWEgC07iBkkt92fKTpagMx+_oim_3qcPoc=B6ttsUzoOA@mail.gmail.com>
+        (Lorenzo Bianconi's message of "Mon, 8 Jan 2018 18:44:07 +0100")
+Message-ID: <87o9m42p2k.fsf@kamboji.qca.qualcomm.com> (sfid-20180108_191703_003584_24BDCDB0)
 MIME-Version: 1.0
-In-Reply-To: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 11 Jan 2018 17:19:51 -0800
-Message-ID: <CA+55aFzNQ8CZ8iNcPXrCfyk=1edMiRGDA0fY0rd87BsFKBxgAw@mail.gmail.com> (sfid-20180112_022038_500354_0C24CA99)
-Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative execution
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        kernel-hardening@lists.openwall.com,
-        Peter Zijlstra <peterz@infradead.org>,
-        Alan Cox <alan.cox@intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "the arch/x86 maintainers" <x86@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Ingo Molnar <mingo@redhat.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 11, 2018 at 4:46 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+
+>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+>>
+>>> Initialize mt76_txq pointer after ieee80211_txq pointer check.
+>>> Remove space after the pointer cast
+>>>
+>>> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+>>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>>
+>> What am I supposed to do with this and patch 2? Drop?
 >
-> This series incorporates Mark Rutland's latest ARM changes and adds
-> the x86 specific implementation of 'ifence_array_ptr'. That ifence
-> based approach is provided as an opt-in fallback, but the default
-> mitigation, '__array_ptr', uses a 'mask' approach that removes
-> conditional branches instructions, and otherwise aims to redirect
-> speculation to use a NULL pointer rather than a user controlled value.
+> What do you mean? Why drop?
 
-Do you have any performance numbers and perhaps example code
-generation? Is this noticeable? Are there any microbenchmarks showing
-the difference between lfence use and the masking model?
+I didn't see Felix's ack, at least not on patchwork.
 
-Having both seems good for testing, but wouldn't we want to pick one in the end?
-
-Also, I do think that there is one particular array load that would
-seem to be pretty obvious: the system call function pointer array.
-
-Yes, yes, the actual call is now behind a retpoline, but that protects
-against a speculative BTB access, it's not obvious that it  protects
-against the mispredict of the __NR_syscall_max comparison in
-arch/x86/entry/entry_64.S.
-
-The act of fetching code is a kind of read too. And retpoline protects
-against BTB stuffing etc, but what if the _actual_ system call
-function address is wrong (due to mis-prediction of the system call
-index check)?
-
-Should the array access in entry_SYSCALL_64_fastpath be made to use
-the masking approach?
-
-                Linus
+-- 
+Kalle Valo
