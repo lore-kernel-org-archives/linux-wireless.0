@@ -1,106 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:41486 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752552AbeADU7y (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jan 2018 15:59:54 -0500
-Received: by mail-pg0-f66.google.com with SMTP id 77so1162259pgd.8
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jan 2018 12:59:54 -0800 (PST)
-Subject: Re: [PATCH v2 1/3] cfg80211/nl80211: Optional authentication offload
- to userspace
-To: Jouni Malinen <jouni@qca.qualcomm.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Srinivas Dasari <dasaris@qti.qualcomm.com>
-References: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <c2554a26-bbbc-3bd2-0091-06fc14e88946@gmail.com> (sfid-20180104_215958_410754_0912712A)
-Date: Thu, 4 Jan 2018 14:59:51 -0600
+Received: from www.llwyncelyn.cymru ([82.70.14.225]:32898 "EHLO fuzix.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756301AbeAHLqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Jan 2018 06:46:09 -0500
+Date: Mon, 8 Jan 2018 11:43:42 +0000
+From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Alan Cox <alan.cox@intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Zhang Rui <rui.zhang@intel.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
+ execution
+Message-ID: <20180108114342.3b2d99fb@alans-desktop> (sfid-20180108_124649_769831_0072AAE7)
+In-Reply-To: <20180108100836.GF3040@hirez.programming.kicks-ass.net>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <87y3lbpvzp.fsf@xmission.com>
+        <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
+        <20180108100836.GF3040@hirez.programming.kicks-ass.net>
 MIME-Version: 1.0
-In-Reply-To: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni, Johannes,
+On Mon, 8 Jan 2018 11:08:36 +0100
+Peter Zijlstra <peterz@infradead.org> wrote:
 
-<snip>> + *	User space uses the %NL80211_CMD_CONNECT command to the host 
-driver for
-> + *	triggering a connection. The host driver selects a BSS and further uses
-> + *	this interface to offload only the authentication part to the user
-> + *	space. Authentication frames are passed between the driver and user
-> + *	space through the %NL80211_CMD_FRAME interface. The status of
+> On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
+> > On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:  
+> > > In at least one place (mpls) you are patching a fast path.  Compile out
+> > > or don't load mpls by all means.  But it is not acceptable to change the
+> > > fast path without even considering performance.  
+> > 
+> > Performance matters greatly, but I need help to identify a workload
+> > that is representative for this fast path to see what, if any, impact
+> > is incurred. Even better is a review that says "nope, 'index' is not
+> > subject to arbitrary userspace control at this point, drop the patch."  
+> 
+> I think we're focussing a little too much on pure userspace. That is, we
+> should be saying under the attackers control. Inbound network packets
+> could equally be under the attackers control.
 
-So this implies userspace must pre-register for authentication 
-management frames, correct?  And other applications could register to 
-receive these frames as well?  Would it not be easier (and more secure) 
-to simply forward these directly to the application that triggered 
-CMD_CONNECT instead?
+Inbound network packets don't come with a facility to read back and do
+cache timimg. For the more general case, timing attacks on network
+activity are not exactly new, and you have to mitigate them in user space
+because most of them are about how many instructions you execute on each
+path. The ancient classic being telling if a user exists by seeing if the
+password was actually checked.
 
-> + *	authentication is further indicated by user space to the host driver
-> + *	with the %NL80211_CMD_EXTERNAL_AUTH command through
-> + *	%NL80211_ATTR_STATUS_CODE attribute. This enables the driver to proceed
-> + *	with association on successful authentication. Driver shall use this
-> + *	%NL80211_ATTR_STATUS_CODE attribute to report the connect result to
-> + *	user space on an authentication failure.
-> + *
->    * @NL80211_CMD_MAX: highest used command number
->    * @__NL80211_CMD_AFTER_LAST: internal use
->    */
-
-<snip>
-
->   
-> +int cfg80211_external_auth_request(struct net_device *dev,
-> +				   struct cfg80211_external_auth_params *params,
-> +				   gfp_t gfp)
-> +{
-> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-> +	struct sk_buff *msg;
-> +	void *hdr;
-> +
-> +	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-> +	if (!msg)
-> +		return -ENOMEM;
-> +
-> +	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_EXTERNAL_AUTH);
-> +	if (!hdr) {
-> +		nlmsg_free(msg);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-> +	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-> +	    nla_put_u32(msg, NL80211_ATTR_AKM_SUITES, params->key_mgmt_suite) ||
-> +	    nla_put_u32(msg, NL80211_ATTR_EXTERNAL_AUTH_ACTION,
-> +			params->action) ||
-> +	    nla_put(msg, NL80211_ATTR_BSSID, ETH_ALEN, params->bssid) ||
-> +	    nla_put(msg, NL80211_ATTR_SSID, params->ssid.ssid_len,
-> +		    params->ssid.ssid))
-> +		goto nla_put_failure;
-> +
-> +	genlmsg_end(msg, hdr);
-> +
-> +	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-> +				NL80211_MCGRP_MLME, gfp);
-
-Is there a reason this is being multicast and not unicast to the 
-application that triggered the CONNECT?  Who else besides the supplicant 
-daemon might find this information useful?
-
-> +	return 0;
-> +
-> + nla_put_failure:
-> +	genlmsg_cancel(msg, hdr);
-> +	nlmsg_free(msg);
-> +	return -ENOBUFS;
-> +}
-> +EXPORT_SYMBOL(cfg80211_external_auth_request);
-> +
->   /* initialisation/exit functions */
->   
->   int __init nl80211_init(void)
-
-Regards,
--Denis
+Alan
