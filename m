@@ -1,85 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46234 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:49182 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750948AbeARMkQ (ORCPT
+        with ESMTP id S1753476AbeAHRh4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 07:40:16 -0500
-From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Bhagavathi Perumal S <bperumal@codeaurora.org>,
-        Venkateswara Naralasetty <vnaralas@codeaurora.org>
-Subject: [PATCH 1/2] cfg80211: Add tx ack signal attribute in sta info
-Date: Thu, 18 Jan 2018 18:10:08 +0530
-Message-Id: <1516279208-16485-1-git-send-email-vnaralas@codeaurora.org> (sfid-20180118_134021_183500_3EDD0028)
+        Mon, 8 Jan 2018 12:37:56 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v5,
+ 1/3] mwifiex: refactor device dump code to make it generic for usb
+ interface
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1513064293-9400-1-git-send-email-huxm@marvell.com>
+References: <1513064293-9400-1-git-send-email-huxm@marvell.com>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Message-Id: <20180108173755.B25B260215@smtp.codeaurora.org> (sfid-20180108_183803_035440_87243017)
+Date: Mon,  8 Jan 2018 17:37:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bhagavathi Perumal S <bperumal@codeaurora.org>
+Xinming Hu <huxm@marvell.com> wrote:
 
-This patch provides support for users to get ack signal
-strength of last transmitted by introducing new attribute
-'NL80211_STA_INFO_ACK_SIGNAL'.
+> This patch refactor current device dump code to make it generic
+> for subsequent implementation on usb interface.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-Signed-off-by: Bhagavathi Perumal S <bperumal@codeaurora.org>
-Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
----
- include/net/cfg80211.h       | 2 ++
- include/uapi/linux/nl80211.h | 2 ++
- net/wireless/nl80211.c       | 1 +
- 3 files changed, 5 insertions(+)
+3 patches applied to wireless-drivers-next.git, thanks.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3a4a1a9..1236bea 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1145,6 +1145,7 @@ struct cfg80211_tid_stats {
-  * @rx_duration: aggregate PPDU duration(usecs) for all the frames from a peer
-  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
-  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
-+ * @ack_signal: signal strength (in dBm) of the last ACK frame.
-  */
- struct station_info {
- 	u64 filled;
-@@ -1189,6 +1190,7 @@ struct station_info {
- 	u64 rx_duration;
- 	u8 rx_beacon_signal_avg;
- 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
-+	s8 ack_signal;
- };
- 
- #if IS_ENABLED(CONFIG_CFG80211)
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c587a61..5a1568d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2899,6 +2899,7 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_RX_DURATION: aggregate PPDU duration for all frames
-  *	received from the station (u64, usec)
-  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
-+ * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2937,6 +2938,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_TID_STATS,
- 	NL80211_STA_INFO_RX_DURATION,
- 	NL80211_STA_INFO_PAD,
-+	NL80211_STA_INFO_ACK_SIGNAL,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b3f8970..94c623e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4479,6 +4479,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO_U64(RX_DROP_MISC, rx_dropped_misc);
- 	PUT_SINFO_U64(BEACON_RX, rx_beacon);
- 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
-+	PUT_SINFO(ACK_SIGNAL, ack_signal, u8);
- 
- #undef PUT_SINFO
- #undef PUT_SINFO_U64
+d0e2b44ef328 mwifiex: refactor device dump code to make it generic for usb interface
+f5ecd02a8b20 mwifiex: device dump support for usb interface
+18d605013357 mwifiex: debugfs: trigger device dump for usb interface
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10106407/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
