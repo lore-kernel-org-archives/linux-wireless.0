@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:44346 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932103AbeAXHja (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35054 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753865AbeAHRaO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 02:39:30 -0500
-Message-ID: <1516779566.2508.41.camel@sipsolutions.net> (sfid-20180124_083950_575456_D426AD58)
-Subject: Re: WARNING in check_flush_dependency
-From: Johannes Berg <johannes@sipsolutions.net>
-To: syzbot <syzbot+41cdaf4232c50e658934@syzkaller.appspotmail.com>,
-        davem@davemloft.net, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Date: Wed, 24 Jan 2018 08:39:26 +0100
-In-Reply-To: <001a1143c56ef80bb405636ca341@google.com> (sfid-20180123_083904_793142_75F4D2AB)
-References: <001a1143c56ef80bb405636ca341@google.com>
-         (sfid-20180123_083904_793142_75F4D2AB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 8 Jan 2018 12:30:14 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mt76x2: eeprom: fix typo in mt76x2_get_power_info_5g()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <2ae397aff0b058615a558a2352067fad2c9201e6.1513248071.git.lorenzo.bianconi@redhat.com>
+References: <2ae397aff0b058615a558a2352067fad2c9201e6.1513248071.git.lorenzo.bianconi@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, colin.king@canonical.com,
+        linux-wireless@vger.kernel.org
+Message-Id: <20180108173014.2BA866079C@smtp.codeaurora.org> (sfid-20180108_183019_737774_63560180)
+Date: Mon,  8 Jan 2018 17:30:14 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-01-22 at 23:39 -0800, syzbot wrote:
-> Hello,
-> 
-> syzbot hit the following crash on upstream commit
-> 0d665e7b109d512b7cae3ccef6e8654714887844 (Fri Jan 19 12:49:24 2018 +0000)
-> mm, page_vma_mapped: Drop faulty pointer arithmetics in check_pte()
-> 
-> So far this crash happened 23 times on net-next, upstream.
-> C reproducer is attached.
-> syzkaller reproducer is attached.
-> Raw console output is attached.
-> compiler: gcc (GCC) 7.1.1 20170620
-> .config is attached.
-> user-space arch: i386
-> 
-> IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> Reported-by: syzbot+41cdaf4232c50e658934@syzkaller.appspotmail.com
-> It will help syzbot understand when the bug is fixed. See footer for  
-> details.
-> If you forward the report, please keep this part and the footer.
-> 
-> ------------[ cut here ]------------
-> workqueue: WQ_MEM_RECLAIM hwsim_wq:destroy_radio is  
-> flushing !WQ_MEM_RECLAIM events_highpri:flush_backlog
-> WARNING: CPU: 0 PID: 3706 at kernel/workqueue.c:2439  
-> check_flush_dependency+0x239/0x380 kernel/workqueue.c:2435
-> Kernel panic - not syncing: panic_on_warn set ...
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
 
-Yeah, we clearly shouldn't have WQ_RECLAIM set on this workqueue...
+> Fix typo in 5GHz power vs channel eeprom parsing
+> 
+> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> Acked-by: Felix Fietkau <nbd@nbd.name>
+> Reported-by: Colin Ian King <colin.king@canonical.com>
 
-johannes
+Patch applied to wireless-drivers-next.git, thanks.
+
+c3929a980b16 mt76x2: eeprom: fix typo in mt76x2_get_power_info_5g()
+
+-- 
+https://patchwork.kernel.org/patch/10111813/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
