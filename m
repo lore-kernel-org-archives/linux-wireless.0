@@ -1,47 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:48440 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752820AbeA3Ok6 (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:44699 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756322AbeAHUpz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 09:40:58 -0500
-Date: Tue, 30 Jan 2018 17:40:31 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: kbuild test robot <lkp@intel.com>, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        linux-wireless@vger.kernel.org, ganesh.krishna@microchip.com,
-        kbuild-all@01.org, aditya.shankar@microchip.com
-Subject: Re: [PATCH v2 13/14] staging: wilc1000: rename Handle_Connect() to
- avoid camelCase
-Message-ID: <20180130144031.hd5whcs4lwah4qhs@mwanda> (sfid-20180130_154102_513508_22643498)
-References: <1516616547-24654-14-git-send-email-ajay.kathat@microchip.com>
- <201801300113.VYPjzW6k%fengguang.wu@intel.com>
- <20180130192949.016ed06a@ajaysk-VirtualBox>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180130192949.016ed06a@ajaysk-VirtualBox>
+        Mon, 8 Jan 2018 15:45:55 -0500
+From: Himanshu Jha <himanshujha199640@gmail.com>
+To: kvalo@codeaurora.org
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com,
+        Himanshu Jha <himanshujha199640@gmail.com>
+Subject: [PATCH v2] brcmfmac: Use zeroing memory allocator than allocator/memset
+Date: Tue,  9 Jan 2018 02:15:31 +0530
+Message-Id: <1515444331-19509-1-git-send-email-himanshujha199640@gmail.com> (sfid-20180108_214615_882027_95342CB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 30, 2018 at 07:29:49PM +0530, Ajay Singh wrote:
-> On Tue, 30 Jan 2018 02:13:53 +0800
-> kbuild test robot <lkp@intel.com> wrote:
-> 
+Use dma_zalloc_coherent for allocating zeroed
+memory and remove unnecessary memset function.
 
-> 
-> 
-> The patch only change variable names to avoid the camelCase, didn't modify any extra code to dereference memory.
+Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
 
-You are responding to a robot and I think we all understood that this
-warning was there before you renamed the variables.
+Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+---
+v2:
+   -corrected the patch to be applied into the branch without corruption
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pcie.c  | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-> I think, with the use of shorter variable name now memcpy() is taking 1 line instead of 3 lines. So, now line 937 has different code line(as code is swifted up by few lines).So because of that new potential NULL dereference error is popped up for same existing code.  
-> The code to validate dynamically allocated memory before access, will be include in separate patch to keep it segregated from variable names changes. 
-> I will rework on this patch and resend again.
-
-There is no need to re-work the patch.
-
-You are right that the NULL check should be added as a separate check.
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 3c87157..8752707 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1251,14 +1251,14 @@ static int brcmf_pcie_init_scratchbuffers(struct brcmf_pciedev_info *devinfo)
+ 	u64 address;
+ 	u32 addr;
+ 
+-	devinfo->shared.scratch = dma_alloc_coherent(&devinfo->pdev->dev,
+-		BRCMF_DMA_D2H_SCRATCH_BUF_LEN,
+-		&devinfo->shared.scratch_dmahandle, GFP_KERNEL);
++	devinfo->shared.scratch =
++		dma_zalloc_coherent(&devinfo->pdev->dev,
++					BRCMF_DMA_D2H_SCRATCH_BUF_LEN,
++					&devinfo->shared.scratch_dmahandle,
++					GFP_KERNEL);
+ 	if (!devinfo->shared.scratch)
+ 		goto fail;
+ 
+-	memset(devinfo->shared.scratch, 0, BRCMF_DMA_D2H_SCRATCH_BUF_LEN);
+-
+ 	addr = devinfo->shared.tcm_base_address +
+ 	       BRCMF_SHARED_DMA_SCRATCH_ADDR_OFFSET;
+ 	address = (u64)devinfo->shared.scratch_dmahandle;
+@@ -1268,14 +1268,14 @@ static int brcmf_pcie_init_scratchbuffers(struct brcmf_pciedev_info *devinfo)
+ 	       BRCMF_SHARED_DMA_SCRATCH_LEN_OFFSET;
+ 	brcmf_pcie_write_tcm32(devinfo, addr, BRCMF_DMA_D2H_SCRATCH_BUF_LEN);
+ 
+-	devinfo->shared.ringupd = dma_alloc_coherent(&devinfo->pdev->dev,
+-		BRCMF_DMA_D2H_RINGUPD_BUF_LEN,
+-		&devinfo->shared.ringupd_dmahandle, GFP_KERNEL);
++	devinfo->shared.ringupd =
++		dma_zalloc_coherent(&devinfo->pdev->dev,
++					BRCMF_DMA_D2H_RINGUPD_BUF_LEN,
++					&devinfo->shared.ringupd_dmahandle,
++					GFP_KERNEL);
+ 	if (!devinfo->shared.ringupd)
+ 		goto fail;
+ 
+-	memset(devinfo->shared.ringupd, 0, BRCMF_DMA_D2H_RINGUPD_BUF_LEN);
+-
+ 	addr = devinfo->shared.tcm_base_address +
+ 	       BRCMF_SHARED_DMA_RINGUPD_ADDR_OFFSET;
+ 	address = (u64)devinfo->shared.ringupd_dmahandle;
+-- 
+2.7.4
