@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44870 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750822AbeAPKyV (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:33796 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754651AbeAIMZe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 05:54:21 -0500
-Subject: [PATCH] ath10k: fix recently introduced checkpatch warnings
-From: Kalle Valo <kvalo@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 16 Jan 2018 12:54:17 +0200
-Message-ID: <151610005703.17030.17977783056615638055.stgit@potku.adurom.net> (sfid-20180116_115425_137311_9490492C)
+        Tue, 9 Jan 2018 07:25:34 -0500
+Received: by mail-qt0-f196.google.com with SMTP id 33so17538252qtv.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 04:25:34 -0800 (PST)
+Subject: Re: [09/11] brcmfmac: Remove array of functions
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1513687637-5555-10-git-send-email-arend.vanspriel@broadcom.com>
+ <20180108172042.EE67E60818@smtp.codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A54B4BC.4070800@broadcom.com> (sfid-20180109_132537_900227_DEC1DD78)
+Date: Tue, 9 Jan 2018 13:25:32 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180108172042.EE67E60818@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Checkpatch found these issues:
+On 1/8/2018 6:20 PM, Kalle Valo wrote:
+> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>
+>> Replace the array of functions with a pair of pointers to the
+>> relevant functions.
+>>
+>> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
+>> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>
+> Failed to apply:
+>
+> fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c).
+> error: could not build fake ancestor
+> Applying: brcmfmac: Remove array of functions
+> Patch failed at 0001 brcmfmac: Remove array of functions
+> The copy of the patch that failed is found in: .git/rebase-apply/patch
 
-drivers/net/wireless/ath/ath10k/ce.h:324: Please use a blank line after function/struct/union/enum declarations
-drivers/net/wireless/ath/ath10k/core.c:1321: Please don't use multiple blank lines
-drivers/net/wireless/ath/ath10k/htt.h:1859: Please use a blank line after function/struct/union/enum declarations
+Guess you merged wireless-drivers/master in between. I just rebased and 
+resolved the conflict and sent a V2 with the remaining patches.
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/ce.h   |    1 +
- drivers/net/wireless/ath/ath10k/core.c |    1 -
- drivers/net/wireless/ath/ath10k/htt.h  |    1 +
- 3 files changed, 2 insertions(+), 1 deletion(-)
+> 3 patches set to Changes Requested.
+>
+> 10123215 [09/11] brcmfmac: Remove array of functions
+> 10123207 [10/11] brcmfmac: add comment block in brcmf_sdio_buscore_read()
+> 10123205 [11/11] brcmfmac: rename brcmf_sdiod_buff_{read,write}() functions
+>
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 06ac2eb70bf5..2c3c8f5e90ea 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -321,6 +321,7 @@ struct ath10k_ce_ops {
- 			      dma_addr_t buffer, u32 nbytes,
- 			      u32 transfer_id, u32 flags);
- };
-+
- static inline u32 ath10k_ce_base_address(struct ath10k *ar, unsigned int ce_id)
- {
- 	return CE0_BASE_ADDRESS + (CE1_BASE_ADDRESS - CE0_BASE_ADDRESS) * ce_id;
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c60d91328b5f..b0fdc1023619 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1318,7 +1318,6 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
- 			goto out;
- 		}
- 
--
- 		len -= ie_len;
- 		data += ie_len;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 360c71b106d7..8cc2a8b278e4 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1856,6 +1856,7 @@ struct ath10k_htt_rx_ops {
- 	void* (*htt_get_vaddr_ring)(struct ath10k_htt *htt);
- 	void (*htt_reset_paddrs_ring)(struct ath10k_htt *htt, int idx);
- };
-+
- #define RX_HTT_HDR_STATUS_LEN 64
- 
- /* This structure layout is programmed via rx ring setup
+Thanks,
+Arend
