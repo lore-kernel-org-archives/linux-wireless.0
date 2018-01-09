@@ -1,42 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36892 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751377AbeA0E3Y (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:50723 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752533AbeAIJer (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 23:29:24 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Krzysztof Mazur <krzysiek@podlesie.net>
-Cc: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, James Hogan <jhogan@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH] ssb: Reenable PCI host on !MIPS
-References: <20180126235849.3177-1-krzysiek@podlesie.net>
-Date: Sat, 27 Jan 2018 06:29:18 +0200
-In-Reply-To: <20180126235849.3177-1-krzysiek@podlesie.net> (Krzysztof Mazur's
-        message of "Sat, 27 Jan 2018 00:58:49 +0100")
-Message-ID: <87inbnsz4x.fsf@kamboji.qca.qualcomm.com> (sfid-20180127_052940_714775_12BD2C43)
+        Tue, 9 Jan 2018 04:34:47 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH] staging: wilc1000: removed enums typedef for BEACON_IE & TX_RATE_T
+Date: Tue, 9 Jan 2018 15:04:23 +0530
+Message-ID: <1515490463-8758-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180109_103454_750613_612EF2A6)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Krzysztof Mazur <krzysiek@podlesie.net> writes:
+This patch removed the unnecessary enum typedef for BEACON_IE &
+TX_RATE_T
+It fix "WARNING: do not add new typedefs" reported by checkpatch.pl
 
-> The commit 58eae1416b804d900014d84feadda7195007cc30
-> ("ssb: Disable PCI host for PCI_DRIVERS_GENERIC") disabled
-> CONFIG_SSB_PCIHOST and CONFIG_SSB_B43_PCI_BRIDGE, which are
-> required for SSB-based b43 PCI cards, on everything except MIPS
-> with PCI_DRIVERS_LEGACY, including x86 (only MIPS defines
-> that config option). Reenable it.
->
-> Signed-off-by: Krzysztof Mazur <krzysiek@podlesie.net>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_if.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-I have already applied an identical patch but missed the deadline for
-final 4.15:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=a9e6d44ddeccd3522670e641f1ed9b068e746ff7
-
-That patch will go to 4.16 and from there to 4.15 via the stable tree.
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index cf4a44d..068a59d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -75,7 +75,7 @@ typedef void (*wilc_tx_complete_func_t)(void *, int);
+ #define MAX_SSID_LEN            33
+ #define MAX_RATES_SUPPORTED     12
+ 
+-typedef enum {
++enum {
+ 	SUPP_RATES_IE		= 1,
+ 	EXT_SUPP_RATES_IE	= 50,
+ 	HT_CAPABILITY_IE	= 45,
+@@ -83,7 +83,7 @@ typedef enum {
+ 	WPA_IE			= 221,
+ 	WMM_IE			= 221,
+ 	P2P_IE			= 221,
+-} BEACON_IE;
++};
+ 
+ enum bss_types {
+ 	INFRASTRUCTURE		= 0,
+@@ -91,7 +91,7 @@ enum bss_types {
+ 	AP,
+ };
+ 
+-typedef enum {
++enum {
+ 	RATE_AUTO		= 0,
+ 	RATE_1MB		= 1,
+ 	RATE_2MB		= 2,
+@@ -105,7 +105,7 @@ typedef enum {
+ 	RATE_26MB		= 36,
+ 	RATE_48MB		= 48,
+ 	RATE_54MB		= 54
+-} TX_RATE_T;
++};
+ 
+ enum {
+ 	B_ONLY_MODE		= 0,    /* 1, 2 M, otherwise 5, 11 M */
 -- 
-Kalle Valo
+2.7.4
