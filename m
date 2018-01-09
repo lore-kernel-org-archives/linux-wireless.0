@@ -1,63 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:33705 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751577AbeA0Swa (ORCPT
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:36107 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbeAIJH0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Jan 2018 13:52:30 -0500
+        Tue, 9 Jan 2018 04:07:26 -0500
+Received: by mail-qt0-f193.google.com with SMTP id a16so16949611qtj.3
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 01:07:26 -0800 (PST)
+Subject: Re: [PATCH v2] b43: Replace mdelay with usleep_range in
+ b43_radio_2057_init_post
+To: Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Greg KH <gregkh@linuxfoundation.org>
+References: <1515462006-6144-1-git-send-email-baijiaju1990@gmail.com>
+ <20180109083541.GA13460@kroah.com>
+ <4201e8cd-81ba-ab7d-2a0d-af957c5dfed6@gmail.com>
+Cc: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
+        kstewart@linuxfoundation.org, johannes.berg@intel.com,
+        tiwai@suse.de, colin.king@canonical.com,
+        andrew.zaborowski@intel.com, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        b43-dev@lists.infradead.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A54864A.8020006@broadcom.com> (sfid-20180109_100801_965694_EE92DE67)
+Date: Tue, 9 Jan 2018 10:07:22 +0100
 MIME-Version: 1.0
-In-Reply-To: <151703971300.26578.1185595719337719486.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151703971300.26578.1185595719337719486.stgit@dwillia2-desk3.amr.corp.intel.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sat, 27 Jan 2018 10:52:27 -0800
-Message-ID: <CA+55aFxDua8mhjOSXTxMNw+XdnFuZSdAN=frh9B==YccgT36Yw@mail.gmail.com> (sfid-20180127_195236_106754_932C6A17)
-Subject: Re: [PATCH v5 00/12] spectre variant1 mitigations for tip/x86/pti
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Cyril Novikov <cnovikov@lynx.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, Jiri Slaby <jslaby@suse.cz>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Andi Kleen <ak@linux.intel.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "the arch/x86 maintainers" <x86@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Ingo Molnar <mingo@redhat.com>,
-        Andrew Honig <ahonig@google.com>,
-        Alan Cox <alan@linux.intel.com>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Kees Cook <keescook@chromium.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Andy Lutomirski <luto@kernel.org>,
-        Jim Mattson <jmattson@google.com>,
-        Christian Lamparter <chunkeey@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <4201e8cd-81ba-ab7d-2a0d-af957c5dfed6@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 26, 2018 at 11:55 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+On 1/9/2018 9:39 AM, Jia-Ju Bai wrote:
 >
-> Here's another spin of the spectre-v1 mitigations for 4.16.
+>
+> On 2018/1/9 16:35, Greg KH wrote:
+>> On Tue, Jan 09, 2018 at 09:40:06AM +0800, Jia-Ju Bai wrote:
+>>> b43_radio_2057_init_post is not called in an interrupt handler
+>>> nor holding a spinlock.
+>>> The function mdelay in it can be replaced with usleep_range,
+>>> to reduce busy wait.
+>>>
+>>> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+>>> ---
+>>> v2:
+>>> * Replace mdelay with usleep_range, instead of msleep in v1.
+>>>    Thank Larry for good advice.
+>>> ---
+>>>   drivers/net/wireless/broadcom/b43/phy_n.c |    2 +-
+>>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c
+>>> b/drivers/net/wireless/broadcom/b43/phy_n.c
+>>> index a5557d7..f2a2f41 100644
+>>> --- a/drivers/net/wireless/broadcom/b43/phy_n.c
+>>> +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+>>> @@ -1031,7 +1031,7 @@ static void b43_radio_2057_init_post(struct
+>>> b43_wldev *dev)
+>>>       b43_radio_set(dev, R2057_RFPLL_MISC_CAL_RESETN, 0x78);
+>>>       b43_radio_set(dev, R2057_XTAL_CONFIG2, 0x80);
+>>> -    mdelay(2);
+>>> +    usleep_range(2000, 3000);
+>> Where did 3000 come from?  Are you sure about that?
+>
+> I am not very sure, and I use it according to Larry's message:
 
-I see nothing really objectionable here.
+Hi Jia-Ju Bai,
 
-And unlike Spectre-v2 and Meltdown, I expect Spectre-v1 to be with us
-for a long time. It's not a "CPU did a bad job with checking the
-cached information it had" (whether it be from the TLB, BTB or RSB),
-it's pretty fundamental to just regular conditional branch prediction.
+The duration here is for settling the registers so hardware can pick it 
+up. Right after this they are written again. Now this is during 
+initialization of the radio so not time critical, but probably anything 
+in the range of 2000..3000 would also have been fine.
 
-So ack from me, and I don't expect this to be behind any config options.
-
-I still haven't really seen any numbers for this, but I _assume_ it's
-basically not measurable.
-
-                 Linus
+Regards,
+Arend
