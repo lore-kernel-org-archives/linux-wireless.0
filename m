@@ -1,223 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:40290 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750968AbeAWHlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Jan 2018 02:41:24 -0500
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: [PATCH 2/4] ath9k: Read noise floor calibration data from eeprom
-Date: Tue, 23 Jan 2018 08:35:23 +0100
-Message-Id: <1516692925-6695-3-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180123_084136_878454_B9C960A1)
-In-Reply-To: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
-References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:15620 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752477AbeAIJ1w (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Jan 2018 04:27:52 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH] staging: wilc1000: removed few unnecessary enums typedef
+Date: Tue, 9 Jan 2018 14:57:16 +0530
+Message-ID: <1515490036-8584-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180109_102759_426894_01ECED55)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9003 devices can have calibrated noise floor values
-which can be used instead of hard coded one. Read them
-from eeprom and save interpolated value in nf limits for
-the current channel.
+This patch removes following RSNA_REKEY_POLICY_T,SCAN_CLASS_FITLER_T,
+SCAN_PRI_T,CH_FILTER_T,N_PROTECTION_MODE_T,G_PROTECTION_MODE_T typedef
+enum.
+Now, these enums are used as anonymous-enums for constants.
 
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+checkpatch.pl warning to avoid new typedef is fixes with this patch.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 63 ++++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 10 ++++
- drivers/net/wireless/ath/ath9k/hw.h            |  2 +
- 3 files changed, 67 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan_if.h | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 23bb677..de2e503 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4689,7 +4689,8 @@ static int ar9003_hw_cal_pier_get(struct ath_hw *ah,
- 				  int ichain,
- 				  int *pfrequency,
- 				  int *pcorrection,
--				  int *ptemperature, int *pvoltage)
-+				  int *ptemperature, int *pvoltage,
-+				  int *pnf_cal, int *pnf_power)
- {
- 	u8 *pCalPier;
- 	struct ar9300_cal_data_per_freq_op_loop *pCalPierStruct;
-@@ -4731,6 +4732,10 @@ static int ar9003_hw_cal_pier_get(struct ath_hw *ah,
- 	*pcorrection = pCalPierStruct->refPower;
- 	*ptemperature = pCalPierStruct->tempMeas;
- 	*pvoltage = pCalPierStruct->voltMeas;
-+	*pnf_cal = pCalPierStruct->rxTempMeas ?
-+			N2DBM(pCalPierStruct->rxNoisefloorCal) : 0;
-+	*pnf_power = pCalPierStruct->rxTempMeas ?
-+			N2DBM(pCalPierStruct->rxNoisefloorPower) : 0;
- 
- 	return 0;
- }
-@@ -4895,14 +4900,18 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 	int mode;
- 	int lfrequency[AR9300_MAX_CHAINS],
- 	    lcorrection[AR9300_MAX_CHAINS],
--	    ltemperature[AR9300_MAX_CHAINS], lvoltage[AR9300_MAX_CHAINS];
-+	    ltemperature[AR9300_MAX_CHAINS], lvoltage[AR9300_MAX_CHAINS],
-+	    lnf_cal[AR9300_MAX_CHAINS], lnf_pwr[AR9300_MAX_CHAINS];
- 	int hfrequency[AR9300_MAX_CHAINS],
- 	    hcorrection[AR9300_MAX_CHAINS],
--	    htemperature[AR9300_MAX_CHAINS], hvoltage[AR9300_MAX_CHAINS];
-+	    htemperature[AR9300_MAX_CHAINS], hvoltage[AR9300_MAX_CHAINS],
-+	    hnf_cal[AR9300_MAX_CHAINS], hnf_pwr[AR9300_MAX_CHAINS];
- 	int fdiff;
- 	int correction[AR9300_MAX_CHAINS],
--	    voltage[AR9300_MAX_CHAINS], temperature[AR9300_MAX_CHAINS];
--	int pfrequency, pcorrection, ptemperature, pvoltage;
-+	    voltage[AR9300_MAX_CHAINS], temperature[AR9300_MAX_CHAINS],
-+	    nf_cal[AR9300_MAX_CHAINS], nf_pwr[AR9300_MAX_CHAINS];
-+	int pfrequency, pcorrection, ptemperature, pvoltage,
-+	    pnf_cal, pnf_pwr;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	mode = (frequency >= 4000);
-@@ -4920,7 +4929,8 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 		for (ipier = 0; ipier < npier; ipier++) {
- 			if (!ar9003_hw_cal_pier_get(ah, mode, ipier, ichain,
- 						    &pfrequency, &pcorrection,
--						    &ptemperature, &pvoltage)) {
-+						    &ptemperature, &pvoltage,
-+						    &pnf_cal, &pnf_pwr)) {
- 				fdiff = frequency - pfrequency;
- 
- 				/*
-@@ -4942,6 +4952,8 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 						htemperature[ichain] =
- 						    ptemperature;
- 						hvoltage[ichain] = pvoltage;
-+						hnf_cal[ichain] = pnf_cal;
-+						hnf_pwr[ichain] = pnf_pwr;
- 					}
- 				}
- 				if (fdiff >= 0) {
-@@ -4958,6 +4970,8 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 						ltemperature[ichain] =
- 						    ptemperature;
- 						lvoltage[ichain] = pvoltage;
-+						lnf_cal[ichain] = pnf_cal;
-+						lnf_pwr[ichain] = pnf_pwr;
- 					}
- 				}
- 			}
-@@ -4966,15 +4980,20 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 
- 	/* interpolate  */
- 	for (ichain = 0; ichain < AR9300_MAX_CHAINS; ichain++) {
--		ath_dbg(common, EEPROM, "ch=%d f=%d low=%d %d h=%d %d\n",
-+		ath_dbg(common, EEPROM,
-+			"ch=%d f=%d low=%d %d h=%d %d n=%d %d p=%d %d\n",
- 			ichain, frequency, lfrequency[ichain],
- 			lcorrection[ichain], hfrequency[ichain],
--			hcorrection[ichain]);
-+			hcorrection[ichain], lnf_cal[ichain],
-+			hnf_cal[ichain], lnf_pwr[ichain],
-+			hnf_pwr[ichain]);
- 		/* they're the same, so just pick one */
- 		if (hfrequency[ichain] == lfrequency[ichain]) {
- 			correction[ichain] = lcorrection[ichain];
- 			voltage[ichain] = lvoltage[ichain];
- 			temperature[ichain] = ltemperature[ichain];
-+			nf_cal[ichain] = lnf_cal[ichain];
-+			nf_pwr[ichain] = lnf_pwr[ichain];
- 		}
- 		/* the low frequency is good */
- 		else if (frequency - lfrequency[ichain] < 1000) {
-@@ -4998,12 +5017,26 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 						hfrequency[ichain],
- 						lvoltage[ichain],
- 						hvoltage[ichain]);
-+
-+				nf_cal[ichain] = interpolate(frequency,
-+						lfrequency[ichain],
-+						hfrequency[ichain],
-+						lnf_cal[ichain],
-+						hnf_cal[ichain]);
-+
-+				nf_pwr[ichain] = interpolate(frequency,
-+						lfrequency[ichain],
-+						hfrequency[ichain],
-+						lnf_pwr[ichain],
-+						hnf_pwr[ichain]);
- 			}
- 			/* only low is good, use it */
- 			else {
- 				correction[ichain] = lcorrection[ichain];
- 				temperature[ichain] = ltemperature[ichain];
- 				voltage[ichain] = lvoltage[ichain];
-+				nf_cal[ichain] = lnf_cal[ichain];
-+				nf_pwr[ichain] = lnf_pwr[ichain];
- 			}
- 		}
- 		/* only high is good, use it */
-@@ -5011,10 +5044,14 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 			correction[ichain] = hcorrection[ichain];
- 			temperature[ichain] = htemperature[ichain];
- 			voltage[ichain] = hvoltage[ichain];
-+			nf_cal[ichain] = hnf_cal[ichain];
-+			nf_pwr[ichain] = hnf_pwr[ichain];
- 		} else {	/* nothing is good, presume 0???? */
- 			correction[ichain] = 0;
- 			temperature[ichain] = 0;
- 			voltage[ichain] = 0;
-+			nf_cal[ichain] = 0;
-+			nf_pwr[ichain] = 0;
- 		}
- 	}
- 
-@@ -5025,6 +5062,16 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 		"for frequency=%d, calibration correction = %d %d %d\n",
- 		frequency, correction[0], correction[1], correction[2]);
- 
-+	/* Store calibrated noise floor values */
-+	for (ichain = 0; ichain < AR5416_MAX_CHAINS; ichain++)
-+		if (mode) {
-+			ah->nf_5g.cal[ichain] = nf_cal[ichain];
-+			ah->nf_5g.pwr[ichain] = nf_pwr[ichain];
-+		} else {
-+			ah->nf_2g.cal[ichain] = nf_cal[ichain];
-+			ah->nf_2g.pwr[ichain] = nf_pwr[ichain];
-+		}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index bd2269c..e8fda54 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -62,6 +62,16 @@
-  */
- #define AR9300_PWR_TABLE_OFFSET  0
- 
-+/* Noise power data definitions
-+ * units are: 4 x dBm - NOISE_PWR_DATA_OFFSET
-+ * (e.g. -25 = (-25/4 - 90) = -96.25 dBm)
-+ * range (for 6 signed bits) is (-32 to 31) + offset => -122dBm to -59dBm
-+ * resolution (2 bits) is 0.25dBm
-+ */
-+#define NOISE_PWR_DATA_OFFSET	-90
-+#define NOISE_PWR_DBM_2_INT(_p)	((((_p) + 3) >> 2) + NOISE_PWR_DATA_OFFSET)
-+#define N2DBM(_p)		NOISE_PWR_DBM_2_INT(_p)
-+
- /* byte addressable */
- #define AR9300_EEPROM_SIZE (16*1024)
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 0d6c07c7..9804a24 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -754,6 +754,8 @@ struct ath_nf_limits {
- 	s16 max;
- 	s16 min;
- 	s16 nominal;
-+	s16 cal[AR5416_MAX_CHAINS];
-+	s16 pwr[AR5416_MAX_CHAINS];
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 598ba9e..eec8760 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -189,42 +189,42 @@ enum {
+ 	NO_REQUEST		= 2,
  };
  
- enum ath_cal_list {
+-typedef enum {
++enum {
+ 	REKEY_DISABLE		= 1,
+ 	REKEY_TIME_BASE,
+ 	REKEY_PKT_BASE,
+ 	REKEY_TIME_PKT_BASE
+-} RSNA_REKEY_POLICY_T;
++};
+ 
+-typedef enum {
++enum {
+ 	FILTER_NO		= 0x00,
+ 	FILTER_AP_ONLY		= 0x01,
+ 	FILTER_STA_ONLY		= 0x02
+-} SCAN_CLASS_FITLER_T;
++};
+ 
+-typedef enum {
++enum {
+ 	PRI_HIGH_RSSI		= 0x00,
+ 	PRI_LOW_RSSI		= 0x04,
+ 	PRI_DETECT		= 0x08
+-} SCAN_PRI_T;
++};
+ 
+-typedef enum {
++enum {
+ 	CH_FILTER_OFF		= 0x00,
+ 	CH_FILTER_ON		= 0x10
+-} CH_FILTER_T;
++};
+ 
+-typedef enum {
++enum {
+ 	AUTO_PROT		= 0,	/* Auto */
+ 	NO_PROT,			/* Do not use any protection */
+ 	ERP_PROT,			/* Protect all ERP frame exchanges */
+ 	HT_PROT,			/* Protect all HT frame exchanges  */
+ 	GF_PROT,			/* Protect all GF frame exchanges  */
+-} N_PROTECTION_MODE_T;
++};
+ 
+-typedef enum {
++enum {
+ 	G_SELF_CTS_PROT,
+ 	G_RTS_CTS_PROT,
+-} G_PROTECTION_MODE_T;
++};
+ 
+ typedef enum {
+ 	HT_MIXED_MODE		= 1,
 -- 
 2.7.4
