@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34929 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750937AbeAYKsk (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51238 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932805AbeAIITM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 05:48:40 -0500
-Received: by mail-wm0-f68.google.com with SMTP id r78so14088341wme.0
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jan 2018 02:48:39 -0800 (PST)
-Subject: Re: [PATCH v2 1/2] pci: Add vendor id of Ubiquiti Networks
-To: Tobias Schramm <tobleminer@gmail.com>, kvalo@qca.qualcomm.com,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-References: <20180125074131.30622-1-tobleminer@gmail.com>
- <20180125074131.30622-2-tobleminer@gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A69B605.60503@broadcom.com> (sfid-20180125_114844_874899_02DA3C51)
-Date: Thu, 25 Jan 2018 11:48:37 +0100
+        Tue, 9 Jan 2018 03:19:12 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180125074131.30622-2-tobleminer@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: [1/3] ath10k: fix spelling error
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20171228190645.25773-2-erik.stromdahl@gmail.com>
+References: <20171228190645.25773-2-erik.stromdahl@gmail.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-Id: <20180109081912.85E2A60BE3@smtp.codeaurora.org> (sfid-20180109_091923_422939_B264B20E)
+Date: Tue,  9 Jan 2018 08:19:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/25/2018 8:41 AM, Tobias Schramm wrote:
-> Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
-> ---
->   include/linux/pci_ids.h | 2 ++
->   1 file changed, 2 insertions(+)
->
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index ab20dc5db423..6b01ac1e9bce 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -149,6 +149,8 @@
->   #define PCI_VENDOR_ID_DYNALINK		0x0675
->   #define PCI_DEVICE_ID_DYNALINK_IS64PH	0x1702
->
-> +#define PCI_VENDOR_ID_UBNT		0x0777
+Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
 
-Guess this is the stock symbol, but that does not seem a common approach 
-here. Why not just PCI_VENDOR_ID_UBIQUITI?
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Regards,
-Arend
+3 patches applied to ath-next branch of ath.git, thanks.
+
+5c9f07132706 ath10k: fix spelling error
+fbea11c8d583 ath10k: remove unused prototype
+e6fe214e6197 ath10k: bugfix: add USB case in ath10k_core_probe_fw
+
+-- 
+https://patchwork.kernel.org/patch/10135791/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
