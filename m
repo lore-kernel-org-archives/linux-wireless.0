@@ -1,129 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:57310 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751355AbeA2D1E (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:37220 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751802AbeAIIjz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Jan 2018 22:27:04 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 10/10] rtlwifi: btcoex: Add 8822be btcoex supported files for wifi only
-Date: Mon, 29 Jan 2018 11:26:41 +0800
-Message-ID: <20180129032641.17841-11-pkshih@realtek.com> (sfid-20180129_042711_576329_4C5C867C)
-In-Reply-To: <20180129032641.17841-1-pkshih@realtek.com>
-References: <20180129032641.17841-1-pkshih@realtek.com>
+        Tue, 9 Jan 2018 03:39:55 -0500
+Subject: Re: [PATCH v2] b43: Replace mdelay with usleep_range in
+ b43_radio_2057_init_post
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
+        kstewart@linuxfoundation.org, johannes.berg@intel.com,
+        tiwai@suse.de, colin.king@canonical.com,
+        andrew.zaborowski@intel.com, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        b43-dev@lists.infradead.org
+References: <1515462006-6144-1-git-send-email-baijiaju1990@gmail.com>
+ <20180109083541.GA13460@kroah.com>
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+Message-ID: <4201e8cd-81ba-ab7d-2a0d-af957c5dfed6@gmail.com> (sfid-20180109_094046_347876_9C98CB41)
+Date: Tue, 9 Jan 2018 16:39:31 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180109083541.GA13460@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
 
-The wifi only btcoex is used to solo card (without BT), and it is also
-useful to exclude the interference with BT to make debug easier.
-There are only four ops for wifi only btcoex to initialze antenna and
-switch the settings while band is changed.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- .../rtlwifi/btcoexist/halbtc8822bwifionly.c        | 55 ++++++++++++++++++++++
- .../rtlwifi/btcoexist/halbtc8822bwifionly.h        | 25 ++++++++++
- 2 files changed, 80 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
+On 2018/1/9 16:35, Greg KH wrote:
+> On Tue, Jan 09, 2018 at 09:40:06AM +0800, Jia-Ju Bai wrote:
+>> b43_radio_2057_init_post is not called in an interrupt handler
+>> nor holding a spinlock.
+>> The function mdelay in it can be replaced with usleep_range,
+>> to reduce busy wait.
+>>
+>> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+>> ---
+>> v2:
+>> * Replace mdelay with usleep_range, instead of msleep in v1.
+>>    Thank Larry for good advice.
+>> ---
+>>   drivers/net/wireless/broadcom/b43/phy_n.c |    2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+>> index a5557d7..f2a2f41 100644
+>> --- a/drivers/net/wireless/broadcom/b43/phy_n.c
+>> +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+>> @@ -1031,7 +1031,7 @@ static void b43_radio_2057_init_post(struct b43_wldev *dev)
+>>   
+>>   	b43_radio_set(dev, R2057_RFPLL_MISC_CAL_RESETN, 0x78);
+>>   	b43_radio_set(dev, R2057_XTAL_CONFIG2, 0x80);
+>> -	mdelay(2);
+>> +	usleep_range(2000, 3000);
+> Where did 3000 come from?  Are you sure about that?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
-new file mode 100644
-index 000000000000..951b8c1e0153
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
-@@ -0,0 +1,55 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016-2017  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ *****************************************************************************/
-+#include "halbt_precomp.h"
-+
-+void ex_hal8822b_wifi_only_hw_config(struct wifi_only_cfg *wifionlycfg)
-+{
-+	/*BB control*/
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x4c, 0x01800000, 0x2);
-+	/*SW control*/
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0xcb4, 0xff, 0x77);
-+	/*antenna mux switch */
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x974, 0x300, 0x3);
-+
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x1990, 0x300, 0x0);
-+
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0xcbc, 0x80000, 0x0);
-+	/*switch to WL side controller and gnt_wl gnt_bt debug signal */
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x70, 0xff000000, 0x0e);
-+	/*gnt_wl=1 , gnt_bt=0*/
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x1704, 0xffffffff, 0x7700);
-+	halwifionly_phy_set_bb_reg(wifionlycfg, 0x1700, 0xffffffff, 0xc00f0038);
-+}
-+
-+void ex_hal8822b_wifi_only_scannotify(struct wifi_only_cfg *wifionlycfg,
-+				      u8 is_5g)
-+{
-+	hal8822b_wifi_only_switch_antenna(wifionlycfg, is_5g);
-+}
-+
-+void ex_hal8822b_wifi_only_switchbandnotify(struct wifi_only_cfg *wifionlycfg,
-+					    u8 is_5g)
-+{
-+	hal8822b_wifi_only_switch_antenna(wifionlycfg, is_5g);
-+}
-+
-+void hal8822b_wifi_only_switch_antenna(struct wifi_only_cfg *wifionlycfg,
-+				       u8 is_5g)
-+{
-+	if (is_5g)
-+		halwifionly_phy_set_bb_reg(wifionlycfg, 0xcbc, 0x300, 0x1);
-+	else
-+		halwifionly_phy_set_bb_reg(wifionlycfg, 0xcbc, 0x300, 0x2);
-+}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
-new file mode 100644
-index 000000000000..6ec356542eea
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
-@@ -0,0 +1,25 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016-2017  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ *****************************************************************************/
-+#ifndef __INC_HAL8822BWIFIONLYHWCFG_H
-+#define __INC_HAL8822BWIFIONLYHWCFG_H
-+
-+void ex_hal8822b_wifi_only_hw_config(struct wifi_only_cfg *wifionlycfg);
-+void ex_hal8822b_wifi_only_scannotify(struct wifi_only_cfg *wifionlycfg,
-+				      u8 is_5g);
-+void ex_hal8822b_wifi_only_switchbandnotify(struct wifi_only_cfg *wifionlycfg,
-+					    u8 is_5g);
-+void hal8822b_wifi_only_switch_antenna(struct wifi_only_cfg *wifionlycfg,
-+				       u8 is_5g);
-+#endif
--- 
-2.15.1
+I am not very sure, and I use it according to Larry's message:
+
+> I had negative comments on one of those due to the possibility of
+> msleep(2) extending as long as 20 msec. Until the author, or someone
+> else, can test that this is OK, then the mdelay(2) can only be
+> replaced with usleep_range(2000, 3000).
+
+Thanks,
+Jia-Ju Bai
