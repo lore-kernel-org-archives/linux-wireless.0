@@ -1,65 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49874 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751215AbeAYJ7J (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:45215 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759159AbeAIToH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 04:59:09 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Brian Norris" <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Shrenik Shikhare <shrenik@marvell.com>
-Subject: RE: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX
- stall
-Date: Thu, 25 Jan 2018 09:59:04 +0000
-Message-ID: <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com> (sfid-20180125_105915_605111_56400ABF)
-References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
- <20180125071202.0F39560A60@smtp.codeaurora.org>
-In-Reply-To: <20180125071202.0F39560A60@smtp.codeaurora.org>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 9 Jan 2018 14:44:07 -0500
+Received: by mail-ot0-f195.google.com with SMTP id o1so12322324oti.12
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 11:44:07 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <alpine.LRH.2.00.1801092017330.27010@gjva.wvxbf.pm>
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <alpine.LRH.2.00.1801092017330.27010@gjva.wvxbf.pm>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 9 Jan 2018 11:44:05 -0800
+Message-ID: <CAPcyv4gccDQYx9urpagnBo-TqNLoQ00gEoE7kp+JXNKsmFxcHw@mail.gmail.com> (sfid-20180109_204449_177698_2538E001)
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative execution
+To: Jiri Kosina <jikos@kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Zhang Rui <rui.zhang@intel.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Netdev <netdev@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQo+DQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gR2FuYXBhdGhpIEJoYXQgPGdiaGF0QG1h
-cnZlbGwuY29tPiB3cm90ZToNCj4NCj4gPiBGcm9tOiBTaHJlbmlrIFNoaWtoYXJlIDxzaHJlbmlr
-QG1hcnZlbGwuY29tPg0KPiA+DQo+ID4gVGhlcmUgaXMgYSByYWNlIGNvbmRpdGlvbiBmb3IgYWNx
-dWlyaW5nIHJ4X3Byb2NfbG9jayBiZXR3ZWVuIHJ4IHdvcmtlcg0KPiA+IHRocmVhZCBhbmQgVVNC
-IFJYIGRhdGEgaW50ZXJydXB0DQo+ID4gKG13aWZpZXhfdXNiX3J4X2NvbXBsZXRlKToNCj4gPg0K
-PiA+IDEuIFVTQiByZWNlaXZlcyBhbiBSWCBkYXRhIGludGVycnVwdCwgcXVldWVzIHJ4X3dvcmsg
-Mi4gcnhfd29yaw0KPiA+IGVtcHRpZXMgcnhfZGF0YV9xLCB0cmllcyB0byBhY3F1aXJlIHJ4X3By
-b2NfbG9jayAodG8gY2xlYXINCj4gPiByeF9wcm9jZXNzaW5nIGZsYWcpIDMuIFdoaWxlICMyIGlz
-IHlldCB0byBhY3F1aXJlIHJ4X3Byb2NfbG9jaywgZHJpdmVyDQo+ID4gcmVjZWl2ZXMgY29udGlu
-dW91cyBSWCBkYXRhIGludGVydXB0cyhtd2lmaWV4X3VzYl9yeF9jb21wbGV0ZSkNCj4gPiAzLiBG
-b3IgZWFjaCBpbnRlcnJ1cHQgYXQgIzMsIGRyaXZlciBhY3F1aXJlcyByeF9wcm9jX2xvY2soaXQg
-Z2V0cyB0aGUNCj4gPiBsb2NrIHNpbmNlIGl0IGlzIGluIGludGVycnVwdCBjb250ZXh0KSwgdHJp
-ZXMgdG8gcXVldWUgcnhfd29yaywgYnV0DQo+ID4gZmFpbHMgdG8gZG8gc28gc2luY2UgcnhfcHJv
-Y2Vzc2luZyBpcyBzdGlsbCBzZXQoIzIpIDQuIFdoZW4gcnhfcGVuZGluZw0KPiA+IGV4Y2VlZHMg
-SElHSF9SWF9QRU5ESU5HLCBkcml2ZXIgc3RvcHMgc3VibWl0dGluZyBVUkJzIGJhY2sgdG8gVVNC
-DQo+ID4gc3Vic3lzdGVtIGFuZCB0aHVzIGZpcm13YXJlIHN0b3BzIHVwbG9hZGluZyBSWCBkYXRh
-IHRvIGRyaXZlciA1LiBOb3cNCj4gPiBmaW5hbGx5ICMyIHdpbGwgYWNxdWlyZSByeF9wcm9jX2xv
-Y2ssIGJ1dCBiZWNhdXNlIG9mICM0LCB0aGVyZSBhcmUgbm8NCj4gPiBmdXJ0aGVyIHRyaWdnZXJz
-IHRvIHNjaGVkdWxlIHJ4X3dvcmsgYWdhaW4NCj4gPg0KPiA+IFRoZSBhYm92ZSBzY2VuYXJpbyBv
-Y2N1cnMgaW4gc29tZSBwbGF0Zm9ybXMgd2hlcmUgdGhlIFJYIHByb2Nlc3NpbmcgaXMNCj4gPiBj
-b21wYXJpdGl2ZWx5IHNsb3dlci4gVGhpcyByZXN1bHRzIGluIFJYIHN0YWxsIGluIGRyaXZlciwg
-Y29tbWFuZC9UWA0KPiA+IHRpbWVvdXRzIGluIGZpcm13YXJlLiBUaGUgYWJvdmUgc2NlbmFyaW8g
-aXMgaW50cm9kdWNlZCBhZnRlciBjb21taXQNCj4gPiBjN2RiZGNiMmE0ZTENCj4gPiAoIm13aWZp
-ZXg6IHNjaGVkdWxlIHJ4X3dvcmsgb24gUlggaW50ZXJydXB0IGZvciBVU0IiKQ0KPiA+DQo+ID4g
-VG8gZml4IHRoaXMgc2V0IGEgbmV3IG1vcmVfcnhfdGFza19mbGFnIHdoZW5ldmVyIFJYIGRhdGEg
-Y2FsbGJhY2sgaXMNCj4gPiB0cnlpbmcgdG8gc2NoZWR1bGUgcnhfd29yayBidXQgcnhfcHJvY2Vz
-c2luZyBpcyBub3QgeWV0IGNsZWFyZWQuIFRoaXMNCj4gPiB3aWxsIGxldCB0aGUgY3VycmVudCBy
-eF93b3JrKHdoaWNoIHdhcyB3YWl0aW5nIGZvcg0KPiA+IHJ4X3Byb2NfbG9jaykgdG8gbG9vcGJh
-Y2sgYW5kIHByb2Nlc3MgbmV3bHkgYXJyaXZlZCBSWCBwYWNrZXRzLg0KPiA+DQo+ID4gU2lnbmVk
-LW9mZi1ieTogQ2F0aHkgTHVvIDxjbHVvQG1hcnZlbGwuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6
-IEdhbmFwYXRoaSBCaGF0IDxnYmhhdEBtYXJ2ZWxsLmNvbT4NCj4NCj4gSSBjYW4ndCBmaW5kIGFu
-eSBjb21taXQgd2l0aCBpZCBjN2RiZGNiMmE0ZTEsIGlzIGl0IGNvcnJlY3Q/DQpDb3JyZWN0LiBB
-Y3R1YWxseSB0aGUgY29tbWl0IGlkIGM3ZGJkY2IyYTRlMSBpcyB0aGUgUEFUQ0ggWzEvMl0gc2Vu
-dCBpbiB0aGlzIHNlcmllcy4NCj4NCj4gLS0NCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9y
-Zy9wYXRjaC8xMDE3ODcyOS8NCj4NCj4gaHR0cHM6Ly93aXJlbGVzcy53aWtpLmtlcm5lbC5vcmcv
-ZW4vZGV2ZWxvcGVycy9kb2N1bWVudGF0aW9uL3N1Ym1pdHRpbmdwDQo+IGF0Y2hlcw0KUmVnYXJk
-cywNCkdhbmFwYXRoaQ0K
+On Tue, Jan 9, 2018 at 11:34 AM, Jiri Kosina <jikos@kernel.org> wrote:
+> On Fri, 5 Jan 2018, Dan Williams wrote:
+>
+> [ ... snip ... ]
+>> Andi Kleen (1):
+>>       x86, barrier: stop speculation for failed access_ok
+>>
+>> Dan Williams (13):
+>>       x86: implement nospec_barrier()
+>>       [media] uvcvideo: prevent bounds-check bypass via speculative execution
+>>       carl9170: prevent bounds-check bypass via speculative execution
+>>       p54: prevent bounds-check bypass via speculative execution
+>>       qla2xxx: prevent bounds-check bypass via speculative execution
+>>       cw1200: prevent bounds-check bypass via speculative execution
+>>       Thermal/int340x: prevent bounds-check bypass via speculative execution
+>>       ipv6: prevent bounds-check bypass via speculative execution
+>>       ipv4: prevent bounds-check bypass via speculative execution
+>>       vfs, fdtable: prevent bounds-check bypass via speculative execution
+>>       net: mpls: prevent bounds-check bypass via speculative execution
+>>       udf: prevent bounds-check bypass via speculative execution
+>>       userns: prevent bounds-check bypass via speculative execution
+>>
+>> Mark Rutland (4):
+>>       asm-generic/barrier: add generic nospec helpers
+>>       Documentation: document nospec helpers
+>>       arm64: implement nospec_ptr()
+>>       arm: implement nospec_ptr()
+>
+> So considering the recent publication of [1], how come we all of a sudden
+> don't need the barriers in ___bpf_prog_run(), namely for LD_IMM_DW and
+> LDX_MEM_##SIZEOP, and something comparable for eBPF JIT?
+>
+> Is this going to be handled in eBPF in some other way?
+>
+> Without that in place, and considering Jann Horn's paper, it would seem
+> like PTI doesn't really lock it down fully, right?
+
+Here is the latest (v3) bpf fix:
+
+https://patchwork.ozlabs.org/patch/856645/
+
+I currently have v2 on my 'nospec' branch and will move that to v3 for
+the next update, unless it goes upstream before then.
