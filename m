@@ -1,77 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:43450 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750844AbeAOSxH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43214 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932119AbeAIIJs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 13:53:07 -0500
-Received: by mail-ot0-f193.google.com with SMTP id p36so3425843otd.10
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 10:53:07 -0800 (PST)
-Subject: Re: [PATCH v2 04/10] rtlwifi: unlink bss when un-association
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: yhchuang@realtek.com, linux-wireless@vger.kernel.org
-References: <20180111070932.9929-1-pkshih@realtek.com>
- <20180111070932.9929-5-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <9899e626-8b3d-a2fc-b8c7-c227c66453ed@lwfinger.net> (sfid-20180115_195314_473244_505A2EAE)
-Date: Mon, 15 Jan 2018 12:53:05 -0600
+        Tue, 9 Jan 2018 03:09:48 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180111070932.9929-5-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [v2,7/9] wil6210: configurable broadcast TX MCS
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1513270393-919-8-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513270393-919-8-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-Id: <20180109080947.E3DC260208@smtp.codeaurora.org> (sfid-20180109_090953_486851_C4E10A92)
+Date: Tue,  9 Jan 2018 08:09:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
-> From: Tsang-Shian Lin <thlin@realtek.com>
-> 
-> When AP change bandwidth setting from 20M to 40M, STA may use old 20M AP
-> information to association with AP. Driver unlink bss in the
-> .bss_info_changed of ieee80211_ops to make sure that later scan can get
-> correct AP bandwidth capability.
-> 
-> Signed-off-by: Tsang-Shian Lin <thlin@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
->   drivers/net/wireless/realtek/rtlwifi/core.c | 18 ++++++++++++++++++
->   1 file changed, 18 insertions(+)
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-
+> Add 2 module parameters that control broadcast/multicast
+> TX packets:
+> 1. bcast_mcs0_limit - specify the maximum packet size
+> that will be sent with MCS 0.
+> 2. bcast_mcs - specify the MCS index to use when sending
+> packets larger than above limit.
 > 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-> index ec639fa8095e..6c698123ac07 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-> @@ -1171,6 +1171,8 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
->   				 "BSS_CHANGED_ASSOC\n");
->   		} else {
-> +			struct cfg80211_bss *bss = NULL;
-> +
->   			mstatus = RT_MEDIA_DISCONNECT;
->   
->   			if (mac->link_state == MAC80211_LINKED)
-> @@ -1178,6 +1180,22 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->   			if (ppsc->p2p_ps_info.p2p_ps_mode > P2P_PS_NONE)
->   				rtl_p2p_ps_cmd(hw, P2P_PS_DISABLE);
->   			mac->link_state = MAC80211_NOLINK;
-> +
-> +			bss = cfg80211_get_bss(hw->wiphy, NULL,
-> +					       (u8 *)mac->bssid, NULL, 0,
-> +					       IEEE80211_BSS_TYPE_ESS,
-> +					       IEEE80211_PRIVACY_OFF);
-> +
-> +			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
-> +				 "bssid = %pMF\n", mac->bssid);
-> +
-> +			if (bss) {
-> +				cfg80211_unlink_bss(hw->wiphy, bss);
-> +				cfg80211_put_bss(hw->wiphy, bss);
-> +				RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
-> +					 "cfg80211_unlink !!\n");
-> +			}
-> +
->   			eth_zero_addr(mac->bssid);
->   			mac->vendor = PEER_UNKNOWN;
->   			mac->mode = 0;
-> 
+> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+IMHO this kind of higher level protocol configuration belongs to nl80211.
+Module parameters are more meant for lower level (hardware etc) configuration.
+
+-- 
+https://patchwork.kernel.org/patch/10112705/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
