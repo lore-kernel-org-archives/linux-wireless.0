@@ -1,88 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:21050 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751521AbeAIJcd (ORCPT
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:36366 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759765AbeAIQuA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 04:32:33 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH] staging: wilc1000: removed few unnecessary enums typedef
-Date: Tue, 9 Jan 2018 15:02:09 +0530
-Message-ID: <1515490329-8688-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180109_103237_507302_7F03824D)
+        Tue, 9 Jan 2018 11:50:00 -0500
+Subject: Re: [PATCH v2] b43: Replace mdelay with usleep_range in
+ b43_radio_2057_init_post
+To: Jia-Ju Bai <baijiaju1990@gmail.com>, kvalo@codeaurora.org,
+        kstewart@linuxfoundation.org, johannes.berg@intel.com,
+        tiwai@suse.de, gregkh@linuxfoundation.org,
+        colin.king@canonical.com, andrew.zaborowski@intel.com
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, b43-dev@lists.infradead.org
+References: <1515462006-6144-1-git-send-email-baijiaju1990@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <05e5756d-e401-5584-f809-e3ad42db2a66@lwfinger.net> (sfid-20180109_175023_719185_A5FE8C6B)
+Date: Tue, 9 Jan 2018 10:49:58 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1515462006-6144-1-git-send-email-baijiaju1990@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes following N_OPERATING_MODE_T,N_OBSS_DETECTION_T,
-N_PROTECTION_TYPE_T,N_SMPS_MODE_T,TX_ABORT_OPTION_T, typedef enum.
-Now, these enums are used as anonymous-enums for constants.
+On 01/08/2018 07:40 PM, Jia-Ju Bai wrote:
+> b43_radio_2057_init_post is not called in an interrupt handler
+> nor holding a spinlock.
+> The function mdelay in it can be replaced with usleep_range,
+> to reduce busy wait.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+> ---
+> v2:
+> * Replace mdelay with usleep_range, instead of msleep in v1.
+>    Thank Larry for good advice.
+> ---
 
-checkpatch.pl warning to not add new typedef is fixes with this patch.
+I agree that a sleep of 2-3 ms should be OK here.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index eec8760..cf4a44d 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -226,40 +226,40 @@ enum {
- 	G_RTS_CTS_PROT,
- };
- 
--typedef enum {
-+enum {
- 	HT_MIXED_MODE		= 1,
- 	HT_ONLY_20MHZ_MODE,
- 	HT_ONLY_20_40MHZ_MODE,
--} N_OPERATING_MODE_T;
-+};
- 
--typedef enum {
-+enum {
- 	NO_DETECT		= 0,
- 	DETECT_ONLY		= 1,
- 	DETECT_PROTECT		= 2,
- 	DETECT_PROTECT_REPORT	= 3,
--} N_OBSS_DETECTION_T;
-+};
- 
--typedef enum {
-+enum {
- 	RTS_CTS_NONHT_PROT	= 0,	/* RTS-CTS at non-HT rate */
- 	FIRST_FRAME_NONHT_PROT,		/* First frame at non-HT rate */
- 	LSIG_TXOP_PROT,                 /* LSIG TXOP Protection */
- 	FIRST_FRAME_MIXED_PROT,		/* First frame at Mixed format */
--} N_PROTECTION_TYPE_T;
-+};
- 
--typedef enum {
-+enum {
- 	STATIC_MODE		= 1,
- 	DYNAMIC_MODE		= 2,
- 	MIMO_MODE		= 3,	/* power save disable */
--} N_SMPS_MODE_T;
-+};
- 
--typedef enum {
-+enum {
- 	DISABLE_SELF_CTS,
- 	ENABLE_SELF_CTS,
- 	DISABLE_TX_ABORT,
- 	ENABLE_TX_ABORT,
- 	HW_TRIGGER_ABORT,
- 	SW_TRIGGER_ABORT,
--} TX_ABORT_OPTION_T;
-+};
- 
- enum wid_type {
- 	WID_CHAR		= 0,
--- 
-2.7.4
+Larry
+
+>   drivers/net/wireless/broadcom/b43/phy_n.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+> index a5557d7..f2a2f41 100644
+> --- a/drivers/net/wireless/broadcom/b43/phy_n.c
+> +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+> @@ -1031,7 +1031,7 @@ static void b43_radio_2057_init_post(struct b43_wldev *dev)
+>   
+>   	b43_radio_set(dev, R2057_RFPLL_MISC_CAL_RESETN, 0x78);
+>   	b43_radio_set(dev, R2057_XTAL_CONFIG2, 0x80);
+> -	mdelay(2);
+> +	usleep_range(2000, 3000);
+>   	b43_radio_mask(dev, R2057_RFPLL_MISC_CAL_RESETN, ~0x78);
+>   	b43_radio_mask(dev, R2057_XTAL_CONFIG2, ~0x80);
+>   
+> 
