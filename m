@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0083.outbound.protection.outlook.com ([104.47.38.83]:62976
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751161AbeAVMrO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 07:47:14 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: [PATCH 10/11] qtnfmac: do not use bus mutex for events processing
-Date: Mon, 22 Jan 2018 15:46:33 +0300
-Message-Id: <20180122124634.8430-11-sergey.matyukevich.os@quantenna.com> (sfid-20180122_134719_623326_37896A4F)
-In-Reply-To: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
-References: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:10406 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751723AbeAIJW1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Jan 2018 04:22:27 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH] staging: wilc1000: remove unnecessary typedef enum G_OPERATING_MODE_T
+Date: Tue, 9 Jan 2018 14:51:29 +0530
+Message-ID: <1515489689-8426-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180109_102232_174857_4F83835C)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+This patch has removed G_OPERATING_MODE_T typedef enum.
+Now, its used as anonymous-enums for constants.
+checkpatch.pl warning to avoid new typedef is fixed with this patch.
 
-Events processing requires locking of bus mutex, which is also used by
-cfg80211 layer before calling several of cfg80211 callbacks. Since all
-cfg80211 callbacks in qtnfmac driver also lock bus mutex, this
-potentially may lead to a deadlock.
-
-Do not use bus lock for event processing. Use RTNL lock instead to
-serialize events and commands processing threads.
-
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/event.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan_if.h | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index 8a3d2b1194e4..bcd415f96412 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -541,9 +541,9 @@ static int qtnf_event_process_skb(struct qtnf_bus *bus,
- 	if (unlikely(!mac))
- 		return -ENXIO;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 2baf6c4..222bde2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -107,12 +107,12 @@ typedef enum {
+ 	RATE_54MB		= 54
+ } TX_RATE_T;
  
--	qtnf_bus_lock(bus);
-+	rtnl_lock();
- 	res = qtnf_event_parse(mac, skb);
--	qtnf_bus_unlock(bus);
-+	rtnl_unlock();
+-typedef enum {
++enum {
+ 	B_ONLY_MODE		= 0,    /* 1, 2 M, otherwise 5, 11 M */
+ 	G_ONLY_MODE,			/* 6,12,24 otherwise 9,18,36,48,54 */
+ 	G_MIXED_11B_1_MODE,		/* 1,2,5.5,11 otherwise all on */
+ 	G_MIXED_11B_2_MODE,		/* 1,2,5,11,6,12,24 otherwise all on */
+-} G_OPERATING_MODE_T;
++};
  
- 	return res;
- }
+ typedef enum {
+ 	G_SHORT_PREAMBLE	= 0,	/* Short Preamble */
 -- 
-2.11.0
+2.7.4
