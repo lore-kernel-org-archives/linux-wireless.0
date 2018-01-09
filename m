@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39344 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932157AbeAHKJN (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:56580 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752152AbeAIMXC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 05:09:13 -0500
-Date: Mon, 8 Jan 2018 11:08:36 +0100
-From: Peter Zijlstra <peterz@infradead.org>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Alan Cox <alan.cox@intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Zhang Rui <rui.zhang@intel.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
-        Eduardo Valentin <edubezval@gmail.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
- execution
-Message-ID: <20180108100836.GF3040@hirez.programming.kicks-ass.net> (sfid-20180108_110953_522734_AA48EB6C)
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <87y3lbpvzp.fsf@xmission.com>
- <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
+        Tue, 9 Jan 2018 07:23:02 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 2/3] brcmfmac: add comment block in brcmf_sdio_buscore_read()
+Date: Tue,  9 Jan 2018 13:22:53 +0100
+Message-Id: <1515500574-16321-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180109_132307_708063_4827BEFA)
+In-Reply-To: <1515500574-16321-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1515500574-16321-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
-> On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:
-> > In at least one place (mpls) you are patching a fast path.  Compile out
-> > or don't load mpls by all means.  But it is not acceptable to change the
-> > fast path without even considering performance.
-> 
-> Performance matters greatly, but I need help to identify a workload
-> that is representative for this fast path to see what, if any, impact
-> is incurred. Even better is a review that says "nope, 'index' is not
-> subject to arbitrary userspace control at this point, drop the patch."
+In brcmf_sdio_buscore_read() there is some special handling upon
+register access to chipid register of the chipcommon core. Add
+comment explaining why it is done here.
 
-I think we're focussing a little too much on pure userspace. That is, we
-should be saying under the attackers control. Inbound network packets
-could equally be under the attackers control.
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Sure, userspace is the most direct and highest bandwidth one, but I
-think we should treat all (kernel) external values with the same
-paranoia.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 81eb776..0868614 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -3772,6 +3772,13 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
+ 
+ 	val = brcmf_sdiod_readl(sdiodev, addr, NULL);
+ 
++	/*
++	 * this is a bit of special handling if reading the chipcommon chipid
++	 * register. The 4339 is a next-gen of the 4335. It uses the same
++	 * SDIO device id as 4335 and the chipid register returns 4335 as well.
++	 * It can be identified as 4339 by looking at the chip revision. It
++	 * is corrected here so the chip.c module has the right info.
++	 */
+ 	if (addr == CORE_CC_REG(SI_ENUM_BASE, chipid) &&
+ 	    (sdiodev->func1->device == SDIO_DEVICE_ID_BROADCOM_4339 ||
+ 	     sdiodev->func1->device == SDIO_DEVICE_ID_BROADCOM_4335_4339)) {
+-- 
+1.9.1
