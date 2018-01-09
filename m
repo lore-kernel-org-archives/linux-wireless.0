@@ -1,42 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:44902 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753992AbeAINNX (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33827 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752243AbeAIJZM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 08:13:23 -0500
-Received: by mail-wr0-f195.google.com with SMTP id w50so4849138wrc.11
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 05:13:22 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] mt76x2: dfs: take into account dfs region in mt76x2_dfs_init_params()
-Date: Tue,  9 Jan 2018 14:13:12 +0100
-Message-Id: <380bdfe40558af66959f6658b50b4999a825edcd.1515503003.git.lorenzo.bianconi@redhat.com> (sfid-20180109_141331_714518_AD575CF3)
-In-Reply-To: <cover.1515503003.git.lorenzo.bianconi@redhat.com>
-References: <cover.1515503003.git.lorenzo.bianconi@redhat.com>
+        Tue, 9 Jan 2018 04:25:12 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH] staging: wilc1000: removed unnecessary enum typedefs
+Date: Tue, 9 Jan 2018 14:54:51 +0530
+Message-ID: <1515489891-8512-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180109_102519_238964_DC4CC55A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not enable DFS state machine if dfs region is set to NL80211_DFS_UNSET
+This patch removes following G_PREAMBLE_T,SCANTYPE_T,
+USER_PS_MODE_T,SECURITY_T,ACK_POLICY_T,RESET_REQ_T typedef enum.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Now, these enums are used as anonymous-enums for constants.
+
+checkpatch.pl warning to avoid new typedef is fixes with this patch.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan_if.h | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-index df23ba5ef900..f936dc9a5476 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-@@ -460,7 +460,8 @@ void mt76x2_dfs_init_params(struct mt76x2_dev *dev)
- {
- 	struct cfg80211_chan_def *chandef = &dev->mt76.chandef;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 222bde2..598ba9e 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -114,28 +114,28 @@ enum {
+ 	G_MIXED_11B_2_MODE,		/* 1,2,5,11,6,12,24 otherwise all on */
+ };
  
--	if (chandef->chan->flags & IEEE80211_CHAN_RADAR) {
-+	if ((chandef->chan->flags & IEEE80211_CHAN_RADAR) &&
-+	    dev->dfs_pd.region != NL80211_DFS_UNSET) {
- 		mt76x2_dfs_set_bbp_params(dev);
- 		/* enable debug mode */
- 		mt76x2_dfs_set_capture_mode_ctrl(dev, true);
+-typedef enum {
++enum {
+ 	G_SHORT_PREAMBLE	= 0,	/* Short Preamble */
+ 	G_LONG_PREAMBLE		= 1,	/* Long Preamble */
+ 	G_AUTO_PREAMBLE		= 2,	/* Auto Preamble Selection */
+-} G_PREAMBLE_T;
++};
+ 
+ #define MAC_CONNECTED		1
+ #define MAC_DISCONNECTED	0
+ 
+ #define SCAN_DONE		TRUE
+-typedef enum {
++enum {
+ 	PASSIVE_SCAN		= 0,
+ 	ACTIVE_SCAN		= 1,
+-} SCANTYPE_T;
++};
+ 
+-typedef enum {
++enum {
+ 	NO_POWERSAVE		= 0,
+ 	MIN_FAST_PS		= 1,
+ 	MAX_FAST_PS		= 2,
+ 	MIN_PSPOLL_PS		= 3,
+ 	MAX_PSPOLL_PS		= 4
+-} USER_PS_MODE_T;
++};
+ 
+ typedef enum {
+ 	CHIP_WAKEDUP		= 0,
+@@ -153,7 +153,7 @@ typedef enum {
+ 	RELEASE_ALLOW_SLEEP	= 1,
+ } BUS_RELEASE_T;
+ 
+-typedef enum {
++enum {
+ 	NO_SECURITY		= 0,
+ 	WEP_40			= 0x3,
+ 	WEP_104			= 0x7,
+@@ -163,7 +163,7 @@ typedef enum {
+ 	WPA2_AES		= 0x31,
+ 	WPA2_TKIP		= 0x51,
+ 	WPA2_AES_TKIP		= 0x71,	/* Aes or Tkip */
+-} SECURITY_T;
++};
+ 
+ enum AUTHTYPE {
+ 	OPEN_SYSTEM		= 1,
+@@ -178,16 +178,16 @@ enum SITESURVEY {
+ 	SITE_SURVEY_OFF		= 2
+ };
+ 
+-typedef enum {
++enum {
+ 	NORMAL_ACK		= 0,
+ 	NO_ACK,
+-} ACK_POLICY_T;
++};
+ 
+-typedef enum {
++enum {
+ 	DONT_RESET		= 0,
+ 	DO_RESET		= 1,
+ 	NO_REQUEST		= 2,
+-} RESET_REQ_T;
++};
+ 
+ typedef enum {
+ 	REKEY_DISABLE		= 1,
 -- 
-2.13.6
+2.7.4
