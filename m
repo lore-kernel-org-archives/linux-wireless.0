@@ -1,135 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:40454 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753183AbeAaVdo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47360 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751838AbeAIHjp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 16:33:44 -0500
-Received: by mail-pg0-f67.google.com with SMTP id g16so11125473pgn.7
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jan 2018 13:33:44 -0800 (PST)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH 4/6] mac80211: Send control port frames over nl80211
-Date: Wed, 31 Jan 2018 15:33:27 -0600
-Message-Id: <20180131213329.25322-5-denkenz@gmail.com> (sfid-20180131_223355_270289_971C06E1)
-In-Reply-To: <20180131213329.25322-1-denkenz@gmail.com>
-References: <20180131213329.25322-1-denkenz@gmail.com>
+        Tue, 9 Jan 2018 02:39:45 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Xinming Hu <huxm@marvell.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Dmitry Torokhov <dtor@google.com>, rajatja@google.com,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Subject: Re: [PATCH] mwifiex: cancel pcie/sdio work in remove/shutdown handler
+References: <1513164473-13827-1-git-send-email-huxm@marvell.com>
+        <20180108181117.GA129772@google.com>
+Date: Tue, 09 Jan 2018 09:39:39 +0200
+In-Reply-To: <20180108181117.GA129772@google.com> (Brian Norris's message of
+        "Mon, 8 Jan 2018 10:11:18 -0800")
+Message-ID: <87373f32h0.fsf@kamboji.qca.qualcomm.com> (sfid-20180109_083950_037615_40C9C89B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If userspace requested control port frames to go over 80211, then do so.
-The control packets are intercepted just prior to delivery of the packet
-to the underlying network device.
+Brian Norris <briannorris@chromium.org> writes:
 
-Pre-authentication type frames (protocol: 0x88c7) are also forwarded
-over nl80211.
+>> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+>> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+>> @@ -310,6 +310,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+>>  		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+>>  	}
+>>  
+>> +	cancel_work_sync(&card->work);
+>> +
+>
+> Just FYI, this "fix" is not a real fix. It will likely paper over some
+> of your bugs (where, e.g., the FW shutdown command times out in the
+> previous couple of lines), but this highlights the fact that there are
+> other races that could trigger the same behavior. You're not fixing
+> those.
+>
+> For example, what if somebody initiates a scan or other nl80211 command
+> between the above line and mwifiex_remove_card()? That command could
+> potentially time out too.
+>
+> The proper fix would be to institute some kind of mutual exclusion
+> (locking) between mwifiex_shutdown_sw() and mwifiex_remove_card(), so
+> that they can't occur at the same time.
+>
+> Unfortunately, I only paid attention to this after Kalle already applied
+> this patch. Personally, I'd prefer this patch not get applied, since
+> it's a bad solution to an obvious problem, which instead leaves a subtle
+> problem that perhaps no one will bother fixing.
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- net/mac80211/cfg.c         |  2 ++
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        |  2 ++
- net/mac80211/rx.c          | 34 +++++++++++++++++++++++++++++-----
- 4 files changed, 34 insertions(+), 5 deletions(-)
+I can revert it, that's not a problem. Can I use the text below as
+explanation for the revert?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 46028e12e216..f53bfb27295f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -925,6 +925,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	 */
- 	sdata->control_port_protocol = params->crypto.control_port_ethertype;
- 	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
-+	sdata->control_port_over_nl80211 = false;
- 	sdata->encrypt_headroom = ieee80211_cs_headroom(sdata->local,
- 							&params->crypto,
- 							sdata->vif.type);
-@@ -934,6 +935,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			params->crypto.control_port_ethertype;
- 		vlan->control_port_no_encrypt =
- 			params->crypto.control_port_no_encrypt;
-+		vlan->control_port_over_nl80211 = false;
- 		vlan->encrypt_headroom =
- 			ieee80211_cs_headroom(sdata->local,
- 					      &params->crypto,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 26900025de2f..6f91aea6a4cb 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -899,6 +899,7 @@ struct ieee80211_sub_if_data {
- 	u16 sequence_number;
- 	__be16 control_port_protocol;
- 	bool control_port_no_encrypt;
-+	bool control_port_over_nl80211;
- 	int encrypt_headroom;
- 
- 	atomic_t num_tx_queued;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 39b660b9a908..fc71a906939b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4830,6 +4830,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 	sdata->control_port_protocol = req->crypto.control_port_ethertype;
- 	sdata->control_port_no_encrypt = req->crypto.control_port_no_encrypt;
-+	sdata->control_port_over_nl80211 =
-+					req->crypto.control_port_over_nl80211;
- 	sdata->encrypt_headroom = ieee80211_cs_headroom(local, &req->crypto,
- 							sdata->vif.type);
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index e755f93ad735..c3abf9e44079 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2243,6 +2243,33 @@ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
- 	return true;
- }
- 
-+static void ieee80211_deliver_skb_to_local_stack(struct sk_buff *skb,
-+						 struct ieee80211_rx_data *rx)
-+{
-+	struct ieee80211_sub_if_data *sdata = rx->sdata;
-+	struct net_device *dev = sdata->dev;
-+
-+	if (unlikely((skb->protocol == sdata->control_port_protocol ||
-+		      skb->protocol == cpu_to_be16(ETH_P_PREAUTH)) &&
-+		     sdata->control_port_over_nl80211)) {
-+		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-+		bool noencrypt = status->flag & RX_FLAG_DECRYPTED;
-+		struct ethhdr *ehdr = eth_hdr(skb);
-+
-+		if (!cfg80211_rx_control_port(dev, skb->data, skb->len,
-+					      ehdr->h_source,
-+					      be16_to_cpu(skb->protocol),
-+					      noencrypt))
-+			dev_kfree_skb(skb);
-+	} else {
-+		/* deliver to local stack */
-+		if (rx->napi)
-+			napi_gro_receive(rx->napi, skb);
-+		else
-+			netif_receive_skb(skb);
-+	}
-+}
-+
- /*
-  * requires that rx->skb is a frame with ethernet header
-  */
-@@ -2327,13 +2354,10 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- #endif
- 
- 	if (skb) {
--		/* deliver to local stack */
- 		skb->protocol = eth_type_trans(skb, dev);
- 		memset(skb->cb, 0, sizeof(skb->cb));
--		if (rx->napi)
--			napi_gro_receive(rx->napi, skb);
--		else
--			netif_receive_skb(skb);
-+
-+		ieee80211_deliver_skb_to_local_stack(skb, rx);
- 	}
- 
- 	if (xmit_skb) {
+----------------------------------------------------------------------
+Brian Norris <briannorris@chromium.org> says:
+
+Just FYI, this "fix" is not a real fix. It will likely paper over some
+of your bugs (where, e.g., the FW shutdown command times out in the
+previous couple of lines), but this highlights the fact that there are
+other races that could trigger the same behavior. You're not fixing
+those.
+
+For example, what if somebody initiates a scan or other nl80211 command
+between the above line and mwifiex_remove_card()? That command could
+potentially time out too.
+
+The proper fix would be to institute some kind of mutual exclusion
+(locking) between mwifiex_shutdown_sw() and mwifiex_remove_card(), so
+that they can't occur at the same time.
+
+----------------------------------------------------------------------
+
 -- 
-2.13.5
+Kalle Valo
