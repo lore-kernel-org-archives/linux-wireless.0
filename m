@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:57396 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932446AbeARUgx (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:45239 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751610AbeAIQsW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 15:36:53 -0500
-Date: Thu, 18 Jan 2018 15:36:51 -0500 (EST)
-Message-Id: <20180118.153651.1709714615193043829.davem@davemloft.net> (sfid-20180118_213701_039536_CC246AAF)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        johannes.berg@intel.com
-Subject: Re: [PATCH] cfg80211: fix station info handling bugs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180116222022.13161-1-johannes@sipsolutions.net>
-References: <20180116222022.13161-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Tue, 9 Jan 2018 11:48:22 -0500
+Subject: Re: [PATCH][next] rtlwifi: btcoexist: remove redundant variable
+ fw_ps_state
+To: Colin King <colin.king@canonical.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20180109164329.15919-1-colin.king@canonical.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <a72bbd04-4bf5-7819-bf6e-31092bfa2d51@lwfinger.net> (sfid-20180109_174844_421821_52901ACE)
+Date: Tue, 9 Jan 2018 10:48:19 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180109164329.15919-1-colin.king@canonical.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 16 Jan 2018 23:20:22 +0100
+On 01/09/2018 10:43 AM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Variable fw_ps_state is assigned a value but it is never read, hence
+> it is redundant and can be removed.
 
-> From: Johannes Berg <johannes.berg@intel.com>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Thanks,
+
+Larry
+
 > 
-> Fix two places where the structure isn't initialized to zero,
-> and thus can't be filled properly by the driver.
+> Cleans up clang warning:
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:736:2:
+> warning: Value stored to 'fw_ps_state' is never read
 > 
-> Fixes: 4a4b8169501b ("cfg80211: Accept multiple RSSI thresholds for CQM")
-> Fixes: 9930380f0bd8 ("cfg80211: implement IWRATE")
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > ---
-> Dave, can you apply this as an exception? I'm not really expecting
-> any other patches to show up now, and seems easier to have a single
-> patch than a whole pull request (especially now that patchwork seems
-> to be swallowing mine ...)
-
-Sure, applied, thanks Johannes.
+>   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> index 5f3eda31187a..873bf9303d5d 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> @@ -677,7 +677,7 @@ static void halbtc_display_wifi_status(struct btc_coexist *btcoexist,
+>   	u32 wifi_link_status = 0x0;
+>   	bool bt_hs_on = false, under_ips = false, under_lps = false;
+>   	bool low_power = false, dc_mode = false;
+> -	u8 wifi_chnl = 0, wifi_hs_chnl = 0, fw_ps_state;
+> +	u8 wifi_chnl = 0, wifi_hs_chnl = 0;
+>   	u8 ap_num = 0;
+>   
+>   	wifi_link_status = halbtc_get_wifi_link_status(btcoexist);
+> @@ -733,7 +733,6 @@ static void halbtc_display_wifi_status(struct btc_coexist *btcoexist,
+>   	dc_mode = true;	/*TODO*/
+>   	under_ips = rtlpriv->psc.inactive_pwrstate == ERFOFF ? 1 : 0;
+>   	under_lps = rtlpriv->psc.dot11_psmode == EACTIVE ? 0 : 1;
+> -	fw_ps_state = 0;
+>   	low_power = 0; /*TODO*/
+>   	seq_printf(m, "\n %-35s = %s%s%s%s",
+>   		   "Power Status",
+> 
