@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0084.outbound.protection.outlook.com ([104.47.38.84]:56768
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751113AbeAVMrL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 07:47:11 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 08/11] qtnfmac: fix STA disconnect procedure
-Date: Mon, 22 Jan 2018 15:46:31 +0300
-Message-Id: <20180122124634.8430-9-sergey.matyukevich.os@quantenna.com> (sfid-20180122_134723_676402_328D21F5)
-In-Reply-To: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
-References: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43760 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756258AbeAIH3U (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Jan 2018 02:29:20 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: AceLan Kao <acelan.kao@canonical.com>, Larry.Finger@lwfinger.net
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath9k: add a quirk to set use_msi automatically
+References: <1515461962-27129-1-git-send-email-acelan.kao@canonical.com>
+Date: Tue, 09 Jan 2018 09:29:14 +0200
+In-Reply-To: <1515461962-27129-1-git-send-email-acelan.kao@canonical.com>
+        (AceLan Kao's message of "Tue, 9 Jan 2018 09:39:22 +0800")
+Message-ID: <877esr32yd.fsf@kamboji.qca.qualcomm.com> (sfid-20180109_082939_282729_A2CC6664)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-STA does not reconnect to the same AP after disconnect. The reason is
-that STA is marked as disconnected in cfg80211 disconnect callback.
-This is too early since in this case qtnfmac event handler skips
-cfg80211_disconnected call when processing disconnect event from
-the card. As a result, wdev is left in an inconsistent state.
+AceLan Kao <acelan.kao@canonical.com> writes:
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 1 -
- 1 file changed, 1 deletion(-)
+> Some platform(BIOS) blocks legacy interrupts (INTx), and only allows MSI
+> for WLAN device. So adding a quirk to list those machines and set
+> use_msi automatically.
+> Adding the following platforms to the quirk.
+>    Dell Inspiron 24-3460
+>    Dell Inspiron 3472
+>    Dell Inspiron 14-3473
+>    Dell Vostro 3262
+>    Dell Vostro 15-3572
+>
+> Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 91830fd41508..edebf23e8eae 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -679,7 +679,6 @@ qtnf_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 		return ret;
- 	}
- 
--	vif->sta_state = QTNF_STA_DISCONNECTED;
- 	return 0;
- }
- 
+[...]
+
+> @@ -96,6 +97,56 @@ static const struct ieee80211_tpt_blink ath9k_tpt_blink[] = {
+>  };
+>  #endif
+>  
+> +static int __init set_use_msi(const struct dmi_system_id *dmi)
+> +{
+> +	ath9k_use_msi = 1;
+> +	return 1;
+> +}
+> +
+> +static const struct dmi_system_id ath9k_quirks[] __initconst = {
+> +	{
+> +		.callback = set_use_msi,
+> +		.ident = "Dell Inspiron 24-3460",
+> +		.matches = {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "Inspiron 24-3460"),
+> +		},
+> +	},
+
+Larry, didn't rtlwifi have similar situation that with certain laptops
+users were required to enable a module parameter to get the device
+working? I think rtlwifi should do the same as AceLan does here as then
+the user would not need to manually set the module parameter.
+
 -- 
-2.11.0
+Kalle Valo
