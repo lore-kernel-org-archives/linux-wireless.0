@@ -1,58 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53132 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759606AbeAIQne (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 11:43:34 -0500
-From: Colin King <colin.king@canonical.com>
-To: Ping-Ke Shih <pkshih@realtek.com>,
+Received: from mx1.redhat.com ([209.132.183.28]:53224 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751384AbeAIU4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Jan 2018 15:56:09 -0500
+Date: Tue, 9 Jan 2018 14:55:49 -0600
+From: Josh Poimboeuf <jpoimboe@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jiri Kosina <jikos@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Zhang Rui <rui.zhang@intel.com>,
+        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arjan van de Ven <arjan@linux.intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH][next] rtlwifi: btcoexist: remove redundant variable fw_ps_state
-Date: Tue,  9 Jan 2018 16:43:29 +0000
-Message-Id: <20180109164329.15919-1-colin.king@canonical.com> (sfid-20180109_174353_626104_B4085025)
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Netdev <netdev@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
+ execution
+Message-ID: <20180109205549.osb25c4r2h2n2wqx@treble> (sfid-20180109_215641_418510_3F9D2586)
+References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <alpine.LRH.2.00.1801092017330.27010@gjva.wvxbf.pm>
+ <CAPcyv4gccDQYx9urpagnBo-TqNLoQ00gEoE7kp+JXNKsmFxcHw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAPcyv4gccDQYx9urpagnBo-TqNLoQ00gEoE7kp+JXNKsmFxcHw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, Jan 09, 2018 at 11:44:05AM -0800, Dan Williams wrote:
+> On Tue, Jan 9, 2018 at 11:34 AM, Jiri Kosina <jikos@kernel.org> wrote:
+> > On Fri, 5 Jan 2018, Dan Williams wrote:
+> >
+> > [ ... snip ... ]
+> >> Andi Kleen (1):
+> >>       x86, barrier: stop speculation for failed access_ok
+> >>
+> >> Dan Williams (13):
+> >>       x86: implement nospec_barrier()
+> >>       [media] uvcvideo: prevent bounds-check bypass via speculative execution
+> >>       carl9170: prevent bounds-check bypass via speculative execution
+> >>       p54: prevent bounds-check bypass via speculative execution
+> >>       qla2xxx: prevent bounds-check bypass via speculative execution
+> >>       cw1200: prevent bounds-check bypass via speculative execution
+> >>       Thermal/int340x: prevent bounds-check bypass via speculative execution
+> >>       ipv6: prevent bounds-check bypass via speculative execution
+> >>       ipv4: prevent bounds-check bypass via speculative execution
+> >>       vfs, fdtable: prevent bounds-check bypass via speculative execution
+> >>       net: mpls: prevent bounds-check bypass via speculative execution
+> >>       udf: prevent bounds-check bypass via speculative execution
+> >>       userns: prevent bounds-check bypass via speculative execution
+> >>
+> >> Mark Rutland (4):
+> >>       asm-generic/barrier: add generic nospec helpers
+> >>       Documentation: document nospec helpers
+> >>       arm64: implement nospec_ptr()
+> >>       arm: implement nospec_ptr()
+> >
+> > So considering the recent publication of [1], how come we all of a sudden
+> > don't need the barriers in ___bpf_prog_run(), namely for LD_IMM_DW and
+> > LDX_MEM_##SIZEOP, and something comparable for eBPF JIT?
+> >
+> > Is this going to be handled in eBPF in some other way?
+> >
+> > Without that in place, and considering Jann Horn's paper, it would seem
+> > like PTI doesn't really lock it down fully, right?
+> 
+> Here is the latest (v3) bpf fix:
+> 
+> https://patchwork.ozlabs.org/patch/856645/
+> 
+> I currently have v2 on my 'nospec' branch and will move that to v3 for
+> the next update, unless it goes upstream before then.
 
-Variable fw_ps_state is assigned a value but it is never read, hence
-it is redundant and can be removed.
+That patch seems specific to CONFIG_BPF_SYSCALL.  Is the bpf() syscall
+the only attack vector?  Or are there other ways to run bpf programs
+that we should be worried about?
 
-Cleans up clang warning:
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:736:2:
-warning: Value stored to 'fw_ps_state' is never read
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 5f3eda31187a..873bf9303d5d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -677,7 +677,7 @@ static void halbtc_display_wifi_status(struct btc_coexist *btcoexist,
- 	u32 wifi_link_status = 0x0;
- 	bool bt_hs_on = false, under_ips = false, under_lps = false;
- 	bool low_power = false, dc_mode = false;
--	u8 wifi_chnl = 0, wifi_hs_chnl = 0, fw_ps_state;
-+	u8 wifi_chnl = 0, wifi_hs_chnl = 0;
- 	u8 ap_num = 0;
- 
- 	wifi_link_status = halbtc_get_wifi_link_status(btcoexist);
-@@ -733,7 +733,6 @@ static void halbtc_display_wifi_status(struct btc_coexist *btcoexist,
- 	dc_mode = true;	/*TODO*/
- 	under_ips = rtlpriv->psc.inactive_pwrstate == ERFOFF ? 1 : 0;
- 	under_lps = rtlpriv->psc.dot11_psmode == EACTIVE ? 0 : 1;
--	fw_ps_state = 0;
- 	low_power = 0; /*TODO*/
- 	seq_printf(m, "\n %-35s = %s%s%s%s",
- 		   "Power Status",
 -- 
-2.15.1
+Josh
