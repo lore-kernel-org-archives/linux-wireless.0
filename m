@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:56223 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750730AbeA2DNq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34872 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751728AbeAIIEM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Jan 2018 22:13:46 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 04/10] rtlwifi: Extend tx_power_by_rate_offset size for newer IC
-Date: Mon, 29 Jan 2018 03:13:33 +0000
-Message-ID: <1517195612.2618.10.camel@realtek.com> (sfid-20180129_041350_438257_A2B15B74)
-References: <20180126074645.27201-1-pkshih@realtek.com>
-         <20180126074645.27201-5-pkshih@realtek.com>
-         <57387d71-27cf-2448-dfe3-b4748930c36b@lwfinger.net>
-In-Reply-To: <57387d71-27cf-2448-dfe3-b4748930c36b@lwfinger.net>
+        Tue, 9 Jan 2018 03:04:12 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [v2,1/9] wil6210: support Scheduled scan
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1513270393-919-2-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1513270393-919-2-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-Id: <20180109080411.CEDF560BDF@smtp.codeaurora.org> (sfid-20180109_090417_391442_3E99AE15)
+Date: Tue,  9 Jan 2018 08:04:11 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU2F0LCAyMDE4LTAxLTI3IGF0IDEzOjQ0IC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IE9uIDAxLzI2LzIwMTggMDE6NDYgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiBG
-cm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPsKgDQo+ID4gSW4gb2xk
-ZXIgZGVzaWduLCB0aGUgVFggcG93ZXIgaXMgZ3JvdXBlZCBpbnRvIHJhdGUgc2VjdGlvbiAoc21h
-bGxlciBhcnJheQ0KPiA+IHNpemUpLCBidXQgbmV3IGRlc2lnbiBncm91cHMgdGhlbSBpbnRvIHJh
-dGUgKGxhcmdlciBhcnJheSBzaXplKS4gVGh1cywNCj4gPiB3ZSBleHRlbmQgdGhlIHNpemUgZm9y
-IGJvdGggY2FzZXMsIGFuZCBhZGQgY29tcGlsZSB0aW1lIGFzc2VydGlvbi4NCj4gPsKgDQo+ID4g
-U2lnbmVkLW9mZi1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQo+ID4gLS0t
-DQo+wqANCj4gSSBoYXRlIHRvIHNlZSBhbnkgYXJyYXlzIGdldHRpbmcgbGFyZ2VyLCBidXQgSSBj
-YW4gc2VlIHRoYXQgY2hhbmdlcyBpbiByYXRlc8KgDQo+IG1ha2UgdGhpcyBpbmV2aXRhYmxlLiBU
-aGUgQlVJTERfQlVHX09OKCkgaXMgYSBnb29kIGFkZGl0aW9uLg0KPsKgDQo+IEFja2VkLWJ5OiBM
-YXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+DQo+DQoNCk15IHN0ZXBzIHRv
-IHJldmlzZSB0eF9wb3dlciBwcm9jZWR1cmUgYXJlDQoxLiBleHRlbmRzIHRoZSBhcnJheSBzaXpl
-ICh0aGlzIGNvbW1pdCkNCjIuIGFkZCA4ODIyYmUgKHRoZSBuZXcgdHhfcG93ZXIgcHJvY2VkdXJl
-IGlzIGluY2x1ZGVkKQ0KMy4gbWFrZSBhbGwgY2hpcHMgdXNlIHRoZSBuZXcgdHhfcG93ZXIgcHJv
-Y2VkdXJlDQoNClBLDQo=
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+
+> Add support for sched_scan_start/stop by sending PNO commands to FW.
+> Driver reports max_sched_scan_reqs and invokes
+> cfg80211_sched_scan_results upon receiving WMI_SCHED_SCAN_RESULT_EVENTID
+> from FW.
+> 
+> Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+7 patches applied to ath-next branch of ath.git, thanks.
+
+a5dc68839273 wil6210: support Scheduled scan
+3dc2c13b5238 wil6210: support 40bit DMA addresses
+38e4c25d6069 wil6210: add platform capabilities bitmap
+594b59ec70e1 wil6210: set platform features based on FW capabilities
+a8fd16d7a14f wil6210: prevent parallel suspend and dump collection
+83957bc3aeaf wil6210: remove leftover "FIXME"s
+7d3e4dbe570e wil6210: remove reference to preset_chandef
+
+-- 
+https://patchwork.kernel.org/patch/10112711/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
