@@ -1,134 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:41835 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756471AbeASWqU (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:56579 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751414AbeAIMXC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jan 2018 17:46:20 -0500
-Received: by mail-oi0-f68.google.com with SMTP id n81so2183175oig.8
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Jan 2018 14:46:20 -0800 (PST)
-Subject: Re: [PATCH 07/10] rtlwifi: btcoex: Fix some static warnings from
- Sparse
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180119064551.10084-1-pkshih@realtek.com>
- <20180119064551.10084-8-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <79544f61-8a0d-283d-6370-1197b31aa59f@lwfinger.net> (sfid-20180119_234624_605462_0D51F469)
-Date: Fri, 19 Jan 2018 16:46:18 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180119064551.10084-8-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 9 Jan 2018 07:23:02 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 3/3] brcmfmac: rename brcmf_sdiod_buff_{read,write}() functions
+Date: Tue,  9 Jan 2018 13:22:54 +0100
+Message-Id: <1515500574-16321-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180109_132311_402337_D139F089)
+In-Reply-To: <1515500574-16321-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1515500574-16321-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/19/2018 12:45 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> Add 'static' or declaration to resolve the warnings.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
->   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 36 +++++++---------------
->   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  4 +++
->   2 files changed, 15 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> index 73ef5b271f3b..1404729441a2 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> @@ -29,7 +29,7 @@
->    *		Debug related function
->    ***************************************************/
->   
-> -const char *const gl_btc_wifi_bw_string[] = {
-> +static const char *const gl_btc_wifi_bw_string[] = {
->   	"11bg",
->   	"HT20",
->   	"HT40",
-> @@ -37,7 +37,7 @@ const char *const gl_btc_wifi_bw_string[] = {
->   	"HT160"
->   };
->   
-> -const char *const gl_btc_wifi_freq_string[] = {
-> +static const char *const gl_btc_wifi_freq_string[] = {
->   	"2.4G",
->   	"5G"
->   };
-> @@ -156,7 +156,7 @@ static u8 halbtc_get_wifi_central_chnl(struct btc_coexist *btcoexist)
->   	return chnl;
->   }
->   
-> -u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
-> +static u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
->   {
->   	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
->   
-> @@ -171,12 +171,12 @@ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
->   	return rtlpriv->btcoexist.btc_info.single_ant_path;
->   }
->   
-> -u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
-> +static u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
->   {
->   	return rtlpriv->btcoexist.btc_info.bt_type;
->   }
->   
-> -u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
-> +static u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
->   {
->   	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
->   	u8 num;
-> @@ -193,7 +193,7 @@ u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
->   	return num;
->   }
->   
-> -u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
-> +static u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
->   {
->   	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
->   
-> @@ -504,7 +504,7 @@ static u32 halbtc_get_bt_forbidden_slot_val(void *btc_context)
->   	return btcoexist->bt_info.bt_forb_slot_val;
->   }
->   
-> -u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
-> +static u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
->   {
->   	/* return value:
->   	 * [31:16] => connected port number
-> @@ -980,7 +980,8 @@ static void halbtc_write_4byte(void *bt_context, u32 reg_addr, u32 data)
->   	rtl_write_dword(rtlpriv, reg_addr, data);
->   }
->   
-> -void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
-> +static void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr,
-> +					 u8 data)
->   {
->   	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
->   	struct rtl_priv *rtlpriv = btcoexist->adapter;
-> @@ -993,22 +994,6 @@ void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
->   		rtl_write_byte(rtlpriv, reg_addr, data);
->   }
->   
-> -void halbtc_set_macreg(void *btc_context, u32 reg_addr, u32 bit_mask, u32 data)
-> -{
-> -	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
-> -	struct rtl_priv *rtlpriv = btcoexist->adapter;
-> -
-> -	rtl_set_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask, data);
-> -}
-> -
-> -u32 halbtc_get_macreg(void *btc_context, u32 reg_addr, u32 bit_mask)
-> -{
-> -	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
-> -	struct rtl_priv *rtlpriv = btcoexist->adapter;
-> -
-> -	return rtl_get_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask);
-> -}
-> -
+Rename functions to brcmf_sdio_skbuff_{read,write}() as we pass an
+skbuff to this function.
 
-Should we conclude that the two routines above are not used, and that fact was 
-exposed when they were made static? If so, please note that they were deleted in 
-the commit message.
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 48 +++++++++++-----------
+ 1 file changed, 24 insertions(+), 24 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index a47b252..0b68240 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -292,24 +292,24 @@ void brcmf_sdiod_writel(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		*ret = retval;
+ }
+ 
+-static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev,
+-				 struct sdio_func *func, u32 addr,
+-				 struct sk_buff *pkt)
++static int brcmf_sdiod_skbuff_read(struct brcmf_sdio_dev *sdiodev,
++				   struct sdio_func *func, u32 addr,
++				   struct sk_buff *skb)
+ {
+ 	unsigned int req_sz;
+ 	int err;
+ 
+ 	/* Single skb use the standard mmc interface */
+-	req_sz = pkt->len + 3;
++	req_sz = skb->len + 3;
+ 	req_sz &= (uint)~3;
+ 
+ 	switch (func->num) {
+ 	case 1:
+-		err = sdio_memcpy_fromio(func, ((u8 *)(pkt->data)), addr,
++		err = sdio_memcpy_fromio(func, ((u8 *)(skb->data)), addr,
+ 					 req_sz);
+ 		break;
+ 	case 2:
+-		err = sdio_readsb(func, ((u8 *)(pkt->data)), addr, req_sz);
++		err = sdio_readsb(func, ((u8 *)(skb->data)), addr, req_sz);
+ 		break;
+ 	default:
+ 		/* bail out as things are really fishy here */
+@@ -323,18 +323,18 @@ static int brcmf_sdiod_buff_read(struct brcmf_sdio_dev *sdiodev,
+ 	return err;
+ }
+ 
+-static int brcmf_sdiod_buff_write(struct brcmf_sdio_dev *sdiodev,
+-				  struct sdio_func *func, u32 addr,
+-				  struct sk_buff *pkt)
++static int brcmf_sdiod_skbuff_write(struct brcmf_sdio_dev *sdiodev,
++				    struct sdio_func *func, u32 addr,
++				    struct sk_buff *skb)
+ {
+ 	unsigned int req_sz;
+ 	int err;
+ 
+ 	/* Single skb use the standard mmc interface */
+-	req_sz = pkt->len + 3;
++	req_sz = skb->len + 3;
+ 	req_sz &= (uint)~3;
+ 
+-	err = sdio_memcpy_toio(func, addr, ((u8 *)(pkt->data)), req_sz);
++	err = sdio_memcpy_toio(func, addr, ((u8 *)(skb->data)), req_sz);
+ 
+ 	if (err == -ENOMEDIUM)
+ 		brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_NOMEDIUM);
+@@ -550,7 +550,7 @@ int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
+ 	addr &= SBSDIO_SB_OFT_ADDR_MASK;
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+-	err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func2, addr, pkt);
++	err = brcmf_sdiod_skbuff_read(sdiodev, sdiodev->func2, addr, pkt);
+ 
+ done:
+ 	return err;
+@@ -575,14 +575,14 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (pktq->qlen == 1)
+-		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func2, addr,
+-					    pktq->next);
++		err = brcmf_sdiod_skbuff_read(sdiodev, sdiodev->func2, addr,
++					      pktq->next);
+ 	else if (!sdiodev->sg_support) {
+ 		glom_skb = brcmu_pkt_buf_get_skb(totlen);
+ 		if (!glom_skb)
+ 			return -ENOMEM;
+-		err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func2, addr,
+-					    glom_skb);
++		err = brcmf_sdiod_skbuff_read(sdiodev, sdiodev->func2, addr,
++					      glom_skb);
+ 		if (err)
+ 			goto done;
+ 
+@@ -623,8 +623,8 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+ 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
+ 
+ 	if (!err)
+-		err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func2, addr,
+-					     mypkt);
++		err = brcmf_sdiod_skbuff_write(sdiodev, sdiodev->func2, addr,
++					       mypkt);
+ 
+ 	brcmu_pkt_buf_free_skb(mypkt);
+ 
+@@ -649,8 +649,8 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 	if (pktq->qlen == 1 || !sdiodev->sg_support) {
+ 		skb_queue_walk(pktq, skb) {
+-			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func2,
+-						     addr, skb);
++			err = brcmf_sdiod_skbuff_write(sdiodev, sdiodev->func2,
++						       addr, skb);
+ 			if (err)
+ 				break;
+ 		}
+@@ -706,11 +706,11 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+ 
+ 		if (write) {
+ 			memcpy(pkt->data, data, dsize);
+-			err = brcmf_sdiod_buff_write(sdiodev, sdiodev->func1,
+-						     sdaddr, pkt);
++			err = brcmf_sdiod_skbuff_write(sdiodev, sdiodev->func1,
++						       sdaddr, pkt);
+ 		} else {
+-			err = brcmf_sdiod_buff_read(sdiodev, sdiodev->func1,
+-						    sdaddr, pkt);
++			err = brcmf_sdiod_skbuff_read(sdiodev, sdiodev->func1,
++						      sdaddr, pkt);
+ 		}
+ 
+ 		if (err) {
+-- 
+1.9.1
