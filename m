@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39010 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750838AbeAYFg4 (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:42892 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752624AbeAJFUc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 00:36:56 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 10 Jan 2018 00:20:32 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/10] rtlwifi: fix some bugs and add btcoex functions
+Date: Wed, 10 Jan 2018 13:19:52 +0800
+Message-ID: <20180110052002.9544-1-pkshih@realtek.com> (sfid-20180110_062050_142948_76579EB2)
 MIME-Version: 1.0
-Subject: Re: [v2] wcn36xx: release resources in case of error
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180123152013.18257-1-rfried@codeaurora.org>
-References: <20180123152013.18257-1-rfried@codeaurora.org>
-To: Ramon Fried <rfried@codeaurora.org>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        bjorn.andersson@linaro.org, wcn36xx@lists.infradead.org,
-        k.eugene.e@gmail.com, Ramon Fried <rfried@codeaurora.org>
-Message-Id: <20180125053656.2ADDF60A60@smtp.codeaurora.org> (sfid-20180125_063704_433764_78EADC8E)
-Date: Thu, 25 Jan 2018 05:36:56 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ramon Fried <rfried@codeaurora.org> wrote:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> wcn36xx_dxe_init() doesn't check for the return value of
-> wcn36xx_dxe_init_descs(), release the resources in case an error ocurred.
-> 
-> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Fix some bugs reported by QC, and continue to submit btcoex patches for
+further use.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Ping-Ke Shih (8):
+  rtlwifi: Use mutex to replace spin_lock to protect IPS and LPS
+  rtlwifi: fix scan channel 1 fail after IPS
+  rtlwifi: Add sta_statistics of mac80211's op, and set filled=0 by
+    default
+  rtlwifi: enable mac80211 fast-tx support
+  rtlwifi: btcoex: Add power_on_setting routine
+  rtlwifi: btcoex: Remove global variables from btcoex
+  rtlwifi: btcoex: Add common function for qeurying BT information
+  rtlwifi: btcoex: add rfe_type parameter to btcoex
 
-d0bb950b9f5f wcn36xx: release DMA memory in case of error
+Steven Ting (1):
+  rtlwifi: Support A-MSDU in A-MPDU capability
+
+Tsang-Shian Lin (1):
+  rtlwifi: unlink bss when un-association
+
+ drivers/net/wireless/realtek/rtlwifi/base.c        |   9 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 398 +++++++++++++++++----
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  94 ++++-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 234 ++++++++++--
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   4 +-
+ drivers/net/wireless/realtek/rtlwifi/core.c        |  34 ++
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |   5 +-
+ drivers/net/wireless/realtek/rtlwifi/ps.c          |  30 +-
+ drivers/net/wireless/realtek/rtlwifi/usb.c         |   1 -
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  16 +-
+ 10 files changed, 688 insertions(+), 137 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/10180503/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.15.1
