@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.uni-rostock.de ([139.30.22.72]:64710 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753419AbeAOOjg (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:42901 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753074AbeAJFUe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 09:39:36 -0500
-Subject: Re: [PATCH v3 4/5] mac80211_hwsim: add permanent mac address option
- for new radios
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
- <6596c1d9-da4f-4d83-bd5e-5e276391a0c9@MAIL2.uni-rostock.de>
- <1516018169.410.14.camel@sipsolutions.net>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Message-ID: <59cebd66-44ca-4bfd-0be2-a6d37c0bfa75@uni-rostock.de> (sfid-20180115_153940_499679_96A2B585)
-Date: Mon, 15 Jan 2018 15:39:33 +0100
+        Wed, 10 Jan 2018 00:20:34 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/10] rtlwifi: Add sta_statistics of mac80211's op, and set filled=0 by default
+Date: Wed, 10 Jan 2018 13:19:55 +0800
+Message-ID: <20180110052002.9544-4-pkshih@realtek.com> (sfid-20180110_062041_475434_510407AA)
+In-Reply-To: <20180110052002.9544-1-pkshih@realtek.com>
+References: <20180110052002.9544-1-pkshih@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <1516018169.410.14.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 15.01.2018 um 13:09 schrieb Johannes Berg:
-> On Wed, 2018-01-10 at 17:42 +0100, Benjamin Beichler wrote:
->
->> To do not break the operation with legacy software using hwsim, the ne=
-w
->> address is set twice. The problem here is, the netlink call backs use
->> wiphy->addresses[1] as identification of a radio and not the proposed
->> permanent address (wiphy->addresses[0]). This design decision is not
->> documented in the kernel repo, therefore this patch simply reproduces =
-this,
->> but with the same address.
-> It's weird to have the same address twice - perhaps we can XOR 0x40 or
-> so?
-I really don't know, why there were 2 addresses introduced in the first
-place, and why the netlink operations for receiving only check against
-the second address and not the first address (see
-get_hwsim_data_ref_from_addr). My suggestion would be, only allocate one
-mac address and check against this one. I don't know, whether really any
-user of hwsim rely on the structure, that an adapter needs two mac
-addresses. Since this is part of the initial commit, this decision is
-not documented in git ...
-> johannes
->
->
+From: Ping-Ke Shih <pkshih@realtek.com>
 
---=20
-M.Sc. Benjamin Beichler
+When using iwconfig to check wifi status, wext uses 'static struct' of
+sinfo to get station info so sinfo->filled will be persistent. Since the
+commit 2b9a7e1bac24 ("mac80211: allow drivers to provide most station
+statistics") assumes driver initializes sinfo->filled to declare supported
+fields, without initialization it will report wrong info. This commit
+simply set 'filled' to be zero simply, and left sinfo to be filled by
+mac80211.
 
-Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
-chnik
-Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/core.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Stra=C3=9Fe 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index a78b828f531a..ec639fa8095e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -992,6 +992,15 @@ static int _rtl_get_hal_qnum(u16 queue)
+ 	return qnum;
+ }
+ 
++static void rtl_op_sta_statistics(struct ieee80211_hw *hw,
++				  struct ieee80211_vif *vif,
++				  struct ieee80211_sta *sta,
++				  struct station_info *sinfo)
++{
++	/* nothing filled by driver, so mac80211 will update all info */
++	sinfo->filled = 0;
++}
++
+ /*
+  *for mac80211 VO = 0, VI = 1, BE = 2, BK = 3
+  *for rtl819x  BE = 0, BK = 1, VI = 2, VO = 3
+@@ -1878,6 +1887,7 @@ const struct ieee80211_ops rtl_ops = {
+ 	.config = rtl_op_config,
+ 	.configure_filter = rtl_op_configure_filter,
+ 	.set_key = rtl_op_set_key,
++	.sta_statistics = rtl_op_sta_statistics,
+ 	.conf_tx = rtl_op_conf_tx,
+ 	.bss_info_changed = rtl_op_bss_info_changed,
+ 	.get_tsf = rtl_op_get_tsf,
+-- 
+2.15.1
