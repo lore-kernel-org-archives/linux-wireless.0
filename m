@@ -1,181 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:33639 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752346AbeAZKgj (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:41439 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752108AbeAJOIP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 05:36:39 -0500
-Subject: Re: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
-To: Wojciech Dubowik <wojciech.dubowik@neratec.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com
-References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
- <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
- <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com>
- <ed47cefe-efa4-a7c9-d017-b50a99316f43@neratec.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <d9e84a77-636e-cd13-7713-9119a4ac971d@dd-wrt.com> (sfid-20180126_113644_577982_22F182F8)
-Date: Fri, 26 Jan 2018 11:36:36 +0100
+        Wed, 10 Jan 2018 09:08:15 -0500
+Received: by mail-qk0-f193.google.com with SMTP id a8so23001319qkb.8
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Jan 2018 06:08:15 -0800 (PST)
+Subject: Re: [PATCH 02/10] rtlwifi: fix scan channel 1 fail after IPS
+To: Pkshih <pkshih@realtek.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+References: <20180110052002.9544-1-pkshih@realtek.com>
+ <20180110052002.9544-3-pkshih@realtek.com> <5A55CB01.5040504@broadcom.com>
+ <5B2DA6FDDF928F4E855344EE0A5C39D13BE66622@RTITMBSV07.realtek.com.tw>
+Cc: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        =?UTF-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A561E4B.6080105@broadcom.com> (sfid-20180110_150819_462814_A55FACE8)
+Date: Wed, 10 Jan 2018 15:08:11 +0100
 MIME-Version: 1.0
-In-Reply-To: <ed47cefe-efa4-a7c9-d017-b50a99316f43@neratec.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <5B2DA6FDDF928F4E855344EE0A5C39D13BE66622@RTITMBSV07.realtek.com.tw>
+Content-Type: text/plain; charset=big5
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 26.01.2018 um 11:27 schrieb Wojciech Dubowik:
-> I will try it with again with couple of OEM cards.
-this is no card. the eeprom is stored in flash memory. so the chip is a 
-9280 pcie chip which is connected on board, but has no own flash memory 
-for calibration data. this is stored in system flash memory
->
-> Is nanostation calibrated for noisefloor? You can see it with 
-> modal_eeprom in debugfs.
-root@TRO2:/sys/kernel/debug/ieee80211/phy0/ath9k# cat modal_eeprom
-    2GHz modal Header :
-  Chain0 Ant. Control :          0
-  Chain1 Ant. Control :          0
-  Chain2 Ant. Control :          0
-  Ant. Common Control :          0
-     Chain0 Ant. Gain :          0
-     Chain1 Ant. Gain :          0
-     Chain2 Ant. Gain :          0
-        Switch Settle :         45
-     Chain0 TxRxAtten :         11
-     Chain1 TxRxAtten :         11
-     Chain2 TxRxAtten :         11
-    Chain0 RxTxMargin :         11
-    Chain1 RxTxMargin :         11
-    Chain2 RxTxMargin :         11
-     ADC Desired size :        224
-     PGA Desired size :          0
-     Chain0 xlna Gain :         14
-     Chain1 xlna Gain :         14
-     Chain2 xlna Gain :         14
-        txEndToXpaOff :          0
-          txEndToRxOn :          2
-       txFrameToXpaOn :         14
-       CCA Threshold) :          0
-  Chain0 NF Threshold :        202
-  Chain1 NF Threshold :        202
-  Chain2 NF Threshold :        202
-              xpdGain :          9
-          External PD :          1
-Chain0 I Coefficient :          0
-Chain1 I Coefficient :          0
-Chain2 I Coefficient :          0
-Chain0 Q Coefficient :          0
-Chain1 Q Coefficient :          0
-Chain2 Q Coefficient :          0
-        pdGainOverlap :          6
-    Chain0 OutputBias :          2
-    Chain0 DriverBias :          2
-       xPA Bias Level :          0
-  2chain pwr decrease :          0
-  3chain pwr decrease :          0
-   txFrameToDataStart :         14
-        txFrameToPaOn :         14
-      HT40 Power Inc. :          2
-      Chain0 bswAtten :         21
-      Chain1 bswAtten :         21
-      Chain2 bswAtten :          0
-     Chain0 bswMargin :         31
-     Chain1 bswMargin :         31
-     Chain2 bswMargin :          0
-   HT40 Switch Settle :         44
-     Chain0 xatten2Db :          0
-     Chain1 xatten2Db :          0
-     Chain2 xatten2Db :          0
-Chain0 xatten2Margin :          0
-Chain1 xatten2Margin :          0
-Chain2 xatten2Margin :          0
-    Chain1 OutputBias :          2
-    Chain1 DriverBias :          2
-          LNA Control :         13
-       XPA Bias Freq0 :          0
-       XPA Bias Freq1 :          0
-       XPA Bias Freq2 :          0
-    5GHz modal Header :
-  Chain0 Ant. Control :         16
-  Chain1 Ant. Control :         16
-  Chain2 Ant. Control :          0
-  Ant. Common Control :        288
-     Chain0 Ant. Gain :          0
-     Chain1 Ant. Gain :          0
-     Chain2 Ant. Gain :          0
-        Switch Settle :         45
-     Chain0 TxRxAtten :         32
-     Chain1 TxRxAtten :         32
-     Chain2 TxRxAtten :         11
-    Chain0 RxTxMargin :          0
-    Chain1 RxTxMargin :          0
-    Chain2 RxTxMargin :         16
-     ADC Desired size :        226
-     PGA Desired size :          0
-     Chain0 xlna Gain :         13
-     Chain1 xlna Gain :         13
-     Chain2 xlna Gain :         13
-        txEndToXpaOff :          0
-          txEndToRxOn :          2
-       txFrameToXpaOn :         14
-       CCA Threshold) :         28
-  Chain0 NF Threshold :        255
-  Chain1 NF Threshold :        255
-  Chain2 NF Threshold :        255
-              xpdGain :          1
-          External PD :          1
-Chain0 I Coefficient :          0
-Chain1 I Coefficient :          0
-Chain2 I Coefficient :          0
-Chain0 Q Coefficient :          0
-Chain1 Q Coefficient :          0
-Chain2 Q Coefficient :          0
-        pdGainOverlap :          6
-    Chain0 OutputBias :          3
-    Chain0 DriverBias :          3
-       xPA Bias Level :          2
-  2chain pwr decrease :          0
-  3chain pwr decrease :          0
-   txFrameToDataStart :         14
-        txFrameToPaOn :         14
-      HT40 Power Inc. :          0
-      Chain0 bswAtten :         34
-      Chain1 bswAtten :         34
-      Chain2 bswAtten :          0
-     Chain0 bswMargin :         22
-     Chain1 bswMargin :         22
-     Chain2 bswMargin :          0
-   HT40 Switch Settle :         45
-     Chain0 xatten2Db :          0
-     Chain1 xatten2Db :          0
-     Chain2 xatten2Db :          0
-Chain0 xatten2Margin :          0
-Chain1 xatten2Margin :          0
-Chain2 xatten2Margin :          0
-    Chain1 OutputBias :          3
-    Chain1 DriverBias :          3
-          LNA Control :         13
-       XPA Bias Freq0 :          0
-       XPA Bias Freq1 :          0
-       XPA Bias Freq2 :          0
+On 1/10/2018 10:38 AM, Pkshih wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: Arend van Spriel [mailto:arend.vanspriel@broadcom.com]
+>> Sent: Wednesday, January 10, 2018 4:13 PM
+>> To: Pkshih; kvalo@codeaurora.org
+>> Cc: Larry.Finger@lwfinger.net; ���۫�; linux-wireless@vger.kernel.org
+>> Subject: Re: [PATCH 02/10] rtlwifi: fix scan channel 1 fail after IPS
+>>
+>> On 1/10/2018 6:19 AM, pkshih@realtek.com wrote:
+>>> From: Ping-Ke Shih <pkshih@realtek.com>
+>>>
+>>> If there is no connection, driver will enter IPS state. Meanwhile, it
+>>> fails to scan channel 1 by the command 'iw dev wlan0 scan freq 2412',
+>>> because hardware channel setting lose after IPS. Thus, restore channel
+>>> setting from hw->conf.channel set by last rtl_op_config().
+>>>
+>>> Signed-off-by: Tim Lee <timlee@realtek.com>
+>>
+>> You need to add your sob here as well as you are submitting them.
+>>
+> 
+> I'll add it in v2.
+> 
+>>> ---
+>>>    drivers/net/wireless/realtek/rtlwifi/ps.c | 6 ++++++
+>>>    1 file changed, 6 insertions(+)
+>>>
+>>> diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+>>> index 6a4008845f49..0ffe43772c9a 100644
+>>> --- a/drivers/net/wireless/realtek/rtlwifi/ps.c
+>>> +++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+>>> @@ -51,6 +51,12 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
+>>>    			&rtlmac->retry_long);
+>>>    	RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+>>>
+>>> +	/*<2.1> Switch Channel & Bandwidth to last rtl_op_config setting*/
+>>
+>> Is this type of comment really helpful? To me it seems the callback
+>> names provide enough context.
+>>
+> 
+> Do you mean the "<2.1>" isn't needed?
+> This is because "<1>, <2>, <3>..." exist in the function, so
+> we want to make it to be consistent.
 
->
-> Wojtek
-> On 26/01/18 10:59, Sebastian Gottschall wrote:
->> i dont know if this is a coincidence. but after testing your patch on 
->> a standard ubiquiti nanostation m2 the noise floor looks wrong.
->> it will stay on -112 which is clearly impossible in 2.4 (before it 
->> was around -96)
->
->
+That is not what I mean. I mean why have a comment describing what is
+obvious from reading the code itself. So in this example:
 
--- 
-Mit freundlichen Grüssen / Regards
+On 1/10/2018 6:19 AM, pkshih@realtek.com wrote:
+> +	/*<2.1> Switch Channel & Bandwidth to last rtl_op_config setting*/
+> +	rtlpriv->cfg->ops->switch_channel(hw);
+> +	rtlpriv->cfg->ops->set_channel_access(hw);
+> +	rtlpriv->cfg->ops->set_bw_mode(hw,
+> +			cfg80211_get_chandef_type(&hw->conf.chandef));
+> +
+>   	/*<3> Enable Interrupt */
+>   	rtlpriv->cfg->ops->enable_interrupt(hw);
 
-Sebastian Gottschall / CTO
+the code after the <2.1> comment calls a switch_channel() callback and a
+set_bw_mode() callback. In my opinion those names are pretty
+self-explanatory for the reader making the comment preceding it only
+noise. The same applies to step <3>.
 
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Regards,
+Arend
