@@ -1,100 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37166 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966563AbeAONJv (ORCPT
+Received: from mail-ua0-f169.google.com ([209.85.217.169]:40447 "EHLO
+        mail-ua0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933623AbeAJMPw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 08:09:51 -0500
-Message-ID: <1516021789.410.28.camel@sipsolutions.net> (sfid-20180115_140955_693433_714A5152)
-Subject: Re: [RFC v2 3/5] mac80211: Send control port frames over nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Date: Mon, 15 Jan 2018 14:09:49 +0100
-In-Reply-To: <20180110170938.2341-4-denkenz@gmail.com> (sfid-20180110_180958_612167_81C26F3A)
-References: <20180110170938.2341-1-denkenz@gmail.com>
-         <20180110170938.2341-4-denkenz@gmail.com>
-         (sfid-20180110_180958_612167_81C26F3A)
+        Wed, 10 Jan 2018 07:15:52 -0500
+Received: by mail-ua0-f169.google.com with SMTP id d37so11374363uae.7
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Jan 2018 04:15:52 -0800 (PST)
+MIME-Version: 1.0
+From: Carlo Caione <carlo@endlessm.com>
+Date: Wed, 10 Jan 2018 12:15:51 +0000
+Message-ID: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com> (sfid-20180110_131556_375099_873DCBC1)
+Subject: RTL8723bu: poor signal and connection troubles
+To: Jes Sorensen <Jes.Sorensen@gmail.com>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        mylene.josserand@free-electrons.com,
+        Linux Upstreaming Team <linux@endlessm.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-01-10 at 11:09 -0600, Denis Kenzior wrote:
+Hi,
+this is a follow up email to [0] since the problem was never fully
+investigated / solved and I keep seeing the same problem also on my
+hardware.
 
-> Pre-authentication type frames (protocol: 0x88c7) are also forwarded
-> over nl80211.
+Also in my case the hardware is a rtl8723bt transceiver
+(0x0bda:0xb720), this time shipped on the internal USB bus in a cheap
+laptop branded Zyrex Sky 232.
 
-Interesting - maybe userspace should be able to configure a(n) (list
-of) ethertype(s)?
+As already reported by Mylene the problem is that using this
+transceiver and the latest Linus master you can barely see any WiFi
+network around and also when a WiFi network is actually seen, the
+connection is impossible since the signal strength is too low to have
+a reliable connection. Of course during my tests BT is off and no BT
+driver is probed at all.
 
-> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
-> ---
->  net/mac80211/cfg.c         |  2 ++
->  net/mac80211/ieee80211_i.h |  1 +
->  net/mac80211/mlme.c        |  2 ++
->  net/mac80211/rx.c          | 31 ++++++++++++++++++++++++++++---
->  4 files changed, 33 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 46028e12e216..f53bfb27295f 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -925,6 +925,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
->  	 */
->  	sdata->control_port_protocol = params->crypto.control_port_ethertype;
->  	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
-> +	sdata->control_port_over_nl80211 = false;
+Using the downstream driver at [1] everything works correctly.
 
-It's probably better to reset this at interface type switching, if it's
-not done anyway (we zero a lot of memory there, but not sure precisely
-what)
+I tried to debug a bit the issue, in particular comparing functions
+and registers related to the antenna setup (.power_on, .enable_rf,
+.phy_init_antenna_selection, .phy_iq_calibrate hooks) but everything
+seems pretty much the same on the two drivers (even though slightly
+differences do exist).
 
-Otherwise we'll surely forget this in some place like mesh or OCB ...
+Any idea / suggestion on how to debug this problem? I guess it's worth
+to start looking at this since several platforms are being affected
+now.
 
-Initially it must be false (0) anyway.
+Cheers,
 
->  	sdata->control_port_protocol = req->crypto.control_port_ethertype;
->  	sdata->control_port_no_encrypt = req->crypto.control_port_no_encrypt;
-> +	sdata->control_port_over_nl80211 =
-> +					req->crypto.control_port_over_nl80211;
+[0] https://www.spinics.net/lists/netdev/msg468028.html
+[1] https://github.com/lwfinger/rtl8723bu
 
-Heh. One of the cases where the 80 cols line is just dumb :-)
-
->  	sdata->encrypt_headroom = ieee80211_cs_headroom(local, &req->crypto,
->  							sdata->vif.type);
->  
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index b3cff69bfd66..28b74ae1ee48 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -2326,16 +2326,41 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
->  	}
->  #endif
->  
-> -	if (skb) {
-> +	if (!skb)
-> +		goto try_xmit;
-
-Seems this could be better without the goto, perhaps pulling the code
-into a helper function?
-
-> +	skb->protocol = eth_type_trans(skb, dev);
-> +	memset(skb->cb, 0, sizeof(skb->cb));
-> +
-> +	if (unlikely((skb->protocol == sdata->control_port_protocol ||
-> +		      skb->protocol == cpu_to_be16(0x88c7)) &&
-> +		     sdata->control_port_over_nl80211)) {
-> +		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-> +		bool noencrypt;
-> +
-> +		ehdr = eth_hdr(skb);
-> +
-> +		if (status->flag & RX_FLAG_DECRYPTED)
-> +			noencrypt = false;
-> +		else
-> +			noencrypt = true;
-
-	noencrypt = status->flags & RX_FLAG_DECRYPTED;
-? It's a bool, after all, and you could even roll it into the
-declaration.
-
-johannes
+-- 
+Carlo Caione  |  +44.7384.69.16.04  |  Endless
