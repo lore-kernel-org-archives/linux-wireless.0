@@ -1,40 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45822 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751086AbeAVM4t (ORCPT
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:45037 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934101AbeAJRJu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 07:56:49 -0500
-Message-ID: <1516625807.2508.22.camel@sipsolutions.net> (sfid-20180122_135652_370374_93485EB8)
-Subject: Re: [PATCH 2/4] cfg80211: enable setting cqm config for AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: tamizhr@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Date: Mon, 22 Jan 2018 13:56:47 +0100
-In-Reply-To: <1516174276-16789-3-git-send-email-tamizhr@codeaurora.org>
-References: <1516174276-16789-1-git-send-email-tamizhr@codeaurora.org>
-         <1516174276-16789-3-git-send-email-tamizhr@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 10 Jan 2018 12:09:50 -0500
+Received: by mail-pl0-f65.google.com with SMTP id n13so7634252plp.11
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Jan 2018 09:09:49 -0800 (PST)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v2 2/5] nl80211: Add CMD_CONTROL_PORT_FRAME API
+Date: Wed, 10 Jan 2018 11:09:35 -0600
+Message-Id: <20180110170938.2341-3-denkenz@gmail.com> (sfid-20180110_180954_446002_3E444A40)
+In-Reply-To: <20180110170938.2341-1-denkenz@gmail.com>
+References: <20180110170938.2341-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-01-17 at 13:01 +0530, tamizhr@codeaurora.org wrote:
-> From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-> 
-> Enable connection monitoring for AP mode which makes it possible to
-> track signal strength of connected stations.
+This commit also adds cfg80211_rx_control_port function.  This is used
+to generate a CMD_CONTROL_PORT_FRAME event out to userspace.  The
+conn_owner_nlportid is used as the unicast destination.  This means that
+userspace must specify NL80211_ATTR_SOCKET_OWNER flag if control port
+over nl80211 routing is requested in NL80211_CMD_CONNECT or
+NL80211_CMD_ASSOCIATE
 
->  	if (wdev->iftype != NL80211_IFTYPE_STATION &&
-> -	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-> +	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT &&
-> +	    wdev->iftype != NL80211_IFTYPE_AP &&
-> +	    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
-> +	    wdev->iftype != NL80211_IFTYPE_AP_VLAN)
->  		return -EOPNOTSUPP;
-> 
-This seems problematic - you'll probably need a driver support flag for
-this. And since clients might want to know whether this works or not,
-just make that an nl80211 extended feature bit?
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ include/net/cfg80211.h       | 17 +++++++++++++
+ include/uapi/linux/nl80211.h | 15 +++++++++++
+ net/wireless/nl80211.c       | 59 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/trace.h         | 21 ++++++++++++++++
+ 4 files changed, 112 insertions(+)
 
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f46bdc4298f1..84cba57dd8d0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5629,6 +5629,23 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+ 
+ 
+ /**
++ * cfg80211_rx_control_port - inform userspace about a received control port
++ * frame, e.g. EAPoL.  This is used if userspace has specified it wants to
++ * receive control port frames over NL80211.
++ * @dev: The device the frame matched to
++ * @buf: control port frame
++ * @len: length of the frame data
++ * @addr: The peer from which the frame was received
++ * @proto: frame protocol, typically PAE or Pre-authentication
++ * @unencrypted: Whether the frame was received unencrypted
++ *
++ * Return: %true if the frame was passed to userspace
++ */
++bool cfg80211_rx_control_port(struct net_device *dev,
++			      const u8 *buf, size_t len,
++			      const u8 *addr, u16 proto, bool unencrypted);
++
++/**
+  * cfg80211_cqm_rssi_notify - connection quality monitoring rssi event
+  * @dev: network device
+  * @rssi_event: the triggered RSSI event
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 8855b7eaf92c..b902614e876e 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -991,6 +991,17 @@
+  *	&NL80211_CMD_CONNECT or &NL80211_CMD_ROAM. If the 4 way handshake failed
+  *	&NL80211_CMD_DISCONNECT should be indicated instead.
+  *
++ * @NL80211_CMD_CONTROL_PORT_FRAME: Control Port (e.g. PAE) frame TX request
++ *	and RX notification.  This command is used both as a request to transmit
++ *	a control port frame and as a notification that a control port frame
++ *	has been received. %NL80211_ATTR_FRAME is used to specify the
++ *	frame contents.  The frame is the raw EAPoL data, without ethernet or
++ *	802.11 headers.
++ *	When used as an event indication %NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
++ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT and %NL80211_ATTR_MAC are added
++ *	indicating the protocol type of the received frame; whether the frame
++ *	was received unencrypted and the MAC address of the peer respectively.
++ *
+  * @NL80211_CMD_RELOAD_REGDB: Request that the regdb firmware file is reloaded.
+  *
+  * @NL80211_CMD_MAX: highest used command number
+@@ -1199,6 +1210,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_RELOAD_REGDB,
+ 
++	NL80211_CMD_CONTROL_PORT_FRAME,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1446,6 +1459,8 @@ enum nl80211_commands {
+  * @NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT: When included along with
+  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE, indicates that the custom
+  *	ethertype frames used for key negotiation must not be encrypted.
++ *	When included in %NL80211_CMD_CONTROL_PORT_FRAME it means that the
++ *	control port frame was received unencrypted.
+  * @NL80211_ATTR_CONTROL_PORT_OVER_NL80211: A flag indicating whether control
+  *	port frames (e.g. of type given in %NL80211_ATTR_CONTROL_PORT_ETHERTYPE)
+  *	will be sent directly to the network interface or sent via the NL80211
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 840ee6d73269..c0f2bb24e7dd 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -14500,6 +14500,65 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+ }
+ EXPORT_SYMBOL(cfg80211_mgmt_tx_status);
+ 
++static int __nl80211_control_port(struct net_device *dev,
++				  const u8 *buf, size_t len,
++				  const u8 *addr, u16 proto,
++				  bool unencrypted, gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
++	struct sk_buff *msg;
++	void *hdr;
++	u32 nlportid = READ_ONCE(wdev->conn_owner_nlportid);
++
++	if (!nlportid)
++		return -ENOENT;
++
++	msg = nlmsg_new(100 + len, gfp);
++	if (!msg)
++		return -ENOMEM;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CONTROL_PORT_FRAME);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return -ENOMEM;
++	}
++
++	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
++	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
++	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
++			      NL80211_ATTR_PAD) ||
++	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
++	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
++	    nla_put_u16(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE, proto) ||
++	    (unencrypted && nla_put_flag(msg,
++					 NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT)))
++		goto nla_put_failure;
++
++	genlmsg_end(msg, hdr);
++
++	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++	return -ENOBUFS;
++}
++
++bool cfg80211_rx_control_port(struct net_device *dev,
++			      const u8 *buf, size_t len,
++			      const u8 *addr, u16 proto, bool unencrypted)
++{
++	bool ret;
++
++	trace_cfg80211_rx_control_port(dev, buf, len, addr, proto, unencrypted);
++	ret = __nl80211_control_port(dev, buf, len, addr, proto,
++				     unencrypted, GFP_ATOMIC);
++	trace_cfg80211_return_bool(ret);
++	return ret;
++}
++EXPORT_SYMBOL(cfg80211_rx_control_port);
++
+ static struct sk_buff *cfg80211_prepare_cqm(struct net_device *dev,
+ 					    const char *mac, gfp_t gfp)
+ {
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index bcfedd39e7a3..48bb1c1eaf67 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2577,6 +2577,27 @@ TRACE_EVENT(cfg80211_mgmt_tx_status,
+ 		  WDEV_PR_ARG, __entry->cookie, BOOL_TO_STR(__entry->ack))
+ );
+ 
++TRACE_EVENT(cfg80211_rx_control_port,
++	TP_PROTO(struct net_device *netdev, const u8 *buf, size_t len,
++		 const u8 *addr, u16 proto, bool unencrypted),
++	TP_ARGS(netdev, buf, len, addr, proto, unencrypted),
++	TP_STRUCT__entry(
++		NETDEV_ENTRY
++		MAC_ENTRY(addr)
++		__field(u16, proto)
++		__field(bool, unencrypted)
++	),
++	TP_fast_assign(
++		NETDEV_ASSIGN;
++		MAC_ASSIGN(addr, addr);
++		__entry->proto = proto;
++		__entry->unencrypted = unencrypted;
++	),
++	TP_printk(NETDEV_PR_FMT ", " MAC_PR_FMT " proto: %x, unencrypted: %s",
++		  NETDEV_PR_ARG, MAC_PR_ARG(addr),
++		  __entry->proto, BOOL_TO_STR(__entry->unencrypted))
++);
++
+ TRACE_EVENT(cfg80211_cqm_rssi_notify,
+ 	TP_PROTO(struct net_device *netdev,
+ 		 enum nl80211_cqm_rssi_threshold_event rssi_event,
+-- 
+2.13.5
