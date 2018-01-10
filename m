@@ -1,54 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:57790 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752100AbeAQNgP (ORCPT
+Received: from mx1.uni-rostock.de ([139.30.22.71]:64769 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965569AbeAJQnn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 08:36:15 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "johannes.berg@intel.com" <johannes.berg@intel.com>
-Subject: Re: [PATCH] cfg80211: wext: don't use static struct
-Date: Wed, 17 Jan 2018 13:26:20 +0000
-Message-ID: <1516195580.2723.15.camel@realtek.com> (sfid-20180117_143619_922067_FE190A88)
-References: <20180116221100.10079-1-johannes@sipsolutions.net>
-In-Reply-To: <20180116221100.10079-1-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        Wed, 10 Jan 2018 11:43:43 -0500
+From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Subject: [PATCH v3 1/5] mac80211_hwsim: add workqueue to wait for deferred radio deletion on mod unload
+Date: Wed, 10 Jan 2018 17:42:51 +0100
+In-Reply-To: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
+References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
 MIME-Version: 1.0
+Content-Type: text/plain
+Message-ID: <2a021406-db0b-42e9-be2b-7185814139af@MAIL2.uni-rostock.de> (sfid-20180110_174348_389295_586E4FBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE4LTAxLTE2IGF0IDIzOjExICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBGcm9tOiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4gDQo+IFRo
-ZXJlJ3Mgbm8gcG9pbnQgaW4gcGVyc2lzdGVudGx5IGFsbG9jYXRpbmcgbWVtb3J5IGZvciB0aGVz
-ZSwNCj4gdGhleSdyZSBzbWFsbCBlbm91Z2ggdG8gbGl2ZSBvbiB0aGUgc3RhY2suDQo+IA0KPiBT
-aWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4g
-LS0tDQo+IMKgbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMgfCA5ICsrLS0tLS0tLQ0KPiDCoDEg
-ZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDcgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZm
-IC0tZ2l0IGEvbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMgYi9uZXQvd2lyZWxlc3Mvd2V4dC1j
-b21wYXQuYw0KPiBpbmRleCAwNTE4NmE0Nzg3OGYuLmMyYjNkNWFjMDU1NCAxMDA2NDQNCj4gLS0t
-IGEvbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMNCj4gKysrIGIvbmV0L3dpcmVsZXNzL3dleHQt
-Y29tcGF0LmMNCj4gQEAgLTEyOTEsOSArMTI5MSw4IEBAIHN0YXRpYyBzdHJ1Y3QgaXdfc3RhdGlz
-dGljcw0KPiAqY2ZnODAyMTFfd2lyZWxlc3Nfc3RhdHMoc3RydWN0IG5ldF9kZXZpY2UgKmRldikN
-Cj4gwqB7DQo+IMKgCXN0cnVjdCB3aXJlbGVzc19kZXYgKndkZXYgPSBkZXYtPmllZWU4MDIxMV9w
-dHI7DQo+IMKgCXN0cnVjdCBjZmc4MDIxMV9yZWdpc3RlcmVkX2RldmljZSAqcmRldiA9DQo+IHdp
-cGh5X3RvX3JkZXYod2Rldi0+d2lwaHkpOw0KPiAtCS8qIHdlIGFyZSB1bmRlciBSVE5MIC0gZ2xv
-YmFsbHkgbG9ja2VkIC0gc28gY2FuIHVzZSBzdGF0aWMNCj4gc3RydWN0cyAqLw0KPiAtCXN0YXRp
-YyBzdHJ1Y3QgaXdfc3RhdGlzdGljcyB3c3RhdHM7DQo+IC0Jc3RhdGljIHN0cnVjdCBzdGF0aW9u
-X2luZm8gc2luZm87DQo+ICsJc3RydWN0IGl3X3N0YXRpc3RpY3Mgd3N0YXRzID0ge307DQo+ICsJ
-c3RydWN0IHN0YXRpb25faW5mbyBzaW5mbyA9IHt9Ow0KPiDCoAl1OCBic3NpZFtFVEhfQUxFTl07
-DQo+IMKgDQo+IMKgCWlmIChkZXYtPmllZWU4MDIxMV9wdHItPmlmdHlwZSAhPSBOTDgwMjExX0lG
-VFlQRV9TVEFUSU9OKQ0KPiBAQCAtMTMxMSwxMyArMTMxMCw5IEBAIHN0YXRpYyBzdHJ1Y3QgaXdf
-c3RhdGlzdGljcw0KPiAqY2ZnODAyMTFfd2lyZWxlc3Nfc3RhdHMoc3RydWN0IG5ldF9kZXZpY2Ug
-KmRldikNCj4gwqAJbWVtY3B5KGJzc2lkLCB3ZGV2LT5jdXJyZW50X2Jzcy0+cHViLmJzc2lkLCBF
-VEhfQUxFTik7DQo+IMKgCXdkZXZfdW5sb2NrKHdkZXYpOw0KPiDCoA0KPiAtCW1lbXNldCgmc2lu
-Zm8sIDAsIHNpemVvZihzaW5mbykpOw0KPiAtDQo+IMKgCWlmIChyZGV2X2dldF9zdGF0aW9uKHJk
-ZXYsIGRldiwgYnNzaWQsICZzaW5mbykpDQo+IMKgCQlyZXR1cm4gTlVMTDsNCj4gwqANCj4gLQlt
-ZW1zZXQoJndzdGF0cywgMCwgc2l6ZW9mKHdzdGF0cykpOw0KPiAtDQo+IMKgCXN3aXRjaCAocmRl
-di0+d2lwaHkuc2lnbmFsX3R5cGUpIHsNCj4gwqAJY2FzZSBDRkc4MDIxMV9TSUdOQUxfVFlQRV9N
-Qk06DQo+IMKgCQlpZiAoc2luZm8uZmlsbGVkICYgQklUKE5MODAyMTFfU1RBX0lORk9fU0lHTkFM
-KSkgew0KDQpXaXRob3V0IHRoZXNlIHR3byBwYXRjaGVzLCB0aGUgYml0IHJhdGUgb2YgJ2l3Y29u
-ZmlnJyBhbmTCoA0KJ2l3IGRldiB3bGFuMCBsaW5rJyBhcmUgZGlmZmVyZW50LiBBZnRlciBhcHBs
-eWluZyB0aGUgcGF0Y2hlcywNCnRoZSBiaXQgcmF0ZXMgYXJlIHRoZSBzYW1lIGFuZCBtYXRjaCBz
-bmlmZmVyLg0KDQpUaGFua3MhDQoNClRlc3RlZC1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVh
-bHRlay5jb20+DQoNCg==
+When closing multiple wmediumd instances with many radios and try to
+unload the  mac80211_hwsim module, it may happen that the work items live
+longer than the module. To wait especially for this deletion work items,
+add a work queue, otherwise flush_scheduled_work would be necessary.
+
+Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 45cca54c05bf..742a1551bb1c 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -489,6 +489,7 @@ static const struct ieee80211_iface_combination hwsim_if_comb_p2p_dev[] = {
+ 
+ static spinlock_t hwsim_radio_lock;
+ static LIST_HEAD(hwsim_radios);
++static struct workqueue_struct *hwsim_wq;
+ static int hwsim_radio_idx;
+ 
+ static struct platform_driver mac80211_hwsim_driver = {
+@@ -3346,7 +3347,7 @@ static void remove_user_radios(u32 portid)
+ 		if (entry->destroy_on_close && entry->portid == portid) {
+ 			list_del(&entry->list);
+ 			INIT_WORK(&entry->destroy_work, destroy_radio);
+-			schedule_work(&entry->destroy_work);
++			queue_work(hwsim_wq, &entry->destroy_work);
+ 		}
+ 	}
+ 	spin_unlock_bh(&hwsim_radio_lock);
+@@ -3421,7 +3422,7 @@ static void __net_exit hwsim_exit_net(struct net *net)
+ 
+ 		list_del(&data->list);
+ 		INIT_WORK(&data->destroy_work, destroy_radio);
+-		schedule_work(&data->destroy_work);
++		queue_work(hwsim_wq, &data->destroy_work);
+ 	}
+ 	spin_unlock_bh(&hwsim_radio_lock);
+ }
+@@ -3453,6 +3454,10 @@ static int __init init_mac80211_hwsim(void)
+ 
+ 	spin_lock_init(&hwsim_radio_lock);
+ 
++	hwsim_wq = alloc_workqueue("hwsim_wq",WQ_MEM_RECLAIM,0);
++	if (!hwsim_wq)
++		return -ENOMEM;
++
+ 	err = register_pernet_device(&hwsim_net_ops);
+ 	if (err)
+ 		return err;
+@@ -3591,8 +3596,11 @@ static void __exit exit_mac80211_hwsim(void)
+ 	hwsim_exit_netlink();
+ 
+ 	mac80211_hwsim_free();
++	flush_workqueue(hwsim_wq);
++
+ 	unregister_netdev(hwsim_mon);
+ 	platform_driver_unregister(&mac80211_hwsim_driver);
+ 	unregister_pernet_device(&hwsim_net_ops);
++	destroy_workqueue(hwsim_wq);
+ }
+ module_exit(exit_mac80211_hwsim);
+-- 
+2.15.1
