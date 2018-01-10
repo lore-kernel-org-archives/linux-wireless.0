@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34872 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751728AbeAIIEM (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59190 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751665AbeAJSZN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 03:04:12 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 10 Jan 2018 13:25:13 -0500
+Date: Wed, 10 Jan 2018 19:25:13 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, ganesh.krishna@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH v2 5/9] staging: wilc1000: removed few unnecessary enums
+ typedef
+Message-ID: <20180110182513.GA24654@kroah.com> (sfid-20180110_192517_365460_2172C765)
+References: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
+ <1515582771-28408-6-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Subject: Re: [v2,1/9] wil6210: support Scheduled scan
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1513270393-919-2-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513270393-919-2-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: Dedy Lansky <qca_dlansky@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Message-Id: <20180109080411.CEDF560BDF@smtp.codeaurora.org> (sfid-20180109_090417_391442_3E99AE15)
-Date: Tue,  9 Jan 2018 08:04:11 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1515582771-28408-6-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
-
-> Add support for sched_scan_start/stop by sending PNO commands to FW.
-> Driver reports max_sched_scan_reqs and invokes
-> cfg80211_sched_scan_results upon receiving WMI_SCHED_SCAN_RESULT_EVENTID
-> from FW.
+On Wed, Jan 10, 2018 at 04:42:47PM +0530, Ajay Singh wrote:
+> This patch removes following N_OPERATING_MODE_T,N_OBSS_DETECTION_T,
+> N_PROTECTION_TYPE_T,N_SMPS_MODE_T,TX_ABORT_OPTION_T, typedef enum.
+> Now, these enums are used as anonymous-enums for constants.
 > 
-> Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> checkpatch.pl warning to not add new typedef is fixes with this patch.
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/wilc_wlan_if.h | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
 
-7 patches applied to ath-next branch of ath.git, thanks.
+This is the same subject line as the previous patch in the series, yet
+they are doing different things.
 
-a5dc68839273 wil6210: support Scheduled scan
-3dc2c13b5238 wil6210: support 40bit DMA addresses
-38e4c25d6069 wil6210: add platform capabilities bitmap
-594b59ec70e1 wil6210: set platform features based on FW capabilities
-a8fd16d7a14f wil6210: prevent parallel suspend and dump collection
-83957bc3aeaf wil6210: remove leftover "FIXME"s
-7d3e4dbe570e wil6210: remove reference to preset_chandef
+Please take this series and work on the subject lines to make them a bit
+more unique and different from each other, and resend.
 
--- 
-https://patchwork.kernel.org/patch/10112711/
+thanks,
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+greg k-h
