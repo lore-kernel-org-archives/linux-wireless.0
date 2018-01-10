@@ -1,31 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:56582 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752045AbeAIMXC (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:13616 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964979AbeAJLN5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 07:23:02 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 0/3] brcmfmac: restructuring sdio access functions - final drop (take 2)
-Date: Tue,  9 Jan 2018 13:22:51 +0100
-Message-Id: <1515500574-16321-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180109_132307_077878_EDDA0AB1)
+        Wed, 10 Jan 2018 06:13:57 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 1/9] staging: wilc1000: removed typedef from enum BSSTYPE_T
+Date: Wed, 10 Jan 2018 16:42:43 +0530
+Message-ID: <1515582771-28408-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180110_121400_818671_0E183FC0)
+In-Reply-To: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
+References: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Resending remaining patch of the series, which have been rebased on the
-master branch of wireless-drivers-next.
+This patch removes typedef from enum BSSTYPE_T and
+rename it to bss_types.
 
-Arend van Spriel (3):
-  brcmfmac: Remove array of functions
-  brcmfmac: add comment block in brcmf_sdio_buscore_read()
-  brcmfmac: rename brcmf_sdiod_buff_{read,write}() functions
+It fixes "WARNING: do not add new typdefs" warning
+reported by checkpatch.pl.
 
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 149 +++++++++---------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 175 +++++++++++----------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  15 +-
- 3 files changed, 170 insertions(+), 169 deletions(-)
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h   | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
---
-1.9.1
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d69248a..4ff1a59 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -202,7 +202,7 @@ struct host_if_msg {
+ };
+ 
+ struct join_bss_param {
+-	BSSTYPE_T bss_type;
++	enum bss_types bss_type;
+ 	u8 dtim_period;
+ 	u16 beacon_period;
+ 	u16 cap_info;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index c1693cf..2baf6c4 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -85,11 +85,11 @@ typedef enum {
+ 	P2P_IE			= 221,
+ } BEACON_IE;
+ 
+-typedef enum {
++enum bss_types {
+ 	INFRASTRUCTURE		= 0,
+ 	INDEPENDENT,
+ 	AP,
+-} BSSTYPE_T;
++};
+ 
+ typedef enum {
+ 	RATE_AUTO		= 0,
+-- 
+2.7.4
