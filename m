@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:36788 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753088AbeAQUFu (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:53792 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964979AbeAJLNy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 15:05:50 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codaurora.org>
-Subject: [PATCH] MAINTAINERS: wireless: update wil6210 maintainer entry
-Date: Wed, 17 Jan 2018 22:05:42 +0200
-Message-Id: <1516219542-6450-1-git-send-email-merez@codeaurora.org> (sfid-20180117_210557_421746_FA82CF75)
+        Wed, 10 Jan 2018 06:13:54 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 0/9] fixes to remove enum typedefs
+Date: Wed, 10 Jan 2018 16:42:42 +0530
+Message-ID: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180110_121358_873600_598FF034)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wil6210 maintainer email and mail list has changed, hence update
-its MAINTAINERS entry accordingly.
+v2: The patch series is created instead of independent patches & 
+updated the name for Signed-off-by field. 
+  
+This patch series fix "WARNING: do not add new typedefs" issues
+found by checkpatch.pl
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- MAINTAINERS | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Ajay Singh (9):
+  staging: wilc1000: removed typedef from enum BSSTYPE_T
+  staging: wilc1000: remove unnecessary typedef enum G_OPERATING_MODE_T
+  staging: wilc1000: removed unnecessary enums typedefs
+  staging: wilc1000: removed few unnecessary enums typedef
+  staging: wilc1000: removed few unnecessary enums typedef
+  staging: wilc1000: removed enums typedef for BEACON_IE & TX_RATE_T
+  staging: wilc1000: removed enum typedef CHIP_PS_STATE_T
+  staging: wilc1000: removed enum typedef BUS_ACQUIRE_T
+  staging: wilc1000: removed enum typedef BUS_RELEASE_T
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 129c591..bdaba61 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14760,9 +14760,9 @@ S:	Maintained
- F:	drivers/hid/hid-wiimote*
- 
- WILOCITY WIL6210 WIRELESS DRIVER
--M:	Maya Erez <qca_merez@qca.qualcomm.com>
-+M:	Maya Erez <merez@codeaurora.org>
- L:	linux-wireless@vger.kernel.org
--L:	wil6210@qca.qualcomm.com
-+L:	wil6210@qti.qualcomm.com
- S:	Supported
- W:	http://wireless.kernel.org/en/users/Drivers/wil6210
- F:	drivers/net/wireless/ath/wil6210/
+ drivers/staging/wilc1000/host_interface.c |  2 +-
+ drivers/staging/wilc1000/wilc_wlan.c      |  6 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h   | 96 +++++++++++++++----------------
+ 3 files changed, 52 insertions(+), 52 deletions(-)
+
 -- 
-1.9.1
+2.7.4
