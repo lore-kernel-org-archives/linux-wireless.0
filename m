@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:19040 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756221AbeARNSE (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:9146 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934630AbeAKPJA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 08:18:04 -0500
+        Thu, 11 Jan 2018 10:09:00 -0500
 From: Ajay Singh <ajay.kathat@microchip.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
         <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 00/14] fix to remove unnecessary parenthesis,typedef and avoid camelCase
-Date: Thu, 18 Jan 2018 18:46:58 +0530
-Message-ID: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141831_445734_662B67ED)
+Subject: [PATCH v3 2/6] staging: wilc1000: remove unnecessary typedef enum G_OPERATING_MODE_T
+Date: Thu, 11 Jan 2018 19:42:15 +0530
+Message-ID: <1515679939-13202-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180111_160945_349309_87C705C0)
+In-Reply-To: <1515679939-13202-1-git-send-email-ajay.kathat@microchip.com>
+References: <1515679939-13202-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series contains changes to fix issues reported by checkpatch.pl script.
+This patch has removed G_OPERATING_MODE_T typedef enum.
+Now, its used as anonymous-enums for constants.
+checkpatch.pl warning to avoid new typedef is fixes with this patch.
 
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_if.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Ajay Singh (14):
-  staging: wilc1000: remove unnecessary use of parentheses
-  staging: wilc1000: removed unnecessary defined enums typedef
-  staging: wilc1000: fix alignments to match open parenthesis
-  staging: wilc1000: rename host_int_ParseJoinBssParam() and it's
-    variable using camelCase
-  staging: wilc1000: rename camelCase used in Handle_DelAllSta() and its
-    variable
-  staging: wilc1000: rename strWIDList variable to wid_list to avoid
-    camelCase
-  staging: wilc1000: rename u32WidsCount variable to avoid camelCase
-  staging: wilc1000: rename pu8CurrByte variable to avoid camelCase
-  staging: wilc1000: rename pstrHostIFconnectAttr argument to avoid
-    camelCase
-  staging: wilc1000: rename ptstrJoinBssParam variable to avoid
-    camelCase
-  staging: wilc1000: rename strConnectInfo variable to avoid camelCase
-  staging: wilc1000: rename Handle_ScanDone() to avoid camelCase
-  staging: wilc1000: rename Handle_Connect() to avoid camelCase
-  staging: wilc1000: rename Handle_ConnectTimeout() and Handle_Key()
-
- drivers/staging/wilc1000/coreconfigurator.c       |   2 +-
- drivers/staging/wilc1000/host_interface.c         | 936 +++++++++++-----------
- drivers/staging/wilc1000/linux_wlan.c             |  10 +-
- drivers/staging/wilc1000/wilc_sdio.c              |   4 +-
- drivers/staging/wilc1000/wilc_spi.c               |  20 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  64 +-
- drivers/staging/wilc1000/wilc_wlan.c              |   2 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.c          |   6 +-
- drivers/staging/wilc1000/wilc_wlan_if.h           |  72 +-
- 9 files changed, 555 insertions(+), 561 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 2baf6c4..222bde2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -107,12 +107,12 @@ typedef enum {
+ 	RATE_54MB		= 54
+ } TX_RATE_T;
+ 
+-typedef enum {
++enum {
+ 	B_ONLY_MODE		= 0,    /* 1, 2 M, otherwise 5, 11 M */
+ 	G_ONLY_MODE,			/* 6,12,24 otherwise 9,18,36,48,54 */
+ 	G_MIXED_11B_1_MODE,		/* 1,2,5.5,11 otherwise all on */
+ 	G_MIXED_11B_2_MODE,		/* 1,2,5,11,6,12,24 otherwise all on */
+-} G_OPERATING_MODE_T;
++};
+ 
+ typedef enum {
+ 	G_SHORT_PREAMBLE	= 0,	/* Short Preamble */
 -- 
 2.7.4
