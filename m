@@ -1,45 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34818 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751505AbeAZO4r (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:60552 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932130AbeAKHKC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 09:56:47 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 11 Jan 2018 02:10:02 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 07/10] rtlwifi: btcoex: Add power_on_setting routine
+Date: Thu, 11 Jan 2018 15:09:29 +0800
+Message-ID: <20180111070932.9929-8-pkshih@realtek.com> (sfid-20180111_081010_510535_13C50233)
+In-Reply-To: <20180111070932.9929-1-pkshih@realtek.com>
+References: <20180111070932.9929-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Subject: Re: ssb: Do not disable PCI host on non-Mips
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <87vafpq7t2.fsf@turtle.gmx.de>
-References: <87vafpq7t2.fsf@turtle.gmx.de>
-To: Sven Joachim <svenjoac@gmx.de>
-Cc: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
-        James Hogan <jhogan@kernel.org>, linux-mips@linux-mips.org,
-        Ralf Baechle <ralf@linux-mips.org>,
-        James Hogan <jhogan@kernel.org>,
-        Paul Burton <paul.burton@mips.com>,
-        Matt Redfearn <matt.redfearn@imgtec.com>,
-        Guenter Roeck <linux@roeck-us.net>
-Message-Id: <20180126145647.6FD3C6024A@smtp.codeaurora.org> (sfid-20180126_155651_779139_A5217E47)
-Date: Fri, 26 Jan 2018 14:56:47 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Joachim <svenjoac@gmx.de> wrote:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> After upgrading an old laptop to 4.15-rc9, I found that the eth0 and
-> wlan0 interfaces had disappeared.  It turns out that the b43 and b44
-> drivers require SSB_PCIHOST_POSSIBLE which depends on
-> PCI_DRIVERS_LEGACY, a config option that only exists on Mips.
-> 
-> Fixes: 58eae1416b80 ("ssb: Disable PCI host for PCI_DRIVERS_GENERIC")
-> Cc: stable@vger.org
-> Signed-off-by: Sven Joachim <svenjoac@gmx.de>
-> Reviewed-by: James Hogan <jhogan@kernel.org>
+After mac power-on sequence, wifi will start to work so notify btcoex the
+event to configure registers especially related to antenna. This will not
+only help to assign antenna but also to yield better user experience.
 
-Patch applied to wireless-drivers.git, thanks.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c      | 6 ++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h      | 1 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
+ 4 files changed, 9 insertions(+)
 
-a9e6d44ddecc ssb: Do not disable PCI host on non-Mips
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index ea12b9d63a73..bc523af7ef88 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -608,6 +608,7 @@ extern struct btc_coexist gl_bt_coexist;
+ 
+ bool exhalbtc_initlize_variables(void);
+ bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
++void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 4d9e33078d4f..9e3623b0423c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -32,6 +32,7 @@
+ static struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_init_variables = rtl_btc_init_variables,
+ 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
++	.btc_power_on_setting = rtl_btc_power_on_setting,
+ 	.btc_init_hw_config = rtl_btc_init_hw_config,
+ 	.btc_ips_notify = rtl_btc_ips_notify,
+ 	.btc_lps_notify = rtl_btc_lps_notify,
+@@ -116,6 +117,11 @@ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
+ 	 */
+ }
+ 
++void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv)
++{
++	exhalbtc_power_on_setting(&gl_bt_coexist);
++}
++
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
+ {
+ 	u8 bt_exist;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index 40f1ce8c8a06..9becfa59407d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -29,6 +29,7 @@
+ 
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv);
++void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv);
+ void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type);
+ void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 941694060f48..b27dbe10b163 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2557,6 +2557,7 @@ struct bt_coexist_info {
+ struct rtl_btc_ops {
+ 	void (*btc_init_variables) (struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
++	void (*btc_power_on_setting)(struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
+ 	void (*btc_ips_notify) (struct rtl_priv *rtlpriv, u8 type);
+ 	void (*btc_lps_notify)(struct rtl_priv *rtlpriv, u8 type);
 -- 
-https://patchwork.kernel.org/patch/10185397/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.15.1
