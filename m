@@ -1,44 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:43606 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751884AbeAPODD (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:60549 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932067AbeAKHKB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 09:03:03 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 04/13] staging: wilc1000: remove unused element in wilc_wfi_p2p_listen_params struct
-Date: Tue, 16 Jan 2018 19:32:22 +0530
-Message-ID: <1516111351-5353-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180116_150403_900823_43448CA9)
-In-Reply-To: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
+        Thu, 11 Jan 2018 02:10:01 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 01/10] rtlwifi: Use mutex to replace spin_lock to protect IPS and LPS
+Date: Thu, 11 Jan 2018 15:09:23 +0800
+Message-ID: <20180111070932.9929-2-pkshih@realtek.com> (sfid-20180111_081017_227114_D305C980)
+In-Reply-To: <20180111070932.9929-1-pkshih@realtek.com>
+References: <20180111070932.9929-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is cleanup patch, to remove the unused "tenuChannelType" element
-from wilc_wfi_p2p_listen_params structure.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Enter/leavel IPS and LPS are large critical section, and they can't use
+sleep function because running in atomic-context, which own a spin_lock.
+In commit ba9f93f82aba ("rtlwifi: Fix enter/exit power_save"), it moves
+LPS functions to thread-context, so this commit can simply change LPS's
+spin lock to mutex.
+Considering IPS functions, rtl_ips_nic_on() may be called by TX tasklet
+(softirq-context) that check whether packet is auth frame. Fortunately,
+current mac80211 will ask driver to leave IPS using op_config with
+changed flag IEEE80211_CONF_CHANGE_IDLE, before issuing auth frame, so
+IPS functions can run in thread-context and use mutex to protect critical
+section, too.
+Also, this commit removes some useless spin locks.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/base.c |  6 ++----
+ drivers/net/wireless/realtek/rtlwifi/ps.c   | 24 ++++++++++--------------
+ drivers/net/wireless/realtek/rtlwifi/usb.c  |  1 -
+ drivers/net/wireless/realtek/rtlwifi/wifi.h | 10 ++--------
+ 4 files changed, 14 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index a4c193e..3337fb2 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -92,7 +92,6 @@ struct sta_info {
- /*Parameters needed for host interface for  remaining on channel*/
- struct wilc_wfi_p2p_listen_params {
- 	struct ieee80211_channel *listen_ch;
--	enum nl80211_channel_type tenuChannelType;
- 	u32 listen_duration;
- 	u64 listen_cookie;
- 	u32 listen_session_id;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 0ba9c0cc95e1..89ec318598ea 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -551,7 +551,8 @@ int rtl_init_core(struct ieee80211_hw *hw)
+ 
+ 	/* <4> locks */
+ 	mutex_init(&rtlpriv->locks.conf_mutex);
+-	spin_lock_init(&rtlpriv->locks.ips_lock);
++	mutex_init(&rtlpriv->locks.ips_mutex);
++	mutex_init(&rtlpriv->locks.lps_mutex);
+ 	spin_lock_init(&rtlpriv->locks.irq_th_lock);
+ 	spin_lock_init(&rtlpriv->locks.h2c_lock);
+ 	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
+@@ -561,9 +562,7 @@ int rtl_init_core(struct ieee80211_hw *hw)
+ 	spin_lock_init(&rtlpriv->locks.c2hcmd_lock);
+ 	spin_lock_init(&rtlpriv->locks.scan_list_lock);
+ 	spin_lock_init(&rtlpriv->locks.cck_and_rw_pagea_lock);
+-	spin_lock_init(&rtlpriv->locks.check_sendpkt_lock);
+ 	spin_lock_init(&rtlpriv->locks.fw_ps_lock);
+-	spin_lock_init(&rtlpriv->locks.lps_lock);
+ 	spin_lock_init(&rtlpriv->locks.iqk_lock);
+ 	/* <5> init list */
+ 	INIT_LIST_HEAD(&rtlpriv->entry_list);
+@@ -1229,7 +1228,6 @@ bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	}
+ 	if (ieee80211_is_auth(fc)) {
+ 		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, "MAC80211_LINKING\n");
+-		rtl_ips_nic_on(hw);
+ 
+ 		mac->link_state = MAC80211_LINKING;
+ 		/* Dul mac */
+diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+index 24c87fae5382..6a4008845f49 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/ps.c
++++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+@@ -289,7 +289,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
+ 
+ 	cancel_delayed_work(&rtlpriv->works.ips_nic_off_wq);
+ 
+-	spin_lock(&rtlpriv->locks.ips_lock);
++	mutex_lock(&rtlpriv->locks.ips_mutex);
+ 	if (ppsc->inactiveps) {
+ 		rtstate = ppsc->rfpwr_state;
+ 
+@@ -306,7 +306,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
+ 									ppsc->inactive_pwrstate);
+ 		}
+ 	}
+-	spin_unlock(&rtlpriv->locks.ips_lock);
++	mutex_unlock(&rtlpriv->locks.ips_mutex);
+ }
+ EXPORT_SYMBOL_GPL(rtl_ips_nic_on);
+ 
+@@ -415,7 +415,6 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	unsigned long flag;
+ 
+ 	if (!ppsc->fwctrl_lps)
+ 		return;
+@@ -436,7 +435,7 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
+ 	if (mac->link_state != MAC80211_LINKED)
+ 		return;
+ 
+-	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
++	mutex_lock(&rtlpriv->locks.lps_mutex);
+ 
+ 	/* Don't need to check (ppsc->dot11_psmode == EACTIVE), because
+ 	 * bt_ccoexist may ask to enter lps.
+@@ -446,7 +445,7 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
+ 		 "Enter 802.11 power save mode...\n");
+ 	rtl_lps_set_psmode(hw, EAUTOPS);
+ 
+-	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
++	mutex_unlock(&rtlpriv->locks.lps_mutex);
+ }
+ 
+ /* Interrupt safe routine to leave the leisure power save mode.*/
+@@ -455,9 +454,8 @@ static void rtl_lps_leave_core(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	unsigned long flag;
+ 
+-	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
++	mutex_lock(&rtlpriv->locks.lps_mutex);
+ 
+ 	if (ppsc->fwctrl_lps) {
+ 		if (ppsc->dot11_psmode != EACTIVE) {
+@@ -478,7 +476,7 @@ static void rtl_lps_leave_core(struct ieee80211_hw *hw)
+ 			rtl_lps_set_psmode(hw, EACTIVE);
+ 		}
+ 	}
+-	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
++	mutex_unlock(&rtlpriv->locks.lps_mutex);
+ }
+ 
+ /* For sw LPS*/
+@@ -568,7 +566,6 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+-	unsigned long flag;
+ 
+ 	if (!rtlpriv->psc.swctrl_lps)
+ 		return;
+@@ -581,9 +578,9 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
+ 		RT_CLEAR_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM);
+ 	}
+ 
+-	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
++	mutex_lock(&rtlpriv->locks.lps_mutex);
+ 	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS);
+-	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
++	mutex_unlock(&rtlpriv->locks.lps_mutex);
+ }
+ 
+ void rtl_swlps_rfon_wq_callback(void *data)
+@@ -600,7 +597,6 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	unsigned long flag;
+ 	u8 sleep_intv;
+ 
+ 	if (!rtlpriv->psc.sw_ps_enabled)
+@@ -624,9 +620,9 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
+ 	}
+ 	spin_unlock(&rtlpriv->locks.rf_ps_lock);
+ 
+-	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
++	mutex_lock(&rtlpriv->locks.lps_mutex);
+ 	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS);
+-	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
++	mutex_unlock(&rtlpriv->locks.lps_mutex);
+ 
+ 	if (ppsc->reg_rfps_level & RT_RF_OFF_LEVL_ASPM &&
+ 	    !RT_IN_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM)) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index 39b033b3b53a..ce3103bb8ebb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -962,7 +962,6 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw,
+ 	memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
+ 	if (ieee80211_is_auth(fc)) {
+ 		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, "MAC80211_LINKING\n");
+-		rtl_ips_nic_on(hw);
+ 	}
+ 
+ 	if (rtlpriv->psc.sw_ps_enabled) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 0b1c54381a2f..941694060f48 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2325,17 +2325,14 @@ struct rtl_hal_cfg {
+ struct rtl_locks {
+ 	/* mutex */
+ 	struct mutex conf_mutex;
+-	struct mutex ps_mutex;
++	struct mutex ips_mutex;	/* mutex for enter/leave IPS */
++	struct mutex lps_mutex;	/* mutex for enter/leave LPS */
+ 
+ 	/*spin lock */
+-	spinlock_t ips_lock;
+ 	spinlock_t irq_th_lock;
+-	spinlock_t irq_pci_lock;
+-	spinlock_t tx_lock;
+ 	spinlock_t h2c_lock;
+ 	spinlock_t rf_ps_lock;
+ 	spinlock_t rf_lock;
+-	spinlock_t lps_lock;
+ 	spinlock_t waitq_lock;
+ 	spinlock_t entry_list_lock;
+ 	spinlock_t usb_lock;
+@@ -2348,9 +2345,6 @@ struct rtl_locks {
+ 	/*Dual mac*/
+ 	spinlock_t cck_and_rw_pagea_lock;
+ 
+-	/*Easy concurrent*/
+-	spinlock_t check_sendpkt_lock;
+-
+ 	spinlock_t iqk_lock;
+ };
+ 
 -- 
-2.7.4
+2.15.1
