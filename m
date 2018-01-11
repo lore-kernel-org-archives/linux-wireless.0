@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:57564 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750905AbeAPWUZ (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:60553 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932163AbeAKHKD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 17:20:25 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: fix station info handling bugs
-Date: Tue, 16 Jan 2018 23:20:22 +0100
-Message-Id: <20180116222022.13161-1-johannes@sipsolutions.net> (sfid-20180116_232033_038691_92E953EE)
+        Thu, 11 Jan 2018 02:10:03 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 10/10] rtlwifi: btcoex: add rfe_type parameter to btcoex
+Date: Thu, 11 Jan 2018 15:09:32 +0800
+Message-ID: <20180111070932.9929-11-pkshih@realtek.com> (sfid-20180111_081007_893692_621BBACB)
+In-Reply-To: <20180111070932.9929-1-pkshih@realtek.com>
+References: <20180111070932.9929-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Fix two places where the structure isn't initialized to zero,
-and thus can't be filled properly by the driver.
+btcoex configure antenna by rfe_type that is RF type programmed in efuse.
 
-Fixes: 4a4b8169501b ("cfg80211: Accept multiple RSSI thresholds for CQM")
-Fixes: 9930380f0bd8 ("cfg80211: implement IWRATE")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
-Dave, can you apply this as an exception? I'm not really expecting
-any other patches to show up now, and seems easier to have a single
-patch than a whole pull request (especially now that patchwork seems
-to be swallowing mine ...)
----
- net/wireless/nl80211.c     | 2 +-
- net/wireless/wext-compat.c | 3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 10 ++++++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h |  2 ++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c084dd2205ac..91e55bb85416 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9832,7 +9832,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 	 */
- 	if (!wdev->cqm_config->last_rssi_event_value && wdev->current_bss &&
- 	    rdev->ops->get_station) {
--		struct station_info sinfo;
-+		struct station_info sinfo = {};
- 		u8 *mac_addr;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 30d940cf3abf..7b7099cbb1c7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -207,6 +207,14 @@ u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
+ 	return rtlhal->package_type;
+ }
  
- 		mac_addr = wdev->current_bss->pub.bssid;
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 7ca04a7de85a..05186a47878f 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1254,8 +1254,7 @@ static int cfg80211_wext_giwrate(struct net_device *dev,
++static
++u8 rtl_get_hwpg_rfe_type(struct rtl_priv *rtlpriv)
++{
++	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
++
++	return rtlhal->rfe_type;
++}
++
+ static
+ bool halbtc_is_hw_mailbox_exist(struct btc_coexist *btcoexist)
  {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
--	/* we are under RTNL - globally locked - so can use a static struct */
--	static struct station_info sinfo;
-+	struct station_info sinfo = {};
- 	u8 addr[ETH_ALEN];
- 	int err;
+@@ -1309,6 +1317,8 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "[BTCoex], Package Type = Non-TFBGA\n");
  
++	btcoexist->board_info.rfe_type = rtl_get_hwpg_rfe_type(rtlpriv);
++
+ 	return true;
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index cbbf5e5a9c9b..ee7bbbd87eae 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -151,6 +151,8 @@ struct btc_board_info {
+ 	u8 btdm_ant_pos;
+ 	u8 single_ant_path; /* current used for 8723b only, 1=>s0,  0=>s1 */
+ 	bool tfbga_package;
++
++	u8 rfe_type;
+ };
+ 
+ enum btc_dbg_opcode {
 -- 
 2.15.1
