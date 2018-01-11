@@ -1,33 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:45534 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751496AbeA0Scz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35128 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934499AbeAKQbL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Jan 2018 13:32:55 -0500
-Received: by mail-oi0-f67.google.com with SMTP id c189so1696815oib.12
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Jan 2018 10:32:55 -0800 (PST)
-Subject: Re: [PATCH 01/10] rtlwifi: enable mac80211 fast-tx support
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180126074645.27201-1-pkshih@realtek.com>
- <20180126074645.27201-2-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <71591635-eb70-f12e-d510-a90a873afcc7@lwfinger.net> (sfid-20180127_193259_744841_CF53DE97)
-Date: Sat, 27 Jan 2018 12:32:53 -0600
+        Thu, 11 Jan 2018 11:31:11 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, janet.morgan@intel.com, joe.konno@intel.com
+Subject: Re: pull-request: iwlwifi-next 2017-12-20
+References: <1513787503.4827.488.camel@coelho.fi>
+Date: Thu, 11 Jan 2018 18:31:06 +0200
+In-Reply-To: <1513787503.4827.488.camel@coelho.fi> (Luca Coelho's message of
+        "Wed, 20 Dec 2017 18:31:43 +0200")
+Message-ID: <87efmwtl11.fsf@kamboji.qca.qualcomm.com> (sfid-20180111_173116_124251_9750E0C9)
 MIME-Version: 1.0
-In-Reply-To: <20180126074645.27201-2-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2018 01:46 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> Enable the mac80211 fast-tx feature, since our driver already support
-> hw_flags required by fast-tx and is able to let mac80211 stack to transmit
-> packet through fast-xmit path.
-> 
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Luca Coelho <luca@coelho.fi> writes:
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> This is my third batch of patches intended for v4.16.  Nothing major
+> here, just the usual continued development.  More details about the
+> contents in the tag description.
+>
+> I have sent this out before and kbuildbot reported success.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit f39a5c01c3d24f2f61ec9d8c7d7e81f9aca506ce:
+>
+>   Merge branch 'nfp-flower-add-Geneve-tunnel-support' (2017-12-19 14:52:13 -0500)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2017-12-20
+>
+> for you to fetch changes up to 4243edb4704ed950a43440dfb4cbd5613db6ab6c:
+>
+>   iwlwifi: define and use if iwl_mvm_has_tlc_offload (2017-12-20 18:28:25 +0200)
+>
+> ----------------------------------------------------------------
+> Third batch of updates for v4.16
+>
+> * Small cleanups in the new rate-scaling code;
+> * Some improvements in debugging;
+> * New FW API changes;
+> * Fix a bug where we got a false-positive warning;
+> * Fix forced quota debugfs functionality;
+>
+> ----------------------------------------------------------------
+
+Pulled, thanks.
+
+-- 
+Kalle Valo
