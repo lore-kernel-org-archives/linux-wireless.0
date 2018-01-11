@@ -1,174 +1,598 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:44189 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752073AbeAPODE (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:60558 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932160AbeAKHKO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 09:03:04 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 06/13] staging: wilc1000: rename CfgConnectResult() and its local variable names
-Date: Tue, 16 Jan 2018 19:32:24 +0530
-Message-ID: <1516111351-5353-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180116_150350_048090_165E21BD)
-In-Reply-To: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
+        Thu, 11 Jan 2018 02:10:14 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 09/10] rtlwifi: btcoex: Add common function for qeurying BT information
+Date: Thu, 11 Jan 2018 15:09:31 +0800
+Message-ID: <20180111070932.9929-10-pkshih@realtek.com> (sfid-20180111_081027_171616_9210AB72)
+In-Reply-To: <20180111070932.9929-1-pkshih@realtek.com>
+References: <20180111070932.9929-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is cleanup patch,to avoid use of camelCase for variable name
-and function names in CfgConnectResult().
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+This commit implement the common function to sort old features, and add
+more new features that are get_supported_feature, get_supported_version,
+get_ant_det_val, ble_scan_type, ble_scan_para, bt_dev_info,
+forbidden_slot_val, afh_map and etc.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 74 +++++++++++------------
- 1 file changed, 37 insertions(+), 37 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 309 ++++++++++++++++++---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  70 +++++
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  48 +++-
+ 3 files changed, 394 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 2ca703c..15d7e14 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -469,92 +469,92 @@ static void CfgScanResult(enum scan_event scan_event,
- 
- int wilc_connecting;
- 
--static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
--			     struct connect_info *pstrConnectInfo,
--			     u8 u8MacStatus,
--			     struct disconnect_info *pstrDisconnectNotifInfo,
--			     void *pUserVoid)
-+static void cfg_connect_result(enum conn_event conn_disconn_evt,
-+			     struct connect_info *conn_info,
-+			     u8 mac_status,
-+			     struct disconnect_info *disconn_info,
-+			     void *priv_data)
- {
- 	struct wilc_priv *priv;
- 	struct net_device *dev;
--	struct host_if_drv *pstrWFIDrv;
--	u8 NullBssid[ETH_ALEN] = {0};
-+	struct host_if_drv *wfi_drv;
-+	u8 null_bssid[ETH_ALEN] = {0};
- 	struct wilc *wl;
- 	struct wilc_vif *vif;
- 
- 	wilc_connecting = 0;
- 
--	priv = pUserVoid;
-+	priv = priv_data;
- 	dev = priv->dev;
- 	vif = netdev_priv(dev);
- 	wl = vif->wilc;
--	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
-+	wfi_drv = (struct host_if_drv *)priv->hif_drv;
- 
--	if (enuConnDisconnEvent == CONN_DISCONN_EVENT_CONN_RESP) {
--		u16 u16ConnectStatus;
-+	if (conn_disconn_evt == CONN_DISCONN_EVENT_CONN_RESP) {
-+		u16 connect_status;
- 
--		u16ConnectStatus = pstrConnectInfo->status;
-+		connect_status = conn_info->status;
- 
--		if ((u8MacStatus == MAC_DISCONNECTED) &&
--		    (pstrConnectInfo->status == SUCCESSFUL_STATUSCODE)) {
--			u16ConnectStatus = WLAN_STATUS_UNSPECIFIED_FAILURE;
--			wilc_wlan_set_bssid(priv->dev, NullBssid,
-+		if ((mac_status == MAC_DISCONNECTED) &&
-+		    (conn_info->status == SUCCESSFUL_STATUSCODE)) {
-+			connect_status = WLAN_STATUS_UNSPECIFIED_FAILURE;
-+			wilc_wlan_set_bssid(priv->dev, null_bssid,
- 					    STATION_MODE);
- 			eth_zero_addr(wilc_connected_ssid);
- 
--			if (!pstrWFIDrv->p2p_connect)
-+			if (!wfi_drv->p2p_connect)
- 				wlan_channel = INVALID_CHANNEL;
- 
- 			netdev_err(dev, "Unspecified failure\n");
- 		}
- 
--		if (u16ConnectStatus == WLAN_STATUS_SUCCESS) {
--			bool bNeedScanRefresh = false;
-+		if (connect_status == WLAN_STATUS_SUCCESS) {
-+			bool scan_refresh = false;
- 			u32 i;
- 
--			memcpy(priv->associated_bss, pstrConnectInfo->bssid, ETH_ALEN);
-+			memcpy(priv->associated_bss, conn_info->bssid, ETH_ALEN);
- 
- 			for (i = 0; i < last_scanned_cnt; i++) {
- 				if (memcmp(last_scanned_shadow[i].bssid,
--					   pstrConnectInfo->bssid,
-+					   conn_info->bssid,
- 					   ETH_ALEN) == 0) {
- 					unsigned long now = jiffies;
- 
- 					if (time_after(now,
- 						       last_scanned_shadow[i].time_scan_cached +
- 						       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
--						bNeedScanRefresh = true;
-+						scan_refresh = true;
- 
- 					break;
- 				}
- 			}
- 
--			if (bNeedScanRefresh)
-+			if (scan_refresh)
- 				refresh_scan(priv, true);
- 		}
- 
--		cfg80211_connect_result(dev, pstrConnectInfo->bssid,
--					pstrConnectInfo->req_ies, pstrConnectInfo->req_ies_len,
--					pstrConnectInfo->resp_ies, pstrConnectInfo->resp_ies_len,
--					u16ConnectStatus, GFP_KERNEL);
--	} else if (enuConnDisconnEvent == CONN_DISCONN_EVENT_DISCONN_NOTIF)    {
-+		cfg80211_connect_result(dev, conn_info->bssid,
-+					conn_info->req_ies, conn_info->req_ies_len,
-+					conn_info->resp_ies, conn_info->resp_ies_len,
-+					connect_status, GFP_KERNEL);
-+	} else if (conn_disconn_evt == CONN_DISCONN_EVENT_DISCONN_NOTIF)    {
- 		wilc_optaining_ip = false;
- 		p2p_local_random = 0x01;
- 		p2p_recv_random = 0x00;
- 		wilc_ie = false;
- 		eth_zero_addr(priv->associated_bss);
--		wilc_wlan_set_bssid(priv->dev, NullBssid, STATION_MODE);
-+		wilc_wlan_set_bssid(priv->dev, null_bssid, STATION_MODE);
- 		eth_zero_addr(wilc_connected_ssid);
- 
--		if (!pstrWFIDrv->p2p_connect)
-+		if (!wfi_drv->p2p_connect)
- 			wlan_channel = INVALID_CHANNEL;
--		if ((pstrWFIDrv->IFC_UP) && (dev == wl->vif[1]->ndev))
--			pstrDisconnectNotifInfo->reason = 3;
--		else if ((!pstrWFIDrv->IFC_UP) && (dev == wl->vif[1]->ndev))
--			pstrDisconnectNotifInfo->reason = 1;
-+		if ((wfi_drv->IFC_UP) && (dev == wl->vif[1]->ndev))
-+			disconn_info->reason = 3;
-+		else if ((!wfi_drv->IFC_UP) && (dev == wl->vif[1]->ndev))
-+			disconn_info->reason = 1;
- 
--		cfg80211_disconnected(dev, pstrDisconnectNotifInfo->reason, pstrDisconnectNotifInfo->ie,
--				      pstrDisconnectNotifInfo->ie_len, false,
-+		cfg80211_disconnected(dev, disconn_info->reason, disconn_info->ie,
-+				      disconn_info->ie_len, false,
- 				      GFP_KERNEL);
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 2be81fec789a..30d940cf3abf 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -207,6 +207,102 @@ u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
+ 	return rtlhal->package_type;
  }
-@@ -794,7 +794,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
  
- 	ret = wilc_set_join_req(vif, pstrNetworkInfo->bssid, sme->ssid,
- 				     sme->ssid_len, sme->ie, sme->ie_len,
--				     CfgConnectResult, (void *)priv,
-+				     cfg_connect_result, (void *)priv,
- 				     u8security, tenuAuth_type,
- 				     pstrNetworkInfo->ch,
- 				     pstrNetworkInfo->join_params);
++static
++bool halbtc_is_hw_mailbox_exist(struct btc_coexist *btcoexist)
++{
++	if (IS_HARDWARE_TYPE_8812(btcoexist->adapter))
++		return false;
++	else
++		return true;
++}
++
++static
++bool halbtc_send_bt_mp_operation(struct btc_coexist *btcoexist, u8 op_code,
++				 u8 *cmd, u32 len, unsigned long wait_ms)
++{
++	struct rtl_priv *rtlpriv;
++	const u8 oper_ver = 0;
++	u8 req_num;
++
++	if (!halbtc_is_hw_mailbox_exist(btcoexist))
++		return false;
++
++	if (wait_ms)	/* before h2c to avoid race condition */
++		reinit_completion(&btcoexist->bt_mp_comp);
++
++	rtlpriv = btcoexist->adapter;
++
++	/* fill req_num by op_code, and rtl_btc_btmpinfo_notify() use it
++	 * to know message type
++	 */
++	switch (op_code) {
++	case BT_OP_GET_BT_VERSION:
++		req_num = BT_SEQ_GET_BT_VERSION;
++		break;
++	case BT_OP_GET_AFH_MAP_L:
++		req_num = BT_SEQ_GET_AFH_MAP_L;
++		break;
++	case BT_OP_GET_AFH_MAP_M:
++		req_num = BT_SEQ_GET_AFH_MAP_M;
++		break;
++	case BT_OP_GET_AFH_MAP_H:
++		req_num = BT_SEQ_GET_AFH_MAP_H;
++		break;
++	case BT_OP_GET_BT_COEX_SUPPORTED_FEATURE:
++		req_num = BT_SEQ_GET_BT_COEX_SUPPORTED_FEATURE;
++		break;
++	case BT_OP_GET_BT_COEX_SUPPORTED_VERSION:
++		req_num = BT_SEQ_GET_BT_COEX_SUPPORTED_VERSION;
++		break;
++	case BT_OP_GET_BT_ANT_DET_VAL:
++		req_num = BT_SEQ_GET_BT_ANT_DET_VAL;
++		break;
++	case BT_OP_GET_BT_BLE_SCAN_PARA:
++		req_num = BT_SEQ_GET_BT_BLE_SCAN_PARA;
++		break;
++	case BT_OP_GET_BT_BLE_SCAN_TYPE:
++		req_num = BT_SEQ_GET_BT_BLE_SCAN_TYPE;
++		break;
++	case BT_OP_GET_BT_DEVICE_INFO:
++		req_num = BT_SEQ_GET_BT_DEVICE_INFO;
++		break;
++	case BT_OP_GET_BT_FORBIDDEN_SLOT_VAL:
++		req_num = BT_SEQ_GET_BT_FORB_SLOT_VAL;
++		break;
++	case BT_OP_WRITE_REG_ADDR:
++	case BT_OP_WRITE_REG_VALUE:
++	case BT_OP_READ_REG:
++	default:
++		req_num = BT_SEQ_DONT_CARE;
++		break;
++	}
++
++	cmd[0] |= (oper_ver & 0x0f);		/* Set OperVer */
++	cmd[0] |= ((req_num << 4) & 0xf0);	/* Set ReqNum */
++	cmd[1] = op_code;
++	rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->mac80211.hw, 0x67, len, cmd);
++
++	/* wait? */
++	if (!wait_ms)
++		return true;
++
++	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++		 "btmpinfo wait req_num=%d wait=%ld\n", req_num, wait_ms);
++
++	if (in_interrupt())
++		return false;
++
++	if (wait_for_completion_timeout(&btcoexist->bt_mp_comp,
++					msecs_to_jiffies(wait_ms)) == 0) {
++		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
++			 "btmpinfo wait (req_num=%d) timeout\n", req_num);
++
++		return false;	/* timeout */
++	}
++
++	return true;
++}
++
+ static void halbtc_leave_lps(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv;
+@@ -334,24 +430,79 @@ static void halbtc_aggregation_check(struct btc_coexist *btcoexist)
+ 
+ static u32 halbtc_get_bt_patch_version(struct btc_coexist *btcoexist)
+ {
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	u8 cmd_buffer[4] = {0};
+-	u8 oper_ver = 0;
+-	u8 req_num = 0x0E;
+ 
+ 	if (btcoexist->bt_info.bt_real_fw_ver)
+ 		goto label_done;
+ 
+-	cmd_buffer[0] |= (oper_ver & 0x0f);	/* Set OperVer */
+-	cmd_buffer[0] |= ((req_num << 4) & 0xf0);	/* Set ReqNum */
+-	cmd_buffer[1] = 0; /* BT_OP_GET_BT_VERSION = 0 */
+-	rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->mac80211.hw, 0x67, 4,
+-					&cmd_buffer[0]);
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	halbtc_send_bt_mp_operation(btcoexist, BT_OP_GET_BT_VERSION,
++				    cmd_buffer, 4, 200);
+ 
+ label_done:
+ 	return btcoexist->bt_info.bt_real_fw_ver;
+ }
+ 
++static u32 halbtc_get_bt_coex_supported_feature(void *btc_context)
++{
++	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
++	u8 cmd_buffer[4] = {0};
++
++	if (btcoexist->bt_info.bt_supported_feature)
++		goto label_done;
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	halbtc_send_bt_mp_operation(btcoexist,
++				    BT_OP_GET_BT_COEX_SUPPORTED_FEATURE,
++				    cmd_buffer, 4, 200);
++
++label_done:
++	return btcoexist->bt_info.bt_supported_feature;
++}
++
++static u32 halbtc_get_bt_coex_supported_version(void *btc_context)
++{
++	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
++	u8 cmd_buffer[4] = {0};
++
++	if (btcoexist->bt_info.bt_supported_version)
++		goto label_done;
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	halbtc_send_bt_mp_operation(btcoexist,
++				    BT_OP_GET_BT_COEX_SUPPORTED_VERSION,
++				    cmd_buffer, 4, 200);
++
++label_done:
++	return btcoexist->bt_info.bt_supported_version;
++}
++
++static u32 halbtc_get_bt_device_info(void *btc_context)
++{
++	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
++	u8 cmd_buffer[4] = {0};
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	halbtc_send_bt_mp_operation(btcoexist,
++				    BT_OP_GET_BT_DEVICE_INFO,
++				    cmd_buffer, 4, 200);
++
++	return btcoexist->bt_info.bt_device_info;
++}
++
++static u32 halbtc_get_bt_forbidden_slot_val(void *btc_context)
++{
++	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
++	u8 cmd_buffer[4] = {0};
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	halbtc_send_bt_mp_operation(btcoexist,
++				    BT_OP_GET_BT_FORBIDDEN_SLOT_VAL,
++				    cmd_buffer, 4, 200);
++
++	return btcoexist->bt_info.bt_forb_slot_val;
++}
++
+ u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
+ {
+ 	/* return value:
+@@ -513,6 +664,18 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 	case BTC_GET_U4_VENDOR:
+ 		*u32_tmp = BTC_VENDOR_OTHER;
+ 		break;
++	case BTC_GET_U4_SUPPORTED_VERSION:
++		*u32_tmp = halbtc_get_bt_coex_supported_version(btcoexist);
++		break;
++	case BTC_GET_U4_SUPPORTED_FEATURE:
++		*u32_tmp = halbtc_get_bt_coex_supported_feature(btcoexist);
++		break;
++	case BTC_GET_U4_BT_DEVICE_INFO:
++		*u32_tmp = halbtc_get_bt_device_info(btcoexist);
++		break;
++	case BTC_GET_U4_BT_FORBIDDEN_SLOT_VAL:
++		*u32_tmp = halbtc_get_bt_forbidden_slot_val(btcoexist);
++		break;
+ 	case BTC_GET_U1_WIFI_DOT11_CHNL:
+ 		*u8_tmp = rtlphy->current_channel;
+ 		break;
+@@ -894,32 +1057,20 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
+ void halbtc_set_bt_reg(void *btc_context, u8 reg_type, u32 offset, u32 set_val)
+ {
+ 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	u8 cmd_buffer1[4] = {0};
+ 	u8 cmd_buffer2[4] = {0};
+-	u8 *addr_to_set = (u8 *)&offset;
+-	u8 *value_to_set = (u8 *)&set_val;
+-	u8 oper_ver = 0;
+-	u8 req_num = 0;
+ 
+-	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
+-		cmd_buffer1[0] |= (oper_ver & 0x0f);	/* Set OperVer */
+-		cmd_buffer1[0] |= ((req_num << 4) & 0xf0);	/* Set ReqNum */
+-		cmd_buffer1[1] = 0x0d;	/* OpCode: BT_LO_OP_WRITE_REG_VALUE */
+-		cmd_buffer1[2] = value_to_set[0];	/* Set WriteRegValue */
+-		rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->mac80211.hw, 0x67, 4,
+-						&cmd_buffer1[0]);
+-
+-		msleep(200);
+-		req_num++;
+-
+-		cmd_buffer2[0] |= (oper_ver & 0x0f);	/* Set OperVer */
+-		cmd_buffer2[0] |= ((req_num << 4) & 0xf0);	/* Set ReqNum */
+-		cmd_buffer2[1] = 0x0c;	/* OpCode: BT_LO_OP_WRITE_REG_ADDR */
+-		cmd_buffer2[3] = addr_to_set[0];	/* Set WriteRegAddr */
+-		rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->mac80211.hw, 0x67, 4,
+-						&cmd_buffer2[0]);
+-	}
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	*((__le16 *)&cmd_buffer1[2]) = cpu_to_le16((u16)set_val);
++	if (!halbtc_send_bt_mp_operation(btcoexist, BT_OP_WRITE_REG_VALUE,
++					 cmd_buffer1, 4, 200))
++		return;
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	cmd_buffer2[2] = reg_type;
++	*((u8 *)&cmd_buffer2[3]) = (u8)offset;
++	halbtc_send_bt_mp_operation(btcoexist, BT_OP_WRITE_REG_ADDR,
++				    cmd_buffer2, 4, 200);
+ }
+ 
+ static void halbtc_display_dbg_msg(void *bt_context, u8 disp_type,
+@@ -960,6 +1111,86 @@ bool halbtc_under_ips(struct btc_coexist *btcoexist)
+ 	return false;
+ }
+ 
++static u8 halbtc_get_ant_det_val_from_bt(void *btc_context)
++{
++	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
++	u8 cmd_buffer[4] = {0};
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	halbtc_send_bt_mp_operation(btcoexist, BT_OP_GET_BT_ANT_DET_VAL,
++				    cmd_buffer, 4, 200);
++
++	/* need wait completion to return correct value */
++
++	return btcoexist->bt_info.bt_ant_det_val;
++}
++
++static u8 halbtc_get_ble_scan_type_from_bt(void *btc_context)
++{
++	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
++	u8 cmd_buffer[4] = {0};
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	halbtc_send_bt_mp_operation(btcoexist, BT_OP_GET_BT_BLE_SCAN_TYPE,
++				    cmd_buffer, 4, 200);
++
++	/* need wait completion to return correct value */
++
++	return btcoexist->bt_info.bt_ble_scan_type;
++}
++
++static u32 halbtc_get_ble_scan_para_from_bt(void *btc_context, u8 scan_type)
++{
++	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
++	u8 cmd_buffer[4] = {0};
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	halbtc_send_bt_mp_operation(btcoexist, BT_OP_GET_BT_BLE_SCAN_PARA,
++				    cmd_buffer, 4, 200);
++
++	/* need wait completion to return correct value */
++
++	return btcoexist->bt_info.bt_ble_scan_para;
++}
++
++static bool halbtc_get_bt_afh_map_from_bt(void *btc_context, u8 map_type,
++					  u8 *afh_map)
++{
++	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
++	u8 cmd_buffer[2] = {0};
++	bool ret;
++	u32 *afh_map_l = (u32 *)afh_map;
++	u32 *afh_map_m = (u32 *)(afh_map + 4);
++	u16 *afh_map_h = (u16 *)(afh_map + 8);
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	ret = halbtc_send_bt_mp_operation(btcoexist, BT_OP_GET_AFH_MAP_L,
++					  cmd_buffer, 2, 200);
++	if (!ret)
++		goto exit;
++
++	*afh_map_l = btcoexist->bt_info.afh_map_l;
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	ret = halbtc_send_bt_mp_operation(btcoexist, BT_OP_GET_AFH_MAP_M,
++					  cmd_buffer, 2, 200);
++	if (!ret)
++		goto exit;
++
++	*afh_map_m = btcoexist->bt_info.afh_map_m;
++
++	/* cmd_buffer[0] and [1] is filled by halbtc_send_bt_mp_operation() */
++	ret = halbtc_send_bt_mp_operation(btcoexist, BT_OP_GET_AFH_MAP_H,
++					  cmd_buffer, 2, 200);
++	if (!ret)
++		goto exit;
++
++	*afh_map_h = btcoexist->bt_info.afh_map_h;
++
++exit:
++	return ret;
++}
++
+ /*****************************************************************
+  *         Extern functions called by other module
+  *****************************************************************/
+@@ -994,11 +1225,25 @@ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv)
+ 	btcoexist->btc_set = halbtc_set;
+ 	btcoexist->btc_set_bt_reg = halbtc_set_bt_reg;
+ 
+-
+ 	btcoexist->bt_info.bt_ctrl_buf_size = false;
+ 	btcoexist->bt_info.agg_buf_size = 5;
+ 
+ 	btcoexist->bt_info.increase_scan_dev_num = false;
++
++	btcoexist->btc_get_bt_coex_supported_feature =
++					halbtc_get_bt_coex_supported_feature;
++	btcoexist->btc_get_bt_coex_supported_version =
++					halbtc_get_bt_coex_supported_version;
++	btcoexist->btc_get_ant_det_val_from_bt = halbtc_get_ant_det_val_from_bt;
++	btcoexist->btc_get_ble_scan_type_from_bt =
++					halbtc_get_ble_scan_type_from_bt;
++	btcoexist->btc_get_ble_scan_para_from_bt =
++					halbtc_get_ble_scan_para_from_bt;
++	btcoexist->btc_get_bt_afh_map_from_bt =
++					halbtc_get_bt_afh_map_from_bt;
++
++	init_completion(&btcoexist->bt_mp_comp);
++
+ 	return true;
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 5a7816ff6877..cbbf5e5a9c9b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -278,6 +278,8 @@ enum btc_get_type {
+ 	BTC_GET_U4_VENDOR,
+ 	BTC_GET_U4_SUPPORTED_VERSION,
+ 	BTC_GET_U4_SUPPORTED_FEATURE,
++	BTC_GET_U4_BT_DEVICE_INFO,
++	BTC_GET_U4_BT_FORBIDDEN_SLOT_VAL,
+ 	BTC_GET_U4_WIFI_IQK_TOTAL,
+ 	BTC_GET_U4_WIFI_IQK_OK,
+ 	BTC_GET_U4_WIFI_IQK_FAIL,
+@@ -459,6 +461,19 @@ typedef	bool (*bfp_btc_get)(void *btcoexist, u8 get_type, void *out_buf);
+ 
+ typedef	bool (*bfp_btc_set)(void *btcoexist, u8 set_type, void *in_buf);
+ 
++typedef u32 (*bfp_btc_get_bt_coex_supported_feature)(void *btcoexist);
++
++typedef u32 (*bfp_btc_get_bt_coex_supported_version)(void *btcoexist);
++
++typedef u8 (*bfp_btc_get_ant_det_val_from_bt)(void *btcoexist);
++
++typedef u8 (*bfp_btc_get_ble_scan_type_from_bt)(void *btcoexist);
++
++typedef u32 (*bfp_btc_get_ble_scan_para_from_bt)(void *btcoexist, u8 scan_type);
++
++typedef bool (*bfp_btc_get_bt_afh_map_from_bt)(void *btcoexist, u8 map_type,
++					       u8 *afh_map);
++
+ typedef void (*bfp_btc_set_bt_reg)(void *btc_context, u8 reg_type, u32 offset,
+ 				   u32 value);
+ 
+@@ -496,6 +511,17 @@ struct btc_bt_info {
+ 	u8 lps_val;
+ 	u8 rpwm_val;
+ 	u32 ra_mask;
++
++	u32 afh_map_l;
++	u32 afh_map_m;
++	u16 afh_map_h;
++	u32 bt_supported_feature;
++	u32 bt_supported_version;
++	u32 bt_device_info;
++	u32 bt_forb_slot_val;
++	u8 bt_ant_det_val;
++	u8 bt_ble_scan_type;
++	u32 bt_ble_scan_para;
+ };
+ 
+ struct btc_stack_info {
+@@ -551,6 +577,40 @@ enum btc_antenna_pos {
+ 	BTC_ANTENNA_AT_AUX_PORT = 0x2,
+ };
+ 
++enum btc_mp_h2c_op_code {
++	BT_OP_GET_BT_VERSION			= 0,
++	BT_OP_WRITE_REG_ADDR			= 12,
++	BT_OP_WRITE_REG_VALUE			= 13,
++	BT_OP_READ_REG				= 17,
++	BT_OP_GET_AFH_MAP_L			= 30,
++	BT_OP_GET_AFH_MAP_M			= 31,
++	BT_OP_GET_AFH_MAP_H			= 32,
++	BT_OP_GET_BT_COEX_SUPPORTED_FEATURE	= 42,
++	BT_OP_GET_BT_COEX_SUPPORTED_VERSION	= 43,
++	BT_OP_GET_BT_ANT_DET_VAL		= 44,
++	BT_OP_GET_BT_BLE_SCAN_PARA		= 45,
++	BT_OP_GET_BT_BLE_SCAN_TYPE		= 46,
++	BT_OP_GET_BT_DEVICE_INFO		= 48,
++	BT_OP_GET_BT_FORBIDDEN_SLOT_VAL		= 49,
++	BT_OP_MAX
++};
++
++enum btc_mp_h2c_req_num {
++	/* 4 bits only */
++	BT_SEQ_DONT_CARE			= 0,
++	BT_SEQ_GET_BT_VERSION			= 0xE,
++	BT_SEQ_GET_AFH_MAP_L			= 0x5,
++	BT_SEQ_GET_AFH_MAP_M			= 0x6,
++	BT_SEQ_GET_AFH_MAP_H			= 0x9,
++	BT_SEQ_GET_BT_COEX_SUPPORTED_FEATURE	= 0x7,
++	BT_SEQ_GET_BT_COEX_SUPPORTED_VERSION	= 0x8,
++	BT_SEQ_GET_BT_ANT_DET_VAL		= 0x2,
++	BT_SEQ_GET_BT_BLE_SCAN_PARA		= 0x3,
++	BT_SEQ_GET_BT_BLE_SCAN_TYPE		= 0x4,
++	BT_SEQ_GET_BT_DEVICE_INFO		= 0xA,
++	BT_SEQ_GET_BT_FORB_SLOT_VAL		= 0xB,
++};
++
+ struct btc_coexist {
+ 	/* make sure only one adapter can bind the data context  */
+ 	bool binded;
+@@ -574,6 +634,8 @@ struct btc_coexist {
+ 	struct btc_statistics statistics;
+ 	u8 pwr_mode_val[10];
+ 
++	struct completion bt_mp_comp;
++
+ 	/* function pointers - io related */
+ 	bfp_btc_r1 btc_read_1byte;
+ 	bfp_btc_w1 btc_write_1byte;
+@@ -598,6 +660,14 @@ struct btc_coexist {
+ 	bfp_btc_set btc_set;
+ 
+ 	bfp_btc_set_bt_reg btc_set_bt_reg;
++
++	bfp_btc_get_bt_coex_supported_feature btc_get_bt_coex_supported_feature;
++	bfp_btc_get_bt_coex_supported_version btc_get_bt_coex_supported_version;
++	bfp_btc_get_ant_det_val_from_bt btc_get_ant_det_val_from_bt;
++	bfp_btc_get_ble_scan_type_from_bt btc_get_ble_scan_type_from_bt;
++	bfp_btc_get_ble_scan_para_from_bt btc_get_ble_scan_para_from_bt;
++	bfp_btc_get_bt_afh_map_from_bt btc_get_bt_afh_map_from_bt;
++
+ };
+ 
+ bool halbtc_is_wifi_uplink(struct rtl_priv *adapter);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index ddbef65c3740..714c0de099e5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -291,6 +291,7 @@ void rtl_btc_btmpinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length)
+ 	u8 extid, seq, len;
+ 	u16 bt_real_fw_ver;
+ 	u8 bt_fw_ver;
++	u8 *data;
+ 
+ 	if (!btcoexist)
+ 		return;
+@@ -305,15 +306,60 @@ void rtl_btc_btmpinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length)
+ 
+ 	len = tmp_buf[1] >> 4;
+ 	seq = tmp_buf[2] >> 4;
++	data = &tmp_buf[3];
+ 
+ 	/* BT Firmware version response */
+-	if (seq == 0x0E) {
++	switch (seq) {
++	case BT_SEQ_GET_BT_VERSION:
+ 		bt_real_fw_ver = tmp_buf[3] | (tmp_buf[4] << 8);
+ 		bt_fw_ver = tmp_buf[5];
+ 
+ 		btcoexist->bt_info.bt_real_fw_ver = bt_real_fw_ver;
+ 		btcoexist->bt_info.bt_fw_ver = bt_fw_ver;
++		break;
++	case BT_SEQ_GET_AFH_MAP_L:
++		btcoexist->bt_info.afh_map_l = le32_to_cpu(*(__le32 *)data);
++		break;
++	case BT_SEQ_GET_AFH_MAP_M:
++		btcoexist->bt_info.afh_map_m = le32_to_cpu(*(__le32 *)data);
++		break;
++	case BT_SEQ_GET_AFH_MAP_H:
++		btcoexist->bt_info.afh_map_h = le16_to_cpu(*(__le16 *)data);
++		break;
++	case BT_SEQ_GET_BT_COEX_SUPPORTED_FEATURE:
++		btcoexist->bt_info.bt_supported_feature = tmp_buf[3] |
++							  (tmp_buf[4] << 8);
++		break;
++	case BT_SEQ_GET_BT_COEX_SUPPORTED_VERSION:
++		btcoexist->bt_info.bt_supported_version = tmp_buf[3] |
++							  (tmp_buf[4] << 8);
++		break;
++	case BT_SEQ_GET_BT_ANT_DET_VAL:
++		btcoexist->bt_info.bt_ant_det_val = tmp_buf[3];
++		break;
++	case BT_SEQ_GET_BT_BLE_SCAN_PARA:
++		btcoexist->bt_info.bt_ble_scan_para = tmp_buf[3] |
++						      (tmp_buf[4] << 8) |
++						      (tmp_buf[5] << 16) |
++						      (tmp_buf[6] << 24);
++		break;
++	case BT_SEQ_GET_BT_BLE_SCAN_TYPE:
++		btcoexist->bt_info.bt_ble_scan_type = tmp_buf[3];
++		break;
++	case BT_SEQ_GET_BT_DEVICE_INFO:
++		btcoexist->bt_info.bt_device_info =
++						le32_to_cpu(*(__le32 *)data);
++		break;
++	case BT_OP_GET_BT_FORBIDDEN_SLOT_VAL:
++		btcoexist->bt_info.bt_forb_slot_val =
++						le32_to_cpu(*(__le32 *)data);
++		break;
+ 	}
++
++	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
++		 "btmpinfo complete req_num=%d\n", seq);
++
++	complete(&btcoexist->bt_mp_comp);
+ }
+ 
+ bool rtl_btc_is_limited_dig(struct rtl_priv *rtlpriv)
 -- 
-2.7.4
+2.15.1
