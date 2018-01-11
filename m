@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37676 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932993AbeALLQh (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:60545 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932132AbeAKHKA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 06:16:37 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH v2] brcmfmac: fix CLM load error for legacy chips when user helper is enabled
-References: <1515743056-8109-1-git-send-email-wright.feng@cypress.com>
-        <5A589428.7020502@broadcom.com>
-Date: Fri, 12 Jan 2018 13:16:33 +0200
-In-Reply-To: <5A589428.7020502@broadcom.com> (Arend van Spriel's message of
-        "Fri, 12 Jan 2018 11:55:36 +0100")
-Message-ID: <87a7xjs4xa.fsf@kamboji.qca.qualcomm.com> (sfid-20180112_121641_695143_2E668840)
+        Thu, 11 Jan 2018 02:10:00 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 05/10] rtlwifi: enable mac80211 fast-tx support
+Date: Thu, 11 Jan 2018 15:09:27 +0800
+Message-ID: <20180111070932.9929-6-pkshih@realtek.com> (sfid-20180111_081024_733365_7617D607)
+In-Reply-To: <20180111070932.9929-1-pkshih@realtek.com>
+References: <20180111070932.9929-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> On 1/12/2018 8:44 AM, Wright Feng wrote:
->> For legacy chips without CLM blob files, kernel with user helper function
->> returns -EAGAIN when we request_firmware() for blob file.
+To enable the mac80211 fast-tx feature, the hw/driver needs to support
+dynamic power saving and fragmentation. Since our driver does not
+need to fragment packet into smaller pieces, we just hook an empty
+callback of set_frag_threshold to avoid fragmentation in mac80211.
 
-_Why_ is the -EAGAIN returned? Is it because of user space, due to
-timing when loading the brcmfmac module or what? You should explain the
-problem in detail in the commit log and why this is the right approach
-to fix the problem.
+After this, the mac80211 will not fragment the packets and can transmit
+them faster by cache the header information.
 
-Based on the commit log to me this still looks like a random attempt to
-workaround a bug, not a proper fix.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/core.c | 6 ++++++
+ 2 files changed, 8 insertions(+)
 
->> In this case, brcmf_bus_started gets error and failed to bring up
->> legacy chips. Because of that, we should continue with CLM data
->> currently present in firmware if getting -EAGAIN when doing
->> request_firmware().
->>
->> Signed-off-by: Wright Feng <wright.feng@cypress.com>
->> ---
->> v2: remove retry from patch v1
->> ---
->>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> index 6a59d06..0baab4c 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> @@ -182,7 +182,7 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
->>
->>   	err = request_firmware(&clm, clm_name, dev);
->>   	if (err) {
->> -		if (err == -ENOENT) {
->> +		if (err == -ENOENT || err == -EAGAIN) {
->>   			brcmf_dbg(INFO, "continue with CLM data currently present in firmware\n");
->>   			return 0;
->>   		}
->
-> Why don't we just fall-back to "CLM in firmware" regardless of the
-> error code?
-
-Indeed, I was thinking the same.
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 89ec318598ea..e902cd7adbfe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -395,6 +395,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+ 	ieee80211_hw_set(hw, CONNECTION_MONITOR);
+ 	ieee80211_hw_set(hw, MFP_CAPABLE);
+ 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
++	ieee80211_hw_set(hw, SUPPORTS_TX_FRAG);
++	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+ 
+ 	/* swlps or hwlps has been set in diff chip in init_sw_vars */
+ 	if (rtlpriv->psc.swctrl_lps) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 6c698123ac07..d454c38fc9cd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1001,6 +1001,11 @@ static void rtl_op_sta_statistics(struct ieee80211_hw *hw,
+ 	sinfo->filled = 0;
+ }
+ 
++static int rtl_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
++{
++	return -EOPNOTSUPP;
++}
++
+ /*
+  *for mac80211 VO = 0, VI = 1, BE = 2, BK = 3
+  *for rtl819x  BE = 0, BK = 1, VI = 2, VO = 3
+@@ -1906,6 +1911,7 @@ const struct ieee80211_ops rtl_ops = {
+ 	.configure_filter = rtl_op_configure_filter,
+ 	.set_key = rtl_op_set_key,
+ 	.sta_statistics = rtl_op_sta_statistics,
++	.set_frag_threshold = rtl_op_set_frag_threshold,
+ 	.conf_tx = rtl_op_conf_tx,
+ 	.bss_info_changed = rtl_op_bss_info_changed,
+ 	.get_tsf = rtl_op_get_tsf,
 -- 
-Kalle Valo
+2.15.1
