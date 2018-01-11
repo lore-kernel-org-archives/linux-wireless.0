@@ -1,90 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:54378 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755875AbeARNSR (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:9146 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933305AbeAKPJK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 08:18:17 -0500
+        Thu, 11 Jan 2018 10:09:10 -0500
 From: Ajay Singh <ajay.kathat@microchip.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
         <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 05/14] staging: wilc1000: rename camelCase used in Handle_DelAllSta() and its variable
-Date: Thu, 18 Jan 2018 18:47:03 +0530
-Message-ID: <1516281432-7724-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141834_932141_501C5737)
-In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH v3 5/6] staging: wilc1000: removed enum typedef BUS_ACQUIRE_T
+Date: Thu, 11 Jan 2018 19:42:18 +0530
+Message-ID: <1515679939-13202-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180111_160922_896047_876F10F3)
+In-Reply-To: <1515679939-13202-1-git-send-email-ajay.kathat@microchip.com>
+References: <1515679939-13202-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fix "Avoid camelCase" issue reported by checkpatch.pl script.
+This patch removes enum typedef BUS_ACQUIRE_T and define
+enum bus_acquire to use instead of typedef.
+
+checkpatch.pl not to add new typedef warning is fixed with this patch.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c    | 2 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9f6365a..1ac079a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2123,34 +2123,34 @@ static void Handle_AddStation(struct wilc_vif *vif,
- 	kfree(wid.val);
- }
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 3a58a62..80a5a0b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -6,7 +6,7 @@
  
--static void Handle_DelAllSta(struct wilc_vif *vif,
--			     struct del_all_sta *pstrDelAllStaParam)
-+static void handle_del_all_sta(struct wilc_vif *vif,
-+			       struct del_all_sta *param)
+ static enum chip_ps_states chip_ps_state = CHIP_WAKEDUP;
+ 
+-static inline void acquire_bus(struct wilc *wilc, BUS_ACQUIRE_T acquire)
++static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
  {
- 	s32 result = 0;
- 	struct wid wid;
--	u8 *pu8CurrByte;
-+	u8 *curr_byte;
- 	u8 i;
--	u8 au8Zero_Buff[6] = {0};
-+	u8 zero_buff[6] = {0};
+ 	mutex_lock(&wilc->hif_cs);
+ 	if (acquire == ACQUIRE_AND_WAKEUP)
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index ab12090..2bc500d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -143,10 +143,10 @@ enum chip_ps_states {
+ 	CHIP_SLEEPING_MANUAL	= 2
+ };
  
- 	wid.id = (u16)WID_DEL_ALL_STA;
- 	wid.type = WID_STR;
--	wid.size = (pstrDelAllStaParam->assoc_sta * ETH_ALEN) + 1;
-+	wid.size = (param->assoc_sta * ETH_ALEN) + 1;
+-typedef enum {
++enum bus_acquire {
+ 	ACQUIRE_ONLY            = 0,
+ 	ACQUIRE_AND_WAKEUP	= 1,
+-} BUS_ACQUIRE_T;
++};
  
--	wid.val = kmalloc((pstrDelAllStaParam->assoc_sta * ETH_ALEN) + 1, GFP_KERNEL);
-+	wid.val = kmalloc((param->assoc_sta * ETH_ALEN) + 1, GFP_KERNEL);
- 	if (!wid.val)
- 		goto ERRORHANDLER;
- 
--	pu8CurrByte = wid.val;
-+	curr_byte = wid.val;
- 
--	*(pu8CurrByte++) = pstrDelAllStaParam->assoc_sta;
-+	*(curr_byte++) = param->assoc_sta;
- 
- 	for (i = 0; i < MAX_NUM_STA; i++) {
--		if (memcmp(pstrDelAllStaParam->del_all_sta[i], au8Zero_Buff, ETH_ALEN))
--			memcpy(pu8CurrByte, pstrDelAllStaParam->del_all_sta[i], ETH_ALEN);
-+		if (memcmp(param->del_all_sta[i], zero_buff, ETH_ALEN))
-+			memcpy(curr_byte, param->del_all_sta[i], ETH_ALEN);
- 		else
- 			continue;
- 
--		pu8CurrByte += ETH_ALEN;
-+		curr_byte += ETH_ALEN;
- 	}
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-@@ -2626,7 +2626,7 @@ static void host_if_work(struct work_struct *work)
- 		break;
- 
- 	case HOST_IF_MSG_DEL_ALL_STA:
--		Handle_DelAllSta(msg->vif, &msg->body.del_all_sta_info);
-+		handle_del_all_sta(msg->vif, &msg->body.del_all_sta_info);
- 		break;
- 
- 	case HOST_IF_MSG_SET_TX_POWER:
+ typedef enum {
+ 	RELEASE_ONLY		= 0,
 -- 
 2.7.4
