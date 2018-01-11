@@ -1,42 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:43851 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750816AbeAQWzc (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:60542 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932102AbeAKHKA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 17:55:32 -0500
-Received: by mail-pf0-f172.google.com with SMTP id y26so5059385pfi.10
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jan 2018 14:55:32 -0800 (PST)
-Date: Wed, 17 Jan 2018 14:55:23 -0800 (PST)
-From: Hugh Dickins <hughd@google.com>
-To: Johannes Berg <johannes.berg@intel.com>
-cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] cfg80211: stop demanding lots of new stuff
-Message-ID: <alpine.LSU.2.11.1801171448510.5433@eggly.anvils> (sfid-20180117_235601_216213_A3BA62CE)
+        Thu, 11 Jan 2018 02:10:00 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 00/10] rtlwifi: fix some bugs and add btcoex functions
+Date: Thu, 11 Jan 2018 15:09:22 +0800
+Message-ID: <20180111070932.9929-1-pkshih@realtek.com> (sfid-20180111_081021_561081_B53FFEEE)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"make oldconfig" from 4.14 (when CONFIG_CFG80211_CERTIFICATION_ONUS
-is not set) to 4.15-rc, gets into asking lots of new questions, and
-configuring in unwanted stuff: I'm unsure of my Kconfig skills, but
-it looks like CFG80211_REQUIRE_SIGNED_REGDB's "default y" needs to
-be toned down when we don't even have CFG80211_CERTIFICATION_ONUS.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Hugh Dickins <hughd@google.com>
----
+Fix some bugs reported by QC, and continue to submit btcoex patches for
+further use.
 
- net/wireless/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2: add my sob to commit log if missing, and remove trivial comments.
 
---- 4.15-rc8/net/wireless/Kconfig	2017-12-03 10:22:51.928845056 -0800
-+++ linux/net/wireless/Kconfig	2018-01-14 19:20:22.595472965 -0800
-@@ -89,7 +89,7 @@ config CFG80211_CERTIFICATION_ONUS
- 
- config CFG80211_REQUIRE_SIGNED_REGDB
- 	bool "require regdb signature" if CFG80211_CERTIFICATION_ONUS
--	default y
-+	default CFG80211_CERTIFICATION_ONUS
- 	select SYSTEM_DATA_VERIFICATION
- 	help
- 	  Require that in addition to the "regulatory.db" file a
+Ping-Ke Shih (8):
+  rtlwifi: Use mutex to replace spin_lock to protect IPS and LPS
+  rtlwifi: fix scan channel 1 fail after IPS
+  rtlwifi: Add sta_statistics of mac80211's op, and set filled=0 by
+    default
+  rtlwifi: enable mac80211 fast-tx support
+  rtlwifi: btcoex: Add power_on_setting routine
+  rtlwifi: btcoex: Remove global variables from btcoex
+  rtlwifi: btcoex: Add common function for qeurying BT information
+  rtlwifi: btcoex: add rfe_type parameter to btcoex
+
+Steven Ting (1):
+  rtlwifi: Support A-MSDU in A-MPDU capability
+
+Tsang-Shian Lin (1):
+  rtlwifi: unlink bss when un-association
+
+ drivers/net/wireless/realtek/rtlwifi/base.c        |   9 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 398 +++++++++++++++++----
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  94 ++++-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 234 ++++++++++--
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   4 +-
+ drivers/net/wireless/realtek/rtlwifi/core.c        |  34 ++
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |   5 +-
+ drivers/net/wireless/realtek/rtlwifi/ps.c          |  30 +-
+ drivers/net/wireless/realtek/rtlwifi/usb.c         |   1 -
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  16 +-
+ 10 files changed, 688 insertions(+), 137 deletions(-)
+
+-- 
+2.15.1
