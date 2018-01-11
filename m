@@ -1,130 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:42473 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933445AbeAJRJv (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:53033 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752828AbeAKBXR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 12:09:51 -0500
-Received: by mail-pl0-f67.google.com with SMTP id bd8so7643496plb.9
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jan 2018 09:09:50 -0800 (PST)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v2 3/5] mac80211: Send control port frames over nl80211
-Date: Wed, 10 Jan 2018 11:09:36 -0600
-Message-Id: <20180110170938.2341-4-denkenz@gmail.com> (sfid-20180110_180958_612167_81C26F3A)
-In-Reply-To: <20180110170938.2341-1-denkenz@gmail.com>
-References: <20180110170938.2341-1-denkenz@gmail.com>
+        Wed, 10 Jan 2018 20:23:17 -0500
+From: Pkshih <pkshih@realtek.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        =?big5?B?svir26vF?= <yhchuang@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 02/10] rtlwifi: fix scan channel 1 fail after IPS
+Date: Thu, 11 Jan 2018 01:22:57 +0000
+Message-ID: <5B2DA6FDDF928F4E855344EE0A5C39D13BE66AAD@RTITMBSV07.realtek.com.tw> (sfid-20180111_022522_562298_B1BF0EA7)
+References: <20180110052002.9544-1-pkshih@realtek.com>
+ <20180110052002.9544-3-pkshih@realtek.com> <5A55CB01.5040504@broadcom.com>
+ <5B2DA6FDDF928F4E855344EE0A5C39D13BE66622@RTITMBSV07.realtek.com.tw>
+ <5A561E4B.6080105@broadcom.com>
+In-Reply-To: <5A561E4B.6080105@broadcom.com>
+Content-Type: text/plain; charset="big5"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If userspace requested control port frames to go over 80211, then do so.
-The control packets are intercepted just prior to delivery of the packet
-to the underlying network device.
-
-Pre-authentication type frames (protocol: 0x88c7) are also forwarded
-over nl80211.
-
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- net/mac80211/cfg.c         |  2 ++
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        |  2 ++
- net/mac80211/rx.c          | 31 ++++++++++++++++++++++++++++---
- 4 files changed, 33 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 46028e12e216..f53bfb27295f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -925,6 +925,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	 */
- 	sdata->control_port_protocol = params->crypto.control_port_ethertype;
- 	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
-+	sdata->control_port_over_nl80211 = false;
- 	sdata->encrypt_headroom = ieee80211_cs_headroom(sdata->local,
- 							&params->crypto,
- 							sdata->vif.type);
-@@ -934,6 +935,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			params->crypto.control_port_ethertype;
- 		vlan->control_port_no_encrypt =
- 			params->crypto.control_port_no_encrypt;
-+		vlan->control_port_over_nl80211 = false;
- 		vlan->encrypt_headroom =
- 			ieee80211_cs_headroom(sdata->local,
- 					      &params->crypto,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 26900025de2f..6f91aea6a4cb 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -899,6 +899,7 @@ struct ieee80211_sub_if_data {
- 	u16 sequence_number;
- 	__be16 control_port_protocol;
- 	bool control_port_no_encrypt;
-+	bool control_port_over_nl80211;
- 	int encrypt_headroom;
- 
- 	atomic_t num_tx_queued;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 39b660b9a908..fc71a906939b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4830,6 +4830,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 	sdata->control_port_protocol = req->crypto.control_port_ethertype;
- 	sdata->control_port_no_encrypt = req->crypto.control_port_no_encrypt;
-+	sdata->control_port_over_nl80211 =
-+					req->crypto.control_port_over_nl80211;
- 	sdata->encrypt_headroom = ieee80211_cs_headroom(local, &req->crypto,
- 							sdata->vif.type);
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b3cff69bfd66..28b74ae1ee48 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2326,16 +2326,41 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- 	}
- #endif
- 
--	if (skb) {
-+	if (!skb)
-+		goto try_xmit;
-+
-+	skb->protocol = eth_type_trans(skb, dev);
-+	memset(skb->cb, 0, sizeof(skb->cb));
-+
-+	if (unlikely((skb->protocol == sdata->control_port_protocol ||
-+		      skb->protocol == cpu_to_be16(0x88c7)) &&
-+		     sdata->control_port_over_nl80211)) {
-+		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-+		bool noencrypt;
-+
-+		ehdr = eth_hdr(skb);
-+
-+		if (status->flag & RX_FLAG_DECRYPTED)
-+			noencrypt = false;
-+		else
-+			noencrypt = true;
-+
-+		if (!cfg80211_rx_control_port(dev, skb->data, skb->len,
-+					      ehdr->h_source,
-+					      be16_to_cpu(skb->protocol),
-+					      noencrypt)) {
-+			dev_kfree_skb(skb);
-+			skb = NULL;
-+		}
-+	} else {
- 		/* deliver to local stack */
--		skb->protocol = eth_type_trans(skb, dev);
--		memset(skb->cb, 0, sizeof(skb->cb));
- 		if (rx->napi)
- 			napi_gro_receive(rx->napi, skb);
- 		else
- 			netif_receive_skb(skb);
- 	}
- 
-+try_xmit:
- 	if (xmit_skb) {
- 		/*
- 		 * Send to wireless media and increase priority by 256 to
--- 
-2.13.5
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEFyZW5kIHZhbiBTcHJpZWwg
+W21haWx0bzphcmVuZC52YW5zcHJpZWxAYnJvYWRjb20uY29tXQ0KPiBTZW50OiBXZWRuZXNkYXks
+IEphbnVhcnkgMTAsIDIwMTggMTA6MDggUE0NCj4gVG86IFBrc2hpaDsga3ZhbG9AY29kZWF1cm9y
+YS5vcmcNCj4gQ2M6IExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ7ILL4q9urxTsgbGludXgtd2ly
+ZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDIvMTBdIHJ0bHdp
+Zmk6IGZpeCBzY2FuIGNoYW5uZWwgMSBmYWlsIGFmdGVyIElQUw0KPiANCj4gT24gMS8xMC8yMDE4
+IDEwOjM4IEFNLCBQa3NoaWggd3JvdGU6DQo+ID4NCj4gPg0KPiA+PiAtLS0tLU9yaWdpbmFsIE1l
+c3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBBcmVuZCB2YW4gU3ByaWVsIFttYWlsdG86YXJlbmQudmFu
+c3ByaWVsQGJyb2FkY29tLmNvbV0NCj4gPj4gU2VudDogV2VkbmVzZGF5LCBKYW51YXJ5IDEwLCAy
+MDE4IDQ6MTMgUE0NCj4gPj4gVG86IFBrc2hpaDsga3ZhbG9AY29kZWF1cm9yYS5vcmcNCj4gPj4g
+Q2M6IExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ7ILL4q9urxTsgbGludXgtd2lyZWxlc3NAdmdl
+ci5rZXJuZWwub3JnDQo+ID4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDIvMTBdIHJ0bHdpZmk6IGZp
+eCBzY2FuIGNoYW5uZWwgMSBmYWlsIGFmdGVyIElQUw0KPiA+Pg0KPiA+PiBPbiAxLzEwLzIwMTgg
+NjoxOSBBTSwgcGtzaGloQHJlYWx0ZWsuY29tIHdyb3RlOg0KPiA+Pj4gRnJvbTogUGluZy1LZSBT
+aGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQo+ID4+Pg0KPiA+Pj4gSWYgdGhlcmUgaXMgbm8gY29u
+bmVjdGlvbiwgZHJpdmVyIHdpbGwgZW50ZXIgSVBTIHN0YXRlLiBNZWFud2hpbGUsIGl0DQo+ID4+
+PiBmYWlscyB0byBzY2FuIGNoYW5uZWwgMSBieSB0aGUgY29tbWFuZCAnaXcgZGV2IHdsYW4wIHNj
+YW4gZnJlcSAyNDEyJywNCj4gPj4+IGJlY2F1c2UgaGFyZHdhcmUgY2hhbm5lbCBzZXR0aW5nIGxv
+c2UgYWZ0ZXIgSVBTLiBUaHVzLCByZXN0b3JlIGNoYW5uZWwNCj4gPj4+IHNldHRpbmcgZnJvbSBo
+dy0+Y29uZi5jaGFubmVsIHNldCBieSBsYXN0IHJ0bF9vcF9jb25maWcoKS4NCj4gPj4+DQo+ID4+
+PiBTaWduZWQtb2ZmLWJ5OiBUaW0gTGVlIDx0aW1sZWVAcmVhbHRlay5jb20+DQo+ID4+DQo+ID4+
+IFlvdSBuZWVkIHRvIGFkZCB5b3VyIHNvYiBoZXJlIGFzIHdlbGwgYXMgeW91IGFyZSBzdWJtaXR0
+aW5nIHRoZW0uDQo+ID4+DQo+ID4NCj4gPiBJJ2xsIGFkZCBpdCBpbiB2Mi4NCj4gPg0KPiA+Pj4g
+LS0tDQo+ID4+PiAgICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcHMuYyB8
+IDYgKysrKysrDQo+ID4+PiAgICAxIGZpbGUgY2hhbmdlZCwgNiBpbnNlcnRpb25zKCspDQo+ID4+
+Pg0KPiA+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lm
+aS9wcy5jDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3BzLmMNCj4g
+Pj4+IGluZGV4IDZhNDAwODg0NWY0OS4uMGZmZTQzNzcyYzlhIDEwMDY0NA0KPiA+Pj4gLS0tIGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3BzLmMNCj4gPj4+ICsrKyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9wcy5jDQo+ID4+PiBAQCAtNTEsNiAr
+NTEsMTIgQEAgYm9vbCBydGxfcHNfZW5hYmxlX25pYyhzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodykN
+Cj4gPj4+ICAgIAkJCSZydGxtYWMtPnJldHJ5X2xvbmcpOw0KPiA+Pj4gICAgCVJUX0NMRUFSX1BT
+X0xFVkVMKHBwc2MsIFJUX1JGX09GRl9MRVZMX0hBTFRfTklDKTsNCj4gPj4+DQo+ID4+PiArCS8q
+PDIuMT4gU3dpdGNoIENoYW5uZWwgJiBCYW5kd2lkdGggdG8gbGFzdCBydGxfb3BfY29uZmlnIHNl
+dHRpbmcqLw0KPiA+Pg0KPiA+PiBJcyB0aGlzIHR5cGUgb2YgY29tbWVudCByZWFsbHkgaGVscGZ1
+bD8gVG8gbWUgaXQgc2VlbXMgdGhlIGNhbGxiYWNrDQo+ID4+IG5hbWVzIHByb3ZpZGUgZW5vdWdo
+IGNvbnRleHQuDQo+ID4+DQo+ID4NCj4gPiBEbyB5b3UgbWVhbiB0aGUgIjwyLjE+IiBpc24ndCBu
+ZWVkZWQ/DQo+ID4gVGhpcyBpcyBiZWNhdXNlICI8MT4sIDwyPiwgPDM+Li4uIiBleGlzdCBpbiB0
+aGUgZnVuY3Rpb24sIHNvDQo+ID4gd2Ugd2FudCB0byBtYWtlIGl0IHRvIGJlIGNvbnNpc3RlbnQu
+DQo+IA0KPiBUaGF0IGlzIG5vdCB3aGF0IEkgbWVhbi4gSSBtZWFuIHdoeSBoYXZlIGEgY29tbWVu
+dCBkZXNjcmliaW5nIHdoYXQgaXMNCj4gb2J2aW91cyBmcm9tIHJlYWRpbmcgdGhlIGNvZGUgaXRz
+ZWxmLiBTbyBpbiB0aGlzIGV4YW1wbGU6DQo+IA0KPiBPbiAxLzEwLzIwMTggNjoxOSBBTSwgcGtz
+aGloQHJlYWx0ZWsuY29tIHdyb3RlOg0KPiA+ICsJLyo8Mi4xPiBTd2l0Y2ggQ2hhbm5lbCAmIEJh
+bmR3aWR0aCB0byBsYXN0IHJ0bF9vcF9jb25maWcgc2V0dGluZyovDQo+ID4gKwlydGxwcml2LT5j
+ZmctPm9wcy0+c3dpdGNoX2NoYW5uZWwoaHcpOw0KPiA+ICsJcnRscHJpdi0+Y2ZnLT5vcHMtPnNl
+dF9jaGFubmVsX2FjY2Vzcyhodyk7DQo+ID4gKwlydGxwcml2LT5jZmctPm9wcy0+c2V0X2J3X21v
+ZGUoaHcsDQo+ID4gKwkJCWNmZzgwMjExX2dldF9jaGFuZGVmX3R5cGUoJmh3LT5jb25mLmNoYW5k
+ZWYpKTsNCj4gPiArDQo+ID4gICAJLyo8Mz4gRW5hYmxlIEludGVycnVwdCAqLw0KPiA+ICAgCXJ0
+bHByaXYtPmNmZy0+b3BzLT5lbmFibGVfaW50ZXJydXB0KGh3KTsNCj4gDQo+IHRoZSBjb2RlIGFm
+dGVyIHRoZSA8Mi4xPiBjb21tZW50IGNhbGxzIGEgc3dpdGNoX2NoYW5uZWwoKSBjYWxsYmFjayBh
+bmQgYQ0KPiBzZXRfYndfbW9kZSgpIGNhbGxiYWNrLiBJbiBteSBvcGluaW9uIHRob3NlIG5hbWVz
+IGFyZSBwcmV0dHkNCj4gc2VsZi1leHBsYW5hdG9yeSBmb3IgdGhlIHJlYWRlciBtYWtpbmcgdGhl
+IGNvbW1lbnQgcHJlY2VkaW5nIGl0IG9ubHkNCj4gbm9pc2UuIFRoZSBzYW1lIGFwcGxpZXMgdG8g
+c3RlcCA8Mz4uDQo+IA0KDQpHb3QgaXQhIEknbGwgZm9sbG93IHRoaXMgY29kaW5nIGNvbnZlbnRp
+b24uDQpUaGFua3MNCg0KUEsNCg0KDQo=
