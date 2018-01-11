@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39572 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751428AbeACLpi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Jan 2018 06:45:38 -0500
-Date: Wed, 3 Jan 2018 12:45:37 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Enrico Mioso <mrkiko.rs@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        nbd@nbd.name
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-Message-ID: <20180103114536.GB10306@redhat.com> (sfid-20180103_124542_471881_3C0A551D)
-References: <alpine.LNX.2.21.99.1712112132480.7817@localhost.localdomain>
- <20171213152017.GA3554@redhat.com>
- <alpine.LNX.2.21.99.1712261820080.22705@localhost.localdomain>
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:63247 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932773AbeAKREq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Jan 2018 12:04:46 -0500
+Subject: Re: [PATCH v3 0/6] fixes to remove enum typedefs
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>
+References: <1515679939-13202-1-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <2373902b-0a48-479a-2799-d8292a94c06b@microchip.com> (sfid-20180111_180450_234043_B5A54BB7)
+Date: Thu, 11 Jan 2018 19:04:43 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.2.21.99.1712261820080.22705@localhost.localdomain>
+In-Reply-To: <1515679939-13202-1-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 26, 2017 at 06:20:22PM +0100, Enrico Mioso wrote:
-> Ok, observing a stall. Unfortunately, it still happens.
-<snip>
-> rt2800_wmac 10180000.wmac: loaded eeprom from mtd device "factory"
-> ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 2872, rev 0200 detected
-> ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 0005 detected
+Hi Ajay,
 
-Is possible that this is the FW problem for this particular RT2872
-device or we do not correctly program registers for it. 
+Just a little note for your future patches: all changes history would
+be good to be kept here, something like this:
 
-I think the issue is that at some point HW/FW is not capable to sent 
-frames and do not report to driver failure of sending frames, hence
-driver queue can not be moved forward. The solution to this will be
-timeout mechanism for TX, similar like for rt2800usb, however this will
-require substantial rt2800pci/mmio driver rewrite. I'm going to look
-at this, but not sure when.
+changes in v3: this, this and this
 
-Cheers
-Stanislaw
+changes in v2: this and this
+
+Thanks,
+Claudiu
+
+On 11.01.2018 16:12, Ajay Singh wrote:
+> Changes since v2: Removed v2 patch number 3,4,5 , where were handling
+> 	different changes under same subject line.
+> 	As those changes were independent, will work on those items and
+> 	send as separate patch later.
+> 	
+> 
+> Ajay Singh (6):
+>   staging: wilc1000: removed typedef from enum BSSTYPE_T
+>   staging: wilc1000: remove unnecessary typedef enum G_OPERATING_MODE_T
+>   staging: wilc1000: removed enums typedef for BEACON_IE & TX_RATE_T
+>   staging: wilc1000: removed enum typedef CHIP_PS_STATE_T
+>   staging: wilc1000: removed enum typedef BUS_ACQUIRE_T
+>   staging: wilc1000: removed enum typedef BUS_RELEASE_T
+> 
+>  drivers/staging/wilc1000/host_interface.c |  2 +-
+>  drivers/staging/wilc1000/wilc_wlan.c      |  6 +++---
+>  drivers/staging/wilc1000/wilc_wlan_if.h   | 28 ++++++++++++++--------------
+>  3 files changed, 18 insertions(+), 18 deletions(-)
+> 
