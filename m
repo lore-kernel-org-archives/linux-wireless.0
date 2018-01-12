@@ -1,83 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:41406 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbeAVPEe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 10:04:34 -0500
-Received: by mail-pf0-f195.google.com with SMTP id c6so4219564pfi.8
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jan 2018 07:04:33 -0800 (PST)
+Received: from mga14.intel.com ([192.55.52.115]:18499 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932465AbeALA4B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Jan 2018 19:56:01 -0500
+Subject: [PATCH v2 15/19] carl9170: prevent bounds-check bypass via
+ speculative execution
+From: Dan Williams <dan.j.williams@intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        tglx@linutronix.de, torvalds@linux-foundation.org,
+        akpm@linux-foundation.org, Kalle Valo <kvalo@codeaurora.org>,
+        alan@linux.intel.com
+Date: Thu, 11 Jan 2018 16:47:46 -0800
+Message-ID: <151571806633.27429.1504260808341642890.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180112_015805_245692_1201A9B6)
+In-Reply-To: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180122145759.GA18798@kroah.com>
-References: <001a11c14bc837f9760560a03d51@google.com> <20171219090121.GA10221@kroah.com>
- <CACT4Y+ZggKsEjCRZsFPW5-7_ByBcz4G0uRdieLL==r4mLQjhFA@mail.gmail.com>
- <CACT4Y+ZOimZPrSfphPMiHKXA3=kOmaFfwdofrmuv_rpXmx+vgA@mail.gmail.com>
- <CACT4Y+YMMfsXb+X4ApcWW02Qe7FmARhHjg97H4J-369OEMnwhw@mail.gmail.com>
- <20180122140015.GA30036@kroah.com> <CACT4Y+bEG22Wa6hiBQ6YX7d=JrHKAXfwYm+tu6cWc7AiUZxYbw@mail.gmail.com>
- <20180122145759.GA18798@kroah.com>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Mon, 22 Jan 2018 16:04:12 +0100
-Message-ID: <CACT4Y+YSHC-fUxiymRDTOGivK6OXp6JO1XsVqbLStJs9iaH_Cw@mail.gmail.com> (sfid-20180122_160454_604328_F7CF4848)
-Subject: Re: [PATCH] sysfs: turn WARN() into pr_warn()
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: syzbot
-        <bot+1fdad4e2731bf0c1bc19953ccc5061237ec92783@syzkaller.appspotmail.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        syzkaller-bugs@googlegroups.com,
-        David Miller <davem@davemloft.net>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Eric Dumazet <edumazet@google.com>,
-        jakub.kicinski@netronome.com,
-        Willem de Bruijn <willemb@google.com>,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        John Fastabend <john.fastabend@gmail.com>,
-        "Tobin C. Harding" <me@tobin.cc>, netdev <netdev@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 22, 2018 at 3:57 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->
-> It's not good to crash the machine if panic_on_warn() is set just
-> because someone made a stupid mistake of trying to create a sysfs file
-> with the same name of an existing one.  This makes the automated testing
-> tools a lot harder to find the real bugs in the kernel.
->
-> So just print a warning out and dump the stack to get the attention of
-> the developer that they did something foolish.  Then keep on trucking,
-> as this should not be a fatal error at all.
->
-> Reported-by: Dmitry Vyukov <dvyukov@google.com>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
->
-> Dmitry, does this look good to you?  If so, I'll queue it up for
-> 4.16-rc1.
+Static analysis reports that 'queue' may be a user controlled value that
+is used as a data dependency to read from the 'ar9170_qmap' array. In
+order to avoid potential leaks of kernel memory values, block
+speculative execution of the instruction stream that could issue reads
+based on an invalid result of 'ar9170_qmap[queue]'. In this case the
+value of 'ar9170_qmap[queue]' is immediately reused as an index to the
+'ar->edcf' array.
 
-Perfect! Looks good. syzbot reacts on "WARNING:" string (+ if kernel
-panic due to panic_on_warn that's also obviously a problem).
+Based on an original patch by Elena Reshetova.
 
-> diff --git a/fs/sysfs/dir.c b/fs/sysfs/dir.c
-> index 2b67bda2021b..3a36a48a4b3f 100644
-> --- a/fs/sysfs/dir.c
-> +++ b/fs/sysfs/dir.c
-> @@ -10,6 +10,7 @@
->   * Please see Documentation/filesystems/sysfs.txt for more information.
->   */
->
-> +#define pr_fmt(fmt)    "sysfs: " fmt
->  #undef DEBUG
->
->  #include <linux/fs.h>
-> @@ -27,8 +28,8 @@ void sysfs_warn_dup(struct kernfs_node *parent, const char *name)
->         if (buf)
->                 kernfs_path(parent, buf, PATH_MAX);
->
-> -       WARN(1, KERN_WARNING "sysfs: cannot create duplicate filename '%s/%s'\n",
-> -            buf, name);
-> +       pr_warn("cannot create duplicate filename '%s/%s'\n", buf, name);
-> +       dump_stack();
->
->         kfree(buf);
->  }
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/net/wireless/ath/carl9170/main.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 988c8857d78c..0acfa8c22b7d 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -41,6 +41,7 @@
+ #include <linux/module.h>
+ #include <linux/etherdevice.h>
+ #include <linux/random.h>
++#include <linux/nospec.h>
+ #include <net/mac80211.h>
+ #include <net/cfg80211.h>
+ #include "hw.h"
+@@ -1384,11 +1385,13 @@ static int carl9170_op_conf_tx(struct ieee80211_hw *hw,
+ 			       const struct ieee80211_tx_queue_params *param)
+ {
+ 	struct ar9170 *ar = hw->priv;
++	const u8 *elem;
+ 	int ret;
+ 
+ 	mutex_lock(&ar->mutex);
+-	if (queue < ar->hw->queues) {
+-		memcpy(&ar->edcf[ar9170_qmap[queue]], param, sizeof(*param));
++	elem = array_ptr(ar9170_qmap, queue, ar->hw->queues);
++	if (elem) {
++		memcpy(&ar->edcf[*elem], param, sizeof(*param));
+ 		ret = carl9170_set_qos(ar);
+ 	} else {
+ 		ret = -EINVAL;
