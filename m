@@ -1,76 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f176.google.com ([209.85.213.176]:43819 "EHLO
-        mail-yb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750920AbeAUVq2 (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:44654 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965277AbeALXF4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Jan 2018 16:46:28 -0500
-Received: by mail-yb0-f176.google.com with SMTP id h9so2555557ybg.10
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jan 2018 13:46:28 -0800 (PST)
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: RTL8723bu: poor signal and connection troubles
-To: Barry Day <briselec@gmail.com>, Carlo Caione <carlo@endlessm.com>,
-        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        mylene.josserand@free-electrons.com,
-        Linux Upstreaming Team <linux@endlessm.com>
-References: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com>
- <20180111103006.GA17574@thinktank.home.org>
-Message-ID: <14c5f7f4-0d5b-cecd-b45b-3672b67da07a@gmail.com> (sfid-20180121_224635_408482_2C5B0DDB)
-Date: Sun, 21 Jan 2018 16:46:25 -0500
+        Fri, 12 Jan 2018 18:05:56 -0500
+Received: by mail-ot0-f196.google.com with SMTP id g59so6356190otg.11
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Jan 2018 15:05:56 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20180111103006.GA17574@thinktank.home.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <6067453.9oC6tc2YFn@debian64>
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <1648304.tjl4HeBnOe@debian64> <CAPcyv4gne66ic3E-Y+pLi4QZdVeeeVmvayVPA3Jt1gyUqpaF9g@mail.gmail.com>
+ <6067453.9oC6tc2YFn@debian64>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 12 Jan 2018 15:05:55 -0800
+Message-ID: <CAPcyv4gtf4xL+vTmtfGRF+18fx2seQffemDhdGPGdHMF8thxtQ@mail.gmail.com> (sfid-20180113_000623_704235_A38481CA)
+Subject: Re: [PATCH v2 15/19] carl9170: prevent bounds-check bypass via
+ speculative execution
+To: Christian Lamparter <chunkeey@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        Netdev <netdev@vger.kernel.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2018 05:30 AM, Barry Day wrote:
-> On Wed, Jan 10, 2018 at 12:15:51PM +0000, Carlo Caione wrote:
->> Hi,
->> this is a follow up email to [0] since the problem was never fully
->> investigated / solved and I keep seeing the same problem also on my
->> hardware.
+On Fri, Jan 12, 2018 at 12:01 PM, Christian Lamparter
+<chunkeey@gmail.com> wrote:
+> On Friday, January 12, 2018 7:39:50 PM CET Dan Williams wrote:
+>> On Fri, Jan 12, 2018 at 6:42 AM, Christian Lamparter <chunkeey@gmail.com> wrote:
+>> > On Friday, January 12, 2018 1:47:46 AM CET Dan Williams wrote:
+>> >> Static analysis reports that 'queue' may be a user controlled value that
+>> >> is used as a data dependency to read from the 'ar9170_qmap' array. In
+>> >> order to avoid potential leaks of kernel memory values, block
+>> >> speculative execution of the instruction stream that could issue reads
+>> >> based on an invalid result of 'ar9170_qmap[queue]'. In this case the
+>> >> value of 'ar9170_qmap[queue]' is immediately reused as an index to the
+>> >> 'ar->edcf' array.
+>> >>
+>> >> Based on an original patch by Elena Reshetova.
+>> >>
+>> >> Cc: Christian Lamparter <chunkeey@googlemail.com>
+>> >> Cc: Kalle Valo <kvalo@codeaurora.org>
+>> >> Cc: linux-wireless@vger.kernel.org
+>> >> Cc: netdev@vger.kernel.org
+>> >> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+>> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>> >> ---
+>> > This patch (and p54, cw1200) look like the same patch?!
+>> > Can you tell me what happend to:
+>> >
+>> > On Saturday, January 6, 2018 5:34:03 PM CET Dan Williams wrote:
+>> >> On Sat, Jan 6, 2018 at 6:23 AM, Christian Lamparter <chunkeey@gmail.com> wrote:
+>> >> > And Furthermore a invalid queue (param->ac) would cause a crash in
+>> >> > this line in mac80211 before it even reaches the driver [1]:
+>> >> > |       sdata->tx_conf[params->ac] = p;
+>> >> > |                   ^^^^^^^^
+>> >> > |       if (drv_conf_tx(local, sdata, >>>> params->ac <<<<, &p)) {
+>> >> > |        ^^ (this is a wrapper for the *_op_conf_tx)
+>> >> >
+>> >> > I don't think these chin-up exercises are needed.
+>> >>
+>> >> Quite the contrary, you've identified a better place in the call stack
+>> >> to sanitize the input and disable speculation. Then we can kill the
+>> >> whole class of the wireless driver reports at once it seems.
+>> > <https://www.spinics.net/lists/netdev/msg476353.html>
 >>
->> Also in my case the hardware is a rtl8723bt transceiver
->> (0x0bda:0xb720), this time shipped on the internal USB bus in a cheap
->> laptop branded Zyrex Sky 232.
->>
->> As already reported by Mylene the problem is that using this
->> transceiver and the latest Linus master you can barely see any WiFi
->> network around and also when a WiFi network is actually seen, the
->> connection is impossible since the signal strength is too low to have
->> a reliable connection. Of course during my tests BT is off and no BT
->> driver is probed at all.
->>
->> Using the downstream driver at [1] everything works correctly.
->>
->> I tried to debug a bit the issue, in particular comparing functions
->> and registers related to the antenna setup (.power_on, .enable_rf,
->> .phy_init_antenna_selection, .phy_iq_calibrate hooks) but everything
->> seems pretty much the same on the two drivers (even though slightly
->> differences do exist).
->>
->> Any idea / suggestion on how to debug this problem? I guess it's worth
->> to start looking at this since several platforms are being affected
->> now.
->>
->> Cheers,
->>
->> [0] https://www.spinics.net/lists/netdev/msg468028.html
->> [1] https://github.com/lwfinger/rtl8723bu
->>
->> -- 
->> Carlo Caione  |  +44.7384.69.16.04  |  Endless
-> 
-> I've found the same. The signal strength using the original driver
-> from Realtek is significantly higher than when using rtl8xxxu.
-> I also was not able to find anything wrong in the rtl8xxxu source code
-> that would be causing the difference, which leads to the thought it is
-> missing something that exists in the original driver.
+>> I didn't see where ac is being validated against the driver specific
+>> 'queues' value in that earlier patch.
+> The link to the check is right there in the earlier post. It's in
+> parse_txq_params():
+> <https://github.com/torvalds/linux/blob/master/net/wireless/nl80211.c#L2070>
+> |       if (txq_params->ac >= NL80211_NUM_ACS)
+> |               return -EINVAL;
+>
+> NL80211_NUM_ACS is 4
+> <http://elixir.free-electrons.com/linux/v4.15-rc7/source/include/uapi/linux/nl80211.h#L3748>
+>
+> This check was added ever since mac80211's ieee80211_set_txq_params():
+> | sdata->tx_conf[params->ac] = p;
+>
+> For cw1200: the driver just sets the dev->queue to 4.
+> In carl9170 dev->queues is set to __AR9170_NUM_TXQ and
+> p54 uses P54_QUEUE_AC_NUM.
+>
+> Both __AR9170_NUM_TXQ and P54_QUEUE_AC_NUM are 4.
+> And this is not going to change since all drivers
+> have to follow mac80211's queue API:
+> <https://wireless.wiki.kernel.org/en/developers/documentation/mac80211/queues>
+>
+> Some background:
+> In the old days (linux 2.6 and early 3.x), the parse_txq_params() function did
+> not verify the "queue" value. That's why these drivers had to do it.
+>
+> Here's the relevant code from 2.6.39:
+> <http://elixir.free-electrons.com/linux/v2.6.39/source/net/wireless/nl80211.c#L879>
+> You'll notice that the check is missing there.
+> Here's mac80211's ieee80211_set_txq_params for reference:
+> <http://elixir.free-electrons.com/linux/v2.6.39/source/net/mac80211/cfg.c#L1197>
+>
+> However over time, the check in the driver has become redundant.
+>
 
-One issue with rtl8723bu is that it needs to coexist with the bluetooth
-driver. When I wrote the rtl8723bu support that was no BT support for
-the chip in the kernel and it worked fine, at least for me. However if
-you load the BT driver for the dongle which someone pushed into the
-kernel since then, it is likely to hijack the antennas causing the weak
-signal you describe.
+Excellent, thank you for pointing that out and the background so clearly.
 
-Jes
+What this tells me though is that we want to inject an ifence() at
+this input validation point, i.e.:
+
+if (txq_params->ac >= NL80211_NUM_ACS) {
+    ifence();
+    return -EINVAL;
+}
+
+...but the kernel, in these patches, only has ifence() defined for
+x86. The only way we can sanitize the 'txq_params->ac' value without
+ifence() is to do it at array access time, but then we're stuck
+touching all drivers when standard kernel development practice says
+'refactor common code out of drivers'.
+
+Ugh, the bigger concern is that this driver is being flagged and not
+that initial bounds check. Imagine if cw1200 and p54 had already been
+converted to assume that they can just trust 'queue'. It would never
+have been flagged.
+
+I think we should focus on the get_user path and  __fcheck_files for v3.
