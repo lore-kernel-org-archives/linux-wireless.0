@@ -1,40 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:51268 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750816AbeAPNdZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 08:33:25 -0500
-Message-ID: <1516109603.410.47.camel@sipsolutions.net> (sfid-20180116_143328_425827_B48D4CA5)
-Subject: Re: [RFC v2 3/5] mac80211: Send control port frames over nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Date: Tue, 16 Jan 2018 14:33:23 +0100
-In-Reply-To: <a7b47de8-ad2c-2b73-1e71-d70c47281845@gmail.com> (sfid-20180115_162443_000232_A82BC49E)
-References: <20180110170938.2341-1-denkenz@gmail.com>
-         <20180110170938.2341-4-denkenz@gmail.com>
-         <1516021789.410.28.camel@sipsolutions.net>
-         <a7b47de8-ad2c-2b73-1e71-d70c47281845@gmail.com>
-         (sfid-20180115_162443_000232_A82BC49E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga04.intel.com ([192.55.52.120]:8599 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933761AbeALA4R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Jan 2018 19:56:17 -0500
+Subject: [PATCH v2 18/19] cw1200: prevent bounds-check bypass via
+ speculative execution
+From: Dan Williams <dan.j.williams@intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Solomon Peachy <pizza@shaftnet.org>, tglx@linutronix.de,
+        torvalds@linux-foundation.org, akpm@linux-foundation.org,
+        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com
+Date: Thu, 11 Jan 2018 16:48:02 -0800
+Message-ID: <151571808286.27429.10595818963597903281.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180112_015701_273655_AC491F84)
+In-Reply-To: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-01-15 at 09:24 -0600, Denis Kenzior wrote:
+Static analysis reports that 'queue' may be a user controlled value that
+is used as a data dependency to read 'txq_params' from the
+'priv->tx_queue_params.params' array.  In order to avoid potential leaks
+of kernel memory values, block speculative execution of the instruction
+stream that could issue reads based on an invalid value of 'txq_params'.
+In this case 'txq_params' is referenced later in the function.
 
-> > It's probably better to reset this at interface type switching, if it's
-> > not done anyway (we zero a lot of memory there, but not sure precisely
-> > what)
-> > 
-> > Otherwise we'll surely forget this in some place like mesh or OCB ...
-> > 
-> > Initially it must be false (0) anyway.
-> > 
-> 
-> Where do I look?  Right now I'm mostly following the precedent of other 
-> control_port_* stuff.
+Based on an original patch by Elena Reshetova.
 
-Oh, interesting. I was thinking of things like sdata->noack_map that
-get reset in ieee80211_setup_sdata().
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/net/wireless/st/cw1200/sta.c |   11 +++++++----
+ drivers/net/wireless/st/cw1200/wsm.h |    4 +---
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
+index 38678e9a0562..7521077e50a4 100644
+--- a/drivers/net/wireless/st/cw1200/sta.c
++++ b/drivers/net/wireless/st/cw1200/sta.c
+@@ -14,6 +14,7 @@
+ #include <linux/firmware.h>
+ #include <linux/module.h>
+ #include <linux/etherdevice.h>
++#include <linux/nospec.h>
+ 
+ #include "cw1200.h"
+ #include "sta.h"
+@@ -612,18 +613,20 @@ int cw1200_conf_tx(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
+ 		   u16 queue, const struct ieee80211_tx_queue_params *params)
+ {
+ 	struct cw1200_common *priv = dev->priv;
++	struct wsm_set_tx_queue_params *txq_params;
+ 	int ret = 0;
+ 	/* To prevent re-applying PM request OID again and again*/
+ 	bool old_uapsd_flags;
+ 
+ 	mutex_lock(&priv->conf_mutex);
+ 
+-	if (queue < dev->queues) {
++	txq_params = array_ptr(priv->tx_queue_params.params, queue,
++			dev->queues);
++	if (txq_params) {
+ 		old_uapsd_flags = le16_to_cpu(priv->uapsd_info.uapsd_flags);
+ 
+-		WSM_TX_QUEUE_SET(&priv->tx_queue_params, queue, 0, 0, 0);
+-		ret = wsm_set_tx_queue_params(priv,
+-					      &priv->tx_queue_params.params[queue], queue);
++		WSM_TX_QUEUE_SET(txq_params, 0, 0, 0);
++		ret = wsm_set_tx_queue_params(priv, txq_params, queue);
+ 		if (ret) {
+ 			ret = -EINVAL;
+ 			goto out;
+diff --git a/drivers/net/wireless/st/cw1200/wsm.h b/drivers/net/wireless/st/cw1200/wsm.h
+index 48086e849515..8c8d9191e233 100644
+--- a/drivers/net/wireless/st/cw1200/wsm.h
++++ b/drivers/net/wireless/st/cw1200/wsm.h
+@@ -1099,10 +1099,8 @@ struct wsm_tx_queue_params {
+ };
+ 
+ 
+-#define WSM_TX_QUEUE_SET(queue_params, queue, ack_policy, allowed_time,\
+-		max_life_time)	\
++#define WSM_TX_QUEUE_SET(p, ack_policy, allowed_time, max_life_time)	\
+ do {							\
+-	struct wsm_set_tx_queue_params *p = &(queue_params)->params[queue]; \
+ 	p->ackPolicy = (ack_policy);				\
+ 	p->allowedMediumTime = (allowed_time);				\
+ 	p->maxTransmitLifetime = (max_life_time);			\
