@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36458 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932596AbeAOMJb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 07:09:31 -0500
-Message-ID: <1516018169.410.14.camel@sipsolutions.net> (sfid-20180115_130935_528241_502A6C81)
-Subject: Re: [PATCH v3 4/5] mac80211_hwsim: add permanent mac address option
- for new radios
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 15 Jan 2018 13:09:29 +0100
-In-Reply-To: <6596c1d9-da4f-4d83-bd5e-5e276391a0c9@MAIL2.uni-rostock.de>
-References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
-         <6596c1d9-da4f-4d83-bd5e-5e276391a0c9@MAIL2.uni-rostock.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-dm3nam03on0115.outbound.protection.outlook.com ([104.47.41.115]:31295
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754449AbeALHn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Jan 2018 02:43:28 -0500
+From: Wright Feng <wright.feng@cypress.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        chi-hsien.lin@cypress.com
+Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH v2] brcmfmac: fix CLM load error for legacy chips when user helper is enabled
+Date: Fri, 12 Jan 2018 15:44:16 +0800
+Message-Id: <1515743056-8109-1-git-send-email-wright.feng@cypress.com> (sfid-20180112_084338_034377_CEC412BE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-01-10 at 17:42 +0100, Benjamin Beichler wrote:
+For legacy chips without CLM blob files, kernel with user helper function
+returns -EAGAIN when we request_firmware() for blob file. In this case,
+brcmf_bus_started gets error and failed to bring up legacy chips.
+Because of that, we should continue with CLM data currently present in
+firmware if getting -EAGAIN when doing request_firmware().
 
-> To do not break the operation with legacy software using hwsim, the new
-> address is set twice. The problem here is, the netlink call backs use
-> wiphy->addresses[1] as identification of a radio and not the proposed
-> permanent address (wiphy->addresses[0]). This design decision is not
-> documented in the kernel repo, therefore this patch simply reproduces this,
-> but with the same address.
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+---
+v2: remove retry from patch v1
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-It's weird to have the same address twice - perhaps we can XOR 0x40 or
-so?
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 6a59d06..0baab4c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -182,7 +182,7 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
+ 
+ 	err = request_firmware(&clm, clm_name, dev);
+ 	if (err) {
+-		if (err == -ENOENT) {
++		if (err == -ENOENT || err == -EAGAIN) {
+ 			brcmf_dbg(INFO, "continue with CLM data currently present in firmware\n");
+ 			return 0;
+ 		}
+-- 
+1.9.1
