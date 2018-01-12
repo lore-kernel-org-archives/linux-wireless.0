@@ -1,101 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:32927 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751403AbeA0Q3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Jan 2018 11:29:50 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Print has_queued in debugfs.
-In-Reply-To: <4ff2358d-6e03-7031-4800-27721a74b960@candelatech.com>
-References: <1517015397-30957-1-git-send-email-greearb@candelatech.com> <874ln7v38y.fsf@toke.dk> <4ff2358d-6e03-7031-4800-27721a74b960@candelatech.com>
-Date: Sat, 27 Jan 2018 17:29:48 +0100
-Message-ID: <87r2qbtgcj.fsf@toke.dk> (sfid-20180127_172954_113406_B1648946)
+Received: from szxga05-in.huawei.com ([45.249.212.191]:3779 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754345AbeALJMj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Jan 2018 04:12:39 -0500
+Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
+To: Christophe LEROY <christophe.leroy@c-s.fr>,
+        Greg KH <gregkh@linuxfoundation.org>
+References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+ <20171223134831.GB10103@kroah.com>
+ <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
+ <8dd19411-5b06-0aa4-fd0e-e5b112c25dcb@huawei.com>
+ <1eb206ed-95e9-5839-485d-0e549ff3f505@c-s.fr>
+CC: <linux-kernel@vger.kernel.org>, <ysxie@foxmail.com>,
+        <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
+        <boris.brezillon@free-electrons.com>, <richard@nod.at>,
+        <marek.vasut@gmail.com>, <cyrille.pitchen@wedev4u.fr>,
+        <linux-mtd@lists.infradead.org>, <alsa-devel@alsa-project.org>,
+        <wim@iguana.be>, <linux@roeck-us.net>,
+        <linux-watchdog@vger.kernel.org>, <b.zolnierkie@samsung.com>,
+        <linux-fbdev@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <linux-gpio@vger.kernel.org>, <ralf@linux-mips.org>,
+        <linux-mips@linux-mips.org>, <lgirdwood@gmail.com>,
+        <broonie@kernel.org>, <tglx@linutronix.de>, <jason@lakedaemon.net>,
+        <marc.zyngier@arm.com>, <arnd@arndb.de>,
+        <andriy.shevchenko@linux.intel.com>,
+        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
+        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
+        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
+        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
+        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
+        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
+        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
+        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
+        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <dvhart@infradead.org>, <andy@infradead.org>,
+        <platform-driver-x86@vger.kernel.org>,
+        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
+        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
+        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
+        <dmaengine@vger.kernel.org>, <jslaby@suse.com>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <ff498c83-d1ee-7553-e20c-a07369f8dad6@huawei.com> (sfid-20180112_101301_179717_0844FDC5)
+Date: Fri, 12 Jan 2018 17:12:12 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1eb206ed-95e9-5839-485d-0e549ff3f505@c-s.fr>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+Hi Christophe ，
 
-> On 01/27/2018 05:29 AM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> greearb@candelatech.com writes:
+On 2018/1/4 16:05, Christophe LEROY wrote:
+> 
+> 
+> Le 25/12/2017 à 02:34, Yisheng Xie a écrit :
 >>
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> The PAUSED field was never printed per tid.  Replace that
->>> with has_queued, which might help someone track down strange
->>> bugs related to aqm.
->>>
->>> And, make tx-queue debug info show peer BSSID as well as vdev
->>> MAC to aid debugging with multiple stations connected to the
->>> same peer.
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>> ---
->>>  drivers/net/wireless/ath/ath9k/debug_sta.c | 10 ++++++----
->>>  drivers/net/wireless/ath/ath9k/xmit.c      |  5 +++--
->>>  2 files changed, 9 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/debug_sta.c b/drivers/net/w=
-ireless/ath/ath9k/debug_sta.c
->>> index efc692e..a45f1f5 100644
->>> --- a/drivers/net/wireless/ath/ath9k/debug_sta.c
->>> +++ b/drivers/net/wireless/ath/ath9k/debug_sta.c
->>> @@ -48,9 +48,10 @@ static ssize_t read_file_node_aggr(struct file *file=
-, char __user *user_buf,
->>>  			 an->mpdudensity);
->>>
->>>  	len +=3D scnprintf(buf + len, size - len,
->>> -			 "\n%3s%11s%10s%10s%10s%10s%9s%6s%8s\n",
->>> +			 "\n%3s%11s%10s%10s%10s%10s%9s%6s%9s\n",
->>>  			 "TID", "SEQ_START", "SEQ_NEXT", "BAW_SIZE",
->>> -			 "BAW_HEAD", "BAW_TAIL", "BAR_IDX", "SCHED", "PAUSED");
->>> +			 "BAW_HEAD", "BAW_TAIL", "BAR_IDX", "SCHED",
->>> +			 "HAS-QUED");
->>>
->>>  	for (tidno =3D 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
->>>  		tid =3D ath_node_to_tid(an, tidno);
->>> @@ -58,7 +59,7 @@ static ssize_t read_file_node_aggr(struct file *file,=
- char __user *user_buf,
->>>  		ath_txq_lock(sc, txq);
->>>  		if (tid->active) {
->>>  			len +=3D scnprintf(buf + len, size - len,
->>> -					 "%3d%11d%10d%10d%10d%10d%9d%6d\n",
->>> +					 "%3d%11d%10d%10d%10d%10d%9d%6d%9d\n",
->>>  					 tid->tidno,
->>>  					 tid->seq_start,
->>>  					 tid->seq_next,
->>> @@ -66,7 +67,8 @@ static ssize_t read_file_node_aggr(struct file *file,=
- char __user *user_buf,
->>>  					 tid->baw_head,
->>>  					 tid->baw_tail,
->>>  					 tid->bar_index,
->>> -					 !list_empty(&tid->list));
->>> +					 !list_empty(&tid->list),
->>> +					 tid->has_queued);
 >>
->> Would it perhaps be useful to print the length of tid->retry_q instead
->> of / in addition to has_queued? Planning to get rid of the has_queued
->> variable entirely...
->
-> I'm just getting started looking at this. 4.9 kernel works fine, so it
-> seems to be a regression in the aqm stuff since that is the big change
-> between 4.9 and 4.13.
->
-> From a brief look yesterday, it seems that has_queued is not
-> adequately protected by locks, but also, it was '1', which indicates
-> it wants to send pkts (?), so I guess it was not hitting a locking
-> race.
+>> On 2017/12/24 17:05, christophe leroy wrote:
+>>>
+>>>
+>>> Le 23/12/2017 à 14:48, Greg KH a écrit :
+>>>> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
+>>>>> Hi all,
+>>>>>
+>>>>> When I tried to use devm_ioremap function and review related code, I found
+>>>>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
+>>>>> except one use ioremap while the other use ioremap_nocache.
+>>>>
+>>>> For all arches?  Really?  Look at MIPS, and x86, they have different
+>>>> functions.
+>>>>
+>>>>> While ioremap's
+>>>>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
+>>>>> same function with devm_ioremap, which can just be killed to reduce the size
+>>>>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
+>>>>>
+>>>>> I have posted two versions, which use macro instead of function for
+>>>>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
+>>>>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
+>>>>> thing. So here comes v3 and please help to review.
+>>>>
+>>>> I don't think this can be done, what am I missing?  These functions are
+>>>> not identical, sorry for missing that before.
+>>>
+>>> devm_ioremap() and devm_ioremap_nocache() are quite similar, both use devm_ioremap_release() for the release, why not just defining:
+>>>
+>>> static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
+>>>                 resource_size_t size, bool nocache)
+>>> {
+>>> [...]
+>>>      if (nocache)
+>>>          addr = ioremap_nocache(offset, size);
+>>>      else
+>>>          addr = ioremap(offset, size);
+>>> [...]
+>>> }
+>>>
+>>> then in include/linux/io.h
+>>>
+>>> static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+>>>                 resource_size_t size)
+>>> {return __devm_ioremap(dev, offset, size, false);}
+>>>
+>>> static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+>>>                     resource_size_t size);
+>>> {return __devm_ioremap(dev, offset, size, true);}
+>>
+>> Yeah, this seems good to me, right now we have devm_ioremap, devm_ioremap_wc, devm_ioremap_nocache
+>> May be we can use an enum like:
+>> typedef enum {
+>>     DEVM_IOREMAP = 0,
+>>     DEVM_IOREMAP_NOCACHE,
+>>     DEVM_IOREMAP_WC,
+>> } devm_ioremap_type;
+>>
+>> static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+>>                  resource_size_t size)
+>>   {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP);}
+>>
+>>   static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+>>                      resource_size_t size);
+>>   {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_NOCACHE);}
+>>
+>>   static inline void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
+>>                      resource_size_t size);
+>>   {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_WC);}
+>>
+>>   static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
+>>                  resource_size_t size, devm_ioremap_type type)
+>>   {
+>>       void __iomem **ptr, *addr = NULL;
+>>   [...]
+>>       switch (type){
+>>       case DEVM_IOREMAP:
+>>           addr = ioremap(offset, size);
+>>           break;
+>>       case DEVM_IOREMAP_NOCACHE:
+>>           addr = ioremap_nocache(offset, size);
+>>           break;
+>>       case DEVM_IOREMAP_WC:
+>>           addr = ioremap_wc(offset, size);
+>>           break;
+>>       }
+>>   [...]
+>>   }
+> 
+> 
+> That looks good to me, will you submit a v4 ?
 
-It's only ever accessed under ath_txq_lock(), so I don't think it's a
-locking issue.
+Sorry for late response. And I will submit the v4 as your suggestion.
 
-> Can you point me at the scheduler code (method name?). I'll be looking
-> at that as soon as I get time.
+Thanks
+Yisheng
 
-ath_txq_schedule() is the main scheduler (in xmit.c). As I said it may
-be the airtime fairness scheduler that's throttling stations; did you
-look at the airtime debugfs file?
-
--Toke
+> 
+> Christophe
+> 
+>>
