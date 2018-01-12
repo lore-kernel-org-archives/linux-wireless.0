@@ -1,55 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47746 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753051AbeAQOu3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 09:50:29 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        dan.carpenter@oracle.com, linux-wireless@vger.kernel.org
-Subject: Re: [1/2] mt76: fix possible NULL pointer dereferencing in mt76x2_ampdu_action()
-References: <18a56326d68a7d53f3197e450cae0e28382d8d2c.1513252573.git.lorenzo.bianconi@redhat.com>
-        <20180108173523.B23C360B22@smtp.codeaurora.org>
-        <CAJ0CqmWEgC07iBkkt92fKTpagMx+_oim_3qcPoc=B6ttsUzoOA@mail.gmail.com>
-        <87o9m42p2k.fsf@kamboji.qca.qualcomm.com>
-        <5835442f-9e10-69bb-3b6d-d207d540181f@nbd.name>
-Date: Wed, 17 Jan 2018 16:50:23 +0200
-In-Reply-To: <5835442f-9e10-69bb-3b6d-d207d540181f@nbd.name> (Felix Fietkau's
-        message of "Wed, 17 Jan 2018 11:26:13 +0100")
-Message-ID: <87o9lsczf4.fsf@kamboji.qca.qualcomm.com> (sfid-20180117_155033_045435_CA7BCC90)
+Received: from mga01.intel.com ([192.55.52.88]:23428 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933688AbeALA4G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Jan 2018 19:56:06 -0500
+Subject: [PATCH v2 16/19] p54: prevent bounds-check bypass via speculative
+ execution
+From: Dan Williams <dan.j.williams@intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        tglx@linutronix.de, torvalds@linux-foundation.org,
+        akpm@linux-foundation.org, Kalle Valo <kvalo@codeaurora.org>,
+        alan@linux.intel.com
+Date: Thu, 11 Jan 2018 16:47:52 -0800
+Message-ID: <151571807201.27429.3448043288988637265.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180112_015805_874642_1C1E9CA1)
+In-Reply-To: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+Static analysis reports that 'queue' may be a user controlled value that
+is used as a data dependency to read from the 'priv->qos_params' array.
+In order to avoid potential leaks of kernel memory values, block
+speculative execution of the instruction stream that could issue reads
+based on an invalid result of 'priv->qos_params[queue]'.
 
-> On 2018-01-08 19:16, Kalle Valo wrote:
->> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->> 
->>>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
->>>>
->>>>> Initialize mt76_txq pointer after ieee80211_txq pointer check.
->>>>> Remove space after the pointer cast
->>>>>
->>>>> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
->>>>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
->>>>
->>>> What am I supposed to do with this and patch 2? Drop?
->>>
->>> What do you mean? Why drop?
->> 
->> I didn't see Felix's ack, at least not on patchwork.
->
-> I sent my ack (for both patches) as a reply to 0/2
+Based on an original patch by Elena Reshetova.
 
-Ah. patchwork is annoying as it doesn't show the cover letter at all so
-I missed that.
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/net/wireless/intersil/p54/main.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-> These patches should go in.
-
-These two are applied now.
-
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
+index ab6d39e12069..5ce693ff547e 100644
+--- a/drivers/net/wireless/intersil/p54/main.c
++++ b/drivers/net/wireless/intersil/p54/main.c
+@@ -20,6 +20,7 @@
+ #include <linux/firmware.h>
+ #include <linux/etherdevice.h>
+ #include <linux/module.h>
++#include <linux/nospec.h>
+ 
+ #include <net/mac80211.h>
+ 
+@@ -411,12 +412,14 @@ static int p54_conf_tx(struct ieee80211_hw *dev,
+ 		       const struct ieee80211_tx_queue_params *params)
+ {
+ 	struct p54_common *priv = dev->priv;
++	struct p54_edcf_queue_param *p54_q;
+ 	int ret;
+ 
+ 	mutex_lock(&priv->conf_mutex);
+-	if (queue < dev->queues) {
+-		P54_SET_QUEUE(priv->qos_params[queue], params->aifs,
+-			params->cw_min, params->cw_max, params->txop);
++	p54_q = array_ptr(priv->qos_params, queue, dev->queues);
++	if (p54_q) {
++		P54_SET_QUEUE(p54_q[0], params->aifs, params->cw_min,
++				params->cw_max, params->txop);
+ 		ret = p54_set_edcf(priv);
+ 	} else
+ 		ret = -EINVAL;
