@@ -1,61 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:43840 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751836AbeA3QKM (ORCPT
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:53644 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754350AbeALKDF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 11:10:12 -0500
-Date: Tue, 30 Jan 2018 21:40:21 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: kbuild test robot <lkp@intel.com>, <devel@driverdev.osuosl.org>,
-        <venkateswara.kaja@microchip.com>, <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <ganesh.krishna@microchip.com>,
-        <kbuild-all@01.org>, <aditya.shankar@microchip.com>
-Subject: Re: [PATCH v2 13/14] staging: wilc1000: rename Handle_Connect() to
- avoid camelCase
-Message-ID: <20180130214021.5fdd1aa3@ajaysk-VirtualBox> (sfid-20180130_171325_559304_D33C5B1E)
-In-Reply-To: <20180130144031.hd5whcs4lwah4qhs@mwanda>
-References: <1516616547-24654-14-git-send-email-ajay.kathat@microchip.com>
-        <201801300113.VYPjzW6k%fengguang.wu@intel.com>
-        <20180130192949.016ed06a@ajaysk-VirtualBox>
-        <20180130144031.hd5whcs4lwah4qhs@mwanda>
+        Fri, 12 Jan 2018 05:03:05 -0500
+Date: Fri, 12 Jan 2018 10:02:08 +0000
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        x86@kernel.org, Ingo Molnar <mingo@redhat.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        linux-media@vger.kernel.org,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        tglx@linutronix.de, Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        netdev@vger.kernel.org, akpm@linux-foundation.org,
+        torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative
+ execution
+Message-ID: <20180112100208.GX17719@n2100.armlinux.org.uk> (sfid-20180112_110327_174591_6FDAA710)
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 30 Jan 2018 17:40:31 +0300
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Do you think that the appropriate patches could be copied to the
+appropriate people please?
 
-> On Tue, Jan 30, 2018 at 07:29:49PM +0530, Ajay Singh wrote:
-> > On Tue, 30 Jan 2018 02:13:53 +0800
-> > kbuild test robot <lkp@intel.com> wrote:
-> >   
+On Thu, Jan 11, 2018 at 04:46:24PM -0800, Dan Williams wrote:
+> Changes since v1 [1]:
+> * fixup the ifence definition to use alternative_2 per recent AMD
+>   changes in tip/x86/pti (Tom)
 > 
-> > 
-> > 
-> > The patch only change variable names to avoid the camelCase, didn't modify any extra code to dereference memory.  
+> * drop 'nospec_ptr' (Linus, Mark)
 > 
-> You are responding to a robot and I think we all understood that this
-> warning was there before you renamed the variables.
+> * rename 'nospec_array_ptr' to 'array_ptr' (Alexei)
 > 
-Thanks, got it.
+> * rename 'nospec_barrier' to 'ifence' (Peter, Ingo)
+> 
+> * clean up occasions of 'variable assignment in if()' (Sergei, Stephen)
+> 
+> * make 'array_ptr' use a mask instead of an architectural ifence by
+>   default (Linus, Alexei)
+> 
+> * provide a command line and compile-time opt-in to the ifence
+>   mechanism, if an architecture provides 'ifence_array_ptr'.
+> 
+> * provide an optimized mask generation helper, 'array_ptr_mask', for
+>   x86 (Linus)
+> 
+> * move 'get_user' hardening from '__range_not_ok' to '__uaccess_begin'
+>   (Linus)
+> 
+> * drop "Thermal/int340x: prevent bounds-check..." since userspace does
+>   not have arbitrary control over the 'trip' index (Srinivas)
+> 
+> * update the changelog of "net: mpls: prevent bounds-check..." and keep
+>   it in the series to continue the debate about Spectre hygiene patches.
+>   (Eric).
+> 
+> * record a reviewed-by from Laurent on "[media] uvcvideo: prevent
+>   bounds-check..."
+> 
+> * update the cover letter
+> 
+> [1]: https://lwn.net/Articles/743376/
+> 
+> ---
+> 
+> Quoting Mark's original RFC:
+> 
+> "Recently, Google Project Zero discovered several classes of attack
+> against speculative execution. One of these, known as variant-1, allows
+> explicit bounds checks to be bypassed under speculation, providing an
+> arbitrary read gadget. Further details can be found on the GPZ blog [2]
+> and the Documentation patch in this series."
+> 
+> This series incorporates Mark Rutland's latest ARM changes and adds
+> the x86 specific implementation of 'ifence_array_ptr'. That ifence
+> based approach is provided as an opt-in fallback, but the default
+> mitigation, '__array_ptr', uses a 'mask' approach that removes
+> conditional branches instructions, and otherwise aims to redirect
+> speculation to use a NULL pointer rather than a user controlled value.
+> 
+> The mask is generated by the following from Alexei, and Linus:
+> 
+>     mask = ~(long)(_i | (_s - 1 - _i)) >> (BITS_PER_LONG - 1);
+> 
+> ...and Linus provided an optimized mask generation helper for x86:
+> 
+>     asm ("cmpq %1,%2; sbbq %0,%0;"
+> 		:"=r" (mask)
+> 		:"r"(sz),"r" (idx)
+> 		:"cc");
+> 
+> The 'array_ptr' mechanism can be switched between 'mask' and 'ifence'
+> via the spectre_v1={mask,ifence} command line option, and the
+> compile-time default is set by selecting either CONFIG_SPECTRE1_MASK or
+> CONFIG_SPECTRE1_IFENCE.
+> 
+> The 'array_ptr' infrastructure is the primary focus this patch set. The
+> individual patches that perform 'array_ptr' conversions are a point in
+> time (i.e. earlier kernel, early analysis tooling, x86 only etc...)
+> start at finding some of these gadgets.
+> 
+> Another consideration for reviewing these patches is the 'hygiene'
+> argument. When a patch refers to hygiene it is concerned with stopping
+> speculation on an unconstrained or insufficiently constrained pointer
+> value under userspace control. That by itself is not sufficient for
+> attack (per current understanding) [3], but it is a necessary
+> pre-condition.  So 'hygiene' refers to cleaning up those suspect
+> pointers regardless of whether they are usable as a gadget.
+> 
+> These patches are also be available via the 'nospec-v2' git branch
+> here:
+> 
+>     git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec-v2
+> 
+> Note that the BPF fix for Spectre variant1 is merged in the bpf.git
+> tree [4], and is not included in this branch.
+> 
+> [2]: https://googleprojectzero.blogspot.co.uk/2018/01/reading-privileged-memory-with-side.html
+> [3]: https://spectreattack.com/spectre.pdf
+> [4]: https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf.git/commit/?id=b2157399cc98
+> 
+> ---
+> 
+> Dan Williams (16):
+>       x86: implement ifence()
+>       x86: implement ifence_array_ptr() and array_ptr_mask()
+>       asm-generic/barrier: mask speculative execution flows
+>       x86: introduce __uaccess_begin_nospec and ASM_IFENCE
+>       x86: use __uaccess_begin_nospec and ASM_IFENCE in get_user paths
+>       ipv6: prevent bounds-check bypass via speculative execution
+>       ipv4: prevent bounds-check bypass via speculative execution
+>       vfs, fdtable: prevent bounds-check bypass via speculative execution
+>       userns: prevent bounds-check bypass via speculative execution
+>       udf: prevent bounds-check bypass via speculative execution
+>       [media] uvcvideo: prevent bounds-check bypass via speculative execution
+>       carl9170: prevent bounds-check bypass via speculative execution
+>       p54: prevent bounds-check bypass via speculative execution
+>       qla2xxx: prevent bounds-check bypass via speculative execution
+>       cw1200: prevent bounds-check bypass via speculative execution
+>       net: mpls: prevent bounds-check bypass via speculative execution
+> 
+> Mark Rutland (3):
+>       Documentation: document array_ptr
+>       arm64: implement ifence_array_ptr()
+>       arm: implement ifence_array_ptr()
+> 
+>  Documentation/speculation.txt            |  142 ++++++++++++++++++++++++++++++
+>  arch/arm/Kconfig                         |    1 
+>  arch/arm/include/asm/barrier.h           |   24 +++++
+>  arch/arm64/Kconfig                       |    1 
+>  arch/arm64/include/asm/barrier.h         |   24 +++++
+>  arch/x86/Kconfig                         |    3 +
+>  arch/x86/include/asm/barrier.h           |   46 ++++++++++
+>  arch/x86/include/asm/msr.h               |    3 -
+>  arch/x86/include/asm/smap.h              |    4 +
+>  arch/x86/include/asm/uaccess.h           |   16 +++
+>  arch/x86/include/asm/uaccess_32.h        |    6 +
+>  arch/x86/include/asm/uaccess_64.h        |   12 +--
+>  arch/x86/lib/copy_user_64.S              |    3 +
+>  arch/x86/lib/usercopy_32.c               |    8 +-
+>  drivers/media/usb/uvc/uvc_v4l2.c         |    9 +-
+>  drivers/net/wireless/ath/carl9170/main.c |    7 +
+>  drivers/net/wireless/intersil/p54/main.c |    9 +-
+>  drivers/net/wireless/st/cw1200/sta.c     |   11 +-
+>  drivers/net/wireless/st/cw1200/wsm.h     |    4 -
+>  drivers/scsi/qla2xxx/qla_mr.c            |   17 ++--
+>  fs/udf/misc.c                            |   40 +++++---
+>  include/linux/fdtable.h                  |    7 +
+>  include/linux/nospec.h                   |   71 +++++++++++++++
+>  kernel/Kconfig.nospec                    |   31 +++++++
+>  kernel/Makefile                          |    1 
+>  kernel/nospec.c                          |   52 +++++++++++
+>  kernel/user_namespace.c                  |   11 +-
+>  lib/Kconfig                              |    3 +
+>  net/ipv4/raw.c                           |   10 +-
+>  net/ipv6/raw.c                           |   10 +-
+>  net/mpls/af_mpls.c                       |   12 +--
+>  31 files changed, 521 insertions(+), 77 deletions(-)
+>  create mode 100644 Documentation/speculation.txt
+>  create mode 100644 include/linux/nospec.h
+>  create mode 100644 kernel/Kconfig.nospec
+>  create mode 100644 kernel/nospec.c
+> 
 
-> > I think, with the use of shorter variable name now memcpy() is taking 1 line instead of 3 lines. So, now line 937 has different code line(as code is swifted up by few lines).So because of that new potential NULL dereference error is popped up for same existing code.  
-> > The code to validate dynamically allocated memory before access, will be include in separate patch to keep it segregated from variable names changes. 
-> > I will rework on this patch and resend again.  
-> 
-> There is no need to re-work the patch.
-> 
-
-Few of the patches for patch series are accepted and submitted to "linux-next". For now, will submit the a new patch series by including the remaining patches (changing commit subject line to avoid confusion from previous patches). 
-
-> You are right that the NULL check should be added as a separate check.
-> 
-> regards,
-> dan carpenter
-> 
-
-
-Regards,
-Ajay
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
+According to speedtest.net: 8.21Mbps down 510kbps up
