@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:42302 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965244AbeALVIo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41932 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754503AbeALLb1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 16:08:44 -0500
-Received: by mail-pf0-f195.google.com with SMTP id d23so5285036pfe.9
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jan 2018 13:08:43 -0800 (PST)
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Brian Norris <briannorris@chromium.org>,
-        "Signed-off-by : Xinming Hu" <huxm@marvell.com>
-Subject: [PATCH 1/2] Revert "mwifiex: cancel pcie/sdio work in remove/shutdown handler"
-Date: Fri, 12 Jan 2018 13:08:36 -0800
-Message-Id: <20180112210837.112628-1-briannorris@chromium.org> (sfid-20180112_220906_122842_D11F2ACF)
+        Fri, 12 Jan 2018 06:31:27 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>, emmanuel.grumbach@intel.com
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH 0/5] iwlwifi: updates intended for v4.16 2017-12-23
+References: <20171223092200.30270-1-luca@coelho.fi>
+Date: Fri, 12 Jan 2018 13:31:23 +0200
+In-Reply-To: <20171223092200.30270-1-luca@coelho.fi> (Luca Coelho's message of
+        "Sat, 23 Dec 2017 11:21:55 +0200")
+Message-ID: <871sivs48k.fsf@kamboji.qca.qualcomm.com> (sfid-20180112_123131_188374_23D58B6E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit b713bbf1471b56b572ce26bd02b81a85c2b007f4.
++ emmanuel
 
-The "fix" in question does not actually fix all related problems, and it
-also introduces new deadlock possibilities. Since commit b014e96d1abb
-("PCI: Protect pci_error_handlers->reset_notify() usage with
-device_lock()"), the race in question is actually resolved (PCIe reset
-cannot happen at the same time as remove()). Instead, this "fix" just
-introduces a deadlock where mwifiex_pcie_card_reset_work() is waiting on
-device_lock, which is held by PCIe device remove(), which is waiting
-on...mwifiex_pcie_card_reset_work().
+Luca Coelho <luca@coelho.fi> writes:
 
-The proper thing to do is just to fix the deadlock. Patch for this will
-come separately.
+> From: Luca Coelho <luciano.coelho@intel.com>
+>
+> Hi,
+>
+> Here's the fourth and probably last batch of patches intended for
+> 4.16.  Nothing major, just continued development, some cleanups and
+> small fixes here and there.
+>
+> * Fix a UBSAN warning;
+> * Improvement in the net-stack/driver log syncing
+> * An RCU lock fix in the new rate-scaling code;
+> * Small cleanups;
+>
+> As usual, I'm pushing this to a pending branch, for kbuild bot, and
+> will send a pull-request later.
+>
+> FYI, I'll be on holidays/vacations for the next few weeks, so there
+> will probably not be much activity in the iwlwifi driver code.
+>
+> Please review.
+>
+> Cheers,
+> Luca.
+>
+>
+> Luca Coelho (1):
+>   iwlwifi: mvm: check if mac80211_queue is valid in iwl_mvm_disable_txq
+>
+> Mordechay Goodstein (1):
+>   iwlwifi: set default timstamp marker cmd
+>
+> Sara Sharon (3):
+>   iwlwifi: mvm: flip AMSDU addresses only for 9000 family
+>   iwlwifi: mvm: take RCU lock before dereferencing
+>   iwlwifi: mvm: move TSO segment to a separate function
 
-Cc: Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 2 --
- drivers/net/wireless/marvell/mwifiex/sdio.c | 2 --
- 2 files changed, 4 deletions(-)
+Most likely the merge window starts in 9 days so I need to start getting
+patches ready. As Luca is away should I apply these patches directly to
+wireless-drivers-next?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 23209c5cab05..f666cb2ea7e0 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -310,8 +310,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
- 	}
- 
--	cancel_work_sync(&card->work);
--
- 	mwifiex_remove_card(adapter);
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 248858723753..a82880132af4 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -399,8 +399,6 @@ mwifiex_sdio_remove(struct sdio_func *func)
- 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
- 	}
- 
--	cancel_work_sync(&card->work);
--
- 	mwifiex_remove_card(adapter);
- }
- 
 -- 
-2.16.0.rc1.238.g530d649a79-goog
+Kalle Valo
