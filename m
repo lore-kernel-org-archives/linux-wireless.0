@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:10406 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751723AbeAIJW1 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:53245 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754392AbeALJOz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 04:22:27 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH] staging: wilc1000: remove unnecessary typedef enum G_OPERATING_MODE_T
-Date: Tue, 9 Jan 2018 14:51:29 +0530
-Message-ID: <1515489689-8426-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180109_102232_174857_4F83835C)
+        Fri, 12 Jan 2018 04:14:55 -0500
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] ath10k: fix spelling mistake: "addrress" -> "address"
+Date: Fri, 12 Jan 2018 09:14:50 +0000
+Message-Id: <20180112091450.8285-1-colin.king@canonical.com> (sfid-20180112_101525_753626_CF1D3A9F)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch has removed G_OPERATING_MODE_T typedef enum.
-Now, its used as anonymous-enums for constants.
-checkpatch.pl warning to avoid new typedef is fixed with this patch.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Trivial fix to spelling mistake in warning message text.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/staging/wilc1000/wilc_wlan_if.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 2baf6c4..222bde2 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -107,12 +107,12 @@ typedef enum {
- 	RATE_54MB		= 54
- } TX_RATE_T;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 8abaccc25227..f6a23f2d0335 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1484,7 +1484,7 @@ static int ath10k_pci_dump_memory_section(struct ath10k *ar,
+ 	cur_section = &mem_region->section_table.sections[0];
  
--typedef enum {
-+enum {
- 	B_ONLY_MODE		= 0,    /* 1, 2 M, otherwise 5, 11 M */
- 	G_ONLY_MODE,			/* 6,12,24 otherwise 9,18,36,48,54 */
- 	G_MIXED_11B_1_MODE,		/* 1,2,5.5,11 otherwise all on */
- 	G_MIXED_11B_2_MODE,		/* 1,2,5,11,6,12,24 otherwise all on */
--} G_OPERATING_MODE_T;
-+};
- 
- typedef enum {
- 	G_SHORT_PREAMBLE	= 0,	/* Short Preamble */
+ 	if (mem_region->start > cur_section->start) {
+-		ath10k_warn(ar, "incorrect memdump region 0x%x with section start addrress 0x%x.\n",
++		ath10k_warn(ar, "incorrect memdump region 0x%x with section start address 0x%x.\n",
+ 			    mem_region->start, cur_section->start);
+ 		return 0;
+ 	}
 -- 
-2.7.4
+2.15.1
