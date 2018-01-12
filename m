@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50594 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753381AbeAHRid (ORCPT
+Received: from 9pmail.ess.barracuda.com ([64.235.154.210]:41581 "EHLO
+        9pmail.ess.barracuda.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933895AbeALO22 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 12:38:33 -0500
-Content-Type: text/plain; charset="utf-8"
+        Fri, 12 Jan 2018 09:28:28 -0500
+From: Matt Redfearn <matt.redfearn@mips.com>
+To: Michael Buesch <m@bues.ch>
+CC: <linux-wireless@vger.kernel.org>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH] ssb: Prevent build of PCI host features in module
+Date: Fri, 12 Jan 2018 14:25:59 +0000
+Message-ID: <1515767159-17226-1-git-send-email-matt.redfearn@mips.com> (sfid-20180112_152843_914842_FA74A6B7)
 MIME-Version: 1.0
-Subject: Re: mwifiex: cancel pcie/sdio work in remove/shutdown handler
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1513164473-13827-1-git-send-email-huxm@marvell.com>
-References: <1513164473-13827-1-git-send-email-huxm@marvell.com>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Message-Id: <20180108173833.5B3046077A@smtp.codeaurora.org> (sfid-20180108_183839_415257_AC96A796)
-Date: Mon,  8 Jan 2018 17:38:33 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxm@marvell.com> wrote:
+Attempting to build ssb.ko with CONFIG_SSB_DRIVER_PCICORE=y results in
+a build error due to use of symbols not exported from vmlinux:
 
-> The last command used to shutdown firmware might be timeout,
-> and trigger firmware dump in asynchronous pcie/sdio work.
-> 
-> The remove/shutdown handler will continue free core data
-> structure private/adapter, which might be dereferenced in
-> pcie/sdio work, finally crash the kernel.
-> 
-> Sync and Cancel pcie/sdio work, could be a fix for above
-> cornel case. In this way, the last command timeout could
-> be handled properly.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
+ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
+ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
+make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
 
-Patch applied to wireless-drivers-next.git, thanks.
+To prevent this, don't allow the host mode feature to be built if
+CONFIG_SSB=m
 
-b713bbf1471b mwifiex: cancel pcie/sdio work in remove/shutdown handler
+Signed-off-by: Matt Redfearn <matt.redfearn@mips.com>
+---
 
+ drivers/ssb/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+index d8e4219c2324..3e1c814e7331 100644
+--- a/drivers/ssb/Kconfig
++++ b/drivers/ssb/Kconfig
+@@ -118,7 +118,7 @@ config SSB_SERIAL
+ 
+ config SSB_DRIVER_PCICORE_POSSIBLE
+ 	bool
+-	depends on SSB_PCIHOST
++	depends on SSB_PCIHOST && SSB = y
+ 	default y
+ 
+ config SSB_DRIVER_PCICORE
 -- 
-https://patchwork.kernel.org/patch/10109773/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
