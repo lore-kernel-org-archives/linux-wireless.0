@@ -1,63 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37254 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030453AbeAONOk (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:39790 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753386AbeAMSvz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 08:14:40 -0500
-Message-ID: <1516022078.410.33.camel@sipsolutions.net> (sfid-20180115_141509_745270_4437E622)
-Subject: Re: [RFC v2 4/5] nl80211: Implement TX of control port frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org,
-        Jouni Malinen <j@w1.fi>
-Date: Mon, 15 Jan 2018 14:14:38 +0100
-In-Reply-To: <20180110170938.2341-5-denkenz@gmail.com> (sfid-20180110_180958_033009_D67159EE)
-References: <20180110170938.2341-1-denkenz@gmail.com>
-         <20180110170938.2341-5-denkenz@gmail.com>
-         (sfid-20180110_180958_033009_D67159EE)
+        Sat, 13 Jan 2018 13:51:55 -0500
+MIME-Version: 1.0
+In-Reply-To: <CA+8MBb+H0FqciBw9nSO9L0fNQtiRvc_1TREitH9z89YxhtyFAQ@mail.gmail.com>
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CA+55aFzNQ8CZ8iNcPXrCfyk=1edMiRGDA0fY0rd87BsFKBxgAw@mail.gmail.com> <CA+8MBb+H0FqciBw9nSO9L0fNQtiRvc_1TREitH9z89YxhtyFAQ@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Sat, 13 Jan 2018 10:51:53 -0800
+Message-ID: <CA+55aFwUspY8DG3hRxZqQaf_n_0OZxGCd=pELc8ZVuBu+058cA@mail.gmail.com> (sfid-20180113_195220_413168_4D2DBFF3)
+Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative execution
+To: Tony Luck <tony.luck@gmail.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok this is the interesting part :-)
+On Fri, Jan 12, 2018 at 4:15 PM, Tony Luck <tony.luck@gmail.com> wrote:
+>
+> Here there isn't any reason for speculation. The core has the
+> value of 'x' in a register and the upper bound encoded into the
+> "cmp" instruction.  Both are right there, no waiting, no speculation.
 
-> +	int	(*tx_control_port)(struct wiphy *wiphy,
-> +				       struct net_device *dev,
-> +				       const u8 *buf, size_t len,
-> +				       const u8 *dest, const u16 proto,
-> +				       const bool noencrypt);
+So this is an argument I haven't seen before (although it was brought
+up in private long ago), but that is very relevant: the actual scope
+and depth of speculation.
 
-(indentation seems off in both patchwork and my email, but whatever)
+Your argument basically depends on just what gets speculated, and on
+the _actual_ order of execution.
 
-> +	wdev_lock(wdev);
-> +
-> +	switch (wdev->iftype) {
-> +	case NL80211_IFTYPE_STATION:
-> +		if (wdev->current_bss)
+So your argument depends on "the uarch will actually run the code in
+order if there are no events that block the pipeline".
 
-err, !current_bss?
+Or at least it depends on a certain latency of the killing of any OoO
+execution being low enough that the cache access doesn't even begin.
 
-> +	buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
-> +	len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
-> +	dest = nla_data(info->attrs[NL80211_ATTR_MAC]);
-> +	proto = nla_get_u16(info->attrs[NL80211_ATTR_CONTROL_PORT_ETHERTYPE]);
-> +	noencrypt =
-> +		nla_get_flag(info->attrs[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT]);
+I realize that that is very much a particular microarchitectural
+detail, but it's actually a *big* deal. Do we have a set of rules for
+what is not a worry, simply because the speculated accesses get killed
+early enough?
 
-So this is the data we support here.
+Apparently "test a register value against a constant" is good enough,
+assuming that register is also needed for the address of the access.
 
-Jouni and I were talking about this and were thinking we might need
-"use old key" or something like that. That's rather difficult to do
-though, I'm not even sure we keep the old key around?
-
-Jouni? Do you see how this could work?
-
-
-The other thing we thought about was that maybe we should have "open
-port after this frame", but since it's an in-band mechanism now you
-could do that also just before the frame.
-
-FWIW, I'm checking with our guy on what other specialities we might
-want to add into this mix as far as workarounds are concerned.
-
-johannes
+            Linus
