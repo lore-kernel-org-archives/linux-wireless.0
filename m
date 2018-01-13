@@ -1,126 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:48820 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751092AbeAUKhv (ORCPT
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:44242 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965312AbeAMAPO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Jan 2018 05:37:51 -0500
-Message-ID: <1516531063.2508.2.camel@sipsolutions.net> (sfid-20180121_113806_147231_156FC166)
-Subject: Re: [PATCH v4 10/10] nl80211: sanitize array index in
- parse_txq_params
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dan.j.williams@intel.com>,
-        linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, akpm@linux-foundation.org,
-        kernel-hardening@lists.openwall.com, gregkh@linuxfoundation.org,
-        Christian Lamparter <chunkeey@gmail.com>,
-        linux-wireless@vger.kernel.org, tglx@linutronix.de,
-        torvalds@linux-foundation.org,
-        "David S. Miller" <davem@davemloft.net>,
+        Fri, 12 Jan 2018 19:15:14 -0500
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFzNQ8CZ8iNcPXrCfyk=1edMiRGDA0fY0rd87BsFKBxgAw@mail.gmail.com>
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CA+55aFzNQ8CZ8iNcPXrCfyk=1edMiRGDA0fY0rd87BsFKBxgAw@mail.gmail.com>
+From: Tony Luck <tony.luck@gmail.com>
+Date: Fri, 12 Jan 2018 16:15:12 -0800
+Message-ID: <CA+8MBb+H0FqciBw9nSO9L0fNQtiRvc_1TREitH9z89YxhtyFAQ@mail.gmail.com> (sfid-20180113_011552_676770_D23DF8AD)
+Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative execution
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
         Elena Reshetova <elena.reshetova@intel.com>,
-        alan@linux.intel.com
-Date: Sun, 21 Jan 2018 11:37:43 +0100
-In-Reply-To: <151632015637.21271.10452415430644852207.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151632009605.21271.11304291057104672116.stgit@dwillia2-desk3.amr.corp.intel.com>
-         <151632015637.21271.10452415430644852207.stgit@dwillia2-desk3.amr.corp.intel.com>
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-01-18 at 16:02 -0800, Dan Williams wrote:
-> Wireless drivers rely on parse_txq_params to validate that
-> txq_params->ac is less than NL80211_NUM_ACS by the time the low-level
-> driver's ->conf_tx() handler is called. Use a new helper, 'array_idx',
-> to sanitize txq_params->ac with respect to speculation. I.e. ensure that
-> any speculation into ->conf_tx() handlers is done with a value of
-> txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
+On Thu, Jan 11, 2018 at 5:19 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> Should the array access in entry_SYSCALL_64_fastpath be made to use
+> the masking approach?
 
-Sorry, I didn't realize you were waiting for me to review.
+That one has a bounds check for an inline constant.
 
-LGTM.
+     cmpq    $__NR_syscall_max, %rax
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+so should be safe.
 
+The classic Spectre variant #1 code sequence is:
 
-> Reported-by: Christian Lamparter <chunkeey@gmail.com>
-> Reported-by: Elena Reshetova <elena.reshetova@intel.com>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: linux-wireless@vger.kernel.org
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  include/linux/nospec.h |   21 +++++++++++++++++++++
->  net/wireless/nl80211.c |   10 +++++++---
->  2 files changed, 28 insertions(+), 3 deletions(-)
-> 
-> diff --git a/include/linux/nospec.h b/include/linux/nospec.h
-> index f841c11f3f1f..8af35be1869e 100644
-> --- a/include/linux/nospec.h
-> +++ b/include/linux/nospec.h
-> @@ -41,4 +41,25 @@ static inline unsigned long array_ptr_mask(unsigned long idx, unsigned long sz)
->  	__u._bit &= _mask;						\
->  	__u._ptr;							\
->  })
-> +
-> +/**
-> + * array_idx - Generate a pointer to an array index, ensuring the
-> + * pointer is bounded under speculation to NULL.
-> + *
-> + * @idx: the index of the element, must be less than LONG_MAX
-> + * @sz: the number of elements in the array, must be less than LONG_MAX
-> + *
-> + * If @idx falls in the interval [0, @sz), returns &@idx otherwise
-> + * returns NULL.
-> + */
-> +#define array_idx(idx, sz)						\
-> +({									\
-> +	union { typeof((idx)) *_ptr; unsigned long _bit; } __u;		\
-> +	typeof(idx) *_i = &(idx);					\
-> +	unsigned long _mask = array_ptr_mask(*_i, (sz));		\
-> +									\
-> +	__u._ptr = _i;							\
-> +	__u._bit &= _mask;						\
-> +	__u._ptr;							\
-> +})
->  #endif /* __NOSPEC_H__ */
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 2b3dbcd40e46..202cb1dc03ee 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -16,6 +16,7 @@
->  #include <linux/nl80211.h>
->  #include <linux/rtnetlink.h>
->  #include <linux/netlink.h>
-> +#include <linux/nospec.h>
->  #include <linux/etherdevice.h>
->  #include <net/net_namespace.h>
->  #include <net/genetlink.h>
-> @@ -2056,20 +2057,23 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
->  static int parse_txq_params(struct nlattr *tb[],
->  			    struct ieee80211_txq_params *txq_params)
->  {
-> +	u8 ac, *idx;
-> +
->  	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
->  	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
->  	    !tb[NL80211_TXQ_ATTR_AIFS])
->  		return -EINVAL;
->  
-> -	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
-> +	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
->  	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
->  	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
->  	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
->  	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
->  
-> -	if (txq_params->ac >= NL80211_NUM_ACS)
-> +	idx = array_idx(ac, NL80211_NUM_ACS);
-> +	if (!idx)
->  		return -EINVAL;
-> -
-> +	txq_params->ac = *idx;
->  	return 0;
->  }
->  
-> 
-> 
+int array_size;
+
+       if (x < array_size) {
+               something with array[x]
+       }
+
+which runs into problems because the array_size variable may not
+be in cache, and while the CPU core is waiting for the value it
+speculates inside the "if" body.
+
+The syscall entry is more like:
+
+#define ARRAY_SIZE 10
+
+     if (x < ARRAY_SIZE) {
+          something with array[x]
+     }
+
+Here there isn't any reason for speculation. The core has the
+value of 'x' in a register and the upper bound encoded into the
+"cmp" instruction.  Both are right there, no waiting, no speculation.
+
+-Tony
