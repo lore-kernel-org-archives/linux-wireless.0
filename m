@@ -1,113 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44666 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751409AbeAWLf2 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:38758 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751128AbeANVeH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Jan 2018 06:35:28 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 23 Jan 2018 17:05:27 +0530
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com
-Subject: Re: [PATCH 1/2] cfg80211: Add support to notify station's opmode
- change to userspace
-In-Reply-To: <1516625287.2508.18.camel@sipsolutions.net>
-References: <1516173508-16528-1-git-send-email-tamizhr@codeaurora.org>
- <1516625287.2508.18.camel@sipsolutions.net>
-Message-ID: <7bf43e88a9460f06f1dd56ae3a75e138@codeaurora.org> (sfid-20180123_123543_551999_67F8BFED)
+        Sun, 14 Jan 2018 16:34:07 -0500
+From: Guenter Roeck <linux@roeck-us.net>
+To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Guenter Roeck <linux@roeck-us.net>,
+        Matt Redfearn <matt.redfearn@imgtec.com>,
+        James Hogan <jhogan@kernel.org>
+Subject: [PATCH] bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
+Date: Sun, 14 Jan 2018 13:34:02 -0800
+Message-Id: <1515965642-16259-1-git-send-email-linux@roeck-us.net> (sfid-20180114_223423_758782_DED420E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Mips builds with BCMA host mode enabled fail in mainline and -next
+with:
 
-Thanks for the code review comments, I'll address these comments and 
-send V2 patchset.
+In file included from include/linux/bcma/bcma.h:10:0,
+                 from drivers/bcma/bcma_private.h:9,
+		 from drivers/bcma/main.c:8:
+include/linux/bcma/bcma_driver_pci.h:218:24: error:
+	field 'pci_controller' has incomplete type
 
->> 
->>  /**
->> + * enum wiphy_opmode_info_flag - opmode information flags
->> + *
->> + * @MAX_BW_CHANGED: Max Bandwidth changed
->> + * @SMPS_MODE_CHANGED: SMPS mode changed
->> + * @N_SS_CHANGED: max N_SS (number of spatial streams) changed
->> + *
->> + */
->> +enum wiphy_opmode_info_flag {
->> +	MAX_BW_CHANGED		= BIT(0),
->> +	SMPS_MODE_CHANGED	= BIT(1),
->> +	N_SS_CHANGED		= BIT(2),
->> +};
-> 
-> These need to have some kind of common prefix, e.g.
-> STA_OPMODE_{BW,SMPS,NSS}_CHANGED
-> 
-> 
->>  /**
->> + * cfg80211_sta_opmode_change_notify - Station's SMPS mode, rx_nss 
->> and
->> + *	max bandwidth change event
-> 
-> need to find a shorter description - must fit on one line
-> 
->> + * @dev: network device
->> + * @mac: MAC address of a station which opmode got modified
->> + * @changed: contains value from &enum wiphy_opmode_info_flag
->> + * @smps_mode: New SMPS mode of a station
->> + * @bw: new max bandwidth value of a station
->> + * @rx_nss: new rx_nss value of a station
->> + * @gfp: context flags
->> + *
->> + * This function is called when station's opmode modified via action 
->> frame.
-> 
-> Rephrase, say "Drivers should call this function when ..."
-> 
->> +void cfg80211_sta_opmode_change_notify(struct net_device *dev, const 
->> u8 *mac,
->> +				       enum wiphy_opmode_info_flag changed,
->> +				       u8 smps_mode, u8 bw, u8 rx_nss,
->> +				       gfp_t gfp);
-> 
-> We may not want to add more, but pulling out those parameters "changed,
-> smps_mode, bw, rx_nss" into a small structure would IMHO be a good
-> idea.
-> 
->> + * @NL80211_CMD_STA_OPMODE_CHANGED: An event that notify station's
->> + *	ht opmode or vht opmode changes. This will use 
->> &NL80211_ATTR_SMPS_MODE,
->> + *	&NL80211_ATTR_CHANNEL_WIDTH, &NL80211_ATTR_NSS to send the event 
->> to
->> + *	userspace.
-> 
-> Should document that not all of those attributes may be included at all
-> times.
-> 
->> +void cfg80211_sta_opmode_change_notify(struct net_device *dev, const 
->> u8 *mac,
->> +				       enum wiphy_opmode_info_flag changed,
->> +				       u8 smps, u8 bw, u8 rx_nss, gfp_t gfp)
->> +{
->> +	struct sk_buff *msg;
->> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
->> +	struct cfg80211_registered_device *rdev = 
->> wiphy_to_rdev(wdev->wiphy);
->> +	void *hdr;
->> +
->> +	if (!mac)
->> +		return;
-> 
-> WARN_ON(), perhaps
-> 
->> +	if (mac && nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac))
->> +		goto nla_put_failure;
-> 
-> no need to check mac != NULL again
-> 
->> +nla_put_failure:
->> +	genlmsg_cancel(msg, hdr);
-> 
-> no need for cancel when you're going to free the message
-> 
-> johannes
+Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
+system type as generic") as the culprit. Analysis shows that the commmit
+changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
+disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
+defined if PCI_DRIVERS_LEGACY is enabled.
+
+Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
+PCI_DRIVERS_LEGACY. Add the missing dependency.
+
+Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
+Cc: Matt Redfearn <matt.redfearn@imgtec.com>
+Cc: James Hogan <jhogan@kernel.org>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+---
+I am aware that this problem has been reported several times. I have
+not been able to find a fix, but I may have missed it. If so, my
+apologies for the noise.
+
+Also note that this is not the only fix required; commit d41e6858ba58c,
+as simple as it looks like, does a pretty good job messing up
+"mips:allmodconfig" builds.
+
+ drivers/bcma/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index 02d78f6cecbb..ba8acca036df 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
+ 
+ config BCMA_DRIVER_PCI_HOSTMODE
+ 	bool "Driver for PCI core working in hostmode"
+-	depends on MIPS && BCMA_DRIVER_PCI
++	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY
+ 	help
+ 	  PCI core hostmode operation (external PCI bus).
+ 
+-- 
+2.7.4
