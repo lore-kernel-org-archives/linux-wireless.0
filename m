@@ -1,69 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36181 "EHLO
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33895 "EHLO
         mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754153AbeAKKbC (ORCPT
+        with ESMTP id S1751321AbeANVkw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jan 2018 05:31:02 -0500
-Received: by mail-pf0-f195.google.com with SMTP id 23so1335586pfp.3
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Jan 2018 02:31:02 -0800 (PST)
-Date: Thu, 11 Jan 2018 20:30:09 +1000
-From: Barry Day <briselec@gmail.com>
-To: Carlo Caione <carlo@endlessm.com>
-Cc: Jes Sorensen <Jes.Sorensen@gmail.com>, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org,
-        mylene.josserand@free-electrons.com,
-        Linux Upstreaming Team <linux@endlessm.com>
-Subject: Re: RTL8723bu: poor signal and connection troubles
-Message-ID: <20180111103006.GA17574@thinktank.home.org> (sfid-20180111_113106_194212_DE2E6877)
-References: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com>
+        Sun, 14 Jan 2018 16:40:52 -0500
+Subject: Re: [PATCH] bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Matt Redfearn <matt.redfearn@imgtec.com>,
+        James Hogan <jhogan@kernel.org>,
+        Linux MIPS Mailing List <linux-mips@linux-mips.org>
+References: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <db5915ed-fc50-292f-c86b-4da7f3f0eddd@roeck-us.net> (sfid-20180114_224121_724805_6481C179)
+Date: Sun, 14 Jan 2018 13:40:50 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com>
+In-Reply-To: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 10, 2018 at 12:15:51PM +0000, Carlo Caione wrote:
-> Hi,
-> this is a follow up email to [0] since the problem was never fully
-> investigated / solved and I keep seeing the same problem also on my
-> hardware.
-> 
-> Also in my case the hardware is a rtl8723bt transceiver
-> (0x0bda:0xb720), this time shipped on the internal USB bus in a cheap
-> laptop branded Zyrex Sky 232.
-> 
-> As already reported by Mylene the problem is that using this
-> transceiver and the latest Linus master you can barely see any WiFi
-> network around and also when a WiFi network is actually seen, the
-> connection is impossible since the signal strength is too low to have
-> a reliable connection. Of course during my tests BT is off and no BT
-> driver is probed at all.
-> 
-> Using the downstream driver at [1] everything works correctly.
-> 
-> I tried to debug a bit the issue, in particular comparing functions
-> and registers related to the antenna setup (.power_on, .enable_rf,
-> .phy_init_antenna_selection, .phy_iq_calibrate hooks) but everything
-> seems pretty much the same on the two drivers (even though slightly
-> differences do exist).
-> 
-> Any idea / suggestion on how to debug this problem? I guess it's worth
-> to start looking at this since several platforms are being affected
-> now.
-> 
-> Cheers,
-> 
-> [0] https://www.spinics.net/lists/netdev/msg468028.html
-> [1] https://github.com/lwfinger/rtl8723bu
-> 
-> -- 
-> Carlo Caione  |  +44.7384.69.16.04  |  Endless
+[ copying linux-mips ]
 
-I've found the same. The signal strength using the original driver
-from Realtek is significantly higher than when using rtl8xxxu.
-I also was not able to find anything wrong in the rtl8xxxu source code
-that would be causing the difference, which leads to the thought it is
-missing something that exists in the original driver.
+On 01/14/2018 01:34 PM, Guenter Roeck wrote:
+> Mips builds with BCMA host mode enabled fail in mainline and -next
+> with:
+> 
+> In file included from include/linux/bcma/bcma.h:10:0,
+>                   from drivers/bcma/bcma_private.h:9,
+> 		 from drivers/bcma/main.c:8:
+> include/linux/bcma/bcma_driver_pci.h:218:24: error:
+> 	field 'pci_controller' has incomplete type
+> 
+> Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
+> system type as generic") as the culprit. Analysis shows that the commmit
+> changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
+> disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
+> defined if PCI_DRIVERS_LEGACY is enabled.
+> 
+> Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
+> PCI_DRIVERS_LEGACY. Add the missing dependency.
+> 
+> Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
+> Cc: Matt Redfearn <matt.redfearn@imgtec.com>
+> Cc: James Hogan <jhogan@kernel.org>
+> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+> ---
+> I am aware that this problem has been reported several times. I have
+> not been able to find a fix, but I may have missed it. If so, my
+> apologies for the noise.
+> 
+I should have said "I have not been able to find a patch fixing it".
 
+> Also note that this is not the only fix required; commit d41e6858ba58c,
+> as simple as it looks like, does a pretty good job messing up
+> "mips:allmodconfig" builds.
+> 
+... nor did I find patch(es) fixing the other build problem(s) introduced
+by d41e6858ba58c.
 
-Barry Day
+Guenter
+
+>   drivers/bcma/Kconfig | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+> index 02d78f6cecbb..ba8acca036df 100644
+> --- a/drivers/bcma/Kconfig
+> +++ b/drivers/bcma/Kconfig
+> @@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
+>   
+>   config BCMA_DRIVER_PCI_HOSTMODE
+>   	bool "Driver for PCI core working in hostmode"
+> -	depends on MIPS && BCMA_DRIVER_PCI
+> +	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY
+>   	help
+>   	  PCI core hostmode operation (external PCI bus).
+>   
+> 
