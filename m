@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38194 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:36248 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750918AbeAPPwn (ORCPT
+        with ESMTP id S1750915AbeANK0k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 10:52:43 -0500
+        Sun, 14 Jan 2018 05:26:40 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: pkshih@realtek.com, yhchuang@realtek.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 09/10] rtlwifi: btcoex: Add common function for qeurying BT information
-References: <20180111070932.9929-1-pkshih@realtek.com>
-        <20180111070932.9929-10-pkshih@realtek.com>
-        <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net>
-Date: Tue, 16 Jan 2018 17:52:39 +0200
-In-Reply-To: <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net> (Larry
-        Finger's message of "Mon, 15 Jan 2018 13:15:59 -0600")
-Message-ID: <87wp0hztq0.fsf@purkki.adurom.net> (sfid-20180116_165246_927909_EC73D82B)
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "luca\@coelho.fi" <luca@coelho.fi>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho\, Luciano" <luciano.coelho@intel.com>
+Subject: Re: [PATCH 0/5] iwlwifi: updates intended for v4.16 2017-12-23
+References: <20171223092200.30270-1-luca@coelho.fi>
+        <871sivs48k.fsf@kamboji.qca.qualcomm.com>
+        <1515914548.7436.1.camel@intel.com>
+Date: Sun, 14 Jan 2018 12:26:35 +0200
+In-Reply-To: <1515914548.7436.1.camel@intel.com> (Emmanuel Grumbach's message
+        of "Sun, 14 Jan 2018 07:22:28 +0000")
+Message-ID: <87y3l07n38.fsf@codeaurora.org> (sfid-20180114_112645_211584_DF9A5AD7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-> On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
->> From: Ping-Ke Shih <pkshih@realtek.com>
+> On Fri, 2018-01-12 at 13:31 +0200, Kalle Valo wrote:
+>> From: Luca Coelho <luciano.coelho@intel.com>
 >>
->> This commit implement the common function to sort old features, and add
->> more new features that are get_supported_feature, get_supported_version,
->> get_ant_det_val, ble_scan_type, ble_scan_para, bt_dev_info,
->> forbidden_slot_val, afh_map and etc.
->>
->> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-
-[...]
-
->> @@ -459,6 +461,19 @@ typedef	bool (*bfp_btc_get)(void *btcoexist, u8 get_type, void *out_buf);
->>     typedef	bool (*bfp_btc_set)(void *btcoexist, u8 set_type, void
->> *in_buf);
->>   +typedef u32 (*bfp_btc_get_bt_coex_supported_feature)(void
->> *btcoexist);
->> +
->> +typedef u32 (*bfp_btc_get_bt_coex_supported_version)(void *btcoexist);
->> +
->> +typedef u8 (*bfp_btc_get_ant_det_val_from_bt)(void *btcoexist);
->> +
->> +typedef u8 (*bfp_btc_get_ble_scan_type_from_bt)(void *btcoexist);
->> +
->> +typedef u32 (*bfp_btc_get_ble_scan_para_from_bt)(void *btcoexist, u8 scan_type);
->> +
->> +typedef bool (*bfp_btc_get_bt_afh_map_from_bt)(void *btcoexist, u8 map_type,
->> +					       u8 *afh_map);
->> +
->>   typedef void (*bfp_btc_set_bt_reg)(void *btc_context, u8 reg_type, u32 offset,
->>   				   u32 value);
+>> > Luca Coelho (1):
+>> >   iwlwifi: mvm: check if mac80211_queue is valid in
+>> > iwl_mvm_disable_txq
+>> > 
+>> > Mordechay Goodstein (1):
+>> >   iwlwifi: set default timstamp marker cmd
+>> > 
+>> > Sara Sharon (3):
+>> >   iwlwifi: mvm: flip AMSDU addresses only for 9000 family
+>> >   iwlwifi: mvm: take RCU lock before dereferencing
+>> >   iwlwifi: mvm: move TSO segment to a separate function
+>> 
+>> Most likely the merge window starts in 9 days so I need to start
+>> getting patches ready. As Luca is away should I apply these patches
+>> directly to wireless-drivers-next?
+>> 
 >
-> I would prefer that you not add additional typedef statements, but I
-> will let it pass.
+> First let me thank you for tracking this. I don't see anything that we
+> really need in 4.16 here. Besides Luca's UBSAN warning, all the rest
+> is for a new device family which won't be supported in 4.16 anyway.
+>
+> So I opt to wait for Luca here.
 
-But I can't really take that :( Typedefs are not really liked in
-upstream and just makes code harder to read.
+Ok, I'll wait for him then.
 
 -- 
 Kalle Valo
