@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40128 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932079AbeADOmo (ORCPT
+Received: from isilmar-4.linta.de ([136.243.71.142]:55610 "EHLO
+        isilmar-4.linta.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751622AbeANSML (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jan 2018 09:42:44 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, luca@coelho.fi,
-        sara.sharon@intel.com, stable@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: pcie: fix DMA memory mapping / unmapping
-References: <20180104071913.15470-1-emmanuel.grumbach@intel.com>
-Date: Thu, 04 Jan 2018 16:42:40 +0200
-In-Reply-To: <20180104071913.15470-1-emmanuel.grumbach@intel.com> (Emmanuel
-        Grumbach's message of "Thu, 4 Jan 2018 09:19:13 +0200")
-Message-ID: <87r2r57kin.fsf@kamboji.qca.qualcomm.com> (sfid-20180104_154257_537225_DFB30C65)
+        Sun, 14 Jan 2018 13:12:11 -0500
+Date: Sun, 14 Jan 2018 19:03:38 +0100
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: johannes.berg@intel.com
+Cc: regressions@leemhuis.info, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] nl80211: take RCU read lock when calling
+ ieee80211_bss_get_ie()
+Message-ID: <20180114180338.GA1569@light.dominikbrodowski.net> (sfid-20180114_191214_897937_AE8397B8)
+References: <20171222072012.GA3110@light.dominikbrodowski.net>
+ <20171230131132.GA2624@light.dominikbrodowski.net>
+ <20180108100403.GA4715@light.dominikbrodowski.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180108100403.GA4715@light.dominikbrodowski.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+As ieee80211_bss_get_ie() derefences an RCU, it needs to be called with
+rcu_read_lock held.
 
-> 22000 devices (previously referenced as A000) can support
-> short transmit queues. This means that we have less DMA
-> descriptors (TFD) for those shorter queues.
-> Previous devices must still have 256 TFDs for each queue
-> even if those 256 TFDs point to fewer buffers.
->
-> When I introduced support for the short queues for 22000
-> I broke older devices by assuming that they can also have
-> less TFDs in their queues. This led to several problems:
->
-> 1) the payload of the commands weren't unmapped properly
->    which caused the SWIOTLB to complain at some point.
-> 2) the hardware could get confused and we get hardware
->    crashes.
->
-> The corresponding bugzilla entries are:
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=198201
-> https://bugzilla.kernel.org/show_bug.cgi?id=198265
->
-> Cc: stable@vger.kernel.org # 4.14+
-> Fixes: 4ecab5616023 ("iwlwifi: pcie: support short Tx queues for A000 device family")
-> Reviewed-by: Sharon, Sara <sara.sharon@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
-> Hi Kalle,
->
-> Luca is on vacation is 4.15 will be closed soon.
-> I am fixing here a bug that caused much troube on our side.
-> There are two bugzillas on it. Users on both bugs validated
-> this fix.
-> Please apply this on wireless-drivers.git directly and I'll sync
-> with Luca when he'll be back.
+Fixes: 44905265bc15 ("nl80211: don't expose wdev->ssid for most interfaces")
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+---
 
-Ok, I'll queue this for 4.15.
+This patch fixes the regression I reported in the last couple of weeks for
+various v4.15-rcX revisions to netdev, where a "suspicious RCU usage"
+showed up in net/wireless/util.c:778.
 
--- 
-Kalle Valo
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2b3dbcd40e46..1eecc249fb5e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2618,8 +2618,10 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 		const u8 *ssid_ie;
+ 		if (!wdev->current_bss)
+ 			break;
++		rcu_read_lock();
+ 		ssid_ie = ieee80211_bss_get_ie(&wdev->current_bss->pub,
+ 					       WLAN_EID_SSID);
++		rcu_read_unlock();
+ 		if (!ssid_ie)
+ 			break;
+ 		if (nla_put(msg, NL80211_ATTR_SSID, ssid_ie[1], ssid_ie + 2))
