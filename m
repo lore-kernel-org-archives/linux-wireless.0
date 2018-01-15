@@ -1,82 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55322 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751834AbeAaG7J (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36390 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752357AbeAOMBM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 01:59:09 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Shrenik Shikhare <shrenik@marvell.com>
-Subject: RE: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX
- stall
-Date: Wed, 31 Jan 2018 06:59:04 +0000
-Message-ID: <26222638cf1645ba85436c1243fbc1bc@SC-EXCH02.marvell.com> (sfid-20180131_075922_548764_5CFC699D)
-References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
- <20180125071202.0F39560A60@smtp.codeaurora.org>
- <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
- <20180125183355.rpmajajr5exxcybb@ban.mtv.corp.google.com>
- <25201a91958e4b408b14c4125433b305@SC-EXCH02.marvell.com>
- <CA+ASDXPkrVgsRH--ETzMNXRQeu-akGn8hZVYT=YpG+5ZpggMTQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Mon, 15 Jan 2018 07:01:12 -0500
+Message-ID: <1516017667.410.12.camel@sipsolutions.net> (sfid-20180115_130149_501208_4FA13D95)
+Subject: Re: WARNING in rfkill_alloc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: syzbot <syzbot+1ddfb3357e1d7bb5b5d3@syzkaller.appspotmail.com>,
+        David Miller <davem@davemloft.net>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        syzkaller-bugs@googlegroups.com
+Date: Mon, 15 Jan 2018 13:01:07 +0100
+In-Reply-To: <CACT4Y+aO8kwS+ketv3rr0x3EecZ6j+7ep8Ag6PuTirO00SqRtw@mail.gmail.com> (sfid-20180115_101229_108798_C47519CB)
+References: <089e08282cc03493040562b0079c@google.com>
+         <1516006661.410.6.camel@sipsolutions.net>
+         <CACT4Y+aO8kwS+ketv3rr0x3EecZ6j+7ep8Ag6PuTirO00SqRtw@mail.gmail.com>
+         (sfid-20180115_101229_108798_C47519CB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQnJpYW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogR2FuYXBh
-dGhpIEJoYXQNCj4gU2VudDogVHVlc2RheSwgSmFudWFyeSAzMCwgMjAxOCA4OjU1IFBNDQo+IFRv
-OiAnQnJpYW4gTm9ycmlzJw0KPiBDYzogS2FsbGUgVmFsbzsgbGludXgtd2lyZWxlc3NAdmdlci5r
-ZXJuZWwub3JnOyBDYXRoeSBMdW87IFhpbm1pbmcgSHU7DQo+IFpoaXl1YW4gWWFuZzsgSmFtZXMg
-Q2FvOyBNYW5nZXNoIE1hbHVzYXJlOyBTaHJlbmlrIFNoaWtoYXJlDQo+IFN1YmplY3Q6IFJFOiBb
-RVhUXSBSZTogWzIvMl0gbXdpZmlleDogdXNlIG1vcmVfcnhfdGFza19mbGFnIHRvIGF2b2lkIFVT
-QiBSWA0KPiBzdGFsbA0KPg0KPiBIaSBCcmlhbiwNCj4NCj4gPiAtLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KPiA+IEZyb206IEJyaWFuIE5vcnJpcyBbbWFpbHRvOmJyaWFubm9ycmlzQGNocm9t
-aXVtLm9yZ10NCj4gPiBTZW50OiBUdWVzZGF5LCBKYW51YXJ5IDMwLCAyMDE4IDM6MzggQU0NCj4g
-PiBUbzogR2FuYXBhdGhpIEJoYXQNCj4gPiBDYzogS2FsbGUgVmFsbzsgbGludXgtd2lyZWxlc3NA
-dmdlci5rZXJuZWwub3JnOyBDYXRoeSBMdW87IFhpbm1pbmcgSHU7DQo+ID4gWmhpeXVhbiBZYW5n
-OyBKYW1lcyBDYW87IE1hbmdlc2ggTWFsdXNhcmU7IFNocmVuaWsgU2hpa2hhcmUNCj4gPiBTdWJq
-ZWN0OiBSZTogW0VYVF0gUmU6IFsyLzJdIG13aWZpZXg6IHVzZSBtb3JlX3J4X3Rhc2tfZmxhZyB0
-byBhdm9pZA0KPiA+IFVTQiBSWCBzdGFsbA0KPiA+DQo+ID4gSGksDQo+ID4NCj4gPiBPbiBTdW4s
-IEphbiAyOCwgMjAxOCBhdCAxMToxOSBQTSwgR2FuYXBhdGhpIEJoYXQgPGdiaGF0QG1hcnZlbGwu
-Y29tPg0KPiA+IHdyb3RlOg0KPiA+ID4+IEZyb206IEdhbmFwYXRoaSBCaGF0DQo+ID4gPj4gPiBG
-cm9tOiBCcmlhbiBOb3JyaXMgW21haWx0bzpicmlhbm5vcnJpc0BjaHJvbWl1bS5vcmddIE9uIFRo
-dSwgSmFuDQo+ID4gPj4gPiAyNSwgMjAxOCBhdCAwOTo1OTowNEFNICswMDAwLCBHYW5hcGF0aGkg
-QmhhdCB3cm90ZToNCj4gPiA+PiA+ID4gPiBJIGNhbid0IGZpbmQgYW55IGNvbW1pdCB3aXRoIGlk
-IGM3ZGJkY2IyYTRlMSwgaXMgaXQgY29ycmVjdD8NCj4gPiA+PiA+ID4gQ29ycmVjdC4gQWN0dWFs
-bHkgdGhlIGNvbW1pdCBpZCBjN2RiZGNiMmE0ZTEgaXMgdGhlIFBBVENIIFsxLzJdDQo+ID4gPj4g
-PiA+IHNlbnQgaW4gdGhpcw0KPiA+ID4+ID4gc2VyaWVzLg0KPiA+ID4+ID4NCj4gPiA+PiA+IFdo
-YXQ/IFdoeSB3b3VsZCB5b3UgaW50cm9kdWNlIGEgYnVnIGFuZCBvbmx5IGZpeCBpdCBpbiB0aGUg
-bmV4dA0KPiBwYXRjaD8NCj4gPiA+PiBXaXRoIHRoZSBmaXJzdCBwYXRjaCB0aGUgb3JpZ2luYWwg
-aXNzdWUgdG9vayBjb25zaWRlcmFibHkgbG9uZ2VyDQo+ID4gPj4gdGltZSB0byByZWNyZWF0ZS4g
-QWxzbyBpdCBmb2xsb3dlZCBhIGRpZmZlcmVudCBwYXRoIHRvIGdldA0KPiA+ID4+IHJlY3JlYXRl
-ZChzaGFyZWQgaW4gY29tbWl0IG1lc3NhZ2UpLg0KPiA+ID4+ID4gRG9lcyB0aGF0IG1lYW4geW91
-IHNob3VsZCBqdXN0IGNvbWJpbmUgdGhlIHR3bz8NCj4gPiA+PiBMZXQgdXMga25vdyBpZiB0aGF0
-IGlzIGZpbmUgdG8gbWVyZ2UgdGhlbS4gV2UgY2FuIG1vZGlmeSB0aGUgY29tbWl0DQo+ID4gPj4g
-bWVzc2FnZSBhY2NvcmRpbmdseS4NCj4gPiA+PiA+IE9yIHJldmVyc2UgdGhlIG9yZGVyLCBpZiBw
-YXRjaCAyIGRvZXNuJ3QgY2F1c2UgcHJvYmxlbXMgb24gaXRzIG93bj8NCj4gPiA+PiBQYXRjaCAy
-IGhhcyBhIGRlcGVuZGVuY3kgb24gcGF0Y2ggMS4NCj4gPiA+IE9uZSBjb3JyZWN0aW9uLiBUaGVy
-ZSBpcyBubyBjb21taXQgZGVwZW5kZW5jeSBiZXR3ZWVuIHBhdGNoIDEgYW5kDQo+ID4gMih0aGV5
-IGNhbiBiZSBhcHBsaWVkIGluIGFueSBvcmRlcikuIEJ1dCB0aGUgcmVzdWx0IHdvdWxkIGJlIHNh
-bWUuIFdlDQo+ID4gbmVlZCBib3RoIGZpeGVzLiBMZXQgdXMga25vdyBpZiB3ZSBjYW4gY29tYmlu
-ZSB0aGVtLg0KPiA+DQo+ID4gSSBoYXZlbid0IGNsb3NlbHkgbG9va2VkIGF0IHBhdGNoIDIgeWV0
-LiBNeSBvbmx5IHN0YXRlbWVudCB3YXMgdGhhdCBpdA0KPiA+IG1ha2VzIG5vIHNlbnNlIHRvIGhh
-dmUgMiBjb21taXRzLCB3aXRoIHRoZSBzZWNvbmQgb25lIGxhYmVsZWQgYXMNCj4gPiAiRml4aW5n
-IiB0aGUgZmlyc3Qgb25lLiBGcm9tIHlvdXIgZGVzY3JpcHRpb25zLCBpdCBzb3VuZHMgbGlrZSBw
-YXRjaCAyDQo+ID4gc2hvdWxkIGFjdHVhbGx5IGNvbWUgZmlyc3QsDQo+IE9rLiBJIHVuZGVyc3Rh
-bmQuIEkgd2lsbCByZW9yZGVyIHRoZW0gYW5kIHNlbmQgdjMoYWxvbmcgd2l0aCBzcGlubG9jaw0K
-PiBjaGFuZ2UpLg0KSSB3YXMgdHJ5aW5nIHRvIHJlb3JkZXIgdGhlIHBhdGNoIGJ1dCBmb3VuZCBw
-YXRjaCAyIGlzIGluZGVlZCBkZXBlbmRlbnQgb24gcGF0Y2ggMS4gQ29uc2lkZXIgdGhlIGZpcnN0
-IHBvaW50IGluIGNvbW1pdCBtZXNzYWdlIG9mIHBhdGNoIDI6DQoxLiBVU0IgcmVjZWl2ZXMgYW4g
-UlggZGF0YSBpbnRlcnJ1cHQsIHF1ZXVlcyByeF93b3JrDQpUaGlzIGlzIHRoZSBjaGFuZ2UgYWRk
-ZWQgaW4gcGF0Y2ggMS4gRWFybGllciBvbiByZWNlaXZlIG9mIFJYIGRhdGEgaW50ZXJydXB0LCBk
-cml2ZXIgd291bGQgcXVldWUgbWFpbl93b3JrLCB3aGljaCBpbiB0dXJuIHF1ZXVlZCByeF93b3Jr
-LiBCdXQgYWZ0ZXIgcGF0Y2ggMSBkcml2ZXIgdHJpZXMgdG8gIHF1ZXVlIHJ4X3dvcmsgaW4gaW50
-ZXJydXB0IGNvbnRleHQuDQoNCkxldCB1cyBwbGVhc2Uga25vdyB5b3VyIHRob3VnaHRzIG9uIHRo
-aXMuDQoNCj4gPiBidXQgSSdtIG5vdCByZWFsbHkgc3VyZS4gSSBvbmx5IGxvb2tlZCBmYXIgZW5v
-dWdoIHRvIHNheSB0aGF0IEkgZGlkbid0DQo+ID4gbGlrZSBwYXRjaA0KPiA+IDEgYXMtaXMgOikN
-Cj4gPg0KPiA+IEJyaWFuDQo+IFJlZ2FyZHMsDQo+IEdhbmFwYXRoaQ0K
+On Mon, 2018-01-15 at 10:12 +0100, Dmitry Vyukov wrote:
+
+> However, there can be some surprising things, for example, executing
+> one ioctl/setsockopt with data meant for another one, or these
+> 0xffffffffffffffff are actually mean 0 (for involved reasons), 
+
+I think those fff was actually what was throwing me off.
+
+> or we
+> can simply have bugs in these descriptions so they don't match C
+> structures and then all data is messed/shifted.
+
+No, I think this part was OK.
+
+> If this representation does not make sense to you right away, your
+> best bet is looking at/running the C reproducer where you can see true
+> data layout:
+> 
+> 
+[...]
+Yeah, good point, I should've just done that.
+
+> > Ah, then again, now I see the fault injection - I guess dev_set_name()
+> > just failed and we didn't check the return value, will fix that.
+> 
+> Yes, it's highly likely the root cause. The raw.log file shows there
+> there was an immediately preceding fault in kmalloc in the same
+> process, in a close stack.
+
+Yep, I submitted the fix now (with the correct reported-by).
+
+Also for the other one, the wiphy_register() warning.
+
+johannes
