@@ -1,217 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:53644 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754350AbeALKDF (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:43602 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751390AbeAOSvX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 05:03:05 -0500
-Date: Fri, 12 Jan 2018 10:02:08 +0000
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
-        kernel-hardening@lists.openwall.com,
-        Peter Zijlstra <peterz@infradead.org>,
-        Alan Cox <alan.cox@intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        x86@kernel.org, Ingo Molnar <mingo@redhat.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        linux-media@vger.kernel.org,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        tglx@linutronix.de, Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        netdev@vger.kernel.org, akpm@linux-foundation.org,
-        torvalds@linux-foundation.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative
- execution
-Message-ID: <20180112100208.GX17719@n2100.armlinux.org.uk> (sfid-20180112_110327_174591_6FDAA710)
-References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+        Mon, 15 Jan 2018 13:51:23 -0500
+Received: by mail-oi0-f66.google.com with SMTP id t16so8915361oif.10
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 10:51:23 -0800 (PST)
+Subject: Re: [PATCH v2 03/10] rtlwifi: Add sta_statistics of mac80211's op,
+ and set filled=0 by default
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: yhchuang@realtek.com, linux-wireless@vger.kernel.org
+References: <20180111070932.9929-1-pkshih@realtek.com>
+ <20180111070932.9929-4-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <4cc39629-a768-60cd-6e75-841f90560114@lwfinger.net> (sfid-20180115_195135_485606_AE5CFB42)
+Date: Mon, 15 Jan 2018 12:51:21 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <20180111070932.9929-4-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do you think that the appropriate patches could be copied to the
-appropriate people please?
-
-On Thu, Jan 11, 2018 at 04:46:24PM -0800, Dan Williams wrote:
-> Changes since v1 [1]:
-> * fixup the ifence definition to use alternative_2 per recent AMD
->   changes in tip/x86/pti (Tom)
+On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
 > 
-> * drop 'nospec_ptr' (Linus, Mark)
+> When using iwconfig to check wifi status, wext uses 'static struct' of
+> sinfo to get station info so sinfo->filled will be persistent. Since the
+> commit 2b9a7e1bac24 ("mac80211: allow drivers to provide most station
+> statistics") assumes driver initializes sinfo->filled to declare supported
+> fields, without initialization it will report wrong info. This commit
+> simply set 'filled' to be zero simply, and left sinfo to be filled by
+> mac80211.
 > 
-> * rename 'nospec_array_ptr' to 'array_ptr' (Alexei)
-> 
-> * rename 'nospec_barrier' to 'ifence' (Peter, Ingo)
-> 
-> * clean up occasions of 'variable assignment in if()' (Sergei, Stephen)
-> 
-> * make 'array_ptr' use a mask instead of an architectural ifence by
->   default (Linus, Alexei)
-> 
-> * provide a command line and compile-time opt-in to the ifence
->   mechanism, if an architecture provides 'ifence_array_ptr'.
-> 
-> * provide an optimized mask generation helper, 'array_ptr_mask', for
->   x86 (Linus)
-> 
-> * move 'get_user' hardening from '__range_not_ok' to '__uaccess_begin'
->   (Linus)
-> 
-> * drop "Thermal/int340x: prevent bounds-check..." since userspace does
->   not have arbitrary control over the 'trip' index (Srinivas)
-> 
-> * update the changelog of "net: mpls: prevent bounds-check..." and keep
->   it in the series to continue the debate about Spectre hygiene patches.
->   (Eric).
-> 
-> * record a reviewed-by from Laurent on "[media] uvcvideo: prevent
->   bounds-check..."
-> 
-> * update the cover letter
-> 
-> [1]: https://lwn.net/Articles/743376/
-> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 > ---
-> 
-> Quoting Mark's original RFC:
-> 
-> "Recently, Google Project Zero discovered several classes of attack
-> against speculative execution. One of these, known as variant-1, allows
-> explicit bounds checks to be bypassed under speculation, providing an
-> arbitrary read gadget. Further details can be found on the GPZ blog [2]
-> and the Documentation patch in this series."
-> 
-> This series incorporates Mark Rutland's latest ARM changes and adds
-> the x86 specific implementation of 'ifence_array_ptr'. That ifence
-> based approach is provided as an opt-in fallback, but the default
-> mitigation, '__array_ptr', uses a 'mask' approach that removes
-> conditional branches instructions, and otherwise aims to redirect
-> speculation to use a NULL pointer rather than a user controlled value.
-> 
-> The mask is generated by the following from Alexei, and Linus:
-> 
->     mask = ~(long)(_i | (_s - 1 - _i)) >> (BITS_PER_LONG - 1);
-> 
-> ...and Linus provided an optimized mask generation helper for x86:
-> 
->     asm ("cmpq %1,%2; sbbq %0,%0;"
-> 		:"=r" (mask)
-> 		:"r"(sz),"r" (idx)
-> 		:"cc");
-> 
-> The 'array_ptr' mechanism can be switched between 'mask' and 'ifence'
-> via the spectre_v1={mask,ifence} command line option, and the
-> compile-time default is set by selecting either CONFIG_SPECTRE1_MASK or
-> CONFIG_SPECTRE1_IFENCE.
-> 
-> The 'array_ptr' infrastructure is the primary focus this patch set. The
-> individual patches that perform 'array_ptr' conversions are a point in
-> time (i.e. earlier kernel, early analysis tooling, x86 only etc...)
-> start at finding some of these gadgets.
-> 
-> Another consideration for reviewing these patches is the 'hygiene'
-> argument. When a patch refers to hygiene it is concerned with stopping
-> speculation on an unconstrained or insufficiently constrained pointer
-> value under userspace control. That by itself is not sufficient for
-> attack (per current understanding) [3], but it is a necessary
-> pre-condition.  So 'hygiene' refers to cleaning up those suspect
-> pointers regardless of whether they are usable as a gadget.
-> 
-> These patches are also be available via the 'nospec-v2' git branch
-> here:
-> 
->     git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec-v2
-> 
-> Note that the BPF fix for Spectre variant1 is merged in the bpf.git
-> tree [4], and is not included in this branch.
-> 
-> [2]: https://googleprojectzero.blogspot.co.uk/2018/01/reading-privileged-memory-with-side.html
-> [3]: https://spectreattack.com/spectre.pdf
-> [4]: https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf.git/commit/?id=b2157399cc98
-> 
-> ---
-> 
-> Dan Williams (16):
->       x86: implement ifence()
->       x86: implement ifence_array_ptr() and array_ptr_mask()
->       asm-generic/barrier: mask speculative execution flows
->       x86: introduce __uaccess_begin_nospec and ASM_IFENCE
->       x86: use __uaccess_begin_nospec and ASM_IFENCE in get_user paths
->       ipv6: prevent bounds-check bypass via speculative execution
->       ipv4: prevent bounds-check bypass via speculative execution
->       vfs, fdtable: prevent bounds-check bypass via speculative execution
->       userns: prevent bounds-check bypass via speculative execution
->       udf: prevent bounds-check bypass via speculative execution
->       [media] uvcvideo: prevent bounds-check bypass via speculative execution
->       carl9170: prevent bounds-check bypass via speculative execution
->       p54: prevent bounds-check bypass via speculative execution
->       qla2xxx: prevent bounds-check bypass via speculative execution
->       cw1200: prevent bounds-check bypass via speculative execution
->       net: mpls: prevent bounds-check bypass via speculative execution
-> 
-> Mark Rutland (3):
->       Documentation: document array_ptr
->       arm64: implement ifence_array_ptr()
->       arm: implement ifence_array_ptr()
-> 
->  Documentation/speculation.txt            |  142 ++++++++++++++++++++++++++++++
->  arch/arm/Kconfig                         |    1 
->  arch/arm/include/asm/barrier.h           |   24 +++++
->  arch/arm64/Kconfig                       |    1 
->  arch/arm64/include/asm/barrier.h         |   24 +++++
->  arch/x86/Kconfig                         |    3 +
->  arch/x86/include/asm/barrier.h           |   46 ++++++++++
->  arch/x86/include/asm/msr.h               |    3 -
->  arch/x86/include/asm/smap.h              |    4 +
->  arch/x86/include/asm/uaccess.h           |   16 +++
->  arch/x86/include/asm/uaccess_32.h        |    6 +
->  arch/x86/include/asm/uaccess_64.h        |   12 +--
->  arch/x86/lib/copy_user_64.S              |    3 +
->  arch/x86/lib/usercopy_32.c               |    8 +-
->  drivers/media/usb/uvc/uvc_v4l2.c         |    9 +-
->  drivers/net/wireless/ath/carl9170/main.c |    7 +
->  drivers/net/wireless/intersil/p54/main.c |    9 +-
->  drivers/net/wireless/st/cw1200/sta.c     |   11 +-
->  drivers/net/wireless/st/cw1200/wsm.h     |    4 -
->  drivers/scsi/qla2xxx/qla_mr.c            |   17 ++--
->  fs/udf/misc.c                            |   40 +++++---
->  include/linux/fdtable.h                  |    7 +
->  include/linux/nospec.h                   |   71 +++++++++++++++
->  kernel/Kconfig.nospec                    |   31 +++++++
->  kernel/Makefile                          |    1 
->  kernel/nospec.c                          |   52 +++++++++++
->  kernel/user_namespace.c                  |   11 +-
->  lib/Kconfig                              |    3 +
->  net/ipv4/raw.c                           |   10 +-
->  net/ipv6/raw.c                           |   10 +-
->  net/mpls/af_mpls.c                       |   12 +--
->  31 files changed, 521 insertions(+), 77 deletions(-)
->  create mode 100644 Documentation/speculation.txt
->  create mode 100644 include/linux/nospec.h
->  create mode 100644 kernel/Kconfig.nospec
->  create mode 100644 kernel/nospec.c
-> 
+>   drivers/net/wireless/realtek/rtlwifi/core.c | 10 ++++++++++
+>   1 file changed, 10 insertions(+)
 
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
-According to speedtest.net: 8.21Mbps down 510kbps up
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+> index a78b828f531a..ec639fa8095e 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+> @@ -992,6 +992,15 @@ static int _rtl_get_hal_qnum(u16 queue)
+>   	return qnum;
+>   }
+>   
+> +static void rtl_op_sta_statistics(struct ieee80211_hw *hw,
+> +				  struct ieee80211_vif *vif,
+> +				  struct ieee80211_sta *sta,
+> +				  struct station_info *sinfo)
+> +{
+> +	/* nothing filled by driver, so mac80211 will update all info */
+> +	sinfo->filled = 0;
+> +}
+> +
+>   /*
+>    *for mac80211 VO = 0, VI = 1, BE = 2, BK = 3
+>    *for rtl819x  BE = 0, BK = 1, VI = 2, VO = 3
+> @@ -1878,6 +1887,7 @@ const struct ieee80211_ops rtl_ops = {
+>   	.config = rtl_op_config,
+>   	.configure_filter = rtl_op_configure_filter,
+>   	.set_key = rtl_op_set_key,
+> +	.sta_statistics = rtl_op_sta_statistics,
+>   	.conf_tx = rtl_op_conf_tx,
+>   	.bss_info_changed = rtl_op_bss_info_changed,
+>   	.get_tsf = rtl_op_get_tsf,
+> 
