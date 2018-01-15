@@ -1,129 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:15544 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753389AbeAFBSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Jan 2018 20:18:08 -0500
-Subject: [PATCH 00/18] prevent bounds-check bypass via speculative execution
-From: Dan Williams <dan.j.williams@intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: Mark Rutland <mark.rutland@arm.com>, peterz@infradead.org,
-        Alan Cox <alan.cox@intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        x86@kernel.org, Ingo Molnar <mingo@redhat.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Zhang Rui <rui.zhang@intel.com>, linux-media@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
-        Eduardo Valentin <edubezval@gmail.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        tglx@linutronix.de, Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        netdev@vger.kernel.org, torvalds@linux-foundation.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Date: Fri, 05 Jan 2018 17:09:53 -0800
-Message-ID: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180106_022413_905687_D118395D)
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:43450 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750844AbeAOSxH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jan 2018 13:53:07 -0500
+Received: by mail-ot0-f193.google.com with SMTP id p36so3425843otd.10
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 10:53:07 -0800 (PST)
+Subject: Re: [PATCH v2 04/10] rtlwifi: unlink bss when un-association
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: yhchuang@realtek.com, linux-wireless@vger.kernel.org
+References: <20180111070932.9929-1-pkshih@realtek.com>
+ <20180111070932.9929-5-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <9899e626-8b3d-a2fc-b8c7-c227c66453ed@lwfinger.net> (sfid-20180115_195314_473244_505A2EAE)
+Date: Mon, 15 Jan 2018 12:53:05 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180111070932.9929-5-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Mark's original RFC:
+On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
+> From: Tsang-Shian Lin <thlin@realtek.com>
+> 
+> When AP change bandwidth setting from 20M to 40M, STA may use old 20M AP
+> information to association with AP. Driver unlink bss in the
+> .bss_info_changed of ieee80211_ops to make sure that later scan can get
+> correct AP bandwidth capability.
+> 
+> Signed-off-by: Tsang-Shian Lin <thlin@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/core.c | 18 ++++++++++++++++++
+>   1 file changed, 18 insertions(+)
 
-"Recently, Google Project Zero discovered several classes of attack
-against speculative execution. One of these, known as variant-1, allows
-explicit bounds checks to be bypassed under speculation, providing an
-arbitrary read gadget. Further details can be found on the GPZ blog [1]
-and the Documentation patch in this series."
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-This series incorporates Mark Rutland's latest api and adds the x86
-specific implementation of nospec_barrier. The
-nospec_{array_ptr,ptr,barrier} helpers are then combined with a kernel
-wide analysis performed by Elena Reshetova to address static analysis
-reports where speculative execution on a userspace controlled value
-could bypass a bounds check. The patches address a precondition for the
-attack discussed in the Spectre paper [2].
 
-A consideration worth noting for reviewing these patches is to weigh the
-dramatic cost of being wrong about whether a given report is exploitable
-vs the overhead nospec_{array_ptr,ptr} may introduce. In other words,
-lets make the bar for applying these patches be "can you prove that the
-bounds check bypass is *not* exploitable". Consider that the Spectre
-paper reports one example of a speculation window being ~180 cycles.
-
-Note that there is also a proposal from Linus, array_access [3], that
-attempts to quash speculative execution past a bounds check without
-introducing an lfence instruction. That may be a future optimization
-possibility that is compatible with this api, but it would appear to
-need guarantees from the compiler that it is not clear the kernel can
-rely on at this point. It is also not clear that it would be a
-significant performance win vs lfence.
-
-These patches also will also be available via the 'nospec' git branch
-here:
-
-    git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec
-
-[1]: https://googleprojectzero.blogspot.co.uk/2018/01/reading-privileged-memory-with-side.html
-[2]: https://spectreattack.com/spectre.pdf
-[3]: https://marc.info/?l=linux-kernel&m=151510446027625&w=2
-
----
-
-Andi Kleen (1):
-      x86, barrier: stop speculation for failed access_ok
-
-Dan Williams (13):
-      x86: implement nospec_barrier()
-      [media] uvcvideo: prevent bounds-check bypass via speculative execution
-      carl9170: prevent bounds-check bypass via speculative execution
-      p54: prevent bounds-check bypass via speculative execution
-      qla2xxx: prevent bounds-check bypass via speculative execution
-      cw1200: prevent bounds-check bypass via speculative execution
-      Thermal/int340x: prevent bounds-check bypass via speculative execution
-      ipv6: prevent bounds-check bypass via speculative execution
-      ipv4: prevent bounds-check bypass via speculative execution
-      vfs, fdtable: prevent bounds-check bypass via speculative execution
-      net: mpls: prevent bounds-check bypass via speculative execution
-      udf: prevent bounds-check bypass via speculative execution
-      userns: prevent bounds-check bypass via speculative execution
-
-Mark Rutland (4):
-      asm-generic/barrier: add generic nospec helpers
-      Documentation: document nospec helpers
-      arm64: implement nospec_ptr()
-      arm: implement nospec_ptr()
-
- Documentation/speculation.txt                      |  166 ++++++++++++++++++++
- arch/arm/include/asm/barrier.h                     |   75 +++++++++
- arch/arm64/include/asm/barrier.h                   |   55 +++++++
- arch/x86/include/asm/barrier.h                     |    6 +
- arch/x86/include/asm/uaccess.h                     |   17 ++
- drivers/media/usb/uvc/uvc_v4l2.c                   |    7 +
- drivers/net/wireless/ath/carl9170/main.c           |    6 -
- drivers/net/wireless/intersil/p54/main.c           |    8 +
- drivers/net/wireless/st/cw1200/sta.c               |   10 +
- drivers/net/wireless/st/cw1200/wsm.h               |    4 
- drivers/scsi/qla2xxx/qla_mr.c                      |   15 +-
- .../thermal/int340x_thermal/int340x_thermal_zone.c |   14 +-
- fs/udf/misc.c                                      |   39 +++--
- include/asm-generic/barrier.h                      |   68 ++++++++
- include/linux/fdtable.h                            |    5 -
- kernel/user_namespace.c                            |   10 -
- net/ipv4/raw.c                                     |    9 +
- net/ipv6/raw.c                                     |    9 +
- net/mpls/af_mpls.c                                 |   12 +
- 19 files changed, 466 insertions(+), 69 deletions(-)
- create mode 100644 Documentation/speculation.txt
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+> index ec639fa8095e..6c698123ac07 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+> @@ -1171,6 +1171,8 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
+>   			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
+>   				 "BSS_CHANGED_ASSOC\n");
+>   		} else {
+> +			struct cfg80211_bss *bss = NULL;
+> +
+>   			mstatus = RT_MEDIA_DISCONNECT;
+>   
+>   			if (mac->link_state == MAC80211_LINKED)
+> @@ -1178,6 +1180,22 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
+>   			if (ppsc->p2p_ps_info.p2p_ps_mode > P2P_PS_NONE)
+>   				rtl_p2p_ps_cmd(hw, P2P_PS_DISABLE);
+>   			mac->link_state = MAC80211_NOLINK;
+> +
+> +			bss = cfg80211_get_bss(hw->wiphy, NULL,
+> +					       (u8 *)mac->bssid, NULL, 0,
+> +					       IEEE80211_BSS_TYPE_ESS,
+> +					       IEEE80211_PRIVACY_OFF);
+> +
+> +			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
+> +				 "bssid = %pMF\n", mac->bssid);
+> +
+> +			if (bss) {
+> +				cfg80211_unlink_bss(hw->wiphy, bss);
+> +				cfg80211_put_bss(hw->wiphy, bss);
+> +				RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
+> +					 "cfg80211_unlink !!\n");
+> +			}
+> +
+>   			eth_zero_addr(mac->bssid);
+>   			mac->vendor = PEER_UNKNOWN;
+>   			mac->mode = 0;
+> 
