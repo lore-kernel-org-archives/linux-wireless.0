@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:41096 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753099AbeAIJiN (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:35506 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753051AbeAOKv6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 04:38:13 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH] staging: wilc1000: removed enum typedef BUS_ACQUIRE_T
-Date: Tue, 9 Jan 2018 15:07:50 +0530
-Message-ID: <1515490670-11274-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180109_103821_856136_EE1C066D)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 15 Jan 2018 05:51:58 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2018-01-15
+Date: Mon, 15 Jan 2018 11:51:53 +0100
+Message-Id: <20180115105154.9727-1-johannes@sipsolutions.net> (sfid-20180115_115211_473148_CDCE48F5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes enum typedef BUS_ACQUIRE_T and define
-enum bus_acquire to use instead of typedef.
+Hi Dave,
 
-checkpatch.pl not to add new typedef warning is fixed with this patch.
+I know this comes last minute, so if it doesn't make it then
+I guess we can live with that, but I got the earliest of the
+patches here on Wednesday last week, and that was the most
+uninteresting one - the others didn't come in until Saturday.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c    | 2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Please pull and let me know if there's any problem.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 3a58a62..80a5a0b 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -6,7 +6,7 @@
- 
- static enum chip_ps_states chip_ps_state = CHIP_WAKEDUP;
- 
--static inline void acquire_bus(struct wilc *wilc, BUS_ACQUIRE_T acquire)
-+static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
- {
- 	mutex_lock(&wilc->hif_cs);
- 	if (acquire == ACQUIRE_AND_WAKEUP)
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 70e3558..65cb53d 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -143,10 +143,10 @@ enum chip_ps_states {
- 	CHIP_SLEEPING_MANUAL	= 2
- };
- 
--typedef enum {
-+enum bus_acquire {
- 	ACQUIRE_ONLY            = 0,
- 	ACQUIRE_AND_WAKEUP	= 1,
--} BUS_ACQUIRE_T;
-+};
- 
- typedef enum {
- 	RELEASE_ONLY		= 0,
--- 
-2.7.4
+Thanks,
+johannes
+
+
+
+The following changes since commit 8155aedf512edd3f88ef19f7cacf476ace7d1322:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf (2018-01-14 11:01:33 -0500)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-01-15
+
+for you to fetch changes up to 59b179b48ce2a6076448a44531242ac2b3f6cef2:
+
+  cfg80211: check dev_set_name() return value (2018-01-15 11:35:06 +0100)
+
+----------------------------------------------------------------
+More fixes:
+ * hwsim:
+    - properly flush deletion works at module unload
+    - validate # of channels passed from userspace
+ * cfg80211:
+    - fix RCU locking regression
+    - initialize on-stack channel data for nl80211 event
+    - check dev_set_name() return value
+
+----------------------------------------------------------------
+Benjamin Beichler (1):
+      mac80211_hwsim: add workqueue to wait for deferred radio deletion on mod unload
+
+Dominik Brodowski (1):
+      nl80211: take RCU read lock when calling ieee80211_bss_get_ie()
+
+Johannes Berg (3):
+      cfg80211: fully initialize old channel for event
+      mac80211_hwsim: validate number of different channels
+      cfg80211: check dev_set_name() return value
+
+ drivers/net/wireless/mac80211_hwsim.c | 17 +++++++++++++++--
+ include/net/cfg80211.h                |  2 ++
+ net/wireless/core.c                   |  8 +++++++-
+ net/wireless/core.h                   |  2 --
+ net/wireless/nl80211.c                | 11 +++++++----
+ net/wireless/reg.c                    |  3 +--
+ 6 files changed, 32 insertions(+), 11 deletions(-)
