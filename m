@@ -1,30 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:39508 "EHLO
-        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755893AbeARKyB (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:46421 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751345AbeAOSzP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 05:54:01 -0500
-Received: by mail-it0-f45.google.com with SMTP id 68so13079878ite.4
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2018 02:54:00 -0800 (PST)
+        Mon, 15 Jan 2018 13:55:15 -0500
+Received: by mail-oi0-f68.google.com with SMTP id d124so8931184oib.13
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 10:55:15 -0800 (PST)
+Subject: Re: [PATCH v2 06/10] rtlwifi: Support A-MSDU in A-MPDU capability
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: yhchuang@realtek.com, linux-wireless@vger.kernel.org
+References: <20180111070932.9929-1-pkshih@realtek.com>
+ <20180111070932.9929-7-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <048f2fad-77f5-f771-3340-61a5b59283aa@lwfinger.net> (sfid-20180115_195520_724414_62EFDFCC)
+Date: Mon, 15 Jan 2018 12:55:14 -0600
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P3Vij4AeiWuOyi5XFiiAF5nqQERR8tDyrRoKZMLFmKoQw@mail.gmail.com>
-References: <CAMNDV2kK33fWYVNNAO8=ZqgxyPdXxTdOrxdQnW6ORMFM1hkrxQ@mail.gmail.com>
- <CANUX_P3Vij4AeiWuOyi5XFiiAF5nqQERR8tDyrRoKZMLFmKoQw@mail.gmail.com>
-From: Tambet Arak <tambet.arak@gmail.com>
-Date: Thu, 18 Jan 2018 12:54:00 +0200
-Message-ID: <CAMNDV2=GqLDnxJfk=0+WC25jK-G=SYZL7PAEMZsUT4W5SAEzzg@mail.gmail.com> (sfid-20180118_115404_767940_EF4AA99A)
-Subject: Re: A few questions about iwlwifi and its rate control mechanism
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180111070932.9929-7-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I see. I might try playing around with hacking iwl-agn-rs, in that case.
+On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
+> From: Steven Ting <steventing@realtek.com>
+> 
+> Due to the fact that A-MSDU deaggregation is done in software,
+> we set this flag to support the A-MSDU in A-MPDU
+> 
+> Signed-off-by: Steven Ting <steventing@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/base.c | 1 +
+>   1 file changed, 1 insertion(+)
 
-> What do you mean by 'drop'. Disassociated? Or associated but no traffic?
-> Association state can be checked with iw <iface> link
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Sorry, that was ambiguous. I meant that the rate is decreased to e.g. MCS3-5.
-
-Tambet
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+> index e902cd7adbfe..07b91bc9adf9 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+> @@ -397,6 +397,7 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+>   	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
+>   	ieee80211_hw_set(hw, SUPPORTS_TX_FRAG);
+>   	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+> +	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
+>   
+>   	/* swlps or hwlps has been set in diff chip in init_sw_vars */
+>   	if (rtlpriv->psc.swctrl_lps) {
+> 
