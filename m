@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54728 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753142AbeAQO7G (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36150 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932397AbeAOLrA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 09:59:06 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: pkshih@realtek.com, Larry.Finger@lwfinger.net,
-        yhchuang@realtek.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 04/10] rtlwifi: enable mac80211 fast-tx support
-References: <20180117061530.30049-1-pkshih@realtek.com>
-        <20180117061530.30049-5-pkshih@realtek.com>
-        <5A5F24D1.2080709@broadcom.com>
-Date: Wed, 17 Jan 2018 16:59:00 +0200
-In-Reply-To: <5A5F24D1.2080709@broadcom.com> (Arend van Spriel's message of
-        "Wed, 17 Jan 2018 11:26:25 +0100")
-Message-ID: <87d128cz0r.fsf@kamboji.qca.qualcomm.com> (sfid-20180117_155910_015768_7585C0D5)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 15 Jan 2018 06:47:00 -0500
+Message-ID: <1516016818.410.10.camel@sipsolutions.net> (sfid-20180115_124704_345634_3AAA5A73)
+Subject: Re: [PATCH v3 2/5] mac80211_hwsim: add hashtable with mac address
+ keys for faster lookup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 15 Jan 2018 12:46:58 +0100
+In-Reply-To: <1d7bda28-6a77-4c4e-a3fc-3857b3c05aa1@MAIL2.uni-rostock.de>
+References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
+         <1d7bda28-6a77-4c4e-a3fc-3857b3c05aa1@MAIL2.uni-rostock.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+On Wed, 2018-01-10 at 17:42 +0100, Benjamin Beichler wrote:
+> This patch adds a rhastable for mac address lookup of hwsim radios. This
+> especially improve the speed on reception of a netlink message with a new
+> frame. Although redundant, we keep holding a normal list for all radios,
+> since the rhashtable_walk interface adds a lot of overhead for iterating
+> over all radios and the doc of rhashtable recommend a redundant structure
+> for stable walks in such situations.
+> 
+> Since rhashtable is rcu protected we do not need a lock for delivering
+> frames and thus improving this scenario.
 
-> On 1/17/2018 7:15 AM, pkshih@realtek.com wrote:
->> From: Ping-Ke Shih <pkshih@realtek.com>
->>
->> To enable the mac80211 fast-tx feature, the hw/driver needs to support
->> dynamic power saving and fragmentation. Since our driver does not
->> need to fragment packet into smaller pieces, we just hook an empty
->> callback of set_frag_threshold to avoid fragmentation in mac80211.
->>
->> After this, the mac80211 will not fragment the packets and can transmit
->> them faster by cache the header information.
->
-> NACK. Please refer to earlier discussion [1].
+Applied, but
 
-I dropped this patch.
+> +static u32 hwsim_table_hash(const void *addr, u32 len, u32 seed)
+> +{
+> +	/* Use last four bytes of hw addr as hash index */
+> +	return jhash_1word(*(u32 *)(addr + 2), seed);
+> +}
 
--- 
-Kalle Valo
+I removed this, because that isn't actually safe - there's only 2-byte
+alignment guaranteed... rhashtable will just do jhash() on the whole
+thing, which should be fast enough.
+
+johannes
