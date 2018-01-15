@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:59458 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:37254 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751511AbeA3Hp0 (ORCPT
+        with ESMTP id S1030453AbeAONOk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 02:45:26 -0500
-Message-ID: <1517298324.2189.34.camel@sipsolutions.net> (sfid-20180130_084529_202640_89BB8447)
-Subject: Re: [PATCHv2 2/2] mac80211: Add support to notify ht/vht opmode
- modification.
+        Mon, 15 Jan 2018 08:14:40 -0500
+Message-ID: <1516022078.410.33.camel@sipsolutions.net> (sfid-20180115_141509_745270_4437E622)
+Subject: Re: [RFC v2 4/5] nl80211: Implement TX of control port frames
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhr@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 30 Jan 2018 08:45:24 +0100
-In-Reply-To: <1516904493-4310-2-git-send-email-tamizhr@codeaurora.org>
-References: <1516904493-4310-1-git-send-email-tamizhr@codeaurora.org>
-         <1516904493-4310-2-git-send-email-tamizhr@codeaurora.org>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org,
+        Jouni Malinen <j@w1.fi>
+Date: Mon, 15 Jan 2018 14:14:38 +0100
+In-Reply-To: <20180110170938.2341-5-denkenz@gmail.com> (sfid-20180110_180958_033009_D67159EE)
+References: <20180110170938.2341-1-denkenz@gmail.com>
+         <20180110170938.2341-5-denkenz@gmail.com>
+         (sfid-20180110_180958_033009_D67159EE)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-01-25 at 23:51 +0530, Tamizh chelvam wrote:
-> 
-> +++ b/net/mac80211/vht.c
-> @@ -447,6 +447,7 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
->  				  enum nl80211_band band)
->  {
->  	enum ieee80211_sta_rx_bandwidth new_bw;
-> +	struct sta_opmode_info sta_opmode;
->  	u32 changed = 0;
->  	u8 nss;
->  
-> @@ -460,7 +461,9 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
->  
->  	if (sta->sta.rx_nss != nss) {
->  		sta->sta.rx_nss = nss;
-> +		sta_opmode.rx_nss = nss;
->  		changed |= IEEE80211_RC_NSS_CHANGED;
-> +		sta_opmode.changed |= STA_OPMODE_N_SS_CHANGED;
+Ok this is the interesting part :-)
 
-This obviously cannot work properly, please respin.
+> +	int	(*tx_control_port)(struct wiphy *wiphy,
+> +				       struct net_device *dev,
+> +				       const u8 *buf, size_t len,
+> +				       const u8 *dest, const u16 proto,
+> +				       const bool noencrypt);
+
+(indentation seems off in both patchwork and my email, but whatever)
+
+> +	wdev_lock(wdev);
+> +
+> +	switch (wdev->iftype) {
+> +	case NL80211_IFTYPE_STATION:
+> +		if (wdev->current_bss)
+
+err, !current_bss?
+
+> +	buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
+> +	len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
+> +	dest = nla_data(info->attrs[NL80211_ATTR_MAC]);
+> +	proto = nla_get_u16(info->attrs[NL80211_ATTR_CONTROL_PORT_ETHERTYPE]);
+> +	noencrypt =
+> +		nla_get_flag(info->attrs[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT]);
+
+So this is the data we support here.
+
+Jouni and I were talking about this and were thinking we might need
+"use old key" or something like that. That's rather difficult to do
+though, I'm not even sure we keep the old key around?
+
+Jouni? Do you see how this could work?
+
+
+The other thing we thought about was that maybe we should have "open
+port after this frame", but since it's an in-band mechanism now you
+could do that also just before the frame.
+
+FWIW, I'm checking with our guy on what other specialities we might
+want to add into this mix as far as workarounds are concerned.
 
 johannes
