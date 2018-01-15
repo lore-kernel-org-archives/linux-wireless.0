@@ -1,61 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:44828 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752311AbeAQKMA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50344 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932627AbeAOKLh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 05:12:00 -0500
+        Mon, 15 Jan 2018 05:11:37 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Matt Redfearn <matt.redfearn@imgtec.com>,
+        James Hogan <jhogan@kernel.org>,
+        Linux MIPS Mailing List <linux-mips@linux-mips.org>,
+        matt.redfearn@mips.com
+Subject: Re: [PATCH] bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
+References: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
+        <db5915ed-fc50-292f-c86b-4da7f3f0eddd@roeck-us.net>
+Date: Mon, 15 Jan 2018 12:11:33 +0200
+In-Reply-To: <db5915ed-fc50-292f-c86b-4da7f3f0eddd@roeck-us.net> (Guenter
+        Roeck's message of "Sun, 14 Jan 2018 13:40:50 -0800")
+Message-ID: <87vag31ley.fsf@purkki.adurom.net> (sfid-20180115_111154_142542_9F91B882)
 MIME-Version: 1.0
-In-Reply-To: <1384d3ee94eb48f29e85161d9a8fa136@codeaurora.org>
-References: <1513270393-919-7-git-send-email-qca_merez@qca.qualcomm.com>
- <20180109080707.B05B66081B@smtp.codeaurora.org> <1384d3ee94eb48f29e85161d9a8fa136@codeaurora.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 17 Jan 2018 21:11:38 +1100
-Message-ID: <CAGRGNgUmtZcW=xewDPCathwCUMXjqXk_qTPcOjb9+VCOm=nskg@mail.gmail.com> (sfid-20180117_111205_017159_F9D90998)
-Subject: Re: [v2,6/9] wil6210: add support for headroom configuration
-To: merez@codeaurora.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Maya Erez <qca_merez@qca.qualcomm.com>,
-        Lazar Alexei <QCA_ailizaro@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        wil6210@qca.qualcomm.com, linux-wireless-owner@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Maya,
+Guenter Roeck <linux@roeck-us.net> writes:
 
-On Tue, Jan 16, 2018 at 12:18 AM,  <merez@codeaurora.org> wrote:
-> On 2018-01-09 10:07, Kalle Valo wrote:
->>
->> Maya Erez <qca_merez@qca.qualcomm.com> wrote:
->>
->>> Add module parameter for configuring the headroom size
->>> in the skb allocation.
->>>
->>> Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
->>> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
->>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
->>
->>
->> Why?
+> [ copying linux-mips ]
 >
+> On 01/14/2018 01:34 PM, Guenter Roeck wrote:
+>> Mips builds with BCMA host mode enabled fail in mainline and -next
+>> with:
+>>
+>> In file included from include/linux/bcma/bcma.h:10:0,
+>>                   from drivers/bcma/bcma_private.h:9,
+>> 		 from drivers/bcma/main.c:8:
+>> include/linux/bcma/bcma_driver_pci.h:218:24: error:
+>> 	field 'pci_controller' has incomplete type
+>>
+>> Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
+>> system type as generic") as the culprit. Analysis shows that the commmit
+>> changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
+>> disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
+>> defined if PCI_DRIVERS_LEGACY is enabled.
+>>
+>> Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
+>> PCI_DRIVERS_LEGACY. Add the missing dependency.
+>>
+>> Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
+>> Cc: Matt Redfearn <matt.redfearn@imgtec.com>
+>> Cc: James Hogan <jhogan@kernel.org>
+>> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+>> ---
+>> I am aware that this problem has been reported several times. I have
+>> not been able to find a fix, but I may have missed it. If so, my
+>> apologies for the noise.
+>>
+> I should have said "I have not been able to find a patch fixing it".
 >
-> Some platforms have specific requirements on packet alignment.
-> I will upload an update of the commit text in the next set of 11ad patches.
+>> Also note that this is not the only fix required; commit d41e6858ba58c,
+>> as simple as it looks like, does a pretty good job messing up
+>> "mips:allmodconfig" builds.
+>>
+> ... nor did I find patch(es) fixing the other build problem(s) introduced
+> by d41e6858ba58c.
 
-Is this something the platform can tell you or something you can store
-in an array by platform name? (and use the maximum size if we don't
-know)
+As I forgot to cc linux-mips on my previous email: I'm planning to queue
+this for v4.15.
 
-Alternatively, would it waste too much RAM to just set this to the
-maximum size and have done?
+Over the weeked I got this bcma patch, but don't know if it's related or
+not:
 
-I feel that allowing the user to set it will be problematic.
+bcma: Prevent build of PCI host features in module
+https://patchwork.kernel.org/patch/10161087/
 
-Thanks,
+And Guenter's patch is:
+
+https://patchwork.kernel.org/patch/10162839/
+
+Which one should I take? Adding also Matt.
+
+And Matt also submitted similar patch for ssb:
+
+ssb: Prevent build of PCI host features in module
+https://patchwork.kernel.org/patch/10161131/
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Kalle Valo
