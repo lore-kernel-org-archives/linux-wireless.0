@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.uni-rostock.de ([139.30.22.71]:64757 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965075AbeAJQnl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 11:43:41 -0500
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Subject: [PATCH v3 0/5] improvements for wmediumd-like simulations and config enhancements
-Date: Wed, 10 Jan 2018 17:42:50 +0100
-MIME-Version: 1.0
-Content-Type: text/plain
-Message-ID: <d468225c-52bd-4f8a-8831-299ed1581bc7@MAIL2.uni-rostock.de> (sfid-20180110_174345_864326_1372CF49)
+Received: from mail.kernel.org ([198.145.29.99]:47510 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750740AbeAOVTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jan 2018 16:19:05 -0500
+From: James Hogan <jhogan@kernel.org>
+To: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
+        linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
+Cc: James Hogan <jhogan@kernel.org>,
+        Paul Burton <paul.burton@mips.com>,
+        Matt Redfearn <matt.redfearn@imgtec.com>,
+        Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH for-4.15] ssb: Disable PCI host for PCI_DRIVERS_GENERIC
+Date: Mon, 15 Jan 2018 21:17:14 +0000
+Message-Id: <20180115211714.24009-1-jhogan@kernel.org> (sfid-20180115_221909_008222_5FF4C985)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series (based on mac80211next branch) includes our efforts for more sophisticated simulations for
-wifi-networks:
-- improving MAC-Address lookups with rhashtable
-- add tx-flags for every frame for more detailed transmission simulation
-- add argument to set permanent MAC address of a hwsim interface while creation
-- fixing bad behavior of radio dump and module unload with many radios
+Since commit d41e6858ba58 ("MIPS: Kconfig: Set default MIPS system type
+as generic") changed the default MIPS platform to the "generic"
+platform, which uses PCI_DRIVERS_GENERIC instead of PCI_DRIVERS_LEGACY,
+various files in drivers/ssb/ have failed to build.
 
-Changes since v2:
-* added a separate workqueue for the deferred deletion tasks (and therefore
-	reduce the introduced code massively)
-* fixed missing signaling of interrupted nl-dump operation
-* fixed small formatting errors
+This is particularly due to the existence of struct pci_controller being
+dependent on PCI_DRIVERS_LEGACY since commit c5611df96804 ("MIPS: PCI:
+Introduce CONFIG_PCI_DRIVERS_LEGACY"), so add that dependency to Kconfig
+to prevent these files being built for the "generic" platform including
+all{yes,mod}config builds.
 
-Changes since v1:
-* syntactical/formal issues
-* the hashtable is now formed by rhashtable
-* instead of the radio id, the radio mac-address can be configured by new
-	radio command
-* parallel ops patch is removed
-* removed the reverse synchronization of the tx-flags from driver to mac80211,
-	since I believe the tx-rate flags are not used after the transmission
-	is done
+Fixes: c5611df96804 ("MIPS: PCI: Introduce CONFIG_PCI_DRIVERS_LEGACY")
+Signed-off-by: James Hogan <jhogan@kernel.org>
+Cc: Michael Buesch <m@bues.ch>
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: Paul Burton <paul.burton@mips.com>
+Cc: Matt Redfearn <matt.redfearn@imgtec.com>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-mips@linux-mips.org
+---
+ drivers/ssb/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-
-Benjamin Beichler (5):
-  mac80211_hwsim: add workqueue to wait for deferred radio deletion on
-    mod unload
-  mac80211_hwsim: add hashtable with mac address keys for faster lookup
-  mac80211_hwsim: add generation count for netlink dump operation
-  mac80211_hwsim: add permanent mac address option for new radios
-  mac80211_hwsim: add hwsim_tx_rate_flags to netlink attributes
-
- drivers/net/wireless/mac80211_hwsim.c | 206 +++++++++++++++++++++++++++-------
- drivers/net/wireless/mac80211_hwsim.h |  77 ++++++++++++-
- 2 files changed, 240 insertions(+), 43 deletions(-)
-
+diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+index d8e4219c2324..71c73766ee22 100644
+--- a/drivers/ssb/Kconfig
++++ b/drivers/ssb/Kconfig
+@@ -32,7 +32,7 @@ config SSB_BLOCKIO
+ 
+ config SSB_PCIHOST_POSSIBLE
+ 	bool
+-	depends on SSB && (PCI = y || PCI = SSB)
++	depends on SSB && (PCI = y || PCI = SSB) && PCI_DRIVERS_LEGACY
+ 	default y
+ 
+ config SSB_PCIHOST
 -- 
-2.15.1
+2.13.6
