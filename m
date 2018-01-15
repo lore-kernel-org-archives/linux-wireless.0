@@ -1,47 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34221 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933808AbeALR1T (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36136 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753488AbeAOLqH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 12:27:19 -0500
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath10k: remove redundant -ve check against u32 integer size
-Date: Fri, 12 Jan 2018 17:27:13 +0000
-Message-Id: <20180112172713.28252-1-colin.king@canonical.com> (sfid-20180112_182936_506136_F57FE12D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Mon, 15 Jan 2018 06:46:07 -0500
+Message-ID: <1516016765.410.9.camel@sipsolutions.net> (sfid-20180115_124610_816662_9AF446CB)
+Subject: Re: [PATCH v3 1/5] mac80211_hwsim: add workqueue to wait for
+ deferred radio deletion on mod unload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 15 Jan 2018 12:46:05 +0100
+In-Reply-To: <2a021406-db0b-42e9-be2b-7185814139af@MAIL2.uni-rostock.de>
+References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
+         <2a021406-db0b-42e9-be2b-7185814139af@MAIL2.uni-rostock.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Wed, 2018-01-10 at 17:42 +0100, Benjamin Beichler wrote:
+> When closing multiple wmediumd instances with many radios and try to
+> unload the  mac80211_hwsim module, it may happen that the work items live
+> longer than the module. To wait especially for this deletion work items,
+> add a work queue, otherwise flush_scheduled_work would be necessary.
+> 
+Applied this to mac80211, thanks.
 
-Variable section_table.size is a u32 and so cannot be less than
-zero, hence the less than zero check is redundant and can be
-removed.
-
-Detected by CoverityScan, CID#1463855 ("Unsigned compared against 0")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index f6a23f2d0335..355db6a0fcf3 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1478,9 +1478,6 @@ static int ath10k_pci_dump_memory_section(struct ath10k *ar,
- 	if (!mem_region || !buf)
- 		return 0;
- 
--	if (mem_region->section_table.size < 0)
--		return 0;
--
- 	cur_section = &mem_region->section_table.sections[0];
- 
- 	if (mem_region->start > cur_section->start) {
--- 
-2.15.1
+johannes
