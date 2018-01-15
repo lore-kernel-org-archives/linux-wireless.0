@@ -1,65 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34910 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965968AbeAORK6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47964 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932121AbeAOKHX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 12:10:58 -0500
-Received: by mail-pg0-f67.google.com with SMTP id d6so8256741pgv.2
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 09:10:58 -0800 (PST)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH] brcmfmac: Make sure CLM downloading is optional
-Date: Mon, 15 Jan 2018 09:10:53 -0800
-Message-Id: <20180115171053.8802-1-bjorn.andersson@linaro.org> (sfid-20180115_181129_513581_00634B87)
+        Mon, 15 Jan 2018 05:07:23 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Matt Redfearn <matt.redfearn@mips.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] bcma: Prevent build of PCI host features in module
+References: <1515767119-17117-1-git-send-email-matt.redfearn@mips.com>
+Date: Mon, 15 Jan 2018 12:07:19 +0200
+In-Reply-To: <1515767119-17117-1-git-send-email-matt.redfearn@mips.com> (Matt
+        Redfearn's message of "Fri, 12 Jan 2018 14:25:18 +0000")
+Message-ID: <87zi5f1lm0.fsf@purkki.adurom.net> (sfid-20180115_110739_239413_460FE087)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The presence of a CLM file is described as optional, but missing the clm
-blob causes the preinit to return unsuccessfully. Fix this by ignoring
-the return value of the brcmf_c_process_clm_blob().
+Matt Redfearn <matt.redfearn@mips.com> writes:
 
-Also remove the extra debug print, as brcmf_c_process_clm_blob() already
-did print a useful error message before returning.
+> Attempting to build bcma.ko with BCMA_DRIVER_PCI_HOSTMODE=y results in
+> a build error due to use of symbols not exported from vmlinux:
+>
+> ERROR: "pcibios_enable_device" [drivers/bcma/bcma.ko] undefined!
+> ERROR: "register_pci_controller" [drivers/bcma/bcma.ko] undefined!
+> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+>
+> To prevent this, don't allow the host mode feature to be built if
+> CONFIG_BCMA=m
+>
+> Signed-off-by: Matt Redfearn <matt.redfearn@mips.com>
+>
+> ---
+>
+>  drivers/bcma/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+> index 02d78f6cecbb..4294784b9cf1 100644
+> --- a/drivers/bcma/Kconfig
+> +++ b/drivers/bcma/Kconfig
+> @@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
+>  
+>  config BCMA_DRIVER_PCI_HOSTMODE
+>  	bool "Driver for PCI core working in hostmode"
+> -	depends on MIPS && BCMA_DRIVER_PCI
+> +	depends on MIPS && BCMA_DRIVER_PCI && BCMA = y
 
-Fixes: fdd0bd88ceae ("brcmfmac: add CLM download support")
-Cc: stable@vger.kernel.org
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
+Is this a new regression? Do you know the commit which broke this? 
 
-This regression was introduced in v4.15-rc1, but I unfortunately didn't test
-WiFi until now. Included a Cc to stable@ in case you choose to pick this up
-after v4.15.
+Is it somehow related to this:
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
+https://patchwork.kernel.org/patch/10162839/
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 6a59d0609d30..0c67ba6ae135 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -278,12 +278,8 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	}
- 	ri->result = err;
- 
--	/* Do any CLM downloading */
--	err = brcmf_c_process_clm_blob(ifp);
--	if (err < 0) {
--		brcmf_err("download CLM blob file failed, %d\n", err);
--		goto done;
--	}
-+	/* Do any optional CLM downloading */
-+	brcmf_c_process_clm_blob(ifp);
- 
- 	/* query for 'ver' to get version info from firmware */
- 	memset(buf, 0, sizeof(buf));
+Or are these two separate issues?
+
 -- 
-2.15.0
+Kalle Valo
