@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:27018 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753439AbeAFBS5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Jan 2018 20:18:57 -0500
-Subject: [PATCH 09/18] p54: prevent bounds-check bypass via speculative
- execution
-From: Dan Williams <dan.j.williams@intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, peterz@infradead.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        gregkh@linuxfoundation.org,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        tglx@linutronix.de, torvalds@linux-foundation.org,
-        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com
-Date: Fri, 05 Jan 2018 17:10:43 -0800
-Message-ID: <151520104323.32271.6614158873750932410.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180106_022210_950892_EB6BA182)
-In-Reply-To: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([144.76.63.242]:36616 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751710AbeAOMWh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jan 2018 07:22:37 -0500
+Message-ID: <1516018955.410.21.camel@sipsolutions.net> (sfid-20180115_132240_640967_B8034E41)
+Subject: Re: [PATCH v2 1/3] cfg80211/nl80211: Optional authentication
+ offload to userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        Srinivas Dasari <dasaris@qti.qualcomm.com>
+Date: Mon, 15 Jan 2018 13:22:35 +0100
+In-Reply-To: <c2554a26-bbbc-3bd2-0091-06fc14e88946@gmail.com> (sfid-20180104_215955_609727_80A46600)
+References: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
+         <c2554a26-bbbc-3bd2-0091-06fc14e88946@gmail.com>
+         (sfid-20180104_215955_609727_80A46600)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Static analysis reports that 'queue' may be a user controlled value that
-is used as a data dependency to read from the 'priv->qos_params' array.
-In order to avoid potential leaks of kernel memory values, block
-speculative execution of the instruction stream that could issue reads
-based on an invalid result of 'priv->qos_params[queue]'.
+On Thu, 2018-01-04 at 14:59 -0600, Denis Kenzior wrote:
 
-Based on an original patch by Elena Reshetova.
+> So this implies userspace must pre-register for authentication 
+> management frames, correct?  And other applications could register to 
+> receive these frames as well?  Would it not be easier (and more secure) 
+> to simply forward these directly to the application that triggered 
+> CMD_CONNECT instead?
 
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/net/wireless/intersil/p54/main.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Only one will be able to register, so I think it's OK. We could even
+check that it's registered already at CONNECT time, I guess.
 
-diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
-index ab6d39e12069..85c9cbee35fc 100644
---- a/drivers/net/wireless/intersil/p54/main.c
-+++ b/drivers/net/wireless/intersil/p54/main.c
-@@ -20,6 +20,7 @@
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
- #include <linux/module.h>
-+#include <linux/compiler.h>
- 
- #include <net/mac80211.h>
- 
-@@ -411,12 +412,13 @@ static int p54_conf_tx(struct ieee80211_hw *dev,
- 		       const struct ieee80211_tx_queue_params *params)
- {
- 	struct p54_common *priv = dev->priv;
-+	struct p54_edcf_queue_param *p54_q;
- 	int ret;
- 
- 	mutex_lock(&priv->conf_mutex);
--	if (queue < dev->queues) {
--		P54_SET_QUEUE(priv->qos_params[queue], params->aifs,
--			params->cw_min, params->cw_max, params->txop);
-+	if ((p54_q = nospec_array_ptr(priv->qos_params, queue, dev->queues))) {
-+		P54_SET_QUEUE(p54_q[0], params->aifs, params->cw_min,
-+				params->cw_max, params->txop);
- 		ret = p54_set_edcf(priv);
- 	} else
- 		ret = -EINVAL;
+> > +	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
+> > +				NL80211_MCGRP_MLME, gfp);
+> 
+> Is there a reason this is being multicast and not unicast to the 
+> application that triggered the CONNECT?  Who else besides the supplicant 
+> daemon might find this information useful?
+
+That's a good point, we should send this to the CONNECT owner (and thus
+obviously also require that there is one).
+
+johannes
