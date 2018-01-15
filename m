@@ -1,45 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:42310 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754833AbeASBkG (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:38107 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750714AbeAOUFv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 20:40:06 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v2 05/10] rtlwifi: enable mac80211 fast-tx support
-Date: Fri, 19 Jan 2018 01:39:43 +0000
-Message-ID: <1516325983.2726.5.camel@realtek.com> (sfid-20180119_024233_179652_89D84733)
-References: <20180111070932.9929-1-pkshih@realtek.com>
-         <20180111070932.9929-6-pkshih@realtek.com>
-         <871sip24fc.fsf@purkki.adurom.net> <5A5E5C99.5020607@broadcom.com>
-         (sfid-20180116_211216_753091_08EEF52B)
- <1516141444.410.52.camel@sipsolutions.net>
-         <1516266330.3990.6.camel@realtek.com>
-         <1516270185.410.56.camel@sipsolutions.net>
-In-Reply-To: <1516270185.410.56.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 15 Jan 2018 15:05:51 -0500
+Subject: Re: [PATCH] bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
+To: Paul Burton <paul.burton@mips.com>, James Hogan <jhogan@kernel.org>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Matt Redfearn <matt.redfearn@imgtec.com>,
+        Linux MIPS Mailing List <linux-mips@linux-mips.org>
+References: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
+ <20180115102336.GC29126@saruman>
+ <20180115171053.6nvstoufw4y6ar4s@pburton-laptop>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <61e41256-f0d3-11f7-06ca-768fab84914d@roeck-us.net> (sfid-20180115_210618_821168_E51BA6FE)
+Date: Mon, 15 Jan 2018 12:05:48 -0800
 MIME-Version: 1.0
+In-Reply-To: <20180115171053.6nvstoufw4y6ar4s@pburton-laptop>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE4LTAxLTE4IGF0IDExOjA5ICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBPbiBUaHUsIDIwMTgtMDEtMTggYXQgMDk6MDUgKzAwMDAsIFBrc2hpaCB3cm90ZToNCj4gPiAN
-Cj4gPiANCj4gPiA+IA0KPiA+ID4gwqDCoMKgwqDCoMKgwqDCoC8qIGZhc3QteG1pdCBkb2Vzbid0
-IGhhbmRsZSBmcmFnbWVudGF0aW9uIGF0IGFsbCAqLw0KPiA+ID4gwqDCoMKgwqDCoMKgwqDCoGlm
-IChsb2NhbC0+aHcud2lwaHktPmZyYWdfdGhyZXNob2xkICE9ICh1MzIpLTEgJiYNCj4gPiA+IMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCFpZWVlODAyMTFfaHdfY2hlY2soJmxvY2FsLT5odywgU1VQ
-UE9SVFNfVFhfRlJBRykpDQo+ID4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGdv
-dG8gb3V0Ow0KPiA+ID4gDQo+ID4gVGhhbmsgeW91IGZvciB0aGlzIHBvaW50LiBUaGlzIGNvbW1p
-dCBoYXMgbm90IHRvIHNldCBTVVBQT1JUU19UWF9GUkFHLMKgDQo+ID4gYnV0IG9ubHkgc2V0IFNV
-UFBPUlRfRkFTVF9YTUlULiBJJ2xsIHRlc3QgYW5kIHByZXBhcmUgZm9yIG5leHTCoA0KPiA+IHN1
-Ym1pc3Npb24uDQo+IEJ1dCB0aGUgcG9pbnQgaXMgdGhhdCB5b3UgKnNob3VsZG4ndCogc2V0IFNV
-UFBPUlRTX1RYX0ZSQUcsIGFuZCB0aGVuDQo+IGZhc3QteG1pdCB3aWxsIG9ubHkgZ2V0IHVzZWQg
-Zm9yIG5vbi1mcmFnbWVudGVkIHNldHVwcywgd2hpY2gNCj4gcmVhbGlzdGljYWxseSBpcyBhbGwg
-YW55b25lIGNhcmVzIGFib3V0IGFueXdheS4NCj4gDQoNCk15IGZhdWx0LiBTaW5jZSB0aGUgZ29h
-bCBvZiB0aGlzIGNvbW1pdCBpcyB0byBlbmFibGUgZmFzdC10eCwgSSBzaG91bGRuJ3QNCnNldMKg
-U1VQUE9SVFNfVFhfRlJBRyBhbmQgdGhlIG9wIHNldF9mcmFnX3RocmVzaG9sZC4NCg0KUEsNCg==
+On 01/15/2018 09:10 AM, Paul Burton wrote:
+> Hello,
+> 
+> On Mon, Jan 15, 2018 at 10:23:37AM +0000, James Hogan wrote:
+>> On Sun, Jan 14, 2018 at 01:34:02PM -0800, Guenter Roeck wrote:
+>>> Mips builds with BCMA host mode enabled fail in mainline and -next
+>>> with:
+>>>
+>>> In file included from include/linux/bcma/bcma.h:10:0,
+>>>                   from drivers/bcma/bcma_private.h:9,
+>>> 		 from drivers/bcma/main.c:8:
+>>> include/linux/bcma/bcma_driver_pci.h:218:24: error:
+>>> 	field 'pci_controller' has incomplete type
+>>>
+>>> Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
+>>> system type as generic") as the culprit. Analysis shows that the commmit
+>>> changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
+>>> disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
+>>> defined if PCI_DRIVERS_LEGACY is enabled.
+>>>
+>>> Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
+>>> PCI_DRIVERS_LEGACY. Add the missing dependency.
+>>>
+>>> Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
+>>
+>> Well, technically I think commit c5611df96804 ("MIPS: PCI: Introduce
+>> CONFIG_PCI_DRIVERS_LEGACY") is to blame (Cc'ing paul), and the first bad
+>> commit would be commit eed0eabd12ef ("MIPS: generic: Introduce generic
+>> DT-based board support") which selects PCI_DRIVERS_GENERIC and is the
+>> only platform to do so. Both commits were first in v4.9-rc1 and I can
+>> reproduce this problem at that latter commit with the appropriate
+>> configuration.
+> 
+> Ah - yes if I recall correctly my assumption was that the MIPS-specific
+> struct pci_controller was only used by the MIPS-specific PCI drivers
+> under arch/mips/pci/, which are only built when configured for the
+> appropriate platform.
+> 
+> In this case use of that MIPS-specific struct pci_controller has spread
+> beyond arch/mips/ & the user can be configured in for platforms other
+> than the one that will actually use the driver, including the generic
+> platform which moves towards more generic PCI drivers in
+> drivers/pci/host/.
+> 
+>> But yes clearly the mentioned commit does also expose that existing
+>> problem more widely and to the default allmodconfig, and it looks like a
+>> reasonable approach for now, so if some mention of the other two commits
+>> is added:
+>>
+>> Reviewed-by: James Hogan <jhogan@kernel.org>
+> 
+> Likewise, with the "Fixes:" tag fixed:
+> 
+>      Reviewed-by: Paul Burton <paul.burton@mips.com>
+> 
+
+Unfortunately, that alone doesn't fix the problem. SSB driver dependencies
+are also broken, and in much worse shape. I had to add dependencies in five
+places to get it to build, and the result is so messy that I won't even try
+to submit it. And if that is fixed, mips:allmodconfig still doesn't build -
+the next error is an undefined reference to physical_memsize in
+arch/mips/kernel/vpe-mt.o.
+
+I wonder if I should just stop trying to build allmodconfig for mips.
+Any thoughts ?
+
+Guenter
+
+> Thanks,
+>      Paul
+> 
+>> Having it in 4.15 would be great.
+>>
+>> Cheers
+>> James
+>>
+>>> Cc: Matt Redfearn <matt.redfearn@imgtec.com>
+>>> Cc: James Hogan <jhogan@kernel.org>
+>>> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+>>> ---
+>>> I am aware that this problem has been reported several times. I have
+>>> not been able to find a fix, but I may have missed it. If so, my
+>>> apologies for the noise.
+>>>
+>>> Also note that this is not the only fix required; commit d41e6858ba58c,
+>>> as simple as it looks like, does a pretty good job messing up
+>>> "mips:allmodconfig" builds.
+>>>
+>>>   drivers/bcma/Kconfig | 2 +-
+>>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+>>> index 02d78f6cecbb..ba8acca036df 100644
+>>> --- a/drivers/bcma/Kconfig
+>>> +++ b/drivers/bcma/Kconfig
+>>> @@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
+>>>   
+>>>   config BCMA_DRIVER_PCI_HOSTMODE
+>>>   	bool "Driver for PCI core working in hostmode"
+>>> -	depends on MIPS && BCMA_DRIVER_PCI
+>>> +	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY
+>>>   	help
+>>>   	  PCI core hostmode operation (external PCI bus).
+>>>   
+>>> -- 
+>>> 2.7.4
+>>>
+> 
+> 
+> 
