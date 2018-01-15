@@ -1,132 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:44654 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965277AbeALXF4 (ORCPT
+Received: from isilmar-4.linta.de ([136.243.71.142]:58432 "EHLO
+        isilmar-4.linta.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753926AbeAOHMl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 18:05:56 -0500
-Received: by mail-ot0-f196.google.com with SMTP id g59so6356190otg.11
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jan 2018 15:05:56 -0800 (PST)
+        Mon, 15 Jan 2018 02:12:41 -0500
+Date: Mon, 15 Jan 2018 08:12:15 +0100
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: regressions@leemhuis.info, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3] nl80211: take RCU read lock when calling
+ ieee80211_bss_get_ie()
+Message-ID: <20180115071215.GA2639@light.dominikbrodowski.net> (sfid-20180115_081301_854981_3D204A89)
+References: <20171222072012.GA3110@light.dominikbrodowski.net>
+ <20171230131132.GA2624@light.dominikbrodowski.net>
+ <20180108100403.GA4715@light.dominikbrodowski.net>
+ <20180114180338.GA1569@light.dominikbrodowski.net>
+ <1515967102.26804.31.camel@sipsolutions.net>
+ <20180114222255.GA9036@light.dominikbrodowski.net>
+ <1515969647.26804.33.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <6067453.9oC6tc2YFn@debian64>
-References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
- <1648304.tjl4HeBnOe@debian64> <CAPcyv4gne66ic3E-Y+pLi4QZdVeeeVmvayVPA3Jt1gyUqpaF9g@mail.gmail.com>
- <6067453.9oC6tc2YFn@debian64>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 12 Jan 2018 15:05:55 -0800
-Message-ID: <CAPcyv4gtf4xL+vTmtfGRF+18fx2seQffemDhdGPGdHMF8thxtQ@mail.gmail.com> (sfid-20180113_000623_704235_A38481CA)
-Subject: Re: [PATCH v2 15/19] carl9170: prevent bounds-check bypass via
- speculative execution
-To: Christian Lamparter <chunkeey@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        Netdev <netdev@vger.kernel.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1515969647.26804.33.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 12, 2018 at 12:01 PM, Christian Lamparter
-<chunkeey@gmail.com> wrote:
-> On Friday, January 12, 2018 7:39:50 PM CET Dan Williams wrote:
->> On Fri, Jan 12, 2018 at 6:42 AM, Christian Lamparter <chunkeey@gmail.com> wrote:
->> > On Friday, January 12, 2018 1:47:46 AM CET Dan Williams wrote:
->> >> Static analysis reports that 'queue' may be a user controlled value that
->> >> is used as a data dependency to read from the 'ar9170_qmap' array. In
->> >> order to avoid potential leaks of kernel memory values, block
->> >> speculative execution of the instruction stream that could issue reads
->> >> based on an invalid result of 'ar9170_qmap[queue]'. In this case the
->> >> value of 'ar9170_qmap[queue]' is immediately reused as an index to the
->> >> 'ar->edcf' array.
->> >>
->> >> Based on an original patch by Elena Reshetova.
->> >>
->> >> Cc: Christian Lamparter <chunkeey@googlemail.com>
->> >> Cc: Kalle Valo <kvalo@codeaurora.org>
->> >> Cc: linux-wireless@vger.kernel.org
->> >> Cc: netdev@vger.kernel.org
->> >> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
->> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> >> ---
->> > This patch (and p54, cw1200) look like the same patch?!
->> > Can you tell me what happend to:
->> >
->> > On Saturday, January 6, 2018 5:34:03 PM CET Dan Williams wrote:
->> >> On Sat, Jan 6, 2018 at 6:23 AM, Christian Lamparter <chunkeey@gmail.com> wrote:
->> >> > And Furthermore a invalid queue (param->ac) would cause a crash in
->> >> > this line in mac80211 before it even reaches the driver [1]:
->> >> > |       sdata->tx_conf[params->ac] = p;
->> >> > |                   ^^^^^^^^
->> >> > |       if (drv_conf_tx(local, sdata, >>>> params->ac <<<<, &p)) {
->> >> > |        ^^ (this is a wrapper for the *_op_conf_tx)
->> >> >
->> >> > I don't think these chin-up exercises are needed.
->> >>
->> >> Quite the contrary, you've identified a better place in the call stack
->> >> to sanitize the input and disable speculation. Then we can kill the
->> >> whole class of the wireless driver reports at once it seems.
->> > <https://www.spinics.net/lists/netdev/msg476353.html>
->>
->> I didn't see where ac is being validated against the driver specific
->> 'queues' value in that earlier patch.
-> The link to the check is right there in the earlier post. It's in
-> parse_txq_params():
-> <https://github.com/torvalds/linux/blob/master/net/wireless/nl80211.c#L2070>
-> |       if (txq_params->ac >= NL80211_NUM_ACS)
-> |               return -EINVAL;
->
-> NL80211_NUM_ACS is 4
-> <http://elixir.free-electrons.com/linux/v4.15-rc7/source/include/uapi/linux/nl80211.h#L3748>
->
-> This check was added ever since mac80211's ieee80211_set_txq_params():
-> | sdata->tx_conf[params->ac] = p;
->
-> For cw1200: the driver just sets the dev->queue to 4.
-> In carl9170 dev->queues is set to __AR9170_NUM_TXQ and
-> p54 uses P54_QUEUE_AC_NUM.
->
-> Both __AR9170_NUM_TXQ and P54_QUEUE_AC_NUM are 4.
-> And this is not going to change since all drivers
-> have to follow mac80211's queue API:
-> <https://wireless.wiki.kernel.org/en/developers/documentation/mac80211/queues>
->
-> Some background:
-> In the old days (linux 2.6 and early 3.x), the parse_txq_params() function did
-> not verify the "queue" value. That's why these drivers had to do it.
->
-> Here's the relevant code from 2.6.39:
-> <http://elixir.free-electrons.com/linux/v2.6.39/source/net/wireless/nl80211.c#L879>
-> You'll notice that the check is missing there.
-> Here's mac80211's ieee80211_set_txq_params for reference:
-> <http://elixir.free-electrons.com/linux/v2.6.39/source/net/mac80211/cfg.c#L1197>
->
-> However over time, the check in the driver has become redundant.
->
+As ieee80211_bss_get_ie() derefences an RCU to return ssid_ie, both
+the call to this function and any operation on this variable need
+protection by the RCU read lock.
 
-Excellent, thank you for pointing that out and the background so clearly.
+Fixes: 44905265bc15 ("nl80211: don't expose wdev->ssid for most interfaces")
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+---
 
-What this tells me though is that we want to inject an ifence() at
-this input validation point, i.e.:
+> but after, perhaps it's easier to just do
+> 
+> 		if (ssid_ie &&
+> 		    nla_put(...)
+> 			goto nla_put_failure_rcu_locked;
+> 
+> and avoid the extra label (but yeah, it's getting late)
 
-if (txq_params->ac >= NL80211_NUM_ACS) {
-    ifence();
-    return -EINVAL;
-}
+OK, done that (and updated the commit message), and testet it.
 
-...but the kernel, in these patches, only has ifence() defined for
-x86. The only way we can sanitize the 'txq_params->ac' value without
-ifence() is to do it at array access time, but then we're stuck
-touching all drivers when standard kernel development practice says
-'refactor common code out of drivers'.
+Thanks,
+	Dominik
 
-Ugh, the bigger concern is that this driver is being flagged and not
-that initial bounds check. Imagine if cw1200 and p54 had already been
-converted to assume that they can just trust 'queue'. It would never
-have been flagged.
-
-I think we should focus on the get_user path and  __fcheck_files for v3.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2b3dbcd40e46..ed87a97fcb0b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2618,12 +2618,13 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 		const u8 *ssid_ie;
+ 		if (!wdev->current_bss)
+ 			break;
++		rcu_read_lock();
+ 		ssid_ie = ieee80211_bss_get_ie(&wdev->current_bss->pub,
+ 					       WLAN_EID_SSID);
+-		if (!ssid_ie)
+-			break;
+-		if (nla_put(msg, NL80211_ATTR_SSID, ssid_ie[1], ssid_ie + 2))
+-			goto nla_put_failure_locked;
++		if (ssid_ie &&
++		    nla_put(msg, NL80211_ATTR_SSID, ssid_ie[1], ssid_ie + 2))
++			goto nla_put_failure_rcu_locked;
++		rcu_read_unlock();
+ 		break;
+ 		}
+ 	default:
+@@ -2635,6 +2636,8 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 	genlmsg_end(msg, hdr);
+ 	return 0;
+ 
++ nla_put_failure_rcu_locked:
++	rcu_read_unlock();
+  nla_put_failure_locked:
+ 	wdev_unlock(wdev);
+  nla_put_failure:
