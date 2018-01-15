@@ -1,97 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:34303 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753439AbeAFBTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Jan 2018 20:19:08 -0500
-Subject: [PATCH 11/18] cw1200: prevent bounds-check bypass via speculative
- execution
-From: Dan Williams <dan.j.williams@intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, peterz@infradead.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        gregkh@linuxfoundation.org, tglx@linutronix.de,
-        torvalds@linux-foundation.org, Kalle Valo <kvalo@codeaurora.org>,
-        alan@linux.intel.com
-Date: Fri, 05 Jan 2018 17:10:53 -0800
-Message-ID: <151520105352.32271.1167586482542492342.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180106_022139_404502_2FEE2EA3)
-In-Reply-To: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([144.76.63.242]:37166 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966563AbeAONJv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jan 2018 08:09:51 -0500
+Message-ID: <1516021789.410.28.camel@sipsolutions.net> (sfid-20180115_140955_693433_714A5152)
+Subject: Re: [RFC v2 3/5] mac80211: Send control port frames over nl80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Mon, 15 Jan 2018 14:09:49 +0100
+In-Reply-To: <20180110170938.2341-4-denkenz@gmail.com> (sfid-20180110_180958_612167_81C26F3A)
+References: <20180110170938.2341-1-denkenz@gmail.com>
+         <20180110170938.2341-4-denkenz@gmail.com>
+         (sfid-20180110_180958_612167_81C26F3A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Static analysis reports that 'queue' may be a user controlled value that
-is used as a data dependency to read 'txq_params' from the
-'priv->tx_queue_params.params' array.  In order to avoid potential leaks
-of kernel memory values, block speculative execution of the instruction
-stream that could issue reads based on an invalid value of 'txq_params'.
-In this case 'txq_params' is referenced later in the function.
+On Wed, 2018-01-10 at 11:09 -0600, Denis Kenzior wrote:
 
-Based on an original patch by Elena Reshetova.
+> Pre-authentication type frames (protocol: 0x88c7) are also forwarded
+> over nl80211.
 
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/net/wireless/st/cw1200/sta.c |   10 ++++++----
- drivers/net/wireless/st/cw1200/wsm.h |    4 +---
- 2 files changed, 7 insertions(+), 7 deletions(-)
+Interesting - maybe userspace should be able to configure a(n) (list
+of) ethertype(s)?
 
-diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
-index 38678e9a0562..886942617f14 100644
---- a/drivers/net/wireless/st/cw1200/sta.c
-+++ b/drivers/net/wireless/st/cw1200/sta.c
-@@ -14,6 +14,7 @@
- #include <linux/firmware.h>
- #include <linux/module.h>
- #include <linux/etherdevice.h>
-+#include <linux/compiler.h>
- 
- #include "cw1200.h"
- #include "sta.h"
-@@ -612,18 +613,19 @@ int cw1200_conf_tx(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
- 		   u16 queue, const struct ieee80211_tx_queue_params *params)
- {
- 	struct cw1200_common *priv = dev->priv;
-+	struct wsm_set_tx_queue_params *txq_params;
- 	int ret = 0;
- 	/* To prevent re-applying PM request OID again and again*/
- 	bool old_uapsd_flags;
- 
- 	mutex_lock(&priv->conf_mutex);
- 
--	if (queue < dev->queues) {
-+	if ((txq_params = nospec_array_ptr(priv->tx_queue_params.params,
-+					queue, dev->queues))) {
- 		old_uapsd_flags = le16_to_cpu(priv->uapsd_info.uapsd_flags);
- 
--		WSM_TX_QUEUE_SET(&priv->tx_queue_params, queue, 0, 0, 0);
--		ret = wsm_set_tx_queue_params(priv,
--					      &priv->tx_queue_params.params[queue], queue);
-+		WSM_TX_QUEUE_SET(txq_params, 0, 0, 0);
-+		ret = wsm_set_tx_queue_params(priv, txq_params, queue);
- 		if (ret) {
- 			ret = -EINVAL;
- 			goto out;
-diff --git a/drivers/net/wireless/st/cw1200/wsm.h b/drivers/net/wireless/st/cw1200/wsm.h
-index 48086e849515..8c8d9191e233 100644
---- a/drivers/net/wireless/st/cw1200/wsm.h
-+++ b/drivers/net/wireless/st/cw1200/wsm.h
-@@ -1099,10 +1099,8 @@ struct wsm_tx_queue_params {
- };
- 
- 
--#define WSM_TX_QUEUE_SET(queue_params, queue, ack_policy, allowed_time,\
--		max_life_time)	\
-+#define WSM_TX_QUEUE_SET(p, ack_policy, allowed_time, max_life_time)	\
- do {							\
--	struct wsm_set_tx_queue_params *p = &(queue_params)->params[queue]; \
- 	p->ackPolicy = (ack_policy);				\
- 	p->allowedMediumTime = (allowed_time);				\
- 	p->maxTransmitLifetime = (max_life_time);			\
+> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+> ---
+>  net/mac80211/cfg.c         |  2 ++
+>  net/mac80211/ieee80211_i.h |  1 +
+>  net/mac80211/mlme.c        |  2 ++
+>  net/mac80211/rx.c          | 31 ++++++++++++++++++++++++++++---
+>  4 files changed, 33 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 46028e12e216..f53bfb27295f 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -925,6 +925,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+>  	 */
+>  	sdata->control_port_protocol = params->crypto.control_port_ethertype;
+>  	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
+> +	sdata->control_port_over_nl80211 = false;
+
+It's probably better to reset this at interface type switching, if it's
+not done anyway (we zero a lot of memory there, but not sure precisely
+what)
+
+Otherwise we'll surely forget this in some place like mesh or OCB ...
+
+Initially it must be false (0) anyway.
+
+>  	sdata->control_port_protocol = req->crypto.control_port_ethertype;
+>  	sdata->control_port_no_encrypt = req->crypto.control_port_no_encrypt;
+> +	sdata->control_port_over_nl80211 =
+> +					req->crypto.control_port_over_nl80211;
+
+Heh. One of the cases where the 80 cols line is just dumb :-)
+
+>  	sdata->encrypt_headroom = ieee80211_cs_headroom(local, &req->crypto,
+>  							sdata->vif.type);
+>  
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index b3cff69bfd66..28b74ae1ee48 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -2326,16 +2326,41 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+>  	}
+>  #endif
+>  
+> -	if (skb) {
+> +	if (!skb)
+> +		goto try_xmit;
+
+Seems this could be better without the goto, perhaps pulling the code
+into a helper function?
+
+> +	skb->protocol = eth_type_trans(skb, dev);
+> +	memset(skb->cb, 0, sizeof(skb->cb));
+> +
+> +	if (unlikely((skb->protocol == sdata->control_port_protocol ||
+> +		      skb->protocol == cpu_to_be16(0x88c7)) &&
+> +		     sdata->control_port_over_nl80211)) {
+> +		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+> +		bool noencrypt;
+> +
+> +		ehdr = eth_hdr(skb);
+> +
+> +		if (status->flag & RX_FLAG_DECRYPTED)
+> +			noencrypt = false;
+> +		else
+> +			noencrypt = true;
+
+	noencrypt = status->flags & RX_FLAG_DECRYPTED;
+? It's a bool, after all, and you could even roll it into the
+declaration.
+
+johannes
