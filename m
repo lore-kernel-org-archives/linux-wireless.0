@@ -1,59 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39792 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933232AbeAHRGb (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:40384 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751118AbeAOStm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 12:06:31 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jia-Ju Bai <baijiaju1990@gmail.com>, kstewart@linuxfoundation.org,
-        johannes.berg@intel.com, tiwai@suse.de, gregkh@linuxfoundation.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        andrew.zaborowski@intel.com, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, colin.king@canonical.com
-Subject: Re: b43: Replace mdelay with msleep in b43_radio_2057_init_post
-References: <1514632107-14698-1-git-send-email-baijiaju1990@gmail.com>
-        <20180108162128.6D37560B1D@smtp.codeaurora.org>
-        <fc3e2558-c31f-289d-8413-33fef4f5ca64@lwfinger.net>
-Date: Mon, 08 Jan 2018 19:06:24 +0200
-In-Reply-To: <fc3e2558-c31f-289d-8413-33fef4f5ca64@lwfinger.net> (Larry
-        Finger's message of "Mon, 8 Jan 2018 10:31:56 -0600")
-Message-ID: <87shbg2sbz.fsf@kamboji.qca.qualcomm.com> (sfid-20180108_180851_466135_085BCD7B)
+        Mon, 15 Jan 2018 13:49:42 -0500
+Received: by mail-oi0-f65.google.com with SMTP id u83so8924848oie.7
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 10:49:41 -0800 (PST)
+Subject: Re: [PATCH v2 02/10] rtlwifi: fix scan channel 1 fail after IPS
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: yhchuang@realtek.com, linux-wireless@vger.kernel.org
+References: <20180111070932.9929-1-pkshih@realtek.com>
+ <20180111070932.9929-3-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <2015659f-afbd-2ec9-9ccb-70370b9872f5@lwfinger.net> (sfid-20180115_194947_202460_D889D8F5)
+Date: Mon, 15 Jan 2018 12:49:40 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180111070932.9929-3-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> If there is no connection, driver will enter IPS state. Meanwhile, it
+> fails to scan channel 1 by the command 'iw dev wlan0 scan freq 2412',
+> because hardware channel setting lose after IPS. Thus, restore channel
+> setting from hw->conf.channel set by last rtl_op_config().
+> 
+> Signed-off-by: Tim Lee <timlee@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/ps.c | 5 +++++
+>   1 file changed, 5 insertions(+)
 
-> On 01/08/2018 10:21 AM, Kalle Valo wrote:
->> Jia-Ju Bai <baijiaju1990@gmail.com> wrote:
->>
->>> b43_radio_2057_init_post is not called in an interrupt handler
->>> nor holding a spinlock.
->>> The function mdelay in it can be replaced with msleep, to reduce busy wait.
->>>
->>> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
->>
->> You submitted an identical patch a week earlier:
->>
->> https://patchwork.kernel.org/patch/10137671/
->>
->> How is this different? Also always add version number to the patch so that the
->> maintainers can follow the changes easily:
->>
->> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
->>
->> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
->
-> I had negative comments on one of those due to the possibility of
-> msleep(2) extending as long as 20 msec. Until the author, or someone
-> else, can test that this is OK, then the mdelay(2) can only be
-> replaced with usleep_range(2000, 3000).
->
-> NACK for both.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Ok, patches dropped.
 
--- 
-Kalle Valo
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+> index 6a4008845f49..71af24e2e051 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/ps.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+> @@ -51,6 +51,11 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
+>   			&rtlmac->retry_long);
+>   	RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+>   
+> +	rtlpriv->cfg->ops->switch_channel(hw);
+> +	rtlpriv->cfg->ops->set_channel_access(hw);
+> +	rtlpriv->cfg->ops->set_bw_mode(hw,
+> +			cfg80211_get_chandef_type(&hw->conf.chandef));
+> +
+>   	/*<3> Enable Interrupt */
+>   	rtlpriv->cfg->ops->enable_interrupt(hw);
+>   
+> 
