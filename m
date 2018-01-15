@@ -1,51 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 9pmail.ess.barracuda.com ([64.235.154.211]:42853 "EHLO
-        9pmail.ess.barracuda.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933846AbeALOZm (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:34190 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932252AbeAOI5r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 09:25:42 -0500
-From: Matt Redfearn <matt.redfearn@mips.com>
-To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-CC: <linux-wireless@vger.kernel.org>,
-        Matt Redfearn <matt.redfearn@mips.com>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH] bcma: Prevent build of PCI host features in module
-Date: Fri, 12 Jan 2018 14:25:18 +0000
-Message-ID: <1515767119-17117-1-git-send-email-matt.redfearn@mips.com> (sfid-20180112_152604_633120_44574D35)
-MIME-Version: 1.0
+        Mon, 15 Jan 2018 03:57:47 -0500
+Message-ID: <1516006661.410.6.camel@sipsolutions.net> (sfid-20180115_095808_008568_EA3E132D)
+Subject: Re: WARNING in rfkill_alloc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: syzbot <syzbot+1ddfb3357e1d7bb5b5d3@syzkaller.appspotmail.com>,
+        davem@davemloft.net, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Date: Mon, 15 Jan 2018 09:57:41 +0100
+In-Reply-To: <089e08282cc03493040562b0079c@google.com> (sfid-20180113_233741_097318_E11B1EAC)
+References: <089e08282cc03493040562b0079c@google.com>
+         (sfid-20180113_233741_097318_E11B1EAC)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Attempting to build bcma.ko with BCMA_DRIVER_PCI_HOSTMODE=y results in
-a build error due to use of symbols not exported from vmlinux:
+Hi,
 
-ERROR: "pcibios_enable_device" [drivers/bcma/bcma.ko] undefined!
-ERROR: "register_pci_controller" [drivers/bcma/bcma.ko] undefined!
-make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+> RIP: 0010:rfkill_alloc+0x2c0/0x380 net/rfkill/core.c:930
 
-To prevent this, don't allow the host mode feature to be built if
-CONFIG_BCMA=m
+This seems pretty obvious - there's no name given.
 
-Signed-off-by: Matt Redfearn <matt.redfearn@mips.com>
+>   wiphy_new_nm+0x159c/0x21d0 net/wireless/core.c:487
+>   ieee80211_alloc_hw_nm+0x4b4/0x2140 net/mac80211/main.c:531
 
----
+which is strange, because we try to validate the name here.
 
- drivers/bcma/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Can you help me read this?
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 02d78f6cecbb..4294784b9cf1 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
- 
- config BCMA_DRIVER_PCI_HOSTMODE
- 	bool "Driver for PCI core working in hostmode"
--	depends on MIPS && BCMA_DRIVER_PCI
-+	depends on MIPS && BCMA_DRIVER_PCI && BCMA = y
- 	help
- 	  PCI core hostmode operation (external PCI bus).
- 
--- 
-2.7.4
+sendmsg$nl_generic(r1, &(0x7f0000b3e000-0x38)={&(0x7f0000d4a000-
+0xc)={0x10, 0x0, 0x0, 0x0}, 0xc,
+&(0x7f0000007000)={&(0x7f00001ca000)={0x14, 0x1c, 0x109,
+0xffffffffffffffff, 0xffffffffffffffff, {0x4, 0x0, 0x0}, []}, 0x14},
+0x1, 0x0, 0x0, 0x0}, 0x0)
+
+I've reformatted it as
+
+sendmsg$nl_generic(
+r1,
+&(0x7f0000b3e000-0x38)={
+addr=   &(0x7f0000d4a000-0xc)={
+                0x10, 0x0, 0x0, 0x0
+        },
+addrlen=0xc,
+vec=    &(0x7f0000007000)={
+        ptr=    &(0x7f00001ca000)={
+                        0x14, 0x1c, 0x109, 0xffffffffffffffff,
+0xffffffffffffffff, {0x4, 0x0, 0x0}, []
+                },
+        len=    0x14
+        },
+vlen=   0x1,
+ctrl=   0x0,
+ctrllen=0x0,
+f=      0x0
+},
+0x0
+)
+
+but am still getting lost - what exactly is the *byte* sequence inside
+the (full) message (including headers)?
+
+
+Ah, then again, now I see the fault injection - I guess dev_set_name()
+just failed and we didn't check the return value, will fix that.
+
+johannes
