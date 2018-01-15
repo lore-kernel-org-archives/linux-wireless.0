@@ -1,68 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60928 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750992AbeAYHMC (ORCPT
+Received: from mail-ot0-f173.google.com ([74.125.82.173]:37450 "EHLO
+        mail-ot0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750918AbeAOUIG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 02:12:02 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 15 Jan 2018 15:08:06 -0500
+Received: by mail-ot0-f173.google.com with SMTP id a24so11644014otd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 12:08:06 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX stall
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
-References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Shrenik Shikhare <shrenik@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20180125071202.482C060A61@smtp.codeaurora.org> (sfid-20180125_081206_761305_4178F354)
-Date: Thu, 25 Jan 2018 07:12:02 +0000 (UTC)
+In-Reply-To: <1512485878.9392.1.camel@nxp.com>
+References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
+ <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com> <1510916848.26896.2.camel@nxp.com>
+ <5A0EDC25.7030505@broadcom.com> <1510932224.22506.0.camel@nxp.com>
+ <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com> <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
+ <1511347672.18886.2.camel@nxp.com> <5A15584A.9090601@broadcom.com>
+ <1511450638.9102.1.camel@nxp.com> <5A1FFA17.6000703@broadcom.com>
+ <1512413992.18900.3.camel@nxp.com> <CAF7Mx6q6mTOXc=4OFVCHAHd26pyfv5e6pK=TMNmb1S6=FBWUWQ@mail.gmail.com>
+ <1512485878.9392.1.camel@nxp.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Mon, 15 Jan 2018 18:08:05 -0200
+Message-ID: <CAOMZO5DXoCFgTtuRRAq_jFjzkzFp6chMCwczXF5Z0bFaNfQnog@mail.gmail.com> (sfid-20180115_210823_430848_FF2B16CF)
+Subject: Re: AP6335 with mainline kernel
+To: Vanessa Maegima <vanessa.maegima@nxp.com>
+Cc: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "van.ayumi@gmail.com" <van.ayumi@gmail.com>,
+        "embed3d@gmail.com" <embed3d@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
+Hi Arend,
 
-> From: Shrenik Shikhare <shrenik@marvell.com>
-> 
-> There is a race condition for acquiring rx_proc_lock between
-> rx worker thread and USB RX data interrupt
-> (mwifiex_usb_rx_complete):
-> 
-> 1. USB receives an RX data interrupt, queues rx_work
-> 2. rx_work empties rx_data_q, tries to acquire rx_proc_lock (to
-> clear rx_processing flag)
-> 3. While #2 is yet to acquire rx_proc_lock, driver receives
-> continuous RX data interupts(mwifiex_usb_rx_complete)
-> 3. For each interrupt at #3, driver acquires rx_proc_lock(it gets
-> the lock since it is in interrupt context), tries to queue
-> rx_work, but fails to do so since rx_processing is still set(#2)
-> 4. When rx_pending exceeds HIGH_RX_PENDING, driver stops
-> submitting URBs back to USB subsystem and thus firmware stops
-> uploading RX data to driver
-> 5. Now finally #2 will acquire rx_proc_lock, but because of #4,
-> there are no further triggers to schedule rx_work again
-> 
-> The above scenario occurs in some platforms where the RX
-> processing is comparitively slower. This results in RX stall in
-> driver, command/TX timeouts in firmware. The above scenario is
-> introduced after commit c7dbdcb2a4e1
-> ("mwifiex: schedule rx_work on RX interrupt for USB")
-> 
-> To fix this set a new more_rx_task_flag whenever RX data callback
-> is trying to schedule rx_work but rx_processing is not yet
-> cleared. This will let the current rx_work(which was waiting for
-> rx_proc_lock) to loopback and process newly arrived RX packets.
-> 
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+On Tue, Dec 5, 2017 at 12:58 PM, Vanessa Maegima
+<vanessa.maegima@nxp.com> wrote:
 
-I can't find any commit with id c7dbdcb2a4e1, is it correct?
+> Hi Arend,
+>
+> Sorry for this!
+>
+> I updated the folder on https://drive.google.com/drive/folders/1fosahjL
+> N1KI5NKS59_aPZdHLpENPFHtK
+>
+> Thanks!
 
--- 
-https://patchwork.kernel.org/patch/10178729/
+Any ideas, please?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks
