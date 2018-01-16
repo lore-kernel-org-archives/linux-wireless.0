@@ -1,104 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:44546 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750908AbeAOTQB (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:57620 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751047AbeAPWYL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 14:16:01 -0500
-Received: by mail-ot0-f195.google.com with SMTP id t20so2196976ote.11
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 11:16:01 -0800 (PST)
-Subject: Re: [PATCH v2 09/10] rtlwifi: btcoex: Add common function for
- qeurying BT information
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: yhchuang@realtek.com, linux-wireless@vger.kernel.org
+        Tue, 16 Jan 2018 17:24:11 -0500
+Message-ID: <1516141444.410.52.camel@sipsolutions.net> (sfid-20180116_232414_974047_9EC0E1C4)
+Subject: Re: [PATCH v2 05/10] rtlwifi: enable mac80211 fast-tx support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>, pkshih@realtek.com
+Cc: Larry.Finger@lwfinger.net, yhchuang@realtek.com,
+        linux-wireless@vger.kernel.org
+Date: Tue, 16 Jan 2018 23:24:04 +0100
+In-Reply-To: <5A5E5C99.5020607@broadcom.com> (sfid-20180116_211216_753091_08EEF52B)
 References: <20180111070932.9929-1-pkshih@realtek.com>
- <20180111070932.9929-10-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net> (sfid-20180115_201606_971996_B95B98E7)
-Date: Mon, 15 Jan 2018 13:15:59 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180111070932.9929-10-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+         <20180111070932.9929-6-pkshih@realtek.com>
+         <871sip24fc.fsf@purkki.adurom.net> <5A5E5C99.5020607@broadcom.com>
+         (sfid-20180116_211216_753091_08EEF52B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
+On Tue, 2018-01-16 at 21:12 +0100, Arend van Spriel wrote:
 > 
-> This commit implement the common function to sort old features, and add
-> more new features that are get_supported_feature, get_supported_version,
-> get_ant_det_val, ble_scan_type, ble_scan_para, bt_dev_info,
-> forbidden_slot_val, afh_map and etc.
+> When I saw this flying by I had the same feeling. This is clearly not 
+> how it was intended although you could interpret the comments of the 
+> .set_frag_threshold() callback and IEEE80211_HW_SUPPORTS_TX_FRAG. 
+> However, the fragmentation threshold is a user-configurable stack 
+> parameter as per the standard. This patch effectively kill that option 
+> for the user although there may be RF conditions in which fragmentation 
+> can help. Having the user configure a fragmentation threshold of 2346 
+> also disables fragmentation and allows mac80211 to use cached fastpath.
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
->   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 309 ++++++++++++++++++---
->   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  70 +++++
->   .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  48 +++-
->   3 files changed, 394 insertions(+), 33 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> index 2be81fec789a..30d940cf3abf 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> @@ -207,6 +207,102 @@ u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
->   	return rtlhal->package_type;
->   }
->   
-> +static
-> +bool halbtc_is_hw_mailbox_exist(struct btc_coexist *btcoexist)
-> +{
-> +	if (IS_HARDWARE_TYPE_8812(btcoexist->adapter))
-> +		return false;
-> +	else
-> +		return true;
 
-Once you have returned false for 8812, you do not need the 'else'. Use a simple 
-'	return true;'. As this is the only objection in this patch, I will let it 
-pass. Some user with a suitable tool will change it.
+        /* fast-xmit doesn't handle fragmentation at all */
+        if (local->hw.wiphy->frag_threshold != (u32)-1 &&
+            !ieee80211_hw_check(&local->hw, SUPPORTS_TX_FRAG))
+                goto out;
 
-> +}
-> +
-> +static
-> +bool halbtc_send_bt_mp_operation(struct btc_coexist *btcoexist, u8 op_code,
-> +				 u8 *cmd, u32 len, unsigned long wait_ms)
---snip--
+so internally at least it has to be -1, does 2346 really do that?
+remember, but it might well :-)
 
->   
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> index 5a7816ff6877..cbbf5e5a9c9b 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> @@ -278,6 +278,8 @@ enum btc_get_type {
->   	BTC_GET_U4_VENDOR,
->   	BTC_GET_U4_SUPPORTED_VERSION,
->   	BTC_GET_U4_SUPPORTED_FEATURE,
-> +	BTC_GET_U4_BT_DEVICE_INFO,
-> +	BTC_GET_U4_BT_FORBIDDEN_SLOT_VAL,
->   	BTC_GET_U4_WIFI_IQK_TOTAL,
->   	BTC_GET_U4_WIFI_IQK_OK,
->   	BTC_GET_U4_WIFI_IQK_FAIL,
-> @@ -459,6 +461,19 @@ typedef	bool (*bfp_btc_get)(void *btcoexist, u8 get_type, void *out_buf);
->   
->   typedef	bool (*bfp_btc_set)(void *btcoexist, u8 set_type, void *in_buf);
->   
-> +typedef u32 (*bfp_btc_get_bt_coex_supported_feature)(void *btcoexist);
-> +
-> +typedef u32 (*bfp_btc_get_bt_coex_supported_version)(void *btcoexist);
-> +
-> +typedef u8 (*bfp_btc_get_ant_det_val_from_bt)(void *btcoexist);
-> +
-> +typedef u8 (*bfp_btc_get_ble_scan_type_from_bt)(void *btcoexist);
-> +
-> +typedef u32 (*bfp_btc_get_ble_scan_para_from_bt)(void *btcoexist, u8 scan_type);
-> +
-> +typedef bool (*bfp_btc_get_bt_afh_map_from_bt)(void *btcoexist, u8 map_type,
-> +					       u8 *afh_map);
-> +
->   typedef void (*bfp_btc_set_bt_reg)(void *btc_context, u8 reg_type, u32 offset,
->   				   u32 value);
-
-I would prefer that you not add additional typedef statements, but I will let it 
-pass.
-
-
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+johannes
