@@ -1,49 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:41303 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752016AbeAZPFe (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:35657 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750716AbeAPI5G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 10:05:34 -0500
-Received: by mail-qt0-f181.google.com with SMTP id i1so1934226qtj.8
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2018 07:05:34 -0800 (PST)
-Date: Fri, 26 Jan 2018 07:05:30 -0800
-From: Tejun Heo <tj@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211_hwsim: don't use WQ_MEM_RECLAIM
-Message-ID: <20180126150530.GK17457@devbig577.frc2.facebook.com> (sfid-20180126_160538_513586_4C9A5632)
-References: <20180124074051.19939-1-johannes@sipsolutions.net>
- <7eb10bf1-7825-3dae-b813-d912e6670440@uni-rostock.de>
- <1516790786.2508.43.camel@sipsolutions.net>
- <CAF7Mx6oASGjDrzVq4_t8Wt-DU7Zap1tcpz5vU7bk-Q5qzg4V=g@mail.gmail.com>
- <CAF7Mx6o_Y0AeGQfhGKMkSxUHtRNyGaHh3g-TyvusJmsYyckFZg@mail.gmail.com>
- <CAF7Mx6rg2XOOG0mZxnKiM_1ToB36Yc2A=sKQfN7drLsr3+4crw@mail.gmail.com>
- <5A6A3BFC.5090305@broadcom.com>
- <1516914086.2189.9.camel@sipsolutions.net>
- <20180125222650.GJ17457@devbig577.frc2.facebook.com>
- <1516954082.2189.14.camel@sipsolutions.net>
+        Tue, 16 Jan 2018 03:57:06 -0500
+Received: by mail-qt0-f196.google.com with SMTP id u10so17335221qtg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jan 2018 00:57:06 -0800 (PST)
+Subject: Re: [PATCH v3] brcmfmac: fix CLM load error for legacy chips when
+ user helper is enabled
+To: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        chi-hsien.lin@cypress.com
+References: <1516083246-16013-1-git-send-email-wright.feng@cypress.com>
+ <5A5DBDE6.2080403@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A5DBE5F.7070701@broadcom.com> (sfid-20180116_095710_048878_5788090A)
+Date: Tue, 16 Jan 2018 09:57:03 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1516954082.2189.14.camel@sipsolutions.net>
+In-Reply-To: <5A5DBDE6.2080403@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 1/16/2018 9:55 AM, Arend van Spriel wrote:
+> On 1/16/2018 7:14 AM, Wright Feng wrote:
+>> For legacy chips without CLM blob files, kernel with user helper function
+>> returns -EAGAIN when we request_firmware(), and then driver got failed
+>> when bringing up legacy chips. We expect the CLM blob file for legacy
+>> chip
+>> is not existence in firmware path, but the -ENOENT error is
+>> transferred to
+>> -EAGAIN in firmware_class.c with user helper.
+>> Because of that, we continue with CLM data currently present in firmware
+>> if getting error from doing request_firmware().
 
-On Fri, Jan 26, 2018 at 09:08:02AM +0100, Johannes Berg wrote:
-> Not that you mention it ... Honestly though, wifi connections break all
-> the time, so not sure you'd really want that. But anyway, that's what
-> we have.
+Forgot to mention, but also please add following Cc: as it will probably 
+not make it before the merge window opens.
 
-I'd be a lot happier to remove WQ_MEM_RECLAIM from wireless drivers
-too, and glancing the code, it looked like there already are so many
-holes that whether having that flag or not shouldn't matter all that
-much.  It was just difficult for me to make a case for removing it
-preemptively.  If you're up for it, please be my guest.
-
-Thanks.
-
--- 
-tejun
+Cc: stable@vger.kernel.org # v4.15.y
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+>> ---
+>> v2: remove retry from patch v1
+>> v3: remove redundant log print
+>> ---
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 9 +++------
+>>   1 file changed, 3 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> index 6a59d06..b0ef0e7 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> @@ -182,12 +182,9 @@ static int brcmf_c_process_clm_blob(struct
+>> brcmf_if *ifp)
+>>
+>>       err = request_firmware(&clm, clm_name, dev);
+>>       if (err) {
+>> -        if (err == -ENOENT) {
+>> -            brcmf_dbg(INFO, "continue with CLM data currently present
+>> in firmware\n");
+>> -            return 0;
+>> -        }
+>> -        brcmf_err("request CLM blob file failed (%d)\n", err);
+>> -        return err;
+>> +        brcmf_info("no clm_blob available(%d), device may have
+>> limited channels available\n",
+>> +               err);
+>> +        return 0;
+>
+> Looking good. However, let's nitpick (my bad). Please make it
+> "..available (err=%d), ...".
+>
+> Regards,
+> Arend
+>
