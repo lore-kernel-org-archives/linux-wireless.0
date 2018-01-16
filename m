@@ -1,146 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:37127 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965081AbeALUCD (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:44189 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752073AbeAPODE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 15:02:03 -0500
-From: Christian Lamparter <chunkeey@gmail.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        Netdev <netdev@vger.kernel.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>
-Subject: Re: [PATCH v2 15/19] carl9170: prevent bounds-check bypass via speculative execution
-Date: Fri, 12 Jan 2018 21:01:59 +0100
-Message-ID: <6067453.9oC6tc2YFn@debian64> (sfid-20180112_210224_806489_D492D3A2)
-In-Reply-To: <CAPcyv4gne66ic3E-Y+pLi4QZdVeeeVmvayVPA3Jt1gyUqpaF9g@mail.gmail.com>
-References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com> <1648304.tjl4HeBnOe@debian64> <CAPcyv4gne66ic3E-Y+pLi4QZdVeeeVmvayVPA3Jt1gyUqpaF9g@mail.gmail.com>
+        Tue, 16 Jan 2018 09:03:04 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 06/13] staging: wilc1000: rename CfgConnectResult() and its local variable names
+Date: Tue, 16 Jan 2018 19:32:24 +0530
+Message-ID: <1516111351-5353-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180116_150350_048090_165E21BD)
+In-Reply-To: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, January 12, 2018 7:39:50 PM CET Dan Williams wrote:
-> On Fri, Jan 12, 2018 at 6:42 AM, Christian Lamparter <chunkeey@gmail.com> wrote:
-> > On Friday, January 12, 2018 1:47:46 AM CET Dan Williams wrote:
-> >> Static analysis reports that 'queue' may be a user controlled value that
-> >> is used as a data dependency to read from the 'ar9170_qmap' array. In
-> >> order to avoid potential leaks of kernel memory values, block
-> >> speculative execution of the instruction stream that could issue reads
-> >> based on an invalid result of 'ar9170_qmap[queue]'. In this case the
-> >> value of 'ar9170_qmap[queue]' is immediately reused as an index to the
-> >> 'ar->edcf' array.
-> >>
-> >> Based on an original patch by Elena Reshetova.
-> >>
-> >> Cc: Christian Lamparter <chunkeey@googlemail.com>
-> >> Cc: Kalle Valo <kvalo@codeaurora.org>
-> >> Cc: linux-wireless@vger.kernel.org
-> >> Cc: netdev@vger.kernel.org
-> >> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> >> ---
-> > This patch (and p54, cw1200) look like the same patch?!
-> > Can you tell me what happend to:
-> >
-> > On Saturday, January 6, 2018 5:34:03 PM CET Dan Williams wrote:
-> >> On Sat, Jan 6, 2018 at 6:23 AM, Christian Lamparter <chunkeey@gmail.com> wrote:
-> >> > And Furthermore a invalid queue (param->ac) would cause a crash in
-> >> > this line in mac80211 before it even reaches the driver [1]:
-> >> > |       sdata->tx_conf[params->ac] = p;
-> >> > |                   ^^^^^^^^
-> >> > |       if (drv_conf_tx(local, sdata, >>>> params->ac <<<<, &p)) {
-> >> > |        ^^ (this is a wrapper for the *_op_conf_tx)
-> >> >
-> >> > I don't think these chin-up exercises are needed.
-> >>
-> >> Quite the contrary, you've identified a better place in the call stack
-> >> to sanitize the input and disable speculation. Then we can kill the
-> >> whole class of the wireless driver reports at once it seems.
-> > <https://www.spinics.net/lists/netdev/msg476353.html>
-> 
-> I didn't see where ac is being validated against the driver specific
-> 'queues' value in that earlier patch.
-The link to the check is right there in the earlier post. It's in 
-parse_txq_params():
-<https://github.com/torvalds/linux/blob/master/net/wireless/nl80211.c#L2070>
-|	if (txq_params->ac >= NL80211_NUM_ACS)
-|		return -EINVAL;
+This is cleanup patch,to avoid use of camelCase for variable name
+and function names in CfgConnectResult().
 
-NL80211_NUM_ACS is 4
-<http://elixir.free-electrons.com/linux/v4.15-rc7/source/include/uapi/linux/nl80211.h#L3748>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 74 +++++++++++------------
+ 1 file changed, 37 insertions(+), 37 deletions(-)
 
-This check was added ever since mac80211's ieee80211_set_txq_params():
-| sdata->tx_conf[params->ac] = p;
-
-For cw1200: the driver just sets the dev->queue to 4.
-In carl9170 dev->queues is set to __AR9170_NUM_TXQ and
-p54 uses P54_QUEUE_AC_NUM.
-
-Both __AR9170_NUM_TXQ and P54_QUEUE_AC_NUM are 4.
-And this is not going to change since all drivers
-have to follow mac80211's queue API:
-<https://wireless.wiki.kernel.org/en/developers/documentation/mac80211/queues>
-
-Some background:
-In the old days (linux 2.6 and early 3.x), the parse_txq_params() function did
-not verify the "queue" value. That's why these drivers had to do it.
-
-Here's the relevant code from 2.6.39:
-<http://elixir.free-electrons.com/linux/v2.6.39/source/net/wireless/nl80211.c#L879>
-You'll notice that the check is missing there.
-Here's mac80211's ieee80211_set_txq_params for reference:
-<http://elixir.free-electrons.com/linux/v2.6.39/source/net/mac80211/cfg.c#L1197>
-
-However over time, the check in the driver has become redundant.
-
-> > Anyway, I think there's an easy way to solve this: remove the
-> > "if (queue < ar->hw->queues)" check altogether. It's no longer needed
-> > anymore as the "queue" value is validated long before the driver code
-> > gets called.
-> > 
-> > And from my understanding, this will fix the "In this case
-> > the value of 'ar9170_qmap[queue]' is immediately reused as an index to
-> > the 'ar->edcf' array." gripe your tool complains about.
-> >
-> > This is here's a quick test-case for carl9170.:
-> > ---
-> > diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-> > index 988c8857d78c..2d3afb15bb62 100644
-> > --- a/drivers/net/wireless/ath/carl9170/main.c
-> > +++ b/drivers/net/wireless/ath/carl9170/main.c
-> > @@ -1387,13 +1387,8 @@ static int carl9170_op_conf_tx(struct ieee80211_hw *hw,
-> >         int ret;
-> >
-> >         mutex_lock(&ar->mutex);
-> > -       if (queue < ar->hw->queues) {
-> > -               memcpy(&ar->edcf[ar9170_qmap[queue]], param, sizeof(*param));
-> > -               ret = carl9170_set_qos(ar);
-> > -       } else {
-> > -               ret = -EINVAL;
-> > -       }
-> > -
-> > +       memcpy(&ar->edcf[ar9170_qmap[queue]], param, sizeof(*param));
-> > +       ret = carl9170_set_qos(ar);
-> >         mutex_unlock(&ar->mutex);
-> >         return ret;
-> >  }
-> > ---
-> > What does your tool say about this?
-> 
-> If you take away the 'if' then I don't the tool will report on this.
-> 
-> > (If necessary, the "queue" value could be even sanitized with a
-> > queue %= ARRAY_SIZE(ar9170_qmap); before the mutex_lock.)
-> 
-> That is what array_ptr() is doing in a more sophisticated way.
-I think it's a very roundabout way :D. In any case the queue %= ...
-could also be replaced by:
-BUILD_BUG_ON(ARRAY_SIZE(ar9170_qmap) != NL80211_NUM_ACS));
-(And the equivalent for p54, cw1200)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 2ca703c..15d7e14 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -469,92 +469,92 @@ static void CfgScanResult(enum scan_event scan_event,
+ 
+ int wilc_connecting;
+ 
+-static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+-			     struct connect_info *pstrConnectInfo,
+-			     u8 u8MacStatus,
+-			     struct disconnect_info *pstrDisconnectNotifInfo,
+-			     void *pUserVoid)
++static void cfg_connect_result(enum conn_event conn_disconn_evt,
++			     struct connect_info *conn_info,
++			     u8 mac_status,
++			     struct disconnect_info *disconn_info,
++			     void *priv_data)
+ {
+ 	struct wilc_priv *priv;
+ 	struct net_device *dev;
+-	struct host_if_drv *pstrWFIDrv;
+-	u8 NullBssid[ETH_ALEN] = {0};
++	struct host_if_drv *wfi_drv;
++	u8 null_bssid[ETH_ALEN] = {0};
+ 	struct wilc *wl;
+ 	struct wilc_vif *vif;
+ 
+ 	wilc_connecting = 0;
+ 
+-	priv = pUserVoid;
++	priv = priv_data;
+ 	dev = priv->dev;
+ 	vif = netdev_priv(dev);
+ 	wl = vif->wilc;
+-	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
++	wfi_drv = (struct host_if_drv *)priv->hif_drv;
+ 
+-	if (enuConnDisconnEvent == CONN_DISCONN_EVENT_CONN_RESP) {
+-		u16 u16ConnectStatus;
++	if (conn_disconn_evt == CONN_DISCONN_EVENT_CONN_RESP) {
++		u16 connect_status;
+ 
+-		u16ConnectStatus = pstrConnectInfo->status;
++		connect_status = conn_info->status;
+ 
+-		if ((u8MacStatus == MAC_DISCONNECTED) &&
+-		    (pstrConnectInfo->status == SUCCESSFUL_STATUSCODE)) {
+-			u16ConnectStatus = WLAN_STATUS_UNSPECIFIED_FAILURE;
+-			wilc_wlan_set_bssid(priv->dev, NullBssid,
++		if ((mac_status == MAC_DISCONNECTED) &&
++		    (conn_info->status == SUCCESSFUL_STATUSCODE)) {
++			connect_status = WLAN_STATUS_UNSPECIFIED_FAILURE;
++			wilc_wlan_set_bssid(priv->dev, null_bssid,
+ 					    STATION_MODE);
+ 			eth_zero_addr(wilc_connected_ssid);
+ 
+-			if (!pstrWFIDrv->p2p_connect)
++			if (!wfi_drv->p2p_connect)
+ 				wlan_channel = INVALID_CHANNEL;
+ 
+ 			netdev_err(dev, "Unspecified failure\n");
+ 		}
+ 
+-		if (u16ConnectStatus == WLAN_STATUS_SUCCESS) {
+-			bool bNeedScanRefresh = false;
++		if (connect_status == WLAN_STATUS_SUCCESS) {
++			bool scan_refresh = false;
+ 			u32 i;
+ 
+-			memcpy(priv->associated_bss, pstrConnectInfo->bssid, ETH_ALEN);
++			memcpy(priv->associated_bss, conn_info->bssid, ETH_ALEN);
+ 
+ 			for (i = 0; i < last_scanned_cnt; i++) {
+ 				if (memcmp(last_scanned_shadow[i].bssid,
+-					   pstrConnectInfo->bssid,
++					   conn_info->bssid,
+ 					   ETH_ALEN) == 0) {
+ 					unsigned long now = jiffies;
+ 
+ 					if (time_after(now,
+ 						       last_scanned_shadow[i].time_scan_cached +
+ 						       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
+-						bNeedScanRefresh = true;
++						scan_refresh = true;
+ 
+ 					break;
+ 				}
+ 			}
+ 
+-			if (bNeedScanRefresh)
++			if (scan_refresh)
+ 				refresh_scan(priv, true);
+ 		}
+ 
+-		cfg80211_connect_result(dev, pstrConnectInfo->bssid,
+-					pstrConnectInfo->req_ies, pstrConnectInfo->req_ies_len,
+-					pstrConnectInfo->resp_ies, pstrConnectInfo->resp_ies_len,
+-					u16ConnectStatus, GFP_KERNEL);
+-	} else if (enuConnDisconnEvent == CONN_DISCONN_EVENT_DISCONN_NOTIF)    {
++		cfg80211_connect_result(dev, conn_info->bssid,
++					conn_info->req_ies, conn_info->req_ies_len,
++					conn_info->resp_ies, conn_info->resp_ies_len,
++					connect_status, GFP_KERNEL);
++	} else if (conn_disconn_evt == CONN_DISCONN_EVENT_DISCONN_NOTIF)    {
+ 		wilc_optaining_ip = false;
+ 		p2p_local_random = 0x01;
+ 		p2p_recv_random = 0x00;
+ 		wilc_ie = false;
+ 		eth_zero_addr(priv->associated_bss);
+-		wilc_wlan_set_bssid(priv->dev, NullBssid, STATION_MODE);
++		wilc_wlan_set_bssid(priv->dev, null_bssid, STATION_MODE);
+ 		eth_zero_addr(wilc_connected_ssid);
+ 
+-		if (!pstrWFIDrv->p2p_connect)
++		if (!wfi_drv->p2p_connect)
+ 			wlan_channel = INVALID_CHANNEL;
+-		if ((pstrWFIDrv->IFC_UP) && (dev == wl->vif[1]->ndev))
+-			pstrDisconnectNotifInfo->reason = 3;
+-		else if ((!pstrWFIDrv->IFC_UP) && (dev == wl->vif[1]->ndev))
+-			pstrDisconnectNotifInfo->reason = 1;
++		if ((wfi_drv->IFC_UP) && (dev == wl->vif[1]->ndev))
++			disconn_info->reason = 3;
++		else if ((!wfi_drv->IFC_UP) && (dev == wl->vif[1]->ndev))
++			disconn_info->reason = 1;
+ 
+-		cfg80211_disconnected(dev, pstrDisconnectNotifInfo->reason, pstrDisconnectNotifInfo->ie,
+-				      pstrDisconnectNotifInfo->ie_len, false,
++		cfg80211_disconnected(dev, disconn_info->reason, disconn_info->ie,
++				      disconn_info->ie_len, false,
+ 				      GFP_KERNEL);
+ 	}
+ }
+@@ -794,7 +794,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	ret = wilc_set_join_req(vif, pstrNetworkInfo->bssid, sme->ssid,
+ 				     sme->ssid_len, sme->ie, sme->ie_len,
+-				     CfgConnectResult, (void *)priv,
++				     cfg_connect_result, (void *)priv,
+ 				     u8security, tenuAuth_type,
+ 				     pstrNetworkInfo->ch,
+ 				     pstrNetworkInfo->join_params);
+-- 
+2.7.4
