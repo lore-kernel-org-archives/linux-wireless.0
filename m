@@ -1,111 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:44535 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751817AbeA0TWr (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:43222 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750826AbeAPB21 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Jan 2018 14:22:47 -0500
-Received: by mail-oi0-f68.google.com with SMTP id j15so2435597oii.11
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Jan 2018 11:22:47 -0800 (PST)
-Subject: Re: [PATCH 09/10] rtlwifi: btcoex: add routine to set default port id
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180126074645.27201-1-pkshih@realtek.com>
- <20180126074645.27201-10-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <496ad7f6-3630-7ffe-2a1f-7e72ac23ffe6@lwfinger.net> (sfid-20180127_202304_915584_186914FC)
-Date: Sat, 27 Jan 2018 13:22:45 -0600
+        Mon, 15 Jan 2018 20:28:27 -0500
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 07/10] rtlwifi: btcoex: Add power_on_setting routine
+Date: Tue, 16 Jan 2018 01:28:12 +0000
+Message-ID: <1516066092.6071.6.camel@realtek.com> (sfid-20180116_022830_922617_05CF2EE0)
+References: <20180111070932.9929-1-pkshih@realtek.com>
+         <20180111070932.9929-8-pkshih@realtek.com>
+         <c2985051-4502-5bc4-79bf-a8c1669e0504@lwfinger.net>
+In-Reply-To: <c2985051-4502-5bc4-79bf-a8c1669e0504@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180126074645.27201-10-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2018 01:46 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> Tell wifi and BT firmware the default port ID to set multiports' state
-> properly, but only 8822be needs this function currently.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
-
-This patch results in the following compiler warnings:
-
-   CC [M]  drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.o
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1052:13: warning: 
-‘halbtc_set_default_port_id_cmd’ defined but not used [-Wunused-function]
-  static void halbtc_set_default_port_id_cmd(void *bt_context)
-              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1042:13: warning: 
-‘halbtc_send_wifi_port_id_cmd’ defined but not used [-Wunused-function]
-  static void halbtc_send_wifi_port_id_cmd(void *bt_context)
-              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Something seems to be wrong. As these routines will likely be needed later, you 
-need to remove the static notation and put their prototypes in a header to quiet 
-Sparse.
-
-Larry
-
-
->   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 22 ++++++++++++++++++++++
->   drivers/net/wireless/realtek/rtlwifi/wifi.h        |  5 +++++
->   2 files changed, 27 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> index 1404729441a2..5e41b204f7c0 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> @@ -1039,6 +1039,28 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
->   					cmd_len, cmd_buf);
->   }
->   
-> +static void halbtc_send_wifi_port_id_cmd(void *bt_context)
-> +{
-> +	struct btc_coexist *btcoexist = (struct btc_coexist *)bt_context;
-> +	struct rtl_priv *rtlpriv = btcoexist->adapter;
-> +	u8 cmd_buf[1] = {0};	/* port id [2:0] = 0 */
-> +
-> +	rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->mac80211.hw, H2C_BT_PORT_ID,
-> +					1, cmd_buf);
-> +}
-> +
-> +static void halbtc_set_default_port_id_cmd(void *bt_context)
-> +{
-> +	struct btc_coexist *btcoexist = (struct btc_coexist *)bt_context;
-> +	struct rtl_priv *rtlpriv = btcoexist->adapter;
-> +	struct ieee80211_hw *hw = rtlpriv->mac80211.hw;
-> +
-> +	if (!rtlpriv->cfg->ops->set_default_port_id_cmd)
-> +		return;
-> +
-> +	rtlpriv->cfg->ops->set_default_port_id_cmd(hw);
-> +}
-> +
->   static
->   void halbtc_set_bt_reg(void *btc_context, u8 reg_type, u32 offset, u32 set_val)
->   {
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> index 0e8aae0c05c1..1c9ed28b42da 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> @@ -153,6 +153,10 @@ enum rtl8192c_h2c_cmd {
->   	MAX_H2CCMD
->   };
->   
-> +enum {
-> +	H2C_BT_PORT_ID = 0x71,
-> +};
-> +
->   #define GET_TX_REPORT_SN_V1(c2h)	(c2h[6])
->   #define GET_TX_REPORT_ST_V1(c2h)	(c2h[0] & 0xC0)
->   #define GET_TX_REPORT_RETRY_V1(c2h)	(c2h[2] & 0x3F)
-> @@ -2256,6 +2260,7 @@ struct rtl_hal_ops {
->   	void (*bt_coex_off_before_lps) (struct ieee80211_hw *hw);
->   	void (*fill_h2c_cmd) (struct ieee80211_hw *hw, u8 element_id,
->   			      u32 cmd_len, u8 *p_cmdbuffer);
-> +	void (*set_default_port_id_cmd)(struct ieee80211_hw *hw);
->   	bool (*get_btc_status) (void);
->   	bool (*is_fw_header)(struct rtlwifi_firmware_header *hdr);
->   	u32 (*rx_command_packet)(struct ieee80211_hw *hw,
-> 
+T24gTW9uLCAyMDE4LTAxLTE1IGF0IDEzOjE5IC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
+IE9uIDAxLzExLzIwMTggMDE6MDkgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiAN
+Cj4gPiBGcm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPiANCj4gPiBB
+ZnRlciBtYWMgcG93ZXItb24gc2VxdWVuY2UsIHdpZmkgd2lsbCBzdGFydCB0byB3b3JrIHNvIG5v
+dGlmeQ0KPiA+IGJ0Y29leCB0aGUNCj4gPiBldmVudCB0byBjb25maWd1cmUgcmVnaXN0ZXJzIGVz
+cGVjaWFsbHkgcmVsYXRlZCB0byBhbnRlbm5hLiBUaGlzDQo+ID4gd2lsbCBub3QNCj4gPiBvbmx5
+IGhlbHAgdG8gYXNzaWduIGFudGVubmEgYnV0IGFsc28gdG8geWllbGQgYmV0dGVyIHVzZXINCj4g
+PiBleHBlcmllbmNlLg0KPiA+IA0KPiA+IFNpZ25lZC1vZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtz
+aGloQHJlYWx0ZWsuY29tPg0KPiA+IC0tLQ0KPiA+IMKgIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
+YWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjb3V0c3JjLmggfCAxDQo+ID4gKw0KPiA+IMKg
+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5j
+wqDCoMKgwqDCoMKgfCA2DQo+ID4gKysrKysrDQo+ID4gwqAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+cmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9ydGxfYnRjLmjCoMKgwqDCoMKgwqB8IDENCj4gPiAr
+DQo+ID4gwqAgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3dpZmkuaMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfCAxDQo+ID4gKw0KPiA+IMKgIDQgZmls
+ZXMgY2hhbmdlZCwgOSBpbnNlcnRpb25zKCspDQo+ID4gDQo+ID4gZGlmZiAtLWdpdA0KPiA+IGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGNvdXRz
+cmMuaA0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlz
+dC9oYWxidGNvdXRzcmMuaA0KPiA+IGluZGV4IGVhMTJiOWQ2M2E3My4uYmM1MjNhZjdlZjg4IDEw
+MDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNv
+ZXhpc3QvaGFsYnRjb3V0c3JjLmgNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFs
+dGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5oDQo+ID4gQEAgLTYwOCw2ICs2MDgs
+NyBAQCBleHRlcm4gc3RydWN0IGJ0Y19jb2V4aXN0IGdsX2J0X2NvZXhpc3Q7DQo+ID4gwqDCoA0K
+PiA+IMKgIGJvb2wgZXhoYWxidGNfaW5pdGxpemVfdmFyaWFibGVzKHZvaWQpOw0KPiA+IMKgIGJv
+b2wgZXhoYWxidGNfYmluZF9idF9jb2V4X3dpdGhhZGFwdGVyKHZvaWQgKmFkYXB0ZXIpOw0KPiA+
+ICt2b2lkIGV4aGFsYnRjX3Bvd2VyX29uX3NldHRpbmcoc3RydWN0IGJ0Y19jb2V4aXN0ICpidGNv
+ZXhpc3QpOw0KPiA+IMKgIHZvaWQgZXhoYWxidGNfaW5pdF9od19jb25maWcoc3RydWN0IGJ0Y19j
+b2V4aXN0ICpidGNvZXhpc3QsIGJvb2wNCj4gPiB3aWZpX29ubHkpOw0KPiA+IMKgIHZvaWQgZXho
+YWxidGNfaW5pdF9jb2V4X2RtKHN0cnVjdCBidGNfY29leGlzdCAqYnRjb2V4aXN0KTsNCj4gPiDC
+oCB2b2lkIGV4aGFsYnRjX2lwc19ub3RpZnkoc3RydWN0IGJ0Y19jb2V4aXN0ICpidGNvZXhpc3Qs
+IHU4IHR5cGUpOw0KPiA+IGRpZmYgLS1naXQNCj4gPiBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
+YWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5jDQo+ID4gYi9kcml2ZXJzL25ldC93aXJl
+bGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L3J0bF9idGMuYw0KPiA+IGluZGV4IDRkOWUz
+MzA3OGQ0Zi4uOWUzNjIzYjA0MjNjIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5jDQo+ID4gKysrIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9ydGxfYnRjLmMNCj4gPiBA
+QCAtMzIsNiArMzIsNyBAQA0KPiA+IMKgIHN0YXRpYyBzdHJ1Y3QgcnRsX2J0Y19vcHMgcnRsX2J0
+Y19vcGVyYXRpb24gPSB7DQo+ID4gwqDCoAkuYnRjX2luaXRfdmFyaWFibGVzID0gcnRsX2J0Y19p
+bml0X3ZhcmlhYmxlcywNCj4gPiDCoMKgCS5idGNfaW5pdF9oYWxfdmFycyA9IHJ0bF9idGNfaW5p
+dF9oYWxfdmFycywNCj4gPiArCS5idGNfcG93ZXJfb25fc2V0dGluZyA9IHJ0bF9idGNfcG93ZXJf
+b25fc2V0dGluZywNCj4gPiDCoMKgCS5idGNfaW5pdF9od19jb25maWcgPSBydGxfYnRjX2luaXRf
+aHdfY29uZmlnLA0KPiA+IMKgwqAJLmJ0Y19pcHNfbm90aWZ5ID0gcnRsX2J0Y19pcHNfbm90aWZ5
+LA0KPiA+IMKgwqAJLmJ0Y19scHNfbm90aWZ5ID0gcnRsX2J0Y19scHNfbm90aWZ5LA0KPiA+IEBA
+IC0xMTYsNiArMTE3LDExIEBAIHZvaWQgcnRsX2J0Y19pbml0X2hhbF92YXJzKHN0cnVjdCBydGxf
+cHJpdg0KPiA+ICpydGxwcml2KQ0KPiA+IMKgwqAJwqAqLw0KPiA+IMKgIH0NCj4gPiDCoMKgDQo+
+ID4gK3ZvaWQgcnRsX2J0Y19wb3dlcl9vbl9zZXR0aW5nKHN0cnVjdCBydGxfcHJpdiAqcnRscHJp
+dikNCj4gPiArew0KPiA+ICsJZXhoYWxidGNfcG93ZXJfb25fc2V0dGluZygmZ2xfYnRfY29leGlz
+dCk7DQo+ID4gK30NCj4gPiArDQo+ID4gwqAgdm9pZCBydGxfYnRjX2luaXRfaHdfY29uZmlnKHN0
+cnVjdCBydGxfcHJpdiAqcnRscHJpdikNCj4gPiDCoCB7DQo+ID4gwqDCoAl1OCBidF9leGlzdDsN
+Cj4gPiBkaWZmIC0tZ2l0DQo+ID4gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdp
+ZmkvYnRjb2V4aXN0L3J0bF9idGMuaA0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRl
+ay9ydGx3aWZpL2J0Y29leGlzdC9ydGxfYnRjLmgNCj4gPiBpbmRleCA0MGYxY2U4YzhhMDYuLjli
+ZWNmYTU5NDA3ZCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVr
+L3J0bHdpZmkvYnRjb2V4aXN0L3J0bF9idGMuaA0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5oDQo+ID4gQEAgLTI5LDYgKzI5
+LDcgQEANCj4gPiDCoMKgDQo+ID4gwqAgdm9pZCBydGxfYnRjX2luaXRfdmFyaWFibGVzKHN0cnVj
+dCBydGxfcHJpdiAqcnRscHJpdik7DQo+ID4gwqAgdm9pZCBydGxfYnRjX2luaXRfaGFsX3ZhcnMo
+c3RydWN0IHJ0bF9wcml2ICpydGxwcml2KTsNCj4gPiArdm9pZCBydGxfYnRjX3Bvd2VyX29uX3Nl
+dHRpbmcoc3RydWN0IHJ0bF9wcml2ICpydGxwcml2KTsNCj4gPiDCoCB2b2lkIHJ0bF9idGNfaW5p
+dF9od19jb25maWcoc3RydWN0IHJ0bF9wcml2ICpydGxwcml2KTsNCj4gPiDCoCB2b2lkIHJ0bF9i
+dGNfaXBzX25vdGlmeShzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYsIHU4IHR5cGUpOw0KPiA+IMKg
+IHZvaWQgcnRsX2J0Y19scHNfbm90aWZ5KHN0cnVjdCBydGxfcHJpdiAqcnRscHJpdiwgdTggdHlw
+ZSk7DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lm
+aS93aWZpLmgNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS93aWZp
+LmgNCj4gPiBpbmRleCA5NDE2OTQwNjBmNDguLmIyN2RiZTEwYjE2MyAxMDA2NDQNCj4gPiAtLS0g
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvd2lmaS5oDQo+ID4gKysrIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3dpZmkuaA0KPiA+IEBAIC0yNTU3
+LDYgKzI1NTcsNyBAQCBzdHJ1Y3QgYnRfY29leGlzdF9pbmZvIHsNCj4gPiDCoCBzdHJ1Y3QgcnRs
+X2J0Y19vcHMgew0KPiA+IMKgwqAJdm9pZCAoKmJ0Y19pbml0X3ZhcmlhYmxlcykgKHN0cnVjdCBy
+dGxfcHJpdiAqcnRscHJpdik7DQo+ID4gwqDCoAl2b2lkICgqYnRjX2luaXRfaGFsX3ZhcnMpIChz
+dHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYpOw0KPiA+ICsJdm9pZCAoKmJ0Y19wb3dlcl9vbl9zZXR0
+aW5nKShzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYpOw0KPiA+IMKgwqAJdm9pZCAoKmJ0Y19pbml0
+X2h3X2NvbmZpZykgKHN0cnVjdCBydGxfcHJpdiAqcnRscHJpdik7DQo+ID4gwqDCoAl2b2lkICgq
+YnRjX2lwc19ub3RpZnkpIChzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYsIHU4DQo+ID4gdHlwZSk7
+DQo+ID4gwqDCoAl2b2lkICgqYnRjX2xwc19ub3RpZnkpKHN0cnVjdCBydGxfcHJpdiAqcnRscHJp
+diwgdTgNCj4gPiB0eXBlKTsNCj4gPiANCj4gSSBkbyBub3Qgc2VlIGFueSBwbGFjZSBpbiB0aGUg
+Y29kZSB3aGVyZSBydGxfYnRjX3Bvd2VyX29uX3NldHRpbmcoKQ0KPiBpcyBjYWxsZWQswqANCj4g
+ZWl0aGVyIGRpcmVjdGx5IG9yIGJ5IGNhbGxiYWNrLiBEaWQgSSBtaXNzIGl0Pw0KPiANClRoaXMg
+d2lsbCBiZSBjYWxsZWQgYnkgODgyMmJlIGFuZCA4NzIzZGUgZHVyaW5nIGluaXRpYWxpemluZyBo
+YXJkd2FyZSwNCmFuZCBvcmlnaW5hbGx5IDg3MjNiZSB3aWxsIGFsc28gbmVlZCBpdCAobGl0dGxl
+IGFudF9zZWwgcmVsYXRlZCkgYnV0DQp5b3UgaGFkIGZpeGVkIGl0IGJ5IHRoZSBjb21taXRzwqA2
+ZDYyMjY5MjgzNjkgYW5kwqBhMzNmY2JhNmVjMDEuIEknbGwNCmNoZWNrIHdoZXRoZXIgODcyM2Jl
+IGhhcyB0byBjYWxsIHRoaXMgb3Igbm90Lg0KDQpQSw0KDQo=
