@@ -1,128 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:44664 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751770AbeAIC2H (ORCPT
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:44980 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751102AbeAPFRF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 21:28:07 -0500
-Received: by mail-qk0-f178.google.com with SMTP id v188so16765231qkh.11
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jan 2018 18:28:06 -0800 (PST)
-Received: from debian-laptop (cblmdm134-228-27-14.buckeyecom.net. [134.228.27.14])
-        by smtp.gmail.com with ESMTPSA id w61sm8329642qte.55.2018.01.08.18.28.05
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 08 Jan 2018 18:28:05 -0800 (PST)
-Message-ID: <1515464884.3518.4.camel@localhost> (sfid-20180109_032811_538190_BFA344EC)
-Subject: Question on stopping ath dmesg output spam
-From: waltfeasel@gmail.com
-To: linux-wireless@vger.kernel.org
-Date: Mon, 08 Jan 2018 21:28:04 -0500
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 16 Jan 2018 00:17:05 -0500
+Received: by mail-pl0-f68.google.com with SMTP id f8so3265481plk.11
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 21:17:05 -0800 (PST)
+Date: Mon, 15 Jan 2018 21:17:01 -0800
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: Make sure CLM downloading is optional
+Message-ID: <20180116051701.GA7804@builder> (sfid-20180116_061711_764928_2EEABEAF)
+References: <20180115171053.8802-1-bjorn.andersson@linaro.org>
+ <5A5D03B2.3070002@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5A5D03B2.3070002@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First off thank you to all of you for your work in letting me run linux
-on my system! It really is greatly appreciated! It has come a long ways
-from the early 90's due to everyone sharing their skills and
-contributing. Sadly the below is driving me nuts for some reason and I
-am at a loss on how to remedy it myself so I seek your wisdom.
+On Mon 15 Jan 11:40 PST 2018, Arend van Spriel wrote:
 
-I really would like to find a way to stop the repeated messages from my
-wireless device in dmesg. 
-It works fine and I have never had an issue with it before. I have
-updated to kernel ver 4.15-rc7 and could not find anything in
-configuring to stop this behavior. 
-It also does this with the latest 4.14.0-0.bpo.2-amd64 kernel from
-Debian so I don't believe it is something I have or havn't done but I
-have been wrong more than once when confident I was right.
+> On 1/15/2018 6:10 PM, Bjorn Andersson wrote:
+> > The presence of a CLM file is described as optional, but missing the clm
+> > blob causes the preinit to return unsuccessfully. Fix this by ignoring
+> > the return value of the brcmf_c_process_clm_blob().
+> > 
+> > Also remove the extra debug print, as brcmf_c_process_clm_blob() already
+> > did print a useful error message before returning.
+> > 
+> > Fixes: fdd0bd88ceae ("brcmfmac: add CLM download support")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> > ---
+> > 
+> > This regression was introduced in v4.15-rc1, but I unfortunately didn't test
+> > WiFi until now. Included a Cc to stable@ in case you choose to pick this up
+> > after v4.15.
+> 
+> Hi Bjorn,
+> 
+> Thanks for looking into this. Actually there already have been a couple of
+> fixes posted on the linux-wireless list. [1] was rejected, [2] is being
+> discussed, and [2] was posted by me and I was awaiting response from the guy
+> reporting it.
+> 
 
-Most of things I have found refer to getting the Qualcomm Atheros
-AR9485 Wireless Network Adapter working on a system and do not fix the
-repeated spamming of this message.
+Thanks for pointing me to these discussions, I did for some reason not
+find them this morning. I don't see the need for the retry in [1], so I
+think that's invalid.
 
-Is there something I need to fix or if this is normal behavior is there
-a way I can send this to the black hole (/dev/null) it belongs in?
+I tested [2] and it works well for me, but I agree with Kalle that a
+better description of why would be in order. Unfortunatley I can't find
+it in my inbox...even though I'm subscribed to linux-wireless@.
 
-Thank you for any insight,
+The answer to Kalle's question should probably include a reference to
+0542ad88fbdd ("firmware loader: Fix _request_firmware_load() return val
+for fw load abort")
 
-Walt
+> Now the thing is that for old (Broadcom) firmware this is optional. Those
+> firmwares don't even have CLM support and those that do have the CLM data
+> embedded in firmware.
 
+I don't know which applies to my device, but it at least doesn't come
+with a dedicated clm blob - and the device won't receive any upgrades
+and hence will never get a clm blob.
 
+> However, Cypress wants to provide their customers with
+> firmware without CLM data. For those devices it is not optional. I still
+> prefer we add a mechanism to the driver to detect that, but we do not have
+> that yet.
+> 
 
-uname -a
-Linux debian-laptop 4.15.0-rc7-feas-00005-g4d01e46404b8-dirty #3 SMP
-PREEMPT Sun Jan 7 19:31:26 EST 2018 x86_64 GNU/Linux
+That sounds reasonable, but I hope we can sort out the regression first
+and then add such logic.
 
+> Now regarding your patch some comments below ...
+> 
+> >   drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 8 ++------
+> >   1 file changed, 2 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> > index 6a59d0609d30..0c67ba6ae135 100644
+> > --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> > +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> > @@ -278,12 +278,8 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+> >   	}
+> >   	ri->result = err;
+> > 
+> > -	/* Do any CLM downloading */
+> > -	err = brcmf_c_process_clm_blob(ifp);
+> > -	if (err < 0) {
+> > -		brcmf_err("download CLM blob file failed, %d\n", err);
+> > -		goto done;
+> > -	}
+> > +	/* Do any optional CLM downloading */
+> > +	brcmf_c_process_clm_blob(ifp);
+> 
+> The error print is indeed redundant and should be removed here. However,
+> brcmf_c_process_clm_blob() also returns -ENOMEM upon allocation failure and
+> I would still fail the driver probe for that.
+> 
 
-wlan0: authenticate with 14:ab:f0:68:ae:e0
-wlan0: send auth to 14:ab:f0:68:ae:e0 (try 1/3)
-wlan0: authenticated
-wlan0: associate with 14:ab:f0:68:ae:e0 (try 1/3)
-wlan0: RX AssocResp from 14:ab:f0:68:ae:e0 (capab=0x411 status=0 aid=1)
-wlan0: associated
-ath: EEPROM regdomain: 0x8348
-ath: EEPROM indicates we should expect a country code
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x3a
-ath: Country alpha2 being used: US
-ath: Regpair used: 0x3a
-ath: regdomain 0x8348 dynamically updated by country IE
+Agreed, but as we want to let a few errors, specifically from the
+firmware loader, slip by I believe it's better to check the return value
+there instead. So I prefer Write's [2].
 
-
-sudo iw reg get
-global
-country US: DFS-FCC
-	(2402 - 2472 @ 40), (N/A, 30), (N/A)
-	(5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
-	(5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
-	(5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
-	(5735 - 5835 @ 80), (N/A, 30), (N/A)
-	(57240 - 63720 @ 2160), (N/A, 40), (N/A)
-
-
-lspci
-02:00.0 Network controller: Qualcomm Atheros AR9485 Wireless Network
-Adapter (rev 01)
-
-
-lsmod | grep ath
-ath9k                 114688  0
-ath9k_common           20480  1 ath9k
-ath9k_hw              479232  2 ath9k,ath9k_common
-ath                    32768  3 ath9k_hw,ath9k,ath9k_common
-mac80211              806912  1 ath9k
-cfg80211              737280  4 mac80211,ath9k,ath,ath9k_common
-
-
-sudo rfkill list all
-0: phy0: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-1: acer-wireless: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-
-
-lsmod | grep acer
-acer_wmi               24576  0
-sparse_keymap          16384  1 acer_wmi
-rfkill                 28672  5 acer_wmi,cfg80211
-video                  45056  2 acer_wmi,i915
-wmi                    28672  3 wmi_bmof,acer_wmi,mxm_wmi
-
-
-sudo dmesg | grep ath | egrep "regdomain|Country"
-[   28.375725] ath: EEPROM regdomain: 0x65
-[   28.375727] ath: Country alpha2 being used: 00
-[   95.802335] ath: EEPROM regdomain: 0x8348
-[   95.802340] ath: Country alpha2 being used: US
-[   95.802342] ath: regdomain 0x8348 dynamically updated by country IE
-[ 2487.519115] ath: EEPROM regdomain: 0x8348
-[ 2487.519121] ath: Country alpha2 being used: US
-[ 2487.519123] ath: regdomain 0x8348 dynamically updated by country IE
-[ 3962.490884] ath: EEPROM regdomain: 0x8348
-[ 3962.490892] ath: Country alpha2 being used: US
-[ 3962.490895] ath: regdomain 0x8348 dynamically updated by country IE
-[ 6089.394036] ath: EEPROM regdomain: 0x8348
-[ 6089.394043] ath: Country alpha2 being used: US
-[ 6089.394045] ath: regdomain 0x8348 dynamically updated by country IE
+Regards,
+Bjorn
