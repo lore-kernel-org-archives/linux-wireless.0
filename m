@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.uni-rostock.de ([139.30.22.71]:64879 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965130AbeAOO2h (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:37822 "EHLO
+        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751090AbeAPRCM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 09:28:37 -0500
-Subject: Re: [PATCH v3 3/5] mac80211_hwsim: add generation count for netlink
- dump operation
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
- <44644db1-58a4-4b6e-a77e-37c72ee2e4a6@MAIL2.uni-rostock.de>
- <1516018121.410.13.camel@sipsolutions.net>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Message-ID: <3c846ba5-a017-1993-79c6-2e33d78dfcf4@uni-rostock.de> (sfid-20180115_152855_251094_AFA761B0)
-Date: Mon, 15 Jan 2018 15:28:33 +0100
+        Tue, 16 Jan 2018 12:02:12 -0500
+Received: by mail-oi0-f49.google.com with SMTP id e144so11111378oib.4
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jan 2018 09:02:12 -0800 (PST)
+Subject: Re: [PATCH v2 09/10] rtlwifi: btcoex: Add common function for
+ qeurying BT information
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: pkshih@realtek.com, yhchuang@realtek.com,
+        linux-wireless@vger.kernel.org
+References: <20180111070932.9929-1-pkshih@realtek.com>
+ <20180111070932.9929-10-pkshih@realtek.com>
+ <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net>
+ <87wp0hztq0.fsf@purkki.adurom.net>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <a498462e-74cb-5af0-4463-477838c1ada2@lwfinger.net> (sfid-20180116_180217_888354_9CA714BB)
+Date: Tue, 16 Jan 2018 11:02:10 -0600
 MIME-Version: 1.0
-In-Reply-To: <1516018121.410.13.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <87wp0hztq0.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 15.01.2018 um 13:08 schrieb Johannes Berg:
-> On Wed, 2018-01-10 at 17:42 +0100, Benjamin Beichler wrote:
->>  Change the dump iteration to be independent from
->> increasing radio indices on radio list.
-> You can't do that, data structures can be deleted while the dump is
-> ongoing.
-That's what I try to address with this patch. In the past there were
-corner cases, which might have failed while deletion.
+On 01/16/2018 09:52 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+> 
+>> On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
+>>> From: Ping-Ke Shih <pkshih@realtek.com>
+>>>
+>>> This commit implement the common function to sort old features, and add
+>>> more new features that are get_supported_feature, get_supported_version,
+>>> get_ant_det_val, ble_scan_type, ble_scan_para, bt_dev_info,
+>>> forbidden_slot_val, afh_map and etc.
+>>>
+>>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> [...]
+> 
+>>> @@ -459,6 +461,19 @@ typedef	bool (*bfp_btc_get)(void *btcoexist, u8 get_type, void *out_buf);
+>>>      typedef	bool (*bfp_btc_set)(void *btcoexist, u8 set_type, void
+>>> *in_buf);
+>>>    +typedef u32 (*bfp_btc_get_bt_coex_supported_feature)(void
+>>> *btcoexist);
+>>> +
+>>> +typedef u32 (*bfp_btc_get_bt_coex_supported_version)(void *btcoexist);
+>>> +
+>>> +typedef u8 (*bfp_btc_get_ant_det_val_from_bt)(void *btcoexist);
+>>> +
+>>> +typedef u8 (*bfp_btc_get_ble_scan_type_from_bt)(void *btcoexist);
+>>> +
+>>> +typedef u32 (*bfp_btc_get_ble_scan_para_from_bt)(void *btcoexist, u8 scan_type);
+>>> +
+>>> +typedef bool (*bfp_btc_get_bt_afh_map_from_bt)(void *btcoexist, u8 map_type,
+>>> +					       u8 *afh_map);
+>>> +
+>>>    typedef void (*bfp_btc_set_bt_reg)(void *btc_context, u8 reg_type, u32 offset,
+>>>    				   u32 value);
+>>
+>> I would prefer that you not add additional typedef statements, but I
+>> will let it pass.
+> 
+> But I can't really take that :( Typedefs are not really liked in
+> upstream and just makes code harder to read.
 
-Nonetheless, the radio count is in the current version strictly
-monotonic, maybe the description is misleading. :-)
-So in the inner loop there is no deletion possible because of the
-spinlock, and multiple calls of nl=5Fdump check the generation count and
-cancel if it have changed.
+Kalle,
 
->
-> johannes
->
+Overnight, I had prepared a patch to remove the typedefs. I have now respun it 
+to handle only the old ones. As the merge of this new patch needs to be 
+coordinated with PK's patches, I have sent it to him so that he can include it 
+with v3 of his series.
 
--- 
-M.Sc. Benjamin Beichler
-
-Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrotechnik
-Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
-
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Stra=C3=9Fe 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
+Larry
