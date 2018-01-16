@@ -1,82 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:49628 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752955AbeARVJ3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:57412 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750796AbeAPWGP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 16:09:29 -0500
-Subject: Re: [PATCH] cfg80211: stop demanding lots of new stuff
-To: Hugh Dickins <hughd@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <alpine.LSU.2.11.1801171448510.5433@eggly.anvils>
- <1516258057.410.55.camel@sipsolutions.net>
- <alpine.LSU.2.11.1801181242280.14771@eggly.anvils>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <4eface89-e34a-c71a-a240-1a4015160508@infradead.org> (sfid-20180118_220948_061375_93F6A187)
-Date: Thu, 18 Jan 2018 13:09:26 -0800
-MIME-Version: 1.0
-In-Reply-To: <alpine.LSU.2.11.1801181242280.14771@eggly.anvils>
-Content-Type: text/plain; charset=utf-8
+        Tue, 16 Jan 2018 17:06:15 -0500
+Message-ID: <1516140365.410.51.camel@sipsolutions.net> (sfid-20180116_230619_045910_A605F430)
+Subject: Re: [PATCH v2 03/10] rtlwifi: Add sta_statistics of mac80211's op,
+ and set filled=0 by default
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@codeaurora.org>, pkshih@realtek.com
+Cc: Larry.Finger@lwfinger.net, yhchuang@realtek.com,
+        linux-wireless@vger.kernel.org
+Date: Tue, 16 Jan 2018 23:06:05 +0100
+In-Reply-To: <87608124kn.fsf@purkki.adurom.net>
+References: <20180111070932.9929-1-pkshih@realtek.com>
+         <20180111070932.9929-4-pkshih@realtek.com>
+         <87608124kn.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/18/2018 01:07 PM, Hugh Dickins wrote:
-> On Thu, 18 Jan 2018, Johannes Berg wrote:
->> On Wed, 2018-01-17 at 14:55 -0800, Hugh Dickins wrote:
->>> "make oldconfig" from 4.14 (when CONFIG_CFG80211_CERTIFICATION_ONUS
->>> is not set) to 4.15-rc, gets into asking lots of new questions, and
->>> configuring in unwanted stuff: I'm unsure of my Kconfig skills, but
->>> it looks like CFG80211_REQUIRE_SIGNED_REGDB's "default y" needs to
->>> be toned down when we don't even have CFG80211_CERTIFICATION_ONUS.
->>
->> No, this is wrong - we want default configurations to be able to load a
->> signed regulatory database and validate the signature.
-> 
-> Great to enable that, but not so great to force new stuff on everyone.
-> It doesn't surprise me at all if the patch here is the wrong one,
-> but something needs to be done differently in this configuration.
-> 
-> Perhaps you did not try on a system without SYSTEM_DATA_VERIFICATION
-> already enabled - that "select SYSTEM_DATA_VERIFICATION" seems to be
-> taking effect even when CFG80211_REQUIRE_SIGNED_REGDB is not enabled,
-> and pulls in a boatload.  I agree that seems strange: perhaps the
-> Kconfig problem is somewhere else entirely.
-> 
-> Attached my old 4.14 config, so you can see for yourself - thanks.
+On Tue, 2018-01-16 at 17:42 +0200, Kalle Valo wrote:
 
-NOT attached.....................................
+> > When using iwconfig to check wifi status, wext uses 'static struct' of
+> > sinfo to get station info so sinfo->filled will be persistent. Since the
+> > commit 2b9a7e1bac24 ("mac80211: allow drivers to provide most station
+> > statistics") assumes driver initializes sinfo->filled to declare supported
+> > fields, without initialization it will report wrong info. This commit
+> > simply set 'filled' to be zero simply, and left sinfo to be filled by
+> > mac80211.
 
+Huh, this can't be right.
 
-> In fact, I cannot even build the resulting config, without scurrying
-> around to update userspace with stuff I never needed before:
+> Adding an empty op like that feels pointless, IMHO (but without checking
+> mac80211 sources) not having the op should be the same as filled = 0. To
+> me this smells like a bug in mac80211.
 > 
->   HOSTCC  scripts/extract-cert
-> scripts/extract-cert.c:21:25: fatal error: openssl/bio.h: No such file or directory
-> 
-> Hugh
-> 
->>
->> johannes
->>
->>>
->>> Signed-off-by: Hugh Dickins <hughd@google.com>
->>> ---
->>>
->>>  net/wireless/Kconfig |    2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> --- 4.15-rc8/net/wireless/Kconfig	2017-12-03 10:22:51.928845056 -0800
->>> +++ linux/net/wireless/Kconfig	2018-01-14 19:20:22.595472965 -0800
->>> @@ -89,7 +89,7 @@ config CFG80211_CERTIFICATION_ONUS
->>>  
->>>  config CFG80211_REQUIRE_SIGNED_REGDB
->>>  	bool "require regdb signature" if CFG80211_CERTIFICATION_ONUS
->>> -	default y
->>> +	default CFG80211_CERTIFICATION_ONUS
->>>  	select SYSTEM_DATA_VERIFICATION
->>>  	help
->>>  	  Require that in addition to the "regulatory.db" file a
+> Johannes, what do you think?
+
+It can't be right. It would've broken each and every driver out there,
+other than the one or two who implement this.
+
+However, it looks like PK is actually correct - *wext* does appear to
+be broken! nl80211 does this:
+
+                memset(&sinfo, 0, sizeof(sinfo));
+                err = rdev_dump_station(rdev, wdev->netdev, sta_idx,
+                                        mac_addr, &sinfo);
 
 
--- 
-~Randy
+and
+
+        memset(&sinfo, 0, sizeof(sinfo));
+
+...
+
+        err = rdev_get_station(rdev, dev, mac_addr, &sinfo);
+
+and has a bug in cfg80211_cqm_rssi_update(). Wext also has bugs, I'll
+send out a fix.
+
+johannes
