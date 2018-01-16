@@ -1,57 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:44386 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754560AbeAHSY6 (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:42025 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751280AbeAPTVV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 13:24:58 -0500
-Date: Mon, 8 Jan 2018 23:54:47 +0530
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org
-Subject: Re: brcmfmac: Use zeroing memory allocator than allocator/memset
-Message-ID: <20180108182447.GA31020@himanshu-Vostro-3559> (sfid-20180108_192515_108663_175DFF44)
-References: <1514649113-7366-1-git-send-email-himanshujha199640@gmail.com>
- <20180108172322.6AD8560B1B@smtp.codeaurora.org>
+        Tue, 16 Jan 2018 14:21:21 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180108172322.6AD8560B1B@smtp.codeaurora.org>
+In-Reply-To: <CA+55aFwUspY8DG3hRxZqQaf_n_0OZxGCd=pELc8ZVuBu+058cA@mail.gmail.com>
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CA+55aFzNQ8CZ8iNcPXrCfyk=1edMiRGDA0fY0rd87BsFKBxgAw@mail.gmail.com>
+ <CA+8MBb+H0FqciBw9nSO9L0fNQtiRvc_1TREitH9z89YxhtyFAQ@mail.gmail.com> <CA+55aFwUspY8DG3hRxZqQaf_n_0OZxGCd=pELc8ZVuBu+058cA@mail.gmail.com>
+From: Tony Luck <tony.luck@gmail.com>
+Date: Tue, 16 Jan 2018 11:21:19 -0800
+Message-ID: <CA+8MBbL-ZJhTT7jTKVffS5r_7Qq6b-Af96YiNLrMs7Ndo45WhA@mail.gmail.com> (sfid-20180116_202145_681915_04D8EE1E)
+Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative execution
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 08, 2018 at 05:23:22PM +0000, Kalle Valo wrote:
-> Himanshu Jha <himanshujha199640@gmail.com> wrote:
-> 
-> > Use dma_zalloc_coherent for allocating zeroed
-> > memory and remove unnecessary memset function.
-> > 
-> > Done using Coccinelle.
-> > Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
-> > 0-day tested with no failures.
-> > 
-> > Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> > Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> > Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> 
-> Failed to apply:
-> 
-> fatal: corrupt patch at line 29
-> error: could not build fake ancestor
-> Applying: brcmfmac: Use zeroing memory allocator than allocator/memset
-> Patch failed at 0001 brcmfmac: Use zeroing memory allocator than allocator/memset
-> The copy of the patch that failed is found in: .git/rebase-apply/patch
-> 
-> Patch set to Changes Requested.
+On Sat, Jan 13, 2018 at 10:51 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Fri, Jan 12, 2018 at 4:15 PM, Tony Luck <tony.luck@gmail.com> wrote:
+> So your argument depends on "the uarch will actually run the code in
+> order if there are no events that block the pipeline".
 
-Sorry! That failed because I manually adjusted the arguments to prevent
-80 character limit in the patch generated.
+And might be bogus ... I'm a software person not a u-arch expert. That
+sounded good in my head, but the level of parallelism may be greater
+than I can imagine.
 
-I will rebase and send v2 with updates.
+> Or at least it depends on a certain latency of the killing of any OoO
+> execution being low enough that the cache access doesn't even begin.
+>
+> I realize that that is very much a particular microarchitectural
+> detail, but it's actually a *big* deal. Do we have a set of rules for
+> what is not a worry, simply because the speculated accesses get killed
+> early enough?
+>
+> Apparently "test a register value against a constant" is good enough,
+> assuming that register is also needed for the address of the access.
 
--- 
-Thanks
-Himanshu Jha
+People who do understand this are working on what can be guaranteed.
+For now don't make big plans based on my ramblings.
+
+-Tony
