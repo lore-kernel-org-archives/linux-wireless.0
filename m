@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:33742 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755625AbeAJLOV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38194 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750918AbeAPPwn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 06:14:21 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 8/9] staging: wilc1000: removed enum typedef BUS_ACQUIRE_T
-Date: Wed, 10 Jan 2018 16:42:50 +0530
-Message-ID: <1515582771-28408-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180110_121435_888981_3A5F5AD3)
-In-Reply-To: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
-References: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 16 Jan 2018 10:52:43 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: pkshih@realtek.com, yhchuang@realtek.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 09/10] rtlwifi: btcoex: Add common function for qeurying BT information
+References: <20180111070932.9929-1-pkshih@realtek.com>
+        <20180111070932.9929-10-pkshih@realtek.com>
+        <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net>
+Date: Tue, 16 Jan 2018 17:52:39 +0200
+In-Reply-To: <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net> (Larry
+        Finger's message of "Mon, 15 Jan 2018 13:15:59 -0600")
+Message-ID: <87wp0hztq0.fsf@purkki.adurom.net> (sfid-20180116_165246_927909_EC73D82B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes enum typedef BUS_ACQUIRE_T and define
-enum bus_acquire to use instead of typedef.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-checkpatch.pl not to add new typedef warning is fixed with this patch.
+> On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
+>> From: Ping-Ke Shih <pkshih@realtek.com>
+>>
+>> This commit implement the common function to sort old features, and add
+>> more new features that are get_supported_feature, get_supported_version,
+>> get_ant_det_val, ble_scan_type, ble_scan_para, bt_dev_info,
+>> forbidden_slot_val, afh_map and etc.
+>>
+>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c    | 2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+[...]
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 3a58a62..80a5a0b 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -6,7 +6,7 @@
- 
- static enum chip_ps_states chip_ps_state = CHIP_WAKEDUP;
- 
--static inline void acquire_bus(struct wilc *wilc, BUS_ACQUIRE_T acquire)
-+static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
- {
- 	mutex_lock(&wilc->hif_cs);
- 	if (acquire == ACQUIRE_AND_WAKEUP)
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 70e3558..65cb53d 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -143,10 +143,10 @@ enum chip_ps_states {
- 	CHIP_SLEEPING_MANUAL	= 2
- };
- 
--typedef enum {
-+enum bus_acquire {
- 	ACQUIRE_ONLY            = 0,
- 	ACQUIRE_AND_WAKEUP	= 1,
--} BUS_ACQUIRE_T;
-+};
- 
- typedef enum {
- 	RELEASE_ONLY		= 0,
+>> @@ -459,6 +461,19 @@ typedef	bool (*bfp_btc_get)(void *btcoexist, u8 get_type, void *out_buf);
+>>     typedef	bool (*bfp_btc_set)(void *btcoexist, u8 set_type, void
+>> *in_buf);
+>>   +typedef u32 (*bfp_btc_get_bt_coex_supported_feature)(void
+>> *btcoexist);
+>> +
+>> +typedef u32 (*bfp_btc_get_bt_coex_supported_version)(void *btcoexist);
+>> +
+>> +typedef u8 (*bfp_btc_get_ant_det_val_from_bt)(void *btcoexist);
+>> +
+>> +typedef u8 (*bfp_btc_get_ble_scan_type_from_bt)(void *btcoexist);
+>> +
+>> +typedef u32 (*bfp_btc_get_ble_scan_para_from_bt)(void *btcoexist, u8 scan_type);
+>> +
+>> +typedef bool (*bfp_btc_get_bt_afh_map_from_bt)(void *btcoexist, u8 map_type,
+>> +					       u8 *afh_map);
+>> +
+>>   typedef void (*bfp_btc_set_bt_reg)(void *btc_context, u8 reg_type, u32 offset,
+>>   				   u32 value);
+>
+> I would prefer that you not add additional typedef statements, but I
+> will let it pass.
+
+But I can't really take that :( Typedefs are not really liked in
+upstream and just makes code harder to read.
+
 -- 
-2.7.4
+Kalle Valo
