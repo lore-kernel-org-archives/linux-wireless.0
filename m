@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52252 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753135AbeADOuC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52630 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751143AbeAPOa5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jan 2018 09:50:02 -0500
-Message-ID: <1515077400.10342.26.camel@sipsolutions.net> (sfid-20180104_155005_667089_78404E74)
-Subject: Re: [PATCH v2 3/3] nl80211: Introduce scan flags to emphasize
- requested scan behavior
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        Sunil Dutt <usdutt@qti.qualcomm.com>
-Date: Thu, 04 Jan 2018 15:50:00 +0100
-In-Reply-To: <1513960419-24780-3-git-send-email-jouni@qca.qualcomm.com>
-References: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
-         <1513960419-24780-3-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 16 Jan 2018 09:30:57 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath9k: add a quirk to set use_msi automatically
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1515461962-27129-1-git-send-email-acelan.kao@canonical.com>
+References: <1515461962-27129-1-git-send-email-acelan.kao@canonical.com>
+To: AceLan Kao <acelan.kao@canonical.com>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20180116143057.2F8DC6076A@smtp.codeaurora.org> (sfid-20180116_153135_284981_8DBDA16E)
+Date: Tue, 16 Jan 2018 14:30:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-12-22 at 18:33 +0200, Jouni Malinen wrote:
-> From: Sunil Dutt <usdutt@qti.qualcomm.com>
-> 
-> This commit defines new scan flags (LOW_SPAN, LOW_POWER, HIGH_LATENCY)
-> to emphasize the requested scan behavior for the driver. These flags are
-> optional and are mutually exclusive. The implementation of the
-> respective functionality can be driver/hardware specific.
-> 
-> These flags can be used to control the compromise between how long a
-> scan takes, how much power it uses, and high accurate/complete the scan
-> is in finding the BSSs.
-> 
-> Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
-> ---
->  include/uapi/linux/nl80211.h | 28 +++++++++++++++++++++++++++-
->  net/wireless/nl80211.c       | 13 +++++++++++--
->  2 files changed, 38 insertions(+), 3 deletions(-)
-> 
-> v2:
-> - added driver capability flags to indicate which of the options are
->   supported
-> - added to this patch series due to a new dependency in one of the
->   header files
+AceLan Kao <acelan.kao@canonical.com> wrote:
 
-Looks fine, but I guess I should wait for a rebase.
+> Some platform(BIOS) blocks legacy interrupts (INTx), and only allows MSI
+> for WLAN device. So adding a quirk to list those machines and set
+> use_msi automatically.
+> Adding the following platforms to the quirk.
+>    Dell Inspiron 24-3460
+>    Dell Inspiron 3472
+>    Dell Inspiron 14-3473
+>    Dell Vostro 3262
+>    Dell Vostro 15-3572
+> 
+> Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-johannes
+Patch applied to ath-next branch of ath.git, thanks.
+
+3153b68e4d1a ath9k: add a quirk to set use_msi automatically
+
+-- 
+https://patchwork.kernel.org/patch/10150851/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
