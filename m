@@ -1,78 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:35657 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750716AbeAPI5G (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:39718 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751296AbeAPA4F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 03:57:06 -0500
-Received: by mail-qt0-f196.google.com with SMTP id u10so17335221qtg.2
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jan 2018 00:57:06 -0800 (PST)
-Subject: Re: [PATCH v3] brcmfmac: fix CLM load error for legacy chips when
- user helper is enabled
-To: Wright Feng <wright.feng@cypress.com>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
-        chi-hsien.lin@cypress.com
-References: <1516083246-16013-1-git-send-email-wright.feng@cypress.com>
- <5A5DBDE6.2080403@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A5DBE5F.7070701@broadcom.com> (sfid-20180116_095710_048878_5788090A)
-Date: Tue, 16 Jan 2018 09:57:03 +0100
+        Mon, 15 Jan 2018 19:56:05 -0500
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 09/10] rtlwifi: btcoex: Add common function for qeurying BT information
+Date: Tue, 16 Jan 2018 00:55:51 +0000
+Message-ID: <1516064151.2403.2.camel@realtek.com> (sfid-20180116_015613_663055_45CCE101)
+References: <20180111070932.9929-1-pkshih@realtek.com>
+         <20180111070932.9929-10-pkshih@realtek.com>
+         <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net>
+In-Reply-To: <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <5A5DBDE6.2080403@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/16/2018 9:55 AM, Arend van Spriel wrote:
-> On 1/16/2018 7:14 AM, Wright Feng wrote:
->> For legacy chips without CLM blob files, kernel with user helper function
->> returns -EAGAIN when we request_firmware(), and then driver got failed
->> when bringing up legacy chips. We expect the CLM blob file for legacy
->> chip
->> is not existence in firmware path, but the -ENOENT error is
->> transferred to
->> -EAGAIN in firmware_class.c with user helper.
->> Because of that, we continue with CLM data currently present in firmware
->> if getting error from doing request_firmware().
-
-Forgot to mention, but also please add following Cc: as it will probably 
-not make it before the merge window opens.
-
-Cc: stable@vger.kernel.org # v4.15.y
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> Signed-off-by: Wright Feng <wright.feng@cypress.com>
->> ---
->> v2: remove retry from patch v1
->> v3: remove redundant log print
->> ---
->>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 9 +++------
->>   1 file changed, 3 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> index 6a59d06..b0ef0e7 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> @@ -182,12 +182,9 @@ static int brcmf_c_process_clm_blob(struct
->> brcmf_if *ifp)
->>
->>       err = request_firmware(&clm, clm_name, dev);
->>       if (err) {
->> -        if (err == -ENOENT) {
->> -            brcmf_dbg(INFO, "continue with CLM data currently present
->> in firmware\n");
->> -            return 0;
->> -        }
->> -        brcmf_err("request CLM blob file failed (%d)\n", err);
->> -        return err;
->> +        brcmf_info("no clm_blob available(%d), device may have
->> limited channels available\n",
->> +               err);
->> +        return 0;
->
-> Looking good. However, let's nitpick (my bad). Please make it
-> "..available (err=%d), ...".
->
-> Regards,
-> Arend
->
+T24gTW9uLCAyMDE4LTAxLTE1IGF0IDEzOjE1IC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
+IE9uIDAxLzExLzIwMTggMDE6MDkgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiAN
+Cj4gPiBGcm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPiANCj4gPiBU
+aGlzIGNvbW1pdCBpbXBsZW1lbnQgdGhlIGNvbW1vbiBmdW5jdGlvbiB0byBzb3J0IG9sZCBmZWF0
+dXJlcywgYW5kDQo+ID4gYWRkDQo+ID4gbW9yZSBuZXcgZmVhdHVyZXMgdGhhdCBhcmUgZ2V0X3N1
+cHBvcnRlZF9mZWF0dXJlLA0KPiA+IGdldF9zdXBwb3J0ZWRfdmVyc2lvbiwNCj4gPiBnZXRfYW50
+X2RldF92YWwsIGJsZV9zY2FuX3R5cGUsIGJsZV9zY2FuX3BhcmEsIGJ0X2Rldl9pbmZvLA0KPiA+
+IGZvcmJpZGRlbl9zbG90X3ZhbCwgYWZoX21hcCBhbmQgZXRjLg0KPiA+IA0KPiA+IFNpZ25lZC1v
+ZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+IC0tLQ0KPiA+IMKg
+IC4uLi9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5jwqDCoMKgwqDCoMKg
+wqB8IDMwOQ0KPiA+ICsrKysrKysrKysrKysrKysrKy0tLQ0KPiA+IMKgIC4uLi9yZWFsdGVrL3J0
+bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5owqDCoMKgwqDCoMKgwqB8wqDCoDcwICsrKysr
+DQo+ID4gwqAgLi4uL3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5j
+wqDCoMKgfMKgwqA0OCArKystDQo+ID4gwqAgMyBmaWxlcyBjaGFuZ2VkLCAzOTQgaW5zZXJ0aW9u
+cygrKSwgMzMgZGVsZXRpb25zKC0pDQo+ID4gDQo+ID4gZGlmZiAtLWdpdA0KPiA+IGEvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGNvdXRzcmMuYw0K
+PiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxi
+dGNvdXRzcmMuYw0KPiA+IGluZGV4IDJiZTgxZmVjNzg5YS4uMzBkOTQwY2YzYWJmIDEwMDY0NA0K
+PiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3Qv
+aGFsYnRjb3V0c3JjLmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
+bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5jDQo+ID4gQEAgLTIwNyw2ICsyMDcsMTAyIEBA
+IHU4IHJ0bF9nZXRfaHdwZ19wYWNrYWdlX3R5cGUoc3RydWN0IHJ0bF9wcml2DQo+ID4gKnJ0bHBy
+aXYpDQo+ID4gwqDCoAlyZXR1cm4gcnRsaGFsLT5wYWNrYWdlX3R5cGU7DQo+ID4gwqAgfQ0KPiA+
+IMKgwqANCj4gPiArc3RhdGljDQo+ID4gK2Jvb2wgaGFsYnRjX2lzX2h3X21haWxib3hfZXhpc3Qo
+c3RydWN0IGJ0Y19jb2V4aXN0ICpidGNvZXhpc3QpDQo+ID4gK3sNCj4gPiArCWlmIChJU19IQVJE
+V0FSRV9UWVBFXzg4MTIoYnRjb2V4aXN0LT5hZGFwdGVyKSkNCj4gPiArCQlyZXR1cm4gZmFsc2U7
+DQo+ID4gKwllbHNlDQo+ID4gKwkJcmV0dXJuIHRydWU7DQo+IE9uY2UgeW91IGhhdmUgcmV0dXJu
+ZWQgZmFsc2UgZm9yIDg4MTIsIHlvdSBkbyBub3QgbmVlZCB0aGUgJ2Vsc2UnLg0KPiBVc2UgYSBz
+aW1wbGXCoA0KPiAnCXJldHVybiB0cnVlOycuIEFzIHRoaXMgaXMgdGhlIG9ubHkgb2JqZWN0aW9u
+IGluIHRoaXMgcGF0Y2gsDQo+IEkgd2lsbCBsZXQgaXTCoA0KPiBwYXNzLiBTb21lIHVzZXIgd2l0
+aCBhIHN1aXRhYmxlIHRvb2wgd2lsbCBjaGFuZ2UgaXQuDQo+IA0KPiA+IA0KPiA+ICt9DQo+ID4g
+Kw0KPiA+ICtzdGF0aWMNCj4gPiArYm9vbCBoYWxidGNfc2VuZF9idF9tcF9vcGVyYXRpb24oc3Ry
+dWN0IGJ0Y19jb2V4aXN0ICpidGNvZXhpc3QsIHU4DQo+ID4gb3BfY29kZSwNCj4gPiArCQkJCcKg
+dTggKmNtZCwgdTMyIGxlbiwgdW5zaWduZWQgbG9uZw0KPiA+IHdhaXRfbXMpDQo+IC0tc25pcC0t
+DQo+IA0KPiA+IA0KPiA+IMKgwqANCj4gPiBkaWZmIC0tZ2l0DQo+ID4gYS9kcml2ZXJzL25ldC93
+aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5oDQo+ID4gYi9k
+cml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNy
+Yy5oDQo+ID4gaW5kZXggNWE3ODE2ZmY2ODc3Li5jYmJmNWU1YTljOWIgMTAwNjQ0DQo+ID4gLS0t
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGNv
+dXRzcmMuaA0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9i
+dGNvZXhpc3QvaGFsYnRjb3V0c3JjLmgNCj4gPiBAQCAtMjc4LDYgKzI3OCw4IEBAIGVudW0gYnRj
+X2dldF90eXBlIHsNCj4gPiDCoMKgCUJUQ19HRVRfVTRfVkVORE9SLA0KPiA+IMKgwqAJQlRDX0dF
+VF9VNF9TVVBQT1JURURfVkVSU0lPTiwNCj4gPiDCoMKgCUJUQ19HRVRfVTRfU1VQUE9SVEVEX0ZF
+QVRVUkUsDQo+ID4gKwlCVENfR0VUX1U0X0JUX0RFVklDRV9JTkZPLA0KPiA+ICsJQlRDX0dFVF9V
+NF9CVF9GT1JCSURERU5fU0xPVF9WQUwsDQo+ID4gwqDCoAlCVENfR0VUX1U0X1dJRklfSVFLX1RP
+VEFMLA0KPiA+IMKgwqAJQlRDX0dFVF9VNF9XSUZJX0lRS19PSywNCj4gPiDCoMKgCUJUQ19HRVRf
+VTRfV0lGSV9JUUtfRkFJTCwNCj4gPiBAQCAtNDU5LDYgKzQ2MSwxOSBAQCB0eXBlZGVmCWJvb2wg
+KCpiZnBfYnRjX2dldCkodm9pZA0KPiA+ICpidGNvZXhpc3QsIHU4IGdldF90eXBlLCB2b2lkICpv
+dXRfYnVmKTsNCj4gPiDCoMKgDQo+ID4gwqAgdHlwZWRlZglib29sICgqYmZwX2J0Y19zZXQpKHZv
+aWQgKmJ0Y29leGlzdCwgdTggc2V0X3R5cGUsDQo+ID4gdm9pZCAqaW5fYnVmKTsNCj4gPiDCoMKg
+DQo+ID4gK3R5cGVkZWYgdTMyICgqYmZwX2J0Y19nZXRfYnRfY29leF9zdXBwb3J0ZWRfZmVhdHVy
+ZSkodm9pZA0KPiA+ICpidGNvZXhpc3QpOw0KPiA+ICsNCj4gPiArdHlwZWRlZiB1MzIgKCpiZnBf
+YnRjX2dldF9idF9jb2V4X3N1cHBvcnRlZF92ZXJzaW9uKSh2b2lkDQo+ID4gKmJ0Y29leGlzdCk7
+DQo+ID4gKw0KPiA+ICt0eXBlZGVmIHU4ICgqYmZwX2J0Y19nZXRfYW50X2RldF92YWxfZnJvbV9i
+dCkodm9pZCAqYnRjb2V4aXN0KTsNCj4gPiArDQo+ID4gK3R5cGVkZWYgdTggKCpiZnBfYnRjX2dl
+dF9ibGVfc2Nhbl90eXBlX2Zyb21fYnQpKHZvaWQgKmJ0Y29leGlzdCk7DQo+ID4gKw0KPiA+ICt0
+eXBlZGVmIHUzMiAoKmJmcF9idGNfZ2V0X2JsZV9zY2FuX3BhcmFfZnJvbV9idCkodm9pZCAqYnRj
+b2V4aXN0LA0KPiA+IHU4IHNjYW5fdHlwZSk7DQo+ID4gKw0KPiA+ICt0eXBlZGVmIGJvb2wgKCpi
+ZnBfYnRjX2dldF9idF9hZmhfbWFwX2Zyb21fYnQpKHZvaWQgKmJ0Y29leGlzdCwgdTgNCj4gPiBt
+YXBfdHlwZSwNCj4gPiArCQkJCQnCoMKgwqDCoMKgwqDCoHU4ICphZmhfbWFwKTsNCj4gPiArDQo+
+ID4gwqAgdHlwZWRlZiB2b2lkICgqYmZwX2J0Y19zZXRfYnRfcmVnKSh2b2lkICpidGNfY29udGV4
+dCwgdTgNCj4gPiByZWdfdHlwZSwgdTMyIG9mZnNldCwNCj4gPiDCoMKgCQkJCcKgwqDCoHUzMiB2
+YWx1ZSk7DQo+IEkgd291bGQgcHJlZmVyIHRoYXQgeW91IG5vdCBhZGQgYWRkaXRpb25hbCB0eXBl
+ZGVmIHN0YXRlbWVudHMsIGJ1dCBJDQo+IHdpbGwgbGV0IGl0wqANCj4gcGFzcy4NCj4gDQpUaGFu
+ayB5b3UgZm9yIHBvaW50aW5nIG91dC4gSSdsbCByZW1vdmUgYWxsIHR5cGVkZWYgaW4gbmV4dCBw
+YXRjaHNldC4NCg0KPiANCj4gQWNrZWQtYnk6IExhcnJ5IEZpbmdlciA8TGFycnkuRmluZ2VyQGx3
+ZmluZ2VyLm5ldD4NCj4gDQo+IC0tLS0tLVBsZWFzZSBjb25zaWRlciB0aGUgZW52aXJvbm1lbnQg
+YmVmb3JlIHByaW50aW5nIHRoaXMgZS1tYWlsLg==
