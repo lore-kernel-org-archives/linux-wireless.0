@@ -1,134 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48660 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933953AbeAXPTU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 10:19:20 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 6/8] mt76: split mt76_rx_complete
-Date: Wed, 24 Jan 2018 16:19:15 +0100
-Message-Id: <20180124151917.70962-6-nbd@nbd.name> (sfid-20180124_161933_036508_F311672F)
-In-Reply-To: <20180124151917.70962-1-nbd@nbd.name>
-References: <20180124151917.70962-1-nbd@nbd.name>
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:16360 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752103AbeAPODb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Jan 2018 09:03:31 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/13] staging: wilc1000: rename variables using camelCase in add_key()
+Date: Tue, 16 Jan 2018 19:32:28 +0530
+Message-ID: <1516111351-5353-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180116_150402_675639_6CA19FA8)
+In-Reply-To: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a separate function for processing frames after A-MPDU reordering,
-reduce code duplication
+This is a cleanup patch to avoid using camelCase for variable
+names.
+Changes fix "Avoid camelCase" issue reported by checkpatch.pl script.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/agg-rx.c   |  8 +-------
- drivers/net/wireless/mediatek/mt76/dma.c      |  2 +-
- drivers/net/wireless/mediatek/mt76/mac80211.c | 24 ++++++++++++++++++------
- drivers/net/wireless/mediatek/mt76/mt76.h     |  5 +++--
- 4 files changed, 23 insertions(+), 16 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 56 +++++++++++------------
+ 1 file changed, 28 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/agg-rx.c b/drivers/net/wireless/mediatek/mt76/agg-rx.c
-index ecd0bcd149e5..8027bb7c03c2 100644
---- a/drivers/net/wireless/mediatek/mt76/agg-rx.c
-+++ b/drivers/net/wireless/mediatek/mt76/agg-rx.c
-@@ -97,9 +97,7 @@ mt76_rx_aggr_reorder_work(struct work_struct *work)
- 	struct mt76_rx_tid *tid = container_of(work, struct mt76_rx_tid,
- 					       reorder_work.work);
- 	struct mt76_dev *dev = tid->dev;
--	struct ieee80211_sta *sta;
- 	struct sk_buff_head frames;
--	struct sk_buff *skb;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ae8df88..b68f46c 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -855,14 +855,14 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 		   const u8 *mac_addr, struct key_params *params)
  
- 	__skb_queue_head_init(&frames);
- 
-@@ -110,11 +108,7 @@ mt76_rx_aggr_reorder_work(struct work_struct *work)
- 	spin_unlock(&tid->lock);
- 
- 	ieee80211_queue_delayed_work(tid->dev->hw, &tid->reorder_work, REORDER_TIMEOUT);
--
--	while ((skb = __skb_dequeue(&frames)) != NULL) {
--		sta = mt76_rx_convert(skb);
--		ieee80211_rx_napi(dev->hw, sta, skb, NULL);
--	}
-+	mt76_rx_complete(dev, &frames, -1);
- 
- 	local_bh_enable();
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index fd8bea144973..3518703524e7 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -396,7 +396,7 @@ mt76_dma_rx_poll(struct napi_struct *napi, int budget)
- 
- 	do {
- 		cur = mt76_dma_rx_process(dev, &dev->q_rx[qid], budget - done);
--		mt76_rx_complete(dev, qid);
-+		mt76_rx_poll_complete(dev, qid);
- 		done += cur;
- 	} while (cur && done < budget);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 5978e5b0a2fe..77f1be161009 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -384,7 +384,7 @@ int mt76_get_survey(struct ieee80211_hw *hw, int idx,
- }
- EXPORT_SYMBOL_GPL(mt76_get_survey);
- 
--struct ieee80211_sta *mt76_rx_convert(struct sk_buff *skb)
-+static struct ieee80211_sta *mt76_rx_convert(struct sk_buff *skb)
  {
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct mt76_rx_status mstat;
-@@ -410,9 +410,24 @@ struct ieee80211_sta *mt76_rx_convert(struct sk_buff *skb)
- 	return wcid_to_sta(mstat.wcid);
- }
+-	s32 ret = 0, KeyLen = params->key_len;
++	s32 ret = 0, keylen = params->key_len;
+ 	struct wilc_priv *priv;
+-	const u8 *pu8RxMic = NULL;
+-	const u8 *pu8TxMic = NULL;
++	const u8 *rx_mic = NULL;
++	const u8 *tx_mic = NULL;
+ 	u8 u8mode = NO_ENCRYPT;
+ 	u8 u8gmode = NO_ENCRYPT;
+ 	u8 u8pmode = NO_ENCRYPT;
+-	enum AUTHTYPE tenuAuth_type = ANY;
++	enum AUTHTYPE auth_type = ANY;
+ 	struct wilc *wl;
+ 	struct wilc_vif *vif;
  
--void mt76_rx_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
-+void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
-+		      int queue)
- {
-+	struct napi_struct *napi = NULL;
- 	struct ieee80211_sta *sta;
-+	struct sk_buff *skb;
-+
-+	if (queue >= 0)
-+	    napi = &dev->napi[queue];
-+
-+	while ((skb = __skb_dequeue(frames)) != NULL) {
-+		sta = mt76_rx_convert(skb);
-+		ieee80211_rx_napi(dev->hw, sta, skb, napi);
-+	}
-+}
-+
-+void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
-+{
- 	struct sk_buff_head frames;
- 	struct sk_buff *skb;
+@@ -877,7 +877,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
+ 			memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
  
-@@ -421,8 +436,5 @@ void mt76_rx_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
- 	while ((skb = __skb_dequeue(&dev->rx_skb[q])) != NULL)
- 		mt76_rx_aggr_reorder(skb, &frames);
+-			tenuAuth_type = OPEN_SYSTEM;
++			auth_type = OPEN_SYSTEM;
  
--	while ((skb = __skb_dequeue(&frames)) != NULL) {
--		sta = mt76_rx_convert(skb);
--		ieee80211_rx_napi(dev->hw, sta, skb, &dev->napi[q]);
--	}
-+	mt76_rx_complete(dev, &frames, q);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index cde199ed3f57..af98bc65c2e1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -416,8 +416,9 @@ void mt76_rx_aggr_stop(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tid);
- /* internal */
- void mt76_tx_free(struct mt76_dev *dev);
- void mt76_put_txwi(struct mt76_dev *dev, struct mt76_txwi_cache *t);
--void mt76_rx_complete(struct mt76_dev *dev, enum mt76_rxq_id q);
-+void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
-+		      int queue);
-+void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q);
- void mt76_rx_aggr_reorder(struct sk_buff *skb, struct sk_buff_head *frames);
--struct ieee80211_sta *mt76_rx_convert(struct sk_buff *skb);
+ 			if (params->cipher == WLAN_CIPHER_SUITE_WEP40)
+ 				u8mode = ENCRYPT_ENABLED | WEP;
+@@ -886,7 +886,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
  
- #endif
+ 			wilc_add_wep_key_bss_ap(vif, params->key,
+ 						params->key_len, key_index,
+-						u8mode, tenuAuth_type);
++						u8mode, auth_type);
+ 			break;
+ 		}
+ 		if (memcmp(params->key, priv->WILC_WFI_wep_key[key_index], params->key_len)) {
+@@ -922,9 +922,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 				priv->wilc_groupkey = u8gmode;
+ 
+ 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+-					pu8TxMic = params->key + 24;
+-					pu8RxMic = params->key + 16;
+-					KeyLen = params->key_len - 16;
++					tx_mic = params->key + 24;
++					rx_mic = params->key + 16;
++					keylen = params->key_len - 16;
+ 				}
+ 				kfree(priv->wilc_gtk[key_index]->key);
+ 
+@@ -941,10 +941,10 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 				priv->wilc_gtk[key_index]->key_len = params->key_len;
+ 				priv->wilc_gtk[key_index]->seq_len = params->seq_len;
+ 
+-				wilc_add_rx_gtk(vif, params->key, KeyLen,
++				wilc_add_rx_gtk(vif, params->key, keylen,
+ 						key_index, params->seq_len,
+-						params->seq, pu8RxMic,
+-						pu8TxMic, AP_MODE, u8gmode);
++						params->seq, rx_mic,
++						tx_mic, AP_MODE, u8gmode);
+ 
+ 			} else {
+ 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
+@@ -953,9 +953,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 					u8pmode = priv->wilc_groupkey | AES;
+ 
+ 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+-					pu8TxMic = params->key + 24;
+-					pu8RxMic = params->key + 16;
+-					KeyLen = params->key_len - 16;
++					tx_mic = params->key + 24;
++					rx_mic = params->key + 16;
++					keylen = params->key_len - 16;
+ 				}
+ 
+ 				kfree(priv->wilc_ptk[key_index]->key);
+@@ -976,8 +976,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 				priv->wilc_ptk[key_index]->key_len = params->key_len;
+ 				priv->wilc_ptk[key_index]->seq_len = params->seq_len;
+ 
+-				wilc_add_ptk(vif, params->key, KeyLen,
+-					     mac_addr, pu8RxMic, pu8TxMic,
++				wilc_add_ptk(vif, params->key, keylen,
++					     mac_addr, rx_mic, tx_mic,
+ 					     AP_MODE, u8pmode, key_index);
+ 			}
+ 			break;
+@@ -987,9 +987,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 			u8mode = 0;
+ 			if (!pairwise) {
+ 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+-					pu8RxMic = params->key + 24;
+-					pu8TxMic = params->key + 16;
+-					KeyLen = params->key_len - 16;
++					rx_mic = params->key + 24;
++					tx_mic = params->key + 16;
++					keylen = params->key_len - 16;
+ 				}
+ 
+ 				if (!g_gtk_keys_saved && netdev == wl->vif[0]->ndev) {
+@@ -1013,16 +1013,16 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 					g_gtk_keys_saved = true;
+ 				}
+ 
+-				wilc_add_rx_gtk(vif, params->key, KeyLen,
++				wilc_add_rx_gtk(vif, params->key, keylen,
+ 						key_index, params->seq_len,
+-						params->seq, pu8RxMic,
+-						pu8TxMic, STATION_MODE,
++						params->seq, rx_mic,
++						tx_mic, STATION_MODE,
+ 						u8mode);
+ 			} else {
+ 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+-					pu8RxMic = params->key + 24;
+-					pu8TxMic = params->key + 16;
+-					KeyLen = params->key_len - 16;
++					rx_mic = params->key + 24;
++					tx_mic = params->key + 16;
++					keylen = params->key_len - 16;
+ 				}
+ 
+ 				if (!g_ptk_keys_saved && netdev == wl->vif[0]->ndev) {
+@@ -1046,8 +1046,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 					g_ptk_keys_saved = true;
+ 				}
+ 
+-				wilc_add_ptk(vif, params->key, KeyLen,
+-					     mac_addr, pu8RxMic, pu8TxMic,
++				wilc_add_ptk(vif, params->key, keylen,
++					     mac_addr, rx_mic, tx_mic,
+ 					     STATION_MODE, u8mode, key_index);
+ 			}
+ 		}
 -- 
-2.14.2
+2.7.4
