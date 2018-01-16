@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:42361 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752642AbeAZJI5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:57564 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750905AbeAPWUZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 04:08:57 -0500
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-To: zajec5@gmail.com, hauke@hauke-m.de
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] bcma: Replace mdelay with usleep_range in bcma_pmu_resources_init
-Date: Fri, 26 Jan 2018 17:13:31 +0800
-Message-Id: <1516958011-303-1-git-send-email-baijiaju1990@gmail.com> (sfid-20180126_101003_579860_ABACF0A8)
+        Tue, 16 Jan 2018 17:20:25 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: fix station info handling bugs
+Date: Tue, 16 Jan 2018 23:20:22 +0100
+Message-Id: <20180116222022.13161-1-johannes@sipsolutions.net> (sfid-20180116_232033_038691_92E953EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After checking all possible call chains to bcma_pmu_resources_init() here,
-my tool finds that this function is never called in atomic context,
-namely never in an interrupt handler or holding a spinlock.
-Thus mdelay can be replaced with usleep_range to avoid busy wait.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is found by a static analysis tool named DCNS written by myself.
+Fix two places where the structure isn't initialized to zero,
+and thus can't be filled properly by the driver.
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Fixes: 4a4b8169501b ("cfg80211: Accept multiple RSSI thresholds for CQM")
+Fixes: 9930380f0bd8 ("cfg80211: implement IWRATE")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/bcma/driver_chipcommon_pmu.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Dave, can you apply this as an exception? I'm not really expecting
+any other patches to show up now, and seems easier to have a single
+patch than a whole pull request (especially now that patchwork seems
+to be swallowing mine ...)
+---
+ net/wireless/nl80211.c     | 2 +-
+ net/wireless/wext-compat.c | 3 +--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index f1eb4d3..478948c 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -203,7 +203,7 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
- 	 * Add some delay; allow resources to come up and settle.
- 	 * Delay is required for SoC (early init).
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c084dd2205ac..91e55bb85416 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9832,7 +9832,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
  	 */
--	mdelay(2);
-+	usleep_range(1500, 2000);
- }
+ 	if (!wdev->cqm_config->last_rssi_event_value && wdev->current_bss &&
+ 	    rdev->ops->get_station) {
+-		struct station_info sinfo;
++		struct station_info sinfo = {};
+ 		u8 *mac_addr;
  
- /* Disable to allow reading SPROM. Don't know the adventages of enabling it. */
+ 		mac_addr = wdev->current_bss->pub.bssid;
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 7ca04a7de85a..05186a47878f 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1254,8 +1254,7 @@ static int cfg80211_wext_giwrate(struct net_device *dev,
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+-	/* we are under RTNL - globally locked - so can use a static struct */
+-	static struct station_info sinfo;
++	struct station_info sinfo = {};
+ 	u8 addr[ETH_ALEN];
+ 	int err;
+ 
 -- 
-1.7.9.5
+2.15.1
