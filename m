@@ -1,77 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:44900 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751741AbeAINNV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 08:13:21 -0500
-Received: by mail-wr0-f195.google.com with SMTP id w50so4849068wrc.11
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 05:13:21 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] mt76x2: dfs: add set_domain handler
-Date: Tue,  9 Jan 2018 14:13:11 +0100
-Message-Id: <e3320c27f5d1b73896712cb2cea92f58722f707e.1515503003.git.lorenzo.bianconi@redhat.com> (sfid-20180109_141331_069304_368EC132)
-In-Reply-To: <cover.1515503003.git.lorenzo.bianconi@redhat.com>
-References: <cover.1515503003.git.lorenzo.bianconi@redhat.com>
+Received: from mail-sn1nam02on0111.outbound.protection.outlook.com ([104.47.36.111]:41380
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750764AbeAPGM5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Jan 2018 01:12:57 -0500
+From: Wright Feng <wright.feng@cypress.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
+        chi-hsien.lin@cypress.com
+Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH v3] brcmfmac: fix CLM load error for legacy chips when user helper is enabled
+Date: Tue, 16 Jan 2018 14:14:06 +0800
+Message-Id: <1516083246-16013-1-git-send-email-wright.feng@cypress.com> (sfid-20180116_071306_388867_B74EEAC2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add mt76x2_dfs_set_domain routine in order to properly reconfigure
-pattern detector when DFS domain has been changed
+For legacy chips without CLM blob files, kernel with user helper function
+returns -EAGAIN when we request_firmware(), and then driver got failed
+when bringing up legacy chips. We expect the CLM blob file for legacy chip
+is not existence in firmware path, but the -ENOENT error is transferred to
+-EAGAIN in firmware_class.c with user helper.
+Because of that, we continue with CLM data currently present in firmware
+if getting error from doing request_firmware().
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c  | 13 +++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h  |  2 ++
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c |  2 +-
- 3 files changed, 16 insertions(+), 1 deletion(-)
+v2: remove retry from patch v1
+v3: remove redundant log print
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-index 1a6282a8b64b..df23ba5ef900 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-@@ -490,3 +490,16 @@ void mt76x2_dfs_init_detector(struct mt76x2_dev *dev)
- 		     (unsigned long)dev);
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 6a59d06..b0ef0e7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -182,12 +182,9 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
  
-+void mt76x2_dfs_set_domain(struct mt76x2_dev *dev,
-+			   enum nl80211_dfs_regions region)
-+{
-+	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
-+
-+	if (dfs_pd->region != region) {
-+		tasklet_disable(&dfs_pd->dfs_tasklet);
-+		dfs_pd->region = region;
-+		mt76x2_dfs_init_params(dev);
-+		tasklet_enable(&dfs_pd->dfs_tasklet);
-+	}
-+}
-+
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
-index 9ac69b6a116d..8dbc783cc6bc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
-@@ -76,5 +76,7 @@ struct mt76x2_dfs_pattern_detector {
- void mt76x2_dfs_init_params(struct mt76x2_dev *dev);
- void mt76x2_dfs_init_detector(struct mt76x2_dev *dev);
- void mt76x2_dfs_adjust_agc(struct mt76x2_dev *dev);
-+void mt76x2_dfs_set_domain(struct mt76x2_dev *dev,
-+			   enum nl80211_dfs_regions region);
+ 	err = request_firmware(&clm, clm_name, dev);
+ 	if (err) {
+-		if (err == -ENOENT) {
+-			brcmf_dbg(INFO, "continue with CLM data currently present in firmware\n");
+-			return 0;
+-		}
+-		brcmf_err("request CLM blob file failed (%d)\n", err);
+-		return err;
++		brcmf_info("no clm_blob available(%d), device may have limited channels available\n",
++			   err);
++		return 0;
+ 	}
  
- #endif /* __MT76x2_DFS_H */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 4373a2ba5143..9f20a308ff76 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -652,7 +652,7 @@ static void mt76x2_regd_notifier(struct wiphy *wiphy,
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct mt76x2_dev *dev = hw->priv;
- 
--	dev->dfs_pd.region = request->dfs_region;
-+	mt76x2_dfs_set_domain(dev, request->dfs_region);
- }
- 
- #define CCK_RATE(_idx, _rate) {					\
+ 	chunk_buf = kzalloc(sizeof(*chunk_buf) + MAX_CHUNK_LEN - 1, GFP_KERNEL);
 -- 
-2.13.6
+1.9.1
