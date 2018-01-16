@@ -1,100 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44002 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753161AbeA0QYf (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58370 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750812AbeAPJbV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Jan 2018 11:24:35 -0500
-Subject: Re: [PATCH] ath9k: Print has_queued in debugfs.
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-References: <1517015397-30957-1-git-send-email-greearb@candelatech.com>
- <874ln7v38y.fsf@toke.dk>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <4ff2358d-6e03-7031-4800-27721a74b960@candelatech.com> (sfid-20180127_172439_347128_09E5EB8F)
-Date: Sat, 27 Jan 2018 08:24:28 -0800
+        Tue, 16 Jan 2018 04:31:21 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Firmware <linux-firmware@kernel.org>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Bob Tan <tanbo@marvell.com>,
+        "Xu (Shanghai) Wang" <xwang4@marvell.com>
+Subject: RE: pull-request mwifiex-firmware 2018-01-16
+Date: Tue, 16 Jan 2018 09:31:18 +0000
+Message-ID: <0c55d63be096467897b31ba080df0106@SC-EXCH02.marvell.com> (sfid-20180116_103125_840719_B2CE89DE)
+References: <1516092471-9041-1-git-send-email-huxm@marvell.com>
+In-Reply-To: <1516092471-9041-1-git-send-email-huxm@marvell.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-In-Reply-To: <874ln7v38y.fsf@toke.dk>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 01/27/2018 05:29 AM, Toke Høiland-Jørgensen wrote:
-> greearb@candelatech.com writes:
->
->> From: Ben Greear <greearb@candelatech.com>
->>
->> The PAUSED field was never printed per tid.  Replace that
->> with has_queued, which might help someone track down strange
->> bugs related to aqm.
->>
->> And, make tx-queue debug info show peer BSSID as well as vdev
->> MAC to aid debugging with multiple stations connected to the
->> same peer.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/debug_sta.c | 10 ++++++----
->>  drivers/net/wireless/ath/ath9k/xmit.c      |  5 +++--
->>  2 files changed, 9 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/debug_sta.c b/drivers/net/wireless/ath/ath9k/debug_sta.c
->> index efc692e..a45f1f5 100644
->> --- a/drivers/net/wireless/ath/ath9k/debug_sta.c
->> +++ b/drivers/net/wireless/ath/ath9k/debug_sta.c
->> @@ -48,9 +48,10 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
->>  			 an->mpdudensity);
->>
->>  	len += scnprintf(buf + len, size - len,
->> -			 "\n%3s%11s%10s%10s%10s%10s%9s%6s%8s\n",
->> +			 "\n%3s%11s%10s%10s%10s%10s%9s%6s%9s\n",
->>  			 "TID", "SEQ_START", "SEQ_NEXT", "BAW_SIZE",
->> -			 "BAW_HEAD", "BAW_TAIL", "BAR_IDX", "SCHED", "PAUSED");
->> +			 "BAW_HEAD", "BAW_TAIL", "BAR_IDX", "SCHED",
->> +			 "HAS-QUED");
->>
->>  	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
->>  		tid = ath_node_to_tid(an, tidno);
->> @@ -58,7 +59,7 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
->>  		ath_txq_lock(sc, txq);
->>  		if (tid->active) {
->>  			len += scnprintf(buf + len, size - len,
->> -					 "%3d%11d%10d%10d%10d%10d%9d%6d\n",
->> +					 "%3d%11d%10d%10d%10d%10d%9d%6d%9d\n",
->>  					 tid->tidno,
->>  					 tid->seq_start,
->>  					 tid->seq_next,
->> @@ -66,7 +67,8 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
->>  					 tid->baw_head,
->>  					 tid->baw_tail,
->>  					 tid->bar_index,
->> -					 !list_empty(&tid->list));
->> +					 !list_empty(&tid->list),
->> +					 tid->has_queued);
->
-> Would it perhaps be useful to print the length of tid->retry_q instead
-> of / in addition to has_queued? Planning to get rid of the has_queued
-> variable entirely...
-
-I'm just getting started looking at this.  4.9 kernel works fine, so it seems
-to be a regression in the aqm stuff since that is the big change between 4.9
-and 4.13.
-
- From a brief look yesterday, it seems that has_queued is not adequately protected
-by locks, but also, it was '1', which indicates it wants to send pkts (?), so I guess
-it was not hitting a locking race.
-
-Can you point me at the scheduler code (method name?).  I'll be looking at that
-as soon as I get time.
-
-Thanks,
-Ben
-
->
-> -Toke
->
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+SGksDQoNClBsZWFzZSBpZ25vcmUgdGhpcyByZXF1ZXN0LCB0aGVyZSB3b3VsZCBiZSBhIGVuaGFu
+Y2VkIHZlcnNpb24gZm9yIHRoaXMuDQoNClRoYW5rcw0KU2ltb24NCj4gLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
+DQo+IFttYWlsdG86bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhh
+bGYgT2YgWGlubWluZyBIdQ0KPiBTZW50OiAyMDE4xOox1MIxNsjVIDE2OjQ4DQo+IFRvOiBMaW51
+eCBGaXJtd2FyZSA8bGludXgtZmlybXdhcmVAa2VybmVsLm9yZz4NCj4gQ2M6IExpbnV4IFdpcmVs
+ZXNzIDxsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc+OyBaaGl5dWFuIFlhbmcNCj4gPHlh
+bmd6eUBtYXJ2ZWxsLmNvbT47IFRpbSBTb25nIDxzb25ndGFvQG1hcnZlbGwuY29tPjsgQ2F0aHkg
+THVvDQo+IDxjbHVvQG1hcnZlbGwuY29tPjsgSmFtZXMgQ2FvIDxqY2FvQG1hcnZlbGwuY29tPjsg
+R2FuYXBhdGhpIEJoYXQNCj4gPGdiaGF0QG1hcnZlbGwuY29tPjsgQm9iIFRhbiA8dGFuYm9AbWFy
+dmVsbC5jb20+OyBYdSAoU2hhbmdoYWkpIFdhbmcNCj4gPHh3YW5nNEBtYXJ2ZWxsLmNvbT4NCj4g
+U3ViamVjdDogcHVsbC1yZXF1ZXN0IG13aWZpZXgtZmlybXdhcmUgMjAxOC0wMS0xNg0KPiANCj4g
+VGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdA0KPiBkYjNlMTg1NWVhNDZiYzFhMjJi
+OGJiZWNiNDAwYzI5MDljNTUxY2Y1Og0KPiANCj4gICBsaW51eC1maXJtd2FyZTogdXBkYXRlIE1h
+cnZlbGwgUENJZS1VU0I4OTk3IGZpcm13YXJlIGltYWdlICgyMDE3LTEwLTMxDQo+IDIwOjQ5OjUz
+ICswNTMwKQ0KPiANCj4gYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6DQo+
+IA0KPiAgIGdpdDovL2dpdC5tYXJ2ZWxsLmNvbS9td2lmaWV4LWZpcm13YXJlLmdpdA0KPiANCj4g
+Zm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRvIDA3ZDdhN2U1MTAzNGZjYzFjMmE3MmM1ZWVi
+MTU2ZjFlOGFmZDMwMzg6DQo+IA0KPiAgIGxpbnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQ
+Q0llLVVTQjg4OTctQTIgZmlybXdhcmUgaW1hZ2UNCj4gKDIwMTgtMDEtMTYgMTU6MDQ6MTEgKzA4
+MDApDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tDQo+IFhpbm1pbmcgSHUgKDEpOg0KPiAgICAgICBsaW51eC1maXJt
+d2FyZTogdXBkYXRlIE1hcnZlbGwgUENJZS1VU0I4ODk3LUEyIGZpcm13YXJlIGltYWdlDQo+IA0K
+PiAgV0hFTkNFICAgICAgICAgICAgICAgICAgIHwgICAyICstDQo+ICBtcnZsL3BjaWU4ODk3X3Vh
+cHN0YS5iaW4gfCBCaW4gODM2NTQwIC0+IDg0MzgyOCBieXRlcw0KPiAgMiBmaWxlcyBjaGFuZ2Vk
+LCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0K
