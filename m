@@ -1,225 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:48289 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750819AbeAZLQM (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:22634 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751390AbeAPOCx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 06:16:12 -0500
-Subject: Re: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
-To: Wojciech Dubowik <wojciech.dubowik@neratec.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com
-References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
- <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
- <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com>
- <ed47cefe-efa4-a7c9-d017-b50a99316f43@neratec.com>
- <d9e84a77-636e-cd13-7713-9119a4ac971d@dd-wrt.com>
- <b0be6634-de6a-9f24-b48b-88e67ca9eee4@neratec.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <355dd2ee-36ab-0908-953f-a66b673630d1@dd-wrt.com> (sfid-20180126_121616_393225_362BC1BB)
-Date: Fri, 26 Jan 2018 12:16:09 +0100
+        Tue, 16 Jan 2018 09:02:53 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 03/13] staging: wilc1000: rename au8Sta_AssociatedBss element sta_info structure
+Date: Tue, 16 Jan 2018 19:32:21 +0530
+Message-ID: <1516111351-5353-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180116_150258_612262_EE8931FA)
+In-Reply-To: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <b0be6634-de6a-9f24-b48b-88e67ca9eee4@neratec.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 26.01.2018 um 12:07 schrieb Wojciech Dubowik:
-> Are you sure you have applied path 4 in the series. You should see 
-> calibration piers. Sth like:
-yes. all of them
+This is a cleanup patch, to rename au8Sta_AssociatedBss element of
+sta_info structure.
+The changes fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-root@TRO2:/sys/kernel/debug/ieee80211/phy0/ath9k# cat dump_nfcal
-Channel Noise Floor : -112
-Chain | privNF | # Readings | NF Readings
-  0       -107    5               -107 -107 -107 -108 -108
-  1       -106    5               -106 -106 -106 -106 -106
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-but looks different from yours, but chipset is 9280 as i said.
-
-let me just revert your 4 patches to see if it changes the behaviour
->
-> Calibration data
-> Chain 0
-> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
-> 2412    14    0    136    0    0    0
-> 2437    13    0    136    0    0    0
-> 2472    11    0    136    0    0    0
-> Chain 1
-> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
-> 2412    11    0    137    0    0    0
-> 2437    11    0    139    0    0    0
-> 2472    10    0    137    0    0    0
-> Chain 2
-> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
-> 2412    13    0    138    0    0    0
-> 2437    14    0    139    0    0    0
-> 2472    14    0    139    0    0    0
->
-> I have just done backports from ath.git and I can see these entries 
-> with my Compex card.
->
-> Wojtek
->
->
-> On 26/01/18 11:36, Sebastian Gottschall wrote:
->> Am 26.01.2018 um 11:27 schrieb Wojciech Dubowik:
->>> I will try it with again with couple of OEM cards.
->> this is no card. the eeprom is stored in flash memory. so the chip is 
->> a 9280 pcie chip which is connected on board, but has no own flash 
->> memory for calibration data. this is stored in system flash memory
->>>
->>> Is nanostation calibrated for noisefloor? You can see it with 
->>> modal_eeprom in debugfs.
->> root@TRO2:/sys/kernel/debug/ieee80211/phy0/ath9k# cat modal_eeprom
->>    2GHz modal Header :
->>  Chain0 Ant. Control :          0
->>  Chain1 Ant. Control :          0
->>  Chain2 Ant. Control :          0
->>  Ant. Common Control :          0
->>     Chain0 Ant. Gain :          0
->>     Chain1 Ant. Gain :          0
->>     Chain2 Ant. Gain :          0
->>        Switch Settle :         45
->>     Chain0 TxRxAtten :         11
->>     Chain1 TxRxAtten :         11
->>     Chain2 TxRxAtten :         11
->>    Chain0 RxTxMargin :         11
->>    Chain1 RxTxMargin :         11
->>    Chain2 RxTxMargin :         11
->>     ADC Desired size :        224
->>     PGA Desired size :          0
->>     Chain0 xlna Gain :         14
->>     Chain1 xlna Gain :         14
->>     Chain2 xlna Gain :         14
->>        txEndToXpaOff :          0
->>          txEndToRxOn :          2
->>       txFrameToXpaOn :         14
->>       CCA Threshold) :          0
->>  Chain0 NF Threshold :        202
->>  Chain1 NF Threshold :        202
->>  Chain2 NF Threshold :        202
->>              xpdGain :          9
->>          External PD :          1
->> Chain0 I Coefficient :          0
->> Chain1 I Coefficient :          0
->> Chain2 I Coefficient :          0
->> Chain0 Q Coefficient :          0
->> Chain1 Q Coefficient :          0
->> Chain2 Q Coefficient :          0
->>        pdGainOverlap :          6
->>    Chain0 OutputBias :          2
->>    Chain0 DriverBias :          2
->>       xPA Bias Level :          0
->>  2chain pwr decrease :          0
->>  3chain pwr decrease :          0
->>   txFrameToDataStart :         14
->>        txFrameToPaOn :         14
->>      HT40 Power Inc. :          2
->>      Chain0 bswAtten :         21
->>      Chain1 bswAtten :         21
->>      Chain2 bswAtten :          0
->>     Chain0 bswMargin :         31
->>     Chain1 bswMargin :         31
->>     Chain2 bswMargin :          0
->>   HT40 Switch Settle :         44
->>     Chain0 xatten2Db :          0
->>     Chain1 xatten2Db :          0
->>     Chain2 xatten2Db :          0
->> Chain0 xatten2Margin :          0
->> Chain1 xatten2Margin :          0
->> Chain2 xatten2Margin :          0
->>    Chain1 OutputBias :          2
->>    Chain1 DriverBias :          2
->>          LNA Control :         13
->>       XPA Bias Freq0 :          0
->>       XPA Bias Freq1 :          0
->>       XPA Bias Freq2 :          0
->>    5GHz modal Header :
->>  Chain0 Ant. Control :         16
->>  Chain1 Ant. Control :         16
->>  Chain2 Ant. Control :          0
->>  Ant. Common Control :        288
->>     Chain0 Ant. Gain :          0
->>     Chain1 Ant. Gain :          0
->>     Chain2 Ant. Gain :          0
->>        Switch Settle :         45
->>     Chain0 TxRxAtten :         32
->>     Chain1 TxRxAtten :         32
->>     Chain2 TxRxAtten :         11
->>    Chain0 RxTxMargin :          0
->>    Chain1 RxTxMargin :          0
->>    Chain2 RxTxMargin :         16
->>     ADC Desired size :        226
->>     PGA Desired size :          0
->>     Chain0 xlna Gain :         13
->>     Chain1 xlna Gain :         13
->>     Chain2 xlna Gain :         13
->>        txEndToXpaOff :          0
->>          txEndToRxOn :          2
->>       txFrameToXpaOn :         14
->>       CCA Threshold) :         28
->>  Chain0 NF Threshold :        255
->>  Chain1 NF Threshold :        255
->>  Chain2 NF Threshold :        255
->>              xpdGain :          1
->>          External PD :          1
->> Chain0 I Coefficient :          0
->> Chain1 I Coefficient :          0
->> Chain2 I Coefficient :          0
->> Chain0 Q Coefficient :          0
->> Chain1 Q Coefficient :          0
->> Chain2 Q Coefficient :          0
->>        pdGainOverlap :          6
->>    Chain0 OutputBias :          3
->>    Chain0 DriverBias :          3
->>       xPA Bias Level :          2
->>  2chain pwr decrease :          0
->>  3chain pwr decrease :          0
->>   txFrameToDataStart :         14
->>        txFrameToPaOn :         14
->>      HT40 Power Inc. :          0
->>      Chain0 bswAtten :         34
->>      Chain1 bswAtten :         34
->>      Chain2 bswAtten :          0
->>     Chain0 bswMargin :         22
->>     Chain1 bswMargin :         22
->>     Chain2 bswMargin :          0
->>   HT40 Switch Settle :         45
->>     Chain0 xatten2Db :          0
->>     Chain1 xatten2Db :          0
->>     Chain2 xatten2Db :          0
->> Chain0 xatten2Margin :          0
->> Chain1 xatten2Margin :          0
->> Chain2 xatten2Margin :          0
->>    Chain1 OutputBias :          3
->>    Chain1 DriverBias :          3
->>          LNA Control :         13
->>       XPA Bias Freq0 :          0
->>       XPA Bias Freq1 :          0
->>       XPA Bias Freq2 :          0
->>
->>>
->>> Wojtek
->>> On 26/01/18 10:59, Sebastian Gottschall wrote:
->>>> i dont know if this is a coincidence. but after testing your patch 
->>>> on a standard ubiquiti nanostation m2 the noise floor looks wrong.
->>>> it will stay on -112 which is clearly impossible in 2.4 (before it 
->>>> was around -96)
->>>
->>>
->>
->
->
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index d6ff989..7dfb230 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1182,7 +1182,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+ 		for (i = 0; i < NUM_STA_ASSOCIATED; i++) {
+-			if (!(memcmp(mac, priv->assoc_stainfo.au8Sta_AssociatedBss[i], ETH_ALEN))) {
++			if (!(memcmp(mac, priv->assoc_stainfo.sta_associated_bss[i], ETH_ALEN))) {
+ 				associatedsta = i;
+ 				break;
+ 			}
+@@ -1837,7 +1837,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		vif->iftype = STATION_MODE;
+ 		wilc_set_operation_mode(vif, STATION_MODE);
+ 
+-		memset(priv->assoc_stainfo.au8Sta_AssociatedBss, 0, MAX_NUM_STA * ETH_ALEN);
++		memset(priv->assoc_stainfo.sta_associated_bss, 0, MAX_NUM_STA * ETH_ALEN);
+ 
+ 		wilc_enable_ps = true;
+ 		wilc_set_power_mgmt(vif, 1, 0);
+@@ -1970,7 +1970,7 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+ 		memcpy(strStaParams.bssid, mac, ETH_ALEN);
+-		memcpy(priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid], mac, ETH_ALEN);
++		memcpy(priv->assoc_stainfo.sta_associated_bss[params->aid], mac, ETH_ALEN);
+ 		strStaParams.aid = params->aid;
+ 		strStaParams.rates_len = params->supported_rates_len;
+ 		strStaParams.rates = params->supported_rates;
+@@ -2010,7 +2010,7 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+ 		if (!mac)
+ 			s32Error = wilc_del_allstation(vif,
+-				     priv->assoc_stainfo.au8Sta_AssociatedBss);
++				     priv->assoc_stainfo.sta_associated_bss);
+ 
+ 		s32Error = wilc_del_station(vif, mac);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 0a936a4..a4c193e 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -86,7 +86,7 @@ struct wilc_wfi_wep_key {
+ };
+ 
+ struct sta_info {
+-	u8 au8Sta_AssociatedBss[MAX_NUM_STA][ETH_ALEN];
++	u8 sta_associated_bss[MAX_NUM_STA][ETH_ALEN];
+ };
+ 
+ /*Parameters needed for host interface for  remaining on channel*/
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+2.7.4
