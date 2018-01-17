@@ -1,81 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:35705 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751345AbeAOSyl (ORCPT
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:37867 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750816AbeAQWrv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 13:54:41 -0500
-Received: by mail-ot0-f196.google.com with SMTP id 53so11485222otj.2
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 10:54:41 -0800 (PST)
-Subject: Re: [PATCH v2 05/10] rtlwifi: enable mac80211 fast-tx support
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: yhchuang@realtek.com, linux-wireless@vger.kernel.org
-References: <20180111070932.9929-1-pkshih@realtek.com>
- <20180111070932.9929-6-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <9e87780d-e961-dbbb-0a2d-9124c60efa6c@lwfinger.net> (sfid-20180115_195447_442205_9BC88A91)
-Date: Mon, 15 Jan 2018 12:54:40 -0600
+        Wed, 17 Jan 2018 17:47:51 -0500
+Received: by mail-qt0-f175.google.com with SMTP id d54so13683441qtd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Jan 2018 14:47:51 -0800 (PST)
+Subject: Re: Not work 802.11ac WLAN Adapter
+To: Cristian <caravena@gmail.com>, linux-wireless@vger.kernel.org,
+        linux-usb@vger.kernel.org
+References: <CABwnbU=Z7zJd8zL-0qkEnNHgQyvLCQ+85d1oMh+FKM83rzmoSA@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A5FD293.2010107@broadcom.com> (sfid-20180117_234755_874618_32995E3C)
+Date: Wed, 17 Jan 2018 23:47:47 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180111070932.9929-6-pkshih@realtek.com>
+In-Reply-To: <CABwnbU=Z7zJd8zL-0qkEnNHgQyvLCQ+85d1oMh+FKM83rzmoSA@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> To enable the mac80211 fast-tx feature, the hw/driver needs to support
-> dynamic power saving and fragmentation. Since our driver does not
-> need to fragment packet into smaller pieces, we just hook an empty
-> callback of set_frag_threshold to avoid fragmentation in mac80211.
-> 
-> After this, the mac80211 will not fragment the packets and can transmit
-> them faster by cache the header information.
-> 
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
->   drivers/net/wireless/realtek/rtlwifi/base.c | 2 ++
->   drivers/net/wireless/realtek/rtlwifi/core.c | 6 ++++++
->   2 files changed, 8 insertions(+)
+On 1/17/2018 9:47 PM, Cristian wrote:
+> Hello,
+>
+> Open bug in launchpad.net
+> https://bugs.launchpad.net/bugs/1743872
+>
+> dmesg_4.15.0-041500rc8-generic
+>
+> dmesg:
+> [ 104.468231] usb 3-2: new high-speed USB device number 4 using xhci_hcd
+> [ 104.616570] usb 3-2: New USB device found, idVendor=0bda, idProduct=a811
+> [ 104.616578] usb 3-2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+> [ 104.616582] usb 3-2: Product: 802.11ac WLAN Adapter
+> [ 104.616585] usb 3-2: Manufacturer: Realtek
+> [ 104.616588] usb 3-2: SerialNumber: 00e04c000001
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+So according to wikidevi it seems to be a RTL8811AU [1]. This does not 
+seem supported by an upstream driver. Just search for "rtl8811au linux 
+driver" on your favorite internet search engine and I am sure you will 
+find a solution. Ubuntu seems to have a dkms package for it [2].
 
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-> index 89ec318598ea..e902cd7adbfe 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-> @@ -395,6 +395,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
->   	ieee80211_hw_set(hw, CONNECTION_MONITOR);
->   	ieee80211_hw_set(hw, MFP_CAPABLE);
->   	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
-> +	ieee80211_hw_set(hw, SUPPORTS_TX_FRAG);
-> +	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
->   
->   	/* swlps or hwlps has been set in diff chip in init_sw_vars */
->   	if (rtlpriv->psc.swctrl_lps) {
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-> index 6c698123ac07..d454c38fc9cd 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-> @@ -1001,6 +1001,11 @@ static void rtl_op_sta_statistics(struct ieee80211_hw *hw,
->   	sinfo->filled = 0;
->   }
->   
-> +static int rtl_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +
->   /*
->    *for mac80211 VO = 0, VI = 1, BE = 2, BK = 3
->    *for rtl819x  BE = 0, BK = 1, VI = 2, VO = 3
-> @@ -1906,6 +1911,7 @@ const struct ieee80211_ops rtl_ops = {
->   	.configure_filter = rtl_op_configure_filter,
->   	.set_key = rtl_op_set_key,
->   	.sta_statistics = rtl_op_sta_statistics,
-> +	.set_frag_threshold = rtl_op_set_frag_threshold,
->   	.conf_tx = rtl_op_conf_tx,
->   	.bss_info_changed = rtl_op_bss_info_changed,
->   	.get_tsf = rtl_op_get_tsf,
-> 
+Regards,
+Arend
+
+[1] 
+https://wikidevi.com/w/index.php?title=Special%3AAsk&q=%5B%5BDevice+ID%3A%3Aa811%5D%5D&po=%3FInterface%0D%0A%3FForm+factor%3DFF%0D%0A%3FInterface+connector+type%3DUSB+conn.%0D%0A%3FFCC+ID%0D%0A%3FManuf%0D%0A%3FManuf+product+model%3DManuf.+mdl%0D%0A%3FVendor+ID%0D%0A%3FDevice+ID%0D%0A%3FChip1+model%0D%0A%3FSupported+802dot11+protocols%3DPHY+modes%0D%0A%3FMIMO+config%0D%0A%3FOUI%0D%0A%3FEstimated+year+of+release%3DEst.+year%0D%0A&eq=yes&p%5Bformat%5D=broadtable&sort_num=&order_num=ASC&p%5Blimit%5D=500&p%5Boffset%5D=&p%5Blink%5D=all&p%5Bsort%5D=&p%5Bheaders%5D=show&p%5Bmainlabel%5D=&p%5Bintro%5D=&p%5Boutro%5D=&p%5Bsearchlabel%5D=%E2%80%A6+further+results&p%5Bdefault%5D=&p%5Bclass%5D=sortable+wikitable+smwtable&p%5Bsep%5D=&eq=yes
+[2] https://packages.ubuntu.com/xenial/kernel/rtl8812au-dkms
