@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58450 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750886AbeAVLWr (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:32880 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752357AbeAQHec (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 06:22:47 -0500
-Date: Mon, 22 Jan 2018 14:22:34 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Cc: Ajay Singh <ajay.kathat@microchip.com>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        gregkh@linuxfoundation.org, venkateswara.kaja@microchip.com,
-        aditya.shankar@microchip.com, ganesh.krishna@microchip.com
-Subject: Re: [PATCH v2 02/14] staging: wilc1000: removed unnecessary defined
- enums typedef
-Message-ID: <20180122112234.33sod7nfy7ps3pq4@mwanda> (sfid-20180122_122251_576697_EA5B125A)
-References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
- <1516616547-24654-3-git-send-email-ajay.kathat@microchip.com>
- <90847f2f-449e-b34a-4a86-880e2b3670d7@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <90847f2f-449e-b34a-4a86-880e2b3670d7@microchip.com>
+        Wed, 17 Jan 2018 02:34:32 -0500
+From: tamizhr@codeaurora.org
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCH 0/4] cfg80211/mac80211: cqm rssi config for AP mode
+Date: Wed, 17 Jan 2018 13:01:12 +0530
+Message-Id: <1516174276-16789-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180117_083446_596303_AE7E322F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 22, 2018 at 01:06:59PM +0200, Claudiu Beznea wrote:
-> 
-> 
-> On 22.01.2018 12:22, Ajay Singh wrote:
-> > Fix the "do not add new typedefs" issue found by checkpatch.pl
-> > script
-> > 
-> >From https://www.kernel.org/doc/html/latest/process/submitting-patches.html#the-canonical-patch-format
-> the the message body line is wrapped at 75 columns.
-> 
+From: Tamizh chelvam <tamizhr@codeaurora.org>
 
-I normally consider 75 characters a maximum.  I wrap at 72 characters
-like a normal email.
+Currently station mode has the support of rssi based cqm. This patchsets
+extended the support for AP mode as well. Already netlink accepts mac
+address in cqm notification event. We can use that to pass mac address of
+the station to specify its rssi change event and bssid will be passed for
+STA mode. This patchset changes cfg80211_cqm_rssi_notify and
+ieee80211_cqm_rssi_notify apis to accepts mac address. RSSI config is
+common for all the stations in bss.
 
-If we get too hung up on procedures for their own sake then it makes
-sending patches a real pain.  There are some people I just don't send
-patches to because they are too much headache to deal with.
+Pradeep Kumar Chitrapu (3):
+  wireless: allow send peer mac in rssi cqm notify
+  cfg80211: enable setting cqm config for AP mode
+  mac80211: enable setting cqm config for AP mode
 
-regards,
-dan carpenter
+Tamizh chelvam (1):
+  mac80211: implement cqm using rx data signal
+
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c      |  4 +--
+ drivers/net/wireless/marvell/mwifiex/sta_event.c |  4 +--
+ drivers/net/wireless/rndis_wlan.c                |  2 +-
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c      |  2 +-
+ drivers/net/wireless/st/cw1200/sta.c             |  4 ++-
+ drivers/net/wireless/ti/wl1251/event.c           |  4 +--
+ drivers/net/wireless/ti/wlcore/event.c           |  5 +--
+ include/net/cfg80211.h                           |  3 +-
+ include/net/mac80211.h                           | 10 +++++-
+ net/mac80211/cfg.c                               | 32 ++++++++++++------
+ net/mac80211/mlme.c                              | 14 ++++----
+ net/mac80211/rx.c                                | 43 +++++++++++++++++++++++-
+ net/mac80211/sta_info.h                          |  3 ++
+ net/mac80211/trace.h                             | 11 +++---
+ net/wireless/nl80211.c                           | 11 +++---
+ net/wireless/trace.h                             | 12 ++++---
+ 16 files changed, 121 insertions(+), 43 deletions(-)
+
+-- 
+1.9.1
