@@ -1,91 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:49832 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755715AbeARNPw (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37876 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750846AbeAQLra (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 08:15:52 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH] [wireless-next] mt76: fix building without CONFIG_LEDS_CLASS
-Date: Thu, 18 Jan 2018 14:14:11 +0100
-Message-Id: <20180118131524.817297-1-arnd@arndb.de> (sfid-20180118_141619_764641_DECE6613)
+        Wed, 17 Jan 2018 06:47:30 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: merez@codeaurora.org, Maya Erez <qca_merez@qca.qualcomm.com>,
+        Lazar Alexei <QCA_ailizaro@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        wil6210@qca.qualcomm.com, linux-wireless-owner@vger.kernel.org
+Subject: Re: [v2,6/9] wil6210: add support for headroom configuration
+References: <1513270393-919-7-git-send-email-qca_merez@qca.qualcomm.com>
+        <20180109080707.B05B66081B@smtp.codeaurora.org>
+        <1384d3ee94eb48f29e85161d9a8fa136@codeaurora.org>
+        <CAGRGNgUmtZcW=xewDPCathwCUMXjqXk_qTPcOjb9+VCOm=nskg@mail.gmail.com>
+Date: Wed, 17 Jan 2018 13:47:24 +0200
+In-Reply-To: <CAGRGNgUmtZcW=xewDPCathwCUMXjqXk_qTPcOjb9+VCOm=nskg@mail.gmail.com>
+        (Julian Calaby's message of "Wed, 17 Jan 2018 21:11:38 +1100")
+Message-ID: <87vag0emgj.fsf@kamboji.qca.qualcomm.com> (sfid-20180117_124734_081186_EB244232)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_LEDS_CLASS is disabled, or it is a loadable module while
-mt76 is built-in, we run into a link error:
+Julian Calaby <julian.calaby@gmail.com> writes:
 
-drivers/net/wireless/mediatek/mt76/mac80211.o: In function `mt76_register_device':
-mac80211.c:(.text+0xb78): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `devm_of_led_classdev_register'
+> On Tue, Jan 16, 2018 at 12:18 AM,  <merez@codeaurora.org> wrote:
+>> On 2018-01-09 10:07, Kalle Valo wrote:
+>>>
+>>> Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+>>>
+>>>> Add module parameter for configuring the headroom size
+>>>> in the skb allocation.
+>>>>
+>>>> Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+>>>> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+>>>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>>>
+>>>
+>>> Why?
+>>
+>>
+>> Some platforms have specific requirements on packet alignment.
+>> I will upload an update of the commit text in the next set of 11ad patches.
+>
+> Is this something the platform can tell you or something you can store
+> in an array by platform name? (and use the maximum size if we don't
+> know)
+>
+> Alternatively, would it waste too much RAM to just set this to the
+> maximum size and have done?
+>
+> I feel that allowing the user to set it will be problematic.
 
-We don't really need a hard dependency here as the driver can presumably
-work just fine without LEDs, so this follows the iwlwifi example and
-adds a separate Kconfig option for the LED support, this will be available
-whenever it will link, and otherwise the respective code gets left out from
-the driver object.
+I feel the same. I don't think this is something which should be
+controlled with a module parameter, instead the driver should choose it
+automatically.
 
-Fixes: 17f1de56df05 ("mt76: add common code shared between multiple chipsets")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/mediatek/mt76/Kconfig       | 5 +++++
- drivers/net/wireless/mediatek/mt76/mac80211.c    | 8 +++++---
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 6 ++++--
- 3 files changed, 14 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
-index fc05d79c80d0..9d12c1f5284e 100644
---- a/drivers/net/wireless/mediatek/mt76/Kconfig
-+++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-@@ -8,3 +8,8 @@ config MT76x2E
- 	depends on PCI
- 	---help---
- 	  This adds support for MT7612/MT7602/MT7662-based wireless PCIe devices.
-+
-+config MT76_LEDS
-+	bool "LED support for MT76"
-+	depends on MT76_CORE
-+	depends on LEDS_CLASS=y || MT76_CORE=LEDS_CLASS
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 3acf0e175d71..144e312a9407 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -295,9 +295,11 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- 	mt76_check_sband(dev, NL80211_BAND_2GHZ);
- 	mt76_check_sband(dev, NL80211_BAND_5GHZ);
- 
--	ret = mt76_led_init(dev);
--	if (ret)
--		return ret;
-+	if (IS_ENABLED(CONFIG_MT76_LEDS)) {
-+		ret = mt76_led_init(dev);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	return ieee80211_register_hw(hw);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 4373a2ba5143..0c9d02af205d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -849,8 +849,10 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 	mt76x2_dfs_init_detector(dev);
- 
- 	/* init led callbacks */
--	dev->mt76.led_cdev.brightness_set = mt76x2_led_set_brightness;
--	dev->mt76.led_cdev.blink_set = mt76x2_led_set_blink;
-+	if (IS_ENABLED(CONFIG_MT76_LEDS)) {
-+		dev->mt76.led_cdev.brightness_set = mt76x2_led_set_brightness;
-+		dev->mt76.led_cdev.blink_set = mt76x2_led_set_blink;
-+	}
- 
- 	ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
- 				   ARRAY_SIZE(mt76x2_rates));
 -- 
-2.9.0
+Kalle Valo
