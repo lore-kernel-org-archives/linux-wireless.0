@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar-4.linta.de ([136.243.71.142]:55610 "EHLO
-        isilmar-4.linta.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751622AbeANSML (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47746 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753051AbeAQOu3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Jan 2018 13:12:11 -0500
-Date: Sun, 14 Jan 2018 19:03:38 +0100
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: johannes.berg@intel.com
-Cc: regressions@leemhuis.info, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] nl80211: take RCU read lock when calling
- ieee80211_bss_get_ie()
-Message-ID: <20180114180338.GA1569@light.dominikbrodowski.net> (sfid-20180114_191214_897937_AE8397B8)
-References: <20171222072012.GA3110@light.dominikbrodowski.net>
- <20171230131132.GA2624@light.dominikbrodowski.net>
- <20180108100403.GA4715@light.dominikbrodowski.net>
+        Wed, 17 Jan 2018 09:50:29 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        dan.carpenter@oracle.com, linux-wireless@vger.kernel.org
+Subject: Re: [1/2] mt76: fix possible NULL pointer dereferencing in mt76x2_ampdu_action()
+References: <18a56326d68a7d53f3197e450cae0e28382d8d2c.1513252573.git.lorenzo.bianconi@redhat.com>
+        <20180108173523.B23C360B22@smtp.codeaurora.org>
+        <CAJ0CqmWEgC07iBkkt92fKTpagMx+_oim_3qcPoc=B6ttsUzoOA@mail.gmail.com>
+        <87o9m42p2k.fsf@kamboji.qca.qualcomm.com>
+        <5835442f-9e10-69bb-3b6d-d207d540181f@nbd.name>
+Date: Wed, 17 Jan 2018 16:50:23 +0200
+In-Reply-To: <5835442f-9e10-69bb-3b6d-d207d540181f@nbd.name> (Felix Fietkau's
+        message of "Wed, 17 Jan 2018 11:26:13 +0100")
+Message-ID: <87o9lsczf4.fsf@kamboji.qca.qualcomm.com> (sfid-20180117_155033_045435_CA7BCC90)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180108100403.GA4715@light.dominikbrodowski.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As ieee80211_bss_get_ie() derefences an RCU, it needs to be called with
-rcu_read_lock held.
+Felix Fietkau <nbd@nbd.name> writes:
 
-Fixes: 44905265bc15 ("nl80211: don't expose wdev->ssid for most interfaces")
-Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
----
+> On 2018-01-08 19:16, Kalle Valo wrote:
+>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+>> 
+>>>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+>>>>
+>>>>> Initialize mt76_txq pointer after ieee80211_txq pointer check.
+>>>>> Remove space after the pointer cast
+>>>>>
+>>>>> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+>>>>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>>>>
+>>>> What am I supposed to do with this and patch 2? Drop?
+>>>
+>>> What do you mean? Why drop?
+>> 
+>> I didn't see Felix's ack, at least not on patchwork.
+>
+> I sent my ack (for both patches) as a reply to 0/2
 
-This patch fixes the regression I reported in the last couple of weeks for
-various v4.15-rcX revisions to netdev, where a "suspicious RCU usage"
-showed up in net/wireless/util.c:778.
+Ah. patchwork is annoying as it doesn't show the cover letter at all so
+I missed that.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2b3dbcd40e46..1eecc249fb5e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2618,8 +2618,10 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 		const u8 *ssid_ie;
- 		if (!wdev->current_bss)
- 			break;
-+		rcu_read_lock();
- 		ssid_ie = ieee80211_bss_get_ie(&wdev->current_bss->pub,
- 					       WLAN_EID_SSID);
-+		rcu_read_unlock();
- 		if (!ssid_ie)
- 			break;
- 		if (nla_put(msg, NL80211_ATTR_SSID, ssid_ie[1], ssid_ie + 2))
+> These patches should go in.
+
+These two are applied now.
+
+-- 
+Kalle Valo
