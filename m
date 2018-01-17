@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56826 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934005AbeAXPRu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 10:17:50 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:36032 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750810AbeAQK0P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Jan 2018 05:26:15 -0500
+Subject: Re: [1/2] mt76: fix possible NULL pointer dereferencing in
+ mt76x2_ampdu_action()
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: dan.carpenter@oracle.com, linux-wireless@vger.kernel.org
+References: <18a56326d68a7d53f3197e450cae0e28382d8d2c.1513252573.git.lorenzo.bianconi@redhat.com>
+ <20180108173523.B23C360B22@smtp.codeaurora.org>
+ <CAJ0CqmWEgC07iBkkt92fKTpagMx+_oim_3qcPoc=B6ttsUzoOA@mail.gmail.com>
+ <87o9m42p2k.fsf@kamboji.qca.qualcomm.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <5835442f-9e10-69bb-3b6d-d207d540181f@nbd.name> (sfid-20180117_112619_445991_97476F0A)
+Date: Wed, 17 Jan 2018 11:26:13 +0100
 MIME-Version: 1.0
-Subject: Re: [v2] mt76x2: init: disable all pending tasklets during device
- removal
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <612e527f5358f4d7d465f21fc72b5b649dce5f40.1516697336.git.lorenzo.bianconi@redhat.com>
-References: <612e527f5358f4d7d465f21fc72b5b649dce5f40.1516697336.git.lorenzo.bianconi@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
-Message-Id: <20180124151750.12E4B609D1@smtp.codeaurora.org> (sfid-20180124_161755_100927_985900AE)
-Date: Wed, 24 Jan 2018 15:17:50 +0000 (UTC)
+In-Reply-To: <87o9m42p2k.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
-
-> There is a possible race in mt76x2_stop_hardware() since pre_tbtt and
-> dfs tasklets could run during driver cleanup. Fix it disabling all
-> pending tasklets during device removal
+On 2018-01-08 19:16, Kalle Valo wrote:
+> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> Acked-by: Felix Fietkau <nbd@nbd.name>
+>>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+>>>
+>>>> Initialize mt76_txq pointer after ieee80211_txq pointer check.
+>>>> Remove space after the pointer cast
+>>>>
+>>>> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+>>>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>>>
+>>> What am I supposed to do with this and patch 2? Drop?
+>>
+>> What do you mean? Why drop?
+> 
+> I didn't see Felix's ack, at least not on patchwork.
+I sent my ack (for both patches) as a reply to 0/2
+These patches should go in.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-ba9797b2a7a5 mt76x2: init: disable all pending tasklets during device removal
-
--- 
-https://patchwork.kernel.org/patch/10179831/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+- Felix
