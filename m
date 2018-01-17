@@ -1,206 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:45037 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934101AbeAJRJu (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:57790 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752100AbeAQNgP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 12:09:50 -0500
-Received: by mail-pl0-f65.google.com with SMTP id n13so7634252plp.11
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jan 2018 09:09:49 -0800 (PST)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v2 2/5] nl80211: Add CMD_CONTROL_PORT_FRAME API
-Date: Wed, 10 Jan 2018 11:09:35 -0600
-Message-Id: <20180110170938.2341-3-denkenz@gmail.com> (sfid-20180110_180954_446002_3E444A40)
-In-Reply-To: <20180110170938.2341-1-denkenz@gmail.com>
-References: <20180110170938.2341-1-denkenz@gmail.com>
+        Wed, 17 Jan 2018 08:36:15 -0500
+From: Pkshih <pkshih@realtek.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "johannes.berg@intel.com" <johannes.berg@intel.com>
+Subject: Re: [PATCH] cfg80211: wext: don't use static struct
+Date: Wed, 17 Jan 2018 13:26:20 +0000
+Message-ID: <1516195580.2723.15.camel@realtek.com> (sfid-20180117_143619_922067_FE190A88)
+References: <20180116221100.10079-1-johannes@sipsolutions.net>
+In-Reply-To: <20180116221100.10079-1-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit also adds cfg80211_rx_control_port function.  This is used
-to generate a CMD_CONTROL_PORT_FRAME event out to userspace.  The
-conn_owner_nlportid is used as the unicast destination.  This means that
-userspace must specify NL80211_ATTR_SOCKET_OWNER flag if control port
-over nl80211 routing is requested in NL80211_CMD_CONNECT or
-NL80211_CMD_ASSOCIATE
-
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/net/cfg80211.h       | 17 +++++++++++++
- include/uapi/linux/nl80211.h | 15 +++++++++++
- net/wireless/nl80211.c       | 59 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/trace.h         | 21 ++++++++++++++++
- 4 files changed, 112 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f46bdc4298f1..84cba57dd8d0 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5629,6 +5629,23 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
- 
- 
- /**
-+ * cfg80211_rx_control_port - inform userspace about a received control port
-+ * frame, e.g. EAPoL.  This is used if userspace has specified it wants to
-+ * receive control port frames over NL80211.
-+ * @dev: The device the frame matched to
-+ * @buf: control port frame
-+ * @len: length of the frame data
-+ * @addr: The peer from which the frame was received
-+ * @proto: frame protocol, typically PAE or Pre-authentication
-+ * @unencrypted: Whether the frame was received unencrypted
-+ *
-+ * Return: %true if the frame was passed to userspace
-+ */
-+bool cfg80211_rx_control_port(struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *addr, u16 proto, bool unencrypted);
-+
-+/**
-  * cfg80211_cqm_rssi_notify - connection quality monitoring rssi event
-  * @dev: network device
-  * @rssi_event: the triggered RSSI event
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 8855b7eaf92c..b902614e876e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -991,6 +991,17 @@
-  *	&NL80211_CMD_CONNECT or &NL80211_CMD_ROAM. If the 4 way handshake failed
-  *	&NL80211_CMD_DISCONNECT should be indicated instead.
-  *
-+ * @NL80211_CMD_CONTROL_PORT_FRAME: Control Port (e.g. PAE) frame TX request
-+ *	and RX notification.  This command is used both as a request to transmit
-+ *	a control port frame and as a notification that a control port frame
-+ *	has been received. %NL80211_ATTR_FRAME is used to specify the
-+ *	frame contents.  The frame is the raw EAPoL data, without ethernet or
-+ *	802.11 headers.
-+ *	When used as an event indication %NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
-+ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT and %NL80211_ATTR_MAC are added
-+ *	indicating the protocol type of the received frame; whether the frame
-+ *	was received unencrypted and the MAC address of the peer respectively.
-+ *
-  * @NL80211_CMD_RELOAD_REGDB: Request that the regdb firmware file is reloaded.
-  *
-  * @NL80211_CMD_MAX: highest used command number
-@@ -1199,6 +1210,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_RELOAD_REGDB,
- 
-+	NL80211_CMD_CONTROL_PORT_FRAME,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1446,6 +1459,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT: When included along with
-  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE, indicates that the custom
-  *	ethertype frames used for key negotiation must not be encrypted.
-+ *	When included in %NL80211_CMD_CONTROL_PORT_FRAME it means that the
-+ *	control port frame was received unencrypted.
-  * @NL80211_ATTR_CONTROL_PORT_OVER_NL80211: A flag indicating whether control
-  *	port frames (e.g. of type given in %NL80211_ATTR_CONTROL_PORT_ETHERTYPE)
-  *	will be sent directly to the network interface or sent via the NL80211
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 840ee6d73269..c0f2bb24e7dd 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -14500,6 +14500,65 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
- }
- EXPORT_SYMBOL(cfg80211_mgmt_tx_status);
- 
-+static int __nl80211_control_port(struct net_device *dev,
-+				  const u8 *buf, size_t len,
-+				  const u8 *addr, u16 proto,
-+				  bool unencrypted, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	struct sk_buff *msg;
-+	void *hdr;
-+	u32 nlportid = READ_ONCE(wdev->conn_owner_nlportid);
-+
-+	if (!nlportid)
-+		return -ENOENT;
-+
-+	msg = nlmsg_new(100 + len, gfp);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CONTROL_PORT_FRAME);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return -ENOMEM;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-+	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
-+			      NL80211_ATTR_PAD) ||
-+	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
-+	    nla_put_u16(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE, proto) ||
-+	    (unencrypted && nla_put_flag(msg,
-+					 NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT)))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
-+bool cfg80211_rx_control_port(struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *addr, u16 proto, bool unencrypted)
-+{
-+	bool ret;
-+
-+	trace_cfg80211_rx_control_port(dev, buf, len, addr, proto, unencrypted);
-+	ret = __nl80211_control_port(dev, buf, len, addr, proto,
-+				     unencrypted, GFP_ATOMIC);
-+	trace_cfg80211_return_bool(ret);
-+	return ret;
-+}
-+EXPORT_SYMBOL(cfg80211_rx_control_port);
-+
- static struct sk_buff *cfg80211_prepare_cqm(struct net_device *dev,
- 					    const char *mac, gfp_t gfp)
- {
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index bcfedd39e7a3..48bb1c1eaf67 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2577,6 +2577,27 @@ TRACE_EVENT(cfg80211_mgmt_tx_status,
- 		  WDEV_PR_ARG, __entry->cookie, BOOL_TO_STR(__entry->ack))
- );
- 
-+TRACE_EVENT(cfg80211_rx_control_port,
-+	TP_PROTO(struct net_device *netdev, const u8 *buf, size_t len,
-+		 const u8 *addr, u16 proto, bool unencrypted),
-+	TP_ARGS(netdev, buf, len, addr, proto, unencrypted),
-+	TP_STRUCT__entry(
-+		NETDEV_ENTRY
-+		MAC_ENTRY(addr)
-+		__field(u16, proto)
-+		__field(bool, unencrypted)
-+	),
-+	TP_fast_assign(
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(addr, addr);
-+		__entry->proto = proto;
-+		__entry->unencrypted = unencrypted;
-+	),
-+	TP_printk(NETDEV_PR_FMT ", " MAC_PR_FMT " proto: %x, unencrypted: %s",
-+		  NETDEV_PR_ARG, MAC_PR_ARG(addr),
-+		  __entry->proto, BOOL_TO_STR(__entry->unencrypted))
-+);
-+
- TRACE_EVENT(cfg80211_cqm_rssi_notify,
- 	TP_PROTO(struct net_device *netdev,
- 		 enum nl80211_cqm_rssi_threshold_event rssi_event,
--- 
-2.13.5
+T24gVHVlLCAyMDE4LTAxLTE2IGF0IDIzOjExICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBGcm9tOiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4gDQo+IFRo
+ZXJlJ3Mgbm8gcG9pbnQgaW4gcGVyc2lzdGVudGx5IGFsbG9jYXRpbmcgbWVtb3J5IGZvciB0aGVz
+ZSwNCj4gdGhleSdyZSBzbWFsbCBlbm91Z2ggdG8gbGl2ZSBvbiB0aGUgc3RhY2suDQo+IA0KPiBT
+aWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4g
+LS0tDQo+IMKgbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMgfCA5ICsrLS0tLS0tLQ0KPiDCoDEg
+ZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDcgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZm
+IC0tZ2l0IGEvbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMgYi9uZXQvd2lyZWxlc3Mvd2V4dC1j
+b21wYXQuYw0KPiBpbmRleCAwNTE4NmE0Nzg3OGYuLmMyYjNkNWFjMDU1NCAxMDA2NDQNCj4gLS0t
+IGEvbmV0L3dpcmVsZXNzL3dleHQtY29tcGF0LmMNCj4gKysrIGIvbmV0L3dpcmVsZXNzL3dleHQt
+Y29tcGF0LmMNCj4gQEAgLTEyOTEsOSArMTI5MSw4IEBAIHN0YXRpYyBzdHJ1Y3QgaXdfc3RhdGlz
+dGljcw0KPiAqY2ZnODAyMTFfd2lyZWxlc3Nfc3RhdHMoc3RydWN0IG5ldF9kZXZpY2UgKmRldikN
+Cj4gwqB7DQo+IMKgCXN0cnVjdCB3aXJlbGVzc19kZXYgKndkZXYgPSBkZXYtPmllZWU4MDIxMV9w
+dHI7DQo+IMKgCXN0cnVjdCBjZmc4MDIxMV9yZWdpc3RlcmVkX2RldmljZSAqcmRldiA9DQo+IHdp
+cGh5X3RvX3JkZXYod2Rldi0+d2lwaHkpOw0KPiAtCS8qIHdlIGFyZSB1bmRlciBSVE5MIC0gZ2xv
+YmFsbHkgbG9ja2VkIC0gc28gY2FuIHVzZSBzdGF0aWMNCj4gc3RydWN0cyAqLw0KPiAtCXN0YXRp
+YyBzdHJ1Y3QgaXdfc3RhdGlzdGljcyB3c3RhdHM7DQo+IC0Jc3RhdGljIHN0cnVjdCBzdGF0aW9u
+X2luZm8gc2luZm87DQo+ICsJc3RydWN0IGl3X3N0YXRpc3RpY3Mgd3N0YXRzID0ge307DQo+ICsJ
+c3RydWN0IHN0YXRpb25faW5mbyBzaW5mbyA9IHt9Ow0KPiDCoAl1OCBic3NpZFtFVEhfQUxFTl07
+DQo+IMKgDQo+IMKgCWlmIChkZXYtPmllZWU4MDIxMV9wdHItPmlmdHlwZSAhPSBOTDgwMjExX0lG
+VFlQRV9TVEFUSU9OKQ0KPiBAQCAtMTMxMSwxMyArMTMxMCw5IEBAIHN0YXRpYyBzdHJ1Y3QgaXdf
+c3RhdGlzdGljcw0KPiAqY2ZnODAyMTFfd2lyZWxlc3Nfc3RhdHMoc3RydWN0IG5ldF9kZXZpY2Ug
+KmRldikNCj4gwqAJbWVtY3B5KGJzc2lkLCB3ZGV2LT5jdXJyZW50X2Jzcy0+cHViLmJzc2lkLCBF
+VEhfQUxFTik7DQo+IMKgCXdkZXZfdW5sb2NrKHdkZXYpOw0KPiDCoA0KPiAtCW1lbXNldCgmc2lu
+Zm8sIDAsIHNpemVvZihzaW5mbykpOw0KPiAtDQo+IMKgCWlmIChyZGV2X2dldF9zdGF0aW9uKHJk
+ZXYsIGRldiwgYnNzaWQsICZzaW5mbykpDQo+IMKgCQlyZXR1cm4gTlVMTDsNCj4gwqANCj4gLQlt
+ZW1zZXQoJndzdGF0cywgMCwgc2l6ZW9mKHdzdGF0cykpOw0KPiAtDQo+IMKgCXN3aXRjaCAocmRl
+di0+d2lwaHkuc2lnbmFsX3R5cGUpIHsNCj4gwqAJY2FzZSBDRkc4MDIxMV9TSUdOQUxfVFlQRV9N
+Qk06DQo+IMKgCQlpZiAoc2luZm8uZmlsbGVkICYgQklUKE5MODAyMTFfU1RBX0lORk9fU0lHTkFM
+KSkgew0KDQpXaXRob3V0IHRoZXNlIHR3byBwYXRjaGVzLCB0aGUgYml0IHJhdGUgb2YgJ2l3Y29u
+ZmlnJyBhbmTCoA0KJ2l3IGRldiB3bGFuMCBsaW5rJyBhcmUgZGlmZmVyZW50LiBBZnRlciBhcHBs
+eWluZyB0aGUgcGF0Y2hlcywNCnRoZSBiaXQgcmF0ZXMgYXJlIHRoZSBzYW1lIGFuZCBtYXRjaCBz
+bmlmZmVyLg0KDQpUaGFua3MhDQoNClRlc3RlZC1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVh
+bHRlay5jb20+DQoNCg==
