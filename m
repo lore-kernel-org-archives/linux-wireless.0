@@ -1,29 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:42348 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755030AbeASP1Z (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:54059 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751090AbeAQGPy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jan 2018 10:27:25 -0500
-Date: Fri, 19 Jan 2018 10:27:19 -0500 (EST)
-Message-Id: <20180119.102719.1785535842746129827.davem@davemloft.net> (sfid-20180119_162834_991003_92CE9740)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2018-01-19
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <873732b4wa.fsf@kamboji.qca.qualcomm.com>
-References: <873732b4wa.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Wed, 17 Jan 2018 01:15:54 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 08/10] rtlwifi: btcoex: Remove typedef statements
+Date: Wed, 17 Jan 2018 14:15:28 +0800
+Message-ID: <20180117061530.30049-9-pkshih@realtek.com> (sfid-20180117_071609_793982_00FA8968)
+In-Reply-To: <20180117061530.30049-1-pkshih@realtek.com>
+References: <20180117061530.30049-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Fri, 19 Jan 2018 10:59:33 +0200
+From: Larry Finger <Larry.Finger@lwfinger.net>
 
-> a pull request to net-next tree for 4.16. This should be the last pull
-> request in this cycle, unless Linus releases -rc9 of course. Only few
-> patches so should be an easy one. Please let me know if there are any
-> problems.
+Each of these typedefs are only referenced in a single location later
+in this header. Thus, they are easily removed.
 
-Pulled, thanks Kalle.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       | 98 +++++++---------------
+ 1 file changed, 31 insertions(+), 67 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 5a7816ff6877..55d648546de1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -421,50 +421,6 @@ enum btc_notify_type_stack_operation {
+ 	BTC_STACK_OP_MAX
+ };
+ 
+-typedef u8 (*bfp_btc_r1)(void *btc_context, u32 reg_addr);
+-
+-typedef u16 (*bfp_btc_r2)(void *btc_context, u32 reg_addr);
+-
+-typedef u32 (*bfp_btc_r4)(void *btc_context, u32 reg_addr);
+-
+-typedef void (*bfp_btc_w1)(void *btc_context, u32 reg_addr, u32 data);
+-
+-typedef void (*bfp_btc_w1_bit_mak)(void *btc_context, u32 reg_addr,
+-				   u32 bit_mask, u8 data1b);
+-
+-typedef void (*bfp_btc_w2)(void *btc_context, u32 reg_addr, u16 data);
+-
+-typedef void (*bfp_btc_w4)(void *btc_context, u32 reg_addr, u32 data);
+-
+-typedef void (*bfp_btc_local_reg_w1)(void *btc_context, u32 reg_addr, u8 data);
+-typedef void (*bfp_btc_wr_1byte_bit_mask)(void *btc_context, u32 reg_addr,
+-					  u8 bit_mask, u8 data);
+-
+-typedef void (*bfp_btc_set_bb_reg)(void *btc_context, u32 reg_addr,
+-				   u32 bit_mask, u32 data);
+-
+-typedef u32 (*bfp_btc_get_bb_reg)(void *btc_context, u32 reg_addr,
+-				  u32 bit_mask);
+-
+-typedef void (*bfp_btc_set_rf_reg)(void *btc_context, u8 rf_path, u32 reg_addr,
+-				   u32 bit_mask, u32 data);
+-
+-typedef u32 (*bfp_btc_get_rf_reg)(void *btc_context, u8 rf_path,
+-				  u32 reg_addr, u32 bit_mask);
+-
+-typedef void (*bfp_btc_fill_h2c)(void *btc_context, u8 element_id,
+-				 u32 cmd_len, u8 *cmd_buffer);
+-
+-typedef	bool (*bfp_btc_get)(void *btcoexist, u8 get_type, void *out_buf);
+-
+-typedef	bool (*bfp_btc_set)(void *btcoexist, u8 set_type, void *in_buf);
+-
+-typedef void (*bfp_btc_set_bt_reg)(void *btc_context, u8 reg_type, u32 offset,
+-				   u32 value);
+-
+-typedef void (*bfp_btc_disp_dbg_msg)(void *btcoexist, u8 disp_type,
+-				     struct seq_file *m);
+-
+ struct btc_bt_info {
+ 	bool bt_disabled;
+ 	u8 rssi_adjust_for_agc_table_on;
+@@ -575,29 +531,37 @@ struct btc_coexist {
+ 	u8 pwr_mode_val[10];
+ 
+ 	/* function pointers - io related */
+-	bfp_btc_r1 btc_read_1byte;
+-	bfp_btc_w1 btc_write_1byte;
+-	bfp_btc_w1_bit_mak btc_write_1byte_bitmask;
+-	bfp_btc_r2 btc_read_2byte;
+-	bfp_btc_w2 btc_write_2byte;
+-	bfp_btc_r4 btc_read_4byte;
+-	bfp_btc_w4 btc_write_4byte;
+-	bfp_btc_local_reg_w1 btc_write_local_reg_1byte;
+-
+-	bfp_btc_set_bb_reg btc_set_bb_reg;
+-	bfp_btc_get_bb_reg btc_get_bb_reg;
+-
+-	bfp_btc_set_rf_reg btc_set_rf_reg;
+-	bfp_btc_get_rf_reg btc_get_rf_reg;
+-
+-	bfp_btc_fill_h2c btc_fill_h2c;
+-
+-	bfp_btc_disp_dbg_msg btc_disp_dbg_msg;
+-
+-	bfp_btc_get btc_get;
+-	bfp_btc_set btc_set;
+-
+-	bfp_btc_set_bt_reg btc_set_bt_reg;
++	u8 (*btc_read_1byte)(void *btc_context, u32 reg_addr);
++	void (*btc_write_1byte)(void *btc_context, u32 reg_addr, u32 data);
++	void (*btc_write_1byte_bitmask)(void *btc_context, u32 reg_addr,
++					u32 bit_mask, u8 data1b);
++	u16 (*btc_read_2byte)(void *btc_context, u32 reg_addr);
++	void (*btc_write_2byte)(void *btc_context, u32 reg_addr, u16 data);
++	u32 (*btc_read_4byte)(void *btc_context, u32 reg_addr);
++	void (*btc_write_4byte)(void *btc_context, u32 reg_addr, u32 data);
++
++	void (*btc_write_local_reg_1byte)(void *btc_context, u32 reg_addr,
++					  u8 data);
++	void (*btc_set_bb_reg)(void *btc_context, u32 reg_addr,
++			       u32 bit_mask, u32 data);
++	u32 (*btc_get_bb_reg)(void *btc_context, u32 reg_addr,
++			      u32 bit_mask);
++	void (*btc_set_rf_reg)(void *btc_context, u8 rf_path, u32 reg_addr,
++			       u32 bit_mask, u32 data);
++	u32 (*btc_get_rf_reg)(void *btc_context, u8 rf_path,
++			      u32 reg_addr, u32 bit_mask);
++
++	void (*btc_fill_h2c)(void *btc_context, u8 element_id,
++			     u32 cmd_len, u8 *cmd_buffer);
++
++	void (*btc_disp_dbg_msg)(void *btcoexist, u8 disp_type,
++				 struct seq_file *m);
++
++	bool (*btc_get)(void *btcoexist, u8 get_type, void *out_buf);
++	bool (*btc_set)(void *btcoexist, u8 set_type, void *in_buf);
++
++	void (*btc_set_bt_reg)(void *btc_context, u8 reg_type, u32 offset,
++			       u32 value);
+ };
+ 
+ bool halbtc_is_wifi_uplink(struct rtl_priv *adapter);
+-- 
+2.15.1
