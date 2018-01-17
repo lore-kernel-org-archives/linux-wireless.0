@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:47072 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751099AbeAVPbZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 10:31:25 -0500
-Message-ID: <1516635078.2508.38.camel@sipsolutions.net> (sfid-20180122_163132_982467_B025EEC0)
-Subject: Re: pull-request: mac80211-next 2018-01-22
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Mon, 22 Jan 2018 16:31:18 +0100
-In-Reply-To: <20180122.101728.704853095626932714.davem@davemloft.net>
-References: <20180122131501.21953-1-johannes@sipsolutions.net>
-         <20180122.101728.704853095626932714.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:35728 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750853AbeAQKOL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Jan 2018 05:14:11 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, stijn@linux-ipv6.be
+Subject: [PATCH] ath9k: discard undersized packets
+Date: Wed, 17 Jan 2018 11:14:05 +0100
+Message-Id: <20180117101405.16700-1-nbd@nbd.name> (sfid-20180117_111415_581150_38C2EF19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-01-22 at 10:17 -0500, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Mon, 22 Jan 2018 14:15:00 +0100
-> 
-> > A few more (only four, really) changes have come in, so I figured
-> > since the merge window hasn't opened yesterday, I'd still send them
-> > to you.
-> > 
-> > Please pull and let me know if there's any problem.
-> 
-> I had to resolve a conflict in mac80211_hwsim.c, please check my
-> resolution and send me any fixes which are necessary.
+Sometimes the hardware will push small packets that trigger a WARN_ON
+in mac80211. Discard them early to avoid this issue.
 
-Sorry, my bad, I apologize. I knew about this and didn't think of it
-when writing the pull request.
+Reported-by: Stijn Tintel <stijn@linux-ipv6.be>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Resolution looks good - I was worried about the destruction order for a
-second there, but it doesn't actually matter.
-
-Thanks!
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 2197aee2bb72..a8ac42c96d71 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -826,9 +826,9 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	sc->rx.discard_next = false;
+ 
+ 	/*
+-	 * Discard zero-length packets.
++	 * Discard zero-length packets and packets smaller than an ACK
+ 	 */
+-	if (!rx_stats->rs_datalen) {
++	if (rx_stats->rs_datalen < 10) {
+ 		RX_STAT_INC(rx_len_err);
+ 		goto corrupt;
+ 	}
+-- 
+2.14.2
