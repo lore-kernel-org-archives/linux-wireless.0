@@ -1,48 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:59530 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751537AbeA3HxT (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:54052 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750847AbeAQGPu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 02:53:19 -0500
-Message-ID: <1517298797.2189.36.camel@sipsolutions.net> (sfid-20180130_085322_903779_DFCAF59B)
-Subject: Re: [PATCH v3 2/3] cfg80211/nl80211: Optional authentication
- offload to userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        Srinivas Dasari <dasaris@qti.qualcomm.com>
-Date: Tue, 30 Jan 2018 08:53:17 +0100
-In-Reply-To: <1516893219-30243-2-git-send-email-jouni@qca.qualcomm.com>
-References: <1516893219-30243-1-git-send-email-jouni@qca.qualcomm.com>
-         <1516893219-30243-2-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 17 Jan 2018 01:15:50 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 04/10] rtlwifi: enable mac80211 fast-tx support
+Date: Wed, 17 Jan 2018 14:15:24 +0800
+Message-ID: <20180117061530.30049-5-pkshih@realtek.com> (sfid-20180117_071555_709604_FA916240)
+In-Reply-To: <20180117061530.30049-1-pkshih@realtek.com>
+References: <20180117061530.30049-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-01-25 at 17:13 +0200, Jouni Malinen wrote:
-> 
-> +	if (nla_get_flag(info->attrs[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT]))
-> +		connect.flags |= CONNECT_REQ_EXTERNAL_AUTH_SUPPORT;
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-It seems like here we should check for connection owner, no?
+To enable the mac80211 fast-tx feature, the hw/driver needs to support
+dynamic power saving and fragmentation. Since our driver does not
+need to fragment packet into smaller pieces, we just hook an empty
+callback of set_frag_threshold to avoid fragmentation in mac80211.
 
-If you say yes, I can edit that in.
+After this, the mac80211 will not fragment the packets and can transmit
+them faster by cache the header information.
 
-> +int cfg80211_external_auth_request(struct net_device *dev,
-> +				   struct cfg80211_external_auth_params *params,
-> +				   gfp_t gfp)
-> +{
-> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-> +	struct sk_buff *msg;
-> +	void *hdr;
-> +
-> +	if (!wdev->conn_owner_nlportid)
-> +		return -EINVAL;
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/core.c | 6 ++++++
+ 2 files changed, 8 insertions(+)
 
-This still kinda makes sense, of course, though it should only happen
-through races (connection owner goes away and we can't tear down the
-connection quickly enough before this happens)
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 89ec318598ea..e902cd7adbfe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -395,6 +395,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
+ 	ieee80211_hw_set(hw, CONNECTION_MONITOR);
+ 	ieee80211_hw_set(hw, MFP_CAPABLE);
+ 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
++	ieee80211_hw_set(hw, SUPPORTS_TX_FRAG);
++	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+ 
+ 	/* swlps or hwlps has been set in diff chip in init_sw_vars */
+ 	if (rtlpriv->psc.swctrl_lps) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index a16aa94273e8..cef511f7aa05 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -992,6 +992,11 @@ static int _rtl_get_hal_qnum(u16 queue)
+ 	return qnum;
+ }
+ 
++static int rtl_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
++{
++	return -EOPNOTSUPP;
++}
++
+ /*
+  *for mac80211 VO = 0, VI = 1, BE = 2, BK = 3
+  *for rtl819x  BE = 0, BK = 1, VI = 2, VO = 3
+@@ -1896,6 +1901,7 @@ const struct ieee80211_ops rtl_ops = {
+ 	.config = rtl_op_config,
+ 	.configure_filter = rtl_op_configure_filter,
+ 	.set_key = rtl_op_set_key,
++	.set_frag_threshold = rtl_op_set_frag_threshold,
+ 	.conf_tx = rtl_op_conf_tx,
+ 	.bss_info_changed = rtl_op_bss_info_changed,
+ 	.get_tsf = rtl_op_get_tsf,
+-- 
+2.15.1
