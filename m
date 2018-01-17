@@ -1,58 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:56824 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751128AbeANV60 (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:54057 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750885AbeAQGPw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Jan 2018 16:58:26 -0500
-Message-ID: <1515967102.26804.31.camel@sipsolutions.net> (sfid-20180114_225845_884064_EB067B93)
-Subject: Re: [PATCH] nl80211: take RCU read lock when calling
- ieee80211_bss_get_ie()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: regressions@leemhuis.info, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Sun, 14 Jan 2018 22:58:22 +0100
-In-Reply-To: <20180114180338.GA1569@light.dominikbrodowski.net> (sfid-20180114_191214_897937_AE8397B8)
-References: <20171222072012.GA3110@light.dominikbrodowski.net>
-         <20171230131132.GA2624@light.dominikbrodowski.net>
-         <20180108100403.GA4715@light.dominikbrodowski.net>
-         <20180114180338.GA1569@light.dominikbrodowski.net>
-         (sfid-20180114_191214_897937_AE8397B8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 17 Jan 2018 01:15:52 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 06/10] rtlwifi: btcoex: Add power_on_setting routine
+Date: Wed, 17 Jan 2018 14:15:26 +0800
+Message-ID: <20180117061530.30049-7-pkshih@realtek.com> (sfid-20180117_071557_443489_AEE9C7BB)
+In-Reply-To: <20180117061530.30049-1-pkshih@realtek.com>
+References: <20180117061530.30049-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> Fixes: 44905265bc15 ("nl80211: don't expose wdev->ssid for most interfaces")
-> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
-> ---
-> 
-> This patch fixes the regression I reported in the last couple of weeks for
-> various v4.15-rcX revisions to netdev, where a "suspicious RCU usage"
-> showed up in net/wireless/util.c:778.
+After mac power-on sequence, wifi will start to work so notify btcoex the
+event to configure registers especially related to antenna. This will not
+only help to assign antenna but also to yield better user experience.
 
-Huh. You should added linux-wireless to those reports, I simply didn't
-see them!
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c      | 6 ++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h      | 1 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
+ 4 files changed, 9 insertions(+)
 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 2b3dbcd40e46..1eecc249fb5e 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -2618,8 +2618,10 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
->  		const u8 *ssid_ie;
->  		if (!wdev->current_bss)
->  			break;
-> +		rcu_read_lock();
->  		ssid_ie = ieee80211_bss_get_ie(&wdev->current_bss->pub,
->  					       WLAN_EID_SSID);
-> +		rcu_read_unlock();
->  		if (!ssid_ie)
->  			break;
->  		if (nla_put(msg, NL80211_ATTR_SSID, ssid_ie[1], ssid_ie + 2))
-
-This uses the ssid_ie, so that doesn't really seem right? The
-protection should extend beyond the usage.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index ea12b9d63a73..bc523af7ef88 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -608,6 +608,7 @@ extern struct btc_coexist gl_bt_coexist;
+ 
+ bool exhalbtc_initlize_variables(void);
+ bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
++void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 4d9e33078d4f..9e3623b0423c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -32,6 +32,7 @@
+ static struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_init_variables = rtl_btc_init_variables,
+ 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
++	.btc_power_on_setting = rtl_btc_power_on_setting,
+ 	.btc_init_hw_config = rtl_btc_init_hw_config,
+ 	.btc_ips_notify = rtl_btc_ips_notify,
+ 	.btc_lps_notify = rtl_btc_lps_notify,
+@@ -116,6 +117,11 @@ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
+ 	 */
+ }
+ 
++void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv)
++{
++	exhalbtc_power_on_setting(&gl_bt_coexist);
++}
++
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
+ {
+ 	u8 bt_exist;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index 40f1ce8c8a06..9becfa59407d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -29,6 +29,7 @@
+ 
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv);
++void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv);
+ void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type);
+ void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 941694060f48..b27dbe10b163 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2557,6 +2557,7 @@ struct bt_coexist_info {
+ struct rtl_btc_ops {
+ 	void (*btc_init_variables) (struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
++	void (*btc_power_on_setting)(struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
+ 	void (*btc_ips_notify) (struct rtl_priv *rtlpriv, u8 type);
+ 	void (*btc_lps_notify)(struct rtl_priv *rtlpriv, u8 type);
+-- 
+2.15.1
