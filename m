@@ -1,137 +1,452 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:65353 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751086AbeAWHlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Jan 2018 02:41:24 -0500
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: [PATCH 4/4] ath9k: Display calibration data piers in debugfs
-Date: Tue, 23 Jan 2018 08:35:25 +0100
-Message-Id: <1516692925-6695-5-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180123_084134_056634_67175E47)
-In-Reply-To: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
-References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:7320 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756236AbeARNS1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 08:18:27 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 08/14] staging: wilc1000: rename pu8CurrByte variable to avoid camelCase
+Date: Thu, 18 Jan 2018 18:47:06 +0530
+Message-ID: <1516281432-7724-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141836_799583_EB6217FA)
+In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Display per frequency calibration data in dump_modal
-debugfs entry including reference power, voltage,
-tx temperature and noise floor.
+fix "Avoid camelCase" issue reported by checkpatch.pl script.
+rename variable name from "pu8CurrByte" to "cur_byte"
 
-Example of chain 0 of OEM card (dump from modal_eeprom):
-Chain 0
-Freq	 ref	volt	temp	nf_Cal	nf_Pow	rx_temp
-5180	-30	0	137	0	0	0
-5320	-24	0	137	0	0	0
-5500	-15	0	137	0	0	0
-5620	-10	0	137	0	0	0
-5700	-15	0	137	0	0	0
-5745	-16	0	135	0	0	0
-5785	-19	0	136	0	0	0
-5825	-22	0	136	0	0	0
-
-Example of a card with calibrated noise floor.
-Chain 0
-Freq	 ref	volt	temp	nf_Cal	nf_Pow	rx_temp
-4890	-49	0	128	-107	-97	124
-5100	-23	0	128	-101	-96	124
-5180	-18	0	128	-101	-96	124
-5300	-12	0	128	-102	-97	124
-5500	-9	0	128	-101	-97	125
-5640	-17	0	128	-101	-98	124
-5785	-25	0	128	-101	-98	124
-5940	-33	0	128	-106	-99	124
-
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 64 +++++++++++++++++++++++++-
- 1 file changed, 63 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 232 +++++++++++++++---------------
+ 1 file changed, 116 insertions(+), 116 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index de2e503..f019a20 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3436,6 +3436,60 @@ static u32 ar9003_dump_modal_eeprom(char *buf, u32 len, u32 size,
- 	return len;
- }
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 912d223..e3931bc 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -908,7 +908,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 	s32 result = 0;
+ 	struct wid wid_list[8];
+ 	u32 wid_cnt = 0, dummyval = 0;
+-	u8 *pu8CurrByte = NULL;
++	u8 *cur_byte = NULL;
+ 	struct join_bss_param *ptstrJoinBssParam;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
  
-+static u32 ar9003_dump_cal_data(struct ath_hw *ah, char *buf, u32 len, u32 size,
-+				bool is_2g)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	struct ar9300_base_eep_hdr *pBase;
-+	struct ar9300_cal_data_per_freq_op_loop *cal_pier;
-+	int cal_pier_nr;
-+	int freq;
-+	int i, j;
-+
-+	pBase = &eep->baseEepHeader;
-+
-+	if (is_2g)
-+		cal_pier_nr = AR9300_NUM_2G_CAL_PIERS;
-+	else
-+		cal_pier_nr = AR9300_NUM_5G_CAL_PIERS;
-+
-+	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+		if (!((pBase->txrxMask >> i) & 1))
-+			continue;
-+
-+		len += snprintf(buf + len, size - len, "Chain %d\n", i);
-+
-+		len += snprintf(buf + len, size - len,
-+			"Freq\t ref\tvolt\ttemp\tnf_cal\tnf_pow\trx_temp\n");
-+
-+		for (j = 0; j < cal_pier_nr; j++) {
-+			if (is_2g) {
-+				cal_pier = &eep->calPierData2G[i][j];
-+				freq = 2300 + eep->calFreqPier2G[j];
-+			} else {
-+				cal_pier = &eep->calPierData5G[i][j];
-+				freq = 4800 + eep->calFreqPier5G[j] * 5;
-+			}
-+
-+			len += snprintf(buf + len, size - len,
-+				"%d\t", freq);
-+
-+			len += snprintf(buf + len, size - len,
-+				"%d\t%d\t%d\t%d\t%d\t%d\n",
-+				cal_pier->refPower,
-+				cal_pier->voltMeas,
-+				cal_pier->tempMeas,
-+				cal_pier->rxTempMeas ?
-+				N2DBM(cal_pier->rxNoisefloorCal) : 0,
-+				cal_pier->rxTempMeas ?
-+				N2DBM(cal_pier->rxNoisefloorPower) : 0,
-+				cal_pier->rxTempMeas);
-+		}
-+	}
-+
-+	return len;
-+}
-+
- static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 				       u8 *buf, u32 len, u32 size)
- {
-@@ -3447,10 +3501,18 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 				 "%20s :\n", "2GHz modal Header");
- 		len = ar9003_dump_modal_eeprom(buf, len, size,
- 						&eep->modalHeader2G);
--		len += scnprintf(buf + len, size - len,
-+
-+		len += scnprintf(buf + len, size - len, "Calibration data\n");
-+		len = ar9003_dump_cal_data(ah, buf, len, size, true);
-+
-+		len +=  snprintf(buf + len, size - len,
- 				 "%20s :\n", "5GHz modal Header");
- 		len = ar9003_dump_modal_eeprom(buf, len, size,
- 						&eep->modalHeader5G);
-+
-+		len += snprintf(buf + len, size - len, "Calibration data\n");
-+		len = ar9003_dump_cal_data(ah, buf, len, size, false);
-+
- 		goto out;
+@@ -1016,90 +1016,90 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 		goto ERRORHANDLER;
  	}
  
+-	pu8CurrByte = wid_list[wid_cnt].val;
++	cur_byte = wid_list[wid_cnt].val;
+ 
+ 	if (pstrHostIFconnectAttr->ssid) {
+-		memcpy(pu8CurrByte, pstrHostIFconnectAttr->ssid, pstrHostIFconnectAttr->ssid_len);
+-		pu8CurrByte[pstrHostIFconnectAttr->ssid_len] = '\0';
++		memcpy(cur_byte, pstrHostIFconnectAttr->ssid, pstrHostIFconnectAttr->ssid_len);
++		cur_byte[pstrHostIFconnectAttr->ssid_len] = '\0';
+ 	}
+-	pu8CurrByte += MAX_SSID_LEN;
+-	*(pu8CurrByte++) = INFRASTRUCTURE;
++	cur_byte += MAX_SSID_LEN;
++	*(cur_byte++) = INFRASTRUCTURE;
+ 
+ 	if (pstrHostIFconnectAttr->ch >= 1 && pstrHostIFconnectAttr->ch <= 14) {
+-		*(pu8CurrByte++) = pstrHostIFconnectAttr->ch;
++		*(cur_byte++) = pstrHostIFconnectAttr->ch;
+ 	} else {
+ 		netdev_err(vif->ndev, "Channel out of range\n");
+-		*(pu8CurrByte++) = 0xFF;
++		*(cur_byte++) = 0xFF;
+ 	}
+-	*(pu8CurrByte++)  = (ptstrJoinBssParam->cap_info) & 0xFF;
+-	*(pu8CurrByte++)  = ((ptstrJoinBssParam->cap_info) >> 8) & 0xFF;
++	*(cur_byte++)  = (ptstrJoinBssParam->cap_info) & 0xFF;
++	*(cur_byte++)  = ((ptstrJoinBssParam->cap_info) >> 8) & 0xFF;
+ 
+ 	if (pstrHostIFconnectAttr->bssid)
+-		memcpy(pu8CurrByte, pstrHostIFconnectAttr->bssid, 6);
+-	pu8CurrByte += 6;
++		memcpy(cur_byte, pstrHostIFconnectAttr->bssid, 6);
++	cur_byte += 6;
+ 
+ 	if (pstrHostIFconnectAttr->bssid)
+-		memcpy(pu8CurrByte, pstrHostIFconnectAttr->bssid, 6);
+-	pu8CurrByte += 6;
++		memcpy(cur_byte, pstrHostIFconnectAttr->bssid, 6);
++	cur_byte += 6;
+ 
+-	*(pu8CurrByte++)  = (ptstrJoinBssParam->beacon_period) & 0xFF;
+-	*(pu8CurrByte++)  = ((ptstrJoinBssParam->beacon_period) >> 8) & 0xFF;
+-	*(pu8CurrByte++)  =  ptstrJoinBssParam->dtim_period;
++	*(cur_byte++)  = (ptstrJoinBssParam->beacon_period) & 0xFF;
++	*(cur_byte++)  = ((ptstrJoinBssParam->beacon_period) >> 8) & 0xFF;
++	*(cur_byte++)  =  ptstrJoinBssParam->dtim_period;
+ 
+-	memcpy(pu8CurrByte, ptstrJoinBssParam->supp_rates, MAX_RATES_SUPPORTED + 1);
+-	pu8CurrByte += (MAX_RATES_SUPPORTED + 1);
++	memcpy(cur_byte, ptstrJoinBssParam->supp_rates, MAX_RATES_SUPPORTED + 1);
++	cur_byte += (MAX_RATES_SUPPORTED + 1);
+ 
+-	*(pu8CurrByte++)  =  ptstrJoinBssParam->wmm_cap;
+-	*(pu8CurrByte++)  = ptstrJoinBssParam->uapsd_cap;
++	*(cur_byte++)  =  ptstrJoinBssParam->wmm_cap;
++	*(cur_byte++)  = ptstrJoinBssParam->uapsd_cap;
+ 
+-	*(pu8CurrByte++)  = ptstrJoinBssParam->ht_capable;
++	*(cur_byte++)  = ptstrJoinBssParam->ht_capable;
+ 	hif_drv->usr_conn_req.ht_capable = ptstrJoinBssParam->ht_capable;
+ 
+-	*(pu8CurrByte++)  =  ptstrJoinBssParam->rsn_found;
+-	*(pu8CurrByte++)  =  ptstrJoinBssParam->rsn_grp_policy;
+-	*(pu8CurrByte++) =  ptstrJoinBssParam->mode_802_11i;
++	*(cur_byte++)  =  ptstrJoinBssParam->rsn_found;
++	*(cur_byte++)  =  ptstrJoinBssParam->rsn_grp_policy;
++	*(cur_byte++) =  ptstrJoinBssParam->mode_802_11i;
+ 
+-	memcpy(pu8CurrByte, ptstrJoinBssParam->rsn_pcip_policy, sizeof(ptstrJoinBssParam->rsn_pcip_policy));
+-	pu8CurrByte += sizeof(ptstrJoinBssParam->rsn_pcip_policy);
++	memcpy(cur_byte, ptstrJoinBssParam->rsn_pcip_policy, sizeof(ptstrJoinBssParam->rsn_pcip_policy));
++	cur_byte += sizeof(ptstrJoinBssParam->rsn_pcip_policy);
+ 
+-	memcpy(pu8CurrByte, ptstrJoinBssParam->rsn_auth_policy, sizeof(ptstrJoinBssParam->rsn_auth_policy));
+-	pu8CurrByte += sizeof(ptstrJoinBssParam->rsn_auth_policy);
++	memcpy(cur_byte, ptstrJoinBssParam->rsn_auth_policy, sizeof(ptstrJoinBssParam->rsn_auth_policy));
++	cur_byte += sizeof(ptstrJoinBssParam->rsn_auth_policy);
+ 
+-	memcpy(pu8CurrByte, ptstrJoinBssParam->rsn_cap, sizeof(ptstrJoinBssParam->rsn_cap));
+-	pu8CurrByte += sizeof(ptstrJoinBssParam->rsn_cap);
++	memcpy(cur_byte, ptstrJoinBssParam->rsn_cap, sizeof(ptstrJoinBssParam->rsn_cap));
++	cur_byte += sizeof(ptstrJoinBssParam->rsn_cap);
+ 
+-	*(pu8CurrByte++) = REAL_JOIN_REQ;
+-	*(pu8CurrByte++) = ptstrJoinBssParam->noa_enabled;
++	*(cur_byte++) = REAL_JOIN_REQ;
++	*(cur_byte++) = ptstrJoinBssParam->noa_enabled;
+ 
+ 	if (ptstrJoinBssParam->noa_enabled) {
+-		*(pu8CurrByte++) = (ptstrJoinBssParam->tsf) & 0xFF;
+-		*(pu8CurrByte++) = ((ptstrJoinBssParam->tsf) >> 8) & 0xFF;
+-		*(pu8CurrByte++) = ((ptstrJoinBssParam->tsf) >> 16) & 0xFF;
+-		*(pu8CurrByte++) = ((ptstrJoinBssParam->tsf) >> 24) & 0xFF;
++		*(cur_byte++) = (ptstrJoinBssParam->tsf) & 0xFF;
++		*(cur_byte++) = ((ptstrJoinBssParam->tsf) >> 8) & 0xFF;
++		*(cur_byte++) = ((ptstrJoinBssParam->tsf) >> 16) & 0xFF;
++		*(cur_byte++) = ((ptstrJoinBssParam->tsf) >> 24) & 0xFF;
+ 
+-		*(pu8CurrByte++) = ptstrJoinBssParam->opp_enabled;
+-		*(pu8CurrByte++) = ptstrJoinBssParam->idx;
++		*(cur_byte++) = ptstrJoinBssParam->opp_enabled;
++		*(cur_byte++) = ptstrJoinBssParam->idx;
+ 
+ 		if (ptstrJoinBssParam->opp_enabled)
+-			*(pu8CurrByte++) = ptstrJoinBssParam->ct_window;
++			*(cur_byte++) = ptstrJoinBssParam->ct_window;
+ 
+-		*(pu8CurrByte++) = ptstrJoinBssParam->cnt;
++		*(cur_byte++) = ptstrJoinBssParam->cnt;
+ 
+-		memcpy(pu8CurrByte, ptstrJoinBssParam->duration, sizeof(ptstrJoinBssParam->duration));
+-		pu8CurrByte += sizeof(ptstrJoinBssParam->duration);
++		memcpy(cur_byte, ptstrJoinBssParam->duration, sizeof(ptstrJoinBssParam->duration));
++		cur_byte += sizeof(ptstrJoinBssParam->duration);
+ 
+-		memcpy(pu8CurrByte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
+-		pu8CurrByte += sizeof(ptstrJoinBssParam->interval);
++		memcpy(cur_byte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
++		cur_byte += sizeof(ptstrJoinBssParam->interval);
+ 
+-		memcpy(pu8CurrByte, ptstrJoinBssParam->start_time, sizeof(ptstrJoinBssParam->start_time));
+-		pu8CurrByte += sizeof(ptstrJoinBssParam->start_time);
++		memcpy(cur_byte, ptstrJoinBssParam->start_time, sizeof(ptstrJoinBssParam->start_time));
++		cur_byte += sizeof(ptstrJoinBssParam->start_time);
+ 	}
+ 
+-	pu8CurrByte = wid_list[wid_cnt].val;
++	cur_byte = wid_list[wid_cnt].val;
+ 	wid_cnt++;
+ 
+ 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
+-		memcpy(join_req, pu8CurrByte, join_req_size);
++		memcpy(join_req, cur_byte, join_req_size);
+ 		join_req_vif = vif;
+ 	}
+ 
+@@ -1161,7 +1161,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 	kfree(pstrHostIFconnectAttr->ies);
+ 	pstrHostIFconnectAttr->ies = NULL;
+ 
+-	kfree(pu8CurrByte);
++	kfree(cur_byte);
+ 	return result;
+ }
+ 
+@@ -1992,7 +1992,7 @@ static void Handle_AddBeacon(struct wilc_vif *vif,
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *pu8CurrByte;
++	u8 *cur_byte;
+ 
+ 	wid.id = (u16)WID_ADD_BEACON;
+ 	wid.type = WID_BIN;
+@@ -2001,33 +2001,33 @@ static void Handle_AddBeacon(struct wilc_vif *vif,
+ 	if (!wid.val)
+ 		goto ERRORHANDLER;
+ 
+-	pu8CurrByte = wid.val;
+-	*pu8CurrByte++ = (pstrSetBeaconParam->interval & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->interval >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->interval >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->interval >> 24) & 0xFF);
++	cur_byte = wid.val;
++	*cur_byte++ = (pstrSetBeaconParam->interval & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->interval >> 8) & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->interval >> 16) & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->interval >> 24) & 0xFF);
+ 
+-	*pu8CurrByte++ = (pstrSetBeaconParam->dtim_period & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->dtim_period >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->dtim_period >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->dtim_period >> 24) & 0xFF);
++	*cur_byte++ = (pstrSetBeaconParam->dtim_period & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->dtim_period >> 8) & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->dtim_period >> 16) & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->dtim_period >> 24) & 0xFF);
+ 
+-	*pu8CurrByte++ = (pstrSetBeaconParam->head_len & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->head_len >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->head_len >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->head_len >> 24) & 0xFF);
++	*cur_byte++ = (pstrSetBeaconParam->head_len & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->head_len >> 8) & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->head_len >> 16) & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->head_len >> 24) & 0xFF);
+ 
+-	memcpy(pu8CurrByte, pstrSetBeaconParam->head, pstrSetBeaconParam->head_len);
+-	pu8CurrByte += pstrSetBeaconParam->head_len;
++	memcpy(cur_byte, pstrSetBeaconParam->head, pstrSetBeaconParam->head_len);
++	cur_byte += pstrSetBeaconParam->head_len;
+ 
+-	*pu8CurrByte++ = (pstrSetBeaconParam->tail_len & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
++	*cur_byte++ = (pstrSetBeaconParam->tail_len & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->tail_len >> 8) & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
++	*cur_byte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
+ 
+ 	if (pstrSetBeaconParam->tail)
+-		memcpy(pu8CurrByte, pstrSetBeaconParam->tail, pstrSetBeaconParam->tail_len);
+-	pu8CurrByte += pstrSetBeaconParam->tail_len;
++		memcpy(cur_byte, pstrSetBeaconParam->tail, pstrSetBeaconParam->tail_len);
++	cur_byte += pstrSetBeaconParam->tail_len;
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+@@ -2044,7 +2044,7 @@ static void Handle_DelBeacon(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *pu8CurrByte;
++	u8 *cur_byte;
+ 
+ 	wid.id = (u16)WID_DEL_BEACON;
+ 	wid.type = WID_CHAR;
+@@ -2054,7 +2054,7 @@ static void Handle_DelBeacon(struct wilc_vif *vif)
+ 	if (!wid.val)
+ 		return;
+ 
+-	pu8CurrByte = wid.val;
++	cur_byte = wid.val;
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+@@ -2065,34 +2065,34 @@ static void Handle_DelBeacon(struct wilc_vif *vif)
+ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 				    struct add_sta_param *pstrStationParam)
+ {
+-	u8 *pu8CurrByte;
++	u8 *cur_byte;
+ 
+-	pu8CurrByte = pu8Buffer;
++	cur_byte = pu8Buffer;
+ 
+-	memcpy(pu8CurrByte, pstrStationParam->bssid, ETH_ALEN);
+-	pu8CurrByte +=  ETH_ALEN;
++	memcpy(cur_byte, pstrStationParam->bssid, ETH_ALEN);
++	cur_byte +=  ETH_ALEN;
+ 
+-	*pu8CurrByte++ = pstrStationParam->aid & 0xFF;
+-	*pu8CurrByte++ = (pstrStationParam->aid >> 8) & 0xFF;
++	*cur_byte++ = pstrStationParam->aid & 0xFF;
++	*cur_byte++ = (pstrStationParam->aid >> 8) & 0xFF;
+ 
+-	*pu8CurrByte++ = pstrStationParam->rates_len;
++	*cur_byte++ = pstrStationParam->rates_len;
+ 	if (pstrStationParam->rates_len > 0)
+-		memcpy(pu8CurrByte, pstrStationParam->rates,
++		memcpy(cur_byte, pstrStationParam->rates,
+ 		       pstrStationParam->rates_len);
+-	pu8CurrByte += pstrStationParam->rates_len;
++	cur_byte += pstrStationParam->rates_len;
+ 
+-	*pu8CurrByte++ = pstrStationParam->ht_supported;
+-	memcpy(pu8CurrByte, &pstrStationParam->ht_capa,
++	*cur_byte++ = pstrStationParam->ht_supported;
++	memcpy(cur_byte, &pstrStationParam->ht_capa,
+ 	       sizeof(struct ieee80211_ht_cap));
+-	pu8CurrByte += sizeof(struct ieee80211_ht_cap);
++	cur_byte += sizeof(struct ieee80211_ht_cap);
+ 
+-	*pu8CurrByte++ = pstrStationParam->flags_mask & 0xFF;
+-	*pu8CurrByte++ = (pstrStationParam->flags_mask >> 8) & 0xFF;
++	*cur_byte++ = pstrStationParam->flags_mask & 0xFF;
++	*cur_byte++ = (pstrStationParam->flags_mask >> 8) & 0xFF;
+ 
+-	*pu8CurrByte++ = pstrStationParam->flags_set & 0xFF;
+-	*pu8CurrByte++ = (pstrStationParam->flags_set >> 8) & 0xFF;
++	*cur_byte++ = pstrStationParam->flags_set & 0xFF;
++	*cur_byte++ = (pstrStationParam->flags_set >> 8) & 0xFF;
+ 
+-	return pu8CurrByte - pu8Buffer;
++	return cur_byte - pu8Buffer;
+ }
+ 
+ static void Handle_AddStation(struct wilc_vif *vif,
+@@ -2100,7 +2100,7 @@ static void Handle_AddStation(struct wilc_vif *vif,
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *pu8CurrByte;
++	u8 *cur_byte;
+ 
+ 	wid.id = (u16)WID_ADD_STA;
+ 	wid.type = WID_BIN;
+@@ -2110,8 +2110,8 @@ static void Handle_AddStation(struct wilc_vif *vif,
+ 	if (!wid.val)
+ 		goto ERRORHANDLER;
+ 
+-	pu8CurrByte = wid.val;
+-	pu8CurrByte += WILC_HostIf_PackStaParam(pu8CurrByte, pstrStationParam);
++	cur_byte = wid.val;
++	cur_byte += WILC_HostIf_PackStaParam(cur_byte, pstrStationParam);
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+@@ -2169,7 +2169,7 @@ static void Handle_DelStation(struct wilc_vif *vif,
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *pu8CurrByte;
++	u8 *cur_byte;
+ 
+ 	wid.id = (u16)WID_REMOVE_STA;
+ 	wid.type = WID_BIN;
+@@ -2179,9 +2179,9 @@ static void Handle_DelStation(struct wilc_vif *vif,
+ 	if (!wid.val)
+ 		goto ERRORHANDLER;
+ 
+-	pu8CurrByte = wid.val;
++	cur_byte = wid.val;
+ 
+-	ether_addr_copy(pu8CurrByte, pstrDelStaParam->mac_addr);
++	ether_addr_copy(cur_byte, pstrDelStaParam->mac_addr);
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+@@ -2197,7 +2197,7 @@ static void Handle_EditStation(struct wilc_vif *vif,
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *pu8CurrByte;
++	u8 *cur_byte;
+ 
+ 	wid.id = (u16)WID_EDIT_STA;
+ 	wid.type = WID_BIN;
+@@ -2207,8 +2207,8 @@ static void Handle_EditStation(struct wilc_vif *vif,
+ 	if (!wid.val)
+ 		goto ERRORHANDLER;
+ 
+-	pu8CurrByte = wid.val;
+-	pu8CurrByte += WILC_HostIf_PackStaParam(pu8CurrByte, pstrStationParam);
++	cur_byte = wid.val;
++	cur_byte += WILC_HostIf_PackStaParam(cur_byte, pstrStationParam);
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+@@ -2294,7 +2294,7 @@ static int Handle_RegisterFrame(struct wilc_vif *vif,
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *pu8CurrByte;
++	u8 *cur_byte;
+ 
+ 	wid.id = (u16)WID_REGISTER_FRAME;
+ 	wid.type = WID_STR;
+@@ -2302,11 +2302,11 @@ static int Handle_RegisterFrame(struct wilc_vif *vif,
+ 	if (!wid.val)
+ 		return -ENOMEM;
+ 
+-	pu8CurrByte = wid.val;
++	cur_byte = wid.val;
+ 
+-	*pu8CurrByte++ = pstrHostIfRegisterFrame->reg;
+-	*pu8CurrByte++ = pstrHostIfRegisterFrame->reg_id;
+-	memcpy(pu8CurrByte, &pstrHostIfRegisterFrame->frame_type, sizeof(u16));
++	*cur_byte++ = pstrHostIfRegisterFrame->reg;
++	*cur_byte++ = pstrHostIfRegisterFrame->reg_id;
++	memcpy(cur_byte, &pstrHostIfRegisterFrame->frame_type, sizeof(u16));
+ 
+ 	wid.size = sizeof(u16) + 2;
+ 
+@@ -2410,7 +2410,7 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *pu8CurrByte;
++	u8 *cur_byte;
+ 
+ 	wid.id = (u16)WID_SETUP_MULTICAST_FILTER;
+ 	wid.type = WID_BIN;
+@@ -2419,19 +2419,19 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 	if (!wid.val)
+ 		goto ERRORHANDLER;
+ 
+-	pu8CurrByte = wid.val;
+-	*pu8CurrByte++ = (strHostIfSetMulti->enabled & 0xFF);
+-	*pu8CurrByte++ = 0;
+-	*pu8CurrByte++ = 0;
+-	*pu8CurrByte++ = 0;
++	cur_byte = wid.val;
++	*cur_byte++ = (strHostIfSetMulti->enabled & 0xFF);
++	*cur_byte++ = 0;
++	*cur_byte++ = 0;
++	*cur_byte++ = 0;
+ 
+-	*pu8CurrByte++ = (strHostIfSetMulti->cnt & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 16) & 0xFF);
+-	*pu8CurrByte++ = ((strHostIfSetMulti->cnt >> 24) & 0xFF);
++	*cur_byte++ = (strHostIfSetMulti->cnt & 0xFF);
++	*cur_byte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
++	*cur_byte++ = ((strHostIfSetMulti->cnt >> 16) & 0xFF);
++	*cur_byte++ = ((strHostIfSetMulti->cnt >> 24) & 0xFF);
+ 
+ 	if ((strHostIfSetMulti->cnt) > 0)
+-		memcpy(pu8CurrByte, wilc_multicast_mac_addr_list,
++		memcpy(cur_byte, wilc_multicast_mac_addr_list,
+ 		       ((strHostIfSetMulti->cnt) * ETH_ALEN));
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
 -- 
 2.7.4
