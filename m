@@ -1,126 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:47994 "EHLO nbd.name"
+Received: from foss.arm.com ([217.140.101.70]:55256 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752368AbeARSBp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 13:01:45 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH] mt76: fix transmission of encrypted management frames
-Date: Thu, 18 Jan 2018 19:01:43 +0100
-Message-Id: <20180118180143.82156-1-nbd@nbd.name> (sfid-20180118_190149_754489_EBD2F729)
+        id S1756245AbeARNSc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 08:18:32 -0500
+Date: Thu, 18 Jan 2018 13:18:37 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative
+ execution
+Message-ID: <20180118131837.GA20783@arm.com> (sfid-20180118_141932_798911_D52900C0)
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CA+55aFzNQ8CZ8iNcPXrCfyk=1edMiRGDA0fY0rd87BsFKBxgAw@mail.gmail.com>
+ <CAPcyv4gPcV7MRumSJNz6nDw=HhKO4MK2QqKbj4uc_6APsSFr+g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPcyv4gPcV7MRumSJNz6nDw=HhKO4MK2QqKbj4uc_6APsSFr+g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware encryption seems to break encrypted unicast mgmt tx.
-Unfortunately the hardware TXWI header does not have a bit to indicate
-that a frame is software encrypted, so sw-encrypted frames need to use a
-different WCID. For that to work, the CCMP PN needs to be generated in
-software, which makes things a bit slower, so only do it for keys that
-also need to tx management frames.
+Hi Dan, Linus,
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt76.h        |  1 +
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c  | 16 ++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c |  8 +++++++-
- drivers/net/wireless/mediatek/mt76/mt76x2_tx.c   |  6 ++++--
- 4 files changed, 28 insertions(+), 3 deletions(-)
+On Thu, Jan 11, 2018 at 05:41:08PM -0800, Dan Williams wrote:
+> On Thu, Jan 11, 2018 at 5:19 PM, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+> > On Thu, Jan 11, 2018 at 4:46 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> >>
+> >> This series incorporates Mark Rutland's latest ARM changes and adds
+> >> the x86 specific implementation of 'ifence_array_ptr'. That ifence
+> >> based approach is provided as an opt-in fallback, but the default
+> >> mitigation, '__array_ptr', uses a 'mask' approach that removes
+> >> conditional branches instructions, and otherwise aims to redirect
+> >> speculation to use a NULL pointer rather than a user controlled value.
+> >
+> > Do you have any performance numbers and perhaps example code
+> > generation? Is this noticeable? Are there any microbenchmarks showing
+> > the difference between lfence use and the masking model?
+> 
+> I don't have performance numbers, but here's a sample code generation
+> from __fcheck_files, where the 'and; lea; and' sequence is portion of
+> array_ptr() after the mask generation with 'sbb'.
+> 
+>         fdp = array_ptr(fdt->fd, fd, fdt->max_fds);
+>      8e7:       8b 02                   mov    (%rdx),%eax
+>      8e9:       48 39 c7                cmp    %rax,%rdi
+>      8ec:       48 19 c9                sbb    %rcx,%rcx
+>      8ef:       48 8b 42 08             mov    0x8(%rdx),%rax
+>      8f3:       48 89 fe                mov    %rdi,%rsi
+>      8f6:       48 21 ce                and    %rcx,%rsi
+>      8f9:       48 8d 04 f0             lea    (%rax,%rsi,8),%rax
+>      8fd:       48 21 c8                and    %rcx,%rax
+> 
+> 
+> > Having both seems good for testing, but wouldn't we want to pick one in the end?
+> 
+> I was thinking we'd keep it as a 'just in case' sort of thing, at
+> least until the 'probably safe' assumption of the 'mask' approach has
+> more time to settle out.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index aa0880bbea7f..f88d9a15210a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -129,6 +129,7 @@ struct mt76_wcid {
- 	bool tx_rate_set;
- 	u8 tx_rate_nss;
- 	s8 max_txpwr_adj;
-+	bool sw_iv;
- };
- 
- struct mt76_txq {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-index f7c0df0759f7..a7416a01baa4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-@@ -171,10 +171,12 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *rate = &info->control.rates[0];
-+	struct ieee80211_key_conf *key = info->control.hw_key;
- 	u16 rate_ht_mask = FIELD_PREP(MT_RXWI_RATE_PHY, BIT(1) | BIT(2));
- 	u16 txwi_flags = 0;
- 	u8 nss;
- 	s8 txpwr_adj, max_txpwr_adj;
-+	u8 ccmp_pn[8];
- 
- 	memset(txwi, 0, sizeof(*txwi));
- 
-@@ -185,6 +187,20 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- 
- 	txwi->pktid = 1;
- 
-+	if (wcid && wcid->sw_iv && key) {
-+		u64 pn = atomic64_inc_return(&key->tx_pn);
-+		ccmp_pn[0] = pn;
-+		ccmp_pn[1] = pn >> 8;
-+		ccmp_pn[2] = 0;
-+		ccmp_pn[3] = 0x20 | (key->keyidx << 6);
-+		ccmp_pn[4] = pn >> 16;
-+		ccmp_pn[5] = pn >> 24;
-+		ccmp_pn[6] = pn >> 32;
-+		ccmp_pn[7] = pn >> 40;
-+		txwi->iv = *((u32 *) &ccmp_pn[0]);
-+		txwi->eiv = *((u32 *) &ccmp_pn[1]);
-+	}
-+
- 	spin_lock_bh(&dev->mt76.lock);
- 	if (wcid && (rate->idx < 0 || !rate->count)) {
- 		txwi->rate = wcid->tx_rate;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-index 79915cbee3f0..a474e8c9f642 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-@@ -355,9 +355,15 @@ mt76x2_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	if (cmd == SET_KEY) {
- 		key->hw_key_idx = wcid->idx;
- 		wcid->hw_key_idx = idx;
-+		if (key->flags & IEEE80211_KEY_FLAG_RX_MGMT) {
-+			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
-+			wcid->sw_iv = true;
-+		}
- 	} else {
--		if (idx == wcid->hw_key_idx)
-+		if (idx == wcid->hw_key_idx) {
- 			wcid->hw_key_idx = -1;
-+			wcid->sw_iv = true;
-+		}
- 
- 		key = NULL;
- 	}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-index 1a32e1fb8743..534e4bf9a34c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-@@ -36,7 +36,9 @@ void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
- 
- 		msta = (struct mt76x2_sta *) control->sta->drv_priv;
- 		wcid = &msta->wcid;
--	} else if (vif) {
-+	}
-+
-+	if (vif || (!info->control.hw_key && wcid->hw_key_idx != -1)) {
- 		struct mt76x2_vif *mvif;
- 
- 		mvif = (struct mt76x2_vif *) vif->drv_priv;
-@@ -166,7 +168,7 @@ int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
- 	*tx_info = FIELD_PREP(MT_TXD_INFO_QSEL, qsel) |
- 		   MT_TXD_INFO_80211;
- 
--	if (!wcid || wcid->hw_key_idx == 0xff)
-+	if (!wcid || wcid->hw_key_idx == 0xff || wcid->sw_iv)
- 		*tx_info |= MT_TXD_INFO_WIV;
- 
- 	return 0;
--- 
-2.14.2
+>From the arm64 side, the only concern I have (and this actually applies to
+our CSDB sequence as well) is the calculation of the array size by the
+caller. As Linus mentioned at the end of [1], if the determination of the
+size argument is based on a conditional branch, then masking doesn't help
+because you bound within the wrong range under speculation.
+
+We ran into this when trying to use masking to protect our uaccess routines
+where the conditional bound is either KERNEL_DS or USER_DS. It's possible
+that a prior conditional set_fs(KERNEL_DS) could defeat the masking and so
+we'd need to throw some heavy barriers in set_fs to make it robust.
+
+The question then is whether or not we're likely to run into this elsewhere,
+and I don't have a good feel for that.
+
+Will
+
+[1] http://lkml.kernel.org/r/CA+55aFz0tsreoa=5Ud2noFCpng-dizLBhT9WU9asyhpLfjdcYA@mail.gmail.com
