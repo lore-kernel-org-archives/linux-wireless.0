@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:40175 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751475AbeA3Sz2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 13:55:28 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k will not tx packets sometimes.
-In-Reply-To: <712ee959-4e41-f4fd-e765-523d024fa7fc@candelatech.com>
-References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com> <87a7wzv43j.fsf@toke.dk> <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com> <87d11stk0i.fsf@toke.dk> <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com> <871si81eev.fsf@toke.dk> <5A6FA79B.1080206@candelatech.com> <87h8r335yz.fsf@toke.dk> <712ee959-4e41-f4fd-e765-523d024fa7fc@candelatech.com>
-Date: Tue, 30 Jan 2018 19:55:25 +0100
-Message-ID: <87wozzyy5e.fsf@toke.dk> (sfid-20180130_195551_732996_E10D889A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.63.242]:51608 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754098AbeARGrj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 01:47:39 -0500
+Message-ID: <1516258057.410.55.camel@sipsolutions.net> (sfid-20180118_074851_777338_54C8F021)
+Subject: Re: [PATCH] cfg80211: stop demanding lots of new stuff
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hugh Dickins <hughd@google.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 18 Jan 2018 07:47:37 +0100
+In-Reply-To: <alpine.LSU.2.11.1801171448510.5433@eggly.anvils> (sfid-20180117_235601_216213_A3BA62CE)
+References: <alpine.LSU.2.11.1801171448510.5433@eggly.anvils>
+         (sfid-20180117_235601_216213_A3BA62CE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+On Wed, 2018-01-17 at 14:55 -0800, Hugh Dickins wrote:
+> "make oldconfig" from 4.14 (when CONFIG_CFG80211_CERTIFICATION_ONUS
+> is not set) to 4.15-rc, gets into asking lots of new questions, and
+> configuring in unwanted stuff: I'm unsure of my Kconfig skills, but
+> it looks like CFG80211_REQUIRE_SIGNED_REGDB's "default y" needs to
+> be toned down when we don't even have CFG80211_CERTIFICATION_ONUS.
 
->> I'm actually working on reworking that whole scheduler logic, and move
->> some of it into mac80211. Could you test this (WiP) patch and see if
->> that has the same problem?
->
-> It had some serious conflicts in ath10k, due to my local changes, so
-> I did not actually test this.
+No, this is wrong - we want default configurations to be able to load a
+signed regulatory database and validate the signature.
 
-Can send you a version without the ath10k changes tomorrow if you'd like
-to test - but will try to reproduce myself as well...
-
-> But, a revert of the atf patches (a6e56d749 and 63fefa050) appear to
-> have resolved the issue. I'll test more with these reverted, and maybe
-> will have time to work more on actually fixing upstream code next time
-> I move to a newer kernel (and/or after your pending changes get in).
-
-Ah, that narrows it down some. Well, that is the code I'm hacking on
-currently anyway, so let's see if we can't get it fixed as part of that
-series :)
-
--Toke
+johannes
