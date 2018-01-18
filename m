@@ -1,42 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36980 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965771AbeAOM6h (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59808 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756532AbeAROYI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 07:58:37 -0500
-Message-ID: <1516021115.410.23.camel@sipsolutions.net> (sfid-20180115_135842_581886_98477B14)
-Subject: Re: [RFC v2 1/5] nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Date: Mon, 15 Jan 2018 13:58:35 +0100
-In-Reply-To: <20180110170938.2341-2-denkenz@gmail.com> (sfid-20180110_180956_952258_12ECA7BD)
-References: <20180110170938.2341-1-denkenz@gmail.com>
-         <20180110170938.2341-2-denkenz@gmail.com>
-         (sfid-20180110_180956_952258_12ECA7BD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 18 Jan 2018 09:24:08 -0500
+From: Ramon Fried <rfried@codeaurora.org>
+To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
+        bjorn.andersson@linaro.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Ramon Fried <rfried@codeaurora.org>
+Subject: [PATCH] wcn36xx: release resources in case of error
+Date: Thu, 18 Jan 2018 16:23:48 +0200
+Message-Id: <20180118142348.12759-1-rfried@codeaurora.org> (sfid-20180118_152423_819007_316CBC18)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-01-10 at 11:09 -0600, Denis Kenzior wrote:
-> 
-> +	WIPHY_FLAG_CONTROL_PORT_OVER_NL80211	= BIT(25),
+wcn36xx_dxe_init() doesn't check for the return value
+of wcn36xx_dxe_init_descs().
+This patch releases the resources in case an error ocurred.
 
-I think it'd be easier for everyone to just use an nl80211 extended
-feature flag for this, then you also don't need this code:
+Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 48 +++++++++++++++++++++++++++++-----
+ 1 file changed, 42 insertions(+), 6 deletions(-)
 
-> +	if (info->attrs[NL80211_ATTR_CONTROL_PORT_OVER_NL80211]) {
-> +		if (!info->attrs[NL80211_ATTR_SOCKET_OWNER])
-> +			return -EINVAL;
-> +
-> +		if (!(rdev->wiphy.flags & WIPHY_FLAG_CONTROL_PORT_OVER_NL80211))
-> +			return -EOPNOTSUPP;
-> +
-> +		settings->control_port_over_nl80211 = true;
-> +	} else {
-> +		settings->control_port_over_nl80211 = false;
-> +	}
-
-Nit: you don't really need the else branch.
-
-johannes
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index d5c810a8cc52..dc7129edac96 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -236,6 +236,16 @@ static int wcn36xx_dxe_init_descs(struct device *dev, struct wcn36xx_dxe_ch *wcn
+ 	return 0;
+ }
+ 
++static void wcn36xx_dxe_deinit_descs(struct device *dev, struct wcn36xx_dxe_ch *wcn_ch)
++{
++	size_t size;
++
++	size = wcn_ch->desc_bum * sizeof(struct wcn36xx_dxe_desc);
++	dma_free_coherent(wcn->dev, size,
++					wcn_ch->cpu_addr,
++					wcn_ch->dma_addr);
++}
++
+ static void wcn36xx_dxe_init_tx_bd(struct wcn36xx_dxe_ch *ch,
+ 				   struct wcn36xx_dxe_mem_pool *pool)
+ {
+@@ -722,7 +732,11 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for TX LOW channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_l_ch);
++	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_l_ch);
++	if (ret) {
++		dev_error("Error allocating descriptor\n");
++		return ret;
++	}
+ 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_l_ch, &wcn->data_mem_pool);
+ 
+ 	/* Write channel head to a NEXT register */
+@@ -740,7 +754,12 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for TX HIGH channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_h_ch);
++	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_h_ch);
++	if (ret) {
++		dev_error("Error allocating descriptor\n");
++		goto our_err_txh_ch;
++	}
++
+ 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_h_ch, &wcn->mgmt_mem_pool);
+ 
+ 	/* Write channel head to a NEXT register */
+@@ -760,7 +779,12 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for RX LOW channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_l_ch);
++	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_l_ch);
++	if (ret) {
++		dev_error("Error allocating descriptor\n");
++		goto out_err_rxl_ch;
++	}
++
+ 
+ 	/* For RX we need to preallocated buffers */
+ 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_l_ch);
+@@ -790,7 +814,11 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for RX HIGH channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_h_ch);
++	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_h_ch)
++	if (ret) {
++		dev_error("Error allocating descriptor\n");
++		goto out_err_rxh_ch;
++	}
+ 
+ 	/* For RX we need to prealocat buffers */
+ 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_h_ch);
+@@ -819,11 +847,19 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 
+ 	ret = wcn36xx_dxe_request_irqs(wcn);
+ 	if (ret < 0)
+-		goto out_err;
++		goto out_err_irq;
+ 
+ 	return 0;
+ 
+-out_err:
++out_err_irq:
++	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_rx_h_ch);
++out_err_rxh_ch:
++	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_rx_l_ch);
++out_err_rxl_ch:
++	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_tx_h_ch);
++out_err_txh_ch:
++	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_tx_l_ch);
++
+ 	return ret;
+ }
+ 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
