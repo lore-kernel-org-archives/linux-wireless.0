@@ -1,40 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35836 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751279AbeAWKiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Jan 2018 05:38:21 -0500
-Subject: Re: [PATCH] mt76x2: fix WMM parameter configuration
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless@vger.kernel.org, gaetano.catalli@gmail.com
-References: <cover.1516186517.git.lorenzo.bianconi@redhat.com>
- <7554b3527fd55afa7561ffc89fb7f3bea1a902ed.1516186517.git.lorenzo.bianconi@redhat.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <781e466b-6d23-c8c2-efcc-d8ff864034a6@nbd.name> (sfid-20180123_113825_327477_141C83E6)
-Date: Tue, 23 Jan 2018 11:38:19 +0100
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:19040 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756155AbeARNSK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 08:18:10 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 03/14] staging: wilc1000: fix alignments to match open parenthesis
+Date: Thu, 18 Jan 2018 18:47:01 +0530
+Message-ID: <1516281432-7724-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141833_424596_C5BE1C05)
+In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <7554b3527fd55afa7561ffc89fb7f3bea1a902ed.1516186517.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-01-17 12:01, Lorenzo Bianconi wrote:
-> Fix hw queue configuration since mt76x2 devices use a reverse queue
-> enumeration respect to mac80211 one:
->  - 0: AC_BE
->  - 1: AC_BK
->  - 2: AC_VI
->  - 3: AC_VO
-> 
-> The issue can be reproduced sending two concurrent flow using
-> two separate queues:
->  - VO: 20Mbps UDP traffic
->  - BE: TCP traffic
-> 
-> In this scenario the UDP traffic will be blocked by the TCP one.
-> Fix it configuring properly WMM hw queue parameters
-> 
-> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
-> Tested-by: Gaetano Catalli <gaetano.catalli@gmail.com>
-> Signed-off-by: Gaetano Catalli <gaetano.catalli@gmail.com>
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Acked-by: Felix Fietkau <nbd@nbd.name>
+fix "Alignment should match open parenthesis" issues reported by
+checkpatch.pl script. changes to comply with linux coding style.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c         |  4 +--
+ drivers/staging/wilc1000/linux_wlan.c             |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 38 +++++++++++------------
+ 3 files changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 46e2d55..358354b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3730,8 +3730,8 @@ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param)
+ 	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
+ 	if (add_sta_info->rates_len > 0) {
+ 		add_sta_info->rates = kmemdup(sta_param->rates,
+-				      add_sta_info->rates_len,
+-				      GFP_KERNEL);
++					      add_sta_info->rates_len,
++					      GFP_KERNEL);
+ 		if (!add_sta_info->rates)
+ 			return -ENOMEM;
+ 	}
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3c3f1863..d9725ef 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -695,7 +695,7 @@ static int wlan_initialize_threads(struct net_device *dev)
+ 	wilc = vif->wilc;
+ 
+ 	wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
+-				     "K_TXQ_TASK");
++				       "K_TXQ_TASK");
+ 	if (IS_ERR(wilc->txq_thread)) {
+ 		netdev_err(dev, "couldn't create TXQ thread\n");
+ 		wilc->close = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index fb4a142..621810d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -470,10 +470,10 @@ static void CfgScanResult(enum scan_event scan_event,
+ int wilc_connecting;
+ 
+ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+-			     struct connect_info *conn_info,
+-			     u8 mac_status,
+-			     struct disconnect_info *disconn_info,
+-			     void *priv_data)
++			       struct connect_info *conn_info,
++			       u8 mac_status,
++			       struct disconnect_info *disconn_info,
++			       void *priv_data)
+ {
+ 	struct wilc_priv *priv;
+ 	struct net_device *dev;
+@@ -623,18 +623,18 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 				}
+ 			}
+ 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
+-					     au8ScanChanList,
+-					     request->n_channels,
+-					     (const u8 *)request->ie,
+-					     request->ie_len, CfgScanResult,
+-					     (void *)priv, &strHiddenNetwork);
++					au8ScanChanList,
++					request->n_channels,
++					(const u8 *)request->ie,
++					request->ie_len, CfgScanResult,
++					(void *)priv, &strHiddenNetwork);
+ 		} else {
+ 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
+-					     au8ScanChanList,
+-					     request->n_channels,
+-					     (const u8 *)request->ie,
+-					     request->ie_len, CfgScanResult,
+-					     (void *)priv, NULL);
++					au8ScanChanList,
++					request->n_channels,
++					(const u8 *)request->ie,
++					request->ie_len, CfgScanResult,
++					(void *)priv, NULL);
+ 		}
+ 	} else {
+ 		netdev_err(priv->dev, "Requested scanned channels over\n");
+@@ -793,11 +793,11 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	wilc_wlan_set_bssid(dev, pstrNetworkInfo->bssid, STATION_MODE);
+ 
+ 	ret = wilc_set_join_req(vif, pstrNetworkInfo->bssid, sme->ssid,
+-				     sme->ssid_len, sme->ie, sme->ie_len,
+-				     cfg_connect_result, (void *)priv,
+-				     u8security, auth_type,
+-				     pstrNetworkInfo->ch,
+-				     pstrNetworkInfo->join_params);
++				sme->ssid_len, sme->ie, sme->ie_len,
++				cfg_connect_result, (void *)priv,
++				u8security, auth_type,
++				pstrNetworkInfo->ch,
++				pstrNetworkInfo->join_params);
+ 	if (ret != 0) {
+ 		netdev_err(dev, "wilc_set_join_req(): Error\n");
+ 		ret = -ENOENT;
+-- 
+2.7.4
