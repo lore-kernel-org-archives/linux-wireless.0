@@ -1,44 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39537 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754090AbeASGqY (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:54378 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755875AbeARNSR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jan 2018 01:46:24 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/10] rtlwifi: 8822be has to report vht capability to mac80211
-Date: Fri, 19 Jan 2018 14:45:49 +0800
-Message-ID: <20180119064551.10084-9-pkshih@realtek.com> (sfid-20180119_074642_857951_618AA778)
-In-Reply-To: <20180119064551.10084-1-pkshih@realtek.com>
-References: <20180119064551.10084-1-pkshih@realtek.com>
+        Thu, 18 Jan 2018 08:18:17 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 05/14] staging: wilc1000: rename camelCase used in Handle_DelAllSta() and its variable
+Date: Thu, 18 Jan 2018 18:47:03 +0530
+Message-ID: <1516281432-7724-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141834_932141_501C5737)
+In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+fix "Avoid camelCase" issue reported by checkpatch.pl script.
 
-8822be is 2x2 11ac wifi chip, so report VHT capability to mac80211.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/base.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index c8ebf738cb2b..7fa435e95c0e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -244,7 +244,8 @@ static void _rtl_init_hw_vht_capab(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 9f6365a..1ac079a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2123,34 +2123,34 @@ static void Handle_AddStation(struct wilc_vif *vif,
+ 	kfree(wid.val);
+ }
  
--	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
-+	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE ||
-+	    rtlhal->hw_type == HARDWARE_TYPE_RTL8822BE) {
- 		u16 mcs_map;
+-static void Handle_DelAllSta(struct wilc_vif *vif,
+-			     struct del_all_sta *pstrDelAllStaParam)
++static void handle_del_all_sta(struct wilc_vif *vif,
++			       struct del_all_sta *param)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *pu8CurrByte;
++	u8 *curr_byte;
+ 	u8 i;
+-	u8 au8Zero_Buff[6] = {0};
++	u8 zero_buff[6] = {0};
  
- 		vht_cap->vht_supported = true;
+ 	wid.id = (u16)WID_DEL_ALL_STA;
+ 	wid.type = WID_STR;
+-	wid.size = (pstrDelAllStaParam->assoc_sta * ETH_ALEN) + 1;
++	wid.size = (param->assoc_sta * ETH_ALEN) + 1;
+ 
+-	wid.val = kmalloc((pstrDelAllStaParam->assoc_sta * ETH_ALEN) + 1, GFP_KERNEL);
++	wid.val = kmalloc((param->assoc_sta * ETH_ALEN) + 1, GFP_KERNEL);
+ 	if (!wid.val)
+ 		goto ERRORHANDLER;
+ 
+-	pu8CurrByte = wid.val;
++	curr_byte = wid.val;
+ 
+-	*(pu8CurrByte++) = pstrDelAllStaParam->assoc_sta;
++	*(curr_byte++) = param->assoc_sta;
+ 
+ 	for (i = 0; i < MAX_NUM_STA; i++) {
+-		if (memcmp(pstrDelAllStaParam->del_all_sta[i], au8Zero_Buff, ETH_ALEN))
+-			memcpy(pu8CurrByte, pstrDelAllStaParam->del_all_sta[i], ETH_ALEN);
++		if (memcmp(param->del_all_sta[i], zero_buff, ETH_ALEN))
++			memcpy(curr_byte, param->del_all_sta[i], ETH_ALEN);
+ 		else
+ 			continue;
+ 
+-		pu8CurrByte += ETH_ALEN;
++		curr_byte += ETH_ALEN;
+ 	}
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+@@ -2626,7 +2626,7 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_DEL_ALL_STA:
+-		Handle_DelAllSta(msg->vif, &msg->body.del_all_sta_info);
++		handle_del_all_sta(msg->vif, &msg->body.del_all_sta_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_SET_TX_POWER:
 -- 
-2.15.1
+2.7.4
