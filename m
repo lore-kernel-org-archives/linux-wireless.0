@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:49924 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751836AbeABN1M (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:43179 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932517AbeARXIZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Jan 2018 08:27:12 -0500
-Message-ID: <1514899630.2024.2.camel@sipsolutions.net> (sfid-20180102_142716_604722_5389FD45)
-Subject: Re: [RFC 0/4] EAPoL over NL80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 02 Jan 2018 14:27:10 +0100
-In-Reply-To: <186d4469-fffb-45b2-1ea7-53a4eaf1c966@gmail.com> (sfid-20171229_192937_701953_D7DF1E5F)
-References: <20171228175832.3253-1-denkenz@gmail.com>
-         <5A460B01.7060603@broadcom.com>
-         <186d4469-fffb-45b2-1ea7-53a4eaf1c966@gmail.com>
-         (sfid-20171229_192937_701953_D7DF1E5F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 18 Jan 2018 18:08:25 -0500
+Received: by mail-wm0-f67.google.com with SMTP id g1so73493wmg.2
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2018 15:08:24 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] mt76x2: dfs: disable dfs tasklet during device cleanup
+Date: Fri, 19 Jan 2018 00:08:14 +0100
+Message-Id: <04f915e7611a50fd1c57562e6673baf418e55d3a.1516315624.git.lorenzo.bianconi@redhat.com> (sfid-20180119_000828_623378_E1DBFAC3)
+In-Reply-To: <cover.1516315624.git.lorenzo.bianconi@redhat.com>
+References: <cover.1516315624.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-12-29 at 12:29 -0600, Denis Kenzior wrote:
+Define mt76x2_dfs_cleanup() routine since it will be helpful to add
+the support for dfs sw detector
 
-> Agreed, requiring both attributes is less than ideal, but I tried to 
-> make the initial RFC as minimal as possible.  It also helped that iwd 
-> uses SOCKET_OWNER by default.  What can be done is to always set 
-> conn_owner_nlportid and introduce another flag that would indicate 
-> whether 'connection tear-down on application exit' was requested.
-> 
-> However, my opinion is that the current SOCKET_OWNER behavior should 
-> just be made default, especially for control port over nl80211 
-> connections, even if SOCKET_OWNER was not requested.  Once the 
-> controlling application dies, there's no hope of salvaging the 
-> connection, perform rekeys, etc.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c  | 6 ++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h  | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 1 +
+ 3 files changed, 8 insertions(+)
 
-I think we should keep both attributes; it's better to be explicit that
-both are needed than to set socket-owner automatically.
-
-> The biggest issue was that each driver defines a set of management 
-> frames it can accept via this mechanism.
-
-I'm not sure this is "the biggest issue", but I tend to agree with
-keeping them separate.
-
-johannes
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+index f936dc9a5476..19ac6edd672a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+@@ -504,3 +504,9 @@ void mt76x2_dfs_set_domain(struct mt76x2_dev *dev,
+ 	}
+ }
+ 
++void mt76x2_dfs_cleanup(struct mt76x2_dev *dev)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++
++	tasklet_disable(&dfs_pd->dfs_tasklet);
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+index 8dbc783cc6bc..f70220615bbc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+@@ -74,6 +74,7 @@ struct mt76x2_dfs_pattern_detector {
+ };
+ 
+ void mt76x2_dfs_init_params(struct mt76x2_dev *dev);
++void mt76x2_dfs_cleanup(struct mt76x2_dev *dev);
+ void mt76x2_dfs_init_detector(struct mt76x2_dev *dev);
+ void mt76x2_dfs_adjust_agc(struct mt76x2_dev *dev);
+ void mt76x2_dfs_set_domain(struct mt76x2_dev *dev,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index 66d4bfc70977..2bf861058658 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -618,6 +618,7 @@ void mt76x2_cleanup(struct mt76x2_dev *dev)
+ 	mt76x2_stop_hardware(dev);
+ 	mt76x2_dma_cleanup(dev);
+ 	mt76x2_mcu_cleanup(dev);
++	mt76x2_dfs_cleanup(dev);
+ }
+ 
+ struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev)
+-- 
+2.13.6
