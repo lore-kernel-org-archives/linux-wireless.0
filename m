@@ -1,162 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:51006 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752103AbeAPODJ (ORCPT
+Received: from galahad.ideasonboard.com ([185.26.127.97]:36481 "EHLO
+        galahad.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750767AbeARVlw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 09:03:09 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 08/13] staging: wilc1000: rename pstrWFIDrv to wfi_drv to avoid camelCase naming
-Date: Tue, 16 Jan 2018 19:32:26 +0530
-Message-ID: <1516111351-5353-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180116_150318_146330_F8B416B0)
-In-Reply-To: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
+        Thu, 18 Jan 2018 16:41:52 -0500
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative execution
+Date: Thu, 18 Jan 2018 23:41:57 +0200
+Message-ID: <1726114.TonTVukLyd@avalon> (sfid-20180118_224218_445348_8AB8E760)
+In-Reply-To: <20180118170547.GF12394@arm.com>
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com> <CAPcyv4gPLx74CAHGGrC3R-fgrh0vUmCbLNXZ0f7PTiKi0f+hCQ@mail.gmail.com> <20180118170547.GF12394@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is cleanup patch, it fixes "Avoid CamelCase: <pstrWFIDrv>"
-issue found by checkpatch.pl
+Hi Will,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 36 +++++++++++------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+On Thursday, 18 January 2018 19:05:47 EET Will Deacon wrote:
+> On Thu, Jan 18, 2018 at 08:58:08AM -0800, Dan Williams wrote:
+> > On Thu, Jan 18, 2018 at 5:18 AM, Will Deacon wrote:
+> >> On Thu, Jan 11, 2018 at 05:41:08PM -0800, Dan Williams wrote:
+> >>> On Thu, Jan 11, 2018 at 5:19 PM, Linus Torvalds wrote:
+> >>>> On Thu, Jan 11, 2018 at 4:46 PM, Dan Williams wrote:
+> >>>>> This series incorporates Mark Rutland's latest ARM changes and adds
+> >>>>> the x86 specific implementation of 'ifence_array_ptr'. That ifence
+> >>>>> based approach is provided as an opt-in fallback, but the default
+> >>>>> mitigation, '__array_ptr', uses a 'mask' approach that removes
+> >>>>> conditional branches instructions, and otherwise aims to redirect
+> >>>>> speculation to use a NULL pointer rather than a user controlled
+> >>>>> value.
+> >>>> 
+> >>>> Do you have any performance numbers and perhaps example code
+> >>>> generation? Is this noticeable? Are there any microbenchmarks showing
+> >>>> the difference between lfence use and the masking model?
+> >>> 
+> >>> I don't have performance numbers, but here's a sample code generation
+> >>> from __fcheck_files, where the 'and; lea; and' sequence is portion of
+> >>> array_ptr() after the mask generation with 'sbb'.
+> >>> 
+> >>>         fdp = array_ptr(fdt->fd, fd, fdt->max_fds);
+> >>>      
+> >>>      8e7:       8b 02                   mov    (%rdx),%eax
+> >>>      8e9:       48 39 c7                cmp    %rax,%rdi
+> >>>      8ec:       48 19 c9                sbb    %rcx,%rcx
+> >>>      8ef:       48 8b 42 08             mov    0x8(%rdx),%rax
+> >>>      8f3:       48 89 fe                mov    %rdi,%rsi
+> >>>      8f6:       48 21 ce                and    %rcx,%rsi
+> >>>      8f9:       48 8d 04 f0             lea    (%rax,%rsi,8),%rax
+> >>>      8fd:       48 21 c8                and    %rcx,%rax
+> >>>> 
+> >>>> Having both seems good for testing, but wouldn't we want to pick one
+> >>>> in the end?
+> >>> 
+> >>> I was thinking we'd keep it as a 'just in case' sort of thing, at
+> >>> least until the 'probably safe' assumption of the 'mask' approach has
+> >>> more time to settle out.
+> >> 
+> >> From the arm64 side, the only concern I have (and this actually applies
+> >> to our CSDB sequence as well) is the calculation of the array size by
+> >> the caller. As Linus mentioned at the end of [1], if the determination
+> >> of the size argument is based on a conditional branch, then masking
+> >> doesn't help because you bound within the wrong range under speculation.
+> >> 
+> >> We ran into this when trying to use masking to protect our uaccess
+> >> routines where the conditional bound is either KERNEL_DS or USER_DS.
+> >> It's possible that a prior conditional set_fs(KERNEL_DS) could defeat
+> >> the masking and so we'd need to throw some heavy barriers in set_fs to
+> >> make it robust.
+> > 
+> > At least in the conditional mask case near set_fs() usage the approach
+> > we are taking is to use a barrier. I.e. the following guidance from
+> > Linus:
+> > 
+> > "Basically, the rule is trivial: find all 'stac' users, and use address
+> > masking if those users already integrate the limit check, and lfence
+> > they don't."
+> > 
+> > ...which translates to narrow the pointer for get_user() and use a
+> > barrier  for __get_user().
+> 
+> Great, that matches my thinking re set_fs but I'm still worried about
+> finding all the places where the bound is conditional for other users
+> of the macro. Then again, finding the places that need this macro in the
+> first place is tough enough so perhaps analysing the bound calculation
+> doesn't make it much worse.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index ec079cc..1c5782e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -656,19 +656,19 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 	enum AUTHTYPE tenuAuth_type = ANY;
- 
- 	struct wilc_priv *priv;
--	struct host_if_drv *pstrWFIDrv;
-+	struct host_if_drv *wfi_drv;
- 	struct network_info *pstrNetworkInfo = NULL;
- 	struct wilc_vif *vif;
- 
- 	wilc_connecting = 1;
- 	priv = wiphy_priv(wiphy);
- 	vif = netdev_priv(priv->dev);
--	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
-+	wfi_drv = (struct host_if_drv *)priv->hif_drv;
- 
- 	if (!(strncmp(sme->ssid, "DIRECT-", 7)))
--		pstrWFIDrv->p2p_connect = 1;
-+		wfi_drv->p2p_connect = 1;
- 	else
--		pstrWFIDrv->p2p_connect = 0;
-+		wfi_drv->p2p_connect = 0;
- 
- 	for (i = 0; i < last_scanned_cnt; i++) {
- 		if ((sme->ssid_len == last_scanned_shadow[i].ssid_len) &&
-@@ -787,7 +787,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	curr_channel = pstrNetworkInfo->ch;
- 
--	if (!pstrWFIDrv->p2p_connect)
-+	if (!wfi_drv->p2p_connect)
- 		wlan_channel = pstrNetworkInfo->ch;
- 
- 	wilc_wlan_set_bssid(dev, pstrNetworkInfo->bssid, STATION_MODE);
-@@ -812,7 +812,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
- {
- 	s32 ret = 0;
- 	struct wilc_priv *priv;
--	struct host_if_drv *pstrWFIDrv;
-+	struct host_if_drv *wfi_drv;
- 	struct wilc_vif *vif;
- 	struct wilc *wilc;
- 	u8 NullBssid[ETH_ALEN] = {0};
-@@ -831,15 +831,15 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
- 		return 0;
- 	}
- 
--	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
--	if (!pstrWFIDrv->p2p_connect)
-+	wfi_drv = (struct host_if_drv *)priv->hif_drv;
-+	if (!wfi_drv->p2p_connect)
- 		wlan_channel = INVALID_CHANNEL;
- 	wilc_wlan_set_bssid(priv->dev, NullBssid, STATION_MODE);
- 
- 	p2p_local_random = 0x01;
- 	p2p_recv_random = 0x00;
- 	wilc_ie = false;
--	pstrWFIDrv->p2p_timeout = 0;
-+	wfi_drv->p2p_timeout = 0;
- 
- 	ret = wilc_disconnect(vif, reason_code);
- 	if (ret != 0) {
-@@ -1425,12 +1425,12 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
- {
- 	struct wilc_priv *priv;
- 	u32 header, pkt_offset;
--	struct host_if_drv *pstrWFIDrv;
-+	struct host_if_drv *wfi_drv;
- 	u32 i = 0;
- 	s32 s32Freq;
- 
- 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
--	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
-+	wfi_drv = (struct host_if_drv *)priv->hif_drv;
- 
- 	memcpy(&header, (buff - HOST_HDR_OFFSET), HOST_HDR_OFFSET);
- 
-@@ -1451,7 +1451,7 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
- 		s32Freq = ieee80211_channel_to_frequency(curr_channel, NL80211_BAND_2GHZ);
- 
- 		if (ieee80211_is_action(buff[FRAME_TYPE_ID])) {
--			if (priv->cfg_scanning && time_after_eq(jiffies, (unsigned long)pstrWFIDrv->p2p_timeout)) {
-+			if (priv->cfg_scanning && time_after_eq(jiffies, (unsigned long)wfi_drv->p2p_timeout)) {
- 				netdev_dbg(dev, "Receiving action wrong ch\n");
- 				return;
- 			}
-@@ -1604,14 +1604,14 @@ static int mgmt_tx(struct wiphy *wiphy,
- 	const struct ieee80211_mgmt *mgmt;
- 	struct p2p_mgmt_data *mgmt_tx;
- 	struct wilc_priv *priv;
--	struct host_if_drv *pstrWFIDrv;
-+	struct host_if_drv *wfi_drv;
- 	u32 i;
- 	struct wilc_vif *vif;
- 	u32 buf_len = len + sizeof(p2p_vendor_spec) + sizeof(p2p_local_random);
- 
- 	vif = netdev_priv(wdev->netdev);
- 	priv = wiphy_priv(wiphy);
--	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
-+	wfi_drv = (struct host_if_drv *)priv->hif_drv;
- 
- 	*cookie = (unsigned long)buf;
- 	priv->tx_cookie = *cookie;
-@@ -1695,7 +1695,7 @@ static int mgmt_tx(struct wiphy *wiphy,
- 				}
- 			}
- 
--			pstrWFIDrv->p2p_timeout = (jiffies + msecs_to_jiffies(wait));
-+			wfi_drv->p2p_timeout = (jiffies + msecs_to_jiffies(wait));
- 		}
- 
- 		wilc_wlan_txq_add_mgmt_pkt(wdev->netdev, mgmt_tx,
-@@ -1710,11 +1710,11 @@ static int mgmt_tx_cancel_wait(struct wiphy *wiphy,
- 			       u64 cookie)
- {
- 	struct wilc_priv *priv;
--	struct host_if_drv *pstrWFIDrv;
-+	struct host_if_drv *wfi_drv;
- 
- 	priv = wiphy_priv(wiphy);
--	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
--	pstrWFIDrv->p2p_timeout = jiffies;
-+	wfi_drv = (struct host_if_drv *)priv->hif_drv;
-+	wfi_drv->p2p_timeout = jiffies;
- 
- 	if (!priv->p2p_listen_state) {
- 		cfg80211_remain_on_channel_expired(priv->wdev,
+It might not now, but if the bound calculation changes later, I'm pretty sure 
+we'll forget to update the speculation barrier macro at least in some cases. 
+Without the help of static (or possibly dynamic) code analysis I think we're 
+bound to reintroduce problems over time, but that's true for finding places 
+where the barrier is needed, not just for barrier selection based on bound 
+calculation.
+
 -- 
-2.7.4
+Regards,
+
+Laurent Pinchart
