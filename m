@@ -1,93 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:41439 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752108AbeAJOIP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41414 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756424AbeAROeK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 09:08:15 -0500
-Received: by mail-qk0-f193.google.com with SMTP id a8so23001319qkb.8
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jan 2018 06:08:15 -0800 (PST)
-Subject: Re: [PATCH 02/10] rtlwifi: fix scan channel 1 fail after IPS
-To: Pkshih <pkshih@realtek.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-References: <20180110052002.9544-1-pkshih@realtek.com>
- <20180110052002.9544-3-pkshih@realtek.com> <5A55CB01.5040504@broadcom.com>
- <5B2DA6FDDF928F4E855344EE0A5C39D13BE66622@RTITMBSV07.realtek.com.tw>
-Cc: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        =?UTF-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A561E4B.6080105@broadcom.com> (sfid-20180110_150819_462814_A55FACE8)
-Date: Wed, 10 Jan 2018 15:08:11 +0100
-MIME-Version: 1.0
-In-Reply-To: <5B2DA6FDDF928F4E855344EE0A5C39D13BE66622@RTITMBSV07.realtek.com.tw>
-Content-Type: text/plain; charset=big5
+        Thu, 18 Jan 2018 09:34:10 -0500
+From: Ramon Fried <rfried@codeaurora.org>
+To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
+        bjorn.andersson@linaro.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Ramon Fried <rfried@codeaurora.org>
+Subject: [PATCH] wcn36xx: release resources in case of error
+Date: Thu, 18 Jan 2018 16:33:56 +0200
+Message-Id: <20180118143356.14290-1-rfried@codeaurora.org> (sfid-20180118_153433_864672_8061EDDC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/10/2018 10:38 AM, Pkshih wrote:
-> 
-> 
->> -----Original Message-----
->> From: Arend van Spriel [mailto:arend.vanspriel@broadcom.com]
->> Sent: Wednesday, January 10, 2018 4:13 PM
->> To: Pkshih; kvalo@codeaurora.org
->> Cc: Larry.Finger@lwfinger.net; ²ø«Û«Å; linux-wireless@vger.kernel.org
->> Subject: Re: [PATCH 02/10] rtlwifi: fix scan channel 1 fail after IPS
->>
->> On 1/10/2018 6:19 AM, pkshih@realtek.com wrote:
->>> From: Ping-Ke Shih <pkshih@realtek.com>
->>>
->>> If there is no connection, driver will enter IPS state. Meanwhile, it
->>> fails to scan channel 1 by the command 'iw dev wlan0 scan freq 2412',
->>> because hardware channel setting lose after IPS. Thus, restore channel
->>> setting from hw->conf.channel set by last rtl_op_config().
->>>
->>> Signed-off-by: Tim Lee <timlee@realtek.com>
->>
->> You need to add your sob here as well as you are submitting them.
->>
-> 
-> I'll add it in v2.
-> 
->>> ---
->>>    drivers/net/wireless/realtek/rtlwifi/ps.c | 6 ++++++
->>>    1 file changed, 6 insertions(+)
->>>
->>> diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
->>> index 6a4008845f49..0ffe43772c9a 100644
->>> --- a/drivers/net/wireless/realtek/rtlwifi/ps.c
->>> +++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
->>> @@ -51,6 +51,12 @@ bool rtl_ps_enable_nic(struct ieee80211_hw *hw)
->>>    			&rtlmac->retry_long);
->>>    	RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
->>>
->>> +	/*<2.1> Switch Channel & Bandwidth to last rtl_op_config setting*/
->>
->> Is this type of comment really helpful? To me it seems the callback
->> names provide enough context.
->>
-> 
-> Do you mean the "<2.1>" isn't needed?
-> This is because "<1>, <2>, <3>..." exist in the function, so
-> we want to make it to be consistent.
+wcn36xx_dxe_init() doesn't check for the return value
+of wcn36xx_dxe_init_descs().
+This patch releases the resources in case an error ocurred.
 
-That is not what I mean. I mean why have a comment describing what is
-obvious from reading the code itself. So in this example:
+Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 48 +++++++++++++++++++++++++++++-----
+ 1 file changed, 42 insertions(+), 6 deletions(-)
 
-On 1/10/2018 6:19 AM, pkshih@realtek.com wrote:
-> +	/*<2.1> Switch Channel & Bandwidth to last rtl_op_config setting*/
-> +	rtlpriv->cfg->ops->switch_channel(hw);
-> +	rtlpriv->cfg->ops->set_channel_access(hw);
-> +	rtlpriv->cfg->ops->set_bw_mode(hw,
-> +			cfg80211_get_chandef_type(&hw->conf.chandef));
-> +
->   	/*<3> Enable Interrupt */
->   	rtlpriv->cfg->ops->enable_interrupt(hw);
-
-the code after the <2.1> comment calls a switch_channel() callback and a
-set_bw_mode() callback. In my opinion those names are pretty
-self-explanatory for the reader making the comment preceding it only
-noise. The same applies to step <3>.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index d5c810a8cc52..dc7129edac96 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -236,6 +236,16 @@ static int wcn36xx_dxe_init_descs(struct device *dev, struct wcn36xx_dxe_ch *wcn
+ 	return 0;
+ }
+ 
++static void wcn36xx_dxe_deinit_descs(struct device *dev, struct wcn36xx_dxe_ch *wcn_ch)
++{
++	size_t size;
++
++	size = wcn_ch->desc_bum * sizeof(struct wcn36xx_dxe_desc);
++	dma_free_coherent(wcn->dev, size,
++					wcn_ch->cpu_addr,
++					wcn_ch->dma_addr);
++}
++
+ static void wcn36xx_dxe_init_tx_bd(struct wcn36xx_dxe_ch *ch,
+ 				   struct wcn36xx_dxe_mem_pool *pool)
+ {
+@@ -722,7 +732,11 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for TX LOW channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_l_ch);
++	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_l_ch);
++	if (ret) {
++		dev_error("Error allocating descriptor\n");
++		return ret;
++	}
+ 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_l_ch, &wcn->data_mem_pool);
+ 
+ 	/* Write channel head to a NEXT register */
+@@ -740,7 +754,12 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for TX HIGH channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_h_ch);
++	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_h_ch);
++	if (ret) {
++		dev_error("Error allocating descriptor\n");
++		goto our_err_txh_ch;
++	}
++
+ 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_h_ch, &wcn->mgmt_mem_pool);
+ 
+ 	/* Write channel head to a NEXT register */
+@@ -760,7 +779,12 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for RX LOW channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_l_ch);
++	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_l_ch);
++	if (ret) {
++		dev_error("Error allocating descriptor\n");
++		goto out_err_rxl_ch;
++	}
++
+ 
+ 	/* For RX we need to preallocated buffers */
+ 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_l_ch);
+@@ -790,7 +814,11 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 	/***************************************/
+ 	/* Init descriptors for RX HIGH channel */
+ 	/***************************************/
+-	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_h_ch);
++	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_h_ch)
++	if (ret) {
++		dev_error("Error allocating descriptor\n");
++		goto out_err_rxh_ch;
++	}
+ 
+ 	/* For RX we need to prealocat buffers */
+ 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_h_ch);
+@@ -819,11 +847,19 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
+ 
+ 	ret = wcn36xx_dxe_request_irqs(wcn);
+ 	if (ret < 0)
+-		goto out_err;
++		goto out_err_irq;
+ 
+ 	return 0;
+ 
+-out_err:
++out_err_irq:
++	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_rx_h_ch);
++out_err_rxh_ch:
++	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_rx_l_ch);
++out_err_rxl_ch:
++	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_tx_h_ch);
++out_err_txh_ch:
++	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_tx_l_ch);
++
+ 	return ret;
+ }
+ 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
