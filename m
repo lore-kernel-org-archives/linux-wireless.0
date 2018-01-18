@@ -1,117 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43030 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751086AbeAVPJ2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46234 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750948AbeARMkQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 10:09:28 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Shrenik Shikhare <shrenik@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 1/2] mwifiex: schedule rx_work on RX interrupt for USB
-Date: Mon, 22 Jan 2018 20:34:56 +0530
-Message-ID: <1516633497-6584-2-git-send-email-gbhat@marvell.com> (sfid-20180122_160943_952754_26B0F34B)
-In-Reply-To: <1516633497-6584-1-git-send-email-gbhat@marvell.com>
-References: <1516633497-6584-1-git-send-email-gbhat@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 18 Jan 2018 07:40:16 -0500
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Bhagavathi Perumal S <bperumal@codeaurora.org>,
+        Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Subject: [PATCH 1/2] cfg80211: Add tx ack signal attribute in sta info
+Date: Thu, 18 Jan 2018 18:10:08 +0530
+Message-Id: <1516279208-16485-1-git-send-email-vnaralas@codeaurora.org> (sfid-20180118_134021_183500_3EDD0028)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shrenik Shikhare <shrenik@marvell.com>
+From: Bhagavathi Perumal S <bperumal@codeaurora.org>
 
-There is race for data_received flag between main thread and
-RX data interrupt(mwifiex_usb_rx_complete()):
-1. USB received an RX data interrupt, set data_received flag
-2. main thread checks data_received, if set queues rx_work
-3. rx worker thread independently start processing rx_data_q
-4. rx work exits (once rx_data_q is empty)
-5. main thread resets the data_received flag(after #2)
-6. Now at the corner case there will be high RX data interrupts
-between #4 and #5
-7. Driver stops submitting URBs to firmware, once rx_pending
-exceeds HIGH_RX_PENDING
-8. The flag data_received(cleared in #5) will remain unset since
-there will be no interrupts from firmware to set it(after #7)
+This patch provides support for users to get ack signal
+strength of last transmitted by introducing new attribute
+'NL80211_STA_INFO_ACK_SIGNAL'.
 
-Above scenario causes RX stall in driver, which will finally
-result in command/TX timeouts in firmware.
-
-As a fix, queue rx_work directly in mwifiex_usb_rx_complete()
-callback, instead in the main thread. This removes dependency
-of RX processing on data_received flag.
-
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Bhagavathi Perumal S <bperumal@codeaurora.org>
+Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
 ---
- drivers/net/wireless/marvell/mwifiex/main.c | 7 ++++---
- drivers/net/wireless/marvell/mwifiex/main.h | 1 +
- drivers/net/wireless/marvell/mwifiex/usb.c  | 2 ++
- 3 files changed, 7 insertions(+), 3 deletions(-)
+ include/net/cfg80211.h       | 2 ++
+ include/uapi/linux/nl80211.h | 2 ++
+ net/wireless/nl80211.c       | 1 +
+ 3 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 12e7399..6e6e1a7 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -171,7 +171,7 @@ void mwifiex_queue_main_work(struct mwifiex_adapter *adapter)
- }
- EXPORT_SYMBOL_GPL(mwifiex_queue_main_work);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3a4a1a9..1236bea 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1145,6 +1145,7 @@ struct cfg80211_tid_stats {
+  * @rx_duration: aggregate PPDU duration(usecs) for all the frames from a peer
+  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
+  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
++ * @ack_signal: signal strength (in dBm) of the last ACK frame.
+  */
+ struct station_info {
+ 	u64 filled;
+@@ -1189,6 +1190,7 @@ struct station_info {
+ 	u64 rx_duration;
+ 	u8 rx_beacon_signal_avg;
+ 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
++	s8 ack_signal;
+ };
  
--static void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
-+void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
- {
- 	unsigned long flags;
+ #if IS_ENABLED(CONFIG_CFG80211)
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index c587a61..5a1568d 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2899,6 +2899,7 @@ enum nl80211_sta_bss_param {
+  * @NL80211_STA_INFO_RX_DURATION: aggregate PPDU duration for all frames
+  *	received from the station (u64, usec)
+  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
++ * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2937,6 +2938,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_TID_STATS,
+ 	NL80211_STA_INFO_RX_DURATION,
+ 	NL80211_STA_INFO_PAD,
++	NL80211_STA_INFO_ACK_SIGNAL,
  
-@@ -183,6 +183,7 @@ static void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
- 		queue_work(adapter->rx_workqueue, &adapter->rx_work);
- 	}
- }
-+EXPORT_SYMBOL_GPL(mwifiex_queue_rx_work);
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b3f8970..94c623e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4479,6 +4479,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 	PUT_SINFO_U64(RX_DROP_MISC, rx_dropped_misc);
+ 	PUT_SINFO_U64(BEACON_RX, rx_beacon);
+ 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
++	PUT_SINFO(ACK_SIGNAL, ack_signal, u8);
  
- static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
- {
-@@ -283,10 +284,10 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
- 				mwifiex_process_hs_config(adapter);
- 			if (adapter->if_ops.process_int_status)
- 				adapter->if_ops.process_int_status(adapter);
-+			if (adapter->rx_work_enabled && adapter->data_received)
-+				mwifiex_queue_rx_work(adapter);
- 		}
- 
--		if (adapter->rx_work_enabled && adapter->data_received)
--			mwifiex_queue_rx_work(adapter);
- 
- 		/* Need to wake up the card ? */
- 		if ((adapter->ps_state == PS_STATE_SLEEP) &&
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 6b5539b..66ba95c 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1667,6 +1667,7 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
- void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter);
- void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
- void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
-+void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter);
- int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
- 			      int cmd_type,
- 			      struct mwifiex_ds_wakeup_reason *wakeup_reason);
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 4bc2448..d20fda1 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -144,6 +144,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 		skb_queue_tail(&adapter->rx_data_q, skb);
- 		adapter->data_received = true;
- 		atomic_inc(&adapter->rx_pending);
-+		if (adapter->rx_work_enabled)
-+			mwifiex_queue_rx_work(adapter);
- 		break;
- 	default:
- 		mwifiex_dbg(adapter, ERROR,
+ #undef PUT_SINFO
+ #undef PUT_SINFO_U64
 -- 
-1.9.1
+2.7.4
