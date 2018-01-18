@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38334 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752804AbeAKTxc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jan 2018 14:53:32 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga07-in.huawei.com ([45.249.212.35]:54775 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752062AbeARCRN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Jan 2018 21:17:13 -0500
+From: Wei Yongjun <weiyongjun1@huawei.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ben Hutchings <ben.hutchings@codethink.co.uk>
+CC: Wei Yongjun <weiyongjun1@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Subject: [PATCH net-next] mac80211_hwsim: fix possible memory leak in hwsim_new_radio_nl()
+Date: Thu, 18 Jan 2018 02:23:34 +0000
+Message-ID: <1516242214-51095-1-git-send-email-weiyongjun1@huawei.com> (sfid-20180118_031717_789751_0746C925)
+Content-Type: text/plain; charset="ISO-8859-1"
 MIME-Version: 1.0
-Subject: Re: [v2] brcmfmac: Use zeroing memory allocator than allocator/memset
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1515444331-19509-1-git-send-email-himanshujha199640@gmail.com>
-References: <1515444331-19509-1-git-send-email-himanshujha199640@gmail.com>
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com,
-        Himanshu Jha <himanshujha199640@gmail.com>
-Message-Id: <20180111195331.695C2601D4@smtp.codeaurora.org> (sfid-20180111_205358_268251_A1011203)
-Date: Thu, 11 Jan 2018 19:53:31 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Himanshu Jha <himanshujha199640@gmail.com> wrote:
+'hwname' is malloced in hwsim_new_radio_nl() and should be freed
+before leaving from the error handling cases, otherwise it will cause
+memory leak.
 
-> Use dma_zalloc_coherent for allocating zeroed
-> memory and remove unnecessary memset function.
-> 
-> Generated-by: scripts/coccinelle/api/alloc/kzalloc-simple.cocci
-> 
-> Suggested-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+Fixes: ff4dd73dd2b4 ("mac80211_hwsim: check HWSIM_ATTR_RADIO_NAME length")
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-b7acadaf0387 brcmfmac: Use zeroing memory allocator than allocator/memset
-
--- 
-https://patchwork.kernel.org/patch/10150583/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index e542555..34052c1 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3155,8 +3155,10 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	if (info->attrs[HWSIM_ATTR_REG_CUSTOM_REG]) {
+ 		u32 idx = nla_get_u32(info->attrs[HWSIM_ATTR_REG_CUSTOM_REG]);
+ 
+-		if (idx >= ARRAY_SIZE(hwsim_world_regdom_custom))
++		if (idx >= ARRAY_SIZE(hwsim_world_regdom_custom)) {
++			kfree(hwname);
+ 			return -EINVAL;
++		}
+ 		param.regd = hwsim_world_regdom_custom[idx];
+ 	}
