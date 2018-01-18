@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:39313 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751819AbeAZPGo (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:46813 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754631AbeARJFw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 10:06:44 -0500
-Subject: Re: [PATCH] ath9k: Fix get channel default noise floor
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-References: <1516976454-8883-1-git-send-email-Wojciech.Dubowik@neratec.com>
- <87k1w4u1qr.fsf@kamboji.qca.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <73df95f3-be45-b1ba-74a6-425fe201b739@dd-wrt.com> (sfid-20180126_160658_174481_169AA431)
-Date: Fri, 26 Jan 2018 16:06:42 +0100
+        Thu, 18 Jan 2018 04:05:52 -0500
+From: Pkshih <pkshih@realtek.com>
+To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH v2 05/10] rtlwifi: enable mac80211 fast-tx support
+Date: Thu, 18 Jan 2018 09:05:30 +0000
+Message-ID: <1516266330.3990.6.camel@realtek.com> (sfid-20180118_100603_223703_9D434BFD)
+References: <20180111070932.9929-1-pkshih@realtek.com>
+         <20180111070932.9929-6-pkshih@realtek.com>
+         <871sip24fc.fsf@purkki.adurom.net> <5A5E5C99.5020607@broadcom.com>
+         (sfid-20180116_211216_753091_08EEF52B)
+ <1516141444.410.52.camel@sipsolutions.net>
+In-Reply-To: <1516141444.410.52.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87k1w4u1qr.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-the regression has been solved with that patch. so noise floor looks 
-normal for me on the 9280 chipset again
-
-Am 26.01.2018 um 15:35 schrieb Kalle Valo:
-> Wojciech Dubowik <Wojciech.Dubowik@neratec.com> writes:
->
->> Commit 8da58553cc63 ("ath9k: Use calibrated noise floor value
->> when available") introduced regression in ath9k_hw_getchan_noise
->> where per chain nominal noise floor has been taken instead default
->> for channel.
->> Revert to original default channel noise floor.
->>
->> Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-> Fixes: 8da58553cc63 ("ath9k: Use calibrated noise floor value when available")
->
-> I can add that if this passes Sebastian's tests.
->
-> And I'm planning to queue this for 4.16.
->
-
--- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+T24gVHVlLCAyMDE4LTAxLTE2IGF0IDIzOjI0ICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBPbiBUdWUsIDIwMTgtMDEtMTYgYXQgMjE6MTIgKzAxMDAsIEFyZW5kIHZhbiBTcHJpZWwgd3Jv
+dGU6DQo+ID4gDQo+ID4gDQo+ID4gV2hlbiBJIHNhdyB0aGlzIGZseWluZyBieSBJIGhhZCB0aGUg
+c2FtZSBmZWVsaW5nLiBUaGlzIGlzIGNsZWFybHkNCj4gPiBub3TCoA0KPiA+IGhvdyBpdCB3YXMg
+aW50ZW5kZWQgYWx0aG91Z2ggeW91IGNvdWxkIGludGVycHJldCB0aGUgY29tbWVudHMgb2YNCj4g
+PiB0aGXCoA0KPiA+IC5zZXRfZnJhZ190aHJlc2hvbGQoKSBjYWxsYmFjayBhbmQgSUVFRTgwMjEx
+X0hXX1NVUFBPUlRTX1RYX0ZSQUcuwqANCj4gPiBIb3dldmVyLCB0aGUgZnJhZ21lbnRhdGlvbiB0
+aHJlc2hvbGQgaXMgYSB1c2VyLWNvbmZpZ3VyYWJsZSBzdGFja8KgDQo+ID4gcGFyYW1ldGVyIGFz
+IHBlciB0aGUgc3RhbmRhcmQuIFRoaXMgcGF0Y2ggZWZmZWN0aXZlbHkga2lsbCB0aGF0DQo+ID4g
+b3B0aW9uwqANCj4gPiBmb3IgdGhlIHVzZXIgYWx0aG91Z2ggdGhlcmUgbWF5IGJlIFJGIGNvbmRp
+dGlvbnMgaW4gd2hpY2gNCj4gPiBmcmFnbWVudGF0aW9uwqANCj4gPiBjYW4gaGVscC4gSGF2aW5n
+IHRoZSB1c2VyIGNvbmZpZ3VyZSBhIGZyYWdtZW50YXRpb24gdGhyZXNob2xkIG9mDQo+ID4gMjM0
+NsKgDQo+ID4gYWxzbyBkaXNhYmxlcyBmcmFnbWVudGF0aW9uIGFuZCBhbGxvd3MgbWFjODAyMTEg
+dG8gdXNlIGNhY2hlZA0KPiA+IGZhc3RwYXRoLg0KPiA+IA0KPiDCoMKgwqDCoMKgwqDCoMKgLyog
+ZmFzdC14bWl0IGRvZXNuJ3QgaGFuZGxlIGZyYWdtZW50YXRpb24gYXQgYWxsICovDQo+IMKgwqDC
+oMKgwqDCoMKgwqBpZiAobG9jYWwtPmh3LndpcGh5LT5mcmFnX3RocmVzaG9sZCAhPSAodTMyKS0x
+ICYmDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCFpZWVlODAyMTFfaHdfY2hlY2soJmxvY2Fs
+LT5odywgU1VQUE9SVFNfVFhfRlJBRykpDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgZ290byBvdXQ7DQo+IA0KDQpUaGFuayB5b3UgZm9yIHRoaXMgcG9pbnQuIFRoaXMgY29tbWl0
+IGhhcyBub3QgdG8gc2V0IFNVUFBPUlRTX1RYX0ZSQUcswqANCmJ1dCBvbmx5IHNldCBTVVBQT1JU
+X0ZBU1RfWE1JVC4gSSdsbCB0ZXN0IGFuZCBwcmVwYXJlIGZvciBuZXh0wqANCnN1Ym1pc3Npb24u
+DQoNClBLDQoNCg==
