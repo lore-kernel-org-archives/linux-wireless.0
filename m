@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f43.google.com ([209.85.214.43]:38416 "EHLO
-        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753505AbeARJJe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 04:09:34 -0500
-Received: by mail-it0-f43.google.com with SMTP id w14so12086128itc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2018 01:09:33 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:47184 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754870AbeARRbj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 12:31:39 -0500
+Subject: Re: [PATCH] [wireless-next] mt76: fix building without
+ CONFIG_LEDS_CLASS
+To: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+References: <20180118131524.817297-1-arnd@arndb.de>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <f5b35785-2c80-da12-607c-02c253c22f39@nbd.name> (sfid-20180118_183155_508893_197C7C9F)
+Date: Thu, 18 Jan 2018 18:31:36 +0100
 MIME-Version: 1.0
-From: Tambet Arak <tambet.arak@gmail.com>
-Date: Thu, 18 Jan 2018 11:09:27 +0200
-Message-ID: <CAMNDV2kK33fWYVNNAO8=ZqgxyPdXxTdOrxdQnW6ORMFM1hkrxQ@mail.gmail.com> (sfid-20180118_100939_973414_852CE9BA)
-Subject: A few questions about iwlwifi and its rate control mechanism
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180118131524.817297-1-arnd@arndb.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On 2018-01-18 14:14, Arnd Bergmann wrote:
+> When CONFIG_LEDS_CLASS is disabled, or it is a loadable module while
+> mt76 is built-in, we run into a link error:
+> 
+> drivers/net/wireless/mediatek/mt76/mac80211.o: In function `mt76_register_device':
+> mac80211.c:(.text+0xb78): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `devm_of_led_classdev_register'
+> 
+> We don't really need a hard dependency here as the driver can presumably
+> work just fine without LEDs, so this follows the iwlwifi example and
+> adds a separate Kconfig option for the LED support, this will be available
+> whenever it will link, and otherwise the respective code gets left out from
+> the driver object.
+> 
+> Fixes: 17f1de56df05 ("mt76: add common code shared between multiple chipsets")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/net/wireless/mediatek/mt76/Kconfig       | 5 +++++
+>  drivers/net/wireless/mediatek/mt76/mac80211.c    | 8 +++++---
+>  drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 6 ++++--
+>  3 files changed, 14 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+> index fc05d79c80d0..9d12c1f5284e 100644
+> --- a/drivers/net/wireless/mediatek/mt76/Kconfig
+> +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+> @@ -8,3 +8,8 @@ config MT76x2E
+>  	depends on PCI
+>  	---help---
+>  	  This adds support for MT7612/MT7602/MT7662-based wireless PCIe devices.
+> +
+> +config MT76_LEDS
+> +	bool "LED support for MT76"
+> +	depends on MT76_CORE
+> +	depends on LEDS_CLASS=y || MT76_CORE=LEDS_CLASS
+I think this should have a 'default y'
 
-I'm not really a Linux developer, more of a curious user, but the
-wireless developers mailing list seems appropriate for my questions.
-Please bear with me if they don't make much sense, as I'm a complete
-novice when it comes to the wireless subsystem.
-
-In any case, I was looking into how to optimally tune wireless
-reception at work, since the APs are aging and only support up to MCS7
-(65 Mb/s), so any improvements would help. I'm using a HP laptop with
-a Intel Centrino Advanced-N 6235, driven by iwlwifi / iwldvm (vanilla
-Linux 4.14.8). I noticed that `iw dev wlo1 station dump` generally
-reports a 58.5-65 Mb/s rx bitrate, but when the connection is taxed
-(e.g. downloading a file), it drops.
-
-Since the only other OS on my machine is Windows, I tested by
-downloading a large file there and generally the average throughput
-was slightly higher. I'm not a Windows user, so I don't have a clue if
-`netsh show interfaces` reports a correct effective bit rate, but it
-was always fixed to 65 Mb/s in my tests.
-
-This led me to digging around in iwlwifi. It seems that iwlwifi
-registers its own rate control algorithm (iwl-agn-rs) with the
-mac80211 subsystem and this is hardcoded.
-
-Hence a few questions:
-
-- Why does iwlwifi have / need its own rc algorithm, instead of using minstrel?
-- It seems that iwl-agn-rs is not configurable by the end user. Would
-there be any interest in development for iwl-agn-rs configurability,
-e.g. being less / more conservative about lowering rates? I'm mostly
-interested in rx performance - I'm making the assumption here that rx
-rates are negotiated with the AP (as opposed to being forced).
-- Is there any documentation regarding iwlwifi or its rc algorithm
-implementation? If so, I would kindly appreciate pointers.
-
-Cheers,
-
-Tambet
+- Felix
