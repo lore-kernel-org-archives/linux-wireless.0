@@ -1,89 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50344 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932627AbeAOKLh (ORCPT
+Received: from mail-it0-f45.google.com ([209.85.214.45]:39508 "EHLO
+        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755893AbeARKyB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 05:11:37 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Matt Redfearn <matt.redfearn@imgtec.com>,
-        James Hogan <jhogan@kernel.org>,
-        Linux MIPS Mailing List <linux-mips@linux-mips.org>,
-        matt.redfearn@mips.com
-Subject: Re: [PATCH] bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
-References: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
-        <db5915ed-fc50-292f-c86b-4da7f3f0eddd@roeck-us.net>
-Date: Mon, 15 Jan 2018 12:11:33 +0200
-In-Reply-To: <db5915ed-fc50-292f-c86b-4da7f3f0eddd@roeck-us.net> (Guenter
-        Roeck's message of "Sun, 14 Jan 2018 13:40:50 -0800")
-Message-ID: <87vag31ley.fsf@purkki.adurom.net> (sfid-20180115_111154_142542_9F91B882)
+        Thu, 18 Jan 2018 05:54:01 -0500
+Received: by mail-it0-f45.google.com with SMTP id 68so13079878ite.4
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2018 02:54:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P3Vij4AeiWuOyi5XFiiAF5nqQERR8tDyrRoKZMLFmKoQw@mail.gmail.com>
+References: <CAMNDV2kK33fWYVNNAO8=ZqgxyPdXxTdOrxdQnW6ORMFM1hkrxQ@mail.gmail.com>
+ <CANUX_P3Vij4AeiWuOyi5XFiiAF5nqQERR8tDyrRoKZMLFmKoQw@mail.gmail.com>
+From: Tambet Arak <tambet.arak@gmail.com>
+Date: Thu, 18 Jan 2018 12:54:00 +0200
+Message-ID: <CAMNDV2=GqLDnxJfk=0+WC25jK-G=SYZL7PAEMZsUT4W5SAEzzg@mail.gmail.com> (sfid-20180118_115404_767940_EF4AA99A)
+Subject: Re: A few questions about iwlwifi and its rate control mechanism
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Guenter Roeck <linux@roeck-us.net> writes:
+I see. I might try playing around with hacking iwl-agn-rs, in that case.
 
-> [ copying linux-mips ]
->
-> On 01/14/2018 01:34 PM, Guenter Roeck wrote:
->> Mips builds with BCMA host mode enabled fail in mainline and -next
->> with:
->>
->> In file included from include/linux/bcma/bcma.h:10:0,
->>                   from drivers/bcma/bcma_private.h:9,
->> 		 from drivers/bcma/main.c:8:
->> include/linux/bcma/bcma_driver_pci.h:218:24: error:
->> 	field 'pci_controller' has incomplete type
->>
->> Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
->> system type as generic") as the culprit. Analysis shows that the commmit
->> changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
->> disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
->> defined if PCI_DRIVERS_LEGACY is enabled.
->>
->> Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
->> PCI_DRIVERS_LEGACY. Add the missing dependency.
->>
->> Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
->> Cc: Matt Redfearn <matt.redfearn@imgtec.com>
->> Cc: James Hogan <jhogan@kernel.org>
->> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
->> ---
->> I am aware that this problem has been reported several times. I have
->> not been able to find a fix, but I may have missed it. If so, my
->> apologies for the noise.
->>
-> I should have said "I have not been able to find a patch fixing it".
->
->> Also note that this is not the only fix required; commit d41e6858ba58c,
->> as simple as it looks like, does a pretty good job messing up
->> "mips:allmodconfig" builds.
->>
-> ... nor did I find patch(es) fixing the other build problem(s) introduced
-> by d41e6858ba58c.
+> What do you mean by 'drop'. Disassociated? Or associated but no traffic?
+> Association state can be checked with iw <iface> link
 
-As I forgot to cc linux-mips on my previous email: I'm planning to queue
-this for v4.15.
+Sorry, that was ambiguous. I meant that the rate is decreased to e.g. MCS3-5.
 
-Over the weeked I got this bcma patch, but don't know if it's related or
-not:
-
-bcma: Prevent build of PCI host features in module
-https://patchwork.kernel.org/patch/10161087/
-
-And Guenter's patch is:
-
-https://patchwork.kernel.org/patch/10162839/
-
-Which one should I take? Adding also Matt.
-
-And Matt also submitted similar patch for ssb:
-
-ssb: Prevent build of PCI host features in module
-https://patchwork.kernel.org/patch/10161131/
-
--- 
-Kalle Valo
+Tambet
