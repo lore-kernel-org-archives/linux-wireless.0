@@ -1,87 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 9pmail.ess.barracuda.com ([64.235.154.210]:48222 "EHLO
-        9pmail.ess.barracuda.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750852AbeAOLST (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:7296 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756223AbeARNSH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 06:18:19 -0500
-Subject: Re: [PATCH] bcma: Prevent build of PCI host features in module
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Guenter Roeck" <linux@roeck-us.net>,
-        Linux MIPS Mailing List <linux-mips@linux-mips.org>
-References: <1515767119-17117-1-git-send-email-matt.redfearn@mips.com>
- <87zi5f1lm0.fsf@purkki.adurom.net>
-From: Matt Redfearn <matt.redfearn@mips.com>
-Message-ID: <85b96369-ebd6-1f04-13c2-1757ac716723@mips.com> (sfid-20180115_121837_612925_09125BFA)
-Date: Mon, 15 Jan 2018 11:16:57 +0000
+        Thu, 18 Jan 2018 08:18:07 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 02/14] staging: wilc1000: removed unnecessary defined enums typedef
+Date: Thu, 18 Jan 2018 18:47:00 +0530
+Message-ID: <1516281432-7724-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141832_024440_BE5ECE5D)
+In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <87zi5f1lm0.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+fix the "do not add new typedefs" issue found by checkpatch.pl
+script
 
-On 15/01/18 10:07, Kalle Valo wrote:
-> Matt Redfearn <matt.redfearn@mips.com> writes:
-> 
->> Attempting to build bcma.ko with BCMA_DRIVER_PCI_HOSTMODE=y results in
->> a build error due to use of symbols not exported from vmlinux:
->>
->> ERROR: "pcibios_enable_device" [drivers/bcma/bcma.ko] undefined!
->> ERROR: "register_pci_controller" [drivers/bcma/bcma.ko] undefined!
->> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
->>
->> To prevent this, don't allow the host mode feature to be built if
->> CONFIG_BCMA=m
->>
->> Signed-off-by: Matt Redfearn <matt.redfearn@mips.com>
->>
->> ---
->>
->>   drivers/bcma/Kconfig | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
->> index 02d78f6cecbb..4294784b9cf1 100644
->> --- a/drivers/bcma/Kconfig
->> +++ b/drivers/bcma/Kconfig
->> @@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
->>   
->>   config BCMA_DRIVER_PCI_HOSTMODE
->>   	bool "Driver for PCI core working in hostmode"
->> -	depends on MIPS && BCMA_DRIVER_PCI
->> +	depends on MIPS && BCMA_DRIVER_PCI && BCMA = y
-> 
-> Is this a new regression? Do you know the commit which broke this?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_if.h | 72 ++++++++++++++++-----------------
+ 1 file changed, 36 insertions(+), 36 deletions(-)
 
-As far as I can see, pcibios_enable_device and register_pci_controller 
-have never being exported symbols from vmlinux, and an allmodconfig 
-build with CONFIG_MIPS_COBALT=y (MIPS cobalt platform) which attempts to 
-put this this functionality into a module would never have linked 
-successfully. As such it can be traced back to when this functionality 
-was added, 49dc9577155576b10ff79f0c1486c816b01f58bf ("bcma: add PCIe 
-host controller").
-
-> 
-> Is it somehow related to this:
-> 
-> bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
-> https://patchwork.kernel.org/patch/10162839/
-> 
-> Or are these two separate issues?
-> 
-
-Separate issues - that one fixes allmodconfig when CONFIG_MIPS_GENERIC=y 
-(MIPS generic platform) which does not define the struct pci_controller 
-- that error was really introduced when that struct definition was 
-removed for the generic platform by 
-c5611df968047fb0b38156497b4242730ef66108 ("MIPS: PCI: Introduce 
-CONFIG_PCI_DRIVERS_LEGACY").
-
-I think both patches are valid since they fix errors building 
-allmodconfig on 2 separate MIPS platforms.
-
-Thanks,
-Matt
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 1641ddb..e186509 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -114,28 +114,28 @@ enum {
+ 	G_MIXED_11B_2_MODE,		/* 1,2,5,11,6,12,24 otherwise all on */
+ };
+ 
+-typedef enum {
++enum {
+ 	G_SHORT_PREAMBLE	= 0,	/* Short Preamble */
+ 	G_LONG_PREAMBLE		= 1,	/* Long Preamble */
+ 	G_AUTO_PREAMBLE		= 2,	/* Auto Preamble Selection */
+-} G_PREAMBLE_T;
++};
+ 
+ #define MAC_CONNECTED		1
+ #define MAC_DISCONNECTED	0
+ 
+ #define SCAN_DONE		TRUE
+-typedef enum {
++enum {
+ 	PASSIVE_SCAN		= 0,
+ 	ACTIVE_SCAN		= 1,
+-} SCANTYPE_T;
++};
+ 
+-typedef enum {
++enum {
+ 	NO_POWERSAVE		= 0,
+ 	MIN_FAST_PS		= 1,
+ 	MAX_FAST_PS		= 2,
+ 	MIN_PSPOLL_PS		= 3,
+ 	MAX_PSPOLL_PS		= 4
+-} USER_PS_MODE_T;
++};
+ 
+ enum chip_ps_states {
+ 	CHIP_WAKEDUP		= 0,
+@@ -153,7 +153,7 @@ enum bus_release {
+ 	RELEASE_ALLOW_SLEEP	= 1,
+ };
+ 
+-typedef enum {
++enum {
+ 	NO_SECURITY		= 0,
+ 	WEP_40			= 0x3,
+ 	WEP_104			= 0x7,
+@@ -163,7 +163,7 @@ typedef enum {
+ 	WPA2_AES		= 0x31,
+ 	WPA2_TKIP		= 0x51,
+ 	WPA2_AES_TKIP		= 0x71,	/* Aes or Tkip */
+-} SECURITY_T;
++};
+ 
+ enum AUTHTYPE {
+ 	OPEN_SYSTEM		= 1,
+@@ -178,88 +178,88 @@ enum SITESURVEY {
+ 	SITE_SURVEY_OFF		= 2
+ };
+ 
+-typedef enum {
++enum {
+ 	NORMAL_ACK		= 0,
+ 	NO_ACK,
+-} ACK_POLICY_T;
++};
+ 
+-typedef enum {
++enum {
+ 	DONT_RESET		= 0,
+ 	DO_RESET		= 1,
+ 	NO_REQUEST		= 2,
+-} RESET_REQ_T;
++};
+ 
+-typedef enum {
++enum {
+ 	REKEY_DISABLE		= 1,
+ 	REKEY_TIME_BASE,
+ 	REKEY_PKT_BASE,
+ 	REKEY_TIME_PKT_BASE
+-} RSNA_REKEY_POLICY_T;
++};
+ 
+-typedef enum {
++enum {
+ 	FILTER_NO		= 0x00,
+ 	FILTER_AP_ONLY		= 0x01,
+ 	FILTER_STA_ONLY		= 0x02
+-} SCAN_CLASS_FITLER_T;
++};
+ 
+-typedef enum {
++enum {
+ 	PRI_HIGH_RSSI		= 0x00,
+ 	PRI_LOW_RSSI		= 0x04,
+ 	PRI_DETECT		= 0x08
+-} SCAN_PRI_T;
++};
+ 
+-typedef enum {
++enum {
+ 	CH_FILTER_OFF		= 0x00,
+ 	CH_FILTER_ON		= 0x10
+-} CH_FILTER_T;
++};
+ 
+-typedef enum {
++enum {
+ 	AUTO_PROT		= 0,	/* Auto */
+ 	NO_PROT,			/* Do not use any protection */
+ 	ERP_PROT,			/* Protect all ERP frame exchanges */
+ 	HT_PROT,			/* Protect all HT frame exchanges  */
+ 	GF_PROT,			/* Protect all GF frame exchanges  */
+-} N_PROTECTION_MODE_T;
++};
+ 
+-typedef enum {
++enum {
+ 	G_SELF_CTS_PROT,
+ 	G_RTS_CTS_PROT,
+-} G_PROTECTION_MODE_T;
++};
+ 
+-typedef enum {
++enum {
+ 	HT_MIXED_MODE		= 1,
+ 	HT_ONLY_20MHZ_MODE,
+ 	HT_ONLY_20_40MHZ_MODE,
+-} N_OPERATING_MODE_T;
++};
+ 
+-typedef enum {
++enum {
+ 	NO_DETECT		= 0,
+ 	DETECT_ONLY		= 1,
+ 	DETECT_PROTECT		= 2,
+ 	DETECT_PROTECT_REPORT	= 3,
+-} N_OBSS_DETECTION_T;
++};
+ 
+-typedef enum {
++enum {
+ 	RTS_CTS_NONHT_PROT	= 0,	/* RTS-CTS at non-HT rate */
+ 	FIRST_FRAME_NONHT_PROT,		/* First frame at non-HT rate */
+ 	LSIG_TXOP_PROT,                 /* LSIG TXOP Protection */
+ 	FIRST_FRAME_MIXED_PROT,		/* First frame at Mixed format */
+-} N_PROTECTION_TYPE_T;
++};
+ 
+-typedef enum {
++enum {
+ 	STATIC_MODE		= 1,
+ 	DYNAMIC_MODE		= 2,
+ 	MIMO_MODE		= 3,	/* power save disable */
+-} N_SMPS_MODE_T;
++};
+ 
+-typedef enum {
++enum {
+ 	DISABLE_SELF_CTS,
+ 	ENABLE_SELF_CTS,
+ 	DISABLE_TX_ABORT,
+ 	ENABLE_TX_ABORT,
+ 	HW_TRIGGER_ABORT,
+ 	SW_TRIGGER_ABORT,
+-} TX_ABORT_OPTION_T;
++};
+ 
+ enum wid_type {
+ 	WID_CHAR		= 0,
+@@ -281,7 +281,7 @@ struct wid {
+ 	s8 *val;
+ };
+ 
+-typedef enum {
++enum {
+ 	WID_NIL				= 0xffff,
+ 
+ 	/*
+@@ -889,7 +889,7 @@ typedef enum {
+ 	/* Miscellaneous WIDs */
+ 	WID_ALL				= 0x7FFE,
+ 	WID_MAX				= 0xFFFF
+-} WID_T;
++};
+ 
+ struct wilc;
+ int wilc_wlan_init(struct net_device *dev);
+-- 
+2.7.4
