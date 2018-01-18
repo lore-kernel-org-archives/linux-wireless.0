@@ -1,119 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:12398 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932170AbeAXIC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 03:02:27 -0500
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: [PATCH v2 3/4] ath9k: Use calibrated noise floor value when available
-Date: Wed, 24 Jan 2018 09:02:18 +0100
-Message-Id: <1516780939-7176-4-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180124_090238_589027_6CF0097E)
-In-Reply-To: <1516780939-7176-1-git-send-email-Wojciech.Dubowik@neratec.com>
-References: <1516780939-7176-1-git-send-email-Wojciech.Dubowik@neratec.com>
+Received: from mail-ua0-f181.google.com ([209.85.217.181]:35011 "EHLO
+        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755821AbeARKnY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 05:43:24 -0500
+Received: by mail-ua0-f181.google.com with SMTP id g16so15259097ual.2
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2018 02:43:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com>
+References: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com>
+From: Carlo Caione <carlo@endlessm.com>
+Date: Thu, 18 Jan 2018 10:43:23 +0000
+Message-ID: <CAL9uMOFDtBORCY3FO_nnUg1fpdio2FfHgfoUN4z3svSoQoT5VA@mail.gmail.com> (sfid-20180118_114330_928976_AAB35AC7)
+Subject: Re: RTL8723bu: poor signal and connection troubles
+To: Jes Sorensen <Jes.Sorensen@gmail.com>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        mylene.josserand@free-electrons.com,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        briselec@gmail.com, Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9003 series allows to calibrate noise floor for different frequency
-bins. Once it's done it's possible to get more accurate rssi/signal
-values over whole frequency band at a given temperature.
-The RSSI/signal accuracy reported by calibrated RF cards improves
-from 6 to up to 2dB.
+On Wed, Jan 10, 2018 at 12:15 PM, Carlo Caione <carlo@endlessm.com> wrote:
+> Hi,
+> this is a follow up email to [0] since the problem was never fully
+> investigated / solved and I keep seeing the same problem also on my
+> hardware.
+>
+> Also in my case the hardware is a rtl8723bt transceiver
+> (0x0bda:0xb720), this time shipped on the internal USB bus in a cheap
+> laptop branded Zyrex Sky 232.
+>
+> As already reported by Mylene the problem is that using this
+> transceiver and the latest Linus master you can barely see any WiFi
+> network around and also when a WiFi network is actually seen, the
+> connection is impossible since the signal strength is too low to have
+> a reliable connection. Of course during my tests BT is off and no BT
+> driver is probed at all.
+>
+> Using the downstream driver at [1] everything works correctly.
+>
+> I tried to debug a bit the issue, in particular comparing functions
+> and registers related to the antenna setup (.power_on, .enable_rf,
+> .phy_init_antenna_selection, .phy_iq_calibrate hooks) but everything
+> seems pretty much the same on the two drivers (even though slightly
+> differences do exist).
+>
+> Any idea / suggestion on how to debug this problem? I guess it's worth
+> to start looking at this since several platforms are being affected
+> now.
 
-This could be interesting for application which require good signal
-accuracy like roaming or mesh protocols.
+Jes,
+anything to comment about this issue? (ping)
 
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
----
- drivers/net/wireless/ath/ath9k/calib.c | 38 +++++++++++++++++++++-------------
- 1 file changed, 24 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 13ab6bc..3d9447e 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -58,19 +58,25 @@ static struct ath_nf_limits *ath9k_hw_get_nf_limits(struct ath_hw *ah,
- }
- 
- static s16 ath9k_hw_get_default_nf(struct ath_hw *ah,
--				   struct ath9k_channel *chan)
-+				   struct ath9k_channel *chan,
-+				   int chain)
- {
--	return ath9k_hw_get_nf_limits(ah, chan)->nominal;
-+	s16 calib_nf = ath9k_hw_get_nf_limits(ah, chan)->cal[chain];
-+
-+	if (calib_nf)
-+		return calib_nf;
-+	else
-+		return ath9k_hw_get_nf_limits(ah, chan)->nominal;
- }
- 
- s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan,
- 			   s16 nf)
- {
--	s8 noise = ATH_DEFAULT_NOISE_FLOOR;
-+	s8 noise = ath9k_hw_get_default_nf(ah, chan, 0);
- 
- 	if (nf) {
- 		s8 delta = nf - ATH9K_NF_CAL_NOISE_THRESH -
--			   ath9k_hw_get_default_nf(ah, chan);
-+			   ath9k_hw_get_default_nf(ah, chan, 0);
- 		if (delta > 0)
- 			noise += delta;
- 	}
-@@ -240,7 +246,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	unsigned i, j;
- 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	s16 default_nf = ath9k_hw_get_default_nf(ah, chan);
-+	s16 default_nf = ath9k_hw_get_nf_limits(ah, chan)->nominal;
- 	u32 bb_agc_ctl = REG_READ(ah, AR_PHY_AGC_CONTROL);
- 
- 	if (ah->caldata)
-@@ -258,8 +264,13 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 				nfval = ah->nf_override;
- 			else if (h)
- 				nfval = h[i].privNF;
--			else
--				nfval = default_nf;
-+			else {
-+				/* Try to get calibrated noise floor value */
-+				nfval =
-+				    ath9k_hw_get_nf_limits(ah, chan)->cal[i];
-+				if (nfval > -60 || nfval < -127)
-+					nfval = default_nf;
-+			}
- 
- 			REG_RMW(ah, ah->nf_regs[i],
- 				(((u32) nfval << 1) & 0x1ff), 0x1ff);
-@@ -429,20 +440,19 @@ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
- 				  struct ath9k_channel *chan)
- {
- 	struct ath9k_nfcal_hist *h;
--	s16 default_nf;
--	int i, j;
-+	int i, j, k = 0;
- 
- 	ah->caldata->channel = chan->channel;
- 	ah->caldata->channelFlags = chan->channelFlags;
- 	h = ah->caldata->nfCalHist;
--	default_nf = ath9k_hw_get_default_nf(ah, chan);
- 	for (i = 0; i < NUM_NF_READINGS; i++) {
- 		h[i].currIndex = 0;
--		h[i].privNF = default_nf;
-+		h[i].privNF = ath9k_hw_get_default_nf(ah, chan, k);
- 		h[i].invalidNFcount = AR_PHY_CCA_FILTERWINDOW_LENGTH;
--		for (j = 0; j < ATH9K_NF_CAL_HIST_MAX; j++) {
--			h[i].nfCalBuffer[j] = default_nf;
--		}
-+		for (j = 0; j < ATH9K_NF_CAL_HIST_MAX; j++)
-+			h[i].nfCalBuffer[j] = h[i].privNF;
-+		if (++k >= AR5416_MAX_CHAINS)
-+			k = 0;
- 	}
- }
- 
 -- 
-2.7.4
+Carlo Caione  |  +44.7384.69.16.04  |  Endless
