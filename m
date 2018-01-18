@@ -1,54 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:46675 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751587AbeAaLuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 06:50:22 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Ben Greear <greearb@candelatech.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k will not tx packets sometimes.
-In-Reply-To: <0e4aa72c-83da-e879-052d-505d8658177d@dd-wrt.com>
-References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com> <87a7wzv43j.fsf@toke.dk> <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com> <87d11stk0i.fsf@toke.dk> <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com> <871si81eev.fsf@toke.dk> <5A6FA79B.1080206@candelatech.com> <87h8r335yz.fsf@toke.dk> <712ee959-4e41-f4fd-e765-523d024fa7fc@candelatech.com> <87wozzyy5e.fsf@toke.dk> <0e4aa72c-83da-e879-052d-505d8658177d@dd-wrt.com>
-Date: Wed, 31 Jan 2018 12:50:20 +0100
-Message-ID: <878tce2qo3.fsf@toke.dk> (sfid-20180131_125026_972710_9062256B)
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:16916 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932405AbeARNSk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 08:18:40 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 12/14] staging: wilc1000: rename Handle_ScanDone() to avoid camelCase
+Date: Thu, 18 Jan 2018 18:47:10 +0530
+Message-ID: <1516281432-7724-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141920_807779_AFADC29F)
+In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+fix "Avoid camelCase" issue reported by checkpatch.pl
+script.
 
-> Am 30.01.2018 um 19:55 schrieb Toke H=C3=B8iland-J=C3=B8rgensen:
->> Ben Greear <greearb@candelatech.com> writes:
->>
->>>> I'm actually working on reworking that whole scheduler logic, and move
->>>> some of it into mac80211. Could you test this (WiP) patch and see if
->>>> that has the same problem?
->>> It had some serious conflicts in ath10k, due to my local changes, so
->>> I did not actually test this.
->> Can send you a version without the ath10k changes tomorrow if you'd like
->> to test - but will try to reproduce myself as well...
->>
->>> But, a revert of the atf patches (a6e56d749 and 63fefa050) appear to
->>> have resolved the issue. I'll test more with these reverted, and maybe
->>> will have time to work more on actually fixing upstream code next time
->>> I move to a newer kernel (and/or after your pending changes get in).
->> Ah, that narrows it down some. Well, that is the code I'm hacking on
->> currently anyway, so let's see if we can't get it fixed as part of that
->> series :)
-> i have some addition information for you maybe. in the same timeframe i=20
-> noticed a increased memory usage for ath9k devices.
-> maybe that helps. so i hit memory boundaries on embedded devices with=20
-> dual interfaces and just 32 mb=C2=A0 ram now which wasnt the case before
-> is this patch worth to try from my side?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-This is probably because of the added queue space. Which is sort of by
-design. In 3ff23cd5654b9c8f4d567caa73439b4c39fbeaae we lowered the
-default limit for non-VHT devices to 4MB. But if you have several PHYs
-on a very memory constrained device you could still run out I guess.
-
-`echo fq_memory_limit 2097152 > /sys/kernel/debug/ieee80211/phy0/aqm`
-would limit it to 2MB for that phy...
-
--Toke
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d017c86..5ea7c4b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -267,7 +267,7 @@ static struct wilc_vif *join_req_vif;
+ 
+ static void *host_parse_join_bss_param(struct network_info *info);
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+-static s32 Handle_ScanDone(struct wilc_vif *vif, enum scan_event enuEvent);
++static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event enuEvent);
+ static void host_if_work(struct work_struct *work);
+ 
+ /*!
+@@ -847,7 +847,7 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ ERRORHANDLER:
+ 	if (result) {
+ 		del_timer(&hif_drv->scan_timer);
+-		Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
++		handle_scan_done(vif, SCAN_EVENT_ABORTED);
+ 	}
+ 
+ 	kfree(scan_info->ch_freq_list);
+@@ -863,8 +863,8 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 	return result;
+ }
+ 
+-static s32 Handle_ScanDone(struct wilc_vif *vif,
+-			   enum scan_event enuEvent)
++static s32 handle_scan_done(struct wilc_vif *vif,
++			    enum scan_event enuEvent)
+ {
+ 	s32 result = 0;
+ 	u8 u8abort_running_scan;
+@@ -1461,7 +1461,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 
+ 			if (hif_drv->usr_scan_req.scan_result) {
+ 				del_timer(&hif_drv->scan_timer);
+-				Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
++				handle_scan_done(vif, SCAN_EVENT_ABORTED);
+ 			}
+ 
+ 			strDisconnectNotifInfo.reason = 0;
+@@ -1509,7 +1509,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 			   (hif_drv->usr_scan_req.scan_result)) {
+ 			del_timer(&hif_drv->scan_timer);
+ 			if (hif_drv->usr_scan_req.scan_result)
+-				Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
++				handle_scan_done(vif, SCAN_EVENT_ABORTED);
+ 		}
+ 	}
+ 
+@@ -2526,7 +2526,7 @@ static void host_if_work(struct work_struct *work)
+ 		if (!wilc_wlan_get_num_conn_ifcs(wilc))
+ 			wilc_chip_sleep_manually(wilc);
+ 
+-		Handle_ScanDone(msg->vif, SCAN_EVENT_DONE);
++		handle_scan_done(msg->vif, SCAN_EVENT_DONE);
+ 
+ 		if (msg->vif->hif_drv->remain_on_ch_pending)
+ 			Handle_RemainOnChan(msg->vif,
+@@ -2568,7 +2568,7 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_SCAN_TIMER_FIRED:
+-		Handle_ScanDone(msg->vif, SCAN_EVENT_ABORTED);
++		handle_scan_done(msg->vif, SCAN_EVENT_ABORTED);
+ 		break;
+ 
+ 	case HOST_IF_MSG_CONNECT_TIMER_FIRED:
+-- 
+2.7.4
