@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.uni-rostock.de ([139.30.22.72]:49351 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S935239AbeAOOsJ (ORCPT
+Received: from gateway34.websitewelcome.com ([192.185.149.222]:38579 "EHLO
+        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754507AbeASAlw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 09:48:09 -0500
-Subject: Re: [PATCH v3 4/5] mac80211_hwsim: add permanent mac address option
- for new radios
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
- <6596c1d9-da4f-4d83-bd5e-5e276391a0c9@MAIL2.uni-rostock.de>
- <1516018472.410.16.camel@sipsolutions.net>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Message-ID: <3dd7a66e-1b55-0300-b04e-489ed1163b96@uni-rostock.de> (sfid-20180115_154813_477042_131AC723)
-Date: Mon, 15 Jan 2018 15:48:06 +0100
+        Thu, 18 Jan 2018 19:41:52 -0500
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway34.websitewelcome.com (Postfix) with ESMTP id 735DB40F801
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2018 17:54:29 -0600 (CST)
+Date: Thu, 18 Jan 2018 17:54:28 -0600
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Michael Buesch <m@bues.ch>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] ssb: return boolean instead of integer in
+ ssb_dma_translation_special_bit
+Message-ID: <20180118235428.GA25892@embeddedor.com> (sfid-20180119_014157_544233_CEFD06B9)
 MIME-Version: 1.0
-In-Reply-To: <1516018472.410.16.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 15.01.2018 um 13:14 schrieb Johannes Berg:
-> On Wed, 2018-01-10 at 17:42 +0100, Benjamin Beichler wrote:
->> =20
->> +	if (info->attrs[HWSIM_ATTR_PERM_ADDR]) {
->> +		if (nla_len(info->attrs[HWSIM_ATTR_PERM_ADDR]) !=3D ETH_ALEN) {
->> +			pr_debug("mac80211_hwsim: MAC has wrong size\n");
->> +			return -EINVAL;
->> +		}
-> Oh, also - don't do this.
->
-> 1) don't print, use NL_SET_ERR_MSG().
-Ok, I only adapted the code already there, but I change this.
->
-> 2) use the policy to validate lengths
-Yeah, of course I change that, much easier -.-
+Return statements in functions returning bool should use
+true/false instead of 1/0.
 
->
->> +		if (!is_local_ether_addr(
->> +				nla_data(info->attrs[HWSIM_ATTR_PERM_ADDR]))) {
->> +			pr_debug("mac80211_hwsim: MAC is not locally administered\n");
->> +			return -EINVAL;
->> +		}
-> This doesn't really matter - it's purely virtual. I think we can avoid
-> that.
->
->> +		if (get_hwsim_data_ref_from_addr(
->> +				nla_data(info->attrs[HWSIM_ATTR_PERM_ADDR]))) {
->> +			pr_debug("mac80211_hwsim: perm MAC already in use\n");
->> +			return -EINVAL;
->> +		}
-> This is racy afaict - remove it and return a clash later when you fail
-> to insert the new radio.
-Ehm yes, actually exactly this test is already in the rhashtable patch.
-But maybe I should also change there the error print to a NL_ERR_MSG() ?
+This issue was detected with the help of Coccinelle.
 
->
-> johannes
->
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+---
+ drivers/ssb/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---=20
-M.Sc. Benjamin Beichler
-
-Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
-chnik
-Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
-
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Stra=C3=9Fe 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 65420a9..fdb89b6 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -1116,7 +1116,7 @@ static bool ssb_dma_translation_special_bit(struct ssb_device *dev)
+ 			chip_id == 43231 || chip_id == 43222);
+ 	}
+ 
+-	return 0;
++	return false;
+ }
+ 
+ u32 ssb_dma_translation(struct ssb_device *dev)
+-- 
+2.7.4
