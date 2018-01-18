@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:46813 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754631AbeARJFw (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:33243 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932124AbeARPRv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 04:05:52 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v2 05/10] rtlwifi: enable mac80211 fast-tx support
-Date: Thu, 18 Jan 2018 09:05:30 +0000
-Message-ID: <1516266330.3990.6.camel@realtek.com> (sfid-20180118_100603_223703_9D434BFD)
-References: <20180111070932.9929-1-pkshih@realtek.com>
-         <20180111070932.9929-6-pkshih@realtek.com>
-         <871sip24fc.fsf@purkki.adurom.net> <5A5E5C99.5020607@broadcom.com>
-         (sfid-20180116_211216_753091_08EEF52B)
- <1516141444.410.52.camel@sipsolutions.net>
-In-Reply-To: <1516141444.410.52.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        Thu, 18 Jan 2018 10:17:51 -0500
+Received: by mail-io0-f178.google.com with SMTP id n7so8722193iob.0
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2018 07:17:51 -0800 (PST)
+From: Kyle Evans <kvans32@gmail.com>
+Date: Thu, 18 Jan 2018 12:50:24 -0500
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kyle Evans <kvans32@gmail.com>, linux-wireless@vger.kernel.org
+Subject: sdio failure to initialize on warm boot.
+Message-ID: <20180118172804.GA1170@localhost.localdomain> (sfid-20180118_161805_608081_9D86A826)
+References: <7c73dc36-5b7a-729e-4656-b45839c1360d@gmail.com>
+ <5A55D325.60805@broadcom.com>
+ <3842a299-cd14-65db-1222-6849bc95ef74@gmail.com>
+ <5A59CF17.6040706@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5A59CF17.6040706@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE4LTAxLTE2IGF0IDIzOjI0ICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBPbiBUdWUsIDIwMTgtMDEtMTYgYXQgMjE6MTIgKzAxMDAsIEFyZW5kIHZhbiBTcHJpZWwgd3Jv
-dGU6DQo+ID4gDQo+ID4gDQo+ID4gV2hlbiBJIHNhdyB0aGlzIGZseWluZyBieSBJIGhhZCB0aGUg
-c2FtZSBmZWVsaW5nLiBUaGlzIGlzIGNsZWFybHkNCj4gPiBub3TCoA0KPiA+IGhvdyBpdCB3YXMg
-aW50ZW5kZWQgYWx0aG91Z2ggeW91IGNvdWxkIGludGVycHJldCB0aGUgY29tbWVudHMgb2YNCj4g
-PiB0aGXCoA0KPiA+IC5zZXRfZnJhZ190aHJlc2hvbGQoKSBjYWxsYmFjayBhbmQgSUVFRTgwMjEx
-X0hXX1NVUFBPUlRTX1RYX0ZSQUcuwqANCj4gPiBIb3dldmVyLCB0aGUgZnJhZ21lbnRhdGlvbiB0
-aHJlc2hvbGQgaXMgYSB1c2VyLWNvbmZpZ3VyYWJsZSBzdGFja8KgDQo+ID4gcGFyYW1ldGVyIGFz
-IHBlciB0aGUgc3RhbmRhcmQuIFRoaXMgcGF0Y2ggZWZmZWN0aXZlbHkga2lsbCB0aGF0DQo+ID4g
-b3B0aW9uwqANCj4gPiBmb3IgdGhlIHVzZXIgYWx0aG91Z2ggdGhlcmUgbWF5IGJlIFJGIGNvbmRp
-dGlvbnMgaW4gd2hpY2gNCj4gPiBmcmFnbWVudGF0aW9uwqANCj4gPiBjYW4gaGVscC4gSGF2aW5n
-IHRoZSB1c2VyIGNvbmZpZ3VyZSBhIGZyYWdtZW50YXRpb24gdGhyZXNob2xkIG9mDQo+ID4gMjM0
-NsKgDQo+ID4gYWxzbyBkaXNhYmxlcyBmcmFnbWVudGF0aW9uIGFuZCBhbGxvd3MgbWFjODAyMTEg
-dG8gdXNlIGNhY2hlZA0KPiA+IGZhc3RwYXRoLg0KPiA+IA0KPiDCoMKgwqDCoMKgwqDCoMKgLyog
-ZmFzdC14bWl0IGRvZXNuJ3QgaGFuZGxlIGZyYWdtZW50YXRpb24gYXQgYWxsICovDQo+IMKgwqDC
-oMKgwqDCoMKgwqBpZiAobG9jYWwtPmh3LndpcGh5LT5mcmFnX3RocmVzaG9sZCAhPSAodTMyKS0x
-ICYmDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCFpZWVlODAyMTFfaHdfY2hlY2soJmxvY2Fs
-LT5odywgU1VQUE9SVFNfVFhfRlJBRykpDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgZ290byBvdXQ7DQo+IA0KDQpUaGFuayB5b3UgZm9yIHRoaXMgcG9pbnQuIFRoaXMgY29tbWl0
-IGhhcyBub3QgdG8gc2V0IFNVUFBPUlRTX1RYX0ZSQUcswqANCmJ1dCBvbmx5IHNldCBTVVBQT1JU
-X0ZBU1RfWE1JVC4gSSdsbCB0ZXN0IGFuZCBwcmVwYXJlIGZvciBuZXh0wqANCnN1Ym1pc3Npb24u
-DQoNClBLDQoNCg==
+* Arend van Spriel <arend.vanspriel@broadcom.com>:
+> On 1/12/2018 9:18 PM, Kyle Evans wrote:
+> > 2) After reboot I get this nasty error...
+> > [    0.000000] Kernel command line: console=tty0 selinux=0
+> > video=1280x800 root=/dev/mmcblk1p1 brcmfmac.bebug=0x20000
+> > [    2.269750] mmc0: Invalid maximum block size, assuming 512 bytes
+> > [    2.330010] mmc0: SDHCI controller on c8000000.sdhci [c8000000.sdhci]
+> > using ADMA
+> > [    2.645242] mmc0: error -110 whilst initialising SDIO card
+> 
+> Ok. I suppose you mean a warm reboot. So I suppose the card is not 
+> properly power cycled. If your SDHCI controller driver (is it 
+> sdhci-acpi?) is loaded as a module, you could try to unload it and load 
+> it again. Let me know if that works for you to confirm my guess.
+
+Your guess is correct. The following brings up wifi after failure to do 
+so during warm boot.
+
+modprobe -r sdhci-tegra; modprobe sdhci-tegra;
+
+-Kyle
