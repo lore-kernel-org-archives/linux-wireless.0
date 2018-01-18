@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:46058 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:53724 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751096AbeAVNPI (ORCPT
+        with ESMTP id S1754962AbeARKJv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 08:15:08 -0500
+        Thu, 18 Jan 2018 05:09:51 -0500
+Message-ID: <1516270185.410.56.camel@sipsolutions.net> (sfid-20180118_110955_624415_05AAD7C1)
+Subject: Re: [PATCH v2 05/10] rtlwifi: enable mac80211 fast-tx support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2018-01-22
-Date: Mon, 22 Jan 2018 14:15:00 +0100
-Message-Id: <20180122131501.21953-1-johannes@sipsolutions.net> (sfid-20180122_141516_248512_74F61848)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Pkshih <pkshih@realtek.com>,
+        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+Cc: =?UTF-8?Q?=E8=8E=8A=E5=BD=A5=E5=AE=A3?= <yhchuang@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+Date: Thu, 18 Jan 2018 11:09:45 +0100
+In-Reply-To: <1516266330.3990.6.camel@realtek.com>
+References: <20180111070932.9929-1-pkshih@realtek.com>
+         <20180111070932.9929-6-pkshih@realtek.com>
+         <871sip24fc.fsf@purkki.adurom.net> <5A5E5C99.5020607@broadcom.com>
+         (sfid-20180116_211216_753091_08EEF52B) <1516141444.410.52.camel@sipsolutions.net>
+         <1516266330.3990.6.camel@realtek.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Thu, 2018-01-18 at 09:05 +0000, Pkshih wrote:
+> 
+> >         /* fast-xmit doesn't handle fragmentation at all */
+> >         if (local->hw.wiphy->frag_threshold != (u32)-1 &&
+> >             !ieee80211_hw_check(&local->hw, SUPPORTS_TX_FRAG))
+> >                 goto out;
+> > 
+> 
+> Thank you for this point. This commit has not to set SUPPORTS_TX_FRAG, 
+> but only set SUPPORT_FAST_XMIT. I'll test and prepare for next 
+> submission.
 
-A few more (only four, really) changes have come in, so I figured
-since the merge window hasn't opened yesterday, I'd still send them
-to you.
+But the point is that you *shouldn't* set SUPPORTS_TX_FRAG, and then
+fast-xmit will only get used for non-fragmented setups, which
+realistically is all anyone cares about anyway.
 
-Please pull and let me know if there's any problem.
-
-Thanks,
 johannes
-
-
-
-The following changes since commit 564737f981fb4b4b3266901508bb9b90d9d43de8:
-
-  Merge branch '10GbE' of git://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/next-queue (2018-01-14 12:25:04 -0500)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2018-01-22
-
-for you to fetch changes up to 0ddcff49b672239dda94d70d0fcf50317a9f4b51:
-
-  mac80211_hwsim: fix possible memory leak in hwsim_new_radio_nl() (2018-01-22 14:03:29 +0100)
-
-----------------------------------------------------------------
-Less than a handful of changes:
- * possible memory leak fix in hwsim
- * speed up hwsim
- * add hwsim userspace rate control API
- * code cleanups
-
-----------------------------------------------------------------
-Benjamin Beichler (2):
-      mac80211_hwsim: add hashtable with mac address keys for faster lookup
-      mac80211_hwsim: add hwsim_tx_rate_flags to netlink attributes
-
-Christopher Díaz Riveros (1):
-      debugfs_sta: Remove unneeded semicolons
-
-weiyongjun (A) (1):
-      mac80211_hwsim: fix possible memory leak in hwsim_new_radio_nl()
-
- drivers/net/wireless/mac80211_hwsim.c | 95 ++++++++++++++++++++++++++++-------
- drivers/net/wireless/mac80211_hwsim.h | 68 ++++++++++++++++++++++++-
- net/mac80211/debugfs_sta.c            |  4 +-
- 3 files changed, 146 insertions(+), 21 deletions(-)
