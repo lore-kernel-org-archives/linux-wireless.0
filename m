@@ -1,174 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0084.outbound.protection.outlook.com ([104.47.38.84]:56768
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751156AbeAVMrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 07:47:12 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: [PATCH 09/11] qtnfmac: do not use mutexes in timer context
-Date: Mon, 22 Jan 2018 15:46:32 +0300
-Message-Id: <20180122124634.8430-10-sergey.matyukevich.os@quantenna.com> (sfid-20180122_134718_804294_A9134CA3)
-In-Reply-To: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
-References: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:58562 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750841AbeARRFm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 12:05:42 -0500
+Date: Thu, 18 Jan 2018 17:05:47 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Alan Cox <alan.cox@intel.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
+        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Alan Cox <alan@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative
+ execution
+Message-ID: <20180118170547.GF12394@arm.com> (sfid-20180118_180604_276882_713361FA)
+References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CA+55aFzNQ8CZ8iNcPXrCfyk=1edMiRGDA0fY0rd87BsFKBxgAw@mail.gmail.com>
+ <CAPcyv4gPcV7MRumSJNz6nDw=HhKO4MK2QqKbj4uc_6APsSFr+g@mail.gmail.com>
+ <20180118131837.GA20783@arm.com>
+ <CAPcyv4gPLx74CAHGGrC3R-fgrh0vUmCbLNXZ0f7PTiKi0f+hCQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPcyv4gPLx74CAHGGrC3R-fgrh0vUmCbLNXZ0f7PTiKi0f+hCQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+On Thu, Jan 18, 2018 at 08:58:08AM -0800, Dan Williams wrote:
+> On Thu, Jan 18, 2018 at 5:18 AM, Will Deacon <will.deacon@arm.com> wrote:
+> > On Thu, Jan 11, 2018 at 05:41:08PM -0800, Dan Williams wrote:
+> >> On Thu, Jan 11, 2018 at 5:19 PM, Linus Torvalds
+> >> <torvalds@linux-foundation.org> wrote:
+> >> > On Thu, Jan 11, 2018 at 4:46 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> >> >>
+> >> >> This series incorporates Mark Rutland's latest ARM changes and adds
+> >> >> the x86 specific implementation of 'ifence_array_ptr'. That ifence
+> >> >> based approach is provided as an opt-in fallback, but the default
+> >> >> mitigation, '__array_ptr', uses a 'mask' approach that removes
+> >> >> conditional branches instructions, and otherwise aims to redirect
+> >> >> speculation to use a NULL pointer rather than a user controlled value.
+> >> >
+> >> > Do you have any performance numbers and perhaps example code
+> >> > generation? Is this noticeable? Are there any microbenchmarks showing
+> >> > the difference between lfence use and the masking model?
+> >>
+> >> I don't have performance numbers, but here's a sample code generation
+> >> from __fcheck_files, where the 'and; lea; and' sequence is portion of
+> >> array_ptr() after the mask generation with 'sbb'.
+> >>
+> >>         fdp = array_ptr(fdt->fd, fd, fdt->max_fds);
+> >>      8e7:       8b 02                   mov    (%rdx),%eax
+> >>      8e9:       48 39 c7                cmp    %rax,%rdi
+> >>      8ec:       48 19 c9                sbb    %rcx,%rcx
+> >>      8ef:       48 8b 42 08             mov    0x8(%rdx),%rax
+> >>      8f3:       48 89 fe                mov    %rdi,%rsi
+> >>      8f6:       48 21 ce                and    %rcx,%rsi
+> >>      8f9:       48 8d 04 f0             lea    (%rax,%rsi,8),%rax
+> >>      8fd:       48 21 c8                and    %rcx,%rax
+> >>
+> >>
+> >> > Having both seems good for testing, but wouldn't we want to pick one in the end?
+> >>
+> >> I was thinking we'd keep it as a 'just in case' sort of thing, at
+> >> least until the 'probably safe' assumption of the 'mask' approach has
+> >> more time to settle out.
+> >
+> > From the arm64 side, the only concern I have (and this actually applies to
+> > our CSDB sequence as well) is the calculation of the array size by the
+> > caller. As Linus mentioned at the end of [1], if the determination of the
+> > size argument is based on a conditional branch, then masking doesn't help
+> > because you bound within the wrong range under speculation.
+> >
+> > We ran into this when trying to use masking to protect our uaccess routines
+> > where the conditional bound is either KERNEL_DS or USER_DS. It's possible
+> > that a prior conditional set_fs(KERNEL_DS) could defeat the masking and so
+> > we'd need to throw some heavy barriers in set_fs to make it robust.
+> 
+> At least in the conditional mask case near set_fs() usage the approach
+> we are taking is to use a barrier. I.e. the following guidance from
+> Linus:
+> 
+> "Basically, the rule is trivial: find all 'stac' users, and use address
+> masking if those users already integrate the limit check, and lfence
+> they don't."
+> 
+> ...which translates to narrow the pointer for get_user() and use a
+> barrier  for __get_user().
 
-The function qtnf_scan_done makes use of mutexes which is wrong
-since it may be called from timer context. Move scan timeout
-handler from timer to deferred work.
+Great, that matches my thinking re set_fs but I'm still worried about
+finding all the places where the bound is conditional for other users
+of the macro. Then again, finding the places that need this macro in the
+first place is tough enough so perhaps analysing the bound calculation
+doesn't make it much worse.
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 15 +++--------
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.h | 19 -------------
- drivers/net/wireless/quantenna/qtnfmac/core.c     | 33 ++++++++++++++++++++++-
- drivers/net/wireless/quantenna/qtnfmac/core.h     |  3 ++-
- 4 files changed, 38 insertions(+), 32 deletions(-)
-
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index edebf23e8eae..0398bece5782 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -595,19 +595,13 @@ qtnf_del_station(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
- 
--static void qtnf_scan_timeout(struct timer_list *t)
--{
--	struct qtnf_wmac *mac = from_timer(mac, t, scan_timeout);
--
--	pr_warn("mac%d scan timed out\n", mac->macid);
--	qtnf_scan_done(mac, true);
--}
--
- static int
- qtnf_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- {
- 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 
-+	cancel_delayed_work_sync(&mac->scan_timeout);
-+
- 	mac->scan_req = request;
- 
- 	if (qtnf_cmd_send_scan(mac)) {
-@@ -616,9 +610,8 @@ qtnf_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 		return -EFAULT;
- 	}
- 
--	mac->scan_timeout.function = qtnf_scan_timeout;
--	mod_timer(&mac->scan_timeout,
--		  jiffies + QTNF_SCAN_TIMEOUT_SEC * HZ);
-+	queue_delayed_work(mac->bus->workqueue, &mac->scan_timeout,
-+			   QTNF_SCAN_TIMEOUT_SEC * HZ);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-index 66db26613b1f..b73425122a10 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.h
-@@ -28,23 +28,4 @@ void qtnf_band_init_rates(struct ieee80211_supported_band *band);
- void qtnf_band_setup_htvht_caps(struct qtnf_mac_info *macinfo,
- 				struct ieee80211_supported_band *band);
- 
--static inline void qtnf_scan_done(struct qtnf_wmac *mac, bool aborted)
--{
--	struct cfg80211_scan_info info = {
--		.aborted = aborted,
--	};
--
--	if (timer_pending(&mac->scan_timeout))
--		del_timer_sync(&mac->scan_timeout);
--
--	mutex_lock(&mac->mac_lock);
--
--	if (mac->scan_req) {
--		cfg80211_scan_done(mac->scan_req, &info);
--		mac->scan_req = NULL;
--	}
--
--	mutex_unlock(&mac->mac_lock);
--}
--
- #endif /* _QTN_FMAC_CFG80211_H_ */
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index b1344d0731d7..cf26c15a84f8 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -311,6 +311,37 @@ static void qtnf_mac_init_primary_intf(struct qtnf_wmac *mac)
- 	vif->cons_tx_timeout_cnt = 0;
- }
- 
-+static void qtnf_mac_scan_finish(struct qtnf_wmac *mac, bool aborted)
-+{
-+	struct cfg80211_scan_info info = {
-+		.aborted = aborted,
-+	};
-+
-+	mutex_lock(&mac->mac_lock);
-+
-+	if (mac->scan_req) {
-+		cfg80211_scan_done(mac->scan_req, &info);
-+		mac->scan_req = NULL;
-+	}
-+
-+	mutex_unlock(&mac->mac_lock);
-+}
-+
-+void qtnf_scan_done(struct qtnf_wmac *mac, bool aborted)
-+{
-+	cancel_delayed_work_sync(&mac->scan_timeout);
-+	qtnf_mac_scan_finish(mac, aborted);
-+}
-+
-+static void qtnf_mac_scan_timeout(struct work_struct *work)
-+{
-+	struct qtnf_wmac *mac =
-+		container_of(work, struct qtnf_wmac, scan_timeout.work);
-+
-+	pr_warn("MAC%d: scan timed out\n", mac->macid);
-+	qtnf_mac_scan_finish(mac, true);
-+}
-+
- static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
- 					     unsigned int macid)
- {
-@@ -334,7 +365,7 @@ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
- 		mac->iflist[i].vifid = i;
- 		qtnf_sta_list_init(&mac->iflist[i].sta_list);
- 		mutex_init(&mac->mac_lock);
--		timer_setup(&mac->scan_timeout, NULL, 0);
-+		INIT_DELAYED_WORK(&mac->scan_timeout, qtnf_mac_scan_timeout);
- 		mac->iflist[i].stats64 =
- 			netdev_alloc_pcpu_stats(struct pcpu_sw_netstats);
- 		if (!mac->iflist[i].stats64)
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index 29f38bd3b491..3b884c80b6ab 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -133,7 +133,7 @@ struct qtnf_wmac {
- 	struct qtnf_vif iflist[QTNF_MAX_INTF];
- 	struct cfg80211_scan_request *scan_req;
- 	struct mutex mac_lock;	/* lock during wmac speicific ops */
--	struct timer_list scan_timeout;
-+	struct delayed_work scan_timeout;
- };
- 
- struct qtnf_hw_info {
-@@ -168,6 +168,7 @@ void qtnf_update_tx_stats(struct net_device *ndev, const struct sk_buff *skb);
- void qtnf_virtual_intf_cleanup(struct net_device *ndev);
- 
- void qtnf_netdev_updown(struct net_device *ndev, bool up);
-+void qtnf_scan_done(struct qtnf_wmac *mac, bool aborted);
- 
- static inline struct qtnf_vif *qtnf_netdev_get_priv(struct net_device *dev)
- {
--- 
-2.11.0
+Will
