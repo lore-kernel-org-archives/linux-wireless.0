@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47672 "EHLO mx2.suse.de"
+Received: from smtp.gentoo.org ([140.211.166.183]:42534 "EHLO smtp.gentoo.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752087AbeAETNq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Jan 2018 14:13:46 -0500
-Date: Fri, 5 Jan 2018 20:13:45 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Jelle van der Waa <jelle@vdwaa.nl>
-Cc: "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        id S1755820AbeARNbx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 08:31:53 -0500
+From: =?UTF-8?q?Christopher=20D=C3=ADaz=20Riveros?= <chrisadr@gentoo.org>
+To: johannes@sipsolutions.net, davem@davemloft.net
+Cc: =?UTF-8?q?Christopher=20D=C3=ADaz=20Riveros?= <chrisadr@gentoo.org>,
         linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] crda: Fix error: =?utf-8?Q?`ke?= =?utf-8?B?eXPigJk=?=
- defined but not used
-Message-ID: <20180105191345.GE22430@wotan.suse.de> (sfid-20180105_201350_226288_239F5A5A)
-References: <20171204205239.6296-1-jelle@vdwaa.nl>
+Subject: [PATCH-next] mac80211: Remove unneeded semicolons
+Date: Thu, 18 Jan 2018 08:31:05 -0500
+Message-Id: <20180118133105.26432-1-chrisadr@gentoo.org> (sfid-20180118_143156_729962_5E84D29B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20171204205239.6296-1-jelle@vdwaa.nl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 04, 2017 at 09:52:39PM +0100, Jelle van der Waa wrote:
-> Fix error: ‘keys’ defined but not used [-Werror=unused-const-variable=]
-> by informing GCC keys is unused.
-> 
-> Signed-off-by: Jelle van der Waa <jelle@vdwaa.nl>
+Trivial fix removes unneeded semicolons after switch blocks.
 
-Thanks, applied and pushed! Although this just fixes a compilation
-warning, but since we do use -Werror and thus force any error to
-fail compilation I've pushed out a new release with this fix
-merged as v4.14.
+This issue was detected by using the Coccinelle software.
 
-If a new tarball is not kicked off soon [0] automatically I'll poke and see to
-it. Note that as of kernel v4.15 (as of commit 007f6c5e6eb45 ("cfg80211:
-support loading regulatory database as firmware file" we have the ability
-now for the kernel to do this file lookup for us first, and only if
-that fails will CRDA kick in.
+Signed-off-by: Christopher Díaz Riveros <chrisadr@gentoo.org>
+---
+ net/mac80211/debugfs_sta.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-[0] https://www.kernel.org/pub/software/network/crda/
-
-  Luis
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index b15412c21ac9..444ea8d127fe 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -420,7 +420,7 @@ static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
+ 		default:
+ 			p += scnprintf(p, sizeof(buf) + buf - p,
+ 				       "\t\tMAX-MPDU-UNKNOWN\n");
+-		};
++		}
+ 		switch (vhtc->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
+ 		case 0:
+ 			p += scnprintf(p, sizeof(buf) + buf - p,
+@@ -438,7 +438,7 @@ static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
+ 			p += scnprintf(p, sizeof(buf) + buf - p,
+ 				       "\t\tUNKNOWN-MHZ: 0x%x\n",
+ 				       (vhtc->cap >> 2) & 0x3);
+-		};
++		}
+ 		PFLAG(RXLDPC, "RXLDPC");
+ 		PFLAG(SHORT_GI_80, "SHORT-GI-80");
+ 		PFLAG(SHORT_GI_160, "SHORT-GI-160");
+-- 
+2.15.1
