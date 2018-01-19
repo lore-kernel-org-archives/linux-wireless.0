@@ -1,45 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:42660 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753247AbeADPTD (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:13666 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755192AbeASLUP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jan 2018 10:19:03 -0500
-Date: Thu, 4 Jan 2018 16:18:53 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
-        Christoph Hellwig <hch@lst.de>,
-        John Stultz <john.stultz@linaro.org>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH v4 31/36] mac80211_hwsim: Replace hrtimer tasklet with
- softirq hrtimer
-In-Reply-To: <1515078757.10342.33.camel@sipsolutions.net>
-Message-ID: <alpine.DEB.2.20.1801041617340.1771@nanos> (sfid-20180104_161949_698704_C4957562)
-References: <20171221104205.7269-1-anna-maria@linutronix.de>  <20171221104205.7269-32-anna-maria@linutronix.de> <1515078757.10342.33.camel@sipsolutions.net>
+        Fri, 19 Jan 2018 06:20:15 -0500
+Subject: Re: [PATCH 05/14] staging: wilc1000: rename camelCase used in
+ Handle_DelAllSta() and its variable
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>
+References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+ <1516281432-7724-6-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <6740516d-1960-7669-0412-6a1f2cea686a@microchip.com> (sfid-20180119_122019_107661_93C9F088)
+Date: Fri, 19 Jan 2018 13:20:11 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1516281432-7724-6-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 4 Jan 2018, Johannes Berg wrote:
 
-> On Thu, 2017-12-21 at 11:42 +0100, Anna-Maria Gleixner wrote:
-> > From: Thomas Gleixner <tglx@linutronix.de>
-> > 
-> > Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
+
+On 18.01.2018 15:17, Ajay Singh wrote:
+> fix "Avoid camelCase" issue reported by checkpatch.pl script.
 > 
-> I've pointed out before that this should say HRTIMER_MODE_REL_SOFT.
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
+>  1 file changed, 12 insertions(+), 12 deletions(-)
 > 
-> Anyway, since it still doesn't apply on my tree, somebody else will
-> have to pick it up.
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 9f6365a..1ac079a 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -2123,34 +2123,34 @@ static void Handle_AddStation(struct wilc_vif *vif,
+>  	kfree(wid.val);
+>  }
+>  
+> -static void Handle_DelAllSta(struct wilc_vif *vif,
+> -			     struct del_all_sta *pstrDelAllStaParam)
+> +static void handle_del_all_sta(struct wilc_vif *vif,
+> +			       struct del_all_sta *param)
+>  {
+>  	s32 result = 0;
+>  	struct wid wid;
+> -	u8 *pu8CurrByte;
+> +	u8 *curr_byte;
+>  	u8 i;
+> -	u8 au8Zero_Buff[6] = {0};
+> +	u8 zero_buff[6] = {0};
+>  
+>  	wid.id = (u16)WID_DEL_ALL_STA;
+>  	wid.type = WID_STR;
+> -	wid.size = (pstrDelAllStaParam->assoc_sta * ETH_ALEN) + 1;
+> +	wid.size = (param->assoc_sta * ETH_ALEN) + 1;
+>  
+> -	wid.val = kmalloc((pstrDelAllStaParam->assoc_sta * ETH_ALEN) + 1, GFP_KERNEL);
+> +	wid.val = kmalloc((param->assoc_sta * ETH_ALEN) + 1, GFP_KERNEL);
+>  	if (!wid.val)
+>  		goto ERRORHANDLER;
+>  
+> -	pu8CurrByte = wid.val;
+> +	curr_byte = wid.val;
+>  
+> -	*(pu8CurrByte++) = pstrDelAllStaParam->assoc_sta;
+> +	*(curr_byte++) = param->assoc_sta;
+>  
+>  	for (i = 0; i < MAX_NUM_STA; i++) {
+> -		if (memcmp(pstrDelAllStaParam->del_all_sta[i], au8Zero_Buff, ETH_ALEN))
+> -			memcpy(pu8CurrByte, pstrDelAllStaParam->del_all_sta[i], ETH_ALEN);> +		if (memcmp(param->del_all_sta[i], zero_buff, ETH_ALEN))
+For future, you could use is_zero_ether_addr() if you ensure
+pstrDelAllStaParam->del_all_sta[i] is alligned to u16.
 
-Yes. I'm going to do that or decide to postpone the conversion
-patches. Have not yet thought about it as I was distracted for the last 2
-month by something unpleasant....
-
-Thanks,
-
-	tglx
+> +			memcpy(curr_byte, param->del_all_sta[i], ETH_ALEN);
+>  		else
+>  			continue;
+>  
+> -		pu8CurrByte += ETH_ALEN;
+> +		curr_byte += ETH_ALEN;
+>  	}
+>  
+>  	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+> @@ -2626,7 +2626,7 @@ static void host_if_work(struct work_struct *work)
+>  		break;
+>  
+>  	case HOST_IF_MSG_DEL_ALL_STA:
+> -		Handle_DelAllSta(msg->vif, &msg->body.del_all_sta_info);
+> +		handle_del_all_sta(msg->vif, &msg->body.del_all_sta_info);
+>  		break;
+>  
+>  	case HOST_IF_MSG_SET_TX_POWER:
+> 
