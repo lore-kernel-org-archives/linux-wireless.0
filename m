@@ -1,801 +1,289 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36910 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751454AbeAaMBb (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18602 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932284AbeASPhX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 07:01:31 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Subject: [PATCH] ath10k: Add sta rx packet stats per tid
-Date: Wed, 31 Jan 2018 17:31:12 +0530
-Message-Id: <1517400072-9204-1-git-send-email-vthiagar@codeaurora.org> (sfid-20180131_130138_640048_6FABE223)
+        Fri, 19 Jan 2018 10:37:23 -0500
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codaurora.org>,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 6/8] wil6210: fix random failure to bring network interface up
+Date: Fri, 19 Jan 2018 17:37:02 +0200
+Message-Id: <1516376224-13976-7-git-send-email-merez@codeaurora.org> (sfid-20180119_163738_439879_AAB03B33)
+In-Reply-To: <1516376224-13976-1-git-send-email-merez@codeaurora.org>
+References: <1516376224-13976-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added per tid sta counters for the following
+From: Lior David <liord@codeaurora.org>
 
-- Total number MSDUs received from firmware
-- Number of MSDUs received with errors like decryption, crc, mic ,etc.
-- Number of MSDUs dropped in the driver
-- A-MPDU/A-MSDU subframe stats
-- Number of MSDUS passed to mac80211
+Currently when we want to bring the interface up, we first
+reset the device which causes the boot loader to run. Then
+we halt the device CPU, load FW image and resume the device
+CPU.
+There are some boot loader versions which perform redundant
+memory accesses even when idle. Halting the device CPU
+while boot loader access memory can cause the device memory
+controller to get stuck, the FW will fail to load and the
+network interface will not come up.
+For such boot loaders implement a workaround where we freeze
+the boot loader before halting the device CPU, so it will not
+perform any memory accesses.
 
-All stats other than A-MPDU stats are only for received data frames.
-A-MPDU stats might have stats for management frames when monitor
-interface is active where management frames are notified both in wmi
-and HTT interfaces.
-
-These per tid stats can be enabled with tid bitmask through a debugfs
-like below
-
- echo <tid_bitmask> > /sys/kernel/debug/ieee80211/phyX/ath10k/sta_tid_stats_mask
-
- tid 16 (tid_bitmask 0x10000) is used for non-qos data/management frames
-
-The stats are read from
-/sys/kernel/debug/ieee80211/phyX/netdev\:wlanX/stations/<sta_mac>/dump_tid_stats
-
-Sample output:
-
- To enable rx stats for tid 0, 5 and 6,
-
- echo 0x00000061 > /sys/kernel/debug/ieee80211/phy0/ath10k/sta_tid_stats_mask
-
-cat /sys/kernel/debug/ieee80211/phy0/netdev\:wlan15/stations/8c\:fd\:f0\:0a\:8e\:df/dump_tid_stats
-
-  		Driver Rx pkt stats per tid, ([tid] count)
-                ------------------------------------------
-MSDUs from FW                   [00] 2567        [05] 3178        [06] 1089
-MSDUs unchained                 [00] 0           [05] 0           [06] 0
-MSDUs locally dropped:chained   [00] 0           [05] 0           [06] 0
-MSDUs locally dropped:filtered  [00] 0           [05] 0           [06] 0
-MSDUs queued for mac80211       [00] 2567        [05] 3178        [06] 1089
-MSDUs with error:fcs_err        [00] 0           [05] 0           [06] 2
-MSDUs with error:tkip_err       [00] 0           [05] 0           [06] 0
-MSDUs with error:crypt_err      [00] 0           [05] 0           [06] 0
-MSDUs with error:peer_idx_inval [00] 0           [05] 0           [06] 0
-
-A-MPDU num subframes upto 10    [00] 2567        [05] 3178        [06] 1087
-A-MPDU num subframes 11-20      [00] 0           [05] 0           [06] 0
-A-MPDU num subframes 21-30      [00] 0           [05] 0           [06] 0
-A-MPDU num subframes 31-40      [00] 0           [05] 0           [06] 0
-A-MPDU num subframes 41-50      [00] 0           [05] 0           [06] 0
-A-MPDU num subframes 51-60      [00] 0           [05] 0           [06] 0
-A-MPDU num subframes >60        [00] 0           [05] 0           [06] 0
-
-A-MSDU num subframes 1          [00] 2567        [05] 3178        [06] 1089
-A-MSDU num subframes 2          [00] 0           [05] 0           [06] 0
-A-MSDU num subframes 3          [00] 0           [05] 0           [06] 0
-A-MSDU num subframes 4          [00] 0           [05] 0           [06] 0
-A-MSDU num subframes >4         [00] 0           [05] 0           [06] 0
-
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/core.h        |  45 ++++
- drivers/net/wireless/ath/ath10k/debug.c       |  48 +++++
- drivers/net/wireless/ath/ath10k/debug.h       |  31 +++
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 286 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/htt_rx.c      |  71 ++++++-
- 5 files changed, 471 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/wil6210/boot_loader.h |   9 ++-
+ drivers/net/wireless/ath/wil6210/main.c        | 101 ++++++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c    |   8 ++
+ drivers/net/wireless/ath/wil6210/wil6210.h     |   3 +
+ drivers/net/wireless/ath/wil6210/wmi.c         |  18 +++++
+ 5 files changed, 137 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index fe6b30356d3b..c624b96f8b84 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
+diff --git a/drivers/net/wireless/ath/wil6210/boot_loader.h b/drivers/net/wireless/ath/wil6210/boot_loader.h
+index c131b5e..d32c1f4 100644
+--- a/drivers/net/wireless/ath/wil6210/boot_loader.h
++++ b/drivers/net/wireless/ath/wil6210/boot_loader.h
+@@ -1,4 +1,5 @@
+ /* Copyright (c) 2015 Qualcomm Atheros, Inc.
 + * Copyright (c) 2018, The Linux Foundation. All rights reserved.
   *
   * Permission to use, copy, modify, and/or distribute this software for any
   * purpose with or without fee is hereby granted, provided that the above
-@@ -354,6 +355,45 @@ struct ath10k_txq {
- 	unsigned long num_push_allowed;
- };
+@@ -39,7 +40,8 @@ struct bl_dedicated_registers_v1 {
+ 	/* valid only for version 2 and above */
+ 	__le32  bl_assert_code;         /* 0x880A58 BL Assert code */
+ 	__le32  bl_assert_blink;        /* 0x880A5C BL Assert Branch */
+-	__le32  bl_reserved[22];        /* 0x880A60 - 0x880AB4 */
++	__le32  bl_shutdown_handshake;  /* 0x880A60 BL cleaner shutdown */
++	__le32  bl_reserved[21];        /* 0x880A64 - 0x880AB4 */
+ 	__le32  bl_magic_number;        /* 0x880AB8 BL Magic number */
+ } __packed;
  
-+enum ath10k_pkt_rx_err {
-+	ATH10K_PKT_RX_ERR_FCS,
-+	ATH10K_PKT_RX_ERR_TKIP,
-+	ATH10K_PKT_RX_ERR_CRYPT,
-+	ATH10K_PKT_RX_ERR_PEER_IDX_INVAL,
-+	ATH10K_PKT_RX_ERR_MAX,
-+};
-+
-+enum ath10k_ampdu_subfrm_num {
-+	ATH10K_AMPDU_SUBFRM_NUM_10,
-+	ATH10K_AMPDU_SUBFRM_NUM_20,
-+	ATH10K_AMPDU_SUBFRM_NUM_30,
-+	ATH10K_AMPDU_SUBFRM_NUM_40,
-+	ATH10K_AMPDU_SUBFRM_NUM_50,
-+	ATH10K_AMPDU_SUBFRM_NUM_60,
-+	ATH10K_AMPDU_SUBFRM_NUM_MORE,
-+	ATH10K_AMPDU_SUBFRM_NUM_MAX,
-+};
-+
-+enum ath10k_amsdu_subfrm_num {
-+	ATH10K_AMSDU_SUBFRM_NUM_1,
-+	ATH10K_AMSDU_SUBFRM_NUM_2,
-+	ATH10K_AMSDU_SUBFRM_NUM_3,
-+	ATH10K_AMSDU_SUBFRM_NUM_4,
-+	ATH10K_AMSDU_SUBFRM_NUM_MORE,
-+	ATH10K_AMSDU_SUBFRM_NUM_MAX,
-+};
-+
-+struct ath10k_sta_tid_stats {
-+	unsigned long int rx_pkt_from_fw;
-+	unsigned long int rx_pkt_unchained;
-+	unsigned long int rx_pkt_drop_chained;
-+	unsigned long int rx_pkt_drop_filter;
-+	unsigned long int rx_pkt_err[ATH10K_PKT_RX_ERR_MAX];
-+	unsigned long int rx_pkt_queued_for_mac;
-+	unsigned long int rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_MAX];
-+	unsigned long int rx_pkt_amsdu[ATH10K_AMSDU_SUBFRM_NUM_MAX];
-+};
-+
- struct ath10k_sta {
- 	struct ath10k_vif *arvif;
+@@ -58,4 +60,9 @@ struct bl_dedicated_registers_v0 {
+ 	u8	mac_address[6];			/* 0x880A4c BL mac address */
+ } __packed;
  
-@@ -371,6 +411,9 @@ struct ath10k_sta {
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	/* protected by conf_mutex */
- 	bool aggr_mode;
++/* bits for bl_shutdown_handshake */
++#define BL_SHUTDOWN_HS_GRTD		BIT(0)
++#define BL_SHUTDOWN_HS_RTD		BIT(1)
++#define BL_SHUTDOWN_HS_PROT_VER(x) WIL_GET_BITS(x, 28, 31)
 +
-+	/* Protected with ar->data_lock */
-+	struct ath10k_sta_tid_stats tid_stats[IEEE80211_NUM_TIDS + 1];
- #endif
- };
+ #endif /* BOOT_LOADER_EXPORT_H_ */
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index d95ff74..a6af486 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -638,6 +638,97 @@ void wil_priv_deinit(struct wil6210_priv *wil)
+ 	destroy_workqueue(wil->wmi_wq);
+ }
  
-@@ -1019,6 +1062,8 @@ struct ath10k {
- 
- 	void *ce_priv;
- 
-+	u32 sta_tid_stats_mask;
-+
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 6d836a26272f..df253f8a7779 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -2135,6 +2136,48 @@ static ssize_t ath10k_debug_fw_checksums_read(struct file *file,
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_sta_tid_stats_mask_read(struct file *file,
-+					      char __user *user_buf,
-+					      size_t count, loff_t *ppos)
++static void wil_shutdown_bl(struct wil6210_priv *wil)
 +{
-+	struct ath10k *ar = file->private_data;
-+	char buf[32];
-+	size_t len;
++	u32 val;
 +
-+	len = scnprintf(buf, sizeof(buf), "0x%08x\n", ar->sta_tid_stats_mask);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	wil_s(wil, RGF_USER_BL +
++	      offsetof(struct bl_dedicated_registers_v1,
++		       bl_shutdown_handshake), BL_SHUTDOWN_HS_GRTD);
++
++	usleep_range(100, 150);
++
++	val = wil_r(wil, RGF_USER_BL +
++		    offsetof(struct bl_dedicated_registers_v1,
++			     bl_shutdown_handshake));
++	if (val & BL_SHUTDOWN_HS_RTD) {
++		wil_dbg_misc(wil, "BL is ready for halt\n");
++		return;
++	}
++
++	wil_err(wil, "BL did not report ready for halt\n");
 +}
 +
-+static ssize_t ath10k_sta_tid_stats_mask_write(struct file *file,
-+					       const char __user *user_buf,
-+					       size_t count, loff_t *ppos)
++/* this format is used by ARC embedded CPU for instruction memory */
++static inline u32 ARC_me_imm32(u32 d)
 +{
-+	struct ath10k *ar = file->private_data;
-+	char buf[32];
-+	ssize_t len;
-+	u32 mask;
++	return ((d & 0xffff0000) >> 16) | ((d & 0x0000ffff) << 16);
++}
 +
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
++/* defines access to interrupt vectors for wil_freeze_bl */
++#define ARC_IRQ_VECTOR_OFFSET(N)	((N) * 8)
++/* ARC long jump instruction */
++#define ARC_JAL_INST			(0x20200f80)
 +
-+	buf[len] = '\0';
-+	if (kstrtoint(buf, 0, &mask))
++static void wil_freeze_bl(struct wil6210_priv *wil)
++{
++	u32 jal, upc, saved;
++	u32 ivt3 = ARC_IRQ_VECTOR_OFFSET(3);
++
++	jal = wil_r(wil, wil->iccm_base + ivt3);
++	if (jal != ARC_me_imm32(ARC_JAL_INST)) {
++		wil_dbg_misc(wil, "invalid IVT entry found, skipping\n");
++		return;
++	}
++
++	/* prevent the target from entering deep sleep
++	 * and disabling memory access
++	 */
++	saved = wil_r(wil, RGF_USER_USAGE_8);
++	wil_w(wil, RGF_USER_USAGE_8, saved | BIT_USER_PREVENT_DEEP_SLEEP);
++	usleep_range(20, 25); /* let the BL process the bit */
++
++	/* redirect to endless loop in the INT_L1 context and let it trap */
++	wil_w(wil, wil->iccm_base + ivt3 + 4, ARC_me_imm32(ivt3));
++	usleep_range(20, 25); /* let the BL get into the trap */
++
++	/* verify the BL is frozen */
++	upc = wil_r(wil, RGF_USER_CPU_PC);
++		wil_dbg_misc(wil, "BL freeze failed, PC=0x%08X\n", upc);
++
++	wil_w(wil, RGF_USER_USAGE_8, saved);
++}
++
++static void wil_bl_prepare_halt(struct wil6210_priv *wil)
++{
++	u32 tmp, ver;
++
++	/* before halting device CPU driver must make sure BL is not accessing
++	 * host memory. This is done differently depending on BL version:
++	 * 1. For very old BL versions the procedure is skipped
++	 * (not supported).
++	 * 2. For old BL version we use a special trick to freeze the BL
++	 * 3. For new BL versions we shutdown the BL using handshake procedure.
++	 */
++	tmp = wil_r(wil, RGF_USER_BL +
++		    offsetof(struct bl_dedicated_registers_v0,
++			     boot_loader_struct_version));
++	if (!tmp) {
++		wil_dbg_misc(wil, "old BL, skipping halt preperation\n");
++		return;
++	}
++
++	tmp = wil_r(wil, RGF_USER_BL +
++		    offsetof(struct bl_dedicated_registers_v1,
++			     bl_shutdown_handshake));
++	ver = BL_SHUTDOWN_HS_PROT_VER(tmp);
++
++	if (ver > 0)
++		wil_shutdown_bl(wil);
++	else
++		wil_freeze_bl(wil);
++}
++
+ static inline void wil_halt_cpu(struct wil6210_priv *wil)
+ {
+ 	wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
+@@ -685,11 +776,16 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 
+ 	wil_halt_cpu(wil);
+ 
+-	if (!no_flash)
++	if (!no_flash) {
+ 		/* clear all boot loader "ready" bits */
+ 		wil_w(wil, RGF_USER_BL +
+ 		      offsetof(struct bl_dedicated_registers_v0,
+ 			       boot_loader_ready), 0);
++		/* this should be safe to write even with old BLs */
++		wil_w(wil, RGF_USER_BL +
++		      offsetof(struct bl_dedicated_registers_v1,
++			       bl_shutdown_handshake), 0);
++	}
+ 	/* Clear Fw Download notification */
+ 	wil_c(wil, RGF_USER_USAGE_6, BIT(0));
+ 
+@@ -1156,6 +1252,9 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		wil_info(wil, "Use firmware <%s> + board <%s>\n",
+ 			 wil->wil_fw_name, WIL_BOARD_FILE_NAME);
+ 
++		if (!no_flash)
++			wil_bl_prepare_halt(wil);
++
+ 		wil_halt_cpu(wil);
+ 		memset(wil->fw_version, 0, sizeof(wil->fw_version));
+ 		/* Loading f/w from the file */
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index ab8cb91..750c34e 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -43,6 +43,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 	u8 chip_revision = (wil_r(wil, RGF_USER_REVISION_ID) &
+ 			    RGF_USER_REVISION_ID_MASK);
+ 	int platform_capa;
++	struct fw_map *iccm_section;
+ 
+ 	bitmap_zero(wil->hw_capa, hw_capa_last);
+ 	bitmap_zero(wil->fw_capabilities, WMI_FW_CAPABILITY_MAX);
+@@ -95,6 +96,13 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 		return -EINVAL;
+ 	}
+ 
++	iccm_section = wil_find_fw_mapping("fw_code");
++	if (!iccm_section) {
++		wil_err(wil, "fw_code section not found in fw_mapping\n");
 +		return -EINVAL;
++	}
++	wil->iccm_base = iccm_section->host;
 +
-+	ar->sta_tid_stats_mask = mask;
-+
-+	return len;
-+}
-+
-+static const struct file_operations fops_sta_tid_stats_mask = {
-+	.read = ath10k_sta_tid_stats_mask_read,
-+	.write = ath10k_sta_tid_stats_mask_write,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath10k_debug_create(struct ath10k *ar)
- {
- 	ar->debug.cal_data = vzalloc(ATH10K_DEBUG_CAL_DATA_LEN);
-@@ -2250,6 +2293,11 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("fw_checksums", 0400, ar->debug.debugfs_phy, ar,
- 			    &fops_fw_checksums);
+ 	wil_info(wil, "Board hardware is %s, flash %sexist\n", wil->hw_name,
+ 		 test_bit(hw_capa_no_flash, wil->hw_capa) ? "doesn't " : "");
  
-+	if (IS_ENABLED(CONFIG_MAC80211_DEBUGFS))
-+		debugfs_create_file("sta_tid_stats_mask", 0600,
-+				    ar->debug.debugfs_phy,
-+				    ar, &fops_sta_tid_stats_mask);
-+
- 	return 0;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index d243df3..5f9bcfb 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -170,6 +170,7 @@ struct RGF_ICR {
+ 	#define HW_MACHINE_BOOT_DONE	(0x3fffffd)
+ #define RGF_USER_USER_CPU_0		(0x8801e0)
+ 	#define BIT_USER_USER_CPU_MAN_RST	BIT(1) /* user_cpu_man_rst */
++#define RGF_USER_CPU_PC			(0x8801e8)
+ #define RGF_USER_MAC_CPU_0		(0x8801fc)
+ 	#define BIT_USER_MAC_CPU_MAN_RST	BIT(1) /* mac_cpu_man_rst */
+ #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
+@@ -791,6 +792,7 @@ struct wil6210_priv {
+ 
+ 	u32 rgf_fw_assert_code_addr;
+ 	u32 rgf_ucode_assert_code_addr;
++	u32 iccm_base;
+ };
+ 
+ #define wil_to_wiphy(i) (i->wdev->wiphy)
+@@ -916,6 +918,7 @@ int wil_ps_update(struct wil6210_priv *wil,
+ int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
+ void wil_set_ethtoolops(struct net_device *ndev);
+ 
++struct fw_map *wil_find_fw_mapping(const char *section);
+ void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr, u32 size);
+ void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr);
+ void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 69da3c2..43c5803 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -185,6 +185,24 @@ static u32 wmi_addr_remap(u32 x)
  }
  
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index e54308889e59..306796dcedae 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -191,12 +192,42 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir);
- void ath10k_sta_update_rx_duration(struct ath10k *ar,
- 				   struct ath10k_fw_stats *stats);
-+void ath10k_sta_update_rx_tid_stats(struct ath10k *ar, u8 *first_hdr,
-+				    unsigned long int num_msdus,
-+				    enum ath10k_pkt_rx_err err,
-+				    unsigned long int unchain_cnt,
-+				    unsigned long int drop_cnt,
-+				    unsigned long int drop_cnt_filter,
-+				    unsigned long int queued_msdus);
-+void ath10k_sta_update_rx_tid_stats_ampdu(struct ath10k *ar,
-+			u16 peer_id, u8 tid,
-+			struct htt_rx_indication_mpdu_range *mpdu_ranges,
-+			int num_mpdu_rages);
- #else
- static inline
- void ath10k_sta_update_rx_duration(struct ath10k *ar,
- 				   struct ath10k_fw_stats *stats)
- {
- }
-+
-+static inline
-+void ath10k_sta_update_rx_tid_stats(struct ath10k *ar, u8 *first_hdr,
-+				    unsigned long int num_msdus,
-+				    enum ath10k_pkt_rx_err err,
-+				    unsigned long int unchain_cnt,
-+				    unsigned long int drop_cnt,
-+				    unsigned long int drop_cnt_filter,
-+				    unsigned long int queued_msdus)
+ /**
++ * find fw_mapping entry by section name
++ * @section - section name
++ *
++ * Return pointer to section or NULL if not found
++ */
++struct fw_map *wil_find_fw_mapping(const char *section)
 +{
-+}
-+
-+static inline
-+void ath10k_sta_update_rx_tid_stats_ampdu(struct ath10k *ar,
-+			u16 peer_id, u8 tid,
-+			struct htt_rx_indication_mpdu_range *mpdu_ranges,
-+			int num_mpdu_rages)
-+{
-+}
- #endif /* CONFIG_MAC80211_DEBUGFS */
- 
- #ifdef CONFIG_ATH10K_DEBUG
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index b260b09dd4d3..c6301324af82 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2014-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -16,8 +17,125 @@
- 
- #include "core.h"
- #include "wmi-ops.h"
-+#include "txrx.h"
- #include "debug.h"
- 
-+static void ath10k_rx_stats_update_amsdu_subfrm(struct ath10k *ar,
-+					     struct ath10k_sta_tid_stats *stats,
-+					     u32 msdu_count)
-+{
-+	if (msdu_count == 1)
-+		stats->rx_pkt_amsdu[ATH10K_AMSDU_SUBFRM_NUM_1]++;
-+	else if (msdu_count == 2)
-+		stats->rx_pkt_amsdu[ATH10K_AMSDU_SUBFRM_NUM_2]++;
-+	else if (msdu_count == 3)
-+		stats->rx_pkt_amsdu[ATH10K_AMSDU_SUBFRM_NUM_3]++;
-+	else if (msdu_count == 4)
-+		stats->rx_pkt_amsdu[ATH10K_AMSDU_SUBFRM_NUM_4]++;
-+	else if (msdu_count > 4)
-+		stats->rx_pkt_amsdu[ATH10K_AMSDU_SUBFRM_NUM_MORE]++;
-+}
-+
-+static void ath10k_rx_stats_update_ampdu_subfrm(struct ath10k *ar,
-+					     struct ath10k_sta_tid_stats *stats,
-+					     u32 mpdu_count)
-+{
-+	if (mpdu_count <= 10)
-+		stats->rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_10]++;
-+	else if (mpdu_count <= 20)
-+		stats->rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_20]++;
-+	else if (mpdu_count <= 30)
-+		stats->rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_30]++;
-+	else if (mpdu_count <= 40)
-+		stats->rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_40]++;
-+	else if (mpdu_count <= 50)
-+		stats->rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_50]++;
-+	else if (mpdu_count <= 60)
-+		stats->rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_60]++;
-+	else if (mpdu_count > 60)
-+		stats->rx_pkt_ampdu[ATH10K_AMPDU_SUBFRM_NUM_MORE]++;
-+}
-+
-+void ath10k_sta_update_rx_tid_stats_ampdu(struct ath10k *ar, u16 peer_id, u8 tid,
-+			struct htt_rx_indication_mpdu_range *mpdu_ranges,
-+			int num_mpdu_ranges)
-+{
-+	struct ath10k_sta *arsta;
-+	struct ath10k_peer *peer;
 +	int i;
 +
-+	if (tid > IEEE80211_NUM_TIDS || !(ar->sta_tid_stats_mask & BIT(tid)))
-+		return;
++	for (i = 0; i < ARRAY_SIZE(fw_mapping); i++)
++		if (fw_mapping[i].name &&
++		    !strcmp(section, fw_mapping[i].name))
++			return &fw_mapping[i];
 +
-+	rcu_read_lock();
-+	spin_lock_bh(&ar->data_lock);
-+
-+	peer = ath10k_peer_find_by_id(ar, peer_id);
-+	if (!peer)
-+		goto out;
-+
-+	arsta = (struct ath10k_sta *)peer->sta->drv_priv;
-+
-+	for (i = 0; i < num_mpdu_ranges; i++)
-+		ath10k_rx_stats_update_ampdu_subfrm(ar,
-+						    &arsta->tid_stats[tid],
-+						    mpdu_ranges[i].mpdu_count);
-+
-+out:
-+	spin_unlock_bh(&ar->data_lock);
-+	rcu_read_unlock();
++	return NULL;
 +}
 +
-+void ath10k_sta_update_rx_tid_stats(struct ath10k *ar, u8 *first_hdr,
-+				    unsigned long int num_msdus,
-+				    enum ath10k_pkt_rx_err err,
-+				    unsigned long int unchain_cnt,
-+				    unsigned long int drop_cnt,
-+				    unsigned long int drop_cnt_filter,
-+				    unsigned long int queued_msdus)
-+{
-+	struct ieee80211_sta *sta;
-+	struct ath10k_sta *arsta;
-+	struct ieee80211_hdr *hdr;
-+	struct ath10k_sta_tid_stats *stats;
-+	u8 tid = IEEE80211_NUM_TIDS;
-+	bool non_data_frm = false;
-+
-+	hdr = (struct ieee80211_hdr *)first_hdr;
-+	if (!ieee80211_is_data(hdr->frame_control))
-+		non_data_frm = true;
-+
-+	if (ieee80211_is_data_qos(hdr->frame_control))
-+		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
-+
-+	if (!(ar->sta_tid_stats_mask & BIT(tid)) || non_data_frm)
-+		return;
-+
-+	rcu_read_lock();
-+
-+	sta = ieee80211_find_sta_by_ifaddr(ar->hw, hdr->addr2, NULL);
-+	if (!sta)
-+		goto exit;
-+
-+	arsta = (struct ath10k_sta *)sta->drv_priv;
-+
-+	spin_lock_bh(&ar->data_lock);
-+	stats = &arsta->tid_stats[tid];
-+	stats->rx_pkt_from_fw += num_msdus;
-+	stats->rx_pkt_unchained += unchain_cnt;
-+	stats->rx_pkt_drop_chained += drop_cnt;
-+	stats->rx_pkt_drop_filter += drop_cnt_filter;
-+	if (err != ATH10K_PKT_RX_ERR_MAX)
-+		stats->rx_pkt_err[err] += queued_msdus;
-+	stats->rx_pkt_queued_for_mac += queued_msdus;
-+	ath10k_rx_stats_update_amsdu_subfrm(ar, &arsta->tid_stats[tid],
-+					    num_msdus);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+exit:
-+	rcu_read_unlock();
-+}
-+
- static void ath10k_sta_update_extd_stats_rx_duration(struct ath10k *ar,
- 						     struct ath10k_fw_stats *stats)
- {
-@@ -342,6 +460,172 @@ static ssize_t ath10k_dbg_sta_read_peer_debug_trigger(struct file *file,
- 	.llseek = default_llseek,
- };
- 
-+static char *get_err_str(enum ath10k_pkt_rx_err i)
-+{
-+	switch (i) {
-+	case ATH10K_PKT_RX_ERR_FCS:
-+		return "fcs_err";
-+	case ATH10K_PKT_RX_ERR_TKIP:
-+		return "tkip_err";
-+	case ATH10K_PKT_RX_ERR_CRYPT:
-+		return "crypt_err";
-+	case ATH10K_PKT_RX_ERR_PEER_IDX_INVAL:
-+		return "peer_idx_inval";
-+	case ATH10K_PKT_RX_ERR_MAX:
-+		return "unknown";
-+	}
-+
-+	return "unknown";
-+}
-+
-+static char *get_num_ampdu_subfrm_str(enum ath10k_ampdu_subfrm_num i)
-+{
-+	switch (i) {
-+	case ATH10K_AMPDU_SUBFRM_NUM_10:
-+		return "upto 10";
-+	case ATH10K_AMPDU_SUBFRM_NUM_20:
-+		return "11-20";
-+	case ATH10K_AMPDU_SUBFRM_NUM_30:
-+		return "21-30";
-+	case ATH10K_AMPDU_SUBFRM_NUM_40:
-+		return "31-40";
-+	case ATH10K_AMPDU_SUBFRM_NUM_50:
-+		return "41-50";
-+	case ATH10K_AMPDU_SUBFRM_NUM_60:
-+		return "51-60";
-+	case ATH10K_AMPDU_SUBFRM_NUM_MORE:
-+		return ">60";
-+	case ATH10K_AMPDU_SUBFRM_NUM_MAX:
-+		return "0";
-+	}
-+
-+	return "0";
-+}
-+
-+static char *get_num_amsdu_subfrm_str(enum ath10k_amsdu_subfrm_num i)
-+{
-+	switch (i) {
-+	case ATH10K_AMSDU_SUBFRM_NUM_1:
-+		return "1";
-+	case ATH10K_AMSDU_SUBFRM_NUM_2:
-+		return "2";
-+	case ATH10K_AMSDU_SUBFRM_NUM_3:
-+		return "3";
-+	case ATH10K_AMSDU_SUBFRM_NUM_4:
-+		return "4";
-+	case ATH10K_AMSDU_SUBFRM_NUM_MORE:
-+		return ">4";
-+	case ATH10K_AMSDU_SUBFRM_NUM_MAX:
-+		return "0";
-+	}
-+
-+	return "0";
-+}
-+
-+#define PRINT_TID_STATS(_field, _tabs) \
-+	do { \
-+		int k = 0; \
-+		for (j = 0; j <= IEEE80211_NUM_TIDS; j++) { \
-+			if (ar->sta_tid_stats_mask & BIT(j))  { \
-+				len += scnprintf(buf + len, buf_len - len, \
-+						 "[%02d] %-10lu  ", \
-+						 j, stats[j]._field); \
-+				k++; \
-+				if (k % 8 == 0)  { \
-+					len += scnprintf(buf + len, \
-+							 buf_len - len, "\n"); \
-+					len += scnprintf(buf + len, \
-+							 buf_len - len, \
-+							 _tabs); \
-+				} \
-+			} \
-+		} \
-+		len += scnprintf(buf + len, buf_len - len, "\n"); \
-+	} while (0)
-+
-+static ssize_t ath10k_dbg_sta_read_tid_stats(struct file *file,
-+					     char __user *user_buf,
-+					     size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+	struct ath10k *ar = arsta->arvif->ar;
-+	struct ath10k_sta_tid_stats *stats = arsta->tid_stats;
-+	size_t len = 0, buf_len = 1048 * IEEE80211_NUM_TIDS;
-+	char *buf;
-+	int i, j;
-+	ssize_t ret;
-+
-+	buf = kzalloc(buf_len, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	len += scnprintf(buf + len, buf_len - len,
-+			 "\n\t\tDriver Rx pkt stats per tid, ([tid] count)\n");
-+	len += scnprintf(buf + len, buf_len - len,
-+			 "\t\t------------------------------------------\n");
-+	len += scnprintf(buf + len, buf_len - len, "MSDUs from FW\t\t\t");
-+	PRINT_TID_STATS(rx_pkt_from_fw, "\t\t\t\t");
-+
-+	len += scnprintf(buf + len, buf_len - len, "MSDUs unchained\t\t\t");
-+	PRINT_TID_STATS(rx_pkt_unchained, "\t\t\t\t");
-+
-+	len += scnprintf(buf + len, buf_len - len,
-+			 "MSDUs locally dropped:chained\t");
-+	PRINT_TID_STATS(rx_pkt_drop_chained, "\t\t\t\t");
-+
-+	len += scnprintf(buf + len, buf_len - len,
-+			 "MSDUs locally dropped:filtered\t");
-+	PRINT_TID_STATS(rx_pkt_drop_filter, "\t\t\t\t");
-+
-+	len += scnprintf(buf + len, buf_len - len,
-+			 "MSDUs queued for mac80211\t");
-+	PRINT_TID_STATS(rx_pkt_queued_for_mac, "\t\t\t\t");
-+
-+	for (i = 0; i < ATH10K_PKT_RX_ERR_MAX; i++) {
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "MSDUs with error:%s\t", get_err_str(i));
-+		PRINT_TID_STATS(rx_pkt_err[i], "\t\t\t\t");
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n");
-+	for (i = 0; i < ATH10K_AMPDU_SUBFRM_NUM_MAX; i++) {
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "A-MPDU num subframes %s\t",
-+				 get_num_ampdu_subfrm_str(i));
-+		PRINT_TID_STATS(rx_pkt_ampdu[i], "\t\t\t\t");
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n");
-+	for (i = 0; i < ATH10K_AMSDU_SUBFRM_NUM_MAX; i++) {
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "A-MSDU num subframes %s\t\t",
-+				 get_num_amsdu_subfrm_str(i));
-+		PRINT_TID_STATS(rx_pkt_amsdu[i], "\t\t\t\t");
-+	}
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+
-+	kfree(buf);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static const struct file_operations fops_tid_stats_dump = {
-+	.open = simple_open,
-+	.read = ath10k_dbg_sta_read_tid_stats,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
-@@ -351,4 +635,6 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	debugfs_create_file("delba", 0200, dir, sta, &fops_delba);
- 	debugfs_create_file("peer_debug_trigger", 0600, dir, sta,
- 			    &fops_peer_debug_trigger);
-+	debugfs_create_file("dump_tid_stats", 0400, dir, sta,
-+			    &fops_tid_stats_dump);
- }
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 6d96f9560950..64996aba1485 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -1502,7 +1503,9 @@ static void ath10k_htt_rx_h_csum_offload(struct sk_buff *msdu)
- static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 				 struct sk_buff_head *amsdu,
- 				 struct ieee80211_rx_status *status,
--				 bool fill_crypt_header)
-+				 bool fill_crypt_header,
-+				 u8 *rx_hdr,
-+				 enum ath10k_pkt_rx_err *err)
- {
- 	struct sk_buff *first;
- 	struct sk_buff *last;
-@@ -1538,6 +1541,9 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 	hdr = (void *)rxd->rx_hdr_status;
- 	memcpy(first_hdr, hdr, RX_HTT_HDR_STATUS_LEN);
- 
-+	if (rx_hdr)
-+		memcpy(rx_hdr, hdr, RX_HTT_HDR_STATUS_LEN);
-+
- 	/* Each A-MSDU subframe will use the original header as the base and be
- 	 * reported as a separate MSDU so strip the A-MSDU bit from QoS Ctl.
- 	 */
-@@ -1581,6 +1587,17 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 	if (has_tkip_err)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
- 
-+	if (err) {
-+		if (has_fcs_err)
-+			*err = ATH10K_PKT_RX_ERR_FCS;
-+		else if (has_tkip_err)
-+			*err = ATH10K_PKT_RX_ERR_TKIP;
-+		else if (has_crypto_err)
-+			*err = ATH10K_PKT_RX_ERR_CRYPT;
-+		else if (has_peer_idx_invalid)
-+			*err = ATH10K_PKT_RX_ERR_PEER_IDX_INVAL;
-+	}
-+
- 	/* Firmware reports all necessary management frames via WMI already.
- 	 * They are not reported to monitor interfaces at all so pass the ones
- 	 * coming via HTT to monitor interfaces instead. This simplifies
-@@ -1651,11 +1668,13 @@ static void ath10k_htt_rx_h_enqueue(struct ath10k *ar,
- 	}
- }
- 
--static int ath10k_unchain_msdu(struct sk_buff_head *amsdu)
-+static int ath10k_unchain_msdu(struct sk_buff_head *amsdu,
-+			       unsigned long int *unchain_cnt)
- {
- 	struct sk_buff *skb, *first;
- 	int space;
- 	int total_len = 0;
-+	int amsdu_len = skb_queue_len(amsdu);
- 
- 	/* TODO:  Might could optimize this by using
- 	 * skb_try_coalesce or similar method to
-@@ -1691,11 +1710,16 @@ static int ath10k_unchain_msdu(struct sk_buff_head *amsdu)
- 	}
- 
- 	__skb_queue_head(amsdu, first);
-+
-+	*unchain_cnt += amsdu_len - 1;
-+
- 	return 0;
- }
- 
- static void ath10k_htt_rx_h_unchain(struct ath10k *ar,
--				    struct sk_buff_head *amsdu)
-+				    struct sk_buff_head *amsdu,
-+				    unsigned long int *drop_cnt,
-+				    unsigned long int *unchain_cnt)
- {
- 	struct sk_buff *first;
- 	struct htt_rx_desc *rxd;
-@@ -1713,11 +1737,12 @@ static void ath10k_htt_rx_h_unchain(struct ath10k *ar,
- 	 */
- 	if (decap != RX_MSDU_DECAP_RAW ||
- 	    skb_queue_len(amsdu) != 1 + rxd->frag_info.ring2_more_count) {
-+		*drop_cnt += skb_queue_len(amsdu);
- 		__skb_queue_purge(amsdu);
- 		return;
- 	}
- 
--	ath10k_unchain_msdu(amsdu);
-+	ath10k_unchain_msdu(amsdu, unchain_cnt);
- }
- 
- static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
-@@ -1743,7 +1768,8 @@ static bool ath10k_htt_rx_amsdu_allowed(struct ath10k *ar,
- 
- static void ath10k_htt_rx_h_filter(struct ath10k *ar,
- 				   struct sk_buff_head *amsdu,
--				   struct ieee80211_rx_status *rx_status)
-+				   struct ieee80211_rx_status *rx_status,
-+				   unsigned long int *drop_cnt)
- {
- 	if (skb_queue_empty(amsdu))
- 		return;
-@@ -1751,6 +1777,9 @@ static void ath10k_htt_rx_h_filter(struct ath10k *ar,
- 	if (ath10k_htt_rx_amsdu_allowed(ar, amsdu, rx_status))
- 		return;
- 
-+	if (drop_cnt)
-+		*drop_cnt += skb_queue_len(amsdu);
-+
- 	__skb_queue_purge(amsdu);
- }
- 
-@@ -1760,6 +1789,12 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
- 	struct ieee80211_rx_status *rx_status = &htt->rx_status;
- 	struct sk_buff_head amsdu;
- 	int ret;
-+	unsigned long int drop_cnt = 0;
-+	unsigned long int unchain_cnt = 0;
-+	unsigned long int drop_cnt_filter = 0;
-+	unsigned long int msdus_to_queue, num_msdus;
-+	enum ath10k_pkt_rx_err err = ATH10K_PKT_RX_ERR_MAX;
-+	u8 first_hdr[RX_HTT_HDR_STATUS_LEN];
- 
- 	__skb_queue_head_init(&amsdu);
- 
-@@ -1781,16 +1816,23 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
- 		return ret;
- 	}
- 
-+	num_msdus = skb_queue_len(&amsdu);
-+
- 	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
- 
- 	/* only for ret = 1 indicates chained msdus */
- 	if (ret > 0)
--		ath10k_htt_rx_h_unchain(ar, &amsdu);
-+		ath10k_htt_rx_h_unchain(ar, &amsdu, &drop_cnt, &unchain_cnt);
- 
--	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
--	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status, true);
-+	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status, &drop_cnt_filter);
-+	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status, true, first_hdr, &err);
-+	msdus_to_queue = skb_queue_len(&amsdu);
- 	ath10k_htt_rx_h_enqueue(ar, &amsdu, rx_status);
- 
-+	ath10k_sta_update_rx_tid_stats(ar, first_hdr, num_msdus, err,
-+				       unchain_cnt, drop_cnt, drop_cnt_filter,
-+				       msdus_to_queue);
-+
- 	return 0;
- }
- 
-@@ -1801,9 +1843,14 @@ static void ath10k_htt_rx_proc_rx_ind(struct ath10k_htt *htt,
- 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
- 	int num_mpdu_ranges;
- 	int i, mpdu_count = 0;
-+	u16 peer_id;
-+	u8 tid;
- 
- 	num_mpdu_ranges = MS(__le32_to_cpu(rx->hdr.info1),
- 			     HTT_RX_INDICATION_INFO1_NUM_MPDU_RANGES);
-+	peer_id = __le16_to_cpu(rx->hdr.peer_id);
-+	tid =  MS(rx->hdr.info0, HTT_RX_INDICATION_INFO0_EXT_TID);
-+
- 	mpdu_ranges = htt_rx_ind_get_mpdu_ranges(rx);
- 
- 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt rx ind: ",
-@@ -1815,6 +1862,9 @@ static void ath10k_htt_rx_proc_rx_ind(struct ath10k_htt *htt,
- 		mpdu_count += mpdu_ranges[i].mpdu_count;
- 
- 	atomic_add(mpdu_count, &htt->num_mpdus_ready);
-+
-+	ath10k_sta_update_rx_tid_stats_ampdu(ar, peer_id, tid, mpdu_ranges,
-+					     num_mpdu_ranges);
- }
- 
- static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
-@@ -2124,8 +2174,9 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			 * should still give an idea about rx rate to the user.
- 			 */
- 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
--			ath10k_htt_rx_h_filter(ar, &amsdu, status);
--			ath10k_htt_rx_h_mpdu(ar, &amsdu, status, false);
-+			ath10k_htt_rx_h_filter(ar, &amsdu, status, NULL);
-+			ath10k_htt_rx_h_mpdu(ar, &amsdu, status, false, NULL,
-+					     NULL);
- 			ath10k_htt_rx_h_enqueue(ar, &amsdu, status);
- 			break;
- 		case -EAGAIN:
++/**
+  * Check address validity for WMI buffer; remap if needed
+  * @ptr - internal (linker) fw/ucode address
+  * @size - if non zero, validate the block does not
 -- 
 1.9.1
