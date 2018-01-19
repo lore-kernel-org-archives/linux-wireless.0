@@ -1,41 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:44613 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751882AbeA0NRr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Jan 2018 08:17:47 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k will not tx packets sometimes.
-In-Reply-To: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com>
-References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com>
-Date: Sat, 27 Jan 2018 14:11:28 +0100
-Message-ID: <87a7wzv43j.fsf@toke.dk> (sfid-20180127_141751_755960_5C6077D3)
+Received: from rtits2.realtek.com ([211.75.126.72]:39534 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751480AbeASGqX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Jan 2018 01:46:23 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/10] rtlwifi: btcoex: Fix some static warnings from Sparse
+Date: Fri, 19 Jan 2018 14:45:48 +0800
+Message-ID: <20180119064551.10084-8-pkshih@realtek.com> (sfid-20180119_074638_177960_E9C1C3BF)
+In-Reply-To: <20180119064551.10084-1-pkshih@realtek.com>
+References: <20180119064551.10084-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> I'm doing a test with 200 virtual stations on each of 6 ath9k radios.
->
-> When I configure stations for DHCP, I see cases where stations on a particular
-> radio will not transmit anything sometimes.  I see no 'XMIT' logs that show indication of
-> frames being received in the driver from the upper stack, but if I use 'tshark' on
-> a station interface, it shows frames being 'transmitted'.
->
-> I do, however, see this, which looks like it might show
-> an issue.  It looks like whatever 'aqm' is, it has an ever expanding number
-> of backlog packets:
+Add 'static' or declaration to resolve the warnings.
 
-The aqm is the intermediate queues in mac80211. So this indicates that
-the driver is not pulling packets for transmission.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 36 +++++++---------------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  4 +++
+ 2 files changed, 15 insertions(+), 25 deletions(-)
 
-With that many stations, I wonder whether it is due to the airtime
-fairness scheduler throttling the station? What is the contents of
-debug/ieee80211/wiphy2/netdev\:sta30194/stations/00\:0e\:8e\:69\:b8\:f7/airtime
-while the station is not transmitting? And is it all stations on that
-particular radio, or only some of them?
-
--Toke
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 73ef5b271f3b..1404729441a2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -29,7 +29,7 @@
+  *		Debug related function
+  ***************************************************/
+ 
+-const char *const gl_btc_wifi_bw_string[] = {
++static const char *const gl_btc_wifi_bw_string[] = {
+ 	"11bg",
+ 	"HT20",
+ 	"HT40",
+@@ -37,7 +37,7 @@ const char *const gl_btc_wifi_bw_string[] = {
+ 	"HT160"
+ };
+ 
+-const char *const gl_btc_wifi_freq_string[] = {
++static const char *const gl_btc_wifi_freq_string[] = {
+ 	"2.4G",
+ 	"5G"
+ };
+@@ -156,7 +156,7 @@ static u8 halbtc_get_wifi_central_chnl(struct btc_coexist *btcoexist)
+ 	return chnl;
+ }
+ 
+-u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
++static u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+ {
+ 	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+ 
+@@ -171,12 +171,12 @@ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+ 	return rtlpriv->btcoexist.btc_info.single_ant_path;
+ }
+ 
+-u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
++static u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
+ {
+ 	return rtlpriv->btcoexist.btc_info.bt_type;
+ }
+ 
+-u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
++static u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+ {
+ 	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+ 	u8 num;
+@@ -193,7 +193,7 @@ u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+ 	return num;
+ }
+ 
+-u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
++static u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
+ {
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 
+@@ -504,7 +504,7 @@ static u32 halbtc_get_bt_forbidden_slot_val(void *btc_context)
+ 	return btcoexist->bt_info.bt_forb_slot_val;
+ }
+ 
+-u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
++static u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
+ {
+ 	/* return value:
+ 	 * [31:16] => connected port number
+@@ -980,7 +980,8 @@ static void halbtc_write_4byte(void *bt_context, u32 reg_addr, u32 data)
+ 	rtl_write_dword(rtlpriv, reg_addr, data);
+ }
+ 
+-void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
++static void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr,
++					 u8 data)
+ {
+ 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+@@ -993,22 +994,6 @@ void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
+ 		rtl_write_byte(rtlpriv, reg_addr, data);
+ }
+ 
+-void halbtc_set_macreg(void *btc_context, u32 reg_addr, u32 bit_mask, u32 data)
+-{
+-	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-
+-	rtl_set_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask, data);
+-}
+-
+-u32 halbtc_get_macreg(void *btc_context, u32 reg_addr, u32 bit_mask)
+-{
+-	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-
+-	return rtl_get_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask);
+-}
+-
+ static void halbtc_set_bbreg(void *bt_context, u32 reg_addr, u32 bit_mask,
+ 			     u32 data)
+ {
+@@ -1054,6 +1039,7 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
+ 					cmd_len, cmd_buf);
+ }
+ 
++static
+ void halbtc_set_bt_reg(void *btc_context, u8 reg_type, u32 offset, u32 set_val)
+ {
+ 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+@@ -1093,7 +1079,7 @@ static void halbtc_display_dbg_msg(void *bt_context, u8 disp_type,
+ 	}
+ }
+ 
+-bool halbtc_under_ips(struct btc_coexist *btcoexist)
++static bool halbtc_under_ips(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 1c6019be793a..8ed217656539 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -647,6 +647,7 @@ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv);
+ bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv);
+ bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
+ void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
++void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist);
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
+ void exhalbtc_init_hw_config_wifi_only(struct wifi_only_cfg *wifionly_cfg);
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+@@ -661,6 +662,7 @@ void exhalbtc_mediastatus_notify(struct btc_coexist *btcoexist,
+ void exhalbtc_special_packet_notify(struct btc_coexist *btcoexist, u8 pkt_type);
+ void exhalbtc_bt_info_notify(struct btc_coexist *btcoexist, u8 *tmp_buf,
+ 			     u8 length);
++void exhalbtc_rf_status_notify(struct btc_coexist *btcoexist, u8 type);
+ void exhalbtc_stack_operation_notify(struct btc_coexist *btcoexist, u8 type);
+ void exhalbtc_halt_notify(struct btc_coexist *btcoexist);
+ void exhalbtc_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
+@@ -668,6 +670,8 @@ void exhalbtc_coex_dm_switch(struct btc_coexist *btcoexist);
+ void exhalbtc_periodical(struct btc_coexist *btcoexist);
+ void exhalbtc_dbg_control(struct btc_coexist *btcoexist, u8 code, u8 len,
+ 			  u8 *data);
++void exhalbtc_antenna_detection(struct btc_coexist *btcoexist, u32 cent_freq,
++				u32 offset, u32 span, u32 seconds);
+ void exhalbtc_stack_update_profile_info(void);
+ void exhalbtc_set_hci_version(struct btc_coexist *btcoexist, u16 hci_version);
+ void exhalbtc_set_bt_patch_version(struct btc_coexist *btcoexist,
+-- 
+2.15.1
