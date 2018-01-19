@@ -1,222 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:7296 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756223AbeARNSH (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:39518 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751480AbeASGqT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 08:18:07 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 02/14] staging: wilc1000: removed unnecessary defined enums typedef
-Date: Thu, 18 Jan 2018 18:47:00 +0530
-Message-ID: <1516281432-7724-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141832_024440_BE5ECE5D)
-In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 19 Jan 2018 01:46:19 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/10] rtlwifi: add btcoex materials for 8822be
+Date: Fri, 19 Jan 2018 14:45:41 +0800
+Message-ID: <20180119064551.10084-1-pkshih@realtek.com> (sfid-20180119_074624_851302_EB26303B)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fix the "do not add new typedefs" issue found by checkpatch.pl
-script
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 72 ++++++++++++++++-----------------
- 1 file changed, 36 insertions(+), 36 deletions(-)
+In order to support rtl8822be, btcoex needs more information to control
+rtl8822be, and common code needs to add more materials as well.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 1641ddb..e186509 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -114,28 +114,28 @@ enum {
- 	G_MIXED_11B_2_MODE,		/* 1,2,5,11,6,12,24 otherwise all on */
- };
- 
--typedef enum {
-+enum {
- 	G_SHORT_PREAMBLE	= 0,	/* Short Preamble */
- 	G_LONG_PREAMBLE		= 1,	/* Long Preamble */
- 	G_AUTO_PREAMBLE		= 2,	/* Auto Preamble Selection */
--} G_PREAMBLE_T;
-+};
- 
- #define MAC_CONNECTED		1
- #define MAC_DISCONNECTED	0
- 
- #define SCAN_DONE		TRUE
--typedef enum {
-+enum {
- 	PASSIVE_SCAN		= 0,
- 	ACTIVE_SCAN		= 1,
--} SCANTYPE_T;
-+};
- 
--typedef enum {
-+enum {
- 	NO_POWERSAVE		= 0,
- 	MIN_FAST_PS		= 1,
- 	MAX_FAST_PS		= 2,
- 	MIN_PSPOLL_PS		= 3,
- 	MAX_PSPOLL_PS		= 4
--} USER_PS_MODE_T;
-+};
- 
- enum chip_ps_states {
- 	CHIP_WAKEDUP		= 0,
-@@ -153,7 +153,7 @@ enum bus_release {
- 	RELEASE_ALLOW_SLEEP	= 1,
- };
- 
--typedef enum {
-+enum {
- 	NO_SECURITY		= 0,
- 	WEP_40			= 0x3,
- 	WEP_104			= 0x7,
-@@ -163,7 +163,7 @@ typedef enum {
- 	WPA2_AES		= 0x31,
- 	WPA2_TKIP		= 0x51,
- 	WPA2_AES_TKIP		= 0x71,	/* Aes or Tkip */
--} SECURITY_T;
-+};
- 
- enum AUTHTYPE {
- 	OPEN_SYSTEM		= 1,
-@@ -178,88 +178,88 @@ enum SITESURVEY {
- 	SITE_SURVEY_OFF		= 2
- };
- 
--typedef enum {
-+enum {
- 	NORMAL_ACK		= 0,
- 	NO_ACK,
--} ACK_POLICY_T;
-+};
- 
--typedef enum {
-+enum {
- 	DONT_RESET		= 0,
- 	DO_RESET		= 1,
- 	NO_REQUEST		= 2,
--} RESET_REQ_T;
-+};
- 
--typedef enum {
-+enum {
- 	REKEY_DISABLE		= 1,
- 	REKEY_TIME_BASE,
- 	REKEY_PKT_BASE,
- 	REKEY_TIME_PKT_BASE
--} RSNA_REKEY_POLICY_T;
-+};
- 
--typedef enum {
-+enum {
- 	FILTER_NO		= 0x00,
- 	FILTER_AP_ONLY		= 0x01,
- 	FILTER_STA_ONLY		= 0x02
--} SCAN_CLASS_FITLER_T;
-+};
- 
--typedef enum {
-+enum {
- 	PRI_HIGH_RSSI		= 0x00,
- 	PRI_LOW_RSSI		= 0x04,
- 	PRI_DETECT		= 0x08
--} SCAN_PRI_T;
-+};
- 
--typedef enum {
-+enum {
- 	CH_FILTER_OFF		= 0x00,
- 	CH_FILTER_ON		= 0x10
--} CH_FILTER_T;
-+};
- 
--typedef enum {
-+enum {
- 	AUTO_PROT		= 0,	/* Auto */
- 	NO_PROT,			/* Do not use any protection */
- 	ERP_PROT,			/* Protect all ERP frame exchanges */
- 	HT_PROT,			/* Protect all HT frame exchanges  */
- 	GF_PROT,			/* Protect all GF frame exchanges  */
--} N_PROTECTION_MODE_T;
-+};
- 
--typedef enum {
-+enum {
- 	G_SELF_CTS_PROT,
- 	G_RTS_CTS_PROT,
--} G_PROTECTION_MODE_T;
-+};
- 
--typedef enum {
-+enum {
- 	HT_MIXED_MODE		= 1,
- 	HT_ONLY_20MHZ_MODE,
- 	HT_ONLY_20_40MHZ_MODE,
--} N_OPERATING_MODE_T;
-+};
- 
--typedef enum {
-+enum {
- 	NO_DETECT		= 0,
- 	DETECT_ONLY		= 1,
- 	DETECT_PROTECT		= 2,
- 	DETECT_PROTECT_REPORT	= 3,
--} N_OBSS_DETECTION_T;
-+};
- 
--typedef enum {
-+enum {
- 	RTS_CTS_NONHT_PROT	= 0,	/* RTS-CTS at non-HT rate */
- 	FIRST_FRAME_NONHT_PROT,		/* First frame at non-HT rate */
- 	LSIG_TXOP_PROT,                 /* LSIG TXOP Protection */
- 	FIRST_FRAME_MIXED_PROT,		/* First frame at Mixed format */
--} N_PROTECTION_TYPE_T;
-+};
- 
--typedef enum {
-+enum {
- 	STATIC_MODE		= 1,
- 	DYNAMIC_MODE		= 2,
- 	MIMO_MODE		= 3,	/* power save disable */
--} N_SMPS_MODE_T;
-+};
- 
--typedef enum {
-+enum {
- 	DISABLE_SELF_CTS,
- 	ENABLE_SELF_CTS,
- 	DISABLE_TX_ABORT,
- 	ENABLE_TX_ABORT,
- 	HW_TRIGGER_ABORT,
- 	SW_TRIGGER_ABORT,
--} TX_ABORT_OPTION_T;
-+};
- 
- enum wid_type {
- 	WID_CHAR		= 0,
-@@ -281,7 +281,7 @@ struct wid {
- 	s8 *val;
- };
- 
--typedef enum {
-+enum {
- 	WID_NIL				= 0xffff,
- 
- 	/*
-@@ -889,7 +889,7 @@ typedef enum {
- 	/* Miscellaneous WIDs */
- 	WID_ALL				= 0x7FFE,
- 	WID_MAX				= 0xFFFF
--} WID_T;
-+};
- 
- struct wilc;
- int wilc_wlan_init(struct net_device *dev);
+Ping-Ke Shih (10):
+  rtlwifi: btcoex: extend get_wifi_bw to support bandwidth 80M
+  rtlwifi: btcoex: Add switch band notify for btc
+  rtlwifi: btcoex: Add variable ant_div_cfg to support antenna diversity
+  rtlwifi: btcoex: add scan_notify within ips_notify if RFON
+  rtlwifi: btcoex: Add wifi_only series ops to control solo card
+  rtlwifi: btcoex: add boolean variables dbg_mode
+  rtlwifi: btcoex: Fix some static warnings from Sparse
+  rtlwifi: 8822be has to report vht capability to mac80211
+  rtlwifi: Add ratr_table for newer IC
+  rtlwifi: Add spec_ver to check whether use new rate-id or not
+
+ drivers/net/wireless/realtek/rtlwifi/base.c        | 129 ++++++++++++++++++--
+ drivers/net/wireless/realtek/rtlwifi/base.h        |   2 +
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 135 ++++++++++++++-------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  64 ++++++++++
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  89 +++++++++++++-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   7 ++
+ drivers/net/wireless/realtek/rtlwifi/core.c        |   6 +
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |   8 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  32 +++++
+ 9 files changed, 409 insertions(+), 63 deletions(-)
+
 -- 
-2.7.4
+2.15.1
