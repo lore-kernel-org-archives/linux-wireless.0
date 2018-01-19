@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57800 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751042AbeA2HRQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18602 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755030AbeASPhK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jan 2018 02:17:16 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Shrenik Shikhare <shrenik@marvell.com>
-Subject: RE: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX
- stall
-Date: Mon, 29 Jan 2018 07:17:12 +0000
-Message-ID: <c30565031fa54173b92bac878475171a@SC-EXCH02.marvell.com> (sfid-20180129_081720_506330_66B9D854)
-References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
- <20180125071202.0F39560A60@smtp.codeaurora.org>
- <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
- <20180125183355.rpmajajr5exxcybb@ban.mtv.corp.google.com>
-In-Reply-To: <20180125183355.rpmajajr5exxcybb@ban.mtv.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Fri, 19 Jan 2018 10:37:10 -0500
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codaurora.org>
+Subject: [PATCH 0/8] wil6210 patches
+Date: Fri, 19 Jan 2018 17:36:56 +0200
+Message-Id: <1516376224-13976-1-git-send-email-merez@codeaurora.org> (sfid-20180119_163719_160652_F7647897)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+The following patches add support for new wil6210 device
+and general fixes.
 
-> -----Original Message-----
-> From: Brian Norris [mailto:briannorris@chromium.org]
-> Sent: Friday, January 26, 2018 12:04 AM
-> To: Ganapathi Bhat
-> Cc: Kalle Valo; linux-wireless@vger.kernel.org; Cathy Luo; Xinming Hu;
-> Zhiyuan Yang; James Cao; Mangesh Malusare; Shrenik Shikhare
-> Subject: Re: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX
-> stall
->
-> On Thu, Jan 25, 2018 at 09:59:04AM +0000, Ganapathi Bhat wrote:
-> > > I can't find any commit with id c7dbdcb2a4e1, is it correct?
-> > Correct. Actually the commit id c7dbdcb2a4e1 is the PATCH [1/2] sent in this
-> series.
->
-> What? Why would you introduce a bug and only fix it in the next patch?
-With the first patch the original issue took considerably longer time to recreate. Also it followed a different path to get recreated(shared in commit message).
-> Does that mean you should just combine the two?
-Let us know if that is fine to merge them. We can modify the commit message accordingly.
-> Or reverse the order, if patch 2 doesn't cause problems on its own?
-Patch 2 has a dependency on patch 1.
->
-> Brian
+Dedy Lansky (1):
+  wil6210: support flashless device
 
-Regards,
-Ganapathi
+Lior David (2):
+  wil6210: fix random failure to bring network interface up
+  wil6210: enlarge FW mac_rgf_ext section for Sparrow D0
+
+Maya Erez (5):
+  wil6210: add Talyn PCIe device ID
+  wil6210: recognize Talyn JTAG ID
+  wil6210: add support for Talyn AHB address map
+  wil6210: configure OTP HW vectors in SW reset flow
+  wil6210: support parsing brd file address from fw file
+
+ drivers/net/wireless/ath/wil6210/boot_loader.h |   9 +-
+ drivers/net/wireless/ath/wil6210/fw.h          |  18 ++-
+ drivers/net/wireless/ath/wil6210/fw_inc.c      | 167 +++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/interrupt.c   |   6 +-
+ drivers/net/wireless/ath/wil6210/main.c        | 216 ++++++++++++++++++++++---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c    |  46 +++++-
+ drivers/net/wireless/ath/wil6210/wil6210.h     |  55 ++++++-
+ drivers/net/wireless/ath/wil6210/wmi.c         |  90 +++++++++--
+ 8 files changed, 549 insertions(+), 58 deletions(-)
+
+-- 
+1.9.1
