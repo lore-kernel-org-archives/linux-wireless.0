@@ -1,334 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
 Received: from wolverine02.qualcomm.com ([199.106.114.251]:18602 "EHLO
         wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932321AbeASPh2 (ORCPT
+        with ESMTP id S932266AbeASPhU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jan 2018 10:37:28 -0500
+        Fri, 19 Jan 2018 10:37:20 -0500
 From: Maya Erez <merez@codeaurora.org>
 To: Kalle Valo <kvalo@codeaurora.org>
 Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
         wil6210@qti.qualcomm.com, Maya Erez <merez@codaurora.org>
-Subject: [PATCH 8/8] wil6210: support parsing brd file address from fw file
-Date: Fri, 19 Jan 2018 17:37:04 +0200
-Message-Id: <1516376224-13976-9-git-send-email-merez@codeaurora.org> (sfid-20180119_163739_724164_BFC14601)
+Subject: [PATCH 5/8] wil6210: configure OTP HW vectors in SW reset flow
+Date: Fri, 19 Jan 2018 17:37:01 +0200
+Message-Id: <1516376224-13976-6-git-send-email-merez@codeaurora.org> (sfid-20180119_163737_815519_3B588360)
 In-Reply-To: <1516376224-13976-1-git-send-email-merez@codeaurora.org>
 References: <1516376224-13976-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to allow using the same brd file across different
-11ad chips, the address for loading the brd file should be
-part of the FW file, instead of the brd file. The brd file is
-expected to include only one section.
-To allow backward compatibility the driver reads the
-address from the brd file in case it is not included in the
-FW file.
+OTP HW vectors values are different for 40MHz and 330MHz AHB
+clocks.
+In SW reset flow, the host driver sets the clock frequency
+to 40MHz. In order to allow reading from the OTP, the host
+driver should configure the OTP HW vectors with the values
+that fits this clock frequency.
 
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/fw.h      |  18 +++-
- drivers/net/wireless/ath/wil6210/fw_inc.c  | 167 +++++++++++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/main.c    |   7 +-
- drivers/net/wireless/ath/wil6210/wil6210.h |   3 +
- 4 files changed, 184 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c    | 15 +++++++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h | 11 +++++++++++
+ 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/fw.h b/drivers/net/wireless/ath/wil6210/fw.h
-index 2f2b910..2c7b24f 100644
---- a/drivers/net/wireless/ath/wil6210/fw.h
-+++ b/drivers/net/wireless/ath/wil6210/fw.h
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2014,2016 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -58,15 +59,30 @@ struct wil_fw_record_comment { /* type == wil_fw_type_comment */
- 	u8 data[0]; /* free-form data [data_size], see above */
- } __packed;
- 
-+/* Comment header - common for all comment record types */
-+struct wil_fw_record_comment_hdr {
-+	__le32 magic;
-+};
-+
- /* FW capabilities encoded inside a comment record */
- #define WIL_FW_CAPABILITIES_MAGIC (0xabcddcba)
- struct wil_fw_record_capabilities { /* type == wil_fw_type_comment */
- 	/* identifies capabilities record */
--	__le32 magic;
-+	struct wil_fw_record_comment_hdr hdr;
- 	/* capabilities (variable size), see enum wmi_fw_capability */
- 	u8 capabilities[0];
- };
- 
-+/* brd file info encoded inside a comment record */
-+#define WIL_BRD_FILE_MAGIC (0xabcddcbb)
-+struct wil_fw_record_brd_file { /* type == wil_fw_type_comment */
-+	/* identifies brd file record */
-+	struct wil_fw_record_comment_hdr hdr;
-+	__le32 version;
-+	__le32 base_addr;
-+	__le32 max_size_bytes;
-+} __packed;
-+
- /* perform action
-  * data_size = @head.size - offsetof(struct wil_fw_record_action, data)
-  */
-diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
-index 77d1902..914c010 100644
---- a/drivers/net/wireless/ath/wil6210/fw_inc.c
-+++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2014-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -128,14 +129,13 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
- }
- 
- static int
--fw_handle_comment(struct wil6210_priv *wil, const void *data,
--		  size_t size)
-+fw_handle_capabilities(struct wil6210_priv *wil, const void *data,
-+		       size_t size)
- {
- 	const struct wil_fw_record_capabilities *rec = data;
- 	size_t capa_size;
- 
--	if (size < sizeof(*rec) ||
--	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC) {
-+	if (size < sizeof(*rec)) {
- 		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
- 				data, size, true);
- 		return 0;
-@@ -151,8 +151,56 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
- 	return 0;
- }
- 
--static int fw_handle_data(struct wil6210_priv *wil, const void *data,
--			  size_t size)
-+static int
-+fw_handle_brd_file(struct wil6210_priv *wil, const void *data,
-+		   size_t size)
-+{
-+	const struct wil_fw_record_brd_file *rec = data;
-+
-+	if (size < sizeof(*rec)) {
-+		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
-+				data, size, true);
-+		return 0;
-+	}
-+
-+	wil->brd_file_addr = le32_to_cpu(rec->base_addr);
-+	wil->brd_file_max_size = le32_to_cpu(rec->max_size_bytes);
-+
-+	wil_dbg_fw(wil, "brd_file_addr 0x%x, brd_file_max_size %d\n",
-+		   wil->brd_file_addr, wil->brd_file_max_size);
-+
-+	return 0;
-+}
-+
-+static int
-+fw_handle_comment(struct wil6210_priv *wil, const void *data,
-+		  size_t size)
-+{
-+	const struct wil_fw_record_comment_hdr *hdr = data;
-+	u32 magic;
-+	int rc = 0;
-+
-+	if (size < sizeof(*hdr))
-+		return 0;
-+
-+	magic = le32_to_cpu(hdr->magic);
-+
-+	switch (magic) {
-+	case WIL_FW_CAPABILITIES_MAGIC:
-+		wil_dbg_fw(wil, "magic is WIL_FW_CAPABILITIES_MAGIC\n");
-+		rc = fw_handle_capabilities(wil, data, size);
-+		break;
-+	case WIL_BRD_FILE_MAGIC:
-+		wil_dbg_fw(wil, "magic is WIL_BRD_FILE_MAGIC\n");
-+		rc = fw_handle_brd_file(wil, data, size);
-+		break;
-+	}
-+
-+	return rc;
-+}
-+
-+static int __fw_handle_data(struct wil6210_priv *wil, const void *data,
-+			    size_t size, __le32 addr)
- {
- 	const struct wil_fw_record_data *d = data;
- 	void __iomem *dst;
-@@ -163,16 +211,23 @@ static int fw_handle_data(struct wil6210_priv *wil, const void *data,
- 		return -EINVAL;
- 	}
- 
--	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
-+	if (!wil_fw_addr_check(wil, &dst, addr, s, "address"))
- 		return -EINVAL;
--	wil_dbg_fw(wil, "write [0x%08x] <== %zu bytes\n", le32_to_cpu(d->addr),
--		   s);
-+	wil_dbg_fw(wil, "write [0x%08x] <== %zu bytes\n", le32_to_cpu(addr), s);
- 	wil_memcpy_toio_32(dst, d->data, s);
- 	wmb(); /* finish before processing next record */
- 
- 	return 0;
- }
- 
-+static int fw_handle_data(struct wil6210_priv *wil, const void *data,
-+			  size_t size)
-+{
-+	const struct wil_fw_record_data *d = data;
-+
-+	return __fw_handle_data(wil, data, size, d->addr);
-+}
-+
- static int fw_handle_fill(struct wil6210_priv *wil, const void *data,
- 			  size_t size)
- {
-@@ -552,6 +607,100 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
- }
- 
- /**
-+ * wil_brd_process - process section from BRD file
-+ *
-+ * Return error code
-+ */
-+static int wil_brd_process(struct wil6210_priv *wil, const void *data,
-+			   size_t size)
-+{
-+	int rc = 0;
-+	const struct wil_fw_record_head *hdr = data;
-+	size_t s, hdr_sz;
-+	u16 type;
-+
-+	/* Assuming the board file includes only one header record and one data
-+	 * record. Each record starts with wil_fw_record_head.
-+	 */
-+	if (size < sizeof(*hdr))
-+		return -EINVAL;
-+	s = sizeof(*hdr) + le32_to_cpu(hdr->size);
-+	if (s > size)
-+		return -EINVAL;
-+
-+	/* Skip the header record and handle the data record */
-+	hdr = (const void *)hdr + s;
-+	size -= s;
-+	if (size < sizeof(*hdr))
-+		return -EINVAL;
-+	hdr_sz = le32_to_cpu(hdr->size);
-+
-+	if (wil->brd_file_max_size && hdr_sz > wil->brd_file_max_size)
-+		return -EINVAL;
-+	if (sizeof(*hdr) + hdr_sz > size)
-+		return -EINVAL;
-+	if (hdr_sz % 4) {
-+		wil_err_fw(wil, "unaligned record size: %zu\n",
-+			   hdr_sz);
-+		return -EINVAL;
-+	}
-+	type = le16_to_cpu(hdr->type);
-+	if (type != wil_fw_type_data) {
-+		wil_err_fw(wil, "invalid record type for board file: %d\n",
-+			   type);
-+		return -EINVAL;
-+	}
-+	if (hdr_sz < sizeof(struct wil_fw_record_data)) {
-+		wil_err_fw(wil, "data record too short: %zu\n", hdr_sz);
-+		return -EINVAL;
-+	}
-+
-+	wil_dbg_fw(wil, "using addr from fw file: [0x%08x]\n",
-+		   wil->brd_file_addr);
-+
-+	rc = __fw_handle_data(wil, &hdr[1], hdr_sz,
-+			      cpu_to_le32(wil->brd_file_addr));
-+
-+	return rc;
-+}
-+
-+/**
-+ * wil_request_board - Request board file
-+ *
-+ * Request board image from the file
-+ * board file address and max size are read from FW file
-+ * during initialization.
-+ * brd file shall include one header and one data section.
-+ *
-+ * Return error code
-+ */
-+int wil_request_board(struct wil6210_priv *wil, const char *name)
-+{
-+	int rc, dlen;
-+	const struct firmware *brd;
-+
-+	rc = request_firmware(&brd, name, wil_to_dev(wil));
-+	if (rc) {
-+		wil_err_fw(wil, "Failed to load brd %s\n", name);
-+		return rc;
-+	}
-+	wil_dbg_fw(wil, "Loading <%s>, %zu bytes\n", name, brd->size);
-+
-+	/* Verify the header */
-+	dlen = wil_fw_verify(wil, brd->data, brd->size);
-+	if (dlen < 0) {
-+		rc = dlen;
-+		goto out;
-+	}
-+	/* Process the data record */
-+	rc = wil_brd_process(wil, brd->data, dlen);
-+
-+out:
-+	release_firmware(brd);
-+	return rc;
-+}
-+
-+/**
-  * wil_fw_verify_file_exists - checks if firmware file exist
-  *
-  * @wil: driver context
 diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index a6af486..d5c3ea3 100644
+index f6cca0f..d95ff74 100644
 --- a/drivers/net/wireless/ath/wil6210/main.c
 +++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1261,7 +1261,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		rc = wil_request_firmware(wil, wil->wil_fw_name, true);
- 		if (rc)
- 			goto out;
--		rc = wil_request_firmware(wil, WIL_BOARD_FILE_NAME, true);
-+		if (wil->brd_file_addr)
-+			rc = wil_request_board(wil, WIL_BOARD_FILE_NAME);
-+		else
-+			rc = wil_request_firmware(wil,
-+						  WIL_BOARD_FILE_NAME,
-+						  true);
- 		if (rc)
- 			goto out;
+@@ -764,6 +764,21 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 	wil_s(wil, RGF_DMA_OFUL_NID_0, BIT_DMA_OFUL_NID_0_RX_EXT_TR_EN |
+ 	      BIT_DMA_OFUL_NID_0_RX_EXT_A3_SRC);
  
++	if (no_flash) {
++		/* Reset OTP HW vectors to fit 40MHz */
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME1, 0x60001);
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME2, 0x20027);
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME3, 0x1);
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME4, 0x20027);
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME5, 0x30003);
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME6, 0x20002);
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME7, 0x60001);
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME8, 0x60001);
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME9, 0x60001);
++		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME10, 0x60001);
++		wil_w(wil, RGF_USER_XPM_RD_DOUT_SAMPLE_TIME, 0x57);
++	}
++
+ 	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay * RST_DELAY);
+ 	return 0;
+ }
 diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 836122a..0df2aad 100644
+index 2273a05..d243df3 100644
 --- a/drivers/net/wireless/ath/wil6210/wil6210.h
 +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -681,6 +681,8 @@ struct wil6210_priv {
- 	const char *hw_name;
- 	const char *wil_fw_name;
- 	char *board_file;
-+	u32 brd_file_addr;
-+	u32 brd_file_max_size;
- 	DECLARE_BITMAP(hw_capa, hw_capa_last);
- 	DECLARE_BITMAP(fw_capabilities, WMI_FW_CAPABILITY_MAX);
- 	DECLARE_BITMAP(platform_capa, WIL_PLATFORM_CAPA_MAX);
-@@ -1053,6 +1055,7 @@ void wil_update_net_queues_bh(struct wil6210_priv *wil, struct vring *vring,
+@@ -197,6 +197,17 @@ struct RGF_ICR {
+ 	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
+ #define RGF_USER_OTP_HW_RD_MACHINE_1	(0x880ce0)
+ 	#define BIT_NO_FLASH_INDICATION		BIT(8)
++#define RGF_USER_XPM_IFC_RD_TIME1	(0x880cec)
++#define RGF_USER_XPM_IFC_RD_TIME2	(0x880cf0)
++#define RGF_USER_XPM_IFC_RD_TIME3	(0x880cf4)
++#define RGF_USER_XPM_IFC_RD_TIME4	(0x880cf8)
++#define RGF_USER_XPM_IFC_RD_TIME5	(0x880cfc)
++#define RGF_USER_XPM_IFC_RD_TIME6	(0x880d00)
++#define RGF_USER_XPM_IFC_RD_TIME7	(0x880d04)
++#define RGF_USER_XPM_IFC_RD_TIME8	(0x880d08)
++#define RGF_USER_XPM_IFC_RD_TIME9	(0x880d0c)
++#define RGF_USER_XPM_IFC_RD_TIME10	(0x880d10)
++#define RGF_USER_XPM_RD_DOUT_SAMPLE_TIME (0x880d64)
  
- int wil_request_firmware(struct wil6210_priv *wil, const char *name,
- 			 bool load);
-+int wil_request_board(struct wil6210_priv *wil, const char *name);
- bool wil_fw_verify_file_exists(struct wil6210_priv *wil, const char *name);
- 
- void wil_pm_runtime_allow(struct wil6210_priv *wil);
+ #define RGF_DMA_EP_TX_ICR		(0x881bb4) /* struct RGF_ICR */
+ 	#define BIT_DMA_EP_TX_ICR_TX_DONE	BIT(0)
 -- 
 1.9.1
