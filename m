@@ -1,57 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:34576 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759793AbeAIQuE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 11:50:04 -0500
-Received: by mail-pf0-f173.google.com with SMTP id e76so4161511pfk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 08:50:04 -0800 (PST)
-Received: from [192.168.1.131] ([50.51.72.82])
-        by smtp.googlemail.com with ESMTPSA id l80sm30880176pfk.67.2018.01.09.08.50.01
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Jan 2018 08:50:02 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-From: Kyle Evans <kvans32@gmail.com>
-Subject: brcmfmac4329-sdio firmware load failed.
-Message-ID: <7c73dc36-5b7a-729e-4656-b45839c1360d@gmail.com> (sfid-20180109_175023_108848_FE582121)
-Date: Tue, 9 Jan 2018 12:51:15 +0000
+Received: from mail-eopbgr00089.outbound.protection.outlook.com ([40.107.0.89]:61461
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755188AbeASCBq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 21:01:46 -0500
+From: peter.oh@bowerswilkins.com
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Peter Oh <peter.oh@bowerswilkins.com>, johannes.berg@intel.com
+Subject: [PATCH] mac80211: mesh: fix wrong mesh TTL offset calculation
+Date: Thu, 18 Jan 2018 18:01:30 -0800
+Message-Id: <1516327290-6162-1-git-send-email-peter.oh@bowerswilkins.com> (sfid-20180119_030212_168943_0B35D8C0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is linux-4.15-rc2 on an ASUS TF101. This device was shipped with 
-Android and a custom kernel using bcmdhd. I have taken nvram.txt from 
-/system/etc/ on the stock filesystem and copied to 
-/lib/firmware/brcm/brcmfmac4329-sdio.txt. Below is the result.
+From: Peter Oh <peter.oh@bowerswilkins.com>
 
-[    2.729157] brcmfmac: F1 signature read @0x18000000=0x9934329
-[    2.734313] brcmfmac: brcmf_sdiod_regrw_helper: failed to read data 
-F1@0x080ac, err: -84
-[    2.739952] brcmfmac: brcmf_fw_map_chip_to_name: using 
-brcm/brcmfmac4329-sdio.bin for chip 0x004329(17193) rev 0x000003
-[    2.965820] brcmfmac mmc0:0001:1: Direct firmware load for 
-brcm/brcmfmac4329-sdio.clm_blob failed with error -2
-[    2.969658] brcmfmac mmc0:0001:1: Falling back to user helper
-[   64.489695] brcmfmac: brcmf_c_process_clm_blob: request CLM blob file 
-failed (-11)
-[   64.489720] brcmfmac: brcmf_c_preinit_dcmds: download CLM blob file 
-failed, -11
-[   64.489739] brcmfmac: brcmf_bus_started: failed: -11
-[   64.489783] brcmfmac: brcmf_sdio_firmware_callback: dongle is not 
-responding
-[   64.596281] [<c061fd98>] (device_release_driver_internal) from 
-[<c068f394>] (brcmf_sdio_firmware_callback+0x244/0x5b8)
-[   64.596500] [<c068f394>] (brcmf_sdio_firmware_callback) from 
-[<c0686870>] (brcmf_fw_request_nvram_done+0x1cc/0x73c)
-[   64.596716] [<c0686870>] (brcmf_fw_request_nvram_done) from 
-[<c063337c>] (request_firmware_work_func+0x3c/0x64)
+mesh TTL offset in Mesh Channel Switch Parameters element depends on
+not only Secondary Channel Offset element, but also affected by
+HT Control field and Wide Bandwidth Channel Switch element.
+Hence take those values place in.
 
-md5sum /lib/firmware/brcm/brcmfmac4329*
-ff610cee869375a2d0c0be6b97b107fb  \
-	/lib/firmware/brcm/brcmfmac4329-sdio.bin
-84ecaf20d459b11b720d6b5884040553  \
-	/lib/firmware/brcm/brcmfmac4329-sdio.txt
+Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
+---
+ net/mac80211/mesh.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
--Kyle
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 73ac607..887b676 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1255,13 +1255,16 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+-			       struct ieee80211_mgmt *mgmt, size_t len)
++			       struct ieee80211_mgmt *mgmt, size_t len,
++			       struct ieee802_11_elems *elems)
+ {
+ 	struct ieee80211_mgmt *mgmt_fwd;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_local *local = sdata->local;
+ 	u8 *pos = mgmt->u.action.u.chan_switch.variable;
+ 	size_t offset_ttl;
++	/* mgmt hdr 24 + csa action 15 without sec offset and wide bw */
++	unsigned int basic_hdrlen = 39;
+ 
+ 	skb = dev_alloc_skb(local->tx_headroom + len);
+ 	if (!skb)
+@@ -1269,11 +1272,17 @@ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 	skb_reserve(skb, local->tx_headroom);
+ 	mgmt_fwd = skb_put(skb, len);
+ 
++	if (ieee80211_has_order(mgmt->frame_control))
++		basic_hdrlen += 4;
++
++	if (elems->wide_bw_chansw_ie)
++		basic_hdrlen += 5;
++
+ 	/* offset_ttl is based on whether the secondary channel
+ 	 * offset is available or not. Subtract 1 from the mesh TTL
+ 	 * and disable the initiator flag before forwarding.
+ 	 */
+-	offset_ttl = (len < 42) ? 7 : 10;
++	offset_ttl = (len < basic_hdrlen) ? 7 : 10;
+ 	*(pos + offset_ttl) -= 1;
+ 	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
+ 
+@@ -1323,7 +1332,7 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* forward or re-broadcast the CSA frame */
+ 	if (fwd_csa) {
+-		if (mesh_fwd_csa_frame(sdata, mgmt, len) < 0)
++		if (mesh_fwd_csa_frame(sdata, mgmt, len, &elems) < 0)
+ 			mcsa_dbg(sdata, "Failed to forward the CSA frame");
+ 	}
+ }
+-- 
+2.7.4
