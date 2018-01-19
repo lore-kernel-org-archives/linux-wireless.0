@@ -1,128 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:39610 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751085AbeAVKXD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 05:23:03 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 03/14] staging: wilc1000: fix alignments to match open parenthesis
-Date: Mon, 22 Jan 2018 15:52:16 +0530
-Message-ID: <1516616547-24654-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180122_112306_690117_F540DDA6)
-In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mga03.intel.com ([134.134.136.65]:63231 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750762AbeASAKn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 19:10:43 -0500
+Subject: [PATCH v4 00/10] prevent bounds-check bypass via speculative
+ execution
+From: Dan Williams <dan.j.williams@intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: Mark Rutland <mark.rutland@arm.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        Jonathan Corbet <corbet@lwn.net>, x86@kernel.org,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Andrew Honig <ahonig@google.com>, alan@linux.intel.com,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andy Lutomirski <luto@kernel.org>, tglx@linutronix.de,
+        akpm@linux-foundation.org, Jim Mattson <jmattson@google.com>,
+        Christian Lamparter <chunkeey@gmail.com>,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        stable@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>
+Date: Thu, 18 Jan 2018 16:01:36 -0800
+Message-ID: <151632009605.21271.11304291057104672116.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180119_011050_464927_953E5DAC)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Alignment should match open parenthesis" issues reported by
-checkpatch.pl script. changes to comply with linux coding style.
+Changes since v3 [1]
+* Drop 'ifence_array_ptr' and associated compile-time + run-time
+  switching and just use the masking approach all the time.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+* Convert 'get_user' to use pointer sanitization via masking rather than
+  lfence. '__get_user' and associated paths still rely on
+  lfence. (Linus)
+
+      "Basically, the rule is trivial: find all 'stac' users, and use
+       address masking if those users already integrate the limit
+       check, and lfence they don't."
+
+* At syscall entry sanitize the syscall number under speculation
+  to remove a user controlled pointer de-reference in kernel
+  space.  (Linus)
+
+* Fix a raw lfence in the kvm code (added for v4.15-rc8) to use
+  'array_ptr'.
+
+* Propose 'array_idx' as a way to sanitize user input that is
+  later used as an array index, but where the validation is
+  happening in a different code block than the array reference.
+  (Christian).
+
+* Fix grammar in speculation.txt (Kees)
+
 ---
- drivers/staging/wilc1000/host_interface.c         |  4 +--
- drivers/staging/wilc1000/linux_wlan.c             |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 38 +++++++++++------------
- 3 files changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 46e2d55..358354b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3730,8 +3730,8 @@ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param)
- 	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
- 	if (add_sta_info->rates_len > 0) {
- 		add_sta_info->rates = kmemdup(sta_param->rates,
--				      add_sta_info->rates_len,
--				      GFP_KERNEL);
-+					      add_sta_info->rates_len,
-+					      GFP_KERNEL);
- 		if (!add_sta_info->rates)
- 			return -ENOMEM;
- 	}
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 3c3f1863..d9725ef 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -695,7 +695,7 @@ static int wlan_initialize_threads(struct net_device *dev)
- 	wilc = vif->wilc;
- 
- 	wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
--				     "K_TXQ_TASK");
-+				       "K_TXQ_TASK");
- 	if (IS_ERR(wilc->txq_thread)) {
- 		netdev_err(dev, "couldn't create TXQ thread\n");
- 		wilc->close = 0;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index fb4a142..621810d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -470,10 +470,10 @@ static void CfgScanResult(enum scan_event scan_event,
- int wilc_connecting;
- 
- static void cfg_connect_result(enum conn_event conn_disconn_evt,
--			     struct connect_info *conn_info,
--			     u8 mac_status,
--			     struct disconnect_info *disconn_info,
--			     void *priv_data)
-+			       struct connect_info *conn_info,
-+			       u8 mac_status,
-+			       struct disconnect_info *disconn_info,
-+			       void *priv_data)
- {
- 	struct wilc_priv *priv;
- 	struct net_device *dev;
-@@ -623,18 +623,18 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 				}
- 			}
- 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
--					     au8ScanChanList,
--					     request->n_channels,
--					     (const u8 *)request->ie,
--					     request->ie_len, CfgScanResult,
--					     (void *)priv, &strHiddenNetwork);
-+					au8ScanChanList,
-+					request->n_channels,
-+					(const u8 *)request->ie,
-+					request->ie_len, CfgScanResult,
-+					(void *)priv, &strHiddenNetwork);
- 		} else {
- 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
--					     au8ScanChanList,
--					     request->n_channels,
--					     (const u8 *)request->ie,
--					     request->ie_len, CfgScanResult,
--					     (void *)priv, NULL);
-+					au8ScanChanList,
-+					request->n_channels,
-+					(const u8 *)request->ie,
-+					request->ie_len, CfgScanResult,
-+					(void *)priv, NULL);
- 		}
- 	} else {
- 		netdev_err(priv->dev, "Requested scanned channels over\n");
-@@ -793,11 +793,11 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 	wilc_wlan_set_bssid(dev, pstrNetworkInfo->bssid, STATION_MODE);
- 
- 	ret = wilc_set_join_req(vif, pstrNetworkInfo->bssid, sme->ssid,
--				     sme->ssid_len, sme->ie, sme->ie_len,
--				     cfg_connect_result, (void *)priv,
--				     u8security, auth_type,
--				     pstrNetworkInfo->ch,
--				     pstrNetworkInfo->join_params);
-+				sme->ssid_len, sme->ie, sme->ie_len,
-+				cfg_connect_result, (void *)priv,
-+				u8security, auth_type,
-+				pstrNetworkInfo->ch,
-+				pstrNetworkInfo->join_params);
- 	if (ret != 0) {
- 		netdev_err(dev, "wilc_set_join_req(): Error\n");
- 		ret = -ENOENT;
--- 
-2.7.4
+Quoting Mark's original RFC:
+
+"Recently, Google Project Zero discovered several classes of attack
+against speculative execution. One of these, known as variant-1, allows
+explicit bounds checks to be bypassed under speculation, providing an
+arbitrary read gadget. Further details can be found on the GPZ blog [2]
+and the Documentation patch in this series."
+
+A precondition of using this attack on the kernel is to get a user
+controlled pointer de-referenced (under speculation) in privileged code.
+The primary source of user controlled pointers in the kernel is the
+arguments passed to 'get_user' and '__get_user'. An example of other
+user controlled pointers are user-controlled array / pointer offsets.
+
+Better tooling is needed to find more arrays / pointers with user
+controlled indices / offsets that can be converted to use 'array_ptr' or
+'array_idx'. A few are included in this set, and these are not expected
+to be complete. That said, the 'get_user' protections raise the bar on
+finding a vulnerable gadget in the kernel.
+
+These patches are also available via the 'nospec-v4' git branch here:
+
+    git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec-v4
+
+Note that the BPF fix for Spectre variant1 is merged for 4.15-rc8.
+
+[2]: https://googleprojectzero.blogspot.co.uk/2018/01/reading-privileged-memory-with-side.html
+
+---
+
+Dan Williams (9):
+      asm/nospec, array_ptr: sanitize speculative array de-references
+      x86: implement array_ptr_mask()
+      x86: introduce __uaccess_begin_nospec and ifence
+      x86, __get_user: use __uaccess_begin_nospec
+      x86, get_user: use pointer masking to limit speculation
+      x86: narrow out of bounds syscalls to sys_read under speculation
+      vfs, fdtable: prevent bounds-check bypass via speculative execution
+      kvm, x86: fix spectre-v1 mitigation
+      nl80211: sanitize array index in parse_txq_params
+
+Mark Rutland (1):
+      Documentation: document array_ptr
+
+
+ Documentation/speculation.txt     |  143 +++++++++++++++++++++++++++++++++++++
+ arch/x86/entry/entry_64.S         |    2 +
+ arch/x86/include/asm/barrier.h    |   28 +++++++
+ arch/x86/include/asm/msr.h        |    3 -
+ arch/x86/include/asm/smap.h       |   24 ++++++
+ arch/x86/include/asm/uaccess.h    |   15 +++-
+ arch/x86/include/asm/uaccess_32.h |    6 +-
+ arch/x86/include/asm/uaccess_64.h |   12 ++-
+ arch/x86/kvm/vmx.c                |   19 ++---
+ arch/x86/lib/getuser.S            |    5 +
+ arch/x86/lib/usercopy_32.c        |    8 +-
+ include/linux/fdtable.h           |    7 +-
+ include/linux/nospec.h            |   65 +++++++++++++++++
+ net/wireless/nl80211.c            |   10 ++-
+ 14 files changed, 312 insertions(+), 35 deletions(-)
+ create mode 100644 Documentation/speculation.txt
+ create mode 100644 include/linux/nospec.h
