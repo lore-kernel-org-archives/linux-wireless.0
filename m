@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36032 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750810AbeAQK0P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 05:26:15 -0500
-Subject: Re: [1/2] mt76: fix possible NULL pointer dereferencing in
- mt76x2_ampdu_action()
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: dan.carpenter@oracle.com, linux-wireless@vger.kernel.org
-References: <18a56326d68a7d53f3197e450cae0e28382d8d2c.1513252573.git.lorenzo.bianconi@redhat.com>
- <20180108173523.B23C360B22@smtp.codeaurora.org>
- <CAJ0CqmWEgC07iBkkt92fKTpagMx+_oim_3qcPoc=B6ttsUzoOA@mail.gmail.com>
- <87o9m42p2k.fsf@kamboji.qca.qualcomm.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <5835442f-9e10-69bb-3b6d-d207d540181f@nbd.name> (sfid-20180117_112619_445991_97476F0A)
-Date: Wed, 17 Jan 2018 11:26:13 +0100
+Received: from smtp.codeaurora.org ([198.145.29.96]:41846 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751282AbeASI2W (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Jan 2018 03:28:22 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mt76x2: init: disable tbtt tasklet during device cleanup
+References: <cover.1516315624.git.lorenzo.bianconi@redhat.com>
+        <f46c90a50429201056419aae168a836fcc406f47.1516315624.git.lorenzo.bianconi@redhat.com>
+Date: Fri, 19 Jan 2018 10:28:18 +0200
+In-Reply-To: <f46c90a50429201056419aae168a836fcc406f47.1516315624.git.lorenzo.bianconi@redhat.com>
+        (Lorenzo Bianconi's message of "Fri, 19 Jan 2018 00:08:13 +0100")
+Message-ID: <87607yxnfh.fsf@purkki.adurom.net> (sfid-20180119_092826_253545_7D59E271)
 MIME-Version: 1.0
-In-Reply-To: <87o9m42p2k.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-01-08 19:16, Kalle Valo wrote:
-> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
-> 
->>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
->>>
->>>> Initialize mt76_txq pointer after ieee80211_txq pointer check.
->>>> Remove space after the pointer cast
->>>>
->>>> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
->>>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
->>>
->>> What am I supposed to do with this and patch 2? Drop?
->>
->> What do you mean? Why drop?
-> 
-> I didn't see Felix's ack, at least not on patchwork.
-I sent my ack (for both patches) as a reply to 0/2
-These patches should go in.
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
-- Felix
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+
+No empty commit logs, please. At least the commit log should answer the
+question "Why?". For example, are you fixing a reported bug or are you
+fixing is a theoretical issue you found during code review? What kind of
+symtomps does this bug have?
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_log_does_not_answer_why
+
+-- 
+Kalle Valo
