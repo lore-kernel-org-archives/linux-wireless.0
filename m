@@ -1,86 +1,437 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:39790 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753386AbeAMSvz (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:39533 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753427AbeASGqX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Jan 2018 13:51:55 -0500
+        Fri, 19 Jan 2018 01:46:23 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/10] rtlwifi: btcoex: Add wifi_only series ops to control solo card
+Date: Fri, 19 Jan 2018 14:45:46 +0800
+Message-ID: <20180119064551.10084-6-pkshih@realtek.com> (sfid-20180119_074635_826247_838FA36D)
+In-Reply-To: <20180119064551.10084-1-pkshih@realtek.com>
+References: <20180119064551.10084-1-pkshih@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+8MBb+H0FqciBw9nSO9L0fNQtiRvc_1TREitH9z89YxhtyFAQ@mail.gmail.com>
-References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
- <CA+55aFzNQ8CZ8iNcPXrCfyk=1edMiRGDA0fY0rd87BsFKBxgAw@mail.gmail.com> <CA+8MBb+H0FqciBw9nSO9L0fNQtiRvc_1TREitH9z89YxhtyFAQ@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sat, 13 Jan 2018 10:51:53 -0800
-Message-ID: <CA+55aFwUspY8DG3hRxZqQaf_n_0OZxGCd=pELc8ZVuBu+058cA@mail.gmail.com> (sfid-20180113_195220_413168_4D2DBFF3)
-Subject: Re: [PATCH v2 00/19] prevent bounds-check bypass via speculative execution
-To: Tony Luck <tony.luck@gmail.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        kernel-hardening@lists.openwall.com,
-        Peter Zijlstra <peterz@infradead.org>,
-        Alan Cox <alan.cox@intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "the arch/x86 maintainers" <x86@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Ingo Molnar <mingo@redhat.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 12, 2018 at 4:15 PM, Tony Luck <tony.luck@gmail.com> wrote:
->
-> Here there isn't any reason for speculation. The core has the
-> value of 'x' in a register and the upper bound encoded into the
-> "cmp" instruction.  Both are right there, no waiting, no speculation.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-So this is an argument I haven't seen before (although it was brought
-up in private long ago), but that is very relevant: the actual scope
-and depth of speculation.
+Originally, btcoex controls the antenna of combo card, but solo card
+is also needed to setup properly. The new ops are named with suffix
+'_wifi_only' opposited to original btc_ops, and new structures and
+definitions are also introduced. The wifi_only oly contains four ops that
+are initial variable, hw config, scan notify, and switch band notify.
 
-Your argument basically depends on just what gets speculated, and on
-the _actual_ order of execution.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 48 +++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       | 47 +++++++++++++++++++
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 54 +++++++++++++++++++++-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |  5 ++
+ drivers/net/wireless/realtek/rtlwifi/core.c        |  6 +++
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |  8 +++-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  7 +++
+ 7 files changed, 172 insertions(+), 3 deletions(-)
 
-So your argument depends on "the uarch will actually run the code in
-order if there are no events that block the pipeline".
-
-Or at least it depends on a certain latency of the killing of any OoO
-execution being low enough that the cache access doesn't even begin.
-
-I realize that that is very much a particular microarchitectural
-detail, but it's actually a *big* deal. Do we have a set of rules for
-what is not a worry, simply because the speculated accesses get killed
-early enough?
-
-Apparently "test a register value against a constant" is good enough,
-assuming that register is also needed for the address of the access.
-
-            Linus
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 8dc646190e35..73ef5b271f3b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -1247,6 +1247,40 @@ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv)
+ 	return true;
+ }
+ 
++bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv)
++{
++	struct wifi_only_cfg *wifionly_cfg = rtl_btc_wifi_only(rtlpriv);
++	struct wifi_only_haldata *wifionly_haldata;
++
++	if (!wifionly_cfg)
++		return false;
++
++	wifionly_cfg->adapter = rtlpriv;
++
++	switch (rtlpriv->rtlhal.interface) {
++	case INTF_PCI:
++		wifionly_cfg->chip_interface = BTC_INTF_PCI;
++		break;
++	case INTF_USB:
++		wifionly_cfg->chip_interface = BTC_INTF_USB;
++		break;
++	default:
++		wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
++		break;
++	}
++
++	wifionly_haldata = &wifionly_cfg->haldata_info;
++
++	wifionly_haldata->customer_id = CUSTOMER_NORMAL;
++	wifionly_haldata->efuse_pg_antnum = rtl_get_hwpg_ant_num(rtlpriv);
++	wifionly_haldata->efuse_pg_antpath =
++					rtl_get_hwpg_single_ant_path(rtlpriv);
++	wifionly_haldata->rfe_type = rtl_get_hwpg_rfe_type(rtlpriv);
++	wifionly_haldata->ant_div_cfg = 0;
++
++	return true;
++}
++
+ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
+ {
+ 	struct rtl_priv *rtlpriv = adapter;
+@@ -1368,6 +1402,10 @@ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only)
+ 	}
+ }
+ 
++void exhalbtc_init_hw_config_wifi_only(struct wifi_only_cfg *wifionly_cfg)
++{
++}
++
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist)
+ {
+ 	if (!halbtc_is_bt_coexist_available(btcoexist))
+@@ -1494,6 +1532,11 @@ void exhalbtc_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ 	halbtc_normal_low_power(btcoexist);
+ }
+ 
++void exhalbtc_scan_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
++				    u8 is_5g)
++{
++}
++
+ void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action)
+ {
+ 	u8 asso_type;
+@@ -1924,3 +1967,8 @@ void exhalbtc_switch_band_notify(struct btc_coexist *btcoexist, u8 type)
+ 
+ 	halbtc_normal_low_power(btcoexist);
+ }
++
++void exhalbtc_switch_band_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
++					   u8 is_5g)
++{
++}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index e0818f6efb87..6c145313c615 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -636,15 +636,23 @@ bool halbtc_is_wifi_uplink(struct rtl_priv *adapter);
+ 
+ #define rtl_btc_coexist(rtlpriv)				\
+ 	((struct btc_coexist *)((rtlpriv)->btcoexist.btc_context))
++#define rtl_btc_wifi_only(rtlpriv)				\
++	((struct wifi_only_cfg *)((rtlpriv)->btcoexist.wifi_only_context))
++
++struct wifi_only_cfg;
+ 
+ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv);
++bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv);
+ bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
+ void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
++void exhalbtc_init_hw_config_wifi_only(struct wifi_only_cfg *wifionly_cfg);
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type);
+ void exhalbtc_lps_notify(struct btc_coexist *btcoexist, u8 type);
+ void exhalbtc_scan_notify(struct btc_coexist *btcoexist, u8 type);
++void exhalbtc_scan_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
++				    u8 is_5g);
+ void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action);
+ void exhalbtc_mediastatus_notify(struct btc_coexist *btcoexist,
+ 				 enum rt_media_status media_status);
+@@ -669,6 +677,8 @@ void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num);
+ void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist,
+ 				   struct seq_file *m);
+ void exhalbtc_switch_band_notify(struct btc_coexist *btcoexist, u8 type);
++void exhalbtc_switch_band_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
++					   u8 is_5g);
+ void exhalbtc_signal_compensation(struct btc_coexist *btcoexist,
+ 				  u8 *rssi_wifi, u8 *rssi_bt);
+ void exhalbtc_lps_leave(struct btc_coexist *btcoexist);
+@@ -676,4 +686,41 @@ void exhalbtc_low_wifi_traffic_notify(struct btc_coexist *btcoexist);
+ void exhalbtc_set_single_ant_path(struct btc_coexist *btcoexist,
+ 				  u8 single_ant_path);
+ 
++/* The following are used by wifi_only case */
++enum wifionly_chip_interface {
++	WIFIONLY_INTF_UNKNOWN	= 0,
++	WIFIONLY_INTF_PCI		= 1,
++	WIFIONLY_INTF_USB		= 2,
++	WIFIONLY_INTF_SDIO		= 3,
++	WIFIONLY_INTF_MAX
++};
++
++enum wifionly_customer_id {
++	CUSTOMER_NORMAL			= 0,
++	CUSTOMER_HP_1			= 1,
++};
++
++struct wifi_only_haldata {
++	u16		customer_id;
++	u8		efuse_pg_antnum;
++	u8		efuse_pg_antpath;
++	u8		rfe_type;
++	u8		ant_div_cfg;
++};
++
++struct wifi_only_cfg {
++	void				*adapter;
++	struct wifi_only_haldata	haldata_info;
++	enum wifionly_chip_interface	chip_interface;
++};
++
++static inline
++void halwifionly_phy_set_bb_reg(struct wifi_only_cfg *wifi_conly_cfg,
++				u32 regaddr, u32 bitmask, u32 data)
++{
++	struct rtl_priv *rtlpriv = (struct rtl_priv *)wifi_conly_cfg->adapter;
++
++	rtl_set_bbreg(rtlpriv->hw, regaddr, bitmask, data);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index 0111ab9e7b05..cce4a37ea408 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -31,13 +31,16 @@
+ 
+ static struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_init_variables = rtl_btc_init_variables,
++	.btc_init_variables_wifi_only = rtl_btc_init_variables_wifi_only,
+ 	.btc_deinit_variables = rtl_btc_deinit_variables,
+ 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
+ 	.btc_power_on_setting = rtl_btc_power_on_setting,
+ 	.btc_init_hw_config = rtl_btc_init_hw_config,
++	.btc_init_hw_config_wifi_only = rtl_btc_init_hw_config_wifi_only,
+ 	.btc_ips_notify = rtl_btc_ips_notify,
+ 	.btc_lps_notify = rtl_btc_lps_notify,
+ 	.btc_scan_notify = rtl_btc_scan_notify,
++	.btc_scan_notify_wifi_only = rtl_btc_scan_notify_wifi_only,
+ 	.btc_connect_notify = rtl_btc_connect_notify,
+ 	.btc_mediastatus_notify = rtl_btc_mediastatus_notify,
+ 	.btc_periodical = rtl_btc_periodical,
+@@ -49,6 +52,7 @@ static struct rtl_btc_ops rtl_btc_operation = {
+ 	.btc_is_bt_disabled = rtl_btc_is_bt_disabled,
+ 	.btc_special_packet_notify = rtl_btc_special_packet_notify,
+ 	.btc_switch_band_notify = rtl_btc_switch_band_notify,
++	.btc_switch_band_notify_wifi_only = rtl_btc_switch_band_notify_wifionly,
+ 	.btc_record_pwr_mode = rtl_btc_record_pwr_mode,
+ 	.btc_get_lps_val = rtl_btc_get_lps_val,
+ 	.btc_get_rpwm_val = rtl_btc_get_rpwm_val,
+@@ -147,7 +151,11 @@ void rtl_btc_get_ampdu_cfg(struct rtl_priv *rtlpriv, u8 *reject_agg,
+ 
+ static void rtl_btc_alloc_variable(struct rtl_priv *rtlpriv, bool wifi_only)
+ {
+-	rtlpriv->btcoexist.btc_context =
++	if (wifi_only)
++		rtlpriv->btcoexist.wifi_only_context =
++			kzalloc(sizeof(struct wifi_only_cfg), GFP_KERNEL);
++	else
++		rtlpriv->btcoexist.btc_context =
+ 			kzalloc(sizeof(struct btc_coexist), GFP_KERNEL);
+ }
+ 
+@@ -155,6 +163,9 @@ static void rtl_btc_free_variable(struct rtl_priv *rtlpriv)
+ {
+ 	kfree(rtlpriv->btcoexist.btc_context);
+ 	rtlpriv->btcoexist.btc_context = NULL;
++
++	kfree(rtlpriv->btcoexist.wifi_only_context);
++	rtlpriv->btcoexist.wifi_only_context = NULL;
+ }
+ 
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv)
+@@ -165,6 +176,13 @@ void rtl_btc_init_variables(struct rtl_priv *rtlpriv)
+ 	exhalbtc_bind_bt_coex_withadapter(rtlpriv);
+ }
+ 
++void rtl_btc_init_variables_wifi_only(struct rtl_priv *rtlpriv)
++{
++	rtl_btc_alloc_variable(rtlpriv, true);
++
++	exhalbtc_initlize_variables_wifi_only(rtlpriv);
++}
++
+ void rtl_btc_deinit_variables(struct rtl_priv *rtlpriv)
+ {
+ 	rtl_btc_free_variable(rtlpriv);
+@@ -204,6 +222,16 @@ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
+ 	exhalbtc_init_coex_dm(btcoexist);
+ }
+ 
++void rtl_btc_init_hw_config_wifi_only(struct rtl_priv *rtlpriv)
++{
++	struct wifi_only_cfg *wifionly_cfg = rtl_btc_wifi_only(rtlpriv);
++
++	if (!wifionly_cfg)
++		return;
++
++	exhalbtc_init_hw_config_wifi_only(wifionly_cfg);
++}
++
+ void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type)
+ {
+ 	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
+@@ -242,6 +270,18 @@ void rtl_btc_scan_notify(struct rtl_priv *rtlpriv, u8 scantype)
+ 	exhalbtc_scan_notify(btcoexist, scantype);
+ }
+ 
++void rtl_btc_scan_notify_wifi_only(struct rtl_priv *rtlpriv, u8 scantype)
++{
++	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
++	struct wifi_only_cfg *wifionly_cfg = rtl_btc_wifi_only(rtlpriv);
++	u8 is_5g = (rtlhal->current_bandtype == BAND_ON_5G);
++
++	if (!wifionly_cfg)
++		return;
++
++	exhalbtc_scan_notify_wifi_only(wifionly_cfg, is_5g);
++}
++
+ void rtl_btc_connect_notify(struct rtl_priv *rtlpriv, u8 action)
+ {
+ 	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
+@@ -458,6 +498,18 @@ void rtl_btc_switch_band_notify(struct rtl_priv *rtlpriv, u8 band_type,
+ 		exhalbtc_switch_band_notify(btcoexist, type);
+ }
+ 
++void rtl_btc_switch_band_notify_wifionly(struct rtl_priv *rtlpriv, u8 band_type,
++					 bool scanning)
++{
++	struct wifi_only_cfg *wifionly_cfg = rtl_btc_wifi_only(rtlpriv);
++	u8 is_5g = (band_type == BAND_ON_5G);
++
++	if (!wifionly_cfg)
++		return;
++
++	exhalbtc_switch_band_notify_wifi_only(wifionly_cfg, is_5g);
++}
++
+ struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
+ {
+ 	return &rtl_btc_operation;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+index 1d98741ae874..8c996055de71 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+@@ -28,13 +28,16 @@
+ #include "halbt_precomp.h"
+ 
+ void rtl_btc_init_variables(struct rtl_priv *rtlpriv);
++void rtl_btc_init_variables_wifi_only(struct rtl_priv *rtlpriv);
+ void rtl_btc_deinit_variables(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv);
+ void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv);
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv);
++void rtl_btc_init_hw_config_wifi_only(struct rtl_priv *rtlpriv);
+ void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type);
+ void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type);
+ void rtl_btc_scan_notify(struct rtl_priv *rtlpriv, u8 scantype);
++void rtl_btc_scan_notify_wifi_only(struct rtl_priv *rtlpriv, u8 scantype);
+ void rtl_btc_connect_notify(struct rtl_priv *rtlpriv, u8 action);
+ void rtl_btc_mediastatus_notify(struct rtl_priv *rtlpriv,
+ 				enum rt_media_status mstatus);
+@@ -48,6 +51,8 @@ bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
+ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
+ void rtl_btc_switch_band_notify(struct rtl_priv *rtlpriv, u8 band_type,
+ 				bool scanning);
++void rtl_btc_switch_band_notify_wifionly(struct rtl_priv *rtlpriv, u8 band_type,
++					 bool scanning);
+ void rtl_btc_display_bt_coex_info(struct rtl_priv *rtlpriv, struct seq_file *m);
+ void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
+ u8   rtl_btc_get_lps_val(struct rtl_priv *rtlpriv);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index a16aa94273e8..cfea57efa7f4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1453,6 +1453,9 @@ static void rtl_op_sw_scan_start(struct ieee80211_hw *hw,
+ 
+ 	if (rtlpriv->cfg->ops->get_btc_status())
+ 		rtlpriv->btcoexist.btc_ops->btc_scan_notify(rtlpriv, 1);
++	else if (rtlpriv->btcoexist.btc_ops)
++		rtlpriv->btcoexist.btc_ops->btc_scan_notify_wifi_only(rtlpriv,
++								      1);
+ 
+ 	if (rtlpriv->dm.supp_phymode_switch) {
+ 		if (rtlpriv->cfg->ops->chk_switch_dmdp)
+@@ -1508,6 +1511,9 @@ static void rtl_op_sw_scan_complete(struct ieee80211_hw *hw,
+ 	rtlpriv->cfg->ops->scan_operation_backup(hw, SCAN_OPT_RESTORE);
+ 	if (rtlpriv->cfg->ops->get_btc_status())
+ 		rtlpriv->btcoexist.btc_ops->btc_scan_notify(rtlpriv, 0);
++	else if (rtlpriv->btcoexist.btc_ops)
++		rtlpriv->btcoexist.btc_ops->btc_scan_notify_wifi_only(rtlpriv,
++								      0);
+ }
+ 
+ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index aa1d3ae4937f..01ccf8884831 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -1794,6 +1794,7 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
++	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+ 
+ 	int err;
+ 
+@@ -1803,9 +1804,12 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
+ 	if (rtlpriv->cfg->ops->get_btc_status &&
+ 	    rtlpriv->cfg->ops->get_btc_status()) {
+ 		rtlpriv->btcoexist.btc_info.ap_num = 36;
+-		rtlpriv->btcoexist.btc_ops->btc_init_variables(rtlpriv);
+-		rtlpriv->btcoexist.btc_ops->btc_init_hal_vars(rtlpriv);
++		btc_ops->btc_init_variables(rtlpriv);
++		btc_ops->btc_init_hal_vars(rtlpriv);
++	} else if (btc_ops) {
++		btc_ops->btc_init_variables_wifi_only(rtlpriv);
+ 	}
++
+ 	err = rtlpriv->cfg->ops->hw_init(hw);
+ 	if (err) {
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 8ed0207c6f14..111f81b44c1b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2502,6 +2502,7 @@ struct bt_coexist_info {
+ 	struct rtl_btc_info btc_info;
+ 	/* btc context */
+ 	void *btc_context;
++	void *wifi_only_context;
+ 	/* EEPROM BT info. */
+ 	u8 eeprom_bt_coexist;
+ 	u8 eeprom_bt_type;
+@@ -2558,13 +2559,17 @@ struct bt_coexist_info {
+ 
+ struct rtl_btc_ops {
+ 	void (*btc_init_variables) (struct rtl_priv *rtlpriv);
++	void (*btc_init_variables_wifi_only)(struct rtl_priv *rtlpriv);
+ 	void (*btc_deinit_variables)(struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
+ 	void (*btc_power_on_setting)(struct rtl_priv *rtlpriv);
+ 	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
++	void (*btc_init_hw_config_wifi_only)(struct rtl_priv *rtlpriv);
+ 	void (*btc_ips_notify) (struct rtl_priv *rtlpriv, u8 type);
+ 	void (*btc_lps_notify)(struct rtl_priv *rtlpriv, u8 type);
+ 	void (*btc_scan_notify) (struct rtl_priv *rtlpriv, u8 scantype);
++	void (*btc_scan_notify_wifi_only)(struct rtl_priv *rtlpriv,
++					  u8 scantype);
+ 	void (*btc_connect_notify) (struct rtl_priv *rtlpriv, u8 action);
+ 	void (*btc_mediastatus_notify) (struct rtl_priv *rtlpriv,
+ 					enum rt_media_status mstatus);
+@@ -2581,6 +2586,8 @@ struct rtl_btc_ops {
+ 					  u8 pkt_type);
+ 	void (*btc_switch_band_notify)(struct rtl_priv *rtlpriv, u8 type,
+ 				       bool scanning);
++	void (*btc_switch_band_notify_wifi_only)(struct rtl_priv *rtlpriv,
++						 u8 type, bool scanning);
+ 	void (*btc_display_bt_coex_info)(struct rtl_priv *rtlpriv,
+ 					 struct seq_file *m);
+ 	void (*btc_record_pwr_mode)(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
+-- 
+2.15.1
