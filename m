@@ -1,231 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:54053 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750801AbeAQGPv (ORCPT
+Received: from mail-it0-f42.google.com ([209.85.214.42]:35553 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753332AbeASNda (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 01:15:51 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 01/10] rtlwifi: Use mutex to replace spin_lock to protect IPS and LPS
-Date: Wed, 17 Jan 2018 14:15:21 +0800
-Message-ID: <20180117061530.30049-2-pkshih@realtek.com> (sfid-20180117_071618_193541_0F781BF3)
-In-Reply-To: <20180117061530.30049-1-pkshih@realtek.com>
-References: <20180117061530.30049-1-pkshih@realtek.com>
+        Fri, 19 Jan 2018 08:33:30 -0500
+Received: by mail-it0-f42.google.com with SMTP id e1so2133848ita.0
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jan 2018 05:33:30 -0800 (PST)
+From: Kyle Evans <kvans32@gmail.com>
+Date: Fri, 19 Jan 2018 11:05:54 -0500
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kyle Evans <kvans32@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: sdio failure to initialize on warm boot.
+Message-ID: <20180119160554.GA4162@localhost.localdomain> (sfid-20180119_143334_955816_C3BF6AD4)
+References: <7c73dc36-5b7a-729e-4656-b45839c1360d@gmail.com>
+ <5A55D325.60805@broadcom.com>
+ <3842a299-cd14-65db-1222-6849bc95ef74@gmail.com>
+ <5A59CF17.6040706@broadcom.com>
+ <20180118172804.GA1170@localhost.localdomain>
+ <5A61AA9E.6000505@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5A61AA9E.6000505@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+* Arend van Spriel <arend.vanspriel@broadcom.com>:
+> On 1/18/2018 6:50 PM, Kyle Evans wrote:
+> > * Arend van Spriel <arend.vanspriel@broadcom.com>:
+> >> On 1/12/2018 9:18 PM, Kyle Evans wrote:
+> >>> 2) After reboot I get this nasty error...
+> >>> [    0.000000] Kernel command line: console=tty0 selinux=0
+> >>> video=1280x800 root=/dev/mmcblk1p1 brcmfmac.bebug=0x20000
+> >>> [    2.269750] mmc0: Invalid maximum block size, assuming 512 bytes
+> >>> [    2.330010] mmc0: SDHCI controller on c8000000.sdhci [c8000000.sdhci]
+> >>> using ADMA
+> >>> [    2.645242] mmc0: error -110 whilst initialising SDIO card
+> >>
+> >> Ok. I suppose you mean a warm reboot. So I suppose the card is not
+> >> properly power cycled. If your SDHCI controller driver (is it
+> >> sdhci-acpi?) is loaded as a module, you could try to unload it and load
+> >> it again. Let me know if that works for you to confirm my guess.
+> >
+> > Your guess is correct. The following brings up wifi after failure to do
+> > so during warm boot.
+> >
+> > modprobe -r sdhci-tegra; modprobe sdhci-tegra;
+> 
+> Do you know if your uses a device tree and where I can find it? 
+> Typically, there is a GPIO to the wifi device that needs to be toggled 
+> using mmc powerseq.
 
-Enter/leavel IPS and LPS are large critical section, and they can't use
-sleep function because running in atomic-context, which own a spin_lock.
-In commit ba9f93f82aba ("rtlwifi: Fix enter/exit power_save"), it moves
-LPS functions to thread-context, so this commit can simply change LPS's
-spin lock to mutex.
-Considering IPS functions, rtl_ips_nic_on() may be called by TX tasklet
-(softirq-context) that check whether packet is auth frame. Fortunately,
-current mac80211 will ask driver to leave IPS using op_config with
-changed flag IEEE80211_CONF_CHANGE_IDLE, before issuing auth frame, so
-IPS functions can run in thread-context and use mutex to protect critical
-section, too.
-Also, this commit removes some useless spin locks.
+I had a hunch this is was the next step. This device did not ship with a 
+DT, but I have one in the works. My initial trial & error has been met 
+with error. 
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c |  6 ++----
- drivers/net/wireless/realtek/rtlwifi/ps.c   | 24 ++++++++++--------------
- drivers/net/wireless/realtek/rtlwifi/usb.c  |  1 -
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 10 ++--------
- 4 files changed, 14 insertions(+), 27 deletions(-)
+This is what I have so far, which is wrong since adding pwrseq (boot panic):
+	sdhci@c8000000 {
+                compatible = "nvidia,tegra20-sdhci";
+                reg = <0xc8000000 0x200>;
+                interrupts = <GIC_SPI 14 IRQ_TYPE_LEVEL_HIGH>;
+                clocks = <&tegra_car TEGRA20_CLK_SDMMC1>;
+                resets = <&tegra_car 14>;
+                reset-names = "sdhci";
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 0ba9c0cc95e1..89ec318598ea 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -551,7 +551,8 @@ int rtl_init_core(struct ieee80211_hw *hw)
- 
- 	/* <4> locks */
- 	mutex_init(&rtlpriv->locks.conf_mutex);
--	spin_lock_init(&rtlpriv->locks.ips_lock);
-+	mutex_init(&rtlpriv->locks.ips_mutex);
-+	mutex_init(&rtlpriv->locks.lps_mutex);
- 	spin_lock_init(&rtlpriv->locks.irq_th_lock);
- 	spin_lock_init(&rtlpriv->locks.h2c_lock);
- 	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
-@@ -561,9 +562,7 @@ int rtl_init_core(struct ieee80211_hw *hw)
- 	spin_lock_init(&rtlpriv->locks.c2hcmd_lock);
- 	spin_lock_init(&rtlpriv->locks.scan_list_lock);
- 	spin_lock_init(&rtlpriv->locks.cck_and_rw_pagea_lock);
--	spin_lock_init(&rtlpriv->locks.check_sendpkt_lock);
- 	spin_lock_init(&rtlpriv->locks.fw_ps_lock);
--	spin_lock_init(&rtlpriv->locks.lps_lock);
- 	spin_lock_init(&rtlpriv->locks.iqk_lock);
- 	/* <5> init list */
- 	INIT_LIST_HEAD(&rtlpriv->entry_list);
-@@ -1229,7 +1228,6 @@ bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	}
- 	if (ieee80211_is_auth(fc)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, "MAC80211_LINKING\n");
--		rtl_ips_nic_on(hw);
- 
- 		mac->link_state = MAC80211_LINKING;
- 		/* Dul mac */
-diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
-index 24c87fae5382..6a4008845f49 100644
---- a/drivers/net/wireless/realtek/rtlwifi/ps.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
-@@ -289,7 +289,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
- 
- 	cancel_delayed_work(&rtlpriv->works.ips_nic_off_wq);
- 
--	spin_lock(&rtlpriv->locks.ips_lock);
-+	mutex_lock(&rtlpriv->locks.ips_mutex);
- 	if (ppsc->inactiveps) {
- 		rtstate = ppsc->rfpwr_state;
- 
-@@ -306,7 +306,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
- 									ppsc->inactive_pwrstate);
- 		}
- 	}
--	spin_unlock(&rtlpriv->locks.ips_lock);
-+	mutex_unlock(&rtlpriv->locks.ips_mutex);
- }
- EXPORT_SYMBOL_GPL(rtl_ips_nic_on);
- 
-@@ -415,7 +415,6 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	unsigned long flag;
- 
- 	if (!ppsc->fwctrl_lps)
- 		return;
-@@ -436,7 +435,7 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 	if (mac->link_state != MAC80211_LINKED)
- 		return;
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 
- 	/* Don't need to check (ppsc->dot11_psmode == EACTIVE), because
- 	 * bt_ccoexist may ask to enter lps.
-@@ -446,7 +445,7 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 		 "Enter 802.11 power save mode...\n");
- 	rtl_lps_set_psmode(hw, EAUTOPS);
- 
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- }
- 
- /* Interrupt safe routine to leave the leisure power save mode.*/
-@@ -455,9 +454,8 @@ static void rtl_lps_leave_core(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	unsigned long flag;
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 
- 	if (ppsc->fwctrl_lps) {
- 		if (ppsc->dot11_psmode != EACTIVE) {
-@@ -478,7 +476,7 @@ static void rtl_lps_leave_core(struct ieee80211_hw *hw)
- 			rtl_lps_set_psmode(hw, EACTIVE);
- 		}
- 	}
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- }
- 
- /* For sw LPS*/
-@@ -568,7 +566,6 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
--	unsigned long flag;
- 
- 	if (!rtlpriv->psc.swctrl_lps)
- 		return;
-@@ -581,9 +578,9 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
- 		RT_CLEAR_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM);
- 	}
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS);
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- }
- 
- void rtl_swlps_rfon_wq_callback(void *data)
-@@ -600,7 +597,6 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	unsigned long flag;
- 	u8 sleep_intv;
- 
- 	if (!rtlpriv->psc.sw_ps_enabled)
-@@ -624,9 +620,9 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 	}
- 	spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS);
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- 
- 	if (ppsc->reg_rfps_level & RT_RF_OFF_LEVL_ASPM &&
- 	    !RT_IN_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM)) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 39b033b3b53a..ce3103bb8ebb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -962,7 +962,6 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw,
- 	memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
- 	if (ieee80211_is_auth(fc)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, "MAC80211_LINKING\n");
--		rtl_ips_nic_on(hw);
- 	}
- 
- 	if (rtlpriv->psc.sw_ps_enabled) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 0b1c54381a2f..941694060f48 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2325,17 +2325,14 @@ struct rtl_hal_cfg {
- struct rtl_locks {
- 	/* mutex */
- 	struct mutex conf_mutex;
--	struct mutex ps_mutex;
-+	struct mutex ips_mutex;	/* mutex for enter/leave IPS */
-+	struct mutex lps_mutex;	/* mutex for enter/leave LPS */
- 
- 	/*spin lock */
--	spinlock_t ips_lock;
- 	spinlock_t irq_th_lock;
--	spinlock_t irq_pci_lock;
--	spinlock_t tx_lock;
- 	spinlock_t h2c_lock;
- 	spinlock_t rf_ps_lock;
- 	spinlock_t rf_lock;
--	spinlock_t lps_lock;
- 	spinlock_t waitq_lock;
- 	spinlock_t entry_list_lock;
- 	spinlock_t usb_lock;
-@@ -2348,9 +2345,6 @@ struct rtl_locks {
- 	/*Dual mac*/
- 	spinlock_t cck_and_rw_pagea_lock;
- 
--	/*Easy concurrent*/
--	spinlock_t check_sendpkt_lock;
--
- 	spinlock_t iqk_lock;
- };
- 
--- 
-2.15.1
+                status = "okay";
+                //power-gpios = <&gpio TEGRA_GPIO(K, 6) GPIO_ACTIVE_HIGH>;
+                bus-width = <4>;
+                keep-power-in-suspend;
+                non-removable;
+                mmc-pwrseq = <&wlan_rst>;
+
+                brcmf: wifi@1 {
+                        compatible = "brcm,bcm4329-fmac";
+                        interrupt-parent = <&gpio>;
+                        interrupts = <TEGRA_GPIO(Y, 6) GPIO_ACTIVE_HIGH>,
+                                     <TEGRA_GPIO(S, 0) GPIO_ACTIVE_HIGH>;
+                        interrupt-names = "host-wake";
+                };
+        };
+
+        wlan_rst: sdhci0_pwrseq {
+                compatible = "mmc-pwrseq-simple";
+                reset-gpios = <&gpio TEGRA_GPIO(K, 6) GPIO_ACTIVE_LOW>;
+        };
+
+
+This stuff is from a pre-DT kernel:
+
+#define TF101_WLAN_RST  TEGRA_GPIO_PK6
+#define TF101_WLAN_WOW  TEGRA_GPIO_PS0
+#define TF101_SDIO_WOW  TEGRA_GPIO_PY6
+
+static struct embedded_sdio_data embedded_sdio_data1 = {
+        .cccr   = {
+                .sdio_vsn       = 2,
+                .multi_block    = 1,
+                .low_speed      = 0,
+                .wide_bus       = 0,
+                .high_power     = 1,
+                .high_speed     = 1,
+        },
+        .cis  = {
+                .vendor         = 0x02d0,
+                .device         = 0x4329,
+        },
+}
+static struct tegra_sdhci_platform_data tegra_sdhci_platform_data1 = {
+        .mmc_data = {
+                .register_status_notify = tf101_wifi_status_register,
+                .embedded_sdio = &embedded_sdio_data1,
+                .built_in = 0,
+        },
+        .wow_gpio = TF101_SDIO_WOW,
+        .cd_gpio = -1,
+        .wp_gpio = -1,
+        .power_gpio = -1,
+        .max_clk_limit = 40000000,
+}
+
+static int tf101_wifi_power(int on)
+{
+        pr_debug("%s: %d\n", __func__, on);
+
+#if 0
+        gpio_set_value(TF101_WLAN_PWR, on);
+        mdelay(100);
+#endif
+        gpio_set_value(TF101_WLAN_RST, on);
+        mdelay(200);
+
+        return 0;
+}
+
+static int __init tf101_wifi_init(void)
+{
+        //gpio_request(TF101_WLAN_PWR, "wlan_power");
+        gpio_request(TF101_WLAN_RST, "wlan_rst");
+        gpio_request(TF101_WLAN_WOW, "bcmsdh_sdmmc");
+
+        //tegra_gpio_enable(TF101_WLAN_PWR);
+        tegra_gpio_enable(TF101_WLAN_RST);
+        tegra_gpio_enable(TF101_WLAN_WOW);
+
+        //gpio_direction_output(TF101_WLAN_PWR, 0);
+        gpio_direction_output(TF101_WLAN_RST, 0);
+        gpio_direction_input(TF101_WLAN_WOW);
+
+        platform_device_register(&tf101_wifi_device);
+
+        device_init_wakeup(&tf101_wifi_device.dev, 1);
+        device_set_wakeup_enable(&tf101_wifi_device.dev, 0);
+
+        return 0;
+}
+
+static struct resource tf101_bcm4329_rfkill_resources[] = {
+        {
+                .name   = "bcm4329_nshutdown_gpio",
+                .start  = TEGRA_GPIO_PU0,
+                .end    = TEGRA_GPIO_PU0,
+                .flags  = IORESOURCE_IO,
+        },
+};
+
+static struct resource tf101_bluesleep_resources[] = {
+        [0] = {
+                .name = "gpio_host_wake",
+                        .start  = TEGRA_GPIO_PU6,
+                        .end    = TEGRA_GPIO_PU6,
+                        .flags  = IORESOURCE_IO,
+        },
+        [1] = {
+                .name = "gpio_ext_wake",
+                        .start  = TEGRA_GPIO_PU1,
+                        .end    = TEGRA_GPIO_PU1,
+                        .flags  = IORESOURCE_IO,
+        },
+        [2] = {
+                .name = "host_wake",
+                        .start  = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PU6),
+                        .end    = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PU6),
+                        .flags  = IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHEDGE,
+        },
+};
+
+Asside from getting reboot to work, I am at a loss where to put all of 
+the wakeup sources and rfkill nodes.
+S,0 - WLAN_WOW
+Y,6 - SDIO_WOW
+U,6 - bt host_wake
+U,1 - bt ext_wake
+U,0 - rfkill
+
+Thanks,
+Kyle
+
+> 
+> Regards,
+> Arend
+> 
