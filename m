@@ -1,158 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 9pmail.ess.barracuda.com ([64.235.150.225]:40553 "EHLO
-        9pmail.ess.barracuda.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750777AbeAOUbm (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:41835 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756471AbeASWqU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 15:31:42 -0500
-Date: Mon, 15 Jan 2018 20:30:23 +0000
-From: James Hogan <james.hogan@mips.com>
-To: Guenter Roeck <linux@roeck-us.net>
-CC: Paul Burton <paul.burton@mips.com>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Matt Redfearn <matt.redfearn@imgtec.com>,
-        Linux MIPS Mailing List <linux-mips@linux-mips.org>
-Subject: Re: [PATCH] bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
-Message-ID: <20180115203022.GE5027@jhogan-linux.mipstec.com> (sfid-20180115_213228_109148_F5DFE6A3)
-References: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
- <20180115102336.GC29126@saruman>
- <20180115171053.6nvstoufw4y6ar4s@pburton-laptop>
- <61e41256-f0d3-11f7-06ca-768fab84914d@roeck-us.net>
+        Fri, 19 Jan 2018 17:46:20 -0500
+Received: by mail-oi0-f68.google.com with SMTP id n81so2183175oig.8
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jan 2018 14:46:20 -0800 (PST)
+Subject: Re: [PATCH 07/10] rtlwifi: btcoex: Fix some static warnings from
+ Sparse
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180119064551.10084-1-pkshih@realtek.com>
+ <20180119064551.10084-8-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <79544f61-8a0d-283d-6370-1197b31aa59f@lwfinger.net> (sfid-20180119_234624_605462_0D51F469)
+Date: Fri, 19 Jan 2018 16:46:18 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <61e41256-f0d3-11f7-06ca-768fab84914d@roeck-us.net>
+In-Reply-To: <20180119064551.10084-8-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 15, 2018 at 12:05:48PM -0800, Guenter Roeck wrote:
-> On 01/15/2018 09:10 AM, Paul Burton wrote:
-> > Hello,
-> > 
-> > On Mon, Jan 15, 2018 at 10:23:37AM +0000, James Hogan wrote:
-> >> On Sun, Jan 14, 2018 at 01:34:02PM -0800, Guenter Roeck wrote:
-> >>> Mips builds with BCMA host mode enabled fail in mainline and -next
-> >>> with:
-> >>>
-> >>> In file included from include/linux/bcma/bcma.h:10:0,
-> >>>                   from drivers/bcma/bcma_private.h:9,
-> >>> 		 from drivers/bcma/main.c:8:
-> >>> include/linux/bcma/bcma_driver_pci.h:218:24: error:
-> >>> 	field 'pci_controller' has incomplete type
-> >>>
-> >>> Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
-> >>> system type as generic") as the culprit. Analysis shows that the commmit
-> >>> changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
-> >>> disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
-> >>> defined if PCI_DRIVERS_LEGACY is enabled.
-> >>>
-> >>> Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
-> >>> PCI_DRIVERS_LEGACY. Add the missing dependency.
-> >>>
-> >>> Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
-> >>
-> >> Well, technically I think commit c5611df96804 ("MIPS: PCI: Introduce
-> >> CONFIG_PCI_DRIVERS_LEGACY") is to blame (Cc'ing paul), and the first bad
-> >> commit would be commit eed0eabd12ef ("MIPS: generic: Introduce generic
-> >> DT-based board support") which selects PCI_DRIVERS_GENERIC and is the
-> >> only platform to do so. Both commits were first in v4.9-rc1 and I can
-> >> reproduce this problem at that latter commit with the appropriate
-> >> configuration.
-> > 
-> > Ah - yes if I recall correctly my assumption was that the MIPS-specific
-> > struct pci_controller was only used by the MIPS-specific PCI drivers
-> > under arch/mips/pci/, which are only built when configured for the
-> > appropriate platform.
-> > 
-> > In this case use of that MIPS-specific struct pci_controller has spread
-> > beyond arch/mips/ & the user can be configured in for platforms other
-> > than the one that will actually use the driver, including the generic
-> > platform which moves towards more generic PCI drivers in
-> > drivers/pci/host/.
-> > 
-> >> But yes clearly the mentioned commit does also expose that existing
-> >> problem more widely and to the default allmodconfig, and it looks like a
-> >> reasonable approach for now, so if some mention of the other two commits
-> >> is added:
-> >>
-> >> Reviewed-by: James Hogan <jhogan@kernel.org>
-> > 
-> > Likewise, with the "Fixes:" tag fixed:
-> > 
-> >      Reviewed-by: Paul Burton <paul.burton@mips.com>
-> > 
+On 01/19/2018 12:45 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
 > 
-> Unfortunately, that alone doesn't fix the problem. SSB driver dependencies
-> are also broken, and in much worse shape. I had to add dependencies in five
-> places to get it to build, and the result is so messy that I won't even try
-> to submit it.
-
-Oh, thats interesting. When I tried this earlier I just added "&&
-PCI_DRIVERS_LEGACY" to the SSB_PCIHOST_POSSIBLE dependencies, but I was
-waiting for Paul's feedback before submitting a similar patch.
-
-But that wasn't -next, it was mainline + mips fixes branch + individual
-fixes:
-
-> And if that is fixed, mips:allmodconfig still doesn't build -
-> the next error is an undefined reference to physical_memsize in
-> arch/mips/kernel/vpe-mt.o.
-
-That one is fairly easy to fix properly, I'll hopefully submit something
-this evening.
-
+> Add 'static' or declaration to resolve the warnings.
 > 
-> I wonder if I should just stop trying to build allmodconfig for mips.
-> Any thoughts ?
-
-With a few fixes applied it should be buildable I think. Sorry its been
-late in the cycle before we've been able to get fixes merged.
-
-Cheers
-James
-
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+>   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 36 +++++++---------------
+>   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  4 +++
+>   2 files changed, 15 insertions(+), 25 deletions(-)
 > 
-> Guenter
-> 
-> > Thanks,
-> >      Paul
-> > 
-> >> Having it in 4.15 would be great.
-> >>
-> >> Cheers
-> >> James
-> >>
-> >>> Cc: Matt Redfearn <matt.redfearn@imgtec.com>
-> >>> Cc: James Hogan <jhogan@kernel.org>
-> >>> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> >>> ---
-> >>> I am aware that this problem has been reported several times. I have
-> >>> not been able to find a fix, but I may have missed it. If so, my
-> >>> apologies for the noise.
-> >>>
-> >>> Also note that this is not the only fix required; commit d41e6858ba58c,
-> >>> as simple as it looks like, does a pretty good job messing up
-> >>> "mips:allmodconfig" builds.
-> >>>
-> >>>   drivers/bcma/Kconfig | 2 +-
-> >>>   1 file changed, 1 insertion(+), 1 deletion(-)
-> >>>
-> >>> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-> >>> index 02d78f6cecbb..ba8acca036df 100644
-> >>> --- a/drivers/bcma/Kconfig
-> >>> +++ b/drivers/bcma/Kconfig
-> >>> @@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
-> >>>   
-> >>>   config BCMA_DRIVER_PCI_HOSTMODE
-> >>>   	bool "Driver for PCI core working in hostmode"
-> >>> -	depends on MIPS && BCMA_DRIVER_PCI
-> >>> +	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY
-> >>>   	help
-> >>>   	  PCI core hostmode operation (external PCI bus).
-> >>>   
-> >>> -- 
-> >>> 2.7.4
-> >>>
-> > 
-> > 
-> > 
-> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> index 73ef5b271f3b..1404729441a2 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> @@ -29,7 +29,7 @@
+>    *		Debug related function
+>    ***************************************************/
+>   
+> -const char *const gl_btc_wifi_bw_string[] = {
+> +static const char *const gl_btc_wifi_bw_string[] = {
+>   	"11bg",
+>   	"HT20",
+>   	"HT40",
+> @@ -37,7 +37,7 @@ const char *const gl_btc_wifi_bw_string[] = {
+>   	"HT160"
+>   };
+>   
+> -const char *const gl_btc_wifi_freq_string[] = {
+> +static const char *const gl_btc_wifi_freq_string[] = {
+>   	"2.4G",
+>   	"5G"
+>   };
+> @@ -156,7 +156,7 @@ static u8 halbtc_get_wifi_central_chnl(struct btc_coexist *btcoexist)
+>   	return chnl;
+>   }
+>   
+> -u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+> +static u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+>   {
+>   	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+>   
+> @@ -171,12 +171,12 @@ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+>   	return rtlpriv->btcoexist.btc_info.single_ant_path;
+>   }
+>   
+> -u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
+> +static u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
+>   {
+>   	return rtlpriv->btcoexist.btc_info.bt_type;
+>   }
+>   
+> -u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+> +static u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+>   {
+>   	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+>   	u8 num;
+> @@ -193,7 +193,7 @@ u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+>   	return num;
+>   }
+>   
+> -u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
+> +static u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
+>   {
+>   	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+>   
+> @@ -504,7 +504,7 @@ static u32 halbtc_get_bt_forbidden_slot_val(void *btc_context)
+>   	return btcoexist->bt_info.bt_forb_slot_val;
+>   }
+>   
+> -u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
+> +static u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
+>   {
+>   	/* return value:
+>   	 * [31:16] => connected port number
+> @@ -980,7 +980,8 @@ static void halbtc_write_4byte(void *bt_context, u32 reg_addr, u32 data)
+>   	rtl_write_dword(rtlpriv, reg_addr, data);
+>   }
+>   
+> -void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
+> +static void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr,
+> +					 u8 data)
+>   {
+>   	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+>   	struct rtl_priv *rtlpriv = btcoexist->adapter;
+> @@ -993,22 +994,6 @@ void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
+>   		rtl_write_byte(rtlpriv, reg_addr, data);
+>   }
+>   
+> -void halbtc_set_macreg(void *btc_context, u32 reg_addr, u32 bit_mask, u32 data)
+> -{
+> -	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+> -	struct rtl_priv *rtlpriv = btcoexist->adapter;
+> -
+> -	rtl_set_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask, data);
+> -}
+> -
+> -u32 halbtc_get_macreg(void *btc_context, u32 reg_addr, u32 bit_mask)
+> -{
+> -	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+> -	struct rtl_priv *rtlpriv = btcoexist->adapter;
+> -
+> -	return rtl_get_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask);
+> -}
+> -
+
+Should we conclude that the two routines above are not used, and that fact was 
+exposed when they were made static? If so, please note that they were deleted in 
+the commit message.
+
+Larry
