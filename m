@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:33243 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932124AbeARPRv (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:52917 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754070AbeASLXI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 10:17:51 -0500
-Received: by mail-io0-f178.google.com with SMTP id n7so8722193iob.0
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2018 07:17:51 -0800 (PST)
-From: Kyle Evans <kvans32@gmail.com>
-Date: Thu, 18 Jan 2018 12:50:24 -0500
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kyle Evans <kvans32@gmail.com>, linux-wireless@vger.kernel.org
-Subject: sdio failure to initialize on warm boot.
-Message-ID: <20180118172804.GA1170@localhost.localdomain> (sfid-20180118_161805_608081_9D86A826)
-References: <7c73dc36-5b7a-729e-4656-b45839c1360d@gmail.com>
- <5A55D325.60805@broadcom.com>
- <3842a299-cd14-65db-1222-6849bc95ef74@gmail.com>
- <5A59CF17.6040706@broadcom.com>
+        Fri, 19 Jan 2018 06:23:08 -0500
+Subject: Re: [PATCH 00/14] fix to remove unnecessary parenthesis,typedef and
+ avoid camelCase
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>
+References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <9fcef768-0db6-892b-98ef-b4bcdb1e10db@microchip.com> (sfid-20180119_122312_119674_42A1920A)
+Date: Fri, 19 Jan 2018 13:23:04 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5A59CF17.6040706@broadcom.com>
+In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Arend van Spriel <arend.vanspriel@broadcom.com>:
-> On 1/12/2018 9:18 PM, Kyle Evans wrote:
-> > 2) After reboot I get this nasty error...
-> > [    0.000000] Kernel command line: console=tty0 selinux=0
-> > video=1280x800 root=/dev/mmcblk1p1 brcmfmac.bebug=0x20000
-> > [    2.269750] mmc0: Invalid maximum block size, assuming 512 bytes
-> > [    2.330010] mmc0: SDHCI controller on c8000000.sdhci [c8000000.sdhci]
-> > using ADMA
-> > [    2.645242] mmc0: error -110 whilst initialising SDIO card
+All series Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+with the inline comments.
+
+Ajay, one general remark, please use Capital letters when beginning new
+sentences (I'm talking about commit descriptions).
+
+Thanks,
+Claudiu Beznea
+
+On 18.01.2018 15:16, Ajay Singh wrote:
+> This patch series contains changes to fix issues reported by checkpatch.pl script.
 > 
-> Ok. I suppose you mean a warm reboot. So I suppose the card is not 
-> properly power cycled. If your SDHCI controller driver (is it 
-> sdhci-acpi?) is loaded as a module, you could try to unload it and load 
-> it again. Let me know if that works for you to confirm my guess.
-
-Your guess is correct. The following brings up wifi after failure to do 
-so during warm boot.
-
-modprobe -r sdhci-tegra; modprobe sdhci-tegra;
-
--Kyle
+> 
+> Ajay Singh (14):
+>   staging: wilc1000: remove unnecessary use of parentheses
+>   staging: wilc1000: removed unnecessary defined enums typedef
+>   staging: wilc1000: fix alignments to match open parenthesis
+>   staging: wilc1000: rename host_int_ParseJoinBssParam() and it's
+>     variable using camelCase
+>   staging: wilc1000: rename camelCase used in Handle_DelAllSta() and its
+>     variable
+>   staging: wilc1000: rename strWIDList variable to wid_list to avoid
+>     camelCase
+>   staging: wilc1000: rename u32WidsCount variable to avoid camelCase
+>   staging: wilc1000: rename pu8CurrByte variable to avoid camelCase
+>   staging: wilc1000: rename pstrHostIFconnectAttr argument to avoid
+>     camelCase
+>   staging: wilc1000: rename ptstrJoinBssParam variable to avoid
+>     camelCase
+>   staging: wilc1000: rename strConnectInfo variable to avoid camelCase
+>   staging: wilc1000: rename Handle_ScanDone() to avoid camelCase
+>   staging: wilc1000: rename Handle_Connect() to avoid camelCase
+>   staging: wilc1000: rename Handle_ConnectTimeout() and Handle_Key()
+> 
+>  drivers/staging/wilc1000/coreconfigurator.c       |   2 +-
+>  drivers/staging/wilc1000/host_interface.c         | 936 +++++++++++-----------
+>  drivers/staging/wilc1000/linux_wlan.c             |  10 +-
+>  drivers/staging/wilc1000/wilc_sdio.c              |   4 +-
+>  drivers/staging/wilc1000/wilc_spi.c               |  20 +-
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  64 +-
+>  drivers/staging/wilc1000/wilc_wlan.c              |   2 +-
+>  drivers/staging/wilc1000/wilc_wlan_cfg.c          |   6 +-
+>  drivers/staging/wilc1000/wilc_wlan_if.h           |  72 +-
+>  9 files changed, 555 insertions(+), 561 deletions(-)
+> 
