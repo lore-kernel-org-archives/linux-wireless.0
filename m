@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:59438 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751537AbeA3HnO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 02:43:14 -0500
-Message-ID: <1517298191.2189.33.camel@sipsolutions.net> (sfid-20180130_084318_597654_0E45C291)
-Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matthias Schiffer <mschiffer@universe-factory.net>,
-        Richard =?ISO-8859-1?Q?Sch=FCtz?= <rschuetz@uni-koblenz.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 30 Jan 2018 08:43:11 +0100
-In-Reply-To: <2f3b9bd7-f083-f46c-8c47-051019a6f495@universe-factory.net>
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
-         <2f3b9bd7-f083-f46c-8c47-051019a6f495@universe-factory.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-eopbgr60081.outbound.protection.outlook.com ([40.107.6.81]:11936
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753011AbeASCJ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Jan 2018 21:09:26 -0500
+From: peter.oh@bowerswilkins.com
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Peter Oh <peter.oh@bowerswilkins.com>, johannes.berg@intel.com
+Subject: [PATCH v2] mac80211: mesh: fix wrong mesh TTL offset calculation
+Date: Thu, 18 Jan 2018 18:09:03 -0800
+Message-Id: <5ab069190f29078c2d621acf10ec9ad8aa0b684c.1516327710.git.peter.oh@bowerswilkins.com> (sfid-20180119_030932_332489_2A13DE94)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-01-26 at 23:17 +0100, Matthias Schiffer wrote:
-> 
-> I propose to revert this for now (I assume it's too late for 4.15, but
-> hopefully the regression can be fixed in 4.15.1).
+From: Peter Oh <peter.oh@bowerswilkins.com>
 
-I really don't think we should revert this, it fixes a real bug.
+mesh TTL offset in Mesh Channel Switch Parameters element depends on
+not only Secondary Channel Offset element, but also affected by
+HT Control field and Wide Bandwidth Channel Switch element.
+Hence take those values place in.
 
-We can easily switch the default though, would something like this
-help?
+Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
+---
+ net/mac80211/mesh.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 51aa55618ef7..b12da6ef3c12 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -170,9 +170,28 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 		enum nl80211_bss_scan_width scan_width;
- 		struct ieee80211_supported_band *sband =
- 				rdev->wiphy.bands[setup->chandef.chan->band];
--		scan_width = cfg80211_chandef_to_scan_width(&setup->chandef);
--		setup->basic_rates = ieee80211_mandatory_rates(sband,
--							       scan_width);
-+
-+		if (setup->chandef.chan->band == NL80211_BAND_2GHZ) {
-+			int i;
-+
-+			/*
-+			 * Older versions selected the mandatory rates for
-+			 * 2.4 GHz as well, but were broken in that only
-+			 * 1 Mbps was regarded as a mandatory rate. Keep
-+			 * using just 1 Mbps as the default basic rate for
-+			 * mesh to be interoperable with older versions.
-+			 */
-+			for (i = 0; i < sband->n_bitrates; i++) {
-+				if (sband->bitrates[i].bitrate == 10) {
-+					setup->basic_rates = BIT(i);
-+					break;
-+				}
-+			}
-+		} else {
-+			scan_width = cfg80211_chandef_to_scan_width(&setup->chandef);
-+			setup->basic_rates = ieee80211_mandatory_rates(sband,
-+								       scan_width);
-+		}
- 	}
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 73ac607..8c2aaf0 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1255,13 +1255,16 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ }
  
- 	err = cfg80211_chandef_dfs_required(&rdev->wiphy,
-
-johannes
+ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+-			       struct ieee80211_mgmt *mgmt, size_t len)
++			       struct ieee80211_mgmt *mgmt, size_t len,
++			       struct ieee802_11_elems *elems)
+ {
+ 	struct ieee80211_mgmt *mgmt_fwd;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_local *local = sdata->local;
+ 	u8 *pos = mgmt->u.action.u.chan_switch.variable;
+ 	size_t offset_ttl;
++	/* mgmt hdr 24 + csa action 15 without sec offset and wide bw */
++	unsigned int basic_hdrlen = 39;
+ 
+ 	skb = dev_alloc_skb(local->tx_headroom + len);
+ 	if (!skb)
+@@ -1269,11 +1272,17 @@ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 	skb_reserve(skb, local->tx_headroom);
+ 	mgmt_fwd = skb_put(skb, len);
+ 
++	if (ieee80211_has_order(mgmt->frame_control))
++		basic_hdrlen += 4;
++
++	if (elems->wide_bw_chansw_ie)
++		basic_hdrlen += 5;
++
+ 	/* offset_ttl is based on whether the secondary channel
+ 	 * offset is available or not. Subtract 1 from the mesh TTL
+ 	 * and disable the initiator flag before forwarding.
+ 	 */
+-	offset_ttl = (len < 42) ? 7 : 10;
++	offset_ttl = (len > basic_hdrlen) ? 10 : 7;
+ 	*(pos + offset_ttl) -= 1;
+ 	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
+ 
+@@ -1323,7 +1332,7 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* forward or re-broadcast the CSA frame */
+ 	if (fwd_csa) {
+-		if (mesh_fwd_csa_frame(sdata, mgmt, len) < 0)
++		if (mesh_fwd_csa_frame(sdata, mgmt, len, &elems) < 0)
+ 			mcsa_dbg(sdata, "Failed to forward the CSA frame");
+ 	}
+ }
+-- 
+2.7.4
