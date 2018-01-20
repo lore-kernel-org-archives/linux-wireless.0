@@ -1,85 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48998 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755359AbeAHGZ6 (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:40869 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754913AbeATRHl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 01:25:58 -0500
-Received: from mail-wr0-f198.google.com ([209.85.128.198])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <chia-lin.kao@canonical.com>)
-        id 1eYQsf-00024Z-5e
-        for linux-wireless@vger.kernel.org; Mon, 08 Jan 2018 06:25:57 +0000
-Received: by mail-wr0-f198.google.com with SMTP id g13so6490093wrh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Jan 2018 22:25:57 -0800 (PST)
+        Sat, 20 Jan 2018 12:07:41 -0500
 MIME-Version: 1.0
-From: AceLan Kao <acelan.kao@canonical.com>
-Date: Mon, 8 Jan 2018 14:25:55 +0800
-Message-ID: <CAFv23Qmb3myLgexGJ+9-yx2P+3ku-A5pSyrCxA-mU1HCGbuBsQ@mail.gmail.com> (sfid-20180108_072606_316057_630CA136)
-Subject: Poor performance on 5G network with Intel 9000 series cards
-To: linux-wireless@vger.kernel.org
-Cc: Emily Chien <emily.chien@canonical.com>,
-        William Kao <william.kao@canonical.com>,
-        Anthony Wong <anthony.wong@canonical.com>
+In-Reply-To: <20180120165631.e7c3kipmhb5sckor@ast-mbp>
+References: <151632009605.21271.11304291057104672116.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CAPcyv4iBHTahi66deUT1iSPpA2W2wjYZSaiUYUjpdK10d5Rt7g@mail.gmail.com> <20180120165631.e7c3kipmhb5sckor@ast-mbp>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Date: Sat, 20 Jan 2018 09:07:18 -0800
+Message-ID: <CAADnVQLOYTV5Z8C_sSj+pV9DRBFg9oOZVYcr3EKYsfZvuNS2Rw@mail.gmail.com> (sfid-20180120_181224_905842_A38F3B0A)
+Subject: Re: [PATCH v4 00/10] prevent bounds-check bypass via speculative execution
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Andi Kleen <ak@linux.intel.com>,
+        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Andrew Honig <ahonig@google.com>,
+        Alan Cox <alan@linux.intel.com>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andy Lutomirski <luto@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jim Mattson <jmattson@google.com>,
+        Christian Lamparter <chunkeey@gmail.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Sat, Jan 20, 2018 at 8:56 AM, Alexei Starovoitov
+<alexei.starovoitov@gmail.com> wrote:
+> On Fri, Jan 19, 2018 at 10:58:44PM -0800, Dan Williams wrote:
+>> On Thu, Jan 18, 2018 at 4:01 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+>> > Changes since v3 [1]
+>> > * Drop 'ifence_array_ptr' and associated compile-time + run-time
+>> >   switching and just use the masking approach all the time.
+>> >
+>> > * Convert 'get_user' to use pointer sanitization via masking rather than
+>> >   lfence. '__get_user' and associated paths still rely on
+>> >   lfence. (Linus)
+>> >
+>> >       "Basically, the rule is trivial: find all 'stac' users, and use
+>> >        address masking if those users already integrate the limit
+>> >        check, and lfence they don't."
+>> >
+>> > * At syscall entry sanitize the syscall number under speculation
+>> >   to remove a user controlled pointer de-reference in kernel
+>> >   space.  (Linus)
+>> >
+>> > * Fix a raw lfence in the kvm code (added for v4.15-rc8) to use
+>> >   'array_ptr'.
+>> >
+>> > * Propose 'array_idx' as a way to sanitize user input that is
+>> >   later used as an array index, but where the validation is
+>> >   happening in a different code block than the array reference.
+>> >   (Christian).
+>> >
+>> > * Fix grammar in speculation.txt (Kees)
+>> >
+>> > ---
+>> >
+>> > Quoting Mark's original RFC:
+>> >
+>> > "Recently, Google Project Zero discovered several classes of attack
+>> > against speculative execution. One of these, known as variant-1, allows
+>> > explicit bounds checks to be bypassed under speculation, providing an
+>> > arbitrary read gadget. Further details can be found on the GPZ blog [2]
+>> > and the Documentation patch in this series."
+>> >
+>> > A precondition of using this attack on the kernel is to get a user
+>> > controlled pointer de-referenced (under speculation) in privileged code.
+>> > The primary source of user controlled pointers in the kernel is the
+>> > arguments passed to 'get_user' and '__get_user'. An example of other
+>> > user controlled pointers are user-controlled array / pointer offsets.
+>> >
+>> > Better tooling is needed to find more arrays / pointers with user
+>> > controlled indices / offsets that can be converted to use 'array_ptr' or
+>> > 'array_idx'. A few are included in this set, and these are not expected
+>> > to be complete. That said, the 'get_user' protections raise the bar on
+>> > finding a vulnerable gadget in the kernel.
+>> >
+>> > These patches are also available via the 'nospec-v4' git branch here:
+>> >
+>> >     git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec-v4
+>>
+>> I've pushed out a nospec-v4.1 with the below minor cleanup, a fixup of
+>> the changelog for "kvm, x86: fix spectre-v1 mitigation", and added
+>> Paolo's ack.
+>>
+>>      git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec-v4.1
+>>
+>> diff --git a/include/linux/nospec.h b/include/linux/nospec.h
+>> index 8af35be1869e..b8a9222e34d1 100644
+>> --- a/include/linux/nospec.h
+>> +++ b/include/linux/nospec.h
+>> @@ -37,7 +37,7 @@ static inline unsigned long array_ptr_mask(unsigned
+>> long idx, unsigned long sz)
+>>         unsigned long _i = (idx);                                       \
+>>         unsigned long _mask = array_ptr_mask(_i, (sz));                 \
+>>                                                                         \
+>> -       __u._ptr = _arr + (_i & _mask);                                 \
+>> +       __u._ptr = _arr + _i;                                           \
+>>         __u._bit &= _mask;                                              \
+>>         __u._ptr;                                                       \
+>
+> hmm. I'm not sure it's the right thing to do, since the macro
+> is forcing cpu to speculate subsequent load from null instead
+> of valid pointer.
+> As Linus said: "
+>  So that __u._bit masking wasn't masking
+>  the pointer, it was masking the value that was *read* from the
+>  pointer, so that you could know that an invalid access returned
+>  0/NULL, not just the first value in the array.
+> "
+> imo just
+>   return _arr + (_i & _mask);
+> is enough. No need for union games.
+> The cpu will speculate the load from _arr[0] if _i is out of bounds
+> which is the same as if user passed _i == 0 which would have passed
+> bounds check anyway, so I don't see any data leak from populating
+> cache with _arr[0] data. In-bounds access can do that just as well
+> without any speculation.
 
-We found that Intel 9000 series wifi cards have tx performance issue
-on 5G network.
-Here are the test result.
-
-Client(10.101.46.25) is the platform with 9260 wifi card on 5G
-network, and server(10.101.46.219) is another machine with ethernet
-network.
-
-kernel v4.15-rc5 with firmware API 33
-
-acelan@u-Kabylake-Client-platform ~ % iperf -c 10.101.46.219 -er
-------------------------------------------------------------
-Server listening on TCP port 5001 with pid 2248
-Read buffer size: 1.44 KByte
-TCP window size: 85.3 KByte (default)
-------------------------------------------------------------
-------------------------------------------------------------
-Client connecting to 10.101.46.219, TCP port 5001 with pid 2248
-Write buffer size: 128 KByte
-TCP window size: 85.0 KByte (default)
-------------------------------------------------------------
-[ 5] local 10.101.46.25 port 54308 connected with 10.101.46.219 port 5001
-[ ID] Interval Transfer Bandwidth Write/Err Rtry Cwnd/RTT
-[ 5] 0.00-11.06 sec 7.75 MBytes 5.88 Mbits/sec 1/0 77 7K/165143 us
-[ 4] local 10.101.46.25 port 5001 connected with 10.101.46.219 port 38816
-[ ID] Interval Transfer Bandwidth Reads Dist(bin=0.2K)
-[ 4] 0.00-10.31 sec 77.0 MBytes 62.7 Mbits/sec 55729
-49:23:176:59:1140:294:168:53820
-
-------------------------------------------------------------
-
-With firmware API 34, no luck
-
-acelan@u-Kabylake-Client-platform ~ % iperf -c 10.101.46.219 -er
-------------------------------------------------------------
-Server listening on TCP port 5001 with pid 2138
-Read buffer size: 1.44 KByte
-TCP window size: 85.3 KByte (default)
-------------------------------------------------------------
-------------------------------------------------------------
-Client connecting to 10.101.46.219, TCP port 5001 with pid 2138
-Write buffer size: 128 KByte
-TCP window size: 187 KByte (default)
-------------------------------------------------------------
-[ 5] local 10.101.46.25 port 43560 connected with 10.101.46.219 port 5001
-[ ID] Interval Transfer Bandwidth Write/Err Rtry Cwnd/RTT
-[ 5] 0.00-10.01 sec 896 KBytes 733 Kbits/sec 1/0 58 7K/140474 us
-[ 4] local 10.101.46.25 port 5001 connected with 10.101.46.219 port 38844
-[ ID] Interval Transfer Bandwidth Reads Dist(bin=0.2K)
-[ 4] 0.00-10.11 sec 79.8 MBytes 66.2 Mbits/sec 57744
-37:6:191:52:1236:413:143:55666
-
-Any ideas?
-
-Best regards,
-AceLan Kao.
+scratch that. It's array_ptr, not array_access.
+The code will do if (!ptr) later, so yeah this api is fine.
