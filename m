@@ -1,46 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39455 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933510AbeAYDlK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 22:41:10 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "johannes.berg@intel.com" <johannes.berg@intel.com>
-CC: "kbuild-all@01.org" <kbuild-all@01.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "fengguang.wu@intel.com" <fengguang.wu@intel.com>
-Subject: Re: [mac80211-next:master 3/5] net//wireless/wext-compat.c:1351:9: warning: function returns address of local variable
-Date: Thu, 25 Jan 2018 03:41:00 +0000
-Message-ID: <1516851660.3774.13.camel@realtek.com> (sfid-20180125_044130_173566_885F00F7)
-References: <201801222115.gqohMHIk%fengguang.wu@intel.com>
-In-Reply-To: <201801222115.gqohMHIk%fengguang.wu@intel.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mga01.intel.com ([192.55.52.88]:37131 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756705AbeATVP6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 20 Jan 2018 16:15:58 -0500
+Subject: [PATCH v4.1 10/10] nl80211: sanitize array index in parse_txq_params
+From: Dan Williams <dan.j.williams@intel.com>
+To: tglx@linutronix.de
+Cc: linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        gregkh@linuxfoundation.org,
+        Christian Lamparter <chunkeey@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        alan@linux.intel.com
+Date: Sat, 20 Jan 2018 13:06:52 -0800
+Message-ID: <151648241217.34747.15879467952925973505.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180120_221602_602734_631941A3)
+In-Reply-To: <151648235823.34747.15181877619346237802.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151648235823.34747.15181877619346237802.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE4LTAxLTIyIGF0IDEzOjAwICswMDAwLCBrYnVpbGQgdGVzdCByb2JvdCB3cm90
-ZToNCj4gdHJlZTrCoMKgwqBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2Vy
-bmVsL2dpdC9qYmVyZy9tYWM4MDIxMS1uZXh0LmdpDQo+IHQgbWFzdGVyDQo+IGhlYWQ6wqDCoMKg
-MDc2ZGM2NzFlZTlmYTM3NGU3N2MzZDA1OTI1ZGFmYjc1YjIzYTc0Yw0KPiBjb21taXQ6IGMxNzll
-OTE1MTJjYWIwMWU4M2JlMzVhNjBlYWVkYTBmMTcwYTkxMDEgWzMvNV0gY2ZnODAyMTE6IHdleHQ6
-IGRvbid0DQo+IHVzZSBzdGF0aWMgc3RydWN0DQo+IGNvbmZpZzogeDg2XzY0LXJhbmRjb25maWct
-eDAxNi0wMTIyMTgzNCAoYXR0YWNoZWQgYXMgLmNvbmZpZykNCj4gY29tcGlsZXI6IGdjYy03IChE
-ZWJpYW4gNy4yLjAtMTIpIDcuMi4xIDIwMTcxMDI1DQo+IHJlcHJvZHVjZToNCj7CoMKgwqDCoMKg
-wqDCoMKgwqBnaXQgY2hlY2tvdXQgYzE3OWU5MTUxMmNhYjAxZTgzYmUzNWE2MGVhZWRhMGYxNzBh
-OTEwMQ0KPsKgwqDCoMKgwqDCoMKgwqDCoCMgc2F2ZSB0aGUgYXR0YWNoZWQgLmNvbmZpZyB0byBs
-aW51eCBidWlsZCB0cmVlDQo+wqDCoMKgwqDCoMKgwqDCoMKgbWFrZSBBUkNIPXg4Nl82NMKgDQo+
-wqANCj4gQWxsIHdhcm5pbmdzIChuZXcgb25lcyBwcmVmaXhlZCBieSA+Pik6DQo+wqANCj7CoMKg
-wqDCoG5ldC8vd2lyZWxlc3Mvd2V4dC1jb21wYXQuYzogSW4gZnVuY3Rpb24gJ2NmZzgwMjExX3dp
-cmVsZXNzX3N0YXRzJzoNCj4gPj4gbmV0Ly93aXJlbGVzcy93ZXh0LWNvbXBhdC5jOjEzNTE6OTog
-d2FybmluZzogZnVuY3Rpb24gcmV0dXJucyBhZGRyZXNzIG9mDQo+IGxvY2FsIHZhcmlhYmxlIFst
-V3JldHVybi1sb2NhbC1hZGRyXQ0KPsKgwqDCoMKgwqDCoHJldHVybiAmd3N0YXRzOw0KPsKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgXn5+fn5+fg0KPsKgDQoNCkhpIEpvaGFubmVzLA0KDQpJbiBj
-b21taXQgYzE3OWU5MTUxLCB5b3UgcmVtb3ZlICdzdGF0aWMnIGZyb20gc3RydWN0LCBidXQgZnVu
-Y3Rpb24gcmV0dXJuIHRoZQ0KYWRkcmVzcyBvZiBsb2NhbCB2YXJpYWJsZSBhcyBrYnVpbGQgcm9i
-b3QgbWVudGlvbmVkLiBJdCBpcyBhIHByb2JsZW0sIGJ1dA0KbXkgcHJpb3IgZXhwZXJpbWVudCBs
-b29rcyBmaW5lLiBIZW5jZSwgSSBjaGVjayB0aGUgY2FsbGVycyBvZiBnZXRfd2lyZWxlc3Nfc3Rh
-dHMoKSwNCmFuZCBmb3VuZCB0aGV5IHVzZSB0aGUgYWRkcmVzcyB0aGF0IHBvaW50cyB0byBzdGFj
-ayBpbW1lZGlhdGVseSwgc28gY29udGVudCBvZg0Kc3RhY2sgd2Fzbid0IGJyb2tlbiBsdWNraWx5
-Lg0KDQpTbywgcGxlYXNlIHJlY2FsbCB0aGUgJ3N0YXRpYycgb2YgJ3N0cnVjdCBpd19zdGF0aXN0
-aWNzIHdzdGF0cycuDQpUaGFua3MNClBLDQoNCg==
+Wireless drivers rely on parse_txq_params to validate that
+txq_params->ac is less than NL80211_NUM_ACS by the time the low-level
+driver's ->conf_tx() handler is called. Use a new helper, 'array_idx',
+to sanitize txq_params->ac with respect to speculation. I.e. ensure that
+any speculation into ->conf_tx() handlers is done with a value of
+txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
+
+Reported-by: Christian Lamparter <chunkeey@gmail.com>
+Reported-by: Elena Reshetova <elena.reshetova@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ include/linux/nospec.h |   21 +++++++++++++++++++++
+ net/wireless/nl80211.c |   10 +++++++---
+ 2 files changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/nospec.h b/include/linux/nospec.h
+index dd3aa05fab87..b8a9222e34d1 100644
+--- a/include/linux/nospec.h
++++ b/include/linux/nospec.h
+@@ -41,4 +41,25 @@ static inline unsigned long array_ptr_mask(unsigned long idx, unsigned long sz)
+ 	__u._bit &= _mask;						\
+ 	__u._ptr;							\
+ })
++
++/**
++ * array_idx - Generate a pointer to an array index, ensuring the
++ * pointer is bounded under speculation to NULL.
++ *
++ * @idx: the index of the element, must be less than LONG_MAX
++ * @sz: the number of elements in the array, must be less than LONG_MAX
++ *
++ * If @idx falls in the interval [0, @sz), returns &@idx otherwise
++ * returns NULL.
++ */
++#define array_idx(idx, sz)						\
++({									\
++	union { typeof((idx)) *_ptr; unsigned long _bit; } __u;		\
++	typeof(idx) *_i = &(idx);					\
++	unsigned long _mask = array_ptr_mask(*_i, (sz));		\
++									\
++	__u._ptr = _i;							\
++	__u._bit &= _mask;						\
++	__u._ptr;							\
++})
+ #endif /* __NOSPEC_H__ */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d396cb61a280..e3b3527c16d4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -16,6 +16,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/netlink.h>
++#include <linux/nospec.h>
+ #include <linux/etherdevice.h>
+ #include <net/net_namespace.h>
+ #include <net/genetlink.h>
+@@ -2056,20 +2057,23 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
+ static int parse_txq_params(struct nlattr *tb[],
+ 			    struct ieee80211_txq_params *txq_params)
+ {
++	u8 ac, *idx;
++
+ 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
+ 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
+ 	    !tb[NL80211_TXQ_ATTR_AIFS])
+ 		return -EINVAL;
+ 
+-	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
++	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
+ 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
+ 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
+ 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
+ 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 
+-	if (txq_params->ac >= NL80211_NUM_ACS)
++	idx = array_idx(ac, NL80211_NUM_ACS);
++	if (!idx)
+ 		return -EINVAL;
+-
++	txq_params->ac = *idx;
+ 	return 0;
+ }
+ 
