@@ -1,121 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41724 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751169AbeAYSZR (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35715 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751064AbeATG6p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 13:25:17 -0500
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv2 2/2] mac80211: Add support to notify ht/vht opmode modification.
-Date: Thu, 25 Jan 2018 23:51:33 +0530
-Message-Id: <1516904493-4310-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180125_192521_110098_6AD77B99)
-In-Reply-To: <1516904493-4310-1-git-send-email-tamizhr@codeaurora.org>
-References: <1516904493-4310-1-git-send-email-tamizhr@codeaurora.org>
+        Sat, 20 Jan 2018 01:58:45 -0500
+Received: by mail-oi0-f66.google.com with SMTP id b11so2685435oif.2
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Jan 2018 22:58:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <151632009605.21271.11304291057104672116.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151632009605.21271.11304291057104672116.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 19 Jan 2018 22:58:44 -0800
+Message-ID: <CAPcyv4iBHTahi66deUT1iSPpA2W2wjYZSaiUYUjpdK10d5Rt7g@mail.gmail.com> (sfid-20180120_075917_271971_0014003E)
+Subject: Re: [PATCH v4 00/10] prevent bounds-check bypass via speculative execution
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Andi Kleen <ak@linux.intel.com>,
+        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Andrew Honig <ahonig@google.com>,
+        Alan Cox <alan@linux.intel.com>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andy Lutomirski <luto@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jim Mattson <jmattson@google.com>,
+        Christian Lamparter <chunkeey@gmail.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        stable@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will add support to send an event to a userspace application
-whenever station advertise its ht/vht opmode modification through
-an action frame.
+On Thu, Jan 18, 2018 at 4:01 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> Changes since v3 [1]
+> * Drop 'ifence_array_ptr' and associated compile-time + run-time
+>   switching and just use the masking approach all the time.
+>
+> * Convert 'get_user' to use pointer sanitization via masking rather than
+>   lfence. '__get_user' and associated paths still rely on
+>   lfence. (Linus)
+>
+>       "Basically, the rule is trivial: find all 'stac' users, and use
+>        address masking if those users already integrate the limit
+>        check, and lfence they don't."
+>
+> * At syscall entry sanitize the syscall number under speculation
+>   to remove a user controlled pointer de-reference in kernel
+>   space.  (Linus)
+>
+> * Fix a raw lfence in the kvm code (added for v4.15-rc8) to use
+>   'array_ptr'.
+>
+> * Propose 'array_idx' as a way to sanitize user input that is
+>   later used as an array index, but where the validation is
+>   happening in a different code block than the array reference.
+>   (Christian).
+>
+> * Fix grammar in speculation.txt (Kees)
+>
+> ---
+>
+> Quoting Mark's original RFC:
+>
+> "Recently, Google Project Zero discovered several classes of attack
+> against speculative execution. One of these, known as variant-1, allows
+> explicit bounds checks to be bypassed under speculation, providing an
+> arbitrary read gadget. Further details can be found on the GPZ blog [2]
+> and the Documentation patch in this series."
+>
+> A precondition of using this attack on the kernel is to get a user
+> controlled pointer de-referenced (under speculation) in privileged code.
+> The primary source of user controlled pointers in the kernel is the
+> arguments passed to 'get_user' and '__get_user'. An example of other
+> user controlled pointers are user-controlled array / pointer offsets.
+>
+> Better tooling is needed to find more arrays / pointers with user
+> controlled indices / offsets that can be converted to use 'array_ptr' or
+> 'array_idx'. A few are included in this set, and these are not expected
+> to be complete. That said, the 'get_user' protections raise the bar on
+> finding a vulnerable gadget in the kernel.
+>
+> These patches are also available via the 'nospec-v4' git branch here:
+>
+>     git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec-v4
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- net/mac80211/rx.c  | 14 ++++++++++++++
- net/mac80211/vht.c |  9 +++++++++
- 2 files changed, 23 insertions(+)
+I've pushed out a nospec-v4.1 with the below minor cleanup, a fixup of
+the changelog for "kvm, x86: fix spectre-v1 mitigation", and added
+Paolo's ack.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fd58061..d1efe8a 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2848,6 +2848,7 @@ static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
- 		case WLAN_HT_ACTION_SMPS: {
- 			struct ieee80211_supported_band *sband;
- 			enum ieee80211_smps_mode smps_mode;
-+			struct sta_opmode_info sta_opmode;
- 
- 			/* convert to HT capability */
- 			switch (mgmt->u.action.u.ht_smps.smps_control) {
-@@ -2868,17 +2869,24 @@ static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
- 			if (rx->sta->sta.smps_mode == smps_mode)
- 				goto handled;
- 			rx->sta->sta.smps_mode = smps_mode;
-+			sta_opmode.smps_mode = smps_mode;
-+			sta_opmode.changed = STA_OPMODE_SMPS_MODE_CHANGED;
- 
- 			sband = rx->local->hw.wiphy->bands[status->band];
- 
- 			rate_control_rate_update(local, sband, rx->sta,
- 						 IEEE80211_RC_SMPS_CHANGED);
-+			cfg80211_sta_opmode_change_notify(sdata->dev,
-+							  rx->sta->addr,
-+							  &sta_opmode,
-+							  GFP_KERNEL);
- 			goto handled;
- 		}
- 		case WLAN_HT_ACTION_NOTIFY_CHANWIDTH: {
- 			struct ieee80211_supported_band *sband;
- 			u8 chanwidth = mgmt->u.action.u.ht_notify_cw.chanwidth;
- 			enum ieee80211_sta_rx_bandwidth max_bw, new_bw;
-+			struct sta_opmode_info sta_opmode;
- 
- 			/* If it doesn't support 40 MHz it can't change ... */
- 			if (!(rx->sta->sta.ht_cap.cap &
-@@ -2899,9 +2907,15 @@ static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
- 
- 			rx->sta->sta.bandwidth = new_bw;
- 			sband = rx->local->hw.wiphy->bands[status->band];
-+			sta_opmode.bw = new_bw;
-+			sta_opmode.changed = STA_OPMODE_MAX_BW_CHANGED;
- 
- 			rate_control_rate_update(local, sband, rx->sta,
- 						 IEEE80211_RC_BW_CHANGED);
-+			cfg80211_sta_opmode_change_notify(sdata->dev,
-+							  rx->sta->addr,
-+							  &sta_opmode,
-+							  GFP_KERNEL);
- 			goto handled;
- 		}
- 		default:
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index b9276ac..5f5db8e 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -447,6 +447,7 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				  enum nl80211_band band)
- {
- 	enum ieee80211_sta_rx_bandwidth new_bw;
-+	struct sta_opmode_info sta_opmode;
- 	u32 changed = 0;
- 	u8 nss;
- 
-@@ -460,7 +461,9 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 
- 	if (sta->sta.rx_nss != nss) {
- 		sta->sta.rx_nss = nss;
-+		sta_opmode.rx_nss = nss;
- 		changed |= IEEE80211_RC_NSS_CHANGED;
-+		sta_opmode.changed |= STA_OPMODE_N_SS_CHANGED;
- 	}
- 
- 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
-@@ -481,9 +484,15 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 	new_bw = ieee80211_sta_cur_vht_bw(sta);
- 	if (new_bw != sta->sta.bandwidth) {
- 		sta->sta.bandwidth = new_bw;
-+		sta_opmode.bw = new_bw;
- 		changed |= IEEE80211_RC_BW_CHANGED;
-+		sta_opmode.changed |= STA_OPMODE_MAX_BW_CHANGED;
- 	}
- 
-+	if (sta_opmode.changed)
-+		cfg80211_sta_opmode_change_notify(sdata->dev, sta->addr,
-+						  &sta_opmode, GFP_KERNEL);
-+
- 	return changed;
- }
- 
--- 
-1.9.1
+     git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec-v4.1
+
+diff --git a/include/linux/nospec.h b/include/linux/nospec.h
+index 8af35be1869e..b8a9222e34d1 100644
+--- a/include/linux/nospec.h
++++ b/include/linux/nospec.h
+@@ -37,7 +37,7 @@ static inline unsigned long array_ptr_mask(unsigned
+long idx, unsigned long sz)
+        unsigned long _i = (idx);                                       \
+        unsigned long _mask = array_ptr_mask(_i, (sz));                 \
+                                                                        \
+-       __u._ptr = _arr + (_i & _mask);                                 \
++       __u._ptr = _arr + _i;                                           \
+        __u._bit &= _mask;                                              \
+        __u._ptr;                                                       \
+ })
