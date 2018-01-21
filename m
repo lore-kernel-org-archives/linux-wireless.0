@@ -1,111 +1,334 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44938 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932615AbeAYBKL (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25940 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751121AbeAUJVI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 20:10:11 -0500
-From: ryanhsu@codeaurora.org
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        rouven@czerwinskis.de
-Cc: ryanhsu@codeaurora.org
-Subject: [PATCH] ath10k: Update the phymode along with bandwidth change request
-Date: Wed, 24 Jan 2018 17:10:04 -0800
-Message-Id: <1516842604-31447-1-git-send-email-ryanhsu@codeaurora.org> (sfid-20180125_021015_838130_4106EC16)
+        Sun, 21 Jan 2018 04:21:08 -0500
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v2 8/8] wil6210: support parsing brd file address from fw file
+Date: Sun, 21 Jan 2018 11:14:43 +0200
+Message-Id: <1516526083-31389-9-git-send-email-merez@codeaurora.org> (sfid-20180121_102114_584946_258C66F2)
+In-Reply-To: <1516526083-31389-1-git-send-email-merez@codeaurora.org>
+References: <1516526083-31389-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ryan Hsu <ryanhsu@codeaurora.org>
+In order to allow using the same brd file across different
+11ad chips, the address for loading the brd file should be
+part of the FW file, instead of the brd file. The brd file is
+expected to include only one section.
+To allow backward compatibility the driver reads the
+address from the brd file in case it is not included in the
+FW file.
 
-In the case of Station connects to AP with narrower bandwidth at beginning.
-And later the AP changes the bandwidth to winder bandwidth, the AP will
-beacon with wider bandwidth IE, eg VHT20->VHT40->VHT80 or VHT40->VHT80.
-
-Since the supported BANDWIDTH will be limited by the PHYMODE, so while
-Station receives the bandwidth change request, it will also need to
-reconfigure the PHYMODE setting to firmware instead of just configuring
-the BANDWIDTH info, otherwise it'll trigger a firmware crash with
-non-support bandwidth.
-
-The issue was observed in WLAN.RM.4.4.1-00051-QCARMSWP-1, QCA6174 with
-below scenario.
-
---
-AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0 MHz)
-disconnect from AP xxx for new auth to yyy
-RX ReassocResp from xxx (capab=0x1111 status=0 aid=102)
-associated
-
-....
-
-AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0 MHz)
-AP xxx changed bandwidth, new config is 5200 MHz, width 3 (5210/0 MHz)
-
-....
-
-firmware register dump:
-[00]: 0x05030000 0x000015B3 0x00987291 0x00955B31
-[04]: 0x00987291 0x00060730 0x00000004 0x00000001
-[08]: 0x004089F0 0x00955A00 0x000A0B00 0x00400000
-[12]: 0x00000009 0x00000000 0x00952CD0 0x00952CE6
-[16]: 0x00952CC4 0x0098E25F 0x00000000 0x0091080D
-[20]: 0x40987291 0x0040E7A8 0x00000000 0x0041EE3C
-[24]: 0x809ABF05 0x0040E808 0x00000000 0xC0987291
-[28]: 0x809A650C 0x0040E948 0x0041FE40 0x004345C4
-[32]: 0x809A5C63 0x0040E988 0x0040E9AC 0x0042D1A8
-[36]: 0x8091D252 0x0040E9A8 0x00000002 0x00000001
-[40]: 0x809FDA9D 0x0040EA58 0x0043D554 0x0042D554
-[44]: 0x809F8B22 0x0040EA78 0x0043D554 0x00000001
-[48]: 0x80911210 0x0040EAC8 0x00000010 0x004041D0
-[52]: 0x80911154 0x0040EB28 0x00400000 0x00000000
-[56]: 0x8091122D 0x0040EB48 0x00000000 0x00400600
---
-
-Reported-by: Rouven Czerwinski <rouven@czerwinskis.de>
-Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/fw.h      |  18 +++-
+ drivers/net/wireless/ath/wil6210/fw_inc.c  | 167 +++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/main.c    |   7 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h |   3 +
+ 4 files changed, 184 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index ebb3f1b..68a5256 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1,6 +1,7 @@
+diff --git a/drivers/net/wireless/ath/wil6210/fw.h b/drivers/net/wireless/ath/wil6210/fw.h
+index 2f2b910..2c7b24f 100644
+--- a/drivers/net/wireless/ath/wil6210/fw.h
++++ b/drivers/net/wireless/ath/wil6210/fw.h
+@@ -1,5 +1,6 @@
  /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
+  * Copyright (c) 2014,2016 Qualcomm Atheros, Inc.
 + * Copyright (c) 2018, The Linux Foundation. All rights reserved.
   *
   * Permission to use, copy, modify, and/or distribute this software for any
   * purpose with or without fee is hereby granted, provided that the above
-@@ -5996,8 +5997,18 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
- 			   ath10k_mac_max_vht_nss(vht_mcs_mask)));
+@@ -58,15 +59,30 @@ struct wil_fw_record_comment { /* type == wil_fw_type_comment */
+ 	u8 data[0]; /* free-form data [data_size], see above */
+ } __packed;
  
- 	if (changed & IEEE80211_RC_BW_CHANGED) {
--		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM peer bw %d\n",
--			   sta->addr, bw);
-+		mode = chan_to_phymode(&def);
++/* Comment header - common for all comment record types */
++struct wil_fw_record_comment_hdr {
++	__le32 magic;
++};
 +
-+		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM peer bw %d phymode %d\n",
-+			   sta->addr, bw, mode);
+ /* FW capabilities encoded inside a comment record */
+ #define WIL_FW_CAPABILITIES_MAGIC (0xabcddcba)
+ struct wil_fw_record_capabilities { /* type == wil_fw_type_comment */
+ 	/* identifies capabilities record */
+-	__le32 magic;
++	struct wil_fw_record_comment_hdr hdr;
+ 	/* capabilities (variable size), see enum wmi_fw_capability */
+ 	u8 capabilities[0];
+ };
+ 
++/* brd file info encoded inside a comment record */
++#define WIL_BRD_FILE_MAGIC (0xabcddcbb)
++struct wil_fw_record_brd_file { /* type == wil_fw_type_comment */
++	/* identifies brd file record */
++	struct wil_fw_record_comment_hdr hdr;
++	__le32 version;
++	__le32 base_addr;
++	__le32 max_size_bytes;
++} __packed;
 +
-+		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
-+						WMI_PEER_PHYMODE, mode);
-+		if (err) {
-+			ath10k_warn(ar, "failed to update STA %pM peer phymode %d: %d\n",
-+				    sta->addr, mode, err);
-+			goto exit;
-+		}
- 
- 		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
- 						WMI_PEER_CHAN_WIDTH, bw);
-@@ -6039,6 +6050,7 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
- 				    sta->addr);
- 	}
- 
-+exit:
- 	mutex_unlock(&ar->conf_mutex);
+ /* perform action
+  * data_size = @head.size - offsetof(struct wil_fw_record_action, data)
+  */
+diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
+index 77d1902..914c010 100644
+--- a/drivers/net/wireless/ath/wil6210/fw_inc.c
++++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2014-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -128,14 +129,13 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
  }
  
+ static int
+-fw_handle_comment(struct wil6210_priv *wil, const void *data,
+-		  size_t size)
++fw_handle_capabilities(struct wil6210_priv *wil, const void *data,
++		       size_t size)
+ {
+ 	const struct wil_fw_record_capabilities *rec = data;
+ 	size_t capa_size;
+ 
+-	if (size < sizeof(*rec) ||
+-	    le32_to_cpu(rec->magic) != WIL_FW_CAPABILITIES_MAGIC) {
++	if (size < sizeof(*rec)) {
+ 		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
+ 				data, size, true);
+ 		return 0;
+@@ -151,8 +151,56 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
+ 	return 0;
+ }
+ 
+-static int fw_handle_data(struct wil6210_priv *wil, const void *data,
+-			  size_t size)
++static int
++fw_handle_brd_file(struct wil6210_priv *wil, const void *data,
++		   size_t size)
++{
++	const struct wil_fw_record_brd_file *rec = data;
++
++	if (size < sizeof(*rec)) {
++		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
++				data, size, true);
++		return 0;
++	}
++
++	wil->brd_file_addr = le32_to_cpu(rec->base_addr);
++	wil->brd_file_max_size = le32_to_cpu(rec->max_size_bytes);
++
++	wil_dbg_fw(wil, "brd_file_addr 0x%x, brd_file_max_size %d\n",
++		   wil->brd_file_addr, wil->brd_file_max_size);
++
++	return 0;
++}
++
++static int
++fw_handle_comment(struct wil6210_priv *wil, const void *data,
++		  size_t size)
++{
++	const struct wil_fw_record_comment_hdr *hdr = data;
++	u32 magic;
++	int rc = 0;
++
++	if (size < sizeof(*hdr))
++		return 0;
++
++	magic = le32_to_cpu(hdr->magic);
++
++	switch (magic) {
++	case WIL_FW_CAPABILITIES_MAGIC:
++		wil_dbg_fw(wil, "magic is WIL_FW_CAPABILITIES_MAGIC\n");
++		rc = fw_handle_capabilities(wil, data, size);
++		break;
++	case WIL_BRD_FILE_MAGIC:
++		wil_dbg_fw(wil, "magic is WIL_BRD_FILE_MAGIC\n");
++		rc = fw_handle_brd_file(wil, data, size);
++		break;
++	}
++
++	return rc;
++}
++
++static int __fw_handle_data(struct wil6210_priv *wil, const void *data,
++			    size_t size, __le32 addr)
+ {
+ 	const struct wil_fw_record_data *d = data;
+ 	void __iomem *dst;
+@@ -163,16 +211,23 @@ static int fw_handle_data(struct wil6210_priv *wil, const void *data,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (!wil_fw_addr_check(wil, &dst, d->addr, s, "address"))
++	if (!wil_fw_addr_check(wil, &dst, addr, s, "address"))
+ 		return -EINVAL;
+-	wil_dbg_fw(wil, "write [0x%08x] <== %zu bytes\n", le32_to_cpu(d->addr),
+-		   s);
++	wil_dbg_fw(wil, "write [0x%08x] <== %zu bytes\n", le32_to_cpu(addr), s);
+ 	wil_memcpy_toio_32(dst, d->data, s);
+ 	wmb(); /* finish before processing next record */
+ 
+ 	return 0;
+ }
+ 
++static int fw_handle_data(struct wil6210_priv *wil, const void *data,
++			  size_t size)
++{
++	const struct wil_fw_record_data *d = data;
++
++	return __fw_handle_data(wil, data, size, d->addr);
++}
++
+ static int fw_handle_fill(struct wil6210_priv *wil, const void *data,
+ 			  size_t size)
+ {
+@@ -552,6 +607,100 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
+ }
+ 
+ /**
++ * wil_brd_process - process section from BRD file
++ *
++ * Return error code
++ */
++static int wil_brd_process(struct wil6210_priv *wil, const void *data,
++			   size_t size)
++{
++	int rc = 0;
++	const struct wil_fw_record_head *hdr = data;
++	size_t s, hdr_sz;
++	u16 type;
++
++	/* Assuming the board file includes only one header record and one data
++	 * record. Each record starts with wil_fw_record_head.
++	 */
++	if (size < sizeof(*hdr))
++		return -EINVAL;
++	s = sizeof(*hdr) + le32_to_cpu(hdr->size);
++	if (s > size)
++		return -EINVAL;
++
++	/* Skip the header record and handle the data record */
++	hdr = (const void *)hdr + s;
++	size -= s;
++	if (size < sizeof(*hdr))
++		return -EINVAL;
++	hdr_sz = le32_to_cpu(hdr->size);
++
++	if (wil->brd_file_max_size && hdr_sz > wil->brd_file_max_size)
++		return -EINVAL;
++	if (sizeof(*hdr) + hdr_sz > size)
++		return -EINVAL;
++	if (hdr_sz % 4) {
++		wil_err_fw(wil, "unaligned record size: %zu\n",
++			   hdr_sz);
++		return -EINVAL;
++	}
++	type = le16_to_cpu(hdr->type);
++	if (type != wil_fw_type_data) {
++		wil_err_fw(wil, "invalid record type for board file: %d\n",
++			   type);
++		return -EINVAL;
++	}
++	if (hdr_sz < sizeof(struct wil_fw_record_data)) {
++		wil_err_fw(wil, "data record too short: %zu\n", hdr_sz);
++		return -EINVAL;
++	}
++
++	wil_dbg_fw(wil, "using addr from fw file: [0x%08x]\n",
++		   wil->brd_file_addr);
++
++	rc = __fw_handle_data(wil, &hdr[1], hdr_sz,
++			      cpu_to_le32(wil->brd_file_addr));
++
++	return rc;
++}
++
++/**
++ * wil_request_board - Request board file
++ *
++ * Request board image from the file
++ * board file address and max size are read from FW file
++ * during initialization.
++ * brd file shall include one header and one data section.
++ *
++ * Return error code
++ */
++int wil_request_board(struct wil6210_priv *wil, const char *name)
++{
++	int rc, dlen;
++	const struct firmware *brd;
++
++	rc = request_firmware(&brd, name, wil_to_dev(wil));
++	if (rc) {
++		wil_err_fw(wil, "Failed to load brd %s\n", name);
++		return rc;
++	}
++	wil_dbg_fw(wil, "Loading <%s>, %zu bytes\n", name, brd->size);
++
++	/* Verify the header */
++	dlen = wil_fw_verify(wil, brd->data, brd->size);
++	if (dlen < 0) {
++		rc = dlen;
++		goto out;
++	}
++	/* Process the data record */
++	rc = wil_brd_process(wil, brd->data, dlen);
++
++out:
++	release_firmware(brd);
++	return rc;
++}
++
++/**
+  * wil_fw_verify_file_exists - checks if firmware file exist
+  *
+  * @wil: driver context
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 575aafe..0c61a6c 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1262,7 +1262,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		rc = wil_request_firmware(wil, wil->wil_fw_name, true);
+ 		if (rc)
+ 			goto out;
+-		rc = wil_request_firmware(wil, WIL_BOARD_FILE_NAME, true);
++		if (wil->brd_file_addr)
++			rc = wil_request_board(wil, WIL_BOARD_FILE_NAME);
++		else
++			rc = wil_request_firmware(wil,
++						  WIL_BOARD_FILE_NAME,
++						  true);
+ 		if (rc)
+ 			goto out;
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 836122a..0df2aad 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -681,6 +681,8 @@ struct wil6210_priv {
+ 	const char *hw_name;
+ 	const char *wil_fw_name;
+ 	char *board_file;
++	u32 brd_file_addr;
++	u32 brd_file_max_size;
+ 	DECLARE_BITMAP(hw_capa, hw_capa_last);
+ 	DECLARE_BITMAP(fw_capabilities, WMI_FW_CAPABILITY_MAX);
+ 	DECLARE_BITMAP(platform_capa, WIL_PLATFORM_CAPA_MAX);
+@@ -1053,6 +1055,7 @@ void wil_update_net_queues_bh(struct wil6210_priv *wil, struct vring *vring,
+ 
+ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
+ 			 bool load);
++int wil_request_board(struct wil6210_priv *wil, const char *name);
+ bool wil_fw_verify_file_exists(struct wil6210_priv *wil, const char *name);
+ 
+ void wil_pm_runtime_allow(struct wil6210_priv *wil);
 -- 
 1.9.1
