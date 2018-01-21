@@ -1,271 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39541 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754534AbeASGqZ (ORCPT
+Received: from mail-yb0-f176.google.com ([209.85.213.176]:43819 "EHLO
+        mail-yb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750920AbeAUVq2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jan 2018 01:46:25 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/10] rtlwifi: Add spec_ver to check whether use new rate-id or not
-Date: Fri, 19 Jan 2018 14:45:51 +0800
-Message-ID: <20180119064551.10084-11-pkshih@realtek.com> (sfid-20180119_080154_868451_96A11341)
-In-Reply-To: <20180119064551.10084-1-pkshih@realtek.com>
-References: <20180119064551.10084-1-pkshih@realtek.com>
+        Sun, 21 Jan 2018 16:46:28 -0500
+Received: by mail-yb0-f176.google.com with SMTP id h9so2555557ybg.10
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Jan 2018 13:46:28 -0800 (PST)
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: RTL8723bu: poor signal and connection troubles
+To: Barry Day <briselec@gmail.com>, Carlo Caione <carlo@endlessm.com>,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        mylene.josserand@free-electrons.com,
+        Linux Upstreaming Team <linux@endlessm.com>
+References: <CAL9uMOFT3VwqHs5+wvot+dxArvhd7Bi-U5+CKhYUXjYwHcU=jg@mail.gmail.com>
+ <20180111103006.GA17574@thinktank.home.org>
+Message-ID: <14c5f7f4-0d5b-cecd-b45b-3672b67da07a@gmail.com> (sfid-20180121_224635_408482_2C5B0DDB)
+Date: Sun, 21 Jan 2018 16:46:25 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180111103006.GA17574@thinktank.home.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 01/11/2018 05:30 AM, Barry Day wrote:
+> On Wed, Jan 10, 2018 at 12:15:51PM +0000, Carlo Caione wrote:
+>> Hi,
+>> this is a follow up email to [0] since the problem was never fully
+>> investigated / solved and I keep seeing the same problem also on my
+>> hardware.
+>>
+>> Also in my case the hardware is a rtl8723bt transceiver
+>> (0x0bda:0xb720), this time shipped on the internal USB bus in a cheap
+>> laptop branded Zyrex Sky 232.
+>>
+>> As already reported by Mylene the problem is that using this
+>> transceiver and the latest Linus master you can barely see any WiFi
+>> network around and also when a WiFi network is actually seen, the
+>> connection is impossible since the signal strength is too low to have
+>> a reliable connection. Of course during my tests BT is off and no BT
+>> driver is probed at all.
+>>
+>> Using the downstream driver at [1] everything works correctly.
+>>
+>> I tried to debug a bit the issue, in particular comparing functions
+>> and registers related to the antenna setup (.power_on, .enable_rf,
+>> .phy_init_antenna_selection, .phy_iq_calibrate hooks) but everything
+>> seems pretty much the same on the two drivers (even though slightly
+>> differences do exist).
+>>
+>> Any idea / suggestion on how to debug this problem? I guess it's worth
+>> to start looking at this since several platforms are being affected
+>> now.
+>>
+>> Cheers,
+>>
+>> [0] https://www.spinics.net/lists/netdev/msg468028.html
+>> [1] https://github.com/lwfinger/rtl8723bu
+>>
+>> -- 
+>> Carlo Caione  |  +44.7384.69.16.04  |  Endless
+> 
+> I've found the same. The signal strength using the original driver
+> from Realtek is significantly higher than when using rtl8xxxu.
+> I also was not able to find anything wrong in the rtl8xxxu source code
+> that would be causing the difference, which leads to the thought it is
+> missing something that exists in the original driver.
 
-The field spec_ver is IC's specification mask for common code to do proper
-process to specified IC. This commit add a field new rate ID for new
-generation IC.
+One issue with rtl8723bu is that it needs to coexist with the bluetooth
+driver. When I wrote the rtl8723bu support that was no BT support for
+the chip in the kernel and it worked fine, at least for me. However if
+you load the BT driver for the dongle which someone pushed into the
+kernel since then, it is likely to hijack the antennas causing the weak
+signal you describe.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 126 +++++++++++++++++++++++++---
- drivers/net/wireless/realtek/rtlwifi/base.h |   2 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h |   5 ++
- 3 files changed, 121 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 7fa435e95c0e..d6c03bd5cc65 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -698,14 +698,94 @@ static void _rtl_query_protection_mode(struct ieee80211_hw *hw,
- 	}
- }
- 
-+u8 rtl_mrate_idx_to_arfr_id(struct ieee80211_hw *hw, u8 rate_index,
-+			    enum wireless_mode wirelessmode)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &rtlpriv->phy;
-+	u8 ret = 0;
-+
-+	switch (rate_index) {
-+	case RATR_INX_WIRELESS_NGB:
-+		if (rtlphy->rf_type == RF_1T1R)
-+			ret = RATEID_IDX_BGN_40M_1SS;
-+		else
-+			ret = RATEID_IDX_BGN_40M_2SS;
-+		; break;
-+	case RATR_INX_WIRELESS_N:
-+	case RATR_INX_WIRELESS_NG:
-+		if (rtlphy->rf_type == RF_1T1R)
-+			ret = RATEID_IDX_GN_N1SS;
-+		else
-+			ret = RATEID_IDX_GN_N2SS;
-+		; break;
-+	case RATR_INX_WIRELESS_NB:
-+		if (rtlphy->rf_type == RF_1T1R)
-+			ret = RATEID_IDX_BGN_20M_1SS_BN;
-+		else
-+			ret = RATEID_IDX_BGN_20M_2SS_BN;
-+		; break;
-+	case RATR_INX_WIRELESS_GB:
-+		ret = RATEID_IDX_BG;
-+		break;
-+	case RATR_INX_WIRELESS_G:
-+		ret = RATEID_IDX_G;
-+		break;
-+	case RATR_INX_WIRELESS_B:
-+		ret = RATEID_IDX_B;
-+		break;
-+	case RATR_INX_WIRELESS_MC:
-+		if (wirelessmode == WIRELESS_MODE_B ||
-+		    wirelessmode == WIRELESS_MODE_G ||
-+		    wirelessmode == WIRELESS_MODE_N_24G ||
-+		    wirelessmode == WIRELESS_MODE_AC_24G)
-+			ret = RATEID_IDX_BG;
-+		else
-+			ret = RATEID_IDX_G;
-+		break;
-+	case RATR_INX_WIRELESS_AC_5N:
-+		if (rtlphy->rf_type == RF_1T1R)
-+			ret = RATEID_IDX_VHT_1SS;
-+		else
-+			ret = RATEID_IDX_VHT_2SS;
-+		break;
-+	case RATR_INX_WIRELESS_AC_24N:
-+		if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_80) {
-+			if (rtlphy->rf_type == RF_1T1R)
-+				ret = RATEID_IDX_VHT_1SS;
-+			else
-+				ret = RATEID_IDX_VHT_2SS;
-+		} else {
-+			if (rtlphy->rf_type == RF_1T1R)
-+				ret = RATEID_IDX_MIX1;
-+			else
-+				ret = RATEID_IDX_MIX2;
-+		}
-+		break;
-+	default:
-+		ret = RATEID_IDX_BGN_40M_2SS;
-+		break;
-+	}
-+	return ret;
-+}
-+EXPORT_SYMBOL(rtl_mrate_idx_to_arfr_id);
-+
- static void _rtl_txrate_selectmode(struct ieee80211_hw *hw,
- 				   struct ieee80211_sta *sta,
- 				   struct rtl_tcb_desc *tcb_desc)
- {
-+#define SET_RATE_ID(rate_id)					\
-+	({typeof(rate_id) _id = rate_id;			\
-+	  ((rtlpriv->cfg->spec_ver & RTL_SPEC_NEW_RATEID) ?	\
-+		rtl_mrate_idx_to_arfr_id(hw, _id,		\
-+			(sta_entry ? sta_entry->wireless_mode :	\
-+			 WIRELESS_MODE_G)) :			\
-+		_id); })
-+
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_sta_info *sta_entry = NULL;
--	u8 ratr_index = 7;
-+	u8 ratr_index = SET_RATE_ID(RATR_INX_WIRELESS_MC);
- 
- 	if (sta) {
- 		sta_entry = (struct rtl_sta_info *) sta->drv_priv;
-@@ -720,7 +800,8 @@ static void _rtl_txrate_selectmode(struct ieee80211_hw *hw,
- 				tcb_desc->hw_rate =
- 				    rtlpriv->cfg->maps[RTL_RC_CCK_RATE2M];
- 				tcb_desc->use_driver_rate = 1;
--				tcb_desc->ratr_index = RATR_INX_WIRELESS_MC;
-+				tcb_desc->ratr_index =
-+					SET_RATE_ID(RATR_INX_WIRELESS_MC);
- 			} else {
- 				tcb_desc->ratr_index = ratr_index;
- 			}
-@@ -736,22 +817,30 @@ static void _rtl_txrate_selectmode(struct ieee80211_hw *hw,
- 		    mac->opmode == NL80211_IFTYPE_MESH_POINT) {
- 			tcb_desc->mac_id = 0;
- 
--			if (mac->mode == WIRELESS_MODE_AC_5G)
-+			if (sta &&
-+			    (rtlpriv->cfg->spec_ver & RTL_SPEC_NEW_RATEID))
-+				;	/* use sta_entry->ratr_index */
-+			else if (mac->mode == WIRELESS_MODE_AC_5G)
- 				tcb_desc->ratr_index =
--					RATR_INX_WIRELESS_AC_5N;
-+					SET_RATE_ID(RATR_INX_WIRELESS_AC_5N);
- 			else if (mac->mode == WIRELESS_MODE_AC_24G)
- 				tcb_desc->ratr_index =
--					RATR_INX_WIRELESS_AC_24N;
-+					SET_RATE_ID(RATR_INX_WIRELESS_AC_24N);
- 			else if (mac->mode == WIRELESS_MODE_N_24G)
--				tcb_desc->ratr_index = RATR_INX_WIRELESS_NGB;
-+				tcb_desc->ratr_index =
-+					SET_RATE_ID(RATR_INX_WIRELESS_NGB);
- 			else if (mac->mode == WIRELESS_MODE_N_5G)
--				tcb_desc->ratr_index = RATR_INX_WIRELESS_NG;
-+				tcb_desc->ratr_index =
-+					SET_RATE_ID(RATR_INX_WIRELESS_NG);
- 			else if (mac->mode & WIRELESS_MODE_G)
--				tcb_desc->ratr_index = RATR_INX_WIRELESS_GB;
-+				tcb_desc->ratr_index =
-+					SET_RATE_ID(RATR_INX_WIRELESS_GB);
- 			else if (mac->mode & WIRELESS_MODE_B)
--				tcb_desc->ratr_index = RATR_INX_WIRELESS_B;
-+				tcb_desc->ratr_index =
-+					SET_RATE_ID(RATR_INX_WIRELESS_B);
- 			else if (mac->mode & WIRELESS_MODE_A)
--				tcb_desc->ratr_index = RATR_INX_WIRELESS_G;
-+				tcb_desc->ratr_index =
-+					SET_RATE_ID(RATR_INX_WIRELESS_G);
- 
- 		} else if (mac->opmode == NL80211_IFTYPE_AP ||
- 			mac->opmode == NL80211_IFTYPE_ADHOC) {
-@@ -765,6 +854,7 @@ static void _rtl_txrate_selectmode(struct ieee80211_hw *hw,
- 			}
- 		}
- 	}
-+#undef SET_RATE_ID
- }
- 
- static void _rtl_query_bandwidth_mode(struct ieee80211_hw *hw,
-@@ -1141,9 +1231,19 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
- 		      struct ieee80211_sta *sta,
- 		      struct sk_buff *skb, struct rtl_tcb_desc *tcb_desc)
- {
-+#define SET_RATE_ID(rate_id)					\
-+	({typeof(rate_id) _id = rate_id;			\
-+	  ((rtlpriv->cfg->spec_ver & RTL_SPEC_NEW_RATEID) ?	\
-+		rtl_mrate_idx_to_arfr_id(hw, _id,		\
-+			(sta_entry ? sta_entry->wireless_mode :	\
-+			 WIRELESS_MODE_G)) :			\
-+		_id); })
-+
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
- 	struct ieee80211_hdr *hdr = rtl_get_hdr(skb);
-+	struct rtl_sta_info *sta_entry =
-+		(sta ? (struct rtl_sta_info *)sta->drv_priv : NULL);
- 
- 	__le16 fc = rtl_get_fc(skb);
- 
-@@ -1166,7 +1266,8 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
- 		if (info->control.rates[0].idx == 0 ||
- 				ieee80211_is_nullfunc(fc)) {
- 			tcb_desc->use_driver_rate = true;
--			tcb_desc->ratr_index = RATR_INX_WIRELESS_MC;
-+			tcb_desc->ratr_index =
-+					SET_RATE_ID(RATR_INX_WIRELESS_MC);
- 
- 			tcb_desc->disable_ratefallback = 1;
- 		} else {
-@@ -1208,11 +1309,12 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
- 		_rtl_query_protection_mode(hw, tcb_desc, info);
- 	} else {
- 		tcb_desc->use_driver_rate = true;
--		tcb_desc->ratr_index = RATR_INX_WIRELESS_MC;
-+		tcb_desc->ratr_index = SET_RATE_ID(RATR_INX_WIRELESS_MC);
- 		tcb_desc->disable_ratefallback = 1;
- 		tcb_desc->mac_id = 0;
- 		tcb_desc->packet_bw = false;
- 	}
-+#undef SET_RATE_ID
- }
- EXPORT_SYMBOL(rtl_get_tcb_desc);
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
-index 26735319b38f..acc924635818 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.h
-@@ -162,6 +162,8 @@ void rtl_c2hcmd_wq_callback(void *data);
- void rtl_c2hcmd_launcher(struct ieee80211_hw *hw, int exec);
- void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, u8 tag, u8 len, u8 *val);
- 
-+u8 rtl_mrate_idx_to_arfr_id(struct ieee80211_hw *hw, u8 rate_index,
-+			    enum wireless_mode wirelessmode);
- void rtl_get_tcb_desc(struct ieee80211_hw *hw,
- 		      struct ieee80211_tx_info *info,
- 		      struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 2d8e96896f49..a7aacbc3984e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -949,6 +949,10 @@ enum package_type {
- 	PACKAGE_TFBGA79
- };
- 
-+enum rtl_spec_ver {
-+	RTL_SPEC_NEW_RATEID = BIT(0),	/* use ratr_table_mode_new */
-+};
-+
- struct octet_string {
- 	u8 *octet;
- 	u16 length;
-@@ -2333,6 +2337,7 @@ struct rtl_hal_cfg {
- 	struct rtl_hal_ops *ops;
- 	struct rtl_mod_params *mod_params;
- 	struct rtl_hal_usbint_cfg *usb_interface_cfg;
-+	enum rtl_spec_ver spec_ver;
- 
- 	/*this map used for some registers or vars
- 	   defined int HAL but used in MAIN */
--- 
-2.15.1
+Jes
