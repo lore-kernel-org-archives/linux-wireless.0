@@ -1,51 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f182.google.com ([209.85.213.182]:44203 "EHLO
-        mail-yb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755199AbeAHSa5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:48820 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751092AbeAUKhv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 13:30:57 -0500
-Received: by mail-yb0-f182.google.com with SMTP id h189so4894219ybc.11
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jan 2018 10:30:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87o9m42p2k.fsf@kamboji.qca.qualcomm.com>
-References: <18a56326d68a7d53f3197e450cae0e28382d8d2c.1513252573.git.lorenzo.bianconi@redhat.com>
- <20180108173523.B23C360B22@smtp.codeaurora.org> <CAJ0CqmWEgC07iBkkt92fKTpagMx+_oim_3qcPoc=B6ttsUzoOA@mail.gmail.com>
- <87o9m42p2k.fsf@kamboji.qca.qualcomm.com>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Mon, 8 Jan 2018 19:30:56 +0100
-Message-ID: <CAJ0CqmV9C70SbxGk4aNDeKovHFCCH65Z7zfA2+WWDKqzkwmEvw@mail.gmail.com> (sfid-20180108_193101_207114_36FD1336)
-Subject: Re: [1/2] mt76: fix possible NULL pointer dereferencing in mt76x2_ampdu_action()
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Felix Fietkau <nbd@nbd.name>, dan.carpenter@oracle.com,
-        linux-wireless@vger.kernel.org
+        Sun, 21 Jan 2018 05:37:51 -0500
+Message-ID: <1516531063.2508.2.camel@sipsolutions.net> (sfid-20180121_113806_147231_156FC166)
+Subject: Re: [PATCH v4 10/10] nl80211: sanitize array index in
+ parse_txq_params
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dan.j.williams@intel.com>,
+        linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, akpm@linux-foundation.org,
+        kernel-hardening@lists.openwall.com, gregkh@linuxfoundation.org,
+        Christian Lamparter <chunkeey@gmail.com>,
+        linux-wireless@vger.kernel.org, tglx@linutronix.de,
+        torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        alan@linux.intel.com
+Date: Sun, 21 Jan 2018 11:37:43 +0100
+In-Reply-To: <151632015637.21271.10452415430644852207.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151632009605.21271.11304291057104672116.stgit@dwillia2-desk3.amr.corp.intel.com>
+         <151632015637.21271.10452415430644852207.stgit@dwillia2-desk3.amr.corp.intel.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->
->>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
->>>
->>>> Initialize mt76_txq pointer after ieee80211_txq pointer check.
->>>> Remove space after the pointer cast
->>>>
->>>> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
->>>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
->>>
->>> What am I supposed to do with this and patch 2? Drop?
->>
->> What do you mean? Why drop?
->
-> I didn't see Felix's ack, at least not on patchwork.
->
-> --
-> Kalle Valo
+On Thu, 2018-01-18 at 16:02 -0800, Dan Williams wrote:
+> Wireless drivers rely on parse_txq_params to validate that
+> txq_params->ac is less than NL80211_NUM_ACS by the time the low-level
+> driver's ->conf_tx() handler is called. Use a new helper, 'array_idx',
+> to sanitize txq_params->ac with respect to speculation. I.e. ensure that
+> any speculation into ->conf_tx() handlers is done with a value of
+> txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
 
-They should be fine since he merged them in mt76 github repo:
-- https://github.com/openwrt/mt76/commit/ca5ca8c779932e7cab3224053377b29f139904b9
-- https://github.com/openwrt/mt76/commit/2d4b8f57cc5e3101d45785ae9a9f1eb6fc229de9
+Sorry, I didn't realize you were waiting for me to review.
 
-Anyway we can wait for him, up to you.
-Regards,
+LGTM.
 
-Lorenzo
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+
+
+> Reported-by: Christian Lamparter <chunkeey@gmail.com>
+> Reported-by: Elena Reshetova <elena.reshetova@intel.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  include/linux/nospec.h |   21 +++++++++++++++++++++
+>  net/wireless/nl80211.c |   10 +++++++---
+>  2 files changed, 28 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/linux/nospec.h b/include/linux/nospec.h
+> index f841c11f3f1f..8af35be1869e 100644
+> --- a/include/linux/nospec.h
+> +++ b/include/linux/nospec.h
+> @@ -41,4 +41,25 @@ static inline unsigned long array_ptr_mask(unsigned long idx, unsigned long sz)
+>  	__u._bit &= _mask;						\
+>  	__u._ptr;							\
+>  })
+> +
+> +/**
+> + * array_idx - Generate a pointer to an array index, ensuring the
+> + * pointer is bounded under speculation to NULL.
+> + *
+> + * @idx: the index of the element, must be less than LONG_MAX
+> + * @sz: the number of elements in the array, must be less than LONG_MAX
+> + *
+> + * If @idx falls in the interval [0, @sz), returns &@idx otherwise
+> + * returns NULL.
+> + */
+> +#define array_idx(idx, sz)						\
+> +({									\
+> +	union { typeof((idx)) *_ptr; unsigned long _bit; } __u;		\
+> +	typeof(idx) *_i = &(idx);					\
+> +	unsigned long _mask = array_ptr_mask(*_i, (sz));		\
+> +									\
+> +	__u._ptr = _i;							\
+> +	__u._bit &= _mask;						\
+> +	__u._ptr;							\
+> +})
+>  #endif /* __NOSPEC_H__ */
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 2b3dbcd40e46..202cb1dc03ee 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/nl80211.h>
+>  #include <linux/rtnetlink.h>
+>  #include <linux/netlink.h>
+> +#include <linux/nospec.h>
+>  #include <linux/etherdevice.h>
+>  #include <net/net_namespace.h>
+>  #include <net/genetlink.h>
+> @@ -2056,20 +2057,23 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
+>  static int parse_txq_params(struct nlattr *tb[],
+>  			    struct ieee80211_txq_params *txq_params)
+>  {
+> +	u8 ac, *idx;
+> +
+>  	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
+>  	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
+>  	    !tb[NL80211_TXQ_ATTR_AIFS])
+>  		return -EINVAL;
+>  
+> -	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
+> +	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
+>  	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
+>  	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
+>  	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
+>  	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+>  
+> -	if (txq_params->ac >= NL80211_NUM_ACS)
+> +	idx = array_idx(ac, NL80211_NUM_ACS);
+> +	if (!idx)
+>  		return -EINVAL;
+> -
+> +	txq_params->ac = *idx;
+>  	return 0;
+>  }
+>  
+> 
+> 
