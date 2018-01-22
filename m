@@ -1,174 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39534 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751480AbeASGqX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jan 2018 01:46:23 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/10] rtlwifi: btcoex: Fix some static warnings from Sparse
-Date: Fri, 19 Jan 2018 14:45:48 +0800
-Message-ID: <20180119064551.10084-8-pkshih@realtek.com> (sfid-20180119_074638_177960_E9C1C3BF)
-In-Reply-To: <20180119064551.10084-1-pkshih@realtek.com>
-References: <20180119064551.10084-1-pkshih@realtek.com>
+Received: from mail-bl2nam02on0084.outbound.protection.outlook.com ([104.47.38.84]:56768
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751112AbeAVMrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Jan 2018 07:47:10 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 07/11] qtnfmac: validate interface combinations on changes
+Date: Mon, 22 Jan 2018 15:46:30 +0300
+Message-Id: <20180122124634.8430-8-sergey.matyukevich.os@quantenna.com> (sfid-20180122_134714_289770_94A2D3BD)
+In-Reply-To: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
+References: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Validate new interface combinations using wireless core checks when new
+interface is added or when the type of existing interface is modified.
+This is performed to make sure that new interface combination is supported
+by hardware. As a result, invalid interface combinations are rejected early,
+rather than passed to hardware with sometimes unpredictable results.
 
-Add 'static' or declaration to resolve the warnings.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 36 +++++++---------------
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  4 +++
- 2 files changed, 15 insertions(+), 25 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 50 +++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 73ef5b271f3b..1404729441a2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -29,7 +29,7 @@
-  *		Debug related function
-  ***************************************************/
- 
--const char *const gl_btc_wifi_bw_string[] = {
-+static const char *const gl_btc_wifi_bw_string[] = {
- 	"11bg",
- 	"HT20",
- 	"HT40",
-@@ -37,7 +37,7 @@ const char *const gl_btc_wifi_bw_string[] = {
- 	"HT160"
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 78e8968ab3c7..91830fd41508 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -81,6 +81,41 @@ qtnf_mgmt_stypes[NUM_NL80211_IFTYPES] = {
  };
  
--const char *const gl_btc_wifi_freq_string[] = {
-+static const char *const gl_btc_wifi_freq_string[] = {
- 	"2.4G",
- 	"5G"
- };
-@@ -156,7 +156,7 @@ static u8 halbtc_get_wifi_central_chnl(struct btc_coexist *btcoexist)
- 	return chnl;
- }
+ static int
++qtnf_validate_iface_combinations(struct wiphy *wiphy,
++				 struct qtnf_vif *change_vif,
++				 enum nl80211_iftype new_type)
++{
++	struct qtnf_wmac *mac;
++	struct qtnf_vif *vif;
++	int i;
++	int ret = 0;
++	struct iface_combination_params params = {
++		.num_different_channels = 1,
++	};
++
++	mac = wiphy_priv(wiphy);
++	if (!mac)
++		return -EFAULT;
++
++	for (i = 0; i < QTNF_MAX_INTF; i++) {
++		vif = &mac->iflist[i];
++		if (vif->wdev.iftype != NL80211_IFTYPE_UNSPECIFIED)
++			params.iftype_num[vif->wdev.iftype]++;
++	}
++
++	if (change_vif) {
++		params.iftype_num[new_type]++;
++		params.iftype_num[change_vif->wdev.iftype]--;
++	} else {
++		params.iftype_num[new_type]++;
++	}
++
++	ret = cfg80211_check_combinations(wiphy, &params);
++
++	return ret;
++}
++
++static int
+ qtnf_change_virtual_intf(struct wiphy *wiphy,
+ 			 struct net_device *dev,
+ 			 enum nl80211_iftype type,
+@@ -90,6 +125,13 @@ qtnf_change_virtual_intf(struct wiphy *wiphy,
+ 	u8 *mac_addr;
+ 	int ret;
  
--u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
-+static u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
- {
- 	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
++	ret = qtnf_validate_iface_combinations(wiphy, vif, type);
++	if (ret) {
++		pr_err("VIF%u.%u combination check: failed to set type %d\n",
++		       vif->mac->macid, vif->vifid, type);
++		return ret;
++	}
++
+ 	if (params)
+ 		mac_addr = params->macaddr;
+ 	else
+@@ -150,12 +192,20 @@ static struct wireless_dev *qtnf_add_virtual_intf(struct wiphy *wiphy,
+ 	struct qtnf_wmac *mac;
+ 	struct qtnf_vif *vif;
+ 	u8 *mac_addr = NULL;
++	int ret;
  
-@@ -171,12 +171,12 @@ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
- 	return rtlpriv->btcoexist.btc_info.single_ant_path;
- }
+ 	mac = wiphy_priv(wiphy);
  
--u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
-+static u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
- {
- 	return rtlpriv->btcoexist.btc_info.bt_type;
- }
+ 	if (!mac)
+ 		return ERR_PTR(-EFAULT);
  
--u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
-+static u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
- {
- 	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
- 	u8 num;
-@@ -193,7 +193,7 @@ u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
- 	return num;
- }
- 
--u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
-+static u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
- {
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
- 
-@@ -504,7 +504,7 @@ static u32 halbtc_get_bt_forbidden_slot_val(void *btc_context)
- 	return btcoexist->bt_info.bt_forb_slot_val;
- }
- 
--u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
-+static u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
- {
- 	/* return value:
- 	 * [31:16] => connected port number
-@@ -980,7 +980,8 @@ static void halbtc_write_4byte(void *bt_context, u32 reg_addr, u32 data)
- 	rtl_write_dword(rtlpriv, reg_addr, data);
- }
- 
--void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
-+static void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr,
-+					 u8 data)
- {
- 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-@@ -993,22 +994,6 @@ void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
- 		rtl_write_byte(rtlpriv, reg_addr, data);
- }
- 
--void halbtc_set_macreg(void *btc_context, u32 reg_addr, u32 bit_mask, u32 data)
--{
--	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
--	struct rtl_priv *rtlpriv = btcoexist->adapter;
--
--	rtl_set_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask, data);
--}
--
--u32 halbtc_get_macreg(void *btc_context, u32 reg_addr, u32 bit_mask)
--{
--	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
--	struct rtl_priv *rtlpriv = btcoexist->adapter;
--
--	return rtl_get_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask);
--}
--
- static void halbtc_set_bbreg(void *bt_context, u32 reg_addr, u32 bit_mask,
- 			     u32 data)
- {
-@@ -1054,6 +1039,7 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
- 					cmd_len, cmd_buf);
- }
- 
-+static
- void halbtc_set_bt_reg(void *btc_context, u8 reg_type, u32 offset, u32 set_val)
- {
- 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
-@@ -1093,7 +1079,7 @@ static void halbtc_display_dbg_msg(void *bt_context, u8 disp_type,
- 	}
- }
- 
--bool halbtc_under_ips(struct btc_coexist *btcoexist)
-+static bool halbtc_under_ips(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 1c6019be793a..8ed217656539 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -647,6 +647,7 @@ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv);
- bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv);
- bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
- void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
-+void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist);
- void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
- void exhalbtc_init_hw_config_wifi_only(struct wifi_only_cfg *wifionly_cfg);
- void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
-@@ -661,6 +662,7 @@ void exhalbtc_mediastatus_notify(struct btc_coexist *btcoexist,
- void exhalbtc_special_packet_notify(struct btc_coexist *btcoexist, u8 pkt_type);
- void exhalbtc_bt_info_notify(struct btc_coexist *btcoexist, u8 *tmp_buf,
- 			     u8 length);
-+void exhalbtc_rf_status_notify(struct btc_coexist *btcoexist, u8 type);
- void exhalbtc_stack_operation_notify(struct btc_coexist *btcoexist, u8 type);
- void exhalbtc_halt_notify(struct btc_coexist *btcoexist);
- void exhalbtc_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
-@@ -668,6 +670,8 @@ void exhalbtc_coex_dm_switch(struct btc_coexist *btcoexist);
- void exhalbtc_periodical(struct btc_coexist *btcoexist);
- void exhalbtc_dbg_control(struct btc_coexist *btcoexist, u8 code, u8 len,
- 			  u8 *data);
-+void exhalbtc_antenna_detection(struct btc_coexist *btcoexist, u32 cent_freq,
-+				u32 offset, u32 span, u32 seconds);
- void exhalbtc_stack_update_profile_info(void);
- void exhalbtc_set_hci_version(struct btc_coexist *btcoexist, u16 hci_version);
- void exhalbtc_set_bt_patch_version(struct btc_coexist *btcoexist,
++	ret = qtnf_validate_iface_combinations(wiphy, NULL, type);
++	if (ret) {
++		pr_err("MAC%u invalid combination: failed to add type %d\n",
++		       mac->macid, type);
++		return ERR_PTR(ret);
++	}
++
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_AP:
 -- 
-2.15.1
+2.11.0
