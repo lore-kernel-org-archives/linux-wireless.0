@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:37178 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752802AbeARB0e (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:46726 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751028AbeAVOvj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 20:26:34 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] rtlwifi: Support A-MSDU in A-MPDU capability
-Date: Thu, 18 Jan 2018 09:26:14 +0800
-Message-ID: <20180118012614.6724-1-pkshih@realtek.com> (sfid-20180118_022652_856302_51D95AE5)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 22 Jan 2018 09:51:39 -0500
+Message-ID: <1516632697.2508.32.camel@sipsolutions.net> (sfid-20180122_155142_918559_E0193828)
+Subject: Re: [PATCH v3 4/5] mac80211_hwsim: add permanent mac address option
+ for new radios
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 22 Jan 2018 15:51:37 +0100
+In-Reply-To: <f9d585eb-2c32-5b54-9615-48f9f36c6647@uni-rostock.de> (sfid-20180122_154950_627652_0284353E)
+References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
+         <6596c1d9-da4f-4d83-bd5e-5e276391a0c9@MAIL2.uni-rostock.de>
+         <1516018472.410.16.camel@sipsolutions.net>
+         <3dd7a66e-1b55-0300-b04e-489ed1163b96@uni-rostock.de>
+         <1516627401.2508.30.camel@sipsolutions.net>
+         <f9d585eb-2c32-5b54-9615-48f9f36c6647@uni-rostock.de>
+         (sfid-20180122_154950_627652_0284353E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Mon, 2018-01-22 at 15:49 +0100, Benjamin Beichler wrote:
+> 
+> Should I sent then the complete patch set again, or should I create a
+> new one based on your current mac80211next branch, excluding the
+> accepted patches ?
 
-Due to the fact that A-MSDU deaggregation is done in software,
-we set this flag to support the A-MSDU in A-MPDU
+Please only send the ones I don't have yet, if necessary throwing in a
+separate fix for them.
 
-Signed-off-by: Steven Ting <steventing@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
-Rebase to resolve conflict due to the patch 'fast-tx' is dropped.
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 89ec318598ea..c8ebf738cb2b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -395,6 +395,7 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, CONNECTION_MONITOR);
- 	ieee80211_hw_set(hw, MFP_CAPABLE);
- 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
-+	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
- 
- 	/* swlps or hwlps has been set in diff chip in init_sw_vars */
- 	if (rtlpriv->psc.swctrl_lps) {
--- 
-2.15.1
+johannes
