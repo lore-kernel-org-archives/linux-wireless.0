@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.uni-rostock.de ([139.30.22.71]:51914 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751028AbeAVRE6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 12:04:58 -0500
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Subject: [PATCH v4 2/3] mac80211_hwsim: add nl_err_msg in hwsim_new_radio in netlink case
-Date: Mon, 22 Jan 2018 18:04:36 +0100
-Message-ID: <20180122170437.14213-3-benjamin.beichler@uni-rostock.de> (sfid-20180122_180502_529853_60CC6D58)
-In-Reply-To: <20180122170437.14213-1-benjamin.beichler@uni-rostock.de>
-References: <20180122170437.14213-1-benjamin.beichler@uni-rostock.de>
+Received: from mail-bl2nam02on0057.outbound.protection.outlook.com ([104.47.38.57]:39552
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751092AbeAVMrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Jan 2018 07:47:00 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>
+Subject: [PATCH 02/11] qtnfmac: fix warnings when mBSS setup is stopped
+Date: Mon, 22 Jan 2018 15:46:25 +0300
+Message-Id: <20180122124634.8430-3-sergey.matyukevich.os@quantenna.com> (sfid-20180122_134706_487839_8157230F)
+In-Reply-To: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
+References: <20180122124634.8430-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a NL_ERR_MSG in case of creating a radio by a netlink message to give
-clear output to the creating process instead of creating only a debug
-message in kernel log. The same function is used for the creation while
-module load, so keep the old message, although it should never be thrown
-while load, because the module controls all mac addresses.
+From: Vasily Ulyanov <vulyanov@quantenna.com>
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Virtual interface should be deleted after calling unregister_netdevice
+since this function ends up with sending updown_intf command to card.
+
+Signed-off-by: Vasily Ulyanov <vulyanov@quantenna.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index e9c92f70b97d..8baf61dea961 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2796,8 +2796,13 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	err = rhashtable_insert_fast(&hwsim_radios_rht, &data->rht,
- 				     hwsim_rht_params);
- 	if (err < 0) {
--		pr_debug("mac80211_hwsim: radio index %d already present\n",
--			 idx);
-+		if(!info)
-+			pr_debug("mac80211_hwsim: radio index %d already present\n",
-+				 idx);
-+		else
-+			GENL_SET_ERR_MSG(info,"perm addr already present");
-+			NL_SET_BAD_ATTR(info->extack,
-+					info->attrs[HWSIM_ATTR_PERM_ADDR]);
- 		spin_unlock_bh(&hwsim_radio_lock);
- 		goto failed_final_insert;
- 	}
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index abf10996c26a..c417a67b0291 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -120,10 +120,6 @@ int qtnf_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 
+ 	qtnf_scan_done(vif->mac, true);
+ 
+-	if (qtnf_cmd_send_del_intf(vif))
+-		pr_err("VIF%u.%u: failed to delete VIF\n", vif->mac->macid,
+-		       vif->vifid);
+-
+ 	/* Stop data */
+ 	netif_tx_stop_all_queues(netdev);
+ 	if (netif_carrier_ok(netdev))
+@@ -132,6 +128,10 @@ int qtnf_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 	if (netdev->reg_state == NETREG_REGISTERED)
+ 		unregister_netdevice(netdev);
+ 
++	if (qtnf_cmd_send_del_intf(vif))
++		pr_err("VIF%u.%u: failed to delete VIF\n", vif->mac->macid,
++		       vif->vifid);
++
+ 	vif->netdev->ieee80211_ptr = NULL;
+ 	vif->netdev = NULL;
+ 	vif->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
 -- 
-2.15.1
+2.11.0
