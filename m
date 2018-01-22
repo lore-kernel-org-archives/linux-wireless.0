@@ -1,71 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:16916 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932408AbeARNSr (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59832 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751057AbeAVOAQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 08:18:47 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 14/14] staging: wilc1000: rename Handle_ConnectTimeout() and Handle_Key()
-Date: Thu, 18 Jan 2018 18:47:12 +0530
-Message-ID: <1516281432-7724-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141921_441081_FA4D422A)
-In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 22 Jan 2018 09:00:16 -0500
+Date: Mon, 22 Jan 2018 15:00:15 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: syzbot
+        <bot+1fdad4e2731bf0c1bc19953ccc5061237ec92783@syzkaller.appspotmail.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        syzkaller-bugs@googlegroups.com,
+        David Miller <davem@davemloft.net>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Eric Dumazet <edumazet@google.com>,
+        jakub.kicinski@netronome.com,
+        Willem de Bruijn <willemb@google.com>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        John Fastabend <john.fastabend@gmail.com>,
+        "Tobin C. Harding" <me@tobin.cc>, netdev <netdev@vger.kernel.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: WARNING in sysfs_warn_dup
+Message-ID: <20180122140015.GA30036@kroah.com> (sfid-20180122_150031_038376_E9706743)
+References: <001a11c14bc837f9760560a03d51@google.com>
+ <20171219090121.GA10221@kroah.com>
+ <CACT4Y+ZggKsEjCRZsFPW5-7_ByBcz4G0uRdieLL==r4mLQjhFA@mail.gmail.com>
+ <CACT4Y+ZOimZPrSfphPMiHKXA3=kOmaFfwdofrmuv_rpXmx+vgA@mail.gmail.com>
+ <CACT4Y+YMMfsXb+X4ApcWW02Qe7FmARhHjg97H4J-369OEMnwhw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACT4Y+YMMfsXb+X4ApcWW02Qe7FmARhHjg97H4J-369OEMnwhw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fix "Avoid camelCase" issue found by checkpatch.pl script.
+On Mon, Jan 22, 2018 at 02:47:33PM +0100, Dmitry Vyukov wrote:
+> On Tue, Dec 19, 2017 at 10:06 AM, Dmitry Vyukov <dvyukov@google.com> wrote:
+> > On Tue, Dec 19, 2017 at 10:03 AM, Dmitry Vyukov <dvyukov@google.com> wrote:
+> >>
+> >> On Tue, Dec 19, 2017 at 10:01 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> >>>
+> >>> On Mon, Dec 18, 2017 at 08:57:01AM -0800, syzbot wrote:
+> >>> > Hello,
+> >>> >
+> >>> > syzkaller hit the following crash on
+> >>> > 6084b576dca2e898f5c101baef151f7bfdbb606d
+> >>> > git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/master
+> >>> > compiler: gcc (GCC) 7.1.1 20170620
+> >>> > .config is attached
+> >>> > Raw console output is attached.
+> >>> >
+> >>> > Unfortunately, I don't have any reproducer for this bug yet.
+> >>> >
+> >>> >
+> >>> > netlink: 9 bytes leftover after parsing attributes in process
+> >>> > `syz-executor3'.
+> >>> > sg_write: data in/out 822404280/197 bytes for SCSI command 0x12-- guessing
+> >>> > data in;
+> >>> >    program syz-executor0 not setting count and/or reply_len properly
+> >>> > sg_write: data in/out 262364/161 bytes for SCSI command 0xff-- guessing data
+> >>> > in;
+> >>> >    program syz-executor0 not setting count and/or reply_len properly
+> >>> > WARNING: CPU: 1 PID: 22282 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x60/0x80
+> >>> > fs/sysfs/dir.c:30
+> >>> > Kernel panic - not syncing: panic_on_warn set ...
+> >>>
+> >>> Looks like a networking issue, it tried to create two sysfs directories
+> >>> with the same name, which isn't a sysfs bug :)
+> >
+> >
+> > Now as plain text:
+> >
+> > +net/core/dev.c maintainers
+> 
+> 
+> Also happens for wiphy_register (on upstream
+> a8750ddca918032d6349adbf9a4b6555e7db20da):
+> 
+> ------------[ cut here ]------------
+> sysfs: cannot create duplicate filename
+> '/class/ieee80211/š§"­ût{§Ô­ðô Š!× ž 7… Š†õiùS6 È< »þ {_CK5äá   ×ÝÊmô Be'
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+That's a wonderful filename :)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 15fca67..49f35f7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1159,7 +1159,7 @@ static s32 handle_connect(struct wilc_vif *vif,
- 	return result;
- }
- 
--static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
-+static s32 handle_connect_timeout(struct wilc_vif *vif)
- {
- 	s32 result = 0;
- 	struct connect_info conn_info;
-@@ -1519,7 +1519,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
- 	return result;
- }
- 
--static int Handle_Key(struct wilc_vif *vif,
-+static int handle_key(struct wilc_vif *vif,
- 		      struct key_attr *pstrHostIFkeyAttr)
- {
- 	s32 result = 0;
-@@ -2505,7 +2505,7 @@ static void host_if_work(struct work_struct *work)
- 		break;
- 
- 	case HOST_IF_MSG_KEY:
--		Handle_Key(msg->vif, &msg->body.key_info);
-+		handle_key(msg->vif, &msg->body.key_info);
- 		break;
- 
- 	case HOST_IF_MSG_CFG_PARAMS:
-@@ -2572,7 +2572,7 @@ static void host_if_work(struct work_struct *work)
- 		break;
- 
- 	case HOST_IF_MSG_CONNECT_TIMER_FIRED:
--		Handle_ConnectTimeout(msg->vif);
-+		handle_connect_timeout(msg->vif);
- 		break;
- 
- 	case HOST_IF_MSG_POWER_MGMT:
--- 
-2.7.4
+> WARNING: CPU: 1 PID: 8233 at fs/sysfs/dir.c:31
+> sysfs_warn_dup+0x7e/0xa0 fs/sysfs/dir.c:30
+
+As this is just sysfs saying "Hey dummy, you are trying to do something
+foolish here", what would be the better thing for it to do?
+
+Just printk(KERN_WARNING...) and then dump the stack?
+
+It seems the WARN_ON() that is currently being used is being treated as
+an "error" by your testing, when really it isn't, unless the caller can
+not handle the error being passed back up to it by the sysfs core.
+Which it should, but I don't think you are even giving it the chance as
+you are:
+
+> Kernel panic - not syncing: panic_on_warn set ...
+
+Yup, panic_on_warn :(
+
+ideas to make this easier for you?
+
+thanks,
+
+greg k-h
