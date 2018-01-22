@@ -1,43 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:33546 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751401AbeAOIWr (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:46507 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751216AbeAVKXb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 03:22:47 -0500
-Message-ID: <1516004561.410.3.camel@sipsolutions.net> (sfid-20180115_092302_052016_1787874E)
-Subject: Re: WARNING in wiphy_register
-From: Johannes Berg <johannes@sipsolutions.net>
-To: syzbot <syzbot+8dd9051ff19940290931@syzkaller.appspotmail.com>,
-        davem@davemloft.net, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Date: Mon, 15 Jan 2018 09:22:41 +0100
-In-Reply-To: <94eb2c05e11e2f85150562b007ef@google.com> (sfid-20180113_233740_281154_0AEBEE6F)
-References: <94eb2c05e11e2f85150562b007ef@google.com>
-         (sfid-20180113_233740_281154_0AEBEE6F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 22 Jan 2018 05:23:31 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 12/14] staging: wilc1000: rename Handle_ScanDone() to avoid camelCase
+Date: Mon, 22 Jan 2018 15:52:25 +0530
+Message-ID: <1516616547-24654-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180122_113155_479203_47782924)
+In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi syzbot maintainers,
+Fix "Avoid camelCase" issue reported by checkpatch.pl
+script.
 
-Thanks for the report.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
->   hwsim_new_radio_nl+0x5b7/0x7c0 drivers/net/wireless/mac80211_hwsim.c:3152
->   genl_family_rcv_msg+0x7b7/0xfb0 net/netlink/genetlink.c:599
->   genl_rcv_msg+0xb2/0x140 net/netlink/genetlink.c:624
-
-You're getting into the kernel via generic netlink receive, so just as
-an FYI - the generic netlink numbers aren't stable across systems, so
-your reproducer has a quite good chance of not working without your
-kernel .config and (virt) hardware environment.
-
-I'll take a look at this and the rfkill one, I assume that there are
-some sanity checks missing in hwsim generic netlink when it builds a
-radio struct.
-
-However, I can't really promise that I'll be able to validate the
-changes against your reproducer.
-
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0eaf6c6..b34243c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -267,7 +267,7 @@ static struct wilc_vif *join_req_vif;
+ 
+ static void *host_int_parse_join_bss_param(struct network_info *info);
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+-static s32 Handle_ScanDone(struct wilc_vif *vif, enum scan_event enuEvent);
++static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event enuEvent);
+ static void host_if_work(struct work_struct *work);
+ 
+ /*!
+@@ -847,7 +847,7 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ ERRORHANDLER:
+ 	if (result) {
+ 		del_timer(&hif_drv->scan_timer);
+-		Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
++		handle_scan_done(vif, SCAN_EVENT_ABORTED);
+ 	}
+ 
+ 	kfree(scan_info->ch_freq_list);
+@@ -863,8 +863,8 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 	return result;
+ }
+ 
+-static s32 Handle_ScanDone(struct wilc_vif *vif,
+-			   enum scan_event enuEvent)
++static s32 handle_scan_done(struct wilc_vif *vif,
++			    enum scan_event enuEvent)
+ {
+ 	s32 result = 0;
+ 	u8 u8abort_running_scan;
+@@ -1460,7 +1460,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 
+ 			if (hif_drv->usr_scan_req.scan_result) {
+ 				del_timer(&hif_drv->scan_timer);
+-				Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
++				handle_scan_done(vif, SCAN_EVENT_ABORTED);
+ 			}
+ 
+ 			strDisconnectNotifInfo.reason = 0;
+@@ -1508,7 +1508,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 			   (hif_drv->usr_scan_req.scan_result)) {
+ 			del_timer(&hif_drv->scan_timer);
+ 			if (hif_drv->usr_scan_req.scan_result)
+-				Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
++				handle_scan_done(vif, SCAN_EVENT_ABORTED);
+ 		}
+ 	}
+ 
+@@ -2525,7 +2525,7 @@ static void host_if_work(struct work_struct *work)
+ 		if (!wilc_wlan_get_num_conn_ifcs(wilc))
+ 			wilc_chip_sleep_manually(wilc);
+ 
+-		Handle_ScanDone(msg->vif, SCAN_EVENT_DONE);
++		handle_scan_done(msg->vif, SCAN_EVENT_DONE);
+ 
+ 		if (msg->vif->hif_drv->remain_on_ch_pending)
+ 			Handle_RemainOnChan(msg->vif,
+@@ -2567,7 +2567,7 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_SCAN_TIMER_FIRED:
+-		Handle_ScanDone(msg->vif, SCAN_EVENT_ABORTED);
++		handle_scan_done(msg->vif, SCAN_EVENT_ABORTED);
+ 		break;
+ 
+ 	case HOST_IF_MSG_CONNECT_TIMER_FIRED:
+-- 
+2.7.4
