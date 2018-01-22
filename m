@@ -1,59 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:34149 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755900AbeAHJby (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:45233 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751121AbeAVTMw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 04:31:54 -0500
-Received: by mail-wm0-f48.google.com with SMTP id y82so14963745wmg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jan 2018 01:31:54 -0800 (PST)
-Subject: Re: brcmfmac: set p2p_disc error on BCM4350
-To: William Dauchy <wdauchy@gmail.com>, linux-wireless@vger.kernel.org
-References: <CAJ75kXYLOV8aVZpftBFRbMv=KCaxCoQpJFaL0m0QDjVOytq3Vg@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A533A88.1000804@broadcom.com> (sfid-20180108_103159_360301_9FC2C28F)
-Date: Mon, 8 Jan 2018 10:31:52 +0100
+        Mon, 22 Jan 2018 14:12:52 -0500
+Received: by mail-oi0-f65.google.com with SMTP id a28so617469oiy.12
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jan 2018 11:12:51 -0800 (PST)
+Subject: Re: [PATCH 02/10] rtlwifi: btcoex: Add switch band notify for btc
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180119064551.10084-1-pkshih@realtek.com>
+ <20180119064551.10084-3-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <21ae901c-b5a6-0310-134c-1b281a42487a@lwfinger.net> (sfid-20180122_201256_032500_483B158E)
+Date: Mon, 22 Jan 2018 13:12:50 -0600
 MIME-Version: 1.0
-In-Reply-To: <CAJ75kXYLOV8aVZpftBFRbMv=KCaxCoQpJFaL0m0QDjVOytq3Vg@mail.gmail.com>
+In-Reply-To: <20180119064551.10084-3-pkshih@realtek.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/8/2018 12:49 AM, William Dauchy wrote:
-> Hello,
->
-> Using the last v4.14.x I am getting this error at each boot, on my
-> BCM4350 802.11ac Wireless Network Adapter:
->
-> brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
-> brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlp58s0 type 10
-> failed: err=-16
->
-> The firmware used is:
-> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015
-> 06:16:26 version 7.35.180.119 (r594535) FWID 01-e791c176
->
-> I was wondering if this error could be fixed?
+On 01/19/2018 12:45 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> BT shares 2.4G band but not 5G band, so inform current band to btcoex to
+> setup antenna properly.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-This has been reported before, but not been able to look into it. Diving 
-into firmware it seems that error can only occur if the mac address for 
-the p2pdev interface is already used. So if possible can you rebuild the 
-driver with the patch below applied and provide dmesg output and output 
-of 'ifconfig -a'.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Regards,
-Arend
----8<----------------------------------------------------------------
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c 
-b/drivers/n
-index 2ee5413..f96ad37 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -2065,6 +2065,7 @@ static struct wireless_dev 
-*brcmf_p2p_create_p2pdev(struc
-         int err;
-         u32 bsscfgidx;
-
-+       brcmf_err("enter: mac=%pM\n", addr);
-         if (p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
-                 return ERR_PTR(-ENOSPC);
+> ---
+>   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 13 +++++++++++
+>   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  9 ++++++++
+>   .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 27 ++++++++++++++++++++++
+>   .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |  2 ++
+>   drivers/net/wireless/realtek/rtlwifi/wifi.h        |  2 ++
+>   5 files changed, 53 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> index c335f06eb13b..b51189ae1bfd 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> @@ -1910,3 +1910,16 @@ void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist,
+>   
+>   	halbtc_normal_low_power(btcoexist);
+>   }
+> +
+> +void exhalbtc_switch_band_notify(struct btc_coexist *btcoexist, u8 type)
+> +{
+> +	if (!halbtc_is_bt_coexist_available(btcoexist))
+> +		return;
+> +
+> +	if (btcoexist->manual_control)
+> +		return;
+> +
+> +	halbtc_leave_low_power(btcoexist);
+> +
+> +	halbtc_normal_low_power(btcoexist);
+> +}
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> index bc854ff2ab8a..cd3925d34854 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> @@ -385,6 +385,14 @@ enum btc_notify_type_scan {
+>   	BTC_SCAN_MAX
+>   };
+>   
+> +enum btc_notify_type_switchband {
+> +	BTC_NOT_SWITCH = 0x0,
+> +	BTC_SWITCH_TO_24G = 0x1,
+> +	BTC_SWITCH_TO_5G = 0x2,
+> +	BTC_SWITCH_TO_24G_NOFORSCAN = 0x3,
+> +	BTC_SWITCH_MAX
+> +};
+> +
+>   enum btc_notify_type_associate {
+>   	BTC_ASSOCIATE_FINISH = 0x0,
+>   	BTC_ASSOCIATE_START = 0x1,
+> @@ -659,6 +667,7 @@ void exhalbtc_set_chip_type(struct btc_coexist *btcoexist, u8 chip_type);
+>   void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num);
+>   void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist,
+>   				   struct seq_file *m);
+> +void exhalbtc_switch_band_notify(struct btc_coexist *btcoexist, u8 type);
+>   void exhalbtc_signal_compensation(struct btc_coexist *btcoexist,
+>   				  u8 *rssi_wifi, u8 *rssi_bt);
+>   void exhalbtc_lps_leave(struct btc_coexist *btcoexist);
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+> index 714c0de099e5..bbc9517260b3 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+> @@ -48,6 +48,7 @@ static struct rtl_btc_ops rtl_btc_operation = {
+>   	.btc_is_disable_edca_turbo = rtl_btc_is_disable_edca_turbo,
+>   	.btc_is_bt_disabled = rtl_btc_is_bt_disabled,
+>   	.btc_special_packet_notify = rtl_btc_special_packet_notify,
+> +	.btc_switch_band_notify = rtl_btc_switch_band_notify,
+>   	.btc_record_pwr_mode = rtl_btc_record_pwr_mode,
+>   	.btc_get_lps_val = rtl_btc_get_lps_val,
+>   	.btc_get_rpwm_val = rtl_btc_get_rpwm_val,
+> @@ -423,6 +424,32 @@ void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type)
+>   	return exhalbtc_special_packet_notify(btcoexist, pkt_type);
+>   }
+>   
+> +void rtl_btc_switch_band_notify(struct rtl_priv *rtlpriv, u8 band_type,
+> +				bool scanning)
+> +{
+> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
+> +	u8 type = BTC_NOT_SWITCH;
+> +
+> +	if (!btcoexist)
+> +		return;
+> +
+> +	switch (band_type) {
+> +	case BAND_ON_2_4G:
+> +		if (scanning)
+> +			type = BTC_SWITCH_TO_24G;
+> +		else
+> +			type = BTC_SWITCH_TO_24G_NOFORSCAN;
+> +		break;
+> +
+> +	case BAND_ON_5G:
+> +		type = BTC_SWITCH_TO_5G;
+> +		break;
+> +	}
+> +
+> +	if (type != BTC_NOT_SWITCH)
+> +		exhalbtc_switch_band_notify(btcoexist, type);
+> +}
+> +
+>   struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
+>   {
+>   	return &rtl_btc_operation;
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+> index 8c5098266039..1d98741ae874 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
+> @@ -46,6 +46,8 @@ bool rtl_btc_is_limited_dig(struct rtl_priv *rtlpriv);
+>   bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv);
+>   bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv);
+>   void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type);
+> +void rtl_btc_switch_band_notify(struct rtl_priv *rtlpriv, u8 band_type,
+> +				bool scanning);
+>   void rtl_btc_display_bt_coex_info(struct rtl_priv *rtlpriv, struct seq_file *m);
+>   void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
+>   u8   rtl_btc_get_lps_val(struct rtl_priv *rtlpriv);
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> index 531c86df54d4..8ed0207c6f14 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> @@ -2579,6 +2579,8 @@ struct rtl_btc_ops {
+>   	bool (*btc_is_bt_disabled) (struct rtl_priv *rtlpriv);
+>   	void (*btc_special_packet_notify)(struct rtl_priv *rtlpriv,
+>   					  u8 pkt_type);
+> +	void (*btc_switch_band_notify)(struct rtl_priv *rtlpriv, u8 type,
+> +				       bool scanning);
+>   	void (*btc_display_bt_coex_info)(struct rtl_priv *rtlpriv,
+>   					 struct seq_file *m);
+>   	void (*btc_record_pwr_mode)(struct rtl_priv *rtlpriv, u8 *buf, u8 len);
+> 
