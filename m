@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:49611 "EHLO
-        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751516AbeA0JJI (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:53942 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750954AbeAVAxs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Jan 2018 04:09:08 -0500
-From: Andreas Schwab <schwab@linux-m68k.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: James Hogan <jhogan@kernel.org>, Michael Buesch <m@bues.ch>,
-        linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Paul Burton <paul.burton@mips.com>,
-        Matt Redfearn <matt.redfearn@imgtec.com>,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [for-4.15] ssb: Disable PCI host for PCI_DRIVERS_GENERIC
-References: <20180115211714.24009-1-jhogan@kernel.org>
-        <20180116191636.6B3E5605A4@smtp.codeaurora.org>
-Date: Sat, 27 Jan 2018 10:08:56 +0100
-In-Reply-To: <20180116191636.6B3E5605A4@smtp.codeaurora.org> (Kalle Valo's
-        message of "Tue, 16 Jan 2018 19:16:36 +0000 (UTC)")
-Message-ID: <m2bmhfsm6v.fsf@linux-m68k.org> (sfid-20180127_100926_088810_D45812A5)
+        Sun, 21 Jan 2018 19:53:48 -0500
+From: Pkshih <pkshih@realtek.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 07/10] rtlwifi: btcoex: Fix some static warnings from Sparse
+Date: Mon, 22 Jan 2018 00:53:34 +0000
+Message-ID: <5B2DA6FDDF928F4E855344EE0A5C39D13BE6ECBA@RTITMBSV07.realtek.com.tw> (sfid-20180122_015353_454267_E1240780)
+References: <20180119064551.10084-1-pkshih@realtek.com>
+ <20180119064551.10084-8-pkshih@realtek.com>
+ <79544f61-8a0d-283d-6370-1197b31aa59f@lwfinger.net>
+In-Reply-To: <79544f61-8a0d-283d-6370-1197b31aa59f@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 16 2018, Kalle Valo <kvalo@codeaurora.org> wrote:
-
-> 58eae1416b80 ssb: Disable PCI host for PCI_DRIVERS_GENERIC
-
-That breaks wireless on PowerMac!  There is nothing MIPS-specific about
-SSB.
-
-Andreas.
-
--- 
-Andreas Schwab, schwab@linux-m68k.org
-GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
-"And now for something completely different."
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5r
+ZXJuZWwub3JnXSBPbiBCZWhhbGYNCj4gT2YgTGFycnkgRmluZ2VyDQo+IFNlbnQ6IFNhdHVyZGF5
+LCBKYW51YXJ5IDIwLCAyMDE4IDY6NDYgQU0NCj4gVG86IFBrc2hpaDsga3ZhbG9AY29kZWF1cm9y
+YS5vcmcNCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBS
+ZTogW1BBVENIIDA3LzEwXSBydGx3aWZpOiBidGNvZXg6IEZpeCBzb21lIHN0YXRpYyB3YXJuaW5n
+cyBmcm9tIFNwYXJzZQ0KPiANCj4gT24gMDEvMTkvMjAxOCAxMjo0NSBBTSwgcGtzaGloQHJlYWx0
+ZWsuY29tIHdyb3RlOg0KPiA+IEZyb206IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29t
+Pg0KPiA+DQo+ID4gQWRkICdzdGF0aWMnIG9yIGRlY2xhcmF0aW9uIHRvIHJlc29sdmUgdGhlIHdh
+cm5pbmdzLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVh
+bHRlay5jb20+DQo+ID4gLS0tDQo+ID4gICAuLi4vcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9o
+YWxidGNvdXRzcmMuYyAgICAgICB8IDM2ICsrKysrKystLS0tLS0tLS0tLS0tLS0NCj4gPiAgIC4u
+Li9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5oICAgICAgIHwgIDQgKysr
+DQo+ID4gICAyIGZpbGVzIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDI1IGRlbGV0aW9ucygt
+KQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRs
+d2lmaS9idGNvZXhpc3QvaGFsYnRjb3V0c3JjLmMNCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9y
+ZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5jDQo+ID4gaW5kZXggNzNlZjVi
+MjcxZjNiLi4xNDA0NzI5NDQxYTIgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGNvdXRzcmMuYw0KPiA+ICsrKyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjb3V0c3Jj
+LmMNCj4gPiBAQCAtOTkzLDIyICs5OTQsNiBAQCB2b2lkIGhhbGJ0Y193cml0ZV9sb2NhbF9yZWdf
+MWJ5dGUodm9pZCAqYnRjX2NvbnRleHQsIHUzMiByZWdfYWRkciwgdTggZGF0YSkNCj4gPiAgIAkJ
+cnRsX3dyaXRlX2J5dGUocnRscHJpdiwgcmVnX2FkZHIsIGRhdGEpOw0KPiA+ICAgfQ0KPiA+DQo+
+ID4gLXZvaWQgaGFsYnRjX3NldF9tYWNyZWcodm9pZCAqYnRjX2NvbnRleHQsIHUzMiByZWdfYWRk
+ciwgdTMyIGJpdF9tYXNrLCB1MzIgZGF0YSkNCj4gPiAtew0KPiA+IC0Jc3RydWN0IGJ0Y19jb2V4
+aXN0ICpidGNvZXhpc3QgPSAoc3RydWN0IGJ0Y19jb2V4aXN0ICopYnRjX2NvbnRleHQ7DQo+ID4g
+LQlzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYgPSBidGNvZXhpc3QtPmFkYXB0ZXI7DQo+ID4gLQ0K
+PiA+IC0JcnRsX3NldF9iYnJlZyhydGxwcml2LT5tYWM4MDIxMS5odywgcmVnX2FkZHIsIGJpdF9t
+YXNrLCBkYXRhKTsNCj4gPiAtfQ0KPiA+IC0NCj4gPiAtdTMyIGhhbGJ0Y19nZXRfbWFjcmVnKHZv
+aWQgKmJ0Y19jb250ZXh0LCB1MzIgcmVnX2FkZHIsIHUzMiBiaXRfbWFzaykNCj4gPiAtew0KPiA+
+IC0Jc3RydWN0IGJ0Y19jb2V4aXN0ICpidGNvZXhpc3QgPSAoc3RydWN0IGJ0Y19jb2V4aXN0ICop
+YnRjX2NvbnRleHQ7DQo+ID4gLQlzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYgPSBidGNvZXhpc3Qt
+PmFkYXB0ZXI7DQo+ID4gLQ0KPiA+IC0JcmV0dXJuIHJ0bF9nZXRfYmJyZWcocnRscHJpdi0+bWFj
+ODAyMTEuaHcsIHJlZ19hZGRyLCBiaXRfbWFzayk7DQo+ID4gLX0NCj4gPiAtDQo+IA0KPiBTaG91
+bGQgd2UgY29uY2x1ZGUgdGhhdCB0aGUgdHdvIHJvdXRpbmVzIGFib3ZlIGFyZSBub3QgdXNlZCwg
+YW5kIHRoYXQgZmFjdCB3YXMNCj4gZXhwb3NlZCB3aGVuIHRoZXkgd2VyZSBtYWRlIHN0YXRpYz8g
+SWYgc28sIHBsZWFzZSBub3RlIHRoYXQgdGhleSB3ZXJlIGRlbGV0ZWQgaW4NCj4gdGhlIGNvbW1p
+dCBtZXNzYWdlLg0KPiANCg0KSSdsbCBhZGQgdG8gY29tbWl0IGxvZyBpbiB2Mi4NCg0KUEsNCg0K
