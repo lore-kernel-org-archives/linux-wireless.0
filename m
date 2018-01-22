@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f180.google.com ([74.125.82.180]:36945 "EHLO
-        mail-ot0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751406AbeA0T4k (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:55513 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751243AbeAVKXe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Jan 2018 14:56:40 -0500
-Received: by mail-ot0-f180.google.com with SMTP id a24so3224782otd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Jan 2018 11:56:39 -0800 (PST)
-Subject: Re: [PATCH 03/10] rtlwifi: Use 6 bits as sequence number of TX report
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180126074645.27201-1-pkshih@realtek.com>
- <20180126074645.27201-4-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <b3957f59-bea5-82c4-7213-4ee36f3795fb@lwfinger.net> (sfid-20180127_205752_801843_DFCA8228)
-Date: Sat, 27 Jan 2018 13:56:38 -0600
+        Mon, 22 Jan 2018 05:23:34 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 13/14] staging: wilc1000: rename Handle_Connect() to avoid camelCase
+Date: Mon, 22 Jan 2018 15:52:26 +0530
+Message-ID: <1516616547-24654-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180122_112353_632546_89074CCE)
+In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180126074645.27201-4-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2018 01:46 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> In new design, SW_DEFINE[1:0] of tx desc are used by firmware, and the TX
-> report only contains SW_DEFINE[7:0]. To satisfy with all cases, driver uses
-> SW_DEFINE[7:2] as sequence number.
-> Besides, the format of tx report have been changed, so a new flag
-> RTL_SPEC_EXT_C2H is used to access report.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Fix "Avoid camelcase" issue found by checkpatch.pl
+script.
 
-This change was tested on an old design (RTL8188CE). No problems were observed.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b34243c..6e462db 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -902,7 +902,7 @@ static s32 handle_scan_done(struct wilc_vif *vif,
+ }
+ 
+ u8 wilc_connected_ssid[6] = {0};
+-static s32 Handle_Connect(struct wilc_vif *vif,
++static s32 handle_connect(struct wilc_vif *vif,
+ 			  struct connect_attr *attr)
+ {
+ 	s32 result = 0;
+@@ -2491,7 +2491,7 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_CONNECT:
+-		Handle_Connect(msg->vif, &msg->body.con_info);
++		handle_connect(msg->vif, &msg->body.con_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_RCVD_NTWRK_INFO:
+-- 
+2.7.4
