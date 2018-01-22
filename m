@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:49878 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751063AbeAWHlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Jan 2018 02:41:24 -0500
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
-Date: Tue, 23 Jan 2018 08:35:21 +0100
-Message-Id: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180123_084130_173810_21041217)
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12467 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751030AbeAVLcW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Jan 2018 06:32:22 -0500
+Subject: Re: [PATCH v2 02/14] staging: wilc1000: removed unnecessary defined
+ enums typedef
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <ganesh.krishna@microchip.com>
+References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+ <1516616547-24654-3-git-send-email-ajay.kathat@microchip.com>
+ <90847f2f-449e-b34a-4a86-880e2b3670d7@microchip.com>
+ <20180122112234.33sod7nfy7ps3pq4@mwanda>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <ebeb825e-5a92-7ea4-df8d-6bc40a5f804d@microchip.com> (sfid-20180122_123230_003029_C68508AB)
+Date: Mon, 22 Jan 2018 13:32:19 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180122112234.33sod7nfy7ps3pq4@mwanda>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9003 series allows to calibrate noise floor for different frequency
-bins. Once it's done it's possible to get more accurate rssi/signal
-values over whole frequency band at a given temperature.
-The RSSI/signal accuracy reported by calibrated RF cards improves
-from 6 to up to 2dB.
 
-This could be interesting for application which require good signal
-accuracy like roaming or mesh protocols.
 
-Wojciech Dubowik (4):
-  ath9k: Alternative EEPROM size for AR9003
-  ath9k: Read noise floor calibration data from eeprom
-  ath9k: Use calibrated noise floor value when available
-  ath9k: Display calibration data piers in debugfs
+On 22.01.2018 13:22, Dan Carpenter wrote:
+> On Mon, Jan 22, 2018 at 01:06:59PM +0200, Claudiu Beznea wrote:
+>>
+>>
+>> On 22.01.2018 12:22, Ajay Singh wrote:
+>>> Fix the "do not add new typedefs" issue found by checkpatch.pl
+>>> script
+>>>
+>> >From https://www.kernel.org/doc/html/latest/process/submitting-patches.html#the-canonical-patch-format
+>> the the message body line is wrapped at 75 columns.
+>>
+> 
+> I normally consider 75 characters a maximum.  I wrap at 72 characters
+> like a normal email.
+> 
+> If we get too hung up on procedures for their own sake then it makes
+> sending patches a real pain.
+I agree with you. This is not my intention even it may look this way with
+my previous comments. Was just a note. My bad, next time I'll have to
+specify this.
 
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 133 +++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |  10 ++
- drivers/net/wireless/ath/ath9k/calib.c         |  38 ++++---
- drivers/net/wireless/ath/ath9k/hw.h            |   2 +
- 4 files changed, 160 insertions(+), 23 deletions(-)
+Thank you,
+Claudiu Beznea  
 
--- 
-2.7.4
+There are some people I just don't send
+> patches to because they are too much headache to deal with.> 
+> regards,
+> dan carpenter
+> 
+> 
