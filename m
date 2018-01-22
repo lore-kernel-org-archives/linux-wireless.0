@@ -1,77 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40176 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751029AbeABSUf (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:52851 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751204AbeAVKXZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Jan 2018 13:20:35 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  Report rx-timeout errors.
-Date: Tue,  2 Jan 2018 10:20:29 -0800
-Message-Id: <1514917229-7839-1-git-send-email-greearb@candelatech.com> (sfid-20180102_192039_548999_A302698E)
+        Mon, 22 Jan 2018 05:23:25 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 10/14] staging: wilc1000: rename ptstrJoinBssParam variable to avoid camelCase
+Date: Mon, 22 Jan 2018 15:52:23 +0530
+Message-ID: <1516616547-24654-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180122_112328_713372_35A81706)
+In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Fix "Avoid camelCase" issue reported by checkpatch.pl script.
 
-The rx pdev related stats do not match the 10.4 firmware stats
-struct.  The pdev-rx-timeout field needs to be added.
-
-Stock firmware may not actually ever increment that value,
-but this should at least help the other stats be aligned properly.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h | 1 +
- drivers/net/wireless/ath/ath10k/wmi.c  | 3 +++
- drivers/net/wireless/ath/ath10k/wmi.h  | 1 +
- 3 files changed, 5 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 78 +++++++++++++++----------------
+ 1 file changed, 39 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index a6b0894..1aacc9b8 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -288,6 +288,7 @@ struct ath10k_fw_stats_pdev {
- 	s32 phy_err_drop;
- 	s32 mpdu_errs;
- 	s32 rx_ovfl_errs;
-+	s32 rx_timeout_errs;
- };
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4856d4f..c3b6368 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -909,7 +909,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 	struct wid wid_list[8];
+ 	u32 wid_cnt = 0, dummyval = 0;
+ 	u8 *cur_byte = NULL;
+-	struct join_bss_param *ptstrJoinBssParam;
++	struct join_bss_param *bss_param;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
  
- struct ath10k_fw_stats {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index f3e6c67..cba6dad 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3217,6 +3217,7 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
- 		ath10k_wmi_pull_pdev_stats_base(&src->base, dst);
- 		ath10k_wmi_10_4_pull_pdev_stats_tx(&src->tx, dst);
- 		ath10k_wmi_pull_pdev_stats_rx(&src->rx, dst);
-+		dst->rx_timeout_errs = __le32_to_cpu(src->pdev_rx_timeout);
- 		dst->rx_ovfl_errs = __le32_to_cpu(src->rx_ovfl_errs);
- 		ath10k_wmi_pull_pdev_stats_extra(&src->extra, dst);
+ 	if (memcmp(attr->bssid, wilc_connected_ssid, ETH_ALEN) == 0) {
+@@ -918,8 +918,8 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 		return result;
+ 	}
  
-@@ -8244,6 +8245,8 @@ void ath10k_wmi_10_4_op_fw_stats_fill(struct ath10k *ar,
+-	ptstrJoinBssParam = attr->params;
+-	if (!ptstrJoinBssParam) {
++	bss_param = attr->params;
++	if (!bss_param) {
+ 		netdev_err(vif->ndev, "Required BSSID not found\n");
+ 		result = -ENOENT;
+ 		goto ERRORHANDLER;
+@@ -1027,8 +1027,8 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 		netdev_err(vif->ndev, "Channel out of range\n");
+ 		*(cur_byte++) = 0xFF;
+ 	}
+-	*(cur_byte++)  = (ptstrJoinBssParam->cap_info) & 0xFF;
+-	*(cur_byte++)  = ((ptstrJoinBssParam->cap_info) >> 8) & 0xFF;
++	*(cur_byte++)  = (bss_param->cap_info) & 0xFF;
++	*(cur_byte++)  = ((bss_param->cap_info) >> 8) & 0xFF;
  
- 	ath10k_wmi_fw_pdev_rx_stats_fill(pdev, buf, &len);
- 	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
-+			"Num Rx Timeout errors", pdev->rx_timeout_errs);
-+	len += scnprintf(buf + len, buf_len - len, "%30s %10d\n",
- 			"Num Rx Overflow errors", pdev->rx_ovfl_errs);
+ 	if (attr->bssid)
+ 		memcpy(cur_byte, attr->bssid, 6);
+@@ -1038,57 +1038,57 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 		memcpy(cur_byte, attr->bssid, 6);
+ 	cur_byte += 6;
  
- 	len += scnprintf(buf + len, buf_len - len, "\n");
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 66b446d..93ca8e8 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4434,6 +4434,7 @@ struct wmi_10_4_pdev_stats {
- 	struct wmi_pdev_stats_base base;
- 	struct wmi_10_4_pdev_stats_tx tx;
- 	struct wmi_pdev_stats_rx rx;
-+	__le32 pdev_rx_timeout;
- 	__le32 rx_ovfl_errs;
- 	struct wmi_pdev_stats_mem mem;
- 	__le32 sram_free_size;
+-	*(cur_byte++)  = (ptstrJoinBssParam->beacon_period) & 0xFF;
+-	*(cur_byte++)  = ((ptstrJoinBssParam->beacon_period) >> 8) & 0xFF;
+-	*(cur_byte++)  =  ptstrJoinBssParam->dtim_period;
++	*(cur_byte++)  = (bss_param->beacon_period) & 0xFF;
++	*(cur_byte++)  = ((bss_param->beacon_period) >> 8) & 0xFF;
++	*(cur_byte++)  =  bss_param->dtim_period;
+ 
+-	memcpy(cur_byte, ptstrJoinBssParam->supp_rates, MAX_RATES_SUPPORTED + 1);
++	memcpy(cur_byte, bss_param->supp_rates, MAX_RATES_SUPPORTED + 1);
+ 	cur_byte += (MAX_RATES_SUPPORTED + 1);
+ 
+-	*(cur_byte++)  =  ptstrJoinBssParam->wmm_cap;
+-	*(cur_byte++)  = ptstrJoinBssParam->uapsd_cap;
++	*(cur_byte++)  =  bss_param->wmm_cap;
++	*(cur_byte++)  = bss_param->uapsd_cap;
+ 
+-	*(cur_byte++)  = ptstrJoinBssParam->ht_capable;
+-	hif_drv->usr_conn_req.ht_capable = ptstrJoinBssParam->ht_capable;
++	*(cur_byte++)  = bss_param->ht_capable;
++	hif_drv->usr_conn_req.ht_capable = bss_param->ht_capable;
+ 
+-	*(cur_byte++)  =  ptstrJoinBssParam->rsn_found;
+-	*(cur_byte++)  =  ptstrJoinBssParam->rsn_grp_policy;
+-	*(cur_byte++) =  ptstrJoinBssParam->mode_802_11i;
++	*(cur_byte++)  =  bss_param->rsn_found;
++	*(cur_byte++)  =  bss_param->rsn_grp_policy;
++	*(cur_byte++) =  bss_param->mode_802_11i;
+ 
+-	memcpy(cur_byte, ptstrJoinBssParam->rsn_pcip_policy, sizeof(ptstrJoinBssParam->rsn_pcip_policy));
+-	cur_byte += sizeof(ptstrJoinBssParam->rsn_pcip_policy);
++	memcpy(cur_byte, bss_param->rsn_pcip_policy, sizeof(bss_param->rsn_pcip_policy));
++	cur_byte += sizeof(bss_param->rsn_pcip_policy);
+ 
+-	memcpy(cur_byte, ptstrJoinBssParam->rsn_auth_policy, sizeof(ptstrJoinBssParam->rsn_auth_policy));
+-	cur_byte += sizeof(ptstrJoinBssParam->rsn_auth_policy);
++	memcpy(cur_byte, bss_param->rsn_auth_policy, sizeof(bss_param->rsn_auth_policy));
++	cur_byte += sizeof(bss_param->rsn_auth_policy);
+ 
+-	memcpy(cur_byte, ptstrJoinBssParam->rsn_cap, sizeof(ptstrJoinBssParam->rsn_cap));
+-	cur_byte += sizeof(ptstrJoinBssParam->rsn_cap);
++	memcpy(cur_byte, bss_param->rsn_cap, sizeof(bss_param->rsn_cap));
++	cur_byte += sizeof(bss_param->rsn_cap);
+ 
+ 	*(cur_byte++) = REAL_JOIN_REQ;
+-	*(cur_byte++) = ptstrJoinBssParam->noa_enabled;
++	*(cur_byte++) = bss_param->noa_enabled;
+ 
+-	if (ptstrJoinBssParam->noa_enabled) {
+-		*(cur_byte++) = (ptstrJoinBssParam->tsf) & 0xFF;
+-		*(cur_byte++) = ((ptstrJoinBssParam->tsf) >> 8) & 0xFF;
+-		*(cur_byte++) = ((ptstrJoinBssParam->tsf) >> 16) & 0xFF;
+-		*(cur_byte++) = ((ptstrJoinBssParam->tsf) >> 24) & 0xFF;
++	if (bss_param->noa_enabled) {
++		*(cur_byte++) = (bss_param->tsf) & 0xFF;
++		*(cur_byte++) = ((bss_param->tsf) >> 8) & 0xFF;
++		*(cur_byte++) = ((bss_param->tsf) >> 16) & 0xFF;
++		*(cur_byte++) = ((bss_param->tsf) >> 24) & 0xFF;
+ 
+-		*(cur_byte++) = ptstrJoinBssParam->opp_enabled;
+-		*(cur_byte++) = ptstrJoinBssParam->idx;
++		*(cur_byte++) = bss_param->opp_enabled;
++		*(cur_byte++) = bss_param->idx;
+ 
+-		if (ptstrJoinBssParam->opp_enabled)
+-			*(cur_byte++) = ptstrJoinBssParam->ct_window;
++		if (bss_param->opp_enabled)
++			*(cur_byte++) = bss_param->ct_window;
+ 
+-		*(cur_byte++) = ptstrJoinBssParam->cnt;
++		*(cur_byte++) = bss_param->cnt;
+ 
+-		memcpy(cur_byte, ptstrJoinBssParam->duration, sizeof(ptstrJoinBssParam->duration));
+-		cur_byte += sizeof(ptstrJoinBssParam->duration);
++		memcpy(cur_byte, bss_param->duration, sizeof(bss_param->duration));
++		cur_byte += sizeof(bss_param->duration);
+ 
+-		memcpy(cur_byte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
+-		cur_byte += sizeof(ptstrJoinBssParam->interval);
++		memcpy(cur_byte, bss_param->interval, sizeof(bss_param->interval));
++		cur_byte += sizeof(bss_param->interval);
+ 
+-		memcpy(cur_byte, ptstrJoinBssParam->start_time, sizeof(ptstrJoinBssParam->start_time));
+-		cur_byte += sizeof(ptstrJoinBssParam->start_time);
++		memcpy(cur_byte, bss_param->start_time, sizeof(bss_param->start_time));
++		cur_byte += sizeof(bss_param->start_time);
+ 	}
+ 
+ 	cur_byte = wid_list[wid_cnt].val;
 -- 
-2.4.11
+2.7.4
