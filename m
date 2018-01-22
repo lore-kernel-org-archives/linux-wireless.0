@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40860 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933953AbeAXPlM (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:2737 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750933AbeAVLKu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 10:41:12 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 22 Jan 2018 06:10:50 -0500
+Subject: Re: [PATCH v2 00/14] fix to remove unnecessary parenthesis,typedef
+ and avoid camelCase
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>
+References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <e4bb033a-a7f9-a907-5850-fa1b00b6cdb4@microchip.com> (sfid-20180122_121054_026296_9EC66D20)
+Date: Mon, 22 Jan 2018 13:10:44 +0200
 MIME-Version: 1.0
-Subject: Re: [01/10] rtlwifi: btcoex: extend get_wifi_bw to support bandwidth
- 80M
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180119064551.10084-2-pkshih@realtek.com>
-References: <20180119064551.10084-2-pkshih@realtek.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Message-Id: <20180124154112.4E1E36090E@smtp.codeaurora.org> (sfid-20180124_164117_241482_6D922EBC)
-Date: Wed, 24 Jan 2018 15:41:12 +0000 (UTC)
+In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
+
+On 22.01.2018 12:22, Ajay Singh wrote:
+> This patch series contains changes to fix issues reported by checkpatch.pl script.
 > 
-> The rtlwifi newer ICs support 80M bandwidth in 5G band, so extend
-> get_wifi_bw() to know bandwidth 80M that helps btcoex to make correct
-> decisions.
+> Changes since v1:
+> * Patch0004: Used "host_int_parse_join_bss_param" for function name.
+> * Patch0009: Put memcpy statement in single line instead of using two lines.
+> * Patch0010: Used "bss_param" for variable name instead of j_bss_param.
+> * Added "Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>" for commit description.
+> * Modify the commit description to start with capital letter for all patch.
+You forgot to do it for patches 3 and 8.
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-9 patches applied to wireless-drivers-next.git, thanks.
-
-66d0f9deba36 rtlwifi: btcoex: extend get_wifi_bw to support bandwidth 80M
-17bf85101181 rtlwifi: btcoex: Add switch band notify for btc
-f243bca13893 rtlwifi: btcoex: Add variable ant_div_cfg to support antenna diversity
-ee373844849c rtlwifi: btcoex: add scan_notify within ips_notify if RFON
-9177c3363994 rtlwifi: btcoex: Add wifi_only series ops to control solo card
-8d73e53e8a87 rtlwifi: btcoex: add boolean variables dbg_mode
-ba3cca4d0c3e rtlwifi: 8822be has to report vht capability to mac80211
-be98db155646 rtlwifi: Add ratr_table for newer IC
-a75f3eebfa3d rtlwifi: Add spec_ver to check whether use new rate-id or not
-
--- 
-https://patchwork.kernel.org/patch/10174643/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> 
+> Ajay Singh (14):
+>   staging: wilc1000: remove unnecessary use of parentheses
+>   staging: wilc1000: removed unnecessary defined enums typedef
+>   staging: wilc1000: fix alignments to match open parenthesis
+>   staging: wilc1000: rename host_int_ParseJoinBssParam() and it's
+>     variable using camelCase
+>   staging: wilc1000: rename camelCase used in Handle_DelAllSta() and its
+>     variable
+>   staging: wilc1000: rename strWIDList variable to wid_list to avoid
+>     camelCase
+>   staging: wilc1000: rename u32WidsCount variable to avoid camelCase
+>   staging: wilc1000: rename pu8CurrByte variable to avoid camelCase
+>   staging: wilc1000: rename pstrHostIFconnectAttr argument to avoid
+>     camelCase
+>   staging: wilc1000: rename ptstrJoinBssParam variable to avoid
+>     camelCase
+>   staging: wilc1000: rename strConnectInfo variable to avoid camelCase
+>   staging: wilc1000: rename Handle_ScanDone() to avoid camelCase
+>   staging: wilc1000: rename Handle_Connect() to avoid camelCase
+>   staging: wilc1000: rename Handle_ConnectTimeout() and Handle_Key()
+> 
+>  drivers/staging/wilc1000/coreconfigurator.c       |   2 +-
+>  drivers/staging/wilc1000/host_interface.c         | 937 +++++++++++-----------
+>  drivers/staging/wilc1000/linux_wlan.c             |  10 +-
+>  drivers/staging/wilc1000/wilc_sdio.c              |   4 +-
+>  drivers/staging/wilc1000/wilc_spi.c               |  20 +-
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  64 +-
+>  drivers/staging/wilc1000/wilc_wlan.c              |   2 +-
+>  drivers/staging/wilc1000/wilc_wlan_cfg.c          |   6 +-
+>  drivers/staging/wilc1000/wilc_wlan_if.h           |  72 +-
+>  9 files changed, 555 insertions(+), 562 deletions(-)
+> 
