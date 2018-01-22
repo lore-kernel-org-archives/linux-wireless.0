@@ -1,36 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40050 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934081AbeAXPih (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:32097 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751020AbeAVLPG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 10:38:37 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 22 Jan 2018 06:15:06 -0500
+Subject: Re: [PATCH v2 00/14] fix to remove unnecessary parenthesis,typedef
+ and avoid camelCase
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>
+References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+ <e4bb033a-a7f9-a907-5850-fa1b00b6cdb4@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <bae6a9b1-6bd0-4827-aed8-89ec70377508@microchip.com> (sfid-20180122_121519_819002_4713F3B8)
+Date: Mon, 22 Jan 2018 13:15:03 +0200
 MIME-Version: 1.0
-Subject: Re: [07/10] rtlwifi: btcoex: Fix some static warnings from Sparse
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180119064551.10084-8-pkshih@realtek.com>
-References: <20180119064551.10084-8-pkshih@realtek.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Message-Id: <20180124153836.DEBF760854@smtp.codeaurora.org> (sfid-20180124_163842_711475_73554942)
-Date: Wed, 24 Jan 2018 15:38:36 +0000 (UTC)
+In-Reply-To: <e4bb033a-a7f9-a907-5850-fa1b00b6cdb4@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
+
+On 22.01.2018 13:10, Claudiu Beznea wrote:
 > 
-> Add 'static' or declaration to resolve the warnings.
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-
-Dropping this patch 7 per comments, but I'll try to take the rest (if
-they apply).
-
-Patch set to Changes Requested.
-
--- 
-https://patchwork.kernel.org/patch/10174655/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> On 22.01.2018 12:22, Ajay Singh wrote:
+>> This patch series contains changes to fix issues reported by checkpatch.pl script.
+>>
+>> Changes since v1:
+>> * Patch0004: Used "host_int_parse_join_bss_param" for function name.
+>> * Patch0009: Put memcpy statement in single line instead of using two lines.
+>> * Patch0010: Used "bss_param" for variable name instead of j_bss_param.
+>> * Added "Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>" for commit description.
+>> * Modify the commit description to start with capital letter for all patch.
+> You forgot to do it for patches 3 and 8.
+Also, for 7.
+>>
+>>
+>> Ajay Singh (14):
+>>   staging: wilc1000: remove unnecessary use of parentheses
+>>   staging: wilc1000: removed unnecessary defined enums typedef
+>>   staging: wilc1000: fix alignments to match open parenthesis
+>>   staging: wilc1000: rename host_int_ParseJoinBssParam() and it's
+>>     variable using camelCase
+>>   staging: wilc1000: rename camelCase used in Handle_DelAllSta() and its
+>>     variable
+>>   staging: wilc1000: rename strWIDList variable to wid_list to avoid
+>>     camelCase
+>>   staging: wilc1000: rename u32WidsCount variable to avoid camelCase
+>>   staging: wilc1000: rename pu8CurrByte variable to avoid camelCase
+>>   staging: wilc1000: rename pstrHostIFconnectAttr argument to avoid
+>>     camelCase
+>>   staging: wilc1000: rename ptstrJoinBssParam variable to avoid
+>>     camelCase
+>>   staging: wilc1000: rename strConnectInfo variable to avoid camelCase
+>>   staging: wilc1000: rename Handle_ScanDone() to avoid camelCase
+>>   staging: wilc1000: rename Handle_Connect() to avoid camelCase
+>>   staging: wilc1000: rename Handle_ConnectTimeout() and Handle_Key()
+>>
+>>  drivers/staging/wilc1000/coreconfigurator.c       |   2 +-
+>>  drivers/staging/wilc1000/host_interface.c         | 937 +++++++++++-----------
+>>  drivers/staging/wilc1000/linux_wlan.c             |  10 +-
+>>  drivers/staging/wilc1000/wilc_sdio.c              |   4 +-
+>>  drivers/staging/wilc1000/wilc_spi.c               |  20 +-
+>>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  64 +-
+>>  drivers/staging/wilc1000/wilc_wlan.c              |   2 +-
+>>  drivers/staging/wilc1000/wilc_wlan_cfg.c          |   6 +-
+>>  drivers/staging/wilc1000/wilc_wlan_if.h           |  72 +-
+>>  9 files changed, 555 insertions(+), 562 deletions(-)
+>>
