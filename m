@@ -1,335 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:7314 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756236AbeARNSU (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:58008 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750977AbeAVUqr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 08:18:20 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 06/14] staging: wilc1000: rename strWIDList variable to wid_list to avoid camelCase
-Date: Thu, 18 Jan 2018 18:47:04 +0530
-Message-ID: <1516281432-7724-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180118_141835_658094_B72BB4BB)
-In-Reply-To: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516281432-7724-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 22 Jan 2018 15:46:47 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 1/2] brcmfmac: assure bcdc dcmd api does not return value > 0
+Date: Mon, 22 Jan 2018 21:46:39 +0100
+Message-Id: <1516654000-25314-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180122_214653_991842_666BDFC4)
+In-Reply-To: <1516654000-25314-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1516654000-25314-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fix "Avoid camelCase" issue found by checkpatch.pl script.
-Rename variable name from strWIDList to wid_list.
+The protocol layer api defines callbacks for dongle commands.
+Although not really well documented these should only return an
+error code in case of an error, or 0 upon success. In the bcdc
+protocol it can return value above 0 and we carry a fix in the
+caller of the protocol layer api. This patch makes it adhere to
+the intent of the api as described above.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 176 +++++++++++++++---------------
- 1 file changed, 88 insertions(+), 88 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c | 6 +++++-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c | 8 +++-----
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 1ac079a..57b872c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -906,7 +906,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 			  struct connect_attr *pstrHostIFconnectAttr)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+index 9f2d0b0..bd6da05 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+@@ -211,6 +211,8 @@ static int brcmf_proto_bcdc_cmplt(struct brcmf_pub *drvr, u32 id, u32 len)
+ 		memcpy(buf, info, len);
+ 	}
+ 
++	ret = 0;
++
+ 	/* Check the ERROR flag */
+ 	if (flags & BCDC_DCMD_ERROR)
+ 		ret = le32_to_cpu(msg->status);
+@@ -225,7 +227,7 @@ static int brcmf_proto_bcdc_cmplt(struct brcmf_pub *drvr, u32 id, u32 len)
  {
- 	s32 result = 0;
--	struct wid strWIDList[8];
-+	struct wid wid_list[8];
- 	u32 u32WidsCount = 0, dummyval = 0;
- 	u8 *pu8CurrByte = NULL;
- 	struct join_bss_param *ptstrJoinBssParam;
-@@ -952,29 +952,29 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 	hif_drv->usr_conn_req.conn_result = pstrHostIFconnectAttr->result;
- 	hif_drv->usr_conn_req.arg = pstrHostIFconnectAttr->arg;
+ 	struct brcmf_bcdc *bcdc = (struct brcmf_bcdc *)drvr->proto->pd;
+ 	struct brcmf_proto_bcdc_dcmd *msg = &bcdc->msg;
+-	int ret = 0;
++	int ret;
+ 	u32 flags, id;
  
--	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)(&(dummyval));
-+	wid_list[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)(&(dummyval));
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)(&(dummyval));
-+	wid_list[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)(&(dummyval));
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_FAILED_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)(&(dummyval));
-+	wid_list[u32WidsCount].id = WID_FAILED_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)(&(dummyval));
- 	u32WidsCount++;
- 
- 	{
--		strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
--		strWIDList[u32WidsCount].type = WID_BIN_DATA;
--		strWIDList[u32WidsCount].val = hif_drv->usr_conn_req.ies;
--		strWIDList[u32WidsCount].size = hif_drv->usr_conn_req.ies_len;
-+		wid_list[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
-+		wid_list[u32WidsCount].type = WID_BIN_DATA;
-+		wid_list[u32WidsCount].val = hif_drv->usr_conn_req.ies;
-+		wid_list[u32WidsCount].size = hif_drv->usr_conn_req.ies_len;
- 		u32WidsCount++;
- 
- 		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
-@@ -984,39 +984,39 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 			       info_element_size);
- 		}
- 	}
--	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
--	strWIDList[u32WidsCount].type = WID_CHAR;
--	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.security;
-+	wid_list[u32WidsCount].id = (u16)WID_11I_MODE;
-+	wid_list[u32WidsCount].type = WID_CHAR;
-+	wid_list[u32WidsCount].size = sizeof(char);
-+	wid_list[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.security;
- 	u32WidsCount++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
- 		mode_11i = hif_drv->usr_conn_req.security;
- 
--	strWIDList[u32WidsCount].id = (u16)WID_AUTH_TYPE;
--	strWIDList[u32WidsCount].type = WID_CHAR;
--	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
-+	wid_list[u32WidsCount].id = (u16)WID_AUTH_TYPE;
-+	wid_list[u32WidsCount].type = WID_CHAR;
-+	wid_list[u32WidsCount].size = sizeof(char);
-+	wid_list[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
- 	u32WidsCount++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
- 		auth_type = (u8)hif_drv->usr_conn_req.auth_type;
- 
--	strWIDList[u32WidsCount].id = (u16)WID_JOIN_REQ_EXTENDED;
--	strWIDList[u32WidsCount].type = WID_STR;
--	strWIDList[u32WidsCount].size = 112;
--	strWIDList[u32WidsCount].val = kmalloc(strWIDList[u32WidsCount].size, GFP_KERNEL);
-+	wid_list[u32WidsCount].id = (u16)WID_JOIN_REQ_EXTENDED;
-+	wid_list[u32WidsCount].type = WID_STR;
-+	wid_list[u32WidsCount].size = 112;
-+	wid_list[u32WidsCount].val = kmalloc(wid_list[u32WidsCount].size, GFP_KERNEL);
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
--		join_req_size = strWIDList[u32WidsCount].size;
-+		join_req_size = wid_list[u32WidsCount].size;
- 		join_req = kmalloc(join_req_size, GFP_KERNEL);
- 	}
--	if (!strWIDList[u32WidsCount].val) {
-+	if (!wid_list[u32WidsCount].val) {
- 		result = -EFAULT;
- 		goto ERRORHANDLER;
+ 	brcmf_dbg(BCDC, "Enter, cmd %d len %d\n", cmd, len);
+@@ -249,6 +251,8 @@ static int brcmf_proto_bcdc_cmplt(struct brcmf_pub *drvr, u32 id, u32 len)
+ 		goto done;
  	}
  
--	pu8CurrByte = strWIDList[u32WidsCount].val;
-+	pu8CurrByte = wid_list[u32WidsCount].val;
++	ret = 0;
++
+ 	/* Check the ERROR flag */
+ 	if (flags & BCDC_DCMD_ERROR)
+ 		ret = le32_to_cpu(msg->status);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
+index f6a2df9..d328aae 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
+@@ -121,11 +121,9 @@ static const char *brcmf_fil_get_errstr(u32 err)
+ 	else
+ 		err = brcmf_proto_query_dcmd(drvr, ifp->ifidx, cmd, data, len);
  
- 	if (pstrHostIFconnectAttr->ssid) {
- 		memcpy(pu8CurrByte, pstrHostIFconnectAttr->ssid, pstrHostIFconnectAttr->ssid_len);
-@@ -1095,7 +1095,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 		pu8CurrByte += sizeof(ptstrJoinBssParam->start_time);
- 	}
+-	if (err >= 0)
+-		return 0;
+-
+-	brcmf_dbg(FIL, "Failed: %s (%d)\n",
+-		  brcmf_fil_get_errstr((u32)(-err)), err);
++	if (err)
++		brcmf_dbg(FIL, "Failed: %s (%d)\n",
++			  brcmf_fil_get_errstr((u32)(-err)), err);
  
--	pu8CurrByte = strWIDList[u32WidsCount].val;
-+	pu8CurrByte = wid_list[u32WidsCount].val;
- 	u32WidsCount++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
-@@ -1107,7 +1107,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 		memcpy(wilc_connected_ssid,
- 		       pstrHostIFconnectAttr->bssid, ETH_ALEN);
- 
--	result = wilc_send_config_pkt(vif, SET_CFG, strWIDList,
-+	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
- 				      u32WidsCount,
- 				      wilc_get_vif_idx(vif));
- 	if (result) {
-@@ -1530,7 +1530,7 @@ static int Handle_Key(struct wilc_vif *vif,
- {
- 	s32 result = 0;
- 	struct wid wid;
--	struct wid strWIDList[5];
-+	struct wid wid_list[5];
- 	u8 i;
- 	u8 *pu8keybuf;
- 	s8 s8idxarray[1];
-@@ -1541,15 +1541,15 @@ static int Handle_Key(struct wilc_vif *vif,
- 	case WEP:
- 
- 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
--			strWIDList[0].id = (u16)WID_11I_MODE;
--			strWIDList[0].type = WID_CHAR;
--			strWIDList[0].size = sizeof(char);
--			strWIDList[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.mode;
-+			wid_list[0].id = (u16)WID_11I_MODE;
-+			wid_list[0].type = WID_CHAR;
-+			wid_list[0].size = sizeof(char);
-+			wid_list[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.mode;
- 
--			strWIDList[1].id = WID_AUTH_TYPE;
--			strWIDList[1].type = WID_CHAR;
--			strWIDList[1].size = sizeof(char);
--			strWIDList[1].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.auth_type;
-+			wid_list[1].id = WID_AUTH_TYPE;
-+			wid_list[1].type = WID_CHAR;
-+			wid_list[1].size = sizeof(char);
-+			wid_list[1].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.auth_type;
- 
- 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
- 					    GFP_KERNEL);
-@@ -1564,13 +1564,13 @@ static int Handle_Key(struct wilc_vif *vif,
- 
- 			kfree(pstrHostIFkeyAttr->attr.wep.key);
- 
--			strWIDList[2].id = (u16)WID_WEP_KEY_VALUE;
--			strWIDList[2].type = WID_STR;
--			strWIDList[2].size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
--			strWIDList[2].val = (s8 *)pu8keybuf;
-+			wid_list[2].id = (u16)WID_WEP_KEY_VALUE;
-+			wid_list[2].type = WID_STR;
-+			wid_list[2].size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
-+			wid_list[2].val = (s8 *)pu8keybuf;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
--						      strWIDList, 3,
-+						      wid_list, 3,
- 						      wilc_get_vif_idx(vif));
- 			kfree(pu8keybuf);
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
-@@ -1632,18 +1632,18 @@ static int Handle_Key(struct wilc_vif *vif,
- 			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.key,
- 			       pstrHostIFkeyAttr->attr.wpa.key_len);
- 
--			strWIDList[0].id = (u16)WID_11I_MODE;
--			strWIDList[0].type = WID_CHAR;
--			strWIDList[0].size = sizeof(char);
--			strWIDList[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
-+			wid_list[0].id = (u16)WID_11I_MODE;
-+			wid_list[0].type = WID_CHAR;
-+			wid_list[0].size = sizeof(char);
-+			wid_list[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
- 
--			strWIDList[1].id = (u16)WID_ADD_RX_GTK;
--			strWIDList[1].type = WID_STR;
--			strWIDList[1].val = (s8 *)pu8keybuf;
--			strWIDList[1].size = RX_MIC_KEY_MSG_LEN;
-+			wid_list[1].id = (u16)WID_ADD_RX_GTK;
-+			wid_list[1].type = WID_STR;
-+			wid_list[1].val = (s8 *)pu8keybuf;
-+			wid_list[1].size = RX_MIC_KEY_MSG_LEN;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
--						      strWIDList, 2,
-+						      wid_list, 2,
- 						      wilc_get_vif_idx(vif));
- 
- 			kfree(pu8keybuf);
-@@ -1700,18 +1700,18 @@ static int Handle_Key(struct wilc_vif *vif,
- 			memcpy(pu8keybuf + 8, pstrHostIFkeyAttr->attr.wpa.key,
- 			       pstrHostIFkeyAttr->attr.wpa.key_len);
- 
--			strWIDList[0].id = (u16)WID_11I_MODE;
--			strWIDList[0].type = WID_CHAR;
--			strWIDList[0].size = sizeof(char);
--			strWIDList[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
-+			wid_list[0].id = (u16)WID_11I_MODE;
-+			wid_list[0].type = WID_CHAR;
-+			wid_list[0].size = sizeof(char);
-+			wid_list[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
- 
--			strWIDList[1].id = (u16)WID_ADD_PTK;
--			strWIDList[1].type = WID_STR;
--			strWIDList[1].val = (s8 *)pu8keybuf;
--			strWIDList[1].size = PTK_KEY_MSG_LEN + 1;
-+			wid_list[1].id = (u16)WID_ADD_PTK;
-+			wid_list[1].type = WID_STR;
-+			wid_list[1].val = (s8 *)pu8keybuf;
-+			wid_list[1].size = PTK_KEY_MSG_LEN + 1;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
--						      strWIDList, 2,
-+						      wid_list, 2,
- 						      wilc_get_vif_idx(vif));
- 			kfree(pu8keybuf);
- 			complete(&hif_drv->comp_test_key_block);
-@@ -1892,40 +1892,40 @@ static void Handle_GetRssi(struct wilc_vif *vif)
- static s32 Handle_GetStatistics(struct wilc_vif *vif,
- 				struct rf_info *pstrStatistics)
- {
--	struct wid strWIDList[5];
-+	struct wid wid_list[5];
- 	u32 u32WidsCount = 0, result = 0;
- 
--	strWIDList[u32WidsCount].id = WID_LINKSPEED;
--	strWIDList[u32WidsCount].type = WID_CHAR;
--	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->link_speed;
-+	wid_list[u32WidsCount].id = WID_LINKSPEED;
-+	wid_list[u32WidsCount].type = WID_CHAR;
-+	wid_list[u32WidsCount].size = sizeof(char);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->link_speed;
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_RSSI;
--	strWIDList[u32WidsCount].type = WID_CHAR;
--	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->rssi;
-+	wid_list[u32WidsCount].id = WID_RSSI;
-+	wid_list[u32WidsCount].type = WID_CHAR;
-+	wid_list[u32WidsCount].size = sizeof(char);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->rssi;
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->tx_cnt;
-+	wid_list[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->tx_cnt;
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->rx_cnt;
-+	wid_list[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->rx_cnt;
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_FAILED_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->tx_fail_cnt;
-+	wid_list[u32WidsCount].id = WID_FAILED_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->tx_fail_cnt;
- 	u32WidsCount++;
- 
--	result = wilc_send_config_pkt(vif, GET_CFG, strWIDList,
-+	result = wilc_send_config_pkt(vif, GET_CFG, wid_list,
- 				      u32WidsCount,
- 				      wilc_get_vif_idx(vif));
- 
+ 	return err;
+ }
 -- 
-2.7.4
+1.9.1
