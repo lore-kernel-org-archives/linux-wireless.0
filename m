@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52432 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:46126 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753141AbeADPIh (ORCPT
+        with ESMTP id S1750955AbeAVNXX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jan 2018 10:08:37 -0500
-Message-ID: <1515078514.10342.29.camel@sipsolutions.net> (sfid-20180104_161324_118888_E0A7C4A2)
-Subject: Re: UBSAN: Undefined behaviour in net/wireless/nl80211.c:718:4:
- -1665903437 * 100 cannot be represented in type 'int'
+        Mon, 22 Jan 2018 08:23:23 -0500
+Message-ID: <1516627401.2508.30.camel@sipsolutions.net> (sfid-20180122_142326_421633_B572A40B)
+Subject: Re: [PATCH v3 4/5] mac80211_hwsim: add permanent mac address option
+ for new radios
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        it+linux-wireless@molgen.mpg.de,
-        Mario Limonciello <mario.limonciello@dell.com>,
-        Thorsten Leemhuis <linux@leemhuis.info>
-Date: Thu, 04 Jan 2018 16:08:34 +0100
-In-Reply-To: <f58ac367-9b22-a7dc-7d45-7e9d19e179c0@molgen.mpg.de>
-References: <f58ac367-9b22-a7dc-7d45-7e9d19e179c0@molgen.mpg.de>
+To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 22 Jan 2018 14:23:21 +0100
+In-Reply-To: <3dd7a66e-1b55-0300-b04e-489ed1163b96@uni-rostock.de>
+References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
+         <6596c1d9-da4f-4d83-bd5e-5e276391a0c9@MAIL2.uni-rostock.de>
+         <1516018472.410.16.camel@sipsolutions.net>
+         <3dd7a66e-1b55-0300-b04e-489ed1163b96@uni-rostock.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2018-01-15 at 15:48 +0100, Benjamin Beichler wrote:
 
-Can you reproduce this?
+> > > +		if (get_hwsim_data_ref_from_addr(
+> > > +				nla_data(info->attrs[HWSIM_ATTR_PERM_ADDR]))) {
+> > > +			pr_debug("mac80211_hwsim: perm MAC already in use\n");
+> > > +			return -EINVAL;
+> > > +		}
+> > 
+> > This is racy afaict - remove it and return a clash later when you fail
+> > to insert the new radio.
+> 
+> Ehm yes, actually exactly this test is already in the rhashtable patch.
+> But maybe I should also change there the error print to a NL_ERR_MSG() ?
 
-> [   54.426491] UBSAN: Undefined behaviour in net/wireless/nl80211.c:718:4
-> [   54.426492] signed integer overflow:
-> [   54.426493] -1665903437 * 100 cannot be represented in type 'int'
+Oh, really? I just sent that out, but whatever, we have enough time to
+fix it :-)
 
-Obviously.
-
-However, it looks like the real reason is that there's some garbage (-
-1665903437) in chan->max_power, which is just stack memory being leaked
-out...
-
-This should help?
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 78e71b0390be..7b42f0bacfd8 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1769,8 +1769,7 @@ static void handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
- 	if (wiphy->regulatory_flags & REGULATORY_DISABLE_BEACON_HINTS)
- 		return;
- 
--	chan_before.center_freq = chan->center_freq;
--	chan_before.flags = chan->flags;
-+	chan_before = *chan;
- 
- 	if (chan->flags & IEEE80211_CHAN_NO_IR) {
- 		chan->flags &= ~IEEE80211_CHAN_NO_IR;
+And yes, using netlink extended ack messages here as well would be
+good.
 
 johannes
