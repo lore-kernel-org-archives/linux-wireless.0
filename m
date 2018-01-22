@@ -1,112 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33827 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752243AbeAIJZM (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:42277 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751174AbeAVOad (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 04:25:12 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH] staging: wilc1000: removed unnecessary enum typedefs
-Date: Tue, 9 Jan 2018 14:54:51 +0530
-Message-ID: <1515489891-8512-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180109_102519_238964_DC4CC55A)
+        Mon, 22 Jan 2018 09:30:33 -0500
+Received: by mail-pf0-f177.google.com with SMTP id b25so7206197pfd.9
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jan 2018 06:30:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180122140015.GA30036@kroah.com>
+References: <001a11c14bc837f9760560a03d51@google.com> <20171219090121.GA10221@kroah.com>
+ <CACT4Y+ZggKsEjCRZsFPW5-7_ByBcz4G0uRdieLL==r4mLQjhFA@mail.gmail.com>
+ <CACT4Y+ZOimZPrSfphPMiHKXA3=kOmaFfwdofrmuv_rpXmx+vgA@mail.gmail.com>
+ <CACT4Y+YMMfsXb+X4ApcWW02Qe7FmARhHjg97H4J-369OEMnwhw@mail.gmail.com> <20180122140015.GA30036@kroah.com>
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Mon, 22 Jan 2018 15:30:12 +0100
+Message-ID: <CACT4Y+bEG22Wa6hiBQ6YX7d=JrHKAXfwYm+tu6cWc7AiUZxYbw@mail.gmail.com> (sfid-20180122_153343_275440_735D792D)
+Subject: Re: WARNING in sysfs_warn_dup
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: syzbot
+        <bot+1fdad4e2731bf0c1bc19953ccc5061237ec92783@syzkaller.appspotmail.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        syzkaller-bugs@googlegroups.com,
+        David Miller <davem@davemloft.net>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Eric Dumazet <edumazet@google.com>,
+        jakub.kicinski@netronome.com,
+        Willem de Bruijn <willemb@google.com>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        John Fastabend <john.fastabend@gmail.com>,
+        "Tobin C. Harding" <me@tobin.cc>, netdev <netdev@vger.kernel.org>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes following G_PREAMBLE_T,SCANTYPE_T,
-USER_PS_MODE_T,SECURITY_T,ACK_POLICY_T,RESET_REQ_T typedef enum.
+On Mon, Jan 22, 2018 at 3:00 PM, Greg KH <gregkh@linuxfoundation.org> wrote=
+:
+> On Mon, Jan 22, 2018 at 02:47:33PM +0100, Dmitry Vyukov wrote:
+>> On Tue, Dec 19, 2017 at 10:06 AM, Dmitry Vyukov <dvyukov@google.com> wro=
+te:
+>> > On Tue, Dec 19, 2017 at 10:03 AM, Dmitry Vyukov <dvyukov@google.com> w=
+rote:
+>> >>
+>> >> On Tue, Dec 19, 2017 at 10:01 AM, Greg KH <gregkh@linuxfoundation.org=
+> wrote:
+>> >>>
+>> >>> On Mon, Dec 18, 2017 at 08:57:01AM -0800, syzbot wrote:
+>> >>> > Hello,
+>> >>> >
+>> >>> > syzkaller hit the following crash on
+>> >>> > 6084b576dca2e898f5c101baef151f7bfdbb606d
+>> >>> > git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/=
+master
+>> >>> > compiler: gcc (GCC) 7.1.1 20170620
+>> >>> > .config is attached
+>> >>> > Raw console output is attached.
+>> >>> >
+>> >>> > Unfortunately, I don't have any reproducer for this bug yet.
+>> >>> >
+>> >>> >
+>> >>> > netlink: 9 bytes leftover after parsing attributes in process
+>> >>> > `syz-executor3'.
+>> >>> > sg_write: data in/out 822404280/197 bytes for SCSI command 0x12-- =
+guessing
+>> >>> > data in;
+>> >>> >    program syz-executor0 not setting count and/or reply_len proper=
+ly
+>> >>> > sg_write: data in/out 262364/161 bytes for SCSI command 0xff-- gue=
+ssing data
+>> >>> > in;
+>> >>> >    program syz-executor0 not setting count and/or reply_len proper=
+ly
+>> >>> > WARNING: CPU: 1 PID: 22282 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x6=
+0/0x80
+>> >>> > fs/sysfs/dir.c:30
+>> >>> > Kernel panic - not syncing: panic_on_warn set ...
+>> >>>
+>> >>> Looks like a networking issue, it tried to create two sysfs director=
+ies
+>> >>> with the same name, which isn't a sysfs bug :)
+>> >
+>> >
+>> > Now as plain text:
+>> >
+>> > +net/core/dev.c maintainers
+>>
+>>
+>> Also happens for wiphy_register (on upstream
+>> a8750ddca918032d6349adbf9a4b6555e7db20da):
+>>
+>> ------------[ cut here ]------------
+>> sysfs: cannot create duplicate filename
+>> '/class/ieee80211/=C5=A1=C2=A7"=C2=AD=C3=BBt{=C2=A7=C3=94=C2=AD=C3=B0=C3=
+=B4 =C5=A0!=C3=97 =C5=BE 7=E2=80=A6 =C5=A0=E2=80=A0=C3=B5i=C3=B9S6 =C3=88< =
+=C2=BB=C3=BE {_CK5=C3=A4=C3=A1   =C3=97=C3=9D=C3=8Am=C3=B4 Be'
+>
+> That's a wonderful filename :)
+>
+>> WARNING: CPU: 1 PID: 8233 at fs/sysfs/dir.c:31
+>> sysfs_warn_dup+0x7e/0xa0 fs/sysfs/dir.c:30
+>
+> As this is just sysfs saying "Hey dummy, you are trying to do something
+> foolish here", what would be the better thing for it to do?
+>
+> Just printk(KERN_WARNING...) and then dump the stack?
+>
+> It seems the WARN_ON() that is currently being used is being treated as
+> an "error" by your testing, when really it isn't, unless the caller can
+> not handle the error being passed back up to it by the sysfs core.
+> Which it should, but I don't think you are even giving it the chance as
+> you are:
+>
+>> Kernel panic - not syncing: panic_on_warn set ...
+>
+> Yup, panic_on_warn :(
+>
+> ideas to make this easier for you?
 
-Now, these enums are used as anonymous-enums for constants.
 
-checkpatch.pl warning to avoid new typedef is fixes with this patch.
+pr_warn or pr_warn_once (optionally followed by dump_stack) would work
+for syzbot.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 222bde2..598ba9e 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -114,28 +114,28 @@ enum {
- 	G_MIXED_11B_2_MODE,		/* 1,2,5,11,6,12,24 otherwise all on */
- };
- 
--typedef enum {
-+enum {
- 	G_SHORT_PREAMBLE	= 0,	/* Short Preamble */
- 	G_LONG_PREAMBLE		= 1,	/* Long Preamble */
- 	G_AUTO_PREAMBLE		= 2,	/* Auto Preamble Selection */
--} G_PREAMBLE_T;
-+};
- 
- #define MAC_CONNECTED		1
- #define MAC_DISCONNECTED	0
- 
- #define SCAN_DONE		TRUE
--typedef enum {
-+enum {
- 	PASSIVE_SCAN		= 0,
- 	ACTIVE_SCAN		= 1,
--} SCANTYPE_T;
-+};
- 
--typedef enum {
-+enum {
- 	NO_POWERSAVE		= 0,
- 	MIN_FAST_PS		= 1,
- 	MAX_FAST_PS		= 2,
- 	MIN_PSPOLL_PS		= 3,
- 	MAX_PSPOLL_PS		= 4
--} USER_PS_MODE_T;
-+};
- 
- typedef enum {
- 	CHIP_WAKEDUP		= 0,
-@@ -153,7 +153,7 @@ typedef enum {
- 	RELEASE_ALLOW_SLEEP	= 1,
- } BUS_RELEASE_T;
- 
--typedef enum {
-+enum {
- 	NO_SECURITY		= 0,
- 	WEP_40			= 0x3,
- 	WEP_104			= 0x7,
-@@ -163,7 +163,7 @@ typedef enum {
- 	WPA2_AES		= 0x31,
- 	WPA2_TKIP		= 0x51,
- 	WPA2_AES_TKIP		= 0x71,	/* Aes or Tkip */
--} SECURITY_T;
-+};
- 
- enum AUTHTYPE {
- 	OPEN_SYSTEM		= 1,
-@@ -178,16 +178,16 @@ enum SITESURVEY {
- 	SITE_SURVEY_OFF		= 2
- };
- 
--typedef enum {
-+enum {
- 	NORMAL_ACK		= 0,
- 	NO_ACK,
--} ACK_POLICY_T;
-+};
- 
--typedef enum {
-+enum {
- 	DONT_RESET		= 0,
- 	DO_RESET		= 1,
- 	NO_REQUEST		= 2,
--} RESET_REQ_T;
-+};
- 
- typedef enum {
- 	REKEY_DISABLE		= 1,
--- 
-2.7.4
+Thanks!
