@@ -1,57 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37324 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750823AbeAPTPg (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43036 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751086AbeAVPJb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 14:15:36 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 22 Jan 2018 10:09:31 -0500
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Shrenik Shikhare <shrenik@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 2/2] mwifiex: use more_rx_task_flag to avoid USB RX stall
+Date: Mon, 22 Jan 2018 20:34:57 +0530
+Message-ID: <1516633497-6584-3-git-send-email-gbhat@marvell.com> (sfid-20180122_160938_655573_650444DE)
+In-Reply-To: <1516633497-6584-1-git-send-email-gbhat@marvell.com>
+References: <1516633497-6584-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-Subject: Re: bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
-References: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Guenter Roeck <linux@roeck-us.net>,
-        Matt Redfearn <matt.redfearn@imgtec.com>,
-        James Hogan <jhogan@kernel.org>
-Message-Id: <20180116191536.7CF82602BA@smtp.codeaurora.org> (sfid-20180116_201553_785117_BD97D221)
-Date: Tue, 16 Jan 2018 19:15:36 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Guenter Roeck <linux@roeck-us.net> wrote:
+From: Shrenik Shikhare <shrenik@marvell.com>
 
-> Mips builds with BCMA host mode enabled fail in mainline and -next
-> with:
-> 
-> In file included from include/linux/bcma/bcma.h:10:0,
->                  from drivers/bcma/bcma_private.h:9,
-> 		 from drivers/bcma/main.c:8:
-> include/linux/bcma/bcma_driver_pci.h:218:24: error:
-> 	field 'pci_controller' has incomplete type
-> 
-> Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
-> system type as generic") as the culprit. Analysis shows that the commmit
-> changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
-> disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
-> defined if PCI_DRIVERS_LEGACY is enabled.
-> 
-> Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
-> PCI_DRIVERS_LEGACY. Add the missing dependency.
-> 
-> Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
-> Cc: Matt Redfearn <matt.redfearn@imgtec.com>
-> Cc: James Hogan <jhogan@kernel.org>
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> Reviewed-by: James Hogan <jhogan@kernel.org>
+There is a race condition for acquiring rx_proc_lock between
+rx worker thread and USB RX data interrupt
+(mwifiex_usb_rx_complete):
 
-Patch applied to wireless-drivers.git, thanks.
+1. USB receives an RX data interrupt, queues rx_work
+2. rx_work empties rx_data_q, tries to acquire rx_proc_lock (to
+clear rx_processing flag)
+3. While #2 is yet to acquire rx_proc_lock, driver receives
+continuous RX data interupts(mwifiex_usb_rx_complete)
+3. For each interrupt at #3, driver acquires rx_proc_lock(it gets
+the lock since it is in interrupt context), tries to queue
+rx_work, but fails to do so since rx_processing is still set(#2)
+4. When rx_pending exceeds HIGH_RX_PENDING, driver stops
+submitting URBs back to USB subsystem and thus firmware stops
+uploading RX data to driver
+5. Now finally #2 will acquire rx_proc_lock, but because of #4,
+there are no further triggers to schedule rx_work again
 
-664eadd6f44b bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
+The above scenario occurs in some platforms where the RX
+processing is comparitively slower. This results in RX stall in
+driver, command/TX timeouts in firmware. The above scenario is
+introduced after commit c7dbdcb2a4e1
+("mwifiex: schedule rx_work on RX interrupt for USB")
 
+To fix this set a new more_rx_task_flag whenever RX data callback
+is trying to schedule rx_work but rx_processing is not yet
+cleared. This will let the current rx_work(which was waiting for
+rx_proc_lock) to loopback and process newly arrived RX packets.
+
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 10 +++++++++-
+ drivers/net/wireless/marvell/mwifiex/main.h |  1 +
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 6e6e1a7..ea87c7c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -163,6 +163,7 @@ void mwifiex_queue_main_work(struct mwifiex_adapter *adapter)
+ 	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 	if (adapter->mwifiex_processing) {
+ 		adapter->more_task_flag = true;
++		adapter->more_rx_task_flag = true;
+ 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 	} else {
+ 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+@@ -177,6 +178,7 @@ void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
+ 
+ 	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
+ 	if (adapter->rx_processing) {
++		adapter->more_rx_task_flag = true;
+ 		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
+ 	} else {
+ 		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
+@@ -193,13 +195,14 @@ static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
+ 
+ 	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
+ 	if (adapter->rx_processing || adapter->rx_locked) {
++		adapter->more_rx_task_flag = true;
+ 		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
+ 		goto exit_rx_proc;
+ 	} else {
+ 		adapter->rx_processing = true;
+ 		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
+ 	}
+-
++rx_process_start:
+ 	/* Check for Rx data */
+ 	while ((skb = skb_dequeue(&adapter->rx_data_q))) {
+ 		atomic_dec(&adapter->rx_pending);
+@@ -221,6 +224,11 @@ static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
+ 		}
+ 	}
+ 	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
++	if (adapter->more_rx_task_flag) {
++		adapter->more_rx_task_flag = false;
++		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
++		goto rx_process_start;
++	}
+ 	adapter->rx_processing = false;
+ 	spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 66ba95c..242e05e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -891,6 +891,7 @@ struct mwifiex_adapter {
+ 	spinlock_t main_proc_lock;
+ 	u32 mwifiex_processing;
+ 	u8 more_task_flag;
++	u8 more_rx_task_flag;
+ 	u16 tx_buf_size;
+ 	u16 curr_tx_buf_size;
+ 	/* sdio single port rx aggregation capability */
 -- 
-https://patchwork.kernel.org/patch/10162839/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
