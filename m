@@ -1,48 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f175.google.com ([209.85.216.175]:37867 "EHLO
-        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750816AbeAQWrv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36720 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751181AbeAVGOt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 17:47:51 -0500
-Received: by mail-qt0-f175.google.com with SMTP id d54so13683441qtd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jan 2018 14:47:51 -0800 (PST)
-Subject: Re: Not work 802.11ac WLAN Adapter
-To: Cristian <caravena@gmail.com>, linux-wireless@vger.kernel.org,
-        linux-usb@vger.kernel.org
-References: <CABwnbU=Z7zJd8zL-0qkEnNHgQyvLCQ+85d1oMh+FKM83rzmoSA@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A5FD293.2010107@broadcom.com> (sfid-20180117_234755_874618_32995E3C)
-Date: Wed, 17 Jan 2018 23:47:47 +0100
+        Mon, 22 Jan 2018 01:14:49 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CABwnbU=Z7zJd8zL-0qkEnNHgQyvLCQ+85d1oMh+FKM83rzmoSA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: wcn36xx: release resources in case of error
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180118142348.12759-1-rfried@codeaurora.org>
+References: <20180118142348.12759-1-rfried@codeaurora.org>
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: k.eugene.e@gmail.com, bjorn.andersson@linaro.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Ramon Fried <rfried@codeaurora.org>
+Message-Id: <20180122061448.B010B6079C@smtp.codeaurora.org> (sfid-20180122_071459_848889_032C6BAA)
+Date: Mon, 22 Jan 2018 06:14:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/17/2018 9:47 PM, Cristian wrote:
-> Hello,
->
-> Open bug in launchpad.net
-> https://bugs.launchpad.net/bugs/1743872
->
-> dmesg_4.15.0-041500rc8-generic
->
-> dmesg:
-> [ 104.468231] usb 3-2: new high-speed USB device number 4 using xhci_hcd
-> [ 104.616570] usb 3-2: New USB device found, idVendor=0bda, idProduct=a811
-> [ 104.616578] usb 3-2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> [ 104.616582] usb 3-2: Product: 802.11ac WLAN Adapter
-> [ 104.616585] usb 3-2: Manufacturer: Realtek
-> [ 104.616588] usb 3-2: SerialNumber: 00e04c000001
+Ramon Fried <rfried@codeaurora.org> wrote:
 
-So according to wikidevi it seems to be a RTL8811AU [1]. This does not 
-seem supported by an upstream driver. Just search for "rtl8811au linux 
-driver" on your favorite internet search engine and I am sure you will 
-find a solution. Ubuntu seems to have a dkms package for it [2].
+> wcn36xx_dxe_init() doesn't check for the return value
+> of wcn36xx_dxe_init_descs().
+> This patch releases the resources in case an error ocurred.
+> 
+> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
 
-Regards,
-Arend
+Doesn't compile:
 
-[1] 
-https://wikidevi.com/w/index.php?title=Special%3AAsk&q=%5B%5BDevice+ID%3A%3Aa811%5D%5D&po=%3FInterface%0D%0A%3FForm+factor%3DFF%0D%0A%3FInterface+connector+type%3DUSB+conn.%0D%0A%3FFCC+ID%0D%0A%3FManuf%0D%0A%3FManuf+product+model%3DManuf.+mdl%0D%0A%3FVendor+ID%0D%0A%3FDevice+ID%0D%0A%3FChip1+model%0D%0A%3FSupported+802dot11+protocols%3DPHY+modes%0D%0A%3FMIMO+config%0D%0A%3FOUI%0D%0A%3FEstimated+year+of+release%3DEst.+year%0D%0A&eq=yes&p%5Bformat%5D=broadtable&sort_num=&order_num=ASC&p%5Blimit%5D=500&p%5Boffset%5D=&p%5Blink%5D=all&p%5Bsort%5D=&p%5Bheaders%5D=show&p%5Bmainlabel%5D=&p%5Bintro%5D=&p%5Boutro%5D=&p%5Bsearchlabel%5D=%E2%80%A6+further+results&p%5Bdefault%5D=&p%5Bclass%5D=sortable+wikitable+smwtable&p%5Bsep%5D=&eq=yes
-[2] https://packages.ubuntu.com/xenial/kernel/rtl8812au-dkms
+drivers/net/wireless/ath/wcn36xx/dxe.c: In function ‘wcn36xx_dxe_deinit_descs’:
+drivers/net/wireless/ath/wcn36xx/dxe.c:243:15: error: ‘struct wcn36xx_dxe_ch’ has no member named ‘desc_bum’
+  size = wcn_ch->desc_bum * sizeof(struct wcn36xx_dxe_desc);
+               ^
+drivers/net/wireless/ath/wcn36xx/dxe.c:244:20: error: ‘wcn’ undeclared (first use in this function)
+  dma_free_coherent(wcn->dev, size,
+                    ^
+drivers/net/wireless/ath/wcn36xx/dxe.c:244:20: note: each undeclared identifier is reported only once for each function it appears in
+drivers/net/wireless/ath/wcn36xx/dxe.c: In function ‘wcn36xx_dxe_init’:
+drivers/net/wireless/ath/wcn36xx/dxe.c:737:3: error: implicit declaration of function ‘dev_error’ [-Werror=implicit-function-declaration]
+   dev_error("Error allocating descriptor\n");
+   ^
+drivers/net/wireless/ath/wcn36xx/dxe.c:818:2: error: expected ‘;’ before ‘if’
+  if (ret) {
+  ^
+drivers/net/wireless/ath/wcn36xx/dxe.c:860:1: warning: label ‘out_err_txh_ch’ defined but not used [-Wunused-label]
+ out_err_txh_ch:
+ ^
+drivers/net/wireless/ath/wcn36xx/dxe.c:856:1: warning: label ‘out_err_rxh_ch’ defined but not used [-Wunused-label]
+ out_err_rxh_ch:
+ ^
+drivers/net/wireless/ath/wcn36xx/dxe.c:760:3: error: label ‘our_err_txh_ch’ used but not defined
+   goto our_err_txh_ch;
+   ^
+cc1: some warnings being treated as errors
+make[5]: *** [drivers/net/wireless/ath/wcn36xx/dxe.o] Error 1
+make[4]: *** [drivers/net/wireless/ath/wcn36xx] Error 2
+make[3]: *** [drivers/net/wireless/ath] Error 2
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make[1]: *** Waiting for unfinished jobs....
+make: *** [drivers] Error 2
+
+Patch set to Changes Requested.
+
+-- 
+https://patchwork.kernel.org/patch/10173325/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
