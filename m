@@ -1,119 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:36472 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934363AbeAJRJx (ORCPT
+Received: from mx1.uni-rostock.de ([139.30.22.71]:51924 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751112AbeAVRFA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 12:09:53 -0500
-Received: by mail-pl0-f68.google.com with SMTP id q2so377374pll.3
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Jan 2018 09:09:53 -0800 (PST)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v2 5/5] mac80211: Add support for tx_control_port
-Date: Wed, 10 Jan 2018 11:09:38 -0600
-Message-Id: <20180110170938.2341-6-denkenz@gmail.com> (sfid-20180110_181002_615262_A9159F28)
-In-Reply-To: <20180110170938.2341-1-denkenz@gmail.com>
-References: <20180110170938.2341-1-denkenz@gmail.com>
+        Mon, 22 Jan 2018 12:05:00 -0500
+From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Subject: [PATCH v4 3/3] mac80211_hwsim: add generation count for netlink dump operation
+Date: Mon, 22 Jan 2018 18:04:37 +0100
+Message-ID: <20180122170437.14213-4-benjamin.beichler@uni-rostock.de> (sfid-20180122_180504_602375_F1FA129C)
+In-Reply-To: <20180122170437.14213-1-benjamin.beichler@uni-rostock.de>
+References: <20180122170437.14213-1-benjamin.beichler@uni-rostock.de>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- net/mac80211/cfg.c         |  1 +
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/main.c        |  1 +
- net/mac80211/tx.c          | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 51 insertions(+)
+Make the dump operation aware of changes on radio list and corresponding
+inconsistent dumps. Changed variable name for better understanding.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f53bfb27295f..71cb45e517b0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3787,4 +3787,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.add_nan_func = ieee80211_add_nan_func,
- 	.del_nan_func = ieee80211_del_nan_func,
- 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
-+	.tx_control_port = ieee80211_tx_control_port,
- };
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 6f91aea6a4cb..be444305ef06 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1735,6 +1735,9 @@ void ieee80211_check_fast_xmit(struct sta_info *sta);
- void ieee80211_check_fast_xmit_all(struct ieee80211_local *local);
- void ieee80211_check_fast_xmit_iface(struct ieee80211_sub_if_data *sdata);
- void ieee80211_clear_fast_xmit(struct sta_info *sta);
-+int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *dest, u16 proto, bool unencrypted);
+Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 31 ++++++++++++++++++++++++-------
+ 1 file changed, 24 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 8baf61dea961..7cff948ef438 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -492,6 +492,7 @@ static spinlock_t hwsim_radio_lock;
+ static LIST_HEAD(hwsim_radios);
+ static struct rhashtable hwsim_radios_rht;
+ static int hwsim_radio_idx;
++static int hwsim_radios_generation = 1;
  
- /* HT */
- void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 0785d04a80bc..fe163c31d431 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -976,6 +976,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ static struct platform_driver mac80211_hwsim_driver = {
+ 	.driver = {
+@@ -2808,6 +2809,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	}
  
- 	/* mac80211 supports control port protocol changing */
- 	local->hw.wiphy->flags |= WIPHY_FLAG_CONTROL_PORT_PROTOCOL;
-+	local->hw.wiphy->flags |= WIPHY_FLAG_CONTROL_PORT_OVER_NL80211;
+ 	list_add_tail(&data->list, &hwsim_radios);
++	hwsim_radios_generation++;
+ 	spin_unlock_bh(&hwsim_radio_lock);
  
- 	if (ieee80211_hw_check(&local->hw, SIGNAL_DBM)) {
- 		local->hw.wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 25904af38839..c22d2fa02d76 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4754,3 +4754,49 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_xmit(sdata, NULL, skb);
- 	local_bh_enable();
+ 	if (idx > 0)
+@@ -3273,6 +3275,7 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 		list_del(&data->list);
+ 		rhashtable_remove_fast(&hwsim_radios_rht, &data->rht,
+ 				       hwsim_rht_params);
++		hwsim_radios_generation++;
+ 		spin_unlock_bh(&hwsim_radio_lock);
+ 		mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy),
+ 					 info);
+@@ -3329,17 +3332,19 @@ static int hwsim_get_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ static int hwsim_dump_radio_nl(struct sk_buff *skb,
+ 			       struct netlink_callback *cb)
+ {
+-	int idx = cb->args[0];
++	int last_idx = cb->args[0];
+ 	struct mac80211_hwsim_data *data = NULL;
+-	int res;
++	int res = 0;
++	void *hdr;
+ 
+ 	spin_lock_bh(&hwsim_radio_lock);
++	cb->seq = hwsim_radios_generation;
+ 
+-	if (idx == hwsim_radio_idx)
++	if (last_idx >= hwsim_radio_idx-1)
+ 		goto done;
+ 
+ 	list_for_each_entry(data, &hwsim_radios, list) {
+-		if (data->idx < idx)
++		if (data->idx <= last_idx)
+ 			continue;
+ 
+ 		if (!net_eq(wiphy_net(data->hw->wiphy), sock_net(skb->sk)))
+@@ -3352,14 +3357,25 @@ static int hwsim_dump_radio_nl(struct sk_buff *skb,
+ 		if (res < 0)
+ 			break;
+ 
+-		idx = data->idx + 1;
++		last_idx = data->idx;
+ 	}
+ 
+-	cb->args[0] = idx;
++	cb->args[0] = last_idx;
++
++	/* list changed, but no new element sent, set interrupted flag */
++	if (skb->len == 0 && cb->prev_seq && cb->seq != cb->prev_seq) {
++		hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).portid,
++				  cb->nlh->nlmsg_seq, &hwsim_genl_family,
++				  NLM_F_MULTI, HWSIM_CMD_GET_RADIO);
++		if (!hdr)
++			res = -EMSGSIZE;
++		genl_dump_check_consistent(cb, hdr);
++		genlmsg_end(skb, hdr);
++	}
+ 
+ done:
+ 	spin_unlock_bh(&hwsim_radio_lock);
+-	return skb->len;
++	return (res)? res : skb->len;
  }
-+
-+int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *dest, u16 proto, bool unencrypted)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct sk_buff *skb;
-+	struct ethhdr *ehdr;
-+	u32 flags;
-+
-+	/* Only accept CONTROL_PORT_PROTOCOL configured in CONNECT/ASSOCIATE
-+	 * or Pre-Authentication
-+	 */
-+	if (proto != sdata->control_port_protocol &&
-+	    proto != cpu_to_be16(0x88c7))
-+		return -EINVAL;
-+
-+	if (unencrypted)
-+		flags = IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	else
-+		flags = 0;
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
-+			    sizeof(struct ethhdr) + len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom + sizeof(struct ethhdr));
-+
-+	skb_put_data(skb, buf, len);
-+
-+	ehdr = skb_push(skb, sizeof(struct ethhdr));
-+	memcpy(ehdr->h_dest, dest, ETH_ALEN);
-+	memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
-+	ehdr->h_proto = proto;
-+
-+	skb->dev = dev;
-+	skb->protocol = htons(ETH_P_802_3);
-+	skb_reset_network_header(skb);
-+	skb_reset_mac_header(skb);
-+
-+	__ieee80211_subif_start_xmit(skb, skb->dev, flags);
-+
-+	return 0;
-+}
+ 
+ /* Generic Netlink operations array */
+@@ -3417,6 +3433,7 @@ static void destroy_radio(struct work_struct *work)
+ 	struct mac80211_hwsim_data *data =
+ 		container_of(work, struct mac80211_hwsim_data, destroy_work);
+ 
++	hwsim_radios_generation++;
+ 	mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy), NULL);
+ }
+ 
 -- 
-2.13.5
+2.15.1
