@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47522 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932363AbeAHLzd (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:45814 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750970AbeAVM4F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 06:55:33 -0500
-Date: Mon, 8 Jan 2018 12:55:02 +0100
-From: Peter Zijlstra <peterz@infradead.org>
-To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Alan Cox <alan.cox@intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Zhang Rui <rui.zhang@intel.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
-        Eduardo Valentin <edubezval@gmail.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
- execution
-Message-ID: <20180108115502.GA6176@hirez.programming.kicks-ass.net> (sfid-20180108_125644_048765_EA3F656A)
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <87y3lbpvzp.fsf@xmission.com>
- <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
- <20180108100836.GF3040@hirez.programming.kicks-ass.net>
- <20180108114342.3b2d99fb@alans-desktop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180108114342.3b2d99fb@alans-desktop>
+        Mon, 22 Jan 2018 07:56:05 -0500
+Message-ID: <1516625763.2508.21.camel@sipsolutions.net> (sfid-20180122_135608_654253_59C6F729)
+Subject: Re: [PATCH 1/4] wireless: allow send peer mac in rssi cqm notify
+From: Johannes Berg <johannes@sipsolutions.net>
+To: tamizhr@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Date: Mon, 22 Jan 2018 13:56:03 +0100
+In-Reply-To: <1516174276-16789-2-git-send-email-tamizhr@codeaurora.org>
+References: <1516174276-16789-1-git-send-email-tamizhr@codeaurora.org>
+         <1516174276-16789-2-git-send-email-tamizhr@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 08, 2018 at 11:43:42AM +0000, Alan Cox wrote:
-> On Mon, 8 Jan 2018 11:08:36 +0100
-> Peter Zijlstra <peterz@infradead.org> wrote:
+On Wed, 2018-01-17 at 13:01 +0530, tamizhr@codeaurora.org wrote:
+> From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 > 
-> > On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
-> > > On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:  
-> > > > In at least one place (mpls) you are patching a fast path.  Compile out
-> > > > or don't load mpls by all means.  But it is not acceptable to change the
-> > > > fast path without even considering performance.  
-> > > 
-> > > Performance matters greatly, but I need help to identify a workload
-> > > that is representative for this fast path to see what, if any, impact
-> > > is incurred. Even better is a review that says "nope, 'index' is not
-> > > subject to arbitrary userspace control at this point, drop the patch."  
-> > 
-> > I think we're focussing a little too much on pure userspace. That is, we
-> > should be saying under the attackers control. Inbound network packets
-> > could equally be under the attackers control.
+> Extend cqm rssi notifier apis to include peer mac address. Currently
+> netlink cqm msg already accepts the mac. With this change just passing
+> the mac address as an argument to cfg and mac80211 apis.
 > 
-> Inbound network packets don't come with a facility to read back and do
-> cache timimg. 
+It seems eminently reasonable to have this functionality, but I'm not
+sure you can implement it like this?
 
-But could they not be used in conjunction with a local task to prime the
-stuff?
+I'd be worried that there's some userspace that just listens for these
+events and could get confused if another virtual interface shows up
+with notifications - if it's not doing proper filtering etc.?
+
+I'd be more comfortable at least moving the per-station notifications
+to a new command ID, or making them opt-in by clients by having a
+registration command and sending them unicast instead.
+
+Or actually, perhaps the best would be to just go and create a new
+multicast group for them, then we don't need a new command ID and
+existing clients can't get confused, but new clients don't really have
+to do anything but sign up to the new multicast group. We could check
+if the group is non-empty before we even build the message too.
+
+johannes
