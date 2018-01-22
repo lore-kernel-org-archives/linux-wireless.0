@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55468 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751257AbeA2SlL (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:34544 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751595AbeAVS4j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jan 2018 13:41:11 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tobias Schramm <tobleminer@gmail.com>,
-        <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3 1/2] pci: Add vendor id of Ubiquiti Networks
-References: <20180125111340.17553-1-tobleminer@gmail.com>
-        <20180125111340.17553-2-tobleminer@gmail.com>
-        <20180129180349.GB232763@bhelgaas-glaptop.roam.corp.google.com>
-Date: Mon, 29 Jan 2018 20:41:07 +0200
-In-Reply-To: <20180129180349.GB232763@bhelgaas-glaptop.roam.corp.google.com>
-        (Bjorn Helgaas's message of "Mon, 29 Jan 2018 12:03:49 -0600")
-Message-ID: <87wp00qzi4.fsf@kamboji.qca.qualcomm.com> (sfid-20180129_194115_831381_4B979AEC)
+        Mon, 22 Jan 2018 13:56:39 -0500
+Received: by mail-ot0-f193.google.com with SMTP id x15so3716616ote.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jan 2018 10:56:38 -0800 (PST)
+Subject: Re: [PATCH 03/10] rtlwifi: btcoex: Add variable ant_div_cfg to
+ support antenna diversity
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180119064551.10084-1-pkshih@realtek.com>
+ <20180119064551.10084-4-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <50fc689d-593c-fa96-ec5b-a27eb9e21805@lwfinger.net> (sfid-20180122_195654_175824_DDCD21FB)
+Date: Mon, 22 Jan 2018 12:56:32 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180119064551.10084-4-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+On 01/19/2018 12:45 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> The variable will be used by btcoex of 8822be, so we prepare this variable
+> in advance.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 1 +
+>   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+>   2 files changed, 2 insertions(+)
 
-> On Thu, Jan 25, 2018 at 12:13:39PM +0100, Tobias Schramm wrote:
->> Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> I see Kalle has already applied this, but if it's updated for any reason,
-> please add my ack and change the subject to:
->
->   PCI: Add Ubiquiti Networks vendor ID
->
-> i.e., match the style of previous changes.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-I only applied it to my pending branch which I use for build testing
-etc. and I can easily change it, which I now did:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=3c4cdd0851bc114f8b6d9f9db0b0479737bbd2d8
-
--- 
-Kalle Valo
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> index b51189ae1bfd..8dc646190e35 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> @@ -1310,6 +1310,7 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
+>   			 "[BTCoex], Package Type = Non-TFBGA\n");
+>   
+>   	btcoexist->board_info.rfe_type = rtl_get_hwpg_rfe_type(rtlpriv);
+> +	btcoexist->board_info.ant_div_cfg = 0;
+>   
+>   	return true;
+>   }
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> index cd3925d34854..e0818f6efb87 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> @@ -153,6 +153,7 @@ struct btc_board_info {
+>   	bool tfbga_package;
+>   
+>   	u8 rfe_type;
+> +	u8 ant_div_cfg;
+>   };
+>   
+>   enum btc_dbg_opcode {
+> 
