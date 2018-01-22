@@ -1,277 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18602 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932219AbeASPhS (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:40294 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751216AbeAVKXh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jan 2018 10:37:18 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codaurora.org>,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 4/8] wil6210: support flashless device
-Date: Fri, 19 Jan 2018 17:37:00 +0200
-Message-Id: <1516376224-13976-5-git-send-email-merez@codeaurora.org> (sfid-20180119_163737_175176_8FAF1882)
-In-Reply-To: <1516376224-13976-1-git-send-email-merez@codeaurora.org>
-References: <1516376224-13976-1-git-send-email-merez@codeaurora.org>
+        Mon, 22 Jan 2018 05:23:37 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 14/14] staging: wilc1000: rename Handle_ConnectTimeout() and Handle_Key()
+Date: Mon, 22 Jan 2018 15:52:27 +0530
+Message-ID: <1516616547-24654-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180122_113155_721409_02AB8B1C)
+In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <dlansky@codeaurora.org>
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-Talyn device supports boot without flash.
-Driver detects flashless device and in this case waits for ready indication
-from HW machine (instead of bootloader ready indication). Also in this
-case, MAC address is retrieved from OTP.
-
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c     | 95 +++++++++++++++++++++--------
- drivers/net/wireless/ath/wil6210/pcie_bus.c |  8 ++-
- drivers/net/wireless/ath/wil6210/wil6210.h  | 13 +++-
- 3 files changed, 87 insertions(+), 29 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index aa6f9c4..f6cca0f 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -670,7 +671,7 @@ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6e462db..38b2f2e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1158,7 +1158,7 @@ static s32 handle_connect(struct wilc_vif *vif,
+ 	return result;
  }
  
--static int wil_target_reset(struct wil6210_priv *wil)
-+static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+-static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
++static s32 handle_connect_timeout(struct wilc_vif *vif)
  {
- 	int delay = 0;
- 	u32 x, x1 = 0;
-@@ -684,9 +685,11 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 
- 	wil_halt_cpu(wil);
- 
--	/* clear all boot loader "ready" bits */
--	wil_w(wil, RGF_USER_BL +
--	      offsetof(struct bl_dedicated_registers_v0, boot_loader_ready), 0);
-+	if (!no_flash)
-+		/* clear all boot loader "ready" bits */
-+		wil_w(wil, RGF_USER_BL +
-+		      offsetof(struct bl_dedicated_registers_v0,
-+			       boot_loader_ready), 0);
- 	/* Clear Fw Download notification */
- 	wil_c(wil, RGF_USER_USAGE_6, BIT(0));
- 
-@@ -727,21 +730,33 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
- 
- 	/* wait until device ready. typical time is 20..80 msec */
--	do {
--		msleep(RST_DELAY);
--		x = wil_r(wil, RGF_USER_BL +
--			  offsetof(struct bl_dedicated_registers_v0,
--				   boot_loader_ready));
--		if (x1 != x) {
--			wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n", x1, x);
--			x1 = x;
--		}
--		if (delay++ > RST_COUNT) {
--			wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
--				x);
--			return -ETIME;
--		}
--	} while (x != BL_READY);
-+	if (no_flash)
-+		do {
-+			msleep(RST_DELAY);
-+			x = wil_r(wil, USER_EXT_USER_PMU_3);
-+			if (delay++ > RST_COUNT) {
-+				wil_err(wil, "Reset not completed, PMU_3 0x%08x\n",
-+					x);
-+				return -ETIME;
-+			}
-+		} while ((x & BIT_PMU_DEVICE_RDY) == 0);
-+	else
-+		do {
-+			msleep(RST_DELAY);
-+			x = wil_r(wil, RGF_USER_BL +
-+				  offsetof(struct bl_dedicated_registers_v0,
-+					   boot_loader_ready));
-+			if (x1 != x) {
-+				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
-+					     x1, x);
-+				x1 = x;
-+			}
-+			if (delay++ > RST_COUNT) {
-+				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
-+					x);
-+				return -ETIME;
-+			}
-+		} while (x != BL_READY);
- 
- 	wil_c(wil, RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
- 
-@@ -906,6 +921,27 @@ static void wil_bl_crash_info(struct wil6210_priv *wil, bool is_err)
- 	}
+ 	s32 result = 0;
+ 	struct connect_info conn_info;
+@@ -1518,7 +1518,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 	return result;
  }
  
-+static int wil_get_otp_info(struct wil6210_priv *wil)
-+{
-+	struct net_device *ndev = wil_to_ndev(wil);
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
-+	u8 mac[8];
-+
-+	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(RGF_OTP_MAC),
-+			     sizeof(mac));
-+	if (!is_valid_ether_addr(mac)) {
-+		wil_err(wil, "Invalid MAC %pM\n", mac);
-+		return -EINVAL;
-+	}
-+
-+	ether_addr_copy(ndev->perm_addr, mac);
-+	ether_addr_copy(wiphy->perm_addr, mac);
-+	if (!is_valid_ether_addr(ndev->dev_addr))
-+		ether_addr_copy(ndev->dev_addr, mac);
-+
-+	return 0;
-+}
-+
- static int wil_wait_for_fw_ready(struct wil6210_priv *wil)
+-static int Handle_Key(struct wilc_vif *vif,
++static int handle_key(struct wilc_vif *vif,
+ 		      struct key_attr *pstrHostIFkeyAttr)
  {
- 	ulong to = msecs_to_jiffies(1000);
-@@ -999,6 +1035,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- {
- 	int rc;
- 	unsigned long status_flags = BIT(wil_status_resetting);
-+	int no_flash;
- 
- 	wil_dbg_misc(wil, "reset\n");
- 
-@@ -1074,20 +1111,28 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	flush_workqueue(wil->wq_service);
- 	flush_workqueue(wil->wmi_wq);
- 
--	wil_bl_crash_info(wil, false);
-+	no_flash = test_bit(hw_capa_no_flash, wil->hw_capa);
-+	if (!no_flash)
-+		wil_bl_crash_info(wil, false);
- 	wil_disable_irq(wil);
--	rc = wil_target_reset(wil);
-+	rc = wil_target_reset(wil, no_flash);
- 	wil6210_clear_irq(wil);
- 	wil_enable_irq(wil);
- 	wil_rx_fini(wil);
- 	if (rc) {
--		wil_bl_crash_info(wil, true);
-+		if (!no_flash)
-+			wil_bl_crash_info(wil, true);
- 		goto out;
- 	}
- 
--	rc = wil_get_bl_info(wil);
--	if (rc == -EAGAIN && !load_fw) /* ignore RF error if not going up */
--		rc = 0;
-+	if (no_flash) {
-+		rc = wil_get_otp_info(wil);
-+	} else {
-+		rc = wil_get_bl_info(wil);
-+		if (rc == -EAGAIN && !load_fw)
-+			/* ignore RF error if not going up */
-+			rc = 0;
-+	}
- 	if (rc)
- 		goto out;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 6b153fe..ab8cb91 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -44,7 +44,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 			    RGF_USER_REVISION_ID_MASK);
- 	int platform_capa;
- 
--	bitmap_zero(wil->hw_capabilities, hw_capability_last);
-+	bitmap_zero(wil->hw_capa, hw_capa_last);
- 	bitmap_zero(wil->fw_capabilities, WMI_FW_CAPABILITY_MAX);
- 	bitmap_zero(wil->platform_capa, WIL_PLATFORM_CAPA_MAX);
- 	wil->wil_fw_name = ftm_mode ? WIL_FW_NAME_FTM_DEFAULT :
-@@ -83,6 +83,9 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		memcpy(fw_mapping, talyn_fw_mapping, sizeof(talyn_fw_mapping));
- 		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
- 		wil->rgf_ucode_assert_code_addr = TALYN_RGF_UCODE_ASSERT_CODE;
-+		if (wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1) &
-+		    BIT_NO_FLASH_INDICATION)
-+			set_bit(hw_capa_no_flash, wil->hw_capa);
+ 	s32 result = 0;
+@@ -2504,7 +2504,7 @@ static void host_if_work(struct work_struct *work)
  		break;
- 	default:
- 		wil_err(wil, "Unknown board hardware, chip_id 0x%08x, chip_revision 0x%08x\n",
-@@ -92,7 +95,8 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		return -EINVAL;
- 	}
  
--	wil_info(wil, "Board hardware is %s\n", wil->hw_name);
-+	wil_info(wil, "Board hardware is %s, flash %sexist\n", wil->hw_name,
-+		 test_bit(hw_capa_no_flash, wil->hw_capa) ? "doesn't " : "");
+ 	case HOST_IF_MSG_KEY:
+-		Handle_Key(msg->vif, &msg->body.key_info);
++		handle_key(msg->vif, &msg->body.key_info);
+ 		break;
  
- 	/* Get platform capabilities */
- 	if (wil->platform_ops.get_capa) {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 79356bb..2273a05 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -195,6 +195,8 @@ struct RGF_ICR {
- #define RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1	(0x880c2c)
- #define RGF_USER_SPARROW_M_4			(0x880c50) /* Sparrow */
- 	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
-+#define RGF_USER_OTP_HW_RD_MACHINE_1	(0x880ce0)
-+	#define BIT_NO_FLASH_INDICATION		BIT(8)
+ 	case HOST_IF_MSG_CFG_PARAMS:
+@@ -2571,7 +2571,7 @@ static void host_if_work(struct work_struct *work)
+ 		break;
  
- #define RGF_DMA_EP_TX_ICR		(0x881bb4) /* struct RGF_ICR */
- 	#define BIT_DMA_EP_TX_ICR_TX_DONE	BIT(0)
-@@ -285,6 +287,9 @@ struct RGF_ICR {
- #define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
- 	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
+ 	case HOST_IF_MSG_CONNECT_TIMER_FIRED:
+-		Handle_ConnectTimeout(msg->vif);
++		handle_connect_timeout(msg->vif);
+ 		break;
  
-+#define USER_EXT_USER_PMU_3		(0x88d00c)
-+	#define BIT_PMU_DEVICE_RDY		BIT(0)
-+
- #define RGF_USER_JTAG_DEV_ID	(0x880b34) /* device ID */
- 	#define JTAG_DEV_ID_SPARROW	(0x2632072f)
- 	#define JTAG_DEV_ID_TALYN	(0x7e0e1)
-@@ -294,6 +299,8 @@ struct RGF_ICR {
- 	#define REVISION_ID_SPARROW_B0	(0x0)
- 	#define REVISION_ID_SPARROW_D0	(0x3)
- 
-+#define RGF_OTP_MAC			(0x8a0620)
-+
- /* crash codes for FW/Ucode stored here */
- 
- /* ASSERT RGFs */
-@@ -583,7 +590,8 @@ enum {
- };
- 
- enum {
--	hw_capability_last
-+	hw_capa_no_flash,
-+	hw_capa_last
- };
- 
- struct wil_probe_client_req {
-@@ -659,7 +667,8 @@ struct wil6210_priv {
- 	u8 chip_revision;
- 	const char *hw_name;
- 	const char *wil_fw_name;
--	DECLARE_BITMAP(hw_capabilities, hw_capability_last);
-+	char *board_file;
-+	DECLARE_BITMAP(hw_capa, hw_capa_last);
- 	DECLARE_BITMAP(fw_capabilities, WMI_FW_CAPABILITY_MAX);
- 	DECLARE_BITMAP(platform_capa, WIL_PLATFORM_CAPA_MAX);
- 	u8 n_mids; /* number of additional MIDs as reported by FW */
+ 	case HOST_IF_MSG_POWER_MGMT:
 -- 
-1.9.1
+2.7.4
