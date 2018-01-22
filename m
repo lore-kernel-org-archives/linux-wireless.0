@@ -1,104 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:40103 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752517AbeAFUHa (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43030 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751086AbeAVPJ2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 6 Jan 2018 15:07:30 -0500
-Received: by mail-oi0-f65.google.com with SMTP id w125so5146357oie.7
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Jan 2018 12:07:30 -0800 (PST)
+        Mon, 22 Jan 2018 10:09:28 -0500
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Shrenik Shikhare <shrenik@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 1/2] mwifiex: schedule rx_work on RX interrupt for USB
+Date: Mon, 22 Jan 2018 20:34:56 +0530
+Message-ID: <1516633497-6584-2-git-send-email-gbhat@marvell.com> (sfid-20180122_160943_952754_26B0F34B)
+In-Reply-To: <1516633497-6584-1-git-send-email-gbhat@marvell.com>
+References: <1516633497-6584-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4gQbo+Bvf89QVL=mJrRy+id=sj3hiNePS=o_aAZv6hu0w@mail.gmail.com>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
- <CAPcyv4gQbo+Bvf89QVL=mJrRy+id=sj3hiNePS=o_aAZv6hu0w@mail.gmail.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 6 Jan 2018 12:07:29 -0800
-Message-ID: <CAPcyv4hjhC+sUS5w33N0KbrCM-zv2AoVYNYdb7vBzHh0tPs1DQ@mail.gmail.com> (sfid-20180106_210758_531699_DBB48F63)
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative execution
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Mark Rutland <mark.rutland@arm.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Alan Cox <alan.cox@intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Zhang Rui <rui.zhang@intel.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
-        Eduardo Valentin <edubezval@gmail.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Netdev <netdev@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 6, 2018 at 11:37 AM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Fri, Jan 5, 2018 at 5:09 PM, Dan Williams <dan.j.williams@intel.com> wrote:
->> Quoting Mark's original RFC:
->>
->> "Recently, Google Project Zero discovered several classes of attack
->> against speculative execution. One of these, known as variant-1, allows
->> explicit bounds checks to be bypassed under speculation, providing an
->> arbitrary read gadget. Further details can be found on the GPZ blog [1]
->> and the Documentation patch in this series."
->>
->> This series incorporates Mark Rutland's latest api and adds the x86
->> specific implementation of nospec_barrier. The
->> nospec_{array_ptr,ptr,barrier} helpers are then combined with a kernel
->> wide analysis performed by Elena Reshetova to address static analysis
->> reports where speculative execution on a userspace controlled value
->> could bypass a bounds check. The patches address a precondition for the
->> attack discussed in the Spectre paper [2].
->>
->> A consideration worth noting for reviewing these patches is to weigh the
->> dramatic cost of being wrong about whether a given report is exploitable
->> vs the overhead nospec_{array_ptr,ptr} may introduce. In other words,
->> lets make the bar for applying these patches be "can you prove that the
->> bounds check bypass is *not* exploitable". Consider that the Spectre
->> paper reports one example of a speculation window being ~180 cycles.
->>
->> Note that there is also a proposal from Linus, array_access [3], that
->> attempts to quash speculative execution past a bounds check without
->> introducing an lfence instruction. That may be a future optimization
->> possibility that is compatible with this api, but it would appear to
->> need guarantees from the compiler that it is not clear the kernel can
->> rely on at this point. It is also not clear that it would be a
->> significant performance win vs lfence.
->>
->> These patches also will also be available via the 'nospec' git branch
->> here:
->>
->>     git://git.kernel.org/pub/scm/linux/kernel/git/djbw/linux nospec
->
-> It appears that git.kernel.org has not mirrored out the new branch. In
-> the meantime here's an alternative location:
->
->     https://github.com/djbw/linux.git nospec
->
-> If there are updates to these patches they will appear in nospec-v2,
-> nospec-v3, etc... branches.
+From: Shrenik Shikhare <shrenik@marvell.com>
 
-For completeness I appended the bpf fix [1] to the git branch.
+There is race for data_received flag between main thread and
+RX data interrupt(mwifiex_usb_rx_complete()):
+1. USB received an RX data interrupt, set data_received flag
+2. main thread checks data_received, if set queues rx_work
+3. rx worker thread independently start processing rx_data_q
+4. rx work exits (once rx_data_q is empty)
+5. main thread resets the data_received flag(after #2)
+6. Now at the corner case there will be high RX data interrupts
+between #4 and #5
+7. Driver stops submitting URBs to firmware, once rx_pending
+exceeds HIGH_RX_PENDING
+8. The flag data_received(cleared in #5) will remain unset since
+there will be no interrupts from firmware to set it(after #7)
 
-https://lwn.net/Articles/743288/
+Above scenario causes RX stall in driver, which will finally
+result in command/TX timeouts in firmware.
+
+As a fix, queue rx_work directly in mwifiex_usb_rx_complete()
+callback, instead in the main thread. This removes dependency
+of RX processing on data_received flag.
+
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 7 ++++---
+ drivers/net/wireless/marvell/mwifiex/main.h | 1 +
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 2 ++
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 12e7399..6e6e1a7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -171,7 +171,7 @@ void mwifiex_queue_main_work(struct mwifiex_adapter *adapter)
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_queue_main_work);
+ 
+-static void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
++void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
+ {
+ 	unsigned long flags;
+ 
+@@ -183,6 +183,7 @@ static void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
+ 		queue_work(adapter->rx_workqueue, &adapter->rx_work);
+ 	}
+ }
++EXPORT_SYMBOL_GPL(mwifiex_queue_rx_work);
+ 
+ static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
+ {
+@@ -283,10 +284,10 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 				mwifiex_process_hs_config(adapter);
+ 			if (adapter->if_ops.process_int_status)
+ 				adapter->if_ops.process_int_status(adapter);
++			if (adapter->rx_work_enabled && adapter->data_received)
++				mwifiex_queue_rx_work(adapter);
+ 		}
+ 
+-		if (adapter->rx_work_enabled && adapter->data_received)
+-			mwifiex_queue_rx_work(adapter);
+ 
+ 		/* Need to wake up the card ? */
+ 		if ((adapter->ps_state == PS_STATE_SLEEP) &&
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 6b5539b..66ba95c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1667,6 +1667,7 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+ void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter);
+ void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
+ void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
++void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter);
+ int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
+ 			      int cmd_type,
+ 			      struct mwifiex_ds_wakeup_reason *wakeup_reason);
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 4bc2448..d20fda1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -144,6 +144,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
+ 		skb_queue_tail(&adapter->rx_data_q, skb);
+ 		adapter->data_received = true;
+ 		atomic_inc(&adapter->rx_pending);
++		if (adapter->rx_work_enabled)
++			mwifiex_queue_rx_work(adapter);
+ 		break;
+ 	default:
+ 		mwifiex_dbg(adapter, ERROR,
+-- 
+1.9.1
