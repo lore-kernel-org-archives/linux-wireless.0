@@ -1,182 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.uni-rostock.de ([139.30.22.71]:64777 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965075AbeAJQno (ORCPT
+Received: from mx2.uni-rostock.de ([139.30.22.72]:54226 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751085AbeAVO61 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 11:43:44 -0500
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Subject: [PATCH v3 2/5] mac80211_hwsim: add hashtable with mac address keys for faster lookup
-Date: Wed, 10 Jan 2018 17:42:52 +0100
-In-Reply-To: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
+        Mon, 22 Jan 2018 09:58:27 -0500
+Subject: Re: [PATCH v3 3/5] mac80211_hwsim: add generation count for netlink
+ dump operation
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
 References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
+ <44644db1-58a4-4b6e-a77e-37c72ee2e4a6@MAIL2.uni-rostock.de>
+ <1516018121.410.13.camel@sipsolutions.net>
+ <3c846ba5-a017-1993-79c6-2e33d78dfcf4@uni-rostock.de>
+ <1516627453.2508.31.camel@sipsolutions.net>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Message-ID: <c7e28f9c-db3a-acb0-660d-9c0e2958bf3a@uni-rostock.de> (sfid-20180122_155830_581352_F4F6219E)
+Date: Mon, 22 Jan 2018 15:58:24 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-Message-ID: <1d7bda28-6a77-4c4e-a3fc-3857b3c05aa1@MAIL2.uni-rostock.de> (sfid-20180110_174349_486900_4C5ADE93)
+In-Reply-To: <1516627453.2508.31.camel@sipsolutions.net>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+        micalg=sha-256; boundary="------------ms030308000602000406030502"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a rhastable for mac address lookup of hwsim radios. This
-especially improve the speed on reception of a netlink message with a new
-frame. Although redundant, we keep holding a normal list for all radios,
-since the rhashtable_walk interface adds a lot of overhead for iterating
-over all radios and the doc of rhashtable recommend a redundant structure
-for stable walks in such situations.
+--------------ms030308000602000406030502
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
 
-Since rhashtable is rcu protected we do not need a lock for delivering
-frames and thus improving this scenario.
+Am 22.01.2018 um 14:24 schrieb Johannes Berg:
+> On Mon, 2018-01-15 at 15:28 +0100, Benjamin Beichler wrote:
+>> Am 15.01.2018 um 13:08 schrieb Johannes Berg:
+>>> On Wed, 2018-01-10 at 17:42 +0100, Benjamin Beichler wrote:
+>>>>  Change the dump iteration to be independent from
+>>>> increasing radio indices on radio list.
+>>> You can't do that, data structures can be deleted while the dump is
+>>> ongoing.
+>> That's what I try to address with this patch. In the past there were
+>> corner cases, which might have failed while deletion.
+> Hah, ok.
+>
+>> Nonetheless, the radio count is in the current version strictly
+>> monotonic, maybe the description is misleading. :-)
+>> So in the inner loop there is no deletion possible because of the
+>> spinlock, and multiple calls of nl_dump check the generation count and=
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 57 +++++++++++++++++++++++++----------
- 1 file changed, 41 insertions(+), 16 deletions(-)
+>> cancel if it have changed.
+> Ah, I missed that you cancel when it's changed, we don't usually do
+> that normally.
+>
+> I'd still prefer if you could have the code not rely on the pointers,
+> because if somebody gets it wrong (forgets to update the generation
+> count) I'm not sure I want that to crash in some corner cases...
+Mkay, I saw the same pattern in other parts of the kernel, that's why I
+adopted it. Then I restore the magic with searching the next radio id
+bigger then the last one. Since on my machine, It needs several hundreds
+of radios for a full message to cause interruptions, I think the code is
+really rarely used and should be fail safe :-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 742a1551bb1c..55d25e3fbbcc 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -32,6 +32,7 @@
- #include <net/genetlink.h>
- #include <net/net_namespace.h>
- #include <net/netns/generic.h>
-+#include <linux/rhashtable.h>
- #include "mac80211_hwsim.h"
- 
- #define WARN_QUEUE 100
-@@ -490,6 +491,7 @@ static const struct ieee80211_iface_combination hwsim_if_comb_p2p_dev[] = {
- static spinlock_t hwsim_radio_lock;
- static LIST_HEAD(hwsim_radios);
- static struct workqueue_struct *hwsim_wq;
-+static struct rhashtable hwsim_radios_rht;
- static int hwsim_radio_idx;
- 
- static struct platform_driver mac80211_hwsim_driver = {
-@@ -500,6 +502,7 @@ static struct platform_driver mac80211_hwsim_driver = {
- 
- struct mac80211_hwsim_data {
- 	struct list_head list;
-+	struct rhash_head rht;
- 	struct ieee80211_hw *hw;
- 	struct device *dev;
- 	struct ieee80211_supported_band bands[NUM_NL80211_BANDS];
-@@ -574,6 +577,20 @@ struct mac80211_hwsim_data {
- 	u64 tx_failed;
- };
- 
-+static u32 hwsim_table_hash(const void *addr, u32 len, u32 seed)
-+{
-+	/* Use last four bytes of hw addr as hash index */
-+	return jhash_1word(*(u32 *)(addr + 2), seed);
-+}
-+
-+static const struct rhashtable_params hwsim_rht_params = {
-+	.nelem_hint = 2,
-+	.automatic_shrinking = true,
-+	.key_len = ETH_ALEN,
-+	.key_offset = offsetof(struct mac80211_hwsim_data, addresses[1]),
-+	.head_offset = offsetof(struct mac80211_hwsim_data, rht),
-+	.hashfn = hwsim_table_hash,
-+};
- 
- struct hwsim_radiotap_hdr {
- 	struct ieee80211_radiotap_header hdr;
-@@ -2731,6 +2748,15 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
- 
- 	spin_lock_bh(&hwsim_radio_lock);
-+	err = rhashtable_insert_fast(&hwsim_radios_rht, &data->rht,
-+				     hwsim_rht_params);
-+	if (err < 0) {
-+		pr_debug("mac80211_hwsim: radio index %d already present\n",
-+			 idx);
-+		spin_unlock_bh(&hwsim_radio_lock);
-+		goto failed_final_insert;
-+	}
-+
- 	list_add_tail(&data->list, &hwsim_radios);
- 	spin_unlock_bh(&hwsim_radio_lock);
- 
-@@ -2739,6 +2765,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 
- 	return idx;
- 
-+failed_final_insert:
-+	debugfs_remove_recursive(data->debugfs);
-+	ieee80211_unregister_hw(data->hw);
- failed_hw:
- 	device_release_driver(data->dev);
- failed_bind:
-@@ -2874,22 +2903,9 @@ static void hwsim_mon_setup(struct net_device *dev)
- 
- static struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(const u8 *addr)
- {
--	struct mac80211_hwsim_data *data;
--	bool _found = false;
--
--	spin_lock_bh(&hwsim_radio_lock);
--	list_for_each_entry(data, &hwsim_radios, list) {
--		if (memcmp(data->addresses[1].addr, addr, ETH_ALEN) == 0) {
--			_found = true;
--			break;
--		}
--	}
--	spin_unlock_bh(&hwsim_radio_lock);
--
--	if (!_found)
--		return NULL;
--
--	return data;
-+	return rhashtable_lookup_fast(&hwsim_radios_rht,
-+				      addr,
-+				      hwsim_rht_params);
- }
- 
- static void hwsim_register_wmediumd(struct net *net, u32 portid)
-@@ -3191,6 +3207,8 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 			continue;
- 
- 		list_del(&data->list);
-+		rhashtable_remove_fast(&hwsim_radios_rht, &data->rht,
-+				       hwsim_rht_params);
- 		spin_unlock_bh(&hwsim_radio_lock);
- 		mac80211_hwsim_del_radio(data, wiphy_name(data->hw->wiphy),
- 					 info);
-@@ -3346,6 +3364,8 @@ static void remove_user_radios(u32 portid)
- 	list_for_each_entry_safe(entry, tmp, &hwsim_radios, list) {
- 		if (entry->destroy_on_close && entry->portid == portid) {
- 			list_del(&entry->list);
-+			rhashtable_remove_fast(&hwsim_radios_rht, &entry->rht,
-+					       hwsim_rht_params);
- 			INIT_WORK(&entry->destroy_work, destroy_radio);
- 			queue_work(hwsim_wq, &entry->destroy_work);
- 		}
-@@ -3421,6 +3441,8 @@ static void __net_exit hwsim_exit_net(struct net *net)
- 			continue;
- 
- 		list_del(&data->list);
-+		rhashtable_remove_fast(&hwsim_radios_rht, &data->rht,
-+				       hwsim_rht_params);
- 		INIT_WORK(&data->destroy_work, destroy_radio);
- 		queue_work(hwsim_wq, &data->destroy_work);
- 	}
-@@ -3458,6 +3480,8 @@ static int __init init_mac80211_hwsim(void)
- 	if (!hwsim_wq)
- 		return -ENOMEM;
- 
-+	rhashtable_init(&hwsim_radios_rht, &hwsim_rht_params);
-+
- 	err = register_pernet_device(&hwsim_net_ops);
- 	if (err)
- 		return err;
-@@ -3598,6 +3622,7 @@ static void __exit exit_mac80211_hwsim(void)
- 	mac80211_hwsim_free();
- 	flush_workqueue(hwsim_wq);
- 
-+	rhashtable_destroy(&hwsim_radios_rht);
- 	unregister_netdev(hwsim_mon);
- 	platform_driver_unregister(&mac80211_hwsim_driver);
- 	unregister_pernet_device(&hwsim_net_ops);
--- 
-2.15.1
+
+> johannes
+>
+
+--=20
+M.Sc. Benjamin Beichler
+
+Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
+chnik
+Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
+
+University of Rostock, Department of CS and EE
+Institute of Applied Microelectronics and CE
+
+Richard-Wagner-Stra=C3=9Fe 31
+18119 Rostock
+Deutschland/Germany
+
+phone: +49 (0) 381 498 - 7278
+email: Benjamin.Beichler@uni-rostock.de
+www: http://www.imd.uni-rostock.de/
+
+
+
+--------------ms030308000602000406030502
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCC
+D/kwggTVMIIDvaADAgECAghQTsb1PRG0ZDANBgkqhkiG9w0BAQsFADBxMQswCQYDVQQGEwJE
+RTEcMBoGA1UEChMTRGV1dHNjaGUgVGVsZWtvbSBBRzEfMB0GA1UECxMWVC1UZWxlU2VjIFRy
+dXN0IENlbnRlcjEjMCEGA1UEAxMaRGV1dHNjaGUgVGVsZWtvbSBSb290IENBIDIwHhcNMTQw
+NzIyMTIwODI2WhcNMTkwNzA5MjM1OTAwWjBaMQswCQYDVQQGEwJERTETMBEGA1UEChMKREZO
+LVZlcmVpbjEQMA4GA1UECxMHREZOLVBLSTEkMCIGA1UEAxMbREZOLVZlcmVpbiBQQ0EgR2xv
+YmFsIC0gRzAxMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6ZvDZ4X5Da71jVTD
+llA1PWLpbkztlNcAW5UidNQg6zSP1uzAMQQLmYHiphTSUqAoI4SLdIkEXlvg4njBeMsWyyg1
+OXstkEXQ7aAAeny/Sg4bAMOG6VwrMRF7DPOCJEOMHDiLamgAmu7cT3ir0sYTm3at7t4m6O8B
+r3QPwQmi9mvOvdPNFDBP9eXjpMhim4IaAycwDQJlYE3t0QkjKpY1WCfTdsZxtpAdxO3/NYZ9
+bzOz2w/FEcKKg6GUXUFr2NIQ9Uz9ylGs2b3vkoO72uuLFlZWQ8/h1RM9ph8nMM1JVNvJEzSa
+cXXFbOqnC5j5IZ0nrz6jOTlIaoytyZn7wxLyvQIDAQABo4IBhjCCAYIwDgYDVR0PAQH/BAQD
+AgEGMB0GA1UdDgQWBBRJt8bP6D0ff+pEexMp9/EKcD7eZDAfBgNVHSMEGDAWgBQxw3kbuvVT
+1xfgiXotF2wKsyudMzASBgNVHRMBAf8ECDAGAQH/AgECMGIGA1UdIARbMFkwEQYPKwYBBAGB
+rSGCLAEBBAICMBEGDysGAQQBga0hgiwBAQQDADARBg8rBgEEAYGtIYIsAQEEAwEwDwYNKwYB
+BAGBrSGCLAEBBDANBgsrBgEEAYGtIYIsHjA+BgNVHR8ENzA1MDOgMaAvhi1odHRwOi8vcGtp
+MDMzNi50ZWxlc2VjLmRlL3JsL0RUX1JPT1RfQ0FfMi5jcmwweAYIKwYBBQUHAQEEbDBqMCwG
+CCsGAQUFBzABhiBodHRwOi8vb2NzcDAzMzYudGVsZXNlYy5kZS9vY3NwcjA6BggrBgEFBQcw
+AoYuaHR0cDovL3BraTAzMzYudGVsZXNlYy5kZS9jcnQvRFRfUk9PVF9DQV8yLmNlcjANBgkq
+hkiG9w0BAQsFAAOCAQEAYyAo/ZwhhnK+OUZZOTIlvKkBmw3Myn1BnIZtCm4ssxNZdbEzkhth
+Jxb/w7LVNYL7hCoBSb1mu2YvssIGXW4/buMBWlvKQ2NclbbhMacf1QdfTeZlgk4y+cN8ekvN
+TVx07iHydQLsUj7SyWrTkCNuSWc1vn9NVqTszC/Pt6GXqHI+ybxA1lqkCD3WvILDt7cyjrEs
+jmpttzUCGc/1OURYY6ckABCwu/xOr24vOLulV0k/2G5QbyyXltwdRpplic+uzPLl2Z9Tsz6h
+L5Kp2AvGhB8Exuse6J99tXulAvEkxSRjETTMWpMgKnmIOiVCkKllO3yG0xIVIyn8LNrMOVtU
+FzCCBWEwggRJoAMCAQICBxeQYQtLfuwwDQYJKoZIhvcNAQELBQAwWjELMAkGA1UEBhMCREUx
+EzARBgNVBAoTCkRGTi1WZXJlaW4xEDAOBgNVBAsTB0RGTi1QS0kxJDAiBgNVBAMTG0RGTi1W
+ZXJlaW4gUENBIEdsb2JhbCAtIEcwMTAeFw0xNDA1MTIxNTA2MzVaFw0xOTA3MDkyMzU5MDBa
+MIGFMQswCQYDVQQGEwJERTEdMBsGA1UEChMUVW5pdmVyc2l0YWV0IFJvc3RvY2sxFjAUBgNV
+BAsTDVJlY2hlbnplbnRydW0xHTAbBgNVBAMTFFVuaSBSb3N0b2NrIENBIC0gRzAyMSAwHgYJ
+KoZIhvcNAQkBFhFjYUB1bmktcm9zdG9jay5kZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+AQoCggEBAKMzLcQy67mVXsTVKZnBwJcZ/9QsaaCz1TCp6J3pCMhImfsq07Xq8qOQJRYqqOuY
+TxTjNkCuimsXXGAjCC6wDJpfihtOW56Rp+OP7UrDIynmWWqoiybw82/I9V0Qo33oE9ZXv4nc
+1udtH/jeSptioarAgZWneyZIzqOHGbWG2CZ+HFVQM9zANtKPuligQdR1Ojn4CjHPfzf20s3i
+igmZyJ1nJt3YltdeB3417GYA1wnFWcQOQpdCkcaucqZ8QWoe6COociQxQ7IuSQraQJBfgL5z
+81Vs95cUAdtV/Oj7ywXmMkcerQ8egitlHVQh/jwG6EbsFLab9erzbPDs7VHsmusCAwEAAaOC
+Af4wggH6MBIGA1UdEwEB/wQIMAYBAf8CAQEwDgYDVR0PAQH/BAQDAgEGMBEGA1UdIAQKMAgw
+BgYEVR0gADAdBgNVHQ4EFgQUsxX1olePg3vUENNc8o4+U/dvQzcwHwYDVR0jBBgwFoAUSbfG
+z+g9H3/qRHsTKffxCnA+3mQwHAYDVR0RBBUwE4ERY2FAdW5pLXJvc3RvY2suZGUwgYgGA1Ud
+HwSBgDB+MD2gO6A5hjdodHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWNhL3B1
+Yi9jcmwvY2FjcmwuY3JsMD2gO6A5hjdodHRwOi8vY2RwMi5wY2EuZGZuLmRlL2dsb2JhbC1y
+b290LWNhL3B1Yi9jcmwvY2FjcmwuY3JsMIHXBggrBgEFBQcBAQSByjCBxzAzBggrBgEFBQcw
+AYYnaHR0cDovL29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZlci9PQ1NQMEcGCCsGAQUFBzAC
+hjtodHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWNhL3B1Yi9jYWNlcnQvY2Fj
+ZXJ0LmNydDBHBggrBgEFBQcwAoY7aHR0cDovL2NkcDIucGNhLmRmbi5kZS9nbG9iYWwtcm9v
+dC1jYS9wdWIvY2FjZXJ0L2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEBAE8SmQRK1aE9
+dqcmXuU9ZPzSN5dd19HgtQuvNAceB1mhearys7UljqQ9Ua3BAtWTthqLGuiy7vr7ul87frgp
+JRVozeRyIePOY7R0iKYbmPTbHgj4XHRyc9Z2D6h1Nec8pWQgx4BSqs3xALpio+gBK3UHsi3X
+sJx4ZpLTuboRR4+BFTmEwdtsGZf6fPLBapfbS0xls05HvPtrSw6JGWClE1PidPl3M5kiARjd
+Ep4HzDr+/IzTx9823poYGnxfCPL1M3Tb6ECugv7mBZiWE90bPzFfv9yEXkX0Pp5ielz/XkCC
+MOB+gDgVZbttmM/BSvoeuw+GtuCqqV1g6lc1/JZBNtgwggW3MIIEn6ADAgECAgcZvwa8Ukka
+MA0GCSqGSIb3DQEBCwUAMIGFMQswCQYDVQQGEwJERTEdMBsGA1UEChMUVW5pdmVyc2l0YWV0
+IFJvc3RvY2sxFjAUBgNVBAsTDVJlY2hlbnplbnRydW0xHTAbBgNVBAMTFFVuaSBSb3N0b2Nr
+IENBIC0gRzAyMSAwHgYJKoZIhvcNAQkBFhFjYUB1bmktcm9zdG9jay5kZTAeFw0xNTA3MTAw
+ODU4MjFaFw0xODA3MDkwODU4MjFaMFYxCzAJBgNVBAYTAkRFMR0wGwYDVQQKDBRVbml2ZXJz
+aXRhZXQgUm9zdG9jazEMMAoGA1UECwwDSUVGMRowGAYDVQQDDBFCZW5qYW1pbiBCZWljaGxl
+cjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMP+J5bUv7oCrhYz7tz+vKg/sGwQ
+9WHm3j528AX5cEn7Qh92cE/Y31gpimuSVlHN/CyYt/PEQ12Gc83vB8HU3gl0t00PwIElWroW
+yeGUBhMzH5Jfv0jkBz5xb/Byv8weXDVHbYvtTZfvWIv6SjDhgjY5puAHw/Z8XpEeksOoBLa6
+H7LQDR3O530Jwvay5ZDPFcWV9n01rBoglnAcfIh7v9Ua6A8BhqdZ/Yt0wlOXN94sTklsiCYy
+cmyKfhrrJWuJMD8WWAYEa69+mi9QodzHg/b58pzUDTE4QOLUR2jAk27g63yC3Nh/+lZi79gB
+e6JfSBieesen0Y2s4DYJG9T207MCAwEAAaOCAlgwggJUMEAGA1UdIAQ5MDcwEQYPKwYBBAGB
+rSGCLAEBBAMDMBEGDysGAQQBga0hgiwCAQQDATAPBg0rBgEEAYGtIYIsAQEEMAkGA1UdEwQC
+MAAwCwYDVR0PBAQDAgXgMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4E
+FgQUNBPZS5VyYehPYcxCwh0ss/3r2zswHwYDVR0jBBgwFoAUsxX1olePg3vUENNc8o4+U/dv
+QzcwKwYDVR0RBCQwIoEgYmVuamFtaW4uYmVpY2hsZXJAdW5pLXJvc3RvY2suZGUwgY0GA1Ud
+HwSBhTCBgjA/oD2gO4Y5aHR0cDovL2NkcDEucGNhLmRmbi5kZS91bmktcm9zdG9jay1jYS9w
+dWIvY3JsL2dfY2FjcmwuY3JsMD+gPaA7hjlodHRwOi8vY2RwMi5wY2EuZGZuLmRlL3VuaS1y
+b3N0b2NrLWNhL3B1Yi9jcmwvZ19jYWNybC5jcmwwgdsGCCsGAQUFBwEBBIHOMIHLMDMGCCsG
+AQUFBzABhidodHRwOi8vb2NzcC5wY2EuZGZuLmRlL09DU1AtU2VydmVyL09DU1AwSQYIKwYB
+BQUHMAKGPWh0dHA6Ly9jZHAxLnBjYS5kZm4uZGUvdW5pLXJvc3RvY2stY2EvcHViL2NhY2Vy
+dC9nX2NhY2VydC5jcnQwSQYIKwYBBQUHMAKGPWh0dHA6Ly9jZHAyLnBjYS5kZm4uZGUvdW5p
+LXJvc3RvY2stY2EvcHViL2NhY2VydC9nX2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEB
+ADPT0DMfqh3ie0QoV5dpv/ULazwuXoXFAYd3rikdZxxGfhR4/zzrQM9QtH4a1+nR66HnoAJR
+6NH76MDmaVY37LO3Jb+WHSbMQfN4ijv2j5Oxc8OnepTp/FY4Vo4qP0TzmW8dtqgJCwWVAcYj
+GPrZLG6oubw2aL0DYirEQYMpEh3LEAf2nemCKdLkahdmbvx5AMDcz1XODWLI9PDhGtifFHCA
+keel0T9YceFhA1myfawGh3GDD43ltM8i0PZzxaex/mw1ropnQ/wfzs3N6EYOmZNsc6RbRJLi
+HEJcraQTzI2bFSuO2Z856KRXMV+jj8c2cJ8xQuVd4ptYFSt1miDSGmwxggPkMIID4AIBATCB
+kTCBhTELMAkGA1UEBhMCREUxHTAbBgNVBAoTFFVuaXZlcnNpdGFldCBSb3N0b2NrMRYwFAYD
+VQQLEw1SZWNoZW56ZW50cnVtMR0wGwYDVQQDExRVbmkgUm9zdG9jayBDQSAtIEcwMjEgMB4G
+CSqGSIb3DQEJARYRY2FAdW5pLXJvc3RvY2suZGUCBxm/BrxSSRowDQYJYIZIAWUDBAIBBQCg
+ggIjMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE4MDEyMjE0
+NTgyNFowLwYJKoZIhvcNAQkEMSIEIKUYDSkFkoUAzvcAWr4zLS3EDmewP2+zt8PcvVoh7eDG
+MGwGCSqGSIb3DQEJDzFfMF0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0D
+BzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwIC
+ASgwgaIGCSsGAQQBgjcQBDGBlDCBkTCBhTELMAkGA1UEBhMCREUxHTAbBgNVBAoTFFVuaXZl
+cnNpdGFldCBSb3N0b2NrMRYwFAYDVQQLEw1SZWNoZW56ZW50cnVtMR0wGwYDVQQDExRVbmkg
+Um9zdG9jayBDQSAtIEcwMjEgMB4GCSqGSIb3DQEJARYRY2FAdW5pLXJvc3RvY2suZGUCBxm/
+BrxSSRowgaQGCyqGSIb3DQEJEAILMYGUoIGRMIGFMQswCQYDVQQGEwJERTEdMBsGA1UEChMU
+VW5pdmVyc2l0YWV0IFJvc3RvY2sxFjAUBgNVBAsTDVJlY2hlbnplbnRydW0xHTAbBgNVBAMT
+FFVuaSBSb3N0b2NrIENBIC0gRzAyMSAwHgYJKoZIhvcNAQkBFhFjYUB1bmktcm9zdG9jay5k
+ZQIHGb8GvFJJGjANBgkqhkiG9w0BAQEFAASCAQBN/BEbxolqmXrDo+NKx9KCq3szl9DlkOel
+yvdUgxTBheeBPCH+KllQGw8AKuE9JoNTMwOsFsj0l0w3f5fh6LlFJ41rAfwbdKZyiRp2nPPI
+6lG/DxwCL12VgTtLuhNt9q3uTOHCfkIh6Ff3QCchDm1RcsQdQi7vsT8dIpzpyshbcQIMYLhH
+h4Zf7IIfsrsYJ8M5SObICwLB9zRMoVDf3l5SnsjaB6yP6HCfd9mvenab0qCGOpjA0L123uwU
+TH773Aq52SRYGCT0NkhUocmBrMsv/nmgT8o8pu2e5mT3V8sLPZz0pgxkRSA3ZSYEuIrZ2i/R
+lBnXTjvzlxTeiC7f2BUyAAAAAAAA
+--------------ms030308000602000406030502--
