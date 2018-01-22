@@ -1,27 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35850 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751268AbeAWKje (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Jan 2018 05:39:34 -0500
-Subject: Re: [PATCH v2] mt76x2: init: disable all pending tasklets during
- device removal
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-References: <cover.1516697336.git.lorenzo.bianconi@redhat.com>
- <612e527f5358f4d7d465f21fc72b5b649dce5f40.1516697336.git.lorenzo.bianconi@redhat.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <1d791ba7-5708-cbe5-5c74-09a6abc3c6ca@nbd.name> (sfid-20180123_113937_520067_86F599E6)
-Date: Tue, 23 Jan 2018 11:39:33 +0100
-MIME-Version: 1.0
-In-Reply-To: <612e527f5358f4d7d465f21fc72b5b649dce5f40.1516697336.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Received: from shards.monkeyblade.net ([184.105.139.130]:35260 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750848AbeAVPRa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Jan 2018 10:17:30 -0500
+Date: Mon, 22 Jan 2018 10:17:28 -0500 (EST)
+Message-Id: <20180122.101728.704853095626932714.davem@davemloft.net> (sfid-20180122_161737_464407_C3ECFE97)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2018-01-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180122131501.21953-1-johannes@sipsolutions.net>
+References: <20180122131501.21953-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-01-23 10:03, Lorenzo Bianconi wrote:
-> There is a possible race in mt76x2_stop_hardware() since pre_tbtt and
-> dfs tasklets could run during driver cleanup. Fix it disabling all
-> pending tasklets during device removal
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 22 Jan 2018 14:15:00 +0100
+
+> A few more (only four, really) changes have come in, so I figured
+> since the merge window hasn't opened yesterday, I'd still send them
+> to you.
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Acked-by: Felix Fietkau <nbd@nbd.name>
+> Please pull and let me know if there's any problem.
+
+I had to resolve a conflict in mac80211_hwsim.c, please check my
+resolution and send me any fixes which are necessary.
+
+Thank you.
