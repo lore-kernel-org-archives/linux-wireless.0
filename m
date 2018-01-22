@@ -1,39 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35114 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbeAYSd6 (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:43388 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751216AbeAVKX2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 13:33:58 -0500
-Received: by mail-pf0-f196.google.com with SMTP id t12so6394943pfg.2
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jan 2018 10:33:58 -0800 (PST)
-Date: Thu, 25 Jan 2018 10:33:55 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Shrenik Shikhare <shrenik@marvell.com>
-Subject: Re: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX
- stall
-Message-ID: <20180125183355.rpmajajr5exxcybb@ban.mtv.corp.google.com> (sfid-20180125_193402_064309_00DA2E99)
-References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
- <20180125071202.0F39560A60@smtp.codeaurora.org>
- <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
+        Mon, 22 Jan 2018 05:23:28 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 11/14] staging: wilc1000: rename strConnectInfo variable to avoid camelCase
+Date: Mon, 22 Jan 2018 15:52:24 +0530
+Message-ID: <1516616547-24654-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180122_113154_946379_CC440AFD)
+In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 25, 2018 at 09:59:04AM +0000, Ganapathi Bhat wrote:
-> > I can't find any commit with id c7dbdcb2a4e1, is it correct?
-> Correct. Actually the commit id c7dbdcb2a4e1 is the PATCH [1/2] sent in this series.
+Fix "Avoid camelCase" issue reported by checkpatch.pl script.
+In this patch rename "strConnectInfo" variable to resolve
+issue reported by checkpatch.pl script.
 
-What? Why would you introduce a bug and only fix it in the next patch?
-Does that mean you should just combine the two? Or reverse the order, if
-patch 2 doesn't cause problems on its own?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 74 +++++++++++++++----------------
+ 1 file changed, 37 insertions(+), 37 deletions(-)
 
-Brian
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c3b6368..0eaf6c6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1115,30 +1115,30 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 
+ ERRORHANDLER:
+ 	if (result) {
+-		struct connect_info strConnectInfo;
++		struct connect_info conn_info;
+ 
+ 		del_timer(&hif_drv->connect_timer);
+ 
+-		memset(&strConnectInfo, 0, sizeof(struct connect_info));
++		memset(&conn_info, 0, sizeof(struct connect_info));
+ 
+ 		if (attr->result) {
+ 			if (attr->bssid)
+-				memcpy(strConnectInfo.bssid, attr->bssid, 6);
++				memcpy(conn_info.bssid, attr->bssid, 6);
+ 
+ 			if (attr->ies) {
+-				strConnectInfo.req_ies_len = attr->ies_len;
+-				strConnectInfo.req_ies = kmalloc(attr->ies_len, GFP_KERNEL);
+-				memcpy(strConnectInfo.req_ies, attr->ies, attr->ies_len);
++				conn_info.req_ies_len = attr->ies_len;
++				conn_info.req_ies = kmalloc(attr->ies_len, GFP_KERNEL);
++				memcpy(conn_info.req_ies, attr->ies, attr->ies_len);
+ 			}
+ 
+ 			attr->result(CONN_DISCONN_EVENT_CONN_RESP,
+-							       &strConnectInfo,
++							       &conn_info,
+ 							       MAC_DISCONNECTED,
+ 							       NULL,
+ 							       attr->arg);
+ 			hif_drv->hif_state = HOST_IF_IDLE;
+-			kfree(strConnectInfo.req_ies);
+-			strConnectInfo.req_ies = NULL;
++			kfree(conn_info.req_ies);
++			conn_info.req_ies = NULL;
+ 
+ 		} else {
+ 			netdev_err(vif->ndev, "Connect callback is NULL\n");
+@@ -1161,7 +1161,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+-	struct connect_info strConnectInfo;
++	struct connect_info conn_info;
+ 	struct wid wid;
+ 	u16 u16DummyReasonCode = 0;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+@@ -1175,30 +1175,30 @@ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
+ 
+ 	scan_while_connected = false;
+ 
+-	memset(&strConnectInfo, 0, sizeof(struct connect_info));
++	memset(&conn_info, 0, sizeof(struct connect_info));
+ 
+ 	if (hif_drv->usr_conn_req.conn_result) {
+ 		if (hif_drv->usr_conn_req.bssid) {
+-			memcpy(strConnectInfo.bssid,
++			memcpy(conn_info.bssid,
+ 			       hif_drv->usr_conn_req.bssid, 6);
+ 		}
+ 
+ 		if (hif_drv->usr_conn_req.ies) {
+-			strConnectInfo.req_ies_len = hif_drv->usr_conn_req.ies_len;
+-			strConnectInfo.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
+-			memcpy(strConnectInfo.req_ies,
++			conn_info.req_ies_len = hif_drv->usr_conn_req.ies_len;
++			conn_info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
++			memcpy(conn_info.req_ies,
+ 			       hif_drv->usr_conn_req.ies,
+ 			       hif_drv->usr_conn_req.ies_len);
+ 		}
+ 
+ 		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
+-						  &strConnectInfo,
++						  &conn_info,
+ 						  MAC_DISCONNECTED,
+ 						  NULL,
+ 						  hif_drv->usr_conn_req.arg);
+ 
+-		kfree(strConnectInfo.req_ies);
+-		strConnectInfo.req_ies = NULL;
++		kfree(conn_info.req_ies);
++		conn_info.req_ies = NULL;
+ 	} else {
+ 		netdev_err(vif->ndev, "Connect callback is NULL\n");
+ 	}
+@@ -1323,7 +1323,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 	u8 u8MacStatus;
+ 	u8 u8MacStatusReasonCode;
+ 	u8 u8MacStatusAdditionalInfo;
+-	struct connect_info strConnectInfo;
++	struct connect_info conn_info;
+ 	struct disconnect_info strDisconnectNotifInfo;
+ 	s32 s32Err = 0;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+@@ -1360,7 +1360,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 			u32 u32RcvdAssocRespInfoLen = 0;
+ 			struct connect_resp_info *pstrConnectRespInfo = NULL;
+ 
+-			memset(&strConnectInfo, 0, sizeof(struct connect_info));
++			memset(&conn_info, 0, sizeof(struct connect_info));
+ 
+ 			if (u8MacStatus == MAC_CONNECTED) {
+ 				memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
+@@ -1376,12 +1376,12 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 					if (s32Err) {
+ 						netdev_err(vif->ndev, "wilc_parse_assoc_resp_info() returned error %d\n", s32Err);
+ 					} else {
+-						strConnectInfo.status = pstrConnectRespInfo->status;
++						conn_info.status = pstrConnectRespInfo->status;
+ 
+-						if (strConnectInfo.status == SUCCESSFUL_STATUSCODE && pstrConnectRespInfo->ies) {
+-							strConnectInfo.resp_ies_len = pstrConnectRespInfo->ies_len;
+-							strConnectInfo.resp_ies = kmalloc(pstrConnectRespInfo->ies_len, GFP_KERNEL);
+-							memcpy(strConnectInfo.resp_ies, pstrConnectRespInfo->ies,
++						if (conn_info.status == SUCCESSFUL_STATUSCODE && pstrConnectRespInfo->ies) {
++							conn_info.resp_ies_len = pstrConnectRespInfo->ies_len;
++							conn_info.resp_ies = kmalloc(pstrConnectRespInfo->ies_len, GFP_KERNEL);
++							memcpy(conn_info.resp_ies, pstrConnectRespInfo->ies,
+ 							       pstrConnectRespInfo->ies_len);
+ 						}
+ 
+@@ -1394,7 +1394,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 			}
+ 
+ 			if (u8MacStatus == MAC_CONNECTED &&
+-			    strConnectInfo.status != SUCCESSFUL_STATUSCODE)	{
++			    conn_info.status != SUCCESSFUL_STATUSCODE)	{
+ 				netdev_err(vif->ndev, "Received MAC status is MAC_CONNECTED while the received status code in Asoc Resp is not SUCCESSFUL_STATUSCODE\n");
+ 				eth_zero_addr(wilc_connected_ssid);
+ 			} else if (u8MacStatus == MAC_DISCONNECTED)    {
+@@ -1403,32 +1403,32 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 			}
+ 
+ 			if (hif_drv->usr_conn_req.bssid) {
+-				memcpy(strConnectInfo.bssid, hif_drv->usr_conn_req.bssid, 6);
++				memcpy(conn_info.bssid, hif_drv->usr_conn_req.bssid, 6);
+ 
+ 				if (u8MacStatus == MAC_CONNECTED &&
+-				    strConnectInfo.status == SUCCESSFUL_STATUSCODE)	{
++				    conn_info.status == SUCCESSFUL_STATUSCODE)	{
+ 					memcpy(hif_drv->assoc_bssid,
+ 					       hif_drv->usr_conn_req.bssid, ETH_ALEN);
+ 				}
+ 			}
+ 
+ 			if (hif_drv->usr_conn_req.ies) {
+-				strConnectInfo.req_ies_len = hif_drv->usr_conn_req.ies_len;
+-				strConnectInfo.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
+-				memcpy(strConnectInfo.req_ies,
++				conn_info.req_ies_len = hif_drv->usr_conn_req.ies_len;
++				conn_info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
++				memcpy(conn_info.req_ies,
+ 				       hif_drv->usr_conn_req.ies,
+ 				       hif_drv->usr_conn_req.ies_len);
+ 			}
+ 
+ 			del_timer(&hif_drv->connect_timer);
+ 			hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
+-							  &strConnectInfo,
++							  &conn_info,
+ 							  u8MacStatus,
+ 							  NULL,
+ 							  hif_drv->usr_conn_req.arg);
+ 
+ 			if (u8MacStatus == MAC_CONNECTED &&
+-			    strConnectInfo.status == SUCCESSFUL_STATUSCODE)	{
++			    conn_info.status == SUCCESSFUL_STATUSCODE)	{
+ 				wilc_set_power_mgmt(vif, 0, 0);
+ 
+ 				hif_drv->hif_state = HOST_IF_CONNECTED;
+@@ -1441,11 +1441,11 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 				scan_while_connected = false;
+ 			}
+ 
+-			kfree(strConnectInfo.resp_ies);
+-			strConnectInfo.resp_ies = NULL;
++			kfree(conn_info.resp_ies);
++			conn_info.resp_ies = NULL;
+ 
+-			kfree(strConnectInfo.req_ies);
+-			strConnectInfo.req_ies = NULL;
++			kfree(conn_info.req_ies);
++			conn_info.req_ies = NULL;
+ 			hif_drv->usr_conn_req.ssid_len = 0;
+ 			kfree(hif_drv->usr_conn_req.ssid);
+ 			hif_drv->usr_conn_req.ssid = NULL;
+-- 
+2.7.4
