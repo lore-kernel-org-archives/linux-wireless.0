@@ -1,38 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52504 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753270AbeADPMs (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:46081 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751121AbeAVTKS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jan 2018 10:12:48 -0500
-Message-ID: <1515078757.10342.33.camel@sipsolutions.net> (sfid-20180104_161324_706564_43F0B88E)
-Subject: Re: [PATCH v4 31/36] mac80211_hwsim: Replace hrtimer tasklet with
- softirq hrtimer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, keescook@chromium.org,
-        Christoph Hellwig <hch@lst.de>,
-        John Stultz <john.stultz@linaro.org>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Date: Thu, 04 Jan 2018 16:12:37 +0100
-In-Reply-To: <20171221104205.7269-32-anna-maria@linutronix.de>
-References: <20171221104205.7269-1-anna-maria@linutronix.de>
-         <20171221104205.7269-32-anna-maria@linutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 22 Jan 2018 14:10:18 -0500
+Received: by mail-oi0-f68.google.com with SMTP id d124so6710448oib.13
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jan 2018 11:10:18 -0800 (PST)
+Subject: Re: [PATCH 10/10] rtlwifi: Add spec_ver to check whether use new
+ rate-id or not
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180119064551.10084-1-pkshih@realtek.com>
+ <20180119064551.10084-11-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <a213209f-e597-d700-6c8b-cadb35af63cc@lwfinger.net> (sfid-20180122_201023_040615_3ADD0EC6)
+Date: Mon, 22 Jan 2018 13:10:16 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180119064551.10084-11-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-12-21 at 11:42 +0100, Anna-Maria Gleixner wrote:
-> From: Thomas Gleixner <tglx@linutronix.de>
+On 01/19/2018 12:45 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
 > 
-> Switch the timer to HRTIMER_MODE_SOFT, which executed the timer
+> The field spec_ver is IC's specification mask for common code to do proper
+> process to specified IC. This commit add a field new rate ID for new
+> generation IC.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-I've pointed out before that this should say HRTIMER_MODE_REL_SOFT.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Anyway, since it still doesn't apply on my tree, somebody else will
-have to pick it up.
-
-johannes
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/base.c | 126 +++++++++++++++++++++++++---
+>   drivers/net/wireless/realtek/rtlwifi/base.h |   2 +
+>   drivers/net/wireless/realtek/rtlwifi/wifi.h |   5 ++
+>   3 files changed, 121 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+> index 7fa435e95c0e..d6c03bd5cc65 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+> @@ -698,14 +698,94 @@ static void _rtl_query_protection_mode(struct ieee80211_hw *hw,
+>   	}
+>   }
+>   
+> +u8 rtl_mrate_idx_to_arfr_id(struct ieee80211_hw *hw, u8 rate_index,
+> +			    enum wireless_mode wirelessmode)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	struct rtl_phy *rtlphy = &rtlpriv->phy;
+> +	u8 ret = 0;
+> +
+> +	switch (rate_index) {
+> +	case RATR_INX_WIRELESS_NGB:
+> +		if (rtlphy->rf_type == RF_1T1R)
+> +			ret = RATEID_IDX_BGN_40M_1SS;
+> +		else
+> +			ret = RATEID_IDX_BGN_40M_2SS;
+> +		; break;
+> +	case RATR_INX_WIRELESS_N:
+> +	case RATR_INX_WIRELESS_NG:
+> +		if (rtlphy->rf_type == RF_1T1R)
+> +			ret = RATEID_IDX_GN_N1SS;
+> +		else
+> +			ret = RATEID_IDX_GN_N2SS;
+> +		; break;
+> +	case RATR_INX_WIRELESS_NB:
+> +		if (rtlphy->rf_type == RF_1T1R)
+> +			ret = RATEID_IDX_BGN_20M_1SS_BN;
+> +		else
+> +			ret = RATEID_IDX_BGN_20M_2SS_BN;
+> +		; break;
+> +	case RATR_INX_WIRELESS_GB:
+> +		ret = RATEID_IDX_BG;
+> +		break;
+> +	case RATR_INX_WIRELESS_G:
+> +		ret = RATEID_IDX_G;
+> +		break;
+> +	case RATR_INX_WIRELESS_B:
+> +		ret = RATEID_IDX_B;
+> +		break;
+> +	case RATR_INX_WIRELESS_MC:
+> +		if (wirelessmode == WIRELESS_MODE_B ||
+> +		    wirelessmode == WIRELESS_MODE_G ||
+> +		    wirelessmode == WIRELESS_MODE_N_24G ||
+> +		    wirelessmode == WIRELESS_MODE_AC_24G)
+> +			ret = RATEID_IDX_BG;
+> +		else
+> +			ret = RATEID_IDX_G;
+> +		break;
+> +	case RATR_INX_WIRELESS_AC_5N:
+> +		if (rtlphy->rf_type == RF_1T1R)
+> +			ret = RATEID_IDX_VHT_1SS;
+> +		else
+> +			ret = RATEID_IDX_VHT_2SS;
+> +		break;
+> +	case RATR_INX_WIRELESS_AC_24N:
+> +		if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_80) {
+> +			if (rtlphy->rf_type == RF_1T1R)
+> +				ret = RATEID_IDX_VHT_1SS;
+> +			else
+> +				ret = RATEID_IDX_VHT_2SS;
+> +		} else {
+> +			if (rtlphy->rf_type == RF_1T1R)
+> +				ret = RATEID_IDX_MIX1;
+> +			else
+> +				ret = RATEID_IDX_MIX2;
+> +		}
+> +		break;
+> +	default:
+> +		ret = RATEID_IDX_BGN_40M_2SS;
+> +		break;
+> +	}
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(rtl_mrate_idx_to_arfr_id);
+> +
+>   static void _rtl_txrate_selectmode(struct ieee80211_hw *hw,
+>   				   struct ieee80211_sta *sta,
+>   				   struct rtl_tcb_desc *tcb_desc)
+>   {
+> +#define SET_RATE_ID(rate_id)					\
+> +	({typeof(rate_id) _id = rate_id;			\
+> +	  ((rtlpriv->cfg->spec_ver & RTL_SPEC_NEW_RATEID) ?	\
+> +		rtl_mrate_idx_to_arfr_id(hw, _id,		\
+> +			(sta_entry ? sta_entry->wireless_mode :	\
+> +			 WIRELESS_MODE_G)) :			\
+> +		_id); })
+> +
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>   	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+>   	struct rtl_sta_info *sta_entry = NULL;
+> -	u8 ratr_index = 7;
+> +	u8 ratr_index = SET_RATE_ID(RATR_INX_WIRELESS_MC);
+>   
+>   	if (sta) {
+>   		sta_entry = (struct rtl_sta_info *) sta->drv_priv;
+> @@ -720,7 +800,8 @@ static void _rtl_txrate_selectmode(struct ieee80211_hw *hw,
+>   				tcb_desc->hw_rate =
+>   				    rtlpriv->cfg->maps[RTL_RC_CCK_RATE2M];
+>   				tcb_desc->use_driver_rate = 1;
+> -				tcb_desc->ratr_index = RATR_INX_WIRELESS_MC;
+> +				tcb_desc->ratr_index =
+> +					SET_RATE_ID(RATR_INX_WIRELESS_MC);
+>   			} else {
+>   				tcb_desc->ratr_index = ratr_index;
+>   			}
+> @@ -736,22 +817,30 @@ static void _rtl_txrate_selectmode(struct ieee80211_hw *hw,
+>   		    mac->opmode == NL80211_IFTYPE_MESH_POINT) {
+>   			tcb_desc->mac_id = 0;
+>   
+> -			if (mac->mode == WIRELESS_MODE_AC_5G)
+> +			if (sta &&
+> +			    (rtlpriv->cfg->spec_ver & RTL_SPEC_NEW_RATEID))
+> +				;	/* use sta_entry->ratr_index */
+> +			else if (mac->mode == WIRELESS_MODE_AC_5G)
+>   				tcb_desc->ratr_index =
+> -					RATR_INX_WIRELESS_AC_5N;
+> +					SET_RATE_ID(RATR_INX_WIRELESS_AC_5N);
+>   			else if (mac->mode == WIRELESS_MODE_AC_24G)
+>   				tcb_desc->ratr_index =
+> -					RATR_INX_WIRELESS_AC_24N;
+> +					SET_RATE_ID(RATR_INX_WIRELESS_AC_24N);
+>   			else if (mac->mode == WIRELESS_MODE_N_24G)
+> -				tcb_desc->ratr_index = RATR_INX_WIRELESS_NGB;
+> +				tcb_desc->ratr_index =
+> +					SET_RATE_ID(RATR_INX_WIRELESS_NGB);
+>   			else if (mac->mode == WIRELESS_MODE_N_5G)
+> -				tcb_desc->ratr_index = RATR_INX_WIRELESS_NG;
+> +				tcb_desc->ratr_index =
+> +					SET_RATE_ID(RATR_INX_WIRELESS_NG);
+>   			else if (mac->mode & WIRELESS_MODE_G)
+> -				tcb_desc->ratr_index = RATR_INX_WIRELESS_GB;
+> +				tcb_desc->ratr_index =
+> +					SET_RATE_ID(RATR_INX_WIRELESS_GB);
+>   			else if (mac->mode & WIRELESS_MODE_B)
+> -				tcb_desc->ratr_index = RATR_INX_WIRELESS_B;
+> +				tcb_desc->ratr_index =
+> +					SET_RATE_ID(RATR_INX_WIRELESS_B);
+>   			else if (mac->mode & WIRELESS_MODE_A)
+> -				tcb_desc->ratr_index = RATR_INX_WIRELESS_G;
+> +				tcb_desc->ratr_index =
+> +					SET_RATE_ID(RATR_INX_WIRELESS_G);
+>   
+>   		} else if (mac->opmode == NL80211_IFTYPE_AP ||
+>   			mac->opmode == NL80211_IFTYPE_ADHOC) {
+> @@ -765,6 +854,7 @@ static void _rtl_txrate_selectmode(struct ieee80211_hw *hw,
+>   			}
+>   		}
+>   	}
+> +#undef SET_RATE_ID
+>   }
+>   
+>   static void _rtl_query_bandwidth_mode(struct ieee80211_hw *hw,
+> @@ -1141,9 +1231,19 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+>   		      struct ieee80211_sta *sta,
+>   		      struct sk_buff *skb, struct rtl_tcb_desc *tcb_desc)
+>   {
+> +#define SET_RATE_ID(rate_id)					\
+> +	({typeof(rate_id) _id = rate_id;			\
+> +	  ((rtlpriv->cfg->spec_ver & RTL_SPEC_NEW_RATEID) ?	\
+> +		rtl_mrate_idx_to_arfr_id(hw, _id,		\
+> +			(sta_entry ? sta_entry->wireless_mode :	\
+> +			 WIRELESS_MODE_G)) :			\
+> +		_id); })
+> +
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>   	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
+>   	struct ieee80211_hdr *hdr = rtl_get_hdr(skb);
+> +	struct rtl_sta_info *sta_entry =
+> +		(sta ? (struct rtl_sta_info *)sta->drv_priv : NULL);
+>   
+>   	__le16 fc = rtl_get_fc(skb);
+>   
+> @@ -1166,7 +1266,8 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+>   		if (info->control.rates[0].idx == 0 ||
+>   				ieee80211_is_nullfunc(fc)) {
+>   			tcb_desc->use_driver_rate = true;
+> -			tcb_desc->ratr_index = RATR_INX_WIRELESS_MC;
+> +			tcb_desc->ratr_index =
+> +					SET_RATE_ID(RATR_INX_WIRELESS_MC);
+>   
+>   			tcb_desc->disable_ratefallback = 1;
+>   		} else {
+> @@ -1208,11 +1309,12 @@ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+>   		_rtl_query_protection_mode(hw, tcb_desc, info);
+>   	} else {
+>   		tcb_desc->use_driver_rate = true;
+> -		tcb_desc->ratr_index = RATR_INX_WIRELESS_MC;
+> +		tcb_desc->ratr_index = SET_RATE_ID(RATR_INX_WIRELESS_MC);
+>   		tcb_desc->disable_ratefallback = 1;
+>   		tcb_desc->mac_id = 0;
+>   		tcb_desc->packet_bw = false;
+>   	}
+> +#undef SET_RATE_ID
+>   }
+>   EXPORT_SYMBOL(rtl_get_tcb_desc);
+>   
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
+> index 26735319b38f..acc924635818 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/base.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+> @@ -162,6 +162,8 @@ void rtl_c2hcmd_wq_callback(void *data);
+>   void rtl_c2hcmd_launcher(struct ieee80211_hw *hw, int exec);
+>   void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, u8 tag, u8 len, u8 *val);
+>   
+> +u8 rtl_mrate_idx_to_arfr_id(struct ieee80211_hw *hw, u8 rate_index,
+> +			    enum wireless_mode wirelessmode);
+>   void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+>   		      struct ieee80211_tx_info *info,
+>   		      struct ieee80211_sta *sta,
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> index 2d8e96896f49..a7aacbc3984e 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> @@ -949,6 +949,10 @@ enum package_type {
+>   	PACKAGE_TFBGA79
+>   };
+>   
+> +enum rtl_spec_ver {
+> +	RTL_SPEC_NEW_RATEID = BIT(0),	/* use ratr_table_mode_new */
+> +};
+> +
+>   struct octet_string {
+>   	u8 *octet;
+>   	u16 length;
+> @@ -2333,6 +2337,7 @@ struct rtl_hal_cfg {
+>   	struct rtl_hal_ops *ops;
+>   	struct rtl_mod_params *mod_params;
+>   	struct rtl_hal_usbint_cfg *usb_interface_cfg;
+> +	enum rtl_spec_ver spec_ver;
+>   
+>   	/*this map used for some registers or vars
+>   	   defined int HAL but used in MAIN */
+> 
