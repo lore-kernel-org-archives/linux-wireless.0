@@ -1,59 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57290 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752888AbeA3RcZ (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:39610 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751085AbeAVKXD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 12:32:25 -0500
-Subject: Re: ath9k will not tx packets sometimes.
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com>
- <87a7wzv43j.fsf@toke.dk>
- <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com>
- <87d11stk0i.fsf@toke.dk>
- <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com>
- <871si81eev.fsf@toke.dk> <5A6FA79B.1080206@candelatech.com>
- <87h8r335yz.fsf@toke.dk>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <712ee959-4e41-f4fd-e765-523d024fa7fc@candelatech.com> (sfid-20180130_183229_281883_DE7FA913)
-Date: Tue, 30 Jan 2018 09:32:22 -0800
+        Mon, 22 Jan 2018 05:23:03 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 03/14] staging: wilc1000: fix alignments to match open parenthesis
+Date: Mon, 22 Jan 2018 15:52:16 +0530
+Message-ID: <1516616547-24654-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180122_112306_690117_F540DDA6)
+In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <87h8r335yz.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2018 04:07 AM, Toke Høiland-Jørgensen wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> Maybe there is some way for the scheduler to get stuck and not
->> schedule anything?
->
-> It would appear so, yeah. Do you do anything special other than
-> associate a whole bunch of stations to trigger this? I can try to see if
-> I can script something that works equivalently on my setup.
+Fix "Alignment should match open parenthesis" issues reported by
+checkpatch.pl script. changes to comply with linux coding style.
 
-Ok, and I'll give you my user-space software package to easily set up
-this test case if you want to test with that.  Contact me off-list if
-you want help setting this up.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c         |  4 +--
+ drivers/staging/wilc1000/linux_wlan.c             |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 38 +++++++++++------------
+ 3 files changed, 22 insertions(+), 22 deletions(-)
 
->
-> I'm actually working on reworking that whole scheduler logic, and move
-> some of it into mac80211. Could you test this (WiP) patch and see if
-> that has the same problem?
-
-It had some serious conflicts in ath10k, due to my local changes, so
-I did not actually test this.
-
-But, a revert of the atf patches (a6e56d749 and 63fefa050) appear to have resolved the
-issue.  I'll test more with these reverted, and maybe will have time to
-work more on actually fixing upstream code next time I move to a newer
-kernel (and/or after your pending changes get in).
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 46e2d55..358354b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3730,8 +3730,8 @@ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param)
+ 	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
+ 	if (add_sta_info->rates_len > 0) {
+ 		add_sta_info->rates = kmemdup(sta_param->rates,
+-				      add_sta_info->rates_len,
+-				      GFP_KERNEL);
++					      add_sta_info->rates_len,
++					      GFP_KERNEL);
+ 		if (!add_sta_info->rates)
+ 			return -ENOMEM;
+ 	}
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3c3f1863..d9725ef 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -695,7 +695,7 @@ static int wlan_initialize_threads(struct net_device *dev)
+ 	wilc = vif->wilc;
+ 
+ 	wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
+-				     "K_TXQ_TASK");
++				       "K_TXQ_TASK");
+ 	if (IS_ERR(wilc->txq_thread)) {
+ 		netdev_err(dev, "couldn't create TXQ thread\n");
+ 		wilc->close = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index fb4a142..621810d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -470,10 +470,10 @@ static void CfgScanResult(enum scan_event scan_event,
+ int wilc_connecting;
+ 
+ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+-			     struct connect_info *conn_info,
+-			     u8 mac_status,
+-			     struct disconnect_info *disconn_info,
+-			     void *priv_data)
++			       struct connect_info *conn_info,
++			       u8 mac_status,
++			       struct disconnect_info *disconn_info,
++			       void *priv_data)
+ {
+ 	struct wilc_priv *priv;
+ 	struct net_device *dev;
+@@ -623,18 +623,18 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 				}
+ 			}
+ 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
+-					     au8ScanChanList,
+-					     request->n_channels,
+-					     (const u8 *)request->ie,
+-					     request->ie_len, CfgScanResult,
+-					     (void *)priv, &strHiddenNetwork);
++					au8ScanChanList,
++					request->n_channels,
++					(const u8 *)request->ie,
++					request->ie_len, CfgScanResult,
++					(void *)priv, &strHiddenNetwork);
+ 		} else {
+ 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
+-					     au8ScanChanList,
+-					     request->n_channels,
+-					     (const u8 *)request->ie,
+-					     request->ie_len, CfgScanResult,
+-					     (void *)priv, NULL);
++					au8ScanChanList,
++					request->n_channels,
++					(const u8 *)request->ie,
++					request->ie_len, CfgScanResult,
++					(void *)priv, NULL);
+ 		}
+ 	} else {
+ 		netdev_err(priv->dev, "Requested scanned channels over\n");
+@@ -793,11 +793,11 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	wilc_wlan_set_bssid(dev, pstrNetworkInfo->bssid, STATION_MODE);
+ 
+ 	ret = wilc_set_join_req(vif, pstrNetworkInfo->bssid, sme->ssid,
+-				     sme->ssid_len, sme->ie, sme->ie_len,
+-				     cfg_connect_result, (void *)priv,
+-				     u8security, auth_type,
+-				     pstrNetworkInfo->ch,
+-				     pstrNetworkInfo->join_params);
++				sme->ssid_len, sme->ie, sme->ie_len,
++				cfg_connect_result, (void *)priv,
++				u8security, auth_type,
++				pstrNetworkInfo->ch,
++				pstrNetworkInfo->join_params);
+ 	if (ret != 0) {
+ 		netdev_err(dev, "wilc_set_join_req(): Error\n");
+ 		ret = -ENOENT;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
