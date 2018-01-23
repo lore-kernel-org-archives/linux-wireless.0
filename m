@@ -1,42 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38796 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60730 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750838AbeAYFfZ (ORCPT
+        with ESMTP id S1750960AbeAWPMu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 00:35:25 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 23 Jan 2018 10:12:50 -0500
+Subject: Re: wcn36xx: release resources in case of error
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        bjorn.andersson@linaro.org, wcn36xx@lists.infradead.org,
+        k.eugene.e@gmail.com
+References: <20180118142348.12759-1-rfried@codeaurora.org>
+ <20180122061448.91CBD6081E@smtp.codeaurora.org>
+From: Ramon Fried <rfried@codeaurora.org>
+Message-ID: <2c3a6245-a3a0-b3ca-e1f6-c156d1b46076@codeaurora.org> (sfid-20180123_161259_815925_D8D41C82)
+Date: Tue, 23 Jan 2018 17:12:45 +0200
 MIME-Version: 1.0
-Subject: Re: [v2,1/4] ath9k: Alternative EEPROM size for AR9003
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1516780939-7176-2-git-send-email-Wojciech.Dubowik@neratec.com>
-References: <1516780939-7176-2-git-send-email-Wojciech.Dubowik@neratec.com>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Message-Id: <20180125053524.983BB60A60@smtp.codeaurora.org> (sfid-20180125_063528_563750_31FB1979)
-Date: Thu, 25 Jan 2018 05:35:24 +0000 (UTC)
+In-Reply-To: <20180122061448.91CBD6081E@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wojciech Dubowik <Wojciech.Dubowik@neratec.com> wrote:
 
-> AR9003 factory calibration allows to use bigger EEPROM than
-> standard 1k without changing the default layout. Allow
-> probing of EEPROM at alternative address if initial check
-> for default fails.
-> The original ar9003 eeprom ops are still be used.
-> 
-> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-4 patches applied to ath-next branch of ath.git, thanks.
-
-528782ecf59f ath9k: Alternative EEPROM size for AR9003
-34d4fcd8813a ath9k: Read noise floor calibration data from eeprom
-8da58553cc63 ath9k: Use calibrated noise floor value when available
-3717957ce55c ath9k: Display calibration data piers in debugfs
-
--- 
-https://patchwork.kernel.org/patch/10181889/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+On 1/22/2018 8:14 AM, Kalle Valo wrote:
+> Ramon Fried <rfried@codeaurora.org> wrote:
+>
+>> wcn36xx_dxe_init() doesn't check for the return value
+>> of wcn36xx_dxe_init_descs().
+>> This patch releases the resources in case an error ocurred.
+>>
+>> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+> Doesn't compile:
+Sorry Kalle, I mistakenly sent the wrong version of the patch :(
+I will sent the correct one shortly.
+>
+> drivers/net/wireless/ath/wcn36xx/dxe.c: In function ‘wcn36xx_dxe_deinit_descs’:
+> drivers/net/wireless/ath/wcn36xx/dxe.c:243:15: error: ‘struct wcn36xx_dxe_ch’ has no member named ‘desc_bum’
+>   size = wcn_ch->desc_bum * sizeof(struct wcn36xx_dxe_desc);
+>                ^
+> drivers/net/wireless/ath/wcn36xx/dxe.c:244:20: error: ‘wcn’ undeclared (first use in this function)
+>   dma_free_coherent(wcn->dev, size,
+>                     ^
+> drivers/net/wireless/ath/wcn36xx/dxe.c:244:20: note: each undeclared identifier is reported only once for each function it appears in
+> drivers/net/wireless/ath/wcn36xx/dxe.c: In function ‘wcn36xx_dxe_init’:
+> drivers/net/wireless/ath/wcn36xx/dxe.c:737:3: error: implicit declaration of function ‘dev_error’ [-Werror=implicit-function-declaration]
+>    dev_error("Error allocating descriptor\n");
+>    ^
+> drivers/net/wireless/ath/wcn36xx/dxe.c:818:2: error: expected ‘;’ before ‘if’
+>   if (ret) {
+>   ^
+> drivers/net/wireless/ath/wcn36xx/dxe.c:860:1: warning: label ‘out_err_txh_ch’ defined but not used [-Wunused-label]
+>  out_err_txh_ch:
+>  ^
+> drivers/net/wireless/ath/wcn36xx/dxe.c:856:1: warning: label ‘out_err_rxh_ch’ defined but not used [-Wunused-label]
+>  out_err_rxh_ch:
+>  ^
+> drivers/net/wireless/ath/wcn36xx/dxe.c:760:3: error: label ‘our_err_txh_ch’ used but not defined
+>    goto our_err_txh_ch;
+>    ^
+> cc1: some warnings being treated as errors
+> make[5]: *** [drivers/net/wireless/ath/wcn36xx/dxe.o] Error 1
+> make[4]: *** [drivers/net/wireless/ath/wcn36xx] Error 2
+> make[3]: *** [drivers/net/wireless/ath] Error 2
+> make[2]: *** [drivers/net/wireless] Error 2
+> make[1]: *** [drivers/net] Error 2
+> make[1]: *** Waiting for unfinished jobs....
+> make: *** [drivers] Error 2
+>
+> Patch set to Changes Requested.
+>
