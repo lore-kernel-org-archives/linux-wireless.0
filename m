@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38892 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751534AbeAZF7b (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:35876 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751682AbeAWTLN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 00:59:31 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Update the phymode along with bandwidth change request
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1516842604-31447-1-git-send-email-ryanhsu@codeaurora.org>
-References: <1516842604-31447-1-git-send-email-ryanhsu@codeaurora.org>
-To: ryanhsu@codeaurora.org
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        rouven@czerwinskis.de, ryanhsu@codeaurora.org
-Message-Id: <20180126055930.A92E76028B@smtp.codeaurora.org> (sfid-20180126_065934_984657_D3D5ED9E)
-Date: Fri, 26 Jan 2018 05:59:30 +0000 (UTC)
+        Tue, 23 Jan 2018 14:11:13 -0500
+Message-ID: <1516734670.2508.40.camel@sipsolutions.net> (sfid-20180123_201232_039627_4598C15F)
+Subject: Re: iwlegacy: Please change led_mode default to _LED_RF_STATE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Luciano Coelho <luciano.coelho@intel.com>
+Cc: cyp@abwesend.de, linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Tue, 23 Jan 2018 20:11:10 +0100
+In-Reply-To: <20180123140733.GA4062@redhat.com> (sfid-20180123_150739_972713_56A7A232)
+References: <CALY9mdzC06HRmPGF1q5G9Gz7Qc5miww8xuK-1rsGE37yMaQj1Q@mail.gmail.com>
+         <1516713855.8658.18.camel@intel.com> <20180123140733.GA4062@redhat.com>
+         (sfid-20180123_150739_972713_56A7A232)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ryanhsu@codeaurora.org wrote:
-
-> From: Ryan Hsu <ryanhsu@codeaurora.org>
+On Tue, 2018-01-23 at 15:07 +0100, Stanislaw Gruszka wrote:
 > 
-> In the case of Station connects to AP with narrower bandwidth at beginning.
-> And later the AP changes the bandwidth to winder bandwidth, the AP will
-> beacon with wider bandwidth IE, eg VHT20->VHT40->VHT80 or VHT40->VHT80.
-> 
-> Since the supported BANDWIDTH will be limited by the PHYMODE, so while
-> Station receives the bandwidth change request, it will also need to
-> reconfigure the PHYMODE setting to firmware instead of just configuring
-> the BANDWIDTH info, otherwise it'll trigger a firmware crash with
-> non-support bandwidth.
-> 
-> The issue was observed in WLAN.RM.4.4.1-00051-QCARMSWP-1, QCA6174 with
-> below scenario.
+> Some of iwlwifi devices have BLINK and some other have RF_STATE
+> as default. I don't know why is that, but I assume there is reason
+> for it. 
 
-Fails to compile:
+Not really. As I remember, the reason was basically marketing having
+sold the devices with different defaults :-)
 
-drivers/net/wireless/ath/ath10k/mac.c: In function ‘ath10k_sta_rc_update_wk’:
-drivers/net/wireless/ath/ath10k/mac.c:6000:3: error: ‘mode’ undeclared (first use in this function)
-   mode = chan_to_phymode(&def);
-   ^
-drivers/net/wireless/ath/ath10k/mac.c:6000:3: note: each undeclared identifier is reported only once for each function it appears in
-drivers/net/wireless/ath/ath10k/mac.c:6006:7: error: ‘WMI_PEER_PHYMODE’ undeclared (first use in this function)
-       WMI_PEER_PHYMODE, mode);
-       ^
-make[5]: *** [drivers/net/wireless/ath/ath10k/mac.o] Error 1
-make[4]: *** [drivers/net/wireless/ath/ath10k] Error 2
-make[3]: *** [drivers/net/wireless/ath] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make[1]: *** Waiting for unfinished jobs....
-make: *** [drivers] Error 2
+I for one have no objection to changing the default, but OTOH the OP
+could just set a module configuration file and be done with it.
 
-Patch set to Changes Requested.
-
--- 
-https://patchwork.kernel.org/patch/10183453/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
