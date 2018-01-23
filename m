@@ -1,56 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40264 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750831AbeAIIfj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 03:35:39 -0500
-Date: Tue, 9 Jan 2018 09:35:41 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
-        kstewart@linuxfoundation.org, johannes.berg@intel.com,
-        tiwai@suse.de, colin.king@canonical.com,
-        andrew.zaborowski@intel.com, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        b43-dev@lists.infradead.org
-Subject: Re: [PATCH v2] b43: Replace mdelay with usleep_range in
- b43_radio_2057_init_post
-Message-ID: <20180109083541.GA13460@kroah.com> (sfid-20180109_093652_061939_16750297)
-References: <1515462006-6144-1-git-send-email-baijiaju1990@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1515462006-6144-1-git-send-email-baijiaju1990@gmail.com>
+Received: from mail.neratec.com ([46.140.151.2]:40290 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750968AbeAWHlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Jan 2018 02:41:24 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH 2/4] ath9k: Read noise floor calibration data from eeprom
+Date: Tue, 23 Jan 2018 08:35:23 +0100
+Message-Id: <1516692925-6695-3-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180123_084136_878454_B9C960A1)
+In-Reply-To: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 09, 2018 at 09:40:06AM +0800, Jia-Ju Bai wrote:
-> b43_radio_2057_init_post is not called in an interrupt handler
-> nor holding a spinlock.
-> The function mdelay in it can be replaced with usleep_range, 
-> to reduce busy wait.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-> ---
-> v2:
-> * Replace mdelay with usleep_range, instead of msleep in v1.
->   Thank Larry for good advice.
-> ---
->  drivers/net/wireless/broadcom/b43/phy_n.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
-> index a5557d7..f2a2f41 100644
-> --- a/drivers/net/wireless/broadcom/b43/phy_n.c
-> +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
-> @@ -1031,7 +1031,7 @@ static void b43_radio_2057_init_post(struct b43_wldev *dev)
->  
->  	b43_radio_set(dev, R2057_RFPLL_MISC_CAL_RESETN, 0x78);
->  	b43_radio_set(dev, R2057_XTAL_CONFIG2, 0x80);
-> -	mdelay(2);
-> +	usleep_range(2000, 3000);
+AR9003 devices can have calibrated noise floor values
+which can be used instead of hard coded one. Read them
+from eeprom and save interpolated value in nf limits for
+the current channel.
 
-Where did 3000 come from?  Are you sure about that?
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 63 ++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 10 ++++
+ drivers/net/wireless/ath/ath9k/hw.h            |  2 +
+ 3 files changed, 67 insertions(+), 8 deletions(-)
 
-thanks,
-
-greg k-h
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 23bb677..de2e503 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4689,7 +4689,8 @@ static int ar9003_hw_cal_pier_get(struct ath_hw *ah,
+ 				  int ichain,
+ 				  int *pfrequency,
+ 				  int *pcorrection,
+-				  int *ptemperature, int *pvoltage)
++				  int *ptemperature, int *pvoltage,
++				  int *pnf_cal, int *pnf_power)
+ {
+ 	u8 *pCalPier;
+ 	struct ar9300_cal_data_per_freq_op_loop *pCalPierStruct;
+@@ -4731,6 +4732,10 @@ static int ar9003_hw_cal_pier_get(struct ath_hw *ah,
+ 	*pcorrection = pCalPierStruct->refPower;
+ 	*ptemperature = pCalPierStruct->tempMeas;
+ 	*pvoltage = pCalPierStruct->voltMeas;
++	*pnf_cal = pCalPierStruct->rxTempMeas ?
++			N2DBM(pCalPierStruct->rxNoisefloorCal) : 0;
++	*pnf_power = pCalPierStruct->rxTempMeas ?
++			N2DBM(pCalPierStruct->rxNoisefloorPower) : 0;
+ 
+ 	return 0;
+ }
+@@ -4895,14 +4900,18 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 	int mode;
+ 	int lfrequency[AR9300_MAX_CHAINS],
+ 	    lcorrection[AR9300_MAX_CHAINS],
+-	    ltemperature[AR9300_MAX_CHAINS], lvoltage[AR9300_MAX_CHAINS];
++	    ltemperature[AR9300_MAX_CHAINS], lvoltage[AR9300_MAX_CHAINS],
++	    lnf_cal[AR9300_MAX_CHAINS], lnf_pwr[AR9300_MAX_CHAINS];
+ 	int hfrequency[AR9300_MAX_CHAINS],
+ 	    hcorrection[AR9300_MAX_CHAINS],
+-	    htemperature[AR9300_MAX_CHAINS], hvoltage[AR9300_MAX_CHAINS];
++	    htemperature[AR9300_MAX_CHAINS], hvoltage[AR9300_MAX_CHAINS],
++	    hnf_cal[AR9300_MAX_CHAINS], hnf_pwr[AR9300_MAX_CHAINS];
+ 	int fdiff;
+ 	int correction[AR9300_MAX_CHAINS],
+-	    voltage[AR9300_MAX_CHAINS], temperature[AR9300_MAX_CHAINS];
+-	int pfrequency, pcorrection, ptemperature, pvoltage;
++	    voltage[AR9300_MAX_CHAINS], temperature[AR9300_MAX_CHAINS],
++	    nf_cal[AR9300_MAX_CHAINS], nf_pwr[AR9300_MAX_CHAINS];
++	int pfrequency, pcorrection, ptemperature, pvoltage,
++	    pnf_cal, pnf_pwr;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	mode = (frequency >= 4000);
+@@ -4920,7 +4929,8 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 		for (ipier = 0; ipier < npier; ipier++) {
+ 			if (!ar9003_hw_cal_pier_get(ah, mode, ipier, ichain,
+ 						    &pfrequency, &pcorrection,
+-						    &ptemperature, &pvoltage)) {
++						    &ptemperature, &pvoltage,
++						    &pnf_cal, &pnf_pwr)) {
+ 				fdiff = frequency - pfrequency;
+ 
+ 				/*
+@@ -4942,6 +4952,8 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 						htemperature[ichain] =
+ 						    ptemperature;
+ 						hvoltage[ichain] = pvoltage;
++						hnf_cal[ichain] = pnf_cal;
++						hnf_pwr[ichain] = pnf_pwr;
+ 					}
+ 				}
+ 				if (fdiff >= 0) {
+@@ -4958,6 +4970,8 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 						ltemperature[ichain] =
+ 						    ptemperature;
+ 						lvoltage[ichain] = pvoltage;
++						lnf_cal[ichain] = pnf_cal;
++						lnf_pwr[ichain] = pnf_pwr;
+ 					}
+ 				}
+ 			}
+@@ -4966,15 +4980,20 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 
+ 	/* interpolate  */
+ 	for (ichain = 0; ichain < AR9300_MAX_CHAINS; ichain++) {
+-		ath_dbg(common, EEPROM, "ch=%d f=%d low=%d %d h=%d %d\n",
++		ath_dbg(common, EEPROM,
++			"ch=%d f=%d low=%d %d h=%d %d n=%d %d p=%d %d\n",
+ 			ichain, frequency, lfrequency[ichain],
+ 			lcorrection[ichain], hfrequency[ichain],
+-			hcorrection[ichain]);
++			hcorrection[ichain], lnf_cal[ichain],
++			hnf_cal[ichain], lnf_pwr[ichain],
++			hnf_pwr[ichain]);
+ 		/* they're the same, so just pick one */
+ 		if (hfrequency[ichain] == lfrequency[ichain]) {
+ 			correction[ichain] = lcorrection[ichain];
+ 			voltage[ichain] = lvoltage[ichain];
+ 			temperature[ichain] = ltemperature[ichain];
++			nf_cal[ichain] = lnf_cal[ichain];
++			nf_pwr[ichain] = lnf_pwr[ichain];
+ 		}
+ 		/* the low frequency is good */
+ 		else if (frequency - lfrequency[ichain] < 1000) {
+@@ -4998,12 +5017,26 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 						hfrequency[ichain],
+ 						lvoltage[ichain],
+ 						hvoltage[ichain]);
++
++				nf_cal[ichain] = interpolate(frequency,
++						lfrequency[ichain],
++						hfrequency[ichain],
++						lnf_cal[ichain],
++						hnf_cal[ichain]);
++
++				nf_pwr[ichain] = interpolate(frequency,
++						lfrequency[ichain],
++						hfrequency[ichain],
++						lnf_pwr[ichain],
++						hnf_pwr[ichain]);
+ 			}
+ 			/* only low is good, use it */
+ 			else {
+ 				correction[ichain] = lcorrection[ichain];
+ 				temperature[ichain] = ltemperature[ichain];
+ 				voltage[ichain] = lvoltage[ichain];
++				nf_cal[ichain] = lnf_cal[ichain];
++				nf_pwr[ichain] = lnf_pwr[ichain];
+ 			}
+ 		}
+ 		/* only high is good, use it */
+@@ -5011,10 +5044,14 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 			correction[ichain] = hcorrection[ichain];
+ 			temperature[ichain] = htemperature[ichain];
+ 			voltage[ichain] = hvoltage[ichain];
++			nf_cal[ichain] = hnf_cal[ichain];
++			nf_pwr[ichain] = hnf_pwr[ichain];
+ 		} else {	/* nothing is good, presume 0???? */
+ 			correction[ichain] = 0;
+ 			temperature[ichain] = 0;
+ 			voltage[ichain] = 0;
++			nf_cal[ichain] = 0;
++			nf_pwr[ichain] = 0;
+ 		}
+ 	}
+ 
+@@ -5025,6 +5062,16 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 		"for frequency=%d, calibration correction = %d %d %d\n",
+ 		frequency, correction[0], correction[1], correction[2]);
+ 
++	/* Store calibrated noise floor values */
++	for (ichain = 0; ichain < AR5416_MAX_CHAINS; ichain++)
++		if (mode) {
++			ah->nf_5g.cal[ichain] = nf_cal[ichain];
++			ah->nf_5g.pwr[ichain] = nf_pwr[ichain];
++		} else {
++			ah->nf_2g.cal[ichain] = nf_cal[ichain];
++			ah->nf_2g.pwr[ichain] = nf_pwr[ichain];
++		}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index bd2269c..e8fda54 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -62,6 +62,16 @@
+  */
+ #define AR9300_PWR_TABLE_OFFSET  0
+ 
++/* Noise power data definitions
++ * units are: 4 x dBm - NOISE_PWR_DATA_OFFSET
++ * (e.g. -25 = (-25/4 - 90) = -96.25 dBm)
++ * range (for 6 signed bits) is (-32 to 31) + offset => -122dBm to -59dBm
++ * resolution (2 bits) is 0.25dBm
++ */
++#define NOISE_PWR_DATA_OFFSET	-90
++#define NOISE_PWR_DBM_2_INT(_p)	((((_p) + 3) >> 2) + NOISE_PWR_DATA_OFFSET)
++#define N2DBM(_p)		NOISE_PWR_DBM_2_INT(_p)
++
+ /* byte addressable */
+ #define AR9300_EEPROM_SIZE (16*1024)
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 0d6c07c7..9804a24 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -754,6 +754,8 @@ struct ath_nf_limits {
+ 	s16 max;
+ 	s16 min;
+ 	s16 nominal;
++	s16 cal[AR5416_MAX_CHAINS];
++	s16 pwr[AR5416_MAX_CHAINS];
+ };
+ 
+ enum ath_cal_list {
+-- 
+2.7.4
