@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:57291 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750813AbeA2D06 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Jan 2018 22:26:58 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 00/10] rtlwifi: add more materials for 8822be
-Date: Mon, 29 Jan 2018 11:26:31 +0800
-Message-ID: <20180129032641.17841-1-pkshih@realtek.com> (sfid-20180129_042702_546546_F8C22D0A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.neratec.com ([46.140.151.2]:49878 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751063AbeAWHlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Jan 2018 02:41:24 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
+Date: Tue, 23 Jan 2018 08:35:21 +0100
+Message-Id: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180123_084130_173810_21041217)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+AR9003 series allows to calibrate noise floor for different frequency
+bins. Once it's done it's possible to get more accurate rssi/signal
+values over whole frequency band at a given temperature.
+The RSSI/signal accuracy reported by calibrated RF cards improves
+from 6 to up to 2dB.
 
-I continue to submit more materials needed by 8822be. A special patch is
-"PATCH 10/10" that add new files to support 8822be btcoex in case wifi
-only. In my plan, 8822be btcoex for combo card will be sumitted in next
-patchset.
+This could be interesting for application which require good signal
+accuracy like roaming or mesh protocols.
 
-v2: Add 'Acked-by: Larry Finger' if the commits are acked
-    Use 'switch...case' to replace verbose 'if...else if...else if...else'
-    Use extern declaration to quiet sparse warnings
+Wojciech Dubowik (4):
+  ath9k: Alternative EEPROM size for AR9003
+  ath9k: Read noise floor calibration data from eeprom
+  ath9k: Use calibrated noise floor value when available
+  ath9k: Display calibration data piers in debugfs
 
-Ping-Ke Shih (10):
-  rtlwifi: enable mac80211 fast-tx support
-  rtlwifi: Add Support VHT to spec_ver
-  rtlwifi: Use 6 bits as sequence number of TX report
-  rtlwifi: Extend tx_power_by_rate_offset size for newer IC
-  rtlwifi: Add rate section and its related definition and comment
-  rtlwifi: Fix VHT NSS in RC
-  rtlwifi: add definition radio_mask for RF and maximum bandwidth
-  rtlwifi: add efuse ops for other components
-  rtlwifi: btcoex: add routine to set default port id
-  rtlwifi: btcoex: Add 8822be btcoex supported files for wifi only
-
- drivers/net/wireless/realtek/rtlwifi/base.c        | 34 ++++++++++---
- .../rtlwifi/btcoexist/halbtc8822bwifionly.c        | 55 ++++++++++++++++++++++
- .../rtlwifi/btcoexist/halbtc8822bwifionly.h        | 25 ++++++++++
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 22 +++++++++
- drivers/net/wireless/realtek/rtlwifi/efuse.c       | 13 +++++
- drivers/net/wireless/realtek/rtlwifi/efuse.h       |  2 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c         |  1 +
- drivers/net/wireless/realtek/rtlwifi/rc.c          | 49 +++++++++++++++----
- .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    |  1 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h        | 39 +++++++++++++--
- 10 files changed, 221 insertions(+), 20 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 133 +++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |  10 ++
+ drivers/net/wireless/ath/ath9k/calib.c         |  38 ++++---
+ drivers/net/wireless/ath/ath9k/hw.h            |   2 +
+ 4 files changed, 160 insertions(+), 23 deletions(-)
 
 -- 
-2.15.1
+2.7.4
