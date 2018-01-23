@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46842 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932931AbeAOKDm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 05:03:42 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Matt Redfearn <matt.redfearn@imgtec.com>,
-        James Hogan <jhogan@kernel.org>
-Subject: Re: [PATCH] bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
-References: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
-Date: Mon, 15 Jan 2018 12:03:36 +0200
-In-Reply-To: <1515965642-16259-1-git-send-email-linux@roeck-us.net> (Guenter
-        Roeck's message of "Sun, 14 Jan 2018 13:34:02 -0800")
-Message-ID: <874lnn30cn.fsf@purkki.adurom.net> (sfid-20180115_110358_195749_EDD07A4B)
+Received: from mout.gmx.net ([212.227.17.22]:65408 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751515AbeAWPFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Jan 2018 10:05:23 -0500
+Received: from mail-ot0-f182.google.com ([74.125.82.182]) by mail.gmx.com
+ (mrgmx102 [212.227.17.168]) with ESMTPSA (Nemesis) id
+ 0M7m0a-1f05QH1ms4-00vMyi for <linux-wireless@vger.kernel.org>; Tue, 23 Jan
+ 2018 16:05:21 +0100
+Received: by mail-ot0-f182.google.com with SMTP id t35so644386otd.13
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Jan 2018 07:05:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Reply-To: cyp@abwesend.de
+In-Reply-To: <CALY9mdxV_TyzREiKzARV_pH4gknW983wA+o+wd2GPGNd-1QPrw@mail.gmail.com>
+References: <CALY9mdzC06HRmPGF1q5G9Gz7Qc5miww8xuK-1rsGE37yMaQj1Q@mail.gmail.com>
+ <1516713855.8658.18.camel@intel.com> <CALY9mdxV_TyzREiKzARV_pH4gknW983wA+o+wd2GPGNd-1QPrw@mail.gmail.com>
+From: cyp@abwesend.de
+Date: Tue, 23 Jan 2018 16:05:19 +0100
+Message-ID: <CALY9mdxTPtvD_gugE=mfWatcCnK1Xe4k9JMMn5-oS6WRSOnW5g@mail.gmail.com> (sfid-20180123_160547_765585_51F40E5A)
+Subject: Fwd: iwlegacy: Please change led_mode default to _LED_RF_STATE
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Guenter Roeck <linux@roeck-us.net> writes:
+> Emmanuel and I are not the maintainers of iwlegacy, so I'm adding
+> the linux-wireless mailing list and Stanislaw, who is the actual
+> maintainer.
 
-> Mips builds with BCMA host mode enabled fail in mainline and -next
-> with:
->
-> In file included from include/linux/bcma/bcma.h:10:0,
->                  from drivers/bcma/bcma_private.h:9,
-> 		 from drivers/bcma/main.c:8:
-> include/linux/bcma/bcma_driver_pci.h:218:24: error:
-> 	field 'pci_controller' has incomplete type
->
-> Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
-> system type as generic") as the culprit. Analysis shows that the commmit
-> changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
-> disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
-> defined if PCI_DRIVERS_LEGACY is enabled.
->
-> Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
-> PCI_DRIVERS_LEGACY. Add the missing dependency.
->
-> Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
+The issue is the same for iwlwifi:
+while most iwiwifi device cfgs have  led_mode = IWL_LED_RF_STATE
+iwlwifi/cfg/1000.c and iwlwifi/cfg/5000.c   have led_mode = IWL_LED_BLINK,
+which in turn causes the led to be configured to blink *by default*
+(up to 20x/sec!),
+which in turn is a human factor problem if the led is bright and/or in
+the user's face.
 
-So the first release for this commit was v4.15-rc1 so this is a recent
-regression.
+The (potential) solution is also the same as for iwlegacy:
+In iwlwifi/dvm/led.c : iwl_leds_init() : line 183
 
-> Cc: Matt Redfearn <matt.redfearn@imgtec.com>
-> Cc: James Hogan <jhogan@kernel.org>
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> ---
-> I am aware that this problem has been reported several times. I have
-> not been able to find a fix, but I may have missed it. If so, my
-> apologies for the noise.
+- if (mode == IWL_LED_DEFAULT)
+-              mode = priv->cfg->led_mode;
 
-As this fixes a build problem I'm planning to queue this for v4.15.
++  if (mode != IWL_LED_BLINK) /* if user does not explicitly request
+blink ... */
++             mode = IWL_LED_RF_STATE; /* then use a stable indicator
+for sanity and consistency */
 
--- 
-Kalle Valo
+
+Sebastian's response that I should then update modprobe options is
+missing the point.
+The point is: defaults ought to be sane to begin with, and (ideally) consistent.
+*I* know what to do. Many (most?) users will not, hence the dozens of
+requests for help (since 2008!).
+
+Regards,
+Cyrus
