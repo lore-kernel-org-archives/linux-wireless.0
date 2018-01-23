@@ -1,51 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52458 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966992AbeAONSw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 08:18:52 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 15 Jan 2018 15:18:51 +0200
-From: merez@codeaurora.org
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        Lazar Alexei <QCA_ailizaro@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [v2,6/9] wil6210: add support for headroom configuration
-In-Reply-To: <20180109080707.B05B66081B@smtp.codeaurora.org>
-References: <1513270393-919-7-git-send-email-qca_merez@qca.qualcomm.com>
- <20180109080707.B05B66081B@smtp.codeaurora.org>
-Message-ID: <1384d3ee94eb48f29e85161d9a8fa136@codeaurora.org> (sfid-20180115_141913_057111_57F09311)
+Received: from mail.neratec.com ([46.140.151.2]:65353 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751086AbeAWHlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Jan 2018 02:41:24 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH 4/4] ath9k: Display calibration data piers in debugfs
+Date: Tue, 23 Jan 2018 08:35:25 +0100
+Message-Id: <1516692925-6695-5-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180123_084134_056634_67175E47)
+In-Reply-To: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-01-09 10:07, Kalle Valo wrote:
-> Maya Erez <qca_merez@qca.qualcomm.com> wrote:
-> 
->> Add module parameter for configuring the headroom size
->> in the skb allocation.
->> 
->> Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
->> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
->> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-> 
-> Why?
+Display per frequency calibration data in dump_modal
+debugfs entry including reference power, voltage,
+tx temperature and noise floor.
 
-Some platforms have specific requirements on packet alignment.
-I will upload an update of the commit text in the next set of 11ad 
-patches.
+Example of chain 0 of OEM card (dump from modal_eeprom):
+Chain 0
+Freq	 ref	volt	temp	nf_Cal	nf_Pow	rx_temp
+5180	-30	0	137	0	0	0
+5320	-24	0	137	0	0	0
+5500	-15	0	137	0	0	0
+5620	-10	0	137	0	0	0
+5700	-15	0	137	0	0	0
+5745	-16	0	135	0	0	0
+5785	-19	0	136	0	0	0
+5825	-22	0	136	0	0	0
 
-> 
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_log_does_not_answer_why
-> 
-> And I'm a bit skeptic about this, controlling headroom via a module 
-> parameter
-> is not really making any sense to me.
+Example of a card with calibrated noise floor.
+Chain 0
+Freq	 ref	volt	temp	nf_Cal	nf_Pow	rx_temp
+4890	-49	0	128	-107	-97	124
+5100	-23	0	128	-101	-96	124
+5180	-18	0	128	-101	-96	124
+5300	-12	0	128	-102	-97	124
+5500	-9	0	128	-101	-97	125
+5640	-17	0	128	-101	-98	124
+5785	-25	0	128	-101	-98	124
+5940	-33	0	128	-106	-99	124
+
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 64 +++++++++++++++++++++++++-
+ 1 file changed, 63 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index de2e503..f019a20 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3436,6 +3436,60 @@ static u32 ar9003_dump_modal_eeprom(char *buf, u32 len, u32 size,
+ 	return len;
+ }
+ 
++static u32 ar9003_dump_cal_data(struct ath_hw *ah, char *buf, u32 len, u32 size,
++				bool is_2g)
++{
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++	struct ar9300_base_eep_hdr *pBase;
++	struct ar9300_cal_data_per_freq_op_loop *cal_pier;
++	int cal_pier_nr;
++	int freq;
++	int i, j;
++
++	pBase = &eep->baseEepHeader;
++
++	if (is_2g)
++		cal_pier_nr = AR9300_NUM_2G_CAL_PIERS;
++	else
++		cal_pier_nr = AR9300_NUM_5G_CAL_PIERS;
++
++	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++		if (!((pBase->txrxMask >> i) & 1))
++			continue;
++
++		len += snprintf(buf + len, size - len, "Chain %d\n", i);
++
++		len += snprintf(buf + len, size - len,
++			"Freq\t ref\tvolt\ttemp\tnf_cal\tnf_pow\trx_temp\n");
++
++		for (j = 0; j < cal_pier_nr; j++) {
++			if (is_2g) {
++				cal_pier = &eep->calPierData2G[i][j];
++				freq = 2300 + eep->calFreqPier2G[j];
++			} else {
++				cal_pier = &eep->calPierData5G[i][j];
++				freq = 4800 + eep->calFreqPier5G[j] * 5;
++			}
++
++			len += snprintf(buf + len, size - len,
++				"%d\t", freq);
++
++			len += snprintf(buf + len, size - len,
++				"%d\t%d\t%d\t%d\t%d\t%d\n",
++				cal_pier->refPower,
++				cal_pier->voltMeas,
++				cal_pier->tempMeas,
++				cal_pier->rxTempMeas ?
++				N2DBM(cal_pier->rxNoisefloorCal) : 0,
++				cal_pier->rxTempMeas ?
++				N2DBM(cal_pier->rxNoisefloorPower) : 0,
++				cal_pier->rxTempMeas);
++		}
++	}
++
++	return len;
++}
++
+ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 				       u8 *buf, u32 len, u32 size)
+ {
+@@ -3447,10 +3501,18 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 				 "%20s :\n", "2GHz modal Header");
+ 		len = ar9003_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader2G);
+-		len += scnprintf(buf + len, size - len,
++
++		len += scnprintf(buf + len, size - len, "Calibration data\n");
++		len = ar9003_dump_cal_data(ah, buf, len, size, true);
++
++		len +=  snprintf(buf + len, size - len,
+ 				 "%20s :\n", "5GHz modal Header");
+ 		len = ar9003_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader5G);
++
++		len += snprintf(buf + len, size - len, "Calibration data\n");
++		len = ar9003_dump_cal_data(ah, buf, len, size, false);
++
+ 		goto out;
+ 	}
+ 
 -- 
-Maya Erez
-Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+2.7.4
