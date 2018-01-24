@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:60550 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932160AbeAKHKC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44506 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934058AbeAXPph (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jan 2018 02:10:02 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 06/10] rtlwifi: Support A-MSDU in A-MPDU capability
-Date: Thu, 11 Jan 2018 15:09:28 +0800
-Message-ID: <20180111070932.9929-7-pkshih@realtek.com> (sfid-20180111_081006_345504_375BA18D)
-In-Reply-To: <20180111070932.9929-1-pkshih@realtek.com>
-References: <20180111070932.9929-1-pkshih@realtek.com>
+        Wed, 24 Jan 2018 10:45:37 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: rtl8xxxu: Fix trailing semicolon
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180117105622.3717-1-luisbg@kernel.org>
+References: <20180117105622.3717-1-luisbg@kernel.org>
+To: Luis de Bethencourt <luisbg@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Joe Perches <joe@perches.com>,
+        Jes Sorensen <Jes.Sorensen@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Luis de Bethencourt <luisbg@kernel.org>
+Message-Id: <20180124154537.1BE29607EB@smtp.codeaurora.org> (sfid-20180124_164621_802640_A488E313)
+Date: Wed, 24 Jan 2018 15:45:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Steven Ting <steventing@realtek.com>
+Luis de Bethencourt <luisbg@kernel.org> wrote:
 
-Due to the fact that A-MSDU deaggregation is done in software,
-we set this flag to support the A-MSDU in A-MPDU
+> The trailing semicolon is an empty statement that does no operation.
+> Removing it since it doesn't do anything.
+> 
+> Signed-off-by: Luis de Bethencourt <luisbg@kernel.org>
+> Acked-by: Jes Sorensen <Jes.Sorensen@gmail.com>
 
-Signed-off-by: Steven Ting <steventing@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 1 +
- 1 file changed, 1 insertion(+)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index e902cd7adbfe..07b91bc9adf9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -397,6 +397,7 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
- 	ieee80211_hw_set(hw, SUPPORTS_TX_FRAG);
- 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
-+	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
- 
- 	/* swlps or hwlps has been set in diff chip in init_sw_vars */
- 	if (rtlpriv->psc.swctrl_lps) {
+8054a275de08 rtl8xxxu: Fix trailing semicolon
+
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10169063/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
