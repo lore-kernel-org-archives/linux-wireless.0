@@ -1,117 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:39996 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964994AbeALSjv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 13:39:51 -0500
-Received: by mail-oi0-f65.google.com with SMTP id u83so4536585oie.7
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jan 2018 10:39:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1648304.tjl4HeBnOe@debian64>
-References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151571806633.27429.1504260808341642890.stgit@dwillia2-desk3.amr.corp.intel.com>
- <1648304.tjl4HeBnOe@debian64>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 12 Jan 2018 10:39:50 -0800
-Message-ID: <CAPcyv4gne66ic3E-Y+pLi4QZdVeeeVmvayVPA3Jt1gyUqpaF9g@mail.gmail.com> (sfid-20180112_194014_049799_09B62CC6)
-Subject: Re: [PATCH v2 15/19] carl9170: prevent bounds-check bypass via
- speculative execution
-To: Christian Lamparter <chunkeey@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        Netdev <netdev@vger.kernel.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.neratec.com ([46.140.151.2]:3709 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932152AbeAXIC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Jan 2018 03:02:27 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH v2 2/4] ath9k: Read noise floor calibration data from eeprom
+Date: Wed, 24 Jan 2018 09:02:17 +0100
+Message-Id: <1516780939-7176-3-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180124_090232_931690_16D1315C)
+In-Reply-To: <1516780939-7176-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1516780939-7176-1-git-send-email-Wojciech.Dubowik@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 12, 2018 at 6:42 AM, Christian Lamparter <chunkeey@gmail.com> wrote:
-> On Friday, January 12, 2018 1:47:46 AM CET Dan Williams wrote:
->> Static analysis reports that 'queue' may be a user controlled value that
->> is used as a data dependency to read from the 'ar9170_qmap' array. In
->> order to avoid potential leaks of kernel memory values, block
->> speculative execution of the instruction stream that could issue reads
->> based on an invalid result of 'ar9170_qmap[queue]'. In this case the
->> value of 'ar9170_qmap[queue]' is immediately reused as an index to the
->> 'ar->edcf' array.
->>
->> Based on an original patch by Elena Reshetova.
->>
->> Cc: Christian Lamparter <chunkeey@googlemail.com>
->> Cc: Kalle Valo <kvalo@codeaurora.org>
->> Cc: linux-wireless@vger.kernel.org
->> Cc: netdev@vger.kernel.org
->> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> ---
-> This patch (and p54, cw1200) look like the same patch?!
-> Can you tell me what happend to:
->
-> On Saturday, January 6, 2018 5:34:03 PM CET Dan Williams wrote:
->> On Sat, Jan 6, 2018 at 6:23 AM, Christian Lamparter <chunkeey@gmail.com> wrote:
->> > And Furthermore a invalid queue (param->ac) would cause a crash in
->> > this line in mac80211 before it even reaches the driver [1]:
->> > |       sdata->tx_conf[params->ac] = p;
->> > |                   ^^^^^^^^
->> > |       if (drv_conf_tx(local, sdata, >>>> params->ac <<<<, &p)) {
->> > |        ^^ (this is a wrapper for the *_op_conf_tx)
->> >
->> > I don't think these chin-up exercises are needed.
->>
->> Quite the contrary, you've identified a better place in the call stack
->> to sanitize the input and disable speculation. Then we can kill the
->> whole class of the wireless driver reports at once it seems.
-> <https://www.spinics.net/lists/netdev/msg476353.html>
+AR9003 devices can have calibrated noise floor values
+which can be used instead of hard coded one. Read them
+from eeprom and save interpolated value in nf limits for
+the current channel.
 
-I didn't see where ac is being validated against the driver specific
-'queues' value in that earlier patch.
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 63 ++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 10 ++++
+ drivers/net/wireless/ath/ath9k/hw.h            |  2 +
+ 3 files changed, 67 insertions(+), 8 deletions(-)
 
->
-> Anyway, I think there's an easy way to solve this: remove the
-> "if (queue < ar->hw->queues)" check altogether. It's no longer needed
-> anymore as the "queue" value is validated long before the driver code
-> gets called.
-
-Can you point me to where that validation happens?
-
-> And from my understanding, this will fix the "In this case
-> the value of 'ar9170_qmap[queue]' is immediately reused as an index to
-> the 'ar->edcf' array." gripe your tool complains about.
->
-> This is here's a quick test-case for carl9170.:
-> ---
-> diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-> index 988c8857d78c..2d3afb15bb62 100644
-> --- a/drivers/net/wireless/ath/carl9170/main.c
-> +++ b/drivers/net/wireless/ath/carl9170/main.c
-> @@ -1387,13 +1387,8 @@ static int carl9170_op_conf_tx(struct ieee80211_hw *hw,
->         int ret;
->
->         mutex_lock(&ar->mutex);
-> -       if (queue < ar->hw->queues) {
-> -               memcpy(&ar->edcf[ar9170_qmap[queue]], param, sizeof(*param));
-> -               ret = carl9170_set_qos(ar);
-> -       } else {
-> -               ret = -EINVAL;
-> -       }
-> -
-> +       memcpy(&ar->edcf[ar9170_qmap[queue]], param, sizeof(*param));
-> +       ret = carl9170_set_qos(ar);
->         mutex_unlock(&ar->mutex);
->         return ret;
->  }
-> ---
-> What does your tool say about this?
-
-If you take away the 'if' then I don't the tool will report on this.
-
-> (If necessary, the "queue" value could be even sanitized with a
-> queue %= ARRAY_SIZE(ar9170_qmap); before the mutex_lock.)
-
-That is what array_ptr() is doing in a more sophisticated way.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 23bb677..de2e503 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4689,7 +4689,8 @@ static int ar9003_hw_cal_pier_get(struct ath_hw *ah,
+ 				  int ichain,
+ 				  int *pfrequency,
+ 				  int *pcorrection,
+-				  int *ptemperature, int *pvoltage)
++				  int *ptemperature, int *pvoltage,
++				  int *pnf_cal, int *pnf_power)
+ {
+ 	u8 *pCalPier;
+ 	struct ar9300_cal_data_per_freq_op_loop *pCalPierStruct;
+@@ -4731,6 +4732,10 @@ static int ar9003_hw_cal_pier_get(struct ath_hw *ah,
+ 	*pcorrection = pCalPierStruct->refPower;
+ 	*ptemperature = pCalPierStruct->tempMeas;
+ 	*pvoltage = pCalPierStruct->voltMeas;
++	*pnf_cal = pCalPierStruct->rxTempMeas ?
++			N2DBM(pCalPierStruct->rxNoisefloorCal) : 0;
++	*pnf_power = pCalPierStruct->rxTempMeas ?
++			N2DBM(pCalPierStruct->rxNoisefloorPower) : 0;
+ 
+ 	return 0;
+ }
+@@ -4895,14 +4900,18 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 	int mode;
+ 	int lfrequency[AR9300_MAX_CHAINS],
+ 	    lcorrection[AR9300_MAX_CHAINS],
+-	    ltemperature[AR9300_MAX_CHAINS], lvoltage[AR9300_MAX_CHAINS];
++	    ltemperature[AR9300_MAX_CHAINS], lvoltage[AR9300_MAX_CHAINS],
++	    lnf_cal[AR9300_MAX_CHAINS], lnf_pwr[AR9300_MAX_CHAINS];
+ 	int hfrequency[AR9300_MAX_CHAINS],
+ 	    hcorrection[AR9300_MAX_CHAINS],
+-	    htemperature[AR9300_MAX_CHAINS], hvoltage[AR9300_MAX_CHAINS];
++	    htemperature[AR9300_MAX_CHAINS], hvoltage[AR9300_MAX_CHAINS],
++	    hnf_cal[AR9300_MAX_CHAINS], hnf_pwr[AR9300_MAX_CHAINS];
+ 	int fdiff;
+ 	int correction[AR9300_MAX_CHAINS],
+-	    voltage[AR9300_MAX_CHAINS], temperature[AR9300_MAX_CHAINS];
+-	int pfrequency, pcorrection, ptemperature, pvoltage;
++	    voltage[AR9300_MAX_CHAINS], temperature[AR9300_MAX_CHAINS],
++	    nf_cal[AR9300_MAX_CHAINS], nf_pwr[AR9300_MAX_CHAINS];
++	int pfrequency, pcorrection, ptemperature, pvoltage,
++	    pnf_cal, pnf_pwr;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	mode = (frequency >= 4000);
+@@ -4920,7 +4929,8 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 		for (ipier = 0; ipier < npier; ipier++) {
+ 			if (!ar9003_hw_cal_pier_get(ah, mode, ipier, ichain,
+ 						    &pfrequency, &pcorrection,
+-						    &ptemperature, &pvoltage)) {
++						    &ptemperature, &pvoltage,
++						    &pnf_cal, &pnf_pwr)) {
+ 				fdiff = frequency - pfrequency;
+ 
+ 				/*
+@@ -4942,6 +4952,8 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 						htemperature[ichain] =
+ 						    ptemperature;
+ 						hvoltage[ichain] = pvoltage;
++						hnf_cal[ichain] = pnf_cal;
++						hnf_pwr[ichain] = pnf_pwr;
+ 					}
+ 				}
+ 				if (fdiff >= 0) {
+@@ -4958,6 +4970,8 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 						ltemperature[ichain] =
+ 						    ptemperature;
+ 						lvoltage[ichain] = pvoltage;
++						lnf_cal[ichain] = pnf_cal;
++						lnf_pwr[ichain] = pnf_pwr;
+ 					}
+ 				}
+ 			}
+@@ -4966,15 +4980,20 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 
+ 	/* interpolate  */
+ 	for (ichain = 0; ichain < AR9300_MAX_CHAINS; ichain++) {
+-		ath_dbg(common, EEPROM, "ch=%d f=%d low=%d %d h=%d %d\n",
++		ath_dbg(common, EEPROM,
++			"ch=%d f=%d low=%d %d h=%d %d n=%d %d p=%d %d\n",
+ 			ichain, frequency, lfrequency[ichain],
+ 			lcorrection[ichain], hfrequency[ichain],
+-			hcorrection[ichain]);
++			hcorrection[ichain], lnf_cal[ichain],
++			hnf_cal[ichain], lnf_pwr[ichain],
++			hnf_pwr[ichain]);
+ 		/* they're the same, so just pick one */
+ 		if (hfrequency[ichain] == lfrequency[ichain]) {
+ 			correction[ichain] = lcorrection[ichain];
+ 			voltage[ichain] = lvoltage[ichain];
+ 			temperature[ichain] = ltemperature[ichain];
++			nf_cal[ichain] = lnf_cal[ichain];
++			nf_pwr[ichain] = lnf_pwr[ichain];
+ 		}
+ 		/* the low frequency is good */
+ 		else if (frequency - lfrequency[ichain] < 1000) {
+@@ -4998,12 +5017,26 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 						hfrequency[ichain],
+ 						lvoltage[ichain],
+ 						hvoltage[ichain]);
++
++				nf_cal[ichain] = interpolate(frequency,
++						lfrequency[ichain],
++						hfrequency[ichain],
++						lnf_cal[ichain],
++						hnf_cal[ichain]);
++
++				nf_pwr[ichain] = interpolate(frequency,
++						lfrequency[ichain],
++						hfrequency[ichain],
++						lnf_pwr[ichain],
++						hnf_pwr[ichain]);
+ 			}
+ 			/* only low is good, use it */
+ 			else {
+ 				correction[ichain] = lcorrection[ichain];
+ 				temperature[ichain] = ltemperature[ichain];
+ 				voltage[ichain] = lvoltage[ichain];
++				nf_cal[ichain] = lnf_cal[ichain];
++				nf_pwr[ichain] = lnf_pwr[ichain];
+ 			}
+ 		}
+ 		/* only high is good, use it */
+@@ -5011,10 +5044,14 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 			correction[ichain] = hcorrection[ichain];
+ 			temperature[ichain] = htemperature[ichain];
+ 			voltage[ichain] = hvoltage[ichain];
++			nf_cal[ichain] = hnf_cal[ichain];
++			nf_pwr[ichain] = hnf_pwr[ichain];
+ 		} else {	/* nothing is good, presume 0???? */
+ 			correction[ichain] = 0;
+ 			temperature[ichain] = 0;
+ 			voltage[ichain] = 0;
++			nf_cal[ichain] = 0;
++			nf_pwr[ichain] = 0;
+ 		}
+ 	}
+ 
+@@ -5025,6 +5062,16 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
+ 		"for frequency=%d, calibration correction = %d %d %d\n",
+ 		frequency, correction[0], correction[1], correction[2]);
+ 
++	/* Store calibrated noise floor values */
++	for (ichain = 0; ichain < AR5416_MAX_CHAINS; ichain++)
++		if (mode) {
++			ah->nf_5g.cal[ichain] = nf_cal[ichain];
++			ah->nf_5g.pwr[ichain] = nf_pwr[ichain];
++		} else {
++			ah->nf_2g.cal[ichain] = nf_cal[ichain];
++			ah->nf_2g.pwr[ichain] = nf_pwr[ichain];
++		}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index bd2269c..e8fda54 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -62,6 +62,16 @@
+  */
+ #define AR9300_PWR_TABLE_OFFSET  0
+ 
++/* Noise power data definitions
++ * units are: 4 x dBm - NOISE_PWR_DATA_OFFSET
++ * (e.g. -25 = (-25/4 - 90) = -96.25 dBm)
++ * range (for 6 signed bits) is (-32 to 31) + offset => -122dBm to -59dBm
++ * resolution (2 bits) is 0.25dBm
++ */
++#define NOISE_PWR_DATA_OFFSET	-90
++#define NOISE_PWR_DBM_2_INT(_p)	((((_p) + 3) >> 2) + NOISE_PWR_DATA_OFFSET)
++#define N2DBM(_p)		NOISE_PWR_DBM_2_INT(_p)
++
+ /* byte addressable */
+ #define AR9300_EEPROM_SIZE (16*1024)
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 0d6c07c7..9804a24 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -754,6 +754,8 @@ struct ath_nf_limits {
+ 	s16 max;
+ 	s16 min;
+ 	s16 nominal;
++	s16 cal[AR5416_MAX_CHAINS];
++	s16 pwr[AR5416_MAX_CHAINS];
+ };
+ 
+ enum ath_cal_list {
+-- 
+2.7.4
