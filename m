@@ -1,36 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52244 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753135AbeADOsw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jan 2018 09:48:52 -0500
-Message-ID: <1515077330.10342.25.camel@sipsolutions.net> (sfid-20180104_154856_168171_A69F8CFC)
-Subject: Re: [PATCH v2 2/3] nl80211: Allow SAE Authentication for
- NL80211_CMD_CONNECT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        Srinivas Dasari <dasaris@qti.qualcomm.com>
-Date: Thu, 04 Jan 2018 15:48:50 +0100
-In-Reply-To: <1513960419-24780-2-git-send-email-jouni@qca.qualcomm.com>
-References: <1513960419-24780-1-git-send-email-jouni@qca.qualcomm.com>
-         <1513960419-24780-2-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:56766 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752320AbeAXKDT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Jan 2018 05:03:19 -0500
+Date: Wed, 24 Jan 2018 11:03:17 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Enrico Mioso <mrkiko.rs@gmail.com>
+Cc: Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20180124100316.GB3101@redhat.com> (sfid-20180124_110326_515679_19B023C5)
+References: <20171219125431.GB2672@redhat.com>
+ <alpine.LNX.2.21.99.1712201848250.21776@localhost.localdomain>
+ <20171221142558.GB4655@redhat.com>
+ <alpine.LNX.2.21.99.1712241311370.28605@localhost.localdomain>
+ <20180103113540.GA10306@redhat.com>
+ <alpine.LNX.2.21.99.1801031503370.8405@localhost.localdomain>
+ <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com>
+ <alpine.LNX.2.21.99.1801220643400.32225@mStation.localdomain>
+ <20180123132234.GC2520@redhat.com>
+ <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-12-22 at 18:33 +0200, Jouni Malinen wrote:
-> From: Srinivas Dasari <dasaris@qti.qualcomm.com>
+Hi
+
+So if 3.9 works and current kernel does not, the best way to address
+the issue would be identify change that broke. Ideally if  bisecton
+could be performed, but this can be hard taking that the problem is not
+easy reproducible. Further difficultly comes from a fact that OpenWRT
+has custom patches. So I suggest some kind of manual semi-bisection 
+on OpenWRT repository with long testing, to find out first or close
+to first OpenWRT change that start to broke things.
+
+Cheers
+Stanislaw
+
+On Wed, Jan 24, 2018 at 09:18:23AM +0100, Enrico Mioso wrote:
+> Hello!
+> I can confirm - there is no firmware being uploaded to the device, or at least: if it's there, it's not uploaded from an external file.
+> root@smalltalk:~# ls -Fa -1 /lib/firmware/
+> ./
+> ../
+> regulatory.db
+> root@smalltalk:~#
 > 
-> This commit allows SAE Authentication for NL80211_CMD_CONNECT
-> interface, provided this is supported by the host driver.
-
-Now this is interesting - there could potentially be a case where you
-request SAE, but don't set NL80211_ATTR_EXTERNAL_AUTH_SUPP[ORT], and
-then SAE *isn't* supported, right?
-
-What happens then? Do we expect the driver to reject it? Better at
-least document the expected behaviour...
-
-johannes
+> Anything I might do? I can also give an ssh session to the device in case.
+> 
+> Enrico
+> 
+> On Tue, 23 Jan 2018, Stanislaw Gruszka wrote:
+> 
+> >Date: Tue, 23 Jan 2018 14:22:35
+> >From: Stanislaw Gruszka <sgruszka@redhat.com>
+> >To: Enrico Mioso <mrkiko.rs@gmail.com>
+> >Cc: Tom Psyborg <pozega.tomislav@gmail.com>,
+> >    linux-wireless <linux-wireless@vger.kernel.org>,
+> >    Johannes Berg <johannes.berg@intel.com>,
+> >    Daniel Golle <daniel@makrotopia.org>, Arnd Bergmann <arnd@arndb.de>,
+> >    John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>
+> >Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+> >    frame due to full tx queue...?
+> >
+> >On Mon, Jan 22, 2018 at 06:45:57AM +0100, Enrico Mioso wrote:
+> >>Crash happening here also in the WL-330n3G device; unfortunately, no messages to report.
+> >>Regarding your hypothesis regardingthe firmware not being able to communicate a problem regarding it's inability to send frames: around when OpenWRT had 3.9.9 kernel, this device worked for weeks no stop with no issues I think.
+> >>And I don't think this is only a coicnidence. So I suspect, but it's only an impression, also because I know ... very very little about this, that at some point things worked.
+> >
+> >I think FW was upgraded since 3.9 kernel as well. But this
+> >could be also problem how driver program the device registers,
+> >not only FW problem.
+> >
+> >Regards
+> >Stanislaw
+> >
