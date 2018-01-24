@@ -1,72 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:44705 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752103AbeAPODM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 09:03:12 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 09/13] staging: wilc1000: rename NullBssid to null_bssid to avoid camelCase variable name
-Date: Tue, 16 Jan 2018 19:32:27 +0530
-Message-ID: <1516111351-5353-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180116_150318_810661_2D11BF6B)
-In-Reply-To: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516111351-5353-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.neratec.com ([46.140.151.2]:26285 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932169AbeAXIC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Jan 2018 03:02:27 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH v2 4/4] ath9k: Display calibration data piers in debugfs
+Date: Wed, 24 Jan 2018 09:02:19 +0100
+Message-Id: <1516780939-7176-5-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180124_090236_626269_82264581)
+In-Reply-To: <1516780939-7176-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1516780939-7176-1-git-send-email-Wojciech.Dubowik@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is cleanup patch, it fixes "Avoid CamelCase: <NullBssid>" found
-by checkpatch.pl.
+Display per frequency calibration data in dump_modal
+debugfs entry including reference power, voltage,
+tx temperature and noise floor.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Example of chain 0 of OEM card (dump from modal_eeprom):
+Chain 0
+Freq	 ref	volt	temp	nf_Cal	nf_Pow	rx_temp
+5180	-30	0	137	0	0	0
+5320	-24	0	137	0	0	0
+5500	-15	0	137	0	0	0
+5620	-10	0	137	0	0	0
+5700	-15	0	137	0	0	0
+5745	-16	0	135	0	0	0
+5785	-19	0	136	0	0	0
+5825	-22	0	136	0	0	0
+
+Example of a card with calibrated noise floor.
+Chain 0
+Freq	 ref	volt	temp	nf_Cal	nf_Pow	rx_temp
+4890	-49	0	128	-107	-97	124
+5100	-23	0	128	-101	-96	124
+5180	-18	0	128	-101	-96	124
+5300	-12	0	128	-102	-97	124
+5500	-9	0	128	-101	-97	125
+5640	-17	0	128	-101	-98	124
+5785	-25	0	128	-101	-98	124
+5940	-33	0	128	-106	-99	124
+
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 64 +++++++++++++++++++++++++-
+ 1 file changed, 63 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 1c5782e..ae8df88 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -815,7 +815,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
- 	struct host_if_drv *wfi_drv;
- 	struct wilc_vif *vif;
- 	struct wilc *wilc;
--	u8 NullBssid[ETH_ALEN] = {0};
-+	u8 null_bssid[ETH_ALEN] = {0};
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index de2e503..f019a20 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3436,6 +3436,60 @@ static u32 ar9003_dump_modal_eeprom(char *buf, u32 len, u32 size,
+ 	return len;
+ }
  
- 	wilc_connecting = 0;
- 	priv = wiphy_priv(wiphy);
-@@ -834,7 +834,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
- 	wfi_drv = (struct host_if_drv *)priv->hif_drv;
- 	if (!wfi_drv->p2p_connect)
- 		wlan_channel = INVALID_CHANNEL;
--	wilc_wlan_set_bssid(priv->dev, NullBssid, STATION_MODE);
-+	wilc_wlan_set_bssid(priv->dev, null_bssid, STATION_MODE);
- 
- 	p2p_local_random = 0x01;
- 	p2p_recv_random = 0x00;
-@@ -1936,7 +1936,7 @@ static int stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	s32 ret = 0;
- 	struct wilc_priv *priv;
- 	struct wilc_vif *vif;
--	u8 NullBssid[ETH_ALEN] = {0};
-+	u8 null_bssid[ETH_ALEN] = {0};
- 
- 	if (!wiphy)
- 		return -EFAULT;
-@@ -1944,7 +1944,7 @@ static int stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	priv = wiphy_priv(wiphy);
- 	vif = netdev_priv(priv->dev);
- 
--	wilc_wlan_set_bssid(dev, NullBssid, AP_MODE);
-+	wilc_wlan_set_bssid(dev, null_bssid, AP_MODE);
- 
- 	ret = wilc_del_beacon(vif);
++static u32 ar9003_dump_cal_data(struct ath_hw *ah, char *buf, u32 len, u32 size,
++				bool is_2g)
++{
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++	struct ar9300_base_eep_hdr *pBase;
++	struct ar9300_cal_data_per_freq_op_loop *cal_pier;
++	int cal_pier_nr;
++	int freq;
++	int i, j;
++
++	pBase = &eep->baseEepHeader;
++
++	if (is_2g)
++		cal_pier_nr = AR9300_NUM_2G_CAL_PIERS;
++	else
++		cal_pier_nr = AR9300_NUM_5G_CAL_PIERS;
++
++	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++		if (!((pBase->txrxMask >> i) & 1))
++			continue;
++
++		len += snprintf(buf + len, size - len, "Chain %d\n", i);
++
++		len += snprintf(buf + len, size - len,
++			"Freq\t ref\tvolt\ttemp\tnf_cal\tnf_pow\trx_temp\n");
++
++		for (j = 0; j < cal_pier_nr; j++) {
++			if (is_2g) {
++				cal_pier = &eep->calPierData2G[i][j];
++				freq = 2300 + eep->calFreqPier2G[j];
++			} else {
++				cal_pier = &eep->calPierData5G[i][j];
++				freq = 4800 + eep->calFreqPier5G[j] * 5;
++			}
++
++			len += snprintf(buf + len, size - len,
++				"%d\t", freq);
++
++			len += snprintf(buf + len, size - len,
++				"%d\t%d\t%d\t%d\t%d\t%d\n",
++				cal_pier->refPower,
++				cal_pier->voltMeas,
++				cal_pier->tempMeas,
++				cal_pier->rxTempMeas ?
++				N2DBM(cal_pier->rxNoisefloorCal) : 0,
++				cal_pier->rxTempMeas ?
++				N2DBM(cal_pier->rxNoisefloorPower) : 0,
++				cal_pier->rxTempMeas);
++		}
++	}
++
++	return len;
++}
++
+ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 				       u8 *buf, u32 len, u32 size)
+ {
+@@ -3447,10 +3501,18 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 				 "%20s :\n", "2GHz modal Header");
+ 		len = ar9003_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader2G);
+-		len += scnprintf(buf + len, size - len,
++
++		len += scnprintf(buf + len, size - len, "Calibration data\n");
++		len = ar9003_dump_cal_data(ah, buf, len, size, true);
++
++		len +=  snprintf(buf + len, size - len,
+ 				 "%20s :\n", "5GHz modal Header");
+ 		len = ar9003_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader5G);
++
++		len += snprintf(buf + len, size - len, "Calibration data\n");
++		len = ar9003_dump_cal_data(ah, buf, len, size, false);
++
+ 		goto out;
+ 	}
  
 -- 
 2.7.4
