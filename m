@@ -1,81 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.llwyncelyn.cymru ([82.70.14.225]:32898 "EHLO fuzix.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756301AbeAHLqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 06:46:09 -0500
-Date: Mon, 8 Jan 2018 11:43:42 +0000
-From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Alan Cox <alan.cox@intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>, X86 ML <x86@kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Zhang Rui <rui.zhang@intel.com>,
-        "Linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Jan Kara <jack@suse.com>,
-        Eduardo Valentin <edubezval@gmail.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, qla2xxx-upstream@qlogic.com,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arjan van de Ven <arjan@linux.intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Alan Cox <alan@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Subject: Re: [PATCH 00/18] prevent bounds-check bypass via speculative
- execution
-Message-ID: <20180108114342.3b2d99fb@alans-desktop> (sfid-20180108_124649_769831_0072AAE7)
-In-Reply-To: <20180108100836.GF3040@hirez.programming.kicks-ass.net>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
-        <87y3lbpvzp.fsf@xmission.com>
-        <CAPcyv4hVisGeXbTH985Hb6dkYKA9Sr8wwZHudNF-CtH0=ADFug@mail.gmail.com>
-        <20180108100836.GF3040@hirez.programming.kicks-ass.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36226 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933172AbeAXL1q (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Jan 2018 06:27:46 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 24 Jan 2018 16:57:45 +0530
+From: vnaralas@codeaurora.org
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Bhagavathi Perumal S <bperumal@codeaurora.org>,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH 1/2] cfg80211: Add tx ack signal attribute in sta info
+In-Reply-To: <1516623728.2508.4.camel@sipsolutions.net>
+References: <1516279208-16485-1-git-send-email-vnaralas@codeaurora.org>
+ <1516623728.2508.4.camel@sipsolutions.net>
+Message-ID: <65e392b36ecf5b3161be954e974c4c0a@codeaurora.org> (sfid-20180124_122751_143883_59CA43A8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 8 Jan 2018 11:08:36 +0100
-Peter Zijlstra <peterz@infradead.org> wrote:
-
-> On Fri, Jan 05, 2018 at 10:30:16PM -0800, Dan Williams wrote:
-> > On Fri, Jan 5, 2018 at 6:22 PM, Eric W. Biederman <ebiederm@xmission.com> wrote:  
-> > > In at least one place (mpls) you are patching a fast path.  Compile out
-> > > or don't load mpls by all means.  But it is not acceptable to change the
-> > > fast path without even considering performance.  
-> > 
-> > Performance matters greatly, but I need help to identify a workload
-> > that is representative for this fast path to see what, if any, impact
-> > is incurred. Even better is a review that says "nope, 'index' is not
-> > subject to arbitrary userspace control at this point, drop the patch."  
+On 2018-01-22 17:52, Johannes Berg wrote:
+> On Thu, 2018-01-18 at 18:10 +0530, Venkateswara Naralasetty wrote:
+>> From: Bhagavathi Perumal S <bperumal@codeaurora.org>
+>> 
+>> This patch provides support for users to get ack signal
+>> strength of last transmitted by introducing new attribute
+>> 'NL80211_STA_INFO_ACK_SIGNAL'.
 > 
-> I think we're focussing a little too much on pure userspace. That is, we
-> should be saying under the attackers control. Inbound network packets
-> could equally be under the attackers control.
+> No real objection to the patch itself, but you should say *why* you
+> need this, and I'm not really sure I see much point in having the
+> signal strength of the very last ACK frame?
+If user wants to get instant RSSI for the station which is ideal for 
+long time, user can sent null frame and get RSSI form the ack of that 
+null frame.
 
-Inbound network packets don't come with a facility to read back and do
-cache timimg. For the more general case, timing attacks on network
-activity are not exactly new, and you have to mitigate them in user space
-because most of them are about how many instructions you execute on each
-path. The ancient classic being telling if a user exists by seeing if the
-password was actually checked.
+> 
+> At least provide reasoning so other drivers can decide whether to
+> implement it or not.
+> 
+>> + * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK 
+>> frame(u8, dBm)
+> 
+> more like s8, really.
 
-Alan
+I have taken reference from 'NL80211_STA_INFO_SIGNAL_AVG'.
