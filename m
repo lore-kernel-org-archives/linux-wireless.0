@@ -1,675 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:41311 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750703AbeAOTCS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 14:02:18 -0500
-Received: by mail-oi0-f68.google.com with SMTP id n81so8958161oig.8
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 11:02:17 -0800 (PST)
-Subject: Re: [PATCH v2 08/10] rtlwifi: btcoex: Remove global variables from
- btcoex
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: yhchuang@realtek.com, linux-wireless@vger.kernel.org
-References: <20180111070932.9929-1-pkshih@realtek.com>
- <20180111070932.9929-9-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <c7dd0898-b6f9-580a-35ab-82054845dd5b@lwfinger.net> (sfid-20180115_200229_506651_3342E778)
-Date: Mon, 15 Jan 2018 13:02:15 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180111070932.9929-9-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from nbd.name ([46.4.11.11]:48672 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934107AbeAXPTV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Jan 2018 10:19:21 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 3/8] mt76: add an intermediate struct for rx status information
+Date: Wed, 24 Jan 2018 16:19:12 +0100
+Message-Id: <20180124151917.70962-3-nbd@nbd.name> (sfid-20180124_161942_553926_2BB265FD)
+In-Reply-To: <20180124151917.70962-1-nbd@nbd.name>
+References: <20180124151917.70962-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2018 01:09 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> Remove global variables, so btcoexist can support multiple instances
-> simultaneously.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
->   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |  79 ++++-----
->   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  21 +--
->   .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 182 +++++++++++++++++----
->   .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   3 +-
->   drivers/net/wireless/realtek/rtlwifi/pci.c         |   5 +-
->   drivers/net/wireless/realtek/rtlwifi/wifi.h        |   5 +-
->   6 files changed, 217 insertions(+), 78 deletions(-)
+Preparation for passing in more internal rx data via skb->cb
 
-I am very happy to see this change. Although a given box is unlikely to have 
-more than one PCI wireless device, it is certainly possible for one of the PCI 
-drivers and rtl8192cu to both be needed.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c   | 29 ++++++++++++++++++++++++-
+ drivers/net/wireless/mediatek/mt76/mt76.h       | 13 +++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c |  4 ++--
+ 3 files changed, 43 insertions(+), 3 deletions(-)
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> index 5f3eda31187a..2be81fec789a 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> @@ -25,14 +25,6 @@
->   
->   #include "halbt_precomp.h"
->   
-> -/***********************************************
-> - *		Global variables
-> - ***********************************************/
-> -
-> -struct btc_coexist gl_bt_coexist;
-> -
-> -u32 btc_dbg_type[BTC_MSG_MAX];
-> -
->   /***************************************************
->    *		Debug related function
->    ***************************************************/
-> @@ -971,9 +963,12 @@ bool halbtc_under_ips(struct btc_coexist *btcoexist)
->   /*****************************************************************
->    *         Extern functions called by other module
->    *****************************************************************/
-> -bool exhalbtc_initlize_variables(void)
-> +bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv)
->   {
-> -	struct btc_coexist *btcoexist = &gl_bt_coexist;
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return false;
->   
->   	halbtc_dbg_init();
->   
-> @@ -1009,9 +1004,12 @@ bool exhalbtc_initlize_variables(void)
->   
->   bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
->   {
-> -	struct btc_coexist *btcoexist = &gl_bt_coexist;
->   	struct rtl_priv *rtlpriv = adapter;
-> -	u8 ant_num = 2, chip_type;
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +	u8 ant_num = 2, chip_type, single_ant_path = 0;
-> +
-> +	if (!btcoexist)
-> +		return false;
->   
->   	if (btcoexist->binded)
->   		return false;
-> @@ -1042,10 +1040,16 @@ bool exhalbtc_bind_bt_coex_withadapter(void *adapter)
->   	btcoexist->bt_info.miracast_plus_bt = false;
->   
->   	chip_type = rtl_get_hwpg_bt_type(rtlpriv);
-> -	exhalbtc_set_chip_type(chip_type);
-> +	exhalbtc_set_chip_type(btcoexist, chip_type);
->   	ant_num = rtl_get_hwpg_ant_num(rtlpriv);
->   	exhalbtc_set_ant_num(rtlpriv, BT_COEX_ANT_TYPE_PG, ant_num);
->   
-> +	/* set default antenna position to main  port */
-> +	btcoexist->board_info.btdm_ant_pos = BTC_ANTENNA_AT_MAIN_PORT;
-> +
-> +	single_ant_path = rtl_get_hwpg_single_ant_path(rtlpriv);
-> +	exhalbtc_set_single_ant_path(btcoexist, single_ant_path);
-> +
->   	if (rtl_get_hwpg_package_type(rtlpriv) == 0)
->   		btcoexist->board_info.tfbga_package = false;
->   	else if (rtl_get_hwpg_package_type(rtlpriv) == 1)
-> @@ -1550,30 +1554,25 @@ void exhalbtc_stack_update_profile_info(void)
->   {
->   }
->   
-> -void exhalbtc_update_min_bt_rssi(s8 bt_rssi)
-> +void exhalbtc_update_min_bt_rssi(struct btc_coexist *btcoexist, s8 bt_rssi)
->   {
-> -	struct btc_coexist *btcoexist = &gl_bt_coexist;
-> -
->   	if (!halbtc_is_bt_coexist_available(btcoexist))
->   		return;
->   
->   	btcoexist->stack_info.min_bt_rssi = bt_rssi;
->   }
->   
-> -void exhalbtc_set_hci_version(u16 hci_version)
-> +void exhalbtc_set_hci_version(struct btc_coexist *btcoexist, u16 hci_version)
->   {
-> -	struct btc_coexist *btcoexist = &gl_bt_coexist;
-> -
->   	if (!halbtc_is_bt_coexist_available(btcoexist))
->   		return;
->   
->   	btcoexist->stack_info.hci_version = hci_version;
->   }
->   
-> -void exhalbtc_set_bt_patch_version(u16 bt_hci_version, u16 bt_patch_version)
-> +void exhalbtc_set_bt_patch_version(struct btc_coexist *btcoexist,
-> +				   u16 bt_hci_version, u16 bt_patch_version)
->   {
-> -	struct btc_coexist *btcoexist = &gl_bt_coexist;
-> -
->   	if (!halbtc_is_bt_coexist_available(btcoexist))
->   		return;
->   
-> @@ -1581,7 +1580,7 @@ void exhalbtc_set_bt_patch_version(u16 bt_hci_version, u16 bt_patch_version)
->   	btcoexist->bt_info.bt_hci_ver = bt_hci_version;
->   }
->   
-> -void exhalbtc_set_chip_type(u8 chip_type)
-> +void exhalbtc_set_chip_type(struct btc_coexist *btcoexist, u8 chip_type)
->   {
->   	switch (chip_type) {
->   	default:
-> @@ -1589,48 +1588,54 @@ void exhalbtc_set_chip_type(u8 chip_type)
->   	case BT_ISSC_3WIRE:
->   	case BT_ACCEL:
->   	case BT_RTL8756:
-> -		gl_bt_coexist.board_info.bt_chip_type = BTC_CHIP_UNDEF;
-> +		btcoexist->board_info.bt_chip_type = BTC_CHIP_UNDEF;
->   		break;
->   	case BT_CSR_BC4:
-> -		gl_bt_coexist.board_info.bt_chip_type = BTC_CHIP_CSR_BC4;
-> +		btcoexist->board_info.bt_chip_type = BTC_CHIP_CSR_BC4;
->   		break;
->   	case BT_CSR_BC8:
-> -		gl_bt_coexist.board_info.bt_chip_type = BTC_CHIP_CSR_BC8;
-> +		btcoexist->board_info.bt_chip_type = BTC_CHIP_CSR_BC8;
->   		break;
->   	case BT_RTL8723A:
-> -		gl_bt_coexist.board_info.bt_chip_type = BTC_CHIP_RTL8723A;
-> +		btcoexist->board_info.bt_chip_type = BTC_CHIP_RTL8723A;
->   		break;
->   	case BT_RTL8821A:
-> -		gl_bt_coexist.board_info.bt_chip_type = BTC_CHIP_RTL8821;
-> +		btcoexist->board_info.bt_chip_type = BTC_CHIP_RTL8821;
->   		break;
->   	case BT_RTL8723B:
-> -		gl_bt_coexist.board_info.bt_chip_type = BTC_CHIP_RTL8723B;
-> +		btcoexist->board_info.bt_chip_type = BTC_CHIP_RTL8723B;
->   		break;
->   	}
->   }
->   
->   void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num)
->   {
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
->   	if (BT_COEX_ANT_TYPE_PG == type) {
-> -		gl_bt_coexist.board_info.pg_ant_num = ant_num;
-> -		gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-> +		btcoexist->board_info.pg_ant_num = ant_num;
-> +		btcoexist->board_info.btdm_ant_num = ant_num;
->   	} else if (BT_COEX_ANT_TYPE_ANTDIV == type) {
-> -		gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-> +		btcoexist->board_info.btdm_ant_num = ant_num;
->   	} else if (type == BT_COEX_ANT_TYPE_DETECTED) {
-> -		gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-> +		btcoexist->board_info.btdm_ant_num = ant_num;
->   		if (rtlpriv->cfg->mod_params->ant_sel == 1)
-> -			gl_bt_coexist.board_info.btdm_ant_pos =
-> +			btcoexist->board_info.btdm_ant_pos =
->   				BTC_ANTENNA_AT_AUX_PORT;
->   		else
-> -			gl_bt_coexist.board_info.btdm_ant_pos =
-> +			btcoexist->board_info.btdm_ant_pos =
->   				BTC_ANTENNA_AT_MAIN_PORT;
->   	}
->   }
->   
->   /* Currently used by 8723b only, S0 or S1 */
-> -void exhalbtc_set_single_ant_path(u8 single_ant_path)
-> +void exhalbtc_set_single_ant_path(struct btc_coexist *btcoexist,
-> +				  u8 single_ant_path)
->   {
-> -	gl_bt_coexist.board_info.single_ant_path = single_ant_path;
-> +	btcoexist->board_info.single_ant_path = single_ant_path;
->   }
->   
->   void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist,
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> index bc523af7ef88..5a7816ff6877 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> @@ -103,8 +103,6 @@ enum btc_msg_type {
->   	BTC_MSG_MAX
->   };
->   
-> -extern u32 btc_dbg_type[];
-> -
->   /* following is for BTC_MSG_INTERFACE */
->   #define		INTF_INIT				BIT0
->   #define		INTF_NOTIFY				BIT2
-> @@ -604,9 +602,10 @@ struct btc_coexist {
->   
->   bool halbtc_is_wifi_uplink(struct rtl_priv *adapter);
->   
-> -extern struct btc_coexist gl_bt_coexist;
-> +#define rtl_btc_coexist(rtlpriv)				\
-> +	((struct btc_coexist *)((rtlpriv)->btcoexist.btc_context))
->   
-> -bool exhalbtc_initlize_variables(void);
-> +bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv);
->   bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
->   void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
->   void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
-> @@ -628,11 +627,12 @@ void exhalbtc_periodical(struct btc_coexist *btcoexist);
->   void exhalbtc_dbg_control(struct btc_coexist *btcoexist, u8 code, u8 len,
->   			  u8 *data);
->   void exhalbtc_stack_update_profile_info(void);
-> -void exhalbtc_set_hci_version(u16 hci_version);
-> -void exhalbtc_set_bt_patch_version(u16 bt_hci_version, u16 bt_patch_version);
-> -void exhalbtc_update_min_bt_rssi(s8 bt_rssi);
-> -void exhalbtc_set_bt_exist(bool bt_exist);
-> -void exhalbtc_set_chip_type(u8 chip_type);
-> +void exhalbtc_set_hci_version(struct btc_coexist *btcoexist, u16 hci_version);
-> +void exhalbtc_set_bt_patch_version(struct btc_coexist *btcoexist,
-> +				   u16 bt_hci_version, u16 bt_patch_version);
-> +void exhalbtc_update_min_bt_rssi(struct btc_coexist *btcoexist, s8 bt_rssi);
-> +void exhalbtc_set_bt_exist(struct btc_coexist *btcoexist, bool bt_exist);
-> +void exhalbtc_set_chip_type(struct btc_coexist *btcoexist, u8 chip_type);
->   void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num);
->   void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist,
->   				   struct seq_file *m);
-> @@ -640,6 +640,7 @@ void exhalbtc_signal_compensation(struct btc_coexist *btcoexist,
->   				  u8 *rssi_wifi, u8 *rssi_bt);
->   void exhalbtc_lps_leave(struct btc_coexist *btcoexist);
->   void exhalbtc_low_wifi_traffic_notify(struct btc_coexist *btcoexist);
-> -void exhalbtc_set_single_ant_path(u8 single_ant_path);
-> +void exhalbtc_set_single_ant_path(struct btc_coexist *btcoexist,
-> +				  u8 single_ant_path);
->   
->   #endif
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-> index 9e3623b0423c..ddbef65c3740 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-> @@ -31,6 +31,7 @@
->   
->   static struct rtl_btc_ops rtl_btc_operation = {
->   	.btc_init_variables = rtl_btc_init_variables,
-> +	.btc_deinit_variables = rtl_btc_deinit_variables,
->   	.btc_init_hal_vars = rtl_btc_init_hal_vars,
->   	.btc_power_on_setting = rtl_btc_power_on_setting,
->   	.btc_init_hw_config = rtl_btc_init_hw_config,
-> @@ -58,58 +59,116 @@ static struct rtl_btc_ops rtl_btc_operation = {
->   
->   void rtl_btc_display_bt_coex_info(struct rtl_priv *rtlpriv, struct seq_file *m)
->   {
-> -	exhalbtc_display_bt_coex_info(&gl_bt_coexist, m);
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist) {
-> +		seq_puts(m, "btc_coexist context is NULL!\n");
-> +		return;
-> +	}
-> +
-> +	exhalbtc_display_bt_coex_info(btcoexist, m);
->   }
->   
->   void rtl_btc_record_pwr_mode(struct rtl_priv *rtlpriv, u8 *buf, u8 len)
->   {
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
->   	u8 safe_len;
->   
-> -	safe_len = sizeof(gl_bt_coexist.pwr_mode_val);
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	safe_len = sizeof(btcoexist->pwr_mode_val);
->   
->   	if (safe_len > len)
->   		safe_len = len;
->   
-> -	memcpy(gl_bt_coexist.pwr_mode_val, buf, safe_len);
-> +	memcpy(btcoexist->pwr_mode_val, buf, safe_len);
->   }
->   
->   u8 rtl_btc_get_lps_val(struct rtl_priv *rtlpriv)
->   {
-> -	return gl_bt_coexist.bt_info.lps_val;
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return 0;
-> +
-> +	return btcoexist->bt_info.lps_val;
->   }
->   
->   u8 rtl_btc_get_rpwm_val(struct rtl_priv *rtlpriv)
->   {
-> -	return gl_bt_coexist.bt_info.rpwm_val;
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return 0;
-> +
-> +	return btcoexist->bt_info.rpwm_val;
->   }
->   
->   bool rtl_btc_is_bt_ctrl_lps(struct rtl_priv *rtlpriv)
->   {
-> -	return gl_bt_coexist.bt_info.bt_ctrl_lps;
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return false;
-> +
-> +	return btcoexist->bt_info.bt_ctrl_lps;
->   }
->   
->   bool rtl_btc_is_bt_lps_on(struct rtl_priv *rtlpriv)
->   {
-> -	return gl_bt_coexist.bt_info.bt_lps_on;
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return false;
-> +
-> +	return btcoexist->bt_info.bt_lps_on;
->   }
->   
->   void rtl_btc_get_ampdu_cfg(struct rtl_priv *rtlpriv, u8 *reject_agg,
->   			   u8 *ctrl_agg_size, u8 *agg_size)
->   {
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist) {
-> +		*reject_agg = false;
-> +		*ctrl_agg_size = false;
-> +		return;
-> +	}
-> +
->   	if (reject_agg)
-> -		*reject_agg = gl_bt_coexist.bt_info.reject_agg_pkt;
-> +		*reject_agg = btcoexist->bt_info.reject_agg_pkt;
->   	if (ctrl_agg_size)
-> -		*ctrl_agg_size = gl_bt_coexist.bt_info.bt_ctrl_agg_buf_size;
-> +		*ctrl_agg_size = btcoexist->bt_info.bt_ctrl_agg_buf_size;
->   	if (agg_size)
-> -		*agg_size = gl_bt_coexist.bt_info.agg_buf_size;
-> +		*agg_size = btcoexist->bt_info.agg_buf_size;
-> +}
-> +
-> +static void rtl_btc_alloc_variable(struct rtl_priv *rtlpriv, bool wifi_only)
-> +{
-> +	rtlpriv->btcoexist.btc_context =
-> +			kzalloc(sizeof(struct btc_coexist), GFP_KERNEL);
-> +}
-> +
-> +static void rtl_btc_free_variable(struct rtl_priv *rtlpriv)
-> +{
-> +	kfree(rtlpriv->btcoexist.btc_context);
-> +	rtlpriv->btcoexist.btc_context = NULL;
->   }
->   
->   void rtl_btc_init_variables(struct rtl_priv *rtlpriv)
->   {
-> -	exhalbtc_initlize_variables();
-> +	rtl_btc_alloc_variable(rtlpriv, false);
-> +
-> +	exhalbtc_initlize_variables(rtlpriv);
->   	exhalbtc_bind_bt_coex_withadapter(rtlpriv);
->   }
->   
-> +void rtl_btc_deinit_variables(struct rtl_priv *rtlpriv)
-> +{
-> +	rtl_btc_free_variable(rtlpriv);
-> +}
-> +
->   void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
->   {
->   	/* move ant_num, bt_type and single_ant_path to
-> @@ -119,71 +178,123 @@ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
->   
->   void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv)
->   {
-> -	exhalbtc_power_on_setting(&gl_bt_coexist);
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	exhalbtc_power_on_setting(btcoexist);
->   }
->   
->   void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
->   {
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
->   	u8 bt_exist;
->   
->   	bt_exist = rtl_get_hwpg_bt_exist(rtlpriv);
->   	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
->   		"%s, bt_exist is %d\n", __func__, bt_exist);
->   
-> -	exhalbtc_init_hw_config(&gl_bt_coexist, !bt_exist);
-> -	exhalbtc_init_coex_dm(&gl_bt_coexist);
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	exhalbtc_init_hw_config(btcoexist, !bt_exist);
-> +	exhalbtc_init_coex_dm(btcoexist);
->   }
->   
->   void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type)
->   {
-> -	exhalbtc_ips_notify(&gl_bt_coexist, type);
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	exhalbtc_ips_notify(btcoexist, type);
->   }
->   
->   void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type)
->   {
-> -	exhalbtc_lps_notify(&gl_bt_coexist, type);
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	exhalbtc_lps_notify(btcoexist, type);
->   }
->   
->   void rtl_btc_scan_notify(struct rtl_priv *rtlpriv, u8 scantype)
->   {
-> -	exhalbtc_scan_notify(&gl_bt_coexist, scantype);
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	exhalbtc_scan_notify(btcoexist, scantype);
->   }
->   
->   void rtl_btc_connect_notify(struct rtl_priv *rtlpriv, u8 action)
->   {
-> -	exhalbtc_connect_notify(&gl_bt_coexist, action);
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	exhalbtc_connect_notify(btcoexist, action);
->   }
->   
->   void rtl_btc_mediastatus_notify(struct rtl_priv *rtlpriv,
->   				enum rt_media_status mstatus)
->   {
-> -	exhalbtc_mediastatus_notify(&gl_bt_coexist, mstatus);
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	exhalbtc_mediastatus_notify(btcoexist, mstatus);
->   }
->   
->   void rtl_btc_periodical(struct rtl_priv *rtlpriv)
->   {
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
->   	/*rtl_bt_dm_monitor();*/
-> -	exhalbtc_periodical(&gl_bt_coexist);
-> +	exhalbtc_periodical(btcoexist);
->   }
->   
-> -void rtl_btc_halt_notify(void)
-> +void rtl_btc_halt_notify(struct rtl_priv *rtlpriv)
->   {
-> -	struct btc_coexist *btcoexist = &gl_bt_coexist;
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
->   
->   	exhalbtc_halt_notify(btcoexist);
->   }
->   
->   void rtl_btc_btinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length)
->   {
-> -	exhalbtc_bt_info_notify(&gl_bt_coexist, tmp_buf, length);
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	exhalbtc_bt_info_notify(btcoexist, tmp_buf, length);
->   }
->   
->   void rtl_btc_btmpinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length)
->   {
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
->   	u8 extid, seq, len;
->   	u16 bt_real_fw_ver;
->   	u8 bt_fw_ver;
->   
-> +	if (!btcoexist)
-> +		return;
-> +
->   	if ((length < 4) || (!tmp_buf))
->   		return;
->   
-> @@ -200,14 +311,19 @@ void rtl_btc_btmpinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length)
->   		bt_real_fw_ver = tmp_buf[3] | (tmp_buf[4] << 8);
->   		bt_fw_ver = tmp_buf[5];
->   
-> -		gl_bt_coexist.bt_info.bt_real_fw_ver = bt_real_fw_ver;
-> -		gl_bt_coexist.bt_info.bt_fw_ver = bt_fw_ver;
-> +		btcoexist->bt_info.bt_real_fw_ver = bt_real_fw_ver;
-> +		btcoexist->bt_info.bt_fw_ver = bt_fw_ver;
->   	}
->   }
->   
->   bool rtl_btc_is_limited_dig(struct rtl_priv *rtlpriv)
->   {
-> -	return gl_bt_coexist.bt_info.limited_dig;
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return false;
-> +
-> +	return btcoexist->bt_info.limited_dig;
->   }
->   
->   bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv)
-> @@ -239,8 +355,13 @@ bool rtl_btc_is_disable_edca_turbo(struct rtl_priv *rtlpriv)
->   
->   bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv)
->   {
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return true;
-> +
->   	/* It seems 'bt_disabled' is never be initialized or set. */
-> -	if (gl_bt_coexist.bt_info.bt_disabled)
-> +	if (btcoexist->bt_info.bt_disabled)
->   		return true;
->   	else
->   		return false;
-> @@ -248,7 +369,12 @@ bool rtl_btc_is_bt_disabled(struct rtl_priv *rtlpriv)
->   
->   void rtl_btc_special_packet_notify(struct rtl_priv *rtlpriv, u8 pkt_type)
->   {
-> -	return exhalbtc_special_packet_notify(&gl_bt_coexist, pkt_type);
-> +	struct btc_coexist *btcoexist = rtl_btc_coexist(rtlpriv);
-> +
-> +	if (!btcoexist)
-> +		return;
-> +
-> +	return exhalbtc_special_packet_notify(btcoexist, pkt_type);
->   }
->   
->   struct rtl_btc_ops *rtl_btc_get_ops_pointer(void)
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-> index 9becfa59407d..8c5098266039 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-> @@ -28,6 +28,7 @@
->   #include "halbt_precomp.h"
->   
->   void rtl_btc_init_variables(struct rtl_priv *rtlpriv);
-> +void rtl_btc_deinit_variables(struct rtl_priv *rtlpriv);
->   void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv);
->   void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv);
->   void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv);
-> @@ -38,7 +39,7 @@ void rtl_btc_connect_notify(struct rtl_priv *rtlpriv, u8 action);
->   void rtl_btc_mediastatus_notify(struct rtl_priv *rtlpriv,
->   				enum rt_media_status mstatus);
->   void rtl_btc_periodical(struct rtl_priv *rtlpriv);
-> -void rtl_btc_halt_notify(void);
-> +void rtl_btc_halt_notify(struct rtl_priv *rtlpriv);
->   void rtl_btc_btinfo_notify(struct rtl_priv *rtlpriv, u8 *tmpbuf, u8 length);
->   void rtl_btc_btmpinfo_notify(struct rtl_priv *rtlpriv, u8 *tmp_buf, u8 length);
->   bool rtl_btc_is_limited_dig(struct rtl_priv *rtlpriv);
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-> index c1833a501be4..aa1d3ae4937f 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-> @@ -1841,7 +1841,10 @@ static void rtl_pci_stop(struct ieee80211_hw *hw)
->   	u8 rf_timeout = 0;
->   
->   	if (rtlpriv->cfg->ops->get_btc_status())
-> -		rtlpriv->btcoexist.btc_ops->btc_halt_notify();
-> +		rtlpriv->btcoexist.btc_ops->btc_halt_notify(rtlpriv);
-> +
-> +	if (rtlpriv->btcoexist.btc_ops)
-> +		rtlpriv->btcoexist.btc_ops->btc_deinit_variables(rtlpriv);
->   
->   	/*should be before disable interrupt&adapter
->   	 *and will do it immediately.
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> index b27dbe10b163..531c86df54d4 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> @@ -2500,6 +2500,8 @@ struct rtl_btc_info {
->   struct bt_coexist_info {
->   	struct rtl_btc_ops *btc_ops;
->   	struct rtl_btc_info btc_info;
-> +	/* btc context */
-> +	void *btc_context;
->   	/* EEPROM BT info. */
->   	u8 eeprom_bt_coexist;
->   	u8 eeprom_bt_type;
-> @@ -2556,6 +2558,7 @@ struct bt_coexist_info {
->   
->   struct rtl_btc_ops {
->   	void (*btc_init_variables) (struct rtl_priv *rtlpriv);
-> +	void (*btc_deinit_variables)(struct rtl_priv *rtlpriv);
->   	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
->   	void (*btc_power_on_setting)(struct rtl_priv *rtlpriv);
->   	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
-> @@ -2566,7 +2569,7 @@ struct rtl_btc_ops {
->   	void (*btc_mediastatus_notify) (struct rtl_priv *rtlpriv,
->   					enum rt_media_status mstatus);
->   	void (*btc_periodical) (struct rtl_priv *rtlpriv);
-> -	void (*btc_halt_notify) (void);
-> +	void (*btc_halt_notify)(struct rtl_priv *rtlpriv);
->   	void (*btc_btinfo_notify) (struct rtl_priv *rtlpriv,
->   				   u8 *tmp_buf, u8 length);
->   	void (*btc_btmpinfo_notify)(struct rtl_priv *rtlpriv,
-> 
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 3acf0e175d71..258d2623d1bf 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -384,10 +384,37 @@ int mt76_get_survey(struct ieee80211_hw *hw, int idx,
+ }
+ EXPORT_SYMBOL_GPL(mt76_get_survey);
+ 
++static void
++mt76_rx_convert(struct sk_buff *skb)
++{
++	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
++	struct mt76_rx_status mstat;
++
++	mstat = *((struct mt76_rx_status *) skb->cb);
++	memset(status, 0, sizeof(*status));
++
++	status->flag = mstat.flag;
++	status->freq = mstat.freq;
++	status->enc_flags = mstat.enc_flags;
++	status->encoding = mstat.encoding;
++	status->bw = mstat.bw;
++	status->rate_idx = mstat.rate_idx;
++	status->nss = mstat.nss;
++	status->band = mstat.band;
++	status->signal = mstat.signal;
++	status->chains = mstat.chains;
++
++	BUILD_BUG_ON(sizeof(mstat) > sizeof(skb->cb));
++	BUILD_BUG_ON(sizeof(status->chain_signal) != sizeof(mstat.chain_signal));
++	memcpy(status->chain_signal, mstat.chain_signal, sizeof(mstat.chain_signal));
++}
++
+ void mt76_rx_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
+ {
+ 	struct sk_buff *skb;
+ 
+-	while ((skb = __skb_dequeue(&dev->rx_skb[q])) != NULL)
++	while ((skb = __skb_dequeue(&dev->rx_skb[q])) != NULL) {
++		mt76_rx_convert(skb);
+ 		ieee80211_rx_napi(dev->hw, NULL, skb, &dev->napi[q]);
++	}
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index f88d9a15210a..be4846ee4828 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -250,6 +250,19 @@ struct mt76_rate_power {
+ 	};
+ };
+ 
++struct mt76_rx_status {
++	u32 flag;
++	u16 freq;
++	u8 enc_flags;
++	u8 encoding:2, bw:3;
++	u8 rate_idx;
++	u8 nss;
++	u8 band;
++	u8 signal;
++	u8 chains;
++	s8 chain_signal[IEEE80211_MAX_CHAINS];
++};
++
+ #define mt76_rr(dev, ...)	(dev)->mt76.bus->rr(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_wr(dev, ...)	(dev)->mt76.bus->wr(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_rmw(dev, ...)	(dev)->mt76.bus->rmw(&((dev)->mt76), __VA_ARGS__)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index 98219b971463..2e12fc0d5c9e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -29,7 +29,7 @@ void mt76x2_mac_set_bssid(struct mt76x2_dev *dev, u8 idx, const u8 *addr)
+ }
+ 
+ static int
+-mt76x2_mac_process_rate(struct ieee80211_rx_status *status, u16 rate)
++mt76x2_mac_process_rate(struct mt76_rx_status *status, u16 rate)
+ {
+ 	u8 idx = FIELD_GET(MT_RXWI_RATE_INDEX, rate);
+ 
+@@ -268,7 +268,7 @@ static void mt76x2_remove_hdr_pad(struct sk_buff *skb)
+ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
+ 			  void *rxi)
+ {
+-	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
++	struct mt76_rx_status *status = (struct mt76_rx_status *) skb->cb;
+ 	struct mt76x2_rxwi *rxwi = rxi;
+ 	u32 ctl = le32_to_cpu(rxwi->ctl);
+ 	u16 rate = le16_to_cpu(rxwi->rate);
+-- 
+2.14.2
