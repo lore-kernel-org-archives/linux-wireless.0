@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:46273 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756364AbeAIBg1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40050 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934081AbeAXPih (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 20:36:27 -0500
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-To: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
-        kstewart@linuxfoundation.org, johannes.berg@intel.com,
-        tiwai@suse.de, gregkh@linuxfoundation.org,
-        colin.king@canonical.com, andrew.zaborowski@intel.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, b43-dev@lists.infradead.org,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH v2] b43: Replace mdelay with usleep_range in b43_radio_2057_init_post
-Date: Tue,  9 Jan 2018 09:40:06 +0800
-Message-Id: <1515462006-6144-1-git-send-email-baijiaju1990@gmail.com> (sfid-20180109_024113_907336_33DE9F37)
+        Wed, 24 Jan 2018 10:38:37 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [07/10] rtlwifi: btcoex: Fix some static warnings from Sparse
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180119064551.10084-8-pkshih@realtek.com>
+References: <20180119064551.10084-8-pkshih@realtek.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Message-Id: <20180124153836.DEBF760854@smtp.codeaurora.org> (sfid-20180124_163842_711475_73554942)
+Date: Wed, 24 Jan 2018 15:38:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-b43_radio_2057_init_post is not called in an interrupt handler
-nor holding a spinlock.
-The function mdelay in it can be replaced with usleep_range, 
-to reduce busy wait.
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
----
-v2:
-* Replace mdelay with usleep_range, instead of msleep in v1.
-  Thank Larry for good advice.
----
- drivers/net/wireless/broadcom/b43/phy_n.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Add 'static' or declaration to resolve the warnings.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
-index a5557d7..f2a2f41 100644
---- a/drivers/net/wireless/broadcom/b43/phy_n.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_n.c
-@@ -1031,7 +1031,7 @@ static void b43_radio_2057_init_post(struct b43_wldev *dev)
- 
- 	b43_radio_set(dev, R2057_RFPLL_MISC_CAL_RESETN, 0x78);
- 	b43_radio_set(dev, R2057_XTAL_CONFIG2, 0x80);
--	mdelay(2);
-+	usleep_range(2000, 3000);
- 	b43_radio_mask(dev, R2057_RFPLL_MISC_CAL_RESETN, ~0x78);
- 	b43_radio_mask(dev, R2057_XTAL_CONFIG2, ~0x80);
- 
+Dropping this patch 7 per comments, but I'll try to take the rest (if
+they apply).
+
+Patch set to Changes Requested.
+
 -- 
-1.7.9.5
+https://patchwork.kernel.org/patch/10174655/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
