@@ -1,246 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:11869 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752479AbeA3QvT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 11:51:19 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 4/7] staging: wilc1000: rename u32WidsCount to avoid camelCase
-Date: Tue, 30 Jan 2018 22:20:30 +0530
-Message-ID: <1517331033-5718-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180130_175123_035017_256ECC81)
-In-Reply-To: <1517331033-5718-1-git-send-email-ajay.kathat@microchip.com>
-References: <1517331033-5718-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:48648 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933840AbeAXPTU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Jan 2018 10:19:20 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 4/8] mt76: get station pointer by wcid and pass it to mac80211
+Date: Wed, 24 Jan 2018 16:19:13 +0100
+Message-Id: <20180124151917.70962-4-nbd@nbd.name> (sfid-20180124_161926_723640_DBD464DC)
+In-Reply-To: <20180124151917.70962-1-nbd@nbd.name>
+References: <20180124151917.70962-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camleCase" issue reported by checkpatch.pl script.
+Avoids the rhashtable lookup based on the MAC address inside mac80211
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/staging/wilc1000/host_interface.c | 146 +++++++++++++++---------------
- 1 file changed, 73 insertions(+), 73 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c         |  4 ++++
+ drivers/net/wireless/mediatek/mt76/mac80211.c    |  9 ++++++---
+ drivers/net/wireless/mediatek/mt76/mt76.h        | 14 ++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c  | 13 +++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c |  1 +
+ 5 files changed, 38 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 13ac482..496c72f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -907,7 +907,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index e539b3838b94..fd8bea144973 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -392,12 +392,16 @@ mt76_dma_rx_poll(struct napi_struct *napi, int budget)
+ 	dev = container_of(napi->dev, struct mt76_dev, napi_dev);
+ 	qid = napi - dev->napi;
+ 
++	rcu_read_lock();
++
+ 	do {
+ 		cur = mt76_dma_rx_process(dev, &dev->q_rx[qid], budget - done);
+ 		mt76_rx_complete(dev, qid);
+ 		done += cur;
+ 	} while (cur && done < budget);
+ 
++	rcu_read_unlock();
++
+ 	if (done < budget) {
+ 		napi_complete(napi);
+ 		dev->drv->rx_poll_complete(dev, qid);
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 258d2623d1bf..c1982211d658 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -384,7 +384,7 @@ int mt76_get_survey(struct ieee80211_hw *hw, int idx,
+ }
+ EXPORT_SYMBOL_GPL(mt76_get_survey);
+ 
+-static void
++static struct ieee80211_sta *
+ mt76_rx_convert(struct sk_buff *skb)
  {
- 	s32 result = 0;
- 	struct wid wid_list[8];
--	u32 u32WidsCount = 0, dummyval = 0;
-+	u32 wid_cnt = 0, dummyval = 0;
- 	u8 *pu8CurrByte = NULL;
- 	struct join_bss_param *ptstrJoinBssParam;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
-@@ -952,30 +952,30 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 	hif_drv->usr_conn_req.conn_result = pstrHostIFconnectAttr->result;
- 	hif_drv->usr_conn_req.arg = pstrHostIFconnectAttr->arg;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+@@ -407,14 +407,17 @@ mt76_rx_convert(struct sk_buff *skb)
+ 	BUILD_BUG_ON(sizeof(mstat) > sizeof(skb->cb));
+ 	BUILD_BUG_ON(sizeof(status->chain_signal) != sizeof(mstat.chain_signal));
+ 	memcpy(status->chain_signal, mstat.chain_signal, sizeof(mstat.chain_signal));
++
++	return wcid_to_sta(mstat.wcid);
+ }
  
--	wid_list[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
--	wid_list[u32WidsCount].type = WID_INT;
--	wid_list[u32WidsCount].size = sizeof(u32);
--	wid_list[u32WidsCount].val = (s8 *)(&(dummyval));
--	u32WidsCount++;
-+	wid_list[wid_cnt].id = WID_SUCCESS_FRAME_COUNT;
-+	wid_list[wid_cnt].type = WID_INT;
-+	wid_list[wid_cnt].size = sizeof(u32);
-+	wid_list[wid_cnt].val = (s8 *)(&(dummyval));
-+	wid_cnt++;
- 
--	wid_list[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
--	wid_list[u32WidsCount].type = WID_INT;
--	wid_list[u32WidsCount].size = sizeof(u32);
--	wid_list[u32WidsCount].val = (s8 *)(&(dummyval));
--	u32WidsCount++;
-+	wid_list[wid_cnt].id = WID_RECEIVED_FRAGMENT_COUNT;
-+	wid_list[wid_cnt].type = WID_INT;
-+	wid_list[wid_cnt].size = sizeof(u32);
-+	wid_list[wid_cnt].val = (s8 *)(&(dummyval));
-+	wid_cnt++;
- 
--	wid_list[u32WidsCount].id = WID_FAILED_COUNT;
--	wid_list[u32WidsCount].type = WID_INT;
--	wid_list[u32WidsCount].size = sizeof(u32);
--	wid_list[u32WidsCount].val = (s8 *)(&(dummyval));
--	u32WidsCount++;
-+	wid_list[wid_cnt].id = WID_FAILED_COUNT;
-+	wid_list[wid_cnt].type = WID_INT;
-+	wid_list[wid_cnt].size = sizeof(u32);
-+	wid_list[wid_cnt].val = (s8 *)(&(dummyval));
-+	wid_cnt++;
- 
- 	{
--		wid_list[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
--		wid_list[u32WidsCount].type = WID_BIN_DATA;
--		wid_list[u32WidsCount].val = hif_drv->usr_conn_req.ies;
--		wid_list[u32WidsCount].size = hif_drv->usr_conn_req.ies_len;
--		u32WidsCount++;
-+		wid_list[wid_cnt].id = WID_INFO_ELEMENT_ASSOCIATE;
-+		wid_list[wid_cnt].type = WID_BIN_DATA;
-+		wid_list[wid_cnt].val = hif_drv->usr_conn_req.ies;
-+		wid_list[wid_cnt].size = hif_drv->usr_conn_req.ies_len;
-+		wid_cnt++;
- 
- 		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
- 			info_element_size = hif_drv->usr_conn_req.ies_len;
-@@ -984,39 +984,39 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 			       info_element_size);
- 		}
- 	}
--	wid_list[u32WidsCount].id = (u16)WID_11I_MODE;
--	wid_list[u32WidsCount].type = WID_CHAR;
--	wid_list[u32WidsCount].size = sizeof(char);
--	wid_list[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.security;
--	u32WidsCount++;
-+	wid_list[wid_cnt].id = (u16)WID_11I_MODE;
-+	wid_list[wid_cnt].type = WID_CHAR;
-+	wid_list[wid_cnt].size = sizeof(char);
-+	wid_list[wid_cnt].val = (s8 *)&hif_drv->usr_conn_req.security;
-+	wid_cnt++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
- 		mode_11i = hif_drv->usr_conn_req.security;
- 
--	wid_list[u32WidsCount].id = (u16)WID_AUTH_TYPE;
--	wid_list[u32WidsCount].type = WID_CHAR;
--	wid_list[u32WidsCount].size = sizeof(char);
--	wid_list[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
--	u32WidsCount++;
-+	wid_list[wid_cnt].id = (u16)WID_AUTH_TYPE;
-+	wid_list[wid_cnt].type = WID_CHAR;
-+	wid_list[wid_cnt].size = sizeof(char);
-+	wid_list[wid_cnt].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
-+	wid_cnt++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
- 		auth_type = (u8)hif_drv->usr_conn_req.auth_type;
- 
--	wid_list[u32WidsCount].id = (u16)WID_JOIN_REQ_EXTENDED;
--	wid_list[u32WidsCount].type = WID_STR;
--	wid_list[u32WidsCount].size = 112;
--	wid_list[u32WidsCount].val = kmalloc(wid_list[u32WidsCount].size, GFP_KERNEL);
-+	wid_list[wid_cnt].id = (u16)WID_JOIN_REQ_EXTENDED;
-+	wid_list[wid_cnt].type = WID_STR;
-+	wid_list[wid_cnt].size = 112;
-+	wid_list[wid_cnt].val = kmalloc(wid_list[wid_cnt].size, GFP_KERNEL);
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
--		join_req_size = wid_list[u32WidsCount].size;
-+		join_req_size = wid_list[wid_cnt].size;
- 		join_req = kmalloc(join_req_size, GFP_KERNEL);
- 	}
--	if (!wid_list[u32WidsCount].val) {
-+	if (!wid_list[wid_cnt].val) {
- 		result = -EFAULT;
- 		goto ERRORHANDLER;
- 	}
- 
--	pu8CurrByte = wid_list[u32WidsCount].val;
-+	pu8CurrByte = wid_list[wid_cnt].val;
- 
- 	if (pstrHostIFconnectAttr->ssid) {
- 		memcpy(pu8CurrByte, pstrHostIFconnectAttr->ssid, pstrHostIFconnectAttr->ssid_len);
-@@ -1095,8 +1095,8 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 		pu8CurrByte += sizeof(ptstrJoinBssParam->start_time);
- 	}
- 
--	pu8CurrByte = wid_list[u32WidsCount].val;
--	u32WidsCount++;
-+	pu8CurrByte = wid_list[wid_cnt].val;
-+	wid_cnt++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
- 		memcpy(join_req, pu8CurrByte, join_req_size);
-@@ -1108,7 +1108,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 		       pstrHostIFconnectAttr->bssid, ETH_ALEN);
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
--				      u32WidsCount,
-+				      wid_cnt,
- 				      wilc_get_vif_idx(vif));
- 	if (result) {
- 		netdev_err(vif->ndev, "failed to send config packet\n");
-@@ -1893,40 +1893,40 @@ static s32 Handle_GetStatistics(struct wilc_vif *vif,
- 				struct rf_info *pstrStatistics)
+ void mt76_rx_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
  {
- 	struct wid wid_list[5];
--	u32 u32WidsCount = 0, result = 0;
--
--	wid_list[u32WidsCount].id = WID_LINKSPEED;
--	wid_list[u32WidsCount].type = WID_CHAR;
--	wid_list[u32WidsCount].size = sizeof(char);
--	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->link_speed;
--	u32WidsCount++;
--
--	wid_list[u32WidsCount].id = WID_RSSI;
--	wid_list[u32WidsCount].type = WID_CHAR;
--	wid_list[u32WidsCount].size = sizeof(char);
--	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->rssi;
--	u32WidsCount++;
--
--	wid_list[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
--	wid_list[u32WidsCount].type = WID_INT;
--	wid_list[u32WidsCount].size = sizeof(u32);
--	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->tx_cnt;
--	u32WidsCount++;
--
--	wid_list[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
--	wid_list[u32WidsCount].type = WID_INT;
--	wid_list[u32WidsCount].size = sizeof(u32);
--	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->rx_cnt;
--	u32WidsCount++;
--
--	wid_list[u32WidsCount].id = WID_FAILED_COUNT;
--	wid_list[u32WidsCount].type = WID_INT;
--	wid_list[u32WidsCount].size = sizeof(u32);
--	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->tx_fail_cnt;
--	u32WidsCount++;
-+	u32 wid_cnt = 0, result = 0;
-+
-+	wid_list[wid_cnt].id = WID_LINKSPEED;
-+	wid_list[wid_cnt].type = WID_CHAR;
-+	wid_list[wid_cnt].size = sizeof(char);
-+	wid_list[wid_cnt].val = (s8 *)&pstrStatistics->link_speed;
-+	wid_cnt++;
-+
-+	wid_list[wid_cnt].id = WID_RSSI;
-+	wid_list[wid_cnt].type = WID_CHAR;
-+	wid_list[wid_cnt].size = sizeof(char);
-+	wid_list[wid_cnt].val = (s8 *)&pstrStatistics->rssi;
-+	wid_cnt++;
-+
-+	wid_list[wid_cnt].id = WID_SUCCESS_FRAME_COUNT;
-+	wid_list[wid_cnt].type = WID_INT;
-+	wid_list[wid_cnt].size = sizeof(u32);
-+	wid_list[wid_cnt].val = (s8 *)&pstrStatistics->tx_cnt;
-+	wid_cnt++;
-+
-+	wid_list[wid_cnt].id = WID_RECEIVED_FRAGMENT_COUNT;
-+	wid_list[wid_cnt].type = WID_INT;
-+	wid_list[wid_cnt].size = sizeof(u32);
-+	wid_list[wid_cnt].val = (s8 *)&pstrStatistics->rx_cnt;
-+	wid_cnt++;
-+
-+	wid_list[wid_cnt].id = WID_FAILED_COUNT;
-+	wid_list[wid_cnt].type = WID_INT;
-+	wid_list[wid_cnt].size = sizeof(u32);
-+	wid_list[wid_cnt].val = (s8 *)&pstrStatistics->tx_fail_cnt;
-+	wid_cnt++;
++	struct ieee80211_sta *sta;
+ 	struct sk_buff *skb;
  
- 	result = wilc_send_config_pkt(vif, GET_CFG, wid_list,
--				      u32WidsCount,
-+				      wid_cnt,
- 				      wilc_get_vif_idx(vif));
+ 	while ((skb = __skb_dequeue(&dev->rx_skb[q])) != NULL) {
+-		mt76_rx_convert(skb);
+-		ieee80211_rx_napi(dev->hw, NULL, skb, &dev->napi[q]);
++		sta = mt76_rx_convert(skb);
++		ieee80211_rx_napi(dev->hw, sta, skb, &dev->napi[q]);
+ 	}
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index be4846ee4828..e20c52607c66 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -125,6 +125,8 @@ struct mt76_wcid {
+ 	u8 idx;
+ 	u8 hw_key_idx;
  
- 	if (result)
++	u8 sta:1;
++
+ 	__le16 tx_rate;
+ 	bool tx_rate_set;
+ 	u8 tx_rate_nss;
+@@ -251,6 +253,7 @@ struct mt76_rate_power {
+ };
+ 
+ struct mt76_rx_status {
++	struct mt76_wcid *wcid;
+ 	u32 flag;
+ 	u16 freq;
+ 	u8 enc_flags;
+@@ -343,6 +346,17 @@ mtxq_to_txq(struct mt76_txq *mtxq)
+ 	return container_of(ptr, struct ieee80211_txq, drv_priv);
+ }
+ 
++static inline struct ieee80211_sta *
++wcid_to_sta(struct mt76_wcid *wcid)
++{
++	void *ptr = wcid;
++
++	if (!wcid || !wcid->sta)
++		return NULL;
++
++	return container_of(ptr, struct ieee80211_sta, drv_priv);
++}
++
+ int mt76_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
+ 		      struct sk_buff *skb, struct mt76_wcid *wcid,
+ 		      struct ieee80211_sta *sta);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index 2e12fc0d5c9e..75f2843847d0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -265,6 +265,15 @@ static void mt76x2_remove_hdr_pad(struct sk_buff *skb)
+ 	skb_pull(skb, 2);
+ }
+ 
++static struct mt76_wcid *
++mt76x2_rx_get_wcid(struct mt76x2_dev *dev, u8 idx)
++{
++	if (idx >= ARRAY_SIZE(dev->wcid))
++		return NULL;
++
++	return rcu_dereference(dev->wcid[idx]);
++}
++
+ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
+ 			  void *rxi)
+ {
+@@ -272,8 +281,12 @@ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
+ 	struct mt76x2_rxwi *rxwi = rxi;
+ 	u32 ctl = le32_to_cpu(rxwi->ctl);
+ 	u16 rate = le16_to_cpu(rxwi->rate);
++	u8 wcid;
+ 	int len;
+ 
++	wcid = FIELD_GET(MT_RXWI_CTL_WCID, ctl);
++	status->wcid = mt76x2_rx_get_wcid(dev, wcid);
++
+ 	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD))
+ 		mt76x2_remove_hdr_pad(skb);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+index aa5fbb64e218..2a1cb65c5edb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+@@ -273,6 +273,7 @@ mt76x2_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		goto out;
+ 	}
+ 
++	msta->wcid.sta = 1;
+ 	msta->wcid.idx = idx;
+ 	msta->wcid.hw_key_idx = -1;
+ 	mt76x2_mac_wcid_setup(dev, idx, mvif->idx, sta->addr);
 -- 
-2.7.4
+2.14.2
