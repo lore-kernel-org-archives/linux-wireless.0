@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:38758 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751128AbeANVeH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Jan 2018 16:34:07 -0500
-From: Guenter Roeck <linux@roeck-us.net>
-To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Guenter Roeck <linux@roeck-us.net>,
-        Matt Redfearn <matt.redfearn@imgtec.com>,
-        James Hogan <jhogan@kernel.org>
-Subject: [PATCH] bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
-Date: Sun, 14 Jan 2018 13:34:02 -0800
-Message-Id: <1515965642-16259-1-git-send-email-linux@roeck-us.net> (sfid-20180114_223423_758782_DED420E3)
+Received: from mga09.intel.com ([134.134.136.24]:63802 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932241AbeAXIZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Jan 2018 03:25:58 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Austin Lund <austin.lund@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>, linuxwifi <linuxwifi@intel.com>
+Subject: RE: [linuxwifi] Null pointer dereference in iwlwifi when starting
+ ad-hoc network
+Date: Wed, 24 Jan 2018 08:25:53 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB30119C794FA@HASMSX112.ger.corp.intel.com> (sfid-20180124_092602_264759_28BA95E9)
+References: <CAHLDD1NUF736Jnr1_CtRPfFZZOMO6bmm5T++5N2LrVtFg9-zxg@mail.gmail.com>
+In-Reply-To: <CAHLDD1NUF736Jnr1_CtRPfFZZOMO6bmm5T++5N2LrVtFg9-zxg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mips builds with BCMA host mode enabled fail in mainline and -next
-with:
-
-In file included from include/linux/bcma/bcma.h:10:0,
-                 from drivers/bcma/bcma_private.h:9,
-		 from drivers/bcma/main.c:8:
-include/linux/bcma/bcma_driver_pci.h:218:24: error:
-	field 'pci_controller' has incomplete type
-
-Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
-system type as generic") as the culprit. Analysis shows that the commmit
-changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
-disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
-defined if PCI_DRIVERS_LEGACY is enabled.
-
-Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
-PCI_DRIVERS_LEGACY. Add the missing dependency.
-
-Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
-Cc: Matt Redfearn <matt.redfearn@imgtec.com>
-Cc: James Hogan <jhogan@kernel.org>
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
----
-I am aware that this problem has been reported several times. I have
-not been able to find a fix, but I may have missed it. If so, my
-apologies for the noise.
-
-Also note that this is not the only fix required; commit d41e6858ba58c,
-as simple as it looks like, does a pretty good job messing up
-"mips:allmodconfig" builds.
-
- drivers/bcma/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 02d78f6cecbb..ba8acca036df 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
- 
- config BCMA_DRIVER_PCI_HOSTMODE
- 	bool "Driver for PCI core working in hostmode"
--	depends on MIPS && BCMA_DRIVER_PCI
-+	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY
- 	help
- 	  PCI core hostmode operation (external PCI bus).
- 
--- 
-2.7.4
+SGksDQoNCj4gSSBnZXQgdGhpcyBvb3BzIGluIDQuMTVyYzkgd2hlbiBkb2luZyB0aGUgZm9sbG93
+aW5nOg0KPiANCj4gIyBpdyBkZXYgd2xwMnMwIHNldCB0eXBlIGlic3MNCj4gIyBpcCBsaW5rIHNl
+dCBkZXYgd2xwMnMwIHVwDQo+ICMgaXcgZGV2IHdscDJzMCBpYnNzIGpvaW4gIlRFU1QiIDI0MTIN
+Cj4gDQo+IFRoZSBvb3BzIGhhcHBlbnMgYWZ0ZXIgc29tZSBkZWxheSAoYXBwcm94LiA1IHNlY29u
+ZHMpLg0KPiANCj4gSGFyZHdhcmUgaXM6DQo+IA0KPiAwMjowMC4wIE5ldHdvcmsgY29udHJvbGxl
+cjogSW50ZWwgQ29ycG9yYXRpb24gV2lyZWxlc3MgODI2NSAvIDgyNzUgKHJldiA3OCkgcGNpDQo+
+IHZlbmRvciBjb2RlIDgwODY6MjRmZA0KPiBTdWJzeXN0ZW06IDgwODY6MDA1MA0KPiANCj4gT29w
+cyBtZXNzYWdlIGlzOg0KPiANCj4gSVB2NjogQUREUkNPTkYoTkVUREVWX1VQKTogd2xwMnMwOiBs
+aW5rIGlzIG5vdCByZWFkeQ0KPiB3bHAyczA6IFRyaWdnZXIgbmV3IHNjYW4gdG8gZmluZCBhbiBJ
+QlNTIHRvIGpvaW4NCj4gd2xwMnMwOiBUcmlnZ2VyIG5ldyBzY2FuIHRvIGZpbmQgYW4gSUJTUyB0
+byBqb2luDQo+IHdscDJzMDogVHJpZ2dlciBuZXcgc2NhbiB0byBmaW5kIGFuIElCU1MgdG8gam9p
+bg0KPiB3bHAyczA6IFRyaWdnZXIgbmV3IHNjYW4gdG8gZmluZCBhbiBJQlNTIHRvIGpvaW4NCj4g
+d2xwMnMwOiBUcmlnZ2VyIG5ldyBzY2FuIHRvIGZpbmQgYW4gSUJTUyB0byBqb2luDQo+IHdscDJz
+MDogVHJpZ2dlciBuZXcgc2NhbiB0byBmaW5kIGFuIElCU1MgdG8gam9pbg0KPiB3bHAyczA6IFRy
+aWdnZXIgbmV3IHNjYW4gdG8gZmluZCBhbiBJQlNTIHRvIGpvaW4NCj4gd2xwMnMwOiBUcmlnZ2Vy
+IG5ldyBzY2FuIHRvIGZpbmQgYW4gSUJTUyB0byBqb2luDQo+IHdscDJzMDogVHJpZ2dlciBuZXcg
+c2NhbiB0byBmaW5kIGFuIElCU1MgdG8gam9pbg0KPiB3bHAyczA6IFRyaWdnZXIgbmV3IHNjYW4g
+dG8gZmluZCBhbiBJQlNTIHRvIGpvaW4NCj4gd2xwMnMwOiBDcmVhdGluZyBuZXcgSUJTUyBuZXR3
+b3JrLCBCU1NJRCAzYTo5NDoxZDpkZDphYjowOQ0KPiBCVUc6IHVuYWJsZSB0byBoYW5kbGUga2Vy
+bmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdA0KPiAwMDAwMDAwMDAwMDAwMDY4DQoNCldl
+IGhhdmUgYSBmaXggZm9yIHRoaXMgd2hpY2ggc2hvdWxkIGdvIHVwc3RyZWFtIHNvb246DQoNCmNv
+bW1pdCAwZTM3YTE5NDBmY2ZhZTk5ZmZlYzU5YWQ2MjBlZDgxOTk5OWZlYjJkDQpBdXRob3I6IFNh
+cmEgU2hhcm9uIDxzYXJhLnNoYXJvbkBpbnRlbC5jb20+DQpEYXRlOiAgIFRodSBEZWMgMjEgMTU6
+MDU6MjggMjAxNyArMDIwMA0KDQogICAgW0JVR0ZJWF0gaXdsd2lmaTogbXZtOiBmaXggSUJTUyBm
+b3IgZGV2aWNlcyB0aGF0IHN1cHBvcnQgc3RhdGlvbiB0eXBlIEFQSQ0KDQoNCmluIG91ciBpbnRl
+cm5hbCAgdHJlZSB3aGljaCBpcyBtaXJyb3JlZCBoZXJlOg0KaHR0cHM6Ly9naXQua2VybmVsLm9y
+Zy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvaXdsd2lmaS9iYWNrcG9ydC1pd2x3aWZpLmdpdC8N
+Cg==
