@@ -1,56 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:60542 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932102AbeAKHKA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jan 2018 02:10:00 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 00/10] rtlwifi: fix some bugs and add btcoex functions
-Date: Thu, 11 Jan 2018 15:09:22 +0800
-Message-ID: <20180111070932.9929-1-pkshih@realtek.com> (sfid-20180111_081021_561081_B53FFEEE)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.neratec.com ([46.140.151.2]:12398 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932170AbeAXIC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Jan 2018 03:02:27 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH v2 3/4] ath9k: Use calibrated noise floor value when available
+Date: Wed, 24 Jan 2018 09:02:18 +0100
+Message-Id: <1516780939-7176-4-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180124_090238_589027_6CF0097E)
+In-Reply-To: <1516780939-7176-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1516780939-7176-1-git-send-email-Wojciech.Dubowik@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+AR9003 series allows to calibrate noise floor for different frequency
+bins. Once it's done it's possible to get more accurate rssi/signal
+values over whole frequency band at a given temperature.
+The RSSI/signal accuracy reported by calibrated RF cards improves
+from 6 to up to 2dB.
 
-Fix some bugs reported by QC, and continue to submit btcoex patches for
-further use.
+This could be interesting for application which require good signal
+accuracy like roaming or mesh protocols.
 
-v2: add my sob to commit log if missing, and remove trivial comments.
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c | 38 +++++++++++++++++++++-------------
+ 1 file changed, 24 insertions(+), 14 deletions(-)
 
-Ping-Ke Shih (8):
-  rtlwifi: Use mutex to replace spin_lock to protect IPS and LPS
-  rtlwifi: fix scan channel 1 fail after IPS
-  rtlwifi: Add sta_statistics of mac80211's op, and set filled=0 by
-    default
-  rtlwifi: enable mac80211 fast-tx support
-  rtlwifi: btcoex: Add power_on_setting routine
-  rtlwifi: btcoex: Remove global variables from btcoex
-  rtlwifi: btcoex: Add common function for qeurying BT information
-  rtlwifi: btcoex: add rfe_type parameter to btcoex
-
-Steven Ting (1):
-  rtlwifi: Support A-MSDU in A-MPDU capability
-
-Tsang-Shian Lin (1):
-  rtlwifi: unlink bss when un-association
-
- drivers/net/wireless/realtek/rtlwifi/base.c        |   9 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 398 +++++++++++++++++----
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  94 ++++-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   | 234 ++++++++++--
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |   4 +-
- drivers/net/wireless/realtek/rtlwifi/core.c        |  34 ++
- drivers/net/wireless/realtek/rtlwifi/pci.c         |   5 +-
- drivers/net/wireless/realtek/rtlwifi/ps.c          |  30 +-
- drivers/net/wireless/realtek/rtlwifi/usb.c         |   1 -
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  16 +-
- 10 files changed, 688 insertions(+), 137 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 13ab6bc..3d9447e 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -58,19 +58,25 @@ static struct ath_nf_limits *ath9k_hw_get_nf_limits(struct ath_hw *ah,
+ }
+ 
+ static s16 ath9k_hw_get_default_nf(struct ath_hw *ah,
+-				   struct ath9k_channel *chan)
++				   struct ath9k_channel *chan,
++				   int chain)
+ {
+-	return ath9k_hw_get_nf_limits(ah, chan)->nominal;
++	s16 calib_nf = ath9k_hw_get_nf_limits(ah, chan)->cal[chain];
++
++	if (calib_nf)
++		return calib_nf;
++	else
++		return ath9k_hw_get_nf_limits(ah, chan)->nominal;
+ }
+ 
+ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			   s16 nf)
+ {
+-	s8 noise = ATH_DEFAULT_NOISE_FLOOR;
++	s8 noise = ath9k_hw_get_default_nf(ah, chan, 0);
+ 
+ 	if (nf) {
+ 		s8 delta = nf - ATH9K_NF_CAL_NOISE_THRESH -
+-			   ath9k_hw_get_default_nf(ah, chan);
++			   ath9k_hw_get_default_nf(ah, chan, 0);
+ 		if (delta > 0)
+ 			noise += delta;
+ 	}
+@@ -240,7 +246,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	unsigned i, j;
+ 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	s16 default_nf = ath9k_hw_get_default_nf(ah, chan);
++	s16 default_nf = ath9k_hw_get_nf_limits(ah, chan)->nominal;
+ 	u32 bb_agc_ctl = REG_READ(ah, AR_PHY_AGC_CONTROL);
+ 
+ 	if (ah->caldata)
+@@ -258,8 +264,13 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 				nfval = ah->nf_override;
+ 			else if (h)
+ 				nfval = h[i].privNF;
+-			else
+-				nfval = default_nf;
++			else {
++				/* Try to get calibrated noise floor value */
++				nfval =
++				    ath9k_hw_get_nf_limits(ah, chan)->cal[i];
++				if (nfval > -60 || nfval < -127)
++					nfval = default_nf;
++			}
+ 
+ 			REG_RMW(ah, ah->nf_regs[i],
+ 				(((u32) nfval << 1) & 0x1ff), 0x1ff);
+@@ -429,20 +440,19 @@ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
+ 				  struct ath9k_channel *chan)
+ {
+ 	struct ath9k_nfcal_hist *h;
+-	s16 default_nf;
+-	int i, j;
++	int i, j, k = 0;
+ 
+ 	ah->caldata->channel = chan->channel;
+ 	ah->caldata->channelFlags = chan->channelFlags;
+ 	h = ah->caldata->nfCalHist;
+-	default_nf = ath9k_hw_get_default_nf(ah, chan);
+ 	for (i = 0; i < NUM_NF_READINGS; i++) {
+ 		h[i].currIndex = 0;
+-		h[i].privNF = default_nf;
++		h[i].privNF = ath9k_hw_get_default_nf(ah, chan, k);
+ 		h[i].invalidNFcount = AR_PHY_CCA_FILTERWINDOW_LENGTH;
+-		for (j = 0; j < ATH9K_NF_CAL_HIST_MAX; j++) {
+-			h[i].nfCalBuffer[j] = default_nf;
+-		}
++		for (j = 0; j < ATH9K_NF_CAL_HIST_MAX; j++)
++			h[i].nfCalBuffer[j] = h[i].privNF;
++		if (++k >= AR5416_MAX_CHAINS)
++			k = 0;
+ 	}
+ }
+ 
 -- 
-2.15.1
+2.7.4
