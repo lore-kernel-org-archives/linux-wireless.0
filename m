@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:9146 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933305AbeAKPJN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56688 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934005AbeAXPRU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jan 2018 10:09:13 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v3 6/6] staging: wilc1000: removed enum typedef BUS_RELEASE_T
-Date: Thu, 11 Jan 2018 19:42:19 +0530
-Message-ID: <1515679939-13202-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180111_160923_473631_5C26E258)
-In-Reply-To: <1515679939-13202-1-git-send-email-ajay.kathat@microchip.com>
-References: <1515679939-13202-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 24 Jan 2018 10:17:20 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/3] mt76x2: dfs: avoid tasklet scheduling during
+ mt76x2_dfs_init_params()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <cc2633a981be777e631da2bd3d32781690db910f.1515503003.git.lorenzo.bianconi@redhat.com>
+References: <cc2633a981be777e631da2bd3d32781690db910f.1515503003.git.lorenzo.bianconi@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
+Message-Id: <20180124151720.232B7604D4@smtp.codeaurora.org> (sfid-20180124_161725_577273_86182BBA)
+Date: Wed, 24 Jan 2018 15:17:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes enum typedef BUS_RELEASE_T and define
-"enum bus_release" to use instead of typedef.
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
 
-checkpatch.pl not to add new typedef warning is fixed with this patch.
+> Substitute tasklet_kill with tasklet_disable/tasklet_enable in order to
+> guarantee dfs tasklet can not be executed during dfs parameter
+> initialization
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c    | 2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+3 patches applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 80a5a0b..a2b26ec 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -13,7 +13,7 @@ static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
- 		chip_wakeup(wilc);
- }
- 
--static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
-+static inline void release_bus(struct wilc *wilc, enum bus_release release)
- {
- 	if (release == RELEASE_ALLOW_SLEEP)
- 		chip_allow_sleep(wilc);
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 2bc500d..1641ddb 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -148,10 +148,10 @@ enum bus_acquire {
- 	ACQUIRE_AND_WAKEUP	= 1,
- };
- 
--typedef enum {
-+enum bus_release {
- 	RELEASE_ONLY		= 0,
- 	RELEASE_ALLOW_SLEEP	= 1,
--} BUS_RELEASE_T;
-+};
- 
- typedef enum {
- 	NO_SECURITY		= 0,
+8c9f6491a313 mt76x2: dfs: avoid tasklet scheduling during mt76x2_dfs_init_params()
+2070f3cc2c2c mt76x2: dfs: add set_domain handler
+634e99f0d4da mt76x2: dfs: take into account dfs region in mt76x2_dfs_init_params()
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10152031/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
