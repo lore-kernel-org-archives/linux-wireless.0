@@ -1,90 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:14104 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751427AbeAJLOL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40860 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933953AbeAXPlM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 06:14:11 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 5/9] staging: wilc1000: removed few unnecessary enums typedef
-Date: Wed, 10 Jan 2018 16:42:47 +0530
-Message-ID: <1515582771-28408-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180110_121416_590982_D86CA804)
-In-Reply-To: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
-References: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 24 Jan 2018 10:41:12 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [01/10] rtlwifi: btcoex: extend get_wifi_bw to support bandwidth
+ 80M
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180119064551.10084-2-pkshih@realtek.com>
+References: <20180119064551.10084-2-pkshih@realtek.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Message-Id: <20180124154112.4E1E36090E@smtp.codeaurora.org> (sfid-20180124_164117_241482_6D922EBC)
+Date: Wed, 24 Jan 2018 15:41:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes following N_OPERATING_MODE_T,N_OBSS_DETECTION_T,
-N_PROTECTION_TYPE_T,N_SMPS_MODE_T,TX_ABORT_OPTION_T, typedef enum.
-Now, these enums are used as anonymous-enums for constants.
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-checkpatch.pl warning to not add new typedef is fixes with this patch.
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> The rtlwifi newer ICs support 80M bandwidth in 5G band, so extend
+> get_wifi_bw() to know bandwidth 80M that helps btcoex to make correct
+> decisions.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+9 patches applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index eec8760..cf4a44d 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -226,40 +226,40 @@ enum {
- 	G_RTS_CTS_PROT,
- };
- 
--typedef enum {
-+enum {
- 	HT_MIXED_MODE		= 1,
- 	HT_ONLY_20MHZ_MODE,
- 	HT_ONLY_20_40MHZ_MODE,
--} N_OPERATING_MODE_T;
-+};
- 
--typedef enum {
-+enum {
- 	NO_DETECT		= 0,
- 	DETECT_ONLY		= 1,
- 	DETECT_PROTECT		= 2,
- 	DETECT_PROTECT_REPORT	= 3,
--} N_OBSS_DETECTION_T;
-+};
- 
--typedef enum {
-+enum {
- 	RTS_CTS_NONHT_PROT	= 0,	/* RTS-CTS at non-HT rate */
- 	FIRST_FRAME_NONHT_PROT,		/* First frame at non-HT rate */
- 	LSIG_TXOP_PROT,                 /* LSIG TXOP Protection */
- 	FIRST_FRAME_MIXED_PROT,		/* First frame at Mixed format */
--} N_PROTECTION_TYPE_T;
-+};
- 
--typedef enum {
-+enum {
- 	STATIC_MODE		= 1,
- 	DYNAMIC_MODE		= 2,
- 	MIMO_MODE		= 3,	/* power save disable */
--} N_SMPS_MODE_T;
-+};
- 
--typedef enum {
-+enum {
- 	DISABLE_SELF_CTS,
- 	ENABLE_SELF_CTS,
- 	DISABLE_TX_ABORT,
- 	ENABLE_TX_ABORT,
- 	HW_TRIGGER_ABORT,
- 	SW_TRIGGER_ABORT,
--} TX_ABORT_OPTION_T;
-+};
- 
- enum wid_type {
- 	WID_CHAR		= 0,
+66d0f9deba36 rtlwifi: btcoex: extend get_wifi_bw to support bandwidth 80M
+17bf85101181 rtlwifi: btcoex: Add switch band notify for btc
+f243bca13893 rtlwifi: btcoex: Add variable ant_div_cfg to support antenna diversity
+ee373844849c rtlwifi: btcoex: add scan_notify within ips_notify if RFON
+9177c3363994 rtlwifi: btcoex: Add wifi_only series ops to control solo card
+8d73e53e8a87 rtlwifi: btcoex: add boolean variables dbg_mode
+ba3cca4d0c3e rtlwifi: 8822be has to report vht capability to mac80211
+be98db155646 rtlwifi: Add ratr_table for newer IC
+a75f3eebfa3d rtlwifi: Add spec_ver to check whether use new rate-id or not
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10174643/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
