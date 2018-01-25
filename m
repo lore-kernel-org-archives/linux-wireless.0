@@ -1,95 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a2nlsmtp01-05.prod.iad2.secureserver.net ([198.71.225.49]:53072
-        "EHLO a2nlsmtp01-05.prod.iad2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751032AbeA2GOo (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31634 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750980AbeAYPU3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jan 2018 01:14:44 -0500
-Received: from [67.45.112.215] (port=5546 helo=[192.168.3.86])
-        by a2plcpnl0121.prod.iad2.secureserver.net with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.89)
-        (envelope-from <troubleshooting@epilitimus.com>)
-        id 1eg2a3-00401o-8F
-        for linux-wireless@vger.kernel.org; Sun, 28 Jan 2018 23:06:13 -0700
-To: linux-wireless@vger.kernel.org
-From: Glenn <troubleshooting@epilitimus.com>
-Subject: r8822be driver
-Message-ID: <5A6EBA1B.3080802@epilitimus.com> (sfid-20180129_071448_258010_08A71F70)
-Date: Sun, 28 Jan 2018 22:07:23 -0800
+        Thu, 25 Jan 2018 10:20:29 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Sunil Dutt <usdutt@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v3 1/3] nl80211: Introduce scan flags to emphasize requested scan behavior
+Date: Thu, 25 Jan 2018 17:13:37 +0200
+Message-ID: <1516893219-30243-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20180125_162033_643915_755DC203)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-My new laptop apparently has a  Real Tek R8822BE as the wifi device. The
-module loads but I can not bring up the interface or do anything with
-it. I think the problem is that the firmware load fails, see below. I
-can not find any source for the listed firmware file or any make rules
-to build it.  Possibly connected, the machine also has an R8822B as the
-Bluetooth device (possibly a secondary port on the same device?) which
-shows the same error. The problem is not higher up in the networking
-stack as eth0 works fine.
+From: Sunil Dutt <usdutt@qti.qualcomm.com>
 
-Any help will be appreciated.
+This commit defines new scan flags (LOW_SPAN, LOW_POWER, HIGH_LATENCY)
+to emphasize the requested scan behavior for the driver. These flags
+are optional and are mutually exclusive. The implementation of the
+respective functionality can be driver/hardware specific.
 
-Relevant (I think) info:
+These flags can be used to control the compromise between how long
+a scan takes, how much power it uses, and high accurate/complete
+the scan is in finding the BSSs.
 
-uname -a:
-Linux IceFalcon 4.14.13-tuned #1 SMP Tue Jan 16 20:35:41 PST 2018 x86_64
-Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz GenuineIntel GNU/Linux
+Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/uapi/linux/nl80211.h | 28 +++++++++++++++++++++++++++-
+ net/wireless/nl80211.c       | 13 +++++++++++--
+ 2 files changed, 38 insertions(+), 3 deletions(-)
 
-ifconfig wlan0:
-wlan0: flags=4098<BROADCAST,MULTICAST>  mtu 1500
-        ether d4:6a:6a:55:89:39  txqueuelen 1000  (Ethernet)
-        RX packets 0  bytes 0 (0.0 B)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 0  bytes 0 (0.0 B)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+v3:
+- rebased (moved this scan related change to the top of the series)
 
-ifconfig wlan0 up:
-SIOCSIFFLAGS: Operation not permitted
-
-lspci -v:
-3c:00.0 Network controller: Realtek Semiconductor Co., Ltd. Device b822
-    Subsystem: Hewlett-Packard Company Device 831b
-    Flags: bus master, fast devsel, latency 0, IRQ 131
-    I/O ports at c000 [size=256]
-    Memory at dc200000 (64-bit, non-prefetchable) [size=64K]
-    Capabilities: [40] Power Management version 3
-    Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
-    Capabilities: [70] Express Endpoint, MSI 00
-    Capabilities: [100] Advanced Error Reporting
-    Capabilities: [148] Device Serial Number 00-e0-4c-ff-fe-b8-22-01
-    Capabilities: [158] Latency Tolerance Reporting
-    Capabilities: [160] L1 PM Substates
-    Kernel driver in use: r8822be
-    Kernel modules: r8822be
-
-dmesg:
-[    0.259212] pci 0000:3c:00.0: reg 0x10: [io  0xc000-0xc0ff]
-[    0.259235] pci 0000:3c:00.0: reg 0x18: [mem 0xdc200000-0xdc20ffff 64bit]
-[    0.259352] pci 0000:3c:00.0: supports D1 D2
-[    0.259353] pci 0000:3c:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-
-[    0.337550] pci_bus 0000:3c: resource 0 [io  0xc000-0xcfff]
-[    0.337551] pci_bus 0000:3c: resource 1 [mem 0xdc200000-0xdc2fffff]
-
-[    2.148955] r8822be: module is from the staging directory, the
-quality is unknown, you have been warned.
-
-[    2.173850] r8822be 0000:3c:00.0: enabling device (0000 -> 0003)
-[    2.191530] r8822be: Using firmware rtlwifi/rtl8822befw.bin
-[    2.193717] r8822be 0000:3c:00.0: Direct firmware load for
-rtlwifi/rtl8822befw.bin failed with error -2
-[    2.194503] r8822be: Selected firmware is not available
-[    2.195025] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-[    2.195321] r8822be: rtlwifi: wireless switch is on
-
-[   76.465245] r8822be: halmac_init_hal failed
-[   90.520215] r8822be: halmac_init_hal failed
-[  109.066224] r8822be: halmac_init_hal failed
-[  109.066486] r8822be: halmac_init_hal failed
-[  136.083957] r8822be: halmac_init_hal failed
-[  136.084197] r8822be: halmac_init_hal failed
-[  150.523513] r8822be: halmac_init_hal failed
-[  273.431684] r8822be: halmac_init_hal failed
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index c587a61..6f60503 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4945,6 +4945,9 @@ enum nl80211_feature_flags {
+  *	probe request tx deferral and suppression
+  * @NL80211_EXT_FEATURE_MFP_OPTIONAL: Driver supports the %NL80211_MFP_OPTIONAL
+  *	value in %NL80211_ATTR_USE_MFP.
++ * @NL80211_EXT_FEATURE_LOW_SPAN_SCAN: Driver supports low span scan.
++ * @NL80211_EXT_FEATURE_LOW_POWER_SCAN: Driver supports low power scan.
++ * @NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN: Driver supports high accuracy scan.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -4972,6 +4975,9 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE,
+ 	NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION,
+ 	NL80211_EXT_FEATURE_MFP_OPTIONAL,
++	NL80211_EXT_FEATURE_LOW_SPAN_SCAN,
++	NL80211_EXT_FEATURE_LOW_POWER_SCAN,
++	NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+@@ -5032,6 +5038,10 @@ enum nl80211_timeout_reason {
+  * of NL80211_CMD_TRIGGER_SCAN and NL80211_CMD_START_SCHED_SCAN
+  * requests.
+  *
++ * NL80211_SCAN_FLAG_LOW_SPAN, NL80211_SCAN_FLAG_LOW_POWER, and
++ * NL80211_SCAN_FLAG_HIGH_ACCURACY flags are exclusive of each other, i.e., only
++ * one of them can be used in the request.
++ *
+  * @NL80211_SCAN_FLAG_LOW_PRIORITY: scan request has low priority
+  * @NL80211_SCAN_FLAG_FLUSH: flush cache before scanning
+  * @NL80211_SCAN_FLAG_AP: force a scan even if the interface is configured
+@@ -5059,7 +5069,20 @@ enum nl80211_timeout_reason {
+  *	and suppression (if it has received a broadcast Probe Response frame,
+  *	Beacon frame or FILS Discovery frame from an AP that the STA considers
+  *	a suitable candidate for (re-)association - suitable in terms of
+- *	SSID and/or RSSI
++ *	SSID and/or RSSI.
++ * @NL80211_SCAN_FLAG_LOW_SPAN: Span corresponds to the total time taken to
++ *	accomplish the scan. Thus, this flag intends the driver to perform the
++ *	scan request with lesser span/duration. It is specific to the driver
++ *	implementations on how this is accomplished. Scan accuracy may get
++ *	impacted with this flag.
++ * @NL80211_SCAN_FLAG_LOW_POWER: This flag intends the scan attempts to consume
++ *	optimal possible power. Drivers can resort to their specific means to
++ *	optimize the power. Scan accuracy may get impacted with this flag.
++ * @NL80211_SCAN_FLAG_HIGH_ACCURACY: Accuracy here intends to the extent of scan
++ *	results obtained. Thus HIGH_ACCURACY scan flag aims to get maximum
++ *	possible scan results. This flag hints the driver to use the best
++ *	possible scan configuration to improve the accuracy in scanning.
++ *	Latency and power use may get impacted with this flag.
+  */
+ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_PRIORITY				= 1<<0,
+@@ -5070,6 +5093,9 @@ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP		= 1<<5,
+ 	NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE		= 1<<6,
+ 	NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION	= 1<<7,
++	NL80211_SCAN_FLAG_LOW_SPAN				= 1<<8,
++	NL80211_SCAN_FLAG_LOW_POWER				= 1<<9,
++	NL80211_SCAN_FLAG_HIGH_ACCURACY				= 1<<10,
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c084dd2..a83e758 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6712,8 +6712,17 @@ nl80211_check_scan_flags(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	*flags = nla_get_u32(attrs[NL80211_ATTR_SCAN_FLAGS]);
+ 
+-	if ((*flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
+-	    !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN))
++	if (((*flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
++	     !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) ||
++	    ((*flags & NL80211_SCAN_FLAG_LOW_SPAN) &&
++	     !wiphy_ext_feature_isset(wiphy,
++				      NL80211_EXT_FEATURE_LOW_SPAN_SCAN)) ||
++	    ((*flags & NL80211_SCAN_FLAG_LOW_POWER) &&
++	     !wiphy_ext_feature_isset(wiphy,
++				      NL80211_EXT_FEATURE_LOW_POWER_SCAN)) ||
++	    ((*flags & NL80211_SCAN_FLAG_HIGH_ACCURACY) &&
++	     !wiphy_ext_feature_isset(wiphy,
++				      NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN)))
+ 		return -EOPNOTSUPP;
+ 
+ 	if (*flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+-- 
+2.7.4
