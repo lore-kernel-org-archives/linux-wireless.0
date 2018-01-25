@@ -1,89 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db5eur01on0054.outbound.protection.outlook.com ([104.47.2.54]:64761
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750994AbeAYTBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 14:01:53 -0500
-Subject: Re: [PATCH v3] mac80211: mesh: fix wrong mesh TTL offset calculation
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-References: <8582518b7f032acfa598faf7d26c765b09149e90.1516842930.git.peter.oh@bowerswilkins.com>
-Cc: johannes.berg@intel.com
-From: Peter Oh <peter.oh@bowerswilkins.com>
-Message-ID: <d5398ece-5ca2-19ba-7d18-c103283e2e96@bowerswilkins.com> (sfid-20180125_200201_198514_5D8FA508)
-Date: Thu, 25 Jan 2018 11:01:40 -0800
+Received: from mail-qt0-f182.google.com ([209.85.216.182]:34247 "EHLO
+        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751339AbeAYW0y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Jan 2018 17:26:54 -0500
+Received: by mail-qt0-f182.google.com with SMTP id a27so23378808qtd.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jan 2018 14:26:53 -0800 (PST)
+Date: Thu, 25 Jan 2018 14:26:50 -0800
+From: Tejun Heo <tj@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211_hwsim: don't use WQ_MEM_RECLAIM
+Message-ID: <20180125222650.GJ17457@devbig577.frc2.facebook.com> (sfid-20180125_232658_221790_1DCB46E1)
+References: <20180124074051.19939-1-johannes@sipsolutions.net>
+ <7eb10bf1-7825-3dae-b813-d912e6670440@uni-rostock.de>
+ <1516790786.2508.43.camel@sipsolutions.net>
+ <CAF7Mx6oASGjDrzVq4_t8Wt-DU7Zap1tcpz5vU7bk-Q5qzg4V=g@mail.gmail.com>
+ <CAF7Mx6o_Y0AeGQfhGKMkSxUHtRNyGaHh3g-TyvusJmsYyckFZg@mail.gmail.com>
+ <CAF7Mx6rg2XOOG0mZxnKiM_1ToB36Yc2A=sKQfN7drLsr3+4crw@mail.gmail.com>
+ <5A6A3BFC.5090305@broadcom.com>
+ <1516914086.2189.9.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <8582518b7f032acfa598faf7d26c765b09149e90.1516842930.git.peter.oh@bowerswilkins.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1516914086.2189.9.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ignore the patch below for now. Just noticed mesh_chansw_params_ie is 
-constance.
+Hello,
 
-will come up with new approach.
+On Thu, Jan 25, 2018 at 10:01:26PM +0100, Johannes Berg wrote:
+> I guess we should just ask Tejun :-)
+> 
+> Tejun, the problem was a report that a WQ_MEM_RECLAIM workqueue is
+> flushing another that isn't, and it turns out that lots of wireless
+> drivers are using WQ_MEM_RECLAIM for some reason.
 
+Yeah, that came up a couple years ago.  IIRC, there wasn't a definite
+answer but the sentiment seemed that things like nfs over wireless
+should probably considered.  No idea how serious that concern is.
 
-Thanks,
+> Arend said:
+> > >  > > Maybe a hint in the documentation, that a work item on a WQ_MEM_RECLAIM
+> > >  > > queue must not call flush of an !WQ_MEM_RECLAIM queue would be nice.
+> > >  > > Maybe it's kind of obvious, but there is also a reminder not to forget
+> > >  > > that flag, if a queue may have work items that reclaim memory
+> > >  >
+> > >  > Yeah, honestly, I'm not really sure either. Clearly we can't set it,
+> > >  > but other drivers also set it...
 
-Peter
+So, anything which can sit in memory reclaim path needs to have that
+flag set and having that flag set automatically means that it can't
+depend on anything which isn't protected the same way as that'd break
+that protection.
 
+> > > That triggered something in my memory. So indeed we use it in brcmfmac
+> > > as well. We used create_singlethread_workqueue(), but I wanted to avoid
+> > > snprintf and specify the name format so switched to using
+> > > alloc_ordered_workqueue() keeping WQ_MEM_RECLAIM as per the macro
+> > > definition.
+> > 
+> > #define create_singlethread_workqueue(name)				\
+> > 	alloc_ordered_workqueue("%s", __WQ_LEGACY | WQ_MEM_RECLAIM, name)
+> > 
+> > > Don't recall why I dropped the __WQ_LEGACY flag though.
 
-On 01/24/2018 05:16 PM, peter.oh@bowerswilkins.com wrote:
-> From: Peter Oh <peter.oh@bowerswilkins.com>
->
-> mesh TTL offset in Mesh Channel Switch Parameters element depends on
-> not only Secondary Channel Offset element, but also affected by
-> HT Control field and Wide Bandwidth Channel Switch element.
-> Use element structure to correct the miscalculation.
->
-> Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
-> ---
->   net/mac80211/mesh.c | 17 ++++++-----------
->   1 file changed, 6 insertions(+), 11 deletions(-)
->
-> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-> index 73ac607..6a381cb 100644
-> --- a/net/mac80211/mesh.c
-> +++ b/net/mac80211/mesh.c
-> @@ -1255,13 +1255,12 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
->   }
->   
->   static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
-> -			       struct ieee80211_mgmt *mgmt, size_t len)
-> +			       struct ieee80211_mgmt *mgmt, size_t len,
-> +			       struct ieee802_11_elems *elems)
->   {
->   	struct ieee80211_mgmt *mgmt_fwd;
->   	struct sk_buff *skb;
->   	struct ieee80211_local *local = sdata->local;
-> -	u8 *pos = mgmt->u.action.u.chan_switch.variable;
-> -	size_t offset_ttl;
->   
->   	skb = dev_alloc_skb(local->tx_headroom + len);
->   	if (!skb)
-> @@ -1269,13 +1268,9 @@ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
->   	skb_reserve(skb, local->tx_headroom);
->   	mgmt_fwd = skb_put(skb, len);
->   
-> -	/* offset_ttl is based on whether the secondary channel
-> -	 * offset is available or not. Subtract 1 from the mesh TTL
-> -	 * and disable the initiator flag before forwarding.
-> -	 */
-> -	offset_ttl = (len < 42) ? 7 : 10;
-> -	*(pos + offset_ttl) -= 1;
-> -	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
-> +	elems->mesh_chansw_params_ie->mesh_ttl--;
-> +	elems->mesh_chansw_params_ie->mesh_flags &=
-> +		~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
->   
->   	memcpy(mgmt_fwd, mgmt, len);
->   	eth_broadcast_addr(mgmt_fwd->da);
-> @@ -1323,7 +1318,7 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
->   
->   	/* forward or re-broadcast the CSA frame */
->   	if (fwd_csa) {
-> -		if (mesh_fwd_csa_frame(sdata, mgmt, len) < 0)
-> +		if (mesh_fwd_csa_frame(sdata, mgmt, len, &elems) < 0)
->   			mcsa_dbg(sdata, "Failed to forward the CSA frame");
->   	}
->   }
+The only thing that flag does is disabling the flush dependency check
+which is necessary because in the old implementation, all workqueues
+were basically WQ_MEM_RECLAIM workqueues leading to spurious
+triggering of the warnings.
+
+Thanks.
+
+-- 
+tejun
