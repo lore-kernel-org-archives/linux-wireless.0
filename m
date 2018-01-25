@@ -1,18 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:60543 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:60614 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932130AbeAKHKA (ORCPT
+        with ESMTP id S932637AbeAYCu0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jan 2018 02:10:00 -0500
+        Wed, 24 Jan 2018 21:50:26 -0500
 From: <pkshih@realtek.com>
 To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 03/10] rtlwifi: Add sta_statistics of mac80211's op, and set filled=0 by default
-Date: Thu, 11 Jan 2018 15:09:25 +0800
-Message-ID: <20180111070932.9929-4-pkshih@realtek.com> (sfid-20180111_081005_692138_FE9D318C)
-In-Reply-To: <20180111070932.9929-1-pkshih@realtek.com>
-References: <20180111070932.9929-1-pkshih@realtek.com>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] rtlwifi: btcoex: Fix some static warnings from Sparse
+Date: Thu, 25 Jan 2018 10:49:54 +0800
+Message-ID: <20180125024954.3720-1-pkshih@realtek.com> (sfid-20180125_035029_826683_816634CA)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -20,46 +17,163 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-When using iwconfig to check wifi status, wext uses 'static struct' of
-sinfo to get station info so sinfo->filled will be persistent. Since the
-commit 2b9a7e1bac24 ("mac80211: allow drivers to provide most station
-statistics") assumes driver initializes sinfo->filled to declare supported
-fields, without initialization it will report wrong info. This commit
-simply set 'filled' to be zero simply, and left sinfo to be filled by
-mac80211.
+Add 'static' or declaration to resolve the warnings, and remove two unused
+functions halbtc_set_macreg() and halbtc_get_macreg() exposed when they
+were made static.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/core.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+The original subject of this patch is '[PATCH 07/10]' in previous
+patchset, and other patches are applied excepcting to this one that Larry
+suggested to add comments why two functions are revmoed, but the content is
+unchanged.
+---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 36 +++++++---------------
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  4 +++
+ 2 files changed, 15 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index a78b828f531a..ec639fa8095e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -992,6 +992,15 @@ static int _rtl_get_hal_qnum(u16 queue)
- 	return qnum;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 73ef5b271f3b..1404729441a2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -29,7 +29,7 @@
+  *		Debug related function
+  ***************************************************/
+ 
+-const char *const gl_btc_wifi_bw_string[] = {
++static const char *const gl_btc_wifi_bw_string[] = {
+ 	"11bg",
+ 	"HT20",
+ 	"HT40",
+@@ -37,7 +37,7 @@ const char *const gl_btc_wifi_bw_string[] = {
+ 	"HT160"
+ };
+ 
+-const char *const gl_btc_wifi_freq_string[] = {
++static const char *const gl_btc_wifi_freq_string[] = {
+ 	"2.4G",
+ 	"5G"
+ };
+@@ -156,7 +156,7 @@ static u8 halbtc_get_wifi_central_chnl(struct btc_coexist *btcoexist)
+ 	return chnl;
  }
  
-+static void rtl_op_sta_statistics(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif,
-+				  struct ieee80211_sta *sta,
-+				  struct station_info *sinfo)
-+{
-+	/* nothing filled by driver, so mac80211 will update all info */
-+	sinfo->filled = 0;
-+}
-+
- /*
-  *for mac80211 VO = 0, VI = 1, BE = 2, BK = 3
-  *for rtl819x  BE = 0, BK = 1, VI = 2, VO = 3
-@@ -1878,6 +1887,7 @@ const struct ieee80211_ops rtl_ops = {
- 	.config = rtl_op_config,
- 	.configure_filter = rtl_op_configure_filter,
- 	.set_key = rtl_op_set_key,
-+	.sta_statistics = rtl_op_sta_statistics,
- 	.conf_tx = rtl_op_conf_tx,
- 	.bss_info_changed = rtl_op_bss_info_changed,
- 	.get_tsf = rtl_op_get_tsf,
+-u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
++static u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+ {
+ 	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+ 
+@@ -171,12 +171,12 @@ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+ 	return rtlpriv->btcoexist.btc_info.single_ant_path;
+ }
+ 
+-u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
++static u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
+ {
+ 	return rtlpriv->btcoexist.btc_info.bt_type;
+ }
+ 
+-u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
++static u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+ {
+ 	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+ 	u8 num;
+@@ -193,7 +193,7 @@ u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+ 	return num;
+ }
+ 
+-u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
++static u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
+ {
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 
+@@ -504,7 +504,7 @@ static u32 halbtc_get_bt_forbidden_slot_val(void *btc_context)
+ 	return btcoexist->bt_info.bt_forb_slot_val;
+ }
+ 
+-u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
++static u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
+ {
+ 	/* return value:
+ 	 * [31:16] => connected port number
+@@ -980,7 +980,8 @@ static void halbtc_write_4byte(void *bt_context, u32 reg_addr, u32 data)
+ 	rtl_write_dword(rtlpriv, reg_addr, data);
+ }
+ 
+-void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
++static void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr,
++					 u8 data)
+ {
+ 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+@@ -993,22 +994,6 @@ void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
+ 		rtl_write_byte(rtlpriv, reg_addr, data);
+ }
+ 
+-void halbtc_set_macreg(void *btc_context, u32 reg_addr, u32 bit_mask, u32 data)
+-{
+-	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-
+-	rtl_set_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask, data);
+-}
+-
+-u32 halbtc_get_macreg(void *btc_context, u32 reg_addr, u32 bit_mask)
+-{
+-	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+-	struct rtl_priv *rtlpriv = btcoexist->adapter;
+-
+-	return rtl_get_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask);
+-}
+-
+ static void halbtc_set_bbreg(void *bt_context, u32 reg_addr, u32 bit_mask,
+ 			     u32 data)
+ {
+@@ -1054,6 +1039,7 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
+ 					cmd_len, cmd_buf);
+ }
+ 
++static
+ void halbtc_set_bt_reg(void *btc_context, u8 reg_type, u32 offset, u32 set_val)
+ {
+ 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+@@ -1093,7 +1079,7 @@ static void halbtc_display_dbg_msg(void *bt_context, u8 disp_type,
+ 	}
+ }
+ 
+-bool halbtc_under_ips(struct btc_coexist *btcoexist)
++static bool halbtc_under_ips(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 1c6019be793a..8ed217656539 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -647,6 +647,7 @@ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv);
+ bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv);
+ bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
+ void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
++void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist);
+ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
+ void exhalbtc_init_hw_config_wifi_only(struct wifi_only_cfg *wifionly_cfg);
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+@@ -661,6 +662,7 @@ void exhalbtc_mediastatus_notify(struct btc_coexist *btcoexist,
+ void exhalbtc_special_packet_notify(struct btc_coexist *btcoexist, u8 pkt_type);
+ void exhalbtc_bt_info_notify(struct btc_coexist *btcoexist, u8 *tmp_buf,
+ 			     u8 length);
++void exhalbtc_rf_status_notify(struct btc_coexist *btcoexist, u8 type);
+ void exhalbtc_stack_operation_notify(struct btc_coexist *btcoexist, u8 type);
+ void exhalbtc_halt_notify(struct btc_coexist *btcoexist);
+ void exhalbtc_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
+@@ -668,6 +670,8 @@ void exhalbtc_coex_dm_switch(struct btc_coexist *btcoexist);
+ void exhalbtc_periodical(struct btc_coexist *btcoexist);
+ void exhalbtc_dbg_control(struct btc_coexist *btcoexist, u8 code, u8 len,
+ 			  u8 *data);
++void exhalbtc_antenna_detection(struct btc_coexist *btcoexist, u32 cent_freq,
++				u32 offset, u32 span, u32 seconds);
+ void exhalbtc_stack_update_profile_info(void);
+ void exhalbtc_set_hci_version(struct btc_coexist *btcoexist, u16 hci_version);
+ void exhalbtc_set_bt_patch_version(struct btc_coexist *btcoexist,
 -- 
 2.15.1
