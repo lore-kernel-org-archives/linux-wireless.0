@@ -1,96 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:60552 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932130AbeAKHKC (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:41570 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751311AbeAYQkT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jan 2018 02:10:02 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 07/10] rtlwifi: btcoex: Add power_on_setting routine
-Date: Thu, 11 Jan 2018 15:09:29 +0800
-Message-ID: <20180111070932.9929-8-pkshih@realtek.com> (sfid-20180111_081010_510535_13C50233)
-In-Reply-To: <20180111070932.9929-1-pkshih@realtek.com>
-References: <20180111070932.9929-1-pkshih@realtek.com>
+        Thu, 25 Jan 2018 11:40:19 -0500
+Received: by mail-oi0-f67.google.com with SMTP id m83so5626378oik.8
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jan 2018 08:40:19 -0800 (PST)
+Subject: Re: [PATCH v2] rtlwifi: btcoex: Fix some static warnings from Sparse
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180125024954.3720-1-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <b9c45ec2-6cc8-70cc-44ee-3d74550e7ef9@lwfinger.net> (sfid-20180125_174034_982372_0153D5A5)
+Date: Thu, 25 Jan 2018 10:40:17 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180125024954.3720-1-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 01/24/2018 08:49 PM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Add 'static' or declaration to resolve the warnings, and remove two unused
+> functions halbtc_set_macreg() and halbtc_get_macreg() exposed when they
+> were made static.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+> The original subject of this patch is '[PATCH 07/10]' in previous
+> patchset, and other patches are applied excepcting to this one that Larry
+> suggested to add comments why two functions are revmoed, but the content is
+> unchanged.
+> ---
 
-After mac power-on sequence, wifi will start to work so notify btcoex the
-event to configure registers especially related to antenna. This will not
-only help to assign antenna but also to yield better user experience.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c      | 6 ++++++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h      | 1 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
- 4 files changed, 9 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index ea12b9d63a73..bc523af7ef88 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -608,6 +608,7 @@ extern struct btc_coexist gl_bt_coexist;
- 
- bool exhalbtc_initlize_variables(void);
- bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
-+void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
- void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
- void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
- void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index 4d9e33078d4f..9e3623b0423c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -32,6 +32,7 @@
- static struct rtl_btc_ops rtl_btc_operation = {
- 	.btc_init_variables = rtl_btc_init_variables,
- 	.btc_init_hal_vars = rtl_btc_init_hal_vars,
-+	.btc_power_on_setting = rtl_btc_power_on_setting,
- 	.btc_init_hw_config = rtl_btc_init_hw_config,
- 	.btc_ips_notify = rtl_btc_ips_notify,
- 	.btc_lps_notify = rtl_btc_lps_notify,
-@@ -116,6 +117,11 @@ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
- 	 */
- }
- 
-+void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv)
-+{
-+	exhalbtc_power_on_setting(&gl_bt_coexist);
-+}
-+
- void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
- {
- 	u8 bt_exist;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-index 40f1ce8c8a06..9becfa59407d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.h
-@@ -29,6 +29,7 @@
- 
- void rtl_btc_init_variables(struct rtl_priv *rtlpriv);
- void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv);
-+void rtl_btc_power_on_setting(struct rtl_priv *rtlpriv);
- void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv);
- void rtl_btc_ips_notify(struct rtl_priv *rtlpriv, u8 type);
- void rtl_btc_lps_notify(struct rtl_priv *rtlpriv, u8 type);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 941694060f48..b27dbe10b163 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2557,6 +2557,7 @@ struct bt_coexist_info {
- struct rtl_btc_ops {
- 	void (*btc_init_variables) (struct rtl_priv *rtlpriv);
- 	void (*btc_init_hal_vars) (struct rtl_priv *rtlpriv);
-+	void (*btc_power_on_setting)(struct rtl_priv *rtlpriv);
- 	void (*btc_init_hw_config) (struct rtl_priv *rtlpriv);
- 	void (*btc_ips_notify) (struct rtl_priv *rtlpriv, u8 type);
- 	void (*btc_lps_notify)(struct rtl_priv *rtlpriv, u8 type);
--- 
-2.15.1
+>   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 36 +++++++---------------
+>   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  4 +++
+>   2 files changed, 15 insertions(+), 25 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> index 73ef5b271f3b..1404729441a2 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> @@ -29,7 +29,7 @@
+>    *		Debug related function
+>    ***************************************************/
+>   
+> -const char *const gl_btc_wifi_bw_string[] = {
+> +static const char *const gl_btc_wifi_bw_string[] = {
+>   	"11bg",
+>   	"HT20",
+>   	"HT40",
+> @@ -37,7 +37,7 @@ const char *const gl_btc_wifi_bw_string[] = {
+>   	"HT160"
+>   };
+>   
+> -const char *const gl_btc_wifi_freq_string[] = {
+> +static const char *const gl_btc_wifi_freq_string[] = {
+>   	"2.4G",
+>   	"5G"
+>   };
+> @@ -156,7 +156,7 @@ static u8 halbtc_get_wifi_central_chnl(struct btc_coexist *btcoexist)
+>   	return chnl;
+>   }
+>   
+> -u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+> +static u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+>   {
+>   	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+>   
+> @@ -171,12 +171,12 @@ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+>   	return rtlpriv->btcoexist.btc_info.single_ant_path;
+>   }
+>   
+> -u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
+> +static u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
+>   {
+>   	return rtlpriv->btcoexist.btc_info.bt_type;
+>   }
+>   
+> -u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+> +static u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+>   {
+>   	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+>   	u8 num;
+> @@ -193,7 +193,7 @@ u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+>   	return num;
+>   }
+>   
+> -u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
+> +static u8 rtl_get_hwpg_package_type(struct rtl_priv *rtlpriv)
+>   {
+>   	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+>   
+> @@ -504,7 +504,7 @@ static u32 halbtc_get_bt_forbidden_slot_val(void *btc_context)
+>   	return btcoexist->bt_info.bt_forb_slot_val;
+>   }
+>   
+> -u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
+> +static u32 halbtc_get_wifi_link_status(struct btc_coexist *btcoexist)
+>   {
+>   	/* return value:
+>   	 * [31:16] => connected port number
+> @@ -980,7 +980,8 @@ static void halbtc_write_4byte(void *bt_context, u32 reg_addr, u32 data)
+>   	rtl_write_dword(rtlpriv, reg_addr, data);
+>   }
+>   
+> -void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
+> +static void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr,
+> +					 u8 data)
+>   {
+>   	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+>   	struct rtl_priv *rtlpriv = btcoexist->adapter;
+> @@ -993,22 +994,6 @@ void halbtc_write_local_reg_1byte(void *btc_context, u32 reg_addr, u8 data)
+>   		rtl_write_byte(rtlpriv, reg_addr, data);
+>   }
+>   
+> -void halbtc_set_macreg(void *btc_context, u32 reg_addr, u32 bit_mask, u32 data)
+> -{
+> -	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+> -	struct rtl_priv *rtlpriv = btcoexist->adapter;
+> -
+> -	rtl_set_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask, data);
+> -}
+> -
+> -u32 halbtc_get_macreg(void *btc_context, u32 reg_addr, u32 bit_mask)
+> -{
+> -	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+> -	struct rtl_priv *rtlpriv = btcoexist->adapter;
+> -
+> -	return rtl_get_bbreg(rtlpriv->mac80211.hw, reg_addr, bit_mask);
+> -}
+> -
+>   static void halbtc_set_bbreg(void *bt_context, u32 reg_addr, u32 bit_mask,
+>   			     u32 data)
+>   {
+> @@ -1054,6 +1039,7 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
+>   					cmd_len, cmd_buf);
+>   }
+>   
+> +static
+>   void halbtc_set_bt_reg(void *btc_context, u8 reg_type, u32 offset, u32 set_val)
+>   {
+>   	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+> @@ -1093,7 +1079,7 @@ static void halbtc_display_dbg_msg(void *bt_context, u8 disp_type,
+>   	}
+>   }
+>   
+> -bool halbtc_under_ips(struct btc_coexist *btcoexist)
+> +static bool halbtc_under_ips(struct btc_coexist *btcoexist)
+>   {
+>   	struct rtl_priv *rtlpriv = btcoexist->adapter;
+>   	struct rtl_ps_ctl *ppsc = rtl_psc(rtlpriv);
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> index 1c6019be793a..8ed217656539 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> @@ -647,6 +647,7 @@ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv);
+>   bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv);
+>   bool exhalbtc_bind_bt_coex_withadapter(void *adapter);
+>   void exhalbtc_power_on_setting(struct btc_coexist *btcoexist);
+> +void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist);
+>   void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only);
+>   void exhalbtc_init_hw_config_wifi_only(struct wifi_only_cfg *wifionly_cfg);
+>   void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist);
+> @@ -661,6 +662,7 @@ void exhalbtc_mediastatus_notify(struct btc_coexist *btcoexist,
+>   void exhalbtc_special_packet_notify(struct btc_coexist *btcoexist, u8 pkt_type);
+>   void exhalbtc_bt_info_notify(struct btc_coexist *btcoexist, u8 *tmp_buf,
+>   			     u8 length);
+> +void exhalbtc_rf_status_notify(struct btc_coexist *btcoexist, u8 type);
+>   void exhalbtc_stack_operation_notify(struct btc_coexist *btcoexist, u8 type);
+>   void exhalbtc_halt_notify(struct btc_coexist *btcoexist);
+>   void exhalbtc_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state);
+> @@ -668,6 +670,8 @@ void exhalbtc_coex_dm_switch(struct btc_coexist *btcoexist);
+>   void exhalbtc_periodical(struct btc_coexist *btcoexist);
+>   void exhalbtc_dbg_control(struct btc_coexist *btcoexist, u8 code, u8 len,
+>   			  u8 *data);
+> +void exhalbtc_antenna_detection(struct btc_coexist *btcoexist, u32 cent_freq,
+> +				u32 offset, u32 span, u32 seconds);
+>   void exhalbtc_stack_update_profile_info(void);
+>   void exhalbtc_set_hci_version(struct btc_coexist *btcoexist, u16 hci_version);
+>   void exhalbtc_set_bt_patch_version(struct btc_coexist *btcoexist,
+> 
