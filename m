@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47762 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750896AbeAIMMs (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:41759 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbeAYScO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 07:12:48 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 25 Jan 2018 13:32:14 -0500
+Received: by mail-pg0-f65.google.com with SMTP id 136so5584028pgd.8
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jan 2018 10:32:13 -0800 (PST)
+Date: Thu, 25 Jan 2018 10:32:11 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Ganapathi Bhat <gbhat@marvell.com>, linux-wireless@vger.kernel.org,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Shrenik Shikhare <shrenik@marvell.com>
+Subject: Re: [1/2] mwifiex: schedule rx_work on RX interrupt for USB
+Message-ID: <20180125183209.whiz3mjtbhtoqp6s@ban.mtv.corp.google.com> (sfid-20180125_193217_694048_484F7E82)
+References: <1516633497-6584-2-git-send-email-gbhat@marvell.com>
+ <20180125071052.E370660A4E@smtp.codeaurora.org>
 MIME-Version: 1.0
-Subject: Re: [v2,01/10] qtnfmac: check that MAC exists in regulatory notifier
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171219112856.22463-2-sergey.matyukevich.os@quantenna.com>
-References: <20171219112856.22463-2-sergey.matyukevich.os@quantenna.com>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Message-Id: <20180109121247.C95116081B@smtp.codeaurora.org> (sfid-20180109_131252_160022_8A8BB9AD)
-Date: Tue,  9 Jan 2018 12:12:47 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180125071052.E370660A4E@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
-
-> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+On Thu, Jan 25, 2018 at 07:10:52AM +0000, Kalle Valo wrote:
+> Ganapathi Bhat <gbhat@marvell.com> wrote:
 > 
-> It is possible that regulatory notifier is called before MAC data
-> was allocated. We need to verify that MAC data exists before trying
-> to send a regulatory change event.
+> > From: Shrenik Shikhare <shrenik@marvell.com>
+> > 
+> > There is race for data_received flag between main thread and
+> > RX data interrupt(mwifiex_usb_rx_complete()):
+> > 1. USB received an RX data interrupt, set data_received flag
+> > 2. main thread checks data_received, if set queues rx_work
+> > 3. rx worker thread independently start processing rx_data_q
+> > 4. rx work exits (once rx_data_q is empty)
+> > 5. main thread resets the data_received flag(after #2)
+> > 6. Now at the corner case there will be high RX data interrupts
+> > between #4 and #5
+> > 7. Driver stops submitting URBs to firmware, once rx_pending
+> > exceeds HIGH_RX_PENDING
+> > 8. The flag data_received(cleared in #5) will remain unset since
+> > there will be no interrupts from firmware to set it(after #7)
+> > 
+> > Above scenario causes RX stall in driver, which will finally
+> > result in command/TX timeouts in firmware.
+> > 
+> > As a fix, queue rx_work directly in mwifiex_usb_rx_complete()
+> > callback, instead in the main thread. This removes dependency
+> > of RX processing on data_received flag.
+> > 
+> > Signed-off-by: Cathy Luo <cluo@marvell.com>
+> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 > 
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> Brian, did you have a chance to review these two?
 
-10 patches applied to wireless-drivers-next.git, thanks.
-
-4fd045cdb239 qtnfmac: check that MAC exists in regulatory notifier
-5bf374ab91ad qtnfmac: pass complete channel data between driver and firmware
-b05ee456fd21 qtnfmac: add support for radar detection and CAC
-e6ef8cd05145 qtnfmac: change default interface mode from AP to STA
-e6e594aff26a qtnfmac: check for passed channel being NULL in MGMT_TX command
-fbad963a28e4 qtnfmac: fix rssi data passed to wireless core
-9cbd599966d8 qtnfmac: fill wiphy's extended capabilities
-4d2a7a1cfa68 qtnfmac: modify GET_STA_STATS cmd format for back/forward compatibility
-7a4d3a3bc84e qtnfmac: keeping track of "generation" for STA info
-f1398fd2dd8c qtnfmac: support MAC address based access control
-
--- 
-https://patchwork.kernel.org/patch/10123079/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Not really. I don't generally make a lot of time to review the USB
+driver unless it's really screwing around with the main driver, since I
+don't use the USB driver. But I'll try to give it a few glances.
