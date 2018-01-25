@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34458 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752041AbeAZQeK (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49874 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751215AbeAYJ7J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 11:34:10 -0500
-Subject: Re: [PATCH] bcma: Replace mdelay with usleep_range in
- bcma_pmu_resources_init
-To: Larry Finger <Larry.Finger@lwfinger.net>, zajec5@gmail.com,
-        hauke@hauke-m.de
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1516958011-303-1-git-send-email-baijiaju1990@gmail.com>
- <b0ae2efe-9b90-0e5f-d53a-d045e76b213c@lwfinger.net>
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Message-ID: <f8c701d1-853f-ab35-15c8-451330ab02f4@gmail.com> (sfid-20180126_173437_708721_92D92212)
-Date: Sat, 27 Jan 2018 00:33:49 +0800
+        Thu, 25 Jan 2018 04:59:09 -0500
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Brian Norris" <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Shrenik Shikhare <shrenik@marvell.com>
+Subject: RE: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX
+ stall
+Date: Thu, 25 Jan 2018 09:59:04 +0000
+Message-ID: <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com> (sfid-20180125_105915_605111_56400ABF)
+References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
+ <20180125071202.0F39560A60@smtp.codeaurora.org>
+In-Reply-To: <20180125071202.0F39560A60@smtp.codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <b0ae2efe-9b90-0e5f-d53a-d045e76b213c@lwfinger.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 2018/1/27 0:26, Larry Finger wrote:
-> On 01/26/2018 03:13 AM, Jia-Ju Bai wrote:
->> After checking all possible call chains to bcma_pmu_resources_init() 
->> here,
->> my tool finds that this function is never called in atomic context,
->> namely never in an interrupt handler or holding a spinlock.
->> Thus mdelay can be replaced with usleep_range to avoid busy wait.
->>
->> This is found by a static analysis tool named DCNS written by myself.
->>
->> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
->> ---
->>   drivers/bcma/driver_chipcommon_pmu.c |    2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/bcma/driver_chipcommon_pmu.c 
->> b/drivers/bcma/driver_chipcommon_pmu.c
->> index f1eb4d3..478948c 100644
->> --- a/drivers/bcma/driver_chipcommon_pmu.c
->> +++ b/drivers/bcma/driver_chipcommon_pmu.c
->> @@ -203,7 +203,7 @@ static void bcma_pmu_resources_init(struct 
->> bcma_drv_cc *cc)
->>        * Add some delay; allow resources to come up and settle.
->>        * Delay is required for SoC (early init).
->>        */
->> -    mdelay(2);
->> +    usleep_range(1500, 2000);
->
-> I have no idea how critical this delay might be, but it would be safer 
-> to never make the sleep be shorter than the original delay. Using 
-> (2000, 2500) would be a better choice of arguments for usleep_range().
-
-Okay, I have used usleep_range(2000, 2500) and sent patch v2.
-
-
-Thanks,
-Jia-Ju Bai
+SGkgS2FsbGUsDQo+DQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gR2FuYXBhdGhpIEJoYXQgPGdiaGF0QG1h
+cnZlbGwuY29tPiB3cm90ZToNCj4NCj4gPiBGcm9tOiBTaHJlbmlrIFNoaWtoYXJlIDxzaHJlbmlr
+QG1hcnZlbGwuY29tPg0KPiA+DQo+ID4gVGhlcmUgaXMgYSByYWNlIGNvbmRpdGlvbiBmb3IgYWNx
+dWlyaW5nIHJ4X3Byb2NfbG9jayBiZXR3ZWVuIHJ4IHdvcmtlcg0KPiA+IHRocmVhZCBhbmQgVVNC
+IFJYIGRhdGEgaW50ZXJydXB0DQo+ID4gKG13aWZpZXhfdXNiX3J4X2NvbXBsZXRlKToNCj4gPg0K
+PiA+IDEuIFVTQiByZWNlaXZlcyBhbiBSWCBkYXRhIGludGVycnVwdCwgcXVldWVzIHJ4X3dvcmsg
+Mi4gcnhfd29yaw0KPiA+IGVtcHRpZXMgcnhfZGF0YV9xLCB0cmllcyB0byBhY3F1aXJlIHJ4X3By
+b2NfbG9jayAodG8gY2xlYXINCj4gPiByeF9wcm9jZXNzaW5nIGZsYWcpIDMuIFdoaWxlICMyIGlz
+IHlldCB0byBhY3F1aXJlIHJ4X3Byb2NfbG9jaywgZHJpdmVyDQo+ID4gcmVjZWl2ZXMgY29udGlu
+dW91cyBSWCBkYXRhIGludGVydXB0cyhtd2lmaWV4X3VzYl9yeF9jb21wbGV0ZSkNCj4gPiAzLiBG
+b3IgZWFjaCBpbnRlcnJ1cHQgYXQgIzMsIGRyaXZlciBhY3F1aXJlcyByeF9wcm9jX2xvY2soaXQg
+Z2V0cyB0aGUNCj4gPiBsb2NrIHNpbmNlIGl0IGlzIGluIGludGVycnVwdCBjb250ZXh0KSwgdHJp
+ZXMgdG8gcXVldWUgcnhfd29yaywgYnV0DQo+ID4gZmFpbHMgdG8gZG8gc28gc2luY2UgcnhfcHJv
+Y2Vzc2luZyBpcyBzdGlsbCBzZXQoIzIpIDQuIFdoZW4gcnhfcGVuZGluZw0KPiA+IGV4Y2VlZHMg
+SElHSF9SWF9QRU5ESU5HLCBkcml2ZXIgc3RvcHMgc3VibWl0dGluZyBVUkJzIGJhY2sgdG8gVVNC
+DQo+ID4gc3Vic3lzdGVtIGFuZCB0aHVzIGZpcm13YXJlIHN0b3BzIHVwbG9hZGluZyBSWCBkYXRh
+IHRvIGRyaXZlciA1LiBOb3cNCj4gPiBmaW5hbGx5ICMyIHdpbGwgYWNxdWlyZSByeF9wcm9jX2xv
+Y2ssIGJ1dCBiZWNhdXNlIG9mICM0LCB0aGVyZSBhcmUgbm8NCj4gPiBmdXJ0aGVyIHRyaWdnZXJz
+IHRvIHNjaGVkdWxlIHJ4X3dvcmsgYWdhaW4NCj4gPg0KPiA+IFRoZSBhYm92ZSBzY2VuYXJpbyBv
+Y2N1cnMgaW4gc29tZSBwbGF0Zm9ybXMgd2hlcmUgdGhlIFJYIHByb2Nlc3NpbmcgaXMNCj4gPiBj
+b21wYXJpdGl2ZWx5IHNsb3dlci4gVGhpcyByZXN1bHRzIGluIFJYIHN0YWxsIGluIGRyaXZlciwg
+Y29tbWFuZC9UWA0KPiA+IHRpbWVvdXRzIGluIGZpcm13YXJlLiBUaGUgYWJvdmUgc2NlbmFyaW8g
+aXMgaW50cm9kdWNlZCBhZnRlciBjb21taXQNCj4gPiBjN2RiZGNiMmE0ZTENCj4gPiAoIm13aWZp
+ZXg6IHNjaGVkdWxlIHJ4X3dvcmsgb24gUlggaW50ZXJydXB0IGZvciBVU0IiKQ0KPiA+DQo+ID4g
+VG8gZml4IHRoaXMgc2V0IGEgbmV3IG1vcmVfcnhfdGFza19mbGFnIHdoZW5ldmVyIFJYIGRhdGEg
+Y2FsbGJhY2sgaXMNCj4gPiB0cnlpbmcgdG8gc2NoZWR1bGUgcnhfd29yayBidXQgcnhfcHJvY2Vz
+c2luZyBpcyBub3QgeWV0IGNsZWFyZWQuIFRoaXMNCj4gPiB3aWxsIGxldCB0aGUgY3VycmVudCBy
+eF93b3JrKHdoaWNoIHdhcyB3YWl0aW5nIGZvcg0KPiA+IHJ4X3Byb2NfbG9jaykgdG8gbG9vcGJh
+Y2sgYW5kIHByb2Nlc3MgbmV3bHkgYXJyaXZlZCBSWCBwYWNrZXRzLg0KPiA+DQo+ID4gU2lnbmVk
+LW9mZi1ieTogQ2F0aHkgTHVvIDxjbHVvQG1hcnZlbGwuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6
+IEdhbmFwYXRoaSBCaGF0IDxnYmhhdEBtYXJ2ZWxsLmNvbT4NCj4NCj4gSSBjYW4ndCBmaW5kIGFu
+eSBjb21taXQgd2l0aCBpZCBjN2RiZGNiMmE0ZTEsIGlzIGl0IGNvcnJlY3Q/DQpDb3JyZWN0LiBB
+Y3R1YWxseSB0aGUgY29tbWl0IGlkIGM3ZGJkY2IyYTRlMSBpcyB0aGUgUEFUQ0ggWzEvMl0gc2Vu
+dCBpbiB0aGlzIHNlcmllcy4NCj4NCj4gLS0NCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9y
+Zy9wYXRjaC8xMDE3ODcyOS8NCj4NCj4gaHR0cHM6Ly93aXJlbGVzcy53aWtpLmtlcm5lbC5vcmcv
+ZW4vZGV2ZWxvcGVycy9kb2N1bWVudGF0aW9uL3N1Ym1pdHRpbmdwDQo+IGF0Y2hlcw0KUmVnYXJk
+cywNCkdhbmFwYXRoaQ0K
