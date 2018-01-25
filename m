@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0117.outbound.protection.outlook.com ([104.47.38.117]:58592
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750878AbeAPJZr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 04:25:47 -0500
-From: Wright Feng <wright.feng@cypress.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
-        chi-hsien.lin@cypress.com
-Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, stable@vger.kernel.org
-Subject: [PATCH v4] brcmfmac: fix CLM load error for legacy chips when user helper is enabled
-Date: Tue, 16 Jan 2018 17:26:50 +0800
-Message-Id: <1516094814-16528-1-git-send-email-wright.feng@cypress.com> (sfid-20180116_102552_105768_45970907)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:32927 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751138AbeAYHmG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Jan 2018 02:42:06 -0500
+From: Tobias Schramm <tobleminer@gmail.com>
+To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Cc: Tobias Schramm <tobleminer@gmail.com>
+Subject: [PATCH v2 1/2] pci: Add vendor id of Ubiquiti Networks
+Date: Thu, 25 Jan 2018 08:41:30 +0100
+Message-Id: <20180125074131.30622-2-tobleminer@gmail.com> (sfid-20180125_084216_635070_436721FE)
+In-Reply-To: <20180125074131.30622-1-tobleminer@gmail.com>
+References: <20180125074131.30622-1-tobleminer@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For legacy chips without CLM blob files, kernel with user helper function
-returns -EAGAIN when we request_firmware(), and then driver got failed
-when bringing up legacy chips. We expect the CLM blob file for legacy chip
-is not existence in firmware path, but the -ENOENT error is transferred to
--EAGAIN in firmware_class.c with user helper.
-Because of that, we continue with CLM data currently present in firmware
-if getting error from doing request_firmware().
-
-Cc: stable@vger.kernel.org # v4.15.y
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
+Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
 ---
-v2: remove retry from patch v1
-v3: remove redundant log print
-v4: modify log print
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 6a59d06..9be0b05 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -182,12 +182,9 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ab20dc5db423..6b01ac1e9bce 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -149,6 +149,8 @@
+ #define PCI_VENDOR_ID_DYNALINK		0x0675
+ #define PCI_DEVICE_ID_DYNALINK_IS64PH	0x1702
  
- 	err = request_firmware(&clm, clm_name, dev);
- 	if (err) {
--		if (err == -ENOENT) {
--			brcmf_dbg(INFO, "continue with CLM data currently present in firmware\n");
--			return 0;
--		}
--		brcmf_err("request CLM blob file failed (%d)\n", err);
--		return err;
-+		brcmf_info("no clm_blob available(err=%d), device may have limited channels available\n",
-+			   err);
-+		return 0;
- 	}
- 
- 	chunk_buf = kzalloc(sizeof(*chunk_buf) + MAX_CHUNK_LEN - 1, GFP_KERNEL);
++#define PCI_VENDOR_ID_UBNT		0x0777
++
+ #define PCI_VENDOR_ID_BERKOM			0x0871
+ #define PCI_DEVICE_ID_BERKOM_A1T		0xffa1
+ #define PCI_DEVICE_ID_BERKOM_T_CONCEPT		0xffa2
 -- 
-1.9.1
+2.16.0
