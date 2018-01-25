@@ -1,72 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:11869 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752479AbeA3Qv2 (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:45496 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751386AbeAYLON (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 11:51:28 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 7/7] staging: wilc1000: rename Handle_Key() and Handle_ConnectTimeout()
-Date: Tue, 30 Jan 2018 22:20:33 +0530
-Message-ID: <1517331033-5718-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180130_175131_543547_1E2D51E4)
-In-Reply-To: <1517331033-5718-1-git-send-email-ajay.kathat@microchip.com>
-References: <1517331033-5718-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 25 Jan 2018 06:14:13 -0500
+From: Tobias Schramm <tobleminer@gmail.com>
+To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Cc: Tobias Schramm <tobleminer@gmail.com>
+Subject: [PATCH v3 0/2] ath10k: Add support for Ubiquiti-branded QCA988X
+Date: Thu, 25 Jan 2018 12:13:38 +0100
+Message-Id: <20180125111340.17553-1-tobleminer@gmail.com> (sfid-20180125_121417_505919_77D3DA30)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+A lot of more modern Ubiquiti AirMAX wireless devices contain a rebranded
+QCA988X with changed PCI vendor and device id.
+This patch adds support for those chips by treating them as QCA988X rev2
+radios.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Changes since v1:
+ * Send patch to more people and lists
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f5fdca7..5e01f6e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1165,7 +1165,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 	return result;
- }
- 
--static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
-+static s32 handle_connect_timeout(struct wilc_vif *vif)
- {
- 	s32 result = 0;
- 	struct connect_info strConnectInfo;
-@@ -1525,7 +1525,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
- 	return result;
- }
- 
--static int Handle_Key(struct wilc_vif *vif,
-+static int handle_key(struct wilc_vif *vif,
- 		      struct key_attr *pstrHostIFkeyAttr)
- {
- 	s32 result = 0;
-@@ -2511,7 +2511,7 @@ static void host_if_work(struct work_struct *work)
- 		break;
- 
- 	case HOST_IF_MSG_KEY:
--		Handle_Key(msg->vif, &msg->body.key_info);
-+		handle_key(msg->vif, &msg->body.key_info);
- 		break;
- 
- 	case HOST_IF_MSG_CFG_PARAMS:
-@@ -2578,7 +2578,7 @@ static void host_if_work(struct work_struct *work)
- 		break;
- 
- 	case HOST_IF_MSG_CONNECT_TIMER_FIRED:
--		Handle_ConnectTimeout(msg->vif);
-+		handle_connect_timeout(msg->vif);
- 		break;
- 
- 	case HOST_IF_MSG_POWER_MGMT:
+Changes since v2:
+ * Rename PCI_VENDOR_ID_UBNT to PCI_VENDOR_ID_UBIQUITI
+
+Tobias Schramm (2):
+  pci: Add vendor id of Ubiquiti Networks
+  ath10k: Add support for Ubiquiti rebranded QCA988X v2
+
+ drivers/net/wireless/ath/ath10k/core.c | 24 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  1 +
+ drivers/net/wireless/ath/ath10k/pci.c  |  4 ++++
+ include/linux/pci_ids.h                |  2 ++
+ 4 files changed, 31 insertions(+)
+
 -- 
-2.7.4
+2.16.0
