@@ -1,62 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37876 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750846AbeAQLra (ORCPT
+Received: from mail-qt0-f179.google.com ([209.85.216.179]:45983 "EHLO
+        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751184AbeAYKwT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 06:47:30 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: merez@codeaurora.org, Maya Erez <qca_merez@qca.qualcomm.com>,
-        Lazar Alexei <QCA_ailizaro@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        wil6210@qca.qualcomm.com, linux-wireless-owner@vger.kernel.org
-Subject: Re: [v2,6/9] wil6210: add support for headroom configuration
-References: <1513270393-919-7-git-send-email-qca_merez@qca.qualcomm.com>
-        <20180109080707.B05B66081B@smtp.codeaurora.org>
-        <1384d3ee94eb48f29e85161d9a8fa136@codeaurora.org>
-        <CAGRGNgUmtZcW=xewDPCathwCUMXjqXk_qTPcOjb9+VCOm=nskg@mail.gmail.com>
-Date: Wed, 17 Jan 2018 13:47:24 +0200
-In-Reply-To: <CAGRGNgUmtZcW=xewDPCathwCUMXjqXk_qTPcOjb9+VCOm=nskg@mail.gmail.com>
-        (Julian Calaby's message of "Wed, 17 Jan 2018 21:11:38 +1100")
-Message-ID: <87vag0emgj.fsf@kamboji.qca.qualcomm.com> (sfid-20180117_124734_081186_EB244232)
+        Thu, 25 Jan 2018 05:52:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5A69B605.60503@broadcom.com>
+References: <20180125074131.30622-1-tobleminer@gmail.com> <20180125074131.30622-2-tobleminer@gmail.com>
+ <5A69B605.60503@broadcom.com>
+From: Tobias Schramm <tobleminer@gmail.com>
+Date: Thu, 25 Jan 2018 11:52:18 +0100
+Message-ID: <CAM6qAzqQda40QZOaGzhSBp_a8U59Wpgx9ZQofAxh-yQ54f01Fw@mail.gmail.com> (sfid-20180125_115223_870590_8EA80602)
+Subject: Re: [PATCH v2 1/2] pci: Add vendor id of Ubiquiti Networks
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian Calaby <julian.calaby@gmail.com> writes:
-
-> On Tue, Jan 16, 2018 at 12:18 AM,  <merez@codeaurora.org> wrote:
->> On 2018-01-09 10:07, Kalle Valo wrote:
->>>
->>> Maya Erez <qca_merez@qca.qualcomm.com> wrote:
->>>
->>>> Add module parameter for configuring the headroom size
->>>> in the skb allocation.
->>>>
->>>> Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
->>>> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
->>>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
->>>
->>>
->>> Why?
->>
->>
->> Some platforms have specific requirements on packet alignment.
->> I will upload an update of the commit text in the next set of 11ad patches.
->
-> Is this something the platform can tell you or something you can store
-> in an array by platform name? (and use the maximum size if we don't
-> know)
->
-> Alternatively, would it waste too much RAM to just set this to the
-> maximum size and have done?
->
-> I feel that allowing the user to set it will be problematic.
-
-I feel the same. I don't think this is something which should be
-controlled with a module parameter, instead the driver should choose it
-automatically.
-
--- 
-Kalle Valo
+Ok, will change that to PCI_VENDOR_ID_UBIQUITI in v3
