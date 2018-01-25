@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:56580 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752152AbeAIMXC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36738 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751174AbeAYVBb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 07:23:02 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 2/3] brcmfmac: add comment block in brcmf_sdio_buscore_read()
-Date: Tue,  9 Jan 2018 13:22:53 +0100
-Message-Id: <1515500574-16321-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180109_132307_708063_4827BEFA)
-In-Reply-To: <1515500574-16321-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1515500574-16321-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 25 Jan 2018 16:01:31 -0500
+Message-ID: <1516914086.2189.9.camel@sipsolutions.net> (sfid-20180125_220203_962108_2542E998)
+Subject: Re: [PATCH v2] mac80211_hwsim: don't use WQ_MEM_RECLAIM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Tejun Heo <tj@kernel.org>
+Cc: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 25 Jan 2018 22:01:26 +0100
+In-Reply-To: <5A6A3BFC.5090305@broadcom.com> (sfid-20180125_212019_075070_4A9FE925)
+References: <20180124074051.19939-1-johannes@sipsolutions.net>
+         <7eb10bf1-7825-3dae-b813-d912e6670440@uni-rostock.de>
+         <1516790786.2508.43.camel@sipsolutions.net>
+         <CAF7Mx6oASGjDrzVq4_t8Wt-DU7Zap1tcpz5vU7bk-Q5qzg4V=g@mail.gmail.com>
+         <CAF7Mx6o_Y0AeGQfhGKMkSxUHtRNyGaHh3g-TyvusJmsYyckFZg@mail.gmail.com>
+         <CAF7Mx6rg2XOOG0mZxnKiM_1ToB36Yc2A=sKQfN7drLsr3+4crw@mail.gmail.com>
+         <5A6A3BFC.5090305@broadcom.com> (sfid-20180125_212019_075070_4A9FE925)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_sdio_buscore_read() there is some special handling upon
-register access to chipid register of the chipcommon core. Add
-comment explaining why it is done here.
+I guess we should just ask Tejun :-)
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Tejun, the problem was a report that a WQ_MEM_RECLAIM workqueue is
+flushing another that isn't, and it turns out that lots of wireless
+drivers are using WQ_MEM_RECLAIM for some reason.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 81eb776..0868614 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3772,6 +3772,13 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
- 
- 	val = brcmf_sdiod_readl(sdiodev, addr, NULL);
- 
-+	/*
-+	 * this is a bit of special handling if reading the chipcommon chipid
-+	 * register. The 4339 is a next-gen of the 4335. It uses the same
-+	 * SDIO device id as 4335 and the chipid register returns 4335 as well.
-+	 * It can be identified as 4339 by looking at the chip revision. It
-+	 * is corrected here so the chip.c module has the right info.
-+	 */
- 	if (addr == CORE_CC_REG(SI_ENUM_BASE, chipid) &&
- 	    (sdiodev->func1->device == SDIO_DEVICE_ID_BROADCOM_4339 ||
- 	     sdiodev->func1->device == SDIO_DEVICE_ID_BROADCOM_4335_4339)) {
--- 
-1.9.1
+Arend said:
+> >  > > Maybe a hint in the documentation, that a work item on a WQ_MEM_RECLAIM
+> >  > > queue must not call flush of an !WQ_MEM_RECLAIM queue would be nice.
+> >  > > Maybe it's kind of obvious, but there is also a reminder not to forget
+> >  > > that flag, if a queue may have work items that reclaim memory
+> >  >
+> >  > Yeah, honestly, I'm not really sure either. Clearly we can't set it,
+> >  > but other drivers also set it...
+> > 
+> > That triggered something in my memory. So indeed we use it in brcmfmac
+> > as well. We used create_singlethread_workqueue(), but I wanted to avoid
+> > snprintf and specify the name format so switched to using
+> > alloc_ordered_workqueue() keeping WQ_MEM_RECLAIM as per the macro
+> > definition.
+> 
+> #define create_singlethread_workqueue(name)				\
+> 	alloc_ordered_workqueue("%s", __WQ_LEGACY | WQ_MEM_RECLAIM, name)
+> 
+> > Don't recall why I dropped the __WQ_LEGACY flag though.
+
+johannes
