@@ -1,336 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:7210 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751085AbeAVKXN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40498 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751531AbeAYM7O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 05:23:13 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 06/14] staging: wilc1000: rename strWIDList variable to wid_list to avoid camelCase
-Date: Mon, 22 Jan 2018 15:52:19 +0530
-Message-ID: <1516616547-24654-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180122_112316_405607_B2A063B3)
-In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
+        Thu, 25 Jan 2018 07:59:14 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Brian Norris" <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Shrenik Shikhare <shrenik@marvell.com>
+Subject: Re: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX stall
+References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
+        <20180125071202.0F39560A60@smtp.codeaurora.org>
+        <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
+Date: Thu, 25 Jan 2018 14:59:08 +0200
+In-Reply-To: <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
+        (Ganapathi Bhat's message of "Thu, 25 Jan 2018 09:59:04 +0000")
+Message-ID: <87a7x2yu03.fsf@kamboji.qca.qualcomm.com> (sfid-20180125_140145_478693_D24115AC)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
-Rename variable name from strWIDList to wid_list.
+Ganapathi Bhat <gbhat@marvell.com> writes:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 176 +++++++++++++++---------------
- 1 file changed, 88 insertions(+), 88 deletions(-)
+>> > The above scenario occurs in some platforms where the RX processing is
+>> > comparitively slower. This results in RX stall in driver, command/TX
+>> > timeouts in firmware. The above scenario is introduced after commit
+>> > c7dbdcb2a4e1
+>> > ("mwifiex: schedule rx_work on RX interrupt for USB")
+>> >
+>> > To fix this set a new more_rx_task_flag whenever RX data callback is
+>> > trying to schedule rx_work but rx_processing is not yet cleared. This
+>> > will let the current rx_work(which was waiting for
+>> > rx_proc_lock) to loopback and process newly arrived RX packets.
+>> >
+>> > Signed-off-by: Cathy Luo <cluo@marvell.com>
+>> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+>>
+>> I can't find any commit with id c7dbdcb2a4e1, is it correct?
+>
+> Correct. Actually the commit id c7dbdcb2a4e1 is the PATCH [1/2] sent in this series.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f0168e3..13ac482 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -906,7 +906,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 			  struct connect_attr *pstrHostIFconnectAttr)
- {
- 	s32 result = 0;
--	struct wid strWIDList[8];
-+	struct wid wid_list[8];
- 	u32 u32WidsCount = 0, dummyval = 0;
- 	u8 *pu8CurrByte = NULL;
- 	struct join_bss_param *ptstrJoinBssParam;
-@@ -952,29 +952,29 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 	hif_drv->usr_conn_req.conn_result = pstrHostIFconnectAttr->result;
- 	hif_drv->usr_conn_req.arg = pstrHostIFconnectAttr->arg;
- 
--	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)(&(dummyval));
-+	wid_list[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)(&(dummyval));
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)(&(dummyval));
-+	wid_list[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)(&(dummyval));
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_FAILED_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)(&(dummyval));
-+	wid_list[u32WidsCount].id = WID_FAILED_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)(&(dummyval));
- 	u32WidsCount++;
- 
- 	{
--		strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
--		strWIDList[u32WidsCount].type = WID_BIN_DATA;
--		strWIDList[u32WidsCount].val = hif_drv->usr_conn_req.ies;
--		strWIDList[u32WidsCount].size = hif_drv->usr_conn_req.ies_len;
-+		wid_list[u32WidsCount].id = WID_INFO_ELEMENT_ASSOCIATE;
-+		wid_list[u32WidsCount].type = WID_BIN_DATA;
-+		wid_list[u32WidsCount].val = hif_drv->usr_conn_req.ies;
-+		wid_list[u32WidsCount].size = hif_drv->usr_conn_req.ies_len;
- 		u32WidsCount++;
- 
- 		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
-@@ -984,39 +984,39 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 			       info_element_size);
- 		}
- 	}
--	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
--	strWIDList[u32WidsCount].type = WID_CHAR;
--	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.security;
-+	wid_list[u32WidsCount].id = (u16)WID_11I_MODE;
-+	wid_list[u32WidsCount].type = WID_CHAR;
-+	wid_list[u32WidsCount].size = sizeof(char);
-+	wid_list[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.security;
- 	u32WidsCount++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
- 		mode_11i = hif_drv->usr_conn_req.security;
- 
--	strWIDList[u32WidsCount].id = (u16)WID_AUTH_TYPE;
--	strWIDList[u32WidsCount].type = WID_CHAR;
--	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
-+	wid_list[u32WidsCount].id = (u16)WID_AUTH_TYPE;
-+	wid_list[u32WidsCount].type = WID_CHAR;
-+	wid_list[u32WidsCount].size = sizeof(char);
-+	wid_list[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
- 	u32WidsCount++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
- 		auth_type = (u8)hif_drv->usr_conn_req.auth_type;
- 
--	strWIDList[u32WidsCount].id = (u16)WID_JOIN_REQ_EXTENDED;
--	strWIDList[u32WidsCount].type = WID_STR;
--	strWIDList[u32WidsCount].size = 112;
--	strWIDList[u32WidsCount].val = kmalloc(strWIDList[u32WidsCount].size, GFP_KERNEL);
-+	wid_list[u32WidsCount].id = (u16)WID_JOIN_REQ_EXTENDED;
-+	wid_list[u32WidsCount].type = WID_STR;
-+	wid_list[u32WidsCount].size = 112;
-+	wid_list[u32WidsCount].val = kmalloc(wid_list[u32WidsCount].size, GFP_KERNEL);
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
--		join_req_size = strWIDList[u32WidsCount].size;
-+		join_req_size = wid_list[u32WidsCount].size;
- 		join_req = kmalloc(join_req_size, GFP_KERNEL);
- 	}
--	if (!strWIDList[u32WidsCount].val) {
-+	if (!wid_list[u32WidsCount].val) {
- 		result = -EFAULT;
- 		goto ERRORHANDLER;
- 	}
- 
--	pu8CurrByte = strWIDList[u32WidsCount].val;
-+	pu8CurrByte = wid_list[u32WidsCount].val;
- 
- 	if (pstrHostIFconnectAttr->ssid) {
- 		memcpy(pu8CurrByte, pstrHostIFconnectAttr->ssid, pstrHostIFconnectAttr->ssid_len);
-@@ -1095,7 +1095,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 		pu8CurrByte += sizeof(ptstrJoinBssParam->start_time);
- 	}
- 
--	pu8CurrByte = strWIDList[u32WidsCount].val;
-+	pu8CurrByte = wid_list[u32WidsCount].val;
- 	u32WidsCount++;
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
-@@ -1107,7 +1107,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
- 		memcpy(wilc_connected_ssid,
- 		       pstrHostIFconnectAttr->bssid, ETH_ALEN);
- 
--	result = wilc_send_config_pkt(vif, SET_CFG, strWIDList,
-+	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
- 				      u32WidsCount,
- 				      wilc_get_vif_idx(vif));
- 	if (result) {
-@@ -1530,7 +1530,7 @@ static int Handle_Key(struct wilc_vif *vif,
- {
- 	s32 result = 0;
- 	struct wid wid;
--	struct wid strWIDList[5];
-+	struct wid wid_list[5];
- 	u8 i;
- 	u8 *pu8keybuf;
- 	s8 s8idxarray[1];
-@@ -1541,15 +1541,15 @@ static int Handle_Key(struct wilc_vif *vif,
- 	case WEP:
- 
- 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
--			strWIDList[0].id = (u16)WID_11I_MODE;
--			strWIDList[0].type = WID_CHAR;
--			strWIDList[0].size = sizeof(char);
--			strWIDList[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.mode;
-+			wid_list[0].id = (u16)WID_11I_MODE;
-+			wid_list[0].type = WID_CHAR;
-+			wid_list[0].size = sizeof(char);
-+			wid_list[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.mode;
- 
--			strWIDList[1].id = WID_AUTH_TYPE;
--			strWIDList[1].type = WID_CHAR;
--			strWIDList[1].size = sizeof(char);
--			strWIDList[1].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.auth_type;
-+			wid_list[1].id = WID_AUTH_TYPE;
-+			wid_list[1].type = WID_CHAR;
-+			wid_list[1].size = sizeof(char);
-+			wid_list[1].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.auth_type;
- 
- 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
- 					    GFP_KERNEL);
-@@ -1564,13 +1564,13 @@ static int Handle_Key(struct wilc_vif *vif,
- 
- 			kfree(pstrHostIFkeyAttr->attr.wep.key);
- 
--			strWIDList[2].id = (u16)WID_WEP_KEY_VALUE;
--			strWIDList[2].type = WID_STR;
--			strWIDList[2].size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
--			strWIDList[2].val = (s8 *)pu8keybuf;
-+			wid_list[2].id = (u16)WID_WEP_KEY_VALUE;
-+			wid_list[2].type = WID_STR;
-+			wid_list[2].size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
-+			wid_list[2].val = (s8 *)pu8keybuf;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
--						      strWIDList, 3,
-+						      wid_list, 3,
- 						      wilc_get_vif_idx(vif));
- 			kfree(pu8keybuf);
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
-@@ -1632,18 +1632,18 @@ static int Handle_Key(struct wilc_vif *vif,
- 			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.key,
- 			       pstrHostIFkeyAttr->attr.wpa.key_len);
- 
--			strWIDList[0].id = (u16)WID_11I_MODE;
--			strWIDList[0].type = WID_CHAR;
--			strWIDList[0].size = sizeof(char);
--			strWIDList[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
-+			wid_list[0].id = (u16)WID_11I_MODE;
-+			wid_list[0].type = WID_CHAR;
-+			wid_list[0].size = sizeof(char);
-+			wid_list[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
- 
--			strWIDList[1].id = (u16)WID_ADD_RX_GTK;
--			strWIDList[1].type = WID_STR;
--			strWIDList[1].val = (s8 *)pu8keybuf;
--			strWIDList[1].size = RX_MIC_KEY_MSG_LEN;
-+			wid_list[1].id = (u16)WID_ADD_RX_GTK;
-+			wid_list[1].type = WID_STR;
-+			wid_list[1].val = (s8 *)pu8keybuf;
-+			wid_list[1].size = RX_MIC_KEY_MSG_LEN;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
--						      strWIDList, 2,
-+						      wid_list, 2,
- 						      wilc_get_vif_idx(vif));
- 
- 			kfree(pu8keybuf);
-@@ -1700,18 +1700,18 @@ static int Handle_Key(struct wilc_vif *vif,
- 			memcpy(pu8keybuf + 8, pstrHostIFkeyAttr->attr.wpa.key,
- 			       pstrHostIFkeyAttr->attr.wpa.key_len);
- 
--			strWIDList[0].id = (u16)WID_11I_MODE;
--			strWIDList[0].type = WID_CHAR;
--			strWIDList[0].size = sizeof(char);
--			strWIDList[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
-+			wid_list[0].id = (u16)WID_11I_MODE;
-+			wid_list[0].type = WID_CHAR;
-+			wid_list[0].size = sizeof(char);
-+			wid_list[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
- 
--			strWIDList[1].id = (u16)WID_ADD_PTK;
--			strWIDList[1].type = WID_STR;
--			strWIDList[1].val = (s8 *)pu8keybuf;
--			strWIDList[1].size = PTK_KEY_MSG_LEN + 1;
-+			wid_list[1].id = (u16)WID_ADD_PTK;
-+			wid_list[1].type = WID_STR;
-+			wid_list[1].val = (s8 *)pu8keybuf;
-+			wid_list[1].size = PTK_KEY_MSG_LEN + 1;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
--						      strWIDList, 2,
-+						      wid_list, 2,
- 						      wilc_get_vif_idx(vif));
- 			kfree(pu8keybuf);
- 			complete(&hif_drv->comp_test_key_block);
-@@ -1892,40 +1892,40 @@ static void Handle_GetRssi(struct wilc_vif *vif)
- static s32 Handle_GetStatistics(struct wilc_vif *vif,
- 				struct rf_info *pstrStatistics)
- {
--	struct wid strWIDList[5];
-+	struct wid wid_list[5];
- 	u32 u32WidsCount = 0, result = 0;
- 
--	strWIDList[u32WidsCount].id = WID_LINKSPEED;
--	strWIDList[u32WidsCount].type = WID_CHAR;
--	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->link_speed;
-+	wid_list[u32WidsCount].id = WID_LINKSPEED;
-+	wid_list[u32WidsCount].type = WID_CHAR;
-+	wid_list[u32WidsCount].size = sizeof(char);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->link_speed;
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_RSSI;
--	strWIDList[u32WidsCount].type = WID_CHAR;
--	strWIDList[u32WidsCount].size = sizeof(char);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->rssi;
-+	wid_list[u32WidsCount].id = WID_RSSI;
-+	wid_list[u32WidsCount].type = WID_CHAR;
-+	wid_list[u32WidsCount].size = sizeof(char);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->rssi;
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->tx_cnt;
-+	wid_list[u32WidsCount].id = WID_SUCCESS_FRAME_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->tx_cnt;
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->rx_cnt;
-+	wid_list[u32WidsCount].id = WID_RECEIVED_FRAGMENT_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->rx_cnt;
- 	u32WidsCount++;
- 
--	strWIDList[u32WidsCount].id = WID_FAILED_COUNT;
--	strWIDList[u32WidsCount].type = WID_INT;
--	strWIDList[u32WidsCount].size = sizeof(u32);
--	strWIDList[u32WidsCount].val = (s8 *)&pstrStatistics->tx_fail_cnt;
-+	wid_list[u32WidsCount].id = WID_FAILED_COUNT;
-+	wid_list[u32WidsCount].type = WID_INT;
-+	wid_list[u32WidsCount].size = sizeof(u32);
-+	wid_list[u32WidsCount].val = (s8 *)&pstrStatistics->tx_fail_cnt;
- 	u32WidsCount++;
- 
--	result = wilc_send_config_pkt(vif, GET_CFG, strWIDList,
-+	result = wilc_send_config_pkt(vif, GET_CFG, wid_list,
- 				      u32WidsCount,
- 				      wilc_get_vif_idx(vif));
- 
+Actually the commit id will be different, I just tested it to be sure:
+
+$ git reset --hard master
+HEAD is now at b69c1df47281 brcmfmac: separate firmware errors from i/o errors
+$ git am -s -3 1.patch
+Applying: mwifiex: schedule rx_work on RX interrupt for USB
+$ git log --oneline -1 | cat
+676bc4833907 mwifiex: schedule rx_work on RX interrupt for USB
+$ git reset --hard master
+HEAD is now at b69c1df47281 brcmfmac: separate firmware errors from i/o errors
+$ git am -s -3 1.patch
+Applying: mwifiex: schedule rx_work on RX interrupt for USB
+$ git log --oneline -1 | cat
+74c5fc1d45b4 mwifiex: schedule rx_work on RX interrupt for USB
+$ 
+
+So the date, and most likely also the commiter, is included when
+calculating the hash. So you can't really refer to uncommited patches
+using a commit id as the id is determined only once the maintainer
+applies the patch.
+
 -- 
-2.7.4
+Kalle Valo
