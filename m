@@ -1,67 +1,286 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41932 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754503AbeALLb1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 06:31:27 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>, emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 0/5] iwlwifi: updates intended for v4.16 2017-12-23
-References: <20171223092200.30270-1-luca@coelho.fi>
-Date: Fri, 12 Jan 2018 13:31:23 +0200
-In-Reply-To: <20171223092200.30270-1-luca@coelho.fi> (Luca Coelho's message of
-        "Sat, 23 Dec 2017 11:21:55 +0200")
-Message-ID: <871sivs48k.fsf@kamboji.qca.qualcomm.com> (sfid-20180112_123131_188374_23D58B6E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:47592 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750937AbeAYKo3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Jan 2018 05:44:29 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, johannes@sipsolutions.net
+Subject: [PATCH v2 8/8] mt76: validate rx CCMP PN
+Date: Thu, 25 Jan 2018 11:44:24 +0100
+Message-Id: <20180125104424.90324-1-nbd@nbd.name> (sfid-20180125_114434_329591_3C8C0BC5)
+In-Reply-To: <20180124151917.70962-8-nbd@nbd.name>
+References: <20180124151917.70962-8-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ emmanuel
+Apparently hardware does not perform CCMP PN validation in hardware, so
+we need to take care of this in the driver. This is important for
+protecting against replay attacks.
 
-Luca Coelho <luca@coelho.fi> writes:
+Since validation of fragmented frames is more complex, the CCMP header
+for those is preserved. To keep the counter in sync, the first fragment
+is verified by both mt76 and mac80211, and all other fragments only by
+mac80211.
 
-> From: Luca Coelho <luciano.coelho@intel.com>
->
-> Hi,
->
-> Here's the fourth and probably last batch of patches intended for
-> 4.16.  Nothing major, just continued development, some cleanups and
-> small fixes here and there.
->
-> * Fix a UBSAN warning;
-> * Improvement in the net-stack/driver log syncing
-> * An RCU lock fix in the new rate-scaling code;
-> * Small cleanups;
->
-> As usual, I'm pushing this to a pending branch, for kbuild bot, and
-> will send a pull-request later.
->
-> FYI, I'll be on holidays/vacations for the next few weeks, so there
-> will probably not be much activity in the iwlwifi driver code.
->
-> Please review.
->
-> Cheers,
-> Luca.
->
->
-> Luca Coelho (1):
->   iwlwifi: mvm: check if mac80211_queue is valid in iwl_mvm_disable_txq
->
-> Mordechay Goodstein (1):
->   iwlwifi: set default timstamp marker cmd
->
-> Sara Sharon (3):
->   iwlwifi: mvm: flip AMSDU addresses only for 9000 family
->   iwlwifi: mvm: take RCU lock before dereferencing
->   iwlwifi: mvm: move TSO segment to a separate function
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c    | 65 ++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h        | 12 ++++-
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c  | 61 +++++++++++++++++-----
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c |  1 +
+ 5 files changed, 125 insertions(+), 16 deletions(-)
 
-Most likely the merge window starts in 9 days so I need to start getting
-patches ready. As Luca is away should I apply these patches directly to
-wireless-drivers-next?
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 77f1be161009..5fcb2deb89a2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -384,6 +384,27 @@ int mt76_get_survey(struct ieee80211_hw *hw, int idx,
+ }
+ EXPORT_SYMBOL_GPL(mt76_get_survey);
+ 
++void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
++			 struct ieee80211_key_conf *key)
++{
++	struct ieee80211_key_seq seq;
++	int i;
++
++	wcid->rx_check_pn = false;
++
++	if (!key)
++		return;
++
++	if (key->cipher == WLAN_CIPHER_SUITE_CCMP)
++		wcid->rx_check_pn = true;
++
++	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
++		ieee80211_get_key_rx_seq(key, i, &seq);
++		memcpy(wcid->rx_key_pn[i], seq.ccmp.pn, sizeof(seq.ccmp.pn));
++	}
++}
++EXPORT_SYMBOL(mt76_wcid_key_setup);
++
+ static struct ieee80211_sta *mt76_rx_convert(struct sk_buff *skb)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+@@ -410,6 +431,45 @@ static struct ieee80211_sta *mt76_rx_convert(struct sk_buff *skb)
+ 	return wcid_to_sta(mstat.wcid);
+ }
+ 
++static int
++mt76_check_ccmp_pn(struct sk_buff *skb)
++{
++	struct mt76_rx_status *status = (struct mt76_rx_status *) skb->cb;
++	struct mt76_wcid *wcid = status->wcid;
++	struct ieee80211_hdr *hdr;
++	int ret;
++
++	if (!(status->flag & RX_FLAG_DECRYPTED))
++		return 0;
++
++	if (!wcid || !wcid->rx_check_pn)
++		return 0;
++
++	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
++		/*
++		 * Validate the first fragment both here and in mac80211
++		 * All further fragments will be validated by mac80211 only.
++		 */
++		hdr = (struct ieee80211_hdr *) skb->data;
++		if (ieee80211_is_frag(hdr) &&
++		    !ieee80211_is_first_frag(hdr->frame_control))
++			return 0;
++	}
++
++	BUILD_BUG_ON(sizeof(status->iv) != sizeof(wcid->rx_key_pn[0]));
++	ret = memcmp(status->iv, wcid->rx_key_pn[status->tid],
++		     sizeof(status->iv));
++	if (ret <= 0)
++		return -EINVAL; /* replay */
++
++	memcpy(wcid->rx_key_pn[status->tid], status->iv, sizeof(status->iv));
++
++	if (status->flag & RX_FLAG_IV_STRIPPED)
++		status->flag |= RX_FLAG_PN_VALIDATED;
++
++	return 0;
++}
++
+ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+ 		      int queue)
+ {
+@@ -421,6 +481,11 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+ 	    napi = &dev->napi[queue];
+ 
+ 	while ((skb = __skb_dequeue(frames)) != NULL) {
++		if (mt76_check_ccmp_pn(skb)) {
++			dev_kfree_skb(skb);
++			continue;
++		}
++
+ 		sta = mt76_rx_convert(skb);
+ 		ieee80211_rx_napi(dev->hw, sta, skb, napi);
+ 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index af98bc65c2e1..129015c9d116 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -131,6 +131,9 @@ struct mt76_wcid {
+ 
+ 	u8 sta:1;
+ 
++	u8 rx_check_pn;
++	u8 rx_key_pn[IEEE80211_NUM_TIDS][6];
++
+ 	__le16 tx_rate;
+ 	bool tx_rate_set;
+ 	u8 tx_rate_nss;
+@@ -279,12 +282,14 @@ struct mt76_rx_status {
+ 
+ 	unsigned long reorder_time;
+ 
+-	u8 aggr;
++	u8 iv[6];
++
++	u8 aggr:1;
+ 	u8 tid;
+ 	u16 seqno;
+ 
+-	u32 flag;
+ 	u16 freq;
++	u32 flag;
+ 	u8 enc_flags;
+ 	u8 encoding:2, bw:3;
+ 	u8 rate_idx;
+@@ -413,6 +418,9 @@ int mt76_rx_aggr_start(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tid,
+ 		       u16 ssn, u8 size);
+ void mt76_rx_aggr_stop(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tid);
+ 
++void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
++			 struct ieee80211_key_conf *key);
++
+ /* internal */
+ void mt76_tx_free(struct mt76_dev *dev);
+ void mt76_put_txwi(struct mt76_dev *dev, struct mt76_txwi_cache *t);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index 1e34b578b151..1b00ae4465a2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -131,7 +131,7 @@ mt76_write_mac_initvals(struct mt76x2_dev *dev)
+ 		{ MT_RX_FILTR_CFG,		0x00015f97 },
+ 		{ MT_LEGACY_BASIC_RATE,		0x0000017f },
+ 		{ MT_HT_BASIC_RATE,		0x00004003 },
+-		{ MT_PN_PAD_MODE,		0x00000002 },
++		{ MT_PN_PAD_MODE,		0x00000003 },
+ 		{ MT_TXOP_HLDR_ET,		0x00000002 },
+ 		{ 0xa44,			0x00000000 },
+ 		{ MT_HEADER_TRANS_CTRL_REG,	0x00000000 },
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index f56a8f459fe6..6c30b5eaa9ca 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -257,12 +257,16 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
+ 	txwi->len_ctl = cpu_to_le16(skb->len);
+ }
+ 
+-static void mt76x2_remove_hdr_pad(struct sk_buff *skb)
++static void mt76x2_remove_hdr_pad(struct sk_buff *skb, int len)
+ {
+-	int len = ieee80211_get_hdrlen_from_skb(skb);
++	int hdrlen;
+ 
+-	memmove(skb->data + 2, skb->data, len);
+-	skb_pull(skb, 2);
++	if (!len)
++		return;
++
++	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++	memmove(skb->data + len, skb->data, hdrlen);
++	skb_pull(skb, len);
+ }
+ 
+ static struct mt76_wcid *
+@@ -287,28 +291,59 @@ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
+ {
+ 	struct mt76_rx_status *status = (struct mt76_rx_status *) skb->cb;
+ 	struct mt76x2_rxwi *rxwi = rxi;
++	u32 rxinfo = le32_to_cpu(rxwi->rxinfo);
+ 	u32 ctl = le32_to_cpu(rxwi->ctl);
+ 	u16 rate = le16_to_cpu(rxwi->rate);
+ 	u16 tid_sn = le16_to_cpu(rxwi->tid_sn);
+ 	bool unicast = rxwi->rxinfo & cpu_to_le32(MT_RXINFO_UNICAST);
++	int pad_len = 0;
++	u8 pn_len;
+ 	u8 wcid;
+ 	int len;
+ 
++	if (rxinfo & MT_RXINFO_L2PAD)
++		pad_len += 2;
++
++	if (rxinfo & MT_RXINFO_DECRYPT) {
++		status->flag |= RX_FLAG_DECRYPTED;
++		status->flag |= RX_FLAG_MMIC_STRIPPED;
++		status->flag |= RX_FLAG_MIC_STRIPPED;
++		status->flag |= RX_FLAG_IV_STRIPPED;
++	}
++
+ 	wcid = FIELD_GET(MT_RXWI_CTL_WCID, ctl);
+ 	status->wcid = mt76x2_rx_get_sta_wcid(dev, wcid, unicast);
+ 
+-	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD))
+-		mt76x2_remove_hdr_pad(skb);
++	len = FIELD_GET(MT_RXWI_CTL_MPDU_LEN, ctl);
++	pn_len = FIELD_GET(MT_RXINFO_PN_LEN, rxinfo);
++	if (pn_len) {
++		int offset = ieee80211_get_hdrlen_from_skb(skb) + pad_len;
++		u8 *data = skb->data + offset;
++
++		status->iv[0] = data[7];
++		status->iv[1] = data[6];
++		status->iv[2] = data[5];
++		status->iv[3] = data[4];
++		status->iv[4] = data[1];
++		status->iv[5] = data[0];
++
++		/*
++		 * Driver CCMP validation can't deal with fragments.
++		 * Let mac80211 take care of it.
++		 */
++		if (rxinfo & MT_RXINFO_FRAG) {
++			status->flag &= ~RX_FLAG_IV_STRIPPED;
++		} else {
++			pad_len += pn_len << 2;
++			len -= pn_len << 2;
++		}
++	}
++
++	mt76x2_remove_hdr_pad(skb, pad_len);
+ 
+-	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_BA))
++	if (rxinfo & MT_RXINFO_BA)
+ 		status->aggr = true;
+ 
+-	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_DECRYPT)) {
+-		status->flag |= RX_FLAG_DECRYPTED;
+-		status->flag |= RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED;
+-	}
+-
+-	len = FIELD_GET(MT_RXWI_CTL_MPDU_LEN, ctl);
+ 	if (WARN_ON_ONCE(len > skb->len))
+ 		return -EINVAL;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+index 08fe804c6a43..bf26284b9989 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+@@ -371,6 +371,7 @@ mt76x2_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 		key = NULL;
+ 	}
++	mt76_wcid_key_setup(&dev->mt76, wcid, key);
+ 
+ 	if (!msta) {
+ 		if (key || wcid->hw_key_idx == idx) {
 -- 
-Kalle Valo
+2.14.2
