@@ -1,113 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37131 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756705AbeATVP6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Jan 2018 16:15:58 -0500
-Subject: [PATCH v4.1 10/10] nl80211: sanitize array index in parse_txq_params
-From: Dan Williams <dan.j.williams@intel.com>
-To: tglx@linutronix.de
-Cc: linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        gregkh@linuxfoundation.org,
-        Christian Lamparter <chunkeey@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        torvalds@linux-foundation.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        alan@linux.intel.com
-Date: Sat, 20 Jan 2018 13:06:52 -0800
-Message-ID: <151648241217.34747.15879467952925973505.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180120_221602_602734_631941A3)
-In-Reply-To: <151648235823.34747.15181877619346237802.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151648235823.34747.15181877619346237802.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:41724 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751169AbeAYSZR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Jan 2018 13:25:17 -0500
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCHv2 2/2] mac80211: Add support to notify ht/vht opmode modification.
+Date: Thu, 25 Jan 2018 23:51:33 +0530
+Message-Id: <1516904493-4310-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180125_192521_110098_6AD77B99)
+In-Reply-To: <1516904493-4310-1-git-send-email-tamizhr@codeaurora.org>
+References: <1516904493-4310-1-git-send-email-tamizhr@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless drivers rely on parse_txq_params to validate that
-txq_params->ac is less than NL80211_NUM_ACS by the time the low-level
-driver's ->conf_tx() handler is called. Use a new helper, 'array_idx',
-to sanitize txq_params->ac with respect to speculation. I.e. ensure that
-any speculation into ->conf_tx() handlers is done with a value of
-txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
+This will add support to send an event to a userspace application
+whenever station advertise its ht/vht opmode modification through
+an action frame.
 
-Reported-by: Christian Lamparter <chunkeey@gmail.com>
-Reported-by: Elena Reshetova <elena.reshetova@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
 ---
- include/linux/nospec.h |   21 +++++++++++++++++++++
- net/wireless/nl80211.c |   10 +++++++---
- 2 files changed, 28 insertions(+), 3 deletions(-)
+ net/mac80211/rx.c  | 14 ++++++++++++++
+ net/mac80211/vht.c |  9 +++++++++
+ 2 files changed, 23 insertions(+)
 
-diff --git a/include/linux/nospec.h b/include/linux/nospec.h
-index dd3aa05fab87..b8a9222e34d1 100644
---- a/include/linux/nospec.h
-+++ b/include/linux/nospec.h
-@@ -41,4 +41,25 @@ static inline unsigned long array_ptr_mask(unsigned long idx, unsigned long sz)
- 	__u._bit &= _mask;						\
- 	__u._ptr;							\
- })
-+
-+/**
-+ * array_idx - Generate a pointer to an array index, ensuring the
-+ * pointer is bounded under speculation to NULL.
-+ *
-+ * @idx: the index of the element, must be less than LONG_MAX
-+ * @sz: the number of elements in the array, must be less than LONG_MAX
-+ *
-+ * If @idx falls in the interval [0, @sz), returns &@idx otherwise
-+ * returns NULL.
-+ */
-+#define array_idx(idx, sz)						\
-+({									\
-+	union { typeof((idx)) *_ptr; unsigned long _bit; } __u;		\
-+	typeof(idx) *_i = &(idx);					\
-+	unsigned long _mask = array_ptr_mask(*_i, (sz));		\
-+									\
-+	__u._ptr = _i;							\
-+	__u._bit &= _mask;						\
-+	__u._ptr;							\
-+})
- #endif /* __NOSPEC_H__ */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d396cb61a280..e3b3527c16d4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -16,6 +16,7 @@
- #include <linux/nl80211.h>
- #include <linux/rtnetlink.h>
- #include <linux/netlink.h>
-+#include <linux/nospec.h>
- #include <linux/etherdevice.h>
- #include <net/net_namespace.h>
- #include <net/genetlink.h>
-@@ -2056,20 +2057,23 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
- static int parse_txq_params(struct nlattr *tb[],
- 			    struct ieee80211_txq_params *txq_params)
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index fd58061..d1efe8a 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2848,6 +2848,7 @@ static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
+ 		case WLAN_HT_ACTION_SMPS: {
+ 			struct ieee80211_supported_band *sband;
+ 			enum ieee80211_smps_mode smps_mode;
++			struct sta_opmode_info sta_opmode;
+ 
+ 			/* convert to HT capability */
+ 			switch (mgmt->u.action.u.ht_smps.smps_control) {
+@@ -2868,17 +2869,24 @@ static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
+ 			if (rx->sta->sta.smps_mode == smps_mode)
+ 				goto handled;
+ 			rx->sta->sta.smps_mode = smps_mode;
++			sta_opmode.smps_mode = smps_mode;
++			sta_opmode.changed = STA_OPMODE_SMPS_MODE_CHANGED;
+ 
+ 			sband = rx->local->hw.wiphy->bands[status->band];
+ 
+ 			rate_control_rate_update(local, sband, rx->sta,
+ 						 IEEE80211_RC_SMPS_CHANGED);
++			cfg80211_sta_opmode_change_notify(sdata->dev,
++							  rx->sta->addr,
++							  &sta_opmode,
++							  GFP_KERNEL);
+ 			goto handled;
+ 		}
+ 		case WLAN_HT_ACTION_NOTIFY_CHANWIDTH: {
+ 			struct ieee80211_supported_band *sband;
+ 			u8 chanwidth = mgmt->u.action.u.ht_notify_cw.chanwidth;
+ 			enum ieee80211_sta_rx_bandwidth max_bw, new_bw;
++			struct sta_opmode_info sta_opmode;
+ 
+ 			/* If it doesn't support 40 MHz it can't change ... */
+ 			if (!(rx->sta->sta.ht_cap.cap &
+@@ -2899,9 +2907,15 @@ static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
+ 
+ 			rx->sta->sta.bandwidth = new_bw;
+ 			sband = rx->local->hw.wiphy->bands[status->band];
++			sta_opmode.bw = new_bw;
++			sta_opmode.changed = STA_OPMODE_MAX_BW_CHANGED;
+ 
+ 			rate_control_rate_update(local, sband, rx->sta,
+ 						 IEEE80211_RC_BW_CHANGED);
++			cfg80211_sta_opmode_change_notify(sdata->dev,
++							  rx->sta->addr,
++							  &sta_opmode,
++							  GFP_KERNEL);
+ 			goto handled;
+ 		}
+ 		default:
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index b9276ac..5f5db8e 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -447,6 +447,7 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				  enum nl80211_band band)
  {
-+	u8 ac, *idx;
+ 	enum ieee80211_sta_rx_bandwidth new_bw;
++	struct sta_opmode_info sta_opmode;
+ 	u32 changed = 0;
+ 	u8 nss;
+ 
+@@ -460,7 +461,9 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (sta->sta.rx_nss != nss) {
+ 		sta->sta.rx_nss = nss;
++		sta_opmode.rx_nss = nss;
+ 		changed |= IEEE80211_RC_NSS_CHANGED;
++		sta_opmode.changed |= STA_OPMODE_N_SS_CHANGED;
+ 	}
+ 
+ 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
+@@ -481,9 +484,15 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 	new_bw = ieee80211_sta_cur_vht_bw(sta);
+ 	if (new_bw != sta->sta.bandwidth) {
+ 		sta->sta.bandwidth = new_bw;
++		sta_opmode.bw = new_bw;
+ 		changed |= IEEE80211_RC_BW_CHANGED;
++		sta_opmode.changed |= STA_OPMODE_MAX_BW_CHANGED;
+ 	}
+ 
++	if (sta_opmode.changed)
++		cfg80211_sta_opmode_change_notify(sdata->dev, sta->addr,
++						  &sta_opmode, GFP_KERNEL);
 +
- 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
- 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
- 	    !tb[NL80211_TXQ_ATTR_AIFS])
- 		return -EINVAL;
- 
--	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
-+	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
- 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
- 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
- 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
- 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
- 
--	if (txq_params->ac >= NL80211_NUM_ACS)
-+	idx = array_idx(ac, NL80211_NUM_ACS);
-+	if (!idx)
- 		return -EINVAL;
--
-+	txq_params->ac = *idx;
- 	return 0;
+ 	return changed;
  }
  
+-- 
+1.9.1
