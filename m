@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.llwyncelyn.cymru ([82.70.14.225]:55358 "EHLO fuzix.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753340AbeAFPGx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 6 Jan 2018 10:06:53 -0500
-Date: Sat, 6 Jan 2018 15:06:21 +0000
-From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-To: Christian Lamparter <chunkeey@gmail.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        peterz@infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        gregkh@linuxfoundation.org, tglx@linutronix.de,
-        torvalds@linux-foundation.org, Kalle Valo <kvalo@codeaurora.org>,
-        alan@linux.intel.com
-Subject: Re: [PATCH 08/18] carl9170: prevent bounds-check bypass via
- speculative execution
-Message-ID: <20180106150621.2221a646@alans-desktop> (sfid-20180106_160712_462314_C945DDC4)
-In-Reply-To: <3586343.KJymplWpZW@debian64>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
-        <151520103755.32271.6819511294540882298.stgit@dwillia2-desk3.amr.corp.intel.com>
-        <3586343.KJymplWpZW@debian64>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:45315 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751386AbeAYLOW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Jan 2018 06:14:22 -0500
+From: Tobias Schramm <tobleminer@gmail.com>
+To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Cc: Tobias Schramm <tobleminer@gmail.com>
+Subject: [PATCH v3 1/2] pci: Add vendor id of Ubiquiti Networks
+Date: Thu, 25 Jan 2018 12:13:39 +0100
+Message-Id: <20180125111340.17553-2-tobleminer@gmail.com> (sfid-20180125_121433_905249_C7FD449D)
+In-Reply-To: <20180125111340.17553-1-tobleminer@gmail.com>
+References: <20180125111340.17553-1-tobleminer@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> The only way a user can set this in any meaningful way would be via
-> a NL80211_CMD_SET_WIPHY netlink message. However, the value will get
-> vetted there by cfg80211's parse_txq_params [0]. This is long before
+Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
+---
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Far more than a couple of hundred instructions ? The problem is that the
-processor will speculate that the parameter is valid and continue on that
-basis until the speculation resolves or it hits some other limit that
-stops it speculating further. That can be quite a distance on a modern
-x86 processor, and for all we know could be even more on some of the
-other CPUs involved.
-
-> it reaches any of the *_op_conf_tx functions.
-> 
-> And Furthermore a invalid queue (param->ac) would cause a crash in 
-> this line in mac80211 before it even reaches the driver [1]:
-> |	sdata->tx_conf[params->ac] = p;
-> |                   ^^^^^^^^
-
-Firstly it might not because the address you get as a result could be
-valid kernel memory. In fact your attackers wants it to be valid kernel
-memory since they are trying to find the value of a piece of that memory.
-
-Secondly the processor is doing this speculatively so it won't fault. It
-will eventually decide it went the wrong way and throw all the
-speculative work away - leaving footprints. It won't fault unless the
-speculative resolves that was the real path the code took.
-
-If it's not a performance critical path then it's better to be safe.
-
-Alan
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ab20dc5db423..35871adfdc86 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -149,6 +149,8 @@
+ #define PCI_VENDOR_ID_DYNALINK		0x0675
+ #define PCI_DEVICE_ID_DYNALINK_IS64PH	0x1702
+ 
++#define PCI_VENDOR_ID_UBIQUITI		0x0777
++
+ #define PCI_VENDOR_ID_BERKOM			0x0871
+ #define PCI_DEVICE_ID_BERKOM_A1T		0xffa1
+ #define PCI_DEVICE_ID_BERKOM_T_CONCEPT		0xffa2
+-- 
+2.16.0
