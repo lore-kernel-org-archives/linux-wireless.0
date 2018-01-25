@@ -1,46 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45814 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750970AbeAVM4F (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44938 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932615AbeAYBKL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 07:56:05 -0500
-Message-ID: <1516625763.2508.21.camel@sipsolutions.net> (sfid-20180122_135608_654253_59C6F729)
-Subject: Re: [PATCH 1/4] wireless: allow send peer mac in rssi cqm notify
-From: Johannes Berg <johannes@sipsolutions.net>
-To: tamizhr@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Date: Mon, 22 Jan 2018 13:56:03 +0100
-In-Reply-To: <1516174276-16789-2-git-send-email-tamizhr@codeaurora.org>
-References: <1516174276-16789-1-git-send-email-tamizhr@codeaurora.org>
-         <1516174276-16789-2-git-send-email-tamizhr@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 24 Jan 2018 20:10:11 -0500
+From: ryanhsu@codeaurora.org
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        rouven@czerwinskis.de
+Cc: ryanhsu@codeaurora.org
+Subject: [PATCH] ath10k: Update the phymode along with bandwidth change request
+Date: Wed, 24 Jan 2018 17:10:04 -0800
+Message-Id: <1516842604-31447-1-git-send-email-ryanhsu@codeaurora.org> (sfid-20180125_021015_838130_4106EC16)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-01-17 at 13:01 +0530, tamizhr@codeaurora.org wrote:
-> From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-> 
-> Extend cqm rssi notifier apis to include peer mac address. Currently
-> netlink cqm msg already accepts the mac. With this change just passing
-> the mac address as an argument to cfg and mac80211 apis.
-> 
-It seems eminently reasonable to have this functionality, but I'm not
-sure you can implement it like this?
+From: Ryan Hsu <ryanhsu@codeaurora.org>
 
-I'd be worried that there's some userspace that just listens for these
-events and could get confused if another virtual interface shows up
-with notifications - if it's not doing proper filtering etc.?
+In the case of Station connects to AP with narrower bandwidth at beginning.
+And later the AP changes the bandwidth to winder bandwidth, the AP will
+beacon with wider bandwidth IE, eg VHT20->VHT40->VHT80 or VHT40->VHT80.
 
-I'd be more comfortable at least moving the per-station notifications
-to a new command ID, or making them opt-in by clients by having a
-registration command and sending them unicast instead.
+Since the supported BANDWIDTH will be limited by the PHYMODE, so while
+Station receives the bandwidth change request, it will also need to
+reconfigure the PHYMODE setting to firmware instead of just configuring
+the BANDWIDTH info, otherwise it'll trigger a firmware crash with
+non-support bandwidth.
 
-Or actually, perhaps the best would be to just go and create a new
-multicast group for them, then we don't need a new command ID and
-existing clients can't get confused, but new clients don't really have
-to do anything but sign up to the new multicast group. We could check
-if the group is non-empty before we even build the message too.
+The issue was observed in WLAN.RM.4.4.1-00051-QCARMSWP-1, QCA6174 with
+below scenario.
 
-johannes
+--
+AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0 MHz)
+disconnect from AP xxx for new auth to yyy
+RX ReassocResp from xxx (capab=0x1111 status=0 aid=102)
+associated
+
+....
+
+AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0 MHz)
+AP xxx changed bandwidth, new config is 5200 MHz, width 3 (5210/0 MHz)
+
+....
+
+firmware register dump:
+[00]: 0x05030000 0x000015B3 0x00987291 0x00955B31
+[04]: 0x00987291 0x00060730 0x00000004 0x00000001
+[08]: 0x004089F0 0x00955A00 0x000A0B00 0x00400000
+[12]: 0x00000009 0x00000000 0x00952CD0 0x00952CE6
+[16]: 0x00952CC4 0x0098E25F 0x00000000 0x0091080D
+[20]: 0x40987291 0x0040E7A8 0x00000000 0x0041EE3C
+[24]: 0x809ABF05 0x0040E808 0x00000000 0xC0987291
+[28]: 0x809A650C 0x0040E948 0x0041FE40 0x004345C4
+[32]: 0x809A5C63 0x0040E988 0x0040E9AC 0x0042D1A8
+[36]: 0x8091D252 0x0040E9A8 0x00000002 0x00000001
+[40]: 0x809FDA9D 0x0040EA58 0x0043D554 0x0042D554
+[44]: 0x809F8B22 0x0040EA78 0x0043D554 0x00000001
+[48]: 0x80911210 0x0040EAC8 0x00000010 0x004041D0
+[52]: 0x80911154 0x0040EB28 0x00400000 0x00000000
+[56]: 0x8091122D 0x0040EB48 0x00000000 0x00400600
+--
+
+Reported-by: Rouven Czerwinski <rouven@czerwinskis.de>
+Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ebb3f1b..68a5256 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -5996,8 +5997,18 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
+ 			   ath10k_mac_max_vht_nss(vht_mcs_mask)));
+ 
+ 	if (changed & IEEE80211_RC_BW_CHANGED) {
+-		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM peer bw %d\n",
+-			   sta->addr, bw);
++		mode = chan_to_phymode(&def);
++
++		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM peer bw %d phymode %d\n",
++			   sta->addr, bw, mode);
++
++		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_PHYMODE, mode);
++		if (err) {
++			ath10k_warn(ar, "failed to update STA %pM peer phymode %d: %d\n",
++				    sta->addr, mode, err);
++			goto exit;
++		}
+ 
+ 		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
+ 						WMI_PEER_CHAN_WIDTH, bw);
+@@ -6039,6 +6050,7 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
+ 				    sta->addr);
+ 	}
+ 
++exit:
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
+-- 
+1.9.1
