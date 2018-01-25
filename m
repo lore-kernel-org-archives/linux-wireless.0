@@ -1,79 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:46794 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750848AbeAVO6A (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:58812 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751411AbeAYJWr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 09:58:00 -0500
-Date: Mon, 22 Jan 2018 15:57:59 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: syzbot
-        <bot+1fdad4e2731bf0c1bc19953ccc5061237ec92783@syzkaller.appspotmail.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        syzkaller-bugs@googlegroups.com,
-        David Miller <davem@davemloft.net>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Eric Dumazet <edumazet@google.com>,
-        jakub.kicinski@netronome.com,
-        Willem de Bruijn <willemb@google.com>,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        John Fastabend <john.fastabend@gmail.com>,
-        "Tobin C. Harding" <me@tobin.cc>, netdev <netdev@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH] sysfs: turn WARN() into pr_warn()
-Message-ID: <20180122145759.GA18798@kroah.com> (sfid-20180122_155817_726718_699A2A62)
-References: <001a11c14bc837f9760560a03d51@google.com>
- <20171219090121.GA10221@kroah.com>
- <CACT4Y+ZggKsEjCRZsFPW5-7_ByBcz4G0uRdieLL==r4mLQjhFA@mail.gmail.com>
- <CACT4Y+ZOimZPrSfphPMiHKXA3=kOmaFfwdofrmuv_rpXmx+vgA@mail.gmail.com>
- <CACT4Y+YMMfsXb+X4ApcWW02Qe7FmARhHjg97H4J-369OEMnwhw@mail.gmail.com>
- <20180122140015.GA30036@kroah.com>
- <CACT4Y+bEG22Wa6hiBQ6YX7d=JrHKAXfwYm+tu6cWc7AiUZxYbw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACT4Y+bEG22Wa6hiBQ6YX7d=JrHKAXfwYm+tu6cWc7AiUZxYbw@mail.gmail.com>
+        Thu, 25 Jan 2018 04:22:47 -0500
+Message-ID: <1516872160.2189.1.camel@sipsolutions.net> (sfid-20180125_102252_151716_714ECB0A)
+Subject: Re: [mac80211-next:master 3/5] net//wireless/wext-compat.c:1351:9:
+ warning: function returns address of local variable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pkshih <pkshih@realtek.com>
+Cc: "kbuild-all@01.org" <kbuild-all@01.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "fengguang.wu@intel.com" <fengguang.wu@intel.com>
+Date: Thu, 25 Jan 2018 10:22:40 +0100
+In-Reply-To: <1516851660.3774.13.camel@realtek.com> (sfid-20180125_044130_173566_885F00F7)
+References: <201801222115.gqohMHIk%fengguang.wu@intel.com>
+         <1516851660.3774.13.camel@realtek.com>
+         (sfid-20180125_044130_173566_885F00F7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+On Thu, 2018-01-25 at 03:41 +0000, Pkshih wrote:
+> 
+> In commit c179e9151, you remove 'static' from struct, but function return the
+> address of local variable as kbuild robot mentioned. It is a problem, but
+> my prior experiment looks fine. Hence, I check the callers of get_wireless_stats(),
+> and found they use the address that points to stack immediately, so content of
+> stack wasn't broken luckily.
+> 
+> So, please recall the 'static' of 'struct iw_statistics wstats'.
 
-It's not good to crash the machine if panic_on_warn() is set just
-because someone made a stupid mistake of trying to create a sysfs file
-with the same name of an existing one.  This makes the automated testing
-tools a lot harder to find the real bugs in the kernel.
+Yeah, that was garbage. I dropped the patch already.
 
-So just print a warning out and dump the stack to get the attention of
-the developer that they did something foolish.  Then keep on trucking,
-as this should not be a fatal error at all.
-
-Reported-by: Dmitry Vyukov <dvyukov@google.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
-
-Dmitry, does this look good to you?  If so, I'll queue it up for
-4.16-rc1.
-
-
-diff --git a/fs/sysfs/dir.c b/fs/sysfs/dir.c
-index 2b67bda2021b..3a36a48a4b3f 100644
---- a/fs/sysfs/dir.c
-+++ b/fs/sysfs/dir.c
-@@ -10,6 +10,7 @@
-  * Please see Documentation/filesystems/sysfs.txt for more information.
-  */
- 
-+#define pr_fmt(fmt)	"sysfs: " fmt
- #undef DEBUG
- 
- #include <linux/fs.h>
-@@ -27,8 +28,8 @@ void sysfs_warn_dup(struct kernfs_node *parent, const char *name)
- 	if (buf)
- 		kernfs_path(parent, buf, PATH_MAX);
- 
--	WARN(1, KERN_WARNING "sysfs: cannot create duplicate filename '%s/%s'\n",
--	     buf, name);
-+	pr_warn("cannot create duplicate filename '%s/%s'\n", buf, name);
-+	dump_stack();
- 
- 	kfree(buf);
- }
+johannes
