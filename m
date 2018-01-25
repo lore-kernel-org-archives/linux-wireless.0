@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0050.outbound.protection.outlook.com ([104.47.32.50]:38252
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752267AbeAINKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 08:10:07 -0500
-Date: Tue, 9 Jan 2018 16:09:53 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [v2,01/10] qtnfmac: check that MAC exists in regulatory notifier
-Message-ID: <20180109130951.2vowioqa3vcwnqv2@bars> (sfid-20180109_141023_336347_8BF1A432)
-References: <20171219112856.22463-2-sergey.matyukevich.os@quantenna.com>
- <20180109121247.C95116081B@smtp.codeaurora.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35114 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbeAYSd6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Jan 2018 13:33:58 -0500
+Received: by mail-pf0-f196.google.com with SMTP id t12so6394943pfg.2
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jan 2018 10:33:58 -0800 (PST)
+Date: Thu, 25 Jan 2018 10:33:55 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Shrenik Shikhare <shrenik@marvell.com>
+Subject: Re: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX
+ stall
+Message-ID: <20180125183355.rpmajajr5exxcybb@ban.mtv.corp.google.com> (sfid-20180125_193402_064309_00DA2E99)
+References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
+ <20180125071202.0F39560A60@smtp.codeaurora.org>
+ <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180109121247.C95116081B@smtp.codeaurora.org>
+In-Reply-To: <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Kalle,
+On Thu, Jan 25, 2018 at 09:59:04AM +0000, Ganapathi Bhat wrote:
+> > I can't find any commit with id c7dbdcb2a4e1, is it correct?
+> Correct. Actually the commit id c7dbdcb2a4e1 is the PATCH [1/2] sent in this series.
 
-> > It is possible that regulatory notifier is called before MAC data
-> > was allocated. We need to verify that MAC data exists before trying
-> > to send a regulatory change event.
-> >
-> > Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> 
-> 10 patches applied to wireless-drivers-next.git, thanks.
-> 
-> 4fd045cdb239 qtnfmac: check that MAC exists in regulatory notifier
-> 5bf374ab91ad qtnfmac: pass complete channel data between driver and firmware
-> b05ee456fd21 qtnfmac: add support for radar detection and CAC
-> e6ef8cd05145 qtnfmac: change default interface mode from AP to STA
-> e6e594aff26a qtnfmac: check for passed channel being NULL in MGMT_TX command
-> fbad963a28e4 qtnfmac: fix rssi data passed to wireless core
-> 9cbd599966d8 qtnfmac: fill wiphy's extended capabilities
-> 4d2a7a1cfa68 qtnfmac: modify GET_STA_STATS cmd format for back/forward compatibility
-> 7a4d3a3bc84e qtnfmac: keeping track of "generation" for STA info
-> f1398fd2dd8c qtnfmac: support MAC address based access control
+What? Why would you introduce a bug and only fix it in the next patch?
+Does that mean you should just combine the two? Or reverse the order, if
+patch 2 doesn't cause problems on its own?
 
-Just to understand the timelines... Could you please clarify if these patches
-are still going to make it into 4.16 merge window ?
-
-Regards,
-Sergey
+Brian
