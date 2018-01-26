@@ -1,114 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:43103 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965149AbeAJLOE (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:50513 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752095AbeAZOYY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 06:14:04 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 3/9] staging: wilc1000: removed unnecessary enums typedefs
-Date: Wed, 10 Jan 2018 16:42:45 +0530
-Message-ID: <1515582771-28408-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180110_121506_934015_4BE5A9AC)
-In-Reply-To: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
-References: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 26 Jan 2018 09:24:24 -0500
+Subject: Re: [PATCH] ath9k: Fix get channel default noise floor
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>,
+        linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
+References: <1516976454-8883-1-git-send-email-Wojciech.Dubowik@neratec.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <6666e006-614b-bb26-2e28-260f3af0d512@dd-wrt.com> (sfid-20180126_152440_287830_24C28E0F)
+Date: Fri, 26 Jan 2018 15:24:21 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1516976454-8883-1-git-send-email-Wojciech.Dubowik@neratec.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes following G_PREAMBLE_T,SCANTYPE_T,
-USER_PS_MODE_T,SECURITY_T,ACK_POLICY_T,RESET_REQ_T typedef enum.
+let me check
 
-Now, these enums are used as anonymous-enums for constants.
+Am 26.01.2018 um 15:20 schrieb Wojciech Dubowik:
+> Commit 8da58553cc63 ("ath9k: Use calibrated noise floor value
+> when available") introduced regression in ath9k_hw_getchan_noise
+> where per chain nominal noise floor has been taken instead default
+> for channel.
+> Revert to original default channel noise floor.
+>
+> Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/calib.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+> index 3d9447e..695c779 100644
+> --- a/drivers/net/wireless/ath/ath9k/calib.c
+> +++ b/drivers/net/wireless/ath/ath9k/calib.c
+> @@ -72,7 +72,7 @@ static s16 ath9k_hw_get_default_nf(struct ath_hw *ah,
+>   s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan,
+>   			   s16 nf)
+>   {
+> -	s8 noise = ath9k_hw_get_default_nf(ah, chan, 0);
+> +	s8 noise = ATH_DEFAULT_NOISE_FLOOR;
+>   
+>   	if (nf) {
+>   		s8 delta = nf - ATH9K_NF_CAL_NOISE_THRESH -
 
-checkpatch.pl warning to avoid new typedef is fixes with this patch.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 222bde2..598ba9e 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -114,28 +114,28 @@ enum {
- 	G_MIXED_11B_2_MODE,		/* 1,2,5,11,6,12,24 otherwise all on */
- };
- 
--typedef enum {
-+enum {
- 	G_SHORT_PREAMBLE	= 0,	/* Short Preamble */
- 	G_LONG_PREAMBLE		= 1,	/* Long Preamble */
- 	G_AUTO_PREAMBLE		= 2,	/* Auto Preamble Selection */
--} G_PREAMBLE_T;
-+};
- 
- #define MAC_CONNECTED		1
- #define MAC_DISCONNECTED	0
- 
- #define SCAN_DONE		TRUE
--typedef enum {
-+enum {
- 	PASSIVE_SCAN		= 0,
- 	ACTIVE_SCAN		= 1,
--} SCANTYPE_T;
-+};
- 
--typedef enum {
-+enum {
- 	NO_POWERSAVE		= 0,
- 	MIN_FAST_PS		= 1,
- 	MAX_FAST_PS		= 2,
- 	MIN_PSPOLL_PS		= 3,
- 	MAX_PSPOLL_PS		= 4
--} USER_PS_MODE_T;
-+};
- 
- typedef enum {
- 	CHIP_WAKEDUP		= 0,
-@@ -153,7 +153,7 @@ typedef enum {
- 	RELEASE_ALLOW_SLEEP	= 1,
- } BUS_RELEASE_T;
- 
--typedef enum {
-+enum {
- 	NO_SECURITY		= 0,
- 	WEP_40			= 0x3,
- 	WEP_104			= 0x7,
-@@ -163,7 +163,7 @@ typedef enum {
- 	WPA2_AES		= 0x31,
- 	WPA2_TKIP		= 0x51,
- 	WPA2_AES_TKIP		= 0x71,	/* Aes or Tkip */
--} SECURITY_T;
-+};
- 
- enum AUTHTYPE {
- 	OPEN_SYSTEM		= 1,
-@@ -178,16 +178,16 @@ enum SITESURVEY {
- 	SITE_SURVEY_OFF		= 2
- };
- 
--typedef enum {
-+enum {
- 	NORMAL_ACK		= 0,
- 	NO_ACK,
--} ACK_POLICY_T;
-+};
- 
--typedef enum {
-+enum {
- 	DONT_RESET		= 0,
- 	DO_RESET		= 1,
- 	NO_REQUEST		= 2,
--} RESET_REQ_T;
-+};
- 
- typedef enum {
- 	REKEY_DISABLE		= 1,
 -- 
-2.7.4
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
