@@ -1,59 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46200 "EHLO mx1.redhat.com"
+Received: from mail.neratec.com ([46.140.151.2]:17725 "EHLO mail.neratec.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751594AbeAWNUS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Jan 2018 08:20:18 -0500
-Date: Tue, 23 Jan 2018 14:20:16 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Tom Psyborg <pozega.tomislav@gmail.com>
-Cc: Enrico Mioso <mrkiko.rs@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-Message-ID: <20180123132016.GB2520@redhat.com> (sfid-20180123_142130_292453_473FFBFB)
-References: <20171218152142.GA15414@redhat.com>
- <20171219122707.GA2672@redhat.com>
- <alpine.LNX.2.21.99.1712191341570.2555@localhost.localdomain>
- <20171219125431.GB2672@redhat.com>
- <alpine.LNX.2.21.99.1712201848250.21776@localhost.localdomain>
- <20171221142558.GB4655@redhat.com>
- <alpine.LNX.2.21.99.1712241311370.28605@localhost.localdomain>
- <20180103113540.GA10306@redhat.com>
- <alpine.LNX.2.21.99.1801031503370.8405@localhost.localdomain>
- <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com>
+        id S1751409AbeAZLIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Jan 2018 06:08:00 -0500
+Subject: Re: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com
+References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+ <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
+ <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com>
+ <ed47cefe-efa4-a7c9-d017-b50a99316f43@neratec.com>
+ <d9e84a77-636e-cd13-7713-9119a4ac971d@dd-wrt.com>
+From: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+Message-ID: <b0be6634-de6a-9f24-b48b-88e67ca9eee4@neratec.com> (sfid-20180126_120803_765306_AB887912)
+Date: Fri, 26 Jan 2018 12:07:58 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com>
+In-Reply-To: <d9e84a77-636e-cd13-7713-9119a4ac971d@dd-wrt.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 11, 2018 at 05:00:14PM +0100, Tom Psyborg wrote:
-> does not help as expected. there was even a crash:
+Are you sure you have applied path 4 in the series. You should see 
+calibration piers. Sth like:
 
-You mean the kernel hangs ? There is a WARNING at the end of the logs
-but it's from ath9k not from rt2800. 
+Calibration data
+Chain 0
+Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+2412    14    0    136    0    0    0
+2437    13    0    136    0    0    0
+2472    11    0    136    0    0    0
+Chain 1
+Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+2412    11    0    137    0    0    0
+2437    11    0    139    0    0    0
+2472    10    0    137    0    0    0
+Chain 2
+Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+2412    13    0    138    0    0    0
+2437    14    0    139    0    0    0
+2472    14    0    139    0    0    0
 
-> [   92.559018] ieee80211 phy1: rt2800mmio_txstatus_is_spurious: Warning - 4
-> spurious TX_FIFO_STATUS interrupt(s)
+I have just done backports from ath.git and I can see these entries with 
+my Compex card.
 
-This is suspicious, we should not get spurious interrupts. Perhaps there
-is something wrong on platform lever, maybe with pinmux ? 
+Wojtek
 
-> for an empty queue 2, dropping
-> [  176.019555] ieee80211 phy1: rt2x00lib_rxdone_read_signal: Warning -
-> Frame received with unrecognized signal, mode=0x0001, signal=0x010f, type=4
-> [  176.025456] ieee80211 phy1: rt2x00lib_rxdone_read_signal: Warning -
 
-and this indicate that HW/FW do not provide correct frames to 
-the driver any longer.
-
-Again - I think we do something that make device no longer possible to
-function normally. Changing queue stop/start thresholds will not help
-with that.
-
-Cheers
-Stanislaw 
+On 26/01/18 11:36, Sebastian Gottschall wrote:
+> Am 26.01.2018 um 11:27 schrieb Wojciech Dubowik:
+>> I will try it with again with couple of OEM cards.
+> this is no card. the eeprom is stored in flash memory. so the chip is 
+> a 9280 pcie chip which is connected on board, but has no own flash 
+> memory for calibration data. this is stored in system flash memory
+>>
+>> Is nanostation calibrated for noisefloor? You can see it with 
+>> modal_eeprom in debugfs.
+> root@TRO2:/sys/kernel/debug/ieee80211/phy0/ath9k# cat modal_eeprom
+>    2GHz modal Header :
+>  Chain0 Ant. Control :          0
+>  Chain1 Ant. Control :          0
+>  Chain2 Ant. Control :          0
+>  Ant. Common Control :          0
+>     Chain0 Ant. Gain :          0
+>     Chain1 Ant. Gain :          0
+>     Chain2 Ant. Gain :          0
+>        Switch Settle :         45
+>     Chain0 TxRxAtten :         11
+>     Chain1 TxRxAtten :         11
+>     Chain2 TxRxAtten :         11
+>    Chain0 RxTxMargin :         11
+>    Chain1 RxTxMargin :         11
+>    Chain2 RxTxMargin :         11
+>     ADC Desired size :        224
+>     PGA Desired size :          0
+>     Chain0 xlna Gain :         14
+>     Chain1 xlna Gain :         14
+>     Chain2 xlna Gain :         14
+>        txEndToXpaOff :          0
+>          txEndToRxOn :          2
+>       txFrameToXpaOn :         14
+>       CCA Threshold) :          0
+>  Chain0 NF Threshold :        202
+>  Chain1 NF Threshold :        202
+>  Chain2 NF Threshold :        202
+>              xpdGain :          9
+>          External PD :          1
+> Chain0 I Coefficient :          0
+> Chain1 I Coefficient :          0
+> Chain2 I Coefficient :          0
+> Chain0 Q Coefficient :          0
+> Chain1 Q Coefficient :          0
+> Chain2 Q Coefficient :          0
+>        pdGainOverlap :          6
+>    Chain0 OutputBias :          2
+>    Chain0 DriverBias :          2
+>       xPA Bias Level :          0
+>  2chain pwr decrease :          0
+>  3chain pwr decrease :          0
+>   txFrameToDataStart :         14
+>        txFrameToPaOn :         14
+>      HT40 Power Inc. :          2
+>      Chain0 bswAtten :         21
+>      Chain1 bswAtten :         21
+>      Chain2 bswAtten :          0
+>     Chain0 bswMargin :         31
+>     Chain1 bswMargin :         31
+>     Chain2 bswMargin :          0
+>   HT40 Switch Settle :         44
+>     Chain0 xatten2Db :          0
+>     Chain1 xatten2Db :          0
+>     Chain2 xatten2Db :          0
+> Chain0 xatten2Margin :          0
+> Chain1 xatten2Margin :          0
+> Chain2 xatten2Margin :          0
+>    Chain1 OutputBias :          2
+>    Chain1 DriverBias :          2
+>          LNA Control :         13
+>       XPA Bias Freq0 :          0
+>       XPA Bias Freq1 :          0
+>       XPA Bias Freq2 :          0
+>    5GHz modal Header :
+>  Chain0 Ant. Control :         16
+>  Chain1 Ant. Control :         16
+>  Chain2 Ant. Control :          0
+>  Ant. Common Control :        288
+>     Chain0 Ant. Gain :          0
+>     Chain1 Ant. Gain :          0
+>     Chain2 Ant. Gain :          0
+>        Switch Settle :         45
+>     Chain0 TxRxAtten :         32
+>     Chain1 TxRxAtten :         32
+>     Chain2 TxRxAtten :         11
+>    Chain0 RxTxMargin :          0
+>    Chain1 RxTxMargin :          0
+>    Chain2 RxTxMargin :         16
+>     ADC Desired size :        226
+>     PGA Desired size :          0
+>     Chain0 xlna Gain :         13
+>     Chain1 xlna Gain :         13
+>     Chain2 xlna Gain :         13
+>        txEndToXpaOff :          0
+>          txEndToRxOn :          2
+>       txFrameToXpaOn :         14
+>       CCA Threshold) :         28
+>  Chain0 NF Threshold :        255
+>  Chain1 NF Threshold :        255
+>  Chain2 NF Threshold :        255
+>              xpdGain :          1
+>          External PD :          1
+> Chain0 I Coefficient :          0
+> Chain1 I Coefficient :          0
+> Chain2 I Coefficient :          0
+> Chain0 Q Coefficient :          0
+> Chain1 Q Coefficient :          0
+> Chain2 Q Coefficient :          0
+>        pdGainOverlap :          6
+>    Chain0 OutputBias :          3
+>    Chain0 DriverBias :          3
+>       xPA Bias Level :          2
+>  2chain pwr decrease :          0
+>  3chain pwr decrease :          0
+>   txFrameToDataStart :         14
+>        txFrameToPaOn :         14
+>      HT40 Power Inc. :          0
+>      Chain0 bswAtten :         34
+>      Chain1 bswAtten :         34
+>      Chain2 bswAtten :          0
+>     Chain0 bswMargin :         22
+>     Chain1 bswMargin :         22
+>     Chain2 bswMargin :          0
+>   HT40 Switch Settle :         45
+>     Chain0 xatten2Db :          0
+>     Chain1 xatten2Db :          0
+>     Chain2 xatten2Db :          0
+> Chain0 xatten2Margin :          0
+> Chain1 xatten2Margin :          0
+> Chain2 xatten2Margin :          0
+>    Chain1 OutputBias :          3
+>    Chain1 DriverBias :          3
+>          LNA Control :         13
+>       XPA Bias Freq0 :          0
+>       XPA Bias Freq1 :          0
+>       XPA Bias Freq2 :          0
+>
+>>
+>> Wojtek
+>> On 26/01/18 10:59, Sebastian Gottschall wrote:
+>>> i dont know if this is a coincidence. but after testing your patch 
+>>> on a standard ubiquiti nanostation m2 the noise floor looks wrong.
+>>> it will stay on -112 which is clearly impossible in 2.4 (before it 
+>>> was around -96)
+>>
+>>
+>
