@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:54058 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750853AbeAQGPw (ORCPT
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:41303 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752016AbeAZPFe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 01:15:52 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 05/10] rtlwifi: Support A-MSDU in A-MPDU capability
-Date: Wed, 17 Jan 2018 14:15:25 +0800
-Message-ID: <20180117061530.30049-6-pkshih@realtek.com> (sfid-20180117_071556_882827_4AD10564)
-In-Reply-To: <20180117061530.30049-1-pkshih@realtek.com>
-References: <20180117061530.30049-1-pkshih@realtek.com>
+        Fri, 26 Jan 2018 10:05:34 -0500
+Received: by mail-qt0-f181.google.com with SMTP id i1so1934226qtj.8
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2018 07:05:34 -0800 (PST)
+Date: Fri, 26 Jan 2018 07:05:30 -0800
+From: Tejun Heo <tj@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211_hwsim: don't use WQ_MEM_RECLAIM
+Message-ID: <20180126150530.GK17457@devbig577.frc2.facebook.com> (sfid-20180126_160538_513586_4C9A5632)
+References: <20180124074051.19939-1-johannes@sipsolutions.net>
+ <7eb10bf1-7825-3dae-b813-d912e6670440@uni-rostock.de>
+ <1516790786.2508.43.camel@sipsolutions.net>
+ <CAF7Mx6oASGjDrzVq4_t8Wt-DU7Zap1tcpz5vU7bk-Q5qzg4V=g@mail.gmail.com>
+ <CAF7Mx6o_Y0AeGQfhGKMkSxUHtRNyGaHh3g-TyvusJmsYyckFZg@mail.gmail.com>
+ <CAF7Mx6rg2XOOG0mZxnKiM_1ToB36Yc2A=sKQfN7drLsr3+4crw@mail.gmail.com>
+ <5A6A3BFC.5090305@broadcom.com>
+ <1516914086.2189.9.camel@sipsolutions.net>
+ <20180125222650.GJ17457@devbig577.frc2.facebook.com>
+ <1516954082.2189.14.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1516954082.2189.14.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Steven Ting <steventing@realtek.com>
+Hello,
 
-Due to the fact that A-MSDU deaggregation is done in software,
-we set this flag to support the A-MSDU in A-MPDU
+On Fri, Jan 26, 2018 at 09:08:02AM +0100, Johannes Berg wrote:
+> Not that you mention it ... Honestly though, wifi connections break all
+> the time, so not sure you'd really want that. But anyway, that's what
+> we have.
 
-Signed-off-by: Steven Ting <steventing@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 1 +
- 1 file changed, 1 insertion(+)
+I'd be a lot happier to remove WQ_MEM_RECLAIM from wireless drivers
+too, and glancing the code, it looked like there already are so many
+holes that whether having that flag or not shouldn't matter all that
+much.  It was just difficult for me to make a case for removing it
+preemptively.  If you're up for it, please be my guest.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index e902cd7adbfe..07b91bc9adf9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -397,6 +397,7 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
- 	ieee80211_hw_set(hw, SUPPORTS_TX_FRAG);
- 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
-+	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
- 
- 	/* swlps or hwlps has been set in diff chip in init_sw_vars */
- 	if (rtlpriv->psc.swctrl_lps) {
+Thanks.
+
 -- 
-2.15.1
+tejun
