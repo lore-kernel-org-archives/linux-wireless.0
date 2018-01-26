@@ -1,73 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:47659 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751427AbeAJLOO (ORCPT
+Received: from webmail.newmedia-net.de ([185.84.6.166]:48208 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751377AbeAZKPD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 06:14:14 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 6/9] staging: wilc1000: removed enums typedef for BEACON_IE & TX_RATE_T
-Date: Wed, 10 Jan 2018 16:42:48 +0530
-Message-ID: <1515582771-28408-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180110_121417_288341_1CC86271)
-In-Reply-To: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
-References: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 26 Jan 2018 05:15:03 -0500
+Subject: Re: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+ <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com> (sfid-20180126_111507_276459_368E2716)
+Date: Fri, 26 Jan 2018 10:59:20 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removed the unnecessary enum typedef for BEACON_IE &
-TX_RATE_T
-It fix "WARNING: do not add new typedefs" reported by checkpatch.pl
+i dont know if this is a coincidence. but after testing your patch on a 
+standard ubiquiti nanostation m2 the noise floor looks wrong.
+it will stay on -112 which is clearly impossible in 2.4 (before it was 
+around -96)
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Sebastian
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index cf4a44d..068a59d 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -75,7 +75,7 @@ typedef void (*wilc_tx_complete_func_t)(void *, int);
- #define MAX_SSID_LEN            33
- #define MAX_RATES_SUPPORTED     12
- 
--typedef enum {
-+enum {
- 	SUPP_RATES_IE		= 1,
- 	EXT_SUPP_RATES_IE	= 50,
- 	HT_CAPABILITY_IE	= 45,
-@@ -83,7 +83,7 @@ typedef enum {
- 	WPA_IE			= 221,
- 	WMM_IE			= 221,
- 	P2P_IE			= 221,
--} BEACON_IE;
-+};
- 
- enum bss_types {
- 	INFRASTRUCTURE		= 0,
-@@ -91,7 +91,7 @@ enum bss_types {
- 	AP,
- };
- 
--typedef enum {
-+enum {
- 	RATE_AUTO		= 0,
- 	RATE_1MB		= 1,
- 	RATE_2MB		= 2,
-@@ -105,7 +105,7 @@ typedef enum {
- 	RATE_26MB		= 36,
- 	RATE_48MB		= 48,
- 	RATE_54MB		= 54
--} TX_RATE_T;
-+};
- 
- enum {
- 	B_ONLY_MODE		= 0,    /* 1, 2 M, otherwise 5, 11 M */
+Am 23.01.2018 um 08:56 schrieb Kalle Valo:
+> Wojciech Dubowik <Wojciech.Dubowik@neratec.com> writes:
+>
+>> AR9003 series allows to calibrate noise floor for different frequency
+>> bins. Once it's done it's possible to get more accurate rssi/signal
+>> values over whole frequency band at a given temperature.
+>> The RSSI/signal accuracy reported by calibrated RF cards improves
+>> from 6 to up to 2dB.
+>>
+>> This could be interesting for application which require good signal
+>> accuracy like roaming or mesh protocols.
+> This is a very good description of the feature. I think you should copy
+> it to the patch 3 commit log so that it gets archived to git. (I don't
+> store cover letters to git.)
+>
+
 -- 
-2.7.4
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
