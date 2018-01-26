@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:46120 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751041AbeAVNWe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42332 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752760AbeAZLDi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 08:22:34 -0500
-Message-ID: <1516627352.2508.28.camel@sipsolutions.net> (sfid-20180122_142237_852519_AF34CD4F)
-Subject: Re: [PATCH v3 4/5] mac80211_hwsim: add permanent mac address option
- for new radios
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+        Fri, 26 Jan 2018 06:03:38 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Felix Fietkau <nbd@nbd.name>
 Cc: linux-wireless@vger.kernel.org
-Date: Mon, 22 Jan 2018 14:22:32 +0100
-In-Reply-To: <59cebd66-44ca-4bfd-0be2-a6d37c0bfa75@uni-rostock.de>
-References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
-         <6596c1d9-da4f-4d83-bd5e-5e276391a0c9@MAIL2.uni-rostock.de>
-         <1516018169.410.14.camel@sipsolutions.net>
-         <59cebd66-44ca-4bfd-0be2-a6d37c0bfa75@uni-rostock.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH] mt76: implement AP_LINK_PS
+References: <20180126104742.14315-1-nbd@nbd.name>
+Date: Fri, 26 Jan 2018 13:03:33 +0200
+In-Reply-To: <20180126104742.14315-1-nbd@nbd.name> (Felix Fietkau's message of
+        "Fri, 26 Jan 2018 11:47:42 +0100")
+Message-ID: <87o9lgubju.fsf@kamboji.qca.qualcomm.com> (sfid-20180126_120347_283771_81C5AEE4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-01-15 at 15:39 +0100, Benjamin Beichler wrote:
-> 
-> 
-> I really don't know, why there were 2 addresses introduced in the first
-> place, and why the netlink operations for receiving only check against
-> the second address and not the first address (see
-> get_hwsim_data_ref_from_addr). My suggestion would be, only allocate one
-> mac address and check against this one. I don't know, whether really any
-> user of hwsim rely on the structure, that an adapter needs two mac
-> addresses. Since this is part of the initial commit, this decision is
-> not documented in git ...
+Felix Fietkau <nbd@nbd.name> writes:
 
-Fair enough, let's leave it then.
+> With software A-MPDU reordering in place, frames that notify mac80211 of
+> powersave changes are reordered as well, which can cause connection
+> stalls. Fix this by implementing powersave state processing in the
+> driver.
+>
+> Fixes: aee5b8cf2477 ("mt76: implement A-MPDU rx reordering in the driver code")
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-johannes
+I'm planning to queue this to 4.16.
+
+-- 
+Kalle Valo
