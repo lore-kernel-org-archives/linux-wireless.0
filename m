@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50136 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934021AbeAXQLs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 11:11:48 -0500
-Subject: Re: [PATCH 8/8] mt76: validate rx CCMP PN
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-References: <20180124151917.70962-1-nbd@nbd.name>
- <20180124151917.70962-8-nbd@nbd.name>
- <1516809416.2508.44.camel@sipsolutions.net>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <7a022b57-af4a-78ee-aa8f-d0cd9eb17685@nbd.name> (sfid-20180124_171152_622366_5064171B)
-Date: Wed, 24 Jan 2018 17:11:45 +0100
+Received: from smtp.codeaurora.org ([198.145.29.96]:52912 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752021AbeAZOhu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Jan 2018 09:37:50 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: James Hogan <jhogan@kernel.org>
+Cc: Sven Joachim <svenjoac@gmx.de>, Michael Buesch <m@bues.ch>,
+        linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@mips.com>,
+        Matt Redfearn <matt.redfearn@imgtec.com>,
+        Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH] ssb: Do not disable PCI host on non-Mips
+References: <87vafpq7t2.fsf@turtle.gmx.de> <20180126100902.GN5446@saruman>
+Date: Fri, 26 Jan 2018 16:37:44 +0200
+In-Reply-To: <20180126100902.GN5446@saruman> (James Hogan's message of "Fri,
+        26 Jan 2018 10:09:03 +0000")
+Message-ID: <87fu6su1mv.fsf@kamboji.qca.qualcomm.com> (sfid-20180126_153756_575387_EDF4A0BF)
 MIME-Version: 1.0
-In-Reply-To: <1516809416.2508.44.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-01-24 16:56, Johannes Berg wrote:
-> On Wed, 2018-01-24 at 16:19 +0100, Felix Fietkau wrote:
->> Apparently hardware does not perform CCMP PN validation in hardware, so
->> we need to take care of this in the driver. This is important for
->> protecting against replay attacks
->> 
->> +static int
->> +mt76_check_ccmp_pn(struct sk_buff *skb)
->> +{
->> +	struct mt76_rx_status *status = (struct mt76_rx_status *) skb->cb;
->> +	struct mt76_wcid *wcid = status->wcid;
->> +	int ret;
->> +
->> +	if (!(status->flag & RX_FLAG_DECRYPTED))
->> +		return 0;
->> +
->> +	if (!wcid || !wcid->rx_check_pn)
->> +		return 0;
->> +
->> +	BUILD_BUG_ON(sizeof(status->iv) != sizeof(wcid->rx_key_pn[0]));
->> +	ret = memcmp(status->iv, wcid->rx_key_pn[status->tid],
->> +		     sizeof(status->iv));
->> +	if (ret <= 0)
->> +		return -EINVAL; /* replay */
->> +
->> +	memcpy(wcid->rx_key_pn[status->tid], status->iv, sizeof(status->iv));
->> +	status->flag |= RX_FLAG_PN_VALIDATED;
-> 
-> You shouldn't do this, try to somehow make it rely on mac80211 instead.
-> 
-> Otherwise, you really have to handle CCMP vs. fragmentation.
-I guess I will have to look into fragmentation. I have a second driver
-pending that only reports the CCMP PN outside of the packet, and for
-performance reasons I really don't want to translate it and move it to a
-place where mac80211 can parse it.
-I'm also looking into doing parallel rx in software to see if I can get
-more performance that way. I think for that I would also need CCMP PN
-validation in the driver.
+James Hogan <jhogan@kernel.org> writes:
 
-- Felix
+> On Fri, Jan 26, 2018 at 10:38:01AM +0100, Sven Joachim wrote:
+>> After upgrading an old laptop to 4.15-rc9, I found that the eth0 and
+>> wlan0 interfaces had disappeared.  It turns out that the b43 and b44
+>> drivers require SSB_PCIHOST_POSSIBLE which depends on
+>> PCI_DRIVERS_LEGACY, a config option that only exists on Mips.
+>> 
+>> Fixes: 58eae1416b80 ("ssb: Disable PCI host for PCI_DRIVERS_GENERIC")
+>> Cc: stable@vger.org
+>> Signed-off-by: Sven Joachim <svenjoac@gmx.de>
+>
+> Whoops, thats a very good point. I hadn't twigged that
+> PCI_DRIVERS_LEGACY was MIPS specific (one of the disadvantages of using
+> "tig grep" I suppose!).
+>
+> Reviewed-by: James Hogan <jhogan@kernel.org>
+>
+> I think this is obviously correct, so it'd be great to squeeze it into
+> 4.15 final.
+
+I'm not sure if I'm able to get it to 4.15 as it has go via the net
+tree, and we have only two days before the (likely) final release, but
+I'll try.
+
+-- 
+Kalle Valo
