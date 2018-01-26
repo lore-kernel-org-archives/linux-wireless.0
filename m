@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:13616 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964979AbeAJLN5 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40352 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751219AbeAZQdm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 06:13:57 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 1/9] staging: wilc1000: removed typedef from enum BSSTYPE_T
-Date: Wed, 10 Jan 2018 16:42:43 +0530
-Message-ID: <1515582771-28408-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180110_121400_818671_0E183FC0)
-In-Reply-To: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
-References: <1515582771-28408-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 26 Jan 2018 11:33:42 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2018-01-26
+Date: Fri, 26 Jan 2018 18:33:33 +0200
+Message-ID: <87zi50shpe.fsf@kamboji.qca.qualcomm.com> (sfid-20180126_173450_871547_2D87FF93)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from enum BSSTYPE_T and
-rename it to bss_types.
+Hi Dave,
 
-It fixes "WARNING: do not add new typdefs" warning
-reported by checkpatch.pl.
+this is a pull request to the net tree for 4.15. I hate to do late pull
+requests like this but today Sven Joachim found a serious regression in
+one of ssb patches, I hope there's still enough time to get this to
+4.15.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h   | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+But if it's too late, just let me know and I'll queue this for 4.16.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d69248a..4ff1a59 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -202,7 +202,7 @@ struct host_if_msg {
- };
- 
- struct join_bss_param {
--	BSSTYPE_T bss_type;
-+	enum bss_types bss_type;
- 	u8 dtim_period;
- 	u16 beacon_period;
- 	u16 cap_info;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index c1693cf..2baf6c4 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -85,11 +85,11 @@ typedef enum {
- 	P2P_IE			= 221,
- } BEACON_IE;
- 
--typedef enum {
-+enum bss_types {
- 	INFRASTRUCTURE		= 0,
- 	INDEPENDENT,
- 	AP,
--} BSSTYPE_T;
-+};
- 
- typedef enum {
- 	RATE_AUTO		= 0,
--- 
-2.7.4
+Kalle
+
+The following changes since commit 1e19c4d689dc1e95bafd23ef68fbc0c6b9e05180:
+
+  net: vrf: Add support for sends to local broadcast address (2018-01-25 21:51:03 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2018-01-26
+
+for you to fetch changes up to a9e6d44ddeccd3522670e641f1ed9b068e746ff7:
+
+  ssb: Do not disable PCI host on non-Mips (2018-01-26 16:55:34 +0200)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.15
+
+ssb
+
+* last minute patch to fix b43 and b44 drivers on non-mips platforms,
+  a regression from v4.15-rc9
+
+----------------------------------------------------------------
+Sven Joachim (1):
+      ssb: Do not disable PCI host on non-Mips
+
+ drivers/ssb/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
