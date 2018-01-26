@@ -1,29 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45870 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751086AbeAVNBE (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:39009 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751542AbeAZHrI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 08:01:04 -0500
-Message-ID: <1516626062.2508.26.camel@sipsolutions.net> (sfid-20180122_140109_024406_98BDA9F0)
-Subject: Re: [PATCH 2/4] cfg80211: enable setting cqm config for AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: tamizhr@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Date: Mon, 22 Jan 2018 14:01:02 +0100
-In-Reply-To: <1516174276-16789-3-git-send-email-tamizhr@codeaurora.org>
-References: <1516174276-16789-1-git-send-email-tamizhr@codeaurora.org>
-         <1516174276-16789-3-git-send-email-tamizhr@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 26 Jan 2018 02:47:08 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/10] rtlwifi: add definition radio_mask for RF and maximum bandwidth
+Date: Fri, 26 Jan 2018 15:46:42 +0800
+Message-ID: <20180126074645.27201-8-pkshih@realtek.com> (sfid-20180126_084718_099037_D26BE0A3)
+In-Reply-To: <20180126074645.27201-1-pkshih@realtek.com>
+References: <20180126074645.27201-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In addition to what I said before, you should also document which CQM
-modes are actually available per station.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Perhaps the feature bit also needs to be per mode, since in mac80211 at
-least you're only implementing signal monitoring, not
-nl80211_set_cqm_txe()?
+Add rf mask definition (BIT 0, BIT 1, BIT 2, ...) that is different from
+rf path definition (0, 1, 2, ...), and then combinations of rf path are
+possible.
 
-johannes
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/wifi.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 4de2ab1d5416..2e9a20273a2d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -286,6 +286,13 @@ enum radio_path {
+ 	RF90_PATH_D = 3,
+ };
+ 
++enum radio_mask {
++	RF_MASK_A = BIT(0),
++	RF_MASK_B = BIT(1),
++	RF_MASK_C = BIT(2),
++	RF_MASK_D = BIT(3),
++};
++
+ enum regulation_txpwr_lmt {
+ 	TXPWR_LMT_FCC = 0,
+ 	TXPWR_LMT_MKK = 1,
+@@ -579,6 +586,7 @@ enum ht_channel_width {
+ 	HT_CHANNEL_WIDTH_20 = 0,
+ 	HT_CHANNEL_WIDTH_20_40 = 1,
+ 	HT_CHANNEL_WIDTH_80 = 2,
++	HT_CHANNEL_WIDTH_MAX,
+ };
+ 
+ /* Ref: 802.11i sepc D10.0 7.3.2.25.1
+-- 
+2.15.1
