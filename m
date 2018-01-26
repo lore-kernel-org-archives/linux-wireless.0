@@ -1,138 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:45058 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751174AbeAVPFG (ORCPT
+Received: from mail-it0-f47.google.com ([209.85.214.47]:37716 "EHLO
+        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751886AbeAZIM6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 10:05:06 -0500
-Received: by mail-pg0-f42.google.com with SMTP id m136so348917pga.12
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jan 2018 07:05:06 -0800 (PST)
+        Fri, 26 Jan 2018 03:12:58 -0500
+Received: by mail-it0-f47.google.com with SMTP id q8so914234itb.2
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2018 00:12:58 -0800 (PST)
+From: Kyle Evans <kvans32@gmail.com>
+Date: Fri, 26 Jan 2018 05:45:16 -0500
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kyle Evans <kvans32@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: sdio failure to initialize on warm boot.
+Message-ID: <20180126104516.GA1167@localhost.localdomain> (sfid-20180126_091303_217810_D91B6F00)
+References: <7c73dc36-5b7a-729e-4656-b45839c1360d@gmail.com>
+ <5A55D325.60805@broadcom.com>
+ <3842a299-cd14-65db-1222-6849bc95ef74@gmail.com>
+ <5A59CF17.6040706@broadcom.com>
+ <20180118172804.GA1170@localhost.localdomain>
+ <5A61AA9E.6000505@broadcom.com>
+ <20180119160554.GA4162@localhost.localdomain>
+ <5A65AD44.6020506@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20180122144547.GA3375@kroah.com>
-References: <001a11c14bc837f9760560a03d51@google.com> <20171219090121.GA10221@kroah.com>
- <CACT4Y+ZggKsEjCRZsFPW5-7_ByBcz4G0uRdieLL==r4mLQjhFA@mail.gmail.com>
- <CACT4Y+ZOimZPrSfphPMiHKXA3=kOmaFfwdofrmuv_rpXmx+vgA@mail.gmail.com>
- <CACT4Y+YMMfsXb+X4ApcWW02Qe7FmARhHjg97H4J-369OEMnwhw@mail.gmail.com>
- <20180122140015.GA30036@kroah.com> <CACT4Y+bEG22Wa6hiBQ6YX7d=JrHKAXfwYm+tu6cWc7AiUZxYbw@mail.gmail.com>
- <20180122144547.GA3375@kroah.com>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Mon, 22 Jan 2018 16:04:45 +0100
-Message-ID: <CACT4Y+Z7WTfxTBx1bhnZAo4bFzFcmKeYBvSALdF7vFiMcfB7OA@mail.gmail.com> (sfid-20180122_160531_636408_16F9C831)
-Subject: Re: WARNING in sysfs_warn_dup
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: syzbot
-        <bot+1fdad4e2731bf0c1bc19953ccc5061237ec92783@syzkaller.appspotmail.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        syzkaller-bugs@googlegroups.com,
-        David Miller <davem@davemloft.net>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Eric Dumazet <edumazet@google.com>,
-        jakub.kicinski@netronome.com,
-        Willem de Bruijn <willemb@google.com>,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        John Fastabend <john.fastabend@gmail.com>,
-        "Tobin C. Harding" <me@tobin.cc>, netdev <netdev@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5A65AD44.6020506@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 22, 2018 at 3:45 PM, Greg KH <gregkh@linuxfoundation.org> wrote=
-:
-> On Mon, Jan 22, 2018 at 03:30:12PM +0100, Dmitry Vyukov wrote:
->> On Mon, Jan 22, 2018 at 3:00 PM, Greg KH <gregkh@linuxfoundation.org> wr=
-ote:
->> > On Mon, Jan 22, 2018 at 02:47:33PM +0100, Dmitry Vyukov wrote:
->> >> On Tue, Dec 19, 2017 at 10:06 AM, Dmitry Vyukov <dvyukov@google.com> =
-wrote:
->> >> > On Tue, Dec 19, 2017 at 10:03 AM, Dmitry Vyukov <dvyukov@google.com=
-> wrote:
->> >> >>
->> >> >> On Tue, Dec 19, 2017 at 10:01 AM, Greg KH <gregkh@linuxfoundation.=
-org> wrote:
->> >> >>>
->> >> >>> On Mon, Dec 18, 2017 at 08:57:01AM -0800, syzbot wrote:
->> >> >>> > Hello,
->> >> >>> >
->> >> >>> > syzkaller hit the following crash on
->> >> >>> > 6084b576dca2e898f5c101baef151f7bfdbb606d
->> >> >>> > git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.g=
-it/master
->> >> >>> > compiler: gcc (GCC) 7.1.1 20170620
->> >> >>> > .config is attached
->> >> >>> > Raw console output is attached.
->> >> >>> >
->> >> >>> > Unfortunately, I don't have any reproducer for this bug yet.
->> >> >>> >
->> >> >>> >
->> >> >>> > netlink: 9 bytes leftover after parsing attributes in process
->> >> >>> > `syz-executor3'.
->> >> >>> > sg_write: data in/out 822404280/197 bytes for SCSI command 0x12=
--- guessing
->> >> >>> > data in;
->> >> >>> >    program syz-executor0 not setting count and/or reply_len pro=
-perly
->> >> >>> > sg_write: data in/out 262364/161 bytes for SCSI command 0xff-- =
-guessing data
->> >> >>> > in;
->> >> >>> >    program syz-executor0 not setting count and/or reply_len pro=
-perly
->> >> >>> > WARNING: CPU: 1 PID: 22282 at fs/sysfs/dir.c:31 sysfs_warn_dup+=
-0x60/0x80
->> >> >>> > fs/sysfs/dir.c:30
->> >> >>> > Kernel panic - not syncing: panic_on_warn set ...
->> >> >>>
->> >> >>> Looks like a networking issue, it tried to create two sysfs direc=
-tories
->> >> >>> with the same name, which isn't a sysfs bug :)
->> >> >
->> >> >
->> >> > Now as plain text:
->> >> >
->> >> > +net/core/dev.c maintainers
->> >>
->> >>
->> >> Also happens for wiphy_register (on upstream
->> >> a8750ddca918032d6349adbf9a4b6555e7db20da):
->> >>
->> >> ------------[ cut here ]------------
->> >> sysfs: cannot create duplicate filename
->> >> '/class/ieee80211/=C5=A1=C2=A7"=C2=AD=C3=BBt{=C2=A7=C3=94=C2=AD=C3=B0=
-=C3=B4 =C5=A0!=C3=97 =C5=BE 7=E2=80=A6 =C5=A0=E2=80=A0=C3=B5i=C3=B9S6 =C3=
-=88< =C2=BB=C3=BE {_CK5=C3=A4=C3=A1   =C3=97=C3=9D=C3=8Am=C3=B4 Be'
->> >
->> > That's a wonderful filename :)
->> >
->> >> WARNING: CPU: 1 PID: 8233 at fs/sysfs/dir.c:31
->> >> sysfs_warn_dup+0x7e/0xa0 fs/sysfs/dir.c:30
->> >
->> > As this is just sysfs saying "Hey dummy, you are trying to do somethin=
-g
->> > foolish here", what would be the better thing for it to do?
->> >
->> > Just printk(KERN_WARNING...) and then dump the stack?
->> >
->> > It seems the WARN_ON() that is currently being used is being treated a=
-s
->> > an "error" by your testing, when really it isn't, unless the caller ca=
-n
->> > not handle the error being passed back up to it by the sysfs core.
->> > Which it should, but I don't think you are even giving it the chance a=
-s
->> > you are:
->> >
->> >> Kernel panic - not syncing: panic_on_warn set ...
->> >
->> > Yup, panic_on_warn :(
->> >
->> > ideas to make this easier for you?
->>
->>
->> pr_warn or pr_warn_once (optionally followed by dump_stack) would work
->> for syzbot.
->
-> This shouldn't be a _once() call, as it is called by things all over the
-> kernel, all with unique paths.
->
-> I'll go make up a patch for this, thanks.
+* Arend van Spriel <arend.vanspriel@broadcom.com>:
+> On 1/19/2018 5:05 PM, Kyle Evans wrote:
+> > * Arend van Spriel <arend.vanspriel@broadcom.com>:
+> >> On 1/18/2018 6:50 PM, Kyle Evans wrote:
+> >>> * Arend van Spriel <arend.vanspriel@broadcom.com>:
+> >>>> On 1/12/2018 9:18 PM, Kyle Evans wrote:
+> >>>>> 2) After reboot I get this nasty error...
+> >>>>> [    0.000000] Kernel command line: console=tty0 selinux=0
+> >>>>> video=1280x800 root=/dev/mmcblk1p1 brcmfmac.bebug=0x20000
+> >>>>> [    2.269750] mmc0: Invalid maximum block size, assuming 512 bytes
+> >>>>> [    2.330010] mmc0: SDHCI controller on c8000000.sdhci [c8000000.sdhci]
+> >>>>> using ADMA
+> >>>>> [    2.645242] mmc0: error -110 whilst initialising SDIO card
+> >>>>
+> >>>> Ok. I suppose you mean a warm reboot. So I suppose the card is not
+> >>>> properly power cycled. If your SDHCI controller driver (is it
+> >>>> sdhci-acpi?) is loaded as a module, you could try to unload it and load
+> >>>> it again. Let me know if that works for you to confirm my guess.
+> >>>
+> >>> Your guess is correct. The following brings up wifi after failure to do
+> >>> so during warm boot.
+> >>>
+> >>> modprobe -r sdhci-tegra; modprobe sdhci-tegra;
+> >>
+> >> Do you know if your uses a device tree and where I can find it?
+> >> Typically, there is a GPIO to the wifi device that needs to be toggled
+> >> using mmc powerseq.
+> >
+> > I had a hunch this is was the next step. This device did not ship with a
+> > DT, but I have one in the works. My initial trial & error has been met
+> > with error.
+> 
+> So I am getting predictable huh?
 
-#syz fix: sysfs: turn WARN() into pr_warn()
+> 
+> > This is what I have so far, which is wrong since adding pwrseq (boot panic):
+> > 	sdhci@c8000000 {
+> >                  compatible = "nvidia,tegra20-sdhci";
+> >                  reg = <0xc8000000 0x200>;
+> >                  interrupts = <GIC_SPI 14 IRQ_TYPE_LEVEL_HIGH>;
+> >                  clocks = <&tegra_car TEGRA20_CLK_SDMMC1>;
+> >                  resets = <&tegra_car 14>;
+> >                  reset-names = "sdhci";
+> >
+> >                  status = "okay";
+> >                  //power-gpios = <&gpio TEGRA_GPIO(K, 6) GPIO_ACTIVE_HIGH>;
+> >                  bus-width = <4>;
+> >                  keep-power-in-suspend;
+> >                  non-removable;
+> >                  mmc-pwrseq = <&wlan_rst>;
+> >
+> >                  brcmf: wifi@1 {
+> >                          compatible = "brcm,bcm4329-fmac";
+> >                          interrupt-parent = <&gpio>;
+> >                          interrupts = <TEGRA_GPIO(Y, 6) GPIO_ACTIVE_HIGH>,
+> >                                       <TEGRA_GPIO(S, 0) GPIO_ACTIVE_HIGH>;
+> >                          interrupt-names = "host-wake";
+> 
+> Always having a hard time reading this stuff. So does interrupts 
+> property state 2 interrupts here?
+
+Ok, I've slimmed it down to only S,0-"host-wake".
+
+> If so, than interrupt-names should 
+> also have two names. Actually, according to the binding only a single 
+> interrupt should be given (only (S, 0) I think). Furthermore, you are 
+> missing the 'reg' property to specify the SDIO function, ie. "reg = <1>;".
+
+I took the reg property out becuase it causes the below compiler
+warnings. Putting it back in causes a black screen with no console
+output. Any clues?
+
+arch/arm/boot/dts/tegra20-tf101.dtb: Warning (reg_format): "reg"
+property in /sdhci@c8000000/wifi@1 has invalid length (4 bytes)
+(#address-cells == 2, #size-cells == 1)
+arch/arm/boot/dts/tegra20-tf101.dtb: Warning (avoid_default_addr_size):
+Relying on default #address-cells value for /sdhci@c8000000/wifi@1
+arch/arm/boot/dts/tegra20-tf101.dtb: Warning (avoid_default_addr_size):
+Relying on default #size-cells value for /sdhci@c8000000/wifi@1
+
+> 
+> >                  };
+> >          };
+> >
+> >          wlan_rst: sdhci0_pwrseq {
+> >                  compatible = "mmc-pwrseq-simple";
+> >                  reset-gpios = <&gpio TEGRA_GPIO(K, 6) GPIO_ACTIVE_LOW>;
+> >          };
+> 
+> Ignoring the ext_clk stuff, the pwrseq-simple does following: upon power 
+> on, set reset-gpios to 1, power on bus, set reset-gpios back to 0, 
+> optionally wait for post_power_on_delay_ms. The pre-DT kernel stuff is 
+> different. It simply sets the reset gpio to 1 upon power on, and wait 
+> for 200ms leaving the gpio as is and does the same for power off.
+
+So,,,, pwrseq is the wrong approach here?
+
+	wlan_rst: sdhci0_pwrseq {
+                compatible = "mmc-pwrseq-simple";
+                reset-gpios = <&gpio TEGRA_GPIO(K, 6) GPIO_ACTIVE_HIGH>;
+                //post-power-on-delay-ms = <200>;
+                post-power-off-delay-us = <200>;
+        };
+
+I have tested with/without ACTIVE_LOW/HIGH, on/off-delay, all combinations. 
+Using ACTIVE_HIGH, which is contrary to binding documentation, allows the sdhci
+controller to enumerate. It does not enumerate with ACTIVE_LOW. no
+combination loads brcmfmac.
+
+I did the same with U,0, which is the rfkill resource, moving K,6 back to
+power-gpios. This got me back to square one, works on cold boot only,
+with any combination.
+
+It is indicated that power off is were the problem is. On the other 
+hand, it would seem that there should be a reset mechanism and we 
+either have the wrong pin, or it is not being triggered properly.
+
+> 
+> TF101_SDIO_WOW seems for enabling host wakeup by the host-controller 
+> device for which I would expect the driver to call device_init_wakeup(). 
+> However, this functionality does not seem present in the sdhci-tegra driver.
+
+I think I follow, is this in-band IRQ related?
+I just don't understand what the host controller has to do with wireless wakeup,
+since the wireless is part of a doughter card. Unless they both need to be
+enabled for WOW to work. At any rate, WOW is of little importance at this time.
+I was just curious where to put all of the pieces and it looks like
+there is no room for all of the pieces.
+
+-Kyle
+
+> 
+> Regards,
+> Arend
