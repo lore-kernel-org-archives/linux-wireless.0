@@ -1,114 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39006 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751951AbeAZHrH (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:47401 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751758AbeAZOVB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 02:47:07 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/10] rtlwifi: Use 6 bits as sequence number of TX report
-Date: Fri, 26 Jan 2018 15:46:38 +0800
-Message-ID: <20180126074645.27201-4-pkshih@realtek.com> (sfid-20180126_084727_829953_C2A27D60)
-In-Reply-To: <20180126074645.27201-1-pkshih@realtek.com>
-References: <20180126074645.27201-1-pkshih@realtek.com>
+        Fri, 26 Jan 2018 09:21:01 -0500
+Subject: Re: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
+To: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com
+References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+ <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
+ <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com>
+ <ed47cefe-efa4-a7c9-d017-b50a99316f43@neratec.com>
+ <d9e84a77-636e-cd13-7713-9119a4ac971d@dd-wrt.com>
+ <b0be6634-de6a-9f24-b48b-88e67ca9eee4@neratec.com>
+ <20f8b133-98a9-0491-6c16-ea3a414e5bb0@dd-wrt.com>
+ <d311b71d-e5fa-6ed2-2c27-d036471e3459@neratec.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <88585623-bad1-83e0-2b43-005e0240919a@dd-wrt.com> (sfid-20180126_152108_113749_FDC8B514)
+Date: Fri, 26 Jan 2018 15:20:59 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <d311b71d-e5fa-6ed2-2c27-d036471e3459@neratec.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Am 26.01.2018 um 15:16 schrieb Wojciech Dubowik:
+>
+>
+> On 26/01/18 12:42, Sebastian Gottschall wrote:
+>> i have a idea what one cause could ne
+>>
+>> +                nfval =
+>> +                    ath9k_hw_get_nf_limits(ah, chan)->cal[i];
+>> +                if (nfval > -60 || nfval < -127)
+>> +                    nfval = default_nf;
+>>
+> This is just a check to make sure we have sane calibrated values. 
+> Anything above -60 or under -127 will not work so
+> we take nominal value.
+yes. but that means all < -127 and all > -60 catches it. this is the 
+full value range. the check is wrong
+everything is above -60 and bellow -127 at the same time. OR must ne AND
 
-In new design, SW_DEFINE[1:0] of tx desc are used by firmware, and the TX
-report only contains SW_DEFINE[7:0]. To satisfy with all cases, driver uses
-SW_DEFINE[7:2] as sequence number.
-Besides, the format of tx report have been changed, so a new flag
-RTL_SPEC_EXT_C2H is used to access report.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 22 ++++++++++++++++++----
- drivers/net/wireless/realtek/rtlwifi/wifi.h |  8 ++++++++
- 2 files changed, 26 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index a2da057d3cdd..92f99a303920 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -1597,7 +1597,11 @@ static u16 rtl_get_tx_report_sn(struct ieee80211_hw *hw)
- 	struct rtl_tx_report *tx_report = &rtlpriv->tx_report;
- 	u16 sn;
- 
--	sn = atomic_inc_return(&tx_report->sn) & 0x0FFF;
-+	/* SW_DEFINE[11:8] are reserved (driver fills zeros)
-+	 * SW_DEFINE[7:2] are used by driver
-+	 * SW_DEFINE[1:0] are reserved for firmware (driver fills zeros)
-+	 */
-+	sn = (atomic_inc_return(&tx_report->sn) & 0x003F) << 2;
- 
- 	tx_report->last_sent_sn = sn;
- 	tx_report->last_sent_time = jiffies;
-@@ -1625,14 +1629,23 @@ void rtl_tx_report_handler(struct ieee80211_hw *hw, u8 *tmp_buf, u8 c2h_cmd_len)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_tx_report *tx_report = &rtlpriv->tx_report;
- 	u16 sn;
-+	u8 st, retry;
- 
--	sn = ((tmp_buf[7] & 0x0F) << 8) | tmp_buf[6];
-+	if (rtlpriv->cfg->spec_ver & RTL_SPEC_EXT_C2H) {
-+		sn = GET_TX_REPORT_SN_V2(tmp_buf);
-+		st = GET_TX_REPORT_ST_V2(tmp_buf);
-+		retry = GET_TX_REPORT_RETRY_V2(tmp_buf);
-+	} else {
-+		sn = GET_TX_REPORT_SN_V1(tmp_buf);
-+		st = GET_TX_REPORT_ST_V1(tmp_buf);
-+		retry = GET_TX_REPORT_RETRY_V1(tmp_buf);
-+	}
- 
- 	tx_report->last_recv_sn = sn;
- 
- 	RT_TRACE(rtlpriv, COMP_TX_REPORT, DBG_DMESG,
- 		 "Recv TX-Report st=0x%02X sn=0x%X retry=0x%X\n",
--		 tmp_buf[0], sn, tmp_buf[2]);
-+		 st, sn, retry);
- }
- EXPORT_SYMBOL_GPL(rtl_tx_report_handler);
- 
-@@ -1646,7 +1659,8 @@ bool rtl_check_tx_report_acked(struct ieee80211_hw *hw)
- 
- 	if (time_before(tx_report->last_sent_time + 3 * HZ, jiffies)) {
- 		RT_TRACE(rtlpriv, COMP_TX_REPORT, DBG_WARNING,
--			 "Check TX-Report timeout!!\n");
-+			 "Check TX-Report timeout!! s_sn=0x%X r_sn=0x%X\n",
-+			 tx_report->last_sent_sn, tx_report->last_recv_sn);
- 		return true;	/* 3 sec. (timeout) seen as acked */
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 2df0bc316532..be45420f34d3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -153,6 +153,13 @@ enum rtl8192c_h2c_cmd {
- 	MAX_H2CCMD
- };
- 
-+#define GET_TX_REPORT_SN_V1(c2h)	(c2h[6])
-+#define GET_TX_REPORT_ST_V1(c2h)	(c2h[0] & 0xC0)
-+#define GET_TX_REPORT_RETRY_V1(c2h)	(c2h[2] & 0x3F)
-+#define GET_TX_REPORT_SN_V2(c2h)	(c2h[6])
-+#define GET_TX_REPORT_ST_V2(c2h)	(c2h[7] & 0xC0)
-+#define GET_TX_REPORT_RETRY_V2(c2h)	(c2h[8] & 0x3F)
-+
- #define MAX_TX_COUNT			4
- #define MAX_REGULATION_NUM		4
- #define MAX_RF_PATH_NUM			4
-@@ -952,6 +959,7 @@ enum package_type {
- enum rtl_spec_ver {
- 	RTL_SPEC_NEW_RATEID = BIT(0),	/* use ratr_table_mode_new */
- 	RTL_SPEC_SUPPORT_VHT = BIT(1),	/* support VHT */
-+	RTL_SPEC_EXT_C2H = BIT(2),	/* extend FW C2H (e.g. TX REPORT) */
- };
- 
- struct octet_string {
+>> this code here will allways return the default_nf since all possible 
+>> returned values are within that range
+>> and the || is likelly wrong too and must be replaced with &&. but the 
+>> range itself looks bogus. can't be right
+>>
+>> so please do me a favor and test your code against 9280 chipsets too 
+>> and check if its working. right now its a full regression incidence
+>> and should be reverted
+>>
+>>
+>>
+>> Am 26.01.2018 um 12:07 schrieb Wojciech Dubowik:
+>>> Are you sure you have applied path 4 in the series. You should see 
+>>> calibration piers. Sth like:
+>>>
+>>> Calibration data
+>>> Chain 0
+>>> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+>>> 2412    14    0    136    0    0    0
+>>> 2437    13    0    136    0    0    0
+>>> 2472    11    0    136    0    0    0
+>>> Chain 1
+>>> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+>>> 2412    11    0    137    0    0    0
+>>> 2437    11    0    139    0    0    0
+>>> 2472    10    0    137    0    0    0
+>>> Chain 2
+>>> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+>>> 2412    13    0    138    0    0    0
+>>> 2437    14    0    139    0    0    0
+>>> 2472    14    0    139    0    0    0
+>>>
+>>> I have just done backports from ath.git and I can see these entries 
+>>> with my Compex card.
+>>>
+>>> Wojtek
+>>>
+>>>
+>>> On 26/01/18 11:36, Sebastian Gottschall wrote:
+>>>> Am 26.01.2018 um 11:27 schrieb Wojciech Dubowik:
+>>>>> I will try it with again with couple of OEM cards.
+>>>> this is no card. the eeprom is stored in flash memory. so the chip 
+>>>> is a 9280 pcie chip which is connected on board, but has no own 
+>>>> flash memory for calibration data. this is stored in system flash 
+>>>> memory
+>>>>>
+>>>>> Is nanostation calibrated for noisefloor? You can see it with 
+>>>>> modal_eeprom in debugfs.
+>>>> root@TRO2:/sys/kernel/debug/ieee80211/phy0/ath9k# cat modal_eeprom
+>>>>    2GHz modal Header :
+>>>>  Chain0 Ant. Control :          0
+>>>>  Chain1 Ant. Control :          0
+>>>>  Chain2 Ant. Control :          0
+>>>>  Ant. Common Control :          0
+>>>>     Chain0 Ant. Gain :          0
+>>>>     Chain1 Ant. Gain :          0
+>>>>     Chain2 Ant. Gain :          0
+>>>>        Switch Settle :         45
+>>>>     Chain0 TxRxAtten :         11
+>>>>     Chain1 TxRxAtten :         11
+>>>>     Chain2 TxRxAtten :         11
+>>>>    Chain0 RxTxMargin :         11
+>>>>    Chain1 RxTxMargin :         11
+>>>>    Chain2 RxTxMargin :         11
+>>>>     ADC Desired size :        224
+>>>>     PGA Desired size :          0
+>>>>     Chain0 xlna Gain :         14
+>>>>     Chain1 xlna Gain :         14
+>>>>     Chain2 xlna Gain :         14
+>>>>        txEndToXpaOff :          0
+>>>>          txEndToRxOn :          2
+>>>>       txFrameToXpaOn :         14
+>>>>       CCA Threshold) :          0
+>>>>  Chain0 NF Threshold :        202
+>>>>  Chain1 NF Threshold :        202
+>>>>  Chain2 NF Threshold :        202
+>>>>              xpdGain :          9
+>>>>          External PD :          1
+>>>> Chain0 I Coefficient :          0
+>>>> Chain1 I Coefficient :          0
+>>>> Chain2 I Coefficient :          0
+>>>> Chain0 Q Coefficient :          0
+>>>> Chain1 Q Coefficient :          0
+>>>> Chain2 Q Coefficient :          0
+>>>>        pdGainOverlap :          6
+>>>>    Chain0 OutputBias :          2
+>>>>    Chain0 DriverBias :          2
+>>>>       xPA Bias Level :          0
+>>>>  2chain pwr decrease :          0
+>>>>  3chain pwr decrease :          0
+>>>>   txFrameToDataStart :         14
+>>>>        txFrameToPaOn :         14
+>>>>      HT40 Power Inc. :          2
+>>>>      Chain0 bswAtten :         21
+>>>>      Chain1 bswAtten :         21
+>>>>      Chain2 bswAtten :          0
+>>>>     Chain0 bswMargin :         31
+>>>>     Chain1 bswMargin :         31
+>>>>     Chain2 bswMargin :          0
+>>>>   HT40 Switch Settle :         44
+>>>>     Chain0 xatten2Db :          0
+>>>>     Chain1 xatten2Db :          0
+>>>>     Chain2 xatten2Db :          0
+>>>> Chain0 xatten2Margin :          0
+>>>> Chain1 xatten2Margin :          0
+>>>> Chain2 xatten2Margin :          0
+>>>>    Chain1 OutputBias :          2
+>>>>    Chain1 DriverBias :          2
+>>>>          LNA Control :         13
+>>>>       XPA Bias Freq0 :          0
+>>>>       XPA Bias Freq1 :          0
+>>>>       XPA Bias Freq2 :          0
+>>>>    5GHz modal Header :
+>>>>  Chain0 Ant. Control :         16
+>>>>  Chain1 Ant. Control :         16
+>>>>  Chain2 Ant. Control :          0
+>>>>  Ant. Common Control :        288
+>>>>     Chain0 Ant. Gain :          0
+>>>>     Chain1 Ant. Gain :          0
+>>>>     Chain2 Ant. Gain :          0
+>>>>        Switch Settle :         45
+>>>>     Chain0 TxRxAtten :         32
+>>>>     Chain1 TxRxAtten :         32
+>>>>     Chain2 TxRxAtten :         11
+>>>>    Chain0 RxTxMargin :          0
+>>>>    Chain1 RxTxMargin :          0
+>>>>    Chain2 RxTxMargin :         16
+>>>>     ADC Desired size :        226
+>>>>     PGA Desired size :          0
+>>>>     Chain0 xlna Gain :         13
+>>>>     Chain1 xlna Gain :         13
+>>>>     Chain2 xlna Gain :         13
+>>>>        txEndToXpaOff :          0
+>>>>          txEndToRxOn :          2
+>>>>       txFrameToXpaOn :         14
+>>>>       CCA Threshold) :         28
+>>>>  Chain0 NF Threshold :        255
+>>>>  Chain1 NF Threshold :        255
+>>>>  Chain2 NF Threshold :        255
+>>>>              xpdGain :          1
+>>>>          External PD :          1
+>>>> Chain0 I Coefficient :          0
+>>>> Chain1 I Coefficient :          0
+>>>> Chain2 I Coefficient :          0
+>>>> Chain0 Q Coefficient :          0
+>>>> Chain1 Q Coefficient :          0
+>>>> Chain2 Q Coefficient :          0
+>>>>        pdGainOverlap :          6
+>>>>    Chain0 OutputBias :          3
+>>>>    Chain0 DriverBias :          3
+>>>>       xPA Bias Level :          2
+>>>>  2chain pwr decrease :          0
+>>>>  3chain pwr decrease :          0
+>>>>   txFrameToDataStart :         14
+>>>>        txFrameToPaOn :         14
+>>>>      HT40 Power Inc. :          0
+>>>>      Chain0 bswAtten :         34
+>>>>      Chain1 bswAtten :         34
+>>>>      Chain2 bswAtten :          0
+>>>>     Chain0 bswMargin :         22
+>>>>     Chain1 bswMargin :         22
+>>>>     Chain2 bswMargin :          0
+>>>>   HT40 Switch Settle :         45
+>>>>     Chain0 xatten2Db :          0
+>>>>     Chain1 xatten2Db :          0
+>>>>     Chain2 xatten2Db :          0
+>>>> Chain0 xatten2Margin :          0
+>>>> Chain1 xatten2Margin :          0
+>>>> Chain2 xatten2Margin :          0
+>>>>    Chain1 OutputBias :          3
+>>>>    Chain1 DriverBias :          3
+>>>>          LNA Control :         13
+>>>>       XPA Bias Freq0 :          0
+>>>>       XPA Bias Freq1 :          0
+>>>>       XPA Bias Freq2 :          0
+>>>>
+>>>>>
+>>>>> Wojtek
+>>>>> On 26/01/18 10:59, Sebastian Gottschall wrote:
+>>>>>> i dont know if this is a coincidence. but after testing your 
+>>>>>> patch on a standard ubiquiti nanostation m2 the noise floor looks 
+>>>>>> wrong.
+>>>>>> it will stay on -112 which is clearly impossible in 2.4 (before 
+>>>>>> it was around -96)
+>>>>>
+>>>>>
+>>>>
+>>>
+>>>
+>>
+>
+>
+
 -- 
-2.15.1
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
