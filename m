@@ -1,113 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5074 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755358AbeASALr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 19:11:47 -0500
-Subject: [PATCH v4 10/10] nl80211: sanitize array index in parse_txq_params
-From: Dan Williams <dan.j.williams@intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, akpm@linux-foundation.org,
-        kernel-hardening@lists.openwall.com, gregkh@linuxfoundation.org,
-        Christian Lamparter <chunkeey@gmail.com>,
-        linux-wireless@vger.kernel.org, tglx@linutronix.de,
-        Johannes Berg <johannes@sipsolutions.net>,
-        torvalds@linux-foundation.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        alan@linux.intel.com
-Date: Thu, 18 Jan 2018 16:02:41 -0800
-Message-ID: <151632015637.21271.10452415430644852207.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180119_011213_233834_D17327D7)
-In-Reply-To: <151632009605.21271.11304291057104672116.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151632009605.21271.11304291057104672116.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:42361 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752642AbeAZJI5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Jan 2018 04:08:57 -0500
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+To: zajec5@gmail.com, hauke@hauke-m.de
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] bcma: Replace mdelay with usleep_range in bcma_pmu_resources_init
+Date: Fri, 26 Jan 2018 17:13:31 +0800
+Message-Id: <1516958011-303-1-git-send-email-baijiaju1990@gmail.com> (sfid-20180126_101003_579860_ABACF0A8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless drivers rely on parse_txq_params to validate that
-txq_params->ac is less than NL80211_NUM_ACS by the time the low-level
-driver's ->conf_tx() handler is called. Use a new helper, 'array_idx',
-to sanitize txq_params->ac with respect to speculation. I.e. ensure that
-any speculation into ->conf_tx() handlers is done with a value of
-txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
+After checking all possible call chains to bcma_pmu_resources_init() here,
+my tool finds that this function is never called in atomic context,
+namely never in an interrupt handler or holding a spinlock.
+Thus mdelay can be replaced with usleep_range to avoid busy wait.
 
-Reported-by: Christian Lamparter <chunkeey@gmail.com>
-Reported-by: Elena Reshetova <elena.reshetova@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+This is found by a static analysis tool named DCNS written by myself.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 ---
- include/linux/nospec.h |   21 +++++++++++++++++++++
- net/wireless/nl80211.c |   10 +++++++---
- 2 files changed, 28 insertions(+), 3 deletions(-)
+ drivers/bcma/driver_chipcommon_pmu.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/nospec.h b/include/linux/nospec.h
-index f841c11f3f1f..8af35be1869e 100644
---- a/include/linux/nospec.h
-+++ b/include/linux/nospec.h
-@@ -41,4 +41,25 @@ static inline unsigned long array_ptr_mask(unsigned long idx, unsigned long sz)
- 	__u._bit &= _mask;						\
- 	__u._ptr;							\
- })
-+
-+/**
-+ * array_idx - Generate a pointer to an array index, ensuring the
-+ * pointer is bounded under speculation to NULL.
-+ *
-+ * @idx: the index of the element, must be less than LONG_MAX
-+ * @sz: the number of elements in the array, must be less than LONG_MAX
-+ *
-+ * If @idx falls in the interval [0, @sz), returns &@idx otherwise
-+ * returns NULL.
-+ */
-+#define array_idx(idx, sz)						\
-+({									\
-+	union { typeof((idx)) *_ptr; unsigned long _bit; } __u;		\
-+	typeof(idx) *_i = &(idx);					\
-+	unsigned long _mask = array_ptr_mask(*_i, (sz));		\
-+									\
-+	__u._ptr = _i;							\
-+	__u._bit &= _mask;						\
-+	__u._ptr;							\
-+})
- #endif /* __NOSPEC_H__ */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2b3dbcd40e46..202cb1dc03ee 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -16,6 +16,7 @@
- #include <linux/nl80211.h>
- #include <linux/rtnetlink.h>
- #include <linux/netlink.h>
-+#include <linux/nospec.h>
- #include <linux/etherdevice.h>
- #include <net/net_namespace.h>
- #include <net/genetlink.h>
-@@ -2056,20 +2057,23 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
- static int parse_txq_params(struct nlattr *tb[],
- 			    struct ieee80211_txq_params *txq_params)
- {
-+	u8 ac, *idx;
-+
- 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
- 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
- 	    !tb[NL80211_TXQ_ATTR_AIFS])
- 		return -EINVAL;
- 
--	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
-+	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
- 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
- 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
- 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
- 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
- 
--	if (txq_params->ac >= NL80211_NUM_ACS)
-+	idx = array_idx(ac, NL80211_NUM_ACS);
-+	if (!idx)
- 		return -EINVAL;
--
-+	txq_params->ac = *idx;
- 	return 0;
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index f1eb4d3..478948c 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -203,7 +203,7 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
+ 	 * Add some delay; allow resources to come up and settle.
+ 	 * Delay is required for SoC (early init).
+ 	 */
+-	mdelay(2);
++	usleep_range(1500, 2000);
  }
  
+ /* Disable to allow reading SPROM. Don't know the adventages of enabling it. */
+-- 
+1.7.9.5
