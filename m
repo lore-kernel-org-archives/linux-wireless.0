@@ -1,100 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45660 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751099AbeAVMsJ (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:38998 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751431AbeAZHrG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 07:48:09 -0500
-Message-ID: <1516625287.2508.18.camel@sipsolutions.net> (sfid-20180122_134813_174553_7E08E625)
-Subject: Re: [PATCH 1/2] cfg80211: Add support to notify station's opmode
- change to userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: tamizhr@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com
-Date: Mon, 22 Jan 2018 13:48:07 +0100
-In-Reply-To: <1516173508-16528-1-git-send-email-tamizhr@codeaurora.org>
-References: <1516173508-16528-1-git-send-email-tamizhr@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 26 Jan 2018 02:47:06 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/10] rtlwifi: Add Support VHT to spec_ver
+Date: Fri, 26 Jan 2018 15:46:37 +0800
+Message-ID: <20180126074645.27201-3-pkshih@realtek.com> (sfid-20180126_084727_083904_15A4C3CE)
+In-Reply-To: <20180126074645.27201-1-pkshih@realtek.com>
+References: <20180126074645.27201-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-01-17 at 12:48 +0530, tamizhr@codeaurora.org wrote:
-> 
->  /**
-> + * enum wiphy_opmode_info_flag - opmode information flags
-> + *
-> + * @MAX_BW_CHANGED: Max Bandwidth changed
-> + * @SMPS_MODE_CHANGED: SMPS mode changed
-> + * @N_SS_CHANGED: max N_SS (number of spatial streams) changed
-> + *
-> + */
-> +enum wiphy_opmode_info_flag {
-> +	MAX_BW_CHANGED		= BIT(0),
-> +	SMPS_MODE_CHANGED	= BIT(1),
-> +	N_SS_CHANGED		= BIT(2),
-> +};
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-These need to have some kind of common prefix, e.g.
-STA_OPMODE_{BW,SMPS,NSS}_CHANGED
+We are going to add 8822be, which is a VHT 2x2 wifi chip, so add VHT flag
+to replace enumeration of chips.
 
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c         | 6 ++++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 1 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         | 1 +
+ 3 files changed, 6 insertions(+), 2 deletions(-)
 
->  /**
-> + * cfg80211_sta_opmode_change_notify - Station's SMPS mode, rx_nss and
-> + *	max bandwidth change event
-
-need to find a shorter description - must fit on one line
-
-> + * @dev: network device
-> + * @mac: MAC address of a station which opmode got modified
-> + * @changed: contains value from &enum wiphy_opmode_info_flag
-> + * @smps_mode: New SMPS mode of a station
-> + * @bw: new max bandwidth value of a station
-> + * @rx_nss: new rx_nss value of a station
-> + * @gfp: context flags
-> + *
-> + * This function is called when station's opmode modified via action frame.
-
-Rephrase, say "Drivers should call this function when ..."
-
-> +void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
-> +				       enum wiphy_opmode_info_flag changed,
-> +				       u8 smps_mode, u8 bw, u8 rx_nss,
-> +				       gfp_t gfp);
-
-We may not want to add more, but pulling out those parameters "changed,
-smps_mode, bw, rx_nss" into a small structure would IMHO be a good
-idea.
-
-> + * @NL80211_CMD_STA_OPMODE_CHANGED: An event that notify station's
-> + *	ht opmode or vht opmode changes. This will use &NL80211_ATTR_SMPS_MODE,
-> + *	&NL80211_ATTR_CHANNEL_WIDTH, &NL80211_ATTR_NSS to send the event to
-> + *	userspace.
-
-Should document that not all of those attributes may be included at all
-times.
-
-> +void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
-> +				       enum wiphy_opmode_info_flag changed,
-> +				       u8 smps, u8 bw, u8 rx_nss, gfp_t gfp)
-> +{
-> +	struct sk_buff *msg;
-> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-> +	void *hdr;
-> +
-> +	if (!mac)
-> +		return;
-
-WARN_ON(), perhaps
-
-> +	if (mac && nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac))
-> +		goto nla_put_failure;
-
-no need to check mac != NULL again
-
-> +nla_put_failure:
-> +	genlmsg_cancel(msg, hdr);
-
-no need for cancel when you're going to free the message
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index e461eed32699..a2da057d3cdd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -244,6 +244,9 @@ static void _rtl_init_hw_vht_capab(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+ 
++	if (!(rtlpriv->cfg->spec_ver & RTL_SPEC_SUPPORT_VHT))
++		return;
++
+ 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE ||
+ 	    rtlhal->hw_type == HARDWARE_TYPE_RTL8822BE) {
+ 		u16 mcs_map;
+@@ -887,8 +890,7 @@ static void _rtl_query_bandwidth_mode(struct ieee80211_hw *hw,
+ 
+ 	tcb_desc->packet_bw = HT_CHANNEL_WIDTH_20_40;
+ 
+-	if (rtlpriv->rtlhal.hw_type == HARDWARE_TYPE_RTL8812AE ||
+-	    rtlpriv->rtlhal.hw_type == HARDWARE_TYPE_RTL8821AE) {
++	if (rtlpriv->cfg->spec_ver & RTL_SPEC_SUPPORT_VHT) {
+ 		if (mac->opmode == NL80211_IFTYPE_AP ||
+ 		    mac->opmode == NL80211_IFTYPE_ADHOC ||
+ 		    mac->opmode == NL80211_IFTYPE_MESH_POINT) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+index ab5d462b1a3a..9bb3d9dfce79 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+@@ -328,6 +328,7 @@ static const struct rtl_hal_cfg rtl8821ae_hal_cfg = {
+ 	.alt_fw_name = "rtlwifi/rtl8821aefw.bin",
+ 	.ops = &rtl8821ae_hal_ops,
+ 	.mod_params = &rtl8821ae_mod_params,
++	.spec_ver = RTL_SPEC_SUPPORT_VHT,
+ 	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
+ 	.maps[SYS_FUNC_EN] = REG_SYS_FUNC_EN,
+ 	.maps[SYS_CLK] = REG_SYS_CLKR,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index a7aacbc3984e..2df0bc316532 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -951,6 +951,7 @@ enum package_type {
+ 
+ enum rtl_spec_ver {
+ 	RTL_SPEC_NEW_RATEID = BIT(0),	/* use ratr_table_mode_new */
++	RTL_SPEC_SUPPORT_VHT = BIT(1),	/* support VHT */
+ };
+ 
+ struct octet_string {
+-- 
+2.15.1
