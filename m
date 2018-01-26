@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:36107 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751302AbeAIJH0 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:36390 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751321AbeAZWxq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 04:07:26 -0500
-Received: by mail-qt0-f193.google.com with SMTP id a16so16949611qtj.3
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 01:07:26 -0800 (PST)
-Subject: Re: [PATCH v2] b43: Replace mdelay with usleep_range in
- b43_radio_2057_init_post
-To: Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Greg KH <gregkh@linuxfoundation.org>
-References: <1515462006-6144-1-git-send-email-baijiaju1990@gmail.com>
- <20180109083541.GA13460@kroah.com>
- <4201e8cd-81ba-ab7d-2a0d-af957c5dfed6@gmail.com>
-Cc: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
-        kstewart@linuxfoundation.org, johannes.berg@intel.com,
-        tiwai@suse.de, colin.king@canonical.com,
-        andrew.zaborowski@intel.com, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        b43-dev@lists.infradead.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A54864A.8020006@broadcom.com> (sfid-20180109_100801_965694_EE92DE67)
-Date: Tue, 9 Jan 2018 10:07:22 +0100
+        Fri, 26 Jan 2018 17:53:46 -0500
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id C749F40A30A
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2018 14:53:43 -0800 (PST)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: ath9k will not tx packets sometimes.
+Message-ID: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com> (sfid-20180126_235351_078156_24BD2A13)
+Date: Fri, 26 Jan 2018 14:53:43 -0800
 MIME-Version: 1.0
-In-Reply-To: <4201e8cd-81ba-ab7d-2a0d-af957c5dfed6@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/9/2018 9:39 AM, Jia-Ju Bai wrote:
->
->
-> On 2018/1/9 16:35, Greg KH wrote:
->> On Tue, Jan 09, 2018 at 09:40:06AM +0800, Jia-Ju Bai wrote:
->>> b43_radio_2057_init_post is not called in an interrupt handler
->>> nor holding a spinlock.
->>> The function mdelay in it can be replaced with usleep_range,
->>> to reduce busy wait.
->>>
->>> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
->>> ---
->>> v2:
->>> * Replace mdelay with usleep_range, instead of msleep in v1.
->>>    Thank Larry for good advice.
->>> ---
->>>   drivers/net/wireless/broadcom/b43/phy_n.c |    2 +-
->>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c
->>> b/drivers/net/wireless/broadcom/b43/phy_n.c
->>> index a5557d7..f2a2f41 100644
->>> --- a/drivers/net/wireless/broadcom/b43/phy_n.c
->>> +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
->>> @@ -1031,7 +1031,7 @@ static void b43_radio_2057_init_post(struct
->>> b43_wldev *dev)
->>>       b43_radio_set(dev, R2057_RFPLL_MISC_CAL_RESETN, 0x78);
->>>       b43_radio_set(dev, R2057_XTAL_CONFIG2, 0x80);
->>> -    mdelay(2);
->>> +    usleep_range(2000, 3000);
->> Where did 3000 come from?  Are you sure about that?
->
-> I am not very sure, and I use it according to Larry's message:
+I'm doing a test with 200 virtual stations on each of 6 ath9k radios.
 
-Hi Jia-Ju Bai,
+When I configure stations for DHCP, I see cases where stations on a particular
+radio will not transmit anything sometimes.  I see no 'XMIT' logs that show indication of
+frames being received in the driver from the upper stack, but if I use 'tshark' on
+a station interface, it shows frames being 'transmitted'.
 
-The duration here is for settling the registers so hardware can pick it 
-up. Right after this they are written again. Now this is during 
-initialization of the radio so not time critical, but probably anything 
-in the range of 2000..3000 would also have been fine.
+I do, however, see this, which looks like it might show
+an issue.  It looks like whatever 'aqm' is, it has an ever expanding number
+of backlog packets:
 
-Regards,
-Arend
+[root@2u-6n lanforge]# cat /debug/ieee80211/wiphy2/netdev\:sta30194/stations/00\:0e\:8e\:69\:b8\:f7/aqm
+target 49999us interval 299999us ecn no
+tid ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets
+0 2 27616 440 9 0 0 0 428 998 7
+1 3 0 0 0 0 0 0 0 0 0
+2 3 0 0 0 0 0 0 0 0 0
+3 2 0 0 0 0 0 0 0 0 0
+4 1 0 0 0 0 0 0 0 0 0
+5 1 0 0 0 0 0 0 0 0 0
+6 0 0 0 1 0 0 0 0 390 1
+7 0 0 0 637 0 0 0 792 22072 903
+8 2 0 0 0 0 0 0 0 0 0
+9 3 0 0 0 0 0 0 0 0 0
+10 3 0 0 0 0 0 0 0 0 0
+11 2 0 0 0 0 0 0 0 0 0
+12 1 0 0 0 0 0 0 0 0 0
+13 1 0 0 0 0 0 0 0 0 0
+14 0 0 0 0 0 0 0 0 0 0
+15 0 0 0 0 0 0 0 0 0 0
+
+
+Anyone have any pointers as to whether this might be a real issue or not?  I'll go
+digging in the meantime....
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
