@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:34866 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750861AbeAPUV2 (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:39313 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751819AbeAZPGo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jan 2018 15:21:28 -0500
-Received: by mail-wm0-f53.google.com with SMTP id r78so11234331wme.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jan 2018 12:21:27 -0800 (PST)
-Subject: Re: AP6335 with mainline kernel
-To: Fabio Estevam <festevam@gmail.com>,
-        Vanessa Maegima <vanessa.maegima@nxp.com>
-References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
- <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com>
- <1510916848.26896.2.camel@nxp.com> <5A0EDC25.7030505@broadcom.com>
- <1510932224.22506.0.camel@nxp.com>
- <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com>
- <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
- <1511347672.18886.2.camel@nxp.com> <5A15584A.9090601@broadcom.com>
- <1511450638.9102.1.camel@nxp.com> <5A1FFA17.6000703@broadcom.com>
- <1512413992.18900.3.camel@nxp.com>
- <CAF7Mx6q6mTOXc=4OFVCHAHd26pyfv5e6pK=TMNmb1S6=FBWUWQ@mail.gmail.com>
- <1512485878.9392.1.camel@nxp.com>
- <CAOMZO5DXoCFgTtuRRAq_jFjzkzFp6chMCwczXF5Z0bFaNfQnog@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "van.ayumi@gmail.com" <van.ayumi@gmail.com>,
-        "embed3d@gmail.com" <embed3d@gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A5E5EBE.7040301@broadcom.com> (sfid-20180116_212131_956260_09073543)
-Date: Tue, 16 Jan 2018 21:21:18 +0100
+        Fri, 26 Jan 2018 10:06:44 -0500
+Subject: Re: [PATCH] ath9k: Fix get channel default noise floor
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+References: <1516976454-8883-1-git-send-email-Wojciech.Dubowik@neratec.com>
+ <87k1w4u1qr.fsf@kamboji.qca.qualcomm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <73df95f3-be45-b1ba-74a6-425fe201b739@dd-wrt.com> (sfid-20180126_160658_174481_169AA431)
+Date: Fri, 26 Jan 2018 16:06:42 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5DXoCFgTtuRRAq_jFjzkzFp6chMCwczXF5Z0bFaNfQnog@mail.gmail.com>
+In-Reply-To: <87k1w4u1qr.fsf@kamboji.qca.qualcomm.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/15/2018 9:08 PM, Fabio Estevam wrote:
-> Hi Arend,
->
-> On Tue, Dec 5, 2017 at 12:58 PM, Vanessa Maegima
-> <vanessa.maegima@nxp.com> wrote:
->
->> Hi Arend,
->>
->> Sorry for this!
->>
->> I updated the folder on https://drive.google.com/drive/folders/1fosahjL
->> N1KI5NKS59_aPZdHLpENPFHtK
->>
->> Thanks!
->
-> Any ideas, please?
+the regression has been solved with that patch. so noise floor looks 
+normal for me on the 9280 chipset again
 
-Well, the dumps confirm a crash early in the firmware boot. However, I 
-could not obtain more information from it. To capture the failure I need 
-to rework some firmware functionality which is not trivial and I can not 
-claim time for it right now.
+Am 26.01.2018 um 15:35 schrieb Kalle Valo:
+> Wojciech Dubowik <Wojciech.Dubowik@neratec.com> writes:
+>
+>> Commit 8da58553cc63 ("ath9k: Use calibrated noise floor value
+>> when available") introduced regression in ath9k_hw_getchan_noise
+>> where per chain nominal noise floor has been taken instead default
+>> for channel.
+>> Revert to original default channel noise floor.
+>>
+>> Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+> Fixes: 8da58553cc63 ("ath9k: Use calibrated noise floor value when available")
+>
+> I can add that if this passes Sebastian's tests.
+>
+> And I'm planning to queue this for 4.16.
+>
 
-Regards,
-Arend
+-- 
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
