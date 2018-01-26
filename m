@@ -1,130 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from orthanc.universe-factory.net ([104.238.176.138]:52070 "EHLO
-        orthanc.universe-factory.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751464AbeA3KrN (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:39373 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751355AbeAZLmC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 05:47:13 -0500
-Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?UTF-8?Q?Richard_Sch=c3=bctz?= <rschuetz@uni-koblenz.de>,
-        linux-wireless@vger.kernel.org
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
- <2f3b9bd7-f083-f46c-8c47-051019a6f495@universe-factory.net>
- <1517298191.2189.33.camel@sipsolutions.net>
-From: Matthias Schiffer <mschiffer@universe-factory.net>
-Message-ID: <82352a08-9002-e257-9721-30b7efc90a34@universe-factory.net> (sfid-20180130_114717_226273_906901FA)
-Date: Tue, 30 Jan 2018 11:47:10 +0100
+        Fri, 26 Jan 2018 06:42:02 -0500
+Subject: Re: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
+To: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com
+References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+ <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
+ <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com>
+ <ed47cefe-efa4-a7c9-d017-b50a99316f43@neratec.com>
+ <d9e84a77-636e-cd13-7713-9119a4ac971d@dd-wrt.com>
+ <b0be6634-de6a-9f24-b48b-88e67ca9eee4@neratec.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <20f8b133-98a9-0491-6c16-ea3a414e5bb0@dd-wrt.com> (sfid-20180126_124206_527166_1DB02AC6)
+Date: Fri, 26 Jan 2018 12:42:00 +0100
 MIME-Version: 1.0
-In-Reply-To: <1517298191.2189.33.camel@sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="i7bGOTypSrrMZJieRTmsp88U6FsiatY1q"
+In-Reply-To: <b0be6634-de6a-9f24-b48b-88e67ca9eee4@neratec.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---i7bGOTypSrrMZJieRTmsp88U6FsiatY1q
-Content-Type: multipart/mixed; boundary="r83X3GjL0QiyGnIWTMtgPCvQ05SuHSKCO";
- protected-headers="v1"
-From: Matthias Schiffer <mschiffer@universe-factory.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?UTF-8?Q?Richard_Sch=c3=bctz?= <rschuetz@uni-koblenz.de>,
- linux-wireless@vger.kernel.org
-Message-ID: <82352a08-9002-e257-9721-30b7efc90a34@universe-factory.net>
-Subject: Re: [PATCH 1/2] wireless: set correct mandatory rate flags
-References: <20170907154744.28357-1-rschuetz@uni-koblenz.de>
- <2f3b9bd7-f083-f46c-8c47-051019a6f495@universe-factory.net>
- <1517298191.2189.33.camel@sipsolutions.net>
-In-Reply-To: <1517298191.2189.33.camel@sipsolutions.net>
+i have a idea what one cause could ne
 
---r83X3GjL0QiyGnIWTMtgPCvQ05SuHSKCO
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
++				nfval =
++				    ath9k_hw_get_nf_limits(ah, chan)->cal[i];
++				if (nfval > -60 || nfval < -127)
++					nfval = default_nf;
 
-On 01/30/2018 08:43 AM, Johannes Berg wrote:
-> On Fri, 2018-01-26 at 23:17 +0100, Matthias Schiffer wrote:
+this code here will allways return the default_nf since all possible returned values are within that range
+and the || is likelly wrong too and must be replaced with &&. but the range itself looks bogus. can't be right
+
+so please do me a favor and test your code against 9280 chipsets too and check if its working. right now its a full regression incidence
+and should be reverted
+
+
+
+Am 26.01.2018 um 12:07 schrieb Wojciech Dubowik:
+> Are you sure you have applied path 4 in the series. You should see 
+> calibration piers. Sth like:
+>
+> Calibration data
+> Chain 0
+> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+> 2412    14    0    136    0    0    0
+> 2437    13    0    136    0    0    0
+> 2472    11    0    136    0    0    0
+> Chain 1
+> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+> 2412    11    0    137    0    0    0
+> 2437    11    0    139    0    0    0
+> 2472    10    0    137    0    0    0
+> Chain 2
+> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+> 2412    13    0    138    0    0    0
+> 2437    14    0    139    0    0    0
+> 2472    14    0    139    0    0    0
+>
+> I have just done backports from ath.git and I can see these entries 
+> with my Compex card.
+>
+> Wojtek
+>
+>
+> On 26/01/18 11:36, Sebastian Gottschall wrote:
+>> Am 26.01.2018 um 11:27 schrieb Wojciech Dubowik:
+>>> I will try it with again with couple of OEM cards.
+>> this is no card. the eeprom is stored in flash memory. so the chip is 
+>> a 9280 pcie chip which is connected on board, but has no own flash 
+>> memory for calibration data. this is stored in system flash memory
+>>>
+>>> Is nanostation calibrated for noisefloor? You can see it with 
+>>> modal_eeprom in debugfs.
+>> root@TRO2:/sys/kernel/debug/ieee80211/phy0/ath9k# cat modal_eeprom
+>>    2GHz modal Header :
+>>  Chain0 Ant. Control :          0
+>>  Chain1 Ant. Control :          0
+>>  Chain2 Ant. Control :          0
+>>  Ant. Common Control :          0
+>>     Chain0 Ant. Gain :          0
+>>     Chain1 Ant. Gain :          0
+>>     Chain2 Ant. Gain :          0
+>>        Switch Settle :         45
+>>     Chain0 TxRxAtten :         11
+>>     Chain1 TxRxAtten :         11
+>>     Chain2 TxRxAtten :         11
+>>    Chain0 RxTxMargin :         11
+>>    Chain1 RxTxMargin :         11
+>>    Chain2 RxTxMargin :         11
+>>     ADC Desired size :        224
+>>     PGA Desired size :          0
+>>     Chain0 xlna Gain :         14
+>>     Chain1 xlna Gain :         14
+>>     Chain2 xlna Gain :         14
+>>        txEndToXpaOff :          0
+>>          txEndToRxOn :          2
+>>       txFrameToXpaOn :         14
+>>       CCA Threshold) :          0
+>>  Chain0 NF Threshold :        202
+>>  Chain1 NF Threshold :        202
+>>  Chain2 NF Threshold :        202
+>>              xpdGain :          9
+>>          External PD :          1
+>> Chain0 I Coefficient :          0
+>> Chain1 I Coefficient :          0
+>> Chain2 I Coefficient :          0
+>> Chain0 Q Coefficient :          0
+>> Chain1 Q Coefficient :          0
+>> Chain2 Q Coefficient :          0
+>>        pdGainOverlap :          6
+>>    Chain0 OutputBias :          2
+>>    Chain0 DriverBias :          2
+>>       xPA Bias Level :          0
+>>  2chain pwr decrease :          0
+>>  3chain pwr decrease :          0
+>>   txFrameToDataStart :         14
+>>        txFrameToPaOn :         14
+>>      HT40 Power Inc. :          2
+>>      Chain0 bswAtten :         21
+>>      Chain1 bswAtten :         21
+>>      Chain2 bswAtten :          0
+>>     Chain0 bswMargin :         31
+>>     Chain1 bswMargin :         31
+>>     Chain2 bswMargin :          0
+>>   HT40 Switch Settle :         44
+>>     Chain0 xatten2Db :          0
+>>     Chain1 xatten2Db :          0
+>>     Chain2 xatten2Db :          0
+>> Chain0 xatten2Margin :          0
+>> Chain1 xatten2Margin :          0
+>> Chain2 xatten2Margin :          0
+>>    Chain1 OutputBias :          2
+>>    Chain1 DriverBias :          2
+>>          LNA Control :         13
+>>       XPA Bias Freq0 :          0
+>>       XPA Bias Freq1 :          0
+>>       XPA Bias Freq2 :          0
+>>    5GHz modal Header :
+>>  Chain0 Ant. Control :         16
+>>  Chain1 Ant. Control :         16
+>>  Chain2 Ant. Control :          0
+>>  Ant. Common Control :        288
+>>     Chain0 Ant. Gain :          0
+>>     Chain1 Ant. Gain :          0
+>>     Chain2 Ant. Gain :          0
+>>        Switch Settle :         45
+>>     Chain0 TxRxAtten :         32
+>>     Chain1 TxRxAtten :         32
+>>     Chain2 TxRxAtten :         11
+>>    Chain0 RxTxMargin :          0
+>>    Chain1 RxTxMargin :          0
+>>    Chain2 RxTxMargin :         16
+>>     ADC Desired size :        226
+>>     PGA Desired size :          0
+>>     Chain0 xlna Gain :         13
+>>     Chain1 xlna Gain :         13
+>>     Chain2 xlna Gain :         13
+>>        txEndToXpaOff :          0
+>>          txEndToRxOn :          2
+>>       txFrameToXpaOn :         14
+>>       CCA Threshold) :         28
+>>  Chain0 NF Threshold :        255
+>>  Chain1 NF Threshold :        255
+>>  Chain2 NF Threshold :        255
+>>              xpdGain :          1
+>>          External PD :          1
+>> Chain0 I Coefficient :          0
+>> Chain1 I Coefficient :          0
+>> Chain2 I Coefficient :          0
+>> Chain0 Q Coefficient :          0
+>> Chain1 Q Coefficient :          0
+>> Chain2 Q Coefficient :          0
+>>        pdGainOverlap :          6
+>>    Chain0 OutputBias :          3
+>>    Chain0 DriverBias :          3
+>>       xPA Bias Level :          2
+>>  2chain pwr decrease :          0
+>>  3chain pwr decrease :          0
+>>   txFrameToDataStart :         14
+>>        txFrameToPaOn :         14
+>>      HT40 Power Inc. :          0
+>>      Chain0 bswAtten :         34
+>>      Chain1 bswAtten :         34
+>>      Chain2 bswAtten :          0
+>>     Chain0 bswMargin :         22
+>>     Chain1 bswMargin :         22
+>>     Chain2 bswMargin :          0
+>>   HT40 Switch Settle :         45
+>>     Chain0 xatten2Db :          0
+>>     Chain1 xatten2Db :          0
+>>     Chain2 xatten2Db :          0
+>> Chain0 xatten2Margin :          0
+>> Chain1 xatten2Margin :          0
+>> Chain2 xatten2Margin :          0
+>>    Chain1 OutputBias :          3
+>>    Chain1 DriverBias :          3
+>>          LNA Control :         13
+>>       XPA Bias Freq0 :          0
+>>       XPA Bias Freq1 :          0
+>>       XPA Bias Freq2 :          0
 >>
->> I propose to revert this for now (I assume it's too late for 4.15, but=
+>>>
+>>> Wojtek
+>>> On 26/01/18 10:59, Sebastian Gottschall wrote:
+>>>> i dont know if this is a coincidence. but after testing your patch 
+>>>> on a standard ubiquiti nanostation m2 the noise floor looks wrong.
+>>>> it will stay on -112 which is clearly impossible in 2.4 (before it 
+>>>> was around -96)
+>>>
+>>>
+>>
+>
+>
 
->> hopefully the regression can be fixed in 4.15.1).
->=20
-> I really don't think we should revert this, it fixes a real bug.
->=20
-> We can easily switch the default though, would something like this
-> help?
+-- 
+Mit freundlichen Grüssen / Regards
 
-Working perfectly.
+Sebastian Gottschall / CTO
 
-Tested-by: Matthias Schiffer <mschiffer@universe-factory.net>
-
-
->=20
-> diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-> index 51aa55618ef7..b12da6ef3c12 100644
-> --- a/net/wireless/mesh.c
-> +++ b/net/wireless/mesh.c
-> @@ -170,9 +170,28 @@ int __cfg80211_join_mesh(struct cfg80211_registere=
-d_device *rdev,
->  		enum nl80211_bss_scan_width scan_width;
->  		struct ieee80211_supported_band *sband =3D
->  				rdev->wiphy.bands[setup->chandef.chan->band];
-> -		scan_width =3D cfg80211_chandef_to_scan_width(&setup->chandef);
-> -		setup->basic_rates =3D ieee80211_mandatory_rates(sband,
-> -							       scan_width);
-> +
-> +		if (setup->chandef.chan->band =3D=3D NL80211_BAND_2GHZ) {
-> +			int i;
-> +
-> +			/*
-> +			 * Older versions selected the mandatory rates for
-> +			 * 2.4 GHz as well, but were broken in that only
-> +			 * 1 Mbps was regarded as a mandatory rate. Keep
-> +			 * using just 1 Mbps as the default basic rate for
-> +			 * mesh to be interoperable with older versions.
-> +			 */
-> +			for (i =3D 0; i < sband->n_bitrates; i++) {
-> +				if (sband->bitrates[i].bitrate =3D=3D 10) {
-> +					setup->basic_rates =3D BIT(i);
-> +					break;
-> +				}
-> +			}
-> +		} else {
-> +			scan_width =3D cfg80211_chandef_to_scan_width(&setup->chandef);
-> +			setup->basic_rates =3D ieee80211_mandatory_rates(sband,
-> +								       scan_width);
-> +		}
->  	}
-> =20
->  	err =3D cfg80211_chandef_dfs_required(&rdev->wiphy,
->=20
-> johannes
->=20
-
-
-
---r83X3GjL0QiyGnIWTMtgPCvQ05SuHSKCO--
-
---i7bGOTypSrrMZJieRTmsp88U6FsiatY1q
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEZmTnvaa2aYgexS51Fu8/ZMsgHZwFAlpwTS4ACgkQFu8/ZMsg
-HZzwbA/6A6SGammbchNy9L0dhcAtWwkuEuT9f98S3Bf2BB2HseBNgOmemn0HdK6x
-P5otBgR83DJ1hWhwYqFlgNtVw56xcdsXhkgH0QhTUcN4F8xlZxSR7B3Rnl3bw16K
-bzsYhx/7/G6oOvE98BgEhYx1Jt2XAFiMvfv0MVP1o/CSTMJeIT52H4WXqbywbFPv
-uPX/aTXeVC4YBNtzILUrAPEav42S+SZkR0+1SYwgPKfTf+oOJYt7PEACA+bEglub
-HN7ugdLSgaSVlwprNEnPtGnZkeZs07dwZIesDWcI/8OxCSkMqXDI+9HIQdQNe5Ve
-rqEsBH3G+T0TawRHCQCaxJNcNNQzOVf1pTa9cXJG/aDvDar8B1ItJRj6IHgJ4L6u
-/zR7abGR700V8iWdL/aspGmux9E68iFFI5bje5I7hOSwkSvwVBreLwY0C7i/+YU3
-mEBP3NBC6cz9vDUa+c9odnUbds0stJJMZQQzz+un069pKnbntpvAFxuRoCl8Uien
-XsTVuj29I2+5isqbfh+0+y5q0c7uI1wHN4qokPJVwNsyNNj8D5+rie7otCPLkNHZ
-l4DV2QkpKNWi9lT0kuGPDvqldx0eDPjzH86qCfKo3A7jwlqxacH6O3KZVrcIgTKQ
-o+/7rU5sFiET+TrcLDpE80gfyHgPO3jmdw5IQJNhj4YMt69nUYo=
-=WQYh
------END PGP SIGNATURE-----
-
---i7bGOTypSrrMZJieRTmsp88U6FsiatY1q--
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
