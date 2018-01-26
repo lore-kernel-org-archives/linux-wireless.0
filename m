@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:45496 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751386AbeAYLON (ORCPT
+Received: from shrek-s3.podlesie.net ([85.14.110.209]:53589 "EHLO
+        shrek.podlesie.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751136AbeA0AEb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 06:14:13 -0500
-From: Tobias Schramm <tobleminer@gmail.com>
-To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Cc: Tobias Schramm <tobleminer@gmail.com>
-Subject: [PATCH v3 0/2] ath10k: Add support for Ubiquiti-branded QCA988X
-Date: Thu, 25 Jan 2018 12:13:38 +0100
-Message-Id: <20180125111340.17553-1-tobleminer@gmail.com> (sfid-20180125_121417_505919_77D3DA30)
+        Fri, 26 Jan 2018 19:04:31 -0500
+From: Krzysztof Mazur <krzysiek@podlesie.net>
+To: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, James Hogan <jhogan@kernel.org>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Krzysztof Mazur <krzysiek@podlesie.net>
+Subject: [PATCH] ssb: Reenable PCI host on !MIPS
+Date: Sat, 27 Jan 2018 00:58:49 +0100
+Message-Id: <20180126235849.3177-1-krzysiek@podlesie.net> (sfid-20180127_010435_225397_7672E977)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A lot of more modern Ubiquiti AirMAX wireless devices contain a rebranded
-QCA988X with changed PCI vendor and device id.
-This patch adds support for those chips by treating them as QCA988X rev2
-radios.
+The commit 58eae1416b804d900014d84feadda7195007cc30
+("ssb: Disable PCI host for PCI_DRIVERS_GENERIC") disabled
+CONFIG_SSB_PCIHOST and CONFIG_SSB_B43_PCI_BRIDGE, which are
+required for SSB-based b43 PCI cards, on everything except MIPS
+with PCI_DRIVERS_LEGACY, including x86 (only MIPS defines
+that config option). Reenable it.
 
-Changes since v1:
- * Send patch to more people and lists
+Signed-off-by: Krzysztof Mazur <krzysiek@podlesie.net>
+---
+ drivers/ssb/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changes since v2:
- * Rename PCI_VENDOR_ID_UBNT to PCI_VENDOR_ID_UBIQUITI
-
-Tobias Schramm (2):
-  pci: Add vendor id of Ubiquiti Networks
-  ath10k: Add support for Ubiquiti rebranded QCA988X v2
-
- drivers/net/wireless/ath/ath10k/core.c | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  1 +
- drivers/net/wireless/ath/ath10k/pci.c  |  4 ++++
- include/linux/pci_ids.h                |  2 ++
- 4 files changed, 31 insertions(+)
-
+diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+index 71c73766ee22..3dc57414e06b 100644
+--- a/drivers/ssb/Kconfig
++++ b/drivers/ssb/Kconfig
+@@ -32,7 +32,7 @@ config SSB_BLOCKIO
+ 
+ config SSB_PCIHOST_POSSIBLE
+ 	bool
+-	depends on SSB && (PCI = y || PCI = SSB) && PCI_DRIVERS_LEGACY
++	depends on SSB && (PCI = y || PCI = SSB) && (!MIPS || PCI_DRIVERS_LEGACY)
+ 	default y
+ 
+ config SSB_PCIHOST
 -- 
-2.16.0
+2.16.0.rc1.238.g530d649a7
