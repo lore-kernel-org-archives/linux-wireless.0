@@ -1,115 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:36794 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751363AbeA2XAe (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:39010 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751861AbeAZHrJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jan 2018 18:00:34 -0500
-Message-ID: <5A6FA79B.1080206@candelatech.com> (sfid-20180130_000039_505250_E2BD72FD)
-Date: Mon, 29 Jan 2018 15:00:43 -0800
-From: Ben Greear <greearb@candelatech.com>
+        Fri, 26 Jan 2018 02:47:09 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/10] rtlwifi: add efuse ops for other components
+Date: Fri, 26 Jan 2018 15:46:43 +0800
+Message-ID: <20180126074645.27201-9-pkshih@realtek.com> (sfid-20180126_084714_449571_92FA808C)
+In-Reply-To: <20180126074645.27201-1-pkshih@realtek.com>
+References: <20180126074645.27201-1-pkshih@realtek.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k will not tx packets sometimes.
-References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com> <87a7wzv43j.fsf@toke.dk> <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com> <87d11stk0i.fsf@toke.dk> <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com> <871si81eev.fsf@toke.dk>
-In-Reply-To: <871si81eev.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2018 02:35 PM, Toke Høiland-Jørgensen wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> On 01/29/2018 01:47 PM, Toke Høiland-Jørgensen wrote:
->>> Ben Greear <greearb@candelatech.com> writes:
->>>
->>>> On 01/27/2018 05:11 AM, Toke Høiland-Jørgensen wrote:
->>>>> Ben Greear <greearb@candelatech.com> writes:
->>>>>
->>>>>> I'm doing a test with 200 virtual stations on each of 6 ath9k radios.
->>>>>>
->>>>>> When I configure stations for DHCP, I see cases where stations on a particular
->>>>>> radio will not transmit anything sometimes.  I see no 'XMIT' logs that show indication of
->>>>>> frames being received in the driver from the upper stack, but if I use 'tshark' on
->>>>>> a station interface, it shows frames being 'transmitted'.
->>>>>>
->>>>>> I do, however, see this, which looks like it might show
->>>>>> an issue.  It looks like whatever 'aqm' is, it has an ever expanding number
->>>>>> of backlog packets:
->>>>>
->>>>> The aqm is the intermediate queues in mac80211. So this indicates that
->>>>> the driver is not pulling packets for transmission.
->>>>>
->>>>> With that many stations, I wonder whether it is due to the airtime
->>>>> fairness scheduler throttling the station? What is the contents of
->>>>> debug/ieee80211/wiphy2/netdev\:sta30194/stations/00\:0e\:8e\:69\:b8\:f7/airtime
->>>>> while the station is not transmitting? And is it all stations on that
->>>>> particular radio, or only some of them?
->>>>
->>>> Here is the output of airtime and aqm on a hung station:
->>>>
->>>> # cat /debug/ieee80211/wiphy0/netdev\:sta10057/stations/00\:0e\:8e\:50\:74\:8a/airtime
->>>> RX: 83706 us
->>>> TX: 4202 us
->>>> Deficit: VO: 198 us VI: 300 us BE: -8306 us BK: 300 us
->>>
->>> Right. This looks like incoming traffic is depleting the airtime quantum
->>> faster than it can be replenished by the scheduler, which means that the
->>> station gets completely starved.
->>>
->>> Could you try turning off the airtime scheduler?
->>>
->>> echo 0 > /sys/kernel/debug/ieee80211/wiphy0/ath9k/airtime_flags
->>>
->>> and see if the problem goes away.
->>>
->>> If it does, please check if the problem persists when setting
->>> airtime_flags to 1 (which means only include TX airtime).
->>>
->>> -Toke
->>>
->>
->> That did not seem to help:
->>
->> # cat /debug/ieee80211/wiphy0/netdev\:sta10058/stations/00\:0e\:8e\:50\:74\:8a/node_aggr
->> Max-AMPDU: 65535
->> MPDU Density: 8
->>
->>
->> TID  SEQ_START  SEQ_NEXT  BAW_SIZE  BAW_HEAD  BAW_TAIL  BAR_IDX SCHED HAS-QUED
->>     0          0         0        64         0         0       -1     1        1
->
-> Hmm, SCHED and HAS-QUED are both set, so it should be scheduled. Is the
-> scheduler maybe simply taking too long to get round to scheduling that
-> station again?
->
-> What happens if you don't kill things after 30 seconds? Is it hanging
-> forever, or just long enough for your tools to lose patience?
->
-> If you have 200 stations all requesting DHCP addresses I could see how
-> things might take a while...
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-I bring them up in groups of 30 or so.  I typically see 1-10 of them get
-DHCP address, and then it seems that no data frames ever are tx'd again on
-any interface on the radio...or at least tx is very rare.  Sometimes, all 200 will come
-up and pass traffic, but not reliably.  Once the system gets in this state,
-down/up of the affected station interfaces does not fix it.  I have not tried
-bouncing all of them at once yet.
+The new component phydm need to access efuse content, so we prepare ops
+for reference.
 
-I never even see dhcp discovers on the air when sniffing on another machine,
-from any interface once it is hung, so it should not be a simple over-busy
-network issue.
+Signed-off-by: Tsang-Shian Lin <thlin@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/efuse.c | 13 +++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/efuse.h |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/pci.c   |  1 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h  |  7 +++++++
+ 4 files changed, 22 insertions(+), 1 deletion(-)
 
-Maybe there is some way for the scheduler to get stuck and not schedule anything?
-
-Thanks,
-Ben
-
->
-> -Toke
->
-
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/efuse.c b/drivers/net/wireless/realtek/rtlwifi/efuse.c
+index 35b50be633f1..fd13d4ef53b8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/efuse.c
++++ b/drivers/net/wireless/realtek/rtlwifi/efuse.c
+@@ -50,6 +50,11 @@ static const struct efuse_map RTL8712_SDIO_EFUSE_TABLE[] = {
+ 	{11, 0, 0, 28}
+ };
+ 
++static const struct rtl_efuse_ops efuse_ops = {
++	.efuse_onebyte_read = efuse_one_byte_read,
++	.efuse_logical_map_read = efuse_shadow_read,
++};
++
+ static void efuse_shadow_read_1byte(struct ieee80211_hw *hw, u16 offset,
+ 				    u8 *value);
+ static void efuse_shadow_read_2byte(struct ieee80211_hw *hw, u16 offset,
+@@ -1364,3 +1369,11 @@ void rtl_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
+ 	*pfwlen = fwlen;
+ }
+ EXPORT_SYMBOL_GPL(rtl_fill_dummy);
++
++void rtl_efuse_ops_init(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	rtlpriv->efuse.efuse_ops = &efuse_ops;
++}
++EXPORT_SYMBOL_GPL(rtl_efuse_ops_init);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/efuse.h b/drivers/net/wireless/realtek/rtlwifi/efuse.h
+index 952fdc288f0e..dfa31c13fc7a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/efuse.h
++++ b/drivers/net/wireless/realtek/rtlwifi/efuse.h
+@@ -116,5 +116,5 @@ void rtl_fill_dummy(u8 *pfwbuf, u32 *pfwlen);
+ void rtl_fw_page_write(struct ieee80211_hw *hw, u32 page, const u8 *buffer,
+ 		       u32 size);
+ void rtl_fw_block_write(struct ieee80211_hw *hw, const u8 *buffer, u32 size);
+-
++void rtl_efuse_ops_init(struct ieee80211_hw *hw);
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index 01ccf8884831..2437422625bf 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -2238,6 +2238,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 	rtlpriv->cfg = (struct rtl_hal_cfg *)(id->driver_data);
+ 	rtlpriv->intf_ops = &rtl_pci_ops;
+ 	rtlpriv->glb_var = &rtl_global_var;
++	rtl_efuse_ops_init(hw);
+ 
+ 	/* MEM map */
+ 	err = pci_request_regions(pdev, KBUILD_MODNAME);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 2e9a20273a2d..0e8aae0c05c1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -1812,6 +1812,7 @@ struct rtl_dm {
+ #define	EFUSE_MAX_LOGICAL_SIZE			512
+ 
+ struct rtl_efuse {
++	const struct rtl_efuse_ops *efuse_ops;
+ 	bool autoLoad_ok;
+ 	bool bootfromefuse;
+ 	u16 max_physical_size;
+@@ -1917,6 +1918,12 @@ struct rtl_efuse {
+ 	u8 channel_plan;
+ };
+ 
++struct rtl_efuse_ops {
++	int (*efuse_onebyte_read)(struct ieee80211_hw *hw, u16 addr, u8 *data);
++	void (*efuse_logical_map_read)(struct ieee80211_hw *hw, u8 type,
++				       u16 offset, u32 *value);
++};
++
+ struct rtl_tx_report {
+ 	atomic_t sn;
+ 	u16 last_sent_sn;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.15.1
