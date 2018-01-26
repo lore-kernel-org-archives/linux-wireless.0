@@ -1,65 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55208 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751821AbeA3NEO (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:48289 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750819AbeAZLQM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jan 2018 08:04:14 -0500
-Date: Tue, 30 Jan 2018 16:03:54 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [bug report] mt76: fix transmission of encrypted management
- frames
-Message-ID: <20180130130354.2fm7s6s4icqi5hic@mwanda> (sfid-20180130_140418_168281_3F263D01)
-References: <20180130123956.GA9178@mwanda>
+        Fri, 26 Jan 2018 06:16:12 -0500
+Subject: Re: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
+To: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com
+References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+ <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
+ <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com>
+ <ed47cefe-efa4-a7c9-d017-b50a99316f43@neratec.com>
+ <d9e84a77-636e-cd13-7713-9119a4ac971d@dd-wrt.com>
+ <b0be6634-de6a-9f24-b48b-88e67ca9eee4@neratec.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <355dd2ee-36ab-0908-953f-a66b673630d1@dd-wrt.com> (sfid-20180126_121616_393225_362BC1BB)
+Date: Fri, 26 Jan 2018 12:16:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180130123956.GA9178@mwanda>
+In-Reply-To: <b0be6634-de6a-9f24-b48b-88e67ca9eee4@neratec.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 30, 2018 at 03:39:56PM +0300, Dan Carpenter wrote:
-> Hello Felix Fietkau,
-> 
-> The patch 23405236460b: "mt76: fix transmission of encrypted
-> management frames" from Jan 18, 2018, leads to the following static
-> checker warning:
-> 
-> 	drivers/net/wireless/mediatek/mt76/mt76x2_tx.c:41 mt76x2_tx()
-> 	warn: always true condition '(wcid->hw_key_idx != -1) => (0-255 != (-1))'
-> 
-> drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
->     26  void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
->     27               struct sk_buff *skb)
->     28  {
->     29          struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
->     30          struct mt76x2_dev *dev = hw->priv;
->     31          struct ieee80211_vif *vif = info->control.vif;
->     32          struct mt76_wcid *wcid = &dev->global_wcid;
->     33  
->     34          if (control->sta) {
->     35                  struct mt76x2_sta *msta;
->     36  
->     37                  msta = (struct mt76x2_sta *) control->sta->drv_priv;
->     38                  wcid = &msta->wcid;
->     39          }
->     40  
->     41          if (vif || (!info->control.hw_key && wcid->hw_key_idx != -1)) {
->                                                      ^^^^^^^^^^^^^^^^^^^^^^
-> We set ->hw_key_idx to -1 but it's a u8 so it gets truncated to 0xFF.
-> This should probably be a define anyway.
-> 
->     42                  struct mt76x2_vif *mvif;
->     43  
->     44                  mvif = (struct mt76x2_vif *) vif->drv_priv;
-                                                       ^^^^^^^^^^^^^
-Oh, there is another static checker warning because of the "vif" check:
+Am 26.01.2018 um 12:07 schrieb Wojciech Dubowik:
+> Are you sure you have applied path 4 in the series. You should see 
+> calibration piers. Sth like:
+yes. all of them
 
-        drivers/net/wireless/mediatek/mt76/mt76x2_tx.c:44 mt76x2_tx()
-        error: we previously assumed 'vif' could be null (see line 41)
+root@TRO2:/sys/kernel/debug/ieee80211/phy0/ath9k# cat dump_nfcal
+Channel Noise Floor : -112
+Chain | privNF | # Readings | NF Readings
+  0       -107    5               -107 -107 -107 -108 -108
+  1       -106    5               -106 -106 -106 -106 -106
 
-Assume "vif" is NULL, and info->control.hw_key is zero and ->hw_key_idx
-is not -1.
+but looks different from yours, but chipset is 9280 as i said.
 
-regards,
-dan carpenter
+let me just revert your 4 patches to see if it changes the behaviour
+>
+> Calibration data
+> Chain 0
+> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+> 2412    14    0    136    0    0    0
+> 2437    13    0    136    0    0    0
+> 2472    11    0    136    0    0    0
+> Chain 1
+> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+> 2412    11    0    137    0    0    0
+> 2437    11    0    139    0    0    0
+> 2472    10    0    137    0    0    0
+> Chain 2
+> Freq     ref    volt    temp    nf_cal    nf_pow    rx_temp
+> 2412    13    0    138    0    0    0
+> 2437    14    0    139    0    0    0
+> 2472    14    0    139    0    0    0
+>
+> I have just done backports from ath.git and I can see these entries 
+> with my Compex card.
+>
+> Wojtek
+>
+>
+> On 26/01/18 11:36, Sebastian Gottschall wrote:
+>> Am 26.01.2018 um 11:27 schrieb Wojciech Dubowik:
+>>> I will try it with again with couple of OEM cards.
+>> this is no card. the eeprom is stored in flash memory. so the chip is 
+>> a 9280 pcie chip which is connected on board, but has no own flash 
+>> memory for calibration data. this is stored in system flash memory
+>>>
+>>> Is nanostation calibrated for noisefloor? You can see it with 
+>>> modal_eeprom in debugfs.
+>> root@TRO2:/sys/kernel/debug/ieee80211/phy0/ath9k# cat modal_eeprom
+>>    2GHz modal Header :
+>>  Chain0 Ant. Control :          0
+>>  Chain1 Ant. Control :          0
+>>  Chain2 Ant. Control :          0
+>>  Ant. Common Control :          0
+>>     Chain0 Ant. Gain :          0
+>>     Chain1 Ant. Gain :          0
+>>     Chain2 Ant. Gain :          0
+>>        Switch Settle :         45
+>>     Chain0 TxRxAtten :         11
+>>     Chain1 TxRxAtten :         11
+>>     Chain2 TxRxAtten :         11
+>>    Chain0 RxTxMargin :         11
+>>    Chain1 RxTxMargin :         11
+>>    Chain2 RxTxMargin :         11
+>>     ADC Desired size :        224
+>>     PGA Desired size :          0
+>>     Chain0 xlna Gain :         14
+>>     Chain1 xlna Gain :         14
+>>     Chain2 xlna Gain :         14
+>>        txEndToXpaOff :          0
+>>          txEndToRxOn :          2
+>>       txFrameToXpaOn :         14
+>>       CCA Threshold) :          0
+>>  Chain0 NF Threshold :        202
+>>  Chain1 NF Threshold :        202
+>>  Chain2 NF Threshold :        202
+>>              xpdGain :          9
+>>          External PD :          1
+>> Chain0 I Coefficient :          0
+>> Chain1 I Coefficient :          0
+>> Chain2 I Coefficient :          0
+>> Chain0 Q Coefficient :          0
+>> Chain1 Q Coefficient :          0
+>> Chain2 Q Coefficient :          0
+>>        pdGainOverlap :          6
+>>    Chain0 OutputBias :          2
+>>    Chain0 DriverBias :          2
+>>       xPA Bias Level :          0
+>>  2chain pwr decrease :          0
+>>  3chain pwr decrease :          0
+>>   txFrameToDataStart :         14
+>>        txFrameToPaOn :         14
+>>      HT40 Power Inc. :          2
+>>      Chain0 bswAtten :         21
+>>      Chain1 bswAtten :         21
+>>      Chain2 bswAtten :          0
+>>     Chain0 bswMargin :         31
+>>     Chain1 bswMargin :         31
+>>     Chain2 bswMargin :          0
+>>   HT40 Switch Settle :         44
+>>     Chain0 xatten2Db :          0
+>>     Chain1 xatten2Db :          0
+>>     Chain2 xatten2Db :          0
+>> Chain0 xatten2Margin :          0
+>> Chain1 xatten2Margin :          0
+>> Chain2 xatten2Margin :          0
+>>    Chain1 OutputBias :          2
+>>    Chain1 DriverBias :          2
+>>          LNA Control :         13
+>>       XPA Bias Freq0 :          0
+>>       XPA Bias Freq1 :          0
+>>       XPA Bias Freq2 :          0
+>>    5GHz modal Header :
+>>  Chain0 Ant. Control :         16
+>>  Chain1 Ant. Control :         16
+>>  Chain2 Ant. Control :          0
+>>  Ant. Common Control :        288
+>>     Chain0 Ant. Gain :          0
+>>     Chain1 Ant. Gain :          0
+>>     Chain2 Ant. Gain :          0
+>>        Switch Settle :         45
+>>     Chain0 TxRxAtten :         32
+>>     Chain1 TxRxAtten :         32
+>>     Chain2 TxRxAtten :         11
+>>    Chain0 RxTxMargin :          0
+>>    Chain1 RxTxMargin :          0
+>>    Chain2 RxTxMargin :         16
+>>     ADC Desired size :        226
+>>     PGA Desired size :          0
+>>     Chain0 xlna Gain :         13
+>>     Chain1 xlna Gain :         13
+>>     Chain2 xlna Gain :         13
+>>        txEndToXpaOff :          0
+>>          txEndToRxOn :          2
+>>       txFrameToXpaOn :         14
+>>       CCA Threshold) :         28
+>>  Chain0 NF Threshold :        255
+>>  Chain1 NF Threshold :        255
+>>  Chain2 NF Threshold :        255
+>>              xpdGain :          1
+>>          External PD :          1
+>> Chain0 I Coefficient :          0
+>> Chain1 I Coefficient :          0
+>> Chain2 I Coefficient :          0
+>> Chain0 Q Coefficient :          0
+>> Chain1 Q Coefficient :          0
+>> Chain2 Q Coefficient :          0
+>>        pdGainOverlap :          6
+>>    Chain0 OutputBias :          3
+>>    Chain0 DriverBias :          3
+>>       xPA Bias Level :          2
+>>  2chain pwr decrease :          0
+>>  3chain pwr decrease :          0
+>>   txFrameToDataStart :         14
+>>        txFrameToPaOn :         14
+>>      HT40 Power Inc. :          0
+>>      Chain0 bswAtten :         34
+>>      Chain1 bswAtten :         34
+>>      Chain2 bswAtten :          0
+>>     Chain0 bswMargin :         22
+>>     Chain1 bswMargin :         22
+>>     Chain2 bswMargin :          0
+>>   HT40 Switch Settle :         45
+>>     Chain0 xatten2Db :          0
+>>     Chain1 xatten2Db :          0
+>>     Chain2 xatten2Db :          0
+>> Chain0 xatten2Margin :          0
+>> Chain1 xatten2Margin :          0
+>> Chain2 xatten2Margin :          0
+>>    Chain1 OutputBias :          3
+>>    Chain1 DriverBias :          3
+>>          LNA Control :         13
+>>       XPA Bias Freq0 :          0
+>>       XPA Bias Freq1 :          0
+>>       XPA Bias Freq2 :          0
+>>
+>>>
+>>> Wojtek
+>>> On 26/01/18 10:59, Sebastian Gottschall wrote:
+>>>> i dont know if this is a coincidence. but after testing your patch 
+>>>> on a standard ubiquiti nanostation m2 the noise floor looks wrong.
+>>>> it will stay on -112 which is clearly impossible in 2.4 (before it 
+>>>> was around -96)
+>>>
+>>>
+>>
+>
+>
+
+-- 
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
