@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0115.outbound.protection.outlook.com ([104.47.41.115]:31295
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754449AbeALHn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Jan 2018 02:43:28 -0500
-From: Wright Feng <wright.feng@cypress.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@codeaurora.org,
-        chi-hsien.lin@cypress.com
-Cc: wright.feng@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH v2] brcmfmac: fix CLM load error for legacy chips when user helper is enabled
-Date: Fri, 12 Jan 2018 15:44:16 +0800
-Message-Id: <1515743056-8109-1-git-send-email-wright.feng@cypress.com> (sfid-20180112_084338_034377_CEC412BE)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.neratec.com ([46.140.151.2]:45318 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751486AbeAZOVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Jan 2018 09:21:04 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH] ath9k: Fix get channel default noise floor
+Date: Fri, 26 Jan 2018 15:20:54 +0100
+Message-Id: <1516976454-8883-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180126_152109_142764_7F9B33B3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For legacy chips without CLM blob files, kernel with user helper function
-returns -EAGAIN when we request_firmware() for blob file. In this case,
-brcmf_bus_started gets error and failed to bring up legacy chips.
-Because of that, we should continue with CLM data currently present in
-firmware if getting -EAGAIN when doing request_firmware().
+Commit 8da58553cc63 ("ath9k: Use calibrated noise floor value
+when available") introduced regression in ath9k_hw_getchan_noise
+where per chain nominal noise floor has been taken instead default
+for channel.
+Revert to original default channel noise floor.
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
+Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 ---
-v2: remove retry from patch v1
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+ drivers/net/wireless/ath/ath9k/calib.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 6a59d06..0baab4c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -182,7 +182,7 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 3d9447e..695c779 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -72,7 +72,7 @@ static s16 ath9k_hw_get_default_nf(struct ath_hw *ah,
+ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			   s16 nf)
+ {
+-	s8 noise = ath9k_hw_get_default_nf(ah, chan, 0);
++	s8 noise = ATH_DEFAULT_NOISE_FLOOR;
  
- 	err = request_firmware(&clm, clm_name, dev);
- 	if (err) {
--		if (err == -ENOENT) {
-+		if (err == -ENOENT || err == -EAGAIN) {
- 			brcmf_dbg(INFO, "continue with CLM data currently present in firmware\n");
- 			return 0;
- 		}
+ 	if (nf) {
+ 		s8 delta = nf - ATH9K_NF_CAL_NOISE_THRESH -
 -- 
-1.9.1
+2.7.4
