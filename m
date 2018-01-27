@@ -1,81 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f182.google.com ([74.125.82.182]:38372 "EHLO
-        mail-ot0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753203AbeAaRGP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 12:06:15 -0500
-Received: by mail-ot0-f182.google.com with SMTP id v5so14068379oth.5
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jan 2018 09:06:15 -0800 (PST)
-Subject: Re: rtl8821ae keep alive not set, connection lost
-To: James Cameron <quozl@laptop.org>, linux-wireless@vger.kernel.org
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-References: <20170912220916.GB32211@us.netrek.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <a9a1ff03-d12f-7437-e7bc-5f01b195f753@lwfinger.net> (sfid-20180131_180620_556631_4F471481)
-Date: Wed, 31 Jan 2018 11:06:12 -0600
+Received: from mga03.intel.com ([134.134.136.65]:25942 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751446AbeA0IET (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Jan 2018 03:04:19 -0500
+Subject: [PATCH v5 00/12] spectre variant1 mitigations for tip/x86/pti
+From: Dan Williams <dan.j.williams@intel.com>
+To: tglx@linutronix.de
+Cc: Mark Rutland <mark.rutland@arm.com>,
+        Cyril Novikov <cnovikov@lynx.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, Jiri Slaby <jslaby@suse.cz>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        Jonathan Corbet <corbet@lwn.net>, x86@kernel.org,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Andrew Honig <ahonig@google.com>, alan@linux.intel.com,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andy Lutomirski <luto@kernel.org>,
+        Jim Mattson <jmattson@google.com>,
+        Christian Lamparter <chunkeey@gmail.com>,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>
+Date: Fri, 26 Jan 2018 23:55:13 -0800
+Message-ID: <151703971300.26578.1185595719337719486.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180127_090438_832684_008D7E7B)
 MIME-Version: 1.0
-In-Reply-To: <20170912220916.GB32211@us.netrek.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/12/2017 05:09 PM, James Cameron wrote:
-> Summary: 40b368af4b75 ("rtlwifi: Fix alignment issues") breaks
-> rtl8821ae keep alive, causing "Connection to AP lost" and deauth, but
-> why?
-> 
-> Wireless connection is lost after a few seconds or minutes, on every
-> OLPC NL3 laptop with rtl8821ae, with any stable kernel after 4.10.1,
-> and any kernel with 40b368af4b75.
-> 
-> dmesg contains
-> 
->    wlp2s0: Connection to AP 2c:b0:5d:a6:86:eb lost
-> 
-> iw event shows
-> 
->    wlp2s0: del station 2c:b0:5d:a6:86:eb
->    wlp2s0 (phy #0): deauth 74:c6:3b:09:b5:0d -> 2c:b0:5d:a6:86:eb reason 4: Disassociated due to inactivity
->    wlp2s0 (phy #0): disconnected (local request)
-> 
-> Workaround is to bounce the link, then reconnect;
-> 
->    ip link set wlp2s0 down
->    ip link set wlp2s0 up
->    iw dev wlp2s0 connect qz
-> 
-> A nearby monitor host captures a deauthentication packet sent by the
-> device.
-> 
-> Bisection showed cause is 40b368af4b75 ("rtlwifi: Fix alignment
-> issues") which changes the width of DBI register read.
-> 
-> On the face of it, 40b368af4b75 looks correct, especially compared
-> against same function in rtl8723be.
-> 
-> I've no idea why reverting fixes the problem.  I'm hoping someone here
-> might speculate and suggest ways to test.
-> 
-> As keep alive is set through this path, my guess is that keep alive is
-> not being set in the device.  Or perhaps reading 16-bits perturbs
-> another register.  Is there a way to test?
-> 
-> http://dev.laptop.org/~quozl/z/1drtGD.txt dmesg of 4.13
-> 
-> http://dev.laptop.org/~quozl/z/1drt7c.txt dmesg with 4.13 and revert
-> of 40b368af4b75
+Hi Thomas,
 
-James,
+Here's another spin of the spectre-v1 mitigations for 4.16.
 
-I'm afraid we are needing to revisit this problem again. Changing that 8-bit 
-read to a 16-bit version causes an unaligned memory reference in AARCH64, thus 
-we will need to re-revert. To prevent problems on systems such as yours, PK 
-plans to turn off ASPM capability and backdoor in certain platforms that will be 
-listed in a quirks table. Please report the output of 'dmidecode -t system' for 
-you affected system(s).
+Changes since v4.1: [1]
+* Tweak the sanitization scheme yet again to make it even simpler. Now,
+  instead of 'array_ptr' to get a sanitized pointer to an array element,
+  just provide an array index sanitization helper 'array_idx' to be called
+  after successfully validating the index is in bounds. I.e. in the
+  exact same location one would otherwise put an lfence, place this
+  sanitizer:
 
-We hope you will be able to test any proposed patches.
+      if (idx < sz) {
+          idx = array_idx(idx, sz);
+          val = array[idx];
+      }
 
-Thanks,
+  This lets the implementation include more sanity checking that the
+  compiler can usually compile out. It otherwise appears to produce
+  better assembly. This also cleans up the concern about comparing the
+  value returned from array_ptr to create another speculation point.
+  (Russell, Linus, Cyril)
 
-Larry
+* Drop the syscall_64_fastpath.  This is the straightforward patch from
+  Linus that might also be in flight from Andy, but I went ahead and
+  included it since I did not see it on LKML yet.
+
+* Kill the MASK_NOSPEC macro and just open code it. (Andy)
+
+* Add system-call-number sanitization to the slow path syscall table
+  lookups.
+
+* Redo the array_ptr conversions with array_idx.
+
+* Update /sys/devices/system/cpu/vulnerabilities/spectre_v1 to indicate
+  the new protections. It now reports "Vulnerable: Minimal user pointer
+  sanitization". (Jiri)
+
+---
+
+Dan Williams (11):
+      array_idx: sanitize speculative array de-references
+      x86: implement array_idx_mask
+      x86: introduce __uaccess_begin_nospec and ifence
+      x86, __get_user: use __uaccess_begin_nospec
+      x86, get_user: use pointer masking to limit speculation
+      x86: remove the syscall_64 fast-path
+      x86: sanitize sycall table de-references under speculation
+      vfs, fdtable: prevent bounds-check bypass via speculative execution
+      kvm, x86: update spectre-v1 mitigation
+      nl80211: sanitize array index in parse_txq_params
+      x86/spectre: report get_user mitigation for spectre_v1
+
+Mark Rutland (1):
+      Documentation: document array_idx
+
+
+ Documentation/speculation.txt     |   87 ++++++++++++++++++++++++++++
+ arch/x86/entry/common.c           |    3 +
+ arch/x86/entry/entry_64.S         |  116 -------------------------------------
+ arch/x86/entry/syscall_64.c       |    7 +-
+ arch/x86/include/asm/barrier.h    |   26 ++++++++
+ arch/x86/include/asm/msr.h        |    3 -
+ arch/x86/include/asm/uaccess.h    |   15 ++++-
+ arch/x86/include/asm/uaccess_32.h |    6 +-
+ arch/x86/include/asm/uaccess_64.h |   12 ++--
+ arch/x86/kernel/cpu/bugs.c        |    2 -
+ arch/x86/kvm/vmx.c                |   14 +++-
+ arch/x86/lib/getuser.S            |   10 +++
+ arch/x86/lib/usercopy_32.c        |    8 +--
+ include/linux/fdtable.h           |    5 +-
+ include/linux/nospec.h            |   64 ++++++++++++++++++++
+ net/wireless/nl80211.c            |    9 ++-
+ 16 files changed, 239 insertions(+), 148 deletions(-)
+ create mode 100644 Documentation/speculation.txt
+ create mode 100644 include/linux/nospec.h
