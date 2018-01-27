@@ -1,289 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25940 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751085AbeAUJVG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Jan 2018 04:21:06 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v2 6/8] wil6210: fix random failure to bring network interface up
-Date: Sun, 21 Jan 2018 11:14:41 +0200
-Message-Id: <1516526083-31389-7-git-send-email-merez@codeaurora.org> (sfid-20180121_102111_533042_2DADECD7)
-In-Reply-To: <1516526083-31389-1-git-send-email-merez@codeaurora.org>
-References: <1516526083-31389-1-git-send-email-merez@codeaurora.org>
+Received: from mail.toke.dk ([52.28.52.200]:59871 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751408AbeA0N3v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Jan 2018 08:29:51 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: Re: [PATCH] ath9k:  Print has_queued in debugfs.
+In-Reply-To: <1517015397-30957-1-git-send-email-greearb@candelatech.com>
+References: <1517015397-30957-1-git-send-email-greearb@candelatech.com>
+Date: Sat, 27 Jan 2018 14:29:49 +0100
+Message-ID: <874ln7v38y.fsf@toke.dk> (sfid-20180127_142955_648697_B169C590)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <liord@codeaurora.org>
+greearb@candelatech.com writes:
 
-Currently when we want to bring the interface up, we first
-reset the device which causes the boot loader to run. Then
-we halt the device CPU, load FW image and resume the device
-CPU.
-There are some boot loader versions which perform redundant
-memory accesses even when idle. Halting the device CPU
-while boot loader access memory can cause the device memory
-controller to get stuck, the FW will fail to load and the
-network interface will not come up.
-For such boot loaders implement a workaround where we freeze
-the boot loader before halting the device CPU, so it will not
-perform any memory accesses.
+> From: Ben Greear <greearb@candelatech.com>
+>
+> The PAUSED field was never printed per tid.  Replace that
+> with has_queued, which might help someone track down strange
+> bugs related to aqm.
+>
+> And, make tx-queue debug info show peer BSSID as well as vdev
+> MAC to aid debugging with multiple stations connected to the
+> same peer.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/debug_sta.c | 10 ++++++----
+>  drivers/net/wireless/ath/ath9k/xmit.c      |  5 +++--
+>  2 files changed, 9 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/debug_sta.c b/drivers/net/wireless/ath/ath9k/debug_sta.c
+> index efc692e..a45f1f5 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug_sta.c
+> +++ b/drivers/net/wireless/ath/ath9k/debug_sta.c
+> @@ -48,9 +48,10 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
+>  			 an->mpdudensity);
+>  
+>  	len += scnprintf(buf + len, size - len,
+> -			 "\n%3s%11s%10s%10s%10s%10s%9s%6s%8s\n",
+> +			 "\n%3s%11s%10s%10s%10s%10s%9s%6s%9s\n",
+>  			 "TID", "SEQ_START", "SEQ_NEXT", "BAW_SIZE",
+> -			 "BAW_HEAD", "BAW_TAIL", "BAR_IDX", "SCHED", "PAUSED");
+> +			 "BAW_HEAD", "BAW_TAIL", "BAR_IDX", "SCHED",
+> +			 "HAS-QUED");
+>  
+>  	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
+>  		tid = ath_node_to_tid(an, tidno);
+> @@ -58,7 +59,7 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
+>  		ath_txq_lock(sc, txq);
+>  		if (tid->active) {
+>  			len += scnprintf(buf + len, size - len,
+> -					 "%3d%11d%10d%10d%10d%10d%9d%6d\n",
+> +					 "%3d%11d%10d%10d%10d%10d%9d%6d%9d\n",
+>  					 tid->tidno,
+>  					 tid->seq_start,
+>  					 tid->seq_next,
+> @@ -66,7 +67,8 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
+>  					 tid->baw_head,
+>  					 tid->baw_tail,
+>  					 tid->bar_index,
+> -					 !list_empty(&tid->list));
+> +					 !list_empty(&tid->list),
+> +					 tid->has_queued);
 
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/boot_loader.h |   9 ++-
- drivers/net/wireless/ath/wil6210/main.c        | 102 ++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/pcie_bus.c    |   8 ++
- drivers/net/wireless/ath/wil6210/wil6210.h     |   3 +
- drivers/net/wireless/ath/wil6210/wmi.c         |  18 +++++
- 5 files changed, 138 insertions(+), 2 deletions(-)
+Would it perhaps be useful to print the length of tid->retry_q instead
+of / in addition to has_queued? Planning to get rid of the has_queued
+variable entirely...
 
-diff --git a/drivers/net/wireless/ath/wil6210/boot_loader.h b/drivers/net/wireless/ath/wil6210/boot_loader.h
-index c131b5e..d32c1f4 100644
---- a/drivers/net/wireless/ath/wil6210/boot_loader.h
-+++ b/drivers/net/wireless/ath/wil6210/boot_loader.h
-@@ -1,4 +1,5 @@
- /* Copyright (c) 2015 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -39,7 +40,8 @@ struct bl_dedicated_registers_v1 {
- 	/* valid only for version 2 and above */
- 	__le32  bl_assert_code;         /* 0x880A58 BL Assert code */
- 	__le32  bl_assert_blink;        /* 0x880A5C BL Assert Branch */
--	__le32  bl_reserved[22];        /* 0x880A60 - 0x880AB4 */
-+	__le32  bl_shutdown_handshake;  /* 0x880A60 BL cleaner shutdown */
-+	__le32  bl_reserved[21];        /* 0x880A64 - 0x880AB4 */
- 	__le32  bl_magic_number;        /* 0x880AB8 BL Magic number */
- } __packed;
- 
-@@ -58,4 +60,9 @@ struct bl_dedicated_registers_v0 {
- 	u8	mac_address[6];			/* 0x880A4c BL mac address */
- } __packed;
- 
-+/* bits for bl_shutdown_handshake */
-+#define BL_SHUTDOWN_HS_GRTD		BIT(0)
-+#define BL_SHUTDOWN_HS_RTD		BIT(1)
-+#define BL_SHUTDOWN_HS_PROT_VER(x) WIL_GET_BITS(x, 28, 31)
-+
- #endif /* BOOT_LOADER_EXPORT_H_ */
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index d95ff74..575aafe 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -638,6 +638,98 @@ void wil_priv_deinit(struct wil6210_priv *wil)
- 	destroy_workqueue(wil->wmi_wq);
- }
- 
-+static void wil_shutdown_bl(struct wil6210_priv *wil)
-+{
-+	u32 val;
-+
-+	wil_s(wil, RGF_USER_BL +
-+	      offsetof(struct bl_dedicated_registers_v1,
-+		       bl_shutdown_handshake), BL_SHUTDOWN_HS_GRTD);
-+
-+	usleep_range(100, 150);
-+
-+	val = wil_r(wil, RGF_USER_BL +
-+		    offsetof(struct bl_dedicated_registers_v1,
-+			     bl_shutdown_handshake));
-+	if (val & BL_SHUTDOWN_HS_RTD) {
-+		wil_dbg_misc(wil, "BL is ready for halt\n");
-+		return;
-+	}
-+
-+	wil_err(wil, "BL did not report ready for halt\n");
-+}
-+
-+/* this format is used by ARC embedded CPU for instruction memory */
-+static inline u32 ARC_me_imm32(u32 d)
-+{
-+	return ((d & 0xffff0000) >> 16) | ((d & 0x0000ffff) << 16);
-+}
-+
-+/* defines access to interrupt vectors for wil_freeze_bl */
-+#define ARC_IRQ_VECTOR_OFFSET(N)	((N) * 8)
-+/* ARC long jump instruction */
-+#define ARC_JAL_INST			(0x20200f80)
-+
-+static void wil_freeze_bl(struct wil6210_priv *wil)
-+{
-+	u32 jal, upc, saved;
-+	u32 ivt3 = ARC_IRQ_VECTOR_OFFSET(3);
-+
-+	jal = wil_r(wil, wil->iccm_base + ivt3);
-+	if (jal != ARC_me_imm32(ARC_JAL_INST)) {
-+		wil_dbg_misc(wil, "invalid IVT entry found, skipping\n");
-+		return;
-+	}
-+
-+	/* prevent the target from entering deep sleep
-+	 * and disabling memory access
-+	 */
-+	saved = wil_r(wil, RGF_USER_USAGE_8);
-+	wil_w(wil, RGF_USER_USAGE_8, saved | BIT_USER_PREVENT_DEEP_SLEEP);
-+	usleep_range(20, 25); /* let the BL process the bit */
-+
-+	/* redirect to endless loop in the INT_L1 context and let it trap */
-+	wil_w(wil, wil->iccm_base + ivt3 + 4, ARC_me_imm32(ivt3));
-+	usleep_range(20, 25); /* let the BL get into the trap */
-+
-+	/* verify the BL is frozen */
-+	upc = wil_r(wil, RGF_USER_CPU_PC);
-+	if (upc < ivt3 || (upc > (ivt3 + 8)))
-+		wil_dbg_misc(wil, "BL freeze failed, PC=0x%08X\n", upc);
-+
-+	wil_w(wil, RGF_USER_USAGE_8, saved);
-+}
-+
-+static void wil_bl_prepare_halt(struct wil6210_priv *wil)
-+{
-+	u32 tmp, ver;
-+
-+	/* before halting device CPU driver must make sure BL is not accessing
-+	 * host memory. This is done differently depending on BL version:
-+	 * 1. For very old BL versions the procedure is skipped
-+	 * (not supported).
-+	 * 2. For old BL version we use a special trick to freeze the BL
-+	 * 3. For new BL versions we shutdown the BL using handshake procedure.
-+	 */
-+	tmp = wil_r(wil, RGF_USER_BL +
-+		    offsetof(struct bl_dedicated_registers_v0,
-+			     boot_loader_struct_version));
-+	if (!tmp) {
-+		wil_dbg_misc(wil, "old BL, skipping halt preperation\n");
-+		return;
-+	}
-+
-+	tmp = wil_r(wil, RGF_USER_BL +
-+		    offsetof(struct bl_dedicated_registers_v1,
-+			     bl_shutdown_handshake));
-+	ver = BL_SHUTDOWN_HS_PROT_VER(tmp);
-+
-+	if (ver > 0)
-+		wil_shutdown_bl(wil);
-+	else
-+		wil_freeze_bl(wil);
-+}
-+
- static inline void wil_halt_cpu(struct wil6210_priv *wil)
- {
- 	wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
-@@ -685,11 +777,16 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 
- 	wil_halt_cpu(wil);
- 
--	if (!no_flash)
-+	if (!no_flash) {
- 		/* clear all boot loader "ready" bits */
- 		wil_w(wil, RGF_USER_BL +
- 		      offsetof(struct bl_dedicated_registers_v0,
- 			       boot_loader_ready), 0);
-+		/* this should be safe to write even with old BLs */
-+		wil_w(wil, RGF_USER_BL +
-+		      offsetof(struct bl_dedicated_registers_v1,
-+			       bl_shutdown_handshake), 0);
-+	}
- 	/* Clear Fw Download notification */
- 	wil_c(wil, RGF_USER_USAGE_6, BIT(0));
- 
-@@ -1156,6 +1253,9 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		wil_info(wil, "Use firmware <%s> + board <%s>\n",
- 			 wil->wil_fw_name, WIL_BOARD_FILE_NAME);
- 
-+		if (!no_flash)
-+			wil_bl_prepare_halt(wil);
-+
- 		wil_halt_cpu(wil);
- 		memset(wil->fw_version, 0, sizeof(wil->fw_version));
- 		/* Loading f/w from the file */
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index ab8cb91..750c34e 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -43,6 +43,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 	u8 chip_revision = (wil_r(wil, RGF_USER_REVISION_ID) &
- 			    RGF_USER_REVISION_ID_MASK);
- 	int platform_capa;
-+	struct fw_map *iccm_section;
- 
- 	bitmap_zero(wil->hw_capa, hw_capa_last);
- 	bitmap_zero(wil->fw_capabilities, WMI_FW_CAPABILITY_MAX);
-@@ -95,6 +96,13 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		return -EINVAL;
- 	}
- 
-+	iccm_section = wil_find_fw_mapping("fw_code");
-+	if (!iccm_section) {
-+		wil_err(wil, "fw_code section not found in fw_mapping\n");
-+		return -EINVAL;
-+	}
-+	wil->iccm_base = iccm_section->host;
-+
- 	wil_info(wil, "Board hardware is %s, flash %sexist\n", wil->hw_name,
- 		 test_bit(hw_capa_no_flash, wil->hw_capa) ? "doesn't " : "");
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index d243df3..5f9bcfb 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -170,6 +170,7 @@ struct RGF_ICR {
- 	#define HW_MACHINE_BOOT_DONE	(0x3fffffd)
- #define RGF_USER_USER_CPU_0		(0x8801e0)
- 	#define BIT_USER_USER_CPU_MAN_RST	BIT(1) /* user_cpu_man_rst */
-+#define RGF_USER_CPU_PC			(0x8801e8)
- #define RGF_USER_MAC_CPU_0		(0x8801fc)
- 	#define BIT_USER_MAC_CPU_MAN_RST	BIT(1) /* mac_cpu_man_rst */
- #define RGF_USER_USER_SCRATCH_PAD	(0x8802bc)
-@@ -791,6 +792,7 @@ struct wil6210_priv {
- 
- 	u32 rgf_fw_assert_code_addr;
- 	u32 rgf_ucode_assert_code_addr;
-+	u32 iccm_base;
- };
- 
- #define wil_to_wiphy(i) (i->wdev->wiphy)
-@@ -916,6 +918,7 @@ int wil_ps_update(struct wil6210_priv *wil,
- int wil_find_cid(struct wil6210_priv *wil, const u8 *mac);
- void wil_set_ethtoolops(struct net_device *ndev);
- 
-+struct fw_map *wil_find_fw_mapping(const char *section);
- void __iomem *wmi_buffer_block(struct wil6210_priv *wil, __le32 ptr, u32 size);
- void __iomem *wmi_buffer(struct wil6210_priv *wil, __le32 ptr);
- void __iomem *wmi_addr(struct wil6210_priv *wil, u32 ptr);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 69da3c2..43c5803 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -185,6 +185,24 @@ static u32 wmi_addr_remap(u32 x)
- }
- 
- /**
-+ * find fw_mapping entry by section name
-+ * @section - section name
-+ *
-+ * Return pointer to section or NULL if not found
-+ */
-+struct fw_map *wil_find_fw_mapping(const char *section)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(fw_mapping); i++)
-+		if (fw_mapping[i].name &&
-+		    !strcmp(section, fw_mapping[i].name))
-+			return &fw_mapping[i];
-+
-+	return NULL;
-+}
-+
-+/**
-  * Check address validity for WMI buffer; remap if needed
-  * @ptr - internal (linker) fw/ucode address
-  * @size - if non zero, validate the block does not
--- 
-1.9.1
+-Toke
