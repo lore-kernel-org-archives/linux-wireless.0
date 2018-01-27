@@ -1,46 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43502 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756259AbeAHQV3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 11:21:29 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-eopbgr00133.outbound.protection.outlook.com ([40.107.0.133]:16032
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751267AbeA0INe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Jan 2018 03:13:34 -0500
+To: linux-wireless@vger.kernel.org
+Cc: Jes.Sorensen@gmail.com
+From: Kirill Tkhai <ktkhai@virtuozzo.com>
+Subject: rtl8723bs: rtnl_is_locked() misuse
+Message-ID: <d7f3ff15-ee89-7d1f-5939-ee71fa472c57@virtuozzo.com> (sfid-20180127_091338_545882_A0ED2B4D)
+Date: Sat, 27 Jan 2018 11:13:28 +0300
 MIME-Version: 1.0
-Subject: Re: b43: Replace mdelay with msleep in b43_radio_2057_init_post
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1514632107-14698-1-git-send-email-baijiaju1990@gmail.com>
-References: <1514632107-14698-1-git-send-email-baijiaju1990@gmail.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: colin.king@canonical.com, johannes.berg@intel.com, tiwai@suse.de,
-        kstewart@linuxfoundation.org, gregkh@linuxfoundation.org,
-        andrew.zaborowski@intel.com, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
-Message-Id: <20180108162128.C4C9060B3B@smtp.codeaurora.org> (sfid-20180108_172710_123915_A9351198)
-Date: Mon,  8 Jan 2018 16:21:28 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jia-Ju Bai <baijiaju1990@gmail.com> wrote:
+Hi,
 
-> b43_radio_2057_init_post is not called in an interrupt handler 
-> nor holding a spinlock.
-> The function mdelay in it can be replaced with msleep, to reduce busy wait.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+I'm reporting you about misuse of rtnl_is_locked() in rtw_change_ifname() function.
+Note, that rtnl_is_locked() *does not mean* rtnl is locked on the *current cpu*.
+This primitive returns true in case of rtnl is locked somewhere in the system.
+So, it can't be used in the below code:
 
-You submitted an identical patch a week earlier:
+if (!rtnl_is_locked())
+                unregister_netdev(cur_pnetdev);
+        else
+                unregister_netdevice(cur_pnetdev);
 
-https://patchwork.kernel.org/patch/10137671/
-
-How is this different? Also always add version number to the patch so that the
-maintainers can follow the changes easily:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
-
--- 
-https://patchwork.kernel.org/patch/10137671/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kirill
