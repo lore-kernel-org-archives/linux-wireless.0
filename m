@@ -1,425 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31678 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750980AbeAYPUn (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:44084 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751604AbeA0OPD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 10:20:43 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Srinivas Dasari <dasaris@qti.qualcomm.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v3 2/3] cfg80211/nl80211: Optional authentication offload to userspace
-Date: Thu, 25 Jan 2018 17:13:38 +0200
-Message-ID: <1516893219-30243-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20180125_162047_019617_8049FC8D)
-In-Reply-To: <1516893219-30243-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1516893219-30243-1-git-send-email-jouni@qca.qualcomm.com>
+        Sat, 27 Jan 2018 09:15:03 -0500
+Date: Sat, 27 Jan 2018 15:14:59 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH v2 0/6] wl1251: Fix MAC address for Nokia N900
+Message-ID: <20180127141459.lym2mhd5md22co4q@pali> (sfid-20180127_151534_957874_C8A88E19)
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
+ <20180102192345.dnywuv4sapltrfrl@pali>
+ <20180105014510.GB22430@wotan.suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="wojkpjjfykxww634"
+In-Reply-To: <20180105014510.GB22430@wotan.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Srinivas Dasari <dasaris@qti.qualcomm.com>
 
-This interface allows the host driver to offload the authentication to
-user space. This is exclusively defined for host drivers that do not
-define separate commands for authentication and association, but rely on
-userspace SME (e.g., in wpa_supplicant for the ~WPA_DRIVER_FLAGS_SME
-case) for the authentication to happen. This can be used to implement
-SAE without full implementation in the kernel/firmware while still being
-able to use NL80211_CMD_CONNECT with driver-based BSS selection.
+--wojkpjjfykxww634
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Host driver sends NL80211_CMD_EXTERNAL_AUTH event to start/abort
-authentication to the port on which connect is triggered and status
-of authentication is further indicated by user space to host
-driver through the same command response interface.
+On Friday 05 January 2018 02:45:10 Luis R. Rodriguez wrote:
+> On Tue, Jan 02, 2018 at 08:23:45PM +0100, Pali Roh=C3=A1r wrote:
+> > On Friday 10 November 2017 00:38:22 Pali Roh=C3=A1r wrote:
+> > > This patch series fix processing MAC address for wl1251 chip found in=
+ Nokia N900.
+> > >=20
+> > > Changes since v1:
+> > > * Added Acked-by for Pavel Machek
+> > > * Fixed grammar
+> > > * Magic numbers for NVS offsets are replaced by defines
+> > > * Check for validity of mac address NVS data is moved into function
+> > > * Changed order of patches as Pavel requested
+> > >=20
+> > > Pali Roh=C3=A1r (6):
+> > >   wl1251: Update wl->nvs_len after wl->nvs is valid
+> > >   wl1251: Generate random MAC address only if driver does not have
+> > >     valid
+> > >   wl1251: Parse and use MAC address from supplied NVS data
+> > >   wl1251: Set generated MAC address back to NVS data
+> > >   firmware: Add request_firmware_prefer_user() function
+> > >   wl1251: Use request_firmware_prefer_user() for loading NVS
+> > >     calibration data
+> > >=20
+> > >  drivers/base/firmware_class.c          |   45 +++++++++++++-
+> > >  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+> > >  drivers/net/wireless/ti/wl1251/main.c  |  104 ++++++++++++++++++++++=
+++++------
+> > >  include/linux/firmware.h               |    9 +++
+> > >  4 files changed, 138 insertions(+), 21 deletions(-)
+> >=20
+> > Hi! Are there any comments for first 4 patches? If not, could they be
+> > accepted and merged?
+>=20
+> Since the first 4 patches do not touch the firmware API they seem fine to=
+ me so
+> long as the maintainer accepts them. Maybe resend and clarify you have dr=
+opped
+> the other ones and amend with the new tags.
 
-User space entities advertise this capability through the
-NL80211_ATTR_EXTERNAL_AUTH_SUPP flag in the NL80211_CMD_CONNECT request.
-Host drivers shall look at this capability to offload the authentication.
+According to get_maintainer.pl, Kalle Valo is maintainer.
 
-Signed-off-by: Srinivas Dasari <dasaris@qti.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- include/net/cfg80211.h       | 54 +++++++++++++++++++++++++--
- include/uapi/linux/nl80211.h | 48 ++++++++++++++++++++++++
- net/wireless/nl80211.c       | 88 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 15 ++++++++
- net/wireless/trace.h         | 23 ++++++++++++
- 5 files changed, 225 insertions(+), 3 deletions(-)
+Kalle Valo, if you do not have any other comments, can you accept first
+4 patches? Or do you really need to resent first 4 patches again?
 
-v3:
-- rename CONNECT_REQ_EXTERNAL_AUTH_SUPP to
-  CONNECT_REQ_EXTERNAL_AUTH_SUPPORT
-- rename NL80211_ATTR_EXTERNAL_AUTH_SUPP to
-  NL80211_ATTR_EXTERNAL_AUTH_SUPPORT
-- remove NL80211_EXT_FEATURE_EXTERNAL_AUTH
-- unicast netlink events to the port used for the connect command
+--=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ab30a22..1aebcf1 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1903,11 +1903,16 @@ struct cfg80211_auth_request {
-  * @ASSOC_REQ_DISABLE_HT:  Disable HT (802.11n)
-  * @ASSOC_REQ_DISABLE_VHT:  Disable VHT
-  * @ASSOC_REQ_USE_RRM: Declare RRM capability in this association
-+ * @CONNECT_REQ_EXTERNAL_AUTH_SUPPORT: User space indicates external
-+ *  authentication capability. Drivers can offload authentication to
-+ *  userspace if this flag is set. Only applicable for cfg80211_connect()
-+ *  request (connect callback).
-  */
- enum cfg80211_assoc_req_flags {
--	ASSOC_REQ_DISABLE_HT		= BIT(0),
--	ASSOC_REQ_DISABLE_VHT		= BIT(1),
--	ASSOC_REQ_USE_RRM		= BIT(2),
-+	ASSOC_REQ_DISABLE_HT			= BIT(0),
-+	ASSOC_REQ_DISABLE_VHT			= BIT(1),
-+	ASSOC_REQ_USE_RRM			= BIT(2),
-+	CONNECT_REQ_EXTERNAL_AUTH_SUPPORT	= BIT(3),
- };
- 
- /**
-@@ -2599,6 +2604,33 @@ struct cfg80211_pmk_conf {
- };
- 
- /**
-+ * struct cfg80211_external_auth_params - Trigger External authentication.
-+ *
-+ * Commonly used across the external auth request and event interfaces.
-+ *
-+ * @action: action type / trigger for external authentication. Only significant
-+ *	for the authentication request event interface (driver to user space).
-+ * @bssid: BSSID of the peer with which the authentication has
-+ *	to happen. Used by both the authentication request event and
-+ *	authentication response command interface.
-+ * @ssid: SSID of the AP.  Used by both the authentication request event and
-+ *	authentication response command interface.
-+ * @key_mgmt_suite: AKM suite of the respective authentication. Used by the
-+ *	authentication request event interface.
-+ * @status: status code, %WLAN_STATUS_SUCCESS for successful authentication,
-+ *	use %WLAN_STATUS_UNSPECIFIED_FAILURE if user space cannot give you
-+ *	the real status code for failures. Used only for the authentication
-+ *	response command interface (user space to driver).
-+ */
-+struct cfg80211_external_auth_params {
-+	enum nl80211_external_auth_action action;
-+	u8 bssid[ETH_ALEN] __aligned(2);
-+	struct cfg80211_ssid ssid;
-+	unsigned int key_mgmt_suite;
-+	u16 status;
-+};
-+
-+/**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-  * This struct is registered by fullmac card drivers and/or wireless stacks
-@@ -2921,6 +2953,9 @@ struct cfg80211_pmk_conf {
-  *	(invoked with the wireless_dev mutex held)
-  * @del_pmk: delete the previously configured PMK for the given authenticator.
-  *	(invoked with the wireless_dev mutex held)
-+ *
-+ * @external_auth: indicates result of offloaded authentication processing from
-+ *     user space
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3214,6 +3249,8 @@ struct cfg80211_ops {
- 			   const struct cfg80211_pmk_conf *conf);
- 	int	(*del_pmk)(struct wiphy *wiphy, struct net_device *dev,
- 			   const u8 *aa);
-+	int     (*external_auth)(struct wiphy *wiphy, struct net_device *dev,
-+				 struct cfg80211_external_auth_params *params);
- };
- 
- /*
-@@ -6200,6 +6237,17 @@ void cfg80211_nan_func_terminated(struct wireless_dev *wdev,
- /* ethtool helper */
- void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info);
- 
-+/**
-+ * cfg80211_external_auth_request - userspace request for authentication
-+ * @netdev: network device
-+ * @params: External authentication parameters
-+ * @gfp: allocation flags
-+ * Returns: 0 on success, < 0 on error
-+ */
-+int cfg80211_external_auth_request(struct net_device *netdev,
-+				   struct cfg80211_external_auth_params *params,
-+				   gfp_t gfp);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 6f60503..ffe78a9 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -992,6 +992,27 @@
-  *
-  * @NL80211_CMD_RELOAD_REGDB: Request that the regdb firmware file is reloaded.
-  *
-+ * @NL80211_CMD_EXTERNAL_AUTH: This interface is exclusively defined for host
-+ *	drivers that do not define separate commands for authentication and
-+ *	association, but rely on user space for the authentication to happen.
-+ *	This interface acts both as the event request (driver to user space)
-+ *	to trigger the authentication and command response (userspace to
-+ *	driver) to indicate the authentication status.
-+ *
-+ *	User space uses the %NL80211_CMD_CONNECT command to the host driver to
-+ *	trigger a connection. The host driver selects a BSS and further uses
-+ *	this interface to offload only the authentication part to the user
-+ *	space. Authentication frames are passed between the driver and user
-+ *	space through the %NL80211_CMD_FRAME interface. Host driver proceeds
-+ *	further with the association after getting successful authentication
-+ *	status. User space indicates the authentication status through
-+ *	%NL80211_ATTR_STATUS_CODE attribute in %NL80211_CMD_EXTERNAL_AUTH
-+ *	command interface.
-+ *
-+ *	Host driver reports this status on an authentication failure to the
-+ *	user space through the connect result as the user space would have
-+ *	initiated the connection through the connect request.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1198,6 +1219,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_RELOAD_REGDB,
- 
-+	NL80211_CMD_EXTERNAL_AUTH,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2153,6 +2176,16 @@ enum nl80211_commands {
-  * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
-  * @NL80211_ATTR_PORT_AUTHORIZED: (reserved)
-  *
-+ * @NL80211_ATTR_EXTERNAL_AUTH_ACTION: Identify the requested external
-+ *     authentication operation (u32 attribute with an
-+ *     &enum nl80211_external_auth_action value). This is used with the
-+ *     &NL80211_CMD_EXTERNAL_AUTH request event.
-+ * @NL80211_ATTR_EXTERNAL_AUTH_SUPPORT: Flag attribute indicating that the user
-+ *     space supports external authentication. This attribute shall be used
-+ *     only with %NL80211_CMD_CONNECT request. The driver may offload
-+ *     authentication processing to user space if this capability is indicated
-+ *     in NL80211_CMD_CONNECT requests from the user space.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2579,6 +2612,10 @@ enum nl80211_attrs {
- 	NL80211_ATTR_PMKR0_NAME,
- 	NL80211_ATTR_PORT_AUTHORIZED,
- 
-+	NL80211_ATTR_EXTERNAL_AUTH_ACTION,
-+	NL80211_ATTR_EXTERNAL_AUTH_SUPPORT,
-+
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -5495,4 +5532,15 @@ enum nl80211_nan_match_attributes {
- 	NL80211_NAN_MATCH_ATTR_MAX = NUM_NL80211_NAN_MATCH_ATTR - 1
- };
- 
-+/**
-+ * nl80211_external_auth_action - Action to perform with external
-+ *     authentication request. Used by NL80211_ATTR_EXTERNAL_AUTH_ACTION.
-+ * @NL80211_EXTERNAL_AUTH_START: Start the authentication.
-+ * @NL80211_EXTERNAL_AUTH_ABORT: Abort the ongoing authentication.
-+ */
-+enum nl80211_external_auth_action {
-+	NL80211_EXTERNAL_AUTH_START,
-+	NL80211_EXTERNAL_AUTH_ABORT,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a83e758..8b10598 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -420,6 +420,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_FILS_CACHE_ID] = { .len = 2 },
- 	[NL80211_ATTR_PMK] = { .type = NLA_BINARY, .len = PMK_MAX_LEN },
- 	[NL80211_ATTR_SCHED_SCAN_MULTI] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT] = { .type = NLA_FLAG },
- };
- 
- /* policy for the key attributes */
-@@ -9158,6 +9159,9 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 	}
- 
-+	if (nla_get_flag(info->attrs[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT]))
-+		connect.flags |= CONNECT_REQ_EXTERNAL_AUTH_SUPPORT;
-+
- 	wdev_lock(dev->ieee80211_ptr);
- 
- 	err = cfg80211_connect(rdev, dev, &connect, connkeys,
-@@ -12466,6 +12470,41 @@ static int nl80211_del_pmk(struct sk_buff *skb, struct genl_info *info)
- 	return ret;
- }
- 
-+static int nl80211_external_auth(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct cfg80211_external_auth_params params;
-+
-+	if (rdev->ops->external_auth)
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_SSID])
-+		return -EINVAL;
-+
-+	if (!info->attrs[NL80211_ATTR_BSSID])
-+		return -EINVAL;
-+
-+	if (!info->attrs[NL80211_ATTR_STATUS_CODE])
-+		return -EINVAL;
-+
-+	memset(&params, 0, sizeof(params));
-+
-+	params.ssid.ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
-+	if (params.ssid.ssid_len == 0 ||
-+	    params.ssid.ssid_len > IEEE80211_MAX_SSID_LEN)
-+		return -EINVAL;
-+	memcpy(params.ssid.ssid, nla_data(info->attrs[NL80211_ATTR_SSID]),
-+	       params.ssid.ssid_len);
-+
-+	memcpy(params.bssid, nla_data(info->attrs[NL80211_ATTR_BSSID]),
-+	       ETH_ALEN);
-+
-+	params.status = nla_get_u16(info->attrs[NL80211_ATTR_STATUS_CODE]);
-+
-+	return rdev_external_auth(rdev, dev, &params);
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -13361,6 +13400,14 @@ static const struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_EXTERNAL_AUTH,
-+		.doit = nl80211_external_auth,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- 
- };
- 
-@@ -15372,6 +15419,47 @@ void nl80211_send_ap_stopped(struct wireless_dev *wdev)
- 	nlmsg_free(msg);
- }
- 
-+int cfg80211_external_auth_request(struct net_device *dev,
-+				   struct cfg80211_external_auth_params *params,
-+				   gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	if (!wdev->conn_owner_nlportid)
-+		return -EINVAL;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_EXTERNAL_AUTH);
-+	if (!hdr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-+	    nla_put_u32(msg, NL80211_ATTR_AKM_SUITES, params->key_mgmt_suite) ||
-+	    nla_put_u32(msg, NL80211_ATTR_EXTERNAL_AUTH_ACTION,
-+			params->action) ||
-+	    nla_put(msg, NL80211_ATTR_BSSID, ETH_ALEN, params->bssid) ||
-+	    nla_put(msg, NL80211_ATTR_SSID, params->ssid.ssid_len,
-+		    params->ssid.ssid))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+	genlmsg_unicast(wiphy_net(&rdev->wiphy), msg,
-+			wdev->conn_owner_nlportid);
-+	return 0;
-+
-+ nla_put_failure:
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+EXPORT_SYMBOL(cfg80211_external_auth_request);
-+
- /* initialisation/exit functions */
- 
- int __init nl80211_init(void)
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 0c06240..84f23ae 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1190,4 +1190,19 @@ static inline int rdev_del_pmk(struct cfg80211_registered_device *rdev,
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-+
-+static inline int
-+rdev_external_auth(struct cfg80211_registered_device *rdev,
-+		   struct net_device *dev,
-+		   struct cfg80211_external_auth_params *params)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	trace_rdev_external_auth(&rdev->wiphy, dev, params);
-+	if (rdev->ops->external_auth)
-+		ret = rdev->ops->external_auth(&rdev->wiphy, dev, params);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index bcfedd3..5152938 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2319,6 +2319,29 @@ TRACE_EVENT(rdev_del_pmk,
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(aa))
- );
- 
-+TRACE_EVENT(rdev_external_auth,
-+	    TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		     struct cfg80211_external_auth_params *params),
-+	    TP_ARGS(wiphy, netdev, params),
-+	    TP_STRUCT__entry(WIPHY_ENTRY
-+			     NETDEV_ENTRY
-+			     MAC_ENTRY(bssid)
-+			     __array(u8, ssid, IEEE80211_MAX_SSID_LEN + 1)
-+			     __field(u16, status)
-+	    ),
-+	    TP_fast_assign(WIPHY_ASSIGN;
-+			   NETDEV_ASSIGN;
-+			   MAC_ASSIGN(bssid, params->bssid);
-+			   memset(__entry->ssid, 0, IEEE80211_MAX_SSID_LEN + 1);
-+			   memcpy(__entry->ssid, params->ssid.ssid,
-+				  params->ssid.ssid_len);
-+			   __entry->status = params->status;
-+	    ),
-+	    TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", bssid: " MAC_PR_FMT
-+		      ", ssid: %s, status: %u", WIPHY_PR_ARG, NETDEV_PR_ARG,
-+		      __entry->bssid, __entry->ssid, __entry->status)
-+);
-+
- /*************************************************************
-  *	     cfg80211 exported functions traces		     *
-  *************************************************************/
--- 
-2.7.4
+--wojkpjjfykxww634
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQS4VrIQdKium2krgIWL8Mk9A+RDUgUCWmyJXgAKCRCL8Mk9A+RD
+UtxPAJ9u8R682FeXsOnGuZ5sdbAt0UdGhQCgkVmHq8z/ojmBAvh1XxEeTnxF6B4=
+=zwVx
+-----END PGP SIGNATURE-----
+
+--wojkpjjfykxww634--
