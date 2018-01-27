@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18602 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755654AbeASPhL (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:45534 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751496AbeA0Scz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jan 2018 10:37:11 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codaurora.org>
-Subject: [PATCH 1/8] wil6210: add Talyn PCIe device ID
-Date: Fri, 19 Jan 2018 17:36:57 +0200
-Message-Id: <1516376224-13976-2-git-send-email-merez@codeaurora.org> (sfid-20180119_163719_744971_B220A832)
-In-Reply-To: <1516376224-13976-1-git-send-email-merez@codeaurora.org>
-References: <1516376224-13976-1-git-send-email-merez@codeaurora.org>
+        Sat, 27 Jan 2018 13:32:55 -0500
+Received: by mail-oi0-f67.google.com with SMTP id c189so1696815oib.12
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Jan 2018 10:32:55 -0800 (PST)
+Subject: Re: [PATCH 01/10] rtlwifi: enable mac80211 fast-tx support
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180126074645.27201-1-pkshih@realtek.com>
+ <20180126074645.27201-2-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <71591635-eb70-f12e-d510-a90a873afcc7@lwfinger.net> (sfid-20180127_193259_744841_CF53DE97)
+Date: Sat, 27 Jan 2018 12:32:53 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180126074645.27201-2-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PCIe device ID has changed in Talyn.
-Add this ID to wil6210_pcie_ids list to allow
-recognition of Talyn device.
+On 01/26/2018 01:46 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Enable the mac80211 fast-tx feature, since our driver already support
+> hw_flags required by fast-tx and is able to let mac80211 stack to transmit
+> packet through fast-xmit path.
+> 
+> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 0c401bf..f8c7a6b 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -378,6 +379,7 @@ static void wil_pcie_remove(struct pci_dev *pdev)
- static const struct pci_device_id wil6210_pcie_ids[] = {
- 	{ PCI_DEVICE(0x1ae9, 0x0310) },
- 	{ PCI_DEVICE(0x1ae9, 0x0302) }, /* same as above, firmware broken */
-+	{ PCI_DEVICE(0x17cb, 0x1201) }, /* Talyn */
- 	{ /* end: all zeroes */	},
- };
- MODULE_DEVICE_TABLE(pci, wil6210_pcie_ids);
--- 
-1.9.1
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
