@@ -1,41 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43214 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932119AbeAIIJs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 03:09:48 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mga02.intel.com ([134.134.136.20]:27303 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752038AbeA0IFS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Jan 2018 03:05:18 -0500
+Subject: [PATCH v5 11/12] nl80211: sanitize array index in parse_txq_params
+From: Dan Williams <dan.j.williams@intel.com>
+To: tglx@linutronix.de
+Cc: linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        gregkh@linuxfoundation.org,
+        Christian Lamparter <chunkeey@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        alan@linux.intel.com
+Date: Fri, 26 Jan 2018 23:56:12 -0800
+Message-ID: <151703977228.26578.2872989927391963609.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180127_090534_642158_25F3CBD4)
+In-Reply-To: <151703971300.26578.1185595719337719486.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151703971300.26578.1185595719337719486.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Subject: Re: [v2,7/9] wil6210: configurable broadcast TX MCS
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1513270393-919-8-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1513270393-919-8-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Message-Id: <20180109080947.E3DC260208@smtp.codeaurora.org> (sfid-20180109_090953_486851_C4E10A92)
-Date: Tue,  9 Jan 2018 08:09:47 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+Wireless drivers rely on parse_txq_params to validate that
+txq_params->ac is less than NL80211_NUM_ACS by the time the low-level
+driver's ->conf_tx() handler is called. Use a new helper, 'array_idx',
+to sanitize txq_params->ac with respect to speculation. I.e. ensure that
+any speculation into ->conf_tx() handlers is done with a value of
+txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
 
-> Add 2 module parameters that control broadcast/multicast
-> TX packets:
-> 1. bcast_mcs0_limit - specify the maximum packet size
-> that will be sent with MCS 0.
-> 2. bcast_mcs - specify the MCS index to use when sending
-> packets larger than above limit.
-> 
-> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Reported-by: Christian Lamparter <chunkeey@gmail.com>
+Reported-by: Elena Reshetova <elena.reshetova@intel.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ net/wireless/nl80211.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-IMHO this kind of higher level protocol configuration belongs to nl80211.
-Module parameters are more meant for lower level (hardware etc) configuration.
-
--- 
-https://patchwork.kernel.org/patch/10112705/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d396cb61a280..1479a1c7819c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -16,6 +16,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/netlink.h>
++#include <linux/nospec.h>
+ #include <linux/etherdevice.h>
+ #include <net/net_namespace.h>
+ #include <net/genetlink.h>
+@@ -2056,20 +2057,22 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
+ static int parse_txq_params(struct nlattr *tb[],
+ 			    struct ieee80211_txq_params *txq_params)
+ {
++	u8 ac;
++
+ 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
+ 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
+ 	    !tb[NL80211_TXQ_ATTR_AIFS])
+ 		return -EINVAL;
+ 
+-	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
++	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
+ 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
+ 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
+ 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
+ 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 
+-	if (txq_params->ac >= NL80211_NUM_ACS)
++	if (ac >= NL80211_NUM_ACS)
+ 		return -EINVAL;
+-
++	txq_params->ac = array_idx(ac, NL80211_NUM_ACS);
+ 	return 0;
+ }
+ 
