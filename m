@@ -1,91 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:64557 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751085AbeAVKXJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jan 2018 05:23:09 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 05/14] staging: wilc1000: rename camelCase used in Handle_DelAllSta() and its variable
-Date: Mon, 22 Jan 2018 15:52:18 +0530
-Message-ID: <1516616547-24654-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180122_112312_773384_76F0DE17)
-In-Reply-To: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
-References: <1516616547-24654-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:34120 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752256AbeA0PCI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Jan 2018 10:02:08 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 4.16 4/4] mt76: do not set status->aggr for NULL data frames
+Date: Sat, 27 Jan 2018 16:02:06 +0100
+Message-Id: <20180127150206.24690-4-nbd@nbd.name> (sfid-20180127_160213_851483_3C1616DC)
+In-Reply-To: <20180127150206.24690-1-nbd@nbd.name>
+References: <20180127150206.24690-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue reported by checkpatch.pl script.
+Avoids data connection stalls when the client toggles powersave mode
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Fixes: aee5b8cf2477 ("mt76: implement A-MPDU rx reordering in the driver code")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8f8e727..f0168e3 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2123,34 +2123,34 @@ static void Handle_AddStation(struct wilc_vif *vif,
- 	kfree(wid.val);
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index 6c30b5eaa9ca..7ea3d841918e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -341,7 +341,7 @@ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
  
--static void Handle_DelAllSta(struct wilc_vif *vif,
--			     struct del_all_sta *pstrDelAllStaParam)
-+static void handle_del_all_sta(struct wilc_vif *vif,
-+			       struct del_all_sta *param)
- {
- 	s32 result = 0;
- 	struct wid wid;
--	u8 *pu8CurrByte;
-+	u8 *curr_byte;
- 	u8 i;
--	u8 au8Zero_Buff[6] = {0};
-+	u8 zero_buff[6] = {0};
+ 	mt76x2_remove_hdr_pad(skb, pad_len);
  
- 	wid.id = (u16)WID_DEL_ALL_STA;
- 	wid.type = WID_STR;
--	wid.size = (pstrDelAllStaParam->assoc_sta * ETH_ALEN) + 1;
-+	wid.size = (param->assoc_sta * ETH_ALEN) + 1;
+-	if (rxinfo & MT_RXINFO_BA)
++	if ((rxinfo & MT_RXINFO_BA) && !(rxinfo & MT_RXINFO_NULL))
+ 		status->aggr = true;
  
--	wid.val = kmalloc((pstrDelAllStaParam->assoc_sta * ETH_ALEN) + 1, GFP_KERNEL);
-+	wid.val = kmalloc((param->assoc_sta * ETH_ALEN) + 1, GFP_KERNEL);
- 	if (!wid.val)
- 		goto ERRORHANDLER;
- 
--	pu8CurrByte = wid.val;
-+	curr_byte = wid.val;
- 
--	*(pu8CurrByte++) = pstrDelAllStaParam->assoc_sta;
-+	*(curr_byte++) = param->assoc_sta;
- 
- 	for (i = 0; i < MAX_NUM_STA; i++) {
--		if (memcmp(pstrDelAllStaParam->del_all_sta[i], au8Zero_Buff, ETH_ALEN))
--			memcpy(pu8CurrByte, pstrDelAllStaParam->del_all_sta[i], ETH_ALEN);
-+		if (memcmp(param->del_all_sta[i], zero_buff, ETH_ALEN))
-+			memcpy(curr_byte, param->del_all_sta[i], ETH_ALEN);
- 		else
- 			continue;
- 
--		pu8CurrByte += ETH_ALEN;
-+		curr_byte += ETH_ALEN;
- 	}
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-@@ -2626,7 +2626,7 @@ static void host_if_work(struct work_struct *work)
- 		break;
- 
- 	case HOST_IF_MSG_DEL_ALL_STA:
--		Handle_DelAllSta(msg->vif, &msg->body.del_all_sta_info);
-+		handle_del_all_sta(msg->vif, &msg->body.del_all_sta_info);
- 		break;
- 
- 	case HOST_IF_MSG_SET_TX_POWER:
+ 	if (WARN_ON_ONCE(len > skb->len))
 -- 
-2.7.4
+2.14.2
