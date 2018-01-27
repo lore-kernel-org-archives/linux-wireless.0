@@ -1,37 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35054 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753865AbeAHRaO (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38006 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751916AbeA0BLX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 12:30:14 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mt76x2: eeprom: fix typo in mt76x2_get_power_info_5g()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <2ae397aff0b058615a558a2352067fad2c9201e6.1513248071.git.lorenzo.bianconi@redhat.com>
-References: <2ae397aff0b058615a558a2352067fad2c9201e6.1513248071.git.lorenzo.bianconi@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, colin.king@canonical.com,
-        linux-wireless@vger.kernel.org
-Message-Id: <20180108173014.2BA866079C@smtp.codeaurora.org> (sfid-20180108_183019_737774_63560180)
-Date: Mon,  8 Jan 2018 17:30:14 +0000 (UTC)
+        Fri, 26 Jan 2018 20:11:23 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Add txq flags to debugfs
+Date: Fri, 26 Jan 2018 17:11:19 -0800
+Message-Id: <1517015479-15220-1-git-send-email-greearb@candelatech.com> (sfid-20180127_021127_493360_ABACCE8A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> Fix typo in 5GHz power vs channel eeprom parsing
-> 
-> Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> Acked-by: Felix Fietkau <nbd@nbd.name>
-> Reported-by: Colin Ian King <colin.king@canonical.com>
+Might help one figure out why aqm drivers may fail to transmit
+frames sometimes.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/debugfs_sta.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-c3929a980b16 mt76x2: eeprom: fix typo in mt76x2_get_power_info_5g()
-
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index b15412c..570bc27 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -160,12 +160,12 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+ 		       sta->cparams.ecn ? "yes" : "no");
+ 	p += scnprintf(p,
+ 		       bufsz+buf-p,
+-		       "tid ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets\n");
++		       "tid ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets flags\n");
+ 
+ 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
+ 		txqi = to_txq_info(sta->sta.txq[i]);
+ 		p += scnprintf(p, bufsz+buf-p,
+-			       "%d %d %u %u %u %u %u %u %u %u %u\n",
++			       "%d %d %u %u %u %u %u %u %u %u %u 0x%lx(%s%s%s)\n",
+ 			       txqi->txq.tid,
+ 			       txqi->txq.ac,
+ 			       txqi->tin.backlog_bytes,
+@@ -176,7 +176,11 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+ 			       txqi->tin.overlimit,
+ 			       txqi->tin.collisions,
+ 			       txqi->tin.tx_bytes,
+-			       txqi->tin.tx_packets);
++			       txqi->tin.tx_packets,
++			       txqi->flags,
++			       txqi->flags & (1<<IEEE80211_TXQ_STOP) ? "STOP" : "RUN",
++			       txqi->flags & (1<<IEEE80211_TXQ_AMPDU) ? " AMPDU" : "",
++			       txqi->flags & (1<<IEEE80211_TXQ_AMPDU) ? " NO-AMSDU" : "");
+ 	}
+ 
+ 	rcu_read_unlock();
 -- 
-https://patchwork.kernel.org/patch/10111813/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.4.11
