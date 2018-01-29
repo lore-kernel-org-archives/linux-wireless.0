@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53266 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751843AbeAHRVK (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:57303 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751197AbeA2D1B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 12:21:10 -0500
-Content-Type: text/plain; charset="utf-8"
+        Sun, 28 Jan 2018 22:27:01 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 04/10] rtlwifi: Extend tx_power_by_rate_offset size for newer IC
+Date: Mon, 29 Jan 2018 11:26:35 +0800
+Message-ID: <20180129032641.17841-5-pkshih@realtek.com> (sfid-20180129_042705_374454_4E5489AE)
+In-Reply-To: <20180129032641.17841-1-pkshih@realtek.com>
+References: <20180129032641.17841-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Subject: Re: [v2] brcmfmac: Support 43455 save-restore (SR) feature if FW
- include -sr
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1513666604-24592-1-git-send-email-wright.feng@cypress.com>
-References: <1513666604-24592-1-git-send-email-wright.feng@cypress.com>
-To: Wright Feng <wright.feng@cypress.com>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Double Lo <double.lo@cypress.com>
-Message-Id: <20180108172109.8BFB160B1B@smtp.codeaurora.org> (sfid-20180108_182117_451828_6F5DC4DF)
-Date: Mon,  8 Jan 2018 17:21:09 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wright Feng <wright.feng@cypress.com> wrote:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> From: Double Lo <double.lo@cypress.com>
-> 
-> This patch will add 43455 into the save-restore(SR) capable chip list, so
-> the SR engine will be enabled with 43455 FW which built-in the -sr
-> function.
-> 
-> Signed-off-by: Double Lo <double.lo@cypress.com>
-> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+In older design, the TX power is grouped into rate section (smaller array
+size), but new design groups them into rate (larger array size). Thus,
+we extend the size for both cases, and add compile time assertion.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/wifi.h | 3 ++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-e3720dad9985 brcmfmac: Support 43455 save-restore (SR) feature if FW include -sr
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 92f99a303920..c000c85a3ded 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -2646,6 +2646,8 @@ EXPORT_SYMBOL_GPL(rtl_global_var);
+ 
+ static int __init rtl_core_module_init(void)
+ {
++	BUILD_BUG_ON(TX_PWR_BY_RATE_NUM_RATE < TX_PWR_BY_RATE_NUM_SECTION);
++
+ 	if (rtl_rate_control_register())
+ 		pr_err("rtl: Unable to register rtl_rc, use default RC !!\n");
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index be45420f34d3..5b29502a2864 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -173,6 +173,7 @@ enum rtl8192c_h2c_cmd {
+ #define TX_PWR_BY_RATE_NUM_BAND		2
+ #define TX_PWR_BY_RATE_NUM_RF		4
+ #define TX_PWR_BY_RATE_NUM_SECTION	12
++#define TX_PWR_BY_RATE_NUM_RATE		84 /* >= TX_PWR_BY_RATE_NUM_SECTION */
+ #define MAX_BASE_NUM_IN_PHY_REG_PG_24G  6
+ #define MAX_BASE_NUM_IN_PHY_REG_PG_5G	5
+ 
+@@ -1285,7 +1286,7 @@ struct rtl_phy {
+ 	u32 tx_power_by_rate_offset[TX_PWR_BY_RATE_NUM_BAND]
+ 				   [TX_PWR_BY_RATE_NUM_RF]
+ 				   [TX_PWR_BY_RATE_NUM_RF]
+-				   [TX_PWR_BY_RATE_NUM_SECTION];
++				   [TX_PWR_BY_RATE_NUM_RATE];
+ 	u8 txpwr_by_rate_base_24g[TX_PWR_BY_RATE_NUM_RF]
+ 				 [TX_PWR_BY_RATE_NUM_RF]
+ 				 [MAX_BASE_NUM_IN_PHY_REG_PG_24G];
 -- 
-https://patchwork.kernel.org/patch/10122587/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.15.1
