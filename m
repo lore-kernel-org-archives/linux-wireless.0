@@ -1,97 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:44417 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750710AbeAOTsx (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:46204 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751337AbeA2SSb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 14:48:53 -0500
-Received: by mail-qt0-f169.google.com with SMTP id m59so15548305qte.11
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2018 11:48:53 -0800 (PST)
-Subject: Re: brcmfmac: set p2p_disc error on BCM4350
-To: William Dauchy <wdauchy@gmail.com>
-References: <CAJ75kXYLOV8aVZpftBFRbMv=KCaxCoQpJFaL0m0QDjVOytq3Vg@mail.gmail.com>
- <5A533A88.1000804@broadcom.com> <20180108103012.GA1957@paf>
- <20180115102938.GA29421@paf>
+        Mon, 29 Jan 2018 13:18:31 -0500
+Received: by mail-ot0-f196.google.com with SMTP id t35so7417534otd.13
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jan 2018 10:18:31 -0800 (PST)
+Subject: Re: [PATCH 02/10] rtlwifi: Add Support VHT to spec_ver
+To: pkshih@realtek.com, kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A5D05A2.3010604@broadcom.com> (sfid-20180115_204858_215940_642D7CE8)
-Date: Mon, 15 Jan 2018 20:48:50 +0100
+References: <20180126074645.27201-1-pkshih@realtek.com>
+ <20180126074645.27201-3-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <7c29967a-80b0-a2c7-dd1e-1fc3109e1492@lwfinger.net> (sfid-20180129_191836_174848_1587E375)
+Date: Mon, 29 Jan 2018 12:18:30 -0600
 MIME-Version: 1.0
-In-Reply-To: <20180115102938.GA29421@paf>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20180126074645.27201-3-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/15/2018 11:29 AM, William Dauchy wrote:
-> Hello Arend,
->
-> Did you had the chance to look into this?
+On 01/26/2018 01:46 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> We are going to add 8822be, which is a VHT 2x2 wifi chip, so add VHT flag
+> to replace enumeration of chips.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Thanks for the ping, but no not really. I just noticed the mac address 
-in the p2p-dev create request is the null address and I recall that is 
-handled, but I will need to look into that. I will get back to you if I 
-have done so. Feel free to ping again when it is taking to long ;-)
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Now the error is only an issue if you intend to setup a P2P connection 
-with some other device. For running in station or AP mode you can ignore 
-this. So if you have any specific issue and suspect this to be causing 
-it, please elaborate on the specific issue you see.
 
-Regards,
-Arend
-
-> On Mon, Jan 08, 2018 at 11:30:12AM +0100, William Dauchy wrote:
->> Hello Arend,
->>
->> Thanks for your quick answer.
->>
->> On Mon, Jan 08, 2018 at 10:31:52AM +0100, Arend van Spriel wrote:
->>> This has been reported before, but not been able to look into it. Diving
->>> into firmware it seems that error can only occur if the mac address for the
->>> p2pdev interface is already used. So if possible can you rebuild the driver
->>> with the patch below applied and provide dmesg output and output of
->>> 'ifconfig -a'.
->>>
->>> Regards,
->>> Arend
->>> ---8<----------------------------------------------------------------
->>>
->>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>> b/drivers/n
->>> index 2ee5413..f96ad37 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>> @@ -2065,6 +2065,7 @@ static struct wireless_dev
->>> *brcmf_p2p_create_p2pdev(struc
->>>          int err;
->>>          u32 bsscfgidx;
->>>
->>> +       brcmf_err("enter: mac=%pM\n", addr);
->>>          if (p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
->>>                  return ERR_PTR(-ENOSPC);
->>>
->>>
->>
->> Here is my brcmfmac dmesg output with patch applied
->> (please tell me if you need complete dmesg)
->>
->> brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4350-pcie.bin for chip 0x004350(17232) rev 0x000008
->> brcmfmac 0000:3a:00.0: Direct firmware load for brcm/brcmfmac4350-pcie.txt failed with error -2
->> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015 06:16:26 version 7.35.180.119 (r594535) FWID 01-e791c176
->> brcmfmac 0000:3a:00.0 wlp58s0: renamed from wlan0
->> brcmfmac: brcmf_p2p_create_p2pdev: enter: mac=00:00:00:00:00:00
->> brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
->> brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlp58s0 type 10 failed: err=-16
->>
->> ifconfig shows:
->>
->> wlp58s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
->>          inet 192.168.18.77  netmask 255.255.255.0  broadcast 192.168.18.255
->>          inet6 fe80::3517:e1be:5bc7:899  prefixlen 64  scopeid 0x20<link>
->>          ether 30:52:cb:83:71:33  txqueuelen 1000  (Ethernet)
->>          RX packets 26557  bytes 34149730 (32.5 MiB)
->>          RX errors 0  dropped 0  overruns 0  frame 0
->>          TX packets 14965  bytes 2298777 (2.1 MiB)
->>          TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
->
-> Best,
->
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/base.c         | 6 ++++--
+>   drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 1 +
+>   drivers/net/wireless/realtek/rtlwifi/wifi.h         | 1 +
+>   3 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+> index e461eed32699..a2da057d3cdd 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+> @@ -244,6 +244,9 @@ static void _rtl_init_hw_vht_capab(struct ieee80211_hw *hw,
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>   	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
+>   
+> +	if (!(rtlpriv->cfg->spec_ver & RTL_SPEC_SUPPORT_VHT))
+> +		return;
+> +
+>   	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE ||
+>   	    rtlhal->hw_type == HARDWARE_TYPE_RTL8822BE) {
+>   		u16 mcs_map;
+> @@ -887,8 +890,7 @@ static void _rtl_query_bandwidth_mode(struct ieee80211_hw *hw,
+>   
+>   	tcb_desc->packet_bw = HT_CHANNEL_WIDTH_20_40;
+>   
+> -	if (rtlpriv->rtlhal.hw_type == HARDWARE_TYPE_RTL8812AE ||
+> -	    rtlpriv->rtlhal.hw_type == HARDWARE_TYPE_RTL8821AE) {
+> +	if (rtlpriv->cfg->spec_ver & RTL_SPEC_SUPPORT_VHT) {
+>   		if (mac->opmode == NL80211_IFTYPE_AP ||
+>   		    mac->opmode == NL80211_IFTYPE_ADHOC ||
+>   		    mac->opmode == NL80211_IFTYPE_MESH_POINT) {
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+> index ab5d462b1a3a..9bb3d9dfce79 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+> @@ -328,6 +328,7 @@ static const struct rtl_hal_cfg rtl8821ae_hal_cfg = {
+>   	.alt_fw_name = "rtlwifi/rtl8821aefw.bin",
+>   	.ops = &rtl8821ae_hal_ops,
+>   	.mod_params = &rtl8821ae_mod_params,
+> +	.spec_ver = RTL_SPEC_SUPPORT_VHT,
+>   	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
+>   	.maps[SYS_FUNC_EN] = REG_SYS_FUNC_EN,
+>   	.maps[SYS_CLK] = REG_SYS_CLKR,
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> index a7aacbc3984e..2df0bc316532 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> @@ -951,6 +951,7 @@ enum package_type {
+>   
+>   enum rtl_spec_ver {
+>   	RTL_SPEC_NEW_RATEID = BIT(0),	/* use ratr_table_mode_new */
+> +	RTL_SPEC_SUPPORT_VHT = BIT(1),	/* support VHT */
+>   };
+>   
+>   struct octet_string {
+> 
