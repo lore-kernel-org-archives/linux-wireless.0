@@ -1,134 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:38107 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750714AbeAOUFv (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35330 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751373AbeA2Vej (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 15:05:51 -0500
-Subject: Re: [PATCH] bcma: Fix 'allmodconfig' and BCMA builds on MIPS targets
-To: Paul Burton <paul.burton@mips.com>, James Hogan <jhogan@kernel.org>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Matt Redfearn <matt.redfearn@imgtec.com>,
-        Linux MIPS Mailing List <linux-mips@linux-mips.org>
-References: <1515965642-16259-1-git-send-email-linux@roeck-us.net>
- <20180115102336.GC29126@saruman>
- <20180115171053.6nvstoufw4y6ar4s@pburton-laptop>
-From: Guenter Roeck <linux@roeck-us.net>
-Message-ID: <61e41256-f0d3-11f7-06ca-768fab84914d@roeck-us.net> (sfid-20180115_210618_821168_E51BA6FE)
-Date: Mon, 15 Jan 2018 12:05:48 -0800
+        Mon, 29 Jan 2018 16:34:39 -0500
+Subject: Re: ath9k will not tx packets sometimes.
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com>
+ <87a7wzv43j.fsf@toke.dk>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com> (sfid-20180129_223444_109108_C2BB9FF4)
+Date: Mon, 29 Jan 2018 13:34:36 -0800
 MIME-Version: 1.0
-In-Reply-To: <20180115171053.6nvstoufw4y6ar4s@pburton-laptop>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <87a7wzv43j.fsf@toke.dk>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/15/2018 09:10 AM, Paul Burton wrote:
-> Hello,
-> 
-> On Mon, Jan 15, 2018 at 10:23:37AM +0000, James Hogan wrote:
->> On Sun, Jan 14, 2018 at 01:34:02PM -0800, Guenter Roeck wrote:
->>> Mips builds with BCMA host mode enabled fail in mainline and -next
->>> with:
->>>
->>> In file included from include/linux/bcma/bcma.h:10:0,
->>>                   from drivers/bcma/bcma_private.h:9,
->>> 		 from drivers/bcma/main.c:8:
->>> include/linux/bcma/bcma_driver_pci.h:218:24: error:
->>> 	field 'pci_controller' has incomplete type
->>>
->>> Bisect points to commit d41e6858ba58c ("MIPS: Kconfig: Set default MIPS
->>> system type as generic") as the culprit. Analysis shows that the commmit
->>> changes PCI configuration and enables PCI_DRIVERS_GENERIC. This in turn
->>> disables PCI_DRIVERS_LEGACY. 'struct pci_controller' is, however, only
->>> defined if PCI_DRIVERS_LEGACY is enabled.
->>>
->>> Ultimately that means that BCMA_DRIVER_PCI_HOSTMODE depends on
->>> PCI_DRIVERS_LEGACY. Add the missing dependency.
->>>
->>> Fixes: d41e6858ba58c ("MIPS: Kconfig: Set default MIPS system type as ...")
+On 01/27/2018 05:11 AM, Toke Høiland-Jørgensen wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+>
+>> I'm doing a test with 200 virtual stations on each of 6 ath9k radios.
 >>
->> Well, technically I think commit c5611df96804 ("MIPS: PCI: Introduce
->> CONFIG_PCI_DRIVERS_LEGACY") is to blame (Cc'ing paul), and the first bad
->> commit would be commit eed0eabd12ef ("MIPS: generic: Introduce generic
->> DT-based board support") which selects PCI_DRIVERS_GENERIC and is the
->> only platform to do so. Both commits were first in v4.9-rc1 and I can
->> reproduce this problem at that latter commit with the appropriate
->> configuration.
-> 
-> Ah - yes if I recall correctly my assumption was that the MIPS-specific
-> struct pci_controller was only used by the MIPS-specific PCI drivers
-> under arch/mips/pci/, which are only built when configured for the
-> appropriate platform.
-> 
-> In this case use of that MIPS-specific struct pci_controller has spread
-> beyond arch/mips/ & the user can be configured in for platforms other
-> than the one that will actually use the driver, including the generic
-> platform which moves towards more generic PCI drivers in
-> drivers/pci/host/.
-> 
->> But yes clearly the mentioned commit does also expose that existing
->> problem more widely and to the default allmodconfig, and it looks like a
->> reasonable approach for now, so if some mention of the other two commits
->> is added:
+>> When I configure stations for DHCP, I see cases where stations on a particular
+>> radio will not transmit anything sometimes.  I see no 'XMIT' logs that show indication of
+>> frames being received in the driver from the upper stack, but if I use 'tshark' on
+>> a station interface, it shows frames being 'transmitted'.
 >>
->> Reviewed-by: James Hogan <jhogan@kernel.org>
-> 
-> Likewise, with the "Fixes:" tag fixed:
-> 
->      Reviewed-by: Paul Burton <paul.burton@mips.com>
-> 
+>> I do, however, see this, which looks like it might show
+>> an issue.  It looks like whatever 'aqm' is, it has an ever expanding number
+>> of backlog packets:
+>
+> The aqm is the intermediate queues in mac80211. So this indicates that
+> the driver is not pulling packets for transmission.
+>
+> With that many stations, I wonder whether it is due to the airtime
+> fairness scheduler throttling the station? What is the contents of
+> debug/ieee80211/wiphy2/netdev\:sta30194/stations/00\:0e\:8e\:69\:b8\:f7/airtime
+> while the station is not transmitting? And is it all stations on that
+> particular radio, or only some of them?
 
-Unfortunately, that alone doesn't fix the problem. SSB driver dependencies
-are also broken, and in much worse shape. I had to add dependencies in five
-places to get it to build, and the result is so messy that I won't even try
-to submit it. And if that is fixed, mips:allmodconfig still doesn't build -
-the next error is an undefined reference to physical_memsize in
-arch/mips/kernel/vpe-mt.o.
+Here is the output of airtime and aqm on a hung station:
 
-I wonder if I should just stop trying to build allmodconfig for mips.
-Any thoughts ?
+# cat /debug/ieee80211/wiphy0/netdev\:sta10057/stations/00\:0e\:8e\:50\:74\:8a/airtime
+RX: 83706 us
+TX: 4202 us
+Deficit: VO: 198 us VI: 300 us BE: -8306 us BK: 300 us
 
-Guenter
+# cat /debug/ieee80211/wiphy0/netdev\:sta10057/stations/00\:0e\:8e\:50\:74\:8a/aqm
+target 49999us interval 299999us ecn no
+tid ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets flags
+0 2 3476 14 6 0 0 0 8 326 3 0x6(RUN AMPDU NO-AMSDU)
+1 3 0 0 0 0 0 0 0 0 0 0x0(RUN)
+2 3 0 0 0 0 0 0 0 0 0 0x0(RUN)
+3 2 0 0 0 0 0 0 0 0 0 0x0(RUN)
+4 1 0 0 0 0 0 0 0 0 0 0x0(RUN)
+5 1 0 0 0 0 0 0 0 0 0 0x0(RUN)
+6 0 0 0 0 0 0 0 0 0 0 0x0(RUN)
+7 0 0 0 4 0 0 0 6 168 7 0x0(RUN)
+8 2 0 0 0 0 0 0 0 0 0 0x0(RUN)
+9 3 0 0 0 0 0 0 0 0 0 0x0(RUN)
+10 3 0 0 0 0 0 0 0 0 0 0x0(RUN)
+11 2 0 0 0 0 0 0 0 0 0 0x0(RUN)
+12 1 0 0 0 0 0 0 0 0 0 0x0(RUN)
+13 1 0 0 0 0 0 0 0 0 0 0x0(RUN)
+14 0 0 0 0 0 0 0 0 0 0 0x0(RUN)
+15 0 0 0 0 0 0 0 0 0 0 0x0(RUN)
 
-> Thanks,
->      Paul
-> 
->> Having it in 4.15 would be great.
->>
->> Cheers
->> James
->>
->>> Cc: Matt Redfearn <matt.redfearn@imgtec.com>
->>> Cc: James Hogan <jhogan@kernel.org>
->>> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
->>> ---
->>> I am aware that this problem has been reported several times. I have
->>> not been able to find a fix, but I may have missed it. If so, my
->>> apologies for the noise.
->>>
->>> Also note that this is not the only fix required; commit d41e6858ba58c,
->>> as simple as it looks like, does a pretty good job messing up
->>> "mips:allmodconfig" builds.
->>>
->>>   drivers/bcma/Kconfig | 2 +-
->>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
->>> index 02d78f6cecbb..ba8acca036df 100644
->>> --- a/drivers/bcma/Kconfig
->>> +++ b/drivers/bcma/Kconfig
->>> @@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
->>>   
->>>   config BCMA_DRIVER_PCI_HOSTMODE
->>>   	bool "Driver for PCI core working in hostmode"
->>> -	depends on MIPS && BCMA_DRIVER_PCI
->>> +	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY
->>>   	help
->>>   	  PCI core hostmode operation (external PCI bus).
->>>   
->>> -- 
->>> 2.7.4
->>>
-> 
-> 
-> 
+
+My tool will effectively down/up the interface after 30 seconds if DHCP has not
+been acquired...here is another set of debug after that has happened:
+
+# cat /debug/ieee80211/wiphy0/netdev\:sta10057/stations/00\:0e\:8e\:50\:74\:8a/airtime
+RX: 0 us
+TX: 3946 us
+Deficit: VO: 254 us VI: 300 us BE: 300 us BK: 300 us
+
+# cat /debug/ieee80211/wiphy0/netdev\:sta10057/stations/00\:0e\:8e\:50\:74\:8a/aqm
+target 49999us interval 299999us ecn no
+tid ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets flags
+0 2 1376 6 2 0 0 0 4 0 0 0x6(RUN AMPDU NO-AMSDU)
+1 3 0 0 0 0 0 0 0 0 0 0x0(RUN)
+2 3 0 0 0 0 0 0 0 0 0 0x0(RUN)
+3 2 0 0 0 0 0 0 0 0 0 0x0(RUN)
+4 1 0 0 0 0 0 0 0 0 0 0x0(RUN)
+5 1 0 0 0 0 0 0 0 0 0 0x0(RUN)
+6 0 0 0 0 0 0 0 0 0 0 0x0(RUN)
+7 0 0 0 12 0 0 0 13 312 13 0x0(RUN)
+8 2 0 0 0 0 0 0 0 0 0 0x0(RUN)
+9 3 0 0 0 0 0 0 0 0 0 0x0(RUN)
+10 3 0 0 0 0 0 0 0 0 0 0x0(RUN)
+11 2 0 0 0 0 0 0 0 0 0 0x0(RUN)
+12 1 0 0 0 0 0 0 0 0 0 0x0(RUN)
+13 1 0 0 0 0 0 0 0 0 0 0x0(RUN)
+14 0 0 0 0 0 0 0 0 0 0 0x0(RUN)
+15 0 0 0 0 0 0 0 0 0 0 0x0(RUN)
+
+I was able to reproduce this on a system by configuring "only" 200 stations on
+a single ath9k radio, so probably the dedicated individual could reproduce
+this on their own system as well.  Stock kernels are less optimized for this, but at least
+for ath9k, it should function with multiple virtual station devices...
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
