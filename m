@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:37455 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753030AbeAIJkA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 04:40:00 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH] staging: wilc1000: removed enum typedef BUS_RELEASE_T
-Date: Tue, 9 Jan 2018 15:09:32 +0530
-Message-ID: <1515490772-11336-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180109_104008_838896_3D2A6E8B)
+Received: from mail.toke.dk ([52.28.52.200]:58417 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751690AbeA2Vr2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jan 2018 16:47:28 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k will not tx packets sometimes.
+In-Reply-To: <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com>
+References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com> <87a7wzv43j.fsf@toke.dk> <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com>
+Date: Mon, 29 Jan 2018 22:47:25 +0100
+Message-ID: <87d11stk0i.fsf@toke.dk> (sfid-20180129_224732_940909_4C6E6498)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes enum typedef BUS_RELEASE_T and define
-"enum bus_release" to use instead of typedef.
+Ben Greear <greearb@candelatech.com> writes:
 
-checkpatch.pl not to add new typedef warning is fixed with this patch.
+> On 01/27/2018 05:11 AM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Ben Greear <greearb@candelatech.com> writes:
+>>
+>>> I'm doing a test with 200 virtual stations on each of 6 ath9k radios.
+>>>
+>>> When I configure stations for DHCP, I see cases where stations on a par=
+ticular
+>>> radio will not transmit anything sometimes.  I see no 'XMIT' logs that =
+show indication of
+>>> frames being received in the driver from the upper stack, but if I use =
+'tshark' on
+>>> a station interface, it shows frames being 'transmitted'.
+>>>
+>>> I do, however, see this, which looks like it might show
+>>> an issue.  It looks like whatever 'aqm' is, it has an ever expanding nu=
+mber
+>>> of backlog packets:
+>>
+>> The aqm is the intermediate queues in mac80211. So this indicates that
+>> the driver is not pulling packets for transmission.
+>>
+>> With that many stations, I wonder whether it is due to the airtime
+>> fairness scheduler throttling the station? What is the contents of
+>> debug/ieee80211/wiphy2/netdev\:sta30194/stations/00\:0e\:8e\:69\:b8\:f7/=
+airtime
+>> while the station is not transmitting? And is it all stations on that
+>> particular radio, or only some of them?
+>
+> Here is the output of airtime and aqm on a hung station:
+>
+> # cat /debug/ieee80211/wiphy0/netdev\:sta10057/stations/00\:0e\:8e\:50\:7=
+4\:8a/airtime
+> RX: 83706 us
+> TX: 4202 us
+> Deficit: VO: 198 us VI: 300 us BE: -8306 us BK: 300 us
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c    | 2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Right. This looks like incoming traffic is depleting the airtime quantum
+faster than it can be replenished by the scheduler, which means that the
+station gets completely starved.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 80a5a0b..a2b26ec 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -13,7 +13,7 @@ static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
- 		chip_wakeup(wilc);
- }
- 
--static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
-+static inline void release_bus(struct wilc *wilc, enum bus_release release)
- {
- 	if (release == RELEASE_ALLOW_SLEEP)
- 		chip_allow_sleep(wilc);
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 65cb53d..c1483c8 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -148,10 +148,10 @@ enum bus_acquire {
- 	ACQUIRE_AND_WAKEUP	= 1,
- };
- 
--typedef enum {
-+enum bus_release {
- 	RELEASE_ONLY		= 0,
- 	RELEASE_ALLOW_SLEEP	= 1,
--} BUS_RELEASE_T;
-+};
- 
- enum {
- 	NO_SECURITY		= 0,
--- 
-2.7.4
+Could you try turning off the airtime scheduler?
+
+echo 0 > /sys/kernel/debug/ieee80211/wiphy0/ath9k/airtime_flags
+
+and see if the problem goes away.
+
+If it does, please check if the problem persists when setting
+airtime_flags to 1 (which means only include TX airtime).
+
+-Toke
