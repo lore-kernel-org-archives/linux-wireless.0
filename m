@@ -1,206 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:43902 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751782AbeAaVdn (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:39639 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751072AbeA2SEv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 16:33:43 -0500
-Received: by mail-pg0-f67.google.com with SMTP id n17so11123534pgf.10
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jan 2018 13:33:43 -0800 (PST)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH 3/6] nl80211: Add CMD_CONTROL_PORT_FRAME API
-Date: Wed, 31 Jan 2018 15:33:26 -0600
-Message-Id: <20180131213329.25322-4-denkenz@gmail.com> (sfid-20180131_223353_648398_FEE9882F)
-In-Reply-To: <20180131213329.25322-1-denkenz@gmail.com>
-References: <20180131213329.25322-1-denkenz@gmail.com>
+        Mon, 29 Jan 2018 13:04:51 -0500
+Received: by mail-oi0-f51.google.com with SMTP id j188so4344490oib.6
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jan 2018 10:04:50 -0800 (PST)
+Subject: Re: r8822be driver
+To: Glenn <troubleshooting@epilitimus.com>,
+        linux-wireless@vger.kernel.org
+References: <5A6EBA1B.3080802@epilitimus.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <61788aff-30d2-d1b4-d35a-182f58c2d3d4@lwfinger.net> (sfid-20180129_190454_378173_5975E324)
+Date: Mon, 29 Jan 2018 12:04:47 -0600
+MIME-Version: 1.0
+In-Reply-To: <5A6EBA1B.3080802@epilitimus.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit also adds cfg80211_rx_control_port function.  This is used
-to generate a CMD_CONTROL_PORT_FRAME event out to userspace.  The
-conn_owner_nlportid is used as the unicast destination.  This means that
-userspace must specify NL80211_ATTR_SOCKET_OWNER flag if control port
-over nl80211 routing is requested in NL80211_CMD_CONNECT or
-NL80211_CMD_ASSOCIATE
+On 01/29/2018 12:07 AM, Glenn wrote:
+> Hello,
+> My new laptop apparently has a  Real Tek R8822BE as the wifi device. The
+> module loads but I can not bring up the interface or do anything with
+> it. I think the problem is that the firmware load fails, see below. I
+> can not find any source for the listed firmware file or any make rules
+> to build it.  Possibly connected, the machine also has an R8822B as the
+> Bluetooth device (possibly a secondary port on the same device?) which
+> shows the same error. The problem is not higher up in the networking
+> stack as eth0 works fine.
+> 
+> Any help will be appreciated.
+> 
+> Relevant (I think) info:
+> 
+> uname -a:
+> Linux IceFalcon 4.14.13-tuned #1 SMP Tue Jan 16 20:35:41 PST 2018 x86_64
+> Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz GenuineIntel GNU/Linux
+> 
+> ifconfig wlan0:
+> wlan0: flags=4098<BROADCAST,MULTICAST>  mtu 1500
+>          ether d4:6a:6a:55:89:39  txqueuelen 1000  (Ethernet)
+>          RX packets 0  bytes 0 (0.0 B)
+>          RX errors 0  dropped 0  overruns 0  frame 0
+>          TX packets 0  bytes 0 (0.0 B)
+>          TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+> 
+> ifconfig wlan0 up:
+> SIOCSIFFLAGS: Operation not permitted
+> 
+> lspci -v:
+> 3c:00.0 Network controller: Realtek Semiconductor Co., Ltd. Device b822
+>      Subsystem: Hewlett-Packard Company Device 831b
+>      Flags: bus master, fast devsel, latency 0, IRQ 131
+>      I/O ports at c000 [size=256]
+>      Memory at dc200000 (64-bit, non-prefetchable) [size=64K]
+>      Capabilities: [40] Power Management version 3
+>      Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>      Capabilities: [70] Express Endpoint, MSI 00
+>      Capabilities: [100] Advanced Error Reporting
+>      Capabilities: [148] Device Serial Number 00-e0-4c-ff-fe-b8-22-01
+>      Capabilities: [158] Latency Tolerance Reporting
+>      Capabilities: [160] L1 PM Substates
+>      Kernel driver in use: r8822be
+>      Kernel modules: r8822be
+> 
+> dmesg:
+> [    0.259212] pci 0000:3c:00.0: reg 0x10: [io  0xc000-0xc0ff]
+> [    0.259235] pci 0000:3c:00.0: reg 0x18: [mem 0xdc200000-0xdc20ffff 64bit]
+> [    0.259352] pci 0000:3c:00.0: supports D1 D2
+> [    0.259353] pci 0000:3c:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+> 
+> [    0.337550] pci_bus 0000:3c: resource 0 [io  0xc000-0xcfff]
+> [    0.337551] pci_bus 0000:3c: resource 1 [mem 0xdc200000-0xdc2fffff]
+> 
+> [    2.148955] r8822be: module is from the staging directory, the
+> quality is unknown, you have been warned.
+> 
+> [    2.173850] r8822be 0000:3c:00.0: enabling device (0000 -> 0003)
+> [    2.191530] r8822be: Using firmware rtlwifi/rtl8822befw.bin
+> [    2.193717] r8822be 0000:3c:00.0: Direct firmware load for
+> rtlwifi/rtl8822befw.bin failed with error -2
+> [    2.194503] r8822be: Selected firmware is not available
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/net/cfg80211.h       | 17 +++++++++++++
- include/uapi/linux/nl80211.h | 15 +++++++++++
- net/wireless/nl80211.c       | 59 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/trace.h         | 21 ++++++++++++++++
- 4 files changed, 112 insertions(+)
+As the log clearly states, you have not installed the firmware. It seems that 
+your distro is not up to date. You could obtain it from the linux-firmware 
+repository, or get it from my GitHub repo named rtlwifi_new. I will send it to 
+you privately in the next E-mail.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index fb369947aefb..60a38543b830 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5693,6 +5693,23 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
- 
- 
- /**
-+ * cfg80211_rx_control_port - inform userspace about a received control port
-+ * frame, e.g. EAPoL.  This is used if userspace has specified it wants to
-+ * receive control port frames over NL80211.
-+ * @dev: The device the frame matched to
-+ * @buf: control port frame
-+ * @len: length of the frame data
-+ * @addr: The peer from which the frame was received
-+ * @proto: frame protocol, typically PAE or Pre-authentication
-+ * @unencrypted: Whether the frame was received unencrypted
-+ *
-+ * Return: %true if the frame was passed to userspace
-+ */
-+bool cfg80211_rx_control_port(struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *addr, u16 proto, bool unencrypted);
-+
-+/**
-  * cfg80211_cqm_rssi_notify - connection quality monitoring rssi event
-  * @dev: network device
-  * @rssi_event: the triggered RSSI event
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 20b35ba6721f..3a9d4364d383 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -991,6 +991,17 @@
-  *	&NL80211_CMD_CONNECT or &NL80211_CMD_ROAM. If the 4 way handshake failed
-  *	&NL80211_CMD_DISCONNECT should be indicated instead.
-  *
-+ * @NL80211_CMD_CONTROL_PORT_FRAME: Control Port (e.g. PAE) frame TX request
-+ *	and RX notification.  This command is used both as a request to transmit
-+ *	a control port frame and as a notification that a control port frame
-+ *	has been received. %NL80211_ATTR_FRAME is used to specify the
-+ *	frame contents.  The frame is the raw EAPoL data, without ethernet or
-+ *	802.11 headers.
-+ *	When used as an event indication %NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
-+ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT and %NL80211_ATTR_MAC are added
-+ *	indicating the protocol type of the received frame; whether the frame
-+ *	was received unencrypted and the MAC address of the peer respectively.
-+ *
-  * @NL80211_CMD_RELOAD_REGDB: Request that the regdb firmware file is reloaded.
-  *
-  * @NL80211_CMD_EXTERNAL_AUTH: This interface is exclusively defined for host
-@@ -1229,6 +1240,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_STA_OPMODE_CHANGED,
- 
-+	NL80211_CMD_CONTROL_PORT_FRAME,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1476,6 +1489,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT: When included along with
-  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE, indicates that the custom
-  *	ethertype frames used for key negotiation must not be encrypted.
-+ *	When included in %NL80211_CMD_CONTROL_PORT_FRAME it means that the
-+ *	control port frame was received unencrypted.
-  * @NL80211_ATTR_CONTROL_PORT_OVER_NL80211: A flag indicating whether control
-  *	port frames (e.g. of type given in %NL80211_ATTR_CONTROL_PORT_ETHERTYPE)
-  *	will be sent directly to the network interface or sent via the NL80211
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0c389044a4d3..840dada2cca3 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -14561,6 +14561,65 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
- }
- EXPORT_SYMBOL(cfg80211_mgmt_tx_status);
- 
-+static int __nl80211_rx_control_port(struct net_device *dev,
-+				     const u8 *buf, size_t len,
-+				     const u8 *addr, u16 proto,
-+				     bool unencrypted, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	struct sk_buff *msg;
-+	void *hdr;
-+	u32 nlportid = READ_ONCE(wdev->conn_owner_nlportid);
-+
-+	if (!nlportid)
-+		return -ENOENT;
-+
-+	msg = nlmsg_new(100 + len, gfp);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CONTROL_PORT_FRAME);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return -ENOMEM;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-+	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
-+			      NL80211_ATTR_PAD) ||
-+	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
-+	    nla_put_u16(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE, proto) ||
-+	    (unencrypted && nla_put_flag(msg,
-+					 NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT)))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
-+bool cfg80211_rx_control_port(struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *addr, u16 proto, bool unencrypted)
-+{
-+	bool ret;
-+
-+	trace_cfg80211_rx_control_port(dev, buf, len, addr, proto, unencrypted);
-+	ret = __nl80211_rx_control_port(dev, buf, len, addr, proto,
-+					unencrypted, GFP_ATOMIC);
-+	trace_cfg80211_return_bool(ret);
-+	return ret;
-+}
-+EXPORT_SYMBOL(cfg80211_rx_control_port);
-+
- static struct sk_buff *cfg80211_prepare_cqm(struct net_device *dev,
- 					    const char *mac, gfp_t gfp)
- {
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 5152938b358d..24e84dfe54fd 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2600,6 +2600,27 @@ TRACE_EVENT(cfg80211_mgmt_tx_status,
- 		  WDEV_PR_ARG, __entry->cookie, BOOL_TO_STR(__entry->ack))
- );
- 
-+TRACE_EVENT(cfg80211_rx_control_port,
-+	TP_PROTO(struct net_device *netdev, const u8 *buf, size_t len,
-+		 const u8 *addr, u16 proto, bool unencrypted),
-+	TP_ARGS(netdev, buf, len, addr, proto, unencrypted),
-+	TP_STRUCT__entry(
-+		NETDEV_ENTRY
-+		MAC_ENTRY(addr)
-+		__field(u16, proto)
-+		__field(bool, unencrypted)
-+	),
-+	TP_fast_assign(
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(addr, addr);
-+		__entry->proto = proto;
-+		__entry->unencrypted = unencrypted;
-+	),
-+	TP_printk(NETDEV_PR_FMT ", " MAC_PR_FMT " proto: %x, unencrypted: %s",
-+		  NETDEV_PR_ARG, MAC_PR_ARG(addr),
-+		  __entry->proto, BOOL_TO_STR(__entry->unencrypted))
-+);
-+
- TRACE_EVENT(cfg80211_cqm_rssi_notify,
- 	TP_PROTO(struct net_device *netdev,
- 		 enum nl80211_cqm_rssi_threshold_event rssi_event,
--- 
-2.13.5
+Larry
