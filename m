@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32800 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:55468 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752795AbeAHR1a (ORCPT
+        with ESMTP id S1751257AbeA2SlL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 12:27:30 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [04/14] mt76x2: fix transmission of encrypted management frames
+        Mon, 29 Jan 2018 13:41:11 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20171214153918.43774-5-nbd@nbd.name>
-References: <20171214153918.43774-5-nbd@nbd.name>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20180108172729.A550B6079C@smtp.codeaurora.org> (sfid-20180108_182736_717912_E0B5107B)
-Date: Mon,  8 Jan 2018 17:27:29 +0000 (UTC)
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Tobias Schramm <tobleminer@gmail.com>,
+        <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 1/2] pci: Add vendor id of Ubiquiti Networks
+References: <20180125111340.17553-1-tobleminer@gmail.com>
+        <20180125111340.17553-2-tobleminer@gmail.com>
+        <20180129180349.GB232763@bhelgaas-glaptop.roam.corp.google.com>
+Date: Mon, 29 Jan 2018 20:41:07 +0200
+In-Reply-To: <20180129180349.GB232763@bhelgaas-glaptop.roam.corp.google.com>
+        (Bjorn Helgaas's message of "Mon, 29 Jan 2018 12:03:49 -0600")
+Message-ID: <87wp00qzi4.fsf@kamboji.qca.qualcomm.com> (sfid-20180129_194115_831381_4B979AEC)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> wrote:
+Bjorn Helgaas <helgaas@kernel.org> writes:
 
-> Hardware encryption seems to break encrypted unicast mgmt tx.
-> Unfortunately the hardware TXWI header does not have a bit to indicate
-> that a frame is software encrypted, so sw-encrypted frames need to use a
-> different WCID. For that to work, the CCMP PN needs to be generated in
-> software, which makes things a bit slower, so only do it for keys that
-> also need to tx management frames.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> On Thu, Jan 25, 2018 at 12:13:39PM +0100, Tobias Schramm wrote:
+>> Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> I see Kalle has already applied this, but if it's updated for any reason,
+> please add my ack and change the subject to:
+>
+>   PCI: Add Ubiquiti Networks vendor ID
+>
+> i.e., match the style of previous changes.
 
-Failed to apply:
+I only applied it to my pending branch which I use for build testing
+etc. and I can easily change it, which I now did:
 
-fatal: sha1 information is lacking or useless (drivers/net/wireless/mediatek/mt76/mt76x2_mac.c).
-error: could not build fake ancestor
-Applying: mt76x2: fix transmission of encrypted management frames
-Patch failed at 0001 mt76x2: fix transmission of encrypted management frames
-The copy of the patch that failed is found in: .git/rebase-apply/patch
-
-Patch set to Changes Requested.
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=3c4cdd0851bc114f8b6d9f9db0b0479737bbd2d8
 
 -- 
-https://patchwork.kernel.org/patch/10112573/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
