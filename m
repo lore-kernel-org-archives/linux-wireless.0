@@ -1,85 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.uni-rostock.de ([139.30.22.71]:64769 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965569AbeAJQnn (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:57291 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750813AbeA2D06 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 11:43:43 -0500
-From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Subject: [PATCH v3 1/5] mac80211_hwsim: add workqueue to wait for deferred radio deletion on mod unload
-Date: Wed, 10 Jan 2018 17:42:51 +0100
-In-Reply-To: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
-References: <20180110164255.2763-1-benjamin.beichler@uni-rostock.de>
+        Sun, 28 Jan 2018 22:26:58 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 00/10] rtlwifi: add more materials for 8822be
+Date: Mon, 29 Jan 2018 11:26:31 +0800
+Message-ID: <20180129032641.17841-1-pkshih@realtek.com> (sfid-20180129_042702_546546_F8C22D0A)
 MIME-Version: 1.0
 Content-Type: text/plain
-Message-ID: <2a021406-db0b-42e9-be2b-7185814139af@MAIL2.uni-rostock.de> (sfid-20180110_174348_389295_586E4FBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When closing multiple wmediumd instances with many radios and try to
-unload the  mac80211_hwsim module, it may happen that the work items live
-longer than the module. To wait especially for this deletion work items,
-add a work queue, otherwise flush_scheduled_work would be necessary.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+I continue to submit more materials needed by 8822be. A special patch is
+"PATCH 10/10" that add new files to support 8822be btcoex in case wifi
+only. In my plan, 8822be btcoex for combo card will be sumitted in next
+patchset.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 45cca54c05bf..742a1551bb1c 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -489,6 +489,7 @@ static const struct ieee80211_iface_combination hwsim_if_comb_p2p_dev[] = {
- 
- static spinlock_t hwsim_radio_lock;
- static LIST_HEAD(hwsim_radios);
-+static struct workqueue_struct *hwsim_wq;
- static int hwsim_radio_idx;
- 
- static struct platform_driver mac80211_hwsim_driver = {
-@@ -3346,7 +3347,7 @@ static void remove_user_radios(u32 portid)
- 		if (entry->destroy_on_close && entry->portid == portid) {
- 			list_del(&entry->list);
- 			INIT_WORK(&entry->destroy_work, destroy_radio);
--			schedule_work(&entry->destroy_work);
-+			queue_work(hwsim_wq, &entry->destroy_work);
- 		}
- 	}
- 	spin_unlock_bh(&hwsim_radio_lock);
-@@ -3421,7 +3422,7 @@ static void __net_exit hwsim_exit_net(struct net *net)
- 
- 		list_del(&data->list);
- 		INIT_WORK(&data->destroy_work, destroy_radio);
--		schedule_work(&data->destroy_work);
-+		queue_work(hwsim_wq, &data->destroy_work);
- 	}
- 	spin_unlock_bh(&hwsim_radio_lock);
- }
-@@ -3453,6 +3454,10 @@ static int __init init_mac80211_hwsim(void)
- 
- 	spin_lock_init(&hwsim_radio_lock);
- 
-+	hwsim_wq = alloc_workqueue("hwsim_wq",WQ_MEM_RECLAIM,0);
-+	if (!hwsim_wq)
-+		return -ENOMEM;
-+
- 	err = register_pernet_device(&hwsim_net_ops);
- 	if (err)
- 		return err;
-@@ -3591,8 +3596,11 @@ static void __exit exit_mac80211_hwsim(void)
- 	hwsim_exit_netlink();
- 
- 	mac80211_hwsim_free();
-+	flush_workqueue(hwsim_wq);
-+
- 	unregister_netdev(hwsim_mon);
- 	platform_driver_unregister(&mac80211_hwsim_driver);
- 	unregister_pernet_device(&hwsim_net_ops);
-+	destroy_workqueue(hwsim_wq);
- }
- module_exit(exit_mac80211_hwsim);
+v2: Add 'Acked-by: Larry Finger' if the commits are acked
+    Use 'switch...case' to replace verbose 'if...else if...else if...else'
+    Use extern declaration to quiet sparse warnings
+
+Ping-Ke Shih (10):
+  rtlwifi: enable mac80211 fast-tx support
+  rtlwifi: Add Support VHT to spec_ver
+  rtlwifi: Use 6 bits as sequence number of TX report
+  rtlwifi: Extend tx_power_by_rate_offset size for newer IC
+  rtlwifi: Add rate section and its related definition and comment
+  rtlwifi: Fix VHT NSS in RC
+  rtlwifi: add definition radio_mask for RF and maximum bandwidth
+  rtlwifi: add efuse ops for other components
+  rtlwifi: btcoex: add routine to set default port id
+  rtlwifi: btcoex: Add 8822be btcoex supported files for wifi only
+
+ drivers/net/wireless/realtek/rtlwifi/base.c        | 34 ++++++++++---
+ .../rtlwifi/btcoexist/halbtc8822bwifionly.c        | 55 ++++++++++++++++++++++
+ .../rtlwifi/btcoexist/halbtc8822bwifionly.h        | 25 ++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 22 +++++++++
+ drivers/net/wireless/realtek/rtlwifi/efuse.c       | 13 +++++
+ drivers/net/wireless/realtek/rtlwifi/efuse.h       |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |  1 +
+ drivers/net/wireless/realtek/rtlwifi/rc.c          | 49 +++++++++++++++----
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    |  1 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        | 39 +++++++++++++--
+ 10 files changed, 221 insertions(+), 20 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.c
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822bwifionly.h
+
 -- 
 2.15.1
