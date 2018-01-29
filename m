@@ -1,63 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:40575 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753707AbeAINNU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jan 2018 08:13:20 -0500
-Received: by mail-wm0-f67.google.com with SMTP id f206so20531203wmf.5
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2018 05:13:19 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mt76x2: dfs: avoid tasklet scheduling during mt76x2_dfs_init_params()
-Date: Tue,  9 Jan 2018 14:13:10 +0100
-Message-Id: <cc2633a981be777e631da2bd3d32781690db910f.1515503003.git.lorenzo.bianconi@redhat.com> (sfid-20180109_141330_383250_B5728599)
-In-Reply-To: <cover.1515503003.git.lorenzo.bianconi@redhat.com>
-References: <cover.1515503003.git.lorenzo.bianconi@redhat.com>
+Received: from mail-ve1eur01on0042.outbound.protection.outlook.com ([104.47.1.42]:27829
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754841AbeA2U0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jan 2018 15:26:52 -0500
+Subject: Re: [PATCH v3] mac80211: mesh: fix wrong mesh TTL offset calculation
+To: kbuild test robot <lkp@intel.com>
+References: <8582518b7f032acfa598faf7d26c765b09149e90.1516842930.git.peter.oh@bowerswilkins.com>
+ <201801280437.OtqScEom%fengguang.wu@intel.com>
+Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
+        johannes@sipsolutions.net, johannes.berg@intel.com
+From: Peter Oh <peter.oh@bowerswilkins.com>
+Message-ID: <b08b5134-5902-f099-0a9f-0f95a291315b@bowerswilkins.com> (sfid-20180129_212752_419971_D4D418B6)
+Date: Mon, 29 Jan 2018 12:26:26 -0800
+MIME-Version: 1.0
+In-Reply-To: <201801280437.OtqScEom%fengguang.wu@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Substitute tasklet_kill with tasklet_disable/tasklet_enable in order to
-guarantee dfs tasklet can not be executed during dfs parameter
-initialization
+I have patch v4 which fixes the warning, so we can ignore this warning I 
+believe.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c  | 1 -
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c | 2 ++
- 2 files changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-index 5b452a596016..1a6282a8b64b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-@@ -460,7 +460,6 @@ void mt76x2_dfs_init_params(struct mt76x2_dev *dev)
- {
- 	struct cfg80211_chan_def *chandef = &dev->mt76.chandef;
- 
--	tasklet_kill(&dev->dfs_pd.dfs_tasklet);
- 	if (chandef->chan->flags & IEEE80211_CHAN_RADAR) {
- 		mt76x2_dfs_set_bbp_params(dev);
- 		/* enable debug mode */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-index 963aea9e8801..c96e9348d3a9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-@@ -127,6 +127,7 @@ mt76x2_set_channel(struct mt76x2_dev *dev, struct cfg80211_chan_def *chandef)
- 	mt76_set_channel(&dev->mt76);
- 
- 	tasklet_disable(&dev->pre_tbtt_tasklet);
-+	tasklet_disable(&dev->dfs_pd.dfs_tasklet);
- 	cancel_delayed_work_sync(&dev->cal_work);
- 
- 	mt76x2_mac_stop(dev, true);
-@@ -139,6 +140,7 @@ mt76x2_set_channel(struct mt76x2_dev *dev, struct cfg80211_chan_def *chandef)
- 	mt76x2_dfs_init_params(dev);
- 
- 	mt76x2_mac_resume(dev);
-+	tasklet_enable(&dev->dfs_pd.dfs_tasklet);
- 	tasklet_enable(&dev->pre_tbtt_tasklet);
- 
- 	return ret;
--- 
-2.13.6
+Thanks,
+Peter
+On 01/27/2018 01:00 PM, kbuild test robot wrote:
+> Hi Peter,
+>
+> Thank you for the patch! Yet something to improve:
+>
+> [auto build test ERROR on mac80211-next/master]
+> [also build test ERROR on v4.15-rc9 next-20180126]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/peter-oh-bowerswilkins-com/mac80211-mesh-fix-wrong-mesh-TTL-offset-calculation/20180128-042444
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
+> config: i386-randconfig-x070-201804 (attached as .config)
+> compiler: gcc-7 (Debian 7.2.0-12) 7.2.1 20171025
+> reproduce:
+>          # save the attached .config to linux build tree
+>          make ARCH=i386
+>
+> All errors (new ones prefixed by >>):
+>
+>     net//mac80211/mesh.c: In function 'mesh_fwd_csa_frame':
+>>> net//mac80211/mesh.c:1271:40: error: decrement of member 'mesh_ttl' in read-only object
+>       elems->mesh_chansw_params_ie->mesh_ttl--;
+>                                             ^~
+>>> net//mac80211/mesh.c:1272:43: error: assignment of member 'mesh_flags' in read-only object
+>       elems->mesh_chansw_params_ie->mesh_flags &=
+>                                                ^~
+>
+> vim +/mesh_ttl +1271 net//mac80211/mesh.c
+>
+>    1256	
+>    1257	static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+>    1258				       struct ieee80211_mgmt *mgmt, size_t len,
+>    1259				       struct ieee802_11_elems *elems)
+>    1260	{
+>    1261		struct ieee80211_mgmt *mgmt_fwd;
+>    1262		struct sk_buff *skb;
+>    1263		struct ieee80211_local *local = sdata->local;
+>    1264	
+>    1265		skb = dev_alloc_skb(local->tx_headroom + len);
+>    1266		if (!skb)
+>    1267			return -ENOMEM;
+>    1268		skb_reserve(skb, local->tx_headroom);
+>    1269		mgmt_fwd = skb_put(skb, len);
+>    1270	
+>> 1271		elems->mesh_chansw_params_ie->mesh_ttl--;
+>> 1272		elems->mesh_chansw_params_ie->mesh_flags &=
+>    1273			~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
+>    1274	
+>    1275		memcpy(mgmt_fwd, mgmt, len);
+>    1276		eth_broadcast_addr(mgmt_fwd->da);
+>    1277		memcpy(mgmt_fwd->sa, sdata->vif.addr, ETH_ALEN);
+>    1278		memcpy(mgmt_fwd->bssid, sdata->vif.addr, ETH_ALEN);
+>    1279	
+>    1280		ieee80211_tx_skb(sdata, skb);
+>    1281		return 0;
+>    1282	}
+>    1283	
+>
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
