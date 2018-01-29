@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:63802 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932241AbeAXIZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 03:25:58 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Austin Lund <austin.lund@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>, linuxwifi <linuxwifi@intel.com>
-Subject: RE: [linuxwifi] Null pointer dereference in iwlwifi when starting
- ad-hoc network
-Date: Wed, 24 Jan 2018 08:25:53 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB30119C794FA@HASMSX112.ger.corp.intel.com> (sfid-20180124_092602_264759_28BA95E9)
-References: <CAHLDD1NUF736Jnr1_CtRPfFZZOMO6bmm5T++5N2LrVtFg9-zxg@mail.gmail.com>
-In-Reply-To: <CAHLDD1NUF736Jnr1_CtRPfFZZOMO6bmm5T++5N2LrVtFg9-zxg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-io0-f193.google.com ([209.85.223.193]:38907 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752665AbeA2WIF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jan 2018 17:08:05 -0500
+Received: by mail-io0-f193.google.com with SMTP id d13so9304674iog.5
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jan 2018 14:08:05 -0800 (PST)
+Received: from mail-io0-f175.google.com (mail-io0-f175.google.com. [209.85.223.175])
+        by smtp.gmail.com with ESMTPSA id r13sm4705887ioa.4.2018.01.29.14.08.03
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 29 Jan 2018 14:08:03 -0800 (PST)
+Received: by mail-io0-f175.google.com with SMTP id d13so9304603iog.5
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Jan 2018 14:08:03 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <25201a91958e4b408b14c4125433b305@SC-EXCH02.marvell.com>
+References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
+ <20180125071202.0F39560A60@smtp.codeaurora.org> <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
+ <20180125183355.rpmajajr5exxcybb@ban.mtv.corp.google.com> <25201a91958e4b408b14c4125433b305@SC-EXCH02.marvell.com>
+From: Brian Norris <briannorris@chromium.org>
+Date: Mon, 29 Jan 2018 14:08:02 -0800
+Message-ID: <CA+ASDXPkrVgsRH--ETzMNXRQeu-akGn8hZVYT=YpG+5ZpggMTQ@mail.gmail.com> (sfid-20180129_230820_329580_732EFED2)
+Subject: Re: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX stall
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Shrenik Shikhare <shrenik@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCj4gSSBnZXQgdGhpcyBvb3BzIGluIDQuMTVyYzkgd2hlbiBkb2luZyB0aGUgZm9sbG93
-aW5nOg0KPiANCj4gIyBpdyBkZXYgd2xwMnMwIHNldCB0eXBlIGlic3MNCj4gIyBpcCBsaW5rIHNl
-dCBkZXYgd2xwMnMwIHVwDQo+ICMgaXcgZGV2IHdscDJzMCBpYnNzIGpvaW4gIlRFU1QiIDI0MTIN
-Cj4gDQo+IFRoZSBvb3BzIGhhcHBlbnMgYWZ0ZXIgc29tZSBkZWxheSAoYXBwcm94LiA1IHNlY29u
-ZHMpLg0KPiANCj4gSGFyZHdhcmUgaXM6DQo+IA0KPiAwMjowMC4wIE5ldHdvcmsgY29udHJvbGxl
-cjogSW50ZWwgQ29ycG9yYXRpb24gV2lyZWxlc3MgODI2NSAvIDgyNzUgKHJldiA3OCkgcGNpDQo+
-IHZlbmRvciBjb2RlIDgwODY6MjRmZA0KPiBTdWJzeXN0ZW06IDgwODY6MDA1MA0KPiANCj4gT29w
-cyBtZXNzYWdlIGlzOg0KPiANCj4gSVB2NjogQUREUkNPTkYoTkVUREVWX1VQKTogd2xwMnMwOiBs
-aW5rIGlzIG5vdCByZWFkeQ0KPiB3bHAyczA6IFRyaWdnZXIgbmV3IHNjYW4gdG8gZmluZCBhbiBJ
-QlNTIHRvIGpvaW4NCj4gd2xwMnMwOiBUcmlnZ2VyIG5ldyBzY2FuIHRvIGZpbmQgYW4gSUJTUyB0
-byBqb2luDQo+IHdscDJzMDogVHJpZ2dlciBuZXcgc2NhbiB0byBmaW5kIGFuIElCU1MgdG8gam9p
-bg0KPiB3bHAyczA6IFRyaWdnZXIgbmV3IHNjYW4gdG8gZmluZCBhbiBJQlNTIHRvIGpvaW4NCj4g
-d2xwMnMwOiBUcmlnZ2VyIG5ldyBzY2FuIHRvIGZpbmQgYW4gSUJTUyB0byBqb2luDQo+IHdscDJz
-MDogVHJpZ2dlciBuZXcgc2NhbiB0byBmaW5kIGFuIElCU1MgdG8gam9pbg0KPiB3bHAyczA6IFRy
-aWdnZXIgbmV3IHNjYW4gdG8gZmluZCBhbiBJQlNTIHRvIGpvaW4NCj4gd2xwMnMwOiBUcmlnZ2Vy
-IG5ldyBzY2FuIHRvIGZpbmQgYW4gSUJTUyB0byBqb2luDQo+IHdscDJzMDogVHJpZ2dlciBuZXcg
-c2NhbiB0byBmaW5kIGFuIElCU1MgdG8gam9pbg0KPiB3bHAyczA6IFRyaWdnZXIgbmV3IHNjYW4g
-dG8gZmluZCBhbiBJQlNTIHRvIGpvaW4NCj4gd2xwMnMwOiBDcmVhdGluZyBuZXcgSUJTUyBuZXR3
-b3JrLCBCU1NJRCAzYTo5NDoxZDpkZDphYjowOQ0KPiBCVUc6IHVuYWJsZSB0byBoYW5kbGUga2Vy
-bmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdA0KPiAwMDAwMDAwMDAwMDAwMDY4DQoNCldl
-IGhhdmUgYSBmaXggZm9yIHRoaXMgd2hpY2ggc2hvdWxkIGdvIHVwc3RyZWFtIHNvb246DQoNCmNv
-bW1pdCAwZTM3YTE5NDBmY2ZhZTk5ZmZlYzU5YWQ2MjBlZDgxOTk5OWZlYjJkDQpBdXRob3I6IFNh
-cmEgU2hhcm9uIDxzYXJhLnNoYXJvbkBpbnRlbC5jb20+DQpEYXRlOiAgIFRodSBEZWMgMjEgMTU6
-MDU6MjggMjAxNyArMDIwMA0KDQogICAgW0JVR0ZJWF0gaXdsd2lmaTogbXZtOiBmaXggSUJTUyBm
-b3IgZGV2aWNlcyB0aGF0IHN1cHBvcnQgc3RhdGlvbiB0eXBlIEFQSQ0KDQoNCmluIG91ciBpbnRl
-cm5hbCAgdHJlZSB3aGljaCBpcyBtaXJyb3JlZCBoZXJlOg0KaHR0cHM6Ly9naXQua2VybmVsLm9y
-Zy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvaXdsd2lmaS9iYWNrcG9ydC1pd2x3aWZpLmdpdC8N
-Cg==
+Hi,
+
+On Sun, Jan 28, 2018 at 11:19 PM, Ganapathi Bhat <gbhat@marvell.com> wrote:
+>> From: Ganapathi Bhat
+>> > From: Brian Norris [mailto:briannorris@chromium.org]
+>> > On Thu, Jan 25, 2018 at 09:59:04AM +0000, Ganapathi Bhat wrote:
+>> > > > I can't find any commit with id c7dbdcb2a4e1, is it correct?
+>> > > Correct. Actually the commit id c7dbdcb2a4e1 is the PATCH [1/2] sent
+>> > > in this
+>> > series.
+>> >
+>> > What? Why would you introduce a bug and only fix it in the next patch?
+>> With the first patch the original issue took considerably longer time to
+>> recreate. Also it followed a different path to get recreated(shared in commit
+>> message).
+>> > Does that mean you should just combine the two?
+>> Let us know if that is fine to merge them. We can modify the commit
+>> message accordingly.
+>> > Or reverse the order, if patch 2 doesn't cause problems on its own?
+>> Patch 2 has a dependency on patch 1.
+> One correction. There is no commit dependency between patch 1 and 2(they can be applied in any order). But the result would be same. We need both fixes. Let us know if we can combine them.
+
+I haven't closely looked at patch 2 yet. My only statement was that it
+makes no sense to have 2 commits, with the second one labeled as
+"Fixing" the first one. From your descriptions, it sounds like patch 2
+should actually come first, but I'm not really sure. I only looked far
+enough to say that I didn't like patch 1 as-is :)
+
+Brian
