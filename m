@@ -1,105 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39519 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751212AbeASGqS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Jan 2018 01:46:18 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/10] rtlwifi: btcoex: extend get_wifi_bw to support bandwidth 80M
-Date: Fri, 19 Jan 2018 14:45:42 +0800
-Message-ID: <20180119064551.10084-2-pkshih@realtek.com> (sfid-20180119_074622_350658_88FB0DE5)
-In-Reply-To: <20180119064551.10084-1-pkshih@realtek.com>
-References: <20180119064551.10084-1-pkshih@realtek.com>
+Received: from mail.neratec.com ([46.140.151.2]:60315 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751032AbeA2G7l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jan 2018 01:59:41 -0500
+Subject: Re: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: Wojciech Dubowik <wojciech.dubowik@neratec.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
+ <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
+ <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com>
+ <ed47cefe-efa4-a7c9-d017-b50a99316f43@neratec.com>
+ <d9e84a77-636e-cd13-7713-9119a4ac971d@dd-wrt.com>
+ <b0be6634-de6a-9f24-b48b-88e67ca9eee4@neratec.com>
+ <20f8b133-98a9-0491-6c16-ea3a414e5bb0@dd-wrt.com>
+ <d311b71d-e5fa-6ed2-2c27-d036471e3459@neratec.com>
+ <88585623-bad1-83e0-2b43-005e0240919a@dd-wrt.com>
+From: Matthias May <matthias.may@neratec.com>
+Message-ID: <0b97a42a-7392-6101-63fa-0ecde6e8a57a@neratec.com> (sfid-20180129_075946_844020_30A0A64E)
+Date: Mon, 29 Jan 2018 07:53:45 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <88585623-bad1-83e0-2b43-005e0240919a@dd-wrt.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 26/01/18 15:20, Sebastian Gottschall wrote:
+> Am 26.01.2018 um 15:16 schrieb Wojciech Dubowik:
+>>
+>>
+>> On 26/01/18 12:42, Sebastian Gottschall wrote:
+>>> i have a idea what one cause could ne
+>>>
+>>> +                nfval =
+>>> +                    ath9k_hw_get_nf_limits(ah, chan)->cal[i];
+>>> +                if (nfval > -60 || nfval < -127)
+>>> +                    nfval = default_nf;
+>>>
+>> This is just a check to make sure we have sane calibrated values. Anything above -60 or under -127 will not work so
+>> we take nominal value.
+> yes. but that means all < -127 and all > -60 catches it. this is the full value range. the check is wrong
+> everything is above -60 and bellow -127 at the same time. OR must ne AND
 
-The rtlwifi newer ICs support 80M bandwidth in 5G band, so extend
-get_wifi_bw() to know bandwidth 80M that helps btcoex to make correct
-decisions.
+Not really. Note the negative numbers.
+-60 is a bigger value than -127.
+The expressions states that all values from -127 to -60 are valid.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 37 +++++++++-------------
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  1 +
- 2 files changed, 16 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index af8f3778dc91..c335f06eb13b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -95,21 +95,6 @@ static bool is_any_client_connect_to_ap(struct btc_coexist *btcoexist)
- 		return false;
- }
- 
--static bool halbtc_is_bt40(struct rtl_priv *adapter)
--{
--	struct rtl_priv *rtlpriv = adapter;
--	struct rtl_phy *rtlphy = &(rtlpriv->phy);
--	bool is_ht40 = true;
--	enum ht_channel_width bw = rtlphy->current_chan_bw;
--
--	if (bw == HT_CHANNEL_WIDTH_20)
--		is_ht40 = false;
--	else if (bw == HT_CHANNEL_WIDTH_20_40)
--		is_ht40 = true;
--
--	return is_ht40;
--}
--
- static bool halbtc_legacy(struct rtl_priv *adapter)
- {
- 	struct rtl_priv *rtlpriv = adapter;
-@@ -135,18 +120,26 @@ bool halbtc_is_wifi_uplink(struct rtl_priv *adapter)
- 
- static u32 halbtc_get_wifi_bw(struct btc_coexist *btcoexist)
- {
--	struct rtl_priv *rtlpriv =
--		(struct rtl_priv *)btcoexist->adapter;
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	struct rtl_phy *rtlphy = &rtlpriv->phy;
- 	u32 wifi_bw = BTC_WIFI_BW_HT20;
- 
--	if (halbtc_is_bt40(rtlpriv)) {
--		wifi_bw = BTC_WIFI_BW_HT40;
-+	if (halbtc_legacy(rtlpriv)) {
-+		wifi_bw = BTC_WIFI_BW_LEGACY;
- 	} else {
--		if (halbtc_legacy(rtlpriv))
--			wifi_bw = BTC_WIFI_BW_LEGACY;
--		else
-+		switch (rtlphy->current_chan_bw) {
-+		case HT_CHANNEL_WIDTH_20:
- 			wifi_bw = BTC_WIFI_BW_HT20;
-+			break;
-+		case HT_CHANNEL_WIDTH_20_40:
-+			wifi_bw = BTC_WIFI_BW_HT40;
-+			break;
-+		case HT_CHANNEL_WIDTH_80:
-+			wifi_bw = BTC_WIFI_BW_HT80;
-+			break;
-+		}
- 	}
-+
- 	return wifi_bw;
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 57caaf130a46..bc854ff2ab8a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -190,6 +190,7 @@ enum btc_wifi_bw_mode {
- 	BTC_WIFI_BW_LEGACY = 0x0,
- 	BTC_WIFI_BW_HT20 = 0x1,
- 	BTC_WIFI_BW_HT40 = 0x2,
-+	BTC_WIFI_BW_HT80 = 0x3,
- 	BTC_WIFI_BW_MAX
- };
- 
--- 
-2.15.1
+BR
+Matthias
