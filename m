@@ -1,73 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:18499 "EHLO mga14.intel.com"
+Received: from mail.toke.dk ([52.28.52.200]:60823 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932465AbeALA4B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Jan 2018 19:56:01 -0500
-Subject: [PATCH v2 15/19] carl9170: prevent bounds-check bypass via
- speculative execution
-From: Dan Williams <dan.j.williams@intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        tglx@linutronix.de, torvalds@linux-foundation.org,
-        akpm@linux-foundation.org, Kalle Valo <kvalo@codeaurora.org>,
-        alan@linux.intel.com
-Date: Thu, 11 Jan 2018 16:47:46 -0800
-Message-ID: <151571806633.27429.1504260808341642890.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180112_015805_245692_1201A9B6)
-In-Reply-To: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151571798296.27429.7166552848688034184.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1751845AbeA2Wfz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jan 2018 17:35:55 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k will not tx packets sometimes.
+In-Reply-To: <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com>
+References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com> <87a7wzv43j.fsf@toke.dk> <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com> <87d11stk0i.fsf@toke.dk> <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com>
+Date: Mon, 29 Jan 2018 23:35:52 +0100
+Message-ID: <871si81eev.fsf@toke.dk> (sfid-20180129_233600_013845_D9342AE6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Static analysis reports that 'queue' may be a user controlled value that
-is used as a data dependency to read from the 'ar9170_qmap' array. In
-order to avoid potential leaks of kernel memory values, block
-speculative execution of the instruction stream that could issue reads
-based on an invalid result of 'ar9170_qmap[queue]'. In this case the
-value of 'ar9170_qmap[queue]' is immediately reused as an index to the
-'ar->edcf' array.
+Ben Greear <greearb@candelatech.com> writes:
 
-Based on an original patch by Elena Reshetova.
+> On 01/29/2018 01:47 PM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Ben Greear <greearb@candelatech.com> writes:
+>>
+>>> On 01/27/2018 05:11 AM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>>>> Ben Greear <greearb@candelatech.com> writes:
+>>>>
+>>>>> I'm doing a test with 200 virtual stations on each of 6 ath9k radios.
+>>>>>
+>>>>> When I configure stations for DHCP, I see cases where stations on a p=
+articular
+>>>>> radio will not transmit anything sometimes.  I see no 'XMIT' logs tha=
+t show indication of
+>>>>> frames being received in the driver from the upper stack, but if I us=
+e 'tshark' on
+>>>>> a station interface, it shows frames being 'transmitted'.
+>>>>>
+>>>>> I do, however, see this, which looks like it might show
+>>>>> an issue.  It looks like whatever 'aqm' is, it has an ever expanding =
+number
+>>>>> of backlog packets:
+>>>>
+>>>> The aqm is the intermediate queues in mac80211. So this indicates that
+>>>> the driver is not pulling packets for transmission.
+>>>>
+>>>> With that many stations, I wonder whether it is due to the airtime
+>>>> fairness scheduler throttling the station? What is the contents of
+>>>> debug/ieee80211/wiphy2/netdev\:sta30194/stations/00\:0e\:8e\:69\:b8\:f=
+7/airtime
+>>>> while the station is not transmitting? And is it all stations on that
+>>>> particular radio, or only some of them?
+>>>
+>>> Here is the output of airtime and aqm on a hung station:
+>>>
+>>> # cat /debug/ieee80211/wiphy0/netdev\:sta10057/stations/00\:0e\:8e\:50\=
+:74\:8a/airtime
+>>> RX: 83706 us
+>>> TX: 4202 us
+>>> Deficit: VO: 198 us VI: 300 us BE: -8306 us BK: 300 us
+>>
+>> Right. This looks like incoming traffic is depleting the airtime quantum
+>> faster than it can be replenished by the scheduler, which means that the
+>> station gets completely starved.
+>>
+>> Could you try turning off the airtime scheduler?
+>>
+>> echo 0 > /sys/kernel/debug/ieee80211/wiphy0/ath9k/airtime_flags
+>>
+>> and see if the problem goes away.
+>>
+>> If it does, please check if the problem persists when setting
+>> airtime_flags to 1 (which means only include TX airtime).
+>>
+>> -Toke
+>>
+>
+> That did not seem to help:
+>
+> # cat /debug/ieee80211/wiphy0/netdev\:sta10058/stations/00\:0e\:8e\:50\:7=
+4\:8a/node_aggr
+> Max-AMPDU: 65535
+> MPDU Density: 8
+>
+>
+> TID  SEQ_START  SEQ_NEXT  BAW_SIZE  BAW_HEAD  BAW_TAIL  BAR_IDX SCHED HAS=
+-QUED
+>    0          0         0        64         0         0       -1     1   =
+     1
 
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/net/wireless/ath/carl9170/main.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Hmm, SCHED and HAS-QUED are both set, so it should be scheduled. Is the
+scheduler maybe simply taking too long to get round to scheduling that
+station again?
 
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index 988c8857d78c..0acfa8c22b7d 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -41,6 +41,7 @@
- #include <linux/module.h>
- #include <linux/etherdevice.h>
- #include <linux/random.h>
-+#include <linux/nospec.h>
- #include <net/mac80211.h>
- #include <net/cfg80211.h>
- #include "hw.h"
-@@ -1384,11 +1385,13 @@ static int carl9170_op_conf_tx(struct ieee80211_hw *hw,
- 			       const struct ieee80211_tx_queue_params *param)
- {
- 	struct ar9170 *ar = hw->priv;
-+	const u8 *elem;
- 	int ret;
- 
- 	mutex_lock(&ar->mutex);
--	if (queue < ar->hw->queues) {
--		memcpy(&ar->edcf[ar9170_qmap[queue]], param, sizeof(*param));
-+	elem = array_ptr(ar9170_qmap, queue, ar->hw->queues);
-+	if (elem) {
-+		memcpy(&ar->edcf[*elem], param, sizeof(*param));
- 		ret = carl9170_set_qos(ar);
- 	} else {
- 		ret = -EINVAL;
+What happens if you don't kill things after 30 seconds? Is it hanging
+forever, or just long enough for your tools to lose patience?
+
+If you have 200 stations all requesting DHCP addresses I could see how
+things might take a while...
+
+-Toke
