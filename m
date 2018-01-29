@@ -1,166 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:36822 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751493AbeADHTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jan 2018 02:19:15 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, luca@coelho.fi,
-        sara.sharon@intel.com, stable@vger.kernel.org
-Subject: [PATCH] iwlwifi: pcie: fix DMA memory mapping / unmapping
-Date: Thu,  4 Jan 2018 09:19:13 +0200
-Message-Id: <20180104071913.15470-1-emmanuel.grumbach@intel.com> (sfid-20180104_081920_037849_24C48996)
+Received: from smtp.codeaurora.org ([198.145.29.96]:36680 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751083AbeA2IAF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jan 2018 03:00:05 -0500
+From: Yu Wang <yyuwang@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: fix kernel panic issue during pci probe
+Date: Mon, 29 Jan 2018 16:00:00 +0800
+Message-Id: <1517212801-7523-1-git-send-email-yyuwang@codeaurora.org> (sfid-20180129_090013_721018_7744C549)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-22000 devices (previously referenced as A000) can support
-short transmit queues. This means that we have less DMA
-descriptors (TFD) for those shorter queues.
-Previous devices must still have 256 TFDs for each queue
-even if those 256 TFDs point to fewer buffers.
+If device gone during chip reset, ar->normal_mode_fw.board is not
+initialized, but ath10k_debug_print_hwfw_info() will try to access its
+member, which will cause 'kernel NULL pointer' issue. This was found
+using a faulty device (pci link went down sometimes) in a random
+insmod/rmmod/other-op test.
+To fix it, check ar->normal_mode_fw.board before accessing the member.
 
-When I introduced support for the short queues for 22000
-I broke older devices by assuming that they can also have
-less TFDs in their queues. This led to several problems:
+Yu Wang (1):
+  ath10k: fix kernel panic issue during pci probe
 
-1) the payload of the commands weren't unmapped properly
-   which caused the SWIOTLB to complain at some point.
-2) the hardware could get confused and we get hardware
-   crashes.
+ drivers/net/wireless/ath/ath10k/debug.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-The corresponding bugzilla entries are:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=198201
-https://bugzilla.kernel.org/show_bug.cgi?id=198265
-
-Cc: stable@vger.kernel.org # 4.14+
-Fixes: 4ecab5616023 ("iwlwifi: pcie: support short Tx queues for A000 device family")
-Reviewed-by: Sharon, Sara <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-Hi Kalle,
-
-Luca is on vacation is 4.15 will be closed soon.
-I am fixing here a bug that caused much troube on our side.
-There are two bugzillas on it. Users on both bugs validated
-this fix.
-Please apply this on wireless-drivers.git directly and I'll sync
-with Luca when he'll be back.
-
-Thank you!
----
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 10 +++++++---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 11 +++--------
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  8 ++++----
- 3 files changed, 14 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index d749abeca3ae..403e65c309d0 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -670,11 +670,15 @@ static inline u8 iwl_pcie_get_cmd_index(struct iwl_txq *q, u32 index)
- 	return index & (q->n_window - 1);
- }
- 
--static inline void *iwl_pcie_get_tfd(struct iwl_trans_pcie *trans_pcie,
-+static inline void *iwl_pcie_get_tfd(struct iwl_trans *trans,
- 				     struct iwl_txq *txq, int idx)
- {
--	return txq->tfds + trans_pcie->tfd_size * iwl_pcie_get_cmd_index(txq,
--									 idx);
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+
-+	if (trans->cfg->use_tfh)
-+		idx = iwl_pcie_get_cmd_index(txq, idx);
-+
-+	return txq->tfds + trans_pcie->tfd_size * idx;
- }
- 
- static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 16b345f54ff0..6d0a907d5ba5 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -171,8 +171,6 @@ static void iwl_pcie_gen2_tfd_unmap(struct iwl_trans *trans,
- 
- static void iwl_pcie_gen2_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--
- 	/* rd_ptr is bounded by TFD_QUEUE_SIZE_MAX and
- 	 * idx is bounded by n_window
- 	 */
-@@ -181,7 +179,7 @@ static void iwl_pcie_gen2_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq)
- 	lockdep_assert_held(&txq->lock);
- 
- 	iwl_pcie_gen2_tfd_unmap(trans, &txq->entries[idx].meta,
--				iwl_pcie_get_tfd(trans_pcie, txq, idx));
-+				iwl_pcie_get_tfd(trans, txq, idx));
- 
- 	/* free SKB */
- 	if (txq->entries) {
-@@ -364,11 +362,9 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
- 					    struct sk_buff *skb,
- 					    struct iwl_cmd_meta *out_meta)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
--	struct iwl_tfh_tfd *tfd =
--		iwl_pcie_get_tfd(trans_pcie, txq, idx);
-+	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, idx);
- 	dma_addr_t tb_phys;
- 	bool amsdu;
- 	int i, len, tb1_len, tb2_len, hdr_len;
-@@ -565,8 +561,7 @@ static int iwl_pcie_gen2_enqueue_hcmd(struct iwl_trans *trans,
- 	u8 group_id = iwl_cmd_groupid(cmd->id);
- 	const u8 *cmddata[IWL_MAX_CMD_TBS_PER_TFD];
- 	u16 cmdlen[IWL_MAX_CMD_TBS_PER_TFD];
--	struct iwl_tfh_tfd *tfd =
--		iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr);
-+	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, txq->write_ptr);
- 
- 	memset(tfd, 0, sizeof(*tfd));
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index fed6d842a5e1..3f85713c41dc 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -373,7 +373,7 @@ static void iwl_pcie_tfd_unmap(struct iwl_trans *trans,
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int i, num_tbs;
--	void *tfd = iwl_pcie_get_tfd(trans_pcie, txq, index);
-+	void *tfd = iwl_pcie_get_tfd(trans, txq, index);
- 
- 	/* Sanity check on number of chunks */
- 	num_tbs = iwl_pcie_tfd_get_num_tbs(trans, tfd);
-@@ -2018,7 +2018,7 @@ static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
- 	}
- 
- 	trace_iwlwifi_dev_tx(trans->dev, skb,
--			     iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr),
-+			     iwl_pcie_get_tfd(trans, txq, txq->write_ptr),
- 			     trans_pcie->tfd_size,
- 			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
- 			     hdr_len);
-@@ -2092,7 +2092,7 @@ static int iwl_fill_data_tbs_amsdu(struct iwl_trans *trans, struct sk_buff *skb,
- 		IEEE80211_CCMP_HDR_LEN : 0;
- 
- 	trace_iwlwifi_dev_tx(trans->dev, skb,
--			     iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr),
-+			     iwl_pcie_get_tfd(trans, txq, txq->write_ptr),
- 			     trans_pcie->tfd_size,
- 			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len, 0);
- 
-@@ -2425,7 +2425,7 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	memcpy(&txq->first_tb_bufs[txq->write_ptr], &dev_cmd->hdr,
- 	       IWL_FIRST_TB_SIZE);
- 
--	tfd = iwl_pcie_get_tfd(trans_pcie, txq, txq->write_ptr);
-+	tfd = iwl_pcie_get_tfd(trans, txq, txq->write_ptr);
- 	/* Set up entry for this TFD in Tx byte-count array */
- 	iwl_pcie_txq_update_byte_cnt_tbl(trans, txq, le16_to_cpu(tx_cmd->len),
- 					 iwl_pcie_tfd_get_num_tbs(trans, tfd));
 -- 
-2.9.3
+1.9.1
