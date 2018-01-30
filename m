@@ -1,60 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:53942 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750954AbeAVAxs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Jan 2018 19:53:48 -0500
-From: Pkshih <pkshih@realtek.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 07/10] rtlwifi: btcoex: Fix some static warnings from Sparse
-Date: Mon, 22 Jan 2018 00:53:34 +0000
-Message-ID: <5B2DA6FDDF928F4E855344EE0A5C39D13BE6ECBA@RTITMBSV07.realtek.com.tw> (sfid-20180122_015353_454267_E1240780)
-References: <20180119064551.10084-1-pkshih@realtek.com>
- <20180119064551.10084-8-pkshih@realtek.com>
- <79544f61-8a0d-283d-6370-1197b31aa59f@lwfinger.net>
-In-Reply-To: <79544f61-8a0d-283d-6370-1197b31aa59f@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mga17.intel.com ([192.55.52.151]:27426 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752376AbeA3BLR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jan 2018 20:11:17 -0500
+Subject: [PATCH v6 00/13] spectre variant1 mitigations for tip/x86/pti
+From: Dan Williams <dan.j.williams@intel.com>
+To: tglx@linutronix.de, mingo@kernel.org
+Cc: Mark Rutland <mark.rutland@arm.com>,
+        Cyril Novikov <cnovikov@lynx.com>,
+        kernel-hardening@lists.openwall.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, Jiri Slaby <jslaby@suse.cz>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        linux-arch@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+        Jonathan Corbet <corbet@lwn.net>, x86@kernel.org,
+        Russell King <linux@armlinux.org.uk>,
+        Ingo Molnar <mingo@redhat.com>,
+        Andrew Honig <ahonig@google.com>, alan@linux.intel.com,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Kees Cook <keescook@chromium.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andy Lutomirski <luto@kernel.org>,
+        Jim Mattson <jmattson@google.com>,
+        Christian Lamparter <chunkeey@gmail.com>,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>
+Date: Mon, 29 Jan 2018 17:02:10 -0800
+Message-ID: <151727412964.33451.17213780323040673404.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180130_021439_525412_0623136B)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5r
-ZXJuZWwub3JnXSBPbiBCZWhhbGYNCj4gT2YgTGFycnkgRmluZ2VyDQo+IFNlbnQ6IFNhdHVyZGF5
-LCBKYW51YXJ5IDIwLCAyMDE4IDY6NDYgQU0NCj4gVG86IFBrc2hpaDsga3ZhbG9AY29kZWF1cm9y
-YS5vcmcNCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBS
-ZTogW1BBVENIIDA3LzEwXSBydGx3aWZpOiBidGNvZXg6IEZpeCBzb21lIHN0YXRpYyB3YXJuaW5n
-cyBmcm9tIFNwYXJzZQ0KPiANCj4gT24gMDEvMTkvMjAxOCAxMjo0NSBBTSwgcGtzaGloQHJlYWx0
-ZWsuY29tIHdyb3RlOg0KPiA+IEZyb206IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29t
-Pg0KPiA+DQo+ID4gQWRkICdzdGF0aWMnIG9yIGRlY2xhcmF0aW9uIHRvIHJlc29sdmUgdGhlIHdh
-cm5pbmdzLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVh
-bHRlay5jb20+DQo+ID4gLS0tDQo+ID4gICAuLi4vcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9o
-YWxidGNvdXRzcmMuYyAgICAgICB8IDM2ICsrKysrKystLS0tLS0tLS0tLS0tLS0NCj4gPiAgIC4u
-Li9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5oICAgICAgIHwgIDQgKysr
-DQo+ID4gICAyIGZpbGVzIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDI1IGRlbGV0aW9ucygt
-KQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRs
-d2lmaS9idGNvZXhpc3QvaGFsYnRjb3V0c3JjLmMNCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9y
-ZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5jDQo+ID4gaW5kZXggNzNlZjVi
-MjcxZjNiLi4xNDA0NzI5NDQxYTIgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGNvdXRzcmMuYw0KPiA+ICsrKyBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjb3V0c3Jj
-LmMNCj4gPiBAQCAtOTkzLDIyICs5OTQsNiBAQCB2b2lkIGhhbGJ0Y193cml0ZV9sb2NhbF9yZWdf
-MWJ5dGUodm9pZCAqYnRjX2NvbnRleHQsIHUzMiByZWdfYWRkciwgdTggZGF0YSkNCj4gPiAgIAkJ
-cnRsX3dyaXRlX2J5dGUocnRscHJpdiwgcmVnX2FkZHIsIGRhdGEpOw0KPiA+ICAgfQ0KPiA+DQo+
-ID4gLXZvaWQgaGFsYnRjX3NldF9tYWNyZWcodm9pZCAqYnRjX2NvbnRleHQsIHUzMiByZWdfYWRk
-ciwgdTMyIGJpdF9tYXNrLCB1MzIgZGF0YSkNCj4gPiAtew0KPiA+IC0Jc3RydWN0IGJ0Y19jb2V4
-aXN0ICpidGNvZXhpc3QgPSAoc3RydWN0IGJ0Y19jb2V4aXN0ICopYnRjX2NvbnRleHQ7DQo+ID4g
-LQlzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYgPSBidGNvZXhpc3QtPmFkYXB0ZXI7DQo+ID4gLQ0K
-PiA+IC0JcnRsX3NldF9iYnJlZyhydGxwcml2LT5tYWM4MDIxMS5odywgcmVnX2FkZHIsIGJpdF9t
-YXNrLCBkYXRhKTsNCj4gPiAtfQ0KPiA+IC0NCj4gPiAtdTMyIGhhbGJ0Y19nZXRfbWFjcmVnKHZv
-aWQgKmJ0Y19jb250ZXh0LCB1MzIgcmVnX2FkZHIsIHUzMiBiaXRfbWFzaykNCj4gPiAtew0KPiA+
-IC0Jc3RydWN0IGJ0Y19jb2V4aXN0ICpidGNvZXhpc3QgPSAoc3RydWN0IGJ0Y19jb2V4aXN0ICop
-YnRjX2NvbnRleHQ7DQo+ID4gLQlzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYgPSBidGNvZXhpc3Qt
-PmFkYXB0ZXI7DQo+ID4gLQ0KPiA+IC0JcmV0dXJuIHJ0bF9nZXRfYmJyZWcocnRscHJpdi0+bWFj
-ODAyMTEuaHcsIHJlZ19hZGRyLCBiaXRfbWFzayk7DQo+ID4gLX0NCj4gPiAtDQo+IA0KPiBTaG91
-bGQgd2UgY29uY2x1ZGUgdGhhdCB0aGUgdHdvIHJvdXRpbmVzIGFib3ZlIGFyZSBub3QgdXNlZCwg
-YW5kIHRoYXQgZmFjdCB3YXMNCj4gZXhwb3NlZCB3aGVuIHRoZXkgd2VyZSBtYWRlIHN0YXRpYz8g
-SWYgc28sIHBsZWFzZSBub3RlIHRoYXQgdGhleSB3ZXJlIGRlbGV0ZWQgaW4NCj4gdGhlIGNvbW1p
-dCBtZXNzYWdlLg0KPiANCg0KSSdsbCBhZGQgdG8gY29tbWl0IGxvZyBpbiB2Mi4NCg0KUEsNCg0K
+Hi Thomas, Ingo,
+
+Here is another spin of the Spectre variant1 mitigations.
+
+Changes since v5 [1]:
+* Use the _nospec suffix for all new infrastructure, i.e.
+  s/ifence/barrier_nospec/, s/array_idx/array_index_nospec/,
+  and s/array_idx_mask/array_index_mask_nospec/. (Ingo)
+
+* Fix up array_index_mask_nospec() to have a proper kernel doc comment
+  (Thomas)
+
+* Fix up copyright attribution in include/linux/nospec.h (Ingo)
+
+* Spell out 'index' and 'size' throughout the patch set rather than
+  'idx' and 'sz'. (Ingo).
+
+* Clarify placement of barrier_nospec() relative to stac() in
+  __uaccess_begin_nospec() (Ingo)
+
+* Drop the syscall fast path elimination patch out of this series since
+  Andy is handling that separately. (Andy)
+
+* Simplify the x86 array_index_mask_nospec() assembly, no need for a
+  separate 32-bit version (Ingo)
+
+* Clarify that the 'cmp, sbb' sequence in the get_user_<size> variants
+  are effectively open coded array_index_nospec() instances where the
+  array base is the user pointer and the array limit is the task address
+  limit. (Ingo)
+
+* Replace '<function identifier>' with <function identifier>()
+  throughout the series. (Ingo)
+
+* Comment and whitespace fixups in asm/barrier.h (Ingo)
+
+* Split the definition of barrier_nospec() into its own patch separate
+  from its new usages with __uaccess_begin_nospec(). (Ingo)
+
+* Split the __uaccess_begin_nospec() patch into one that cleans up open
+  coded stac/clac usage and one that uses the new
+  __uaccess_begin_nospec() helper. (Ingo)
+
+* Change the contents of the 'bug/spectre_v1' sysfs file to:
+  "Mitigation: __user pointer sanitization" since these changes do raise
+  the kernel's defenses. (Ingo)
+
+[1]: https://www.spinics.net/lists/linux-arch/msg44193.html
+
+---
+
+Dan Williams (12):
+      array_index_nospec: sanitize speculative array de-references
+      x86: implement array_index_mask_nospec
+      x86: introduce barrier_nospec
+      x86: introduce __uaccess_begin_nospec
+      x86, usercopy: replace open coded stac/clac with __uaccess_{begin,end}
+      x86, __get_user: use __uaccess_begin_nospec
+      x86, get_user: use pointer masking to limit speculation
+      x86: sanitize syscall table de-references under speculation
+      vfs, fdtable: prevent bounds-check bypass via speculative execution
+      kvm, x86: update spectre-v1 mitigation
+      nl80211: sanitize array index in parse_txq_params
+      x86/spectre: report get_user mitigation for spectre_v1
+
+Mark Rutland (1):
+      Documentation: document array_index_nospec
+
+
+ Documentation/speculation.txt     |   90 +++++++++++++++++++++++++++++++++++++
+ arch/x86/entry/common.c           |    5 ++
+ arch/x86/include/asm/barrier.h    |   28 ++++++++++++
+ arch/x86/include/asm/msr.h        |    3 -
+ arch/x86/include/asm/uaccess.h    |   15 +++++-
+ arch/x86/include/asm/uaccess_32.h |    6 +-
+ arch/x86/include/asm/uaccess_64.h |   12 ++---
+ arch/x86/kernel/cpu/bugs.c        |    2 -
+ arch/x86/kvm/vmx.c                |   14 ++++--
+ arch/x86/lib/getuser.S            |   10 ++++
+ arch/x86/lib/usercopy_32.c        |    8 ++-
+ include/linux/fdtable.h           |    5 ++
+ include/linux/nospec.h            |   72 ++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c            |    9 ++--
+ 14 files changed, 251 insertions(+), 28 deletions(-)
+ create mode 100644 Documentation/speculation.txt
+ create mode 100644 include/linux/nospec.h
