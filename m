@@ -1,39 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50576 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752193AbeAZOf3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:59558 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751521AbeA3H4q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 09:35:29 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: [PATCH] ath9k: Fix get channel default noise floor
-References: <1516976454-8883-1-git-send-email-Wojciech.Dubowik@neratec.com>
-Date: Fri, 26 Jan 2018 16:35:24 +0200
-In-Reply-To: <1516976454-8883-1-git-send-email-Wojciech.Dubowik@neratec.com>
-        (Wojciech Dubowik's message of "Fri, 26 Jan 2018 15:20:54 +0100")
-Message-ID: <87k1w4u1qr.fsf@kamboji.qca.qualcomm.com> (sfid-20180126_153533_685610_3528BE09)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 30 Jan 2018 02:56:46 -0500
+Message-ID: <1517299004.2189.38.camel@sipsolutions.net> (sfid-20180130_085650_233436_B7807E20)
+Subject: Re: [PATCH v4 2/3] mac80211_hwsim: add nl_err_msg in
+ hwsim_new_radio in netlink case
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 30 Jan 2018 08:56:44 +0100
+In-Reply-To: <20180122170437.14213-3-benjamin.beichler@uni-rostock.de>
+References: <20180122170437.14213-1-benjamin.beichler@uni-rostock.de>
+         <20180122170437.14213-3-benjamin.beichler@uni-rostock.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wojciech Dubowik <Wojciech.Dubowik@neratec.com> writes:
+On Mon, 2018-01-22 at 18:04 +0100, Benjamin Beichler wrote:
+> 
+> +		if(!info)
+> +			pr_debug("mac80211_hwsim: radio index %d already present\n",
+> +				 idx);
 
-> Commit 8da58553cc63 ("ath9k: Use calibrated noise floor value
-> when available") introduced regression in ath9k_hw_getchan_noise
-> where per chain nominal noise floor has been taken instead default
-> for channel.
-> Revert to original default channel noise floor.
->
-> Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Can this really trigger? I think I'll edit it out - we do pass
+info==NULL in the case of module init, but in that case nothing else
+can interfere and we can't even really fail.
 
-Fixes: 8da58553cc63 ("ath9k: Use calibrated noise floor value when available")
-
-I can add that if this passes Sebastian's tests.
-
-And I'm planning to queue this for 4.16.
-
--- 
-Kalle Valo
+johannes
