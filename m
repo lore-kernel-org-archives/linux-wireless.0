@@ -1,56 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36248 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750915AbeANK0k (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Jan 2018 05:26:40 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "luca\@coelho.fi" <luca@coelho.fi>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho\, Luciano" <luciano.coelho@intel.com>
-Subject: Re: [PATCH 0/5] iwlwifi: updates intended for v4.16 2017-12-23
-References: <20171223092200.30270-1-luca@coelho.fi>
-        <871sivs48k.fsf@kamboji.qca.qualcomm.com>
-        <1515914548.7436.1.camel@intel.com>
-Date: Sun, 14 Jan 2018 12:26:35 +0200
-In-Reply-To: <1515914548.7436.1.camel@intel.com> (Emmanuel Grumbach's message
-        of "Sun, 14 Jan 2018 07:22:28 +0000")
-Message-ID: <87y3l07n38.fsf@codeaurora.org> (sfid-20180114_112645_211584_DF9A5AD7)
+Received: from mga01.intel.com ([192.55.52.88]:13677 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751448AbeA3BMW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Jan 2018 20:12:22 -0500
+Subject: [PATCH v6 12/13] nl80211: sanitize array index in parse_txq_params
+From: Dan Williams <dan.j.williams@intel.com>
+To: tglx@linutronix.de, mingo@kernel.org
+Cc: linux-arch@vger.kernel.org,
+        Christian Lamparter <chunkeey@gmail.com>,
+        gregkh@linuxfoundation.org, kernel-hardening@lists.openwall.com,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        alan@linux.intel.com
+Date: Mon, 29 Jan 2018 17:03:15 -0800
+Message-ID: <151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180130_021254_124151_1437FA33)
+In-Reply-To: <151727412964.33451.17213780323040673404.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151727412964.33451.17213780323040673404.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+Wireless drivers rely on parse_txq_params to validate that
+txq_params->ac is less than NL80211_NUM_ACS by the time the low-level
+driver's ->conf_tx() handler is called. Use a new helper,
+array_index_nospec(), to sanitize txq_params->ac with respect to
+speculation. I.e. ensure that any speculation into ->conf_tx() handlers
+is done with a value of txq_params->ac that is within the bounds of [0,
+NL80211_NUM_ACS).
 
-> On Fri, 2018-01-12 at 13:31 +0200, Kalle Valo wrote:
->> From: Luca Coelho <luciano.coelho@intel.com>
->>
->> > Luca Coelho (1):
->> >   iwlwifi: mvm: check if mac80211_queue is valid in
->> > iwl_mvm_disable_txq
->> > 
->> > Mordechay Goodstein (1):
->> >   iwlwifi: set default timstamp marker cmd
->> > 
->> > Sara Sharon (3):
->> >   iwlwifi: mvm: flip AMSDU addresses only for 9000 family
->> >   iwlwifi: mvm: take RCU lock before dereferencing
->> >   iwlwifi: mvm: move TSO segment to a separate function
->> 
->> Most likely the merge window starts in 9 days so I need to start
->> getting patches ready. As Luca is away should I apply these patches
->> directly to wireless-drivers-next?
->> 
->
-> First let me thank you for tracking this. I don't see anything that we
-> really need in 4.16 here. Besides Luca's UBSAN warning, all the rest
-> is for a new device family which won't be supported in 4.16 anyway.
->
-> So I opt to wait for Luca here.
+Reported-by: Christian Lamparter <chunkeey@gmail.com>
+Reported-by: Elena Reshetova <elena.reshetova@intel.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ net/wireless/nl80211.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Ok, I'll wait for him then.
-
--- 
-Kalle Valo
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d396cb61a280..81bef0676e1d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -16,6 +16,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/netlink.h>
++#include <linux/nospec.h>
+ #include <linux/etherdevice.h>
+ #include <net/net_namespace.h>
+ #include <net/genetlink.h>
+@@ -2056,20 +2057,22 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
+ static int parse_txq_params(struct nlattr *tb[],
+ 			    struct ieee80211_txq_params *txq_params)
+ {
++	u8 ac;
++
+ 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
+ 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
+ 	    !tb[NL80211_TXQ_ATTR_AIFS])
+ 		return -EINVAL;
+ 
+-	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
++	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
+ 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
+ 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
+ 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
+ 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 
+-	if (txq_params->ac >= NL80211_NUM_ACS)
++	if (ac >= NL80211_NUM_ACS)
+ 		return -EINVAL;
+-
++	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
+ 	return 0;
+ }
+ 
