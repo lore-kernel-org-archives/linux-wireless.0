@@ -1,92 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48664 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934104AbeAXPTV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jan 2018 10:19:21 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 7/8] mt76: pass the per-vif wcid to the core for multicast rx
-Date: Wed, 24 Jan 2018 16:19:16 +0100
-Message-Id: <20180124151917.70962-7-nbd@nbd.name> (sfid-20180124_161941_306377_578A16BB)
-In-Reply-To: <20180124151917.70962-1-nbd@nbd.name>
-References: <20180124151917.70962-1-nbd@nbd.name>
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:11869 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752479AbeA3QvZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Jan 2018 11:51:25 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 6/7] staging: wilc1000: rename Handle_ScanDone function to avoid camelCase
+Date: Tue, 30 Jan 2018 22:20:32 +0530
+Message-ID: <1517331033-5718-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180130_175128_404433_DEDF14B0)
+In-Reply-To: <1517331033-5718-1-git-send-email-ajay.kathat@microchip.com>
+References: <1517331033-5718-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preparation for adding software rx CCMP PN validation
+Fix "Avoid camelCase" issue reported by checkpatch.pl.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2.h      |  1 +
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c  | 15 ++++++++++++---
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c |  1 +
- 3 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index a12dfce8c0d1..17df17afd9bf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -144,6 +144,7 @@ struct mt76x2_vif {
- struct mt76x2_sta {
- 	struct mt76_wcid wcid; /* must be first */
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 43f8559..f5fdca7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -267,7 +267,7 @@ static struct wilc_vif *join_req_vif;
  
-+	struct mt76x2_vif *vif;
- 	struct mt76x2_tx_status status;
- 	int n_frames;
- };
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-index b96d8a88656c..f56a8f459fe6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-@@ -266,12 +266,20 @@ static void mt76x2_remove_hdr_pad(struct sk_buff *skb)
- }
+ static void *host_int_parse_join_bss_param(struct network_info *info);
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+-static s32 Handle_ScanDone(struct wilc_vif *vif, enum scan_event enuEvent);
++static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event enuEvent);
+ static void host_if_work(struct work_struct *work);
  
- static struct mt76_wcid *
--mt76x2_rx_get_wcid(struct mt76x2_dev *dev, u8 idx)
-+mt76x2_rx_get_sta_wcid(struct mt76x2_dev *dev, u8 idx, bool unicast)
- {
-+	struct mt76x2_sta *sta;
-+	struct mt76_wcid *wcid;
-+
- 	if (idx >= ARRAY_SIZE(dev->wcid))
- 		return NULL;
- 
--	return rcu_dereference(dev->wcid[idx]);
-+	wcid = rcu_dereference(dev->wcid[idx]);
-+	if (unicast || !wcid)
-+		return wcid;
-+
-+	sta = container_of(wcid, struct mt76x2_sta, wcid);
-+	return &sta->vif->group_wcid;
- }
- 
- int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
-@@ -282,11 +290,12 @@ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
- 	u32 ctl = le32_to_cpu(rxwi->ctl);
- 	u16 rate = le16_to_cpu(rxwi->rate);
- 	u16 tid_sn = le16_to_cpu(rxwi->tid_sn);
-+	bool unicast = rxwi->rxinfo & cpu_to_le32(MT_RXINFO_UNICAST);
- 	u8 wcid;
- 	int len;
- 
- 	wcid = FIELD_GET(MT_RXWI_CTL_WCID, ctl);
--	status->wcid = mt76x2_rx_get_wcid(dev, wcid);
-+	status->wcid = mt76x2_rx_get_sta_wcid(dev, wcid, unicast);
- 
- 	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_L2PAD))
- 		mt76x2_remove_hdr_pad(skb);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-index bc08040123b9..08fe804c6a43 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-@@ -273,6 +273,7 @@ mt76x2_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		goto out;
+ /*!
+@@ -847,7 +847,7 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ ERRORHANDLER:
+ 	if (result) {
+ 		del_timer(&hif_drv->scan_timer);
+-		Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
++		handle_scan_done(vif, SCAN_EVENT_ABORTED);
  	}
  
-+	msta->vif = mvif;
- 	msta->wcid.sta = 1;
- 	msta->wcid.idx = idx;
- 	msta->wcid.hw_key_idx = -1;
+ 	kfree(scan_info->ch_freq_list);
+@@ -863,8 +863,8 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 	return result;
+ }
+ 
+-static s32 Handle_ScanDone(struct wilc_vif *vif,
+-			   enum scan_event enuEvent)
++static s32 handle_scan_done(struct wilc_vif *vif,
++			    enum scan_event enuEvent)
+ {
+ 	s32 result = 0;
+ 	u8 u8abort_running_scan;
+@@ -1467,7 +1467,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 
+ 			if (hif_drv->usr_scan_req.scan_result) {
+ 				del_timer(&hif_drv->scan_timer);
+-				Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
++				handle_scan_done(vif, SCAN_EVENT_ABORTED);
+ 			}
+ 
+ 			strDisconnectNotifInfo.reason = 0;
+@@ -1515,7 +1515,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 			   (hif_drv->usr_scan_req.scan_result)) {
+ 			del_timer(&hif_drv->scan_timer);
+ 			if (hif_drv->usr_scan_req.scan_result)
+-				Handle_ScanDone(vif, SCAN_EVENT_ABORTED);
++				handle_scan_done(vif, SCAN_EVENT_ABORTED);
+ 		}
+ 	}
+ 
+@@ -2532,7 +2532,7 @@ static void host_if_work(struct work_struct *work)
+ 		if (!wilc_wlan_get_num_conn_ifcs(wilc))
+ 			wilc_chip_sleep_manually(wilc);
+ 
+-		Handle_ScanDone(msg->vif, SCAN_EVENT_DONE);
++		handle_scan_done(msg->vif, SCAN_EVENT_DONE);
+ 
+ 		if (msg->vif->hif_drv->remain_on_ch_pending)
+ 			Handle_RemainOnChan(msg->vif,
+@@ -2574,7 +2574,7 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_SCAN_TIMER_FIRED:
+-		Handle_ScanDone(msg->vif, SCAN_EVENT_ABORTED);
++		handle_scan_done(msg->vif, SCAN_EVENT_ABORTED);
+ 		break;
+ 
+ 	case HOST_IF_MSG_CONNECT_TIMER_FIRED:
 -- 
-2.14.2
+2.7.4
