@@ -1,47 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51244 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750710AbeAHRTM (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:59540 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751628AbeA3Hy7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 12:19:12 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [01/11] brcmfmac: Remove {r,w}_sdreg32
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1513687637-5555-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1513687637-5555-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, Ian Molton <ian@mnementh.co.uk>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20180108171911.EBE0B6079C@smtp.codeaurora.org> (sfid-20180108_181916_794637_96F40F55)
-Date: Mon,  8 Jan 2018 17:19:11 +0000 (UTC)
+        Tue, 30 Jan 2018 02:54:59 -0500
+Message-ID: <1517298897.2189.37.camel@sipsolutions.net> (sfid-20180130_085506_921889_F85E4E48)
+Subject: Re: [PATCH 1/2] cfg80211: Add tx ack signal attribute in sta info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: vnaralas@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Bhagavathi Perumal S <bperumal@codeaurora.org>,
+        linux-wireless-owner@vger.kernel.org
+Date: Tue, 30 Jan 2018 08:54:57 +0100
+In-Reply-To: <65e392b36ecf5b3161be954e974c4c0a@codeaurora.org>
+References: <1516279208-16485-1-git-send-email-vnaralas@codeaurora.org>
+         <1516623728.2508.4.camel@sipsolutions.net>
+         <65e392b36ecf5b3161be954e974c4c0a@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-
-> From: Ian Molton <ian@mnementh.co.uk>
+On Wed, 2018-01-24 at 16:57 +0530, vnaralas@codeaurora.org wrote:
 > 
-> Remove yet another IO function from the code and replace with one
-> that already exists.
-> 
-> Signed-off-by: Ian Molton <ian@mnementh.co.uk>
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> [arend: keep address calculation, ie. (base + offset) in one line]
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> If user wants to get instant RSSI for the station which is ideal for 
+> long time, user can sent null frame and get RSSI form the ack of that 
+> null frame.
 
-8 patches applied to wireless-drivers-next.git, thanks.
+Then we really should make that part of the NL80211_CMD_PROBE_CLIENT
+response, no?
 
-3d110df8f747 brcmfmac: Remove {r,w}_sdreg32
-dbda7dacb79a brcmfmac: Rename buscore to core for consistency
-874bb8e49b7c brcmfmac: stabilise the value of ->sbwad in use for some xfer routines.
-508422f3695b brcmfmac: Correctly handle accesses to SDIO func0
-99d7b6fdfc8c brcmfmac: Remove func0 from function array
-bcadaaa097c7 brcmfmac: More efficient and slightly easier to read fixup for 4339 chips
-00eb62cfc5f8 brcmfmac: Replace function index with function pointer
-9c3438ed215a brcmfmac: Clean up interrupt macros
-
--- 
-https://patchwork.kernel.org/patch/10123219/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
