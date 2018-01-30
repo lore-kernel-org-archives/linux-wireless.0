@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:32672 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752144AbeAZK1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jan 2018 05:27:23 -0500
-Subject: Re: [PATCH 0/4] ath9k: AR9003 noise floor calibration support
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com
-References: <1516692925-6695-1-git-send-email-Wojciech.Dubowik@neratec.com>
- <87o9ll57ps.fsf@kamboji.qca.qualcomm.com>
- <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com>
-From: Wojciech Dubowik <wojciech.dubowik@neratec.com>
-Message-ID: <ed47cefe-efa4-a7c9-d017-b50a99316f43@neratec.com> (sfid-20180126_112726_989702_FA805A07)
-Date: Fri, 26 Jan 2018 11:27:20 +0100
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:11869 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751405AbeA3QvH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Jan 2018 11:51:07 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 0/7] fixes to avoid use of cameCase
+Date: Tue, 30 Jan 2018 22:20:26 +0530
+Message-ID: <1517331033-5718-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180130_175110_628136_40EF3E8B)
 MIME-Version: 1.0
-In-Reply-To: <b9553f06-b190-c6ec-bb85-587984abfee0@dd-wrt.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I will try it with again with couple of OEM cards.
+Patch set to fix "Avoid camelCase" issues found by checkpatch.pl.
 
-Is nanostation calibrated for noisefloor? You can see it with 
-modal_eeprom in debugfs.
+Ajay Singh (7):
+  staging: wilc1000: rename variables using camelCase in
+    host_int_ParseJoinBssParam()
+  staging: wilc1000: rename Handle_DelAllSta() and its variable using
+    camelCase
+  staging: wilc1000: rename strWIDList variable to avoid camelCase
+  staging: wilc1000: rename u32WidsCount to avoid camelCase
+  staging: wilc1000: rename pu8CurrByte variable to avoid camelCase
+  staging: wilc1000: rename Handle_ScanDone function to avoid camelCase
+  staging: wilc1000: rename Handle_Key() and Handle_ConnectTimeout()
 
-Wojtek
-On 26/01/18 10:59, Sebastian Gottschall wrote:
-> i dont know if this is a coincidence. but after testing your patch on 
-> a standard ubiquiti nanostation m2 the noise floor looks wrong.
-> it will stay on -112 which is clearly impossible in 2.4 (before it was 
-> around -96)
+ drivers/staging/wilc1000/host_interface.c | 726 +++++++++++++++---------------
+ 1 file changed, 363 insertions(+), 363 deletions(-)
+
+-- 
+2.7.4
