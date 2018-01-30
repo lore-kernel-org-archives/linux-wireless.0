@@ -1,91 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:39718 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751296AbeAPA4F (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:56911 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753465AbeA3T1j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 19:56:05 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 09/10] rtlwifi: btcoex: Add common function for qeurying BT information
-Date: Tue, 16 Jan 2018 00:55:51 +0000
-Message-ID: <1516064151.2403.2.camel@realtek.com> (sfid-20180116_015613_663055_45CCE101)
-References: <20180111070932.9929-1-pkshih@realtek.com>
-         <20180111070932.9929-10-pkshih@realtek.com>
-         <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net>
-In-Reply-To: <47949eee-9fe9-271a-bb4c-a287bbd62ca2@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 30 Jan 2018 14:27:39 -0500
+From: Colin King <colin.king@canonical.com>
+To: Maya Erez <merez@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] wil6210: fix spelling mistake: "preperation"-> "preparation"
+Date: Tue, 30 Jan 2018 19:27:37 +0000
+Message-Id: <20180130192737.8986-1-colin.king@canonical.com> (sfid-20180130_202854_940763_6D481D89)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE4LTAxLTE1IGF0IDEzOjE1IC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IE9uIDAxLzExLzIwMTggMDE6MDkgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiAN
-Cj4gPiBGcm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPiANCj4gPiBU
-aGlzIGNvbW1pdCBpbXBsZW1lbnQgdGhlIGNvbW1vbiBmdW5jdGlvbiB0byBzb3J0IG9sZCBmZWF0
-dXJlcywgYW5kDQo+ID4gYWRkDQo+ID4gbW9yZSBuZXcgZmVhdHVyZXMgdGhhdCBhcmUgZ2V0X3N1
-cHBvcnRlZF9mZWF0dXJlLA0KPiA+IGdldF9zdXBwb3J0ZWRfdmVyc2lvbiwNCj4gPiBnZXRfYW50
-X2RldF92YWwsIGJsZV9zY2FuX3R5cGUsIGJsZV9zY2FuX3BhcmEsIGJ0X2Rldl9pbmZvLA0KPiA+
-IGZvcmJpZGRlbl9zbG90X3ZhbCwgYWZoX21hcCBhbmQgZXRjLg0KPiA+IA0KPiA+IFNpZ25lZC1v
-ZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+IC0tLQ0KPiA+IMKg
-IC4uLi9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5jwqDCoMKgwqDCoMKg
-wqB8IDMwOQ0KPiA+ICsrKysrKysrKysrKysrKysrKy0tLQ0KPiA+IMKgIC4uLi9yZWFsdGVrL3J0
-bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5owqDCoMKgwqDCoMKgwqB8wqDCoDcwICsrKysr
-DQo+ID4gwqAgLi4uL3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5j
-wqDCoMKgfMKgwqA0OCArKystDQo+ID4gwqAgMyBmaWxlcyBjaGFuZ2VkLCAzOTQgaW5zZXJ0aW9u
-cygrKSwgMzMgZGVsZXRpb25zKC0pDQo+ID4gDQo+ID4gZGlmZiAtLWdpdA0KPiA+IGEvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGNvdXRzcmMuYw0K
-PiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxi
-dGNvdXRzcmMuYw0KPiA+IGluZGV4IDJiZTgxZmVjNzg5YS4uMzBkOTQwY2YzYWJmIDEwMDY0NA0K
-PiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3Qv
-aGFsYnRjb3V0c3JjLmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
-bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5jDQo+ID4gQEAgLTIwNyw2ICsyMDcsMTAyIEBA
-IHU4IHJ0bF9nZXRfaHdwZ19wYWNrYWdlX3R5cGUoc3RydWN0IHJ0bF9wcml2DQo+ID4gKnJ0bHBy
-aXYpDQo+ID4gwqDCoAlyZXR1cm4gcnRsaGFsLT5wYWNrYWdlX3R5cGU7DQo+ID4gwqAgfQ0KPiA+
-IMKgwqANCj4gPiArc3RhdGljDQo+ID4gK2Jvb2wgaGFsYnRjX2lzX2h3X21haWxib3hfZXhpc3Qo
-c3RydWN0IGJ0Y19jb2V4aXN0ICpidGNvZXhpc3QpDQo+ID4gK3sNCj4gPiArCWlmIChJU19IQVJE
-V0FSRV9UWVBFXzg4MTIoYnRjb2V4aXN0LT5hZGFwdGVyKSkNCj4gPiArCQlyZXR1cm4gZmFsc2U7
-DQo+ID4gKwllbHNlDQo+ID4gKwkJcmV0dXJuIHRydWU7DQo+IE9uY2UgeW91IGhhdmUgcmV0dXJu
-ZWQgZmFsc2UgZm9yIDg4MTIsIHlvdSBkbyBub3QgbmVlZCB0aGUgJ2Vsc2UnLg0KPiBVc2UgYSBz
-aW1wbGXCoA0KPiAnCXJldHVybiB0cnVlOycuIEFzIHRoaXMgaXMgdGhlIG9ubHkgb2JqZWN0aW9u
-IGluIHRoaXMgcGF0Y2gsDQo+IEkgd2lsbCBsZXQgaXTCoA0KPiBwYXNzLiBTb21lIHVzZXIgd2l0
-aCBhIHN1aXRhYmxlIHRvb2wgd2lsbCBjaGFuZ2UgaXQuDQo+IA0KPiA+IA0KPiA+ICt9DQo+ID4g
-Kw0KPiA+ICtzdGF0aWMNCj4gPiArYm9vbCBoYWxidGNfc2VuZF9idF9tcF9vcGVyYXRpb24oc3Ry
-dWN0IGJ0Y19jb2V4aXN0ICpidGNvZXhpc3QsIHU4DQo+ID4gb3BfY29kZSwNCj4gPiArCQkJCcKg
-dTggKmNtZCwgdTMyIGxlbiwgdW5zaWduZWQgbG9uZw0KPiA+IHdhaXRfbXMpDQo+IC0tc25pcC0t
-DQo+IA0KPiA+IA0KPiA+IMKgwqANCj4gPiBkaWZmIC0tZ2l0DQo+ID4gYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5oDQo+ID4gYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNy
-Yy5oDQo+ID4gaW5kZXggNWE3ODE2ZmY2ODc3Li5jYmJmNWU1YTljOWIgMTAwNjQ0DQo+ID4gLS0t
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGNv
-dXRzcmMuaA0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9i
-dGNvZXhpc3QvaGFsYnRjb3V0c3JjLmgNCj4gPiBAQCAtMjc4LDYgKzI3OCw4IEBAIGVudW0gYnRj
-X2dldF90eXBlIHsNCj4gPiDCoMKgCUJUQ19HRVRfVTRfVkVORE9SLA0KPiA+IMKgwqAJQlRDX0dF
-VF9VNF9TVVBQT1JURURfVkVSU0lPTiwNCj4gPiDCoMKgCUJUQ19HRVRfVTRfU1VQUE9SVEVEX0ZF
-QVRVUkUsDQo+ID4gKwlCVENfR0VUX1U0X0JUX0RFVklDRV9JTkZPLA0KPiA+ICsJQlRDX0dFVF9V
-NF9CVF9GT1JCSURERU5fU0xPVF9WQUwsDQo+ID4gwqDCoAlCVENfR0VUX1U0X1dJRklfSVFLX1RP
-VEFMLA0KPiA+IMKgwqAJQlRDX0dFVF9VNF9XSUZJX0lRS19PSywNCj4gPiDCoMKgCUJUQ19HRVRf
-VTRfV0lGSV9JUUtfRkFJTCwNCj4gPiBAQCAtNDU5LDYgKzQ2MSwxOSBAQCB0eXBlZGVmCWJvb2wg
-KCpiZnBfYnRjX2dldCkodm9pZA0KPiA+ICpidGNvZXhpc3QsIHU4IGdldF90eXBlLCB2b2lkICpv
-dXRfYnVmKTsNCj4gPiDCoMKgDQo+ID4gwqAgdHlwZWRlZglib29sICgqYmZwX2J0Y19zZXQpKHZv
-aWQgKmJ0Y29leGlzdCwgdTggc2V0X3R5cGUsDQo+ID4gdm9pZCAqaW5fYnVmKTsNCj4gPiDCoMKg
-DQo+ID4gK3R5cGVkZWYgdTMyICgqYmZwX2J0Y19nZXRfYnRfY29leF9zdXBwb3J0ZWRfZmVhdHVy
-ZSkodm9pZA0KPiA+ICpidGNvZXhpc3QpOw0KPiA+ICsNCj4gPiArdHlwZWRlZiB1MzIgKCpiZnBf
-YnRjX2dldF9idF9jb2V4X3N1cHBvcnRlZF92ZXJzaW9uKSh2b2lkDQo+ID4gKmJ0Y29leGlzdCk7
-DQo+ID4gKw0KPiA+ICt0eXBlZGVmIHU4ICgqYmZwX2J0Y19nZXRfYW50X2RldF92YWxfZnJvbV9i
-dCkodm9pZCAqYnRjb2V4aXN0KTsNCj4gPiArDQo+ID4gK3R5cGVkZWYgdTggKCpiZnBfYnRjX2dl
-dF9ibGVfc2Nhbl90eXBlX2Zyb21fYnQpKHZvaWQgKmJ0Y29leGlzdCk7DQo+ID4gKw0KPiA+ICt0
-eXBlZGVmIHUzMiAoKmJmcF9idGNfZ2V0X2JsZV9zY2FuX3BhcmFfZnJvbV9idCkodm9pZCAqYnRj
-b2V4aXN0LA0KPiA+IHU4IHNjYW5fdHlwZSk7DQo+ID4gKw0KPiA+ICt0eXBlZGVmIGJvb2wgKCpi
-ZnBfYnRjX2dldF9idF9hZmhfbWFwX2Zyb21fYnQpKHZvaWQgKmJ0Y29leGlzdCwgdTgNCj4gPiBt
-YXBfdHlwZSwNCj4gPiArCQkJCQnCoMKgwqDCoMKgwqDCoHU4ICphZmhfbWFwKTsNCj4gPiArDQo+
-ID4gwqAgdHlwZWRlZiB2b2lkICgqYmZwX2J0Y19zZXRfYnRfcmVnKSh2b2lkICpidGNfY29udGV4
-dCwgdTgNCj4gPiByZWdfdHlwZSwgdTMyIG9mZnNldCwNCj4gPiDCoMKgCQkJCcKgwqDCoHUzMiB2
-YWx1ZSk7DQo+IEkgd291bGQgcHJlZmVyIHRoYXQgeW91IG5vdCBhZGQgYWRkaXRpb25hbCB0eXBl
-ZGVmIHN0YXRlbWVudHMsIGJ1dCBJDQo+IHdpbGwgbGV0IGl0wqANCj4gcGFzcy4NCj4gDQpUaGFu
-ayB5b3UgZm9yIHBvaW50aW5nIG91dC4gSSdsbCByZW1vdmUgYWxsIHR5cGVkZWYgaW4gbmV4dCBw
-YXRjaHNldC4NCg0KPiANCj4gQWNrZWQtYnk6IExhcnJ5IEZpbmdlciA8TGFycnkuRmluZ2VyQGx3
-ZmluZ2VyLm5ldD4NCj4gDQo+IC0tLS0tLVBsZWFzZSBjb25zaWRlciB0aGUgZW52aXJvbm1lbnQg
-YmVmb3JlIHByaW50aW5nIHRoaXMgZS1tYWlsLg==
+From: Colin Ian King <colin.king@canonical.com>
+
+Trivial fix to spelling mistake in debug error message text.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 0c61a6c13991..04c8651274d9 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -715,7 +715,7 @@ static void wil_bl_prepare_halt(struct wil6210_priv *wil)
+ 		    offsetof(struct bl_dedicated_registers_v0,
+ 			     boot_loader_struct_version));
+ 	if (!tmp) {
+-		wil_dbg_misc(wil, "old BL, skipping halt preperation\n");
++		wil_dbg_misc(wil, "old BL, skipping halt preparation\n");
+ 		return;
+ 	}
+ 
+-- 
+2.15.1
