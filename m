@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32880 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752357AbeAQHec (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:34270 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751411AbeA3MRm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Jan 2018 02:34:32 -0500
-From: tamizhr@codeaurora.org
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, tamizhr@qti.qualcomm.com,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 0/4] cfg80211/mac80211: cqm rssi config for AP mode
-Date: Wed, 17 Jan 2018 13:01:12 +0530
-Message-Id: <1516174276-16789-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180117_083446_596303_AE7E322F)
+        Tue, 30 Jan 2018 07:17:42 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Matthias Schiffer <mschiffer@universe-factory.net>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: use only 1Mbps for basic rates in mesh
+Date: Tue, 30 Jan 2018 13:17:38 +0100
+Message-Id: <20180130121738.6299-1-johannes@sipsolutions.net> (sfid-20180130_131746_699612_BA59FB0C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <tamizhr@codeaurora.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Currently station mode has the support of rssi based cqm. This patchsets
-extended the support for AP mode as well. Already netlink accepts mac
-address in cqm notification event. We can use that to pass mac address of
-the station to specify its rssi change event and bssid will be passed for
-STA mode. This patchset changes cfg80211_cqm_rssi_notify and
-ieee80211_cqm_rssi_notify apis to accepts mac address. RSSI config is
-common for all the stations in bss.
+Mesh used to use the mandatory rates as basic rates, but we got
+the calculation of mandatory rates wrong until some time ago.
+Fix this this broke interoperability with older versions since
+now more basic rates are required, and thus the MBSS isn't the
+same and the network stops working.
 
-Pradeep Kumar Chitrapu (3):
-  wireless: allow send peer mac in rssi cqm notify
-  cfg80211: enable setting cqm config for AP mode
-  mac80211: enable setting cqm config for AP mode
+Fix this by simply using only 1Mbps as the basic rate in 2.4GHz.
+Since the changed mandatory rates only affected 2.4GHz, this is
+all we need to make it work again.
 
-Tamizh chelvam (1):
-  mac80211: implement cqm using rx data signal
+Reported-and-tested-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Fixes: 1bd773c077de ("wireless: set correct mandatory rate flags")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/mesh.c | 25 ++++++++++++++++++++++---
+ 1 file changed, 22 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c      |  4 +--
- drivers/net/wireless/marvell/mwifiex/sta_event.c |  4 +--
- drivers/net/wireless/rndis_wlan.c                |  2 +-
- drivers/net/wireless/rsi/rsi_91x_mac80211.c      |  2 +-
- drivers/net/wireless/st/cw1200/sta.c             |  4 ++-
- drivers/net/wireless/ti/wl1251/event.c           |  4 +--
- drivers/net/wireless/ti/wlcore/event.c           |  5 +--
- include/net/cfg80211.h                           |  3 +-
- include/net/mac80211.h                           | 10 +++++-
- net/mac80211/cfg.c                               | 32 ++++++++++++------
- net/mac80211/mlme.c                              | 14 ++++----
- net/mac80211/rx.c                                | 43 +++++++++++++++++++++++-
- net/mac80211/sta_info.h                          |  3 ++
- net/mac80211/trace.h                             | 11 +++---
- net/wireless/nl80211.c                           | 11 +++---
- net/wireless/trace.h                             | 12 ++++---
- 16 files changed, 121 insertions(+), 43 deletions(-)
-
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 51aa55618ef7..b12da6ef3c12 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -170,9 +170,28 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 		enum nl80211_bss_scan_width scan_width;
+ 		struct ieee80211_supported_band *sband =
+ 				rdev->wiphy.bands[setup->chandef.chan->band];
+-		scan_width = cfg80211_chandef_to_scan_width(&setup->chandef);
+-		setup->basic_rates = ieee80211_mandatory_rates(sband,
+-							       scan_width);
++
++		if (setup->chandef.chan->band == NL80211_BAND_2GHZ) {
++			int i;
++
++			/*
++			 * Older versions selected the mandatory rates for
++			 * 2.4 GHz as well, but were broken in that only
++			 * 1 Mbps was regarded as a mandatory rate. Keep
++			 * using just 1 Mbps as the default basic rate for
++			 * mesh to be interoperable with older versions.
++			 */
++			for (i = 0; i < sband->n_bitrates; i++) {
++				if (sband->bitrates[i].bitrate == 10) {
++					setup->basic_rates = BIT(i);
++					break;
++				}
++			}
++		} else {
++			scan_width = cfg80211_chandef_to_scan_width(&setup->chandef);
++			setup->basic_rates = ieee80211_mandatory_rates(sband,
++								       scan_width);
++		}
+ 	}
+ 
+ 	err = cfg80211_chandef_dfs_required(&rdev->wiphy,
 -- 
-1.9.1
+2.15.1
