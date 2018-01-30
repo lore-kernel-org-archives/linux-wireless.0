@@ -1,106 +1,321 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:43222 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750826AbeAPB21 (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:11869 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751727AbeA3QvK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 20:28:27 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 07/10] rtlwifi: btcoex: Add power_on_setting routine
-Date: Tue, 16 Jan 2018 01:28:12 +0000
-Message-ID: <1516066092.6071.6.camel@realtek.com> (sfid-20180116_022830_922617_05CF2EE0)
-References: <20180111070932.9929-1-pkshih@realtek.com>
-         <20180111070932.9929-8-pkshih@realtek.com>
-         <c2985051-4502-5bc4-79bf-a8c1669e0504@lwfinger.net>
-In-Reply-To: <c2985051-4502-5bc4-79bf-a8c1669e0504@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 30 Jan 2018 11:51:10 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 1/7] staging: wilc1000: rename variables using camelCase in host_int_ParseJoinBssParam()
+Date: Tue, 30 Jan 2018 22:20:27 +0530
+Message-ID: <1517331033-5718-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180130_175114_391857_35F3364B)
+In-Reply-To: <1517331033-5718-1-git-send-email-ajay.kathat@microchip.com>
+References: <1517331033-5718-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE4LTAxLTE1IGF0IDEzOjE5IC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IE9uIDAxLzExLzIwMTggMDE6MDkgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiAN
-Cj4gPiBGcm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPiANCj4gPiBB
-ZnRlciBtYWMgcG93ZXItb24gc2VxdWVuY2UsIHdpZmkgd2lsbCBzdGFydCB0byB3b3JrIHNvIG5v
-dGlmeQ0KPiA+IGJ0Y29leCB0aGUNCj4gPiBldmVudCB0byBjb25maWd1cmUgcmVnaXN0ZXJzIGVz
-cGVjaWFsbHkgcmVsYXRlZCB0byBhbnRlbm5hLiBUaGlzDQo+ID4gd2lsbCBub3QNCj4gPiBvbmx5
-IGhlbHAgdG8gYXNzaWduIGFudGVubmEgYnV0IGFsc28gdG8geWllbGQgYmV0dGVyIHVzZXINCj4g
-PiBleHBlcmllbmNlLg0KPiA+IA0KPiA+IFNpZ25lZC1vZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtz
-aGloQHJlYWx0ZWsuY29tPg0KPiA+IC0tLQ0KPiA+IMKgIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
-YWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjb3V0c3JjLmggfCAxDQo+ID4gKw0KPiA+IMKg
-IGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5j
-wqDCoMKgwqDCoMKgfCA2DQo+ID4gKysrKysrDQo+ID4gwqAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-cmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9ydGxfYnRjLmjCoMKgwqDCoMKgwqB8IDENCj4gPiAr
-DQo+ID4gwqAgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3dpZmkuaMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfCAxDQo+ID4gKw0KPiA+IMKgIDQgZmls
-ZXMgY2hhbmdlZCwgOSBpbnNlcnRpb25zKCspDQo+ID4gDQo+ID4gZGlmZiAtLWdpdA0KPiA+IGEv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGNvdXRz
-cmMuaA0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlz
-dC9oYWxidGNvdXRzcmMuaA0KPiA+IGluZGV4IGVhMTJiOWQ2M2E3My4uYmM1MjNhZjdlZjg4IDEw
-MDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNv
-ZXhpc3QvaGFsYnRjb3V0c3JjLmgNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFs
-dGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5oDQo+ID4gQEAgLTYwOCw2ICs2MDgs
-NyBAQCBleHRlcm4gc3RydWN0IGJ0Y19jb2V4aXN0IGdsX2J0X2NvZXhpc3Q7DQo+ID4gwqDCoA0K
-PiA+IMKgIGJvb2wgZXhoYWxidGNfaW5pdGxpemVfdmFyaWFibGVzKHZvaWQpOw0KPiA+IMKgIGJv
-b2wgZXhoYWxidGNfYmluZF9idF9jb2V4X3dpdGhhZGFwdGVyKHZvaWQgKmFkYXB0ZXIpOw0KPiA+
-ICt2b2lkIGV4aGFsYnRjX3Bvd2VyX29uX3NldHRpbmcoc3RydWN0IGJ0Y19jb2V4aXN0ICpidGNv
-ZXhpc3QpOw0KPiA+IMKgIHZvaWQgZXhoYWxidGNfaW5pdF9od19jb25maWcoc3RydWN0IGJ0Y19j
-b2V4aXN0ICpidGNvZXhpc3QsIGJvb2wNCj4gPiB3aWZpX29ubHkpOw0KPiA+IMKgIHZvaWQgZXho
-YWxidGNfaW5pdF9jb2V4X2RtKHN0cnVjdCBidGNfY29leGlzdCAqYnRjb2V4aXN0KTsNCj4gPiDC
-oCB2b2lkIGV4aGFsYnRjX2lwc19ub3RpZnkoc3RydWN0IGJ0Y19jb2V4aXN0ICpidGNvZXhpc3Qs
-IHU4IHR5cGUpOw0KPiA+IGRpZmYgLS1naXQNCj4gPiBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
-YWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5jDQo+ID4gYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L3J0bF9idGMuYw0KPiA+IGluZGV4IDRkOWUz
-MzA3OGQ0Zi4uOWUzNjIzYjA0MjNjIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5jDQo+ID4gKysrIGIvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9ydGxfYnRjLmMNCj4gPiBA
-QCAtMzIsNiArMzIsNyBAQA0KPiA+IMKgIHN0YXRpYyBzdHJ1Y3QgcnRsX2J0Y19vcHMgcnRsX2J0
-Y19vcGVyYXRpb24gPSB7DQo+ID4gwqDCoAkuYnRjX2luaXRfdmFyaWFibGVzID0gcnRsX2J0Y19p
-bml0X3ZhcmlhYmxlcywNCj4gPiDCoMKgCS5idGNfaW5pdF9oYWxfdmFycyA9IHJ0bF9idGNfaW5p
-dF9oYWxfdmFycywNCj4gPiArCS5idGNfcG93ZXJfb25fc2V0dGluZyA9IHJ0bF9idGNfcG93ZXJf
-b25fc2V0dGluZywNCj4gPiDCoMKgCS5idGNfaW5pdF9od19jb25maWcgPSBydGxfYnRjX2luaXRf
-aHdfY29uZmlnLA0KPiA+IMKgwqAJLmJ0Y19pcHNfbm90aWZ5ID0gcnRsX2J0Y19pcHNfbm90aWZ5
-LA0KPiA+IMKgwqAJLmJ0Y19scHNfbm90aWZ5ID0gcnRsX2J0Y19scHNfbm90aWZ5LA0KPiA+IEBA
-IC0xMTYsNiArMTE3LDExIEBAIHZvaWQgcnRsX2J0Y19pbml0X2hhbF92YXJzKHN0cnVjdCBydGxf
-cHJpdg0KPiA+ICpydGxwcml2KQ0KPiA+IMKgwqAJwqAqLw0KPiA+IMKgIH0NCj4gPiDCoMKgDQo+
-ID4gK3ZvaWQgcnRsX2J0Y19wb3dlcl9vbl9zZXR0aW5nKHN0cnVjdCBydGxfcHJpdiAqcnRscHJp
-dikNCj4gPiArew0KPiA+ICsJZXhoYWxidGNfcG93ZXJfb25fc2V0dGluZygmZ2xfYnRfY29leGlz
-dCk7DQo+ID4gK30NCj4gPiArDQo+ID4gwqAgdm9pZCBydGxfYnRjX2luaXRfaHdfY29uZmlnKHN0
-cnVjdCBydGxfcHJpdiAqcnRscHJpdikNCj4gPiDCoCB7DQo+ID4gwqDCoAl1OCBidF9leGlzdDsN
-Cj4gPiBkaWZmIC0tZ2l0DQo+ID4gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdp
-ZmkvYnRjb2V4aXN0L3J0bF9idGMuaA0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRl
-ay9ydGx3aWZpL2J0Y29leGlzdC9ydGxfYnRjLmgNCj4gPiBpbmRleCA0MGYxY2U4YzhhMDYuLjli
-ZWNmYTU5NDA3ZCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVr
-L3J0bHdpZmkvYnRjb2V4aXN0L3J0bF9idGMuaA0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvcnRsX2J0Yy5oDQo+ID4gQEAgLTI5LDYgKzI5
-LDcgQEANCj4gPiDCoMKgDQo+ID4gwqAgdm9pZCBydGxfYnRjX2luaXRfdmFyaWFibGVzKHN0cnVj
-dCBydGxfcHJpdiAqcnRscHJpdik7DQo+ID4gwqAgdm9pZCBydGxfYnRjX2luaXRfaGFsX3ZhcnMo
-c3RydWN0IHJ0bF9wcml2ICpydGxwcml2KTsNCj4gPiArdm9pZCBydGxfYnRjX3Bvd2VyX29uX3Nl
-dHRpbmcoc3RydWN0IHJ0bF9wcml2ICpydGxwcml2KTsNCj4gPiDCoCB2b2lkIHJ0bF9idGNfaW5p
-dF9od19jb25maWcoc3RydWN0IHJ0bF9wcml2ICpydGxwcml2KTsNCj4gPiDCoCB2b2lkIHJ0bF9i
-dGNfaXBzX25vdGlmeShzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYsIHU4IHR5cGUpOw0KPiA+IMKg
-IHZvaWQgcnRsX2J0Y19scHNfbm90aWZ5KHN0cnVjdCBydGxfcHJpdiAqcnRscHJpdiwgdTggdHlw
-ZSk7DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lm
-aS93aWZpLmgNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS93aWZp
-LmgNCj4gPiBpbmRleCA5NDE2OTQwNjBmNDguLmIyN2RiZTEwYjE2MyAxMDA2NDQNCj4gPiAtLS0g
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvd2lmaS5oDQo+ID4gKysrIGIv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3dpZmkuaA0KPiA+IEBAIC0yNTU3
-LDYgKzI1NTcsNyBAQCBzdHJ1Y3QgYnRfY29leGlzdF9pbmZvIHsNCj4gPiDCoCBzdHJ1Y3QgcnRs
-X2J0Y19vcHMgew0KPiA+IMKgwqAJdm9pZCAoKmJ0Y19pbml0X3ZhcmlhYmxlcykgKHN0cnVjdCBy
-dGxfcHJpdiAqcnRscHJpdik7DQo+ID4gwqDCoAl2b2lkICgqYnRjX2luaXRfaGFsX3ZhcnMpIChz
-dHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYpOw0KPiA+ICsJdm9pZCAoKmJ0Y19wb3dlcl9vbl9zZXR0
-aW5nKShzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYpOw0KPiA+IMKgwqAJdm9pZCAoKmJ0Y19pbml0
-X2h3X2NvbmZpZykgKHN0cnVjdCBydGxfcHJpdiAqcnRscHJpdik7DQo+ID4gwqDCoAl2b2lkICgq
-YnRjX2lwc19ub3RpZnkpIChzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYsIHU4DQo+ID4gdHlwZSk7
-DQo+ID4gwqDCoAl2b2lkICgqYnRjX2xwc19ub3RpZnkpKHN0cnVjdCBydGxfcHJpdiAqcnRscHJp
-diwgdTgNCj4gPiB0eXBlKTsNCj4gPiANCj4gSSBkbyBub3Qgc2VlIGFueSBwbGFjZSBpbiB0aGUg
-Y29kZSB3aGVyZSBydGxfYnRjX3Bvd2VyX29uX3NldHRpbmcoKQ0KPiBpcyBjYWxsZWQswqANCj4g
-ZWl0aGVyIGRpcmVjdGx5IG9yIGJ5IGNhbGxiYWNrLiBEaWQgSSBtaXNzIGl0Pw0KPiANClRoaXMg
-d2lsbCBiZSBjYWxsZWQgYnkgODgyMmJlIGFuZCA4NzIzZGUgZHVyaW5nIGluaXRpYWxpemluZyBo
-YXJkd2FyZSwNCmFuZCBvcmlnaW5hbGx5IDg3MjNiZSB3aWxsIGFsc28gbmVlZCBpdCAobGl0dGxl
-IGFudF9zZWwgcmVsYXRlZCkgYnV0DQp5b3UgaGFkIGZpeGVkIGl0IGJ5IHRoZSBjb21taXRzwqA2
-ZDYyMjY5MjgzNjkgYW5kwqBhMzNmY2JhNmVjMDEuIEknbGwNCmNoZWNrIHdoZXRoZXIgODcyM2Jl
-IGhhcyB0byBjYWxsIHRoaXMgb3Igbm90Lg0KDQpQSw0KDQo=
+Fix "Avoid CamelCase:" issue reported by checkpatch.pl script.
+Rename host_int_ParseJoinBssParam() & its variables using camelCase.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 230 +++++++++++++++---------------
+ 1 file changed, 115 insertions(+), 115 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 358354b..8f8e727 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -265,7 +265,7 @@ static struct wilc_vif *join_req_vif;
+ #define FLUSHED_JOIN_REQ 1
+ #define FLUSHED_BYTE_POS 79
+ 
+-static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo);
++static void *host_int_parse_join_bss_param(struct network_info *info);
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+ static s32 Handle_ScanDone(struct wilc_vif *vif, enum scan_event enuEvent);
+ static void host_if_work(struct work_struct *work);
+@@ -1288,7 +1288,7 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
+ 				hif_drv->usr_scan_req.rcvd_ch_cnt++;
+ 
+ 				pstrNetworkInfo->new_network = true;
+-				pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
++				pJoinParams = host_int_parse_join_bss_param(pstrNetworkInfo);
+ 
+ 				hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
+ 								  hif_drv->usr_scan_req.arg,
+@@ -3870,152 +3870,152 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+ 	return result;
+ }
+ 
+-static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
++static void *host_int_parse_join_bss_param(struct network_info *info)
+ {
+-	struct join_bss_param *pNewJoinBssParam = NULL;
+-	u8 *pu8IEs;
+-	u16 u16IEsLen;
++	struct join_bss_param *param = NULL;
++	u8 *ies;
++	u16 ies_len;
+ 	u16 index = 0;
+-	u8 suppRatesNo = 0;
+-	u8 extSuppRatesNo;
+-	u16 jumpOffset;
+-	u8 pcipherCount;
+-	u8 authCount;
+-	u8 pcipherTotalCount = 0;
+-	u8 authTotalCount = 0;
++	u8 rates_no = 0;
++	u8 ext_rates_no;
++	u16 offset;
++	u8 pcipher_cnt;
++	u8 auth_cnt;
++	u8 pcipher_total_cnt = 0;
++	u8 auth_total_cnt = 0;
+ 	u8 i, j;
+ 
+-	pu8IEs = ptstrNetworkInfo->ies;
+-	u16IEsLen = ptstrNetworkInfo->ies_len;
+-
+-	pNewJoinBssParam = kzalloc(sizeof(*pNewJoinBssParam), GFP_KERNEL);
+-	if (pNewJoinBssParam) {
+-		pNewJoinBssParam->dtim_period = ptstrNetworkInfo->dtim_period;
+-		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->beacon_period;
+-		pNewJoinBssParam->cap_info = ptstrNetworkInfo->cap_info;
+-		memcpy(pNewJoinBssParam->bssid, ptstrNetworkInfo->bssid, 6);
+-		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->ssid,
+-		       ptstrNetworkInfo->ssid_len + 1);
+-		pNewJoinBssParam->ssid_len = ptstrNetworkInfo->ssid_len;
+-		memset(pNewJoinBssParam->rsn_pcip_policy, 0xFF, 3);
+-		memset(pNewJoinBssParam->rsn_auth_policy, 0xFF, 3);
+-
+-		while (index < u16IEsLen) {
+-			if (pu8IEs[index] == SUPP_RATES_IE) {
+-				suppRatesNo = pu8IEs[index + 1];
+-				pNewJoinBssParam->supp_rates[0] = suppRatesNo;
++	ies = info->ies;
++	ies_len = info->ies_len;
++
++	param = kzalloc(sizeof(*param), GFP_KERNEL);
++	if (param) {
++		param->dtim_period = info->dtim_period;
++		param->beacon_period = info->beacon_period;
++		param->cap_info = info->cap_info;
++		memcpy(param->bssid, info->bssid, 6);
++		memcpy((u8 *)param->ssid, info->ssid,
++		       info->ssid_len + 1);
++		param->ssid_len = info->ssid_len;
++		memset(param->rsn_pcip_policy, 0xFF, 3);
++		memset(param->rsn_auth_policy, 0xFF, 3);
++
++		while (index < ies_len) {
++			if (ies[index] == SUPP_RATES_IE) {
++				rates_no = ies[index + 1];
++				param->supp_rates[0] = rates_no;
+ 				index += 2;
+ 
+-				for (i = 0; i < suppRatesNo; i++)
+-					pNewJoinBssParam->supp_rates[i + 1] = pu8IEs[index + i];
++				for (i = 0; i < rates_no; i++)
++					param->supp_rates[i + 1] = ies[index + i];
+ 
+-				index += suppRatesNo;
+-			} else if (pu8IEs[index] == EXT_SUPP_RATES_IE) {
+-				extSuppRatesNo = pu8IEs[index + 1];
+-				if (extSuppRatesNo > (MAX_RATES_SUPPORTED - suppRatesNo))
+-					pNewJoinBssParam->supp_rates[0] = MAX_RATES_SUPPORTED;
++				index += rates_no;
++			} else if (ies[index] == EXT_SUPP_RATES_IE) {
++				ext_rates_no = ies[index + 1];
++				if (ext_rates_no > (MAX_RATES_SUPPORTED - rates_no))
++					param->supp_rates[0] = MAX_RATES_SUPPORTED;
+ 				else
+-					pNewJoinBssParam->supp_rates[0] += extSuppRatesNo;
++					param->supp_rates[0] += ext_rates_no;
+ 				index += 2;
+-				for (i = 0; i < (pNewJoinBssParam->supp_rates[0] - suppRatesNo); i++)
+-					pNewJoinBssParam->supp_rates[suppRatesNo + i + 1] = pu8IEs[index + i];
+-
+-				index += extSuppRatesNo;
+-			} else if (pu8IEs[index] == HT_CAPABILITY_IE) {
+-				pNewJoinBssParam->ht_capable = true;
+-				index += pu8IEs[index + 1] + 2;
+-			} else if ((pu8IEs[index] == WMM_IE) &&
+-				   (pu8IEs[index + 2] == 0x00) && (pu8IEs[index + 3] == 0x50) &&
+-				   (pu8IEs[index + 4] == 0xF2) &&
+-				   (pu8IEs[index + 5] == 0x02) &&
+-				   ((pu8IEs[index + 6] == 0x00) || (pu8IEs[index + 6] == 0x01)) &&
+-				   (pu8IEs[index + 7] == 0x01)) {
+-				pNewJoinBssParam->wmm_cap = true;
+-
+-				if (pu8IEs[index + 8] & BIT(7))
+-					pNewJoinBssParam->uapsd_cap = true;
+-				index += pu8IEs[index + 1] + 2;
+-			} else if ((pu8IEs[index] == P2P_IE) &&
+-				 (pu8IEs[index + 2] == 0x50) && (pu8IEs[index + 3] == 0x6f) &&
+-				 (pu8IEs[index + 4] == 0x9a) &&
+-				 (pu8IEs[index + 5] == 0x09) && (pu8IEs[index + 6] == 0x0c)) {
+-				u16 u16P2P_count;
+-
+-				pNewJoinBssParam->tsf = ptstrNetworkInfo->tsf_lo;
+-				pNewJoinBssParam->noa_enabled = 1;
+-				pNewJoinBssParam->idx = pu8IEs[index + 9];
+-
+-				if (pu8IEs[index + 10] & BIT(7)) {
+-					pNewJoinBssParam->opp_enabled = 1;
+-					pNewJoinBssParam->ct_window = pu8IEs[index + 10];
++				for (i = 0; i < (param->supp_rates[0] - rates_no); i++)
++					param->supp_rates[rates_no + i + 1] = ies[index + i];
++
++				index += ext_rates_no;
++			} else if (ies[index] == HT_CAPABILITY_IE) {
++				param->ht_capable = true;
++				index += ies[index + 1] + 2;
++			} else if ((ies[index] == WMM_IE) &&
++				   (ies[index + 2] == 0x00) && (ies[index + 3] == 0x50) &&
++				   (ies[index + 4] == 0xF2) &&
++				   (ies[index + 5] == 0x02) &&
++				   ((ies[index + 6] == 0x00) || (ies[index + 6] == 0x01)) &&
++				   (ies[index + 7] == 0x01)) {
++				param->wmm_cap = true;
++
++				if (ies[index + 8] & BIT(7))
++					param->uapsd_cap = true;
++				index += ies[index + 1] + 2;
++			} else if ((ies[index] == P2P_IE) &&
++				 (ies[index + 2] == 0x50) && (ies[index + 3] == 0x6f) &&
++				 (ies[index + 4] == 0x9a) &&
++				 (ies[index + 5] == 0x09) && (ies[index + 6] == 0x0c)) {
++				u16 p2p_cnt;
++
++				param->tsf = info->tsf_lo;
++				param->noa_enabled = 1;
++				param->idx = ies[index + 9];
++
++				if (ies[index + 10] & BIT(7)) {
++					param->opp_enabled = 1;
++					param->ct_window = ies[index + 10];
+ 				} else {
+-					pNewJoinBssParam->opp_enabled = 0;
++					param->opp_enabled = 0;
+ 				}
+ 
+-				pNewJoinBssParam->cnt = pu8IEs[index + 11];
+-				u16P2P_count = index + 12;
++				param->cnt = ies[index + 11];
++				p2p_cnt = index + 12;
+ 
+-				memcpy(pNewJoinBssParam->duration, pu8IEs + u16P2P_count, 4);
+-				u16P2P_count += 4;
++				memcpy(param->duration, ies + p2p_cnt, 4);
++				p2p_cnt += 4;
+ 
+-				memcpy(pNewJoinBssParam->interval, pu8IEs + u16P2P_count, 4);
+-				u16P2P_count += 4;
++				memcpy(param->interval, ies + p2p_cnt, 4);
++				p2p_cnt += 4;
+ 
+-				memcpy(pNewJoinBssParam->start_time, pu8IEs + u16P2P_count, 4);
++				memcpy(param->start_time, ies + p2p_cnt, 4);
+ 
+-				index += pu8IEs[index + 1] + 2;
+-			} else if ((pu8IEs[index] == RSN_IE) ||
+-				 ((pu8IEs[index] == WPA_IE) && (pu8IEs[index + 2] == 0x00) &&
+-				  (pu8IEs[index + 3] == 0x50) && (pu8IEs[index + 4] == 0xF2) &&
+-				  (pu8IEs[index + 5] == 0x01)))	{
+-				u16 rsnIndex = index;
++				index += ies[index + 1] + 2;
++			} else if ((ies[index] == RSN_IE) ||
++				 ((ies[index] == WPA_IE) && (ies[index + 2] == 0x00) &&
++				  (ies[index + 3] == 0x50) && (ies[index + 4] == 0xF2) &&
++				  (ies[index + 5] == 0x01)))	{
++				u16 rsn_idx = index;
+ 
+-				if (pu8IEs[rsnIndex] == RSN_IE)	{
+-					pNewJoinBssParam->mode_802_11i = 2;
++				if (ies[rsn_idx] == RSN_IE)	{
++					param->mode_802_11i = 2;
+ 				} else {
+-					if (pNewJoinBssParam->mode_802_11i == 0)
+-						pNewJoinBssParam->mode_802_11i = 1;
+-					rsnIndex += 4;
++					if (param->mode_802_11i == 0)
++						param->mode_802_11i = 1;
++					rsn_idx += 4;
+ 				}
+ 
+-				rsnIndex += 7;
+-				pNewJoinBssParam->rsn_grp_policy = pu8IEs[rsnIndex];
+-				rsnIndex++;
+-				jumpOffset = pu8IEs[rsnIndex] * 4;
+-				pcipherCount = (pu8IEs[rsnIndex] > 3) ? 3 : pu8IEs[rsnIndex];
+-				rsnIndex += 2;
++				rsn_idx += 7;
++				param->rsn_grp_policy = ies[rsn_idx];
++				rsn_idx++;
++				offset = ies[rsn_idx] * 4;
++				pcipher_cnt = (ies[rsn_idx] > 3) ? 3 : ies[rsn_idx];
++				rsn_idx += 2;
+ 
+-				for (i = pcipherTotalCount, j = 0; i < pcipherCount + pcipherTotalCount && i < 3; i++, j++)
+-					pNewJoinBssParam->rsn_pcip_policy[i] = pu8IEs[rsnIndex + ((j + 1) * 4) - 1];
++				for (i = pcipher_total_cnt, j = 0; i < pcipher_cnt + pcipher_total_cnt && i < 3; i++, j++)
++					param->rsn_pcip_policy[i] = ies[rsn_idx + ((j + 1) * 4) - 1];
+ 
+-				pcipherTotalCount += pcipherCount;
+-				rsnIndex += jumpOffset;
++				pcipher_total_cnt += pcipher_cnt;
++				rsn_idx += offset;
+ 
+-				jumpOffset = pu8IEs[rsnIndex] * 4;
++				offset = ies[rsn_idx] * 4;
+ 
+-				authCount = (pu8IEs[rsnIndex] > 3) ? 3 : pu8IEs[rsnIndex];
+-				rsnIndex += 2;
++				auth_cnt = (ies[rsn_idx] > 3) ? 3 : ies[rsn_idx];
++				rsn_idx += 2;
+ 
+-				for (i = authTotalCount, j = 0; i < authTotalCount + authCount; i++, j++)
+-					pNewJoinBssParam->rsn_auth_policy[i] = pu8IEs[rsnIndex + ((j + 1) * 4) - 1];
++				for (i = auth_total_cnt, j = 0; i < auth_total_cnt + auth_cnt; i++, j++)
++					param->rsn_auth_policy[i] = ies[rsn_idx + ((j + 1) * 4) - 1];
+ 
+-				authTotalCount += authCount;
+-				rsnIndex += jumpOffset;
++				auth_total_cnt += auth_cnt;
++				rsn_idx += offset;
+ 
+-				if (pu8IEs[index] == RSN_IE) {
+-					pNewJoinBssParam->rsn_cap[0] = pu8IEs[rsnIndex];
+-					pNewJoinBssParam->rsn_cap[1] = pu8IEs[rsnIndex + 1];
+-					rsnIndex += 2;
++				if (ies[index] == RSN_IE) {
++					param->rsn_cap[0] = ies[rsn_idx];
++					param->rsn_cap[1] = ies[rsn_idx + 1];
++					rsn_idx += 2;
+ 				}
+-				pNewJoinBssParam->rsn_found = true;
+-				index += pu8IEs[index + 1] + 2;
++				param->rsn_found = true;
++				index += ies[index + 1] + 2;
+ 			} else {
+-				index += pu8IEs[index + 1] + 2;
++				index += ies[index + 1] + 2;
+ 			}
+ 		}
+ 	}
+ 
+-	return (void *)pNewJoinBssParam;
++	return (void *)param;
+ }
+ 
+ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+-- 
+2.7.4
