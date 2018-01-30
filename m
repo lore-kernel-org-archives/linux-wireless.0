@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47510 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750740AbeAOVTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jan 2018 16:19:05 -0500
-From: James Hogan <jhogan@kernel.org>
-To: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
-        linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
-Cc: James Hogan <jhogan@kernel.org>,
-        Paul Burton <paul.burton@mips.com>,
-        Matt Redfearn <matt.redfearn@imgtec.com>,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH for-4.15] ssb: Disable PCI host for PCI_DRIVERS_GENERIC
-Date: Mon, 15 Jan 2018 21:17:14 +0000
-Message-Id: <20180115211714.24009-1-jhogan@kernel.org> (sfid-20180115_221909_008222_5FF4C985)
+Received: from s3.sipsolutions.net ([144.76.63.242]:59530 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751537AbeA3HxT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Jan 2018 02:53:19 -0500
+Message-ID: <1517298797.2189.36.camel@sipsolutions.net> (sfid-20180130_085322_903779_DFCAF59B)
+Subject: Re: [PATCH v3 2/3] cfg80211/nl80211: Optional authentication
+ offload to userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        Srinivas Dasari <dasaris@qti.qualcomm.com>
+Date: Tue, 30 Jan 2018 08:53:17 +0100
+In-Reply-To: <1516893219-30243-2-git-send-email-jouni@qca.qualcomm.com>
+References: <1516893219-30243-1-git-send-email-jouni@qca.qualcomm.com>
+         <1516893219-30243-2-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since commit d41e6858ba58 ("MIPS: Kconfig: Set default MIPS system type
-as generic") changed the default MIPS platform to the "generic"
-platform, which uses PCI_DRIVERS_GENERIC instead of PCI_DRIVERS_LEGACY,
-various files in drivers/ssb/ have failed to build.
+On Thu, 2018-01-25 at 17:13 +0200, Jouni Malinen wrote:
+> 
+> +	if (nla_get_flag(info->attrs[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT]))
+> +		connect.flags |= CONNECT_REQ_EXTERNAL_AUTH_SUPPORT;
 
-This is particularly due to the existence of struct pci_controller being
-dependent on PCI_DRIVERS_LEGACY since commit c5611df96804 ("MIPS: PCI:
-Introduce CONFIG_PCI_DRIVERS_LEGACY"), so add that dependency to Kconfig
-to prevent these files being built for the "generic" platform including
-all{yes,mod}config builds.
+It seems like here we should check for connection owner, no?
 
-Fixes: c5611df96804 ("MIPS: PCI: Introduce CONFIG_PCI_DRIVERS_LEGACY")
-Signed-off-by: James Hogan <jhogan@kernel.org>
-Cc: Michael Buesch <m@bues.ch>
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: Paul Burton <paul.burton@mips.com>
-Cc: Matt Redfearn <matt.redfearn@imgtec.com>
-Cc: Guenter Roeck <linux@roeck-us.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: linux-mips@linux-mips.org
----
- drivers/ssb/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+If you say yes, I can edit that in.
 
-diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-index d8e4219c2324..71c73766ee22 100644
---- a/drivers/ssb/Kconfig
-+++ b/drivers/ssb/Kconfig
-@@ -32,7 +32,7 @@ config SSB_BLOCKIO
- 
- config SSB_PCIHOST_POSSIBLE
- 	bool
--	depends on SSB && (PCI = y || PCI = SSB)
-+	depends on SSB && (PCI = y || PCI = SSB) && PCI_DRIVERS_LEGACY
- 	default y
- 
- config SSB_PCIHOST
--- 
-2.13.6
+> +int cfg80211_external_auth_request(struct net_device *dev,
+> +				   struct cfg80211_external_auth_params *params,
+> +				   gfp_t gfp)
+> +{
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+> +	struct sk_buff *msg;
+> +	void *hdr;
+> +
+> +	if (!wdev->conn_owner_nlportid)
+> +		return -EINVAL;
+
+This still kinda makes sense, of course, though it should only happen
+through races (connection owner goes away and we can't tear down the
+connection quickly enough before this happens)
+
+johannes
