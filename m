@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:58224 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:58076 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753244AbeAaWAC (ORCPT
+        with ESMTP id S1753240AbeAaVwE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 17:00:02 -0500
-Message-ID: <1517436000.28814.3.camel@sipsolutions.net> (sfid-20180131_230013_410448_00624CB9)
-Subject: Re: [RFC v3 0/6] EAPoL over NL80211
+        Wed, 31 Jan 2018 16:52:04 -0500
+Message-ID: <1517435522.2189.66.camel@sipsolutions.net> (sfid-20180131_225207_271968_3161865B)
+Subject: Re: [PATCH 5/6] nl80211: Implement TX of control port frames
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Date: Wed, 31 Jan 2018 23:00:00 +0100
-In-Reply-To: <20180131213329.25322-1-denkenz@gmail.com> (sfid-20180131_223342_909055_336D73F4)
+Date: Wed, 31 Jan 2018 22:52:02 +0100
+In-Reply-To: <20180131213329.25322-6-denkenz@gmail.com> (sfid-20180131_223349_476233_D75A8C24)
 References: <20180131213329.25322-1-denkenz@gmail.com>
-         (sfid-20180131_223342_909055_336D73F4)
+         <20180131213329.25322-6-denkenz@gmail.com>
+         (sfid-20180131_223349_476233_D75A8C24)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks pretty good! Some comments over in separate emails.
+On Wed, 2018-01-31 at 15:33 -0600, Denis Kenzior wrote:
+> 
+> +	return rdev_tx_control_port(rdev, dev, buf, len,
+> +				    dest, cpu_to_be16(proto), noencrypt);
 
-Maybe you should consider reordering:
+You're passing __be16 here
 
-[1/6] keep
-[2/6] keep
-[3/6] introduce TX (now patch 5)
-[4/6] introduce RX (now patch 3)
-      modify this to require TX from the driver in order to be able to
-      set the new flag
-[5/6] add TX to mac80211
-[6/6] add RX to mac80211 and set the flag
+> +++ b/net/wireless/rdev-ops.h
+> @@ -714,6 +714,21 @@ static inline int rdev_mgmt_tx(struct cfg80211_registered_device *rdev,
+>  	return ret;
+>  }
+>  
+> +static inline int rdev_tx_control_port(struct cfg80211_registered_device *rdev,
+> +				       struct net_device *dev,
+> +				       const void *buf, size_t len,
+> +				       const u8 *dest, u16 proto,
+> +				       const bool noencrypt)
 
-Ok, you don't really have to do that, since you only set the flag in
-the last patch anyway, but that'd make it better to add the check that
-requires TX, so you don't have to do that in the TX patch and modify
-the RX portion again.
+but have u16 here - doesn't that make sparse unhappy?
+
+Should also declare the API as __be16.
 
 johannes
