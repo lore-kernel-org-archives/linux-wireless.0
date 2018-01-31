@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43968 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756125AbeARN07 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:58232 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753295AbeAaWBA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 08:26:59 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: MAINTAINERS: wireless: update wil6210 maintainer entry
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1516219542-6450-1-git-send-email-merez@codeaurora.org>
-References: <1516219542-6450-1-git-send-email-merez@codeaurora.org>
-To: Maya Erez <merez@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codaurora.org>
-Message-Id: <20180118132659.39DF760802@smtp.codeaurora.org> (sfid-20180118_142726_547186_2FB4C7F0)
-Date: Thu, 18 Jan 2018 13:26:59 +0000 (UTC)
+        Wed, 31 Jan 2018 17:01:00 -0500
+Message-ID: <1517436058.28814.5.camel@sipsolutions.net> (sfid-20180131_230103_639826_E3A3701C)
+Subject: Re: [PATCH 5/6] nl80211: Implement TX of control port frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Wed, 31 Jan 2018 23:00:58 +0100
+In-Reply-To: <e8e2aeba-edd3-30f6-3960-0578ae127336@gmail.com> (sfid-20180131_225807_098372_0F471554)
+References: <20180131213329.25322-1-denkenz@gmail.com>
+         <20180131213329.25322-6-denkenz@gmail.com>
+         <1517435621.2189.67.camel@sipsolutions.net>
+         <e8e2aeba-edd3-30f6-3960-0578ae127336@gmail.com>
+         (sfid-20180131_225807_098372_0F471554)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <merez@codeaurora.org> wrote:
+On Wed, 2018-01-31 at 15:58 -0600, Denis Kenzior wrote:
 
-> wil6210 maintainer email and mail list has changed, hence update
-> its MAINTAINERS entry accordingly.
+> > Actually, then again, that's awkward because doing events and commands
+> > on the same socket doesn't mix all _that_ well. Perhaps we just need to
+> > fix that problem in libnl or something and be done with it ...
+> > 
 > 
-> Signed-off-by: Maya Erez <merez@codeaurora.org>
+> There are no issues on our side..
 
-Patch applied to wireless-drivers-next.git, thanks.
+I guess you don't use libnl then :-) It doesn't exactly make it easy to
+receive events while waiting for an ACK.
 
-454099ed091a MAINTAINERS: wireless: update wil6210 maintainer entry
-
--- 
-https://patchwork.kernel.org/patch/10170645/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
