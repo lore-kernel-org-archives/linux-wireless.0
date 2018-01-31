@@ -1,231 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:42897 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752987AbeAJFUd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jan 2018 00:20:33 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <yhchuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/10] rtlwifi: Use mutex to replace spin_lock to protect IPS and LPS
-Date: Wed, 10 Jan 2018 13:19:53 +0800
-Message-ID: <20180110052002.9544-2-pkshih@realtek.com> (sfid-20180110_062055_345112_FBCAD46C)
-In-Reply-To: <20180110052002.9544-1-pkshih@realtek.com>
-References: <20180110052002.9544-1-pkshih@realtek.com>
+Received: from mail.toke.dk ([52.28.52.200]:46675 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751587AbeAaLuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Jan 2018 06:50:22 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        Ben Greear <greearb@candelatech.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k will not tx packets sometimes.
+In-Reply-To: <0e4aa72c-83da-e879-052d-505d8658177d@dd-wrt.com>
+References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com> <87a7wzv43j.fsf@toke.dk> <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com> <87d11stk0i.fsf@toke.dk> <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com> <871si81eev.fsf@toke.dk> <5A6FA79B.1080206@candelatech.com> <87h8r335yz.fsf@toke.dk> <712ee959-4e41-f4fd-e765-523d024fa7fc@candelatech.com> <87wozzyy5e.fsf@toke.dk> <0e4aa72c-83da-e879-052d-505d8658177d@dd-wrt.com>
+Date: Wed, 31 Jan 2018 12:50:20 +0100
+Message-ID: <878tce2qo3.fsf@toke.dk> (sfid-20180131_125026_972710_9062256B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-Enter/leavel IPS and LPS are large critical section, and they can't use
-sleep function because running in atomic-context, which own a spin_lock.
-In commit ba9f93f82aba ("rtlwifi: Fix enter/exit power_save"), it moves
-LPS functions to thread-context, so this commit can simply change LPS's
-spin lock to mutex.
-Considering IPS functions, rtl_ips_nic_on() may be called by TX tasklet
-(softirq-context) that check whether packet is auth frame. Fortunately,
-current mac80211 will ask driver to leave IPS using op_config with
-changed flag IEEE80211_CONF_CHANGE_IDLE, before issuing auth frame, so
-IPS functions can run in thread-context and use mutex to protect critical
-section, too.
-Also, this commit removes some useless spin locks.
+> Am 30.01.2018 um 19:55 schrieb Toke H=C3=B8iland-J=C3=B8rgensen:
+>> Ben Greear <greearb@candelatech.com> writes:
+>>
+>>>> I'm actually working on reworking that whole scheduler logic, and move
+>>>> some of it into mac80211. Could you test this (WiP) patch and see if
+>>>> that has the same problem?
+>>> It had some serious conflicts in ath10k, due to my local changes, so
+>>> I did not actually test this.
+>> Can send you a version without the ath10k changes tomorrow if you'd like
+>> to test - but will try to reproduce myself as well...
+>>
+>>> But, a revert of the atf patches (a6e56d749 and 63fefa050) appear to
+>>> have resolved the issue. I'll test more with these reverted, and maybe
+>>> will have time to work more on actually fixing upstream code next time
+>>> I move to a newer kernel (and/or after your pending changes get in).
+>> Ah, that narrows it down some. Well, that is the code I'm hacking on
+>> currently anyway, so let's see if we can't get it fixed as part of that
+>> series :)
+> i have some addition information for you maybe. in the same timeframe i=20
+> noticed a increased memory usage for ath9k devices.
+> maybe that helps. so i hit memory boundaries on embedded devices with=20
+> dual interfaces and just 32 mb=C2=A0 ram now which wasnt the case before
+> is this patch worth to try from my side?
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c |  6 ++----
- drivers/net/wireless/realtek/rtlwifi/ps.c   | 24 ++++++++++--------------
- drivers/net/wireless/realtek/rtlwifi/usb.c  |  1 -
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 10 ++--------
- 4 files changed, 14 insertions(+), 27 deletions(-)
+This is probably because of the added queue space. Which is sort of by
+design. In 3ff23cd5654b9c8f4d567caa73439b4c39fbeaae we lowered the
+default limit for non-VHT devices to 4MB. But if you have several PHYs
+on a very memory constrained device you could still run out I guess.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 0ba9c0cc95e1..89ec318598ea 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -551,7 +551,8 @@ int rtl_init_core(struct ieee80211_hw *hw)
- 
- 	/* <4> locks */
- 	mutex_init(&rtlpriv->locks.conf_mutex);
--	spin_lock_init(&rtlpriv->locks.ips_lock);
-+	mutex_init(&rtlpriv->locks.ips_mutex);
-+	mutex_init(&rtlpriv->locks.lps_mutex);
- 	spin_lock_init(&rtlpriv->locks.irq_th_lock);
- 	spin_lock_init(&rtlpriv->locks.h2c_lock);
- 	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
-@@ -561,9 +562,7 @@ int rtl_init_core(struct ieee80211_hw *hw)
- 	spin_lock_init(&rtlpriv->locks.c2hcmd_lock);
- 	spin_lock_init(&rtlpriv->locks.scan_list_lock);
- 	spin_lock_init(&rtlpriv->locks.cck_and_rw_pagea_lock);
--	spin_lock_init(&rtlpriv->locks.check_sendpkt_lock);
- 	spin_lock_init(&rtlpriv->locks.fw_ps_lock);
--	spin_lock_init(&rtlpriv->locks.lps_lock);
- 	spin_lock_init(&rtlpriv->locks.iqk_lock);
- 	/* <5> init list */
- 	INIT_LIST_HEAD(&rtlpriv->entry_list);
-@@ -1229,7 +1228,6 @@ bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	}
- 	if (ieee80211_is_auth(fc)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, "MAC80211_LINKING\n");
--		rtl_ips_nic_on(hw);
- 
- 		mac->link_state = MAC80211_LINKING;
- 		/* Dul mac */
-diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
-index 24c87fae5382..6a4008845f49 100644
---- a/drivers/net/wireless/realtek/rtlwifi/ps.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
-@@ -289,7 +289,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
- 
- 	cancel_delayed_work(&rtlpriv->works.ips_nic_off_wq);
- 
--	spin_lock(&rtlpriv->locks.ips_lock);
-+	mutex_lock(&rtlpriv->locks.ips_mutex);
- 	if (ppsc->inactiveps) {
- 		rtstate = ppsc->rfpwr_state;
- 
-@@ -306,7 +306,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
- 									ppsc->inactive_pwrstate);
- 		}
- 	}
--	spin_unlock(&rtlpriv->locks.ips_lock);
-+	mutex_unlock(&rtlpriv->locks.ips_mutex);
- }
- EXPORT_SYMBOL_GPL(rtl_ips_nic_on);
- 
-@@ -415,7 +415,6 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	unsigned long flag;
- 
- 	if (!ppsc->fwctrl_lps)
- 		return;
-@@ -436,7 +435,7 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 	if (mac->link_state != MAC80211_LINKED)
- 		return;
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 
- 	/* Don't need to check (ppsc->dot11_psmode == EACTIVE), because
- 	 * bt_ccoexist may ask to enter lps.
-@@ -446,7 +445,7 @@ static void rtl_lps_enter_core(struct ieee80211_hw *hw)
- 		 "Enter 802.11 power save mode...\n");
- 	rtl_lps_set_psmode(hw, EAUTOPS);
- 
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- }
- 
- /* Interrupt safe routine to leave the leisure power save mode.*/
-@@ -455,9 +454,8 @@ static void rtl_lps_leave_core(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	unsigned long flag;
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 
- 	if (ppsc->fwctrl_lps) {
- 		if (ppsc->dot11_psmode != EACTIVE) {
-@@ -478,7 +476,7 @@ static void rtl_lps_leave_core(struct ieee80211_hw *hw)
- 			rtl_lps_set_psmode(hw, EACTIVE);
- 		}
- 	}
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- }
- 
- /* For sw LPS*/
-@@ -568,7 +566,6 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
--	unsigned long flag;
- 
- 	if (!rtlpriv->psc.swctrl_lps)
- 		return;
-@@ -581,9 +578,9 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
- 		RT_CLEAR_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM);
- 	}
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS);
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- }
- 
- void rtl_swlps_rfon_wq_callback(void *data)
-@@ -600,7 +597,6 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	unsigned long flag;
- 	u8 sleep_intv;
- 
- 	if (!rtlpriv->psc.sw_ps_enabled)
-@@ -624,9 +620,9 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 	}
- 	spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 
--	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
-+	mutex_lock(&rtlpriv->locks.lps_mutex);
- 	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS);
--	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
-+	mutex_unlock(&rtlpriv->locks.lps_mutex);
- 
- 	if (ppsc->reg_rfps_level & RT_RF_OFF_LEVL_ASPM &&
- 	    !RT_IN_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM)) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 39b033b3b53a..ce3103bb8ebb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -962,7 +962,6 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw,
- 	memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
- 	if (ieee80211_is_auth(fc)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, "MAC80211_LINKING\n");
--		rtl_ips_nic_on(hw);
- 	}
- 
- 	if (rtlpriv->psc.sw_ps_enabled) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 0b1c54381a2f..941694060f48 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2325,17 +2325,14 @@ struct rtl_hal_cfg {
- struct rtl_locks {
- 	/* mutex */
- 	struct mutex conf_mutex;
--	struct mutex ps_mutex;
-+	struct mutex ips_mutex;	/* mutex for enter/leave IPS */
-+	struct mutex lps_mutex;	/* mutex for enter/leave LPS */
- 
- 	/*spin lock */
--	spinlock_t ips_lock;
- 	spinlock_t irq_th_lock;
--	spinlock_t irq_pci_lock;
--	spinlock_t tx_lock;
- 	spinlock_t h2c_lock;
- 	spinlock_t rf_ps_lock;
- 	spinlock_t rf_lock;
--	spinlock_t lps_lock;
- 	spinlock_t waitq_lock;
- 	spinlock_t entry_list_lock;
- 	spinlock_t usb_lock;
-@@ -2348,9 +2345,6 @@ struct rtl_locks {
- 	/*Dual mac*/
- 	spinlock_t cck_and_rw_pagea_lock;
- 
--	/*Easy concurrent*/
--	spinlock_t check_sendpkt_lock;
--
- 	spinlock_t iqk_lock;
- };
- 
--- 
-2.15.1
+`echo fq_memory_limit 2097152 > /sys/kernel/debug/ieee80211/phy0/aqm`
+would limit it to 2MB for that phy...
+
+-Toke
