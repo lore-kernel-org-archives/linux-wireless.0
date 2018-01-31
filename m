@@ -1,78 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:43483 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755975AbeAHKaQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:58016 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753183AbeAaVp3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jan 2018 05:30:16 -0500
-Received: by mail-wm0-f50.google.com with SMTP id n138so13114549wmg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Jan 2018 02:30:16 -0800 (PST)
-Date: Mon, 8 Jan 2018 11:30:12 +0100
-From: William Dauchy <wdauchy@gmail.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: brcmfmac: set p2p_disc error on BCM4350
-Message-ID: <20180108103012.GA1957@paf> (sfid-20180108_113043_350764_5C841C91)
-References: <CAJ75kXYLOV8aVZpftBFRbMv=KCaxCoQpJFaL0m0QDjVOytq3Vg@mail.gmail.com>
- <5A533A88.1000804@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5A533A88.1000804@broadcom.com>
+        Wed, 31 Jan 2018 16:45:29 -0500
+Message-ID: <1517435126.2189.62.camel@sipsolutions.net> (sfid-20180131_224533_030399_B2422F10)
+Subject: Re: [PATCH 3/6] nl80211: Add CMD_CONTROL_PORT_FRAME API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org,
+        Jouni Malinen <j@w1.fi>
+Date: Wed, 31 Jan 2018 22:45:26 +0100
+In-Reply-To: <20180131213329.25322-4-denkenz@gmail.com> (sfid-20180131_223353_648398_FEE9882F)
+References: <20180131213329.25322-1-denkenz@gmail.com>
+         <20180131213329.25322-4-denkenz@gmail.com>
+         (sfid-20180131_223353_648398_FEE9882F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Arend,
-
-Thanks for your quick answer.
-
-On Mon, Jan 08, 2018 at 10:31:52AM +0100, Arend van Spriel wrote:
-> This has been reported before, but not been able to look into it. Diving
-> into firmware it seems that error can only occur if the mac address for the
-> p2pdev interface is already used. So if possible can you rebuild the driver
-> with the patch below applied and provide dmesg output and output of
-> 'ifconfig -a'.
+On Wed, 2018-01-31 at 15:33 -0600, Denis Kenzior wrote:
 > 
-> Regards,
-> Arend
-> ---8<----------------------------------------------------------------
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> b/drivers/n
-> index 2ee5413..f96ad37 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> @@ -2065,6 +2065,7 @@ static struct wireless_dev
-> *brcmf_p2p_create_p2pdev(struc
->         int err;
->         u32 bsscfgidx;
-> 
-> +       brcmf_err("enter: mac=%pM\n", addr);
->         if (p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
->                 return ERR_PTR(-ENOSPC);
-> 
->
+>  /**
+> + * cfg80211_rx_control_port - inform userspace about a received control port
+> + * frame, e.g. EAPoL.  This is used if userspace has specified it wants to
+> + * receive control port frames over NL80211.
 
-Here is my brcmfmac dmesg output with patch applied
-(please tell me if you need complete dmesg)
+nitpick - the short description must fit on a single line, you can have
+a longer description separately (after the arguments, I'd probably even
+put it after the return)
 
-brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4350-pcie.bin for chip 0x004350(17232) rev 0x000008
-brcmfmac 0000:3a:00.0: Direct firmware load for brcm/brcmfmac4350-pcie.txt failed with error -2
-brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015 06:16:26 version 7.35.180.119 (r594535) FWID 01-e791c176
-brcmfmac 0000:3a:00.0 wlp58s0: renamed from wlan0
-brcmfmac: brcmf_p2p_create_p2pdev: enter: mac=00:00:00:00:00:00
-brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
-brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlp58s0 type 10 failed: err=-16
+> + * @dev: The device the frame matched to
+> + * @buf: control port frame
+> + * @len: length of the frame data
 
-ifconfig shows:
+You should document what exactly is in this frame data?
 
-wlp58s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-        inet 192.168.18.77  netmask 255.255.255.0  broadcast 192.168.18.255
-        inet6 fe80::3517:e1be:5bc7:899  prefixlen 64  scopeid 0x20<link>
-        ether 30:52:cb:83:71:33  txqueuelen 1000  (Ethernet)
-        RX packets 26557  bytes 34149730 (32.5 MiB)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 14965  bytes 2298777 (2.1 MiB)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+Should it be with the ethernet header removed? It would seem easier if
+it's with the ethernet header included, but then why do you need the
+proto argument?
 
-Best,
--- 
-William
+> + * @NL80211_CMD_CONTROL_PORT_FRAME: Control Port (e.g. PAE) frame TX request
+> + *	and RX notification.  This command is used both as a request to transmit
+> + *	a control port frame and as a notification that a control port frame
+> + *	has been received. %NL80211_ATTR_FRAME is used to specify the
+> + *	frame contents.  The frame is the raw EAPoL data, without ethernet or
+> + *	802.11 headers.
+
+Never mind, so it's without Ethernet header. Is that really desirable
+though? I mean, it could be that the Ethernet address even matters (not
+sure) and it'd probably be easier to handle in (existing) userspace
+where Ethernet frames are expected now?
+
+> + nla_put_failure:
+> +	genlmsg_cancel(msg, hdr);
+
+nit: there's no point in cancelling if you free it (immediately).
+
+> +bool cfg80211_rx_control_port(struct net_device *dev,
+> +			      const u8 *buf, size_t len,
+> +			      const u8 *addr, u16 proto, bool unencrypted)
+> +{
+> +	bool ret;
+> +
+> +	trace_cfg80211_rx_control_port(dev, buf, len, addr, proto, unencrypted);
+> +	ret = __nl80211_rx_control_port(dev, buf, len, addr, proto,
+> +					unencrypted, GFP_ATOMIC);
+> +	trace_cfg80211_return_bool(ret);
+
+this seems wrong - you return -ERROR from __nl80211_rx_control_port()
+so you need either to pass that on as an integer to the caller, or put
+an == 0 here or something?
+
+"Return: %true if the frame was passed to userspace"
+
+johannes
