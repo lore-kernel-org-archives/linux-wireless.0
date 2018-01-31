@@ -1,63 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:45015 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbeABTXs (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50092 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751025AbeAaMFT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Jan 2018 14:23:48 -0500
-Date: Tue, 2 Jan 2018 20:23:45 +0100
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH v2 0/6] wl1251: Fix MAC address for Nokia N900
-Message-ID: <20180102192345.dnywuv4sapltrfrl@pali> (sfid-20180102_202405_695372_4BCEFC87)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
+        Wed, 31 Jan 2018 07:05:19 -0500
+Message-ID: <1517400317.2189.54.camel@sipsolutions.net> (sfid-20180131_130524_077215_6C5A88D1)
+Subject: Re: [PATCH v4 2/3] mac80211_hwsim: add nl_err_msg in
+ hwsim_new_radio in netlink case
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 31 Jan 2018 13:05:17 +0100
+In-Reply-To: <cf608fec-78d5-40f4-8601-50537d6f4e73@uni-rostock.de>
+References: <20180122170437.14213-1-benjamin.beichler@uni-rostock.de>
+         <20180122170437.14213-3-benjamin.beichler@uni-rostock.de>
+         <1517299004.2189.38.camel@sipsolutions.net>
+         <cf608fec-78d5-40f4-8601-50537d6f4e73@uni-rostock.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 10 November 2017 00:38:22 Pali Rohár wrote:
-> This patch series fix processing MAC address for wl1251 chip found in Nokia N900.
-> 
-> Changes since v1:
-> * Added Acked-by for Pavel Machek
-> * Fixed grammar
-> * Magic numbers for NVS offsets are replaced by defines
-> * Check for validity of mac address NVS data is moved into function
-> * Changed order of patches as Pavel requested
-> 
-> Pali Rohár (6):
->   wl1251: Update wl->nvs_len after wl->nvs is valid
->   wl1251: Generate random MAC address only if driver does not have
->     valid
->   wl1251: Parse and use MAC address from supplied NVS data
->   wl1251: Set generated MAC address back to NVS data
->   firmware: Add request_firmware_prefer_user() function
->   wl1251: Use request_firmware_prefer_user() for loading NVS
->     calibration data
-> 
->  drivers/base/firmware_class.c          |   45 +++++++++++++-
->  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
->  drivers/net/wireless/ti/wl1251/main.c  |  104 ++++++++++++++++++++++++++------
->  include/linux/firmware.h               |    9 +++
->  4 files changed, 138 insertions(+), 21 deletions(-)
+On Tue, 2018-01-30 at 10:47 +0100, Benjamin Beichler wrote:
 
-Hi! Are there any comments for first 4 patches? If not, could they be
-accepted and merged?
+> It should not be triggered because of already existing macs, I added it
+> for somehow completeness, but you can leave it out.
 
--- 
-Pali Rohár
-pali.rohar@gmail.com
+Sure.
+
+> After having again a look on it, there could be an -ENOMEM on
+> rhashtable_insert. Maybe it's better to explicitly catch only -EEXIST
+> and print for the rest an generic error. Do you agree ?
+
+Nah, that's unlikely enough ... and you get -ENOMEM back in userspace
+too.
+
+That said, good thing I looked at this - you forgot a set of braces :-)
+
+johannes
