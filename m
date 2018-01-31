@@ -1,82 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13677 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751448AbeA3BMW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jan 2018 20:12:22 -0500
-Subject: [PATCH v6 12/13] nl80211: sanitize array index in parse_txq_params
-From: Dan Williams <dan.j.williams@intel.com>
-To: tglx@linutronix.de, mingo@kernel.org
-Cc: linux-arch@vger.kernel.org,
-        Christian Lamparter <chunkeey@gmail.com>,
-        gregkh@linuxfoundation.org, kernel-hardening@lists.openwall.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        torvalds@linux-foundation.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        alan@linux.intel.com
-Date: Mon, 29 Jan 2018 17:03:15 -0800
-Message-ID: <151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180130_021254_124151_1437FA33)
-In-Reply-To: <151727412964.33451.17213780323040673404.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151727412964.33451.17213780323040673404.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55322 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751834AbeAaG7J (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Jan 2018 01:59:09 -0500
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Shrenik Shikhare <shrenik@marvell.com>
+Subject: RE: [EXT] Re: [2/2] mwifiex: use more_rx_task_flag to avoid USB RX
+ stall
+Date: Wed, 31 Jan 2018 06:59:04 +0000
+Message-ID: <26222638cf1645ba85436c1243fbc1bc@SC-EXCH02.marvell.com> (sfid-20180131_075922_548764_5CFC699D)
+References: <1516633497-6584-3-git-send-email-gbhat@marvell.com>
+ <20180125071202.0F39560A60@smtp.codeaurora.org>
+ <e7a1f375b450451da611477943d2eeb6@SC-EXCH02.marvell.com>
+ <20180125183355.rpmajajr5exxcybb@ban.mtv.corp.google.com>
+ <25201a91958e4b408b14c4125433b305@SC-EXCH02.marvell.com>
+ <CA+ASDXPkrVgsRH--ETzMNXRQeu-akGn8hZVYT=YpG+5ZpggMTQ@mail.gmail.com>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless drivers rely on parse_txq_params to validate that
-txq_params->ac is less than NL80211_NUM_ACS by the time the low-level
-driver's ->conf_tx() handler is called. Use a new helper,
-array_index_nospec(), to sanitize txq_params->ac with respect to
-speculation. I.e. ensure that any speculation into ->conf_tx() handlers
-is done with a value of txq_params->ac that is within the bounds of [0,
-NL80211_NUM_ACS).
-
-Reported-by: Christian Lamparter <chunkeey@gmail.com>
-Reported-by: Elena Reshetova <elena.reshetova@intel.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- net/wireless/nl80211.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d396cb61a280..81bef0676e1d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -16,6 +16,7 @@
- #include <linux/nl80211.h>
- #include <linux/rtnetlink.h>
- #include <linux/netlink.h>
-+#include <linux/nospec.h>
- #include <linux/etherdevice.h>
- #include <net/net_namespace.h>
- #include <net/genetlink.h>
-@@ -2056,20 +2057,22 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
- static int parse_txq_params(struct nlattr *tb[],
- 			    struct ieee80211_txq_params *txq_params)
- {
-+	u8 ac;
-+
- 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
- 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
- 	    !tb[NL80211_TXQ_ATTR_AIFS])
- 		return -EINVAL;
- 
--	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
-+	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
- 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
- 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
- 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
- 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
- 
--	if (txq_params->ac >= NL80211_NUM_ACS)
-+	if (ac >= NL80211_NUM_ACS)
- 		return -EINVAL;
--
-+	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
- 	return 0;
- }
- 
+SGkgQnJpYW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogR2FuYXBh
+dGhpIEJoYXQNCj4gU2VudDogVHVlc2RheSwgSmFudWFyeSAzMCwgMjAxOCA4OjU1IFBNDQo+IFRv
+OiAnQnJpYW4gTm9ycmlzJw0KPiBDYzogS2FsbGUgVmFsbzsgbGludXgtd2lyZWxlc3NAdmdlci5r
+ZXJuZWwub3JnOyBDYXRoeSBMdW87IFhpbm1pbmcgSHU7DQo+IFpoaXl1YW4gWWFuZzsgSmFtZXMg
+Q2FvOyBNYW5nZXNoIE1hbHVzYXJlOyBTaHJlbmlrIFNoaWtoYXJlDQo+IFN1YmplY3Q6IFJFOiBb
+RVhUXSBSZTogWzIvMl0gbXdpZmlleDogdXNlIG1vcmVfcnhfdGFza19mbGFnIHRvIGF2b2lkIFVT
+QiBSWA0KPiBzdGFsbA0KPg0KPiBIaSBCcmlhbiwNCj4NCj4gPiAtLS0tLU9yaWdpbmFsIE1lc3Nh
+Z2UtLS0tLQ0KPiA+IEZyb206IEJyaWFuIE5vcnJpcyBbbWFpbHRvOmJyaWFubm9ycmlzQGNocm9t
+aXVtLm9yZ10NCj4gPiBTZW50OiBUdWVzZGF5LCBKYW51YXJ5IDMwLCAyMDE4IDM6MzggQU0NCj4g
+PiBUbzogR2FuYXBhdGhpIEJoYXQNCj4gPiBDYzogS2FsbGUgVmFsbzsgbGludXgtd2lyZWxlc3NA
+dmdlci5rZXJuZWwub3JnOyBDYXRoeSBMdW87IFhpbm1pbmcgSHU7DQo+ID4gWmhpeXVhbiBZYW5n
+OyBKYW1lcyBDYW87IE1hbmdlc2ggTWFsdXNhcmU7IFNocmVuaWsgU2hpa2hhcmUNCj4gPiBTdWJq
+ZWN0OiBSZTogW0VYVF0gUmU6IFsyLzJdIG13aWZpZXg6IHVzZSBtb3JlX3J4X3Rhc2tfZmxhZyB0
+byBhdm9pZA0KPiA+IFVTQiBSWCBzdGFsbA0KPiA+DQo+ID4gSGksDQo+ID4NCj4gPiBPbiBTdW4s
+IEphbiAyOCwgMjAxOCBhdCAxMToxOSBQTSwgR2FuYXBhdGhpIEJoYXQgPGdiaGF0QG1hcnZlbGwu
+Y29tPg0KPiA+IHdyb3RlOg0KPiA+ID4+IEZyb206IEdhbmFwYXRoaSBCaGF0DQo+ID4gPj4gPiBG
+cm9tOiBCcmlhbiBOb3JyaXMgW21haWx0bzpicmlhbm5vcnJpc0BjaHJvbWl1bS5vcmddIE9uIFRo
+dSwgSmFuDQo+ID4gPj4gPiAyNSwgMjAxOCBhdCAwOTo1OTowNEFNICswMDAwLCBHYW5hcGF0aGkg
+QmhhdCB3cm90ZToNCj4gPiA+PiA+ID4gPiBJIGNhbid0IGZpbmQgYW55IGNvbW1pdCB3aXRoIGlk
+IGM3ZGJkY2IyYTRlMSwgaXMgaXQgY29ycmVjdD8NCj4gPiA+PiA+ID4gQ29ycmVjdC4gQWN0dWFs
+bHkgdGhlIGNvbW1pdCBpZCBjN2RiZGNiMmE0ZTEgaXMgdGhlIFBBVENIIFsxLzJdDQo+ID4gPj4g
+PiA+IHNlbnQgaW4gdGhpcw0KPiA+ID4+ID4gc2VyaWVzLg0KPiA+ID4+ID4NCj4gPiA+PiA+IFdo
+YXQ/IFdoeSB3b3VsZCB5b3UgaW50cm9kdWNlIGEgYnVnIGFuZCBvbmx5IGZpeCBpdCBpbiB0aGUg
+bmV4dA0KPiBwYXRjaD8NCj4gPiA+PiBXaXRoIHRoZSBmaXJzdCBwYXRjaCB0aGUgb3JpZ2luYWwg
+aXNzdWUgdG9vayBjb25zaWRlcmFibHkgbG9uZ2VyDQo+ID4gPj4gdGltZSB0byByZWNyZWF0ZS4g
+QWxzbyBpdCBmb2xsb3dlZCBhIGRpZmZlcmVudCBwYXRoIHRvIGdldA0KPiA+ID4+IHJlY3JlYXRl
+ZChzaGFyZWQgaW4gY29tbWl0IG1lc3NhZ2UpLg0KPiA+ID4+ID4gRG9lcyB0aGF0IG1lYW4geW91
+IHNob3VsZCBqdXN0IGNvbWJpbmUgdGhlIHR3bz8NCj4gPiA+PiBMZXQgdXMga25vdyBpZiB0aGF0
+IGlzIGZpbmUgdG8gbWVyZ2UgdGhlbS4gV2UgY2FuIG1vZGlmeSB0aGUgY29tbWl0DQo+ID4gPj4g
+bWVzc2FnZSBhY2NvcmRpbmdseS4NCj4gPiA+PiA+IE9yIHJldmVyc2UgdGhlIG9yZGVyLCBpZiBw
+YXRjaCAyIGRvZXNuJ3QgY2F1c2UgcHJvYmxlbXMgb24gaXRzIG93bj8NCj4gPiA+PiBQYXRjaCAy
+IGhhcyBhIGRlcGVuZGVuY3kgb24gcGF0Y2ggMS4NCj4gPiA+IE9uZSBjb3JyZWN0aW9uLiBUaGVy
+ZSBpcyBubyBjb21taXQgZGVwZW5kZW5jeSBiZXR3ZWVuIHBhdGNoIDEgYW5kDQo+ID4gMih0aGV5
+IGNhbiBiZSBhcHBsaWVkIGluIGFueSBvcmRlcikuIEJ1dCB0aGUgcmVzdWx0IHdvdWxkIGJlIHNh
+bWUuIFdlDQo+ID4gbmVlZCBib3RoIGZpeGVzLiBMZXQgdXMga25vdyBpZiB3ZSBjYW4gY29tYmlu
+ZSB0aGVtLg0KPiA+DQo+ID4gSSBoYXZlbid0IGNsb3NlbHkgbG9va2VkIGF0IHBhdGNoIDIgeWV0
+LiBNeSBvbmx5IHN0YXRlbWVudCB3YXMgdGhhdCBpdA0KPiA+IG1ha2VzIG5vIHNlbnNlIHRvIGhh
+dmUgMiBjb21taXRzLCB3aXRoIHRoZSBzZWNvbmQgb25lIGxhYmVsZWQgYXMNCj4gPiAiRml4aW5n
+IiB0aGUgZmlyc3Qgb25lLiBGcm9tIHlvdXIgZGVzY3JpcHRpb25zLCBpdCBzb3VuZHMgbGlrZSBw
+YXRjaCAyDQo+ID4gc2hvdWxkIGFjdHVhbGx5IGNvbWUgZmlyc3QsDQo+IE9rLiBJIHVuZGVyc3Rh
+bmQuIEkgd2lsbCByZW9yZGVyIHRoZW0gYW5kIHNlbmQgdjMoYWxvbmcgd2l0aCBzcGlubG9jaw0K
+PiBjaGFuZ2UpLg0KSSB3YXMgdHJ5aW5nIHRvIHJlb3JkZXIgdGhlIHBhdGNoIGJ1dCBmb3VuZCBw
+YXRjaCAyIGlzIGluZGVlZCBkZXBlbmRlbnQgb24gcGF0Y2ggMS4gQ29uc2lkZXIgdGhlIGZpcnN0
+IHBvaW50IGluIGNvbW1pdCBtZXNzYWdlIG9mIHBhdGNoIDI6DQoxLiBVU0IgcmVjZWl2ZXMgYW4g
+UlggZGF0YSBpbnRlcnJ1cHQsIHF1ZXVlcyByeF93b3JrDQpUaGlzIGlzIHRoZSBjaGFuZ2UgYWRk
+ZWQgaW4gcGF0Y2ggMS4gRWFybGllciBvbiByZWNlaXZlIG9mIFJYIGRhdGEgaW50ZXJydXB0LCBk
+cml2ZXIgd291bGQgcXVldWUgbWFpbl93b3JrLCB3aGljaCBpbiB0dXJuIHF1ZXVlZCByeF93b3Jr
+LiBCdXQgYWZ0ZXIgcGF0Y2ggMSBkcml2ZXIgdHJpZXMgdG8gIHF1ZXVlIHJ4X3dvcmsgaW4gaW50
+ZXJydXB0IGNvbnRleHQuDQoNCkxldCB1cyBwbGVhc2Uga25vdyB5b3VyIHRob3VnaHRzIG9uIHRo
+aXMuDQoNCj4gPiBidXQgSSdtIG5vdCByZWFsbHkgc3VyZS4gSSBvbmx5IGxvb2tlZCBmYXIgZW5v
+dWdoIHRvIHNheSB0aGF0IEkgZGlkbid0DQo+ID4gbGlrZSBwYXRjaA0KPiA+IDEgYXMtaXMgOikN
+Cj4gPg0KPiA+IEJyaWFuDQo+IFJlZ2FyZHMsDQo+IEdhbmFwYXRoaQ0K
