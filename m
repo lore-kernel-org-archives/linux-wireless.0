@@ -1,102 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:57309 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751197AbeA2D1E (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Jan 2018 22:27:04 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 09/10] rtlwifi: btcoex: add routine to set default port id
-Date: Mon, 29 Jan 2018 11:26:40 +0800
-Message-ID: <20180129032641.17841-10-pkshih@realtek.com> (sfid-20180129_042713_352580_9A68EDCD)
-In-Reply-To: <20180129032641.17841-1-pkshih@realtek.com>
-References: <20180129032641.17841-1-pkshih@realtek.com>
+Received: from mail.toke.dk ([52.28.52.200]:44697 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932080AbeAaNqI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Jan 2018 08:46:08 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        Ben Greear <greearb@candelatech.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k will not tx packets sometimes.
+In-Reply-To: <6bb730a0-f67b-b131-59a4-70baea810584@dd-wrt.com>
+References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com> <87a7wzv43j.fsf@toke.dk> <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com> <87d11stk0i.fsf@toke.dk> <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com> <871si81eev.fsf@toke.dk> <5A6FA79B.1080206@candelatech.com> <87h8r335yz.fsf@toke.dk> <712ee959-4e41-f4fd-e765-523d024fa7fc@candelatech.com> <87wozzyy5e.fsf@toke.dk> <0e4aa72c-83da-e879-052d-505d8658177d@dd-wrt.com> <878tce2qo3.fsf@toke.dk> <6bb730a0-f67b-b131-59a4-70baea810584@dd-wrt.com>
+Date: Wed, 31 Jan 2018 14:46:06 +0100
+Message-ID: <87zi4u16qp.fsf@toke.dk> (sfid-20180131_144701_102822_E3811084)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-Tell wifi and BT firmware the default port ID to set multiports' state
-properly, but only 8822be needs this function currently.
+> Am 31.01.2018 um 12:50 schrieb Toke H=C3=B8iland-J=C3=B8rgensen:
+>> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+>>
+>>> Am 30.01.2018 um 19:55 schrieb Toke H=C3=B8iland-J=C3=B8rgensen:
+>>>> Ben Greear <greearb@candelatech.com> writes:
+>>>>
+>>>>>> I'm actually working on reworking that whole scheduler logic, and mo=
+ve
+>>>>>> some of it into mac80211. Could you test this (WiP) patch and see if
+>>>>>> that has the same problem?
+>>>>> It had some serious conflicts in ath10k, due to my local changes, so
+>>>>> I did not actually test this.
+>>>> Can send you a version without the ath10k changes tomorrow if you'd li=
+ke
+>>>> to test - but will try to reproduce myself as well...
+>>>>
+>>>>> But, a revert of the atf patches (a6e56d749 and 63fefa050) appear to
+>>>>> have resolved the issue. I'll test more with these reverted, and maybe
+>>>>> will have time to work more on actually fixing upstream code next time
+>>>>> I move to a newer kernel (and/or after your pending changes get in).
+>>>> Ah, that narrows it down some. Well, that is the code I'm hacking on
+>>>> currently anyway, so let's see if we can't get it fixed as part of that
+>>>> series :)
+>>> i have some addition information for you maybe. in the same timeframe i
+>>> noticed a increased memory usage for ath9k devices.
+>>> maybe that helps. so i hit memory boundaries on embedded devices with
+>>> dual interfaces and just 32 mb=C2=A0 ram now which wasnt the case before
+>>> is this patch worth to try from my side?
+>> This is probably because of the added queue space. Which is sort of by
+>> design. In 3ff23cd5654b9c8f4d567caa73439b4c39fbeaae we lowered the
+>> default limit for non-VHT devices to 4MB. But if you have several PHYs
+>> on a very memory constrained device you could still run out I guess.
+>>
+>> `echo fq_memory_limit 2097152 > /sys/kernel/debug/ieee80211/phy0/aqm`
+>> would limit it to 2MB for that phy...
+> what if i tried that already? :-)
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 22 ++++++++++++++++++++++
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  2 ++
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  5 +++++
- 3 files changed, 29 insertions(+)
+Hmm, then it's maybe a bug? Changing the limit makes no difference at
+all? Does your build include 0bfe649fbb133? What are values of the
+counters in /sys/kernel/debug/ieee80211/phy0/aqm ?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 1404729441a2..823694cb4fdb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -1039,6 +1039,28 @@ static void halbtc_fill_h2c_cmd(void *bt_context, u8 element_id,
- 					cmd_len, cmd_buf);
- }
- 
-+void halbtc_send_wifi_port_id_cmd(void *bt_context)
-+{
-+	struct btc_coexist *btcoexist = (struct btc_coexist *)bt_context;
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	u8 cmd_buf[1] = {0};	/* port id [2:0] = 0 */
-+
-+	rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->mac80211.hw, H2C_BT_PORT_ID,
-+					1, cmd_buf);
-+}
-+
-+void halbtc_set_default_port_id_cmd(void *bt_context)
-+{
-+	struct btc_coexist *btcoexist = (struct btc_coexist *)bt_context;
-+	struct rtl_priv *rtlpriv = btcoexist->adapter;
-+	struct ieee80211_hw *hw = rtlpriv->mac80211.hw;
-+
-+	if (!rtlpriv->cfg->ops->set_default_port_id_cmd)
-+		return;
-+
-+	rtlpriv->cfg->ops->set_default_port_id_cmd(hw);
-+}
-+
- static
- void halbtc_set_bt_reg(void *btc_context, u8 reg_type, u32 offset, u32 set_val)
- {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 8ed217656539..f5d8159a88eb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -691,6 +691,8 @@ void exhalbtc_lps_leave(struct btc_coexist *btcoexist);
- void exhalbtc_low_wifi_traffic_notify(struct btc_coexist *btcoexist);
- void exhalbtc_set_single_ant_path(struct btc_coexist *btcoexist,
- 				  u8 single_ant_path);
-+void halbtc_send_wifi_port_id_cmd(void *bt_context);
-+void halbtc_set_default_port_id_cmd(void *bt_context);
- 
- /* The following are used by wifi_only case */
- enum wifionly_chip_interface {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 0e8aae0c05c1..1c9ed28b42da 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -153,6 +153,10 @@ enum rtl8192c_h2c_cmd {
- 	MAX_H2CCMD
- };
- 
-+enum {
-+	H2C_BT_PORT_ID = 0x71,
-+};
-+
- #define GET_TX_REPORT_SN_V1(c2h)	(c2h[6])
- #define GET_TX_REPORT_ST_V1(c2h)	(c2h[0] & 0xC0)
- #define GET_TX_REPORT_RETRY_V1(c2h)	(c2h[2] & 0x3F)
-@@ -2256,6 +2260,7 @@ struct rtl_hal_ops {
- 	void (*bt_coex_off_before_lps) (struct ieee80211_hw *hw);
- 	void (*fill_h2c_cmd) (struct ieee80211_hw *hw, u8 element_id,
- 			      u32 cmd_len, u8 *p_cmdbuffer);
-+	void (*set_default_port_id_cmd)(struct ieee80211_hw *hw);
- 	bool (*get_btc_status) (void);
- 	bool (*is_fw_header)(struct rtlwifi_firmware_header *hdr);
- 	u32 (*rx_command_packet)(struct ieee80211_hw *hw,
--- 
-2.15.1
+-Toke
