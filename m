@@ -1,126 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59808 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756532AbeAROYI (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:44044 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753124AbeAaOwf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Jan 2018 09:24:08 -0500
-From: Ramon Fried <rfried@codeaurora.org>
-To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
-        bjorn.andersson@linaro.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH] wcn36xx: release resources in case of error
-Date: Thu, 18 Jan 2018 16:23:48 +0200
-Message-Id: <20180118142348.12759-1-rfried@codeaurora.org> (sfid-20180118_152423_819007_316CBC18)
+        Wed, 31 Jan 2018 09:52:35 -0500
+Subject: Re: ath9k will not tx packets sometimes.
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <c383b64d-d028-3d83-f1c1-b4e32ca04c26@candelatech.com>
+ <87a7wzv43j.fsf@toke.dk>
+ <f021a32c-6f12-1cfe-970f-eae7dd334416@candelatech.com>
+ <87d11stk0i.fsf@toke.dk>
+ <11a30dfe-842a-8b1e-0d7e-d4159bf4b2bb@candelatech.com>
+ <871si81eev.fsf@toke.dk> <5A6FA79B.1080206@candelatech.com>
+ <87h8r335yz.fsf@toke.dk>
+ <712ee959-4e41-f4fd-e765-523d024fa7fc@candelatech.com>
+ <87wozzyy5e.fsf@toke.dk> <0e4aa72c-83da-e879-052d-505d8658177d@dd-wrt.com>
+ <878tce2qo3.fsf@toke.dk> <6bb730a0-f67b-b131-59a4-70baea810584@dd-wrt.com>
+ <87zi4u16qp.fsf@toke.dk>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <26384b26-2c24-eb0b-0d0f-61c67b3d4189@dd-wrt.com> (sfid-20180131_155239_940576_BEA06614)
+Date: Wed, 31 Jan 2018 15:52:33 +0100
+MIME-Version: 1.0
+In-Reply-To: <87zi4u16qp.fsf@toke.dk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wcn36xx_dxe_init() doesn't check for the return value
-of wcn36xx_dxe_init_descs().
-This patch releases the resources in case an error ocurred.
+Am 31.01.2018 um 14:46 schrieb Toke Høiland-Jørgensen:
+> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+>
+>> Am 31.01.2018 um 12:50 schrieb Toke Høiland-Jørgensen:
+>>> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+>>>
+>>>> Am 30.01.2018 um 19:55 schrieb Toke Høiland-Jørgensen:
+>>>>> Ben Greear <greearb@candelatech.com> writes:
+>>>>>
+>>>>>>> I'm actually working on reworking that whole scheduler logic, and move
+>>>>>>> some of it into mac80211. Could you test this (WiP) patch and see if
+>>>>>>> that has the same problem?
+>>>>>> It had some serious conflicts in ath10k, due to my local changes, so
+>>>>>> I did not actually test this.
+>>>>> Can send you a version without the ath10k changes tomorrow if you'd like
+>>>>> to test - but will try to reproduce myself as well...
+>>>>>
+>>>>>> But, a revert of the atf patches (a6e56d749 and 63fefa050) appear to
+>>>>>> have resolved the issue. I'll test more with these reverted, and maybe
+>>>>>> will have time to work more on actually fixing upstream code next time
+>>>>>> I move to a newer kernel (and/or after your pending changes get in).
+>>>>> Ah, that narrows it down some. Well, that is the code I'm hacking on
+>>>>> currently anyway, so let's see if we can't get it fixed as part of that
+>>>>> series :)
+>>>> i have some addition information for you maybe. in the same timeframe i
+>>>> noticed a increased memory usage for ath9k devices.
+>>>> maybe that helps. so i hit memory boundaries on embedded devices with
+>>>> dual interfaces and just 32 mb  ram now which wasnt the case before
+>>>> is this patch worth to try from my side?
+>>> This is probably because of the added queue space. Which is sort of by
+>>> design. In 3ff23cd5654b9c8f4d567caa73439b4c39fbeaae we lowered the
+>>> default limit for non-VHT devices to 4MB. But if you have several PHYs
+>>> on a very memory constrained device you could still run out I guess.
+>>>
+>>> `echo fq_memory_limit 2097152 > /sys/kernel/debug/ieee80211/phy0/aqm`
+>>> would limit it to 2MB for that phy...
+>> what if i tried that already? :-)
+> Hmm, then it's maybe a bug? Changing the limit makes no difference at
+> all? Does your build include 0bfe649fbb133? What are values of the
+maybe it makes a change but i run into oom after a while as well
+> counters in /sys/kernel/debug/ieee80211/phy0/aqm ?
+i will check the current state in the next days. havent checked it over 
+the last 2 months on the affected device
 
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
----
- drivers/net/wireless/ath/wcn36xx/dxe.c | 48 +++++++++++++++++++++++++++++-----
- 1 file changed, 42 insertions(+), 6 deletions(-)
+>
+> -Toke
+>
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index d5c810a8cc52..dc7129edac96 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -236,6 +236,16 @@ static int wcn36xx_dxe_init_descs(struct device *dev, struct wcn36xx_dxe_ch *wcn
- 	return 0;
- }
- 
-+static void wcn36xx_dxe_deinit_descs(struct device *dev, struct wcn36xx_dxe_ch *wcn_ch)
-+{
-+	size_t size;
-+
-+	size = wcn_ch->desc_bum * sizeof(struct wcn36xx_dxe_desc);
-+	dma_free_coherent(wcn->dev, size,
-+					wcn_ch->cpu_addr,
-+					wcn_ch->dma_addr);
-+}
-+
- static void wcn36xx_dxe_init_tx_bd(struct wcn36xx_dxe_ch *ch,
- 				   struct wcn36xx_dxe_mem_pool *pool)
- {
-@@ -722,7 +732,11 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
- 	/***************************************/
- 	/* Init descriptors for TX LOW channel */
- 	/***************************************/
--	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_l_ch);
-+	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_l_ch);
-+	if (ret) {
-+		dev_error("Error allocating descriptor\n");
-+		return ret;
-+	}
- 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_l_ch, &wcn->data_mem_pool);
- 
- 	/* Write channel head to a NEXT register */
-@@ -740,7 +754,12 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
- 	/***************************************/
- 	/* Init descriptors for TX HIGH channel */
- 	/***************************************/
--	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_h_ch);
-+	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_tx_h_ch);
-+	if (ret) {
-+		dev_error("Error allocating descriptor\n");
-+		goto our_err_txh_ch;
-+	}
-+
- 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_h_ch, &wcn->mgmt_mem_pool);
- 
- 	/* Write channel head to a NEXT register */
-@@ -760,7 +779,12 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
- 	/***************************************/
- 	/* Init descriptors for RX LOW channel */
- 	/***************************************/
--	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_l_ch);
-+	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_l_ch);
-+	if (ret) {
-+		dev_error("Error allocating descriptor\n");
-+		goto out_err_rxl_ch;
-+	}
-+
- 
- 	/* For RX we need to preallocated buffers */
- 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_l_ch);
-@@ -790,7 +814,11 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
- 	/***************************************/
- 	/* Init descriptors for RX HIGH channel */
- 	/***************************************/
--	wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_h_ch);
-+	ret = wcn36xx_dxe_init_descs(wcn->dev, &wcn->dxe_rx_h_ch)
-+	if (ret) {
-+		dev_error("Error allocating descriptor\n");
-+		goto out_err_rxh_ch;
-+	}
- 
- 	/* For RX we need to prealocat buffers */
- 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_h_ch);
-@@ -819,11 +847,19 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
- 
- 	ret = wcn36xx_dxe_request_irqs(wcn);
- 	if (ret < 0)
--		goto out_err;
-+		goto out_err_irq;
- 
- 	return 0;
- 
--out_err:
-+out_err_irq:
-+	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_rx_h_ch);
-+out_err_rxh_ch:
-+	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_rx_l_ch);
-+out_err_rxl_ch:
-+	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_tx_h_ch);
-+out_err_txh_ch:
-+	wcn36xx_dxe_deinit_descs(wcn->dev, &wcn->dxe_tx_l_ch);
-+
- 	return ret;
- }
- 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
