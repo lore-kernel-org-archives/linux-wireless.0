@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38242 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750859AbeAYFb1 (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:45584 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751782AbeAaVdk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jan 2018 00:31:27 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath9k: discard undersized packets
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180117101405.16700-1-nbd@nbd.name>
-References: <20180117101405.16700-1-nbd@nbd.name>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, stijn@linux-ipv6.be
-Message-Id: <20180125053127.7122060A60@smtp.codeaurora.org> (sfid-20180125_063132_073622_6723A9B7)
-Date: Thu, 25 Jan 2018 05:31:27 +0000 (UTC)
+        Wed, 31 Jan 2018 16:33:40 -0500
+Received: by mail-pg0-f67.google.com with SMTP id m136so11115445pga.12
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jan 2018 13:33:40 -0800 (PST)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH 1/6] uapi: Add 802.11 Preauthentication to if_ether
+Date: Wed, 31 Jan 2018 15:33:24 -0600
+Message-Id: <20180131213329.25322-2-denkenz@gmail.com> (sfid-20180131_223345_248960_F48E98FD)
+In-Reply-To: <20180131213329.25322-1-denkenz@gmail.com>
+References: <20180131213329.25322-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> wrote:
+This adds 0x88c7 protocol type to if_ether.
 
-> Sometimes the hardware will push small packets that trigger a WARN_ON
-> in mac80211. Discard them early to avoid this issue.
-> 
-> Reported-by: Stijn Tintel <stijn@linux-ipv6.be>
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ include/uapi/linux/if_ether.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-3c0efb745a17 ath9k: discard undersized packets
-
+diff --git a/include/uapi/linux/if_ether.h b/include/uapi/linux/if_ether.h
+index f8cb5760ea4f..54585906e50a 100644
+--- a/include/uapi/linux/if_ether.h
++++ b/include/uapi/linux/if_ether.h
+@@ -89,6 +89,7 @@
+ #define ETH_P_AOE	0x88A2		/* ATA over Ethernet		*/
+ #define ETH_P_8021AD	0x88A8          /* 802.1ad Service VLAN		*/
+ #define ETH_P_802_EX1	0x88B5		/* 802.1 Local Experimental 1.  */
++#define ETH_P_PREAUTH	0x88C7		/* 802.11 Preauthentication */
+ #define ETH_P_TIPC	0x88CA		/* TIPC 			*/
+ #define ETH_P_MACSEC	0x88E5		/* 802.1ae MACsec */
+ #define ETH_P_8021AH	0x88E7          /* 802.1ah Backbone Service Tag */
 -- 
-https://patchwork.kernel.org/patch/10168963/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.5
