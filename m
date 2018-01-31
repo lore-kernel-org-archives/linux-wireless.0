@@ -1,72 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:7066 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753794AbeAFBSw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Jan 2018 20:18:52 -0500
-Subject: [PATCH 08/18] carl9170: prevent bounds-check bypass via speculative
- execution
-From: Dan Williams <dan.j.williams@intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, peterz@infradead.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        gregkh@linuxfoundation.org,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        tglx@linutronix.de, torvalds@linux-foundation.org,
-        Kalle Valo <kvalo@codeaurora.org>, alan@linux.intel.com
-Date: Fri, 05 Jan 2018 17:10:37 -0800
-Message-ID: <151520103755.32271.6819511294540882298.stgit@dwillia2-desk3.amr.corp.intel.com> (sfid-20180106_022227_120572_864EB35F)
-In-Reply-To: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151520099201.32271.4677179499894422956.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:38783 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752273AbeAaM67 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Jan 2018 07:58:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180130182537.5580-1-colin.king@canonical.com>
+References: <20180130182537.5580-1-colin.king@canonical.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 31 Jan 2018 14:58:57 +0200
+Message-ID: <CAHp75Vc_8v3qxWjtT4B3Kvz4dNZ8=-+uRPs-iTK3o8Taa4Swgw@mail.gmail.com> (sfid-20180131_135942_248825_EE7423CB)
+Subject: Re: [PATCH] wireless: zd1211rw: remove redundant assignment of
+ pointer 'q'
+To: Colin King <colin.king@canonical.com>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>, kernel-janitors@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Static analysis reports that 'queue' may be a user controlled value that
-is used as a data dependency to read from the 'ar9170_qmap' array. In
-order to avoid potential leaks of kernel memory values, block
-speculative execution of the instruction stream that could issue reads
-based on an invalid result of 'ar9170_qmap[queue]'. In this case the
-value of 'ar9170_qmap[queue]' is immediately reused as an index to the
-'ar->edcf' array.
+On Tue, Jan 30, 2018 at 8:25 PM, Colin King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Pointer q is initialized and then almost immediately afterwards being
+> re-assigned the same value. Remove the second redundant assignment.
+>
 
-Based on an original patch by Elena Reshetova.
+Don't you see strange that in the same context of the patch two users
+of q are present?
 
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/net/wireless/ath/carl9170/main.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+How did you test this?
 
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index 988c8857d78c..0ff34cbe2b62 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -41,6 +41,7 @@
- #include <linux/module.h>
- #include <linux/etherdevice.h>
- #include <linux/random.h>
-+#include <linux/compiler.h>
- #include <net/mac80211.h>
- #include <net/cfg80211.h>
- #include "hw.h"
-@@ -1384,11 +1385,12 @@ static int carl9170_op_conf_tx(struct ieee80211_hw *hw,
- 			       const struct ieee80211_tx_queue_params *param)
- {
- 	struct ar9170 *ar = hw->priv;
-+	const u8 *elem;
- 	int ret;
- 
- 	mutex_lock(&ar->mutex);
--	if (queue < ar->hw->queues) {
--		memcpy(&ar->edcf[ar9170_qmap[queue]], param, sizeof(*param));
-+	if ((elem = nospec_array_ptr(ar9170_qmap, queue, ar->hw->queues))) {
-+		memcpy(&ar->edcf[*elem], param, sizeof(*param));
- 		ret = carl9170_set_qos(ar);
- 	} else {
- 		ret = -EINVAL;
+> Cleans up clang warning:
+> drivers/net/wireless/zydas/zd1211rw/zd_mac.c:503:23: warning: Value
+> stored to 'q' during its initialization is never read
+
+> -       q = &mac->ack_wait_queue;
+>         spin_lock_irqsave(&q->lock, flags);
+>
+>         skb_queue_walk(q, skb) {
+
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
