@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59620 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751547AbeA2OqM (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:58132 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753220AbeAaVxn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Jan 2018 09:46:12 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Make ath10k report discarded packets to mac80211
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <863ed21f-d2fe-f1e1-6f3c-b4061c777f59@aoifes.com>
-References: <863ed21f-d2fe-f1e1-6f3c-b4061c777f59@aoifes.com>
-To: =?utf-8?q?Ignacio_N=C3=BA=C3=B1ez_Hernanz?=
-        <nacho.nunez@aoifes.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        =?UTF-8?Q?Ignacio_N=c3=ba=c3=b1ez_Hernanz?=
-        <nacho.nunez@aoifes.com>
-Message-Id: <20180129144612.7F65C608BF@smtp.codeaurora.org> (sfid-20180129_154616_861169_6C89C900)
-Date: Mon, 29 Jan 2018 14:46:12 +0000 (UTC)
+        Wed, 31 Jan 2018 16:53:43 -0500
+Message-ID: <1517435621.2189.67.camel@sipsolutions.net> (sfid-20180131_225346_409309_71F06C0C)
+Subject: Re: [PATCH 5/6] nl80211: Implement TX of control port frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Wed, 31 Jan 2018 22:53:41 +0100
+In-Reply-To: <20180131213329.25322-6-denkenz@gmail.com> (sfid-20180131_223349_476233_D75A8C24)
+References: <20180131213329.25322-1-denkenz@gmail.com>
+         <20180131213329.25322-6-denkenz@gmail.com>
+         (sfid-20180131_223349_476233_D75A8C24)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ignacio Núñez Hernanz wrote:
 
-> Whenever ath10k firmware discards a packet (HTT_TX_COMPL_STATE_DISCARD
-> flag), the skb is freed and mac80211 does not get feedback through
-> ieee80211_tx_status().
-> 
-> Instead, make sure that the IEEE80211_TX_STAT_ACK flag is disabled and
-> let the packet go through, like ath9k does.
-> 
-> Signed-off-by: Ignacio Nunez Hernanz <nacho.nunez@aoifes.com>
-> [kvalo@codeaurora.org: rebase patch manually]
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> +static int nl80211_tx_control_port(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+> +	struct net_device *dev = info->user_ptr[1];
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	const u8 *buf;
+> +	size_t len;
+> +	u8 *dest;
+> +	u16 proto;
+> +	bool noencrypt;
+> +	int err;
+> +
+> +	if (!wiphy_ext_feature_isset(&rdev->wiphy,
+> +				     NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211))
+> +		return -EOPNOTSUPP;
+> +
+> +	if (!rdev->ops->tx_control_port)
+> +		return -EOPNOTSUPP;
 
-This didn't apply so I rewrote the patch manually. Please check it from the
-pending branch:
+I wonder if maybe we should accept this command only from the socket
+owner? Is there a use case for something else?
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=74e9f654262e77676c477f01ce5a6f27237b2f25
+Actually, then again, that's awkward because doing events and commands
+on the same socket doesn't mix all _that_ well. Perhaps we just need to
+fix that problem in libnl or something and be done with it ...
 
--- 
-https://patchwork.kernel.org/patch/9859221/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
