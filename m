@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:56637 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751866AbeBSJDF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:47662 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751567AbeBAWkj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 04:03:05 -0500
-Subject: Re: [PATCH 02/13] mac80211: ibss: send a probe request instead of
- allocating station
-To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-References: <20180216161301.29339-1-luca@coelho.fi>
- <20180216161301.29339-3-luca@coelho.fi>
-From: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
-Message-ID: <90dd3605-1418-66e7-80f1-056773dc9fcb@green-communications.fr> (sfid-20180219_100310_967760_A5615282)
-Date: Mon, 19 Feb 2018 10:02:58 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180216161301.29339-3-luca@coelho.fi>
-Content-Type: text/plain; charset=utf-8
+        Thu, 1 Feb 2018 17:40:39 -0500
+Message-ID: <1517524837.28814.14.camel@sipsolutions.net> (sfid-20180201_234043_361624_199087E3)
+Subject: Re: lockdep warning in mac80211/tx.c, 4.13.16+ kernel, ath9k related
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 01 Feb 2018 23:40:37 +0100
+In-Reply-To: <e8f8b910-ffa8-fbc7-3152-58ccf70b1ace@candelatech.com>
+References: <d4632910-7dd9-b066-0c10-b21dd7cbfc61@candelatech.com>
+         <1517523817.28814.10.camel@sipsolutions.net>
+         <e8f8b910-ffa8-fbc7-3152-58ccf70b1ace@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16/02/2018 17:12, Luca Coelho wrote:
-> -	sta = sta_info_alloc(sdata, addr, GFP_ATOMIC);
-> -	if (!sta)
-> -		return;
->  
-> -	/* make sure mandatory rates are always added */
-> -	sband = local->hw.wiphy->bands[band];
-> -	sta->sta.supp_rates[band] = supp_rates |
-> -			ieee80211_mandatory_rates(sband, scan_width);
-> -
-> -	spin_lock(&ifibss->incomplete_lock);
-> -	list_add(&sta->list, &ifibss->incomplete_stations);
-> -	spin_unlock(&ifibss->incomplete_lock);
-> -	ieee80211_queue_work(&local->hw, &sdata->work);
-> +	ieee80211_send_probe_req(sdata, sdata->vif.addr, addr,
-> +				 sdata->u.ibss.ssid, sdata->u.ibss.ssid_len,
-> +				 NULL, 0, (u32)-1, true, 0,
-> +				 chanctx_conf->def.chan, false);
-> +	rcu_read_unlock();
->  }
+On Thu, 2018-02-01 at 14:33 -0800, Ben Greear wrote:
+> 
+> All of RCU is suspicious
 
-Won't that spam the channel with probe request if the traffic from the
-other station is heavy ?
+Heh.
 
-And, if the other station is running the same code and didn't know
-about us (e.g. at join time), won't it also spam the channel with
-probe requests after receiving our many probe requests ? (as well as
-the probe responses from both stations)
+The code does a plain rcu_dereference(), no locking other than
+rcu_read_lock() involved.
 
-Obviously it should stop after receiving a probe response... But what
-if the link is badly asymmetric ?
+On second thought though, I'm not convinced that your modifications
+caused the problem.
+
+Given your call stack, we'd expect rcu_read_lock() somewhere around
+ath_tid_dequeue (or its caller(s)), since ieee80211_tx_dequeue clearly
+requires it.
+
+Normally, ieee80211_tx_dequeue() is called from various places that
+probably come from mac80211 and already hold the rcu_read_lock(), e.g.
+the wake_tx_queue op.
+
+In this case, you're coming from drv_sta_state, so not sure why the
+driver thinks it's OK to call the dequeue there.
+
+johannes
