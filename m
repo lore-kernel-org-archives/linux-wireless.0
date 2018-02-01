@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:36651 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753217AbeBSRr7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39052 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751832AbeBAIe4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 12:47:59 -0500
-Received: by mail-wm0-f47.google.com with SMTP id f3so16616802wmc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Feb 2018 09:47:58 -0800 (PST)
+        Thu, 1 Feb 2018 03:34:56 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: Re: [v5 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
+References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
+        <1513168977-2121-6-git-send-email-amitkarwar@gmail.com>
+        <117694D2-5C98-4C40-BF02-FC1EDBF41FE8@holtmann.org>
+        <87mv0tmc0e.fsf@purkki.adurom.net>
+        <9578979D-0F76-4178-B14D-3C5699039DEB@holtmann.org>
+Date: Thu, 01 Feb 2018 10:34:50 +0200
+In-Reply-To: <9578979D-0F76-4178-B14D-3C5699039DEB@holtmann.org> (Marcel
+        Holtmann's message of "Thu, 1 Feb 2018 09:16:14 +0100")
+Message-ID: <87inbhm7kl.fsf@kamboji.qca.qualcomm.com> (sfid-20180201_093500_143163_D5AABED3)
 MIME-Version: 1.0
-In-Reply-To: <CAPWex-AFApTucOo4DGk2n30X7Y0N2NrNv2u+8ubqTL4SkhxgwA@mail.gmail.com>
-References: <CAPWex-AFApTucOo4DGk2n30X7Y0N2NrNv2u+8ubqTL4SkhxgwA@mail.gmail.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Mon, 19 Feb 2018 09:47:57 -0800
-Message-ID: <CALLGbR+taP7GU4ftX5wFPvxD0BUsCiBDxjGXWeOJi9_nYLhEww@mail.gmail.com> (sfid-20180219_184803_193361_88272DAB)
-Subject: Re: testing tool for packet delay
-To: sdnlabs Janakaraj <wsuprabhu@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 19, 2018 at 9:19 AM, sdnlabs Janakaraj <wsuprabhu@gmail.com> wrote:
+Marcel Holtmann <marcel@holtmann.org> writes:
+
+>>> Acked-by: Marcel Holtmann <marcel@holtmann.org>
+>>> Reviewed-by: Marcel Holtmann <marcel@holtmann.org>
+>> 
+>> So how should we handle the logistics, should all these go via
+>> wireless-drivers-next tree or what's the plan?
 >
-> Hello All,
->
-> I am working on delay analysis of packets in wireless stacks. I am
-> able to see lots of papers talk about therotical analysis. But I am
-> more interested in practical evaluation.
->
-> I am reaching out to developers community to learn how they actually
-> evaluate the performance of the stack. In particular, I am looking for
-> ideas to evaluate the delay experienced by packets within the
-> mac802.11 stack.
->
+> I think they should go via wireless-drivers-next and once you send
+> Dave a pull request, I pull back from net-next into bluetooth-next and
+> we should be good. Any required fixup for Bluetooth we will do then
+> via my tree.
 
-Hi Prabhu,
+Ok, that sounds good to me.
 
-Sounds like an interesting project. More often my instrumentation
-focuses on aggregate performance and iperf throughput numbers suffices
-for most of that. Occasionally I utilize internal performance measures
-and/or data provided me by ftrace and related tools.
-
-If you're unfamiliar with it, I suggest you look at the Bufferbloat
-and Make-wifi-fast projects. I suspect that their data and techniques
-and tools might be of interest to you:
-
-https://www.bufferbloat.net/projects/make-wifi-fast/
-
-Also (shameless plug), I'll be discussing WiFi integration debugging
-techniques and tools at the ELC-NA conference in March. Some of it
-might be relevant. If you're going, please stop by and say hi.
-
-http://sched.co/DXn3
-
-I hope that helps.
-
-- Steve
-
---
-Steve deRosier
-Cal-Sierra Consulting LLC
-https://www.cal-sierra.com/
+-- 
+Kalle Valo
