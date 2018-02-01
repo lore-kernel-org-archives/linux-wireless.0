@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59840 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752657AbeBSM4g (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:47784 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751976AbeBAWrI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:56:36 -0500
-Message-ID: <1519044993.7832.105.camel@coelho.fi> (sfid-20180219_135639_529202_C17E42C6)
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
-Date: Mon, 19 Feb 2018 14:56:33 +0200
-In-Reply-To: <20180219124847.27169-3-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-         <20180219124847.27169-3-luca@coelho.fi>
+        Thu, 1 Feb 2018 17:47:08 -0500
+Message-ID: <1517525226.28814.15.camel@sipsolutions.net> (sfid-20180201_234712_674970_7776BD7E)
+Subject: Re: lockdep warning in mac80211/tx.c, 4.13.16+ kernel, ath9k related
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 01 Feb 2018 23:47:06 +0100
+In-Reply-To: <1517524837.28814.14.camel@sipsolutions.net> (sfid-20180201_234043_361624_199087E3)
+References: <d4632910-7dd9-b066-0c10-b21dd7cbfc61@candelatech.com>
+         <1517523817.28814.10.camel@sipsolutions.net>
+         <e8f8b910-ffa8-fbc7-3152-58ccf70b1ace@candelatech.com>
+         <1517524837.28814.14.camel@sipsolutions.net>
+         (sfid-20180201_234043_361624_199087E3)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: [PATCH v2 02/13] mac80211: ibss: send a probe request instead
- of allocating station
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-02-19 at 14:48 +0200, Luca Coelho wrote:
-> From: Sara Sharon <sara.sharon@intel.com>
+On Thu, 2018-02-01 at 23:40 +0100, Johannes Berg wrote:
 > 
-> When we hear frames from IBSS that we don't have a station
-> for, we allocate the station in the RX path with incomplete
-> data.
+> The code does a plain rcu_dereference(), no locking other than
+> rcu_read_lock() involved.
 > 
-> Instead, send a probe request to the station.
+> On second thought though, I'm not convinced that your modifications
+> caused the problem.
 > 
-> This helps to solve an issue with iwlwifi, which cannot allocate
-> stations in atomic paths, and has the added values of having full
-> data of the station and getting rid from some code.
+> Given your call stack, we'd expect rcu_read_lock() somewhere around
+> ath_tid_dequeue (or its caller(s)), since ieee80211_tx_dequeue clearly
+> requires it.
 > 
-> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
+> Normally, ieee80211_tx_dequeue() is called from various places that
+> probably come from mac80211 and already hold the rcu_read_lock(), e.g.
+> the wake_tx_queue op.
+> 
+> In this case, you're coming from drv_sta_state, so not sure why the
+> driver thinks it's OK to call the dequeue there.
 
-I forgot Nicolas' comment about this patch when I sent v2.  So please
-don't take this yet (as we agreed) and I'll ask Sari to look into the
-issue.
+Just to clarify - it could just be that in the "normal" case, when a
+station dies, there's nothing on the queues - so the dequeue just
+doesn't do anything and never goes into the code path where the
+rcu_dereference() is, hence it might be a bug in mainline that just
+never triggers in ordinary scenarios.
 
-Just for the record.
-
---
-Cheers,
-Luca.
+johannes
