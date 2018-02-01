@@ -1,59 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:41968 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935792AbeBLOE2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40094 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751399AbeBAIgU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 09:04:28 -0500
-Received: by mail-oi0-f53.google.com with SMTP id m83so11214252oik.8
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2018 06:04:28 -0800 (PST)
+        Thu, 1 Feb 2018 03:36:20 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: Re: [v5 7/8] rsi: add module parameter operating mode
+References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
+        <1513168977-2121-8-git-send-email-amitkarwar@gmail.com>
+        <87a7wtmbf0.fsf@purkki.adurom.net>
+        <6E3DC959-D3C0-4638-A94B-5F800A3A89DC@holtmann.org>
+Date: Thu, 01 Feb 2018 10:36:15 +0200
+In-Reply-To: <6E3DC959-D3C0-4638-A94B-5F800A3A89DC@holtmann.org> (Marcel
+        Holtmann's message of "Thu, 1 Feb 2018 09:20:39 +0100")
+Message-ID: <87efm5m7i8.fsf@kamboji.qca.qualcomm.com> (sfid-20180201_093625_530830_3C0DBA36)
 MIME-Version: 1.0
-From: Daniel Drake <drake@endlessm.com>
-Date: Mon, 12 Feb 2018 17:04:26 +0300
-Message-ID: <CAD8Lp47D5sGCpxSiFYQviu0a62W4aj-5Sgs6sjE7E2cZWwsUwg@mail.gmail.com> (sfid-20180212_150434_512304_514131C0)
-Subject: Make brcmfmac repeat authentication requests
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Marcel Holtmann <marcel@holtmann.org> writes:
 
-We are working with the Weibu F3C MiniPC which includes BCM43455 SDIO
-wifi chip 0x004345(17221) rev 0x000006
+> Hi Kalle,
+>
+>>> Operating mode determines the support for other protocols.
+>>> This is made as module parameter for better usage.
+>>> 
+>>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+>>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>> 
+>> [...]
+>> 
+>>> +/* Default operating mode is wlan STA + BT */
+>>> +static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
+>>> +module_param(dev_oper_mode, ushort, 0444);
+>>> +MODULE_PARM_DESC(dev_oper_mode,
+>>> +		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
+>>> +		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
+>>> +		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
+>> 
+>> I really wish that we have nl80211 interface for configuring btcoex. We
+>> have been talking about that for years but nobody has implemented it :(
+>
+> the Bluetooth subsystem and Wireless subsystem can handle that
+> perfectly between themselves. Involving userspace is utterly
+> pointless. First step should be that the Wireless subsystem has an
+> option to inform its actively used frequencies to the Bluetooth
+> subsystem. It then could adjust AFP channel mapping.
 
-Testing Linux 4.15, this wifi adapter is unable to authenticate with
-the MF928 MiFi Access Point which is common in Africa. The STA sends
-the authentication request, which is ACKed by the AP, but then the
-conversation ends there (a timeout later bubbles up to userspace).
-Windows 10 with broadcom driver version 1.605.1.0 is also unable to
-connect.
+Yeah, that would be much better.
 
-My laptop with ath10k can authenticate and connect fine. There the
-conversation is:
-
-1. STA sends authentication request
-2. AP sends ACK
-3. After 0.1s timeout, STA sends another auth request
-4. AP sends ACK
-5. AP sends authentication response
-6. etc.
-
-Also confirmed the same pattern on a couple of smartphones, where the
-delay seems to be 0.3s before repeating the authentication request.
-
-Clearly this AP is not behaving correctly; the authentication request
-should not have to be repeated. However of all the devices to hand,
-unfortunately only this broadcom device is unable to connect.
-
-Is there a way to adjust the driver/firmware to repeat the
-authentication requests when they are not responded to? This would
-match the behaviour of other devices and work around this issue.
-
-Thanks
-Daniel
+-- 
+Kalle Valo
