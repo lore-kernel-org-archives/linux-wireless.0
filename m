@@ -1,80 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blackstar.xs4all.nl ([83.163.96.30]:41555 "EHLO
-        blackstar.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751903AbeBZMWw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 07:22:52 -0500
-Subject: Re: [PATCH] ath9k: introduce endian_check module parameter
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-References: <20180226090917.7iabysywbv6h4rqr@alienware17>
- <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com>
- <4936d4c0-ab52-add5-828b-9509eabd8ad0@dd-wrt.com>
-From: Bas Vermeulen <bvermeul@blackstar.nl>
-Message-ID: <2fc14584-21e3-356c-c357-158ae90bdaa5@blackstar.nl> (sfid-20180226_132335_495089_94C19BFC)
-Date: Mon, 26 Feb 2018 13:21:29 +0100
+Received: from swan.laptop.org ([18.85.44.157]:51021 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751119AbeBAGb2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Feb 2018 01:31:28 -0500
+Date: Thu, 1 Feb 2018 17:22:02 +1100
+From: James Cameron <quozl@laptop.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
+Subject: Re: rtl8821ae keep alive not set, connection lost
+Message-ID: <20180201062202.GH917@us.netrek.org> (sfid-20180201_073131_465076_DD41CC49)
+References: <20170912220916.GB32211@us.netrek.org>
+ <a9a1ff03-d12f-7437-e7bc-5f01b195f753@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4936d4c0-ab52-add5-828b-9509eabd8ad0@dd-wrt.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a9a1ff03-d12f-7437-e7bc-5f01b195f753@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26-02-18 12:28, Sebastian Gottschall wrote:
-> Am 26.02.2018 um 10:54 schrieb Kalle Valo:
->> Bas Vermeulen <bvermeul@blackstar.nl> writes:
->>
->>> A random (little endian eeprom'd) ar9278 card didn't work on my
->>> PowerMac G5 without allowing the driver to byte-swap the eeprom.
->>>
->>> Introduce a module parameter endian_check to allow this to happen,
->>> and the PCIe card to function correctly on BE powerpc.
->>>
->>> Signed-off-by: Bas Vermeulen <bvermeul@blackstar.nl>
->>> ---
->>>   drivers/net/wireless/ath/ath9k/init.c | 6 +++++-
->>>   1 file changed, 5 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/init.c 
->>> b/drivers/net/wireless/ath/ath9k/init.c
->>> index fa58a32227f5..421039dc060a 100644
->>> --- a/drivers/net/wireless/ath/ath9k/init.c
->>> +++ b/drivers/net/wireless/ath/ath9k/init.c
->>> @@ -67,6 +67,9 @@ static int ath9k_ps_enable;
->>>   module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
->>>   MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
->>>   +static int ath9k_endian_check;
->>> +module_param_named(endian_check, ath9k_endian_check, int, 0444);
->>> +MODULE_PARM_DESC(endian_check, "Check EEPROM for endianness 
->>> compatibility");
->>>   #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
->>>     int ath9k_use_chanctx;
->>> @@ -587,7 +590,8 @@ static int ath9k_of_init(struct ath_softc *sc)
->>>           ether_addr_copy(common->macaddr, mac);
->>>         ah->ah_flags &= ~AH_USE_EEPROM;
->>> -    ah->ah_flags |= AH_NO_EEP_SWAP;
->>> +    if (!ath9k_endian_check)
->>> +        ah->ah_flags |= AH_NO_EEP_SWAP;
->> A bit annoying to have a module parameter, isn't there any automatic way
->> to detect/try this? But on the other hand I guess this isn't a common
->> problem as nobody has reported this before?
-> There is a way by simply checking the eeprom magic on this chipset
+On Wed, Jan 31, 2018 at 11:06:12AM -0600, Larry Finger wrote:
+> On 09/12/2017 05:09 PM, James Cameron wrote:
+> >Summary: 40b368af4b75 ("rtlwifi: Fix alignment issues") breaks
+> >rtl8821ae keep alive, causing "Connection to AP lost" and deauth,
+> >but why?
+> >
+> >Wireless connection is lost after a few seconds or minutes, on
+> >every OLPC NL3 laptop with rtl8821ae, with any stable kernel after
+> >4.10.1, and any kernel with 40b368af4b75.
+> >
+> >dmesg contains
+> >
+> >   wlp2s0: Connection to AP 2c:b0:5d:a6:86:eb lost
+> >
+> >iw event shows
+> >
+> >   wlp2s0: del station 2c:b0:5d:a6:86:eb
+> >   wlp2s0 (phy #0): deauth 74:c6:3b:09:b5:0d -> 2c:b0:5d:a6:86:eb reason 4: Disassociated due to inactivity
+> >   wlp2s0 (phy #0): disconnected (local request)
+> >
+> >Workaround is to bounce the link, then reconnect;
+> >
+> >   ip link set wlp2s0 down
+> >   ip link set wlp2s0 up
+> >   iw dev wlp2s0 connect qz
+> >
+> >A nearby monitor host captures a deauthentication packet sent by
+> >the device.
+> >
+> >Bisection showed cause is 40b368af4b75 ("rtlwifi: Fix alignment
+> >issues") which changes the width of DBI register read.
+> >
+> >On the face of it, 40b368af4b75 looks correct, especially compared
+> >against same function in rtl8723be.
+> >
+> >I've no idea why reverting fixes the problem.  I'm hoping someone
+> >here might speculate and suggest ways to test.
+> >
+> >As keep alive is set through this path, my guess is that keep alive
+> >is not being set in the device.  Or perhaps reading 16-bits
+> >perturbs another register.  Is there a way to test?
+> >
+> >http://dev.laptop.org/~quozl/z/1drtGD.txt dmesg of 4.13
+> >
+> >http://dev.laptop.org/~quozl/z/1drt7c.txt dmesg with 4.13 and
+> >revert of 40b368af4b75
+> 
+> James,
+> 
+> I'm afraid we are needing to revisit this problem again. Changing
+> that 8-bit read to a 16-bit version causes an unaligned memory
+> reference in AARCH64, thus we will need to re-revert. To prevent
+> problems on systems such as yours, PK plans to turn off ASPM
+> capability and backdoor in certain platforms that will be listed in
+> a quirks table. Please report the output of 'dmidecode -t system'
+> for you affected system(s).
 
-I am well aware.
+Thanks for letting me know.
 
-The AH_NO_EEP_SWAP flag disables fixing the eeprom by swapping the data 
-read from eeprom.
-AH_NO_EEP_SWAP is enabled by default in ath9k_of_init() without this patch.
-I am happy if the AH_NO_EEP_SWAP flag is not set, that would fix my 
-problem, but changes the
-current behaviour. I wanted to keep the current behaviour by default, 
-and give me and others a
-way to make it work on big endian machines with cards with little endian 
-eeproms.
+We made three production runs, and I'm waiting to get a hold of the
+dmidecode for two of them.  This may take some weeks; we have to find
+stock and ship it, or we have to ask our contract manufacturer (CM) if
+they have kept data or units.
 
-Bas Vermeulen
+I've dmidecode for one production run.
+
+http://dev.laptop.org/~quozl/z/1eh7JF.txt (my unit nl3-e)
+
+I've dmidecode for prototypes, but they have clearly been programmed
+badly.  We did not ask our CM for Windows compatibility, so they may
+have had no step to verify the data.  We also went through several
+iterations to get serial numbers assigned, so the data I have does not
+have good provenance.
+
+http://dev.laptop.org/~quozl/z/1eh7EE.txt (my unit nl3-c)
+http://dev.laptop.org/~quozl/z/1eh7EV.txt (my unit nl3-d)
+http://dev.laptop.org/~quozl/z/1eh7He.txt (my unit nl3-a)
+http://dev.laptop.org/~quozl/z/1eh8DR.txt (my unit nl3-b)
+
+> We hope you will be able to test any proposed patches.
+
+Yes, can do.
+
+I've just tested v4.15.
+
+However, I'm concerned about your plan to use quirks;
+
+1.  turning off ASPM may decrease run time on battery, which if it is
+significant, across several thousand laptops will yield generator fuel
+or solar budget failure; can the power impact be quantified?
+
+2.  why not keep ASPM enabled, and use 8-bit when quirked, or on
+x86_64, or when not AARCH64?
+
+3.  why not find the underlying problem; PK is in the same company as
+the device firmware engineers, so it should be possible for them to
+find out why 16-bit access causes the device firmware to hang?  We
+drew a blank trying to reach firmware engineers through our CM and
+module maker; perhaps we were not large or noisy enough.
+
+4.  it's not just me; there are others who have reported similar
+problems, so won't re-reverting affect them?  They haven't engaged in
+the process as thoroughly, and may not be in the quirks table.  You
+also reproduced the problem with different hardware.
+
+> Thanks,
+> 
+> Larry
 
 -- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+James Cameron
+http://quozl.netrek.org/
