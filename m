@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59764 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752917AbeBSMtD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36308 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751405AbeBAIyt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:49:03 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Feb 2018 14:48:43 +0200
-Message-Id: <20180219124847.27169-10-luca@coelho.fi> (sfid-20180219_134913_813942_D2E9C192)
-In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-Subject: [PATCH v2 09/13] mac80211: Fix sending ADDBA response for an ongoing session
+        Thu, 1 Feb 2018 03:54:49 -0500
+Message-ID: <1517475286.28814.9.camel@sipsolutions.net> (sfid-20180201_095453_036324_4C157FF3)
+Subject: Re: [RFC v3 0/6] EAPoL over NL80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Thu, 01 Feb 2018 09:54:46 +0100
+In-Reply-To: <97c9744e-0f24-49d1-ed2c-eb4661e97289@gmail.com> (sfid-20180201_020955_112630_B89356C9)
+References: <20180131213329.25322-1-denkenz@gmail.com>
+         <1517436000.28814.3.camel@sipsolutions.net>
+         <97c9744e-0f24-49d1-ed2c-eb4661e97289@gmail.com>
+         (sfid-20180201_020955_112630_B89356C9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+Hi,
 
-In case an ADDBA request is received while there is already
-an ongoing BA sessions with the same parameters, i.e., update
-flow, an ADBBA response with decline status was sent twice. Fix it.
+> > [1/6] keep
+> > [2/6] keep
+> > [3/6] introduce TX (now patch 5)
+> > [4/6] introduce RX (now patch 3)
+> >        modify this to require TX from the driver in order to be able to
+> >        set the new flag
+> > [5/6] add TX to mac80211
+> > [6/6] add RX to mac80211 and set the flag
+> > 
+> > Ok, you don't really have to do that, since you only set the flag in
+> > the last patch anyway, but that'd make it better to add the check that
+> > requires TX, so you don't have to do that in the TX patch and modify
+> > the RX portion again.
+> 
+> Err, Johannes Berg presents: Fun with Flags ;) So I re-read this about 
+> half a dozen times and I think I figured out what you wanted.  It seems 
+> you mean different flags in 4/6 and 6/6.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/agg-rx.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Err, I didn't think so, but then it was pretty late. I was thinking of
+the feature flag that says whether userspace can expect to see this or
+not.
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index a8b1616cec41..1f3188d03840 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -8,6 +8,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2007-2010, Intel Corporation
-  * Copyright(c) 2015-2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -304,9 +305,6 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 			 * driver so reject the timeout update.
- 			 */
- 			status = WLAN_STATUS_REQUEST_DECLINED;
--			ieee80211_send_addba_resp(sta->sdata, sta->sta.addr,
--						  tid, dialog_token, status,
--						  1, buf_size, timeout);
- 			goto end;
- 		}
- 
--- 
-2.15.1
+> I reordered V4 with my 
+> interpretation.  Doesn't quite look like the above, but hopefully I 
+> groked what you wanted correctly.
+
+I guess I can always reorder things myself if I really think it
+necessary, thanks :-)
+
+> I didn't put in the extra owner check on the tx operation since it 
+> wasn't clear whether you wanted that or not.
+
+Yeah I can't make up my mind. I'm tempted to say "let's do the right
+thing" and fix the problems we have in userspace ...
+
+johannes
