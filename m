@@ -1,104 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56496 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753868AbeBFXCN (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:44656 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754559AbeBABEd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Feb 2018 18:02:13 -0500
-From: greearb@candelatech.com
+        Wed, 31 Jan 2018 20:04:33 -0500
+Received: by mail-pf0-f194.google.com with SMTP id 17so13040424pfw.11
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Jan 2018 17:04:33 -0800 (PST)
+From: Denis Kenzior <denkenz@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] ath10k:  Support mgt frame per-chain rssi
-Date: Tue,  6 Feb 2018 15:02:08 -0800
-Message-Id: <1517958128-12147-1-git-send-email-greearb@candelatech.com> (sfid-20180207_000233_036515_241D7BFF)
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v4 4/6] nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
+Date: Wed, 31 Jan 2018 19:04:18 -0600
+Message-Id: <20180201010420.6102-5-denkenz@gmail.com> (sfid-20180201_020441_816900_58309531)
+In-Reply-To: <20180201010420.6102-1-denkenz@gmail.com>
+References: <20180201010420.6102-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
-
-This provides per-chain rssi for management frames received
-over wmi.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
 ---
+ include/net/cfg80211.h       |  3 +++
+ include/uapi/linux/nl80211.h | 14 +++++++++++++-
+ net/wireless/nl80211.c       | 13 +++++++++++++
+ 3 files changed, 29 insertions(+), 1 deletion(-)
 
-v2:  Fix 'rssh' typo in commit message.
-
- drivers/net/wireless/ath/ath10k/wmi.c | 21 ++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h |  1 +
- 2 files changed, 21 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 905af93..ff37274 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2287,6 +2287,7 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
- 	u32 msdu_len;
- 	struct wmi_mgmt_rx_ext_info *ext_info;
- 	u32 len;
-+	int i;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e1686421fdd7..ccc501cc6ffc 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -646,6 +646,8 @@ struct survey_info {
+  *	allowed through even on unauthorized ports
+  * @control_port_no_encrypt: TRUE to prevent encryption of control port
+  *	protocol frames.
++ * @control_port_over_nl80211: TRUE if userspace expects to exchange control
++ *	port frames over NL80211 instead of the network interface.
+  * @wep_keys: static WEP keys, if not NULL points to an array of
+  *	CFG80211_MAX_WEP_KEYS WEP keys
+  * @wep_tx_key: key index (0..3) of the default TX static WEP key
+@@ -661,6 +663,7 @@ struct cfg80211_crypto_settings {
+ 	bool control_port;
+ 	__be16 control_port_ethertype;
+ 	bool control_port_no_encrypt;
++	bool control_port_over_nl80211;
+ 	struct key_params *wep_keys;
+ 	int wep_tx_key;
+ 	const u8 *psk;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5842b3954cfd..d6016afbfdd7 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -542,7 +542,8 @@
+  *	IEs in %NL80211_ATTR_IE, %NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_USE_MFP,
+  *	%NL80211_ATTR_MAC, %NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
+  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
+- *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT, %NL80211_ATTR_MAC_HINT, and
++ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT,
++ *	%NL80211_ATTR_CONTROL_PORT_OVER_NL80211, %NL80211_ATTR_MAC_HINT, and
+  *	%NL80211_ATTR_WIPHY_FREQ_HINT.
+  *	If included, %NL80211_ATTR_MAC and %NL80211_ATTR_WIPHY_FREQ are
+  *	restrictions on BSS selection, i.e., they effectively prevent roaming
+@@ -1488,6 +1489,15 @@ enum nl80211_commands {
+  * @NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT: When included along with
+  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE, indicates that the custom
+  *	ethertype frames used for key negotiation must not be encrypted.
++ * @NL80211_ATTR_CONTROL_PORT_OVER_NL80211: A flag indicating whether control
++ *	port frames (e.g. of type given in %NL80211_ATTR_CONTROL_PORT_ETHERTYPE)
++ *	will be sent directly to the network interface or sent via the NL80211
++ *	socket.  If this attribute is missing, then legacy behavior of sending
++ *	control port frames directly to the network interface is used.  If the
++ *	flag is included, then control port frames are sent over NL80211 instead
++ *	using %CMD_CONTROL_PORT_FRAME.  If control port routing over NL80211 is
++ *	to be used then userspace must also use the %NL80211_ATTR_SOCKET_OWNER
++ *	flag.
+  *
+  * @NL80211_ATTR_TESTDATA: Testmode data blob, passed through to the driver.
+  *	We recommend using nested, driver-specific attributes within this.
+@@ -2640,6 +2650,8 @@ enum nl80211_attrs {
  
- 	ev = (struct wmi_10_4_mgmt_rx_event *)skb->data;
- 	ev_hdr = &ev->hdr;
-@@ -2302,6 +2303,8 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
- 	arg->snr = ev_hdr->snr;
- 	arg->phy_mode = ev_hdr->phy_mode;
- 	arg->rate = ev_hdr->rate;
-+	for (i = 0; i<4; i++)
-+		arg->rssi_ctl[i] = ev_hdr->rssi_ctl[i];
+ 	NL80211_ATTR_NSS,
  
- 	msdu_len = __le32_to_cpu(arg->buf_len);
- 	if (skb->len < msdu_len)
-@@ -2357,6 +2360,13 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	u32 buf_len;
- 	u16 fc;
- 	int ret;
-+	int i;
++	NL80211_ATTR_CONTROL_PORT_OVER_NL80211,
 +
-+	/* Initialize the rssi to 'ignore-me' value, stock wave-1
-+	 * firmware doesn't support it.
-+	 */
-+	for (i = 0; i<4; i++)
-+		arg.rssi_ctl[i] = 0x80;
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	ret = ath10k_wmi_pull_mgmt_rx(ar, skb, &arg);
- 	if (ret) {
-@@ -2416,6 +2426,12 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 645c072cc4a3..fbc6c3ddb5f9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -286,6 +286,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_CONTROL_PORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CONTROL_PORT_ETHERTYPE] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_CONTROL_PORT_OVER_NL80211] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PRIVACY] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
+@@ -8225,6 +8226,18 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
+ 	} else
+ 		settings->control_port_ethertype = cpu_to_be16(ETH_P_PAE);
  
- 	status->freq = ieee80211_channel_to_frequency(channel, status->band);
- 	status->signal = snr + ATH10K_DEFAULT_NOISE_FLOOR;
-+	for (i = 0; i<4; i++) {
-+		if (arg.rssi_ctl[i] != 0x80) {
-+			status->chains |= BIT(i);
-+			status->chain_signal[i] = ATH10K_DEFAULT_NOISE_FLOOR + arg.rssi_ctl[i];
-+		}
++	if (info->attrs[NL80211_ATTR_CONTROL_PORT_OVER_NL80211]) {
++		if (!info->attrs[NL80211_ATTR_SOCKET_OWNER])
++			return -EINVAL;
++
++		if (!rdev->ops->tx_control_port ||
++		    !wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211))
++			return -EOPNOTSUPP;
++
++		settings->control_port_over_nl80211 = true;
 +	}
- 	status->rate_idx = ath10k_mac_bitrate_to_idx(sband, rate / 100);
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
-@@ -2451,8 +2467,11 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 		   fc & IEEE80211_FCTL_FTYPE, fc & IEEE80211_FCTL_STYPE);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_MGMT,
--		   "event mgmt rx freq %d band %d snr %d, rate_idx %d\n",
-+		   "event mgmt rx freq %d band %d snr %d chains: 0x%x(%d %d %d %d), rate_idx %d\n",
- 		   status->freq, status->band, status->signal,
-+		   status->chains,
-+		   status->chain_signal[0], status->chain_signal[1],
-+		   status->chain_signal[2], status->chain_signal[3],
- 		   status->rate_idx);
- 
- 	ieee80211_rx(ar->hw, skb);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index a3ba191..d198772 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6490,6 +6490,7 @@ struct wmi_scan_ev_arg {
- struct wmi_mgmt_rx_ev_arg {
- 	__le32 channel;
- 	__le32 snr;
-+	u8 rssi_ctl[4];
- 	__le32 rate;
- 	__le32 phy_mode;
- 	__le32 buf_len;
++
+ 	if (info->attrs[NL80211_ATTR_CIPHER_SUITES_PAIRWISE]) {
+ 		void *data;
+ 		int len, i;
 -- 
-2.4.11
+2.13.5
