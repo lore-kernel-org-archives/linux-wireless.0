@@ -1,126 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:44099 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752737AbeBSNbK (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:39917 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751737AbeBBQbp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 08:31:10 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [v7 3/8] rsi: add header file rsi_91x
-Date: Mon, 19 Feb 2018 18:49:34 +0530
-Message-Id: <1519046379-10068-4-git-send-email-amitkarwar@gmail.com> (sfid-20180219_143116_659702_1BE323DB)
-In-Reply-To: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
-References: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
+        Fri, 2 Feb 2018 11:31:45 -0500
+From: Colin King <colin.king@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mac80211: remove redundant initialization to pointer 'hdr'
+Date: Fri,  2 Feb 2018 16:31:42 +0000
+Message-Id: <20180202163142.4006-1-colin.king@canonical.com> (sfid-20180202_173209_816031_A2575B9B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-The common parameters used by wlan and bt modules are add
-to a new header file "rsi_91x.h" defined in 'include/net'
+The pointer hrd is being initialized with a value that is never read
+and re-assigned a little later, hence the initialization is redundant
+and can be removed.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Cleans up clang warning:
+net/mac80211/tx.c:1924:24: warning: Value stored to 'hdr' during its
+initialization is never read
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
-v7: Same as v6
-v6: Renamed rsi_header.h to rsi_91x.h and moved to include/net
-    from include/linux(Kalle)
-v5: Same as earlier versions
----
- drivers/net/wireless/rsi/rsi_main.h | 12 ++----------
- include/net/rsi_91x.h               | 34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+), 10 deletions(-)
- create mode 100644 include/net/rsi_91x.h
+ net/mac80211/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index ee469dc..b0f4e2c 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -20,6 +20,7 @@
- #include <linux/string.h>
- #include <linux/skbuff.h>
- #include <net/mac80211.h>
-+#include <net/rsi_91x.h>
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 25904af38839..5decd0fb247c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1921,7 +1921,7 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_hdr *hdr;
+ 	int headroom;
+ 	bool may_encrypt;
  
- struct rsi_sta {
- 	struct ieee80211_sta *sta;
-@@ -85,10 +86,6 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
- #define MGMT_HW_Q			10
- #define BEACON_HW_Q			11
- 
--/* Queue information */
--#define RSI_COEX_Q			0x0
--#define RSI_WIFI_MGMT_Q                 0x4
--#define RSI_WIFI_DATA_Q                 0x5
- #define IEEE80211_MGMT_FRAME            0x00
- #define IEEE80211_CTL_FRAME             0x04
- 
-@@ -293,11 +290,6 @@ struct rsi_common {
- 	struct ieee80211_vif *roc_vif;
- };
- 
--enum host_intf {
--	RSI_HOST_INTF_SDIO = 0,
--	RSI_HOST_INTF_USB
--};
--
- struct eepromrw_info {
- 	u32 offset;
- 	u32 length;
-@@ -322,7 +314,7 @@ struct rsi_hw {
- 	struct device *device;
- 	u8 sc_nvifs;
- 
--	enum host_intf rsi_host_intf;
-+	enum rsi_host_intf rsi_host_intf;
- 	u16 block_size;
- 	enum ps_state ps_state;
- 	struct rsi_ps_info ps_info;
-diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
-new file mode 100644
-index 0000000..16a447b
---- /dev/null
-+++ b/include/net/rsi_91x.h
-@@ -0,0 +1,34 @@
-+/**
-+ * Copyright (c) 2017 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef __RSI_HEADER_H__
-+#define __RSI_HEADER_H__
-+
-+/* HAL queue information */
-+#define RSI_COEX_Q			0x0
-+#define RSI_BT_Q			0x2
-+#define RSI_WLAN_Q                      0x3
-+#define RSI_WIFI_MGMT_Q                 0x4
-+#define RSI_WIFI_DATA_Q                 0x5
-+#define RSI_BT_MGMT_Q			0x6
-+#define RSI_BT_DATA_Q			0x7
-+
-+enum rsi_host_intf {
-+	RSI_HOST_INTF_SDIO = 0,
-+	RSI_HOST_INTF_USB
-+};
-+
-+#endif
 -- 
-2.7.4
+2.15.1
