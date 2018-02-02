@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:33742 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752543AbeB1SDb (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:55261 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751470AbeBBPcL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 13:03:31 -0500
-Subject: Re: [RFT 0/7] firmware: enable caching of firmware for reboot
- optimization
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: kubakici@wp.pl, gregkh@linuxfoundation.org,
-        akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        stephen.boyd@linaro.org, broonie@kernel.org,
-        dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20180227232101.20786-1-mcgrof@kernel.org>
-From: cantabile <cantabile.desu@gmail.com>
-Message-ID: <49e9d9c3-1352-e204-ff95-5cf10f14bd35@gmail.com> (sfid-20180228_190348_003571_9AC3811E)
-Date: Wed, 28 Feb 2018 20:03:26 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180227232101.20786-1-mcgrof@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 2 Feb 2018 10:32:11 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: Martin Sebor <msebor@gcc.gnu.org>, Arnd Bergmann <arnd@arndb.de>,
+        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>,
+        =?UTF-8?q?Peter=20Gro=C3=9Fe?= <pegro@friiks.de>,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        Benjamin Berg <benjamin@sipsolutions.net>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] cfg80211: fix cfg80211_beacon_dup
+Date: Fri,  2 Feb 2018 16:31:23 +0100
+Message-Id: <20180202153142.1142229-1-arnd@arndb.de> (sfid-20180202_163240_065420_972E2EE8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28/02/18 01:20, Luis R. Rodriguez wrote:
-> Cantabile, please give these patches a spin and let me know if it fixes
-> your reported issue. They depend on other pending patches I have in line
-> waiting to be merged so the easiest I thing I think is for you to test my
-> 20180227-firmware-cache branch [0], based on Linus' tree. To get that
-> tree, cd into your Linus git tree and do:
-> 
-> git remote add mcgrof https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git
-> git checkout -b 20180227-firmware-cache mcgrof/20180227-firmware-cache
-> 
-> Please let me know if this resolves your issue and thanks for your report.
-> 
+gcc-8 warns about some obviously incorrect code:
 
-I confirmed that request_firmware_cache is called, and the firmware is 
-loaded from the cache when resuming from hibernation. The bug is fixed. 
-Thank you.
+net/mac80211/cfg.c: In function 'cfg80211_beacon_dup':
+net/mac80211/cfg.c:2896:3: error: 'memcpy' source argument is the same as destination [-Werror=restrict]
+
+>From the context, I conclude that we want to copy from beacon into
+new_beacon, as we do in the rest of the function.
+
+Cc: stable@vger.kernel.org
+Fixes: 73da7d5bab79 ("mac80211: add channel switch command and beacon callbacks")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ net/mac80211/cfg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 46028e12e216..f4195a0f0279 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2892,7 +2892,7 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
+ 	}
+ 	if (beacon->probe_resp_len) {
+ 		new_beacon->probe_resp_len = beacon->probe_resp_len;
+-		beacon->probe_resp = pos;
++		new_beacon->probe_resp = pos;
+ 		memcpy(pos, beacon->probe_resp, beacon->probe_resp_len);
+ 		pos += beacon->probe_resp_len;
+ 	}
+-- 
+2.9.0
