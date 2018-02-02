@@ -1,167 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59828 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752657AbeBSMyy (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38092 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751669AbeBBBDK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:54:54 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Feb 2018 14:48:46 +0200
-Message-Id: <20180219124847.27169-13-luca@coelho.fi> (sfid-20180219_135457_770139_ADD72BEA)
-In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-Subject: [PATCH v2 12/13] mac80211: limit wmm params to comply with ETSI requirements
+        Thu, 1 Feb 2018 20:03:10 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Support mgt frame per-chain rssi
+Date: Thu,  1 Feb 2018 17:03:06 -0800
+Message-Id: <1517533386-30766-1-git-send-email-greearb@candelatech.com> (sfid-20180202_020315_799744_6535194E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-ETSI has recently added new requirements that restrict the WMM
-parameter values for 5GHz frequencies.  We need to take care of the
-following scenarios in order to comply with these new requirements:
+This provides per-chain rssh for management frames received
+over wmi.
 
-1. When using mac80211 default values;
-2. When the userspace tries to configure its own values;
-3. When associating to an AP which advertises WWM IE.
-
-When associating to an AP, the client uses the values in the
-advertised WMM IE.  But the AP may not comply with the new ETSI
-requirements, so the client needs to check the current regulatory
-rules and use those limits accordingly.
-
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/cfg.c         |  3 +++
- net/mac80211/ieee80211_i.h |  4 ++++
- net/mac80211/mlme.c        |  1 +
- net/mac80211/util.c        | 42 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 50 insertions(+)
+ drivers/net/wireless/ath/ath10k/wmi.c | 21 ++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h |  1 +
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 46028e12e216..bb22e05075f4 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -4,6 +4,7 @@
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2015  Intel Mobile Communications GmbH
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This file is GPLv2 as found in COPYING.
-  */
-@@ -2156,6 +2157,8 @@ static int ieee80211_set_txq_params(struct wiphy *wiphy,
- 	 */
- 	p.uapsd = false;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 905af93..ff37274 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2287,6 +2287,7 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
+ 	u32 msdu_len;
+ 	struct wmi_mgmt_rx_ext_info *ext_info;
+ 	u32 len;
++	int i;
  
-+	ieee80211_regulatory_limit_wmm_params(sdata, &p, params->ac);
-+
- 	sdata->tx_conf[params->ac] = p;
- 	if (drv_conf_tx(local, sdata, params->ac, &p)) {
- 		wiphy_debug(local->hw.wiphy,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 536f04d14592..a58e8433fb5e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -4,6 +4,7 @@
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2015  Intel Mobile Communications GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -1862,6 +1863,9 @@ extern const void *const mac80211_wiphy_privid; /* for wiphy privid */
- int ieee80211_frame_duration(enum nl80211_band band, size_t len,
- 			     int rate, int erp, int short_preamble,
- 			     int shift);
-+void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
-+					   struct ieee80211_tx_queue_params *qparam,
-+					   int ac);
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 			       bool bss_notify, bool enable_qos);
- void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0024eff9bb84..23b66c611727 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1792,6 +1792,7 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 				   params[ac].cw_min, params[ac].cw_max, aci);
- 			return false;
- 		}
-+		ieee80211_regulatory_limit_wmm_params(sdata, &params[ac], ac);
- 	}
+ 	ev = (struct wmi_10_4_mgmt_rx_event *)skb->data;
+ 	ev_hdr = &ev->hdr;
+@@ -2302,6 +2303,8 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
+ 	arg->snr = ev_hdr->snr;
+ 	arg->phy_mode = ev_hdr->phy_mode;
+ 	arg->rate = ev_hdr->rate;
++	for (i = 0; i<4; i++)
++		arg->rssi_ctl[i] = ev_hdr->rssi_ctl[i];
  
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 1f82191ce601..b42ef76ee5aa 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -5,6 +5,7 @@
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015-2017	Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -1113,6 +1114,46 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 	return crc;
- }
+ 	msdu_len = __le32_to_cpu(arg->buf_len);
+ 	if (skb->len < msdu_len)
+@@ -2357,6 +2360,13 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	u32 buf_len;
+ 	u16 fc;
+ 	int ret;
++	int i;
++
++	/* Initialize the rssi to 'ignore-me' value, stock wave-1
++	 * firmware doesn't support it.
++	 */
++	for (i = 0; i<4; i++)
++		arg.rssi_ctl[i] = 0x80;
  
-+void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
-+					   struct ieee80211_tx_queue_params
-+					   *qparam, int ac)
-+{
-+	struct ieee80211_chanctx_conf *chanctx_conf;
-+	const struct ieee80211_reg_rule *rrule;
-+	struct ieee80211_wmm_ac *wmm_ac;
-+	u16 center_freq = 0;
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_AP &&
-+	    sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	rcu_read_lock();
-+	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-+	if (chanctx_conf)
-+		center_freq = chanctx_conf->def.chan->center_freq;
-+
-+	if (!center_freq) {
-+		rcu_read_unlock();
-+		return;
+ 	ret = ath10k_wmi_pull_mgmt_rx(ar, skb, &arg);
+ 	if (ret) {
+@@ -2416,6 +2426,12 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	status->freq = ieee80211_channel_to_frequency(channel, status->band);
+ 	status->signal = snr + ATH10K_DEFAULT_NOISE_FLOOR;
++	for (i = 0; i<4; i++) {
++		if (arg.rssi_ctl[i] != 0x80) {
++			status->chains |= BIT(i);
++			status->chain_signal[i] = ATH10K_DEFAULT_NOISE_FLOOR + arg.rssi_ctl[i];
++		}
 +	}
-+
-+	rrule = freq_reg_info(sdata->wdev.wiphy, MHZ_TO_KHZ(center_freq));
-+	rcu_read_unlock();
-+
-+	if (IS_ERR_OR_NULL(rrule) || !rrule->wmm_rule)
-+		return;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP)
-+		wmm_ac = &rrule->wmm_rule->ap[ac];
-+	else
-+		wmm_ac = &rrule->wmm_rule->client[ac];
-+	qparam->cw_min = max_t(u16, qparam->cw_min, wmm_ac->cw_min);
-+	qparam->cw_max = max_t(u16, qparam->cw_max, wmm_ac->cw_max);
-+	qparam->aifs = max_t(u8, qparam->aifs, wmm_ac->aifsn);
-+	qparam->txop = !qparam->txop ? wmm_ac->cot / 32 :
-+		min_t(u16, qparam->txop, wmm_ac->cot / 32);
-+}
-+
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 			       bool bss_notify, bool enable_qos)
- {
-@@ -1206,6 +1247,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 				break;
- 			}
- 		}
-+		ieee80211_regulatory_limit_wmm_params(sdata, &qparam, ac);
+ 	status->rate_idx = ath10k_mac_bitrate_to_idx(sband, rate / 100);
  
- 		qparam.uapsd = false;
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -2451,8 +2467,11 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 		   fc & IEEE80211_FCTL_FTYPE, fc & IEEE80211_FCTL_STYPE);
  
+ 	ath10k_dbg(ar, ATH10K_DBG_MGMT,
+-		   "event mgmt rx freq %d band %d snr %d, rate_idx %d\n",
++		   "event mgmt rx freq %d band %d snr %d chains: 0x%x(%d %d %d %d), rate_idx %d\n",
+ 		   status->freq, status->band, status->signal,
++		   status->chains,
++		   status->chain_signal[0], status->chain_signal[1],
++		   status->chain_signal[2], status->chain_signal[3],
+ 		   status->rate_idx);
+ 
+ 	ieee80211_rx(ar->hw, skb);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index a3ba191..d198772 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6490,6 +6490,7 @@ struct wmi_scan_ev_arg {
+ struct wmi_mgmt_rx_ev_arg {
+ 	__le32 channel;
+ 	__le32 snr;
++	u8 rssi_ctl[4];
+ 	__le32 rate;
+ 	__le32 phy_mode;
+ 	__le32 buf_len;
 -- 
-2.15.1
+2.4.11
