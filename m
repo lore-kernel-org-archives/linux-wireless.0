@@ -1,71 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:60251 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbeBHF2K (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Feb 2018 00:28:10 -0500
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-To: kvalo@codeaurora.org
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>
-Subject: [PATCH] ath9k: turn on btcoex_enable as default
-Date: Thu,  8 Feb 2018 13:28:01 +0800
-Message-Id: <20180208052801.15670-1-kai.heng.feng@canonical.com> (sfid-20180208_062842_935019_A684D9B9)
+Received: from mail.toke.dk ([52.28.52.200]:46041 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751221AbeBBPLO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Feb 2018 10:11:14 -0500
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Subject: [PATCH] mac80211: Adjust TSQ pacing shift
+Date: Fri,  2 Feb 2018 16:11:05 +0100
+Message-Id: <20180202151105.30043-1-toke@toke.dk> (sfid-20180202_161118_455742_0963E55B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without btcoex_enable, WiFi activies make both WiFi and Bluetooth
-unstable if there's a bluetooth connection.
+Since we now have the convenient helper to do so, actually adjust the
+TSQ pacing shift for packets going out over a WiFi interface. This
+significantly improves throughput for locally-originated TCP
+connections. The default pacing shift of 10 corresponds to ~1ms of
+queued packet data. Adjusting this to a shift of 8 (i.e. ~4ms) improves
+1-hop throughput for ath9k by a factor of 3, whereas increasing it more
+has diminishing returns.
 
-Enable this option when bt_ant_diversity is disabled.
+Achieved throughput for different values of sk_pacing_shift (average of
+5 iterations of 10-sec netperf runs to a host on the other side of the
+WiFi hop):
 
-BugLink: https://bugs.launchpad.net/bugs/1746164
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+sk_pacing_shift 10:  43.21 Mbps (pre-patch)
+sk_pacing_shift  9:  78.17 Mbps
+sk_pacing_shift  8: 123.94 Mbps
+sk_pacing_shift  7: 128.31 Mbps
+
+Latency for competing flows increases from ~3 ms to ~10 ms with this
+change. This is about the same magnitude of queueing latency induced by
+flows that are not originated on the WiFi device itself (and so are not
+limited by TSQ).
+
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ net/mac80211/tx.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e479fae5aab9..f8f6b091a077 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -56,7 +56,7 @@ static int ath9k_led_active_high = -1;
- module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
- MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 25904af38839..69722504e3e1 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3574,6 +3574,14 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	if (!IS_ERR_OR_NULL(sta)) {
+ 		struct ieee80211_fast_tx *fast_tx;
  
--static int ath9k_btcoex_enable;
-+static int ath9k_btcoex_enable = 1;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
- 
-@@ -693,7 +693,6 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	common->hw = sc->hw;
- 	common->priv = sc;
- 	common->debug_mask = ath9k_debug;
--	common->btcoex_enabled = ath9k_btcoex_enable == 1;
- 	common->disable_ani = false;
- 
- 	/*
-@@ -715,14 +714,17 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	/*
- 	 * Enable WLAN/BT RX Antenna diversity only when:
- 	 *
--	 * - BTCOEX is disabled.
- 	 * - the user manually requests the feature.
- 	 * - the HW cap is set using the platform data.
- 	 */
--	if (!common->btcoex_enabled && ath9k_bt_ant_diversity &&
-+	if (ath9k_bt_ant_diversity &&
- 	    (pCap->hw_caps & ATH9K_HW_CAP_BT_ANT_DIV))
- 		common->bt_ant_diversity = 1;
- 
-+	/* Enable btcoex when ant_diversity is disabled */
-+	if (!common->bt_ant_diversity && ath9k_btcoex_enable)
-+		common->btcoex_enabled = 1;
++		/* We need a bit of data queued to build aggregates properly, so
++		 * instruct the TCP stack to allow more than a single ms of data
++		 * to be queued in the stack. The value is a bit-shift of 1
++		 * second, so 8 is ~4ms of queued data. Only affects local TCP
++		 * sockets.
++		 */
++		sk_pacing_shift_update(skb->sk, 8);
 +
- 	spin_lock_init(&common->cc_lock);
- 	spin_lock_init(&sc->intr_lock);
- 	spin_lock_init(&sc->sc_serial_rw);
+ 		fast_tx = rcu_dereference(sta->fast_tx);
+ 
+ 		if (fast_tx &&
 -- 
-2.15.1
+2.16.0
