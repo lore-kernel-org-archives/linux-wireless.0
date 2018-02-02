@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56554 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754825AbeBOIrY (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:43586 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751835AbeBBOfj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 03:47:24 -0500
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 00/13] ***Set4: Add support of WCN3990 bus layer support ***
-Date: Thu, 15 Feb 2018 14:17:15 +0530
-Message-Id: <1518684435-5288-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_094727_973828_F4D70B35)
+        Fri, 2 Feb 2018 09:35:39 -0500
+Date: Fri, 2 Feb 2018 17:35:25 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: christophe.ricard@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [bug report] NFC: nci: Add HCI over NCI protocol support
+Message-ID: <20180202143525.GA24629@mwanda> (sfid-20180202_153543_530613_75516B02)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This change adds support for integrated wcn3990 chipset on
-MSM platforms. WCN3990 is 2x2 802.11ac chipset where wlan
-subsystem is interfaced over system interconnect.
-Wlan fw runs in Q6 DSP. WCN3990 chipset uses 12 copy engine
-for host to target and target to host communication. It has
-extra 2 copy engine in rx data path and packet log capability
-is exposed via new HTC service over dedicated copy engine.
-Each CE has dedicated interrupt of rx path and tx completion.
+Hello Christophe Ricard,
 
-    [CE0] :host->target control and raw streams
-    [CE1] :target->host HTT
-    [CE2] :target->host WMI
-    [CE3] :host->target WMI
-    [CE4] :host->target HTT
-    [CE5] :reserved
-    [CE6] :Target autonomous HIF_memcpy
-    [CE7] :reserved
-    [CE8] :reserved
-    [CE9] :target->host HTT
-    [CE10] :target->host HTT
-    [CE11] :target -> host PKTLOG
+The patch 11f54f228643: "NFC: nci: Add HCI over NCI protocol support"
+from Feb 1, 2015, leads to the following static checker warning:
 
+	net/nfc/nci/hci.c:297 nci_hci_cmd_received()
+	error: buffer overflow 'ndev->hci_dev->pipes' 127 <= 127
 
+net/nfc/nci/hci.c
+   294  static void nci_hci_cmd_received(struct nci_dev *ndev, u8 pipe,
+   295                                   u8 cmd, struct sk_buff *skb)
+   296  {
+   297          u8 gate = ndev->hci_dev->pipes[pipe].gate;
+                                               ^^^^
+->pipes[] has 127 elements and "pipe" can go up to 127 so this might be
+reading one element beyond the end of the array.
 
-Govind Singh (11):
-  ath10k: platform driver for WCN3990 SNOC WLAN module
-  ath10k: add resource init and deinit for WCN3990
-  ath10k: Add hif start/stop methods for wcn3990 snoc layer
-  ath10k: Add HTC services for WCN3990
-  ath10k: Map HTC services to tx/rx pipes for wcn3990
-  ath10k: Add hif power-up/power-down methods
-  ath10k: Add hif tx methods for wcn3990
-  ath10k: Add hif rx methods for wcn3990
-  ath10k: Modify hif tx paddr to dma_addr_t type
-  ath10k: Vote for hardware resources for WCN3990
-  dt: bindings: add bindings for wcn3990 wifi block
+   298          u8 status = NCI_HCI_ANY_OK | ~NCI_HCI_FRAGMENT;
+   299          u8 dest_gate, new_pipe;
+   300          struct nci_hci_create_pipe_resp *create_info;
+   301          struct nci_hci_delete_pipe_noti *delete_info;
+   302          struct nci_hci_all_pipe_cleared_noti *cleared_info;
+   303  
+   304          pr_debug("from gate %x pipe %x cmd %x\n", gate, pipe, cmd);
+   305  
 
-Rakesh Pillai (2):
-  ath10k: Add support to get target info from hif ops
-  ath10k: Check all CE for data if irq summary is not retained
+"pipe" can come from two places but their both essentially the same:
 
- .../bindings/net/wireless/qcom,ath10k.txt          |   35 +
- drivers/net/wireless/ath/ath10k/Kconfig            |    8 +
- drivers/net/wireless/ath/ath10k/Makefile           |    4 +
- drivers/net/wireless/ath/ath10k/ce.h               |   10 +-
- drivers/net/wireless/ath/ath10k/core.c             |   21 +
- drivers/net/wireless/ath/ath10k/hif.h              |   15 +-
- drivers/net/wireless/ath/ath10k/htc.c              |    6 +
- drivers/net/wireless/ath/ath10k/htc.h              |    4 +
- drivers/net/wireless/ath/ath10k/hw.h               |    3 +
- drivers/net/wireless/ath/ath10k/pci.c              |    8 +-
- drivers/net/wireless/ath/ath10k/snoc.c             | 1450 ++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/snoc.h             |   95 ++
- 12 files changed, 1651 insertions(+), 8 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/snoc.c
- create mode 100644 drivers/net/wireless/ath/ath10k/snoc.h
+net/nfc/nci/hci.c
+   413  static void nci_hci_msg_rx_work(struct work_struct *work)
+   414  {
+   415          struct nci_hci_dev *hdev =
+   416                  container_of(work, struct nci_hci_dev, msg_rx_work);
+   417          struct sk_buff *skb;
+   418          struct nci_hcp_message *message;
+   419          u8 pipe, type, instruction;
+   420  
+   421          while ((skb = skb_dequeue(&hdev->msg_rx_queue)) != NULL) {
+   422                  pipe = NCI_HCP_MSG_GET_PIPE(skb->data[0]);
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The NCI_HCP_MSG_GET_PIPE() macro looks like this:
 
--- 
-1.9.1
+#define NCI_HCP_MSG_GET_PIPE(header) (header & 0x7f)
+
+   423                  skb_pull(skb, NCI_HCI_HCP_PACKET_HEADER_LEN);
+   424                  message = (struct nci_hcp_message *)skb->data;
+   425                  type = NCI_HCP_MSG_GET_TYPE(message->header);
+   426                  instruction = NCI_HCP_MSG_GET_CMD(message->header);
+   427                  skb_pull(skb, NCI_HCI_HCP_MESSAGE_HEADER_LEN);
+   428  
+   429                  nci_hci_hcp_message_rx(hdev->ndev, pipe,
+   430                                         type, instruction, skb);
+   431          }
+   432  }
+
+regards,
+dan carpenter
