@@ -1,128 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:38219 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751351AbeBZWGP (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:44033 "EHLO
+        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750805AbeBBUNL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 17:06:15 -0500
-Received: by mail-wm0-f67.google.com with SMTP id z9so20027458wmb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2018 14:06:14 -0800 (PST)
-Received: from mail-wm0-f44.google.com (mail-wm0-f44.google.com. [74.125.82.44])
-        by smtp.gmail.com with ESMTPSA id 93sm5299004edi.15.2018.02.26.14.06.12
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 26 Feb 2018 14:06:13 -0800 (PST)
-Received: by mail-wm0-f44.google.com with SMTP id x7so17760761wmc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2018 14:06:12 -0800 (PST)
+        Fri, 2 Feb 2018 15:13:11 -0500
+Received: by mail-oi0-f49.google.com with SMTP id b3so14022409oib.11
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Feb 2018 12:13:11 -0800 (PST)
+Subject: Re: rtl8821ae keep alive not set, connection lost
+To: Pkshih <pkshih@realtek.com>, James Cameron <quozl@laptop.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20170912220916.GB32211@us.netrek.org>
+ <a9a1ff03-d12f-7437-e7bc-5f01b195f753@lwfinger.net>
+ <20180201062202.GH917@us.netrek.org>
+ <5B2DA6FDDF928F4E855344EE0A5C39D13BE7A25E@RTITMBSV07.realtek.com.tw>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <33774f69-6fb2-6cbf-615d-9e2a836dd5de@lwfinger.net> (sfid-20180202_211315_412454_2DD1C4AA)
+Date: Fri, 2 Feb 2018 14:13:09 -0600
 MIME-Version: 1.0
-In-Reply-To: <1519383062.2231.5.camel@sipsolutions.net>
-References: <1519210220-22437-1-git-send-email-arend.vanspriel@broadcom.com>
- <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
- <20180221225903.GA42395@rodete-desktop-imager.corp.google.com>
- <5A8EB4F4.2030103@broadcom.com> <20180222193547.GA78462@rodete-desktop-imager.corp.google.com>
- <5A8FEF68.5080900@broadcom.com> <1519383062.2231.5.camel@sipsolutions.net>
-From: Brian Norris <briannorris@chromium.org>
-Date: Mon, 26 Feb 2018 14:06:11 -0800
-Message-ID: <CA+ASDXNogjhRvB_yGO7t4um5KbkJiMVLeed6TTe7um59aS3vDg@mail.gmail.com> (sfid-20180226_230638_653183_4FBF47F8)
-Subject: Re: [PATCH 2/3] mwifiex: support sysfs initiated device coredump
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless@vger.kernel.org,
-        Linux Bluetooth mailing list
-        <linux-bluetooth@vger.kernel.org>,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <5B2DA6FDDF928F4E855344EE0A5C39D13BE7A25E@RTITMBSV07.realtek.com.tw>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 02/02/2018 01:50 AM, Pkshih wrote:
+> Hi James,
+> 
+> In my experiment, unaligned-word-access may get wrong values that
+> are different from the value by byte-access. Actually, it can simply
+> verified by using 'lspci' to check PCI configuration space.
+> 
+> DBI read 0x70f:
+> _rtl8821ae_dbi_read:1127 r8 0x34f = 0x0017
+> _rtl8821ae_dbi_read:1131 r8 0x350 = 0x000c
+> _rtl8821ae_dbi_read:1136 r16 0x350 = 0xffff
+> 
+> DBI read 0x719:
+> _rtl8821ae_dbi_read:1127 r8 0x34d = 0x0000
+> _rtl8821ae_dbi_read:1131 r8 0x34e = 0x0002
+> _rtl8821ae_dbi_read:1136 r16 0x34e = 0x0200
+> 
+> 
+> According to the wrong and original value of 0x70f is 0xff, I think
+> larger L1 latency 0x70f[5:3] may be helpful. Please help to try
+> below patch. If it works, quirk table won't be necessary.
+> 
+> PK
+> 
+> 
+> diff --git a/rtl8821ae/hw.c b/rtl8821ae/hw.c
+> index 7d43ba002..e53af06ed 100644
+> --- a/rtl8821ae/hw.c
+> +++ b/rtl8821ae/hw.c
+> @@ -1123,7 +1123,8 @@ static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
+>   	}
+>   	if (0 == tmp) {
+>   		read_addr = REG_DBI_RDATA + addr % 4;
+> -		ret = rtl_read_word(rtlpriv, read_addr);
+> +
+> +		ret = rtl_read_byte(rtlpriv, read_addr);
+>   	}
+>   	return ret;
+>   }
+> @@ -1165,7 +1166,7 @@ static void _rtl8821ae_enable_aspm_back_door(struct ieee80211_hw *hw)
+>   	}
+>   
+>   	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x70f);
+> -	_rtl8821ae_dbi_write(rtlpriv, 0x70f, tmp | BIT(7));
+> +	_rtl8821ae_dbi_write(rtlpriv, 0x70f, tmp | BIT(7) | 0x38);
+>   
+>   	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x719);
+>   	_rtl8821ae_dbi_write(rtlpriv, 0x719, tmp | BIT(3) | BIT(4));
+> 
 
-On Fri, Feb 23, 2018 at 2:51 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2018-02-23 at 11:39 +0100, Arend van Spriel wrote:
->
-> > > > Well, that depends on the eye of the beholder I guess. From user-space
-> > > > perspective it is asynchronous regardless. A write access to the coredump
-> > > > sysfs file eventually results in a uevent when the devcoredump entry is
-> > > > created, ie. after driver has made a dev_coredump API call. Whether the
-> > > > driver does that synchronously or asynchronously is irrelevant as far as
-> > > > user-space is concerned.
-> > >
-> > > Is it really? The driver infrastructure seems to guarantee that the
-> > > entirety of a driver's ->coredump() will complete before returning from
-> > > the write. So it might be reasonable for some user to assume (based on
-> > > implementation details, e.g., of brcmfmac) that the devcoredump will be
-> > > ready by the time the write() syscall returns, absent documentation that
-> > > says otherwise. But then, that's not how mwifiex works right now, so
-> > > they might be surprised if they switch drivers.
->
-> I can see how you might want to have that kind of behaviour, but you'd
-> have to jump through some hoops to see if the coredump you saw is
-> actually the right one - you probably want an asynchronous coredump
-> "collector" and then wait for it to show up (with some reasonable
-> timeout) on the actual filesystem, not on sysfs?
->
-> Otherwise you have to trawl sysfs for the right coredump I guess, which
-> too is possible.
 
-It's not that I want that interface. It's that I want the *lack* of
-such an interface to be guaranteed in the documentation. When the
-questions like "where? when?" are not answered in the doc, users are
-totally allowed to speculate ;) Perhaps the "where" can be deferred to
-other documentation (which should probably exist someday), but the
-"when" should be listed as "eventually; or not at all; listen for a
-uevent."
+PK,
 
-> > > > You are right. Clearly I did not reach the end my learning curve here. I
-> > > > assumed referring to the existing dev_coredump facility was sufficient, but
-> > > > maybe it is worth a patch to be more explicit and mention the uevent
-> > > > behavior. Also dev_coredump facility may be disabled upon which the trigger
-> > > > will have no effect in sysfs. In the kernel the data passed by the driver is
-> > > > simply freed by dev_coredump facility.
-> > >
-> > > Is there any other documentation for the coredump feature? I don't
-> > > really see much.
-> >
-> > Any other than the code itself you mean? I am not sure. Maybe Johannes
-> > knows.
->
-> There isn't really, it originally was really simple, but then somebody
-> (Kees perhaps?) requested a way to turn it off forever for security or
-> privacy concerns and it became more complicated.
+This patch works perfectly on my x86_64 system. With it, the interface handled a 
+10 million count flood ping with <1000 packets dropped. It has now been running 
+for at least 11 hours. Good work.
 
-Then I don't think when adding a new sysfs ABI, we should be deferring
-to "existing dev_coredump facility [documentation]" (which doesn't
-exist). And just a few words about the user-facing interface would be
-nice for the documentation. There previously wasn't any official way
-to trigger a dump from userspace -- only from random debugfs files, I
-think, or from unspecified device failures.
+Can you explain that magic 0x38? I'm quite sure that Kalle will not accept the 
+patch as is. He already thinks that rtlwifi and friends already have too many 
+magic numbers.
 
-> > > static ssize_t coredump_store(struct device *dev, struct device_attribute *attr,
-> > >                         const char *buf, size_t count)
-> > > {
-> > >     device_lock(dev);
-> > >     if (dev->driver->coredump)
-> > >             dev->driver->coredump(dev);
-> > >     device_unlock(dev);
-> > >
-> > >     return count;
-> > > }
-> > > static DEVICE_ATTR_WO(coredump);
-> > >
-> > > Is that a bug or a feature?
-> >
-> > Yeah. Let's call it a bug. Just not sure what to go for. Return the
-> > error or change coredump callback to void return type.
->
-> I'm not sure it matters all that much - the underlying devcoredump
-> calls all have no return value (void), and given the above complexities
-> with the ability to turn off devcoredumping entirely you cannot rely on
-> this return value to tell you if a dump was created or not, at least
-> not without much more infrastructure work.
-
-Then perhaps it makes sense to remove the return code before you
-create users of it.
-
-Brian
+Larry
