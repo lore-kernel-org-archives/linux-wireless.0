@@ -1,61 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:41895 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751113AbeBINm1 (ORCPT
+Received: from smtp86.iad3a.emailsrvr.com ([173.203.187.86]:57956 "EHLO
+        smtp86.iad3a.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752726AbeBBRBq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Feb 2018 08:42:27 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v2 00/10] rtlwifi: add more materials for 8822be
-Date: Fri, 9 Feb 2018 13:42:14 +0000
-Message-ID: <1518183733.2023.3.camel@realtek.com> (sfid-20180209_150805_265377_9338F3FD)
-References: <20180129032641.17841-1-pkshih@realtek.com>
-In-Reply-To: <20180129032641.17841-1-pkshih@realtek.com>
-Content-Type: text/plain; charset="utf-8"
+        Fri, 2 Feb 2018 12:01:46 -0500
+Date: Fri, 2 Feb 2018 11:55:16 -0500 (EST)
+Subject: RE: [Make-wifi-fast] [PATCH] mac80211: Adjust TSQ pacing shift
+From: "dpreed@deepplum.com" <dpreed@deepplum.com>
+To: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
 MIME-Version: 1.0
+Content-Type: text/plain;charset=UTF-8
+In-Reply-To: <20180202151105.30043-1-toke@toke.dk>
+References: <20180202151105.30043-1-toke@toke.dk>
+Message-ID: <1517590516.742814797@apps.rackspace.com> (sfid-20180202_202430_841945_EABC02FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE4LTAxLTI5IGF0IDExOjI2ICswODAwLCBwa3NoaWhAcmVhbHRlay5jb20gd3Jv
-dGU6DQo+IEZyb206IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiANCj4gSSBj
-b250aW51ZSB0byBzdWJtaXQgbW9yZSBtYXRlcmlhbHMgbmVlZGVkIGJ5IDg4MjJiZS4gQSBzcGVj
-aWFsIHBhdGNoIGlzDQo+ICJQQVRDSCAxMC8xMCIgdGhhdCBhZGQgbmV3IGZpbGVzIHRvIHN1cHBv
-cnQgODgyMmJlIGJ0Y29leCBpbiBjYXNlIHdpZmkNCj4gb25seS4gSW4gbXkgcGxhbiwgODgyMmJl
-IGJ0Y29leCBmb3IgY29tYm8gY2FyZCB3aWxsIGJlIHN1bWl0dGVkIGluIG5leHQNCj4gcGF0Y2hz
-ZXQuDQo+IA0KPiB2MjogQWRkICdBY2tlZC1ieTogTGFycnkgRmluZ2VyJyBpZiB0aGUgY29tbWl0
-cyBhcmUgYWNrZWQNCj4gwqDCoMKgwqBVc2UgJ3N3aXRjaC4uLmNhc2UnIHRvIHJlcGxhY2UgdmVy
-Ym9zZSAnaWYuLi5lbHNlIGlmLi4uZWxzZSBpZi4uLmVsc2UnDQo+IMKgwqDCoMKgVXNlIGV4dGVy
-biBkZWNsYXJhdGlvbiB0byBxdWlldCBzcGFyc2Ugd2FybmluZ3MNCj4gDQo+IFBpbmctS2UgU2hp
-aCAoMTApOg0KPiDCoCBydGx3aWZpOiBlbmFibGUgbWFjODAyMTEgZmFzdC10eCBzdXBwb3J0DQo+
-IMKgIHJ0bHdpZmk6IEFkZCBTdXBwb3J0IFZIVCB0byBzcGVjX3Zlcg0KPiDCoCBydGx3aWZpOiBV
-c2UgNiBiaXRzIGFzIHNlcXVlbmNlIG51bWJlciBvZiBUWCByZXBvcnQNCj4gwqAgcnRsd2lmaTog
-RXh0ZW5kIHR4X3Bvd2VyX2J5X3JhdGVfb2Zmc2V0IHNpemUgZm9yIG5ld2VyIElDDQo+IMKgIHJ0
-bHdpZmk6IEFkZCByYXRlIHNlY3Rpb24gYW5kIGl0cyByZWxhdGVkIGRlZmluaXRpb24gYW5kIGNv
-bW1lbnQNCj4gwqAgcnRsd2lmaTogRml4IFZIVCBOU1MgaW4gUkMNCj4gwqAgcnRsd2lmaTogYWRk
-IGRlZmluaXRpb24gcmFkaW9fbWFzayBmb3IgUkYgYW5kIG1heGltdW0gYmFuZHdpZHRoDQo+IMKg
-IHJ0bHdpZmk6IGFkZCBlZnVzZSBvcHMgZm9yIG90aGVyIGNvbXBvbmVudHMNCj4gwqAgcnRsd2lm
-aTogYnRjb2V4OiBhZGQgcm91dGluZSB0byBzZXQgZGVmYXVsdCBwb3J0IGlkDQo+IMKgIHJ0bHdp
-Zmk6IGJ0Y29leDogQWRkIDg4MjJiZSBidGNvZXggc3VwcG9ydGVkIGZpbGVzIGZvciB3aWZpIG9u
-bHkNCj4gDQo+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2Jhc2UuY8Kg
-wqDCoMKgwqDCoMKgwqB8IDM0ICsrKysrKysrKystLS0NCj4gwqAuLi4vcnRsd2lmaS9idGNvZXhp
-c3QvaGFsYnRjODgyMmJ3aWZpb25seS5jwqDCoMKgwqDCoMKgwqDCoHwgNTUgKysrKysrKysrKysr
-KysrKysrKysrKw0KPiDCoC4uLi9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4ODIyYndpZmlvbmx5
-LmjCoMKgwqDCoMKgwqDCoMKgfCAyNSArKysrKysrKysrDQo+IMKgLi4uL3JlYWx0ZWsvcnRsd2lm
-aS9idGNvZXhpc3QvaGFsYnRjb3V0c3JjLmPCoMKgwqDCoMKgwqDCoHwgMjIgKysrKysrKysrDQo+
-IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2VmdXNlLmPCoMKgwqDCoMKg
-wqDCoHwgMTMgKysrKysNCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkv
-ZWZ1c2UuaMKgwqDCoMKgwqDCoMKgfMKgwqAyICstDQo+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-cmVhbHRlay9ydGx3aWZpL3BjaS5jwqDCoMKgwqDCoMKgwqDCoMKgfMKgwqAxICsNCj4gwqBkcml2
-ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcmMuY8KgwqDCoMKgwqDCoMKgwqDCoMKg
-fCA0OSArKysrKysrKysrKysrKystLS0tDQo+IMKgLi4uL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
-bHdpZmkvcnRsODgyMWFlL3N3LmPCoMKgwqDCoHzCoMKgMSArDQo+IMKgZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvcmVhbHRlay9ydGx3aWZpL3dpZmkuaMKgwqDCoMKgwqDCoMKgwqB8IDM5ICsrKysrKysr
-KysrKystLQ0KPiDCoDEwIGZpbGVzIGNoYW5nZWQsIDIyMSBpbnNlcnRpb25zKCspLCAyMCBkZWxl
-dGlvbnMoLSkNCj4gwqBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVh
-bHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4ODIyYndpZmlvbmx5LmMNCj4gwqBjcmVhdGUg
-bW9kZSAxMDA2NDQgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlz
-dC9oYWxidGM4ODIyYndpZmlvbmx5LmgNCj4gDQoNCkhpIEthbGxlLA0KDQpEbyB5b3UgaGF2ZSBh
-bnkgY29tbWVudCB3aXRoIHRoaXMgcGF0Y2hzZXQgdGhhdCBpcyBwZW5kaW5nIGZvciAyIHdlZWtz
-Pw0KDQpUaGFuayB5b3UNClBLDQo=
+I'm curious about the "WiFi Aware" initiative by the WiFi Alliance.
+
+Does LEDE and/or Linux support this protocol? I know gSupplicant is potentially the way such things are supposed to work, at least according to its supporters.
+
+The general NAN (Neighborhood-Aware-Networking) concept makes a lot of sense at one level, but as an Internet guy, it troubles me that they decided to split from the Internet and go a balkanized direction. To me, the neighborhood is interesting only as part of a larger Internet.
+
+It also troubles me that WiFi Aware is a "certification program" rather than a real standard.
+
+-----Original Message-----
+From: "Toke Høiland-Jørgensen" <toke@toke.dk>
+Sent: Friday, February 2, 2018 10:11am
+To: make-wifi-fast@lists.bufferbloat.net, linux-wireless@vger.kernel.org
+Cc: "Toke Høiland-Jørgensen" <toke@toke.dk>
+Subject: [Make-wifi-fast] [PATCH] mac80211: Adjust TSQ pacing shift
+
+Since we now have the convenient helper to do so, actually adjust the
+TSQ pacing shift for packets going out over a WiFi interface. This
+significantly improves throughput for locally-originated TCP
+connections. The default pacing shift of 10 corresponds to ~1ms of
+queued packet data. Adjusting this to a shift of 8 (i.e. ~4ms) improves
+1-hop throughput for ath9k by a factor of 3, whereas increasing it more
+has diminishing returns.
+
+Achieved throughput for different values of sk_pacing_shift (average of
+5 iterations of 10-sec netperf runs to a host on the other side of the
+WiFi hop):
+
+sk_pacing_shift 10:  43.21 Mbps (pre-patch)
+sk_pacing_shift  9:  78.17 Mbps
+sk_pacing_shift  8: 123.94 Mbps
+sk_pacing_shift  7: 128.31 Mbps
+
+Latency for competing flows increases from ~3 ms to ~10 ms with this
+change. This is about the same magnitude of queueing latency induced by
+flows that are not originated on the WiFi device itself (and so are not
+limited by TSQ).
+
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+---
+ net/mac80211/tx.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 25904af38839..69722504e3e1 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3574,6 +3574,14 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	if (!IS_ERR_OR_NULL(sta)) {
+ 		struct ieee80211_fast_tx *fast_tx;
+ 
++		/* We need a bit of data queued to build aggregates properly, so
++		 * instruct the TCP stack to allow more than a single ms of data
++		 * to be queued in the stack. The value is a bit-shift of 1
++		 * second, so 8 is ~4ms of queued data. Only affects local TCP
++		 * sockets.
++		 */
++		sk_pacing_shift_update(skb->sk, 8);
++
+ 		fast_tx = rcu_dereference(sta->fast_tx);
+ 
+ 		if (fast_tx &&
+-- 
+2.16.0
+
+_______________________________________________
+Make-wifi-fast mailing list
+Make-wifi-fast@lists.bufferbloat.net
+https://lists.bufferbloat.net/listinfo/make-wifi-fast
