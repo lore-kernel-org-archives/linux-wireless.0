@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0092.outbound.protection.outlook.com ([104.47.0.92]:17040
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750806AbeBHJtb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Feb 2018 04:49:31 -0500
-From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: mac80211 scan results, signal value not reliable
-Date: Thu, 8 Feb 2018 09:49:28 +0000
-Message-ID: <AM4PR0101MB23058FC2795B1FAF71CBF4F2E4F30@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180208_104936_856405_3756BBC7)
-Content-Type: text/plain; charset="us-ascii"
+Received: from rtits2.realtek.com ([211.75.126.72]:51107 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751756AbeBCEpq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Feb 2018 23:45:46 -0500
+From: Pkshih <pkshih@realtek.com>
+To: "quozl@laptop.org" <quozl@laptop.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8821ae keep alive not set, connection lost
+Date: Sat, 3 Feb 2018 04:45:10 +0000
+Message-ID: <1517633110.2437.14.camel@realtek.com> (sfid-20180203_054552_156707_22B4DB34)
+References: <20170912220916.GB32211@us.netrek.org>
+         <a9a1ff03-d12f-7437-e7bc-5f01b195f753@lwfinger.net>
+         <20180201062202.GH917@us.netrek.org>
+         <5B2DA6FDDF928F4E855344EE0A5C39D13BE7A25E@RTITMBSV07.realtek.com.tw>
+         <33774f69-6fb2-6cbf-615d-9e2a836dd5de@lwfinger.net>
+In-Reply-To: <33774f69-6fb2-6cbf-615d-9e2a836dd5de@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D----------=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D-----=
------=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D----------=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Hello list,
-
-In net/mac80211/scan.c, function ieee80211_bss_info_update() passes
-incoming scan results to the generic wireless layer, with indication of
-the received signal level, but no indication of signal validity.
-
-Before ieee80211_bss_info_update() is called, rx_status->flag can be set
-to RX_FLAG_NO_SIGNAL_VAL by the ath9k driver and it won't be taken into
-account in the wireless layer.
-Even later in ieee80211_bss_info_update(), rx_status->flag can also be set
-to RX_FLAG_NO_SIGNAL_VAL, and the wireless layer won't be aware of this.
-
-I stumbled on this because, when using ath9k (WLE350NX) to do a passive sca=
-n
-off-channel, the beacons received in a 30ms window after channel change sho=
-w
-a signal level +10dB above the real value. So I was looking for a way to
-tell the above layers that the signal is invalid. RX_FLAG_NO_SIGNAL_VAL see=
-ms
-to fit, but is not conveyed up to iw or wpa_supplicant.
-
-In fact I did not find any such thing in net/wireless/nl80211.c, function
-nl80211_send_bss().
-
-Any suggestion? Did I miss something?
-
-Regards,
-Jean-Pierre
+T24gRnJpLCAyMDE4LTAyLTAyIGF0IDE0OjEzIC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
+IE9uIDAyLzAyLzIwMTggMDE6NTAgQU0sIFBrc2hpaCB3cm90ZToNCj4gPiBIaSBKYW1lcywNCj4g
+PsKgDQo+ID4gSW4gbXkgZXhwZXJpbWVudCwgdW5hbGlnbmVkLXdvcmQtYWNjZXNzIG1heSBnZXQg
+d3JvbmcgdmFsdWVzIHRoYXQNCj4gPiBhcmUgZGlmZmVyZW50IGZyb20gdGhlIHZhbHVlIGJ5IGJ5
+dGUtYWNjZXNzLiBBY3R1YWxseSwgaXQgY2FuIHNpbXBseQ0KPiA+IHZlcmlmaWVkIGJ5IHVzaW5n
+ICdsc3BjaScgdG8gY2hlY2sgUENJIGNvbmZpZ3VyYXRpb24gc3BhY2UuDQo+ID7CoA0KPiA+IERC
+SSByZWFkIDB4NzBmOg0KPiA+IF9ydGw4ODIxYWVfZGJpX3JlYWQ6MTEyNyByOCAweDM0ZiA9IDB4
+MDAxNw0KPiA+IF9ydGw4ODIxYWVfZGJpX3JlYWQ6MTEzMSByOCAweDM1MCA9IDB4MDAwYw0KPiA+
+IF9ydGw4ODIxYWVfZGJpX3JlYWQ6MTEzNiByMTYgMHgzNTAgPSAweGZmZmYNCj4gPsKgDQo+ID4g
+REJJIHJlYWQgMHg3MTk6DQo+ID4gX3J0bDg4MjFhZV9kYmlfcmVhZDoxMTI3IHI4IDB4MzRkID0g
+MHgwMDAwDQo+ID4gX3J0bDg4MjFhZV9kYmlfcmVhZDoxMTMxIHI4IDB4MzRlID0gMHgwMDAyDQo+
+ID4gX3J0bDg4MjFhZV9kYmlfcmVhZDoxMTM2IHIxNiAweDM0ZSA9IDB4MDIwMA0KPiA+wqANCj4g
+PsKgDQo+ID4gQWNjb3JkaW5nIHRvIHRoZSB3cm9uZyBhbmQgb3JpZ2luYWwgdmFsdWUgb2YgMHg3
+MGYgaXMgMHhmZiwgSSB0aGluaw0KPiA+IGxhcmdlciBMMSBsYXRlbmN5IDB4NzBmWzU6M10gbWF5
+IGJlIGhlbHBmdWwuIFBsZWFzZSBoZWxwIHRvIHRyeQ0KPiA+IGJlbG93IHBhdGNoLiBJZiBpdCB3
+b3JrcywgcXVpcmsgdGFibGUgd29uJ3QgYmUgbmVjZXNzYXJ5Lg0KPiA+wqANCj4gPiBQSw0KPiA+
+wqANCj4gPsKgDQo+ID4gZGlmZiAtLWdpdCBhL3J0bDg4MjFhZS9ody5jIGIvcnRsODgyMWFlL2h3
+LmMNCj4gPiBpbmRleCA3ZDQzYmEwMDIuLmU1M2FmMDZlZCAxMDA2NDQNCj4gPiAtLS0gYS9ydGw4
+ODIxYWUvaHcuYw0KPiA+ICsrKyBiL3J0bDg4MjFhZS9ody5jDQo+ID4gQEAgLTExMjMsNyArMTEy
+Myw4IEBAIHN0YXRpYyB1OCBfcnRsODgyMWFlX2RiaV9yZWFkKHN0cnVjdCBydGxfcHJpdiAqcnRs
+cHJpdiwgdTE2IGFkZHIpDQo+ID7CoMKgwqAJfQ0KPiA+wqDCoMKgCWlmICgwID09IHRtcCkgew0K
+PiA+wqDCoMKgCQlyZWFkX2FkZHIgPSBSRUdfREJJX1JEQVRBICsgYWRkciAlIDQ7DQo+ID4gLQkJ
+cmV0ID0gcnRsX3JlYWRfd29yZChydGxwcml2LCByZWFkX2FkZHIpOw0KPiA+ICsNCj4gPiArCQly
+ZXQgPSBydGxfcmVhZF9ieXRlKHJ0bHByaXYsIHJlYWRfYWRkcik7DQo+ID7CoMKgwqAJfQ0KPiA+
+wqDCoMKgCXJldHVybiByZXQ7DQo+ID7CoMKgwqB9DQo+ID4gQEAgLTExNjUsNyArMTE2Niw3IEBA
+IHN0YXRpYyB2b2lkIF9ydGw4ODIxYWVfZW5hYmxlX2FzcG1fYmFja19kb29yKHN0cnVjdCBpZWVl
+ODAyMTFfaHcgKmh3KQ0KPiA+wqDCoMKgCX0NCj4gPsKgwqDCoA0KPiA+wqDCoMKgCXRtcCA9IF9y
+dGw4ODIxYWVfZGJpX3JlYWQocnRscHJpdiwgMHg3MGYpOw0KPiA+IC0JX3J0bDg4MjFhZV9kYmlf
+d3JpdGUocnRscHJpdiwgMHg3MGYsIHRtcCB8IEJJVCg3KSk7DQo+ID4gKwlfcnRsODgyMWFlX2Ri
+aV93cml0ZShydGxwcml2LCAweDcwZiwgdG1wIHwgQklUKDcpIHwgMHgzOCk7DQo+ID7CoMKgwqAN
+Cj4gPsKgwqDCoAl0bXAgPSBfcnRsODgyMWFlX2RiaV9yZWFkKHJ0bHByaXYsIDB4NzE5KTsNCj4g
+PsKgwqDCoAlfcnRsODgyMWFlX2RiaV93cml0ZShydGxwcml2LCAweDcxOSwgdG1wIHwgQklUKDMp
+IHwgQklUKDQpKTsNCj4gPsKgDQo+IA0KPiANCj4gUEssDQo+IA0KPiBUaGlzIHBhdGNoIHdvcmtz
+IHBlcmZlY3RseSBvbiBteSB4ODZfNjQgc3lzdGVtLiBXaXRoIGl0LCB0aGUgaW50ZXJmYWNlIGhh
+bmRsZWQgYcKgDQo+IDEwIG1pbGxpb24gY291bnQgZmxvb2QgcGluZyB3aXRoIDwxMDAwIHBhY2tl
+dHMgZHJvcHBlZC4gSXQgaGFzIG5vdyBiZWVuIHJ1bm5pbmfCoA0KPiBmb3IgYXQgbGVhc3QgMTEg
+aG91cnMuIEdvb2Qgd29yay4NCj4gDQo+IENhbiB5b3UgZXhwbGFpbiB0aGF0IG1hZ2ljIDB4Mzg/
+IEknbSBxdWl0ZSBzdXJlIHRoYXQgS2FsbGUgd2lsbCBub3QgYWNjZXB0IHRoZcKgDQo+IHBhdGNo
+IGFzIGlzLiBIZSBhbHJlYWR5IHRoaW5rcyB0aGF0IHJ0bHdpZmkgYW5kIGZyaWVuZHMgYWxyZWFk
+eSBoYXZlIHRvbyBtYW55wqANCj4gbWFnaWMgbnVtYmVycy4NCj4gDQpUaGUgbWFnaWMgMHgzOCBy
+ZXByZXNlbnRzIEwxIGxhdGVuY3kgMHg3MGZbNTozXT1iJzExMSwgYW5kIEkgd2lsbCBhZGQgZGVm
+aW5pdGlvbg0Kb3IgbWFjcm8gdG8gZGVzY3JpYmUNCjB4NzBmIGFuZCBtb3ZlIGFsbCBBU1BNIGNv
+ZGUgaW50byBwY2kuYywgaWYgdGhlIHByb2JsZW0gd2FzDQpzb2x2ZWQuIEhlbmNlLCBydGw4NzIz
+ZGUgYW5kIHJ0bDg3MjNiZQ0Kd2lsbCB1c2UgdGhlIHNhbWUgdmFsdWVzLCB0b28uDQoNCkNvdWxk
+IHlvdSBhbHNvIGhlbHAgdG8gdGVzdCBMMSBsYXRlbmN5IGFzIHJlY29tbWVuZGVkIHZhbHVlIGIn
+MTAwP8KgDQooaS5lLiAweDIwIGluc3RlYWQpDQoNClRoYW5rcw0KUEsNCg0K
