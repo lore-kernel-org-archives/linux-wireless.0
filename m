@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36026 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752028AbeBIBPs (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:57670 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750709AbeBCHZm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Feb 2018 20:15:48 -0500
-Subject: Re: [PATCH v2] rtlwifi: rtl8192cu: Remove variable self-assignment in
- rf.c
-To: Matthias Kaehlcke <mka@chromium.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Guenter Roeck <groeck@chromium.org>,
-        Justin TerAvest <teravest@chromium.org>,
-        Craig Bergstrom <craigb@chromium.org>
-References: <20180209005712.29353-1-mka@chromium.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <c6b8e448-a848-07bc-2dc3-c1ac5aca0abc@lwfinger.net> (sfid-20180209_021607_855570_2E1DE93A)
-Date: Thu, 8 Feb 2018 19:15:46 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180209005712.29353-1-mka@chromium.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sat, 3 Feb 2018 02:25:42 -0500
+Message-ID: <1517640716.6175.13.camel@coelho.fi> (sfid-20180203_082545_865078_6DBEAF0F)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sat, 03 Feb 2018 08:51:56 +0200
+In-Reply-To: <87y3l07n38.fsf@codeaurora.org>
+References: <20171223092200.30270-1-luca@coelho.fi>
+         <871sivs48k.fsf@kamboji.qca.qualcomm.com>
+         <1515914548.7436.1.camel@intel.com> <87y3l07n38.fsf@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 0/5] iwlwifi: updates intended for v4.16 2017-12-23
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2018 06:57 PM, Matthias Kaehlcke wrote:
-> In _rtl92c_get_txpower_writeval_by_regulatory() the variable writeVal
-> is assigned to itself in an if ... else statement, apparently only to
-> document that the branch condition is handled and that a previously read
-> value should be returned unmodified. The self-assignment causes clang to
-> raise the following warning:
-> 
-> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c:304:13:
->    error: explicitly assigning value of variable of type 'u32'
->      (aka 'unsigned int') to itself [-Werror,-Wself-assign]
->    writeVal = writeVal;
-> 
-> Delete the branch with the self-assignment.
-> 
-> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
-> ---
-> Changes in v2:
-> - Delete the 'else if' branch entirely
-> 
->   drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c | 3 ---
->   1 file changed, 3 deletions(-)
+Hi,
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-
+On Sun, 2018-01-14 at 12:26 +0200, Kalle Valo wrote:
+> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 > 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-> index 9cff6bc4049c..cf551785eb08 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-> @@ -299,9 +299,6 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
->   			writeVal = 0x00000000;
->   		if (rtlpriv->dm.dynamic_txhighpower_lvl == TXHIGHPWRLEVEL_BT1)
->   			writeVal = writeVal - 0x06060606;
-> -		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
-> -			 TXHIGHPWRLEVEL_BT2)
-> -			writeVal = writeVal;
->   		*(p_outwriteval + rf) = writeVal;
->   	}
->   }
+> > On Fri, 2018-01-12 at 13:31 +0200, Kalle Valo wrote:
+> > > From: Luca Coelho <luciano.coelho@intel.com>
+> > > 
+> > > > Luca Coelho (1):
+> > > >   iwlwifi: mvm: check if mac80211_queue is valid in
+> > > > iwl_mvm_disable_txq
+> > > > 
+> > > > Mordechay Goodstein (1):
+> > > >   iwlwifi: set default timstamp marker cmd
+> > > > 
+> > > > Sara Sharon (3):
+> > > >   iwlwifi: mvm: flip AMSDU addresses only for 9000 family
+> > > >   iwlwifi: mvm: take RCU lock before dereferencing
+> > > >   iwlwifi: mvm: move TSO segment to a separate function
+> > > 
+> > > Most likely the merge window starts in 9 days so I need to start
+> > > getting patches ready. As Luca is away should I apply these
+> > > patches
+> > > directly to wireless-drivers-next?
+> > > 
+> > 
+> > First let me thank you for tracking this. I don't see anything that
+> > we
+> > really need in 4.16 here. Besides Luca's UBSAN warning, all the
+> > rest
+> > is for a new device family which won't be supported in 4.16 anyway.
+> > 
+> > So I opt to wait for Luca here.
 > 
+> Ok, I'll wait for him then.
+
+Sorry for coming back to this just now, but yeah, Emmanuel is right
+because of the holidays and my vacations, this got delayed, so it can
+go to 4.17.  I'll include this as part of my next -next pull request.
+
+--
+Cheers,
+Luca.
