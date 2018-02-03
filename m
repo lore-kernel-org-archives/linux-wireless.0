@@ -1,85 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f171.google.com ([209.85.128.171]:35359 "EHLO
-        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751039AbeBTWGu (ORCPT
+Received: from orthanc.universe-factory.net ([104.238.176.138]:34440 "EHLO
+        orthanc.universe-factory.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752412AbeBCXhJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 17:06:50 -0500
-Received: by mail-wr0-f171.google.com with SMTP id l43so18680736wrc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Feb 2018 14:06:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87tvubdick.fsf@toke.dk>
-References: <CAPWex-AFApTucOo4DGk2n30X7Y0N2NrNv2u+8ubqTL4SkhxgwA@mail.gmail.com>
- <CALLGbR+taP7GU4ftX5wFPvxD0BUsCiBDxjGXWeOJi9_nYLhEww@mail.gmail.com> <87tvubdick.fsf@toke.dk>
-From: sdnlabs Janakaraj <wsuprabhu@gmail.com>
-Date: Tue, 20 Feb 2018 17:06:29 -0500
-Message-ID: <CAPWex-A6smsFq0_sbGwThJF0_6168sbXY8gcLattYNgNYoRe3g@mail.gmail.com> (sfid-20180220_230655_549354_8D4064AC)
-Subject: Re: testing tool for packet delay
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: Steve deRosier <derosier@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sat, 3 Feb 2018 18:37:09 -0500
+From: Matthias Schiffer <mschiffer@universe-factory.net>
+To: seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2 1/2] wireless-regdb: do not rely on sorting of dict keys in conversion scripts
+Date: Sun,  4 Feb 2018 00:36:53 +0100
+Message-Id: <bdfcead51b64e05f867ba5fe273c196edea35ddd.1517700836.git.mschiffer@universe-factory.net> (sfid-20180204_003721_456653_3209E6F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Toke,
-Thanks for sharing this information.
+The iteration order of dicts varies across Python implementations, in
+particular Python 2 and 3. Fully sort key lists rather than only taking
+the "freqband" field into consideration to make the build of the binary
+regdbs fully reproducible.
 
-I took a look at Flent yesterday and planning to test it by the
-weekend due to something things I have to catch up with.
+This commit changes the order of the entries in the generated files; the
+output of regdbdump is unchanged.
+
+Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+---
+
+v2: unchanged
 
 
+ db2bin.py | 16 +++++++++-------
+ db2fw.py  |  4 ++--
+ 2 files changed, 11 insertions(+), 9 deletions(-)
 
-On Tue, Feb 20, 2018 at 6:13 AM, Toke H=C3=B8iland-J=C3=B8rgensen <toke@tok=
-e.dk> wrote:
-> Steve deRosier <derosier@gmail.com> writes:
->
->> On Mon, Feb 19, 2018 at 9:19 AM, sdnlabs Janakaraj <wsuprabhu@gmail.com>=
- wrote:
->>>
->>> Hello All,
->>>
->>> I am working on delay analysis of packets in wireless stacks. I am
->>> able to see lots of papers talk about therotical analysis. But I am
->>> more interested in practical evaluation.
->>>
->>> I am reaching out to developers community to learn how they actually
->>> evaluate the performance of the stack. In particular, I am looking for
->>> ideas to evaluate the delay experienced by packets within the
->>> mac802.11 stack.
->>>
->>
->> Hi Prabhu,
->>
->> Sounds like an interesting project. More often my instrumentation
->> focuses on aggregate performance and iperf throughput numbers suffices
->> for most of that. Occasionally I utilize internal performance measures
->> and/or data provided me by ftrace and related tools.
->>
->> If you're unfamiliar with it, I suggest you look at the Bufferbloat
->> and Make-wifi-fast projects. I suspect that their data and techniques
->> and tools might be of interest to you:
->>
->> https://www.bufferbloat.net/projects/make-wifi-fast/
->
-> Bufferbloat/make-wifi-fast community member checking in ;)
->
-> Basically, what we've been doing to analyse (and reduce) the latency of
-> the queueing system in the WiFi stack, is to put it under load and
-> measure how it behaves. This is not so much through the use of tracing
-> tools as it is an end-to-end black-box measurement approach.
->
-> The go-to mechanism for this is to run a latency measurement (either a
-> simple ICMP ping, or a UDP measurement flow using a tool such as
-> irtt[1]), then load the connection with one or more TCP flows and see
-> how it impacts latency. You can of course vary the number of flows,
-> diffserv markings, etc. to get different insights.
->
-> I'm the author of a test tool that automates a lot of this and which can
-> also collect a lot of statistics from the stack while doing so. The tool
-> is called Flent[2] and is open source. Feel free to try it out and ask
-> any questions that come up :)
->
-> -Toke
->
-> [1] https://github.com/peteheist/irtt/
-> [2] https://flent.org
+diff --git a/db2bin.py b/db2bin.py
+index 41d3741..ae5f064 100755
+--- a/db2bin.py
++++ b/db2bin.py
+@@ -50,18 +50,22 @@ class PTR(object):
+ 
+ p = DBParser()
+ countries = p.parse(file(sys.argv[2]))
++
++countrynames = countries.keys()
++countrynames.sort()
++
+ power = []
+ bands = []
+-for c in countries.itervalues():
+-    for perm in c.permissions:
++for alpha2 in countrynames:
++    for perm in countries[alpha2].permissions:
+         if not perm.freqband in bands:
+             bands.append(perm.freqband)
+         if not perm.power in power:
+             power.append(perm.power)
+ rules = create_rules(countries)
+-rules.sort(cmp=lambda x, y: cmp(x.freqband, y.freqband))
++rules.sort()
+ collections = create_collections(countries)
+-collections.sort(cmp=lambda x, y: cmp(x[0].freqband, y[0].freqband))
++collections.sort()
+ 
+ output = StringIO()
+ 
+@@ -104,15 +108,13 @@ for coll in collections:
+     # struct regdb_file_reg_rules_collection
+     coll = list(coll)
+     be32(output, len(coll))
+-    coll.sort(cmp=lambda x, y: cmp(x.freqband, y.freqband))
++    coll.sort()
+     for regrule in coll:
+         be32(output, reg_rules[regrule])
+ 
+ # update country pointer now!
+ reg_country_ptr.set()
+ 
+-countrynames = countries.keys()
+-countrynames.sort()
+ for alpha2 in countrynames:
+     coll = countries[alpha2]
+     # struct regdb_file_reg_country
+diff --git a/db2fw.py b/db2fw.py
+index 7b2b141..630e4d6 100755
+--- a/db2fw.py
++++ b/db2fw.py
+@@ -60,9 +60,9 @@ class PTR(object):
+ p = DBParser()
+ countries = p.parse(file(sys.argv[2]))
+ rules = create_rules(countries)
+-rules.sort(cmp=lambda x, y: cmp(x.freqband, y.freqband))
++rules.sort()
+ collections = create_collections(countries)
+-collections.sort(cmp=lambda x, y: cmp(x[0][0].freqband, y[0][0].freqband))
++collections.sort()
+ 
+ output = StringIO()
+ 
+-- 
+2.16.1
