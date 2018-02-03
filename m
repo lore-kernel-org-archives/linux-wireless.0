@@ -1,79 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752962AbeBSPaO (ORCPT
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:36172 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751644AbeBCQ2w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 10:30:14 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <Adham.Abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 02/14] staging: wilc1000: rename strHostIfSetMulti to avoid camelCase
-Date: Mon, 19 Feb 2018 20:59:32 +0530
-Message-ID: <1519054184-14301-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163018_665586_81EB1452)
-In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+        Sat, 3 Feb 2018 11:28:52 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1516258057.410.55.camel@sipsolutions.net>
+References: <alpine.LSU.2.11.1801171448510.5433@eggly.anvils> <1516258057.410.55.camel@sipsolutions.net>
+From: Kevin Groeneveld <kgroeneveld@gmail.com>
+Date: Sat, 3 Feb 2018 11:28:50 -0500
+Message-ID: <CABF+-6Ur0v=dbyXCFxWS0BeAJuivcANFeRr=g78DggWEL22H9w@mail.gmail.com> (sfid-20180203_172856_875693_1A86A3D7)
+Subject: Re: [PATCH] cfg80211: stop demanding lots of new stuff
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Hugh Dickins <hughd@google.com>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+On Thu, Jan 18, 2018 at 1:47 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2018-01-17 at 14:55 -0800, Hugh Dickins wrote:
+>> "make oldconfig" from 4.14 (when CONFIG_CFG80211_CERTIFICATION_ONUS
+>> is not set) to 4.15-rc, gets into asking lots of new questions, and
+>> configuring in unwanted stuff: I'm unsure of my Kconfig skills, but
+>> it looks like CFG80211_REQUIRE_SIGNED_REGDB's "default y" needs to
+>> be toned down when we don't even have CFG80211_CERTIFICATION_ONUS.
+>
+> No, this is wrong - we want default configurations to be able to load a
+> signed regulatory database and validate the signature.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+I had a similar reaction as Hugh when I recently updated a kernel
+config from 4.14 to 4.15.  I barely understand the kernel config
+options in question so I don't really know what is right or wrong.
+But it seems strange to me that when you turn off
+CFG80211_CERTIFICATION_ONUS in menuconfig that the options which get
+hidden are forced on.  When options are hidden like this I assume
+(maybe incorrectly) that they are dependent on the option I just
+turned off and that the now hidden options will also be off.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3dc3d2e..edd35b7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2406,7 +2406,7 @@ static void Handle_PowerManagement(struct wilc_vif *vif,
- }
- 
- static void Handle_SetMulticastFilter(struct wilc_vif *vif,
--				      struct set_multicast *strHostIfSetMulti)
-+				      struct set_multicast *hif_set_mc)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -2414,25 +2414,25 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
- 
- 	wid.id = (u16)WID_SETUP_MULTICAST_FILTER;
- 	wid.type = WID_BIN;
--	wid.size = sizeof(struct set_multicast) + (strHostIfSetMulti->cnt * ETH_ALEN);
-+	wid.size = sizeof(struct set_multicast) + (hif_set_mc->cnt * ETH_ALEN);
- 	wid.val = kmalloc(wid.size, GFP_KERNEL);
- 	if (!wid.val)
- 		goto ERRORHANDLER;
- 
- 	cur_byte = wid.val;
--	*cur_byte++ = (strHostIfSetMulti->enabled & 0xFF);
-+	*cur_byte++ = (hif_set_mc->enabled & 0xFF);
- 	*cur_byte++ = 0;
- 	*cur_byte++ = 0;
- 	*cur_byte++ = 0;
- 
--	*cur_byte++ = (strHostIfSetMulti->cnt & 0xFF);
--	*cur_byte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
--	*cur_byte++ = ((strHostIfSetMulti->cnt >> 16) & 0xFF);
--	*cur_byte++ = ((strHostIfSetMulti->cnt >> 24) & 0xFF);
-+	*cur_byte++ = (hif_set_mc->cnt & 0xFF);
-+	*cur_byte++ = ((hif_set_mc->cnt >> 8) & 0xFF);
-+	*cur_byte++ = ((hif_set_mc->cnt >> 16) & 0xFF);
-+	*cur_byte++ = ((hif_set_mc->cnt >> 24) & 0xFF);
- 
--	if ((strHostIfSetMulti->cnt) > 0)
-+	if ((hif_set_mc->cnt) > 0)
- 		memcpy(cur_byte, wilc_multicast_mac_addr_list,
--		       ((strHostIfSetMulti->cnt) * ETH_ALEN));
-+		       ((hif_set_mc->cnt) * ETH_ALEN));
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
--- 
-2.7.4
+Kevin
