@@ -1,97 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:43862 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751470AbeBWKml (ORCPT
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:36938 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751577AbeBDSSj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 05:42:41 -0500
-Received: by mail-wr0-f194.google.com with SMTP id u49so13587566wrc.10
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Feb 2018 02:42:41 -0800 (PST)
-From: Jack Wang <jinpu.wang@profitbricks.com>
-To: gregkh@linuxfoundation.org, stable@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        linux-wireless@vger.kernel.org, torvalds@linux-foundation.org,
-        "David S. Miller" <davem@davemloft.net>, alan@linux.intel.com,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Jack Wang <jinpu.wang@profitbricks.com>
-Subject: [stable 4.4 17/29] nl80211: Sanitize array index in parse_txq_params
-Date: Fri, 23 Feb 2018 11:42:06 +0100
-Message-Id: <1519382538-15143-18-git-send-email-jinpu.wangl@profitbricks.com> (sfid-20180223_114255_721959_04A6F993)
-In-Reply-To: <1519382538-15143-1-git-send-email-jinpu.wangl@profitbricks.com>
-References: <1519382538-15143-1-git-send-email-jinpu.wangl@profitbricks.com>
+        Sun, 4 Feb 2018 13:18:39 -0500
+Received: by mail-ot0-f194.google.com with SMTP id e64so5117159ote.4
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Feb 2018 10:18:39 -0800 (PST)
+Subject: Re: rtl8821ae keep alive not set, connection lost
+To: Pkshih <pkshih@realtek.com>, "quozl@laptop.org" <quozl@laptop.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20170912220916.GB32211@us.netrek.org>
+ <a9a1ff03-d12f-7437-e7bc-5f01b195f753@lwfinger.net>
+ <20180201062202.GH917@us.netrek.org>
+ <5B2DA6FDDF928F4E855344EE0A5C39D13BE7A25E@RTITMBSV07.realtek.com.tw>
+ <33774f69-6fb2-6cbf-615d-9e2a836dd5de@lwfinger.net>
+ <1517633110.2437.14.camel@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <6465ff7f-1656-76be-1dae-5425019c848c@lwfinger.net> (sfid-20180204_191845_405280_A67385CD)
+Date: Sun, 4 Feb 2018 12:18:36 -0600
+MIME-Version: 1.0
+In-Reply-To: <1517633110.2437.14.camel@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Williams <dan.j.williams@intel.com>
+On 02/02/2018 10:45 PM, Pkshih wrote:
+> On Fri, 2018-02-02 at 14:13 -0600, Larry Finger wrote:
+>> On 02/02/2018 01:50 AM, Pkshih wrote:
+>>> Hi James,
+>>>   
+>>> In my experiment, unaligned-word-access may get wrong values that
+>>> are different from the value by byte-access. Actually, it can simply
+>>> verified by using 'lspci' to check PCI configuration space.
+>>>   
+>>> DBI read 0x70f:
+>>> _rtl8821ae_dbi_read:1127 r8 0x34f = 0x0017
+>>> _rtl8821ae_dbi_read:1131 r8 0x350 = 0x000c
+>>> _rtl8821ae_dbi_read:1136 r16 0x350 = 0xffff
+>>>   
+>>> DBI read 0x719:
+>>> _rtl8821ae_dbi_read:1127 r8 0x34d = 0x0000
+>>> _rtl8821ae_dbi_read:1131 r8 0x34e = 0x0002
+>>> _rtl8821ae_dbi_read:1136 r16 0x34e = 0x0200
+>>>   
+>>>   
+>>> According to the wrong and original value of 0x70f is 0xff, I think
+>>> larger L1 latency 0x70f[5:3] may be helpful. Please help to try
+>>> below patch. If it works, quirk table won't be necessary.
+>>>   
+>>> PK
+>>>   
+>>>   
+>>> diff --git a/rtl8821ae/hw.c b/rtl8821ae/hw.c
+>>> index 7d43ba002..e53af06ed 100644
+>>> --- a/rtl8821ae/hw.c
+>>> +++ b/rtl8821ae/hw.c
+>>> @@ -1123,7 +1123,8 @@ static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
+>>>     	}
+>>>     	if (0 == tmp) {
+>>>     		read_addr = REG_DBI_RDATA + addr % 4;
+>>> -		ret = rtl_read_word(rtlpriv, read_addr);
+>>> +
+>>> +		ret = rtl_read_byte(rtlpriv, read_addr);
+>>>     	}
+>>>     	return ret;
+>>>     }
+>>> @@ -1165,7 +1166,7 @@ static void _rtl8821ae_enable_aspm_back_door(struct ieee80211_hw *hw)
+>>>     	}
+>>>     
+>>>     	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x70f);
+>>> -	_rtl8821ae_dbi_write(rtlpriv, 0x70f, tmp | BIT(7));
+>>> +	_rtl8821ae_dbi_write(rtlpriv, 0x70f, tmp | BIT(7) | 0x38);
+>>>     
+>>>     	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x719);
+>>>     	_rtl8821ae_dbi_write(rtlpriv, 0x719, tmp | BIT(3) | BIT(4));
+>>>   
+>>
+>>
+>> PK,
+>>
+>> This patch works perfectly on my x86_64 system. With it, the interface handled a
+>> 10 million count flood ping with <1000 packets dropped. It has now been running
+>> for at least 11 hours. Good work.
+>>
+>> Can you explain that magic 0x38? I'm quite sure that Kalle will not accept the
+>> patch as is. He already thinks that rtlwifi and friends already have too many
+>> magic numbers.
+>>
+> The magic 0x38 represents L1 latency 0x70f[5:3]=b'111, and I will add definition
+> or macro to describe
+> 0x70f and move all ASPM code into pci.c, if the problem was
+> solved. Hence, rtl8723de and rtl8723be
+> will use the same values, too.
+> 
+> Could you also help to test L1 latency as recommended value b'100?
+> (i.e. 0x20 instead)
 
-(cherry picked from commit 259d8c1e984318497c84eef547bbb6b1d9f4eb05)
+I have run several tests with the following results:
 
-Wireless drivers rely on parse_txq_params to validate that txq_params->ac
-is less than NL80211_NUM_ACS by the time the low-level driver's ->conf_tx()
-handler is called. Use a new helper, array_index_nospec(), to sanitize
-txq_params->ac with respect to speculation. I.e. ensure that any
-speculation into ->conf_tx() handlers is done with a value of
-txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
+b'010		Failed very quickly
+b'100		Did not fail, but the ping test had errors
+b'110		No failure and no errors
 
-Reported-by: Christian Lamparter <chunkeey@gmail.com>
-Reported-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-arch@vger.kernel.org
-Cc: kernel-hardening@lists.openwall.com
-Cc: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Cc: torvalds@linux-foundation.org
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: alan@linux.intel.com
-Link: https://lkml.kernel.org/r/151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-[jwang: cherry pick to 4.4]
-Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
----
- net/wireless/nl80211.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+My tests seem to indicate that we should use at least 0x30 in the field, and 
+perhaps we should stay at b'111 or 0x38.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7950506..b0b58d1 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -16,6 +16,7 @@
- #include <linux/nl80211.h>
- #include <linux/rtnetlink.h>
- #include <linux/netlink.h>
-+#include <linux/nospec.h>
- #include <linux/etherdevice.h>
- #include <net/net_namespace.h>
- #include <net/genetlink.h>
-@@ -1879,20 +1880,22 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
- static int parse_txq_params(struct nlattr *tb[],
- 			    struct ieee80211_txq_params *txq_params)
- {
-+	u8 ac;
-+
- 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
- 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
- 	    !tb[NL80211_TXQ_ATTR_AIFS])
- 		return -EINVAL;
- 
--	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
-+	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
- 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
- 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
- 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
- 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
- 
--	if (txq_params->ac >= NL80211_NUM_ACS)
-+	if (ac >= NL80211_NUM_ACS)
- 		return -EINVAL;
--
-+	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
- 	return 0;
- }
- 
--- 
-2.7.4
+To fix the current alignment errors for ARM architecture, I will push a patch 
+for mainline and stable that fixes rtl8821ae. Then you can do the patch that 
+moves all ASPM code into pci.c.
+
+Larry
