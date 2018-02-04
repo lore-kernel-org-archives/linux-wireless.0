@@ -1,329 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59820 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752691AbeBSMxO (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:42830 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751797AbeBDWAg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:53:14 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Feb 2018 14:48:45 +0200
-Message-Id: <20180219124847.27169-12-luca@coelho.fi> (sfid-20180219_135318_500428_4AAF70C4)
-In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-Subject: [PATCH v2 11/13] cfg80211: read wmm rules from regulatory database
+        Sun, 4 Feb 2018 17:00:36 -0500
+Received: by mail-wr0-f195.google.com with SMTP id 41so26339704wrc.9
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Feb 2018 14:00:35 -0800 (PST)
+Date: Sun, 4 Feb 2018 22:00:32 +0000
+From: Chris Vine <vine35792468@gmail.com>
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: Regression: bcm4312 lp-phy device not recognized in 4.15 kernel
+Message-ID: <20180204220032.3c339324@bother.homenet> (sfid-20180204_230056_575499_2EDD9ECC)
+In-Reply-To: <935a4987-c481-f4e4-16d7-f5f56adcfee0@gmail.com>
+References: <20180204185855.74e6ade5@bother.homenet>
+        <935a4987-c481-f4e4-16d7-f5f56adcfee0@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+On Sun, 4 Feb 2018 12:03:49 -0800
+Florian Fainelli <f.fainelli@gmail.com> wrote:
+> On 02/04/2018 10:58 AM, Chris Vine wrote:
+> > I probably should have copied this to the relevant kernel wireless
+> > mailing lists.  Anyway, here it is.
+> > 
+> > As a further datum point, the b43 driver works fine with the
+> > 4.15.0-rc3 kernel.  So something seems to have changed between that
+> > and 4.15.0.
+> 
+> Does this patch help?
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=a9e6d44ddeccd3522670e641f1ed9b068e746ff7
 
-ETSI EN 301 893 v211 (2017-05) standard defines a new channel access
-mechanism that all devices (WLAN and LAA) need to comply with.
-The regulatory database can now be loaded into the kernel and also
-has the option to load optional data.
-In order to be able to comply with ETSI standard, we add wmm_rule into
-regulatory rule and add the option to read its value from the regulatory
-database.
+Yes, I have wireless working again.
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/regulatory.h |  28 +++++++++
- net/wireless/reg.c       | 146 ++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 167 insertions(+), 7 deletions(-)
+I'll recompile tomorrow from a fresh kernel tree and apply the patch
+again and make sure it still works.  I will let you know.
 
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index ebc5a2ed8631..355b23ad146c 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -4,6 +4,7 @@
-  * regulatory support structures
-  *
-  * Copyright 2008-2009	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -188,9 +189,35 @@ struct ieee80211_power_rule {
- 	u32 max_eirp;
- };
- 
-+/**
-+ * struct ieee80211_wmm_ac - used to store per ac wmm regulatory limitation
-+ *
-+ * The information provided in this structure is required for QoS
-+ * transmit queue configuration. Cf. IEEE 802.11 7.3.2.29.
-+ *
-+ * @cw_min: minimum contention window [a value of the form
-+ *      2^n-1 in the range 1..32767]
-+ * @cw_max: maximum contention window [like @cw_min]
-+ * @cot: maximum burst time in units of 32 usecs, 0 meaning disabled
-+ * @aifsn: arbitration interframe space [0..255]
-+ *
-+ */
-+struct ieee80211_wmm_ac {
-+	u16 cw_min;
-+	u16 cw_max;
-+	u16 cot;
-+	u8 aifsn;
-+};
-+
-+struct ieee80211_wmm_rule {
-+	struct ieee80211_wmm_ac client[IEEE80211_NUM_ACS];
-+	struct ieee80211_wmm_ac ap[IEEE80211_NUM_ACS];
-+};
-+
- struct ieee80211_reg_rule {
- 	struct ieee80211_freq_range freq_range;
- 	struct ieee80211_power_rule power_rule;
-+	struct ieee80211_wmm_rule *wmm_rule;
- 	u32 flags;
- 	u32 dfs_cac_ms;
- };
-@@ -198,6 +225,7 @@ struct ieee80211_reg_rule {
- struct ieee80211_regdomain {
- 	struct rcu_head rcu_head;
- 	u32 n_reg_rules;
-+	u32 n_wmm_rules;
- 	char alpha2[3];
- 	enum nl80211_dfs_regions dfs_region;
- 	struct ieee80211_reg_rule reg_rules[];
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7b42f0bacfd8..7c7c0e0f8d9d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -5,6 +5,7 @@
-  * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright      2017  Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -424,23 +425,36 @@ static const struct ieee80211_regdomain *
- reg_copy_regd(const struct ieee80211_regdomain *src_regd)
- {
- 	struct ieee80211_regdomain *regd;
--	int size_of_regd;
-+	int size_of_regd, size_of_wmms;
- 	unsigned int i;
-+	struct ieee80211_wmm_rule *d_wmm, *s_wmm;
- 
- 	size_of_regd =
- 		sizeof(struct ieee80211_regdomain) +
- 		src_regd->n_reg_rules * sizeof(struct ieee80211_reg_rule);
-+	size_of_wmms = src_regd->n_wmm_rules *
-+		sizeof(struct ieee80211_wmm_rule);
- 
--	regd = kzalloc(size_of_regd, GFP_KERNEL);
-+	regd = kzalloc(size_of_regd + size_of_wmms, GFP_KERNEL);
- 	if (!regd)
- 		return ERR_PTR(-ENOMEM);
- 
- 	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
- 
--	for (i = 0; i < src_regd->n_reg_rules; i++)
-+	d_wmm = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
-+	s_wmm = (struct ieee80211_wmm_rule *)((u8 *)src_regd + size_of_regd);
-+	memcpy(d_wmm, s_wmm, size_of_wmms);
-+
-+	for (i = 0; i < src_regd->n_reg_rules; i++) {
- 		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
- 		       sizeof(struct ieee80211_reg_rule));
-+		if (!src_regd->reg_rules[i].wmm_rule)
-+			continue;
- 
-+		regd->reg_rules[i].wmm_rule = d_wmm +
-+			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
-+			sizeof(struct ieee80211_wmm_rule);
-+	}
- 	return regd;
- }
- 
-@@ -595,6 +609,17 @@ enum fwdb_flags {
- 	FWDB_FLAG_AUTO_BW	= BIT(4),
- };
- 
-+struct fwdb_wmm_ac {
-+	u8 ecw;
-+	u8 aifsn;
-+	__be16 cot;
-+} __packed;
-+
-+struct fwdb_wmm_rule {
-+	struct fwdb_wmm_ac client[IEEE80211_NUM_ACS];
-+	struct fwdb_wmm_ac ap[IEEE80211_NUM_ACS];
-+} __packed;
-+
- struct fwdb_rule {
- 	u8 len;
- 	u8 flags;
-@@ -602,6 +627,7 @@ struct fwdb_rule {
- 	__be32 start, end, max_bw;
- 	/* start of optional data */
- 	__be16 cac_timeout;
-+	__be16 wmm_ptr;
- } __packed __aligned(4);
- 
- #define FWDB_MAGIC 0x52474442
-@@ -613,6 +639,31 @@ struct fwdb_header {
- 	struct fwdb_country country[];
- } __packed __aligned(4);
- 
-+static int ecw2cw(int ecw)
-+{
-+	return (1 << ecw) - 1;
-+}
-+
-+static bool valid_wmm(struct fwdb_wmm_rule *rule)
-+{
-+	struct fwdb_wmm_ac *ac = (struct fwdb_wmm_ac *)rule;
-+	int i;
-+
-+	for (i = 0; i < IEEE80211_NUM_ACS * 2; i++) {
-+		u16 cw_min = ecw2cw((ac[i].ecw & 0xf0) >> 4);
-+		u16 cw_max = ecw2cw(ac[i].ecw & 0x0f);
-+		u8 aifsn = ac[i].aifsn;
-+
-+		if (cw_min >= cw_max)
-+			return false;
-+
-+		if (aifsn < 1)
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
- static bool valid_rule(const u8 *data, unsigned int size, u16 rule_ptr)
- {
- 	struct fwdb_rule *rule = (void *)(data + (rule_ptr << 2));
-@@ -623,7 +674,18 @@ static bool valid_rule(const u8 *data, unsigned int size, u16 rule_ptr)
- 	/* mandatory fields */
- 	if (rule->len < offsetofend(struct fwdb_rule, max_bw))
- 		return false;
-+	if (rule->len >= offsetofend(struct fwdb_rule, wmm_ptr)) {
-+		u32 wmm_ptr = be16_to_cpu(rule->wmm_ptr) << 2;
-+		struct fwdb_wmm_rule *wmm;
- 
-+		if (wmm_ptr + sizeof(struct fwdb_wmm_rule) > size)
-+			return false;
-+
-+		wmm = (void *)(data + wmm_ptr);
-+
-+		if (!valid_wmm(wmm))
-+			return false;
-+	}
- 	return true;
- }
- 
-@@ -798,23 +860,62 @@ static bool valid_regdb(const u8 *data, unsigned int size)
- 	return true;
- }
- 
-+static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
-+			 struct fwdb_wmm_rule *wmm)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+		rule->client[i].cw_min =
-+			ecw2cw((wmm->client[i].ecw & 0xf0) >> 4);
-+		rule->client[i].cw_max = ecw2cw(wmm->client[i].ecw & 0x0f);
-+		rule->client[i].aifsn =  wmm->client[i].aifsn;
-+		rule->client[i].cot = 1000 * be16_to_cpu(wmm->client[i].cot);
-+		rule->ap[i].cw_min = ecw2cw((wmm->ap[i].ecw & 0xf0) >> 4);
-+		rule->ap[i].cw_max = ecw2cw(wmm->ap[i].ecw & 0x0f);
-+		rule->ap[i].aifsn = wmm->ap[i].aifsn;
-+		rule->ap[i].cot = 1000 * be16_to_cpu(wmm->ap[i].cot);
-+	}
-+}
-+
-+struct wmm_ptrs {
-+	struct ieee80211_wmm_rule *rule;
-+	u32 ptr;
-+};
-+
-+static struct ieee80211_wmm_rule *find_wmm_ptr(struct wmm_ptrs *wmm_ptrs,
-+					       u32 wmm_ptr, int n_wmms)
-+{
-+	int i;
-+
-+	for (i = 0; i < n_wmms; i++) {
-+		if (wmm_ptrs[i].ptr == wmm_ptr)
-+			return wmm_ptrs[i].rule;
-+	}
-+	return NULL;
-+}
-+
- static int regdb_query_country(const struct fwdb_header *db,
- 			       const struct fwdb_country *country)
- {
- 	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
- 	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
- 	struct ieee80211_regdomain *regdom;
--	unsigned int size_of_regd;
--	unsigned int i;
-+	struct ieee80211_regdomain *tmp_rd;
-+	unsigned int size_of_regd, i, n_wmms = 0;
-+	struct wmm_ptrs *wmm_ptrs;
- 
--	size_of_regd =
--		sizeof(struct ieee80211_regdomain) +
-+	size_of_regd = sizeof(struct ieee80211_regdomain) +
- 		coll->n_rules * sizeof(struct ieee80211_reg_rule);
- 
- 	regdom = kzalloc(size_of_regd, GFP_KERNEL);
- 	if (!regdom)
- 		return -ENOMEM;
- 
-+	wmm_ptrs = kcalloc(coll->n_rules, sizeof(*wmm_ptrs), GFP_KERNEL);
-+	if (!wmm_ptrs)
-+		return -ENOMEM;
-+
- 	regdom->n_reg_rules = coll->n_rules;
- 	regdom->alpha2[0] = country->alpha2[0];
- 	regdom->alpha2[1] = country->alpha2[1];
-@@ -851,7 +952,38 @@ static int regdb_query_country(const struct fwdb_header *db,
- 		if (rule->len >= offsetofend(struct fwdb_rule, cac_timeout))
- 			rrule->dfs_cac_ms =
- 				1000 * be16_to_cpu(rule->cac_timeout);
-+		if (rule->len >= offsetofend(struct fwdb_rule, wmm_ptr)) {
-+			u32 wmm_ptr = be16_to_cpu(rule->wmm_ptr) << 2;
-+			struct ieee80211_wmm_rule *wmm_pos =
-+				find_wmm_ptr(wmm_ptrs, wmm_ptr, n_wmms);
-+			struct fwdb_wmm_rule *wmm;
-+			struct ieee80211_wmm_rule *wmm_rule;
-+
-+			if (wmm_pos) {
-+				rrule->wmm_rule = wmm_pos;
-+				continue;
-+			}
-+			wmm = (void *)((u8 *)db + wmm_ptr);
-+			tmp_rd = krealloc(regdom, size_of_regd + (n_wmms + 1) *
-+					  sizeof(struct ieee80211_wmm_rule),
-+					  GFP_KERNEL);
-+
-+			if (!tmp_rd) {
-+				kfree(regdom);
-+				return -ENOMEM;
-+			}
-+			regdom = tmp_rd;
-+
-+			wmm_rule = (struct ieee80211_wmm_rule *)
-+				((u8 *)regdom + size_of_regd + n_wmms *
-+				sizeof(struct ieee80211_wmm_rule));
-+
-+			set_wmm_rule(wmm_rule, wmm);
-+			wmm_ptrs[n_wmms].ptr = wmm_ptr;
-+			wmm_ptrs[n_wmms++].rule = wmm_rule;
-+		}
- 	}
-+	kfree(wmm_ptrs);
- 
- 	return reg_schedule_apply(regdom);
- }
--- 
-2.15.1
+-----------------------------------------
+> > 
+> > Begin forwarded message:
+> > 
+> > Date: Mon, 29 Jan 2018 23:37:49 +0000
+> > From: Chris Vine <vine35792468@gmail.com>
+> > To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+> > Subject: Regression: bcm4312 lp-phy device not recognized in 4.15
+> > kernel
+> > 
+> > 
+> > I have an old netbook with a Broadcom bcm4312 802.11b/g lp-phy
+> > [14e4:4315] (rev 01) wifi device.  It is no longer recognized in
+> > kernel 4.15: it works fine with the 4.14 kernel and earlier, with
+> > the b43 and ssb kernel modules.
+> > 
+> > I cannot give any further information as there are no error messages
+> > logged. The b43 firmware (wl-5.100.138) is not loaded for it, nor
+> > are the ssb/b43/bcma/ mmc_core/mac80211/cfg80211 modules.  The
+> > modules can be loaded by hand without error, but nothing happens
+> > and no network interface is presented.
+> > 
+> > This is a pretty slow and rubbish netbook but is useful when
+> > travelling to a country which might impound your laptop (no names)
+> > and you don't mind too much losing it.  It would be nice to
+> > continue to be able to use it for that.
+> > 
+> > Chris
+> > 
