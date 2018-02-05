@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0084.outbound.protection.outlook.com ([104.47.40.84]:33504
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753693AbeBGLJs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Feb 2018 06:09:48 -0500
-Subject: Re: [PATCH 5/6] qtnfmac: implement asynchronous firmware loading
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
- <20180205150516.16030-6-sergey.matyukevich.os@quantenna.com>
- <5A79900D.5080605@broadcom.com>
-From: Sergei Maksimenko <smaksimenko@quantenna.com>
-Message-ID: <9e2bbb8c-b34f-a93a-873a-6f5e744669ec@quantenna.com> (sfid-20180207_120953_047615_994865F9)
-Date: Wed, 7 Feb 2018 14:09:38 +0300
+Received: from bues.ch ([80.190.117.144]:52960 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753804AbeBETFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Feb 2018 14:05:09 -0500
+Date: Mon, 5 Feb 2018 19:22:57 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Adric Blake <promarbler14@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        jhogan@kernel.org
+Subject: Re: B43 driver no longer works in Linux 4.15 (bisected)
+Message-ID: <20180205192257.46400baf@wiggum> (sfid-20180205_200618_810195_967079E6)
+In-Reply-To: <CAE1jjefXcbuz5nWxo-BOPBRC7EM6KrXd=G7u-4b74tB5DuYGCQ@mail.gmail.com>
+References: <CAE1jjefXcbuz5nWxo-BOPBRC7EM6KrXd=G7u-4b74tB5DuYGCQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <5A79900D.5080605@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/J2aicKjT07+LcOHxFU4kEBg"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+--Sig_/J2aicKjT07+LcOHxFU4kEBg
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Qsr10g devices support loading firmware not only from the host over PCIe bu=
-t also from on-board flash.
-Firmware start-up sequence and the following handshake are common for PCIe =
-and flash boot modes. They take much more
-time (about 10 seconds) than the firmware upload process.
-To make flash mode startup also asynchronous we can't use the existing API =
-such as request_firmware_nowait() as there is
-no firmware to upload, and have to explicitly run the needed functions in a=
- work queue.
-In my opinion it is more neat to have one firmware load function invoked in=
- a work queue for both modes than using
-request_firmware_nowait() for one mode only.
+On Mon, 5 Feb 2018 13:14:28 -0500
+Adric Blake <promarbler14@gmail.com> wrote:
 
-Regards,
-Sergei
-
-On 06.02.2018 14:22, Arend van Spriel wrote:
->
-> External Email
->
->
-> On 2/5/2018 4:05 PM, Sergey Matyukevich wrote:
->> From: Sergei Maksimenko <smaksimenko@quantenna.com>
->>
->> In pci probe() function start firmware loading, protocol handshake
->> and driver core initialization, and not wait for completion.
->
-> The moving of the debugfs stuff makes this a drag to review, but I get
-> the gist. The thing is that the firmware api already provides an
-> asynchronous api, ie. request_firmware_nowait(), so why not use that.
->
-> Regards,
-> Arend
+> In the time between Linux 4.15-rc8 and -rc9, my wireless driver, b43, wou=
+ld
+> no longer load automatically. When I modprobe the b43 (and ssb) modules,
+> the device still didn't appear in NetworkManager. Comparing the kernel lo=
+gs
+> between working (4.14.16-lts) and nonworking (4.15) kernels reveals that
+> there is zero output from the ssb module, and no devices recognized by the
+> b43 driver:
 
 
+Thanks for your bug report.
+A fix for this exists already:
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/=
+commit/?id=3Da9e6d44ddeccd3522670e641f1ed9b068e746ff7
 
-This email, including its contents and any attachment(s), may contain confi=
-dential information of Quantenna Communications, Inc. and is solely for the=
- intended recipient(s). If you may have received this in error, please cont=
-act the sender and permanently delete this email, its contents and any atta=
-chment(s).
+--=20
+Michael
+
+--Sig_/J2aicKjT07+LcOHxFU4kEBg
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlp4oQEACgkQ9TK+HZCN
+iw4n1A//RftVm50NGnVnIkixEMD/TjUR76NkS+hSKOKRriBlTdGhlkjBoSeKe07T
+MGi2RtyZUMlYwutqcd8k/dQDyHUcP8YAB8OV8TSoW4kLstE8o0wJErcuTQ9PW+NB
+Glgh5Zkm9JVeyydzEpTSF6ZKoJwWV4odmzS42K58QUMEr4TzVxVQukWADMW8CmEm
+qMWD0FuzHv6aAt2Tr4k/ztayr8LXhkB6vfD7/5twJoNyeiuPfSZCxp9DhF7r54/X
+LtVRyNbcWQmMkYyKYLTraE7uPkrfHstJi5mhX1+B+OvtI4VMVbLXbWyYbsecWMCZ
+kol3k3kq3uT1+0gU6OhnPT8cbP7q/fi4DPiDIxaP/uKyb2yoifW+bCCVq72OMvFl
+RgAFdtBvmFyCLWPzXfhxHbc+pZu5yRRtGGwm0pQEKb/HEH8hZZe4aFRJkSrgveuu
+iukwoRPb+C8TDrBpDqO3Yd6WsgSyasMHz5OBdniStWHk8AH5A8l4joNilh1QfnEu
+giCWybycpILclz7VgsiyL9C9QgPr0o1pwT+4jPWGoQKukTIFbVynbZ+/jcetivae
+dKqvZ6B3bKUIAOb1Iz2Kxyf97VRkGAb80HWLEgYHSUKU6ey6CMry4bmIBlml51vI
+vdUSCvOpHbRjJtusbVn9jLdw/O8g5IIykEzSe9w4D59RNKVn4nI=
+=5OQo
+-----END PGP SIGNATURE-----
+
+--Sig_/J2aicKjT07+LcOHxFU4kEBg--
