@@ -1,71 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:37945 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750831AbeBULAS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 06:00:18 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/3] Export TXQ parameters and statistics via nl80211
-In-Reply-To: <5A8D3445.3040300@broadcom.com>
-References: <20180219170224.14816-1-toke@toke.dk> <5A8D3445.3040300@broadcom.com>
-Date: Wed, 21 Feb 2018 12:00:16 +0100
-Message-ID: <87bmgiboan.fsf@toke.dk> (sfid-20180221_120022_510182_E3F6D9CC)
+Received: from mail-sn1nam02on0069.outbound.protection.outlook.com ([104.47.36.69]:44244
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752933AbeBEPFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Feb 2018 10:05:40 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 2/6] qtnfmac: enable reloading of qtnfmac kernel modules
+Date: Mon,  5 Feb 2018 18:05:12 +0300
+Message-Id: <20180205150516.16030-3-sergey.matyukevich.os@quantenna.com> (sfid-20180205_160630_979558_38011362)
+In-Reply-To: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
+References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Sergei Maksimenko <smaksimenko@quantenna.com>
 
-> On 2/19/2018 6:02 PM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> This series adds TXQ parameters and statistics that were previously only
->> available through debugfs to the nl80211 userspace interface and the
->> cfg80211 kernel interface. Patches for iw to print the statistics and
->> change the settings are included.
->
-> So what is your motivation for having this exposed through nl80211.
-> For the average end-user the stats and parameters are fairly fuzzy.
+This patch enables rmmod/insmod for qtnfmac kernel modules:
+- do not 'pin' pci device in order to disable it on module unload
+- implement card reset procedure
+- restore PCI bar addresses for restarted wireless card
 
-Two reasons, basically:
+Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c       | 15 ++++++++++++++-
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_ipc.h   |  1 +
+ .../wireless/quantenna/qtnfmac/pearl/pcie_regs_pearl.h    |  1 +
+ 3 files changed, 16 insertions(+), 1 deletion(-)
 
-1. Visibility and statistics; this is basically the same information
-   that is available at the qdisc layer (with `tc -s qdisc`), but which
-   has been missing on WiFi interfaces ever sine we switched to the TXQ
-   structure. Having this available has been quite valuable for
-   debugging qdisc setups on wired links, and it's not always feasible
-   to ask users to recompile their kernels with debugfs enabled.
-
-2. Having visibility into the queues from userspace makes it possible to
-   make decisions based upon (e.g.) which stations are currently
-   backlogged. I'm working on a "policy mode" for the airtime fairness
-   scheduler which will use this capability.
-
-> So can we expect some manual in which is described what parameter
-> should be tweaked based on the retrieved statistics.
-
-Heh, not sure I'll promise a whole manual, but I am happy to write a
-blog post (or wiki page if that's better) explaining what these values
-mean and what insight one might gain from them.
-
-> Also do you intend to remove the debugfs method? Seems a bit redundant
-> to have two mostly identical interfaces in place.
-
-Yes, I am planning to do that in a separate patch; I also have some
-patches pending that changes the airtime scheduler and adds airtime
-statistics to nl80211. So I am planning to send a cleanup patch once all
-that is in place (and I've had time to change my tools that are
-currently parsing debugfs :)).
-
->> Wasn't sure whether to include the updates to nl80211.h in the iw
->> patchset, so I didn't :)
->
-> Updating the nl80211.h in iw should be done with a copy from the
-> kernel so it has to wait for the kernel patch to be applied (which
-> tree I am unsure).
-
-Gotcha. Sort of guessed that from the commit history, but wasn't sure.
-Thanks for confirming my suspicions :)
-
--Toke
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index be5813aa1486..7aa222286d8e 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -162,6 +162,17 @@ static void qtnf_deassert_intx(struct qtnf_pcie_bus_priv *priv)
+ 	qtnf_non_posted_write(cfg, reg);
+ }
+ 
++static void qtnf_reset_card(struct qtnf_pcie_bus_priv *priv)
++{
++	const u32 data = QTN_PEARL_IPC_IRQ_WORD(QTN_PEARL_LHOST_EP_RESET);
++	void __iomem *reg = priv->sysctl_bar +
++			    QTN_PEARL_SYSCTL_LHOST_IRQ_OFFSET;
++
++	qtnf_non_posted_write(data, reg);
++	msleep(QTN_EP_RESET_WAIT_MS);
++	pci_restore_state(priv->pdev);
++}
++
+ static void qtnf_ipc_gen_ep_int(void *arg)
+ {
+ 	const struct qtnf_pcie_bus_priv *priv = arg;
+@@ -1308,7 +1319,6 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto err_base;
+ 	}
+ 
+-	pcim_pin_device(pdev);
+ 	pci_set_master(pdev);
+ 
+ 	ret = qtnf_pcie_init_irq(pcie_priv);
+@@ -1323,6 +1333,8 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto err_base;
+ 	}
+ 
++	pci_save_state(pdev);
++
+ 	ret = qtnf_pcie_init_shm_ipc(pcie_priv);
+ 	if (ret < 0) {
+ 		pr_err("PCIE SHM IPC init failed\n");
+@@ -1425,6 +1437,7 @@ static void qtnf_pcie_remove(struct pci_dev *pdev)
+ 	qtnf_debugfs_remove(bus);
+ 
+ 	qtnf_pcie_free_shm_ipc(priv);
++	qtnf_reset_card(priv);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_ipc.h b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_ipc.h
+index c5a4e46d26ef..00bb21a1c47a 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_ipc.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_ipc.h
+@@ -46,6 +46,7 @@
+ /* state transition timeouts */
+ #define QTN_FW_DL_TIMEOUT_MS	3000
+ #define QTN_FW_QLINK_TIMEOUT_MS	30000
++#define QTN_EP_RESET_WAIT_MS	1000
+ 
+ #define PCIE_HDP_INT_RX_BITS (0		\
+ 	| PCIE_HDP_INT_EP_TXDMA		\
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_regs_pearl.h b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_regs_pearl.h
+index 5b48b425fa7f..0bfe285b6b48 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_regs_pearl.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_regs_pearl.h
+@@ -351,5 +351,6 @@
+ 
+ #define QTN_PEARL_IPC_IRQ_WORD(irq)	(BIT(irq) | BIT(irq + 16))
+ #define QTN_PEARL_LHOST_IPC_IRQ		(6)
++#define QTN_PEARL_LHOST_EP_RESET	(7)
+ 
+ #endif /* __PEARL_PCIE_H */
+-- 
+2.11.0
