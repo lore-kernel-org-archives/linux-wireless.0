@@ -1,65 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59848 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752657AbeBSM65 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:51494 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753525AbeBESYU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:58:57 -0500
-Message-ID: <1519045134.7832.107.camel@coelho.fi> (sfid-20180219_135900_679349_060D03DA)
-From: Luca Coelho <luca@coelho.fi>
-To: Sara Sharon <sara.sharon@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-        Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>,
-        johannes@sipsolutions.net
-Date: Mon, 19 Feb 2018 14:58:54 +0200
-In-Reply-To: <90dd3605-1418-66e7-80f1-056773dc9fcb@green-communications.fr>
-References: <20180216161301.29339-1-luca@coelho.fi>
-         <20180216161301.29339-3-luca@coelho.fi>
-         <90dd3605-1418-66e7-80f1-056773dc9fcb@green-communications.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 02/13] mac80211: ibss: send a probe request instead of
- allocating station
+        Mon, 5 Feb 2018 13:24:20 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Christian Lamparter <chunkeey@gmail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        linux-wireless@vger.kernel.org, torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>, alan@linux.intel.com
+Subject: [PATCH 4.14 46/64] nl80211: Sanitize array index in parse_txq_params
+Date: Mon,  5 Feb 2018 10:23:05 -0800
+Message-Id: <20180205182140.464675558@linuxfoundation.org> (sfid-20180205_200309_998184_58C3FDBD)
+In-Reply-To: <20180205182138.571333346@linuxfoundation.org>
+References: <20180205182138.571333346@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-02-19 at 10:02 +0100, Nicolas Cavallari wrote:
-> On 16/02/2018 17:12, Luca Coelho wrote:
-> > -	sta = sta_info_alloc(sdata, addr, GFP_ATOMIC);
-> > -	if (!sta)
-> > -		return;
-> >  
-> > -	/* make sure mandatory rates are always added */
-> > -	sband = local->hw.wiphy->bands[band];
-> > -	sta->sta.supp_rates[band] = supp_rates |
-> > -			ieee80211_mandatory_rates(sband,
-> > scan_width);
-> > -
-> > -	spin_lock(&ifibss->incomplete_lock);
-> > -	list_add(&sta->list, &ifibss->incomplete_stations);
-> > -	spin_unlock(&ifibss->incomplete_lock);
-> > -	ieee80211_queue_work(&local->hw, &sdata->work);
-> > +	ieee80211_send_probe_req(sdata, sdata->vif.addr, addr,
-> > +				 sdata->u.ibss.ssid, sdata-
-> > >u.ibss.ssid_len,
-> > +				 NULL, 0, (u32)-1, true, 0,
-> > +				 chanctx_conf->def.chan, false);
-> > +	rcu_read_unlock();
-> >  }
-> 
-> Won't that spam the channel with probe request if the traffic from
-> the
-> other station is heavy ?
-> 
-> And, if the other station is running the same code and didn't know
-> about us (e.g. at join time), won't it also spam the channel with
-> probe requests after receiving our many probe requests ? (as well as
-> the probe responses from both stations)
-> 
-> Obviously it should stop after receiving a probe response... But what
-> if the link is badly asymmetric ?
+4.14-stable review patch.  If anyone has any objections, please let me know.
 
-Sari, can you please look into this?
+------------------
 
---
-Cheers,
-Luca.
+From: Dan Williams dan.j.williams@intel.com
+
+commit 259d8c1e984318497c84eef547bbb6b1d9f4eb05
+
+Wireless drivers rely on parse_txq_params to validate that txq_params->ac
+is less than NL80211_NUM_ACS by the time the low-level driver's ->conf_tx()
+handler is called. Use a new helper, array_index_nospec(), to sanitize
+txq_params->ac with respect to speculation. I.e. ensure that any
+speculation into ->conf_tx() handlers is done with a value of
+txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
+
+Reported-by: Christian Lamparter <chunkeey@gmail.com>
+Reported-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-arch@vger.kernel.org
+Cc: kernel-hardening@lists.openwall.com
+Cc: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Cc: torvalds@linux-foundation.org
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: alan@linux.intel.com
+Link: https://lkml.kernel.org/r/151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+
+---
+ net/wireless/nl80211.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -16,6 +16,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/netlink.h>
++#include <linux/nospec.h>
+ #include <linux/etherdevice.h>
+ #include <net/net_namespace.h>
+ #include <net/genetlink.h>
+@@ -2056,20 +2057,22 @@ static const struct nla_policy txq_param
+ static int parse_txq_params(struct nlattr *tb[],
+ 			    struct ieee80211_txq_params *txq_params)
+ {
++	u8 ac;
++
+ 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
+ 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
+ 	    !tb[NL80211_TXQ_ATTR_AIFS])
+ 		return -EINVAL;
+ 
+-	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
++	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
+ 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
+ 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
+ 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
+ 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 
+-	if (txq_params->ac >= NL80211_NUM_ACS)
++	if (ac >= NL80211_NUM_ACS)
+ 		return -EINVAL;
+-
++	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
+ 	return 0;
+ }
+ 
