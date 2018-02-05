@@ -1,44 +1,458 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56436 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751706AbeB0QZx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:25:53 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-sn1nam02on0069.outbound.protection.outlook.com ([104.47.36.69]:44244
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753296AbeBEPF5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Feb 2018 10:05:57 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: [PATCH 5/6] qtnfmac: implement asynchronous firmware loading
+Date: Mon,  5 Feb 2018 18:05:15 +0300
+Message-Id: <20180205150516.16030-6-sergey.matyukevich.os@quantenna.com> (sfid-20180205_160632_843423_98C946B2)
+In-Reply-To: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
+References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-Subject: Re: brcmsmac: remove duplicated bit-wise or of IEEE80211_CHAN_NO_IR
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180223133622.25700-1-colin.king@canonical.com>
-References: <20180223133622.25700-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180227162552.B676C607E5@smtp.codeaurora.org> (sfid-20180227_172610_818532_DAA6C808)
-Date: Tue, 27 Feb 2018 16:25:52 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+From: Sergei Maksimenko <smaksimenko@quantenna.com>
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Bit pattern IEEE80211_CHAN_NO_IR is being bit-wise or'd twice;
-> remove the redundant 2nd IEEE80211_CHAN_NO_IR
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+In pci probe() function start firmware loading, protocol handshake
+and driver core initialization, and not wait for completion.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/bus.h       |   3 +-
+ .../net/wireless/quantenna/qtnfmac/pearl/pcie.c    | 326 ++++++++++-----------
+ 2 files changed, 159 insertions(+), 170 deletions(-)
 
-47c8a3956a60 brcmsmac: remove duplicated bit-wise or of IEEE80211_CHAN_NO_IR
-
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/bus.h b/drivers/net/wireless/quantenna/qtnfmac/bus.h
+index 56e5fed92a2a..0a1604683bab 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/bus.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/bus.h
+@@ -59,8 +59,9 @@ struct qtnf_bus {
+ 	char fwname[32];
+ 	struct napi_struct mux_napi;
+ 	struct net_device mux_dev;
+-	struct completion request_firmware_complete;
++	struct completion firmware_init_complete;
+ 	struct workqueue_struct *workqueue;
++	struct work_struct fw_work;
+ 	struct work_struct event_work;
+ 	struct mutex bus_lock; /* lock during command/event processing */
+ 	struct dentry *dbg_dir;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index 86368e345276..3be5a79cbca0 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -954,6 +954,98 @@ static const struct qtnf_bus_ops qtnf_pcie_bus_ops = {
+ 	.data_rx_stop		= qtnf_pcie_data_rx_stop,
+ };
+ 
++static int qtnf_dbg_mps_show(struct seq_file *s, void *data)
++{
++	struct qtnf_bus *bus = dev_get_drvdata(s->private);
++	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
++
++	seq_printf(s, "%d\n", priv->mps);
++
++	return 0;
++}
++
++static int qtnf_dbg_msi_show(struct seq_file *s, void *data)
++{
++	struct qtnf_bus *bus = dev_get_drvdata(s->private);
++	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
++
++	seq_printf(s, "%u\n", priv->msi_enabled);
++
++	return 0;
++}
++
++static int qtnf_dbg_irq_stats(struct seq_file *s, void *data)
++{
++	struct qtnf_bus *bus = dev_get_drvdata(s->private);
++	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
++	u32 reg = readl(PCIE_HDP_INT_EN(priv->pcie_reg_base));
++	u32 status;
++
++	seq_printf(s, "pcie_irq_count(%u)\n", priv->pcie_irq_count);
++	seq_printf(s, "pcie_irq_tx_count(%u)\n", priv->pcie_irq_tx_count);
++	status = reg &  PCIE_HDP_INT_TX_BITS;
++	seq_printf(s, "pcie_irq_tx_status(%s)\n",
++		   (status == PCIE_HDP_INT_TX_BITS) ? "EN" : "DIS");
++	seq_printf(s, "pcie_irq_rx_count(%u)\n", priv->pcie_irq_rx_count);
++	status = reg &  PCIE_HDP_INT_RX_BITS;
++	seq_printf(s, "pcie_irq_rx_status(%s)\n",
++		   (status == PCIE_HDP_INT_RX_BITS) ? "EN" : "DIS");
++	seq_printf(s, "pcie_irq_uf_count(%u)\n", priv->pcie_irq_uf_count);
++	status = reg &  PCIE_HDP_INT_HHBM_UF;
++	seq_printf(s, "pcie_irq_hhbm_uf_status(%s)\n",
++		   (status == PCIE_HDP_INT_HHBM_UF) ? "EN" : "DIS");
++
++	return 0;
++}
++
++static int qtnf_dbg_hdp_stats(struct seq_file *s, void *data)
++{
++	struct qtnf_bus *bus = dev_get_drvdata(s->private);
++	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
++
++	seq_printf(s, "tx_full_count(%u)\n", priv->tx_full_count);
++	seq_printf(s, "tx_done_count(%u)\n", priv->tx_done_count);
++	seq_printf(s, "tx_reclaim_done(%u)\n", priv->tx_reclaim_done);
++	seq_printf(s, "tx_reclaim_req(%u)\n", priv->tx_reclaim_req);
++
++	seq_printf(s, "tx_bd_r_index(%u)\n", priv->tx_bd_r_index);
++	seq_printf(s, "tx_bd_p_index(%u)\n",
++		   readl(PCIE_HDP_RX0DMA_CNT(priv->pcie_reg_base))
++			& (priv->tx_bd_num - 1));
++	seq_printf(s, "tx_bd_w_index(%u)\n", priv->tx_bd_w_index);
++	seq_printf(s, "tx queue len(%u)\n",
++		   CIRC_CNT(priv->tx_bd_w_index, priv->tx_bd_r_index,
++			    priv->tx_bd_num));
++
++	seq_printf(s, "rx_bd_r_index(%u)\n", priv->rx_bd_r_index);
++	seq_printf(s, "rx_bd_p_index(%u)\n",
++		   readl(PCIE_HDP_TX0DMA_CNT(priv->pcie_reg_base))
++			& (priv->rx_bd_num - 1));
++	seq_printf(s, "rx_bd_w_index(%u)\n", priv->rx_bd_w_index);
++	seq_printf(s, "rx alloc queue len(%u)\n",
++		   CIRC_SPACE(priv->rx_bd_w_index, priv->rx_bd_r_index,
++			      priv->rx_bd_num));
++
++	return 0;
++}
++
++static int qtnf_dbg_shm_stats(struct seq_file *s, void *data)
++{
++	struct qtnf_bus *bus = dev_get_drvdata(s->private);
++	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
++
++	seq_printf(s, "shm_ipc_ep_in.tx_packet_count(%zu)\n",
++		   priv->shm_ipc_ep_in.tx_packet_count);
++	seq_printf(s, "shm_ipc_ep_in.rx_packet_count(%zu)\n",
++		   priv->shm_ipc_ep_in.rx_packet_count);
++	seq_printf(s, "shm_ipc_ep_out.tx_packet_count(%zu)\n",
++		   priv->shm_ipc_ep_out.tx_timeout_count);
++	seq_printf(s, "shm_ipc_ep_out.rx_packet_count(%zu)\n",
++		   priv->shm_ipc_ep_out.rx_packet_count);
++
++	return 0;
++}
++
+ static int qtnf_ep_fw_send(struct qtnf_pcie_bus_priv *priv, uint32_t size,
+ 			   int blk, const u8 *pblk, const u8 *fw)
+ {
+@@ -1069,41 +1161,6 @@ qtnf_ep_fw_load(struct qtnf_pcie_bus_priv *priv, const u8 *fw, u32 fw_size)
+ 	return 0;
+ }
+ 
+-static void qtnf_firmware_load(const struct firmware *fw, void *context)
+-{
+-	struct qtnf_pcie_bus_priv *priv = (void *)context;
+-	struct pci_dev *pdev = priv->pdev;
+-	struct qtnf_bus *bus = pci_get_drvdata(pdev);
+-	int ret;
+-
+-	if (!fw) {
+-		pr_err("failed to get firmware %s\n", bus->fwname);
+-		goto fw_load_err;
+-	}
+-
+-	ret = qtnf_ep_fw_load(priv, fw->data, fw->size);
+-	if (ret) {
+-		pr_err("FW upload error\n");
+-		goto fw_load_err;
+-	}
+-
+-	if (qtnf_poll_state(&priv->bda->bda_ep_state, QTN_EP_FW_DONE,
+-			    QTN_FW_DL_TIMEOUT_MS)) {
+-		pr_err("FW bringup timed out\n");
+-		goto fw_load_err;
+-	}
+-
+-	bus->fw_state = QTNF_FW_STATE_FW_DNLD_DONE;
+-	pr_info("firmware is up and running\n");
+-
+-fw_load_err:
+-
+-	if (fw)
+-		release_firmware(fw);
+-
+-	complete(&bus->request_firmware_complete);
+-}
+-
+ static int qtnf_fw_exists(struct qtnf_bus *bus)
+ {
+ 	struct qtnf_pcie_bus_priv *priv = (void *)get_bus_priv(bus);
+@@ -1118,10 +1175,12 @@ static int qtnf_fw_exists(struct qtnf_bus *bus)
+ 	return !ret;
+ }
+ 
+-static int qtnf_bringup_fw(struct qtnf_bus *bus)
++static void qtnf_fw_work_handler(struct work_struct *work)
+ {
++	struct qtnf_bus *bus = container_of(work, struct qtnf_bus, fw_work);
+ 	struct qtnf_pcie_bus_priv *priv = (void *)get_bus_priv(bus);
+ 	struct pci_dev *pdev = priv->pdev;
++	const struct firmware *fw;
+ 	int ret;
+ 	u32 state = QTN_RC_FW_LOADRDY | QTN_RC_FW_QLINK;
+ 
+@@ -1133,131 +1192,85 @@ static int qtnf_bringup_fw(struct qtnf_bus *bus)
+ 	if (qtnf_poll_state(&priv->bda->bda_ep_state, QTN_EP_FW_LOADRDY,
+ 			    QTN_FW_DL_TIMEOUT_MS)) {
+ 		pr_err("card is not ready\n");
+-		return -ETIMEDOUT;
++		goto fw_load_fail;
+ 	}
+ 
+ 	qtnf_clear_state(&priv->bda->bda_ep_state, QTN_EP_FW_LOADRDY);
+ 
+ 	if (flashboot) {
+-		pr_info("Booting FW from flash\n");
+-
+-		if (!qtnf_poll_state(&priv->bda->bda_ep_state, QTN_EP_FW_DONE,
+-				     QTN_FW_DL_TIMEOUT_MS))
+-			bus->fw_state = QTNF_FW_STATE_FW_DNLD_DONE;
+-
+-		return 0;
+-	}
+-
+-	pr_info("starting firmware upload: %s\n", bus->fwname);
++		pr_info("booting firmware from flash\n");
+ 
+-	ret = request_firmware_nowait(THIS_MODULE, 1, bus->fwname, &pdev->dev,
+-				      GFP_KERNEL, priv, qtnf_firmware_load);
+-	if (ret < 0)
+-		pr_err("request_firmware_nowait error %d\n", ret);
+-	else
+-		ret = 1;
+-
+-	return ret;
+-}
+-
+-static void qtnf_reclaim_tasklet_fn(unsigned long data)
+-{
+-	struct qtnf_pcie_bus_priv *priv = (void *)data;
++	} else {
++		pr_info("starting firmware upload: %s\n", bus->fwname);
+ 
+-	qtnf_pcie_data_tx_reclaim(priv);
+-	qtnf_en_txdone_irq(priv);
+-}
++		ret = request_firmware(&fw, bus->fwname, &pdev->dev);
++		if (ret < 0) {
++			pr_err("failed to get firmware %s\n", bus->fwname);
++			goto fw_load_fail;
++		}
+ 
+-static int qtnf_dbg_mps_show(struct seq_file *s, void *data)
+-{
+-	struct qtnf_bus *bus = dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
++		ret = qtnf_ep_fw_load(priv, fw->data, fw->size);
++		release_firmware(fw);
++		if (ret) {
++			pr_err("firmware upload error\n");
++			goto fw_load_fail;
++		}
++	}
+ 
+-	seq_printf(s, "%d\n", priv->mps);
++	if (qtnf_poll_state(&priv->bda->bda_ep_state, QTN_EP_FW_DONE,
++			    QTN_FW_DL_TIMEOUT_MS)) {
++		pr_err("firmware bringup timed out\n");
++		goto fw_load_fail;
++	}
+ 
+-	return 0;
+-}
++	bus->fw_state = QTNF_FW_STATE_FW_DNLD_DONE;
++	pr_info("firmware is up and running\n");
+ 
+-static int qtnf_dbg_msi_show(struct seq_file *s, void *data)
+-{
+-	struct qtnf_bus *bus = dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
++	if (qtnf_poll_state(&priv->bda->bda_ep_state,
++			    QTN_EP_FW_QLINK_DONE, QTN_FW_QLINK_TIMEOUT_MS)) {
++		pr_err("firmware runtime failure\n");
++		goto fw_load_fail;
++	}
+ 
+-	seq_printf(s, "%u\n", priv->msi_enabled);
++	ret = qtnf_core_attach(bus);
++	if (ret) {
++		pr_err("failed to attach core\n");
++		goto fw_load_fail;
++	}
+ 
+-	return 0;
+-}
++	qtnf_debugfs_init(bus, DRV_NAME);
++	qtnf_debugfs_add_entry(bus, "mps", qtnf_dbg_mps_show);
++	qtnf_debugfs_add_entry(bus, "msi_enabled", qtnf_dbg_msi_show);
++	qtnf_debugfs_add_entry(bus, "hdp_stats", qtnf_dbg_hdp_stats);
++	qtnf_debugfs_add_entry(bus, "irq_stats", qtnf_dbg_irq_stats);
++	qtnf_debugfs_add_entry(bus, "shm_stats", qtnf_dbg_shm_stats);
+ 
+-static int qtnf_dbg_irq_stats(struct seq_file *s, void *data)
+-{
+-	struct qtnf_bus *bus = dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
+-	u32 reg = readl(PCIE_HDP_INT_EN(priv->pcie_reg_base));
+-	u32 status;
++	goto fw_load_exit;
+ 
+-	seq_printf(s, "pcie_irq_count(%u)\n", priv->pcie_irq_count);
+-	seq_printf(s, "pcie_irq_tx_count(%u)\n", priv->pcie_irq_tx_count);
+-	status = reg &  PCIE_HDP_INT_TX_BITS;
+-	seq_printf(s, "pcie_irq_tx_status(%s)\n",
+-		   (status == PCIE_HDP_INT_TX_BITS) ? "EN" : "DIS");
+-	seq_printf(s, "pcie_irq_rx_count(%u)\n", priv->pcie_irq_rx_count);
+-	status = reg &  PCIE_HDP_INT_RX_BITS;
+-	seq_printf(s, "pcie_irq_rx_status(%s)\n",
+-		   (status == PCIE_HDP_INT_RX_BITS) ? "EN" : "DIS");
+-	seq_printf(s, "pcie_irq_uf_count(%u)\n", priv->pcie_irq_uf_count);
+-	status = reg &  PCIE_HDP_INT_HHBM_UF;
+-	seq_printf(s, "pcie_irq_hhbm_uf_status(%s)\n",
+-		   (status == PCIE_HDP_INT_HHBM_UF) ? "EN" : "DIS");
++fw_load_fail:
++	bus->fw_state = QTNF_FW_STATE_DEAD;
+ 
+-	return 0;
++fw_load_exit:
++	complete(&bus->firmware_init_complete);
++	put_device(&pdev->dev);
+ }
+ 
+-static int qtnf_dbg_hdp_stats(struct seq_file *s, void *data)
++static void qtnf_bringup_fw_async(struct qtnf_bus *bus)
+ {
+-	struct qtnf_bus *bus = dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
+-
+-	seq_printf(s, "tx_full_count(%u)\n", priv->tx_full_count);
+-	seq_printf(s, "tx_done_count(%u)\n", priv->tx_done_count);
+-	seq_printf(s, "tx_reclaim_done(%u)\n", priv->tx_reclaim_done);
+-	seq_printf(s, "tx_reclaim_req(%u)\n", priv->tx_reclaim_req);
+-
+-	seq_printf(s, "tx_bd_r_index(%u)\n", priv->tx_bd_r_index);
+-	seq_printf(s, "tx_bd_p_index(%u)\n",
+-		   readl(PCIE_HDP_RX0DMA_CNT(priv->pcie_reg_base))
+-			& (priv->tx_bd_num - 1));
+-	seq_printf(s, "tx_bd_w_index(%u)\n", priv->tx_bd_w_index);
+-	seq_printf(s, "tx queue len(%u)\n",
+-		   CIRC_CNT(priv->tx_bd_w_index, priv->tx_bd_r_index,
+-			    priv->tx_bd_num));
+-
+-	seq_printf(s, "rx_bd_r_index(%u)\n", priv->rx_bd_r_index);
+-	seq_printf(s, "rx_bd_p_index(%u)\n",
+-		   readl(PCIE_HDP_TX0DMA_CNT(priv->pcie_reg_base))
+-			& (priv->rx_bd_num - 1));
+-	seq_printf(s, "rx_bd_w_index(%u)\n", priv->rx_bd_w_index);
+-	seq_printf(s, "rx alloc queue len(%u)\n",
+-		   CIRC_SPACE(priv->rx_bd_w_index, priv->rx_bd_r_index,
+-			      priv->rx_bd_num));
++	struct qtnf_pcie_bus_priv *priv = (void *)get_bus_priv(bus);
++	struct pci_dev *pdev = priv->pdev;
+ 
+-	return 0;
++	get_device(&pdev->dev);
++	INIT_WORK(&bus->fw_work, qtnf_fw_work_handler);
++	schedule_work(&bus->fw_work);
+ }
+ 
+-static int qtnf_dbg_shm_stats(struct seq_file *s, void *data)
++static void qtnf_reclaim_tasklet_fn(unsigned long data)
+ {
+-	struct qtnf_bus *bus = dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
+-
+-	seq_printf(s, "shm_ipc_ep_in.tx_packet_count(%zu)\n",
+-		   priv->shm_ipc_ep_in.tx_packet_count);
+-	seq_printf(s, "shm_ipc_ep_in.rx_packet_count(%zu)\n",
+-		   priv->shm_ipc_ep_in.rx_packet_count);
+-	seq_printf(s, "shm_ipc_ep_out.tx_packet_count(%zu)\n",
+-		   priv->shm_ipc_ep_out.tx_timeout_count);
+-	seq_printf(s, "shm_ipc_ep_out.rx_packet_count(%zu)\n",
+-		   priv->shm_ipc_ep_out.rx_packet_count);
++	struct qtnf_pcie_bus_priv *priv = (void *)data;
+ 
+-	return 0;
++	qtnf_pcie_data_tx_reclaim(priv);
++	qtnf_en_txdone_irq(priv);
+ }
+ 
+ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+@@ -1280,7 +1293,7 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	pcie_priv->pdev = pdev;
+ 
+ 	strcpy(bus->fwname, QTN_PCI_PEARL_FW_NAME);
+-	init_completion(&bus->request_firmware_complete);
++	init_completion(&bus->firmware_init_complete);
+ 	mutex_init(&bus->bus_lock);
+ 	spin_lock_init(&pcie_priv->tx0_lock);
+ 	spin_lock_init(&pcie_priv->irq_lock);
+@@ -1378,35 +1391,7 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto err_fw;
+ 	}
+ 
+-	ret = qtnf_bringup_fw(bus);
+-	if (ret < 0)
+-		goto err_fw;
+-	else if (ret)
+-		wait_for_completion(&bus->request_firmware_complete);
+-
+-	if (bus->fw_state != QTNF_FW_STATE_FW_DNLD_DONE) {
+-		pr_err("failed to start FW\n");
+-		goto err_fw;
+-	}
+-
+-	if (qtnf_poll_state(&pcie_priv->bda->bda_ep_state, QTN_EP_FW_QLINK_DONE,
+-			    QTN_FW_QLINK_TIMEOUT_MS)) {
+-		pr_err("FW runtime failure\n");
+-		goto err_fw;
+-	}
+-
+-	ret = qtnf_core_attach(bus);
+-	if (ret) {
+-		pr_err("failed to attach core\n");
+-		goto err_fw;
+-	}
+-
+-	qtnf_debugfs_init(bus, DRV_NAME);
+-	qtnf_debugfs_add_entry(bus, "mps", qtnf_dbg_mps_show);
+-	qtnf_debugfs_add_entry(bus, "msi_enabled", qtnf_dbg_msi_show);
+-	qtnf_debugfs_add_entry(bus, "hdp_stats", qtnf_dbg_hdp_stats);
+-	qtnf_debugfs_add_entry(bus, "irq_stats", qtnf_dbg_irq_stats);
+-	qtnf_debugfs_add_entry(bus, "shm_stats", qtnf_dbg_shm_stats);
++	qtnf_bringup_fw_async(bus);
+ 
+ 	return 0;
+ 
+@@ -1440,11 +1425,14 @@ static void qtnf_pcie_remove(struct pci_dev *pdev)
+ 	if (!bus)
+ 		return;
+ 
++	wait_for_completion(&bus->firmware_init_complete);
++
++	if (bus->fw_state == QTNF_FW_STATE_ACTIVE)
++		qtnf_core_detach(bus);
++
+ 	priv = get_bus_priv(bus);
+ 
+-	qtnf_core_detach(bus);
+ 	netif_napi_del(&bus->mux_napi);
+-
+ 	flush_workqueue(priv->workqueue);
+ 	destroy_workqueue(priv->workqueue);
+ 	tasklet_kill(&priv->reclaim_tq);
 -- 
-https://patchwork.kernel.org/patch/10237695/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
