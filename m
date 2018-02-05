@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:32848 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751131AbeBXPyY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Feb 2018 10:54:24 -0500
-Received: by mail-wr0-f196.google.com with SMTP id s5so16976600wra.0
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Feb 2018 07:54:24 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mt76: initialize available_antennas_{tx,rx} info
-Date: Sat, 24 Feb 2018 16:54:12 +0100
-Message-Id: <20180224155414.31063-2-lorenzo.bianconi@redhat.com> (sfid-20180224_165427_858638_430FC2C1)
+Received: from mail-sn1nam02on0058.outbound.protection.outlook.com ([104.47.36.58]:37842
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752937AbeBEPFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Feb 2018 10:05:32 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: [PATCH 0/6] qtnfmac: qsr10g pcie backend updates
+Date: Mon,  5 Feb 2018 18:05:10 +0300
+Message-Id: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com> (sfid-20180205_160629_556864_1DDA2524)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize available_antennas related info in wiphy data structure
-according to antenna_mask field; antenna_mask info is initialized
-in device specific code and will be used in mac80211 {set,get}_antenna
-callbacks
+Hello Kalle and all,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c    | 3 +++
- drivers/net/wireless/mediatek/mt76/mt76.h        | 2 ++
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 3 +++
- 3 files changed, 8 insertions(+)
+Here is a patch set with various fixes and enhacements for qsr10g
+PCIe backend driver. The major changes include the following two
+items:
+- make rmmod/insmod work properly for qtnfmac_pcie driver
+- provide configuration knobs to control NSM (networked standby mode)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 85f8d324ebf8..ec94b86a37fd 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -262,6 +262,9 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- 
- 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
- 
-+	wiphy->available_antennas_tx = dev->antenna_mask;
-+	wiphy->available_antennas_rx = dev->antenna_mask;
-+
- 	hw->txq_data_size = sizeof(struct mt76_txq);
- 	hw->max_tx_fragments = 16;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index d2ce15093edd..15009d5b0531 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -253,6 +253,8 @@ struct mt76_dev {
- 	u32 rev;
- 	unsigned long state;
- 
-+	u8 antenna_mask;
-+
- 	struct mt76_sband sband_2g;
- 	struct mt76_sband sband_5g;
- 	struct debugfs_blob_wrapper eeprom;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 9dbf94947324..934c331d995e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -857,6 +857,9 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 	dev->mt76.led_cdev.brightness_set = mt76x2_led_set_brightness;
- 	dev->mt76.led_cdev.blink_set = mt76x2_led_set_blink;
- 
-+	/* init antenna configuration */
-+	dev->mt76.antenna_mask = 3;
-+
- 	ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
- 				   ARRAY_SIZE(mt76x2_rates));
- 	if (ret)
--- 
-2.16.2
+NSM (networked standby mode) is not related to WiFi standard. This is
+a term that has been introduced by European Commission in regulation
+No. 1275/2008. Simplifying things a bit, that regulation specifies
+ecodesing requirements for various operating modes. In that document
+‘networked standby’ is defined as a condition in which the equipment
+is able to resume a function by way of a remotely initiated trigger
+from a network connection.
+
+Regards,
+Sergey
+
+Sergei Maksimenko (3)
+  qtnfmac: implement asynchronous firmware loading
+  qtnfmac: enable reloading of qtnfmac kernel modules
+  qtnfmac: enable networked standby mode on device
+
+Sergey Matyukevich (3)
+  qtnfmac: fix releasing Tx/Rx data buffers
+  qtnfmac: fix rmmod for firmware version mismatch
+  qtnfmac: fix rmmod for missing firmware
+
+
+ bus.h                   |    4 
+ commands.c              |   33 +++
+ commands.h              |    1 
+ core.c                  |   77 +++++++++
+ core.h                  |    2 
+ pearl/pcie.c            |  407 +++++++++++++++++++++++++-----------------------
+ pearl/pcie_ipc.h        |    1 
+ pearl/pcie_regs_pearl.h |    1 
+ qlink.h                 |   30 +++
+ 9 files changed, 363 insertions(+), 193 deletions(-)
