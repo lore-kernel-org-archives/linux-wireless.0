@@ -1,35 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:49220 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967342AbeBNLa6 (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:44048 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753956AbeBESiR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Feb 2018 06:30:58 -0500
-Message-ID: <1518607856.21268.3.camel@sipsolutions.net> (sfid-20180214_123101_836136_1B700D0E)
-Subject: Re: Max clients on wifi access point with 7265
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Micka=EBl?= PANNEQUIN <m.pannequin@xperteam.fr>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 14 Feb 2018 12:30:56 +0100
-In-Reply-To: <HE1PR0501MB23969FCE58F1EE7634D412F0F6F50@HE1PR0501MB2396.eurprd05.prod.outlook.com> (sfid-20180214_115522_052706_6AECF2E4)
-References: <HE1PR0501MB23969FCE58F1EE7634D412F0F6F50@HE1PR0501MB2396.eurprd05.prod.outlook.com>
-         (sfid-20180214_115522_052706_6AECF2E4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 5 Feb 2018 13:38:17 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Stable <stable@vger.kernel.org>
+Subject: [PATCH] rtlwifi: rtl8821ae: Fix connection lost problem correctly
+Date: Mon,  5 Feb 2018 12:38:11 -0600
+Message-Id: <20180205183811.19526-1-Larry.Finger@lwfinger.net> (sfid-20180205_193857_022788_64AA1A61)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-02-14 at 10:55 +0000, Mickaël PANNEQUIN wrote:
+There has been a coding error in rtl8821ae since it was first introduced,
+namely that an 8-bit register was read using a 16-bit read in
+_rtl8821ae_dbi_read(). This error was fixed with commit 40b368af4b75
+("rtlwifi: Fix alignment issues"); however, this change led to
+instability in the connection. To restore stability, this change
+was reverted in commit b8b8b16352cd ("rtlwifi: rtl8821ae: Fix connection
+lost problem").
+
+Unfortunately, the unaligned access causes machine checks in ARM
+architecture, and we were finally forced to find the actual cause of the
+problem on x86 platforms. Following a suggestion from Pkshih
+<pkshih@realtek.com>, it was found that increasing the ASPM L1
+latency from 0 to 7 fixed the instability. This parameter was varied to
+see if a smaller value would work; however, it appears that 7 is the
+safest value. A new symbol is defined for this quantity, thus it can be
+easily changed if necessary.
+
+Fixes: b8b8b16352cd ("rtlwifi: rtl8821ae: Fix connection lost problem")
+Cc: Stable <stable@vger.kernel.org> # 4.14+
+Fix-suggested-by: Pkshih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+Kalle,
+
+This patch should be submitted to 4.16.
+
+Larry
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 5 +++--
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         | 1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index f20e77b4bb65..317c1b3101da 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -1123,7 +1123,7 @@ static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
+ 	}
+ 	if (0 == tmp) {
+ 		read_addr = REG_DBI_RDATA + addr % 4;
+-		ret = rtl_read_word(rtlpriv, read_addr);
++		ret = rtl_read_byte(rtlpriv, read_addr);
+ 	}
+ 	return ret;
+ }
+@@ -1165,7 +1165,8 @@ static void _rtl8821ae_enable_aspm_back_door(struct ieee80211_hw *hw)
+ 	}
  
-> Do you know the limit of the number of users connected at the same
-> time on the wifi? Works fine with 14 connected devices but not more.
-> 
-> How to increase it?
-
-You can't.
-
-> This limit is hardware?
-
-More or less, yes. The HW/FW can support 16 STAs, but needs two for
-other bookkeeping.
-
-johannes
+ 	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x70f);
+-	_rtl8821ae_dbi_write(rtlpriv, 0x70f, tmp | BIT(7));
++	_rtl8821ae_dbi_write(rtlpriv, 0x70f, tmp | BIT(7) |
++			     ASPM_L1_LATENCY << 3);
+ 
+ 	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x719);
+ 	_rtl8821ae_dbi_write(rtlpriv, 0x719, tmp | BIT(3) | BIT(4));
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 1c9ed28b42da..4f48b934ec01 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -99,6 +99,7 @@
+ #define RTL_USB_MAX_RX_COUNT			100
+ #define QBSS_LOAD_SIZE				5
+ #define MAX_WMMELE_LENGTH			64
++#define ASPM_L1_LATENCY				7
+ 
+ #define TOTAL_CAM_ENTRY				32
+ 
+-- 
+2.16.1
