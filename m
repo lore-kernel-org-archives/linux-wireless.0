@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from minos.uwaterloo.ca ([129.97.128.78]:38050 "EHLO
-        minos.uwaterloo.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935174AbeBMNcw (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:41288 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752154AbeBEBZb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 08:32:52 -0500
-Subject: Re: 802.11ac devices that use Minstrel_HT
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Sven Eckelmann <sven@narfation.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <769da6f9-bca3-48bd-32e6-009dd82f3c96@mailservices.uwaterloo.ca>
- <4674890.5ipQsmKAE1@bentobox>
- <00665215-8a85-365d-dcfa-aa9b1aeedd1c@mailservices.uwaterloo.ca>
- <8037020.pGPiyahZAU@bentobox>
- <CAA2SeNLFMKHx4R3RzesFssXz38jeOwtCBfjmxXdEtReO6JJrUQ@mail.gmail.com>
-From: Ali Abedi <a2abedi@uwaterloo.ca>
-Message-ID: <113de75d-62bc-c0b1-1a3a-a17f6fc2f32a@mailservices.uwaterloo.ca> (sfid-20180213_143256_182353_030FDD44)
-Date: Tue, 13 Feb 2018 08:32:47 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAA2SeNLFMKHx4R3RzesFssXz38jeOwtCBfjmxXdEtReO6JJrUQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 4 Feb 2018 20:25:31 -0500
+From: Ulf Magnusson <ulfalizer@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-kbuild@vger.kernel.org, tfiga@chromium.org,
+        paul.burton@mips.com, m.szyprowski@samsung.com,
+        egtvedt@samfundet.no, linus.walleij@linaro.org,
+        vgupta@synopsys.com, mgorman@techsingularity.net, hch@lst.de,
+        mina86@mina86.com, robh@kernel.org, sboyd@codeaurora.org,
+        paulus@ozlabs.org, will.deacon@arm.com, tony@atomide.com,
+        npiggin@gmail.com, yamada.masahiro@socionext.com,
+        Ulf Magnusson <ulfalizer@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 18/20] iwlwifi: fix malformed CONFIG_IWLWIFI_PCIE_RTPM default
+Date: Mon,  5 Feb 2018 02:21:30 +0100
+Message-Id: <20180205012146.23981-19-ulfalizer@gmail.com> (sfid-20180205_022930_656844_22103AAC)
+In-Reply-To: <20180205012146.23981-1-ulfalizer@gmail.com>
+References: <20180205012146.23981-1-ulfalizer@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you, this is extremely helpful for us.
-Do you know any device that supports more than 2 spatial streams? (Is 
-mt76 capable of supporting more spacial streams at the moment?)
+'default false' should be 'default n', though they happen to have the
+same effect here, due to undefined symbols ('false' in this case)
+evaluating to n in a tristate sense.
 
-Best,
-Ali
+Remove the default instead of changing it. bool and tristate symbols
+implicitly default to n.
 
-On 2/13/2018 8:26 AM, Lorenzo Bianconi wrote:
->> On Dienstag, 13. Februar 2018 07:56:29 CET Ali Abedi wrote:
->>>> So I would currently bet on hwsim (only useful when you only want to have some
->>>> simulations) or mt76. Afaik mt76 was also the one which was used to test the
->>>> VHT rate injection code for monitor interfaces and is therefore quite
->>>> flexible.
->> [...]
->>> Thank you Sven. I was actually wondering what hardware was used to test
->>> the code.
->> It seems Lorenzo Bianconi used an D-Link DIR-860L rev B1 [1]
->>
-> Yes, I used it for a while; at the moment to work on mt76 code I am
-> using Buffalo wsr1166
-> Regards,
->
-> Lorenzo
->
->> Kind regards,
->>          Sven
->>
->> [1] https://patchwork.kernel.org/patch/8393091/
+Discovered with the
+https://github.com/ulfalizer/Kconfiglib/blob/master/examples/list_undefined.py
+script.
+
+Signed-off-by: Ulf Magnusson <ulfalizer@gmail.com>
+---
+ drivers/net/wireless/intel/iwlwifi/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
+index c5f2ddf9b0fe..e5a2fc738ac3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Kconfig
++++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
+@@ -91,7 +91,6 @@ config IWLWIFI_BCAST_FILTERING
+ config IWLWIFI_PCIE_RTPM
+        bool "Enable runtime power management mode for PCIe devices"
+        depends on IWLMVM && PM && EXPERT
+-       default false
+        help
+          Say Y here to enable runtime power management for PCIe
+          devices.  If enabled, the device will go into low power mode
+-- 
+2.14.1
