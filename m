@@ -1,70 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:51107 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751756AbeBCEpq (ORCPT
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:40508 "EHLO
+        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752278AbeBFLW4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Feb 2018 23:45:46 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "quozl@laptop.org" <quozl@laptop.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8821ae keep alive not set, connection lost
-Date: Sat, 3 Feb 2018 04:45:10 +0000
-Message-ID: <1517633110.2437.14.camel@realtek.com> (sfid-20180203_054552_156707_22B4DB34)
-References: <20170912220916.GB32211@us.netrek.org>
-         <a9a1ff03-d12f-7437-e7bc-5f01b195f753@lwfinger.net>
-         <20180201062202.GH917@us.netrek.org>
-         <5B2DA6FDDF928F4E855344EE0A5C39D13BE7A25E@RTITMBSV07.realtek.com.tw>
-         <33774f69-6fb2-6cbf-615d-9e2a836dd5de@lwfinger.net>
-In-Reply-To: <33774f69-6fb2-6cbf-615d-9e2a836dd5de@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 6 Feb 2018 06:22:56 -0500
+Received: by mail-qk0-f170.google.com with SMTP id d18so1774723qke.7
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Feb 2018 03:22:56 -0800 (PST)
+Subject: Re: [PATCH 5/6] qtnfmac: implement asynchronous firmware loading
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        linux-wireless@vger.kernel.org
+References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
+ <20180205150516.16030-6-sergey.matyukevich.os@quantenna.com>
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A79900D.5080605@broadcom.com> (sfid-20180206_122300_558959_385038C5)
+Date: Tue, 6 Feb 2018 12:22:53 +0100
 MIME-Version: 1.0
+In-Reply-To: <20180205150516.16030-6-sergey.matyukevich.os@quantenna.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE4LTAyLTAyIGF0IDE0OjEzIC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IE9uIDAyLzAyLzIwMTggMDE6NTAgQU0sIFBrc2hpaCB3cm90ZToNCj4gPiBIaSBKYW1lcywNCj4g
-PsKgDQo+ID4gSW4gbXkgZXhwZXJpbWVudCwgdW5hbGlnbmVkLXdvcmQtYWNjZXNzIG1heSBnZXQg
-d3JvbmcgdmFsdWVzIHRoYXQNCj4gPiBhcmUgZGlmZmVyZW50IGZyb20gdGhlIHZhbHVlIGJ5IGJ5
-dGUtYWNjZXNzLiBBY3R1YWxseSwgaXQgY2FuIHNpbXBseQ0KPiA+IHZlcmlmaWVkIGJ5IHVzaW5n
-ICdsc3BjaScgdG8gY2hlY2sgUENJIGNvbmZpZ3VyYXRpb24gc3BhY2UuDQo+ID7CoA0KPiA+IERC
-SSByZWFkIDB4NzBmOg0KPiA+IF9ydGw4ODIxYWVfZGJpX3JlYWQ6MTEyNyByOCAweDM0ZiA9IDB4
-MDAxNw0KPiA+IF9ydGw4ODIxYWVfZGJpX3JlYWQ6MTEzMSByOCAweDM1MCA9IDB4MDAwYw0KPiA+
-IF9ydGw4ODIxYWVfZGJpX3JlYWQ6MTEzNiByMTYgMHgzNTAgPSAweGZmZmYNCj4gPsKgDQo+ID4g
-REJJIHJlYWQgMHg3MTk6DQo+ID4gX3J0bDg4MjFhZV9kYmlfcmVhZDoxMTI3IHI4IDB4MzRkID0g
-MHgwMDAwDQo+ID4gX3J0bDg4MjFhZV9kYmlfcmVhZDoxMTMxIHI4IDB4MzRlID0gMHgwMDAyDQo+
-ID4gX3J0bDg4MjFhZV9kYmlfcmVhZDoxMTM2IHIxNiAweDM0ZSA9IDB4MDIwMA0KPiA+wqANCj4g
-PsKgDQo+ID4gQWNjb3JkaW5nIHRvIHRoZSB3cm9uZyBhbmQgb3JpZ2luYWwgdmFsdWUgb2YgMHg3
-MGYgaXMgMHhmZiwgSSB0aGluaw0KPiA+IGxhcmdlciBMMSBsYXRlbmN5IDB4NzBmWzU6M10gbWF5
-IGJlIGhlbHBmdWwuIFBsZWFzZSBoZWxwIHRvIHRyeQ0KPiA+IGJlbG93IHBhdGNoLiBJZiBpdCB3
-b3JrcywgcXVpcmsgdGFibGUgd29uJ3QgYmUgbmVjZXNzYXJ5Lg0KPiA+wqANCj4gPiBQSw0KPiA+
-wqANCj4gPsKgDQo+ID4gZGlmZiAtLWdpdCBhL3J0bDg4MjFhZS9ody5jIGIvcnRsODgyMWFlL2h3
-LmMNCj4gPiBpbmRleCA3ZDQzYmEwMDIuLmU1M2FmMDZlZCAxMDA2NDQNCj4gPiAtLS0gYS9ydGw4
-ODIxYWUvaHcuYw0KPiA+ICsrKyBiL3J0bDg4MjFhZS9ody5jDQo+ID4gQEAgLTExMjMsNyArMTEy
-Myw4IEBAIHN0YXRpYyB1OCBfcnRsODgyMWFlX2RiaV9yZWFkKHN0cnVjdCBydGxfcHJpdiAqcnRs
-cHJpdiwgdTE2IGFkZHIpDQo+ID7CoMKgwqAJfQ0KPiA+wqDCoMKgCWlmICgwID09IHRtcCkgew0K
-PiA+wqDCoMKgCQlyZWFkX2FkZHIgPSBSRUdfREJJX1JEQVRBICsgYWRkciAlIDQ7DQo+ID4gLQkJ
-cmV0ID0gcnRsX3JlYWRfd29yZChydGxwcml2LCByZWFkX2FkZHIpOw0KPiA+ICsNCj4gPiArCQly
-ZXQgPSBydGxfcmVhZF9ieXRlKHJ0bHByaXYsIHJlYWRfYWRkcik7DQo+ID7CoMKgwqAJfQ0KPiA+
-wqDCoMKgCXJldHVybiByZXQ7DQo+ID7CoMKgwqB9DQo+ID4gQEAgLTExNjUsNyArMTE2Niw3IEBA
-IHN0YXRpYyB2b2lkIF9ydGw4ODIxYWVfZW5hYmxlX2FzcG1fYmFja19kb29yKHN0cnVjdCBpZWVl
-ODAyMTFfaHcgKmh3KQ0KPiA+wqDCoMKgCX0NCj4gPsKgwqDCoA0KPiA+wqDCoMKgCXRtcCA9IF9y
-dGw4ODIxYWVfZGJpX3JlYWQocnRscHJpdiwgMHg3MGYpOw0KPiA+IC0JX3J0bDg4MjFhZV9kYmlf
-d3JpdGUocnRscHJpdiwgMHg3MGYsIHRtcCB8IEJJVCg3KSk7DQo+ID4gKwlfcnRsODgyMWFlX2Ri
-aV93cml0ZShydGxwcml2LCAweDcwZiwgdG1wIHwgQklUKDcpIHwgMHgzOCk7DQo+ID7CoMKgwqAN
-Cj4gPsKgwqDCoAl0bXAgPSBfcnRsODgyMWFlX2RiaV9yZWFkKHJ0bHByaXYsIDB4NzE5KTsNCj4g
-PsKgwqDCoAlfcnRsODgyMWFlX2RiaV93cml0ZShydGxwcml2LCAweDcxOSwgdG1wIHwgQklUKDMp
-IHwgQklUKDQpKTsNCj4gPsKgDQo+IA0KPiANCj4gUEssDQo+IA0KPiBUaGlzIHBhdGNoIHdvcmtz
-IHBlcmZlY3RseSBvbiBteSB4ODZfNjQgc3lzdGVtLiBXaXRoIGl0LCB0aGUgaW50ZXJmYWNlIGhh
-bmRsZWQgYcKgDQo+IDEwIG1pbGxpb24gY291bnQgZmxvb2QgcGluZyB3aXRoIDwxMDAwIHBhY2tl
-dHMgZHJvcHBlZC4gSXQgaGFzIG5vdyBiZWVuIHJ1bm5pbmfCoA0KPiBmb3IgYXQgbGVhc3QgMTEg
-aG91cnMuIEdvb2Qgd29yay4NCj4gDQo+IENhbiB5b3UgZXhwbGFpbiB0aGF0IG1hZ2ljIDB4Mzg/
-IEknbSBxdWl0ZSBzdXJlIHRoYXQgS2FsbGUgd2lsbCBub3QgYWNjZXB0IHRoZcKgDQo+IHBhdGNo
-IGFzIGlzLiBIZSBhbHJlYWR5IHRoaW5rcyB0aGF0IHJ0bHdpZmkgYW5kIGZyaWVuZHMgYWxyZWFk
-eSBoYXZlIHRvbyBtYW55wqANCj4gbWFnaWMgbnVtYmVycy4NCj4gDQpUaGUgbWFnaWMgMHgzOCBy
-ZXByZXNlbnRzIEwxIGxhdGVuY3kgMHg3MGZbNTozXT1iJzExMSwgYW5kIEkgd2lsbCBhZGQgZGVm
-aW5pdGlvbg0Kb3IgbWFjcm8gdG8gZGVzY3JpYmUNCjB4NzBmIGFuZCBtb3ZlIGFsbCBBU1BNIGNv
-ZGUgaW50byBwY2kuYywgaWYgdGhlIHByb2JsZW0gd2FzDQpzb2x2ZWQuIEhlbmNlLCBydGw4NzIz
-ZGUgYW5kIHJ0bDg3MjNiZQ0Kd2lsbCB1c2UgdGhlIHNhbWUgdmFsdWVzLCB0b28uDQoNCkNvdWxk
-IHlvdSBhbHNvIGhlbHAgdG8gdGVzdCBMMSBsYXRlbmN5IGFzIHJlY29tbWVuZGVkIHZhbHVlIGIn
-MTAwP8KgDQooaS5lLiAweDIwIGluc3RlYWQpDQoNClRoYW5rcw0KUEsNCg0K
+On 2/5/2018 4:05 PM, Sergey Matyukevich wrote:
+> From: Sergei Maksimenko <smaksimenko@quantenna.com>
+>
+> In pci probe() function start firmware loading, protocol handshake
+> and driver core initialization, and not wait for completion.
+
+The moving of the debugfs stuff makes this a drag to review, but I get 
+the gist. The thing is that the firmware api already provides an 
+asynchronous api, ie. request_firmware_nowait(), so why not use that.
+
+Regards,
+Arend
