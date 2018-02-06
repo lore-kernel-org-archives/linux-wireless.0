@@ -1,54 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:33177 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751563AbeBZIps (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56496 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753868AbeBFXCN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 03:45:48 -0500
-Received: by mail-wr0-f196.google.com with SMTP id s5so20285261wra.0
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2018 00:45:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org>
-References: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Mon, 26 Feb 2018 00:45:45 -0800
-Message-ID: <CAJ-Vmo=xxG_Jp=uC-Cx96R0YzO8O0tOVe2G6Nyx8ceWopiwvXQ@mail.gmail.com> (sfid-20180226_094552_389246_15FD134E)
-Subject: Re: [PATCH] Revert "ath10k: send (re)assoc peer command when NSS changed"
-To: Karthikeyan Periyasamy <periyasa@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 6 Feb 2018 18:02:13 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] ath10k:  Support mgt frame per-chain rssi
+Date: Tue,  6 Feb 2018 15:02:08 -0800
+Message-Id: <1517958128-12147-1-git-send-email-greearb@candelatech.com> (sfid-20180207_000233_036515_241D7BFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi!
+From: Ben Greear <greearb@candelatech.com>
 
-On 25 February 2018 at 22:16, Karthikeyan Periyasamy
-<periyasa@codeaurora.org> wrote:
-> This reverts commit 55884c045d31a29cf69db8332d1064a1b61dd159.
->
-> When Ath10k is in AP mode and an unassociated STA sends a VHT action frame
-> (Operating Mode Notification for the NSS change) periodically to AP this causes
-> ath10k to call ath10k_station_assoc() which sends WMI_PEER_ASSOC_CMDID during
-> NSS update. Over the time (with a certain client it can happen within 15 mins
-> when there are over 500 of these VHT action frames) continuous calls of
-> WMI_PEER_ASSOC_CMDID cause firmware to assert due to resource exhaust.
->
-> To my knowledge setting WMI_PEER_NSS peer param itself enough to handle NSS
-> updates and no need to call ath10k_station_assoc(). So revert the original
-> commit from 2014 as it's unclear why the change was really needed.
-> Now the firmware assert doesn't happen anymore.
->
-> Issue observed in QCA9984 platform with firmware version:10.4-3.5.3-00053.
-> This Change tested in QCA9984 with firmware version: 10.4-3.5.3-00053 and
-> QCA988x platform with firmware version: 10.2.4-1.0-00036.
+This provides per-chain rssi for management frames received
+over wmi.
 
-Did you test this on any of the other major firmware variants? I
-wonder if it snuck in because of some firmware quirk in something way
-before dakota/cascade and 10.4 were a thing.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-Eg, Peregrine? Rome? Maybe even earlier Beeliner, just to double check?
+v2:  Fix 'rssh' typo in commit message.
 
-Thanks,
+ drivers/net/wireless/ath/ath10k/wmi.c | 21 ++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h |  1 +
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 
-
-
--adrian
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 905af93..ff37274 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2287,6 +2287,7 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
+ 	u32 msdu_len;
+ 	struct wmi_mgmt_rx_ext_info *ext_info;
+ 	u32 len;
++	int i;
+ 
+ 	ev = (struct wmi_10_4_mgmt_rx_event *)skb->data;
+ 	ev_hdr = &ev->hdr;
+@@ -2302,6 +2303,8 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
+ 	arg->snr = ev_hdr->snr;
+ 	arg->phy_mode = ev_hdr->phy_mode;
+ 	arg->rate = ev_hdr->rate;
++	for (i = 0; i<4; i++)
++		arg->rssi_ctl[i] = ev_hdr->rssi_ctl[i];
+ 
+ 	msdu_len = __le32_to_cpu(arg->buf_len);
+ 	if (skb->len < msdu_len)
+@@ -2357,6 +2360,13 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	u32 buf_len;
+ 	u16 fc;
+ 	int ret;
++	int i;
++
++	/* Initialize the rssi to 'ignore-me' value, stock wave-1
++	 * firmware doesn't support it.
++	 */
++	for (i = 0; i<4; i++)
++		arg.rssi_ctl[i] = 0x80;
+ 
+ 	ret = ath10k_wmi_pull_mgmt_rx(ar, skb, &arg);
+ 	if (ret) {
+@@ -2416,6 +2426,12 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	status->freq = ieee80211_channel_to_frequency(channel, status->band);
+ 	status->signal = snr + ATH10K_DEFAULT_NOISE_FLOOR;
++	for (i = 0; i<4; i++) {
++		if (arg.rssi_ctl[i] != 0x80) {
++			status->chains |= BIT(i);
++			status->chain_signal[i] = ATH10K_DEFAULT_NOISE_FLOOR + arg.rssi_ctl[i];
++		}
++	}
+ 	status->rate_idx = ath10k_mac_bitrate_to_idx(sband, rate / 100);
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -2451,8 +2467,11 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 		   fc & IEEE80211_FCTL_FTYPE, fc & IEEE80211_FCTL_STYPE);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_MGMT,
+-		   "event mgmt rx freq %d band %d snr %d, rate_idx %d\n",
++		   "event mgmt rx freq %d band %d snr %d chains: 0x%x(%d %d %d %d), rate_idx %d\n",
+ 		   status->freq, status->band, status->signal,
++		   status->chains,
++		   status->chain_signal[0], status->chain_signal[1],
++		   status->chain_signal[2], status->chain_signal[3],
+ 		   status->rate_idx);
+ 
+ 	ieee80211_rx(ar->hw, skb);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index a3ba191..d198772 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6490,6 +6490,7 @@ struct wmi_scan_ev_arg {
+ struct wmi_mgmt_rx_ev_arg {
+ 	__le32 channel;
+ 	__le32 snr;
++	u8 rssi_ctl[4];
+ 	__le32 rate;
+ 	__le32 phy_mode;
+ 	__le32 buf_len;
+-- 
+2.4.11
