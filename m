@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:50250 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935290AbeB1WUU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36514 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754328AbeBGQVQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 17:20:20 -0500
-Received: by mail-wm0-f65.google.com with SMTP id w128so8019258wmw.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2018 14:20:20 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x2: remove unnecessary len variable in mt76x2_eeprom_load()
-Date: Wed, 28 Feb 2018 23:20:12 +0100
-Message-Id: <20180228222012.503-1-lorenzo.bianconi@redhat.com> (sfid-20180228_232024_024726_C8305941)
+        Wed, 7 Feb 2018 11:21:16 -0500
+From: Srinivas Dasari <dasaris@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, jouni@codeaurora.org,
+        Srinivas Dasari <dasaris@codeaurora.org>
+Subject: [PATCH v2] ieee80211: Increase the PMK maximum length to 64 bytes
+Date: Wed,  7 Feb 2018 21:50:51 +0530
+Message-Id: <1518020451-8743-1-git-send-email-dasaris@codeaurora.org> (sfid-20180207_172119_934276_7A14D3DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Substitute unnecessary len variable in mt76x2_eeprom_load() with
-MT7662_EEPROM_SIZE macro since len is used just to store eeprom
-default size.
+This is needed to cover the case of DPP with the NIST P-521 and
+brainpoolP512r1 curves which derive a PMK that is longer than the
+previously used limit.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Srinivas Dasari <dasaris@codeaurora.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ include/linux/ieee80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-index 9c9bf3e785ba..5bb50027c1e8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-@@ -222,11 +222,10 @@ static int
- mt76x2_eeprom_load(struct mt76x2_dev *dev)
- {
- 	void *efuse;
--	int len = MT7662_EEPROM_SIZE;
- 	bool found;
- 	int ret;
+v2:
+-Modified the commit text and resending it to right recipients
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index ee6657a..e4cba33 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2111,7 +2111,7 @@ enum ieee80211_key_len {
+ #define FILS_ERP_MAX_REALM_LEN		253
+ #define FILS_ERP_MAX_RRK_LEN		64
  
--	ret = mt76_eeprom_init(&dev->mt76, len);
-+	ret = mt76_eeprom_init(&dev->mt76, MT7662_EEPROM_SIZE);
- 	if (ret < 0)
- 		return ret;
+-#define PMK_MAX_LEN			48
++#define PMK_MAX_LEN			64
  
-@@ -234,14 +233,15 @@ mt76x2_eeprom_load(struct mt76x2_dev *dev)
- 	if (found)
- 		found = !mt76x2_check_eeprom(dev);
- 
--	dev->mt76.otp.data = devm_kzalloc(dev->mt76.dev, len, GFP_KERNEL);
--	dev->mt76.otp.size = len;
-+	dev->mt76.otp.data = devm_kzalloc(dev->mt76.dev, MT7662_EEPROM_SIZE,
-+					  GFP_KERNEL);
-+	dev->mt76.otp.size = MT7662_EEPROM_SIZE;
- 	if (!dev->mt76.otp.data)
- 		return -ENOMEM;
- 
- 	efuse = dev->mt76.otp.data;
- 
--	if (mt76x2_get_efuse_data(dev, efuse, len))
-+	if (mt76x2_get_efuse_data(dev, efuse, MT7662_EEPROM_SIZE))
- 		goto out;
- 
- 	if (found) {
-@@ -249,7 +249,7 @@ mt76x2_eeprom_load(struct mt76x2_dev *dev)
- 	} else {
- 		/* FIXME: check if efuse data is complete */
- 		found = true;
--		memcpy(dev->mt76.eeprom.data, efuse, len);
-+		memcpy(dev->mt76.eeprom.data, efuse, MT7662_EEPROM_SIZE);
- 	}
- 
- out:
+ /* Public action codes (IEEE Std 802.11-2016, 9.6.8.1, Table 9-307) */
+ enum ieee80211_pub_actioncode {
 -- 
-2.16.2
+1.9.1
