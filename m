@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53907 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752922AbeBKLEH (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33041 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754320AbeBGU0z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Feb 2018 06:04:07 -0500
-From: Carl Huang <cjhuang@qti.qualcomm.com>
-To: "nbd@nbd.name" <nbd@nbd.name>, Carl Huang <cjhuang@codeaurora.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] ath10k: fix use-after-free in ath10k_wmi_cmd_send_nowait
-Date: Sun, 11 Feb 2018 11:03:48 +0000
-Message-ID: <77aae4b4bdd44043b30cd7075537630a@aptaiexm02f.ap.qualcomm.com> (sfid-20180211_120411_537475_2611242A)
-References: <1518317805-5796-1-git-send-email-cjhuang@codeaurora.org>
- <3995aa0a-00f0-5ca1-fc49-1fad141fb2ae@nbd.name>
-In-Reply-To: <3995aa0a-00f0-5ca1-fc49-1fad141fb2ae@nbd.name>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Wed, 7 Feb 2018 15:26:55 -0500
+Received: by mail-pf0-f193.google.com with SMTP id u15so822909pfa.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Feb 2018 12:26:55 -0800 (PST)
+From: Matthias Kaehlcke <mka@chromium.org>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Guenter Roeck <groeck@chromium.org>,
+        Justin TerAvest <teravest@chromium.org>,
+        Craig Bergstrom <craigb@chromium.org>,
+        Matthias Kaehlcke <mka@chromium.org>
+Subject: [PATCH] rtlwifi: rtl8192cu: Remove variable self-assignment in rf.c
+Date: Wed,  7 Feb 2018 12:26:34 -0800
+Message-Id: <20180207202634.98937-1-mka@chromium.org> (sfid-20180207_212746_610093_D087C94C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In _rtl92c_get_txpower_writeval_by_regulatory() the variable writeVal
+is assigned to itself in an if ... else statement, apparently only to
+document that the branch condition is handled and that a previously read
+value should be returned unmodified. The self-assignment causes clang to
+raise the following warning:
 
+drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c:304:13:
+  error: explicitly assigning value of variable of type 'u32'
+    (aka 'unsigned int') to itself [-Werror,-Wself-assign]
+  writeVal = writeVal;
 
-> -----Original Message-----
-> From: ath10k [mailto:ath10k-bounces@lists.infradead.org] On Behalf Of Fel=
-ix
-> Fietkau
-> Sent: Sunday, February 11, 2018 5:59 PM
-> To: Carl Huang <cjhuang@codeaurora.org>; ath10k@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH] ath10k: fix use-after-free in
-> ath10k_wmi_cmd_send_nowait
->=20
-> On 2018-02-11 03:56, Carl Huang wrote:
-> > The skb may be freed in tx completion context before
-> > trace_ath10k_wmi_cmd is called. This can be easily captured when
-> > KASAN(Kernel Address Sanitizer) is enabled. The fix is to add a
-> > reference count to the skb and release it after trace_ath10k_wmi_cmd
-> > is called.
-> >
-> > Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
-> I think it makes more sense to simply call the trace function before
-> ath10k_htc_send. Also, for a trivial change like this it probably does no=
-t make
-> sense to add a Copyright line either.
->=20
-Agree that Moving the trace function before ath10k_htc_send is more simple,=
- but then the parameter ret=20
-has no meaning and can't trace the return value of ath10k_htc_send.  Beside=
-s that, skb->data and skb->len=20
-have different value if putting trace function before ath10k_htc_send, and =
-this may be fine since the main
-purpose is to trace the wmi information and not htc header information.
+Replace the self-assignment with a semicolon, which still serves to
+document the 'handling' of the branch condition.
 
-For the Copyright line, need Kalle Valo to comment.=20
+Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->=20
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+index 9cff6bc4049c..4db92496c122 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+@@ -301,7 +301,7 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
+ 			writeVal = writeVal - 0x06060606;
+ 		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
+ 			 TXHIGHPWRLEVEL_BT2)
+-			writeVal = writeVal;
++			;
+ 		*(p_outwriteval + rf) = writeVal;
+ 	}
+ }
+-- 
+2.16.0.rc1.238.g530d649a79-goog
