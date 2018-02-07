@@ -1,26 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55170 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753717AbeBLSkh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 13:40:37 -0500
-Subject: Re: [PATCH] ath9k: fix DFS detector synchronization
-To: Timothy Redaelli <tredaelli@redhat.com>,
-        linux-wireless@vger.kernel.org
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-References: <c967cb589b7d71a17afc29f3c634f961ef6820dd.1518090407.git.tredaelli@redhat.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <a05983e5-5772-e795-d804-142fb65e7cd5@nbd.name> (sfid-20180212_194041_118244_4D1B940A)
-Date: Mon, 12 Feb 2018 19:40:34 +0100
+Received: from smtp.codeaurora.org ([198.145.29.96]:53454 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754182AbeBGORL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Feb 2018 09:17:11 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <c967cb589b7d71a17afc29f3c634f961ef6820dd.1518090407.git.tredaelli@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: ath9k_htc: add Altai WA1011N-GU
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180129081430.16413-1-linux@rempel-privat.de>
+References: <20180129081430.16413-1-linux@rempel-privat.de>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        Oleksij Rempel <linux@rempel-privat.de>
+Message-Id: <20180207141710.BD231609EF@smtp.codeaurora.org> (sfid-20180207_151714_836015_F4C86139)
+Date: Wed,  7 Feb 2018 14:17:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-02-08 12:46, Timothy Redaelli wrote:
-> The code currently syncronize the DFS region only if curchan != 0, but hostapd
-> launch DFS before the channel is set and so set_dfs_domain is never executed.
+Oleksij Rempel <linux@rempel-privat.de> wrote:
+
+> as reported in:
+> https://github.com/qca/open-ath9k-htc-firmware/pull/71#issuecomment-361100070
 > 
-> CC: Felix Fietkau <nbd@nbd.name>
-> Signed-off-by: Timothy Redaelli <tredaelli@redhat.com>
-Acked-by: Felix Fietkau <nbd@nbd.name>
+> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+Patch applied to ath-current branch of ath.git, thanks.
+
+4e12d654ba06 ath9k_htc: add Altai WA1011N-GU
+
+-- 
+https://patchwork.kernel.org/patch/10189389/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
