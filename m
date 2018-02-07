@@ -1,39 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41838 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:38008 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751062AbeB0Qo7 (ORCPT
+        with ESMTP id S1753923AbeBGNv3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:44:59 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: update the IRAM banks number for QCA9377
+        Wed, 7 Feb 2018 08:51:29 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1518135631-29796-1-git-send-email-ryanhsu@codeaurora.org>
-References: <1518135631-29796-1-git-send-email-ryanhsu@codeaurora.org>
-To: ryanhsu@codeaurora.org
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        ryanhsu@codeaurora.org
-Message-Id: <20180227164459.2E3C460285@smtp.codeaurora.org> (sfid-20180227_174503_525529_D82C20FD)
-Date: Tue, 27 Feb 2018 16:44:59 +0000 (UTC)
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Ryan Hsu <ryanhsu@codeaurora.org>
+Subject: [PATCH] Revert "ath10k: add sanity check to ie_len before parsing fw/board ie"
+Date: Wed,  7 Feb 2018 15:51:23 +0200
+Message-Id: <1518011483-7704-1-git-send-email-kvalo@codeaurora.org> (sfid-20180207_145133_469454_32D4069A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ryanhsu@codeaurora.org wrote:
+From: Ryan Hsu <ryanhsu@codeaurora.org>
 
-> Preparation for a new QCA9377 firmware release. The new firmware release
-> requires more IRAM banks, hence update that on ath10k.
-> 
-> The IRAM banks promotion won't break any backwards compatibility, as those IRAM
-> banks were not getting used in previous firmware releases.
-> 
-> Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+This reverts commit 9ed4f91628737c820af6a1815b65bc06bd31518f.
 
-Patch applied to ath-next branch of ath.git, thanks.
+The commit introduced a regression that over read the ie with
+the padding.
 
-fc8b92635f79 ath10k: update the IRAM bank number for QCA9377
+- the expected IE information
 
+ath10k_pci 0000:03:00.0: found firmware features ie (1 B)
+ath10k_pci 0000:03:00.0: Enabling feature bit: 6
+ath10k_pci 0000:03:00.0: Enabling feature bit: 7
+ath10k_pci 0000:03:00.0: features
+ath10k_pci 0000:03:00.0: 00000000: c0 00 00 00 00 00 00 00
+
+- the wrong IE with padding is read (0x77)
+
+ath10k_pci 0000:03:00.0: found firmware features ie (4 B)
+ath10k_pci 0000:03:00.0: Enabling feature bit: 6
+ath10k_pci 0000:03:00.0: Enabling feature bit: 7
+ath10k_pci 0000:03:00.0: Enabling feature bit: 8
+ath10k_pci 0000:03:00.0: Enabling feature bit: 9
+ath10k_pci 0000:03:00.0: Enabling feature bit: 10
+ath10k_pci 0000:03:00.0: Enabling feature bit: 12
+ath10k_pci 0000:03:00.0: Enabling feature bit: 13
+ath10k_pci 0000:03:00.0: Enabling feature bit: 14
+ath10k_pci 0000:03:00.0: Enabling feature bit: 16
+ath10k_pci 0000:03:00.0: Enabling feature bit: 17
+ath10k_pci 0000:03:00.0: Enabling feature bit: 18
+ath10k_pci 0000:03:00.0: features
+ath10k_pci 0000:03:00.0: 00000000: c0 77 07 00 00 00 00 00
+
+Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index b0fdc1023619..fe9341c97f31 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1276,10 +1276,7 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
+ 		len -= sizeof(*hdr);
+ 		data = hdr->data;
+ 
+-		/* jump over the padding */
+-		ie_len = ALIGN(ie_len, 4);
+-
+-		if (len < ie_len) {
++		if (len < ALIGN(ie_len, 4)) {
+ 			ath10k_err(ar, "invalid length for board ie_id %d ie_len %zu len %zu\n",
+ 				   ie_id, ie_len, len);
+ 			ret = -EINVAL;
+@@ -1318,6 +1315,9 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
+ 			goto out;
+ 		}
+ 
++		/* jump over the padding */
++		ie_len = ALIGN(ie_len, 4);
++
+ 		len -= ie_len;
+ 		data += ie_len;
+ 	}
+@@ -1448,9 +1448,6 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 		len -= sizeof(*hdr);
+ 		data += sizeof(*hdr);
+ 
+-		/* jump over the padding */
+-		ie_len = ALIGN(ie_len, 4);
+-
+ 		if (len < ie_len) {
+ 			ath10k_err(ar, "invalid length for FW IE %d (%zu < %zu)\n",
+ 				   ie_id, len, ie_len);
+@@ -1556,6 +1553,9 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 			break;
+ 		}
+ 
++		/* jump over the padding */
++		ie_len = ALIGN(ie_len, 4);
++
+ 		len -= ie_len;
+ 		data += ie_len;
+ 	}
 -- 
-https://patchwork.kernel.org/patch/10208159/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
