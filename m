@@ -1,97 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:34547 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933825AbeBMKWc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53008 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753796AbeBGOQe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 05:22:32 -0500
+        Wed, 7 Feb 2018 09:16:34 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87y3kdmcxe.fsf@purkki.adurom.net>
-References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
- <1513168977-2121-4-git-send-email-amitkarwar@gmail.com> <87y3kdmcxe.fsf@purkki.adurom.net>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Tue, 13 Feb 2018 15:52:30 +0530
-Message-ID: <CAEhWJF=oMHU=9HkFJETVnC0bLozic7NTZ6qLP2hk3ezk5iKODg@mail.gmail.com> (sfid-20180213_112238_236730_25FB525C)
-Subject: Re: [v5 3/8] rsi: add header file rsi_header
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: ath10k: fix kernel panic issue during pci probe
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1517212801-7523-2-git-send-email-yyuwang@codeaurora.org>
+References: <1517212801-7523-2-git-send-email-yyuwang@codeaurora.org>
+To: Yu Wang <yyuwang@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Message-Id: <20180207141633.DFE2D6079C@smtp.codeaurora.org> (sfid-20180207_151638_264792_D5CA3496)
+Date: Wed,  7 Feb 2018 14:16:33 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 1, 2018 at 12:09 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>
->> The common parameters used by wlan and bt modules are added
->> to a new header file "rsi_header.h" defined in '/include/linux'
->>
->> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->
-> [...]
->
->> diff --git a/include/linux/rsi_header.h b/include/linux/rsi_header.h
->> new file mode 100644
->> index 0000000..16a447b
->> --- /dev/null
->> +++ b/include/linux/rsi_header.h
->> @@ -0,0 +1,34 @@
->> +/**
->> + * Copyright (c) 2017 Redpine Signals Inc.
->> + *
->> + * Permission to use, copy, modify, and/or distribute this software for any
->> + * purpose with or without fee is hereby granted, provided that the above
->> + * copyright notice and this permission notice appear in all copies.
->> + *
->> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
->> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
->> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
->> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
->> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
->> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
->> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->> + */
->> +
->> +#ifndef __RSI_HEADER_H__
->> +#define __RSI_HEADER_H__
->> +
->> +/* HAL queue information */
->> +#define RSI_COEX_Q                   0x0
->> +#define RSI_BT_Q                     0x2
->> +#define RSI_WLAN_Q                      0x3
->> +#define RSI_WIFI_MGMT_Q                 0x4
->> +#define RSI_WIFI_DATA_Q                 0x5
->> +#define RSI_BT_MGMT_Q                        0x6
->> +#define RSI_BT_DATA_Q                        0x7
->> +
->> +enum rsi_host_intf {
->> +     RSI_HOST_INTF_SDIO = 0,
->> +     RSI_HOST_INTF_USB
->> +};
->> +
->> +#endif
->
-> The name of the header "rsi_header.h" looks odd. The ".h" prefix already
-> tells that it's a header file, no need to repeat that in the filename.
-> But also calling it "rsi.h" feels a bit weird, it's not really very
-> specific. Would "rsi_91x.h" (from rsi_91x.ko) be any better?
+Yu Wang <yyuwang@codeaurora.org> wrote:
 
-Sure. Using rsi_91x.h makes sense.
+> If device gone during chip reset, ar->normal_mode_fw.board is not
+> initialized, but ath10k_debug_print_hwfw_info() will try to access its
+> member, which will cause 'kernel NULL pointer' issue. This was found
+> using a faulty device (pci link went down sometimes) in a random
+> insmod/rmmod/other-op test.
+> To fix it, check ar->normal_mode_fw.board before accessing the member.
+> 
+> pci 0000:02:00.0: BAR 0: assigned [mem 0xf7400000-0xf75fffff 64bit]
+> ath10k_pci 0000:02:00.0: enabling device (0000 -> 0002)
+> ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
+> ath10k_pci 0000:02:00.0: failed to read device register, device is gone
+> ath10k_pci 0000:02:00.0: failed to wait for target init: -5
+> ath10k_pci 0000:02:00.0: failed to warm reset: -5
+> ath10k_pci 0000:02:00.0: firmware crashed during chip reset
+> ath10k_pci 0000:02:00.0: firmware crashed! (uuid 5d018951-b8e1-404a-8fde-923078b4423a)
+> ath10k_pci 0000:02:00.0: (null) target 0x00000000 chip_id 0x00340aff sub 0000:0000
+> ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 1 testmode 1
+> ath10k_pci 0000:02:00.0: firmware ver  api 0 features  crc32 00000000
+> ...
+> BUG: unable to handle kernel NULL pointer dereference at 00000004
+> ...
+> Call Trace:
+>  [<fb4e7882>] ath10k_print_driver_info+0x12/0x20 [ath10k_core]
+>  [<fb62b7dd>] ath10k_pci_fw_crashed_dump+0x6d/0x4d0 [ath10k_pci]
+>  [<fb629f07>] ? ath10k_pci_sleep.part.19+0x57/0xc0 [ath10k_pci]
+>  [<fb62c8ee>] ath10k_pci_hif_power_up+0x14e/0x1b0 [ath10k_pci]
+>  [<c10477fb>] ? do_page_fault+0xb/0x10
+>  [<fb4eb934>] ath10k_core_register_work+0x24/0x840 [ath10k_core]
+>  [<c18a00d8>] ? netlbl_unlhsh_remove+0x178/0x410
+>  [<c10477f0>] ? __do_page_fault+0x480/0x480
+>  [<c1068e44>] process_one_work+0x114/0x3e0
+>  [<c1069d07>] worker_thread+0x37/0x4a0
+>  [<c106e294>] kthread+0xa4/0xc0
+>  [<c1069cd0>] ? create_worker+0x180/0x180
+>  [<c106e1f0>] ? kthread_park+0x50/0x50
+>  [<c18ab4f7>] ret_from_fork+0x1b/0x28
+>  Code: 78 80 b8 50 09 00 00 00 75 5d 8d 75 94 c7 44 24 08 aa d7 52 fb c7 44 24 04 64 00 00 00
+>  89 34 24 e8 82 52 e2 c5 8b 83 dc 08 00 00 <8b> 50 04 8b 08 31 c0 e8 20 57 e3 c5 89 44 24 10 8b 83 58 09 00
+>  EIP: [<fb4e7754>]-
+>  ath10k_debug_print_board_info+0x34/0xb0 [ath10k_core]
+>  SS:ESP 0068:f4921d90
+>  CR2: 0000000000000004
+> 
+> Signed-off-by: Yu Wang <yyuwang@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
->
-> Also I'm not sure about the location (include/linux), is that really the
-> correct place to have a header file shared by a wireless and bluetooth
-> driver? Anyone know? Or would include/net be better?
->
+Patch applied to ath-current branch of ath.git, thanks.
 
-include/net looks more appropriate. I will use it.
+50e79e25250b ath10k: fix kernel panic issue during pci probe
 
-Regards,
-Amitkumar
+-- 
+https://patchwork.kernel.org/patch/10189375/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
