@@ -1,306 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:39549 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753519AbeB0OiM (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:60923 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750806AbeBHBHA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 09:38:12 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v9 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
-Date: Tue, 27 Feb 2018 19:56:15 +0530
-Message-Id: <1519741578-12640-6-git-send-email-amitkarwar@gmail.com> (sfid-20180227_153815_945175_77CCE1B0)
-In-Reply-To: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
-References: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
+        Wed, 7 Feb 2018 20:07:00 -0500
+From: Pkshih <pkshih@realtek.com>
+To: "mka@chromium.org" <mka@chromium.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "craigb@chromium.org" <craigb@chromium.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "groeck@chromium.org" <groeck@chromium.org>,
+        "teravest@chromium.org" <teravest@chromium.org>
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Remove variable self-assignment in rf.c
+Date: Thu, 8 Feb 2018 01:06:43 +0000
+Message-ID: <1518052003.2680.1.camel@realtek.com> (sfid-20180208_020720_577770_5C5C5ED3)
+References: <20180207202634.98937-1-mka@chromium.org>
+         <947198f5-23eb-afbc-7979-fbc38b6a1a37@lwfinger.net>
+         <20180207205136.GB116483@google.com>
+In-Reply-To: <20180207205136.GB116483@google.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-
-Redpine bluetooth driver is a thin driver which depends on
-'rsi_91x' driver for transmitting and receiving packets
-to/from device. It creates hci interface when attach() is
-called from 'rsi_91x' module.
-
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
-Reviewed-by: Marcel Holtmann <marcel@holtmann.org>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
-v8: Resolve 'kbuild test robot' reported error. Used asm/unaligned.h
-    header file instead of linux/unaligned/le_byteshift.h 
-v7: Same as v6
-v6: Renamed CONFIG_BT_RSI to CONFIG_BT_HCIRSI (Marcel)
-v5: Addressed review comments from Marcel.
-    Removed reduntant switch case code from rsi_hci_recv_pkt()
-    Changed bt_cb(skb)->pkt_type to hci_skb_pkt_type(skb)
-    Removed reduntant '\n' from BT_ERR and redundant BT_INFO messages
-    Changed u8 *pkt to const u8 *pkt in rsi_hci_recv_pkt()
-v4: Removed rsi_hci.h file. Made the functions static(Marcel)
-v3: Made BT_RSI module by default off(Marcel)
-    Removed redundant exported function rsi_get_hci_ops()(Marcel)
-v2: Addressed review comments from Marcel
-    Removed unnecessary 'depends on BT && BT_RFOMM' line in Kconfig
-    Removed redundant BT_INFO messages
-    h_adapter initialization and declaration in a single line.
-    Removed unnecessary error checks for HCI_RUNNING and fsm_state
-    Allocated new skb with skb_realloc_headroom() API if headroom is not sufficient
-    Used get_unaligned_le16 helpers
-    Moved a structure and union from header file to btrsi.c file
----
- drivers/bluetooth/Kconfig  |  12 +++
- drivers/bluetooth/Makefile |   2 +
- drivers/bluetooth/btrsi.c  | 188 +++++++++++++++++++++++++++++++++++++++++++++
- include/net/rsi_91x.h      |   4 +-
- 4 files changed, 205 insertions(+), 1 deletion(-)
- create mode 100644 drivers/bluetooth/btrsi.c
-
-diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
-index 07e55cd..d8bbd66 100644
---- a/drivers/bluetooth/Kconfig
-+++ b/drivers/bluetooth/Kconfig
-@@ -392,4 +392,16 @@ config BT_QCOMSMD
- 	  Say Y here to compile support for HCI over Qualcomm SMD into the
- 	  kernel or say M to compile as a module.
- 
-+config BT_HCIRSI
-+	tristate "Redpine HCI support"
-+	default n
-+	select RSI_COEX
-+	help
-+	  Redpine BT driver.
-+	  This driver handles BT traffic from upper layers and pass
-+	  to the RSI_91x coex module for further scheduling to device
-+
-+	  Say Y here to compile support for HCI over Redpine into the
-+	  kernel or say M to compile as a module.
-+
- endmenu
-diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
-index 4e4e44d..03cfc1b 100644
---- a/drivers/bluetooth/Makefile
-+++ b/drivers/bluetooth/Makefile
-@@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
- 
- obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
- 
-+obj-$(CONFIG_BT_HCIRSI)		+= btrsi.o
-+
- btmrvl-y			:= btmrvl_main.o
- btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
- 
-diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
-new file mode 100644
-index 0000000..5034325
---- /dev/null
-+++ b/drivers/bluetooth/btrsi.c
-@@ -0,0 +1,188 @@
-+/**
-+ * Copyright (c) 2017 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#include <linux/version.h>
-+#include <linux/module.h>
-+#include <linux/kernel.h>
-+#include <net/bluetooth/bluetooth.h>
-+#include <net/bluetooth/hci_core.h>
-+#include <asm/unaligned.h>
-+#include <net/rsi_91x.h>
-+#include <net/genetlink.h>
-+
-+#define RSI_HEADROOM_FOR_BT_HAL	16
-+#define RSI_FRAME_DESC_SIZE	16
-+
-+struct rsi_hci_adapter {
-+	void *priv;
-+	struct rsi_proto_ops *proto_ops;
-+	struct hci_dev *hdev;
-+};
-+
-+static int rsi_hci_open(struct hci_dev *hdev)
-+{
-+	return 0;
-+}
-+
-+static int rsi_hci_close(struct hci_dev *hdev)
-+{
-+	return 0;
-+}
-+
-+static int rsi_hci_flush(struct hci_dev *hdev)
-+{
-+	return 0;
-+}
-+
-+static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
-+{
-+	struct rsi_hci_adapter *h_adapter = hci_get_drvdata(hdev);
-+	struct sk_buff *new_skb = NULL;
-+
-+	switch (hci_skb_pkt_type(skb)) {
-+	case HCI_COMMAND_PKT:
-+		hdev->stat.cmd_tx++;
-+		break;
-+	case HCI_ACLDATA_PKT:
-+		hdev->stat.acl_tx++;
-+		break;
-+	case HCI_SCODATA_PKT:
-+		hdev->stat.sco_tx++;
-+		break;
-+	}
-+
-+	if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
-+		/* Insufficient skb headroom - allocate a new skb */
-+		new_skb = skb_realloc_headroom(skb, RSI_HEADROOM_FOR_BT_HAL);
-+		if (unlikely(!new_skb))
-+			return -ENOMEM;
-+		bt_cb(new_skb)->pkt_type = hci_skb_pkt_type(skb);
-+		kfree_skb(skb);
-+		skb = new_skb;
-+	}
-+
-+	return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
-+						   RSI_BT_Q);
-+}
-+
-+static int rsi_hci_recv_pkt(void *priv, const u8 *pkt)
-+{
-+	struct rsi_hci_adapter *h_adapter = priv;
-+	struct hci_dev *hdev = h_adapter->hdev;
-+	struct sk_buff *skb;
-+	int pkt_len = get_unaligned_le16(pkt) & 0x0fff;
-+
-+	skb = dev_alloc_skb(pkt_len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
-+	skb_put(skb, pkt_len);
-+	h_adapter->hdev->stat.byte_rx += skb->len;
-+
-+	hci_skb_pkt_type(skb) = pkt[14];
-+
-+	return hci_recv_frame(hdev, skb);
-+}
-+
-+static int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
-+{
-+	struct rsi_hci_adapter *h_adapter = NULL;
-+	struct hci_dev *hdev;
-+	int err = 0;
-+
-+	h_adapter = kzalloc(sizeof(*h_adapter), GFP_KERNEL);
-+	if (!h_adapter)
-+		return -ENOMEM;
-+
-+	h_adapter->priv = priv;
-+	ops->set_bt_context(priv, h_adapter);
-+	h_adapter->proto_ops = ops;
-+
-+	hdev = hci_alloc_dev();
-+	if (!hdev) {
-+		BT_ERR("Failed to alloc HCI device");
-+		goto err;
-+	}
-+
-+	h_adapter->hdev = hdev;
-+
-+	if (ops->get_host_intf(priv) == RSI_HOST_INTF_SDIO)
-+		hdev->bus = HCI_SDIO;
-+	else
-+		hdev->bus = HCI_USB;
-+
-+	hci_set_drvdata(hdev, h_adapter);
-+	hdev->dev_type = HCI_PRIMARY;
-+	hdev->open = rsi_hci_open;
-+	hdev->close = rsi_hci_close;
-+	hdev->flush = rsi_hci_flush;
-+	hdev->send = rsi_hci_send_pkt;
-+
-+	err = hci_register_dev(hdev);
-+	if (err < 0) {
-+		BT_ERR("HCI registration failed with errcode %d", err);
-+		hci_free_dev(hdev);
-+		goto err;
-+	}
-+
-+	return 0;
-+err:
-+	h_adapter->hdev = NULL;
-+	kfree(h_adapter);
-+	return -EINVAL;
-+}
-+
-+static void rsi_hci_detach(void *priv)
-+{
-+	struct rsi_hci_adapter *h_adapter = priv;
-+	struct hci_dev *hdev;
-+
-+	if (!h_adapter)
-+		return;
-+
-+	hdev = h_adapter->hdev;
-+	if (hdev) {
-+		hci_unregister_dev(hdev);
-+		hci_free_dev(hdev);
-+		h_adapter->hdev = NULL;
-+	}
-+
-+	kfree(h_adapter);
-+}
-+
-+const struct rsi_mod_ops rsi_bt_ops = {
-+	.attach	= rsi_hci_attach,
-+	.detach	= rsi_hci_detach,
-+	.recv_pkt = rsi_hci_recv_pkt,
-+};
-+EXPORT_SYMBOL(rsi_bt_ops);
-+
-+static int rsi_91x_bt_module_init(void)
-+{
-+	return 0;
-+}
-+
-+static void rsi_91x_bt_module_exit(void)
-+{
-+	return;
-+}
-+
-+module_init(rsi_91x_bt_module_init);
-+module_exit(rsi_91x_bt_module_exit);
-+MODULE_AUTHOR("Redpine Signals Inc");
-+MODULE_DESCRIPTION("RSI BT driver");
-+MODULE_SUPPORTED_DEVICE("RSI-BT");
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
-index 737ab4e..040f07b 100644
---- a/include/net/rsi_91x.h
-+++ b/include/net/rsi_91x.h
-@@ -49,6 +49,8 @@ struct rsi_proto_ops {
- struct rsi_mod_ops {
- 	int (*attach)(void *priv, struct rsi_proto_ops *ops);
- 	void (*detach)(void *priv);
--	int (*recv_pkt)(void *priv, u8 *msg);
-+	int (*recv_pkt)(void *priv, const u8 *msg);
- };
-+
-+extern const struct rsi_mod_ops rsi_bt_ops;
- #endif
--- 
-2.7.4
+T24gV2VkLCAyMDE4LTAyLTA3IGF0IDEyOjUxIC0wODAwLCBNYXR0aGlhcyBLYWVobGNrZSB3cm90
+ZToNCj4gRWwgV2VkLCBGZWIgMDcsIDIwMTggYXQgMDI6MzU6NTlQTSAtMDYwMCBMYXJyeSBGaW5n
+ZXIgaGEgZGl0Og0KPiANCj4gPiBPbiAwMi8wNy8yMDE4IDAyOjI2IFBNLCBNYXR0aGlhcyBLYWVo
+bGNrZSB3cm90ZToNCj4gPiA+IEluIF9ydGw5MmNfZ2V0X3R4cG93ZXJfd3JpdGV2YWxfYnlfcmVn
+dWxhdG9yeSgpIHRoZSB2YXJpYWJsZSB3cml0ZVZhbA0KPiA+ID4gaXMgYXNzaWduZWQgdG8gaXRz
+ZWxmIGluIGFuIGlmIC4uLiBlbHNlIHN0YXRlbWVudCwgYXBwYXJlbnRseSBvbmx5IHRvDQo+ID4g
+PiBkb2N1bWVudCB0aGF0IHRoZSBicmFuY2ggY29uZGl0aW9uIGlzIGhhbmRsZWQgYW5kIHRoYXQg
+YSBwcmV2aW91c2x5IHJlYWQNCj4gPiA+IHZhbHVlIHNob3VsZCBiZSByZXR1cm5lZCB1bm1vZGlm
+aWVkLiBUaGUgc2VsZi1hc3NpZ25tZW50IGNhdXNlcyBjbGFuZyB0bw0KPiA+ID4gcmFpc2UgdGhl
+IGZvbGxvd2luZyB3YXJuaW5nOg0KPiA+ID7CoA0KPiA+ID4gZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+cmVhbHRlay9ydGx3aWZpL3J0bDgxOTJjdS9yZi5jOjMwNDoxMzoNCj4gPiA+wqDCoMKgwqBlcnJv
+cjogZXhwbGljaXRseSBhc3NpZ25pbmcgdmFsdWUgb2YgdmFyaWFibGUgb2YgdHlwZSAndTMyJw0K
+PiA+ID7CoMKgwqDCoMKgwqAoYWthICd1bnNpZ25lZCBpbnQnKSB0byBpdHNlbGYgWy1XZXJyb3Is
+LVdzZWxmLWFzc2lnbl0NCj4gPiA+wqDCoMKgwqB3cml0ZVZhbCA9IHdyaXRlVmFsOw0KPiA+ID7C
+oA0KPiA+ID4gUmVwbGFjZSB0aGUgc2VsZi1hc3NpZ25tZW50IHdpdGggYSBzZW1pY29sb24sIHdo
+aWNoIHN0aWxsIHNlcnZlcyB0bw0KPiA+ID4gZG9jdW1lbnQgdGhlICdoYW5kbGluZycgb2YgdGhl
+IGJyYW5jaCBjb25kaXRpb24uDQo+ID4gPsKgDQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBNYXR0aGlh
+cyBLYWVobGNrZSA8bWthQGNocm9taXVtLm9yZz4NCj4gPiA+IC0tLQ0KPiA+ID7CoMKgwqBkcml2
+ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRsODE5MmN1L3JmLmMgfCAyICstDQo+
+ID4gPsKgwqDCoDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0K
+PiA+ID7CoA0KPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
+cnRsd2lmaS9ydGw4MTkyY3UvcmYuYw0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
+cnRsd2lmaS9ydGw4MTkyY3UvcmYuYw0KPiA+ID4gaW5kZXggOWNmZjZiYzQwNDljLi40ZGI5MjQ5
+NmMxMjIgMTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
+bHdpZmkvcnRsODE5MmN1L3JmLmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
+YWx0ZWsvcnRsd2lmaS9ydGw4MTkyY3UvcmYuYw0KPiA+ID4gQEAgLTMwMSw3ICszMDEsNyBAQCBz
+dGF0aWMgdm9pZCBfcnRsOTJjX2dldF90eHBvd2VyX3dyaXRldmFsX2J5X3JlZ3VsYXRvcnkoc3Ry
+dWN0IGllZWU4MDIxMV9odw0KPiAqaHcsDQo+ID4gPsKgwqDCoAkJCXdyaXRlVmFsID0gd3JpdGVW
+YWwgLSAweDA2MDYwNjA2Ow0KPiA+ID7CoMKgwqAJCWVsc2UgaWYgKHJ0bHByaXYtPmRtLmR5bmFt
+aWNfdHhoaWdocG93ZXJfbHZsID09DQo+ID4gPsKgwqDCoAkJCcKgVFhISUdIUFdSTEVWRUxfQlQy
+KQ0KPiA+ID4gLQkJCXdyaXRlVmFsID0gd3JpdGVWYWw7DQo+ID4gPiArCQkJOw0KPiA+ID7CoMKg
+wqAJCSoocF9vdXR3cml0ZXZhbCArIHJmKSA9IHdyaXRlVmFsOw0KPiA+ID7CoMKgwqAJfQ0KPiA+
+ID7CoMKgwqB9DQo+ID4gPsKgDQo+ID7CoA0KPiA+IEFzIHRoZSBicmFuY2ggY29uZGl0aW9uIGRv
+ZXMgbm90aGluZywgd2h5IG5vdCByZW1vdmUgaXQgYW5kIHNhdmUgdGhlDQo+ID4gY29tcGlsZXIn
+cyBvcHRpbWl6ZXIgYSBiaXQgb2Ygd29yaz8gVGhlIGNvZGUgbG9va3Mgc3RyYW5nZSwgYnV0IGl0
+IG1hdGNoZXMNCj4gPiB0aGUgcmVzdCBvZiBSZWFsdGVrJ3MgVVNCIGRyaXZlcnMuDQoNCkFncmVl
+IExhcnJ5J3MgY29tbWVudC4NCg0KPiANCj4gU3VyZSwgSSBhbSBoYXBweSB0byBjaGFuZ2UgaXQg
+dG8gd2hhdGV2ZXIgdGhlIGF1dGhvcnMvbWFpbnRhaW5lcnMgcHJlZmVyLg0KPiANCj4gSSdsbCB3
+YWl0IGEgYml0IGJlZm9yZSByZXNwaW5uaW5nIGZvciBpZiBvdGhlcnMgZmVlbCBzdHJvbmdseSBh
+Ym91dA0KPiBrZWVwaW5nIHRoZSBicmFuY2guDQo+IA0KPiAtLS0tLS1QbGVhc2UgY29uc2lkZXIg
+dGhlIGVudmlyb25tZW50IGJlZm9yZSBwcmludGluZyB0aGlzIGUtbWFpbC4=
