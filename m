@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752244AbeBTO6s (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 09:58:48 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 11/12] staging: wilc1000: rename _WPAPtk_end_case_ label to avoid camelCase
-Date: Tue, 20 Feb 2018 20:28:00 +0530
-Message-ID: <1519138681-1982-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155851_960131_8A426451)
-In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mail-he1eur01on0092.outbound.protection.outlook.com ([104.47.0.92]:17040
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750806AbeBHJtb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Feb 2018 04:49:31 -0500
+From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: mac80211 scan results, signal value not reliable
+Date: Thu, 8 Feb 2018 09:49:28 +0000
+Message-ID: <AM4PR0101MB23058FC2795B1FAF71CBF4F2E4F30@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180208_104936_856405_3756BBC7)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D----------=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D-----=
+-----=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D----------=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Hello list,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+In net/mac80211/scan.c, function ieee80211_bss_info_update() passes
+incoming scan results to the generic wireless layer, with indication of
+the received signal level, but no indication of signal validity.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8528ff8..0cfb79d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1690,7 +1690,7 @@ static int handle_key(struct wilc_vif *vif,
- 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
- 			if (!pu8keybuf) {
- 				ret = -ENOMEM;
--				goto _WPAPtk_end_case_;
-+				goto out_wpa_ptk;
- 			}
- 
- 			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
-@@ -1719,7 +1719,7 @@ static int handle_key(struct wilc_vif *vif,
- 			if (!pu8keybuf) {
- 				netdev_err(vif->ndev, "No buffer send PTK\n");
- 				ret = -ENOMEM;
--				goto _WPAPtk_end_case_;
-+				goto out_wpa_ptk;
- 			}
- 
- 			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
-@@ -1739,7 +1739,7 @@ static int handle_key(struct wilc_vif *vif,
- 			complete(&hif_drv->comp_test_key_block);
- 		}
- 
--_WPAPtk_end_case_:
-+out_wpa_ptk:
- 		kfree(pstrHostIFkeyAttr->attr.wpa.key);
- 		if (ret)
- 			return ret;
--- 
-2.7.4
+Before ieee80211_bss_info_update() is called, rx_status->flag can be set
+to RX_FLAG_NO_SIGNAL_VAL by the ath9k driver and it won't be taken into
+account in the wireless layer.
+Even later in ieee80211_bss_info_update(), rx_status->flag can also be set
+to RX_FLAG_NO_SIGNAL_VAL, and the wireless layer won't be aware of this.
+
+I stumbled on this because, when using ath9k (WLE350NX) to do a passive sca=
+n
+off-channel, the beacons received in a 30ms window after channel change sho=
+w
+a signal level +10dB above the real value. So I was looking for a way to
+tell the above layers that the signal is invalid. RX_FLAG_NO_SIGNAL_VAL see=
+ms
+to fit, but is not conveyed up to iw or wpa_supplicant.
+
+In fact I did not find any such thing in net/wireless/nl80211.c, function
+nl80211_send_bss().
+
+Any suggestion? Did I miss something?
+
+Regards,
+Jean-Pierre
