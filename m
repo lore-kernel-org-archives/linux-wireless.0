@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:35718 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934806AbeBMMMm (ORCPT
+Received: from cyberdimension.org ([80.67.179.20]:48164 "EHLO
+        lime1-a20.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751706AbeBHQcj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 07:12:42 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org
-Subject: [v6 0/8] rsi: add bluetooth and coex support
-Date: Tue, 13 Feb 2018 17:31:36 +0530
-Message-Id: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com> (sfid-20180213_131247_144499_344F090A)
+        Thu, 8 Feb 2018 11:32:39 -0500
+From: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH] bcma: add HP Stream Notebook
+Date: Thu,  8 Feb 2018 17:25:42 +0100
+Message-Id: <20180208162542.20100-1-GNUtoo@no-log.org> (sfid-20180208_173256_691564_C2E9D719)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+In this laptop we have the following PCI device:
+02:00.0 Network controller [0280]: Broadcom Limited BCM43142 802.11b/g/n [14e4:4365] (rev 01)
+	Subsystem: Hewlett-Packard Company BCM43142 802.11b/g/n [103c:804a]
+	[...]
+	Region 0: Memory at 91000000 (64-bit, non-prefetchable) [size=32K]
+	[...]
 
-This patch series adds new bluetooth driver and coex enhancments
-in existing wlan driver for RSI chipsets.
-As per our architecture, both wlan and bluetooth drivers talk
-over same SDIO interface to device. Separate endpoint will be
-used in case of USB interface.
+With this patch, we can now see its WiFi chip:
+  bcma: bus0: Found chip with id 43142, rev 0x01 and package 0x08
+  bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x28, class 0x0)
+  bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x21, class 0x0)
+  bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x16, class 0x0)
+  bcma: bus0: Core 3 found: UNKNOWN (manuf 0x43B, id 0x368, rev 0x00, class 0x0)
+  bcma: bus0: Found rev 15 PMU (capabilities 0x518C5E0F)
+  bcma: bus0: SPROM offset 0x840
+  bcma: bus0: Found SPROM revision 10
+  bcma: bus0: Workarounds unknown or not needed for device 0xA886
+  bcma: bus0: Bus registered
 
-Changes in v6: 1/8, 3/8, 4/8, 5/8, 6/8 are modified
-Changes in v5: 5/8 is modified
-Changes in v4: 5/8 is modified
-Changes in v3: 4/8, 5/8 and 6/8 patches are modified
-Changes in v2: 2/8, 5/8 and 6/8 patches are modified
+But it not yet supported by brcmsmac so it won't work for now:
+  brcmsmac bcma0:1: brcms_b_attach wl0: vendor 0x14e4 device 0x4365
+  brcmsmac: unknown device id 4365
 
-Prameela Rani Garnepudi (6):
-  rsi: add rx control block to handle rx packets in USB
-  rsi: add header file rsi_91x
-  rsi: add coex support
-  Bluetooth: btrsi: add new rsi bluetooth driver
-  rsi: add module parameter operating mode
-  rsi: sdio changes to support BT
+Signed-off-by: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+---
+ drivers/bcma/host_pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Siva Rebbagondla (2):
-  rsi: add bluetooth rx endpoint
-  rsi: handle BT traffic in driver
-
- drivers/bluetooth/Kconfig                   |  12 ++
- drivers/bluetooth/Makefile                  |   2 +
- drivers/bluetooth/btrsi.c                   | 188 ++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/Kconfig            |   9 ++
- drivers/net/wireless/rsi/Makefile           |   1 +
- drivers/net/wireless/rsi/rsi_91x_coex.c     | 179 ++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_core.c     |  20 ++-
- drivers/net/wireless/rsi/rsi_91x_hal.c      |  56 +++++++--
- drivers/net/wireless/rsi/rsi_91x_main.c     | 129 ++++++++++++++++++-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   2 +-
- drivers/net/wireless/rsi/rsi_91x_sdio.c     |  13 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |   5 +-
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 124 +++++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  35 ++++--
- drivers/net/wireless/rsi/rsi_coex.h         |  38 ++++++
- drivers/net/wireless/rsi/rsi_common.h       |   5 +-
- drivers/net/wireless/rsi/rsi_hal.h          |  21 ++++
- drivers/net/wireless/rsi/rsi_main.h         |  20 +--
- drivers/net/wireless/rsi/rsi_mgmt.h         |   3 +
- drivers/net/wireless/rsi/rsi_usb.h          |  16 ++-
- include/net/rsi_91x.h                       |  56 +++++++++
- 21 files changed, 852 insertions(+), 82 deletions(-)
- create mode 100644 drivers/bluetooth/btrsi.c
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
- create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
- create mode 100644 include/net/rsi_91x.h
-
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index 925842996986..63410ecfe640 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -297,6 +297,7 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_BROADCOM, 0x4365, PCI_VENDOR_ID_DELL, 0x0016) },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_BROADCOM, 0x4365, PCI_VENDOR_ID_DELL, 0x0018) },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_BROADCOM, 0x4365, PCI_VENDOR_ID_FOXCONN, 0xe092) },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_BROADCOM, 0x4365, PCI_VENDOR_ID_HP, 0x804a) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a0) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
 -- 
-2.7.4
+2.16.1
