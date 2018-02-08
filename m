@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753167AbeBSPam (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42080 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750847AbeBHMlq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 10:30:42 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <Adham.Abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 10/14] staging: wilc1000: rename functions starting with TimerCB_ to avoid camelCase
-Date: Mon, 19 Feb 2018 20:59:40 +0530
-Message-ID: <1519054184-14301-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163048_522274_E7B2FB51)
-In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+        Thu, 8 Feb 2018 07:41:46 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: Revert "ath10k: add sanity check to ie_len before parsing
+ fw/board ie"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1518011483-7704-1-git-send-email-kvalo@codeaurora.org>
+References: <1518011483-7704-1-git-send-email-kvalo@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Ryan Hsu <ryanhsu@codeaurora.org>
+Message-Id: <20180208124146.1680B609EF@smtp.codeaurora.org> (sfid-20180208_134150_317026_4E59D35C)
+Date: Thu,  8 Feb 2018 12:41:46 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issues found by checkpatch.pl script.
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> This reverts commit 9ed4f91628737c820af6a1815b65bc06bd31518f.
+> 
+> The commit introduced a regression that over read the ie with
+> the padding.
+> 
+> - the expected IE information
+> 
+> ath10k_pci 0000:03:00.0: found firmware features ie (1 B)
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 6
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 7
+> ath10k_pci 0000:03:00.0: features
+> ath10k_pci 0000:03:00.0: 00000000: c0 00 00 00 00 00 00 00
+> 
+> - the wrong IE with padding is read (0x77)
+> 
+> ath10k_pci 0000:03:00.0: found firmware features ie (4 B)
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 6
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 7
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 8
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 9
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 10
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 12
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 13
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 14
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 16
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 17
+> ath10k_pci 0000:03:00.0: Enabling feature bit: 18
+> ath10k_pci 0000:03:00.0: features
+> ath10k_pci 0000:03:00.0: 00000000: c0 77 07 00 00 00 00 00
+> 
+> Tested-by: Mike Lothian <mike@fireburn.co.uk>
+> Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b861c95..6e39766 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2647,7 +2647,7 @@ static void host_if_work(struct work_struct *work)
- 	complete(&hif_thread_comp);
- }
- 
--static void TimerCB_Scan(struct timer_list *t)
-+static void timer_scan_cb(struct timer_list *t)
- {
- 	struct host_if_drv *hif_drv = from_timer(hif_drv, t, scan_timer);
- 	struct wilc_vif *vif = hif_drv->scan_timer_vif;
-@@ -2660,7 +2660,7 @@ static void TimerCB_Scan(struct timer_list *t)
- 	wilc_enqueue_cmd(&msg);
- }
- 
--static void TimerCB_Connect(struct timer_list *t)
-+static void timer_connect_cb(struct timer_list *t)
- {
- 	struct host_if_drv *hif_drv = from_timer(hif_drv, t,
- 						      connect_timer);
-@@ -3385,8 +3385,8 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
- 	}
- 
--	timer_setup(&hif_drv->scan_timer, TimerCB_Scan, 0);
--	timer_setup(&hif_drv->connect_timer, TimerCB_Connect, 0);
-+	timer_setup(&hif_drv->scan_timer, timer_scan_cb, 0);
-+	timer_setup(&hif_drv->connect_timer, timer_connect_cb, 0);
- 	timer_setup(&hif_drv->remain_on_ch_timer, ListenTimerCB, 0);
- 
- 	mutex_init(&hif_drv->cfg_values_lock);
+Patch applied to ath-current branch of ath.git, thanks.
+
+9ce8b24aa96e Revert "ath10k: add sanity check to ie_len before parsing fw/board ie"
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10205215/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
