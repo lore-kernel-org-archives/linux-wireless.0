@@ -1,75 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48962 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:45972 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752711AbeB0NU1 (ORCPT
+        with ESMTP id S1751113AbeBIHQk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 08:20:27 -0500
+        Fri, 9 Feb 2018 02:16:40 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Ramon Fried <rfried@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
-Subject: Re: [PATCH] wcn36xx: reduce verbosity of drivers messages
-References: <20180217202510.13707-1-rfried@codeaurora.org>
-        <87zi3uhm86.fsf@codeaurora.org>
-        <d2614854-478c-80d5-a3e0-b75442bb862c@codeaurora.org>
-Date: Tue, 27 Feb 2018 15:20:22 +0200
-In-Reply-To: <d2614854-478c-80d5-a3e0-b75442bb862c@codeaurora.org> (Ramon
-        Fried's message of "Tue, 27 Feb 2018 10:52:24 +0200")
-Message-ID: <871sh6tvqh.fsf@kamboji.qca.qualcomm.com> (sfid-20180227_142031_689575_0FA2C59A)
+To: Kai Heng Feng <kai.heng.feng@canonical.com>
+Cc: Felix Fietkau <nbd@nbd.name>, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath9k: turn on btcoex_enable as default
+References: <20180208052801.15670-1-kai.heng.feng@canonical.com>
+        <56d650e6-d26f-087c-4e86-2e5d4e859414@nbd.name>
+        <A5972CE9-8325-404A-A63D-ED29E44FB67B@canonical.com>
+Date: Fri, 09 Feb 2018 09:16:35 +0200
+In-Reply-To: <A5972CE9-8325-404A-A63D-ED29E44FB67B@canonical.com> (Kai Heng
+        Feng's message of "Fri, 9 Feb 2018 12:21:36 +0800")
+Message-ID: <87k1vmeip8.fsf@kamboji.qca.qualcomm.com> (sfid-20180209_081659_380175_72F23144)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ramon,
+Kai Heng Feng <kai.heng.feng@canonical.com> writes:
 
-you dropped the mailing lists from CC, I'll add them back.
-
-Ramon Fried <rfried@codeaurora.org> writes:
-
-> On 2/27/2018 10:26 AM, Kalle Valo wrote:
->> Ramon Fried <rfried@codeaurora.org> writes:
->>
->>> --- a/drivers/net/wireless/ath/wcn36xx/main.c
->>> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
->>> @@ -261,7 +261,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
->>>  
->>>  	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
->>>  		if (get_feat_caps(wcn->fw_feat_caps, i))
->>> -			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
->>> +			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
->>>  	}
->>>  }
->>>  
->>> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
->>> index 2a4871ca9c72..7c4d19b041bc 100644
->>> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
->>> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
->>> @@ -409,10 +409,10 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
->>>  	wcn->fw_minor = rsp->start_rsp_params.version.minor;
->>>  	wcn->fw_major = rsp->start_rsp_params.version.major;
->>>  
->>> -	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
->>> +	wcn36xx_dbg(WCN36XX_DBG_HAL, "firmware WLAN version '%s' and CRM version '%s'\n",
->>>  		     wcn->wlan_version, wcn->crm_version);
->>>  
->>> -	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
->>> +	wcn36xx_dbg(WCN36XX_DBG_HAL, "firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
->>>  		     wcn->fw_major, wcn->fw_minor,
->>>  		     wcn->fw_version, wcn->fw_revision,
->>>  		     rsp->start_rsp_params.stations,
->>
->> I think that printing this information, especially the firmware version,
->> is useful. Isn't there a better way to solve this, like print this only
->> once during the driver is loaded or during the first start() call?
+> Hi Felix,
 >
-> I agree regarding the firmware version. I can fix it.
+>> On Feb 8, 2018, at 7:02 PM, Felix Fietkau <nbd@nbd.name> wrote:
+>>
+>> On 2018-02-08 06:28, Kai-Heng Feng wrote:
+>>> Without btcoex_enable, WiFi activies make both WiFi and Bluetooth
+>>> unstable if there's a bluetooth connection.
+>>>
+>>> Enable this option when bt_ant_diversity is disabled.
+>>>
+>>> BugLink: https://bugs.launchpad.net/bugs/1746164
+>>> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+>> I think this might cause regressions on devices that don't have
+>> bluetooth. This probably either needs more EEPROM checks, or something
+>> to selectively enable it only on affected platforms.
+>
+> I think it=E2=80=99s better not to use dmi_match. This issue should affect
+> more ath9k. And bluetooth peripherals are more than ever now, so it
+> would be great to use BT out of the box.
 
-Good, thanks.
+Sure, but we have to make sure that we don't create regressions on
+existing systems. For example, did you test this with any system which
+don't support btcoex? (just asking, haven't tested this myself)
 
-> the capabilities IMHO is really only relevant for debug and hackers
-> who can turn debug on.
-
-Yeah, makes sense.
-
--- 
+--=20
 Kalle Valo
