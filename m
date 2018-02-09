@@ -1,93 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:34831 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755599AbeBPQ5e (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:41895 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751113AbeBINm1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 11:57:34 -0500
-Subject: Re: [PATCH] v2 ath10k: add LED and GPIO controlling support for
- various chipsets
-To: Steve deRosier <derosier@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-References: <20180216103020.5009-1-s.gottschall@dd-wrt.com>
- <CALLGbRKVpXwZ12BbntX__OGhS3VLBNvRYRnuDGwTKMzu_eiK5Q@mail.gmail.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <8191f271-b217-66de-5d23-7adf30c088a9@dd-wrt.com> (sfid-20180216_175748_304291_6CB8A1EC)
-Date: Fri, 16 Feb 2018 17:57:25 +0100
+        Fri, 9 Feb 2018 08:42:27 -0500
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH v2 00/10] rtlwifi: add more materials for 8822be
+Date: Fri, 9 Feb 2018 13:42:14 +0000
+Message-ID: <1518183733.2023.3.camel@realtek.com> (sfid-20180209_150805_265377_9338F3FD)
+References: <20180129032641.17841-1-pkshih@realtek.com>
+In-Reply-To: <20180129032641.17841-1-pkshih@realtek.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CALLGbRKVpXwZ12BbntX__OGhS3VLBNvRYRnuDGwTKMzu_eiK5Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 16.02.2018 um 17:33 schrieb Steve deRosier:
-> On Fri, Feb 16, 2018 at 2:30 AM,  <s.gottschall@dd-wrt.com> wrote:
->> From: Sebastian Gottschall <s.gottschall@newmedia-net.de>
->>
->> Adds LED and GPIO Control support for 988x, 9887, 9888, 99x0, 9984 and ipq4019 based chipsets with on chipset connected led's
->> using WMI Firmware API.
->> The LED device will get available named as "ath10k-phyX" at sysfs and can be controlled with various triggers.
->> adds also debugfs interface for gpio control.
->>
-> Hi Sebastian,
->
-> First off, let me say I love this and the effort to make the gpios
-> hanging off the wifi chip as proper system gpios. Years ago I had to
-> do a hack to make some wifi-chip provided pins available to a customer
-> who needed more GPIOs on our SoM. It would have been nice if provided
-> hardware functionality had already been properly supported by the
-> driver.
->
-> In looking through, it looks like you're hooking into the standard
-> gpio-chip driver interface. Which is great. So, why are you providing
-> a separate out-of-band debugfs access interface for gpio control?
-this was developed first before the real gpio interface. that way you 
-can poke manually values for testing
-like gpio interrupt etc. which isnt exposed by the gpio and led 
-interface. its only for diagnostic and is not neccessary, but
-it was in my initial code so i did include it in that patch
-> Seems to me to be a duplicate of the interface in sysfs that provides
-> gpio access (`/sys/class/gpio`). My preference is we don't duplicate
-> functionality and that we use the standard provided features. That way
-> we don't possibly confuse users, and we also reduce our maintenance
-> effort.
-its not a duplicate as i said before it offers more flags which arent 
-used by the rest
-gpio config has 4 values. gpio num, input/output, pull_type, interrupt mode
-
-but not all is used by the gpio controller driver
->
-> Additionally, what happens when the relevant GPIO configuration
-> options aren't enabled? Do we have a compilation issue?
-you mean if led and gpio is not selected. mmh you get a compile error 
-for sure. its unlikelly that its not enabled, but i can
-take care of it in the next patch version
-> I'm more
-> familiar with being a _consumer_ of gpiolib in my drivers and I know
-> if CONFIG_GPIOLIB isn't checked I end up with problems. I'm unsure
-> what happens when you're presenting a gpio-chip interface without the
-> relevant CONFIG_ being enabled. Note that I didn't test this, I'm just
-> asking the question to be sure we don't forget anything.
-you're absolutelly right. i will add these checks. i can say that i 
-tested it on 9984, 998x and 988x devices so far
-and the gpio and led code gets only registered on known to be working 
-chipsets
-
-Sebastian
->
-> - Steve
->
-
--- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+T24gTW9uLCAyMDE4LTAxLTI5IGF0IDExOjI2ICswODAwLCBwa3NoaWhAcmVhbHRlay5jb20gd3Jv
+dGU6DQo+IEZyb206IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiANCj4gSSBj
+b250aW51ZSB0byBzdWJtaXQgbW9yZSBtYXRlcmlhbHMgbmVlZGVkIGJ5IDg4MjJiZS4gQSBzcGVj
+aWFsIHBhdGNoIGlzDQo+ICJQQVRDSCAxMC8xMCIgdGhhdCBhZGQgbmV3IGZpbGVzIHRvIHN1cHBv
+cnQgODgyMmJlIGJ0Y29leCBpbiBjYXNlIHdpZmkNCj4gb25seS4gSW4gbXkgcGxhbiwgODgyMmJl
+IGJ0Y29leCBmb3IgY29tYm8gY2FyZCB3aWxsIGJlIHN1bWl0dGVkIGluIG5leHQNCj4gcGF0Y2hz
+ZXQuDQo+IA0KPiB2MjogQWRkICdBY2tlZC1ieTogTGFycnkgRmluZ2VyJyBpZiB0aGUgY29tbWl0
+cyBhcmUgYWNrZWQNCj4gwqDCoMKgwqBVc2UgJ3N3aXRjaC4uLmNhc2UnIHRvIHJlcGxhY2UgdmVy
+Ym9zZSAnaWYuLi5lbHNlIGlmLi4uZWxzZSBpZi4uLmVsc2UnDQo+IMKgwqDCoMKgVXNlIGV4dGVy
+biBkZWNsYXJhdGlvbiB0byBxdWlldCBzcGFyc2Ugd2FybmluZ3MNCj4gDQo+IFBpbmctS2UgU2hp
+aCAoMTApOg0KPiDCoCBydGx3aWZpOiBlbmFibGUgbWFjODAyMTEgZmFzdC10eCBzdXBwb3J0DQo+
+IMKgIHJ0bHdpZmk6IEFkZCBTdXBwb3J0IFZIVCB0byBzcGVjX3Zlcg0KPiDCoCBydGx3aWZpOiBV
+c2UgNiBiaXRzIGFzIHNlcXVlbmNlIG51bWJlciBvZiBUWCByZXBvcnQNCj4gwqAgcnRsd2lmaTog
+RXh0ZW5kIHR4X3Bvd2VyX2J5X3JhdGVfb2Zmc2V0IHNpemUgZm9yIG5ld2VyIElDDQo+IMKgIHJ0
+bHdpZmk6IEFkZCByYXRlIHNlY3Rpb24gYW5kIGl0cyByZWxhdGVkIGRlZmluaXRpb24gYW5kIGNv
+bW1lbnQNCj4gwqAgcnRsd2lmaTogRml4IFZIVCBOU1MgaW4gUkMNCj4gwqAgcnRsd2lmaTogYWRk
+IGRlZmluaXRpb24gcmFkaW9fbWFzayBmb3IgUkYgYW5kIG1heGltdW0gYmFuZHdpZHRoDQo+IMKg
+IHJ0bHdpZmk6IGFkZCBlZnVzZSBvcHMgZm9yIG90aGVyIGNvbXBvbmVudHMNCj4gwqAgcnRsd2lm
+aTogYnRjb2V4OiBhZGQgcm91dGluZSB0byBzZXQgZGVmYXVsdCBwb3J0IGlkDQo+IMKgIHJ0bHdp
+Zmk6IGJ0Y29leDogQWRkIDg4MjJiZSBidGNvZXggc3VwcG9ydGVkIGZpbGVzIGZvciB3aWZpIG9u
+bHkNCj4gDQo+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2Jhc2UuY8Kg
+wqDCoMKgwqDCoMKgwqB8IDM0ICsrKysrKysrKystLS0NCj4gwqAuLi4vcnRsd2lmaS9idGNvZXhp
+c3QvaGFsYnRjODgyMmJ3aWZpb25seS5jwqDCoMKgwqDCoMKgwqDCoHwgNTUgKysrKysrKysrKysr
+KysrKysrKysrKw0KPiDCoC4uLi9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4ODIyYndpZmlvbmx5
+LmjCoMKgwqDCoMKgwqDCoMKgfCAyNSArKysrKysrKysrDQo+IMKgLi4uL3JlYWx0ZWsvcnRsd2lm
+aS9idGNvZXhpc3QvaGFsYnRjb3V0c3JjLmPCoMKgwqDCoMKgwqDCoHwgMjIgKysrKysrKysrDQo+
+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2VmdXNlLmPCoMKgwqDCoMKg
+wqDCoHwgMTMgKysrKysNCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkv
+ZWZ1c2UuaMKgwqDCoMKgwqDCoMKgfMKgwqAyICstDQo+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+cmVhbHRlay9ydGx3aWZpL3BjaS5jwqDCoMKgwqDCoMKgwqDCoMKgfMKgwqAxICsNCj4gwqBkcml2
+ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcmMuY8KgwqDCoMKgwqDCoMKgwqDCoMKg
+fCA0OSArKysrKysrKysrKysrKystLS0tDQo+IMKgLi4uL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
+bHdpZmkvcnRsODgyMWFlL3N3LmPCoMKgwqDCoHzCoMKgMSArDQo+IMKgZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvcmVhbHRlay9ydGx3aWZpL3dpZmkuaMKgwqDCoMKgwqDCoMKgwqB8IDM5ICsrKysrKysr
+KysrKystLQ0KPiDCoDEwIGZpbGVzIGNoYW5nZWQsIDIyMSBpbnNlcnRpb25zKCspLCAyMCBkZWxl
+dGlvbnMoLSkNCj4gwqBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVh
+bHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4ODIyYndpZmlvbmx5LmMNCj4gwqBjcmVhdGUg
+bW9kZSAxMDA2NDQgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlz
+dC9oYWxidGM4ODIyYndpZmlvbmx5LmgNCj4gDQoNCkhpIEthbGxlLA0KDQpEbyB5b3UgaGF2ZSBh
+bnkgY29tbWVudCB3aXRoIHRoaXMgcGF0Y2hzZXQgdGhhdCBpcyBwZW5kaW5nIGZvciAyIHdlZWtz
+Pw0KDQpUaGFuayB5b3UNClBLDQo=
