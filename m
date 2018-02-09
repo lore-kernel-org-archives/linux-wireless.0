@@ -1,154 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54206 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751629AbeBYHuH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Feb 2018 02:50:07 -0500
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv4 3/3] mac80211: implement cqm rssi check using rx data signal
-Date: Sun, 25 Feb 2018 13:19:58 +0530
-Message-Id: <1519544998-2621-4-git-send-email-tamizhr@codeaurora.org> (sfid-20180225_085019_022021_682626EC)
-In-Reply-To: <1519544998-2621-1-git-send-email-tamizhr@codeaurora.org>
-References: <1519544998-2621-1-git-send-email-tamizhr@codeaurora.org>
+Received: from mx3.wp.pl ([212.77.101.9]:4655 "EHLO mx3.wp.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751038AbeBIR5D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Feb 2018 12:57:03 -0500
+Date: Fri, 9 Feb 2018 09:56:55 -0800
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mt7601u: set device mac address in
+ mt7601u_add_interface()
+Message-ID: <20180209095655.728946b9@cakuba.netronome.com> (sfid-20180209_190822_208042_737F9036)
+In-Reply-To: <20180209094920.GA2895@localhost.localdomain>
+References: <cover.1518126991.git.lorenzo.bianconi@redhat.com>
+        <c2fe73b04dac0827adf135e669ed441f9ed1d13c.1518126991.git.lorenzo.bianconi@redhat.com>
+        <20180208150101.0e069f65@cakuba.netronome.com>
+        <20180209094920.GA2895@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <tamizhr@codeaurora.org>
+On Fri, 9 Feb 2018 10:49:21 +0100, Lorenzo Bianconi wrote:
+> On Feb 08, Jakub Kicinski wrote:
+> > On Thu,  8 Feb 2018 23:08:09 +0100, Lorenzo Bianconi wrote:  
+> > > If mac80211 adds a vif with a different mac address respect to
+> > > the eeprom one, the device will not be able to connect to the ap
+> > > since the hw address has not been updated.
+> > > Fix the issue updating hw mac address in mt7601u_add_interface routine
+> > > 
+> > > BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1516935
+> > > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> > > ---
+> > >  drivers/net/wireless/mediatek/mt7601u/main.c | 3 +++
+> > >  1 file changed, 3 insertions(+)
+> > > 
+> > > diff --git a/drivers/net/wireless/mediatek/mt7601u/main.c b/drivers/net/wireless/mediatek/mt7601u/main.c
+> > > index 43ebd460ba86..3c9ea40d9584 100644
+> > > --- a/drivers/net/wireless/mediatek/mt7601u/main.c
+> > > +++ b/drivers/net/wireless/mediatek/mt7601u/main.c
+> > > @@ -64,6 +64,9 @@ static int mt7601u_add_interface(struct ieee80211_hw *hw,
+> > >  	 */
+> > >  	mvif->idx = idx;
+> > >  
+> > > +	if (!ether_addr_equal(dev->macaddr, vif->addr))
+> > > +		mt7601u_set_macaddr(dev, vif->addr);
+> > > +
+> > >  	if (dev->wcid_mask[wcid / BITS_PER_LONG] & BIT(wcid % BITS_PER_LONG))
+> > >  		return -ENOSPC;
+> > >  	dev->wcid_mask[wcid / BITS_PER_LONG] |= BIT(wcid % BITS_PER_LONG);  
+> > 
+> > Sorry, my recollection of mac80211 code is waning, but can't we have
+> > more than one vif as long as they are on the same channel?  
+> 
+> Hi Jakub,
+> 
+> yep, you are right, but according to my understanding (please correct me if
+> it is wrong) current implementation supports just one interface in sta mode
+> (i.e. mvif->idx is always 0) so my patchset just fixes the issue highlighted
+> in the bugzilla since I do not know if the hw supports multiple concurrent vifs
+> in client mode. If so, I can extend the support to multiple client vifs if it is
+> a way to properly configure the rx filters to allow reception from multiple mac
+> addresses.
 
-Triggers cfg80211_ap_sta_cqm_rssi_notify with the corresponding event
-when station signal goes lower than the configured rssi threshold. And
-notify back to user space once the station signal becomes greater than
-the configured value. It uses rx data signal and compare with rssi value
-given by user. This rssi threshold is bss specific and it is common for
-all the stations.
-
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- include/net/mac80211.h  |    7 +++++++
- net/mac80211/rx.c       |   46 +++++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/sta_info.h |    9 +++++++++
- 3 files changed, 61 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index dc3e9d9..e973bcd 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -800,6 +800,13 @@ enum mac80211_rate_control_flags {
- };
- 
- 
-+/*
-+ * How many frames need to have been used in average station's
-+ * signal strength before checking against the threshold
-+ */
-+#define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
-+
-+
- /* there are 40 bytes if you don't need the rateset to be kept */
- #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 2783c5c..611dea5 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1536,6 +1536,47 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
- 	return RX_CONTINUE;
- }
- 
-+static void ieee80211_sta_rx_signal_thold_check(struct ieee80211_rx_data *rx)
-+{
-+	struct sta_info *sta = rx->sta;
-+	struct ieee80211_bss_conf *bss_conf =
-+		&rx->sdata->vif.bss_conf;
-+	int sig, last_event, thold;
-+
-+	if (!wiphy_ext_feature_isset(rx->local->hw.wiphy,
-+				NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG))
-+		return;
-+
-+	sta->count_rx_signal++;
-+	if (sta->count_rx_signal < IEEE80211_STA_SIGNAL_AVE_MIN_COUNT)
-+		return;
-+
-+	if (!bss_conf->cqm_rssi_thold || !bss_conf->enable_beacon) {
-+		sta->count_rx_signal = 0;
-+		return;
-+	}
-+
-+	sig = -ewma_signal_read(&sta->rx_stats_avg.signal);
-+	last_event = sta->last_cqm_event_signal;
-+	thold = bss_conf->cqm_rssi_thold;
-+
-+	if (sig < thold && last_event == 0) {
-+		sta->last_cqm_event_signal = sig;
-+		cfg80211_ap_sta_cqm_rssi_notify(
-+				rx->sdata->dev, sta->addr,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-+				sig, GFP_ATOMIC);
-+		sta->count_rx_signal = 0;
-+	} else if (last_event && sig > thold) {
-+		sta->last_cqm_event_signal = 0;
-+		cfg80211_ap_sta_cqm_rssi_notify(
-+				rx->sdata->dev, sta->addr,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+				sig, GFP_ATOMIC);
-+		sta->count_rx_signal = 0;
-+	}
-+}
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- {
-@@ -1591,6 +1632,7 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
- 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
- 		sta->rx_stats.last_signal = status->signal;
- 		ewma_signal_add(&sta->rx_stats_avg.signal, -status->signal);
-+		ieee80211_sta_rx_signal_thold_check(rx);
- 	}
- 
- 	if (status->chains) {
-@@ -4000,9 +4042,11 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 
- 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
- 		stats->last_signal = status->signal;
--		if (!fast_rx->uses_rss)
-+		if (!fast_rx->uses_rss) {
- 			ewma_signal_add(&sta->rx_stats_avg.signal,
- 					-status->signal);
-+			ieee80211_sta_rx_signal_thold_check(rx);
-+		}
- 	}
- 
- 	if (status->chains) {
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index f64eb86..2127803 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -481,6 +481,12 @@ struct ieee80211_sta_rx_stats {
-  * @pcpu_rx_stats: per-CPU RX statistics, assigned only if the driver needs
-  *	this (by advertising the USES_RSS hw flag)
-  * @status_stats: TX status statistics
-+ * @last_cqm_event_signal: Last data frame signal strength average that
-+ *	triggered a cqm event for a connected station. 0 indicates that no
-+ *	event has been generated for the station.
-+ * @count_rx_signal: Number of data frames used in avg signal for a station.
-+ *	This can be used to avoid generating less reliable cqm events for
-+ *	the station.
-  */
- struct sta_info {
- 	/* General information, mostly static */
-@@ -581,6 +587,9 @@ struct sta_info {
- 
- 	struct cfg80211_chan_def tdls_chandef;
- 
-+	int last_cqm_event_signal;
-+	unsigned int count_rx_signal;
-+
- 	/* keep last! */
- 	struct ieee80211_sta sta;
- };
--- 
-1.7.9.5
+Ah, you're probably right, perhaps we would have one vif but multiple
+stas.
