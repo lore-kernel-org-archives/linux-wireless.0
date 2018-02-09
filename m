@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753134AbeBSPa2 (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36917 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751010AbeBITKt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 10:30:28 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <Adham.Abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 06/14] staging: wilc1000: rename strHostIfStaInactiveT to avoid camelCase
-Date: Mon, 19 Feb 2018 20:59:36 +0530
-Message-ID: <1519054184-14301-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163104_864875_9FB655D4)
-In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 9 Feb 2018 14:10:49 -0500
+Received: by mail-wm0-f65.google.com with SMTP id v71so18170977wmv.2
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Feb 2018 11:10:48 -0800 (PST)
+Subject: Re: [PATCH] mac80211: round IEEE80211_TX_STATUS_HEADROOM up to
+ multiple of 4
+To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+References: <20180209185100.22511-1-nbd@nbd.name>
+Cc: johannes@sipsolutions.net
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A7DF237.9020803@broadcom.com> (sfid-20180209_201053_742425_D77BE3B4)
+Date: Fri, 9 Feb 2018 20:10:47 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180209185100.22511-1-nbd@nbd.name>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+On 2/9/2018 7:51 PM, Felix Fietkau wrote:
+> This ensures that mac80211 allocated management frames are properly
+> aligned, which makes copying them more efficient.
+> For instance, mt76 uses iowrite32_copy to copy beacon frames to beacon
+> template memory on the chip.
+> Misaligned 32-bit accesses cause CPU exceptions on MIPS and should be
+> avoided.
+>
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> ---
+>   include/net/mac80211.h | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 906e90223066..d999b8c8a44b 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -4149,7 +4149,7 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *sta, u8 tid);
+>    * The TX headroom reserved by mac80211 for its own tx_status functions.
+>    * This is enough for the radiotap header.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hi Felix,
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index eda395d..f685da2 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1944,7 +1944,7 @@ static s32 Handle_GetStatistics(struct wilc_vif *vif,
- }
- 
- static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
--				   struct sta_inactive_t *strHostIfStaInactiveT)
-+				   struct sta_inactive_t *hif_sta_inactive)
- {
- 	s32 result = 0;
- 	u8 *stamac;
-@@ -1959,7 +1959,7 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
- 		return -ENOMEM;
- 
- 	stamac = wid.val;
--	ether_addr_copy(stamac, strHostIfStaInactiveT->mac);
-+	ether_addr_copy(stamac, hif_sta_inactive->mac);
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
--- 
-2.7.4
+Maybe useful to mention the alignment requirement in this comment block.
+
+>    */
+> -#define IEEE80211_TX_STATUS_HEADROOM	14
+> +#define IEEE80211_TX_STATUS_HEADROOM	16
+
+Regards,
+Arend
