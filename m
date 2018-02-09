@@ -1,49 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:44482 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753680AbeBPHgr (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6134 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752441AbeBIJst (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 02:36:47 -0500
-Received: by mail-oi0-f66.google.com with SMTP id b3so1671075oib.11
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2018 23:36:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5A858127.1030904@broadcom.com>
-References: <CAD8Lp47D5sGCpxSiFYQviu0a62W4aj-5Sgs6sjE7E2cZWwsUwg@mail.gmail.com>
- <5A82B4F8.2090209@broadcom.com> <CAD8Lp46ta_mQriB1eOJxnTmgoy5n5T9_AyNpVKuL2C4uuLrf3g@mail.gmail.com>
- <5A858127.1030904@broadcom.com>
-From: Daniel Drake <drake@endlessm.com>
-Date: Fri, 16 Feb 2018 10:36:45 +0300
-Message-ID: <CAD8Lp45nhUwkjo4rCG9mYpvNe5U4V12cmh9ZPRuLyas8gYLiqw@mail.gmail.com> (sfid-20180216_083658_384675_A7BEDE4A)
-Subject: Re: Make brcmfmac repeat authentication requests
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 9 Feb 2018 04:48:49 -0500
+From: pillair@codeaurora.org
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH] ath10k: dma unmap mgmt tx buffer if wmi cmd send fails
+Date: Fri,  9 Feb 2018 15:12:10 +0530
+Message-Id: <1518169330-4934-1-git-send-email-pillair@codeaurora.org> (sfid-20180209_104916_412701_8B632A3F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 15, 2018 at 3:46 PM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> Ok. Could you create a log with driver debugging enabled, ie. build driver CONFIG_BRCMDBG=y and load with module param 'debug=0x1416'. The problem is probably when the firmware is configured.
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-Logs from driver load at boot:
-https://gist.github.com/dsd/7f9a7e8b0f8e20794aaed6298b2cb96a
+WCN3990 sends mgmt frames by reference via WMI.
+The host dma maps the mgmt frame and sends the physical
+address to the firmware in the wmi command. Since the
+dma mapping is done in the gen_mgmt_tx and if the wmi
+command send fails, the corresponding mgmt frame is
+not being dma unmapped.
 
-Logs from interface up:
-https://gist.github.com/dsd/13909ed821f7429e6be6a97ed91a61af
+Fix the missing dma unmapping of mgmt tx frame when
+wmi command sending fails for mgmt tx by reference
+via WMI. The already exisiting mgmt tx using copy by
+value does not need such dma unmapping.
+Add a separate wmi-tlv op for mgmt tx via ref, which
+takes care of unmapping the dma address, in case of
+wmi command sending failure.
 
-Logs from connection attempt:
-https://gist.github.com/dsd/ae4a664c45e3d379d765231d96ae20d7
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/mac.c     | 28 +++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 36 ++++++++++++++++++++++++-------
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 22 ++++++++-----------
+ 3 files changed, 60 insertions(+), 26 deletions(-)
 
-By the way, I noticed that the new parameter is called assoc_retry_max.
-However here the problem is at the authentication stage. We do not
-reach association.
-Does assoc_retry_max also affect the authentication codepath, or is
-there an equivalent parameter for retrying auth?
-
-Thanks
-Daniel
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ebb3f1b..7e02ca0 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -3808,6 +3809,7 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
+ {
+ 	struct ath10k *ar = container_of(work, struct ath10k, wmi_mgmt_tx_work);
+ 	struct sk_buff *skb;
++	dma_addr_t paddr;
+ 	int ret;
+ 
+ 	for (;;) {
+@@ -3815,11 +3817,27 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
+ 		if (!skb)
+ 			break;
+ 
+-		ret = ath10k_wmi_mgmt_tx(ar, skb);
+-		if (ret) {
+-			ath10k_warn(ar, "failed to transmit management frame via WMI: %d\n",
+-				    ret);
+-			ieee80211_free_txskb(ar->hw, skb);
++		if (test_bit(ATH10K_FW_FEATURE_MGMT_TX_BY_REF,
++			     ar->running_fw->fw_file.fw_features)) {
++			paddr = dma_map_single(ar->dev, skb->data,
++					       skb->len, DMA_TO_DEVICE);
++			if (!paddr)
++				continue;
++			ret = ath10k_wmi_mgmt_tx_send(ar, skb, paddr);
++			if (ret) {
++				ath10k_warn(ar, "failed to transmit management frame by ref via WMI: %d\n",
++					    ret);
++				dma_unmap_single(ar->dev, paddr, skb->len,
++						 DMA_FROM_DEVICE);
++				ieee80211_free_txskb(ar->hw, skb);
++			}
++		} else {
++			ret = ath10k_wmi_mgmt_tx(ar, skb);
++			if (ret) {
++				ath10k_warn(ar, "failed to transmit management frame via WMI: %d\n",
++					    ret);
++				ieee80211_free_txskb(ar->hw, skb);
++			}
+ 		}
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 14093cf..86b92fe 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -125,6 +126,9 @@ struct wmi_ops {
+ 					     enum wmi_force_fw_hang_type type,
+ 					     u32 delay_ms);
+ 	struct sk_buff *(*gen_mgmt_tx)(struct ath10k *ar, struct sk_buff *skb);
++	struct sk_buff *(*gen_mgmt_tx_send)(struct ath10k *ar,
++					      struct sk_buff *skb,
++					      dma_addr_t paddr);
+ 	struct sk_buff *(*gen_dbglog_cfg)(struct ath10k *ar, u64 module_enable,
+ 					  u32 log_level);
+ 	struct sk_buff *(*gen_pktlog_enable)(struct ath10k *ar, u32 filter);
+@@ -372,12 +376,33 @@ struct wmi_ops {
+ }
+ 
+ static inline int
++ath10k_wmi_mgmt_tx_send(struct ath10k *ar, struct sk_buff *msdu,
++			  dma_addr_t paddr)
++{
++	struct sk_buff *skb;
++	int ret;
++
++	if (!ar->wmi.ops->gen_mgmt_tx_send)
++		return -EOPNOTSUPP;
++
++	skb = ar->wmi.ops->gen_mgmt_tx_send(ar, msdu, paddr);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	ret = ath10k_wmi_cmd_send(ar, skb,
++				  ar->wmi.cmd->mgmt_tx_send_cmdid);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++static inline int
+ ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
+ 	struct sk_buff *skb;
+ 	int ret;
+-	u32 mgmt_tx_cmdid;
+ 
+ 	if (!ar->wmi.ops->gen_mgmt_tx)
+ 		return -EOPNOTSUPP;
+@@ -386,13 +411,8 @@ struct wmi_ops {
+ 	if (IS_ERR(skb))
+ 		return PTR_ERR(skb);
+ 
+-	if (test_bit(ATH10K_FW_FEATURE_MGMT_TX_BY_REF,
+-		     ar->running_fw->fw_file.fw_features))
+-		mgmt_tx_cmdid = ar->wmi.cmd->mgmt_tx_send_cmdid;
+-	else
+-		mgmt_tx_cmdid = ar->wmi.cmd->mgmt_tx_cmdid;
+-
+-	ret = ath10k_wmi_cmd_send(ar, skb, mgmt_tx_cmdid);
++	ret = ath10k_wmi_cmd_send(ar, skb,
++				  ar->wmi.cmd->mgmt_tx_cmdid);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index ae77a00..523af3f 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -2484,19 +2485,19 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
+ }
+ 
+ static struct sk_buff *
+-ath10k_wmi_tlv_op_gen_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
++ath10k_wmi_tlv_op_gen_mgmt_tx_send(struct ath10k *ar, struct sk_buff *msdu,
++				   dma_addr_t paddr)
+ {
+ 	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(msdu);
+ 	struct wmi_tlv_mgmt_tx_cmd *cmd;
+-	struct wmi_tlv *tlv;
+ 	struct ieee80211_hdr *hdr;
++	struct ath10k_vif *arvif;
++	u32 buf_len = msdu->len;
++	struct wmi_tlv *tlv;
+ 	struct sk_buff *skb;
++	u32 vdev_id;
+ 	void *ptr;
+ 	int len;
+-	u32 buf_len = msdu->len;
+-	struct ath10k_vif *arvif;
+-	dma_addr_t mgmt_frame_dma;
+-	u32 vdev_id;
+ 
+ 	if (!cb->vif)
+ 		return ERR_PTR(-EINVAL);
+@@ -2537,12 +2538,7 @@ static void *ath10k_wmi_tlv_put_wmm(void *ptr,
+ 	cmd->chanfreq = 0;
+ 	cmd->buf_len = __cpu_to_le32(buf_len);
+ 	cmd->frame_len = __cpu_to_le32(msdu->len);
+-	mgmt_frame_dma = dma_map_single(arvif->ar->dev, msdu->data,
+-					msdu->len, DMA_TO_DEVICE);
+-	if (!mgmt_frame_dma)
+-		return ERR_PTR(-ENOMEM);
+-
+-	cmd->paddr = __cpu_to_le64(mgmt_frame_dma);
++	cmd->paddr = __cpu_to_le64(paddr);
+ 
+ 	ptr += sizeof(*tlv);
+ 	ptr += sizeof(*cmd);
+@@ -3701,7 +3697,7 @@ static u32 ath10k_wmi_tlv_prepare_peer_qos(u8 uapsd_queues, u8 sp)
+ 	.gen_request_stats = ath10k_wmi_tlv_op_gen_request_stats,
+ 	.gen_force_fw_hang = ath10k_wmi_tlv_op_gen_force_fw_hang,
+ 	/* .gen_mgmt_tx = not implemented; HTT is used */
+-	.gen_mgmt_tx =  ath10k_wmi_tlv_op_gen_mgmt_tx,
++	.gen_mgmt_tx_send = ath10k_wmi_tlv_op_gen_mgmt_tx_send,
+ 	.gen_dbglog_cfg = ath10k_wmi_tlv_op_gen_dbglog_cfg,
+ 	.gen_pktlog_enable = ath10k_wmi_tlv_op_gen_pktlog_enable,
+ 	.gen_pktlog_disable = ath10k_wmi_tlv_op_gen_pktlog_disable,
+-- 
+1.9.1
