@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59702 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752897AbeBSMs4 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:44116 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752558AbeBIUEu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:48:56 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Feb 2018 14:48:35 +0200
-Message-Id: <20180219124847.27169-2-luca@coelho.fi> (sfid-20180219_134903_224965_00D604A5)
-In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-Subject: [PATCH v2 01/13] mac80211: fix a possible leak of station stats
+        Fri, 9 Feb 2018 15:04:50 -0500
+Received: by mail-pg0-f65.google.com with SMTP id j9so3749497pgp.11
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Feb 2018 12:04:50 -0800 (PST)
+Date: Fri, 9 Feb 2018 12:04:47 -0800
+From: Kees Cook <keescook@chromium.org>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Thierry Escande <thierry.escande@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] NFC: llcp: Limit size of SDP URI
+Message-ID: <20180209200447.GA33465@beast> (sfid-20180209_210507_781448_26C5716B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+The tlv_len is u8, so we need to limit the size of the SDP URI. Enforce
+this both in the NLA policy and in the code that performs the allocation
+and copy.
 
-If sta_info_alloc fails after allocating the per CPU statistics,
-they are not properly freed.
-
-Fixes: c9c5962b56c1 ("mac80211: enable collecting station statistics per-CPU")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: d9b8d8e19b073 ("NFC: llcp: Service Name Lookup netlink interface")
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- net/mac80211/sta_info.c | 1 +
- 1 file changed, 1 insertion(+)
+Alternatively, tlv_len switch to size_t, but we'd still have to do the "-4"
+calculation.
+---
+ net/nfc/llcp_commands.c | 4 ++++
+ net/nfc/netlink.c       | 3 ++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 0c5627f8a104..8d7e3732bb61 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -433,6 +433,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	if (sta->sta.txq[0])
- 		kfree(to_txq_info(sta->sta.txq[0]));
- free:
-+	free_percpu(sta->pcpu_rx_stats);
- #ifdef CONFIG_MAC80211_MESH
- 	kfree(sta->mesh);
- #endif
+diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+index 367d8c027101..2ceefa183cee 100644
+--- a/net/nfc/llcp_commands.c
++++ b/net/nfc/llcp_commands.c
+@@ -149,6 +149,10 @@ struct nfc_llcp_sdp_tlv *nfc_llcp_build_sdreq_tlv(u8 tid, char *uri,
+ 
+ 	pr_debug("uri: %s, len: %zu\n", uri, uri_len);
+ 
++	/* sdreq->tlv_len is u8, takes uri_len, + 3 for header, + 1 for NULL */
++	if (WARN_ON_ONCE(uri_len > U8_MAX - 4))
++		return NULL;
++
+ 	sdreq = kzalloc(sizeof(struct nfc_llcp_sdp_tlv), GFP_KERNEL);
+ 	if (sdreq == NULL)
+ 		return NULL;
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index c0b83dc9d993..f018eafc2a0d 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -61,7 +61,8 @@ static const struct nla_policy nfc_genl_policy[NFC_ATTR_MAX + 1] = {
+ };
+ 
+ static const struct nla_policy nfc_sdp_genl_policy[NFC_SDP_ATTR_MAX + 1] = {
+-	[NFC_SDP_ATTR_URI] = { .type = NLA_STRING },
++	[NFC_SDP_ATTR_URI] = { .type = NLA_STRING,
++			       .len = U8_MAX - 4 },
+ 	[NFC_SDP_ATTR_SAP] = { .type = NLA_U8 },
+ };
+ 
 -- 
-2.15.1
+2.7.4
+
+
+-- 
+Kees Cook
+Pixel Security
