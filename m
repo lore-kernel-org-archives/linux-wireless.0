@@ -1,132 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53262 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751988AbeBHRyU (ORCPT
+Received: from smtprelay0158.hostedemail.com ([216.40.44.158]:49471 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752292AbeBIQYv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Feb 2018 12:54:20 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Fri, 9 Feb 2018 11:24:51 -0500
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave08.hostedemail.com (Postfix) with ESMTP id 1C44B1802B41C
+        for <linux-wireless@vger.kernel.org>; Fri,  9 Feb 2018 16:16:54 +0000 (UTC)
+Message-ID: <1518193009.14014.6.camel@perches.com> (sfid-20180209_172458_561118_9554322B)
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: remove pointless memcpy
+From: Joe Perches <joe@perches.com>
+To: Arnd Bergmann <arnd@arndb.de>, Ping-Ke Shih <pkshih@realtek.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers-next 2018-02-08
-Date: Thu, 08 Feb 2018 19:54:15 +0200
-Message-ID: <87shabe5a0.fsf@kamboji.qca.qualcomm.com> (sfid-20180208_185436_776830_897AF178)
-MIME-Version: 1.0
-Content-Type: text/plain
+Date: Fri, 09 Feb 2018 08:16:49 -0800
+In-Reply-To: <20180209132531.2755482-1-arnd@arndb.de>
+References: <20180209132531.2755482-1-arnd@arndb.de>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Fri, 2018-02-09 at 14:24 +0100, Arnd Bergmann wrote:
+> gcc-8 points out that source and destination of the memcpy() are
+> always the same pointer, so the effect of memcpy() is undefined
+> here (its arguments must not overlap):
+> 
+> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c: In function '_rtl_rx_process':
+> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c:430:2: error: 'memcpy' source argument is the same as destination [-Werror=restrict]
+> 
+> Most likely this is harmless, but it's easy to just remove the
+> line and get rid of the warning.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+> index ac4a82de40c7..9ab56827124e 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+> @@ -427,7 +427,6 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  		 (u32)hdr->addr1[0], (u32)hdr->addr1[1],
+>  		 (u32)hdr->addr1[2], (u32)hdr->addr1[3],
+>  		 (u32)hdr->addr1[4], (u32)hdr->addr1[5]);
+> -	memcpy(IEEE80211_SKB_RXCB(skb), rx_status, sizeof(*rx_status));
+>  	ieee80211_rx(hw, skb);
+>  }
 
-first set of fixes for 4.16, unusually many when the merge window hasn't
-even closed yet. Especially the ssb fix is important so I hope there's
-still time to get this to 4.16-rc1. As you can see from the diffstat
-there's one PCI id addition but that has been acked by Bjorn.
+trivia:
 
-Please let me know if you have any problems.
+The RT_TRACE above this should probably use %pM too.
+Not submitted as it would just cause a conflict.
 
-Kalle
+---
 
-The following changes since commit f813614f531114db796ad66ced75c5dc8db7aa3a:
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-  ibmvnic: Wait for device response when changing MAC (2018-01-29 18:03:24 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2018-02-08
-
-for you to fetch changes up to 99ffd198f07f46f3a8e64399249a8333c09063df:
-
-  Merge ath-current from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2018-02-08 19:28:49 +0200)
-
-----------------------------------------------------------------
-wireless-drivers-next patches for 4.16
-
-The most important here is the ssb fix, it has been reported by the
-users frequently and the fix just missed the final v4.15. Also
-numerous other fixes, mt76 had multiple problems with aggregation and
-a long standing unaligned access bug in rtlwifi is finally fixed.
-
-Major changes:
-
-ath10k
-
-* correct firmware RAM dump length for QCA6174/QCA9377
-
-* add new QCA988X device id
-
-* fix a kernel panic during pci probe
-
-* revert a recent commit which broke ath10k firmware metadata parsing
-
-ath9k
-
-* fix a noise floor regression introduced during the merge window
-
-* add new device id
-
-rtlwifi
-
-* fix unaligned access seen on ARM architecture
-
-mt76
-
-* various aggregation fixes which fix connection stalls
-
-ssb
-
-* fix b43 and b44 on non-MIPS which broke in v4.15-rc9
-
-----------------------------------------------------------------
-Felix Fietkau (4):
-      mt76: implement AP_LINK_PS
-      mt76: implement processing of BlockAckReq frames
-      mt76: avoid re-queueing A-MPDU rx reorder work if no frames are pending
-      mt76: do not set status->aggr for NULL data frames
-
-Kalle Valo (2):
-      Merge git://git.kernel.org/.../kvalo/wireless-drivers.git
-      Merge ath-current from git://git.kernel.org/.../kvalo/ath.git
-
-Larry Finger (1):
-      rtlwifi: rtl8821ae: Fix connection lost problem correctly
-
-Oleksij Rempel (1):
-      ath9k_htc: add Altai WA1011N-GU
-
-Ryan Hsu (1):
-      Revert "ath10k: add sanity check to ie_len before parsing fw/board ie"
-
-Sven Joachim (1):
-      ssb: Do not disable PCI host on non-Mips
-
-Tobias Schramm (2):
-      PCI: Add Ubiquiti Networks vendor ID
-      ath10k: add support for Ubiquiti rebranded QCA988X v2
-
-Wojciech Dubowik (1):
-      ath9k: Fix get channel default noise floor
-
-Yu Wang (2):
-      ath10k: correct the length of DRAM dump for QCA6174 hw3.x/QCA9377 hw1.1
-      ath10k: fix kernel panic issue during pci probe
-
- drivers/net/wireless/ath/ath10k/core.c             | 43 +++++++++++++++---
- drivers/net/wireless/ath/ath10k/coredump.c         |  3 +-
- drivers/net/wireless/ath/ath10k/debug.c            | 12 ++++-
- drivers/net/wireless/ath/ath10k/hw.h               |  1 +
- drivers/net/wireless/ath/ath10k/pci.c              |  6 +++
- drivers/net/wireless/ath/ath9k/calib.c             |  2 +-
- drivers/net/wireless/ath/ath9k/hif_usb.c           |  1 +
- drivers/net/wireless/mediatek/mt76/agg-rx.c        | 40 ++++++++++++++++-
- drivers/net/wireless/mediatek/mt76/mac80211.c      | 52 +++++++++++++++++++++-
- drivers/net/wireless/mediatek/mt76/mt76.h          | 10 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2.h        |  2 +
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |  1 +
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c   | 28 ++++++------
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |  5 ++-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  1 +
- drivers/ssb/Kconfig                                |  2 +-
- include/linux/pci_ids.h                            |  2 +
- 18 files changed, 181 insertions(+), 32 deletions(-)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+index ac4a82de40c7..61da667ed8ba 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+@@ -422,11 +422,8 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	if (ieee80211_is_data(fc))
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "Got data frame\n");
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "Fram: fc = 0x%X addr1 = 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\n",
+-		 fc,
+-		 (u32)hdr->addr1[0], (u32)hdr->addr1[1],
+-		 (u32)hdr->addr1[2], (u32)hdr->addr1[3],
+-		 (u32)hdr->addr1[4], (u32)hdr->addr1[5]);
++		 "Fram: fc = 0x%X addr1 = %pM\n",
++		 fc, hdr->addr1);
+ 	memcpy(IEEE80211_SKB_RXCB(skb), rx_status, sizeof(*rx_status));
+ 	ieee80211_rx(hw, skb);
+ }
