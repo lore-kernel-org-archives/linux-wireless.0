@@ -1,69 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:35122 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932276AbeBVMR7 (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:34879 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752172AbeBIBYD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 07:17:59 -0500
-Received: by mail-qk0-f194.google.com with SMTP id s188so6141117qkb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Feb 2018 04:17:59 -0800 (PST)
-Subject: Re: [PATCH 2/3] mwifiex: support sysfs initiated device coredump
-To: Brian Norris <briannorris@chromium.org>
-References: <1519210220-22437-1-git-send-email-arend.vanspriel@broadcom.com>
- <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
- <20180221225903.GA42395@rodete-desktop-imager.corp.google.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A8EB4F4.2030103@broadcom.com> (sfid-20180222_131815_189394_D87B430B)
-Date: Thu, 22 Feb 2018 13:17:56 +0100
+        Thu, 8 Feb 2018 20:24:03 -0500
+Received: by mail-io0-f193.google.com with SMTP id m11so7933829iob.2
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Feb 2018 17:24:03 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20180221225903.GA42395@rodete-desktop-imager.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20180209005712.29353-1-mka@chromium.org>
+References: <20180209005712.29353-1-mka@chromium.org>
+From: Guenter Roeck <groeck@google.com>
+Date: Thu, 8 Feb 2018 17:24:01 -0800
+Message-ID: <CABXOdTcMKkiPDTgg_8tzMDMb0=jRbuQq_Y_qEWiobWhDp0mD-g@mail.gmail.com> (sfid-20180209_022426_055580_D323ABC4)
+Subject: Re: [PATCH v2] rtlwifi: rtl8192cu: Remove variable self-assignment in rf.c
+To: Matthias Kaehlcke <mka@chromium.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Guenter Roeck <groeck@chromium.org>,
+        Justin TerAvest <teravest@chromium.org>,
+        Craig Bergstrom <craigb@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/21/2018 11:59 PM, Brian Norris wrote:
-> On Wed, Feb 21, 2018 at 11:50:19AM +0100, Arend van Spriel wrote:
->> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
->> it is possible to initiate a device coredump from user-space. This
->> patch adds support for it adding the .coredump() driver callback.
->> As there is no longer a need to initiate it through debugfs remove
->> that code.
->>
->> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> ---
->>   drivers/net/wireless/marvell/mwifiex/debugfs.c | 31 +-------------------------
->>   drivers/net/wireless/marvell/mwifiex/pcie.c    | 19 ++++++++++++++--
->>   drivers/net/wireless/marvell/mwifiex/sdio.c    | 13 +++++++++++
->>   drivers/net/wireless/marvell/mwifiex/usb.c     | 14 ++++++++++++
->>   4 files changed, 45 insertions(+), 32 deletions(-)
+On Thu, Feb 8, 2018 at 4:57 PM, Matthias Kaehlcke <mka@chromium.org> wrote:
+> In _rtl92c_get_txpower_writeval_by_regulatory() the variable writeVal
+> is assigned to itself in an if ... else statement, apparently only to
+> document that the branch condition is handled and that a previously read
+> value should be returned unmodified. The self-assignment causes clang to
+> raise the following warning:
 >
-> The documentation doesn't really say [1], but is the coredump supposed
-> to happen synchronously? Because the mwifiex implementation is
-> asynchronous, whereas it looks like the brcmfmac one is synchronous.
-
-Well, that depends on the eye of the beholder I guess. From user-space 
-perspective it is asynchronous regardless. A write access to the 
-coredump sysfs file eventually results in a uevent when the devcoredump 
-entry is created, ie. after driver has made a dev_coredump API call. 
-Whether the driver does that synchronously or asynchronously is 
-irrelevant as far as user-space is concerned.
-
-> Brian
+> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c:304:13:
+>   error: explicitly assigning value of variable of type 'u32'
+>     (aka 'unsigned int') to itself [-Werror,-Wself-assign]
+>   writeVal = writeVal;
 >
-> [1] In fact, the ABI documentation really just describes kernel
-> internals, rather than documenting any user-facing details, from what I
-> can tell.
+> Delete the branch with the self-assignment.
+>
+> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
 
-You are right. Clearly I did not reach the end my learning curve here. I 
-assumed referring to the existing dev_coredump facility was sufficient, 
-but maybe it is worth a patch to be more explicit and mention the uevent 
-behavior. Also dev_coredump facility may be disabled upon which the 
-trigger will have no effect in sysfs. In the kernel the data passed by 
-the driver is simply freed by dev_coredump facility.
+Reviewed-by: Guenter Roeck <groeck@chromium.org>
 
-Regards,
-Arend
+> ---
+> Changes in v2:
+> - Delete the 'else if' branch entirely
+>
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c | 3 ---
+>  1 file changed, 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+> index 9cff6bc4049c..cf551785eb08 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+> @@ -299,9 +299,6 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
+>                         writeVal = 0x00000000;
+>                 if (rtlpriv->dm.dynamic_txhighpower_lvl == TXHIGHPWRLEVEL_BT1)
+>                         writeVal = writeVal - 0x06060606;
+> -               else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
+> -                        TXHIGHPWRLEVEL_BT2)
+> -                       writeVal = writeVal;
+>                 *(p_outwriteval + rf) = writeVal;
+>         }
+>  }
+> --
+> 2.16.0.rc1.238.g530d649a79-goog
+>
