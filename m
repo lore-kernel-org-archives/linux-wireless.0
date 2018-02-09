@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:36968 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933425AbeBMPlY (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:58214 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750942AbeBINMm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 10:41:24 -0500
-Date: Tue, 13 Feb 2018 16:41:25 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: James Hogan <james.hogan@mips.com>
-Cc: stable@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        Adric Blake <promarbler14@gmail.com>, m@bues.ch,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: B43 driver no longer works in Linux 4.15 (bisected)
-Message-ID: <20180213154125.GC5919@kroah.com> (sfid-20180213_164139_772474_A2926286)
-References: <CAE1jjefE1qjgcHMik36Na0OYoFON+kCi5cEDSq=y11HdsyPn0Q@mail.gmail.com>
- <20180205183324.GD8479@saruman>
- <87sha68cv9.fsf@kamboji.qca.qualcomm.com>
- <20180212152231.GK11819@jhogan-linux.mipstec.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180212152231.GK11819@jhogan-linux.mipstec.com>
+        Fri, 9 Feb 2018 08:12:42 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  9 Feb 2018 15:12:29 +0200
+Message-Id: <20180209131234.8504-1-luca@coelho.fi> (sfid-20180209_141255_442908_E61D7EB2)
+Subject: [PATCH 0/5] iwlwifi: fixes intended for 4.16 2018-02-09
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 12, 2018 at 03:22:32PM +0000, James Hogan wrote:
-> On Mon, Feb 12, 2018 at 05:08:10PM +0200, Kalle Valo wrote:
-> > James Hogan <jhogan@kernel.org> writes:
-> > > On Mon, Feb 05, 2018 at 01:23:31PM -0500, Adric Blake wrote:
-> > >> I bisected to this "first bad commit:"
-> > >> 
-> > >> commit 58eae1416b804d900014d84feadda7195007cc30
-> > >> Author: James Hogan <jhogan@kernel.org>
-> > >> Date:   Mon Jan 15 21:17:14 2018 +0000
-> > >> 
-> > >>     ssb: Disable PCI host for PCI_DRIVERS_GENERIC
-> > >
-> > > Yes, really sorry about that and thanks for going to the effort of
-> > > bisecting. There is a patch here:
-> > > https://patchwork.kernel.org/patch/10185397/
-> > >
-> > > which is applied to linux-next as commit
-> > > a9e6d44ddeccd3522670e641f1ed9b068e746ff7, and is tagged for stable,
-> > > though I've just noticed the stable email address is incorrect... I'll
-> > > make sure it gets applied to the 4.15 stable branch though as soon as
-> > > I notice its merged.
-> > 
-> > The commit is now in v4.16-rc1.
-> 
-> Yes, thanks,
-> 
-> Greg: Please can commit a9e6d44ddeccd3522670e641f1ed9b068e746ff7 ("ssb:
-> Do not disable PCI host on non-Mips") be applied to 4.15 stable (the
-> wrong stable email address was Cc'd in the commit message).
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Now applied, thanks.
+Hi,
 
-greg k-h
+This is my first batch of fixes inteded for 4.16.
+
+These are the fixes:
+
+* A couple of bugzilla fixes
+  - Fix a bogus warning when freeing a TFD;
+  - Fix severe throughput problem with 9000 series;
+* Fix for a bug that caused queue hangs in certain situations;
+* Fix for an issue with IBSS;
+* Fix an issue with rate-scalingin AP-mode.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Emmanuel Grumbach (1):
+  iwlwifi: pcie: don't warn if we use all the transmit pointers
+
+Naftali Goldstein (1):
+  iwlwifi: mvm: always init rs with 20mhz bandwidth rates
+
+Sara Sharon (2):
+  iwlwifi: mvm: fix security bug in PN checking
+  iwlwifi: mvm: fix IBSS for devices that support station type API
+
+Shaul Triebitz (1):
+  iwlwifi: align timestamp cancel with timestamp start
+
+ drivers/net/wireless/intel/iwlwifi/fw/init.c      |  6 ----
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  2 --
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c       | 28 +++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 39 ++++++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 24 +++++++-------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  2 +-
+ 10 files changed, 61 insertions(+), 50 deletions(-)
+
+-- 
+2.15.1
