@@ -1,135 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:19889 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752991AbeBVJXH (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:58250 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751091AbeBINMq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 04:23:07 -0500
-Subject: Re: [PATCH 2/4] staging: wilc1000: modified wilc_spi_read_int() by
- using GENMASK macro
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
-        <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
-        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
-        <aditya.shankar@microchip.com>
-References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
- <1519229532-11265-3-git-send-email-ajay.kathat@microchip.com>
- <20180222073731.ambug44zxpmwm76w@mwanda>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <8a20dcf4-8cfd-93bd-539e-e30e01f2a3b1@microchip.com> (sfid-20180222_102310_872354_896D2FB8)
-Date: Thu, 22 Feb 2018 11:23:03 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180222073731.ambug44zxpmwm76w@mwanda>
-Content-Type: text/plain; charset="utf-8"
+        Fri, 9 Feb 2018 08:12:46 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Naftali Goldstein <naftali.goldstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  9 Feb 2018 15:12:34 +0200
+Message-Id: <20180209131234.8504-6-luca@coelho.fi> (sfid-20180209_141253_679964_39F2E03B)
+In-Reply-To: <20180209131234.8504-1-luca@coelho.fi>
+References: <20180209131234.8504-1-luca@coelho.fi>
+Subject: [PATCH 5/5] iwlwifi: mvm: always init rs with 20mhz bandwidth rates
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-On 22.02.2018 09:37, Dan Carpenter wrote:
-> On Wed, Feb 21, 2018 at 09:42:10PM +0530, Ajay Singh wrote:
->> Use existing macro GENMASK to get the bitmask value. Moved the code to
->> get the bitmask value outside the loop, as its only required one time.
->>
->> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
->> ---
->>  drivers/staging/wilc1000/wilc_spi.c | 3 +--
->>  1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
->> index 131d2b7..c63f534 100644
->> --- a/drivers/staging/wilc1000/wilc_spi.c
->> +++ b/drivers/staging/wilc1000/wilc_spi.c
->> @@ -955,6 +955,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
->>  	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
->>  
->>  	j = 0;
->> +	unknown_mask = GENMASK(g_spi.nint - 1, 0);
->>  	do {
->>  		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
->>  		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
->> @@ -964,8 +965,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
->>  			tmp |= (((irq_flags >> 0) & 0x7) << k);
->>  		}
->>  
->> -		unknown_mask = ~((1ul << g_spi.nint) - 1);
->> -
-> 
-> This isn't right at all...  Say g_spi.nint is zero, then we're doing
-> GENMASK(-1, 0) which seems like it should be undefined.  If g_spi.nint
-> is 1 then "GENMASK(1 - 1, 0)" is 0x1 but "~((1 < 1) - 1)" is ~0x1.
-> 
+In AP mode, when a new station associates, rs is initialized immediately
+upon association completion, before the phy context is updated with the
+association parameters, so the sta bandwidth might be wider than the phy
+context allows.
+To avoid this issue, always initialize rs with 20mhz bandwidth rate, and
+after authorization, when the phy context is already up-to-date, re-init
+rs with the correct bw.
 
-Even in this driver g_spi.nint is always constant and equal with NUM_INT_EXT
-(which is 3), it seems that enabling interrupts before initializing g_spi.nint
-may lead to the state where g_spi.nint = 0, as Dan pointed.
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c       | 28 ++++++++++++++++-------
+ 2 files changed, 24 insertions(+), 8 deletions(-)
 
-int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
-{
-		// ...
-                if (wl->gpio >= 0 && init_irq(dev)) {
-                        ret = -EIO;
-                        goto _fail_locks_;
-                }
-
-		// ...
-                ret = linux_wlan_start_firmware(dev); -> calls
-linux_wlan_start_firmware which in turn calls wilc->hif_func->hif_sync_ext(wilc,
-NUM_INT_EXT);
-
-	
-}
-
-Thank you,
-Claudiu Beznea
-
-> I'm done reviewing this patch series...  You need to be more careful.
-> Create a small test program to test your patches.  As a reviewer,
-> creating test programs is how I review your patches.
-> 
-> #include <sys/types.h>
-> #include <sys/stat.h>
-> #include <fcntl.h>
-> #include <stdio.h>
-> #include <stdlib.h>
-> #include <limits.h>
-> #include <string.h>
-> #include "/home/dcarpenter/progs/smatch/devel/check_debug.h"
-> #include "kernel.h"
-> #include <assert.h>
-> #include <fcntl.h>
-> #include <sys/time.h>
-> #include <sys/ioctl.h>
-> #include <linux/blktrace_api.h>
-> #include <linux/fs.h>
-> 
-> #define BITS_PER_LONG 64
-> #define GENMASK(h, l) \
->         (((~0UL) - (1UL << (l)) + 1) & (~0UL >> (BITS_PER_LONG - 1 - (h))))
-> 
-> int main(void)
-> {
->         int i;
->         u32 mask1, mask2;
-> 
->         for (i = 0; i < 32; i++) {
->                 mask1 = ~((1ul << i) - 1);
->                 mask2 = GENMASK(i - 1, 0);
->                 if (mask1 == mask2)
->                         continue;
->                 printf("ONE 0x%x %d\n", mask1, i);
->                 printf("TWO 0x%x\n", mask2);
->         }
->         return 0;
-> }
-> 
-> regards,
-> dan carpenter
-> 
-> 
-> 
-> _______________________________________________
-> devel mailing list
-> devel@linuxdriverproject.org
-> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 8aed40a8bc38..08de822c3ef0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2682,6 +2682,10 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 
+ 		/* enable beacon filtering */
+ 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
++
++		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
++				     false);
++
+ 		ret = 0;
+ 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
+ 		   new_state == IEEE80211_STA_ASSOC) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 60abb0084ee5..47f4c7a1d80d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -2684,7 +2684,8 @@ static void rs_get_initial_rate(struct iwl_mvm *mvm,
+ 				struct ieee80211_sta *sta,
+ 				struct iwl_lq_sta *lq_sta,
+ 				enum nl80211_band band,
+-				struct rs_rate *rate)
++				struct rs_rate *rate,
++				bool init)
+ {
+ 	int i, nentries;
+ 	unsigned long active_rate;
+@@ -2738,14 +2739,25 @@ static void rs_get_initial_rate(struct iwl_mvm *mvm,
+ 	 */
+ 	if (sta->vht_cap.vht_supported &&
+ 	    best_rssi > IWL_RS_LOW_RSSI_THRESHOLD) {
+-		switch (sta->bandwidth) {
+-		case IEEE80211_STA_RX_BW_160:
+-		case IEEE80211_STA_RX_BW_80:
+-		case IEEE80211_STA_RX_BW_40:
++		/*
++		 * In AP mode, when a new station associates, rs is initialized
++		 * immediately upon association completion, before the phy
++		 * context is updated with the association parameters, so the
++		 * sta bandwidth might be wider than the phy context allows.
++		 * To avoid this issue, always initialize rs with 20mhz
++		 * bandwidth rate, and after authorization, when the phy context
++		 * is already up-to-date, re-init rs with the correct bw.
++		 */
++		u32 bw = init ? RATE_MCS_CHAN_WIDTH_20 : rs_bw_from_sta_bw(sta);
++
++		switch (bw) {
++		case RATE_MCS_CHAN_WIDTH_40:
++		case RATE_MCS_CHAN_WIDTH_80:
++		case RATE_MCS_CHAN_WIDTH_160:
+ 			initial_rates = rs_optimal_rates_vht;
+ 			nentries = ARRAY_SIZE(rs_optimal_rates_vht);
+ 			break;
+-		case IEEE80211_STA_RX_BW_20:
++		case RATE_MCS_CHAN_WIDTH_20:
+ 			initial_rates = rs_optimal_rates_vht_20mhz;
+ 			nentries = ARRAY_SIZE(rs_optimal_rates_vht_20mhz);
+ 			break;
+@@ -2756,7 +2768,7 @@ static void rs_get_initial_rate(struct iwl_mvm *mvm,
+ 
+ 		active_rate = lq_sta->active_siso_rate;
+ 		rate->type = LQ_VHT_SISO;
+-		rate->bw = rs_bw_from_sta_bw(sta);
++		rate->bw = bw;
+ 	} else if (sta->ht_cap.ht_supported &&
+ 		   best_rssi > IWL_RS_LOW_RSSI_THRESHOLD) {
+ 		initial_rates = rs_optimal_rates_ht;
+@@ -2839,7 +2851,7 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ 	tbl = &(lq_sta->lq_info[active_tbl]);
+ 	rate = &tbl->rate;
+ 
+-	rs_get_initial_rate(mvm, sta, lq_sta, band, rate);
++	rs_get_initial_rate(mvm, sta, lq_sta, band, rate, init);
+ 	rs_init_optimal_rate(mvm, sta, lq_sta);
+ 
+ 	WARN_ONCE(rate->ant != ANT_A && rate->ant != ANT_B,
+-- 
+2.15.1
