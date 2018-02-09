@@ -1,101 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753114AbeBSPaV (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36026 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752028AbeBIBPs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 10:30:21 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <Adham.Abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 04/14] staging: wilc1000: rename pstrHostIfRemainOnChan to avoid camelCase
-Date: Mon, 19 Feb 2018 20:59:34 +0530
-Message-ID: <1519054184-14301-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163028_775906_D832A0FB)
-In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+        Thu, 8 Feb 2018 20:15:48 -0500
+Subject: Re: [PATCH v2] rtlwifi: rtl8192cu: Remove variable self-assignment in
+ rf.c
+To: Matthias Kaehlcke <mka@chromium.org>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Guenter Roeck <groeck@chromium.org>,
+        Justin TerAvest <teravest@chromium.org>,
+        Craig Bergstrom <craigb@chromium.org>
+References: <20180209005712.29353-1-mka@chromium.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <c6b8e448-a848-07bc-2dc3-c1ac5aca0abc@lwfinger.net> (sfid-20180209_021607_855570_2E1DE93A)
+Date: Thu, 8 Feb 2018 19:15:46 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180209005712.29353-1-mka@chromium.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+On 02/08/2018 06:57 PM, Matthias Kaehlcke wrote:
+> In _rtl92c_get_txpower_writeval_by_regulatory() the variable writeVal
+> is assigned to itself in an if ... else statement, apparently only to
+> document that the branch condition is handled and that a previously read
+> value should be returned unmodified. The self-assignment causes clang to
+> raise the following warning:
+> 
+> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c:304:13:
+>    error: explicitly assigning value of variable of type 'u32'
+>      (aka 'unsigned int') to itself [-Werror,-Wself-assign]
+>    writeVal = writeVal;
+> 
+> Delete the branch with the self-assignment.
+> 
+> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> ---
+> Changes in v2:
+> - Delete the 'else if' branch entirely
+> 
+>   drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c | 3 ---
+>   1 file changed, 3 deletions(-)
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ec98ccd..11e4737 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2221,7 +2221,7 @@ static void Handle_EditStation(struct wilc_vif *vif,
- }
- 
- static int Handle_RemainOnChan(struct wilc_vif *vif,
--			       struct remain_ch *pstrHostIfRemainOnChan)
-+			       struct remain_ch *hif_remain_ch)
- {
- 	s32 result = 0;
- 	u8 u8remain_on_chan_flag;
-@@ -2229,13 +2229,13 @@ static int Handle_RemainOnChan(struct wilc_vif *vif,
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
- 	if (!hif_drv->remain_on_ch_pending) {
--		hif_drv->remain_on_ch.arg = pstrHostIfRemainOnChan->arg;
--		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
--		hif_drv->remain_on_ch.ready = pstrHostIfRemainOnChan->ready;
--		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
--		hif_drv->remain_on_ch.id = pstrHostIfRemainOnChan->id;
-+		hif_drv->remain_on_ch.arg = hif_remain_ch->arg;
-+		hif_drv->remain_on_ch.expired = hif_remain_ch->expired;
-+		hif_drv->remain_on_ch.ready = hif_remain_ch->ready;
-+		hif_drv->remain_on_ch.ch = hif_remain_ch->ch;
-+		hif_drv->remain_on_ch.id = hif_remain_ch->id;
- 	} else {
--		pstrHostIfRemainOnChan->ch = hif_drv->remain_on_ch.ch;
-+		hif_remain_ch->ch = hif_drv->remain_on_ch.ch;
- 	}
- 
- 	if (hif_drv->usr_scan_req.scan_result) {
-@@ -2264,7 +2264,7 @@ static int Handle_RemainOnChan(struct wilc_vif *vif,
- 	}
- 
- 	wid.val[0] = u8remain_on_chan_flag;
--	wid.val[1] = (s8)pstrHostIfRemainOnChan->ch;
-+	wid.val[1] = (s8)hif_remain_ch->ch;
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
-@@ -2277,7 +2277,7 @@ static int Handle_RemainOnChan(struct wilc_vif *vif,
- 		hif_drv->remain_on_ch_timer_vif = vif;
- 		mod_timer(&hif_drv->remain_on_ch_timer,
- 			  jiffies +
--			  msecs_to_jiffies(pstrHostIfRemainOnChan->duration));
-+			  msecs_to_jiffies(hif_remain_ch->duration));
- 
- 		if (hif_drv->remain_on_ch.ready)
- 			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.arg);
-@@ -2321,7 +2321,7 @@ static int Handle_RegisterFrame(struct wilc_vif *vif,
- }
- 
- static u32 Handle_ListenStateExpired(struct wilc_vif *vif,
--				     struct remain_ch *pstrHostIfRemainOnChan)
-+				     struct remain_ch *hif_remain_ch)
- {
- 	u8 u8remain_on_chan_flag;
- 	struct wid wid;
-@@ -2350,7 +2350,7 @@ static u32 Handle_ListenStateExpired(struct wilc_vif *vif,
- 
- 		if (hif_drv->remain_on_ch.expired) {
- 			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
--						      pstrHostIfRemainOnChan->id);
-+						      hif_remain_ch->id);
- 		}
- 		P2P_LISTEN_STATE = 0;
- 	} else {
--- 
-2.7.4
+
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+> index 9cff6bc4049c..cf551785eb08 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+> @@ -299,9 +299,6 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
+>   			writeVal = 0x00000000;
+>   		if (rtlpriv->dm.dynamic_txhighpower_lvl == TXHIGHPWRLEVEL_BT1)
+>   			writeVal = writeVal - 0x06060606;
+> -		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
+> -			 TXHIGHPWRLEVEL_BT2)
+> -			writeVal = writeVal;
+>   		*(p_outwriteval + rf) = writeVal;
+>   	}
+>   }
+> 
