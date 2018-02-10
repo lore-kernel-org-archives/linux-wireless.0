@@ -1,138 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55834 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752828AbeBSMv2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:51:28 -0500
-From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Venkateswara Naralasetty <vnaralas@codeaurora.org>
-Subject: [PATCH] ath10k: fix information leak in debugfs
-Date: Mon, 19 Feb 2018 18:21:21 +0530
-Message-Id: <1519044681-5663-1-git-send-email-vnaralas@codeaurora.org> (sfid-20180219_135144_549003_4D7D3898)
+Received: from nbd.name ([46.4.11.11]:39004 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751145AbeBJOFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Feb 2018 09:05:10 -0500
+Subject: Re: [PATCH] ath9k: turn on btcoex_enable as default
+To: Kai Heng Feng <kai.heng.feng@canonical.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20180208052801.15670-1-kai.heng.feng@canonical.com>
+ <56d650e6-d26f-087c-4e86-2e5d4e859414@nbd.name>
+ <A5972CE9-8325-404A-A63D-ED29E44FB67B@canonical.com>
+ <87k1vmeip8.fsf@kamboji.qca.qualcomm.com>
+ <E500FA42-23F1-433F-9BFB-78A2FD1946AF@canonical.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <7170e2d5-a59d-8260-fa8e-f02f583b773f@nbd.name> (sfid-20180210_150530_895024_EBB90921)
+Date: Sat, 10 Feb 2018 15:05:05 +0100
+MIME-Version: 1.0
+In-Reply-To: <E500FA42-23F1-433F-9BFB-78A2FD1946AF@canonical.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During write to some of debugfs in ath10k, few variables exposing stack
-data when process user input. which leads to possible information leak.
+On 2018-02-10 14:56, Kai Heng Feng wrote:
+> 
+>> On 9 Feb 2018, at 3:16 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Sure, but we have to make sure that we don't create regressions on
+>> existing systems. For example, did you test this with any system which
+>> don't support btcoex? (just asking, haven't tested this myself)
+> 
+> No not really, but I will definitely test it.
+> The only module I have that uses ath9k is Dell’s DW1707.
+> How do I check if it support btcoex or not?
+I just reviewed the code again, and I am sure that we cannot merge this
+patch. Enabling the btcoex parameter makes the driver enable a whole
+bunch of code starting timers, listening to some GPIOs, etc.
 
-This patch fix this issue by initializing buffer and checks
-the return valure of 'simple_write_to_buffer'.
+On non-btcoex systems, some of those GPIOs might be floating or even
+connected to different things, which could cause a lot of undefined
+behavior.
 
-Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/debug.c       | 20 ++++++++---------
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 31 ++++++++++++++-------------
- 2 files changed, 26 insertions(+), 25 deletions(-)
+This is simply too big a risk, so there absolutely needs to be a
+whitelist for systems that need this, otherwise it has to remain
+disabled by default.
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 554cd78..21c348b 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -987,13 +987,13 @@ static ssize_t ath10k_write_htt_max_amsdu_ampdu(struct file *file,
- {
- 	struct ath10k *ar = file->private_data;
- 	int res;
--	char buf[64];
-+	char buf[64] = {0};
- 	unsigned int amsdu, ampdu;
- 
--	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
--
--	/* make sure that buf is null terminated */
--	buf[sizeof(buf) - 1] = 0;
-+	res = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos,
-+				     user_buf, count);
-+	if (res <= 0)
-+		return res;
- 
- 	res = sscanf(buf, "%u %u", &amsdu, &ampdu);
- 
-@@ -1043,14 +1043,14 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
- {
- 	struct ath10k *ar = file->private_data;
- 	int ret;
--	char buf[96];
-+	char buf[96] = {0};
- 	unsigned int log_level;
- 	u64 mask;
- 
--	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
--
--	/* make sure that buf is null terminated */
--	buf[sizeof(buf) - 1] = 0;
-+	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos,
-+				     user_buf, count);
-+	if (ret <= 0)
-+		return ret;
- 
- 	ret = sscanf(buf, "%llx %u", &mask, &log_level);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index b260b09..5583854 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2014-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -136,12 +137,12 @@ static ssize_t ath10k_dbg_sta_write_addba(struct file *file,
- 	struct ath10k *ar = arsta->arvif->ar;
- 	u32 tid, buf_size;
- 	int ret;
--	char buf[64];
-+	char buf[64] = {0};
- 
--	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
--
--	/* make sure that buf is null terminated */
--	buf[sizeof(buf) - 1] = '\0';
-+	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos,
-+				     user_buf, count);
-+	if (ret <= 0)
-+		return ret;
- 
- 	ret = sscanf(buf, "%u %u", &tid, &buf_size);
- 	if (ret != 2)
-@@ -187,12 +188,12 @@ static ssize_t ath10k_dbg_sta_write_addba_resp(struct file *file,
- 	struct ath10k *ar = arsta->arvif->ar;
- 	u32 tid, status;
- 	int ret;
--	char buf[64];
--
--	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+	char buf[64] = {0};
- 
--	/* make sure that buf is null terminated */
--	buf[sizeof(buf) - 1] = '\0';
-+	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos,
-+				     user_buf, count);
-+	if (ret <= 0)
-+		return ret;
- 
- 	ret = sscanf(buf, "%u %u", &tid, &status);
- 	if (ret != 2)
-@@ -237,12 +238,12 @@ static ssize_t ath10k_dbg_sta_write_delba(struct file *file,
- 	struct ath10k *ar = arsta->arvif->ar;
- 	u32 tid, initiator, reason;
- 	int ret;
--	char buf[64];
--
--	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+	char buf[64] = {0};
- 
--	/* make sure that buf is null terminated */
--	buf[sizeof(buf) - 1] = '\0';
-+	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos,
-+				     user_buf, count);
-+	if (ret <= 0)
-+		return ret;
- 
- 	ret = sscanf(buf, "%u %u %u", &tid, &initiator, &reason);
- 	if (ret != 3)
--- 
-2.7.4
+- Felix
