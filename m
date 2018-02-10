@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53454 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754182AbeBGORL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:34454 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752480AbeBJVMW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Feb 2018 09:17:11 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath9k_htc: add Altai WA1011N-GU
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180129081430.16413-1-linux@rempel-privat.de>
-References: <20180129081430.16413-1-linux@rempel-privat.de>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        Oleksij Rempel <linux@rempel-privat.de>
-Message-Id: <20180207141710.BD231609EF@smtp.codeaurora.org> (sfid-20180207_151714_836015_F4C86139)
-Date: Wed,  7 Feb 2018 14:17:10 +0000 (UTC)
+        Sat, 10 Feb 2018 16:12:22 -0500
+Message-ID: <1518297139.2029.9.camel@sipsolutions.net> (sfid-20180210_221225_381387_3D20137C)
+Subject: Re: Regulatory: reg.c : wiphy_apply_custom_regulatory()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Neelansh Mittal <neelansh@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date: Sat, 10 Feb 2018 22:12:19 +0100
+In-Reply-To: <CANg=XDQ0g1=BzJnbbKYyH=Jyx7hTRRem2YL5hqEM0tiB-buwLA@mail.gmail.com> (sfid-20180124_200846_028108_F8C231E6)
+References: <CANg=XDQ0g1=BzJnbbKYyH=Jyx7hTRRem2YL5hqEM0tiB-buwLA@mail.gmail.com>
+         (sfid-20180124_200846_028108_F8C231E6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel <linux@rempel-privat.de> wrote:
 
-> as reported in:
-> https://github.com/qca/open-ath9k-htc-firmware/pull/71#issuecomment-361100070
-> 
-> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Can wiphy_apply_custom_regulatory() be called after wiphy registeration?
+> The documentation(comment) says "/* Used by drivers prior to wiphy
+> registration */"
+> Whys is there a restriction to call this after registration? Is the
+> comment outdated? After Tracing the regulatory code in the cfg80211,
+> it seems that there should be no restriction.
 
-Patch applied to ath-current branch of ath.git, thanks.
+Well, I think nothing gets reported to userspace when you call this
+function, which I think is the reason for this.
 
-4e12d654ba06 ath9k_htc: add Altai WA1011N-GU
+If you want to update on the fly you should call
+regulatory_set_wiphy_regd() instead?
 
--- 
-https://patchwork.kernel.org/patch/10189389/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
