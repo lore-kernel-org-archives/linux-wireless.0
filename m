@@ -1,125 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f176.google.com ([209.85.216.176]:40549 "EHLO
-        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751554AbeBULEv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43598 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751149AbeBKCzC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 06:04:51 -0500
-Received: by mail-qt0-f176.google.com with SMTP id c19so1359109qtm.7
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2018 03:04:50 -0800 (PST)
-Subject: Re: brcmfmac signal/interference issues
-To: Daniel Drake <drake@endlessm.com>
-References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
- <5A8D36B7.1010201@broadcom.com>
- <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Linux Upstreaming Team <linux@endlessm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A8D524F.3070709@broadcom.com> (sfid-20180221_120455_066456_36BC1522)
-Date: Wed, 21 Feb 2018 12:04:47 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Sat, 10 Feb 2018 21:55:02 -0500
+From: Carl Huang <cjhuang@codeaurora.org>
+To: ath10k@lists.infradead.orr
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: fix use-after-free in ath10k_wmi_cmd_send_nowait
+Date: Sun, 11 Feb 2018 10:54:54 +0800
+Message-Id: <1518317694-5741-1-git-send-email-cjhuang@codeaurora.org> (sfid-20180211_035515_528980_3EA9B704)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/21/2018 10:39 AM, Daniel Drake wrote:
-> Hi Arend,
->
-> On Wed, Feb 21, 2018 at 12:07 PM, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->>
->> On 2/21/2018 9:14 AM, Daniel Drake wrote:
->>>
->>> Hi,
->>>
->>> We're working with the Weibu F3C MiniPC which includes BCM43455 SDIO
->>> wifi chip 0x004345(17221) rev 0x000006 (AP6255 module).
->>>
->>> We are seeing a strange issue where usually within an hour of usage,
->>> the wifi connection becomes so unstable and lossy that it is unusable.
->>> While investigating this my standard test is to send ICMP pings to the
->>> IP address of the local access point. Normally the latency is 5-10ms,
->>> but when this problem is seen it will go to 500ms and then increase up
->>> towards 20s before completely timing out.
->>>
->>> Sometimes it is possible to induce the problem on-demand by stressing
->>> some combination of CPU, disk and/or USB. At this point, ping reply
->>> latency increases from ~5ms to 500ms+ before increasing even further.
->>> Killing the stress test, the pings immediately return to normal. This
->>> is not concrete though - I also seem to have a lot of luck hitting the
->>> problem in the morning when booting up the computer from stone cold
->>> state, while it is idle.
->>>
->>> When the problem is being reproduced (ping times are high or get no
->>> response), touching the exposed metal on the antenna connector with my
->>> finger makes ping times return to normal. Touching it with a piece of
->>> plastic does not have the same effect - so it is some effect of body
->>> capacitance or similar. Also, disconnecting the antenna makes ping
->>> times return to normal, although outside of the simple pings,
->>> bandwidth is much reduced.
->>>
->>> Additionally, when the problem is being reproduced, if I move the
->>> antenna outside of the case, ping times return to normal. When I move
->>> the antenna back into the miniPC case vicinity, it goes slow and lossy
->>> again.
->>>
->>> I have used a separate monitoring station with wireshark to look at
->>> the 802.11 traffic while this is happening. When the problem is
->>> reproduced, the miniPC is mostly unable to TX anything, and the AP
->>> sends frames and retries them but with no ACK visible from the miniPC.
->>> Immediately when I touch the antenna connector with my finger, tx
->>> frames from the miniPC appear and the conversation comes back to life.
->>>
->>> Running Linux 4.15 but we believe all versions are affected.
->>>
->>> This very much sounds like a hardware issue, but here is where things
->>> get interesting: Windows 10 on the same unit has no such problem.
->>>
->>> I set up 2 units side by side - one running Windows 10 and the other
->>> running Linux, connected to the same AP. The top part of the MiniPC
->>> case has been removed so I can see the motherboard. I free up the
->>> antennas from the MiniPC casing and they are on a relatively long
->>> cable, so they can be freely moved around in this test, allowing me to
->>> dangle the antenna into the vicinity of the neighbouring unit miniPC
->>> case.
->>>
->>> If I place both antenna terminals inside the Linux MiniPC case, the
->>> Linux pings are bad but the Windows pings are fine.
->>>
->>> If I place both antenna terminals inside the Windows MiniPC case, it
->>> is the same: Linux pings are bad, but the Windows pings are fine.
->>>
->>> And when the Linux antenna is placed outside of both cases, the Linux
->>> pings are fine. I've repeated these tests a handful of times in quick
->>> succession to make sure that I'm not going crazy and that this is not
->>> a case of the problem intermittency causing misleading results. These
->>> findings appear very solid.
->>>
->>> This suggests that regardless of the running OS, the MiniPC produces
->>> some kind of interference that intermittently has an extremely
->>> detrimental effect on wifi signal when you are running Linux. However,
->>> Windows is somehow immune to this.
->>>
->>> Any ideas for how to continue debugging this? How can we make the
->>> Linux driver immune to this interference like the windows one is?
->>
->>
->> Hi Daniel,
->>
->> Thanks. I forwarded your detailed report. My first hunch would be the nvram file used. Are you using the same nvram file on Linux as the one on Windows? If not can you compare them or better just sent them.
->
->
-> Thanks for looking into this. Here is the brcmfmac43455-sdio.txt file
-> we are using:
-> https://gist.github.com/dsd/d7ee3caa6dfd77f0bcd16cf272b20298
-> This is identical to the 4345r6nvram.txt file from windows.
+The skb may be freed in tx completion context before
+trace_ath10k_wmi_cmd is called. This can be easily captured
+when KASAN(Kernel Address Sanitizer) is enabled. The fix is
+to add a reference count to the skb and release it after
+trace_ath10k_wmi_cmd is called.
 
-Ok. There goes my hunch :-( Will see if my colleagues who are more into 
-RF details come up with a good idea.
+Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 58dc218..e63aedb 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -1742,8 +1743,10 @@ int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
+ 	cmd_hdr->cmd_id = __cpu_to_le32(cmd);
+ 
+ 	memset(skb_cb, 0, sizeof(*skb_cb));
++	skb_get(skb);
+ 	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb);
+ 	trace_ath10k_wmi_cmd(ar, cmd_id, skb->data, skb->len, ret);
++	dev_kfree_skb(skb);
+ 
+ 	if (ret)
+ 		goto err_pull;
+-- 
+2.7.4
