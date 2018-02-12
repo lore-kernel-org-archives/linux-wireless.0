@@ -1,130 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:54155 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752701AbeBUQMz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45208 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933072AbeBLMoY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 11:12:55 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 4/4] staging: wilc1000: refactor sdio_clear_int_ext() by using GENMASK macro
-Date: Wed, 21 Feb 2018 21:42:12 +0530
-Message-ID: <1519229532-11265-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180221_171258_602254_FD0C65C4)
-In-Reply-To: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 12 Feb 2018 07:44:24 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Timothy Redaelli <tredaelli@redhat.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] ath9k: fix DFS detector synchronization
+References: <c967cb589b7d71a17afc29f3c634f961ef6820dd.1518090407.git.tredaelli@redhat.com>
+        <87fu6aegmy.fsf@kamboji.qca.qualcomm.com>
+        <20180209153311.193e08e0@redhat.com>
+Date: Mon, 12 Feb 2018 14:44:19 +0200
+In-Reply-To: <20180209153311.193e08e0@redhat.com> (Timothy Redaelli's message
+        of "Fri, 9 Feb 2018 15:33:11 +0100")
+Message-ID: <877eri9y3g.fsf@kamboji.qca.qualcomm.com> (sfid-20180212_134431_066595_C999C8E6)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use GENMASK macro in sdio_clear_int_ext function to get the required
-bitmask value. Simplified the logic by making use of GENMASK
-macro.
+Timothy Redaelli <tredaelli@redhat.com> writes:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_sdio.c | 74 +++++++++++++++---------------------
- 1 file changed, 31 insertions(+), 43 deletions(-)
+> On Fri, 09 Feb 2018 10:01:09 +0200
+> Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+>> Timothy Redaelli <tredaelli@redhat.com> writes:
+>> 
+>> > The code currently syncronize the DFS region only if curchan != 0,
+>> > but hostapd launch DFS before the channel is set and so
+>> > set_dfs_domain is never executed.
+>> >
+>> > CC: Felix Fietkau <nbd@nbd.name>
+>> > Signed-off-by: Timothy Redaelli <tredaelli@redhat.com>  
+>> 
+>> What kind of bug does this fix? Please describe the symptoms from
+>> user's point of view.
+>
+> With the current code radar detection (CAC) doesn't work on ath9k
+> since "dpd_set_domain" is only called once with NL80211_DFS_UNSET (0) as
+> region and so "dpd_add_pulse" always returns true (radar detected)
+> without doing a real scan.
+>
+> You can test it easily with a kernel built with
+> CONFIG_ATH9K_DFS_CERTIFIED and by using a simple hostapd configuration:
+>
+> interface=wlp1s0
+> hw_mode=a
+> channel=acs_survey
+> chanlist=100 104 108 112 116 120 124 128 132 136 140
+> ieee80211d=1
+> ieee80211h=1
+> country_code=US
+> ieee80211n=1
+> wmm_enabled=1
+> ssid=testwifi
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index a088999..8218085 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -876,14 +876,9 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
- 	if (g_sdio.has_thrpt_enh3) {
- 		u32 reg;
- 
--		if (g_sdio.irq_gpio) {
--			u32 flags;
-+		reg = g_sdio.irq_gpio ?
-+			(val & GENMASK(MAX_NUN_INT_THRPT_ENH2 - 1, 0)) : 0;
- 
--			flags = val & (BIT(MAX_NUN_INT_THRPT_ENH2) - 1);
--			reg = flags;
--		} else {
--			reg = 0;
--		}
- 		/* select VMM table 0 */
- 		if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
- 			reg |= BIT(5);
-@@ -918,45 +913,38 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
- 		 * Cannot clear multiple interrupts.
- 		 * Must clear each interrupt individually.
- 		 */
--		u32 flags;
--
--		flags = val & (BIT(MAX_NUM_INT) - 1);
--		if (flags) {
--			int i;
--
--			ret = 1;
--			for (i = 0; i < g_sdio.nint; i++) {
--				if (flags & 1) {
--					struct sdio_cmd52 cmd;
--
--					cmd.read_write = 1;
--					cmd.function = 0;
--					cmd.raw = 0;
--					cmd.address = 0xf8;
--					cmd.data = BIT(i);
--
--					ret = wilc_sdio_cmd52(wilc, &cmd);
--					if (ret) {
--						dev_err(&func->dev,
--							"Failed cmd52, set 0xf8 data (%d) ...\n",
--							__LINE__);
--						goto _fail_;
--					}
--				}
--				if (!ret)
--					break;
--				flags >>= 1;
--			}
--			if (!ret)
--				goto _fail_;
--			for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
--				if (flags & 1)
-+		int i;
-+		u32 expected_irqs, unexpected_irqs;
-+
-+		expected_irqs = val & GENMASK(g_sdio.nint - 1, 0);
-+		unexpected_irqs = val & GENMASK(MAX_NUM_INT - 1, g_sdio.nint);
-+
-+		for (i = 0; i < g_sdio.nint && expected_irqs; i++) {
-+			if (expected_irqs & BIT(i)) {
-+				struct sdio_cmd52 cmd;
-+
-+				cmd.read_write = 1;
-+				cmd.function = 0;
-+				cmd.raw = 0;
-+				cmd.address = 0xf8;
-+				cmd.data = BIT(i);
-+
-+				ret = wilc_sdio_cmd52(wilc, &cmd);
-+				if (ret) {
- 					dev_err(&func->dev,
--						"Unexpected interrupt cleared %d...\n",
--						i);
--				flags >>= 1;
-+						"Failed cmd52, set 0xf8 data (%d) ...\n",
-+						__LINE__);
-+					goto _fail_;
-+				}
- 			}
- 		}
-+
-+		for (i = g_sdio.nint; i < MAX_NUM_INT && unexpected_irqs; i++) {
-+			if (unexpected_irqs & BIT(i))
-+				dev_err(&func->dev,
-+					"Unexpected interrupt cleared %d...\n",
-+					i);
-+		}
- 	}
- 
- 	vmm_ctl = 0;
+Any ideas what broke this? Or has it never worked with FCC (US)?
+
+Anyway, please add this info to the commit log and submit v2.
+
 -- 
-2.7.4
+Kalle Valo
