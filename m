@@ -1,82 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:41918 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751518AbeB0Rks (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 12:40:48 -0500
-Received: by mail-wr0-f174.google.com with SMTP id f14so25728118wre.8
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 09:40:48 -0800 (PST)
+Received: from mail.neratec.com ([46.140.151.2]:53724 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752281AbeBLP1G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Feb 2018 10:27:06 -0500
+Subject: Re: [PATCH] ath9k: fix DFS detector synchronization
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Timothy Redaelli <tredaelli@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Felix Fietkau <nbd@nbd.name>
+References: <c967cb589b7d71a17afc29f3c634f961ef6820dd.1518090407.git.tredaelli@redhat.com>
+ <87fu6aegmy.fsf@kamboji.qca.qualcomm.com>
+ <20180209153311.193e08e0@redhat.com>
+ <877eri9y3g.fsf@kamboji.qca.qualcomm.com>
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Message-ID: <d6f093b1-ddba-a8d0-e007-aea996e16110@neratec.com> (sfid-20180212_162714_137230_E0988FAA)
+Date: Mon, 12 Feb 2018 16:27:05 +0100
 MIME-Version: 1.0
-In-Reply-To: <CALLGbRJxwOUkxnNCyCt2sBuoZacs60AcDnFfWMQQuVdj5YykOw@mail.gmail.com>
-References: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com>
- <5A953DBE.9070805@broadcom.com> <CAPcv9S1fZfrg3AV3GoWG-CaTkonpQyiHY6twvhS_ikXnj00t4g@mail.gmail.com>
- <68f5549d-b8ad-85fb-4e80-50c53cac8108@lwfinger.net> <CAPcv9S0TmMhrL0qcxq-8NStd=fYQreXribrA+GQmppLvrB_avg@mail.gmail.com>
- <CALLGbRJxwOUkxnNCyCt2sBuoZacs60AcDnFfWMQQuVdj5YykOw@mail.gmail.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Tue, 27 Feb 2018 09:34:44 -0800
-Message-ID: <CALLGbRKrnnmsNtzpkABn+xOTjDaFKZz0jNxGkyJXMT1=XLa_3g@mail.gmail.com> (sfid-20180227_184053_310447_F10C3F73)
-Subject: Re: Support on vendor id and device id
-To: Harsha Rao <harshrao464@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <877eri9y3g.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Harsha,
+On 02/12/2018 01:44 PM, Kalle Valo wrote:
+> Timothy Redaelli <tredaelli@redhat.com> writes:
+> 
+>> On Fri, 09 Feb 2018 10:01:09 +0200
+>> Kalle Valo <kvalo@codeaurora.org> wrote:
+>>
+>>> Timothy Redaelli <tredaelli@redhat.com> writes:
+>>>
+>>>> The code currently syncronize the DFS region only if curchan != 0,
+>>>> but hostapd launch DFS before the channel is set and so
+>>>> set_dfs_domain is never executed.
+>>>>
+>>>> CC: Felix Fietkau <nbd@nbd.name>
+>>>> Signed-off-by: Timothy Redaelli <tredaelli@redhat.com>  
+>>>
+>>> What kind of bug does this fix? Please describe the symptoms from
+>>> user's point of view.
+>>
+>> With the current code radar detection (CAC) doesn't work on ath9k
+>> since "dpd_set_domain" is only called once with NL80211_DFS_UNSET (0) as
+>> region and so "dpd_add_pulse" always returns true (radar detected)
+>> without doing a real scan.
+>>
+>> You can test it easily with a kernel built with
+>> CONFIG_ATH9K_DFS_CERTIFIED and by using a simple hostapd configuration:
+>>
+>> interface=wlp1s0
+>> hw_mode=a
+>> channel=acs_survey
+>> chanlist=100 104 108 112 116 120 124 128 132 136 140
+>> ieee80211d=1
+>> ieee80211h=1
+>> country_code=US
+>> ieee80211n=1
+>> wmm_enabled=1
+>> ssid=testwifi
+> 
+> Any ideas what broke this? Or has it never worked with FCC (US)?
+> 
+> Anyway, please add this info to the commit log and submit v2.
+> 
 
-Part 2 - the darn cmd-enter shortcut in gmail got me again. Sorry for
-the premature send.
+Hi,
 
->
-> As both Larry and Arend mention, while it's possible to have multiple
-> drivers with the same IDs, for obvious reasons it's not desirable.
->
-> In theory the vendor IDs shouldn't be duplicated on fundamentally
-> different devices, assuming that the manufacturers are doing things
-> "right". The VID is paid for by buying it from the SD Association.
->
-> My suspicion is that your device, is fundamentally a wilc1000 and that
-> the existing wilc1000 driver will likely largely work for it and all
-> you really need to do is modify the existing driver to handle the
-> quirks of your particular implementation of the wilc1000 chip. And,
-> often WiFi chips will let you change the VID/PID somewhere within
-> whatever non-volatile storage it has (like where it stores the MAC
-> address).
+the idea / reasoning behind setting the DFS detector's initial regulatory domain
+to UNSET is a fail-safe mechanism to ensure a proper countrycode is set before the
+CAC is initiated.
 
-What I was going to mention is this is how it's worked for me many
-times on several chips from QCA, Broadcom and Marvell included. The
-use-case in this case would be building a custom WiFi module using a
-vendor's chip. Very common - Silex, Laird and others do this all the
-time: buy a chip from QCA (or Broadcom or Marvell or...), put it on a
-board with lna, pa, passives, antennas, etc...  And you package it and
-sell that often with value-add software.  Sometimes it's fine if it
-represents like the original chip (for example on the ath6kl chips
-Laird sells, it just uses the QCA IDs), but sometimes you want it to
-represent as "my chip" (again, as Laird has to do on the chips they
-sell to the Windows market to avoid the kind of driver conflicts
-you're encountering). All of these chips usually have a way to store a
-MAC address and at least all that I've worked on will also allow you
-to change the SDIO VID in the same one-time-programable memory.
-Obviously the method changes depending on the chip.
+It used to work for a long time, but might broke when the regdb was moved into the
+kernel and with that the initialization order between channel and regulatory
+domain changed.
 
-However, in nearly every case, the chip is still fundamentally
-whatever it was and we still use the upstream driver, though often
-with tweaks and customizations based on our implementation. In the
-cases where we've added a custom VID, we've also had to add the new
-VID to the original driver and then key our quirks off that.
 
-I'm not saying this is definitely applicable in your case, but it is
-common and maybe it will help.
-
-Also thanks for bringing this issue up. Something I haven't thought
-about in a long time but I'm adding it to my talk at ELC on WiFi
-module interfacing. http://sched.co/DXn3
-
-- Steve
-
---
-Steve deRosier
-Cal-Sierra Consulting LLC
-https://www.cal-sierra.com/
+Not tested, but patch looks sane.
