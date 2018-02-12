@@ -1,86 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59658 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:58546 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752006AbeBSJ0u (ORCPT
+        with ESMTP id S1751150AbeBLUBm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 04:26:50 -0500
-Message-ID: <1519032404.7832.84.camel@coelho.fi> (sfid-20180219_102653_668256_E1EC3C0F)
+        Mon, 12 Feb 2018 15:01:42 -0500
+Message-ID: <1518465698.30914.25.camel@coelho.fi> (sfid-20180212_210146_386552_A9962D4C)
 From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Steve deRosier <derosier@gmail.com>
-Cc: Samuel Sieb <samuel@sieb.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Feb 2018 11:26:44 +0200
-In-Reply-To: <87h8qdldfq.fsf@purkki.adurom.net>
-References: <HE1PR0501MB23969FCE58F1EE7634D412F0F6F50@HE1PR0501MB2396.eurprd05.prod.outlook.com>
-         <1518607856.21268.3.camel@sipsolutions.net>
-         <4f048d04-5f25-caa1-51b3-dcb14baf36da@sieb.net>
-         <CALLGbRLL-tnptVDuFt5E3QoTZ8Wn4K=2wLp3TCNvDJemkGVyKg@mail.gmail.com>
-         <87h8qdldfq.fsf@purkki.adurom.net>
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 12 Feb 2018 22:01:38 +0200
+In-Reply-To: <20180212185259.vuhee7ojgqyjdeeo@pali>
+References: <20180130194926.lg3grfffcsruiz4j@pali>
+         <1518461327.30914.17.camel@coelho.fi>
+         <20180212185259.vuhee7ojgqyjdeeo@pali>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: Max clients on wifi access point with 7265
+Subject: Re: Centrino Advanced-N 6235 - Microcode SW error detected
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-02-19 at 08:07 +0200, Kalle Valo wrote:
-> Steve deRosier <derosier@gmail.com> writes:
-> 
-> > On Wed, Feb 14, 2018 at 2:04 PM, Samuel Sieb <samuel@sieb.net>
-> > wrote:
-> > > On 02/14/2018 03:30 AM, Johannes Berg wrote:
-> > > > 
-> > > > On Wed, 2018-02-14 at 10:55 +0000, Mickaël PANNEQUIN wrote:
-> > > > 
-> > > > > 
-> > > > > Do you know the limit of the number of users connected at the
-> > > > > same
-> > > > > time on the wifi? Works fine with 14 connected devices but
-> > > > > not more.
-> > > > > 
-> > > > > How to increase it?
-> > > > 
-> > > > 
-> > > > You can't.
-> > > > 
-> > > > > This limit is hardware?
-> > > > 
-> > > > 
-> > > > More or less, yes. The HW/FW can support 16 STAs, but needs two
-> > > > for
-> > > > other bookkeeping.
+On Mon, 2018-02-12 at 19:52 +0100, Pali Rohár wrote:
+> On Monday 12 February 2018 20:48:47 Luca Coelho wrote:
+> > On Tue, 2018-01-30 at 20:49 +0100, Pali Rohár wrote:
+> > > Hello,
+> > 
+> > Hi Pali,
+> > 
+> > 
+> > > for almost 3 years I have a problem with Intel wifi card Centrino
+> > > Advanced-N 6235. Its firmware periodically crash and in dmesg I'm
+> > > seeing
+> > > a message "Microcode SW error detected".
 > > > 
+> > > Problem happens independently of kernel versions (I tried 3.8,
+> > > 3.13,
+> > > 3.18, 4.0, 4.9). Currently I'm using Debian Stretch and its 4.9
+> > > version.
 > > > 
-> > > As a general question, is there a standard way to determine this
-> > > limit for
-> > > any particular hardware?
+> > > This wifi card is identified as:
+> > > 
+> > > $ lspci -s 03:00.0 -vv
+> > > 03:00.0 Network controller: Intel Corporation Centrino Advanced-N 
+> > > 6235 (rev 24)
+> > >         Subsystem: Intel Corporation Centrino Advanced-N 6235 AGN
 > > 
+> > [...]
 > > 
-> > Yes, but there's no easy way. Put it in AP mode and connect clients
-> > to
-> > it until it starts rejecting new clients or dropping the old ones.
-> > Usually while watching it with a sniffer. That's how I've always
-> > had
-> > to do it.
+> > > And here is example of dmesg error flood:
+> > > 
+> > > [26624.998823] iwlwifi 0000:03:00.0: Microcode SW error
+> > > detected.  Restarting 0x2000000.
 > > 
-> > Different chips will have different limits, and there's no reliable
-> > way to determine the limit across all chips other than trial and
-> > error. It seems a common desire of people to try to use client
-> > chips
-> > as poor-man APs. While it will work for very limited number of
-> > clients, they're not intended as AP chips. If you want something to
-> > work as an AP, I recommend you choose an AP chip.
+> > [...]
+> > 
+> > > [26624.999013] iwlwifi 0000:03:00.0: Loaded firmware version:
+> > > 18.168.6.1
+> > > [26624.999117] iwlwifi 0000:03:00.0: Start IWL Error Log Dump:
+> > > [26624.999118] iwlwifi 0000:03:00.0: Status: 0x000002CC, count: 6
+> > > [26624.999120] iwlwifi 0000:03:00.0: 0x000028AA |
+> > > ADVANCED_SYSASSERT          
+> > > [27464.823779] iwlwifi 0000:03:00.0: Loaded firmware version:
+> > > 18.168.6.1
+> > > [27464.823903] iwlwifi 0000:03:00.0: Start IWL Error Log Dump:
+> > > [27464.823904] iwlwifi 0000:03:00.0: Status: 0x000002CC, count: 6
+> > > [27464.823906] iwlwifi 0000:03:00.0: 0x000028AA |
+> > > ADVANCED_SYSASSERT          
+> > 
+> > [...]
+> > 
+> > > This really looks like firmware problem. What can I do with these
+> > > microcode errors? Can you help me?
+> > 
+> > Yes, this is a firmware problem.  But unfortunately this is a
+> > really
+> > old hardware (6 years old) and we don't support the firmware
+> > anymore. 
 > 
-> We do have wiphy::max_ap_assoc_sta, but I see only ath10k, qtnfmac and
-> rsi_91x setting it. I wish all drivers would use that.
+> Hi! That is pity :-(
 > 
->  * @max_ap_assoc_sta: maximum number of associated stations supported in AP mode
->  * (including P2P GO) or 0 to indicate no such limit is advertised. The
->  * driver is allowed to advertise a theoretical limit that it can reach in
->  * some cases, but may not always reach.
+> > I'm sorry, but there is really nothing we can do.
+> 
+> So can I debug this problem myself? Is there any documentation or
+> resources for this?
 
-Cool, I hadn't noticed this before.  I'll add a patch to iwlwifi to add
-it.
+Nothing prevents you from trying to debug.  Maybe find the exact
+situation when this happens and try to make a workaround in the driver.
+ But unfortunately we don't have any public documentation for this
+firmware, so you'll have to try to solve it in the driver entirely.
+
+Sadly, I wouldn't have much hope in succeeding, since this is most
+likely a purely firmware side bug which may be impossible to work
+around in the driver. :(
+
+Good luck!
 
 --
 Cheers,
