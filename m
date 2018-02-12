@@ -1,115 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59270 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755142AbeBOIuI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 03:50:08 -0500
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 10/13] ath10k: Add support to get target info from hif ops
-Date: Thu, 15 Feb 2018 14:20:03 +0530
-Message-Id: <1518684603-5812-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_095011_836679_4A69C02B)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48542 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752532AbeBLR7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Feb 2018 12:59:09 -0500
+Subject: Re: [PATCH] net: make getname() functions return length rather than
+ use int* parameter
+To: David Miller <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-bluetooth@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org
+References: <20180212141518.3354-1-dvlasenk@redhat.com>
+ <20180212.124738.870301786818646917.davem@davemloft.net>
+From: Denys Vlasenko <dvlasenk@redhat.com>
+Message-ID: <4f0c5a1d-f75d-4c54-8cdd-5660b2233252@redhat.com> (sfid-20180212_185932_048398_88C90BB2)
+Date: Mon, 12 Feb 2018 18:59:06 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180212.124738.870301786818646917.davem@davemloft.net>
+Content-Type: text/plain; charset=iso-8859-7; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rakesh Pillai <pillair@codeaurora.org>
+On 02/12/2018 06:47 PM, David Miller wrote:
+> From: Denys Vlasenko <dvlasenk@redhat.com>
+> Date: Mon, 12 Feb 2018 15:15:18 +0100
+> 
+>> Before:
+>> All these functions either return a negative error indicator,
+>> or store length of sockaddr into "int *socklen" parameter
+>> and return zero on success.
+>>
+>> "int *socklen" parameter is awkward. For example, if caller does not
+>> care, it still needs to provide on-stack storage for the value
+>> it does not need.
+>>
+>> None of the many FOO_getname() functions of various protocols
+>> ever used old value of *socklen. They always just overwrite it.
+>>
+>> This change drops this parameter, and makes all these functions, on success,
+>> return length of sockaddr. It's always >= 0 and can be differentiated
+>> from an error.
+>>
+>> Tests in callers are changed from "if (err)" to "if (err < 0)", where needed.
+>>
+>> rpc_sockname() lost "int buflen" parameter, since its only use was
+>> to be passed to kernel_getsockname() as &buflen and subsequently
+>> not used in any way.
+>>
+>> Userspace API is not changed.
+>>
+>>      text    data     bss      dec     hex filename
+>> 30108430 2633624  873672 33615726 200ef6e vmlinux.before.o
+>> 30108109 2633612  873672 33615393 200ee21 vmlinux.o
+>>
+>> Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+> 
+> Please do an allmodconfig build, there are still some conversions you
+> missed:
+> 
+> security/tomoyo/network.c: In function ¡tomoyo_socket_listen_permission¢:
+> security/tomoyo/network.c:658:19: warning: passing argument 3 of ¡sock->ops->getname¢ makes integer from pointer without a cast [-Wint-conversion]
+>              &addr, &addr_len, 0);
+>                     ^
+> security/tomoyo/network.c:658:19: note: expected ¡int¢ but argument is of type ¡int *¢
+> security/tomoyo/network.c:657:21: error: too many arguments to function ¡sock->ops->getname¢
+>     const int error = sock->ops->getname(sock, (struct sockaddr *)
+>                       ^~~~
+> fs/dlm/lowcomms.c: In function ¡lowcomms_error_report¢:
+> fs/dlm/lowcomms.c:495:6: error: too many arguments to function ¡kernel_getpeername¢
+>        kernel_getpeername(con->sock, (struct sockaddr *)&saddr, &buflen)) {
+>        ^~~~~~~~~~~~~~~~~~
+> fs/dlm/lowcomms.c: In function ¡tcp_accept_from_sock¢:
+> fs/dlm/lowcomms.c:761:7: warning: passing argument 3 of ¡newsock->ops->getname¢ makes integer from pointer without a cast [-Wint-conversion]
+>         &len, 2)) {
+>         ^
+> fs/dlm/lowcomms.c:761:7: note: expected ¡int¢ but argument is of type ¡int *¢
+> fs/dlm/lowcomms.c:760:6: error: too many arguments to function ¡newsock->ops->getname¢
+>    if (newsock->ops->getname(newsock, (struct sockaddr *)&peeraddr,
+>        ^~~~~~~
 
-wcn3990 does not use bmi.
-Add support to get target info from hif ops.
-
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/core.c |  8 ++++++++
- drivers/net/wireless/ath/ath10k/hif.h  | 13 +++++++++++++
- drivers/net/wireless/ath/ath10k/snoc.c | 10 ++++++++++
- 3 files changed, 31 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 51444d3..bcce875 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2437,6 +2437,14 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		ar->hw->wiphy->hw_version = target_info.version;
- 		break;
- 	case ATH10K_BUS_SNOC:
-+		memset(&target_info, 0, sizeof(target_info));
-+		ret = ath10k_hif_get_target_info(ar, &target_info);
-+		if (ret) {
-+			ath10k_err(ar, "could not get target info (%d)\n", ret);
-+			goto err_power_down;
-+		}
-+		ar->target_version = target_info.version;
-+		ar->hw->wiphy->hw_version = target_info.version;
- 		break;
- 	default:
- 		ath10k_err(ar, "incorrect hif bus type: %d\n", ar->hif.bus);
-diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
-index 7abb13c..1a59ea0 100644
---- a/drivers/net/wireless/ath/ath10k/hif.h
-+++ b/drivers/net/wireless/ath/ath10k/hif.h
-@@ -20,6 +20,7 @@
- 
- #include <linux/kernel.h>
- #include "core.h"
-+#include "bmi.h"
- #include "debug.h"
- 
- struct ath10k_hif_sg_item {
-@@ -93,6 +94,9 @@ struct ath10k_hif_ops {
- 	/* fetch calibration data from target eeprom */
- 	int (*fetch_cal_eeprom)(struct ath10k *ar, void **data,
- 				size_t *data_len);
-+
-+	int (*get_target_info)(struct ath10k *ar,
-+			       struct bmi_target_info *target_info);
- };
- 
- static inline int ath10k_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
-@@ -218,4 +222,13 @@ static inline int ath10k_hif_fetch_cal_eeprom(struct ath10k *ar,
- 	return ar->hif.ops->fetch_cal_eeprom(ar, data, data_len);
- }
- 
-+static inline int ath10k_hif_get_target_info(struct ath10k *ar,
-+					     struct bmi_target_info *tgt_info)
-+{
-+	if (!ar->hif.ops->get_target_info)
-+		return -EOPNOTSUPP;
-+
-+	return ar->hif.ops->get_target_info(ar, tgt_info);
-+}
-+
- #endif /* _HIF_H_ */
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 6d9ccce..1ef0d3b 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -528,6 +528,15 @@ static int ath10k_snoc_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
- 	return err;
- }
- 
-+static int ath10k_snoc_hif_get_target_info(struct ath10k *ar,
-+					   struct bmi_target_info *target_info)
-+{
-+	target_info->version = ATH10K_HW_WCN3990;
-+	target_info->type = ATH10K_HW_WCN3990;
-+
-+	return 0;
-+}
-+
- static u16 ath10k_snoc_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
- {
- 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-@@ -787,6 +796,7 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
- 	.tx_sg			= ath10k_snoc_hif_tx_sg,
- 	.send_complete_check	= ath10k_snoc_hif_send_complete_check,
- 	.get_free_queue_number	= ath10k_snoc_hif_get_free_queue_number,
-+	.get_target_info	= ath10k_snoc_hif_get_target_info,
- };
- 
- static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
--- 
-1.9.1
+Sorry. Will send updated patch.
+  
