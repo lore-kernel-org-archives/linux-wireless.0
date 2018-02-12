@@ -1,30 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:51540 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750802AbeBVUTD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 15:19:03 -0500
-Date: Thu, 22 Feb 2018 15:19:02 -0500 (EST)
-Message-Id: <20180222.151902.347947675667607885.davem@davemloft.net> (sfid-20180222_211911_380791_2AA100AA)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2018-02-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180222201619.30037-1-johannes@sipsolutions.net>
-References: <20180222201619.30037-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from ozlabs.org ([103.22.144.67]:59661 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751483AbeBLM2N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Feb 2018 07:28:13 -0500
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Randy Dunlap <rdunlap@infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Fengguang Wu <fengguang.wu@intel.com>
+Cc: linux-s390 <linux-s390@vger.kernel.org>,
+        John Johansen <john.johansen@canonical.com>,
+        "netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+        X86 ML <x86@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        virtualization@lists.linux-foundation.org,
+        iommu@lists.linux-foundation.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        sparclinux@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH] headers: untangle kmemleak.h from mm.h
+In-Reply-To: <a4629db7-194d-3c7c-c8fd-24f61b220a70@infradead.org>
+References: <a4629db7-194d-3c7c-c8fd-24f61b220a70@infradead.org>
+Date: Mon, 12 Feb 2018 23:28:09 +1100
+Message-ID: <87zi4ev1d2.fsf@concordia.ellerman.id.au> (sfid-20180212_132834_802331_C59B1E01)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 22 Feb 2018 21:16:18 +0100
+Randy Dunlap <rdunlap@infradead.org> writes:
 
-> Wireless is slow ... but we're preparing for HE (802.11ax),
-> so I guess soon we'll have a big chunk of work coming :-)
+> From: Randy Dunlap <rdunlap@infradead.org>
+>
+> Currently <linux/slab.h> #includes <linux/kmemleak.h> for no obvious
+> reason. It looks like it's only a convenience, so remove kmemleak.h
+> from slab.h and add <linux/kmemleak.h> to any users of kmemleak_*
+> that don't already #include it.
+> Also remove <linux/kmemleak.h> from source files that do not use it.
+>
+> This is tested on i386 allmodconfig and x86_64 allmodconfig. It
+> would be good to run it through the 0day bot for other $ARCHes.
+> I have neither the horsepower nor the storage space for the other
+> $ARCHes.
+>
+> [slab.h is the second most used header file after module.h; kernel.h
+> is right there with slab.h. There could be some minor error in the
+> counting due to some #includes having comments after them and I
+> didn't combine all of those.]
+>
+> This is Lingchi patch #1 (death by a thousand cuts, applied to kernel
+> header files).
+>
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-I wondered where you guys have been hiding :-)
+I threw it at a random selection of configs and so far the only failures
+I'm seeing are:
 
-> Please pull and let me know if there's any problem.
+  lib/test_firmware.c:134:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]                                                                                                          
+  lib/test_firmware.c:620:25: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
+  lib/test_firmware.c:620:2: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
+  security/integrity/digsig.c:146:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]
 
-Pulled, thank you!
+Full results trickling in here, not all the failures there are caused by
+this patch, ie. some configs are broken in mainline:
+
+  http://kisskb.ellerman.id.au/kisskb/head/13396/
+
+cheers
