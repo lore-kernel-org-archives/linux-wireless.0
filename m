@@ -1,101 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:43368 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933125AbeBPKza (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:55552 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751379AbeBLRrn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 05:55:30 -0500
-Received: by mail-wr0-f176.google.com with SMTP id b52so2444747wrd.10
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2018 02:55:29 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Cc: ath10k@lists.infradead.org, mohammed@codeaurora.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] ath10k: fix CCK h/w rates for QCA99X0 and newer chipsets
-Date: Fri, 16 Feb 2018 11:55:26 +0100
-Message-ID: <1934280.TgFv3YZ0ZR@bentobox> (sfid-20180216_115534_534894_FB0502D1)
-In-Reply-To: <1464852235-13110-2-git-send-email-mohammed@qca.qualcomm.com>
-References: <1464852235-13110-1-git-send-email-mohammed@qca.qualcomm.com> <1464852235-13110-2-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2072417.djJGnljY5C"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+        Mon, 12 Feb 2018 12:47:43 -0500
+Date: Mon, 12 Feb 2018 12:47:38 -0500 (EST)
+Message-Id: <20180212.124738.870301786818646917.davem@davemloft.net> (sfid-20180212_184811_092509_B3EA58FA)
+To: dvlasenk@redhat.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-bluetooth@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org
+Subject: Re: [PATCH] net: make getname() functions return length rather
+ than use int* parameter
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180212141518.3354-1-dvlasenk@redhat.com>
+References: <20180212141518.3354-1-dvlasenk@redhat.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2072417.djJGnljY5C
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-
-On Donnerstag, 2. Juni 2016 12:53:55 CET Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> CCK hardware table mapping from QCA99X0 onwards got revised.
-> The CCK hardware rate values are in a proper order wrt. to
-> rate and preamble as below
-> 
-> ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
-> ATH10K_HW_RATE_REV2_CCK_LP_2M = 2,
-> ATH10K_HW_RATE_REV2_CCK_LP_5_5M = 3,
-> ATH10K_HW_RATE_REV2_CCK_LP_11M = 4,
-> ATH10K_HW_RATE_REV2_CCK_SP_2M = 5,
-> ATH10K_HW_RATE_REV2_CCK_SP_5_5M = 6,
-> ATH10K_HW_RATE_REV2_CCK_SP_11M = 7,
-> 
-> This results in reporting of rx frames (with CCK rates)
-> totally wrong for QCA99X0, QCA4019. Fix this by having
-> separate CCK rate table for these chipsets with rev2 suffix
-> and registering the correct rate mapping to mac80211 based on
-> the new hw_param (introduced) 'cck_rate_map_rev2' which shall
-> be true for any newchipsets from QCA99X0 onwards
-
-I just tested it here with QCA4019 + 10.4-3.2.1-00050 for beacons. The 
-calculated HW code for 1.0 MBit/s would be 0x41 (rate_code) according to this 
-new mapping. But when I set it with 
-
-    	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
-    					ar->wmi.vdev_param->mcast_data_rate,
-    					rate_code);
-
-then it sends beacons with 5.5Mbit/s and not with 1.0Mbit/s.
-
-Btw. the rate_code was calculated using:
-
-    		if (ath10k_mac_bitrate_is_cck(sband->bitrates[i].bitrate))
-    			preamble = WMI_RATE_PREAMBLE_CCK;
-    		else
-    			preamble = WMI_RATE_PREAMBLE_OFDM;
-    
-    		rate_code = ATH10K_HW_RATECODE(hw_value, 0, preamble);
-
-It works fine when using the old mapping (0x43).
-
-This made me rather curious and I've connected a client to the AP which was 
-only able to send at 1.0 Mbit/s - this actually resulted in the correctly 
-reported rates at in the rx field.
-
-Does this mean that the rates are now inconsistent because the QCA fw doesn't 
-provide a consistent interface for hw rates or did I miss anything?
-
-Kind regards,
-	Sven
---nextPart2072417.djJGnljY5C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlqGuJ4ACgkQXYcKB8Em
-e0aEuhAAl7DE96Z10IGK7OiZJ5jd7nURAaGqVuZ9Ip5Pc9bn2Ilh1ZqKi5mOUydL
-B37+skEIrmS/8aOknBy5dJuWSttX5qHEKEmRjko1ayN82PPgB3e4EupbQ0wso9KE
-Ajhs2CL43IQgCTW87tSbtbC38PX7Y8tCcIckxvvKbeNBbDwZNyHbry9eGElWaUrh
-XMMI21dgjpFk/YxyC0g0SGoUH4fvbTzmLN+ppiyqsobbS7BIASRvV5iLneiIjJeD
-QX0+cKTe52I+AsW1p7tLzRrTsc2n9mNFwpS7wQ+lFwmfOTXMDXZGIThHb38yI+4B
-WTa+vxM89oTw/p+j5YHRCVIK8m69TXMtFUSzUUV7zEgrPAEWCkk5fIuTLU091Nu2
-04D2BjOao/1pQW7I2/QHHoYjsw0QWMFIgXM1XnftaObVWoT+uV98w5qLwKaDxJdy
-xY568H+9ZkodAgreP8tB1WazsicwHNg0B6yaVgTrPDm199peOGp5P2euZGn6QXeO
-tkyjAbczE9nuA3uXgjHtwEXOJ5F8bIby9eswz3X5l6/hLXNWqBwvSTFyvGgCQHQL
-q4f9Inx3uqCXIvdYag4hamT5JlvQ7YFAK1WsRDKftyVTnMu8h2ZUXyeWBeTfWLb0
-bUaGZSmfxLSxgvQmpEXhwfX8wa0ItqjFSKqApUzeVovbujSJvjA=
-=WfZW
------END PGP SIGNATURE-----
-
---nextPart2072417.djJGnljY5C--
+RnJvbTogRGVueXMgVmxhc2Vua28gPGR2bGFzZW5rQHJlZGhhdC5jb20+DQpEYXRlOiBNb24sIDEy
+IEZlYiAyMDE4IDE1OjE1OjE4ICswMTAwDQoNCj4gQmVmb3JlOg0KPiBBbGwgdGhlc2UgZnVuY3Rp
+b25zIGVpdGhlciByZXR1cm4gYSBuZWdhdGl2ZSBlcnJvciBpbmRpY2F0b3IsDQo+IG9yIHN0b3Jl
+IGxlbmd0aCBvZiBzb2NrYWRkciBpbnRvICJpbnQgKnNvY2tsZW4iIHBhcmFtZXRlcg0KPiBhbmQg
+cmV0dXJuIHplcm8gb24gc3VjY2Vzcy4NCj4gDQo+ICJpbnQgKnNvY2tsZW4iIHBhcmFtZXRlciBp
+cyBhd2t3YXJkLiBGb3IgZXhhbXBsZSwgaWYgY2FsbGVyIGRvZXMgbm90DQo+IGNhcmUsIGl0IHN0
+aWxsIG5lZWRzIHRvIHByb3ZpZGUgb24tc3RhY2sgc3RvcmFnZSBmb3IgdGhlIHZhbHVlDQo+IGl0
+IGRvZXMgbm90IG5lZWQuDQo+IA0KPiBOb25lIG9mIHRoZSBtYW55IEZPT19nZXRuYW1lKCkgZnVu
+Y3Rpb25zIG9mIHZhcmlvdXMgcHJvdG9jb2xzDQo+IGV2ZXIgdXNlZCBvbGQgdmFsdWUgb2YgKnNv
+Y2tsZW4uIFRoZXkgYWx3YXlzIGp1c3Qgb3ZlcndyaXRlIGl0Lg0KPiANCj4gVGhpcyBjaGFuZ2Ug
+ZHJvcHMgdGhpcyBwYXJhbWV0ZXIsIGFuZCBtYWtlcyBhbGwgdGhlc2UgZnVuY3Rpb25zLCBvbiBz
+dWNjZXNzLA0KPiByZXR1cm4gbGVuZ3RoIG9mIHNvY2thZGRyLiBJdCdzIGFsd2F5cyA+PSAwIGFu
+ZCBjYW4gYmUgZGlmZmVyZW50aWF0ZWQNCj4gZnJvbSBhbiBlcnJvci4NCj4gDQo+IFRlc3RzIGlu
+IGNhbGxlcnMgYXJlIGNoYW5nZWQgZnJvbSAiaWYgKGVycikiIHRvICJpZiAoZXJyIDwgMCkiLCB3
+aGVyZSBuZWVkZWQuDQo+IA0KPiBycGNfc29ja25hbWUoKSBsb3N0ICJpbnQgYnVmbGVuIiBwYXJh
+bWV0ZXIsIHNpbmNlIGl0cyBvbmx5IHVzZSB3YXMNCj4gdG8gYmUgcGFzc2VkIHRvIGtlcm5lbF9n
+ZXRzb2NrbmFtZSgpIGFzICZidWZsZW4gYW5kIHN1YnNlcXVlbnRseQ0KPiBub3QgdXNlZCBpbiBh
+bnkgd2F5Lg0KPiANCj4gVXNlcnNwYWNlIEFQSSBpcyBub3QgY2hhbmdlZC4NCj4gDQo+ICAgICB0
+ZXh0ICAgIGRhdGEgICAgIGJzcyAgICAgIGRlYyAgICAgaGV4IGZpbGVuYW1lDQo+IDMwMTA4NDMw
+IDI2MzM2MjQgIDg3MzY3MiAzMzYxNTcyNiAyMDBlZjZlIHZtbGludXguYmVmb3JlLm8NCj4gMzAx
+MDgxMDkgMjYzMzYxMiAgODczNjcyIDMzNjE1MzkzIDIwMGVlMjEgdm1saW51eC5vDQo+IA0KPiBT
+aWduZWQtb2ZmLWJ5OiBEZW55cyBWbGFzZW5rbyA8ZHZsYXNlbmtAcmVkaGF0LmNvbT4NCg0KUGxl
+YXNlIGRvIGFuIGFsbG1vZGNvbmZpZyBidWlsZCwgdGhlcmUgYXJlIHN0aWxsIHNvbWUgY29udmVy
+c2lvbnMgeW91DQptaXNzZWQ6DQoNCnNlY3VyaXR5L3RvbW95by9uZXR3b3JrLmM6IEluIGZ1bmN0
+aW9uIKF0b21veW9fc29ja2V0X2xpc3Rlbl9wZXJtaXNzaW9uojoNCnNlY3VyaXR5L3RvbW95by9u
+ZXR3b3JrLmM6NjU4OjE5OiB3YXJuaW5nOiBwYXNzaW5nIGFyZ3VtZW50IDMgb2YgoXNvY2stPm9w
+cy0+Z2V0bmFtZaIgbWFrZXMgaW50ZWdlciBmcm9tIHBvaW50ZXIgd2l0aG91dCBhIGNhc3QgWy1X
+aW50LWNvbnZlcnNpb25dDQogICAgICAgICAgICAmYWRkciwgJmFkZHJfbGVuLCAwKTsNCiAgICAg
+ICAgICAgICAgICAgICBeDQpzZWN1cml0eS90b21veW8vbmV0d29yay5jOjY1ODoxOTogbm90ZTog
+ZXhwZWN0ZWQgoWludKIgYnV0IGFyZ3VtZW50IGlzIG9mIHR5cGUgoWludCAqog0Kc2VjdXJpdHkv
+dG9tb3lvL25ldHdvcmsuYzo2NTc6MjE6IGVycm9yOiB0b28gbWFueSBhcmd1bWVudHMgdG8gZnVu
+Y3Rpb24goXNvY2stPm9wcy0+Z2V0bmFtZaINCiAgIGNvbnN0IGludCBlcnJvciA9IHNvY2stPm9w
+cy0+Z2V0bmFtZShzb2NrLCAoc3RydWN0IHNvY2thZGRyICopDQogICAgICAgICAgICAgICAgICAg
+ICBefn5+DQpmcy9kbG0vbG93Y29tbXMuYzogSW4gZnVuY3Rpb24goWxvd2NvbW1zX2Vycm9yX3Jl
+cG9ydKI6DQpmcy9kbG0vbG93Y29tbXMuYzo0OTU6NjogZXJyb3I6IHRvbyBtYW55IGFyZ3VtZW50
+cyB0byBmdW5jdGlvbiCha2VybmVsX2dldHBlZXJuYW1log0KICAgICAga2VybmVsX2dldHBlZXJu
+YW1lKGNvbi0+c29jaywgKHN0cnVjdCBzb2NrYWRkciAqKSZzYWRkciwgJmJ1ZmxlbikpIHsNCiAg
+ICAgIF5+fn5+fn5+fn5+fn5+fn5+fg0KZnMvZGxtL2xvd2NvbW1zLmM6IEluIGZ1bmN0aW9uIKF0
+Y3BfYWNjZXB0X2Zyb21fc29ja6I6DQpmcy9kbG0vbG93Y29tbXMuYzo3NjE6Nzogd2FybmluZzog
+cGFzc2luZyBhcmd1bWVudCAzIG9mIKFuZXdzb2NrLT5vcHMtPmdldG5hbWWiIG1ha2VzIGludGVn
+ZXIgZnJvbSBwb2ludGVyIHdpdGhvdXQgYSBjYXN0IFstV2ludC1jb252ZXJzaW9uXQ0KICAgICAg
+ICZsZW4sIDIpKSB7DQogICAgICAgXg0KZnMvZGxtL2xvd2NvbW1zLmM6NzYxOjc6IG5vdGU6IGV4
+cGVjdGVkIKFpbnSiIGJ1dCBhcmd1bWVudCBpcyBvZiB0eXBlIKFpbnQgKqINCmZzL2RsbS9sb3dj
+b21tcy5jOjc2MDo2OiBlcnJvcjogdG9vIG1hbnkgYXJndW1lbnRzIHRvIGZ1bmN0aW9uIKFuZXdz
+b2NrLT5vcHMtPmdldG5hbWWiDQogIGlmIChuZXdzb2NrLT5vcHMtPmdldG5hbWUobmV3c29jaywg
+KHN0cnVjdCBzb2NrYWRkciAqKSZwZWVyYWRkciwNCiAgICAgIF5+fn5+fn4NCg==
