@@ -1,97 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f178.google.com ([74.125.82.178]:36525 "EHLO
-        mail-ot0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751679AbeBUIOd (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:41968 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935792AbeBLOE2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 03:14:33 -0500
-Received: by mail-ot0-f178.google.com with SMTP id b15so698202otf.3
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2018 00:14:33 -0800 (PST)
+        Mon, 12 Feb 2018 09:04:28 -0500
+Received: by mail-oi0-f53.google.com with SMTP id m83so11214252oik.8
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2018 06:04:28 -0800 (PST)
 MIME-Version: 1.0
 From: Daniel Drake <drake@endlessm.com>
-Date: Wed, 21 Feb 2018 11:14:32 +0300
-Message-ID: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com> (sfid-20180221_091439_263393_EBF72896)
-Subject: brcmfmac signal/interference issues
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        chi-hsien.lin@cypress.com, wright.feng@cypress.com
+Date: Mon, 12 Feb 2018 17:04:26 +0300
+Message-ID: <CAD8Lp47D5sGCpxSiFYQviu0a62W4aj-5Sgs6sjE7E2cZWwsUwg@mail.gmail.com> (sfid-20180212_150434_512304_514131C0)
+Subject: Make brcmfmac repeat authentication requests
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com
 Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Linux Upstreaming Team <linux@endlessm.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-We're working with the Weibu F3C MiniPC which includes BCM43455 SDIO
-wifi chip 0x004345(17221) rev 0x000006 (AP6255 module).
+We are working with the Weibu F3C MiniPC which includes BCM43455 SDIO
+wifi chip 0x004345(17221) rev 0x000006
 
-We are seeing a strange issue where usually within an hour of usage,
-the wifi connection becomes so unstable and lossy that it is unusable.
-While investigating this my standard test is to send ICMP pings to the
-IP address of the local access point. Normally the latency is 5-10ms,
-but when this problem is seen it will go to 500ms and then increase up
-towards 20s before completely timing out.
+Testing Linux 4.15, this wifi adapter is unable to authenticate with
+the MF928 MiFi Access Point which is common in Africa. The STA sends
+the authentication request, which is ACKed by the AP, but then the
+conversation ends there (a timeout later bubbles up to userspace).
+Windows 10 with broadcom driver version 1.605.1.0 is also unable to
+connect.
 
-Sometimes it is possible to induce the problem on-demand by stressing
-some combination of CPU, disk and/or USB. At this point, ping reply
-latency increases from ~5ms to 500ms+ before increasing even further.
-Killing the stress test, the pings immediately return to normal. This
-is not concrete though - I also seem to have a lot of luck hitting the
-problem in the morning when booting up the computer from stone cold
-state, while it is idle.
+My laptop with ath10k can authenticate and connect fine. There the
+conversation is:
 
-When the problem is being reproduced (ping times are high or get no
-response), touching the exposed metal on the antenna connector with my
-finger makes ping times return to normal. Touching it with a piece of
-plastic does not have the same effect - so it is some effect of body
-capacitance or similar. Also, disconnecting the antenna makes ping
-times return to normal, although outside of the simple pings,
-bandwidth is much reduced.
+1. STA sends authentication request
+2. AP sends ACK
+3. After 0.1s timeout, STA sends another auth request
+4. AP sends ACK
+5. AP sends authentication response
+6. etc.
 
-Additionally, when the problem is being reproduced, if I move the
-antenna outside of the case, ping times return to normal. When I move
-the antenna back into the miniPC case vicinity, it goes slow and lossy
-again.
+Also confirmed the same pattern on a couple of smartphones, where the
+delay seems to be 0.3s before repeating the authentication request.
 
-I have used a separate monitoring station with wireshark to look at
-the 802.11 traffic while this is happening. When the problem is
-reproduced, the miniPC is mostly unable to TX anything, and the AP
-sends frames and retries them but with no ACK visible from the miniPC.
-Immediately when I touch the antenna connector with my finger, tx
-frames from the miniPC appear and the conversation comes back to life.
+Clearly this AP is not behaving correctly; the authentication request
+should not have to be repeated. However of all the devices to hand,
+unfortunately only this broadcom device is unable to connect.
 
-Running Linux 4.15 but we believe all versions are affected.
-
-This very much sounds like a hardware issue, but here is where things
-get interesting: Windows 10 on the same unit has no such problem.
-
-I set up 2 units side by side - one running Windows 10 and the other
-running Linux, connected to the same AP. The top part of the MiniPC
-case has been removed so I can see the motherboard. I free up the
-antennas from the MiniPC casing and they are on a relatively long
-cable, so they can be freely moved around in this test, allowing me to
-dangle the antenna into the vicinity of the neighbouring unit miniPC
-case.
-
-If I place both antenna terminals inside the Linux MiniPC case, the
-Linux pings are bad but the Windows pings are fine.
-
-If I place both antenna terminals inside the Windows MiniPC case, it
-is the same: Linux pings are bad, but the Windows pings are fine.
-
-And when the Linux antenna is placed outside of both cases, the Linux
-pings are fine. I've repeated these tests a handful of times in quick
-succession to make sure that I'm not going crazy and that this is not
-a case of the problem intermittency causing misleading results. These
-findings appear very solid.
-
-This suggests that regardless of the running OS, the MiniPC produces
-some kind of interference that intermittently has an extremely
-detrimental effect on wifi signal when you are running Linux. However,
-Windows is somehow immune to this.
-
-Any ideas for how to continue debugging this? How can we make the
-Linux driver immune to this interference like the windows one is?
+Is there a way to adjust the driver/firmware to repeat the
+authentication requests when they are not responded to? This would
+match the behaviour of other devices and work around this issue.
 
 Thanks
 Daniel
