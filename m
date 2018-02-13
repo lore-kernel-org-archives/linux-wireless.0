@@ -1,115 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48275 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751463AbeB1BTG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 20:19:06 -0500
-Date: Wed, 28 Feb 2018 01:19:01 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Kees Cook <keescook@chromium.org>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, cantabile.desu@gmail.com,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Shuah Khan <shuah@kernel.org>,
-        Martin Fuzzey <mfuzzey@parkeon.com>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        David Howells <dhowells@redhat.com>, pali.rohar@gmail.com,
-        Takashi Iwai <tiwai@suse.de>, arend.vanspriel@broadcom.com,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        nbroeking@me.com, Vikram Mulukutla <markivx@codeaurora.org>,
-        stephen.boyd@linaro.org, Mark Brown <broonie@kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        LKML <linux-kernel@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [RFT 2/7] firmware: fix checking for return values for
- fw_add_devm_name()
-Message-ID: <20180228011900.GD14069@wotan.suse.de> (sfid-20180228_021924_538687_14E1B3F2)
-References: <20180227232101.20786-1-mcgrof@kernel.org>
- <20180227232101.20786-3-mcgrof@kernel.org>
- <CAGXu5jLxAPyBfzvM3izKYYjVz6P=7LQRkxNxUz1Cxwky1gPoUA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGXu5jLxAPyBfzvM3izKYYjVz6P=7LQRkxNxUz1Cxwky1gPoUA@mail.gmail.com>
+Received: from mail-io0-f196.google.com ([209.85.223.196]:38593 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935099AbeBMMNl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Feb 2018 07:13:41 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v6 7/8] rsi: add module parameter operating mode
+Date: Tue, 13 Feb 2018 17:31:43 +0530
+Message-Id: <1518523304-3424-8-git-send-email-amitkarwar@gmail.com> (sfid-20180213_131346_182271_AAC11821)
+In-Reply-To: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
+References: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 27, 2018 at 03:29:53PM -0800, Kees Cook wrote:
-> On Tue, Feb 27, 2018 at 3:20 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> > fw_add_devm_name() adds device's name onto the devres for the
-> > device so that prior to suspend we cache the firmware onto memory,
-> > so that on resume the firmware is reliably available. We never
-> > were checking for success for this call though, meaning in some
-> > really rare cases we my have never setup the firmware cache for
-> > a device, which could in turn make resume fail.
-> >
-> > This is all theoretical, no known issues have been reported.
-> > This small issue has been present way since the addition of the
-> > devres firmware cache names on v3.7.
-> >
-> > Fixes: f531f05ae9437 ("firmware loader: store firmware name into devres list")
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> > ---
-> >  drivers/base/firmware_loader.c | 10 ++++++++--
-> >  1 file changed, 8 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
-> > index 21dd31ef08ae..48932581c70c 100644
-> > --- a/drivers/base/firmware_loader.c
-> > +++ b/drivers/base/firmware_loader.c
-> > @@ -431,6 +431,7 @@ int assign_fw(struct firmware *fw, struct device *device,
-> >               unsigned int opt_flags)
-> >  {
-> >         struct fw_priv *fw_priv = fw->priv;
-> > +       int ret;
-> >
-> >         mutex_lock(&fw_lock);
-> >         if (!fw_priv->size || fw_state_is_aborted(fw_priv)) {
-> > @@ -447,8 +448,13 @@ int assign_fw(struct firmware *fw, struct device *device,
-> >          */
-> >         /* don't cache firmware handled without uevent */
-> >         if (device && (opt_flags & FW_OPT_UEVENT) &&
-> > -           !(opt_flags & FW_OPT_NOCACHE))
-> > -               fw_add_devm_name(device, fw_priv->fw_name);
-> > +           !(opt_flags & FW_OPT_NOCACHE)) {
-> > +               ret = fw_add_devm_name(device, fw_priv->fw_name);
-> > +               if (ret && ret != 1) {
-> 
-> Why not if (ret < 0) ?
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Could be, either way I remove this later for just (ret) after I adjust
-fw_add_devm_name() to not return 1 anymore.
+Operating mode determines the support for other protocols.
+This is made as module parameter for better usage.
 
-So its just a temporal check, I added this patch first so that this can
-be merged into kernels who want the fix.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_main.c | 48 ++++++++++++++++++++++++++++++---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 10 ++++++-
+ drivers/net/wireless/rsi/rsi_91x_usb.c  | 10 ++++++-
+ drivers/net/wireless/rsi/rsi_common.h   |  2 +-
+ drivers/net/wireless/rsi/rsi_hal.h      | 11 ++++++++
+ 5 files changed, 74 insertions(+), 7 deletions(-)
 
-  Luis
-
-> 
-> -Kees
-> 
-> > +                       mutex_unlock(&fw_lock);
-> > +                       return ret;
-> > +               }
-> > +       }
-> >
-> >         /*
-> >          * After caching firmware image is started, let it piggyback
-> > --
-> > 2.16.2
-> >
-> 
-> 
-> 
-> -- 
-> Kees Cook
-> Pixel Security
-> 
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index e5bb7e7..05556b0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -70,8 +70,24 @@ EXPORT_SYMBOL_GPL(rsi_dbg);
+ static char *opmode_str(int oper_mode)
+ {
+ 	switch (oper_mode) {
+-	case RSI_DEV_OPMODE_WIFI_ALONE:
++	case DEV_OPMODE_WIFI_ALONE:
+ 		return "Wi-Fi alone";
++	case DEV_OPMODE_BT_ALONE:
++		return "BT EDR alone";
++	case DEV_OPMODE_BT_LE_ALONE:
++		return "BT LE alone";
++	case DEV_OPMODE_BT_DUAL:
++		return "BT Dual";
++	case DEV_OPMODE_STA_BT:
++		return "Wi-Fi STA + BT EDR";
++	case DEV_OPMODE_STA_BT_LE:
++		return "Wi-Fi STA + BT LE";
++	case DEV_OPMODE_STA_BT_DUAL:
++		return "Wi-Fi STA + BT DUAL";
++	case DEV_OPMODE_AP_BT:
++		return "Wi-Fi AP + BT EDR";
++	case DEV_OPMODE_AP_BT_DUAL:
++		return "Wi-Fi AP + BT DUAL";
+ 	}
+ 
+ 	return "Unknown";
+@@ -278,7 +294,7 @@ void rsi_set_bt_context(void *priv, void *bt_context)
+  *
+  * Return: Pointer to the adapter structure on success, NULL on failure .
+  */
+-struct rsi_hw *rsi_91x_init(void)
++struct rsi_hw *rsi_91x_init(u16 oper_mode)
+ {
+ 	struct rsi_hw *adapter = NULL;
+ 	struct rsi_common *common = NULL;
+@@ -321,9 +337,33 @@ struct rsi_hw *rsi_91x_init(void)
+ 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
+ 	init_completion(&common->wlan_init_completion);
+ 	common->init_done = true;
++	adapter->device_model = RSI_DEV_9113;
++	common->oper_mode = oper_mode;
++
++	/* Determine coex mode */
++	switch (common->oper_mode) {
++	case DEV_OPMODE_STA_BT_DUAL:
++	case DEV_OPMODE_STA_BT:
++	case DEV_OPMODE_STA_BT_LE:
++	case DEV_OPMODE_BT_ALONE:
++	case DEV_OPMODE_BT_LE_ALONE:
++	case DEV_OPMODE_BT_DUAL:
++		common->coex_mode = 2;
++		break;
++	case DEV_OPMODE_AP_BT_DUAL:
++	case DEV_OPMODE_AP_BT:
++		common->coex_mode = 4;
++		break;
++	case DEV_OPMODE_WIFI_ALONE:
++		common->coex_mode = 1;
++		break;
++	default:
++		common->oper_mode = 1;
++		common->coex_mode = 1;
++	}
++	rsi_dbg(INFO_ZONE, "%s: oper_mode = %d, coex_mode = %d\n",
++		__func__, common->oper_mode, common->coex_mode);
+ 
+-	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
+-	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
+ 	adapter->device_model = RSI_DEV_9113;
+ #ifdef CONFIG_RSI_COEX
+ 	if (common->coex_mode > 1) {
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index ba38c6d..5722736 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -21,6 +21,14 @@
+ #include "rsi_coex.h"
+ #include "rsi_hal.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
+  * @rw: Read/write
+@@ -926,7 +934,7 @@ static int rsi_probe(struct sdio_func *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index b33a05f..0a50cff 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -21,6 +21,14 @@
+ #include "rsi_hal.h"
+ #include "rsi_coex.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_usb_card_write() - This function writes to the USB Card.
+  * @adapter: Pointer to the adapter structure.
+@@ -708,7 +716,7 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index 4616585..d9ff3b8 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -81,7 +81,7 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
+ 
+ void rsi_mac80211_detach(struct rsi_hw *hw);
+ u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
+-struct rsi_hw *rsi_91x_init(void);
++struct rsi_hw *rsi_91x_init(u16 oper_mode);
+ void rsi_91x_deinit(struct rsi_hw *adapter);
+ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
+ #ifdef CONFIG_PM
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index e712223..a7d3011 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -17,6 +17,17 @@
+ #ifndef __RSI_HAL_H__
+ #define __RSI_HAL_H__
+ 
++/* Device Operating modes */
++#define DEV_OPMODE_WIFI_ALONE		1
++#define DEV_OPMODE_BT_ALONE		4
++#define DEV_OPMODE_BT_LE_ALONE		8
++#define DEV_OPMODE_BT_DUAL		12
++#define DEV_OPMODE_STA_BT		5
++#define DEV_OPMODE_STA_BT_LE		9
++#define DEV_OPMODE_STA_BT_DUAL		13
++#define DEV_OPMODE_AP_BT		6
++#define DEV_OPMODE_AP_BT_DUAL		14
++
+ #define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
+ #define FLASH_SECTOR_SIZE		(4 * 1024)
+ 
 -- 
-Luis Rodriguez, SUSE LINUX GmbH
-Maxfeldstrasse 5; D-90409 Nuernberg
+2.7.4
