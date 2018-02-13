@@ -1,41 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:35105 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754421AbeBGTfH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34500 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934253AbeBMJWB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Feb 2018 14:35:07 -0500
-Received: by mail-qk0-f193.google.com with SMTP id c4so324818qkm.2
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Feb 2018 11:35:07 -0800 (PST)
-Subject: Re: [PATCH v2] ieee80211: Increase the PMK maximum length to 64 bytes
-To: Srinivas Dasari <dasaris@codeaurora.org>, johannes@sipsolutions.net
-References: <1518020451-8743-1-git-send-email-dasaris@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, jouni@codeaurora.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A7B54E9.8070805@broadcom.com> (sfid-20180207_203517_509069_A58F62A1)
-Date: Wed, 7 Feb 2018 20:35:05 +0100
-MIME-Version: 1.0
-In-Reply-To: <1518020451-8743-1-git-send-email-dasaris@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Tue, 13 Feb 2018 04:22:01 -0500
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCHv2 2/3] mac80211: enable setting cqm rssi config for AP mode
+Date: Tue, 13 Feb 2018 14:53:13 +0530
+Message-Id: <1518513793-22363-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180213_102208_898165_3B99D789)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/7/2018 5:20 PM, Srinivas Dasari wrote:
-> This is needed to cover the case of DPP with the NIST P-521 and
-> brainpoolP512r1 curves which derive a PMK that is longer than the
-> previously used limit.
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 
-So how are driver supposed to deal with this longer PMK. Maybe if you 
-could elaborate on what DPP stands for in this context it would become 
-more clear. Can we stick with PMK_MAX_LEN or does it need to be more 
-fine-grained per use-case? If existing drivers only support 48 bytes PMK 
-and trust nl80211 code to check that limit it may screw them up. Not? If 
-this is preparation for subsequent patches I would put it all in one 
-patch series.
+Enable connection monitoring for AP mode which makes it possible to
+track signal strength of connected stations.
 
-Regards,
-Arend
+Co-Developed-by: Tamizh Chelvam <tamizhr@codeaurora.org>
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+---
+ net/mac80211/cfg.c |   31 +++++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-> Signed-off-by: Srinivas Dasari <dasaris@codeaurora.org>
-> ---
->   include/linux/ieee80211.h | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 46028e1..ca95733 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2689,6 +2689,25 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++static void ieee80211_update_rssi_config(struct ieee80211_sub_if_data *sdata)
++{
++	if (!(sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI))
++		return;
++
++	/* tell the driver upon association, unless already associated */
++	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++	    !sdata->u.mgd.associated)
++		return;
++
++	/* if AP, always tell the driver by checking beacon status */
++	if (!sdata->vif.bss_conf.enable_beacon ||
++	    !wiphy_ext_feature_isset(sdata->local->hw.wiphy,
++				NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG))
++		return;
++
++	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
++}
++
+ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+ 					 s32 rssi_thold, u32 rssi_hyst)
+@@ -2711,11 +2730,7 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
+ 	bss_conf->cqm_rssi_high = 0;
+ 	sdata->u.mgd.last_cqm_event_signal = 0;
+ 
+-	/* tell the driver upon association, unless already associated */
+-	if (sdata->u.mgd.associated &&
+-	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
+-		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
+-
++	ieee80211_update_rssi_config(sdata);
+ 	return 0;
+ }
+ 
+@@ -2736,11 +2751,7 @@ static int ieee80211_set_cqm_rssi_range_config(struct wiphy *wiphy,
+ 	bss_conf->cqm_rssi_hyst = 0;
+ 	sdata->u.mgd.last_cqm_event_signal = 0;
+ 
+-	/* tell the driver upon association, unless already associated */
+-	if (sdata->u.mgd.associated &&
+-	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
+-		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
+-
++	ieee80211_update_rssi_config(sdata);
+ 	return 0;
+ }
+ 
+-- 
+1.7.9.5
