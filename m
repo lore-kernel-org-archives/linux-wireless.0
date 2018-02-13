@@ -1,79 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56168 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752855AbeB1SFG (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:34547 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933825AbeBMKWc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 13:05:06 -0500
-Subject: Re: [RFC] ath10k: Attempt to work around napi_synchronize hang.
-To: =?UTF-8?Q?Micha=c5=82_Kazior?= <kazikcz@gmail.com>
-References: <1519780965-15292-1-git-send-email-greearb@candelatech.com>
- <CABvG-CU1jf4xN+LZdkdejqr67Mcs-JdvGrvHnh0pB2VSJjJZzQ@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <95ddec98-2613-7e6d-3ec8-d47d1aa527db@candelatech.com> (sfid-20180228_190510_494575_CEDE89C3)
-Date: Wed, 28 Feb 2018 10:05:04 -0800
+        Tue, 13 Feb 2018 05:22:32 -0500
 MIME-Version: 1.0
-In-Reply-To: <CABvG-CU1jf4xN+LZdkdejqr67Mcs-JdvGrvHnh0pB2VSJjJZzQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <87y3kdmcxe.fsf@purkki.adurom.net>
+References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
+ <1513168977-2121-4-git-send-email-amitkarwar@gmail.com> <87y3kdmcxe.fsf@purkki.adurom.net>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Tue, 13 Feb 2018 15:52:30 +0530
+Message-ID: <CAEhWJF=oMHU=9HkFJETVnC0bLozic7NTZ6qLP2hk3ezk5iKODg@mail.gmail.com> (sfid-20180213_112238_236730_25FB525C)
+Subject: Re: [v5 3/8] rsi: add header file rsi_header
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/28/2018 09:31 AM, Michał Kazior wrote:
-> On 28 February 2018 at 02:22,  <greearb@candelatech.com> wrote:
+On Thu, Feb 1, 2018 at 12:09 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>
+>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>
+>> The common parameters used by wlan and bt modules are added
+>> to a new header file "rsi_header.h" defined in '/include/linux'
+>>
+>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>
 > [...]
->> @@ -2086,8 +2087,28 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
->>         ath10k_pci_irq_disable(ar);
->>         ath10k_pci_irq_sync(ar);
->>         ath10k_pci_flush(ar);
->> -       napi_synchronize(&ar->napi);
->> -       napi_disable(&ar->napi);
+>
+>> diff --git a/include/linux/rsi_header.h b/include/linux/rsi_header.h
+>> new file mode 100644
+>> index 0000000..16a447b
+>> --- /dev/null
+>> +++ b/include/linux/rsi_header.h
+>> @@ -0,0 +1,34 @@
+>> +/**
+>> + * Copyright (c) 2017 Redpine Signals Inc.
+>> + *
+>> + * Permission to use, copy, modify, and/or distribute this software for any
+>> + * purpose with or without fee is hereby granted, provided that the above
+>> + * copyright notice and this permission notice appear in all copies.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+>> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+>> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+>> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+>> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+>> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+>> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+>> + */
 >> +
->> +       /* Calling napi_disable twice in a row (w/out starting it and/or without
->> +        * having NAPI active leads to deadlock because napi_disable sets
->> +        * NAPI_STATE_SCHED and NAPI_STATE_NPSVC when it returns, as far as I
->> +        * can tell.  So, guard this call to napi_disable.  I believe the
->> +        * failure case is something like this:
->> +        * rmmod ath10k_pci ath10k_core
->> +        *   Firmware crashes before hif_stop is called by the rmmod path
->> +        *   The crash handling logic calls hif_stop
->> +         *   Then rmmod gets around to calling hif_stop, but spins endlessly
->> +        *   in napi_synchronize.
->> +        *
->> +        *  I think one way this could happen is that ath10k_stop checks
->> +        *  for state != ATH10K_STATE_OFF, but STATE_RESTARTING is also
->> +        *  a possibility.  That might be how we can have hif_stop called twice
->> +        *  without a hif_start in between. --Ben
->> +        */
->> +       if (ar->napi_enabled) {
->> +               napi_synchronize(&ar->napi);
->> +               napi_disable(&ar->napi);
->> +               ar->napi_enabled = false;
->> +       }
+>> +#ifndef __RSI_HEADER_H__
+>> +#define __RSI_HEADER_H__
+>> +
+>> +/* HAL queue information */
+>> +#define RSI_COEX_Q                   0x0
+>> +#define RSI_BT_Q                     0x2
+>> +#define RSI_WLAN_Q                      0x3
+>> +#define RSI_WIFI_MGMT_Q                 0x4
+>> +#define RSI_WIFI_DATA_Q                 0x5
+>> +#define RSI_BT_MGMT_Q                        0x6
+>> +#define RSI_BT_DATA_Q                        0x7
+>> +
+>> +enum rsi_host_intf {
+>> +     RSI_HOST_INTF_SDIO = 0,
+>> +     RSI_HOST_INTF_USB
+>> +};
+>> +
+>> +#endif
 >
-> Looking at the code and your comment the described fail case seems
-> legit. I would consider tuning ath10k_stop() so that it calls
-> ath10k_halt() only if ar->state != OFF & ar->state != RESTARTING
-> though. Or did you try already?
+> The name of the header "rsi_header.h" looks odd. The ".h" prefix already
+> tells that it's a header file, no need to repeat that in the filename.
+> But also calling it "rsi.h" feels a bit weird, it's not really very
+> specific. Would "rsi_91x.h" (from rsi_91x.ko) be any better?
 
-I did not try tuning ath10k_stop().  The code in this area is quite complex,
-and in my opinion trying to keep the start/stop calls exactly matched without
-individual 'has_started' flags seems ripe for bugs.
-
-> While your approach will probably work it won't prevent other non-NAPI
-> bad things from happening. Even if there's nothing today it might
-> creep up in the future. And you'd need to update ahb.c too.
-
-I'll update ahb.c to match.
-
-Thanks,
-Ben
+Sure. Using rsi_91x.h makes sense.
 
 >
->
-> Michał
+> Also I'm not sure about the location (include/linux), is that really the
+> correct place to have a header file shared by a wireless and bluetooth
+> driver? Anyone know? Or would include/net be better?
 >
 
+include/net looks more appropriate. I will use it.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Regards,
+Amitkumar
