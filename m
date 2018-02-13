@@ -1,53 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0057.outbound.protection.outlook.com ([104.47.42.57]:4592
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753292AbeB0PNw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 10:13:52 -0500
-Date: Tue, 27 Feb 2018 18:13:39 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: Re: [PATCH v2 4/4] qtnfmac: enable networked standby mode on device
- inactivity
-Message-ID: <20180227151339.xlvxqb7d36s4og6k@bars> (sfid-20180227_161357_385929_01968E77)
-References: <20180210140420.17013-1-sergey.matyukevich.os@quantenna.com>
- <20180210140420.17013-5-sergey.matyukevich.os@quantenna.com>
- <87inaifqpt.fsf@purkki.adurom.net>
+Received: from mail-wr0-f176.google.com ([209.85.128.176]:35394 "EHLO
+        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933865AbeBMKj1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Feb 2018 05:39:27 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87inaifqpt.fsf@purkki.adurom.net>
+In-Reply-To: <87r2q5mc4x.fsf@purkki.adurom.net>
+References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
+ <1513168977-2121-5-git-send-email-amitkarwar@gmail.com> <87r2q5mc4x.fsf@purkki.adurom.net>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Tue, 13 Feb 2018 16:09:25 +0530
+Message-ID: <CAEhWJF=iF4Gy65O3vUNtBrKcXBMpSnCuZgvpCDvuObkgf4zuaA@mail.gmail.com> (sfid-20180213_113932_624398_44355480)
+Subject: Re: [v5 4/8] rsi: add coex support
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
-> 
-> > From: Sergei Maksimenko <smaksimenko@quantenna.com>
-> >
-> > Enable support of networked standby mode (NSM) on qsr10g devices.
-> > Networked standby is a power saving mode when the device keeps
-> > all existing network connections and returns to full power mode
-> > on a network activity. When enabled, device enters standby mode
-> > after 15 min of inactivity (no associated stations or no trattic).
-> > This period can be changed by setting sysfs attribute standby_timeout
-> > (0 disables NSM support). A module parameter auto_standby
-> > (defaults to 1) controls enabling NSM support on module loading.
-> >
-> > Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
-> 
-> Adding a new sysfs file for a wireless driver is usually a bad idea, I
-> don't even remember when we had a case where it was ok to do that. In
-> principle we want everything to go through cfg80211 using nl80211.
-> 
-> Also I'm not really fond of the module parameter just to disable a
-> feature. And there isn't even any justification why it's needed.
+On Thu, Feb 1, 2018 at 12:26 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>
+>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>
+>> With BT support, driver has to handle two streams of data
+>> (i.e. wlan and BT). Actual coex implementation is in firmware.
+>> Coex module just schedule the packets to firmware by taking them
+>> from the corresponding paths.
+>>
+>> Structures for module and protocol operations are introduced for
+>> this purpose. Protocol operations structure is global structure
+>> which can be shared among different modules. Initialization of
+>> coex and operating mode values is moved to rsi_91x_init().
+>>
+>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>
+> [...]
+>
+>> @@ -270,6 +271,7 @@ struct rsi_common {
+>>       u8 obm_ant_sel_val;
+>>       int tx_power;
+>>       u8 ant_in_use;
+>> +     struct semaphore tx_bus_lock;
+>
+> Do you really need to use semaphore? I think nowadays the preference is
+> to use something other than semaphores.
 
-Ok, noted. Then we will take a break and look for better ways to integrate
-this feature. Meanwhile, if you have no concerns regarding the first three
-patches in the series, is it possible to apply them ? Or I better send v3 ?
+We used semaphore here, as USB/SDIO bus write operations could be
+blocking/waiting. I will check if spinlock suits here in follow up
+patch. It will need some testing.
+
+> Also calling it tx_bus_lock is IMHO misleading, tx_bus_sema would be
+> nicer.
+
+Sure. I will rename the variable
 
 Regards,
-Sergey
+Amitkumar
