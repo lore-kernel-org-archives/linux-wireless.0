@@ -1,380 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from orthanc.universe-factory.net ([104.238.176.138]:34446 "EHLO
-        orthanc.universe-factory.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752565AbeBCXhJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34638 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933494AbeBMJWN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Feb 2018 18:37:09 -0500
-From: Matthias Schiffer <mschiffer@universe-factory.net>
-To: seth.forshee@canonical.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 2/2] wireless-regdb: make scripts compatible with Python 3
-Date: Sun,  4 Feb 2018 00:36:54 +0100
-Message-Id: <d79709a55ccea63af94e61a0c1c00aeedff265ca.1517700836.git.mschiffer@universe-factory.net> (sfid-20180204_003722_426776_D7E7BC3E)
-In-Reply-To: <bdfcead51b64e05f867ba5fe273c196edea35ddd.1517700836.git.mschiffer@universe-factory.net>
-References: <bdfcead51b64e05f867ba5fe273c196edea35ddd.1517700836.git.mschiffer@universe-factory.net>
-In-Reply-To: <bdfcead51b64e05f867ba5fe273c196edea35ddd.1517700836.git.mschiffer@universe-factory.net>
-References: <bdfcead51b64e05f867ba5fe273c196edea35ddd.1517700836.git.mschiffer@universe-factory.net>
+        Tue, 13 Feb 2018 04:22:13 -0500
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCHv2 3/3] mac80211: implement cqm rssi check using rx data signal
+Date: Tue, 13 Feb 2018 14:53:35 +0530
+Message-Id: <1518513815-22417-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180213_102220_929540_E33E07F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When playing with the generation scripts for OpenWrt development, I noticed
-that these scripts still required Python 2. Future-proof them by replacing
-deprecated functions with new Python 3 compatible variants. The result
-works with both Python 2.7 and Python 3.x; older Python 2.x releases are
-not supported anymore.
+From: Tamizh chelvam <tamizhr@codeaurora.org>
 
-regulatory.db and regulatory.bin are unchanged and reproducible across
-Python versions. Note that there is no stable release of m2crypto for
-Python 3 yet; I used the current development branch for testing.
+Triggers cfg80211_ap_sta_cqm_rssi_notify with the corresponding event
+when station signal goes lower than the configured rssi threshold. And
+notify back to user space once the station signal becomes greater than
+the configured value. It uses rx data signal and compare with rssi value
+given by user. This rssi threshold is bss specific and it is common for
+all the stations.
 
-Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
 ---
+ include/net/mac80211.h  |    7 +++++++
+ net/mac80211/rx.c       |   46 +++++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/sta_info.h |    3 +++
+ 3 files changed, 55 insertions(+), 1 deletion(-)
 
-v2: explicitly open input file with UTF-8 encoding; otherwise the scripts
-will fail without a UTF-8 locale set in the environment
-
-
- db2bin.py  | 22 ++++++++---------
- db2fw.py   | 28 +++++++++++-----------
- dbparse.py | 81 +++++++++++++++++++++++++++++++++++++-------------------------
- 3 files changed, 74 insertions(+), 57 deletions(-)
-
-diff --git a/db2bin.py b/db2bin.py
-index ae5f064..28cd7d2 100755
---- a/db2bin.py
-+++ b/db2bin.py
-@@ -1,6 +1,6 @@
- #!/usr/bin/env python
- 
--from cStringIO import StringIO
-+from io import BytesIO, open
- import struct
- import hashlib
- from dbparse import DBParser
-@@ -10,21 +10,21 @@ MAGIC = 0x52474442
- VERSION = 19
- 
- if len(sys.argv) < 3:
--    print 'Usage: %s output-file input-file [key-file]' % sys.argv[0]
-+    print('Usage: %s output-file input-file [key-file]' % sys.argv[0])
-     sys.exit(2)
- 
- def create_rules(countries):
-     result = {}
--    for c in countries.itervalues():
-+    for c in countries.values():
-         for rule in c.permissions:
-             result[rule] = 1
--    return result.keys()
-+    return list(result)
- 
- def create_collections(countries):
-     result = {}
--    for c in countries.itervalues():
-+    for c in countries.values():
-         result[c.permissions] = 1
--    return result.keys()
-+    return list(result)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 906e902..8fbf633 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -799,6 +799,13 @@ enum mac80211_rate_control_flags {
+ };
  
  
- def be32(output, val):
-@@ -49,9 +49,9 @@ class PTR(object):
-         return self._offset
++/*
++ * How many frames need to have been used in average station's
++ * signal strength before checking against the threshold
++ */
++#define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
++
++
+ /* there are 40 bytes if you don't need the rateset to be kept */
+ #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
  
- p = DBParser()
--countries = p.parse(file(sys.argv[2]))
-+countries = p.parse(open(sys.argv[2], 'r', encoding='utf-8'))
- 
--countrynames = countries.keys()
-+countrynames = list(countries)
- countrynames.sort()
- 
- power = []
-@@ -67,7 +67,7 @@ rules.sort()
- collections = create_collections(countries)
- collections.sort()
- 
--output = StringIO()
-+output = BytesIO()
- 
- # struct regdb_file_header
- be32(output, MAGIC)
-@@ -118,7 +118,7 @@ reg_country_ptr.set()
- for alpha2 in countrynames:
-     coll = countries[alpha2]
-     # struct regdb_file_reg_country
--    output.write(struct.pack('>ccxBI', str(alpha2[0]), str(alpha2[1]), coll.dfs_region, reg_rules_collections[coll.permissions]))
-+    output.write(struct.pack('>BBxBI', alpha2[0], alpha2[1], coll.dfs_region, reg_rules_collections[coll.permissions]))
- 
- 
- if len(sys.argv) > 3:
-@@ -143,5 +143,5 @@ if len(sys.argv) > 3:
- else:
-     siglen.set(0)
- 
--outfile = open(sys.argv[1], 'w')
-+outfile = open(sys.argv[1], 'wb')
- outfile.write(output.getvalue())
-diff --git a/db2fw.py b/db2fw.py
-index 630e4d6..91b88d3 100755
---- a/db2fw.py
-+++ b/db2fw.py
-@@ -1,6 +1,6 @@
- #!/usr/bin/env python
- 
--from cStringIO import StringIO
-+from io import BytesIO, open
- import struct
- import hashlib
- from dbparse import DBParser
-@@ -10,21 +10,21 @@ MAGIC = 0x52474442
- VERSION = 20
- 
- if len(sys.argv) < 3:
--    print 'Usage: %s output-file input-file' % sys.argv[0]
-+    print('Usage: %s output-file input-file' % sys.argv[0])
-     sys.exit(2)
- 
- def create_rules(countries):
-     result = {}
--    for c in countries.itervalues():
-+    for c in countries.values():
-         for rule in c.permissions:
-             result[rule] = 1
--    return result.keys()
-+    return list(result)
- 
- def create_collections(countries):
-     result = {}
--    for c in countries.itervalues():
-+    for c in countries.values():
-         result[(c.permissions, c.dfs_region)] = 1
--    return result.keys()
-+    return list(result)
- 
- 
- def be32(output, val):
-@@ -58,26 +58,26 @@ class PTR(object):
-         return self._written
- 
- p = DBParser()
--countries = p.parse(file(sys.argv[2]))
-+countries = p.parse(open(sys.argv[2], 'r', encoding='utf-8'))
- rules = create_rules(countries)
- rules.sort()
- collections = create_collections(countries)
- collections.sort()
- 
--output = StringIO()
-+output = BytesIO()
- 
- # struct regdb_file_header
- be32(output, MAGIC)
- be32(output, VERSION)
- 
- country_ptrs = {}
--countrynames = countries.keys()
-+countrynames = list(countries)
- countrynames.sort()
- for alpha2 in countrynames:
-     coll = countries[alpha2]
--    output.write(struct.pack('>cc', str(alpha2[0]), str(alpha2[1])))
-+    output.write(struct.pack('>BB', alpha2[0], alpha2[1]))
-     country_ptrs[alpha2] = PTR(output)
--output.write('\x00' * 4)
-+output.write(b'\x00' * 4)
- 
- reg_rules = {}
- flags = 0
-@@ -104,8 +104,8 @@ for reg_rule in rules:
-         cac_timeout = 0
-     if cac_timeout:
-         rule_len += 2
--    output.write(struct.pack('>BBHIII', rule_len, flags, power_rule.max_eirp * 100,
--                             freq_range.start * 1000, freq_range.end * 1000, freq_range.maxbw * 1000,
-+    output.write(struct.pack('>BBHIII', rule_len, flags, int(power_rule.max_eirp * 100),
-+                             int(freq_range.start * 1000), int(freq_range.end * 1000), int(freq_range.maxbw * 1000),
-                              ))
-     if cac_timeout:
-         output.write(struct.pack('>H', cac_timeout))
-@@ -129,5 +129,5 @@ for coll in collections:
- for alpha2 in countrynames:
-     assert country_ptrs[alpha2].written
- 
--outfile = open(sys.argv[1], 'w')
-+outfile = open(sys.argv[1], 'wb')
- outfile.write(output.getvalue())
-diff --git a/dbparse.py b/dbparse.py
-index b735b6a..d73d1bd 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -1,5 +1,7 @@
- #!/usr/bin/env python
- 
-+from builtins import bytes
-+from functools import total_ordering
- import sys, math
- 
- # must match <linux/nl80211.h> enum nl80211_reg_rule_flags
-@@ -25,6 +27,7 @@ dfs_regions = {
-     'DFS-JP':		3,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index e755f93..0a385a1 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1534,6 +1534,47 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
+ 	return RX_CONTINUE;
  }
  
-+@total_ordering
- class FreqBand(object):
-     def __init__(self, start, end, bw, comments=None):
-         self.start = start
-@@ -32,41 +35,49 @@ class FreqBand(object):
-         self.maxbw = bw
-         self.comments = comments or []
- 
--    def __cmp__(self, other):
--        s = self
--        o = other
--        if not isinstance(o, FreqBand):
--            return False
--        return cmp((s.start, s.end, s.maxbw), (o.start, o.end, o.maxbw))
-+    def _as_tuple(self):
-+        return (self.start, self.end, self.maxbw)
++static void ieee80211_sta_rx_signal_thold_check(struct ieee80211_rx_data *rx)
++{
++	struct sta_info *sta = rx->sta;
++	struct ieee80211_bss_conf *bss_conf =
++		&rx->sdata->vif.bss_conf;
++	int sig, last_event, thold;
 +
-+    def __eq__(self, other):
-+        return (self._as_tuple() == other._as_tuple())
++	if (!wiphy_ext_feature_isset(rx->local->hw.wiphy,
++				NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG))
++		return;
 +
-+    def __ne__(self, other):
-+        return not (self == other)
++	sta->count_rx_signal++;
++	if (sta->count_rx_signal < IEEE80211_STA_SIGNAL_AVE_MIN_COUNT)
++		return;
 +
-+    def __lt__(self, other):
-+        return (self._as_tuple() < other._as_tuple())
- 
-     def __hash__(self):
--        s = self
--        return hash((s.start, s.end, s.maxbw))
-+        return hash(self._as_tuple())
- 
-     def __str__(self):
-         return '<FreqBand %.3f - %.3f @ %.3f>' % (
-                   self.start, self.end, self.maxbw)
- 
-+@total_ordering
- class PowerRestriction(object):
-     def __init__(self, max_ant_gain, max_eirp, comments = None):
-         self.max_ant_gain = max_ant_gain
-         self.max_eirp = max_eirp
-         self.comments = comments or []
- 
--    def __cmp__(self, other):
--        s = self
--        o = other
--        if not isinstance(o, PowerRestriction):
--            return False
--        return cmp((s.max_ant_gain, s.max_eirp),
--                   (o.max_ant_gain, o.max_eirp))
-+    def _as_tuple(self):
-+        return (self.max_ant_gain, self.max_eirp)
- 
--    def __str__(self):
--        return '<PowerRestriction ...>'
-+    def __eq__(self, other):
-+        return (self._as_tuple() == other._as_tuple())
++	if (!bss_conf->cqm_rssi_thold || !bss_conf->enable_beacon) {
++		sta->count_rx_signal = 0;
++		return;
++	}
 +
-+    def __ne__(self, other):
-+        return not (self == other)
++	sig = -ewma_signal_read(&sta->rx_stats_avg.signal);
++	last_event = sta->last_cqm_event_signal;
++	thold = bss_conf->cqm_rssi_thold;
 +
-+    def __lt__(self, other):
-+        return (self._as_tuple() < other._as_tuple())
- 
-     def __hash__(self):
--        s = self
--        return hash((s.max_ant_gain, s.max_eirp))
-+        return hash(self._as_tuple())
++	if (sig < thold && last_event == 0) {
++		sta->last_cqm_event_signal = sig;
++		cfg80211_ap_sta_cqm_rssi_notify(
++				rx->sdata->dev, sta->addr,
++				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
++				sig, GFP_ATOMIC);
++		sta->count_rx_signal = 0;
++	} else if (last_event && sig > thold) {
++		sta->last_cqm_event_signal = 0;
++		cfg80211_ap_sta_cqm_rssi_notify(
++				rx->sdata->dev, sta->addr,
++				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
++				sig, GFP_ATOMIC);
++		sta->count_rx_signal = 0;
++	}
++}
 +
-+    def __str__(self):
-+        return '<PowerRestriction ...>'
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ {
+@@ -1589,6 +1630,7 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
+ 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
+ 		sta->rx_stats.last_signal = status->signal;
+ 		ewma_signal_add(&sta->rx_stats_avg.signal, -status->signal);
++		ieee80211_sta_rx_signal_thold_check(rx);
+ 	}
  
- class DFSRegionError(Exception):
-     def __init__(self, dfs_region):
-@@ -76,6 +87,7 @@ class FlagError(Exception):
-     def __init__(self, flag):
-         self.flag = flag
+ 	if (status->chains) {
+@@ -3981,9 +4023,11 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
  
-+@total_ordering
- class Permission(object):
-     def __init__(self, freqband, power, flags):
-         assert isinstance(freqband, FreqBand)
-@@ -92,10 +104,14 @@ class Permission(object):
-     def _as_tuple(self):
-         return (self.freqband, self.power, self.flags)
+ 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
+ 		stats->last_signal = status->signal;
+-		if (!fast_rx->uses_rss)
++		if (!fast_rx->uses_rss) {
+ 			ewma_signal_add(&sta->rx_stats_avg.signal,
+ 					-status->signal);
++			ieee80211_sta_rx_signal_thold_check(rx);
++		}
+ 	}
  
--    def __cmp__(self, other):
--        if not isinstance(other, Permission):
--            return False
--        return cmp(self._as_tuple(), other._as_tuple())
-+    def __eq__(self, other):
-+        return (self._as_tuple() == other._as_tuple())
+ 	if (status->chains) {
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index cd53619..76e8877 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -579,6 +579,9 @@ struct sta_info {
+ 
+ 	struct cfg80211_chan_def tdls_chandef;
+ 
++	int last_cqm_event_signal;
++	unsigned int count_rx_signal;
 +
-+    def __ne__(self, other):
-+        return not (self == other)
-+
-+    def __lt__(self, other):
-+        return (self._as_tuple() < other._as_tuple())
- 
-     def __hash__(self):
-         return hash(self._as_tuple())
-@@ -104,12 +120,12 @@ class Country(object):
-     def __init__(self, dfs_region, permissions=None, comments=None):
-         self._permissions = permissions or []
-         self.comments = comments or []
--	self.dfs_region = 0
-+        self.dfs_region = 0
- 
--	if dfs_region:
--		if not dfs_region in dfs_regions:
--		    raise DFSRegionError(dfs_region)
--		self.dfs_region = dfs_regions[dfs_region]
-+        if dfs_region:
-+            if not dfs_region in dfs_regions:
-+                raise DFSRegionError(dfs_region)
-+            self.dfs_region = dfs_regions[dfs_region]
- 
-     def add(self, perm):
-         assert isinstance(perm, Permission)
-@@ -248,6 +264,7 @@ class DBParser(object):
-         for cname in cnames:
-             if len(cname) != 2:
-                 self._warn("country '%s' not alpha2" % cname)
-+            cname = bytes(cname, 'ascii')
-             if not cname in self._countries:
-                 self._countries[cname] = Country(dfs_region, comments=self._comments)
-             self._current_countries[cname] = self._countries[cname]
-@@ -304,9 +321,9 @@ class DBParser(object):
-         p = self._power[pname]
-         try:
-             perm = Permission(b, p, flags)
--        except FlagError, e:
-+        except FlagError as e:
-             self._syntax_error("Invalid flag '%s'" % e.flag)
--        for cname, c in self._current_countries.iteritems():
-+        for cname, c in self._current_countries.items():
-             if perm in c:
-                 self._warn('Rule "%s, %s" added to "%s" twice' % (
-                               bname, pname, cname))
-@@ -360,7 +377,7 @@ class DBParser(object):
- 
-         countries = self._countries
-         bands = {}
--        for k, v in self._bands.iteritems():
-+        for k, v in self._bands.items():
-             if k in self._bands_used:
-                 bands[self._banddup[k]] = v
-                 continue
-@@ -369,7 +386,7 @@ class DBParser(object):
-                 self._lineno = self._bandline[k]
-                 self._warn('Unused band definition "%s"' % k)
-         power = {}
--        for k, v in self._power.iteritems():
-+        for k, v in self._power.items():
-             if k in self._power_used:
-                 power[self._powerdup[k]] = v
-                 continue
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
+ };
 -- 
-2.16.1
+1.7.9.5
