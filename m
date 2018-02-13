@@ -1,57 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43162 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750766AbeBZGRG (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:38508 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934985AbeBMMNC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 01:17:06 -0500
-From: Karthikeyan Periyasamy <periyasa@codeaurora.org>
-To: ath10k@lists.infradead.org
+        Tue, 13 Feb 2018 07:13:02 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
 Cc: linux-wireless@vger.kernel.org,
-        Karthikeyan Periyasamy <periyasa@codeaurora.org>
-Subject: [PATCH] Revert "ath10k: send (re)assoc peer command when NSS changed"
-Date: Mon, 26 Feb 2018 11:46:32 +0530
-Message-Id: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org> (sfid-20180226_071712_185325_6EB40C42)
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v6 3/8] rsi: add header file rsi_91x
+Date: Tue, 13 Feb 2018 17:31:39 +0530
+Message-Id: <1518523304-3424-4-git-send-email-amitkarwar@gmail.com> (sfid-20180213_131308_325033_8759CF3F)
+In-Reply-To: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
+References: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit 55884c045d31a29cf69db8332d1064a1b61dd159.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-When Ath10k is in AP mode and an unassociated STA sends a VHT action frame
-(Operating Mode Notification for the NSS change) periodically to AP this causes
-ath10k to call ath10k_station_assoc() which sends WMI_PEER_ASSOC_CMDID during
-NSS update. Over the time (with a certain client it can happen within 15 mins
-when there are over 500 of these VHT action frames) continuous calls of
-WMI_PEER_ASSOC_CMDID cause firmware to assert due to resource exhaust.
+The common parameters used by wlan and bt modules are add
+to a new header file "rsi_91x.h" defined in 'include/net'
 
-To my knowledge setting WMI_PEER_NSS peer param itself enough to handle NSS
-updates and no need to call ath10k_station_assoc(). So revert the original
-commit from 2014 as it's unclear why the change was really needed.
-Now the firmware assert doesn't happen anymore.
-
-Issue observed in QCA9984 platform with firmware version:10.4-3.5.3-00053.
-This Change tested in QCA9984 with firmware version: 10.4-3.5.3-00053 and
-QCA988x platform with firmware version: 10.2.4-1.0-00036.
-
-Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+v6: Renamed rsi_header.h to rsi_91x.h and moved to include/net
+    from include/linux(Kalle)
+v5: Same as earlier versions
+---
+ drivers/net/wireless/rsi/rsi_main.h | 12 ++----------
+ include/net/rsi_91x.h               | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 10 deletions(-)
+ create mode 100644 include/net/rsi_91x.h
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index ebb3f1b..800a86e 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6028,9 +6028,8 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
- 				    sta->addr, smps, err);
- 	}
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index ee469dc..b0f4e2c 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -20,6 +20,7 @@
+ #include <linux/string.h>
+ #include <linux/skbuff.h>
+ #include <net/mac80211.h>
++#include <net/rsi_91x.h>
  
--	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
--	    changed & IEEE80211_RC_NSS_CHANGED) {
--		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates/nss\n",
-+	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
-+		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates\n",
- 			   sta->addr);
+ struct rsi_sta {
+ 	struct ieee80211_sta *sta;
+@@ -85,10 +86,6 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
+ #define MGMT_HW_Q			10
+ #define BEACON_HW_Q			11
  
- 		err = ath10k_station_assoc(ar, arvif->vif, sta, true);
+-/* Queue information */
+-#define RSI_COEX_Q			0x0
+-#define RSI_WIFI_MGMT_Q                 0x4
+-#define RSI_WIFI_DATA_Q                 0x5
+ #define IEEE80211_MGMT_FRAME            0x00
+ #define IEEE80211_CTL_FRAME             0x04
+ 
+@@ -293,11 +290,6 @@ struct rsi_common {
+ 	struct ieee80211_vif *roc_vif;
+ };
+ 
+-enum host_intf {
+-	RSI_HOST_INTF_SDIO = 0,
+-	RSI_HOST_INTF_USB
+-};
+-
+ struct eepromrw_info {
+ 	u32 offset;
+ 	u32 length;
+@@ -322,7 +314,7 @@ struct rsi_hw {
+ 	struct device *device;
+ 	u8 sc_nvifs;
+ 
+-	enum host_intf rsi_host_intf;
++	enum rsi_host_intf rsi_host_intf;
+ 	u16 block_size;
+ 	enum ps_state ps_state;
+ 	struct rsi_ps_info ps_info;
+diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
+new file mode 100644
+index 0000000..16a447b
+--- /dev/null
++++ b/include/net/rsi_91x.h
+@@ -0,0 +1,34 @@
++/**
++ * Copyright (c) 2017 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_HEADER_H__
++#define __RSI_HEADER_H__
++
++/* HAL queue information */
++#define RSI_COEX_Q			0x0
++#define RSI_BT_Q			0x2
++#define RSI_WLAN_Q                      0x3
++#define RSI_WIFI_MGMT_Q                 0x4
++#define RSI_WIFI_DATA_Q                 0x5
++#define RSI_BT_MGMT_Q			0x6
++#define RSI_BT_DATA_Q			0x7
++
++enum rsi_host_intf {
++	RSI_HOST_INTF_SDIO = 0,
++	RSI_HOST_INTF_USB
++};
++
++#endif
 -- 
-1.9.1
+2.7.4
