@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753070AbeBSPaK (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:57812 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934545AbeBMJSL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 10:30:10 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <Adham.Abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 01/14] staging: wilc1000: rename s8PowerMode & strPowerMgmtParam to avoid camelCase
-Date: Mon, 19 Feb 2018 20:59:31 +0530
-Message-ID: <1519054184-14301-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163016_451361_413A3CCF)
-In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 13 Feb 2018 04:18:11 -0500
+Message-ID: <1518513488.2494.0.camel@sipsolutions.net> (sfid-20180213_101825_483448_DC5414BB)
+Subject: Re: [PATCHv2 3/3] ath: change in cfg80211_probe_status API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 13 Feb 2018 10:18:08 +0100
+In-Reply-To: <87inb1p8c3.fsf@purkki.adurom.net>
+References: <1518500128-10837-1-git-send-email-vnaralas@codeaurora.org>
+         <87inb1p8c3.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issues found by checkpatch.pl script.
+On Tue, 2018-02-13 at 11:06 +0200, Kalle Valo wrote:
+> Venkateswara Naralasetty <vnaralas@codeaurora.org> writes:
+> 
+> > This patch changes cfg80211_probe_status API.
+> > 
+> > Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+> > ---
+> >  drivers/net/wireless/ath/wil6210/cfg80211.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> The title prefix should be "wil6210:", not "ath:".
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Doesn't matter, it has to be squashed into patch 1 anyway ... I guess
+I'll do that.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5e01f6e..3dc3d2e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2383,20 +2383,20 @@ static void ListenTimerCB(struct timer_list *t)
- }
- 
- static void Handle_PowerManagement(struct wilc_vif *vif,
--				   struct power_mgmt_param *strPowerMgmtParam)
-+				   struct power_mgmt_param *pm_param)
- {
- 	s32 result = 0;
- 	struct wid wid;
--	s8 s8PowerMode;
-+	s8 power_mode;
- 
- 	wid.id = (u16)WID_POWER_MANAGEMENT;
- 
--	if (strPowerMgmtParam->enabled)
--		s8PowerMode = MIN_FAST_PS;
-+	if (pm_param->enabled)
-+		power_mode = MIN_FAST_PS;
- 	else
--		s8PowerMode = NO_POWERSAVE;
-+		power_mode = NO_POWERSAVE;
- 
--	wid.val = &s8PowerMode;
-+	wid.val = &power_mode;
- 	wid.size = sizeof(char);
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
--- 
-2.7.4
+johannes
