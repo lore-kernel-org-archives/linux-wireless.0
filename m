@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:17863 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754583AbeBPPMU (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:53525 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933931AbeBMKUq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 10:12:20 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 07/12] staging: wilc1000: fix line over 80 chars in wilc_wlan_cfg_indicate_rxi()
-Date: Fri, 16 Feb 2018 20:41:44 +0530
-Message-ID: <1518793909-15573-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180216_161224_019008_975B3AEC)
-In-Reply-To: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
-References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 13 Feb 2018 05:20:46 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87372lnrwu.fsf@purkki.adurom.net>
+References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
+ <1513168977-2121-2-git-send-email-amitkarwar@gmail.com> <87372lnrwu.fsf@purkki.adurom.net>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Tue, 13 Feb 2018 15:50:44 +0530
+Message-ID: <CAEhWJFkf-M3V-zP2it7qo5fD78ni1JmYh4nXuChWEadjgdMK3g@mail.gmail.com> (sfid-20180213_112051_103526_90D38680)
+Subject: Re: [v5 1/8] rsi: add rx control block to handle rx packets in USB
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to fix "line over 80 characters" issue reported by
-checkpatch.pl script.
+On Thu, Feb 1, 2018 at 12:00 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>
+>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>
+>> Rx bluetooth endpoint shall be added in further patches. Rx control
+>> block is introduced here to handle Rx packets properly. Separate
+>> function is written to initialize the RX control blocks.
+>>
+>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>
+> [...]
+>
+>> +static int rsi_usb_init_rx(struct rsi_hw *adapter)
+>> +{
+>> +     struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+>> +     struct rx_usb_ctrl_block *rx_cb;
+>> +     u8 idx;
+>> +
+>> +     for (idx = 0; idx < MAX_RX_URBS; idx++) {
+>> +             rx_cb = &dev->rx_cb[idx];
+>> +
+>> +             rx_cb->rx_buffer = kzalloc(RSI_USB_BUF_SIZE * 2,
+>> +                                        GFP_KERNEL | GFP_DMA);
+>
+> Do you really need GFP_DMA? From the documentation:
+>
+>  "GFP_DMA exists for historical reasons and should be avoided where
+>   possible."
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Thanks for review. I will get rid of this flag,
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 752b292..ab69bac 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -523,9 +523,12 @@ int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 	frame += 4;
- 	size -= 4;
- 
--	/**
--	 *      The  valid types of response messages are 'R' (Response), 'I' (Information), and 'N' (Network Information)
--	 **/
-+	/*
-+	 * The valid types of response messages are
-+	 * 'R' (Response),
-+	 * 'I' (Information), and
-+	 * 'N' (Network Information)
-+	 */
- 
- 	switch (msg_type) {
- 	case 'R':
--- 
-2.7.4
+Regards,
+Amitkumar
