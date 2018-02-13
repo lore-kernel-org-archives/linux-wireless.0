@@ -1,70 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:42830 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751797AbeBDWAg (ORCPT
+Received: from bombadil.infradead.org ([198.137.202.133]:47656 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965574AbeBMUEF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Feb 2018 17:00:36 -0500
-Received: by mail-wr0-f195.google.com with SMTP id 41so26339704wrc.9
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Feb 2018 14:00:35 -0800 (PST)
-Date: Sun, 4 Feb 2018 22:00:32 +0000
-From: Chris Vine <vine35792468@gmail.com>
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Regression: bcm4312 lp-phy device not recognized in 4.15 kernel
-Message-ID: <20180204220032.3c339324@bother.homenet> (sfid-20180204_230056_575499_2EDD9ECC)
-In-Reply-To: <935a4987-c481-f4e4-16d7-f5f56adcfee0@gmail.com>
-References: <20180204185855.74e6ade5@bother.homenet>
-        <935a4987-c481-f4e4-16d7-f5f56adcfee0@gmail.com>
+        Tue, 13 Feb 2018 15:04:05 -0500
+Subject: Re: [PATCH] headers: untangle kmemleak.h from mm.h
+To: Michael Ellerman <mpe@ellerman.id.au>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Fengguang Wu <fengguang.wu@intel.com>
+Cc: linux-s390 <linux-s390@vger.kernel.org>,
+        John Johansen <john.johansen@canonical.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        X86 ML <x86@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        virtualization@lists.linux-foundation.org,
+        iommu@lists.linux-foundation.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        sparclinux@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        Dmitry Kasatkin <dmitry.kasatkin@intel.com>
+References: <a4629db7-194d-3c7c-c8fd-24f61b220a70@infradead.org>
+ <87zi4ev1d2.fsf@concordia.ellerman.id.au>
+ <f119a273-2e86-1b7f-346f-7627ad8b51ed@infradead.org>
+ <87fu652oce.fsf@concordia.ellerman.id.au>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <1f96a3c7-0bb3-6c06-0b44-ca47e5a5d127@infradead.org> (sfid-20180213_210452_868592_540B25AD)
+Date: Tue, 13 Feb 2018 09:51:09 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <87fu652oce.fsf@concordia.ellerman.id.au>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 4 Feb 2018 12:03:49 -0800
-Florian Fainelli <f.fainelli@gmail.com> wrote:
-> On 02/04/2018 10:58 AM, Chris Vine wrote:
-> > I probably should have copied this to the relevant kernel wireless
-> > mailing lists.  Anyway, here it is.
-> > 
-> > As a further datum point, the b43 driver works fine with the
-> > 4.15.0-rc3 kernel.  So something seems to have changed between that
-> > and 4.15.0.
+On 02/13/2018 02:09 AM, Michael Ellerman wrote:
+> Randy Dunlap <rdunlap@infradead.org> writes:
 > 
-> Does this patch help?
+>> On 02/12/2018 04:28 AM, Michael Ellerman wrote:
+>>> Randy Dunlap <rdunlap@infradead.org> writes:
+>>>
+>>>> From: Randy Dunlap <rdunlap@infradead.org>
+>>>>
+>>>> Currently <linux/slab.h> #includes <linux/kmemleak.h> for no obvious
+>>>> reason. It looks like it's only a convenience, so remove kmemleak.h
+>>>> from slab.h and add <linux/kmemleak.h> to any users of kmemleak_*
+>>>> that don't already #include it.
+>>>> Also remove <linux/kmemleak.h> from source files that do not use it.
+>>>>
+>>>> This is tested on i386 allmodconfig and x86_64 allmodconfig. It
+>>>> would be good to run it through the 0day bot for other $ARCHes.
+>>>> I have neither the horsepower nor the storage space for the other
+>>>> $ARCHes.
+>>>>
+>>>> [slab.h is the second most used header file after module.h; kernel.h
+>>>> is right there with slab.h. There could be some minor error in the
+>>>> counting due to some #includes having comments after them and I
+>>>> didn't combine all of those.]
+>>>>
+>>>> This is Lingchi patch #1 (death by a thousand cuts, applied to kernel
+>>>> header files).
+>>>>
+>>>> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+>>>
+>>> I threw it at a random selection of configs and so far the only failures
+>>> I'm seeing are:
+>>>
+>>>   lib/test_firmware.c:134:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]                                                                                                          
+>>>   lib/test_firmware.c:620:25: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
+>>>   lib/test_firmware.c:620:2: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
+>>>   security/integrity/digsig.c:146:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]
+>>
+>> Both of those source files need to #include <linux/vmalloc.h>.
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=a9e6d44ddeccd3522670e641f1ed9b068e746ff7
+> Yep, I added those and rebuilt. I don't see any more failures that look
+> related to your patch.
 
-Yes, I have wireless working again.
+Great, thanks.
 
-I'll recompile tomorrow from a fresh kernel tree and apply the patch
-again and make sure it still works.  I will let you know.
+I also sent patches for both of those.
 
------------------------------------------
-> > 
-> > Begin forwarded message:
-> > 
-> > Date: Mon, 29 Jan 2018 23:37:49 +0000
-> > From: Chris Vine <vine35792468@gmail.com>
-> > To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-> > Subject: Regression: bcm4312 lp-phy device not recognized in 4.15
-> > kernel
-> > 
-> > 
-> > I have an old netbook with a Broadcom bcm4312 802.11b/g lp-phy
-> > [14e4:4315] (rev 01) wifi device.  It is no longer recognized in
-> > kernel 4.15: it works fine with the 4.14 kernel and earlier, with
-> > the b43 and ssb kernel modules.
-> > 
-> > I cannot give any further information as there are no error messages
-> > logged. The b43 firmware (wl-5.100.138) is not loaded for it, nor
-> > are the ssb/b43/bcma/ mmc_core/mac80211/cfg80211 modules.  The
-> > modules can be loaded by hand without error, but nothing happens
-> > and no network interface is presented.
-> > 
-> > This is a pretty slow and rubbish netbook but is useful when
-> > travelling to a country which might impound your laptop (no names)
-> > and you don't mind too much losing it.  It would be nice to
-> > continue to be able to use it for that.
-> > 
-> > Chris
-> > 
+>   http://kisskb.ellerman.id.au/kisskb/head/13399/
+> 
+> 
+> I haven't gone through the defconfigs I have enabled for a while, so
+> it's possible I have some missing but it's still a reasonable cross
+> section.
+
+
+-- 
+~Randy
