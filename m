@@ -1,83 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59732 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752910AbeBSMs7 (ORCPT
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:42742 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964776AbeBMNfN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:48:59 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Mon, 19 Feb 2018 14:48:39 +0200
-Message-Id: <20180219124847.27169-6-luca@coelho.fi> (sfid-20180219_134915_924495_926F8A8D)
-In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-Subject: [PATCH v2 05/13] mac80211: support reporting A-MPDU EOF bit value/known
+        Tue, 13 Feb 2018 08:35:13 -0500
+Received: by mail-pg0-f42.google.com with SMTP id y8so2638700pgr.9
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Feb 2018 05:35:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <113de75d-62bc-c0b1-1a3a-a17f6fc2f32a@mailservices.uwaterloo.ca>
+References: <769da6f9-bca3-48bd-32e6-009dd82f3c96@mailservices.uwaterloo.ca>
+ <4674890.5ipQsmKAE1@bentobox> <00665215-8a85-365d-dcfa-aa9b1aeedd1c@mailservices.uwaterloo.ca>
+ <8037020.pGPiyahZAU@bentobox> <CAA2SeNLFMKHx4R3RzesFssXz38jeOwtCBfjmxXdEtReO6JJrUQ@mail.gmail.com>
+ <113de75d-62bc-c0b1-1a3a-a17f6fc2f32a@mailservices.uwaterloo.ca>
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Date: Tue, 13 Feb 2018 14:35:12 +0100
+Message-ID: <CAA2SeNJmJCYwdvyZ3aqVWoAhC9ntuwZJSnWHi1Z1Wc47TZ16jQ@mail.gmail.com> (sfid-20180213_143517_529619_7423842E)
+Subject: Re: 802.11ac devices that use Minstrel_HT
+To: Ali Abedi <a2abedi@uwaterloo.ca>
+Cc: Sven Eckelmann <sven@narfation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> Thank you, this is extremely helpful for us.
+> Do you know any device that supports more than 2 spatial streams? (Is mt76
+> capable of supporting more spacial streams at the moment?)
+>
+> Best,
+> Ali
+>
+>
+> On 2/13/2018 8:26 AM, Lorenzo Bianconi wrote:
+>>>
+>>> On Dienstag, 13. Februar 2018 07:56:29 CET Ali Abedi wrote:
+>>>>>
+>>>>> So I would currently bet on hwsim (only useful when you only want to
+>>>>> have some
+>>>>> simulations) or mt76. Afaik mt76 was also the one which was used to
+>>>>> test the
+>>>>> VHT rate injection code for monitor interfaces and is therefore quite
+>>>>> flexible.
+>>>
+>>> [...]
+>>>>
+>>>> Thank you Sven. I was actually wondering what hardware was used to test
+>>>> the code.
+>>>
+>>> It seems Lorenzo Bianconi used an D-Link DIR-860L rev B1 [1]
+>>>
+>> Yes, I used it for a while; at the moment to work on mt76 code I am
+>> using Buffalo wsr1166
+>> Regards,
+>>
+>> Lorenzo
+>>
+>>> Kind regards,
+>>>          Sven
+>>>
+>>> [1] https://patchwork.kernel.org/patch/8393091/
+>
+>
 
-Support getting the EOF bit value reported from hardware
-and writing it out to radiotap.
+mt76 driver supports just 2x2:2 based devices for the moment
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/ieee80211_radiotap.h | 2 ++
- include/net/mac80211.h           | 5 +++++
- net/mac80211/rx.c                | 4 ++++
- 3 files changed, 11 insertions(+)
+Lorenzo
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index d91f9e7f4d71..960236fb1681 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -149,6 +149,8 @@ enum ieee80211_radiotap_ampdu_flags {
- 	IEEE80211_RADIOTAP_AMPDU_IS_LAST = 0x0008,
- 	IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_ERR = 0x0010,
- 	IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_KNOWN = 0x0020,
-+	IEEE80211_RADIOTAP_AMPDU_EOF = 0x0040,
-+	IEEE80211_RADIOTAP_AMPDU_EOF_KNOWN = 0x0080,
- };
- 
- /* for IEEE80211_RADIOTAP_VHT */
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 906e90223066..7efac7f98e45 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1098,6 +1098,9 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  *	the first subframe.
-  * @RX_FLAG_ICV_STRIPPED: The ICV is stripped from this frame. CRC checking must
-  *	be done in the hardware.
-+ * @RX_FLAG_AMPDU_EOF_BIT: Value of the EOF bit in the A-MPDU delimiter for this
-+ *	frame
-+ * @RX_FLAG_AMPDU_EOF_BIT_KNOWN: The EOF value is known
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -1124,6 +1127,8 @@ enum mac80211_rx_flags {
- 	RX_FLAG_MIC_STRIPPED		= BIT(21),
- 	RX_FLAG_ALLOW_SAME_PN		= BIT(22),
- 	RX_FLAG_ICV_STRIPPED		= BIT(23),
-+	RX_FLAG_AMPDU_EOF_BIT		= BIT(24),
-+	RX_FLAG_AMPDU_EOF_BIT_KNOWN	= BIT(25),
- };
- 
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index e755f93ad735..478a9c735edb 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -439,6 +439,10 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 			flags |= IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_ERR;
- 		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_KNOWN)
- 			flags |= IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_KNOWN;
-+		if (status->flag & RX_FLAG_AMPDU_EOF_BIT_KNOWN)
-+			flags |= IEEE80211_RADIOTAP_AMPDU_EOF_KNOWN;
-+		if (status->flag & RX_FLAG_AMPDU_EOF_BIT)
-+			flags |= IEEE80211_RADIOTAP_AMPDU_EOF;
- 		put_unaligned_le16(flags, pos);
- 		pos += 2;
- 		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_KNOWN)
 -- 
-2.15.1
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
