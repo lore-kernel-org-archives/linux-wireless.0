@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:39125 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751767AbeBDS67 (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:56275 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934924AbeBMMNp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Feb 2018 13:58:59 -0500
-Received: by mail-wr0-f194.google.com with SMTP id f6so25798630wra.6
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Feb 2018 10:58:59 -0800 (PST)
-Date: Sun, 4 Feb 2018 18:58:55 +0000
-From: Chris Vine <vine35792468@gmail.com>
-To: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Fw: Regression: bcm4312 lp-phy device not recognized in 4.15 kernel
-Message-ID: <20180204185855.74e6ade5@bother.homenet> (sfid-20180204_195903_704918_2C8C9234)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Tue, 13 Feb 2018 07:13:45 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org
+Subject: [v6 8/8] rsi: sdio changes to support BT
+Date: Tue, 13 Feb 2018 17:31:44 +0530
+Message-Id: <1518523304-3424-9-git-send-email-amitkarwar@gmail.com> (sfid-20180213_131354_305537_3C401935)
+In-Reply-To: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
+References: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I probably should have copied this to the relevant kernel wireless
-mailing lists.  Anyway, here it is.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-As a further datum point, the b43 driver works fine with the 4.15.0-rc3
-kernel.  So something seems to have changed between that and 4.15.0.
+Queue number is correctly updated for BT traffic. Also, kzalloc
+instead of kmalloc is used for Rx packet allocation.
 
-Chris
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 2 ++
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-Begin forwarded message:
-
-Date: Mon, 29 Jan 2018 23:37:49 +0000
-From: Chris Vine <vine35792468@gmail.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Regression: bcm4312 lp-phy device not recognized in 4.15 kernel
-
-
-I have an old netbook with a Broadcom bcm4312 802.11b/g lp-phy
-[14e4:4315] (rev 01) wifi device.  It is no longer recognized in kernel
-4.15: it works fine with the 4.14 kernel and earlier, with the b43 and
-ssb kernel modules.
-
-I cannot give any further information as there are no error messages
-logged. The b43 firmware (wl-5.100.138) is not loaded for it, nor are
-the ssb/b43/bcma/ mmc_core/mac80211/cfg80211 modules.  The modules can
-be loaded by hand without error, but nothing happens and no network
-interface is presented.
-
-This is a pretty slow and rubbish netbook but is useful when travelling
-to a country which might impound your laptop (no names) and you don't
-mind too much losing it.  It would be nice to continue to be able to
-use it for that.
-
-Chris
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 5722736..beb18d0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -763,6 +763,8 @@ static int rsi_sdio_host_intf_write_pkt(struct rsi_hw *adapter,
+ 	int status;
+ 
+ 	queueno = ((pkt[1] >> 4) & 0xf);
++	if (queueno == RSI_BT_MGMT_Q || queueno == RSI_BT_DATA_Q)
++		queueno = RSI_BT_Q;
+ 
+ 	num_blocks = len / block_size;
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 169c981..6e74261 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -103,7 +103,7 @@ static int rsi_process_pkt(struct rsi_common *common)
+ 
+ 	rcv_pkt_len = (num_blks * 256);
+ 
+-	common->rx_data_pkt = kmalloc(rcv_pkt_len, GFP_KERNEL);
++	common->rx_data_pkt = kzalloc(rcv_pkt_len, GFP_KERNEL);
+ 	if (!common->rx_data_pkt) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed in memory allocation\n",
+ 			__func__);
+-- 
+2.7.4
