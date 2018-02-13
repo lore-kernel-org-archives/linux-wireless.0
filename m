@@ -1,53 +1,303 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51046 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751654AbeB0JfZ (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:56224 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935036AbeBMMNW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 04:35:25 -0500
-Date: Tue, 27 Feb 2018 12:35:05 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 6/8] staging: wilc1000: fix line over 80 char in
- wilc_wlan_handle_rxq()
-Message-ID: <20180227093505.iq3xy5j4roixbs4n@mwanda> (sfid-20180227_103531_513912_8D22CBD3)
-References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
- <1519662722-15761-7-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519662722-15761-7-git-send-email-ajay.kathat@microchip.com>
+        Tue, 13 Feb 2018 07:13:22 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v6 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
+Date: Tue, 13 Feb 2018 17:31:41 +0530
+Message-Id: <1518523304-3424-6-git-send-email-amitkarwar@gmail.com> (sfid-20180213_131326_119549_DD38A857)
+In-Reply-To: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
+References: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 26, 2018 at 10:02:00PM +0530, Ajay Singh wrote:
-> Fix 'line over 80 character' issue found by checkpatch.pl script.
-> Refactor wilc_wlan_handle_rxq() code to remove the checkpatch.pl
-> warnings.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/wilc_wlan.c | 46 ++++++++++++++++++++----------------
->  1 file changed, 25 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> index 74b80ad..223bf8b 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -798,6 +798,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
->  			u32 header;
->  			u32 pkt_len, pkt_offset, tp_len;
->  			int is_cfg_packet;
-> +			int tmp;
->  
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Heh.  Nope.  Don't do this.  You've just create a "tmp" variable to hold
-many different types of random long values...  It makes the code less
-readable.
+Redpine bluetooth driver is a thin driver which depends on
+'rsi_91x' driver for transmitting and receiving packets
+to/from device. It creates hci interface when attach() is
+called from 'rsi_91x' module.
 
-Just break it up into separate functions.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+Reviewed-by: Marcel Holtmann <marcel@holtmann.org>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v6: Renamed CONFIG_BT_RSI to CONFIG_BT_HCIRSI (Marcel)
+v5: Addressed review comments from Marcel.
+    Removed reduntant switch case code from rsi_hci_recv_pkt()
+    Changed bt_cb(skb)->pkt_type to hci_skb_pkt_type(skb)
+    Removed reduntant '\n' from BT_ERR and redundant BT_INFO messages
+    Changed u8 *pkt to const u8 *pkt in rsi_hci_recv_pkt()
+v4: Removed rsi_hci.h file. Made the functions static(Marcel)
+v3: Made BT_RSI module by default off(Marcel)
+    Removed redundant exported function rsi_get_hci_ops()(Marcel)
+v2: Addressed review comments from Marcel
+    Removed unnecessary 'depends on BT && BT_RFOMM' line in Kconfig
+    Removed redundant BT_INFO messages
+    h_adapter initialization and declaration in a single line.
+    Removed unnecessary error checks for HCI_RUNNING and fsm_state
+    Allocated new skb with skb_realloc_headroom() API if headroom is not sufficient
+    Used get_unaligned_le16 helpers
+    Moved a structure and union from header file to btrsi.c file
+---
+ drivers/bluetooth/Kconfig  |  12 +++
+ drivers/bluetooth/Makefile |   2 +
+ drivers/bluetooth/btrsi.c  | 188 +++++++++++++++++++++++++++++++++++++++++++++
+ include/net/rsi_91x.h      |   4 +-
+ 4 files changed, 205 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/bluetooth/btrsi.c
 
-regards,
-dan carpenter
+diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
+index 07e55cd..d8bbd66 100644
+--- a/drivers/bluetooth/Kconfig
++++ b/drivers/bluetooth/Kconfig
+@@ -392,4 +392,16 @@ config BT_QCOMSMD
+ 	  Say Y here to compile support for HCI over Qualcomm SMD into the
+ 	  kernel or say M to compile as a module.
+ 
++config BT_HCIRSI
++	tristate "Redpine HCI support"
++	default n
++	select RSI_COEX
++	help
++	  Redpine BT driver.
++	  This driver handles BT traffic from upper layers and pass
++	  to the RSI_91x coex module for further scheduling to device
++
++	  Say Y here to compile support for HCI over Redpine into the
++	  kernel or say M to compile as a module.
++
+ endmenu
+diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
+index 4e4e44d..03cfc1b 100644
+--- a/drivers/bluetooth/Makefile
++++ b/drivers/bluetooth/Makefile
+@@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
+ 
+ obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
+ 
++obj-$(CONFIG_BT_HCIRSI)		+= btrsi.o
++
+ btmrvl-y			:= btmrvl_main.o
+ btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
+ 
+diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
+new file mode 100644
+index 0000000..803e045
+--- /dev/null
++++ b/drivers/bluetooth/btrsi.c
+@@ -0,0 +1,188 @@
++/**
++ * Copyright (c) 2017 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#include <linux/version.h>
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <net/bluetooth/bluetooth.h>
++#include <net/bluetooth/hci_core.h>
++#include <linux/unaligned/le_byteshift.h>
++#include <net/rsi_91x.h>
++#include <net/genetlink.h>
++
++#define RSI_HEADROOM_FOR_BT_HAL	16
++#define RSI_FRAME_DESC_SIZE	16
++
++struct rsi_hci_adapter {
++	void *priv;
++	struct rsi_proto_ops *proto_ops;
++	struct hci_dev *hdev;
++};
++
++static int rsi_hci_open(struct hci_dev *hdev)
++{
++	return 0;
++}
++
++static int rsi_hci_close(struct hci_dev *hdev)
++{
++	return 0;
++}
++
++static int rsi_hci_flush(struct hci_dev *hdev)
++{
++	return 0;
++}
++
++static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
++{
++	struct rsi_hci_adapter *h_adapter = hci_get_drvdata(hdev);
++	struct sk_buff *new_skb = NULL;
++
++	switch (hci_skb_pkt_type(skb)) {
++	case HCI_COMMAND_PKT:
++		hdev->stat.cmd_tx++;
++		break;
++	case HCI_ACLDATA_PKT:
++		hdev->stat.acl_tx++;
++		break;
++	case HCI_SCODATA_PKT:
++		hdev->stat.sco_tx++;
++		break;
++	}
++
++	if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
++		/* Insufficient skb headroom - allocate a new skb */
++		new_skb = skb_realloc_headroom(skb, RSI_HEADROOM_FOR_BT_HAL);
++		if (unlikely(!new_skb))
++			return -ENOMEM;
++		bt_cb(new_skb)->pkt_type = hci_skb_pkt_type(skb);
++		kfree_skb(skb);
++		skb = new_skb;
++	}
++
++	return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
++						   RSI_BT_Q);
++}
++
++static int rsi_hci_recv_pkt(void *priv, const u8 *pkt)
++{
++	struct rsi_hci_adapter *h_adapter = priv;
++	struct hci_dev *hdev = h_adapter->hdev;
++	struct sk_buff *skb;
++	int pkt_len = get_unaligned_le16(pkt) & 0x0fff;
++
++	skb = dev_alloc_skb(pkt_len);
++	if (!skb)
++		return -ENOMEM;
++
++	memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
++	skb_put(skb, pkt_len);
++	h_adapter->hdev->stat.byte_rx += skb->len;
++
++	hci_skb_pkt_type(skb) = pkt[14];
++
++	return hci_recv_frame(hdev, skb);
++}
++
++static int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
++{
++	struct rsi_hci_adapter *h_adapter = NULL;
++	struct hci_dev *hdev;
++	int err = 0;
++
++	h_adapter = kzalloc(sizeof(*h_adapter), GFP_KERNEL);
++	if (!h_adapter)
++		return -ENOMEM;
++
++	h_adapter->priv = priv;
++	ops->set_bt_context(priv, h_adapter);
++	h_adapter->proto_ops = ops;
++
++	hdev = hci_alloc_dev();
++	if (!hdev) {
++		BT_ERR("Failed to alloc HCI device");
++		goto err;
++	}
++
++	h_adapter->hdev = hdev;
++
++	if (ops->get_host_intf(priv) == RSI_HOST_INTF_SDIO)
++		hdev->bus = HCI_SDIO;
++	else
++		hdev->bus = HCI_USB;
++
++	hci_set_drvdata(hdev, h_adapter);
++	hdev->dev_type = HCI_PRIMARY;
++	hdev->open = rsi_hci_open;
++	hdev->close = rsi_hci_close;
++	hdev->flush = rsi_hci_flush;
++	hdev->send = rsi_hci_send_pkt;
++
++	err = hci_register_dev(hdev);
++	if (err < 0) {
++		BT_ERR("HCI registration failed with errcode %d", err);
++		hci_free_dev(hdev);
++		goto err;
++	}
++
++	return 0;
++err:
++	h_adapter->hdev = NULL;
++	kfree(h_adapter);
++	return -EINVAL;
++}
++
++static void rsi_hci_detach(void *priv)
++{
++	struct rsi_hci_adapter *h_adapter = priv;
++	struct hci_dev *hdev;
++
++	if (!h_adapter)
++		return;
++
++	hdev = h_adapter->hdev;
++	if (hdev) {
++		hci_unregister_dev(hdev);
++		hci_free_dev(hdev);
++		h_adapter->hdev = NULL;
++	}
++
++	kfree(h_adapter);
++}
++
++const struct rsi_mod_ops rsi_bt_ops = {
++	.attach	= rsi_hci_attach,
++	.detach	= rsi_hci_detach,
++	.recv_pkt = rsi_hci_recv_pkt,
++};
++EXPORT_SYMBOL(rsi_bt_ops);
++
++static int rsi_91x_bt_module_init(void)
++{
++	return 0;
++}
++
++static void rsi_91x_bt_module_exit(void)
++{
++	return;
++}
++
++module_init(rsi_91x_bt_module_init);
++module_exit(rsi_91x_bt_module_exit);
++MODULE_AUTHOR("Redpine Signals Inc");
++MODULE_DESCRIPTION("RSI BT driver");
++MODULE_SUPPORTED_DEVICE("RSI-BT");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
+index 737ab4e..040f07b 100644
+--- a/include/net/rsi_91x.h
++++ b/include/net/rsi_91x.h
+@@ -49,6 +49,8 @@ struct rsi_proto_ops {
+ struct rsi_mod_ops {
+ 	int (*attach)(void *priv, struct rsi_proto_ops *ops);
+ 	void (*detach)(void *priv);
+-	int (*recv_pkt)(void *priv, u8 *msg);
++	int (*recv_pkt)(void *priv, const u8 *msg);
+ };
++
++extern const struct rsi_mod_ops rsi_bt_ops;
+ #endif
+-- 
+2.7.4
