@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33242 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750799AbeBBJPs (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:40146 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934165AbeBMKnq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Feb 2018 04:15:48 -0500
-From: Jouni Malinen <jouni@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Srinivas Dasari <dasaris@codeaurora.org>,
-        Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH] nl80211: Fix external_auth check for offloaded authentication
-Date: Fri,  2 Feb 2018 11:15:27 +0200
-Message-Id: <1517562927-6193-1-git-send-email-jouni@codeaurora.org> (sfid-20180202_101556_308663_28A5F459)
+        Tue, 13 Feb 2018 05:43:46 -0500
+Received: by mail-qt0-f196.google.com with SMTP id c19so3099262qtm.7
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Feb 2018 02:43:46 -0800 (PST)
+Subject: Re: [PATCHv2 1/3] cfg80211: send ack_signal to user in probe client
+ response
+To: Venkateswara Naralasetty <vnaralas@codeaurora.org>,
+        johannes@sipsolutions.net
+References: <1518499986-10606-1-git-send-email-vnaralas@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A82C15F.7060906@broadcom.com> (sfid-20180213_114351_915613_52B70AFF)
+Date: Tue, 13 Feb 2018 11:43:43 +0100
+MIME-Version: 1.0
+In-Reply-To: <1518499986-10606-1-git-send-email-vnaralas@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Srinivas Dasari <dasaris@codeaurora.org>
+On 2/13/2018 6:33 AM, Venkateswara Naralasetty wrote:
+> This patch provides support to get ack signal in probe client response
+> and in station info from user.
 
-Unfortunately removal of the ext_feature flag in the last revision of
-the patch ended up negating the comparison and prevented the command
-from being processed (either nl80211_external_auth() or
-rdev_external_auth() returns -EOPNOTSUPP). Fix this by adding back the
-lost '!'.
+Hi Venkateswara,
 
-Fixes: 40cbfa90218b ("cfg80211/nl80211: Optional authentication offload to userspace")
-Signed-off-by: Srinivas Dasari <dasaris@codeaurora.org>
-Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
----
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In recent discussion [1] it was observed that a valid flag would not 
+really be needed as a signal level of zero could be used as valid 
+indication.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index cc6ec5b..3b6dbc1 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -12486,7 +12486,7 @@ static int nl80211_external_auth(struct sk_buff *skb, struct genl_info *info)
- 	struct net_device *dev = info->user_ptr[1];
- 	struct cfg80211_external_auth_params params;
- 
--	if (rdev->ops->external_auth)
-+	if (!rdev->ops->external_auth)
- 		return -EOPNOTSUPP;
- 
- 	if (!info->attrs[NL80211_ATTR_SSID])
--- 
-2.7.4
+Regards,
+Arend
+
+[1] https://www.spinics.net/lists/linux-wireless/msg170023.html
+
+> Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+> ---
+> v2:
+> * addressed Johannes comments
+>
+>   include/net/cfg80211.h       | 7 ++++++-
+>   include/uapi/linux/nl80211.h | 3 +++
+>   net/wireless/nl80211.c       | 8 ++++++--
+>   3 files changed, 15 insertions(+), 3 deletions(-)
