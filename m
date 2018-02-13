@@ -1,137 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:35914 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751793AbeBZKWp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 05:22:45 -0500
-Received: by mail-qt0-f169.google.com with SMTP id c7so18125249qtn.3
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2018 02:22:45 -0800 (PST)
-Subject: Re: [PATCH resend] brcmfmac: p2p and normal ap access are not always
- possible at the same time
-To: Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170526105747.16874-1-hdegoede@redhat.com>
- <20170526105747.16874-2-hdegoede@redhat.com>
- <8a61e3ad-3949-68dc-bed9-09f61ab6b647@redhat.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A93DFF1.2030208@broadcom.com> (sfid-20180226_112249_571813_CCA644D2)
-Date: Mon, 26 Feb 2018 11:22:41 +0100
+Received: from narfation.org ([79.140.41.39]:35962 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964777AbeBMNPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Feb 2018 08:15:54 -0500
+From: Sven Eckelmann <sven@narfation.org>
+To: Ali Abedi <a2abedi@uwaterloo.ca>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 802.11ac devices that use Minstrel_HT
+Date: Tue, 13 Feb 2018 14:15:48 +0100
+Message-ID: <8037020.pGPiyahZAU@bentobox> (sfid-20180213_141558_564790_05A376AB)
+In-Reply-To: <00665215-8a85-365d-dcfa-aa9b1aeedd1c@mailservices.uwaterloo.ca>
+References: <769da6f9-bca3-48bd-32e6-009dd82f3c96@mailservices.uwaterloo.ca> <4674890.5ipQsmKAE1@bentobox> <00665215-8a85-365d-dcfa-aa9b1aeedd1c@mailservices.uwaterloo.ca>
 MIME-Version: 1.0
-In-Reply-To: <8a61e3ad-3949-68dc-bed9-09f61ab6b647@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: multipart/signed; boundary="nextPart1755978.5WPiQ6of1F"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/25/2018 3:52 PM, Hans de Goede wrote:
-> Hi,
->
-> On 26-05-17 12:57, Hans de Goede wrote:
->> The firmware responding with -EBUSY when trying to add an extra
->> virtual-if
->> is a normal thing, do not print an error for this.
->>
->> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->
-> I'm now seeing this on another device too, but this time the error
-> thrown is -EBADE, this seems to be new with recent kernels:
+--nextPart1755978.5WPiQ6of1F
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Yup. Before we were passing firmware errors up to user-space, which was 
-confusing and potentially be misinterpreted. However, looking at the 
-output below it would have been good to log the firmware error as well. 
-And staring at it some more I suddenly realize I broke the feature 
-detection module with this change. Actually only the GSCAN feature 
-detection.
+On Dienstag, 13. Februar 2018 07:56:29 CET Ali Abedi wrote:
+> > So I would currently bet on hwsim (only useful when you only want to have some
+> > simulations) or mt76. Afaik mt76 was also the one which was used to test the
+> > VHT rate injection code for monitor interfaces and is therefore quite
+> > flexible.
+[...]
+> Thank you Sven. I was actually wondering what hardware was used to test 
+> the code.
 
-> [root@localhost ~]# dmesg | grep brcmfmac
-> [   34.265950] usbcore: registered new interface driver brcmfmac
-> [   34.266059] brcmfmac 0000:01:00.0: enabling device (0000 -> 0002)
-> [   34.376468] brcmfmac: brcmf_fw_map_chip_to_name: using
-> brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
-> [   34.855143] brcmfmac 0000:01:00.0: Direct firmware load for
-> brcm/brcmfmac4356-pcie.clm_blob failed with error -2
-> [   34.855147] brcmfmac: brcmf_c_process_clm_blob: no clm_blob
-> available(err=-2), device may have limited channels available
-> [   34.857029] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
-> Jun  4 2017 16:50:07 version 7.35.101.6 (r702795) FWID 01-5e8eb735
-> [   34.938854] brcmfmac 0000:01:00.0 wlp1s0: renamed from wlan0
-> [   37.086420] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
-> [   37.086431] brcmfmac: brcmf_cfg80211_add_iface: add iface
-> p2p-dev-wlp1s0 type 10 failed: err=-52
->
-> [root@localhost ~]# strings /lib/firmware/brcm/brcmfmac4356-pcie.bin |
-> tail -n 1
-> 4356a2-roml/pcie-ag-msgbuf-splitrx-p2p-pno-aoe-pktfilter-keepalive-sr-mchan-pktctx-proptxstatus-ampduhostreorder-lpc-pwropt-txbf-wl11u-mfp-tdls-amsdutx-sarctrl-proxd-hs20sta-rcc-wepso-ndoe-linkstat-gscan-hchk-logtrace-roamexp-rmon
-> Version: 7.35.101.6 (r702795) CRC: 4f3f65c5 Date: Sun 2017-06-04
-> 16:51:38 PDT Ucode Ver: 963.316 FWID: 01-5e8eb735
->
-> It would be good if we can silence these errors, or maybe at a
-> minimum lower their log-level from error to warning?
+It seems Lorenzo Bianconi used an D-Link DIR-860L rev B1 [1]
 
-I had a look at it and it seems to be a difference in firmware api that 
-we need to support in the driver. Need to do a bit more digging, but it 
-seems an actual issue. You could silence it for now, but I prefer to 
-wait for the fix.
+Kind regards,
+	Sven
 
-Regards,
-Arend
+[1] https://patchwork.kernel.org/patch/8393091/
 
-> Regards,
->
-> Hans
->
->
->> ---
->>   .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14
->> ++++++++++----
->>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     |  5 ++++-
->>   2 files changed, 14 insertions(+), 5 deletions(-)
->>
->> diff --git
->> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> index cd1d6730eab7..dae88f3d041d 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> @@ -684,11 +684,17 @@ static struct wireless_dev
->> *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
->>           return ERR_PTR(-EINVAL);
->>       }
->> -    if (IS_ERR(wdev))
->> -        brcmf_err("add iface %s type %d failed: err=%d\n",
->> -              name, type, (int)PTR_ERR(wdev));
->> -    else
->> +    if (IS_ERR(wdev)) {
->> +        err = PTR_ERR(wdev);
->> +        if (err != -EBUSY)
->> +            brcmf_err("add iface %s type %d failed: err=%d\n",
->> +                  name, type, err);
->> +        else
->> +            brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
->> +                  name, type, err);
->> +    } else {
->>           brcmf_cfg80211_update_proto_addr_mode(wdev);
->> +    }
->>       return wdev;
->>   }
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->> index aa299c47bfa2..1bb296ffb46f 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->> @@ -2090,7 +2090,10 @@ static struct wireless_dev
->> *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
->>       /* Initialize P2P Discovery in the firmware */
->>       err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
->>       if (err < 0) {
->> -        brcmf_err("set p2p_disc error\n");
->> +        if (err != -EBUSY)
->> +            brcmf_err("set p2p_disc error\n");
->> +        else
->> +            brcmf_dbg(INFO, "set p2p_disc error\n");
->>           brcmf_fweh_p2pdev_setup(pri_ifp, false);
->>           brcmf_cfg80211_arm_vif_event(p2p->cfg, NULL);
->>           goto fail;
->>
+--nextPart1755978.5WPiQ6of1F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlqC5QQACgkQXYcKB8Em
+e0Yrjw//TMF+HLexnd8SKJuRnLjY3N48zm6Jb+eHXkUIsROEyaVNjLqIta17FefB
+AvmYcCWwi84NxLkn75CBDhAvLMvQf4cAx/wYaBc4ArR+HFGg5si6XybdtL4GRuNr
+/nIB6elwoxBMpZn1794g6WmdV4SLyljw9VOlWzLsg0ejc6o2SNZQwyedeuDyUZNj
+HLSYbOl2qMfa800ofXmGTOjSEW8YsEc3hWVvuNRN6LX1P8nTuT/CWTmxxSNC/i3y
+ZRtb+zMN3PNmFuR4mXik3A/iTqwD+zTew8jtJgwQw52xie8T1cZsvjXKLDDXOxpQ
+8PTD+hGtd9hHqIaCGHFSEvxHoajn8mQk4eRTHoPGZu1eUcWa1zYiGcYMLHDjSNJp
+a8KV7HcXyyCBYF5+Fuxm/fXLyPb94SSmc2hMMaHPmU/HI9nEXN62wEqw1nhPr5PL
+xCVQapPFqtv52wye7HUusOdHwY75e89tg8EeSiixH5dbfGh4H8Bvc9USML2CUEBJ
+d+aqUoP98/2PLhKkmhPCmTUNls2yrzbmAmEed30RyON7NChUTPj2Z06LN4xK/Mnq
+a+As49rd12xWVtkiBblmANCb3W0n/bNpJY65/sq0u7qagTvB49JBYsMKEUGXrzBe
+5GQU0ja/Lmvbmtdkc960qUzRlv3eQiDFVaV+u5BRrD11GIghkkw=
+=/QWP
+-----END PGP SIGNATURE-----
+
+--nextPart1755978.5WPiQ6of1F--
