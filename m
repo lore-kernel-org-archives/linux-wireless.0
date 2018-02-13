@@ -1,60 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60718 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751733AbeB0Qlw (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:38498 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935051AbeBMMM4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:41:52 -0500
-Subject: Re: fixed bit rate 9Mbps set as 24Mbps in g mode(legacy)
-To: KAVITA MATHUR <kavitam@cdot.in>, ath10k@lists.infradead.org,
-        backports@vger.kernel.org
-References: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org>
- <20180227083933.M59708@cdot.in>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <3047f184-d600-7be7-52bc-2ed4cee37ffe@candelatech.com> (sfid-20180227_174157_003541_EE3F9616)
-Date: Tue, 27 Feb 2018 08:41:50 -0800
-MIME-Version: 1.0
-In-Reply-To: <20180227083933.M59708@cdot.in>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 13 Feb 2018 07:12:56 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v6 2/8] rsi: add bluetooth rx endpoint
+Date: Tue, 13 Feb 2018 17:31:38 +0530
+Message-Id: <1518523304-3424-3-git-send-email-amitkarwar@gmail.com> (sfid-20180213_131315_443502_5E08F804)
+In-Reply-To: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
+References: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/2018 12:49 AM, KAVITA MATHUR wrote:
-> Hi,
->
-> I have configured AP in g mode and tested legacy rates.All basic rates and supported
-> rates(1,2,5.5,11,6,9,12,18,24,36,48,54) are set except 9Mbps.
->
-> When fixed bit rate 9Mbps is set, it gets set as 24 Mbps. This issue has been observed
-> in backports-4.4.2-1 as well as latest git version of ath10k driver.
->
->
-> Is anybody aware of this issue? How can I fix this rate 9Mbps?
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-You should specify which firmware/chipset you are using, since this might
-easily be a firmware issue.
+USB endpoint 1 is used for WLAN which is presently in use.
+USB endpoint 2 is introduced for BT Rx traffic. Enumeration
+of Rx BT endpoint and submitting Rx BT URB are added.
 
-And, how are you determining that 'it gets set to 24Mbps'.  Is that the encoding
-you see in a wifi sniff, or is the driver being set to 24Mbps improperly when
-you use iw (or whatever) to try configuring the rate?
+>From /sys/kernel/debug/usb/devices,
+Ad=81(I) is for WLAN EP IN and Ad=01(O) is for Wlan EP OUT.
+Ad=82(I) is for BT EP IN and Ad=02(O) is for BT EP OUT.
 
-Recent upstream mac80211 has broken the ability to set a single tx rate as well,
-last I checked.
+T:  Bus=01 Lev=01 Prnt=01 Port=09 Cnt=03 Dev#=  4 Spd=480  MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=1618 ProdID=9113 Rev= 0.02
+S:  Manufacturer=Redpine Signals, Inc.
+S:  Product=Wireless USB Network Module
+S:  SerialNumber=000000000001
+C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
+I:* If#= 0 Alt= 0 #EPs= 6 Cls=00(>ifc ) Sub=00 Prot=00 Driver=(none)
+E:  Ad=81(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=01(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=82(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=02(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=03(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
 
-Thanks,
-Ben
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v6: Same as v2, v3, v4, v5
+v2: Included '/sys/kernel/debug/usb/devices' info in patch description(Marcel)
+---
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 37 ++++++++++++++++++++--------------
+ drivers/net/wireless/rsi/rsi_usb.h     |  6 +++---
+ 2 files changed, 25 insertions(+), 18 deletions(-)
 
->
->
-> Thanks & Regards,
-> Kavita
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe backports" in
->
-
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index bbce809..9ab86fb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -103,41 +103,42 @@ static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
+ 	struct usb_host_interface *iface_desc;
+ 	struct usb_endpoint_descriptor *endpoint;
+ 	__le16 buffer_size;
+-	int ii, bep_found = 0;
++	int ii, bin_found = 0, bout_found = 0;
+ 
+ 	iface_desc = &(interface->altsetting[0]);
+ 
+ 	for (ii = 0; ii < iface_desc->desc.bNumEndpoints; ++ii) {
+ 		endpoint = &(iface_desc->endpoint[ii].desc);
+ 
+-		if ((!(dev->bulkin_endpoint_addr)) &&
++		if (!dev->bulkin_endpoint_addr[bin_found] &&
+ 		    (endpoint->bEndpointAddress & USB_DIR_IN) &&
+-		    ((endpoint->bmAttributes &
+-		    USB_ENDPOINT_XFERTYPE_MASK) ==
++		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
+ 		    USB_ENDPOINT_XFER_BULK)) {
+ 			buffer_size = endpoint->wMaxPacketSize;
+-			dev->bulkin_size = buffer_size;
+-			dev->bulkin_endpoint_addr =
++			dev->bulkin_size[bin_found] = buffer_size;
++			dev->bulkin_endpoint_addr[bin_found] =
+ 				endpoint->bEndpointAddress;
++			bin_found++;
+ 		}
+ 
+-		if (!dev->bulkout_endpoint_addr[bep_found] &&
++		if (!dev->bulkout_endpoint_addr[bout_found] &&
+ 		    !(endpoint->bEndpointAddress & USB_DIR_IN) &&
+ 		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
+-		      USB_ENDPOINT_XFER_BULK)) {
+-			dev->bulkout_endpoint_addr[bep_found] =
++		    USB_ENDPOINT_XFER_BULK)) {
++			buffer_size = endpoint->wMaxPacketSize;
++			dev->bulkout_endpoint_addr[bout_found] =
+ 				endpoint->bEndpointAddress;
+ 			buffer_size = endpoint->wMaxPacketSize;
+-			dev->bulkout_size[bep_found] = buffer_size;
+-			bep_found++;
++			dev->bulkout_size[bout_found] = buffer_size;
++			bout_found++;
+ 		}
+ 
+-		if (bep_found >= MAX_BULK_EP)
++		if (bin_found >= MAX_BULK_EP || bout_found >= MAX_BULK_EP)
+ 			break;
+ 	}
+ 
+-	if (!(dev->bulkin_endpoint_addr) &&
+-	    (dev->bulkout_endpoint_addr[0]))
++	if (!(dev->bulkin_endpoint_addr[0]) &&
++	    dev->bulkout_endpoint_addr[0])
+ 		return -EINVAL;
+ 
+ 	return 0;
+@@ -273,7 +274,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
+ 	usb_fill_bulk_urb(urb,
+ 			  dev->usbdev,
+ 			  usb_rcvbulkpipe(dev->usbdev,
+-				dev->bulkin_endpoint_addr),
++			  dev->bulkin_endpoint_addr[ep_num - 1]),
+ 			  urb->transfer_buffer,
+ 			  3000,
+ 			  rsi_rx_done_handler,
+@@ -745,6 +746,12 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 	if (status)
+ 		goto err1;
+ 
++	if (adapter->priv->coex_mode > 1) {
++		status = rsi_rx_urb_submit(adapter, BT_EP);
++		if (status)
++			goto err1;
++	}
++
+ 	return 0;
+ err1:
+ 	rsi_deinit_usb_interface(adapter);
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 7e781d5..0fda14c 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -31,7 +31,7 @@
+ #define USB_VENDOR_REGISTER_WRITE    0x16
+ #define RSI_USB_TX_HEAD_ROOM         128
+ 
+-#define MAX_RX_URBS                  1
++#define MAX_RX_URBS                  2
+ #define MAX_BULK_EP                  8
+ #define WLAN_EP                      1
+ #define BT_EP                        2
+@@ -54,8 +54,8 @@ struct rsi_91x_usbdev {
+ 	struct usb_interface *pfunction;
+ 	struct rx_usb_ctrl_block rx_cb[MAX_RX_URBS];
+ 	u8 *tx_buffer;
+-	__le16 bulkin_size;
+-	u8 bulkin_endpoint_addr;
++	__le16 bulkin_size[MAX_BULK_EP];
++	u8 bulkin_endpoint_addr[MAX_BULK_EP];
+ 	__le16 bulkout_size[MAX_BULK_EP];
+ 	u8 bulkout_endpoint_addr[MAX_BULK_EP];
+ 	u32 tx_blk_size;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
