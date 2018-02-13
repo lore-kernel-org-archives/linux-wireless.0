@@ -1,79 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56644 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755154AbeBOIro (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:43191 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935019AbeBMMNI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 03:47:44 -0500
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
+        Tue, 13 Feb 2018 07:13:08 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
 Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN module
-Date: Thu, 15 Feb 2018 14:17:38 +0530
-Message-Id: <1518684458-5338-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_094747_924041_5D039EFB)
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v6 4/8] rsi: add coex support
+Date: Tue, 13 Feb 2018 17:31:40 +0530
+Message-Id: <1518523304-3424-5-git-send-email-amitkarwar@gmail.com> (sfid-20180213_131319_381995_D9139F88)
+In-Reply-To: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
+References: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3990 is integrated 802.11ac chipset with SNOC
-bus interface. Add snoc layer driver registration
-and associated ops.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-WCN3990 support is not yet complete as cold-boot
-handshake is done using qmi(Qualcomm-MSM-Interface)
-and qmi client support will be added once qmi framework
-is available.
+With BT support, driver has to handle two streams of data
+(i.e. wlan and BT). Actual coex implementation is in firmware.
+Coex module just schedule the packets to firmware by taking them
+from the corresponding paths.
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Structures for module and protocol operations are introduced for
+this purpose. Protocol operations structure is global structure
+which can be shared among different modules. Move initialization
+of coex and operating mode values to rsi_91x_init().
+
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/ath/ath10k/Kconfig  |   8 ++
- drivers/net/wireless/ath/ath10k/Makefile |   4 +
- drivers/net/wireless/ath/ath10k/snoc.c   | 153 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/snoc.h   |  76 +++++++++++++++
- 4 files changed, 241 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/snoc.c
- create mode 100644 drivers/net/wireless/ath/ath10k/snoc.h
+v6: Rename semaphore tx_bus_lock to tx_bus_sema. Modified coex
+    scheduling loop to avoid while(1) (Kalle)
+v5: Same as earlier versions
+---
+ drivers/net/wireless/rsi/Kconfig        |   9 ++
+ drivers/net/wireless/rsi/Makefile       |   1 +
+ drivers/net/wireless/rsi/rsi_91x_coex.c | 177 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_hal.c  |  17 +--
+ drivers/net/wireless/rsi/rsi_91x_main.c |  30 +++++-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |   2 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio.c |   1 +
+ drivers/net/wireless/rsi/rsi_91x_usb.c  |   2 +
+ drivers/net/wireless/rsi/rsi_coex.h     |  38 +++++++
+ drivers/net/wireless/rsi/rsi_main.h     |   5 +
+ drivers/net/wireless/rsi/rsi_mgmt.h     |   3 +
+ include/net/rsi_91x.h                   |  20 ++++
+ 12 files changed, 295 insertions(+), 10 deletions(-)
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
 
-diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
-index deb5ae2..1b317eb 100644
---- a/drivers/net/wireless/ath/ath10k/Kconfig
-+++ b/drivers/net/wireless/ath/ath10k/Kconfig
-@@ -36,6 +36,14 @@ config ATH10K_USB
- 	  This module adds experimental support for USB bus. Currently
- 	  work in progress and will not fully work.
+diff --git a/drivers/net/wireless/rsi/Kconfig b/drivers/net/wireless/rsi/Kconfig
+index 7c5e4ca..e6135ee 100644
+--- a/drivers/net/wireless/rsi/Kconfig
++++ b/drivers/net/wireless/rsi/Kconfig
+@@ -42,4 +42,13 @@ config RSI_USB
+ 	  This option enables the USB bus support in rsi drivers.
+ 	  Select M (recommended), if you have a RSI 1x1 wireless module.
  
-+config ATH10K_SNOC
-+        tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
-+        depends on ATH10K && ARCH_QCOM
-+        ---help---
-+          This module adds support for integrated WCN3990 chip connected
-+          to system NOC(SNOC). Currently work in progress and will not
-+          fully work.
++config RSI_COEX
++	bool "Redpine Signals WLAN BT Coexistence support"
++	depends on BT_HCIRSI && RSI_91X
++	default y
++	---help---
++	  This option enables the WLAN BT coex support in rsi drivers.
++	  Select M (recommended), if you have want to use this feature
++	  and you have RS9113 module.
 +
- config ATH10K_DEBUG
- 	bool "Atheros ath10k debugging"
- 	depends on ATH10K
-diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
-index 6739ac2..390fde0 100644
---- a/drivers/net/wireless/ath/ath10k/Makefile
-+++ b/drivers/net/wireless/ath/ath10k/Makefile
-@@ -35,5 +35,9 @@ ath10k_sdio-y += sdio.o
- obj-$(CONFIG_ATH10K_USB) += ath10k_usb.o
- ath10k_usb-y += usb.o
+ endif # WLAN_VENDOR_RSI
+diff --git a/drivers/net/wireless/rsi/Makefile b/drivers/net/wireless/rsi/Makefile
+index 47c4590..ff87121a 100644
+--- a/drivers/net/wireless/rsi/Makefile
++++ b/drivers/net/wireless/rsi/Makefile
+@@ -5,6 +5,7 @@ rsi_91x-y			+= rsi_91x_mac80211.o
+ rsi_91x-y			+= rsi_91x_mgmt.o
+ rsi_91x-y			+= rsi_91x_hal.o
+ rsi_91x-y			+= rsi_91x_ps.o
++rsi_91x-$(CONFIG_RSI_COEX)	+= rsi_91x_coex.o
+ rsi_91x-$(CONFIG_RSI_DEBUGFS)	+= rsi_91x_debugfs.o
  
-+obj-$(CONFIG_ATH10K_SNOC) += ath10k_snoc.o
-+ath10k_snoc-y += snoc.o \
-+		 ce.o
-+
- # for tracing framework to find trace.h
- CFLAGS_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+ rsi_usb-y			+= rsi_91x_usb.o rsi_91x_usb_ops.o
+diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
 new file mode 100644
-index 0000000..30354a6
+index 0000000..c07e839
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -0,0 +1,153 @@
-+/*
-+ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
++++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
+@@ -0,0 +1,177 @@
++/**
++ * Copyright (c) 2018 Redpine Signals Inc.
 + *
 + * Permission to use, copy, modify, and/or distribute this software for any
 + * purpose with or without fee is hereby granted, provided that the above
@@ -88,151 +107,343 @@ index 0000000..30354a6
 + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 + */
 +
-+#include <linux/module.h>
-+#include <linux/kernel.h>
-+#include "debug.h"
-+#include "hif.h"
-+#include "htc.h"
-+#include "ce.h"
-+#include "snoc.h"
-+#include <linux/of.h>
-+#include <linux/of_device.h>
-+#include <linux/platform_device.h>
++#include "rsi_main.h"
++#include "rsi_coex.h"
++#include "rsi_mgmt.h"
++#include "rsi_hal.h"
 +
-+static const struct ath10k_snoc_drv_priv drv_priv = {
-+	.hw_rev = ATH10K_HW_WCN3990,
-+	.dma_mask = DMA_BIT_MASK(37),
-+};
-+
-+void ath10k_snoc_write32(struct ath10k *ar, u32 offset, u32 value)
++static enum rsi_coex_queues rsi_coex_determine_coex_q
++			(struct rsi_coex_ctrl_block *coex_cb)
 +{
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	enum rsi_coex_queues q_num = RSI_COEX_Q_INVALID;
 +
-+	iowrite32(value, ar_snoc->mem + offset);
++	if (skb_queue_len(&coex_cb->coex_tx_qs[RSI_COEX_Q_COMMON]) > 0)
++		q_num = RSI_COEX_Q_COMMON;
++	if (skb_queue_len(&coex_cb->coex_tx_qs[RSI_COEX_Q_BT]) > 0)
++		q_num = RSI_COEX_Q_BT;
++	if (skb_queue_len(&coex_cb->coex_tx_qs[RSI_COEX_Q_WLAN]) > 0)
++		q_num = RSI_COEX_Q_WLAN;
++
++	return q_num;
 +}
 +
-+u32 ath10k_snoc_read32(struct ath10k *ar, u32 offset)
++static void rsi_coex_sched_tx_pkts(struct rsi_coex_ctrl_block *coex_cb)
 +{
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-+	u32 val;
++	enum rsi_coex_queues coex_q = RSI_COEX_Q_INVALID;
++	struct sk_buff *skb;
 +
-+	val = ioread32(ar_snoc->mem + offset);
++	do {
++		coex_q = rsi_coex_determine_coex_q(coex_cb);
++		rsi_dbg(INFO_ZONE, "queue = %d\n", coex_q);
 +
-+	return val;
++		if (coex_q == RSI_COEX_Q_BT)
++			skb = skb_dequeue(&coex_cb->coex_tx_qs[RSI_COEX_Q_BT]);
++	} while (coex_q != RSI_COEX_Q_INVALID);
 +}
 +
-+static const struct ath10k_hif_ops ath10k_snoc_hif_ops = {
-+	.read32			= ath10k_snoc_read32,
-+	.write32		= ath10k_snoc_write32,
-+};
-+
-+static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
-+	.read32		= ath10k_snoc_read32,
-+	.write32	= ath10k_snoc_write32,
-+};
-+
-+static const struct of_device_id ath10k_snoc_dt_match[] = {
-+	{ .compatible = "qcom,wcn3990-wifi",
-+	 .data = &drv_priv,
-+	},
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(of, ath10k_snoc_dt_match);
-+
-+static int ath10k_snoc_probe(struct platform_device *pdev)
++static void rsi_coex_scheduler_thread(struct rsi_common *common)
 +{
-+	const struct ath10k_snoc_drv_priv *drv_data;
-+	const struct of_device_id *of_id;
-+	struct ath10k_snoc *ar_snoc;
-+	struct device *dev;
-+	struct ath10k *ar;
-+	int ret;
++	struct rsi_coex_ctrl_block *coex_cb =
++		(struct rsi_coex_ctrl_block *)common->coex_cb;
++	u32 timeout = EVENT_WAIT_FOREVER;
 +
-+	of_id = of_match_device(ath10k_snoc_dt_match, &pdev->dev);
-+	if (!of_id) {
-+		dev_err(&pdev->dev, "failed to find matching device tree id\n");
-+		return -EINVAL;
-+	}
++	do {
++		rsi_wait_event(&coex_cb->coex_tx_thread.event, timeout);
++		rsi_reset_event(&coex_cb->coex_tx_thread.event);
 +
-+	drv_data = of_id->data;
-+	dev = &pdev->dev;
++		rsi_coex_sched_tx_pkts(coex_cb);
++	} while (atomic_read(&coex_cb->coex_tx_thread.thread_done) == 0);
 +
-+	ret = dma_set_mask_and_coherent(dev, drv_data->dma_mask);
-+	if (ret) {
-+		dev_err(dev, "failed to set dma mask: %d", ret);
-+		return ret;
-+	}
-+
-+	ar = ath10k_core_create(sizeof(*ar_snoc), dev, ATH10K_BUS_SNOC,
-+				drv_data->hw_rev, &ath10k_snoc_hif_ops);
-+	if (!ar) {
-+		dev_err(dev, "failed to allocate core\n");
-+		return -ENOMEM;
-+	}
-+
-+	ar_snoc = ath10k_snoc_priv(ar);
-+	ar_snoc->dev = pdev;
-+	platform_set_drvdata(pdev, ar);
-+	ar_snoc->ar = ar;
-+	ar_snoc->ce.bus_ops = &ath10k_snoc_bus_ops;
-+	ar->ce_priv = &ar_snoc->ce;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc probe\n");
-+	ath10k_warn(ar, "Warning: SNOC support is still work-in-progress, it will not work properly!");
-+
-+	return ret;
++	complete_and_exit(&coex_cb->coex_tx_thread.completion, 0);
 +}
 +
-+static int ath10k_snoc_remove(struct platform_device *pdev)
++int rsi_coex_recv_pkt(struct rsi_common *common, u8 *msg)
 +{
-+	struct ath10k *ar = platform_get_drvdata(pdev);
++	u8 msg_type = msg[RSI_RX_DESC_MSG_TYPE_OFFSET];
 +
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc remove\n");
-+	ath10k_core_destroy(ar);
++	switch (msg_type) {
++	case COMMON_CARD_READY_IND:
++		rsi_dbg(INFO_ZONE, "common card ready received\n");
++		rsi_handle_card_ready(common, msg);
++		break;
++	case SLEEP_NOTIFY_IND:
++		rsi_dbg(INFO_ZONE, "sleep notify received\n");
++		rsi_mgmt_pkt_recv(common, msg);
++		break;
++	}
 +
 +	return 0;
 +}
 +
-+static struct platform_driver ath10k_snoc_driver = {
-+		.probe  = ath10k_snoc_probe,
-+		.remove = ath10k_snoc_remove,
-+		.driver = {
-+			.name   = "ath10k_snoc",
-+			.owner = THIS_MODULE,
-+			.of_match_table = ath10k_snoc_dt_match,
-+		},
-+};
-+
-+static int __init ath10k_snoc_init(void)
++static inline int rsi_map_coex_q(u8 hal_queue)
 +{
-+	int ret;
-+
-+	ret = platform_driver_register(&ath10k_snoc_driver);
-+	if (ret)
-+		pr_err("failed to register ath10k snoc driver: %d\n",
-+		       ret);
-+
-+	return ret;
++	switch (hal_queue) {
++	case RSI_COEX_Q:
++		return RSI_COEX_Q_COMMON;
++	case RSI_WLAN_Q:
++		return RSI_COEX_Q_WLAN;
++	case RSI_BT_Q:
++		return RSI_COEX_Q_BT;
++	}
++	return RSI_COEX_Q_INVALID;
 +}
-+module_init(ath10k_snoc_init);
 +
-+static void __exit ath10k_snoc_exit(void)
++int rsi_coex_send_pkt(void *priv, struct sk_buff *skb, u8 hal_queue)
 +{
-+	platform_driver_unregister(&ath10k_snoc_driver);
-+}
-+module_exit(ath10k_snoc_exit);
++	struct rsi_common *common = (struct rsi_common *)priv;
++	struct rsi_coex_ctrl_block *coex_cb =
++		(struct rsi_coex_ctrl_block *)common->coex_cb;
++	struct skb_info *tx_params = NULL;
++	enum rsi_coex_queues coex_q;
++	int status;
 +
-+MODULE_AUTHOR("Qualcomm");
-+MODULE_LICENSE("Dual BSD/GPL");
-+MODULE_DESCRIPTION("Driver support for Atheros WCN3990 SNOC devices");
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.h b/drivers/net/wireless/ath/ath10k/snoc.h
++	coex_q = rsi_map_coex_q(hal_queue);
++	if (coex_q == RSI_COEX_Q_INVALID) {
++		rsi_dbg(ERR_ZONE, "Invalid coex queue\n");
++		return -EINVAL;
++	}
++	if (coex_q != RSI_COEX_Q_COMMON &&
++	    coex_q != RSI_COEX_Q_WLAN) {
++		skb_queue_tail(&coex_cb->coex_tx_qs[coex_q], skb);
++		rsi_set_event(&coex_cb->coex_tx_thread.event);
++		return 0;
++	}
++	if (common->iface_down) {
++		tx_params =
++			(struct skb_info *)&IEEE80211_SKB_CB(skb)->driver_data;
++
++		if (!(tx_params->flags & INTERNAL_MGMT_PKT)) {
++			rsi_indicate_tx_status(common->priv, skb, -EINVAL);
++			return 0;
++		}
++	}
++
++	/* Send packet to hal */
++	if (skb->priority == MGMT_SOFT_Q)
++		status = rsi_send_mgmt_pkt(common, skb);
++	else
++		status = rsi_send_data_pkt(common, skb);
++
++	return status;
++}
++
++int rsi_coex_attach(struct rsi_common *common)
++{
++	struct rsi_coex_ctrl_block *coex_cb;
++	int cnt;
++
++	coex_cb = kzalloc(sizeof(*coex_cb), GFP_KERNEL);
++	if (!coex_cb)
++		return -ENOMEM;
++
++	common->coex_cb = (void *)coex_cb;
++	coex_cb->priv = common;
++
++	/* Initialize co-ex queues */
++	for (cnt = 0; cnt < NUM_COEX_TX_QUEUES; cnt++)
++		skb_queue_head_init(&coex_cb->coex_tx_qs[cnt]);
++	rsi_init_event(&coex_cb->coex_tx_thread.event);
++
++	/* Initialize co-ex thread */
++	if (rsi_create_kthread(common,
++			       &coex_cb->coex_tx_thread,
++			       rsi_coex_scheduler_thread,
++			       "Coex-Tx-Thread")) {
++		rsi_dbg(ERR_ZONE, "%s: Unable to init tx thrd\n", __func__);
++		return -EINVAL;
++	}
++	return 0;
++}
++
++void rsi_coex_detach(struct rsi_common *common)
++{
++	struct rsi_coex_ctrl_block *coex_cb =
++		(struct rsi_coex_ctrl_block *)common->coex_cb;
++	int cnt;
++
++	rsi_kill_thread(&coex_cb->coex_tx_thread);
++
++	for (cnt = 0; cnt < NUM_COEX_TX_QUEUES; cnt++)
++		skb_queue_purge(&coex_cb->coex_tx_qs[cnt]);
++
++	kfree(coex_cb);
++}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 1176de6..f73d19b 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -31,8 +31,15 @@ int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb)
+ 	struct rsi_hw *adapter = common->priv;
+ 	int status;
+ 
++	if (common->coex_mode > 1)
++		down(&common->tx_bus_sema);
++
+ 	status = adapter->host_intf_ops->write_pkt(common->priv,
+ 						   skb->data, skb->len);
++
++	if (common->coex_mode > 1)
++		up(&common->tx_bus_sema);
++
+ 	return status;
+ }
+ 
+@@ -296,8 +303,7 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	if (status)
+ 		goto err;
+ 
+-	status = adapter->host_intf_ops->write_pkt(common->priv, skb->data,
+-						   skb->len);
++	status = rsi_send_pkt_to_bus(common, skb);
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n", __func__);
+ 
+@@ -342,8 +348,7 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 		goto err;
+ 
+ 	rsi_prepare_mgmt_desc(common, skb);
+-	status = adapter->host_intf_ops->write_pkt(common->priv,
+-						   (u8 *)skb->data, skb->len);
++	status = rsi_send_pkt_to_bus(common, skb);
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n", __func__);
+ 
+@@ -926,10 +931,6 @@ int rsi_hal_device_init(struct rsi_hw *adapter)
+ {
+ 	struct rsi_common *common = adapter->priv;
+ 
+-	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
+-	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
+-	adapter->device_model = RSI_DEV_9113;
+-
+ 	switch (adapter->device_model) {
+ 	case RSI_DEV_9113:
+ 		if (rsi_load_firmware(adapter)) {
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 0413af8..a298008 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -20,6 +20,7 @@
+ #include <linux/firmware.h>
+ #include "rsi_mgmt.h"
+ #include "rsi_common.h"
++#include "rsi_coex.h"
+ #include "rsi_hal.h"
+ 
+ u32 rsi_zone_enabled = /* INFO_ZONE |
+@@ -160,8 +161,13 @@ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
+ 
+ 		switch (queueno) {
+ 		case RSI_COEX_Q:
+-			rsi_mgmt_pkt_recv(common, (frame_desc + offset));
++			if (common->coex_mode > 1)
++				rsi_coex_recv_pkt(common, frame_desc + offset);
++			else
++				rsi_mgmt_pkt_recv(common,
++						  (frame_desc + offset));
+ 			break;
++
+ 		case RSI_WIFI_DATA_Q:
+ 			skb = rsi_prepare_skb(common,
+ 					      (frame_desc + offset),
+@@ -217,6 +223,13 @@ static void rsi_tx_scheduler_thread(struct rsi_common *common)
+ 	complete_and_exit(&common->tx_thread.completion, 0);
+ }
+ 
++enum rsi_host_intf rsi_get_host_intf(void *priv)
++{
++	struct rsi_common *common = (struct rsi_common *)priv;
++
++	return common->priv->rsi_host_intf;
++}
++
+ /**
+  * rsi_91x_init() - This function initializes os interface operations.
+  * @void: Void.
+@@ -251,6 +264,7 @@ struct rsi_hw *rsi_91x_init(void)
+ 	mutex_init(&common->mutex);
+ 	mutex_init(&common->tx_lock);
+ 	mutex_init(&common->rx_lock);
++	sema_init(&common->tx_bus_sema, 1);
+ 
+ 	if (rsi_create_kthread(common,
+ 			       &common->tx_thread,
+@@ -265,6 +279,17 @@ struct rsi_hw *rsi_91x_init(void)
+ 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
+ 	init_completion(&common->wlan_init_completion);
+ 	common->init_done = true;
++
++	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
++	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
++	adapter->device_model = RSI_DEV_9113;
++	if (common->coex_mode > 1) {
++		if (rsi_coex_attach(common)) {
++			rsi_dbg(ERR_ZONE, "Failed to init coex module\n");
++			goto err;
++		}
++	}
++
+ 	return adapter;
+ 
+ err:
+@@ -294,6 +319,9 @@ void rsi_91x_deinit(struct rsi_hw *adapter)
+ 
+ 	common->init_done = false;
+ 
++	if (common->coex_mode > 1)
++		rsi_coex_detach(common);
++
+ 	kfree(common);
+ 	kfree(adapter->rsi_dev);
+ 	kfree(adapter);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 46c9d54..c21fca7 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1791,7 +1791,7 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
+ 	return -EINVAL;
+ }
+ 
+-static int rsi_handle_card_ready(struct rsi_common *common, u8 *msg)
++int rsi_handle_card_ready(struct rsi_common *common, u8 *msg)
+ {
+ 	switch (common->fsm_state) {
+ 	case FSM_CARD_NOT_READY:
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index b0cf411..ba38c6d 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include "rsi_sdio.h"
+ #include "rsi_common.h"
++#include "rsi_coex.h"
+ #include "rsi_hal.h"
+ 
+ /**
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 9ab86fb..b33a05f 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -16,8 +16,10 @@
+  */
+ 
+ #include <linux/module.h>
++#include <net/rsi_91x.h>
+ #include "rsi_usb.h"
+ #include "rsi_hal.h"
++#include "rsi_coex.h"
+ 
+ /**
+  * rsi_usb_card_write() - This function writes to the USB Card.
+diff --git a/drivers/net/wireless/rsi/rsi_coex.h b/drivers/net/wireless/rsi/rsi_coex.h
 new file mode 100644
-index 0000000..cf65b01
+index 0000000..bc4994b
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/snoc.h
-@@ -0,0 +1,76 @@
-+/*
-+ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
++++ b/drivers/net/wireless/rsi/rsi_coex.h
+@@ -0,0 +1,38 @@
++/**
++ * Copyright (c) 2018 Redpine Signals Inc.
 + *
 + * Permission to use, copy, modify, and/or distribute this software for any
 + * purpose with or without fee is hereby granted, provided that the above
@@ -247,65 +458,123 @@ index 0000000..cf65b01
 + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 + */
 +
-+#ifndef _SNOC_H_
-+#define _SNOC_H_
++#ifndef __RSI_COEX_H__
++#define __RSI_COEX_H__
 +
-+#include "hw.h"
-+#include "ce.h"
-+#include "pci.h"
++#include "rsi_common.h"
 +
-+struct ath10k_snoc_drv_priv {
-+	enum ath10k_hw_rev hw_rev;
-+	u64 dma_mask;
++#define RSI_COEX_TXQ_MAX_PKTS		64
++#define RSI_COEX_TXQ_WATER_MARK		50
++#define COMMON_CARD_READY_IND           0
++#define NUM_COEX_TX_QUEUES              5
++
++struct rsi_coex_ctrl_block {
++	struct rsi_common *priv;
++	struct sk_buff_head coex_tx_qs[NUM_COEX_TX_QUEUES];
++	struct rsi_thread coex_tx_thread;
 +};
 +
-+struct snoc_state {
-+	u32 pipe_cfg_addr;
-+	u32 svc_to_pipe_map;
++int rsi_coex_attach(struct rsi_common *common);
++void rsi_coex_detach(struct rsi_common *common);
++int rsi_coex_send_pkt(void *priv, struct sk_buff *skb, u8 proto_type);
++int rsi_coex_recv_pkt(struct rsi_common *common, u8 *msg);
++
++#endif
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index b0f4e2c..7b01782 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -206,6 +206,7 @@ struct rsi_common {
+ 	struct rsi_hw *priv;
+ 	struct vif_priv vif_info[RSI_MAX_VIFS];
+ 
++	void *coex_cb;
+ 	bool mgmt_q_block;
+ 	struct version_info lmac_ver;
+ 
+@@ -270,6 +271,7 @@ struct rsi_common {
+ 	u8 obm_ant_sel_val;
+ 	int tx_power;
+ 	u8 ant_in_use;
++	struct semaphore tx_bus_sema;
+ 	bool hibernate_resume;
+ 	bool reinit_hw;
+ 	u8 wow_flags;
+@@ -359,4 +361,7 @@ struct rsi_host_intf_ops {
+ 				      u8 *fw);
+ 	int (*reinit_device)(struct rsi_hw *adapter);
+ };
++
++enum rsi_host_intf rsi_get_host_intf(void *priv);
++
+ #endif
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 389094a..cf6567a 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -57,12 +57,14 @@
+ #define WOW_PATTERN_SIZE 256
+ 
+ /* Receive Frame Types */
++#define RSI_RX_DESC_MSG_TYPE_OFFSET	2
+ #define TA_CONFIRM_TYPE                 0x01
+ #define RX_DOT11_MGMT                   0x02
+ #define TX_STATUS_IND                   0x04
+ #define BEACON_EVENT_IND		0x08
+ #define PROBEREQ_CONFIRM                2
+ #define CARD_READY_IND                  0x00
++#define SLEEP_NOTIFY_IND                0x06
+ 
+ #define RSI_DELETE_PEER                 0x0
+ #define RSI_ADD_PEER                    0x1
+@@ -638,6 +640,7 @@ static inline void rsi_set_len_qno(__le16 *addr, u16 len, u8 qno)
+ 	*addr = cpu_to_le16(len | ((qno & 7) << 12));
+ }
+ 
++int rsi_handle_card_ready(struct rsi_common *common, u8 *msg);
+ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg);
+ int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode,
+ 			     u8 *mac_addr, u8 vap_id, u8 vap_status);
+diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
+index 16a447b..737ab4e 100644
+--- a/include/net/rsi_91x.h
++++ b/include/net/rsi_91x.h
+@@ -17,6 +17,8 @@
+ #ifndef __RSI_HEADER_H__
+ #define __RSI_HEADER_H__
+ 
++#include <linux/skbuff.h>
++
+ /* HAL queue information */
+ #define RSI_COEX_Q			0x0
+ #define RSI_BT_Q			0x2
+@@ -26,9 +28,27 @@
+ #define RSI_BT_MGMT_Q			0x6
+ #define RSI_BT_DATA_Q			0x7
+ 
++enum rsi_coex_queues {
++	RSI_COEX_Q_INVALID = -1,
++	RSI_COEX_Q_COMMON = 0,
++	RSI_COEX_Q_BT,
++	RSI_COEX_Q_WLAN
 +};
 +
-+struct ath10k_snoc_pipe {
-+	struct ath10k_ce_pipe *ce_hdl;
-+	u8 pipe_num;
-+	struct ath10k *hif_ce_state;
-+	size_t buf_sz;
-+	/* protect ce info */
-+	spinlock_t pipe_lock;
-+	struct ath10k_snoc *ar_snoc;
+ enum rsi_host_intf {
+ 	RSI_HOST_INTF_SDIO = 0,
+ 	RSI_HOST_INTF_USB
+ };
+ 
++struct rsi_proto_ops {
++	int (*coex_send_pkt)(void *priv, struct sk_buff *skb, u8 hal_queue);
++	enum rsi_host_intf (*get_host_intf)(void *priv);
++	void (*set_bt_context)(void *priv, void *context);
 +};
 +
-+struct ath10k_snoc_target_info {
-+	u32 target_version;
-+	u32 target_type;
-+	u32 target_revision;
-+	u32 soc_version;
++struct rsi_mod_ops {
++	int (*attach)(void *priv, struct rsi_proto_ops *ops);
++	void (*detach)(void *priv);
++	int (*recv_pkt)(void *priv, u8 *msg);
 +};
-+
-+struct ath10k_snoc_ce_irq {
-+	u32 irq_line;
-+};
-+
-+struct ath10k_snoc {
-+	struct platform_device *dev;
-+	struct ath10k *ar;
-+	void __iomem *mem;
-+	dma_addr_t mem_pa;
-+	struct ath10k_snoc_target_info target_info;
-+	size_t mem_len;
-+	struct ath10k_snoc_pipe pipe_info[CE_COUNT_MAX];
-+	struct ath10k_snoc_ce_irq ce_irqs[CE_COUNT_MAX];
-+	struct ath10k_ce ce;
-+	struct timer_list rx_post_retry;
-+};
-+
-+static inline struct ath10k_snoc *ath10k_snoc_priv(struct ath10k *ar)
-+{
-+	return (struct ath10k_snoc *)ar->drv_priv;
-+}
-+
-+void ath10k_snoc_write32(struct ath10k *ar, u32 offset, u32 value);
-+u32 ath10k_snoc_read32(struct ath10k *ar, u32 offset);
-+
-+#endif /* _SNOC_H_ */
+ #endif
 -- 
-1.9.1
+2.7.4
