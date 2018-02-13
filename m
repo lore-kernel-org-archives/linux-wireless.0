@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.161.174]:41016 "EHLO
-        mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751190AbeBAEzA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:58892 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933865AbeBMKu3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jan 2018 23:55:00 -0500
-Received: by mail-yw0-f174.google.com with SMTP id b129so9470525ywa.8
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Jan 2018 20:55:00 -0800 (PST)
-MIME-Version: 1.0
-From: David Hutchison <dhutchison@bluemesh.net>
-Date: Wed, 31 Jan 2018 21:54:59 -0700
-Message-ID: <CA+i30h-rt18nnEnLt5YWD4HXek2nW2HcXZabCaqbLafaivRo9Q@mail.gmail.com> (sfid-20180201_055513_856620_4E6B37D4)
-Subject: QCA9531 Question
-To: linux-wireless@vger.kernel.org
+        Tue, 13 Feb 2018 05:50:29 -0500
+Message-ID: <1518519026.2494.1.camel@sipsolutions.net> (sfid-20180213_115033_859816_FCE431F7)
+Subject: Re: [PATCHv2 1/3] cfg80211: send ack_signal to user in probe client
+ response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 13 Feb 2018 11:50:26 +0100
+In-Reply-To: <5A82C15F.7060906@broadcom.com> (sfid-20180213_114347_243560_839A74AD)
+References: <1518499986-10606-1-git-send-email-vnaralas@codeaurora.org>
+         <5A82C15F.7060906@broadcom.com> (sfid-20180213_114347_243560_839A74AD)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, 2018-02-13 at 11:43 +0100, Arend van Spriel wrote:
+> On 2/13/2018 6:33 AM, Venkateswara Naralasetty wrote:
+> > This patch provides support to get ack signal in probe client response
+> > and in station info from user.
+> 
+> Hi Venkateswara,
+> 
+> In recent discussion [1] it was observed that a valid flag would not 
+> really be needed as a signal level of zero could be used as valid 
+> indication.
 
-I have two Atheros AP147 QCA9531 SoC, the radio is connected to the
-WMAC. I am running OpenWRT Trunk on them and for some reason the TX/RX
-is incredibly low.
+I don't think it matters much though, and physically 0 is a valid power
+level, just practically we can't receive that high power :-)
 
-The first AP147 is low powered, No xPA Bias and only has 20dB of
-output power. Ath9k appears to run correctly, meaning I can bring up
-station/AP. However when I scan, it see's nothing. When I bring up an
-AP, the AP doesn't transmit.
-
-The second AP147 has an xPA Bias level of 13. This time I can scan on
-a station interface but everything it see's is incredibly low. The TX
-Power is also very very low. With the xPA, this is supposed to run at
-26 dB.
-
-Is there a register a register that I can toggle to enable the QCA9531
-internal PA/LNA? It's like ath9k is not enabling the internal PA/LNA
-correctly.
-
-The odd thing is, I have other QCA9531 boards ( Mikrotik based ) and
-they run fine on OpenWRT Trunk. I'm not sure what the difference is...
-
-Any insight would be much appreciated.
-
-I posted some details on the LEDE forum:
-https://forum.lede-project.org/t/ap147-010-qca9531-wmac-tx-power-issue/11126/2
-
--- Davey
+johannes
