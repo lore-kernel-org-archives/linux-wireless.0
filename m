@@ -1,87 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:37860 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754817AbeBOHXJ (ORCPT
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:35746 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751758AbeBMGJc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 02:23:09 -0500
-Received: by mail-pg0-f65.google.com with SMTP id o1so3592514pgn.4
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Feb 2018 23:23:09 -0800 (PST)
-From: Sudhir Sreedharan <ssreedharan@mvista.com>
-To: herton@canonical.com, htl10@users.sourceforge.net,
-        Larry.Finger@lwfinger.net
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sudhir Sreedharan <ssreedharan@mvista.com>,
-        stable@vger.kernel.org
-Subject: [PATCH] rtl8187: Fix NULL pointer dereference in priv->conf_mutex
-Date: Thu, 15 Feb 2018 12:52:45 +0530
-Message-Id: <1518679365-15697-1-git-send-email-ssreedharan@mvista.com> (sfid-20180215_082328_659137_A08A1100)
+        Tue, 13 Feb 2018 01:09:32 -0500
+Received: by mail-lf0-f53.google.com with SMTP id a204so23555903lfa.2
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2018 22:09:31 -0800 (PST)
+MIME-Version: 1.0
+From: Steve deRosier <derosier@gmail.com>
+Date: Mon, 12 Feb 2018 22:09:30 -0800
+Message-ID: <CALupW3BbupwudkZw2=C8RvU0PYkk8=+TtV4SxcYH+uxh6WmZew@mail.gmail.com> (sfid-20180213_070937_391437_8DD7BB44)
+Subject: Presentation at ELC on debugging wifi modules
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be reproduced by bind/unbind the driver multiple times
-in AM3517 board.
+Hi Linux Wireless driver maintainers,
 
-Analysis revealed that rtl8187_start() was invoked before probe
-finishes(ie. before the mutex is initialized).
+I'm giving a talk at ELC NA next month in Portland and I'd like a
+little help from our other driver maintainers. The talk is titled:
+"Reliable Linux Wireless - Techniques for Debugging Wireless Module
+Integrations". While I'm familiar with a fairly wide variety of WiFi
+chips and adapters and drivers, I don't know them all. I will speak
+from my experience and I'm sure I won't have time to get into the
+detailed ins-and-outs of every driver, but I'd love to include value
+for everyone no matter which wifi chip vendor the audience member is
+using.
 
- INFO: trying to register non-static key.
- the code is fine but needs lockdep annotation.
- turning off the locking correctness validator.
- CPU: 0 PID: 821 Comm: wpa_supplicant Not tainted 4.9.80-dirty #250
- Hardware name: Generic AM3517 (Flattened Device Tree)
- [<c010e0d8>] (unwind_backtrace) from [<c010beac>] (show_stack+0x10/0x14)
- [<c010beac>] (show_stack) from [<c017401c>] (register_lock_class+0x4f4/0x55c)
- [<c017401c>] (register_lock_class) from [<c0176fe0>] (__lock_acquire+0x74/0x1938)
- [<c0176fe0>] (__lock_acquire) from [<c0178cfc>] (lock_acquire+0xfc/0x23c)
- [<c0178cfc>] (lock_acquire) from [<c08aa2f8>] (mutex_lock_nested+0x50/0x3b0)
- [<c08aa2f8>] (mutex_lock_nested) from [<c05f5bf8>] (rtl8187_start+0x2c/0xd54)
- [<c05f5bf8>] (rtl8187_start) from [<c082dea0>] (drv_start+0xa8/0x320)
- [<c082dea0>] (drv_start) from [<c084d1d4>] (ieee80211_do_open+0x2bc/0x8e4)
- [<c084d1d4>] (ieee80211_do_open) from [<c069be94>] (__dev_open+0xb8/0x120)
- [<c069be94>] (__dev_open) from [<c069c11c>] (__dev_change_flags+0x88/0x14c)
- [<c069c11c>] (__dev_change_flags) from [<c069c1f8>] (dev_change_flags+0x18/0x48)
- [<c069c1f8>] (dev_change_flags) from [<c0710b08>] (devinet_ioctl+0x738/0x840)
- [<c0710b08>] (devinet_ioctl) from [<c067925c>] (sock_ioctl+0x164/0x2f4)
- [<c067925c>] (sock_ioctl) from [<c02883f8>] (do_vfs_ioctl+0x8c/0x9d0)
- [<c02883f8>] (do_vfs_ioctl) from [<c0288da8>] (SyS_ioctl+0x6c/0x7c)
- [<c0288da8>] (SyS_ioctl) from [<c0107760>] (ret_fast_syscall+0x0/0x1c)
- Unable to handle kernel NULL pointer dereference at virtual address 00000000
- pgd = cd1ec000
- [00000000] *pgd=8d1de831, *pte=00000000, *ppte=00000000
- Internal error: Oops: 817 [#1] PREEMPT ARM
- Modules linked in:
- CPU: 0 PID: 821 Comm: wpa_supplicant Not tainted 4.9.80-dirty #250
- Hardware name: Generic AM3517 (Flattened Device Tree)
- task: ce73eec0 task.stack: cd1ea000
- PC is at mutex_lock_nested+0xe8/0x3b0
- LR is at mutex_lock_nested+0xd0/0x3b0
+So, if you have any specific tips or tricks you'd like to share with
+me so I can include them in the materials for my talk I would
+appreciate it.  I'm looking for those harder to find things: the
+little known debugfs knobs, module parameters, device tree bindings,
+and so on. Or, those things that are are common tripping up points.
+Anything you find useful or think others might.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Sudhir Sreedharan <ssreedharan@mvista.com>
----
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Also, part of my talk will be about how to reach out to those of us on
+the list for help. We all know the calls for help come to us in
+varying quality and I'd like to explain all the stuff to do first and
+all the information to gather and send to us as they reach out. So
+please send me any thoughts on what you'd like to see in the emails
+when people ask for help.
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-index 121b94f..9a1d15b 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-@@ -1450,6 +1450,7 @@ static int rtl8187_probe(struct usb_interface *intf,
- 		goto err_free_dev;
- 	}
- 	mutex_init(&priv->io_mutex);
-+	mutex_init(&priv->conf_mutex);
- 
- 	SET_IEEE80211_DEV(dev, &intf->dev);
- 	usb_set_intfdata(intf, dev);
-@@ -1625,7 +1626,6 @@ static int rtl8187_probe(struct usb_interface *intf,
- 		printk(KERN_ERR "rtl8187: Cannot register device\n");
- 		goto err_free_dmabuf;
- 	}
--	mutex_init(&priv->conf_mutex);
- 	skb_queue_head_init(&priv->b_tx_status.queue);
- 
- 	wiphy_info(dev->wiphy, "hwaddr %pM, %s V%d + %s, rfkill mask %d\n",
--- 
-2.6.4
+You're welcome to do it on-list if you desire to elicit discussion,
+but in order to keep the noise down feel free to reply to me directly
+off-list.
+
+For those that are not of the maintainer types that happen to be on
+this list, if you're looking for help or tips and tricks, please
+attend my talk at ELC or otherwise come and find me. All are welcome.
+
+Thanks,
+- Steve
