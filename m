@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:45108 "EHLO
-        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752636AbeB0KQO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34210 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934063AbeBMJVd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 05:16:14 -0500
-Received: by mail-io0-f177.google.com with SMTP id m22so20607726iob.12
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 02:16:14 -0800 (PST)
-MIME-Version: 1.0
-From: Harsha Rao <harshrao464@gmail.com>
-Date: Tue, 27 Feb 2018 15:46:13 +0530
-Message-ID: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com> (sfid-20180227_111621_509785_B1F818D0)
-Subject: Support on vendor id and device id
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 13 Feb 2018 04:21:33 -0500
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCHv2 0/3] cfg80211/mac80211: cqm rssi config for AP mode
+Date: Tue, 13 Feb 2018 14:50:55 +0530
+Message-Id: <1518513656-22324-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180213_102140_068579_2E4DC24D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks,
-I am developing a new wifi driver for our sdio based wifi device.
+From: Tamizh chelvam <tamizhr@codeaurora.org>
 
-I see that SDIO_VENDOR_ID and SDIO_DEVICE_ID for our device (We had
-bought the SDIO IP from 3rd party)  is already  been used by some
-other vendor and its already into staging .
+Currently station mode has the support of rssi based cqm. This patchsets
+extended the support for AP mode as well. Already netlink accepts mac
+address in cqm notification event. We can use that to pass mac address of
+the station to specify its rssi change event. This patchsets introduce
+new api cfg80211_ap_sta_cqm_notify and multicast group to notify the event.
 
-Please suggest me how can I move forward to submit the driver for staging.
+Pradeep Kumar Chitrapu (1):
+  mac80211: enable setting cqm rssi c onfig for AP mode
 
-Is there a way to reconfigure the values in the SDIO host for
-different value or does Linux allow two drivers with same values to
-survive mutual exclusively
+Tamizh chelvam (2):
+  cfg80211: enable setting cqm rssi config for AP mode
+  mac80211: implement cqm rssi check using rx data signal
 
--
-Harsha
+V2:
+  * Removed changing existing ieee80211_cqm_rssi_notify api changes.
+  * Introduced new ext feature bit and multicast group id to support this
+    feature.
+
+ include/net/cfg80211.h       |   15 ++++++++++
+ include/net/mac80211.h       |    7 +++++
+ include/uapi/linux/nl80211.h |    6 ++++
+ net/mac80211/cfg.c           |   31 ++++++++++++-------
+ net/mac80211/rx.c            |   46 +++++++++++++++++++++++++++-
+ net/mac80211/sta_info.h      |    3 ++
+ net/wireless/nl80211.c       |   68 +++++++++++++++++++++++++++++++++++-------
+ 7 files changed, 155 insertions(+), 21 deletions(-)
+
+-- 
+1.7.9.5
