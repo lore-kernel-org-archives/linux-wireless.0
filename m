@@ -1,58 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59288 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751086AbeBQIeH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Feb 2018 03:34:07 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 17 Feb 2018 10:33:51 +0200
-Message-Id: <20180217083354.31160-7-luca@coelho.fi> (sfid-20180217_093421_577043_E293CD77)
-In-Reply-To: <20180217083354.31160-1-luca@coelho.fi>
-References: <20180217083354.31160-1-luca@coelho.fi>
-Subject: [PATCH 6/9] iwlwifi: mvm: fix "failed to remove key" message
+Received: from mail-db5eur01on0118.outbound.protection.outlook.com ([104.47.2.118]:51456
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1032204AbeBNQ0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Feb 2018 11:26:44 -0500
+From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
+Subject: [PATCH v2] ath9k: mark RSSI as invalid if frame received during
+ channel setup
+Date: Wed, 14 Feb 2018 16:26:42 +0000
+Message-ID: <AM4PR0101MB230538DEEFCFFC0E0F4437A2E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180214_172648_842860_6A5D18EB)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+ath9k returns a wrong RSSI value for frames received in a 30ms time
+window after a channel change. The correct value is typically 10dB
+below the returned value.
 
-When the GTK is installed, we install it to HW with the
-station ID of the AP.
+This was found with a Atheros AR9300 Rev:3 chip (WLE350NX / JWX6083
+cards), during offchannel scans.
 
-Mac80211 will try to remove it only after the AP sta is
-removed, which will result in a failure to remove key
-since we do not have any station for it.
+Mark the signal value as invalid in this case.
 
-This is a valid situation, but a previous commit removed
-the early return and added a return with error value, which
-resulted in an error message that is confusing to users.
-
-Remove the error return value.
-
-Fixes: 85aeb58cec1a ("iwlwifi: mvm: Enable security on new TX API")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+V2: replace LEDE patch with due kernel patch (with excuses to Kalle Valo)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index dbd2ba2bb714..3739e42b34e4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -3170,8 +3170,9 @@ static int __iwl_mvm_remove_sta_key(struct iwl_mvm *mvm, u8 sta_id,
- 	int ret, size;
- 	u32 status;
- 
-+	/* This is a valid situation for GTK removal */
- 	if (sta_id == IWL_MVM_INVALID_STA)
--		return -EINVAL;
-+		return 0;
- 
- 	key_flags = cpu_to_le16((keyconf->keyidx << STA_KEY_FLG_KEYID_POS) &
- 				 STA_KEY_FLG_KEYID_MSK);
--- 
-2.15.1
+ drivers/net/wireless/ath/ath9k/ani.c    |    1 +
+ drivers/net/wireless/ath/ath9k/common.c |   10 ++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h     |    1 +
+ 3 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/at=
+h/ath9k/ani.c
+index 5214dd7..a7e07ed 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -317,6 +317,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scannin=
+g)
+ 		return;
+=20
+ 	BUG_ON(aniState =3D=3D NULL);
++	ah->chan_stable_time =3D jiffies + (30*HZ)/1000; /* 30ms */
+ 	ah->stats.ast_ani_reset++;
+=20
+ 	ofdm_nil =3D max_t(int, ATH9K_ANI_OFDM_DEF_LEVEL,
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless=
+/ath/ath9k/common.c
+index 099f3d4..7e5f7a3 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -221,6 +221,16 @@ void ath9k_cmn_process_rssi(struct ath_common *common,
+ 	int i, j;
+=20
+ 	/*
++	 * RSSI is not available before 30ms after reset on ath9k.
++	 */
++	if (time_before(jiffies, ah->chan_stable_time)) {
++		ath_dbg(common, ANY, "early frame rssi=3D%d\n",rx_stats->rs_rssi);
++		rxs->flag |=3D RX_FLAG_NO_SIGNAL_VAL;
++		return;
++	}
++	ah->chan_stable_time =3D jiffies; /* advance stable time to cop with jiff=
+ies wraparound */
++
++	/*
+ 	 * RSSI is not available for subframes in an A-MPDU.
+ 	 */
+ 	if (rx_stats->rs_moreaggr) {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath=
+/ath9k/hw.h
+index 9804a24..ec07da9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -809,6 +809,7 @@ struct ath_hw {
+=20
+ 	bool reset_power_on;
+ 	bool htc_reset_init;
++	unsigned long chan_stable_time;
+=20
+ 	enum nl80211_iftype opmode;
+ 	enum ath9k_power_mode power_mode;
+--=20
+1.7.2.5
