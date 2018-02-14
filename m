@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blackstar.xs4all.nl ([83.163.96.30]:41310 "EHLO
-        blackstar.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751563AbeBZJKF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 04:10:05 -0500
-Date: Mon, 26 Feb 2018 10:09:17 +0100
-From: Bas Vermeulen <bvermeul@blackstar.nl>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: introduce endian_check module parameter
-Message-ID: <20180226090917.7iabysywbv6h4rqr@alienware17> (sfid-20180226_101242_765870_75D15451)
+Received: from mail-eopbgr40133.outbound.protection.outlook.com ([40.107.4.133]:44725
+        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1031118AbeBNOr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Feb 2018 09:47:27 -0500
+From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
+Subject: [PATCH] ath9k: mark RSSI as invalid if frame received during channel
+ setup
+Date: Wed, 14 Feb 2018 14:47:23 +0000
+Message-ID: <AM4PR0101MB2305369CE7574F25AA0AB680E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180214_154744_474772_4383A9FB)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A random (little endian eeprom'd) ar9278 card didn't work on my
-PowerMac G5 without allowing the driver to byte-swap the eeprom.
-
-Introduce a module parameter endian_check to allow this to happen,
-and the PCIe card to function correctly on BE powerpc.
-
-Signed-off-by: Bas Vermeulen <bvermeul@blackstar.nl>
----
- drivers/net/wireless/ath/ath9k/init.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index fa58a32227f5..421039dc060a 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -67,6 +67,9 @@ static int ath9k_ps_enable;
- module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
- MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
- 
-+static int ath9k_endian_check;
-+module_param_named(endian_check, ath9k_endian_check, int, 0444);
-+MODULE_PARM_DESC(endian_check, "Check EEPROM for endianness compatibility");
- #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
- 
- int ath9k_use_chanctx;
-@@ -587,7 +590,8 @@ static int ath9k_of_init(struct ath_softc *sc)
- 		ether_addr_copy(common->macaddr, mac);
- 
- 	ah->ah_flags &= ~AH_USE_EEPROM;
--	ah->ah_flags |= AH_NO_EEP_SWAP;
-+	if (!ath9k_endian_check)
-+		ah->ah_flags |= AH_NO_EEP_SWAP;
- 
- 	return 0;
- }
--- 
-2.16.2
-
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+YXRoOWsgcmV0dXJucyBhIHdyb25nIFJTU0kgdmFsdWUgZm9yIGZyYW1lcyByZWNlaXZlZCBpbiBh
+IDMwbXMgdGltZSB3aW5kb3cgYWZ0ZXINCmEgY2hhbm5lbCBjaGFuZ2UuIFRoZSBjb3JyZWN0IHZh
+bHVlIGlzIHR5cGljYWxseSAxMGRCIGJlbG93IHRoZSByZXR1cm5lZCB2YWx1ZS4NCg0KVGhpcyB3
+YXMgZm91bmQgd2l0aCBhIEF0aGVyb3MgQVI5MzAwIFJldjozIGNoaXAgKFdMRTM1ME5YIC8gSldY
+NjA4MyBjYXJkcyksDQpkdXJpbmcgb2ZmY2hhbm5lbCBzY2Fucy4NCg0KTWFyayB0aGUgc2lnbmFs
+IHZhbHVlIGFzIGludmFsaWQgaW4gdGhpcyBjYXNlLg0KDQpTaWduZWQtb2ZmLWJ5OiBKZWFuIFBp
+ZXJyZSBUT1NPTkkgPGpwLnRvc29uaUBhY2tzeXMuZnI+DQotLS0NCiAuLi4vYTk5NS1iLWFja3N5
+cy1hdGg5ay13YWl0LWNoYW5uZWwtY2hhbmdlLnBhdGNoICB8ICAgMzkgKysrKysrKysrKysrKysr
+KysrKysNCiAxIGZpbGVzIGNoYW5nZWQsIDM5IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0p
+DQogY3JlYXRlIG1vZGUgMTAwNjQ0IHBhY2thZ2Uva2VybmVsL21hYzgwMjExL3BhdGNoZXMvYTk5
+NS1iLWFja3N5cy1hdGg5ay13YWl0LWNoYW5uZWwtY2hhbmdlLnBhdGNoDQoNCmRpZmYgLS1naXQg
+YS9wYWNrYWdlL2tlcm5lbC9tYWM4MDIxMS9wYXRjaGVzL2E5OTUtYi1hY2tzeXMtYXRoOWstd2Fp
+dC1jaGFubmVsLWNoYW5nZS5wYXRjaCBiL3BhY2thZ2Uva2VybmVsL21hYzgwMjExL3BhdGNoZXMv
+YTk5NS1iLWFja3N5cy1hdGg5ay13YWl0LWNoYW5uZWwtY2hhbmdlLnBhdGNoDQpuZXcgZmlsZSBt
+b2RlIDEwMDY0NA0KaW5kZXggMDAwMDAwMC4uZDFlMTE0Ng0KLS0tIC9kZXYvbnVsbA0KKysrIGIv
+cGFja2FnZS9rZXJuZWwvbWFjODAyMTEvcGF0Y2hlcy9hOTk1LWItYWNrc3lzLWF0aDlrLXdhaXQt
+Y2hhbm5lbC1jaGFuZ2UucGF0Y2gNCkBAIC0wLDAgKzEsMzkgQEANCistLS0gYS9kcml2ZXJzL25l
+dC93aXJlbGVzcy9hdGgvYXRoOWsvYW5pLmMNCisrKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9h
+dGgvYXRoOWsvYW5pLmMNCitAQCAtMzMzLDYgKzMzMyw3IEBAIHZvaWQgYXRoOWtfYW5pX3Jlc2V0
+KHN0cnVjdCBhdGhfaHcgKmFoLA0KKyAJCXJldHVybjsNCisgDQorIAlCVUdfT04oYW5pU3RhdGUg
+PT0gTlVMTCk7DQorKwlhaC0+Y2hhbl9zdGFibGVfdGltZSA9IGppZmZpZXMgKyAoMzAqSFopLzEw
+MDA7IC8qIDMwbXMgKi8NCisgCWFoLT5zdGF0cy5hc3RfYW5pX3Jlc2V0Kys7DQorIA0KKyAJb2Zk
+bV9uaWwgPSBtYXhfdChpbnQsIEFUSDlLX0FOSV9PRkRNX0RFRl9MRVZFTCwNCistLS0gYS9kcml2
+ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvY29tbW9uLmMNCisrKysgYi9kcml2ZXJzL25ldC93
+aXJlbGVzcy9hdGgvYXRoOWsvY29tbW9uLmMNCitAQCAtMjIwLDYgKzIyMCwxNiBAQCB2b2lkIGF0
+aDlrX2Ntbl9wcm9jZXNzX3Jzc2koc3RydWN0IGF0aF9jDQorIAlpbnQgaSwgajsNCisgDQorIAkv
+Kg0KKysJICogUlNTSSBpcyBub3QgYXZhaWxhYmxlIGJlZm9yZSAzMG1zIGFmdGVyIHJlc2V0IG9u
+IGF0aDlrLg0KKysJICovDQorKwlpZiAodGltZV9iZWZvcmUoamlmZmllcywgYWgtPmNoYW5fc3Rh
+YmxlX3RpbWUpKSB7DQorKwkJYXRoX2RiZyhjb21tb24sIEFOWSwgImVhcmx5IGZyYW1lIHJzc2k9
+JWRcbiIscnhfc3RhdHMtPnJzX3Jzc2kpOw0KKysJCXJ4cy0+ZmxhZyB8PSBSWF9GTEFHX05PX1NJ
+R05BTF9WQUw7DQorKwkJcmV0dXJuOw0KKysJfQ0KKysJYWgtPmNoYW5fc3RhYmxlX3RpbWUgPSBq
+aWZmaWVzOyAvKiBhZHZhbmNlIHN0YWJsZSB0aW1lIHRvIGNvcCB3aXRoIGppZmZpZXMgd3JhcGFy
+b3VuZCAqLw0KKysNCisrCS8qDQorIAkgKiBSU1NJIGlzIG5vdCBhdmFpbGFibGUgZm9yIHN1YmZy
+YW1lcyBpbiBhbiBBLU1QRFUuDQorIAkgKi8NCisgCWlmIChyeF9zdGF0cy0+cnNfbW9yZWFnZ3Ip
+IHsNCistLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvaHcuaA0KKysrKyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9ody5oDQorQEAgLTgxNiw2ICs4MTYsNyBAQCBz
+dHJ1Y3QgYXRoX2h3IHsNCisgDQorIAlib29sIHJlc2V0X3Bvd2VyX29uOw0KKyAJYm9vbCBodGNf
+cmVzZXRfaW5pdDsNCisrCXVuc2lnbmVkIGxvbmcgY2hhbl9zdGFibGVfdGltZTsNCisgDQorIAll
+bnVtIG5sODAyMTFfaWZ0eXBlIG9wbW9kZTsNCisgCWVudW0gYXRoOWtfcG93ZXJfbW9kZSBwb3dl
+cl9tb2RlOw0KLS0gDQoxLjcuMi41DQoNCg==
