@@ -1,231 +1,603 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:42547 "EHLO
-        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751925AbeBZLBV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 06:01:21 -0500
-Received: by mail-qk0-f177.google.com with SMTP id b130so18512418qkg.9
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2018 03:01:20 -0800 (PST)
-Subject: Re: [PATCH resend] brcmfmac: p2p and normal ap access are not always
- possible at the same time
-To: Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170526105747.16874-1-hdegoede@redhat.com>
- <20170526105747.16874-2-hdegoede@redhat.com>
- <8a61e3ad-3949-68dc-bed9-09f61ab6b647@redhat.com>
- <5A93DFF1.2030208@broadcom.com>
- <e204e0a3-4001-0d55-86ef-fb1afc1c6d4b@redhat.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A93E8FC.10606@broadcom.com> (sfid-20180226_120125_746592_D71F42A3)
-Date: Mon, 26 Feb 2018 12:01:16 +0100
+Received: from mail-ve1eur01on0045.outbound.protection.outlook.com ([104.47.1.45]:2189
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S967159AbeBNKzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Feb 2018 05:55:17 -0500
+From: =?iso-8859-1?Q?Micka=EBl_PANNEQUIN?= <m.pannequin@xperteam.fr>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Max clients on wifi access point with 7265
+Date: Wed, 14 Feb 2018 10:55:13 +0000
+Message-ID: <HE1PR0501MB23969FCE58F1EE7634D412F0F6F50@HE1PR0501MB2396.eurprd05.prod.outlook.com> (sfid-20180214_115522_052706_6AECF2E4)
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <e204e0a3-4001-0d55-86ef-fb1afc1c6d4b@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/26/2018 11:29 AM, Hans de Goede wrote:
-> Hi,
->
-> On 26-02-18 11:22, Arend van Spriel wrote:
->> On 2/25/2018 3:52 PM, Hans de Goede wrote:
->>> Hi,
->>>
->>> On 26-05-17 12:57, Hans de Goede wrote:
->>>> The firmware responding with -EBUSY when trying to add an extra
->>>> virtual-if
->>>> is a normal thing, do not print an error for this.
->>>>
->>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>>
->>> I'm now seeing this on another device too, but this time the error
->>> thrown is -EBADE, this seems to be new with recent kernels:
->>
->> Yup. Before we were passing firmware errors up to user-space, which
->> was confusing and potentially be misinterpreted. However, looking at
->> the output below it would have been good to log the firmware error as
->> well. And staring at it some more I suddenly realize I broke the
->> feature detection module with this change. Actually only the GSCAN
->> feature detection.
->>
->>> [root@localhost ~]# dmesg | grep brcmfmac
->>> [   34.265950] usbcore: registered new interface driver brcmfmac
->>> [   34.266059] brcmfmac 0000:01:00.0: enabling device (0000 -> 0002)
->>> [   34.376468] brcmfmac: brcmf_fw_map_chip_to_name: using
->>> brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
->>> [   34.855143] brcmfmac 0000:01:00.0: Direct firmware load for
->>> brcm/brcmfmac4356-pcie.clm_blob failed with error -2
->>> [   34.855147] brcmfmac: brcmf_c_process_clm_blob: no clm_blob
->>> available(err=-2), device may have limited channels available
->>> [   34.857029] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0:
->>> Jun  4 2017 16:50:07 version 7.35.101.6 (r702795) FWID 01-5e8eb735
->>> [   34.938854] brcmfmac 0000:01:00.0 wlp1s0: renamed from wlan0
->>> [   37.086420] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
->>> [   37.086431] brcmfmac: brcmf_cfg80211_add_iface: add iface
->>> p2p-dev-wlp1s0 type 10 failed: err=-52
->>>
->>> [root@localhost ~]# strings /lib/firmware/brcm/brcmfmac4356-pcie.bin |
->>> tail -n 1
->>> 4356a2-roml/pcie-ag-msgbuf-splitrx-p2p-pno-aoe-pktfilter-keepalive-sr-mchan-pktctx-proptxstatus-ampduhostreorder-lpc-pwropt-txbf-wl11u-mfp-tdls-amsdutx-sarctrl-proxd-hs20sta-rcc-wepso-ndoe-linkstat-gscan-hchk-logtrace-roamexp-rmon
->>>
->>> Version: 7.35.101.6 (r702795) CRC: 4f3f65c5 Date: Sun 2017-06-04
->>> 16:51:38 PDT Ucode Ver: 963.316 FWID: 01-5e8eb735
->>>
->>> It would be good if we can silence these errors, or maybe at a
->>> minimum lower their log-level from error to warning?
->>
->> I had a look at it and it seems to be a difference in firmware api
->> that we need to support in the driver. Need to do a bit more digging,
->> but it seems an actual issue. You could silence it for now, but I
->> prefer to wait for the fix.
->
-> Ok, what is the ETA of a fix for this?
 
-Actually went back to an old log you sent and noticed:
+Hi,
 
-[   15.714569] brcmfmac: brcmf_attach Enter
-[   15.714756] brcmfmac: brcmf_fweh_register event handler registered 
-for PSM_WATCHDOG
-[   15.714757] brcmfmac: brcmf_proto_attach Enter
-[   15.716598] brcmfmac: brcmf_bus_started
-[   15.716603] brcmfmac: brcmf_add_if Enter, bsscfgidx=0, ifidx=0
-[   15.716604] brcmfmac: brcmf_add_if allocate netdev interface
-[   15.716622] brcmfmac: brcmf_add_if  ==== pid:2a, if:wlan%d 
-(00:00:00:00:00:00) created ===
-[   15.716624] brcmfmac: brcmf_bus_change_state 0 -> 1
-[   15.717841] brcmfmac: brcmf_fil_iovar_data_get ifidx=0, 
-name=cur_etheraddr, len=6
-[   15.717843] brcmutil: data
-[   15.717847] 00000000: 44 2c 05 9e c9 02 
-   D,....
 
-So mac address of the device is 44:2c:05:9e:c9. However, further down I see:
+I use a Intel Dual Band Wireless-N 7265. The OS is Linux Debian 8 (Kernel 3=
+.16.0-4_amd64).
 
-[   17.819113] brcmfmac: brcmf_netdev_set_mac_address Enter, bsscfgidx=0
-[   17.819122] brcmfmac: brcmf_fil_iovar_data_set ifidx=0, 
-name=cur_etheraddr, len=6
-[   17.819127] brcmutil: data
-[   17.819135] 00000000: aa 3e 81 77 bc 40 
-   .>.w.@
-[   17.819864] brcmfmac: brcmf_netdev_set_mac_address updated to 
-aa:3e:81:77:bc:40
 
-So the mac address in a local admin variant. Now our firmware has a 
-requirement for the p2p-dev interface that it should be different from 
-the mac address of the primary interface, ie. wlp1s0 in this log. In 
-brcmfmac we try to do that by setting the local admin bit, but... as it 
-is already set we end up using the same mac address hence the -EBUSY.
+=20
+Do you know the limit of the number of users connected at the same time on =
+the wifi? Works fine with 14 connected devices but not more.
 
-[   17.947704] brcmfmac: brcmf_cfg80211_add_iface enter: p2p-dev-wlp1s0 
-type 10
-[   17.947714] brcmfmac: brcmf_p2p_add_vif adding vif "p2p-dev-wlp1s0" 
-(type=10, addr=00:00:00:00:00:00)
-[   17.947716] brcmfmac: brcmf_alloc_vif allocating virtual interface 
-(size=3920)
-[   17.947720] brcmfmac: brcmf_fil_cmd_int_set ifidx=0, cmd=3, value=1
-[   17.948749] brcmfmac: brcmf_fil_iovar_data_set ifidx=0, name=apsta, len=4
-[   17.948752] brcmutil: data
-[   17.948756] 00000000: 01 00 00 00 
-   ....
-[   17.949620] brcmfmac: brcmf_fil_cmd_int_set ifidx=0, cmd=2, value=1
-[   17.984420] brcmfmac: brcmf_fweh_event_worker event IF (54) ifidx 0 
-bsscfg 0 addr aa:3e:81:77:bc:40
-[   17.984424] brcmfmac: brcmf_fweh_event_worker   version 2 flags 0 
-status 0 reason 0
-[   17.984427] brcmutil: event payload, len=5
-[   17.984430] 00000000: 00 01 00 00 00 
-   .....
-[   17.984433] brcmfmac: brcmf_fweh_handle_if_event action: 1 ifidx: 0 
-bsscfgidx: 0 flags: 0 role: 0
-[   17.984435] brcmfmac: brcmf_fweh_handle_if_event adding wl0 
-(aa:3e:81:77:bc:40)
-[   17.984437] brcmfmac: brcmf_add_if Enter, bsscfgidx=0, ifidx=0
-[   17.984439] brcmfmac: brcmf_add_if netdev:wlp1s0 ignore IF event
-[   17.984646] brcmfmac: brcmf_fil_iovar_data_set ifidx=0, 
-name=p2p_disc, len=4
-[   17.984657] brcmutil: data
-[   17.984669] 00000000: 00 00 00 00 
-   ....
-[   17.985123] brcmfmac: brcmf_fil_iovar_data_set ifidx=0, 
-name=p2p_da_override, len=6
-[   17.985131] brcmutil: data
-[   17.985140] 00000000: aa 3e 81 77 bc 40 
-   .>.w.@
-[   17.985580] brcmfmac: brcmf_fil_iovar_data_set ifidx=0, 
-name=p2p_disc, len=4
-[   17.985588] brcmutil: data
-[   17.985598] 00000000: 01 00 00 00 
-   ....
-[   17.985975] brcmfmac: brcmf_fil_cmd_data Failed: BCME_BUSY (-16)
-[   17.985985] brcmfmac: brcmf_p2p_create_p2pdev set p2p_disc error
-[   17.985999] brcmfmac: brcmf_cfg80211_add_iface add iface 
-p2p-dev-wlp1s0 type 10 failed: err=-16
+How to increase it?
 
-Sorry that I missed that earlier :-(
+This limit is hardware?
 
-Regards,
-Arend
+I can't find information about this.
 
-> Regards,
->
-> Hans
->
->
->
->
->>>> ---
->>>>   .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14
->>>> ++++++++++----
->>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     |  5 ++++-
->>>>   2 files changed, 14 insertions(+), 5 deletions(-)
->>>>
->>>> diff --git
->>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>>> index cd1d6730eab7..dae88f3d041d 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>>> @@ -684,11 +684,17 @@ static struct wireless_dev
->>>> *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
->>>>           return ERR_PTR(-EINVAL);
->>>>       }
->>>> -    if (IS_ERR(wdev))
->>>> -        brcmf_err("add iface %s type %d failed: err=%d\n",
->>>> -              name, type, (int)PTR_ERR(wdev));
->>>> -    else
->>>> +    if (IS_ERR(wdev)) {
->>>> +        err = PTR_ERR(wdev);
->>>> +        if (err != -EBUSY)
->>>> +            brcmf_err("add iface %s type %d failed: err=%d\n",
->>>> +                  name, type, err);
->>>> +        else
->>>> +            brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
->>>> +                  name, type, err);
->>>> +    } else {
->>>>           brcmf_cfg80211_update_proto_addr_mode(wdev);
->>>> +    }
->>>>       return wdev;
->>>>   }
->>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>> index aa299c47bfa2..1bb296ffb46f 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>> @@ -2090,7 +2090,10 @@ static struct wireless_dev
->>>> *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
->>>>       /* Initialize P2P Discovery in the firmware */
->>>>       err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
->>>>       if (err < 0) {
->>>> -        brcmf_err("set p2p_disc error\n");
->>>> +        if (err != -EBUSY)
->>>> +            brcmf_err("set p2p_disc error\n");
->>>> +        else
->>>> +            brcmf_dbg(INFO, "set p2p_disc error\n");
->>>>           brcmf_fweh_p2pdev_setup(pri_ifp, false);
->>>>           brcmf_cfg80211_arm_vif_event(p2p->cfg, NULL);
->>>>           goto fail;
->>>>
->>
+
+# Technical information
+
+iw list
+
+
+Wiphy phy0
+
+        max # scan SSIDs: 20
+
+        max scan IEs length: 393 bytes
+
+        Retry short limit: 7
+
+        Retry long limit: 4
+
+        Coverage class: 0 (up to 0m)
+
+        Device supports RSN-IBSS.
+
+        Device supports AP-side u-APSD.
+
+        Supported Ciphers:
+
+                * CCMP (00-0f-ac:4)
+
+                * TKIP (00-0f-ac:2)
+
+                * WEP40 (00-0f-ac:1)
+
+                * WEP104 (00-0f-ac:5)
+
+                * CMAC (00-0f-ac:6)
+
+                * WPI-SMS4 (00-14-72:1)
+
+        Available Antennas: TX 0 RX 0
+
+        Supported interface modes:
+
+                 * IBSS
+
+                 * managed
+
+                 * AP
+
+                 * AP/VLAN
+
+                 * monitor
+
+                 * P2P-client
+
+                 * P2P-GO
+
+                 * P2P-device
+
+        Band 1:
+
+                Capabilities: 0x11e2
+
+                        HT20/HT40
+
+                        Static SM Power Save
+
+                        RX HT20 SGI
+
+                        RX HT40 SGI
+
+                        TX STBC
+
+                        RX STBC 1-stream
+
+                        Max AMSDU length: 3839 bytes
+
+                        DSSS/CCK HT40
+
+                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+
+                Minimum RX AMPDU time spacing: 4 usec (0x05)
+
+                HT TX/RX MCS rate indexes supported: 0-15, 32
+
+                Bitrates (non-HT):
+
+                        * 1.0 Mbps
+
+                        * 2.0 Mbps (short preamble supported)
+
+                        * 5.5 Mbps (short preamble supported)
+
+                        * 11.0 Mbps (short preamble supported)
+
+                        * 6.0 Mbps
+
+                        * 9.0 Mbps
+
+                        * 12.0 Mbps
+
+                        * 18.0 Mbps
+
+                        * 24.0 Mbps
+
+                        * 36.0 Mbps
+
+                        * 48.0 Mbps
+
+                        * 54.0 Mbps
+
+                Frequencies:
+
+                        * 2412 MHz [1] (20.0 dBm)
+
+                        * 2417 MHz [2] (20.0 dBm)
+
+                        * 2422 MHz [3] (20.0 dBm)
+
+                        * 2427 MHz [4] (20.0 dBm)
+
+                        * 2432 MHz [5] (20.0 dBm)
+
+                        * 2437 MHz [6] (20.0 dBm)
+
+                        * 2442 MHz [7] (20.0 dBm)
+
+                        * 2447 MHz [8] (20.0 dBm)
+
+                        * 2452 MHz [9] (20.0 dBm)
+
+                        * 2457 MHz [10] (20.0 dBm)
+
+                        * 2462 MHz [11] (20.0 dBm)
+
+                        * 2467 MHz [12] (20.0 dBm) (no IR)
+
+                        * 2472 MHz [13] (20.0 dBm) (no IR)
+
+        Band 2:
+
+                Capabilities: 0x11e2
+
+                        HT20/HT40
+
+                        Static SM Power Save
+
+                        RX HT20 SGI
+
+                        RX HT40 SGI
+
+                        TX STBC
+
+                        RX STBC 1-stream
+
+                        Max AMSDU length: 3839 bytes
+
+                        DSSS/CCK HT40
+
+                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+
+                Minimum RX AMPDU time spacing: 4 usec (0x05)
+
+                HT TX/RX MCS rate indexes supported: 0-15, 32
+
+                VHT Capabilities (0x038071a0):
+
+                        Max MPDU length: 3895
+
+                        Supported Channel Width: neither 160 nor 80+80
+
+                        short GI (80 MHz)
+
+                        TX STBC
+
+                        SU Beamformee
+
+                VHT RX MCS set:
+
+                        1 streams: MCS 0-9
+
+                        2 streams: MCS 0-9
+
+                        3 streams: not supported
+
+                        4 streams: not supported
+
+                        5 streams: not supported
+
+                        6 streams: not supported
+
+                        7 streams: not supported
+
+                        8 streams: not supported
+
+                VHT RX highest supported: 0 Mbps
+
+                VHT TX MCS set:
+
+                        1 streams: MCS 0-9
+
+                        2 streams: MCS 0-9
+
+                        3 streams: not supported
+
+                        4 streams: not supported
+
+                        5 streams: not supported
+
+                        6 streams: not supported
+
+                        7 streams: not supported
+
+                        8 streams: not supported
+
+                VHT TX highest supported: 0 Mbps
+
+                Bitrates (non-HT):
+
+                        * 6.0 Mbps
+
+                        * 9.0 Mbps
+
+                        * 12.0 Mbps
+
+                        * 18.0 Mbps
+
+                        * 24.0 Mbps
+
+                        * 36.0 Mbps
+
+                        * 48.0 Mbps
+
+                        * 54.0 Mbps
+
+                Frequencies:
+
+                        * 5180 MHz [36] (20.0 dBm) (no IR)
+
+                        * 5200 MHz [40] (20.0 dBm) (no IR)
+
+                        * 5220 MHz [44] (20.0 dBm) (no IR)
+
+                        * 5240 MHz [48] (20.0 dBm) (no IR)
+
+                        * 5260 MHz [52] (20.0 dBm) (no IR, radar detection)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5280 MHz [56] (20.0 dBm) (no IR, radar detection)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5300 MHz [60] (20.0 dBm) (no IR, radar detection)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5320 MHz [64] (20.0 dBm) (no IR, radar detection)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5500 MHz [100] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5520 MHz [104] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5540 MHz [108] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5560 MHz [112] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5580 MHz [116] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5600 MHz [120] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5620 MHz [124] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5640 MHz [128] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5660 MHz [132] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5680 MHz [136] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5700 MHz [140] (22.0 dBm) (no IR, radar detection=
+)
+
+                          DFS state: usable (for 544 sec)
+
+                          DFS CAC time: 60000 ms
+
+                        * 5720 MHz [144] (disabled)
+
+                        * 5745 MHz [149] (disabled)
+
+                        * 5765 MHz [153] (disabled)
+
+                        * 5785 MHz [157] (disabled)
+
+                        * 5805 MHz [161] (disabled)
+
+                        * 5825 MHz [165] (disabled)
+
+        Supported commands:
+
+                 * new_interface
+
+                 * set_interface
+
+                 * new_key
+
+                 * start_ap
+
+                 * new_station
+
+                 * new_mpath
+
+                 * set_mesh_config
+
+                 * set_bss
+
+                 * authenticate
+
+                 * associate
+
+                 * deauthenticate
+
+                 * disassociate
+
+                 * join_ibss
+
+                 * join_mesh
+
+                 * remain_on_channel
+
+                 * set_tx_bitrate_mask
+
+                 * frame
+
+                 * frame_wait_cancel
+
+                 * set_wiphy_netns
+
+                 * set_channel
+
+                 * set_wds_peer
+
+                 * start_sched_scan
+
+                 * probe_client
+
+                 * set_noack_map
+
+                 * register_beacons
+
+                 * start_p2p_device
+
+                 * set_mcast_rate
+
+                 * Unknown command (104)
+
+                 * connect
+
+                 * disconnect
+
+        Supported TX frame types:
+
+                 * IBSS: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 =
+0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+
+                 * managed: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x=
+90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+
+                 * AP: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x90 0x=
+a0 0xb0 0xc0 0xd0 0xe0 0xf0
+
+                 * AP/VLAN: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x=
+90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+
+                 * mesh point: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80=
+ 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+
+                 * P2P-client: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80=
+ 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+
+                 * P2P-GO: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 0x9=
+0 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+
+                 * P2P-device: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80=
+ 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
+
+        Supported RX frame types:
+
+                 * IBSS: 0x40 0xb0 0xc0 0xd0
+
+                 * managed: 0x40 0xd0
+
+                 * AP: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
+
+                 * AP/VLAN: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
+
+                 * mesh point: 0xb0 0xc0 0xd0
+
+                 * P2P-client: 0x40 0xd0
+
+                 * P2P-GO: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
+
+                 * P2P-device: 0x40 0xd0
+
+        WoWLAN support:
+
+                 * wake up on disconnect
+
+                 * wake up on magic packet
+
+                 * wake up on pattern match, up to 20 patterns of 16-128 by=
+tes,
+
+                   maximum packet offset 0 bytes
+
+                 * can do GTK rekeying
+
+                 * wake up on GTK rekey failure
+
+                 * wake up on EAP identity request
+
+                 * wake up on 4-way handshake
+
+                 * wake up on rfkill release
+
+                 * wake up on TCP connection
+
+        software interface modes (can always be added):
+
+                 * AP/VLAN
+
+                 * monitor
+
+        valid interface combinations:
+
+                 * #{ managed } <=3D 1, #{ AP, P2P-client, P2P-GO } <=3D 1,=
+ #{ P2P-device } <=3D 1,
+
+                   total <=3D 3, #channels <=3D 1
+
+        HT Capability overrides:
+
+                 * MCS: ff ff ff ff ff ff ff ff ff ff
+
+                 * maximum A-MSDU length
+
+                 * supported channel width
+
+                 * short GI for 40 MHz
+
+                 * max A-MPDU length exponent
+
+                 * min MPDU start spacing
+
+        Device supports TX status socket option.
+
+        Device supports HT-IBSS.
+
+        Device supports SAE with AUTHENTICATE command
+
+        Device supports scan flush.
+
+        Device supports per-vif TX power setting
+
+        P2P GO supports CT window setting
+
+        P2P GO supports opportunistic powersave setting
+
+        Driver supports a userspace MPM
+
+=20
+
+lspci | grep "Network"
+
+=20
+
+02:00.0 Network controller: Intel Corporation Wireless 7265 (rev 61)
+
+=20
+
+nano /etc/hostapd/hostapd.conf
+
+=20
+
+country_code=3DFR
+
+driver=3Dnl80211
+
+ssid=3DSSID-TEST
+
+interface=3Dwlan0
+
+hw_mode=3Dg
+
+channel=3D5
+
+wmm_enabled=3D1
+
+auth_algs=3D1
+
+ieee80211n=3D1
+
+ht_capab=3D[SHORT-GI-40][HT40+][HT40-][DSSS_CCK-40][SHORT-GI-20][SHORT-GI-4=
+0]
+
+    =20
+=20
+
+=20
+Best regards.=20
+=A0     =20
+Micka=EBl PANNEQUIN=
