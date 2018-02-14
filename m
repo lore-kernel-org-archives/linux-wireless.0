@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45208 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:41130 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933072AbeBLMoY (ORCPT
+        with ESMTP id S1031553AbeBNQEU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 07:44:24 -0500
+        Wed, 14 Feb 2018 11:04:20 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Timothy Redaelli <tredaelli@redhat.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] ath9k: fix DFS detector synchronization
-References: <c967cb589b7d71a17afc29f3c634f961ef6820dd.1518090407.git.tredaelli@redhat.com>
-        <87fu6aegmy.fsf@kamboji.qca.qualcomm.com>
-        <20180209153311.193e08e0@redhat.com>
-Date: Mon, 12 Feb 2018 14:44:19 +0200
-In-Reply-To: <20180209153311.193e08e0@redhat.com> (Timothy Redaelli's message
-        of "Fri, 9 Feb 2018 15:33:11 +0100")
-Message-ID: <877eri9y3g.fsf@kamboji.qca.qualcomm.com> (sfid-20180212_134431_066595_C999C8E6)
+To: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel\@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH] ath9k: mark RSSI as invalid if frame received during channel setup
+References: <AM4PR0101MB2305369CE7574F25AA0AB680E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+Date: Wed, 14 Feb 2018 18:04:16 +0200
+In-Reply-To: <AM4PR0101MB2305369CE7574F25AA0AB680E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+        (Jean Pierre TOSONI's message of "Wed, 14 Feb 2018 14:47:23 +0000")
+Message-ID: <87sha3mubj.fsf@purkki.adurom.net> (sfid-20180214_170424_318812_04191DEB)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Timothy Redaelli <tredaelli@redhat.com> writes:
+Jean Pierre TOSONI <jp.tosoni@acksys.fr> writes:
 
-> On Fri, 09 Feb 2018 10:01:09 +0200
-> Kalle Valo <kvalo@codeaurora.org> wrote:
+> ath9k returns a wrong RSSI value for frames received in a 30ms time window after
+> a channel change. The correct value is typically 10dB below the returned value.
 >
->> Timothy Redaelli <tredaelli@redhat.com> writes:
->> 
->> > The code currently syncronize the DFS region only if curchan != 0,
->> > but hostapd launch DFS before the channel is set and so
->> > set_dfs_domain is never executed.
->> >
->> > CC: Felix Fietkau <nbd@nbd.name>
->> > Signed-off-by: Timothy Redaelli <tredaelli@redhat.com>  
->> 
->> What kind of bug does this fix? Please describe the symptoms from
->> user's point of view.
+> This was found with a Atheros AR9300 Rev:3 chip (WLE350NX / JWX6083 cards),
+> during offchannel scans.
 >
-> With the current code radar detection (CAC) doesn't work on ath9k
-> since "dpd_set_domain" is only called once with NL80211_DFS_UNSET (0) as
-> region and so "dpd_add_pulse" always returns true (radar detected)
-> without doing a real scan.
+> Mark the signal value as invalid in this case.
 >
-> You can test it easily with a kernel built with
-> CONFIG_ATH9K_DFS_CERTIFIED and by using a simple hostapd configuration:
->
-> interface=wlp1s0
-> hw_mode=a
-> channel=acs_survey
-> chanlist=100 104 108 112 116 120 124 128 132 136 140
-> ieee80211d=1
-> ieee80211h=1
-> country_code=US
-> ieee80211n=1
-> wmm_enabled=1
-> ssid=testwifi
+> Signed-off-by: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
+> ---
+>  .../a995-b-acksys-ath9k-wait-channel-change.patch  |   39 ++++++++++++++++++++
+>  1 files changed, 39 insertions(+), 0 deletions(-)
+>  create mode 100644 package/kernel/mac80211/patches/a995-b-acksys-ath9k-wait-channel-change.patch
 
-Any ideas what broke this? Or has it never worked with FCC (US)?
-
-Anyway, please add this info to the commit log and submit v2.
+This looks like a patch for LEDE, not for a Linux kernel tree.
 
 -- 
 Kalle Valo
