@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:49701 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751017AbeBBKTb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Feb 2018 05:19:31 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Ben Greear <greearb@candelatech.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: lockdep warning in mac80211/tx.c, 4.13.16+ kernel, ath9k related
-In-Reply-To: <488be568-d9c1-0697-9fa4-e1a623b4bed5@candelatech.com>
-References: <d4632910-7dd9-b066-0c10-b21dd7cbfc61@candelatech.com> <1517523817.28814.10.camel@sipsolutions.net> <e8f8b910-ffa8-fbc7-3152-58ccf70b1ace@candelatech.com> <1517524837.28814.14.camel@sipsolutions.net> <1517525226.28814.15.camel@sipsolutions.net> <488be568-d9c1-0697-9fa4-e1a623b4bed5@candelatech.com>
-Date: Fri, 02 Feb 2018 11:19:29 +0100
-Message-ID: <87607f1yoe.fsf@toke.dk> (sfid-20180202_111936_329097_E2F48C64)
+Received: from mail-db5eur01on0114.outbound.protection.outlook.com ([104.47.2.114]:48920
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1030221AbeBNNvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Feb 2018 08:51:15 -0500
+From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: inform wireless layer when frame RSSI is invalid
+Date: Wed, 14 Feb 2018 13:51:12 +0000
+Message-ID: <AM4PR0101MB2305288C51F159AE69BD78CCE4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180214_145120_320982_E6EA9A2B)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
-
-> On 02/01/2018 02:47 PM, Johannes Berg wrote:
->> On Thu, 2018-02-01 at 23:40 +0100, Johannes Berg wrote:
->>>
->>> The code does a plain rcu_dereference(), no locking other than
->>> rcu_read_lock() involved.
->>>
->>> On second thought though, I'm not convinced that your modifications
->>> caused the problem.
->>>
->>> Given your call stack, we'd expect rcu_read_lock() somewhere around
->>> ath_tid_dequeue (or its caller(s)), since ieee80211_tx_dequeue clearly
->>> requires it.
->>>
->>> Normally, ieee80211_tx_dequeue() is called from various places that
->>> probably come from mac80211 and already hold the rcu_read_lock(), e.g.
->>> the wake_tx_queue op.
->>>
->>> In this case, you're coming from drv_sta_state, so not sure why the
->>> driver thinks it's OK to call the dequeue there.
->>
->> Just to clarify - it could just be that in the "normal" case, when a
->> station dies, there's nothing on the queues - so the dequeue just
->> doesn't do anything and never goes into the code path where the
->> rcu_dereference() is, hence it might be a bug in mainline that just
->> never triggers in ordinary scenarios.
->
-> It looks like the code in ath9k has not been changed in that area for
-> some time.
-
-Hmm, I think the issue here is that after the switch to mac80211 txqs,
-the driver is now draining mac80211 queues, whereas before it was only
-draining its own driver-internal queues (which are protected by the
-ath_txq_lock() that ath_tx_node_cleanup() does grab). And when the
-switch to the mac80211 queues happened, a call to rcu_read_lock() should
-have been added. But, well, I had no idea this was needed until just
-now, so obviously I didn't add that... :)
-
-> Would adding rcu_read_lock in drv_sta_state() be a possibility?
-
-Think it should probably just be added in ath_tx_node_cleanup()? Can
-send a patch...
-
--Toke
+V2hlbiB0aGUgbG93LWxldmVsIGRyaXZlciByZXR1cm5zIGFuIGludmFsaWQgUlNTSSBpbmRpY2F0
+aW9uLA0Kc2V0IHRoZSBzaWduYWwgdmFsdWUgdG8gMCBhcyBhbiBpbmRpY2F0aW9uIHRvIHRoZSB1
+cHBlciBsYXllci4NCg0KQWxzbywgc2tpcCBhdmVyYWdlIGxldmVsIGNvbXB1dGF0aW9uIGlmIHNp
+Z25hbCBpcyBpbnZhbGlkLg0KDQpTaWduZWQtb2ZmLWJ5OiBKZWFuIFBpZXJyZSBUT1NPTkkgPGpw
+LnRvc29uaUBhY2tzeXMuZnI+DQotLS0NCldBUk5JTkc6DQpUaGlzIHBhdGNoIGFwcGxpZXMgdG8g
+d2lyZWxlc3MtdGVzdGluZyByZXRyaWV2ZWQgb24gRmViIDE0LCAyMDE4IGJ1dCBpdCB3YXMgdGVz
+dGVkIG9uDQphIG11Y2ggb2xkZXIgdmVyc2lvbiAoT3BlbldydCBrZXJuZWwgMy4xOCB3aXRoIGNv
+bXBhdC13aXJlbGVzcy0yMDE1LTA3LTIxKS4NCg0KIG5ldC9tYWM4MDIxMS9tbG1lLmMgfCAgICAz
+ICsrKw0KIG5ldC9tYWM4MDIxMS9yeC5jICAgfCAgICA2ICsrKystLQ0KIG5ldC9tYWM4MDIxMS9z
+Y2FuLmMgfCAgICA0ICsrKy0NCiAzIGZpbGVzIGNoYW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDMg
+ZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9uZXQvbWFjODAyMTEvbWxtZS5jIGIvbmV0L21h
+YzgwMjExL21sbWUuYw0KaW5kZXggMzliNjYwYi4uOTlmZjY3OSAxMDA2NDQNCi0tLSBhL25ldC9t
+YWM4MDIxMS9tbG1lLmMNCisrKyBiL25ldC9tYWM4MDIxMS9tbG1lLmMNCkBAIC0zMzY4LDYgKzMz
+NjgsOCBAQCBzdGF0aWMgdm9pZCBpZWVlODAyMTFfcnhfbWdtdF9iZWFjb24oc3RydWN0IGllZWU4
+MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGEsDQogCWJzc2lkID0gaWZtZ2QtPmFzc29jaWF0ZWQtPmJz
+c2lkOw0KIA0KIAkvKiBUcmFjayBhdmVyYWdlIFJTU0kgZnJvbSB0aGUgQmVhY29uIGZyYW1lcyBv
+ZiB0aGUgY3VycmVudCBBUCAqLw0KKwlpZiAocnhfc3RhdHVzLT5mbGFnICYgUlhfRkxBR19OT19T
+SUdOQUxfVkFMKQ0KKwkJZ290byBza2lwX3NpZ25hbF9wcm9jZXNzaW5nOw0KIAlpZiAoaWZtZ2Qt
+PmZsYWdzICYgSUVFRTgwMjExX1NUQV9SRVNFVF9TSUdOQUxfQVZFKSB7DQogCQlpZm1nZC0+Zmxh
+Z3MgJj0gfklFRUU4MDIxMV9TVEFfUkVTRVRfU0lHTkFMX0FWRTsNCiAJCWV3bWFfYmVhY29uX3Np
+Z25hbF9pbml0KCZpZm1nZC0+YXZlX2JlYWNvbl9zaWduYWwpOw0KQEAgLTM0NTQsNiArMzQ1Niw3
+IEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9yeF9tZ210X2JlYWNvbihzdHJ1Y3QgaWVlZTgwMjEx
+X3N1Yl9pZl9kYXRhICpzZGF0YSwNCiAJCQkJc2lnLCBHRlBfS0VSTkVMKTsNCiAJCX0NCiAJfQ0K
+K3NraXBfc2lnbmFsX3Byb2Nlc3Npbmc6DQogDQogCWlmIChpZm1nZC0+ZmxhZ3MgJiBJRUVFODAy
+MTFfU1RBX0NPTk5FQ1RJT05fUE9MTCkgew0KIAkJbWxtZV9kYmdfcmF0ZWxpbWl0ZWQoc2RhdGEs
+DQpkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL3J4LmMgYi9uZXQvbWFjODAyMTEvcnguYw0KaW5k
+ZXggZTc1NWY5My4uOGQ2M2ExYiAxMDA2NDQNCi0tLSBhL25ldC9tYWM4MDIxMS9yeC5jDQorKysg
+Yi9uZXQvbWFjODAyMTEvcnguYw0KQEAgLTI3OTEsNyArMjc5MSw4IEBAIHN0YXRpYyB2b2lkIGll
+ZWU4MDIxMV9wcm9jZXNzX3NhX3F1ZXJ5X3JlcShzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRh
+ICpzZGF0YSwNCiAJICAgICEocngtPmZsYWdzICYgSUVFRTgwMjExX1JYX0JFQUNPTl9SRVBPUlRF
+RCkpIHsNCiAJCWludCBzaWcgPSAwOw0KIA0KLQkJaWYgKGllZWU4MDIxMV9od19jaGVjaygmcngt
+PmxvY2FsLT5odywgU0lHTkFMX0RCTSkpDQorCQlpZiAoaWVlZTgwMjExX2h3X2NoZWNrKCZyeC0+
+bG9jYWwtPmh3LCBTSUdOQUxfREJNKSAmJg0KKwkJICAgICEoc3RhdHVzLT5mbGFnICYgUlhfRkxB
+R19OT19TSUdOQUxfVkFMKSkNCiAJCQlzaWcgPSBzdGF0dXMtPnNpZ25hbDsNCiANCiAJCWNmZzgw
+MjExX3JlcG9ydF9vYnNzX2JlYWNvbihyeC0+bG9jYWwtPmh3LndpcGh5LA0KQEAgLTMxMzIsNyAr
+MzEzMyw4IEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9wcm9jZXNzX3NhX3F1ZXJ5X3JlcShzdHJ1
+Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwNCiAJICogaXQgdHJhbnNtaXR0ZWQgd2Vy
+ZSBwcm9jZXNzZWQgb3IgcmV0dXJuZWQuDQogCSAqLw0KIA0KLQlpZiAoaWVlZTgwMjExX2h3X2No
+ZWNrKCZyeC0+bG9jYWwtPmh3LCBTSUdOQUxfREJNKSkNCisJaWYgKGllZWU4MDIxMV9od19jaGVj
+aygmcngtPmxvY2FsLT5odywgU0lHTkFMX0RCTSkgJiYNCisJICAgICEoc3RhdHVzLT5mbGFnICYg
+UlhfRkxBR19OT19TSUdOQUxfVkFMKSkNCiAJCXNpZyA9IHN0YXR1cy0+c2lnbmFsOw0KIA0KIAlp
+ZiAoY2ZnODAyMTFfcnhfbWdtdCgmcngtPnNkYXRhLT53ZGV2LCBzdGF0dXMtPmZyZXEsIHNpZywN
+CmRpZmYgLS1naXQgYS9uZXQvbWFjODAyMTEvc2Nhbi5jIGIvbmV0L21hYzgwMjExL3NjYW4uYw0K
+aW5kZXggZWYyYmVjYS4uYTNiMWJjYyAxMDA2NDQNCi0tLSBhL25ldC9tYWM4MDIxMS9zY2FuLmMN
+CisrKyBiL25ldC9tYWM4MDIxMS9zY2FuLmMNCkBAIC03Myw3ICs3Myw5IEBAIHN0cnVjdCBpZWVl
+ODAyMTFfYnNzICoNCiAJYm9vbCBzaWduYWxfdmFsaWQ7DQogCXN0cnVjdCBpZWVlODAyMTFfc3Vi
+X2lmX2RhdGEgKnNjYW5fc2RhdGE7DQogDQotCWlmIChpZWVlODAyMTFfaHdfY2hlY2soJmxvY2Fs
+LT5odywgU0lHTkFMX0RCTSkpDQorCWlmIChyeF9zdGF0dXMtPmZsYWcgJiBSWF9GTEFHX05PX1NJ
+R05BTF9WQUwpDQorCQlic3NfbWV0YS5zaWduYWwgPSAwOyAvKiBpbnZhbGlkIHNpZ25hbCBpbmRp
+Y2F0aW9uICovDQorCWVsc2UgaWYgKGllZWU4MDIxMV9od19jaGVjaygmbG9jYWwtPmh3LCBTSUdO
+QUxfREJNKSkNCiAJCWJzc19tZXRhLnNpZ25hbCA9IHJ4X3N0YXR1cy0+c2lnbmFsICogMTAwOw0K
+IAllbHNlIGlmIChpZWVlODAyMTFfaHdfY2hlY2soJmxvY2FsLT5odywgU0lHTkFMX1VOU1BFQykp
+DQogCQlic3NfbWV0YS5zaWduYWwgPSAocnhfc3RhdHVzLT5zaWduYWwgKiAxMDApIC8gbG9jYWwt
+Pmh3Lm1heF9zaWduYWw7DQotLSANCjEuNy4yLjUNCg0K
