@@ -1,135 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59750 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752921AbeBSMtC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:49:02 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Feb 2018 14:48:41 +0200
-Message-Id: <20180219124847.27169-8-luca@coelho.fi> (sfid-20180219_134911_019341_9D485B98)
-In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-Subject: [PATCH v2 07/13] mac80211: Call mgd_prep_tx before transmitting deauthentication
+Received: from swan.laptop.org ([18.85.44.157]:55796 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1031127AbeBNVag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Feb 2018 16:30:36 -0500
+Date: Thu, 15 Feb 2018 08:30:26 +1100
+From: James Cameron <quozl@laptop.org>
+To: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH v2] ath9k: mark RSSI as invalid if frame received during
+ channel setup
+Message-ID: <20180214213025.GB17837@us.netrek.org> (sfid-20180214_223039_764947_78AE21C1)
+References: <AM4PR0101MB230538DEEFCFFC0E0F4437A2E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AM4PR0101MB230538DEEFCFFC0E0F4437A2E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+On Wed, Feb 14, 2018 at 04:26:42PM +0000, Jean Pierre TOSONI wrote:
+> ath9k returns a wrong RSSI value for frames received in a 30ms time
+> window after a channel change. The correct value is typically 10dB
+> below the returned value.
 
-In multi channel scenarios, when disassociating from the AP before a
-beacon was heard from the AP, it is not guaranteed that the virtual
-interface is granted air time for the transmission of the
-deauthentication frame. This in turn can lead to various issues as
-the AP might never get the deauthentication frame.
+How was your correct value determined?
 
-To mitigate such possible issues, add a HW flag indicating that the
-driver requires mac80211 to call the mgd_prep_tx() driver callback
-to make sure that the virtual interface is granted immediate airtime
-to be able to transmit the frame, in case that no beacon was heard
-from the AP.
+> This was found with a Atheros AR9300 Rev:3 chip (WLE350NX / JWX6083
+> cards), during offchannel scans.
+> 
+> Mark the signal value as invalid in this case.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h | 13 +++++++++++++
- net/mac80211/debugfs.c |  1 +
- net/mac80211/mlme.c    | 16 +++++++++++++++-
- 3 files changed, 29 insertions(+), 1 deletion(-)
+Why not adjust by 10dB?
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 7efac7f98e45..c27c59650da8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6,6 +6,7 @@
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -2068,6 +2069,14 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA: Hardware supports buffer STA on
-  *	TDLS links.
-  *
-+ * @IEEE80211_HW_DEAUTH_NEED_MGD_TX_PREP: The driver requires the
-+ *	mgd_prepare_tx() callback to be called before transmission of a
-+ *	deauthentication frame in case the association was completed but no
-+ *	beacon was heard. This is required in multi-channel scenarios, where the
-+ *	virtual interface might not be given air time for the transmission of
-+ *	the frame, as it is not synced with the AP/P2P GO yet, and thus the
-+ *	deauthentication frame might not be transmitted.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -2111,6 +2120,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_REPORTS_LOW_ACK,
- 	IEEE80211_HW_SUPPORTS_TX_FRAG,
- 	IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA,
-+	IEEE80211_HW_DEAUTH_NEED_MGD_TX_PREP,
- 
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-@@ -3355,6 +3365,9 @@ enum ieee80211_reconfig_type {
-  *	management frame prior to having successfully associated to allow the
-  *	driver to give it channel time for the transmission, to get a response
-  *	and to be able to synchronize with the GO.
-+ *	For drivers that set %IEEE80211_HW_DEAUTH_NEED_MGD_TX_PREP, mac80211
-+ *	would also call this function before transmitting a deauthentication
-+ *	frame in case that no beacon was heard from the AP/P2P GO.
-  *	The callback will be called before each transmission and upon return
-  *	mac80211 will transmit the frame right away.
-  *	The callback is optional and can (should!) sleep.
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 1f466d12a6bc..a75653affbf7 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -212,6 +212,7 @@ static const char *hw_flag_names[] = {
- 	FLAG(REPORTS_LOW_ACK),
- 	FLAG(SUPPORTS_TX_FRAG),
- 	FLAG(SUPPORTS_TDLS_BUFFER_STA),
-+	FLAG(DEAUTH_NEED_MGD_TX_PREP),
- #undef FLAG
- };
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 010b127a3937..0024eff9bb84 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -7,6 +7,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -2008,9 +2009,22 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_flush_queues(local, sdata, true);
- 
- 	/* deauthenticate/disassociate now */
--	if (tx || frame_buf)
-+	if (tx || frame_buf) {
-+		struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+
-+		/*
-+		 * In multi channel scenarios guarantee that the virtual
-+		 * interface is granted immediate airtime to transmit the
-+		 * deauthentication frame by calling mgd_prepare_tx, if the
-+		 * driver requested so.
-+		 */
-+		if (ieee80211_hw_check(&local->hw, DEAUTH_NEED_MGD_TX_PREP) &&
-+		    !ifmgd->have_beacon)
-+			drv_mgd_prepare_tx(sdata->local, sdata);
-+
- 		ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid, stype,
- 					       reason, tx, frame_buf);
-+	}
- 
- 	/* flush out frame - make sure the deauth was actually sent */
- 	if (tx)
+Speculating: in a typical card, RSSI is calculated by firmware from
+readings of ADCs attached to the receiver.  Firmware may average
+several readings.  Firmware may apply other offsets or calibrations,
+based on frequency and temperature.  This sounds like a firmware
+problem.
+
+> Signed-off-by: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
+> [...]
+
 -- 
-2.15.1
+James Cameron
+http://quozl.netrek.org/
