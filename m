@@ -1,78 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:39715 "EHLO
-        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751146AbeBHJvP (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59054 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966351AbeBNAnu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Feb 2018 04:51:15 -0500
-Received: by mail-qk0-f177.google.com with SMTP id d72so4841239qkc.6
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Feb 2018 01:51:15 -0800 (PST)
-Subject: Re: [PATCH 5/6] qtnfmac: implement asynchronous firmware loading
-To: Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        linux-wireless@vger.kernel.org
-References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
- <20180205150516.16030-6-sergey.matyukevich.os@quantenna.com>
- <5A79900D.5080605@broadcom.com>
- <9e2bbb8c-b34f-a93a-873a-6f5e744669ec@quantenna.com>
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A7C1D90.6060401@broadcom.com> (sfid-20180208_105121_522802_E61F9640)
-Date: Thu, 8 Feb 2018 10:51:12 +0100
+        Tue, 13 Feb 2018 19:43:50 -0500
+From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
+To: =?utf-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
+        "make-wifi-fast@lists.bufferbloat.net"
+        <make-wifi-fast@lists.bufferbloat.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Adjust TSQ pacing shift
+Date: Wed, 14 Feb 2018 00:43:25 +0000
+Message-ID: <40f644f6-ecfa-c31b-ce98-3491c954d6b1@qti.qualcomm.com> (sfid-20180214_014406_090263_1E468916)
+References: <20180202151105.30043-1-toke@toke.dk>
+In-Reply-To: <20180202151105.30043-1-toke@toke.dk>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <9e2bbb8c-b34f-a93a-873a-6f5e744669ec@quantenna.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/7/2018 12:09 PM, Sergei Maksimenko wrote:
-> Hi Arend,
->
-> Qsr10g devices support loading firmware not only from the host over PCIe
-> but also from on-board flash.
-> Firmware start-up sequence and the following handshake are common for
-> PCIe and flash boot modes. They take much more
-> time (about 10 seconds) than the firmware upload process.
-> To make flash mode startup also asynchronous we can't use the existing
-> API such as request_firmware_nowait() as there is
-> no firmware to upload, and have to explicitly run the needed functions
-> in a work queue.
-> In my opinion it is more neat to have one firmware load function invoked
-> in a work queue for both modes than using
-> request_firmware_nowait() for one mode only.
-
-I was taught "neat" is not a real argument ;-) I agree that if you need 
-the worker for async flashing it makes sense to use that for async 
-firmware loading as well. Missed that reading the patch itself.
-
-Regards,
-Arend
-
-> Regards,
-> Sergei
->
-> On 06.02.2018 14:22, Arend van Spriel wrote:
->>
->> External Email
->>
->>
->> On 2/5/2018 4:05 PM, Sergey Matyukevich wrote:
->>> From: Sergei Maksimenko <smaksimenko@quantenna.com>
->>>
->>> In pci probe() function start firmware loading, protocol handshake
->>> and driver core initialization, and not wait for completion.
->>
->> The moving of the debugfs stuff makes this a drag to review, but I get
->> the gist. The thing is that the firmware api already provides an
->> asynchronous api, ie. request_firmware_nowait(), so why not use that.
->>
->> Regards,
->> Arend
->
->
->
-> This email, including its contents and any attachment(s), may contain
-> confidential information of Quantenna Communications, Inc. and is solely
-> for the intended recipient(s). If you may have received this in error,
-> please contact the sender and permanently delete this email, its
-> contents and any attachment(s).
+T24gMDIvMDIvMjAxOCAwNzoxMSBBTSwgVG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2VuIHdyb3RlOg0K
+DQo+IFNpbmNlIHdlIG5vdyBoYXZlIHRoZSBjb252ZW5pZW50IGhlbHBlciB0byBkbyBzbywgYWN0
+dWFsbHkgYWRqdXN0IHRoZQ0KPiBUU1EgcGFjaW5nIHNoaWZ0IGZvciBwYWNrZXRzIGdvaW5nIG91
+dCBvdmVyIGEgV2lGaSBpbnRlcmZhY2UuIFRoaXMNCj4gc2lnbmlmaWNhbnRseSBpbXByb3ZlcyB0
+aHJvdWdocHV0IGZvciBsb2NhbGx5LW9yaWdpbmF0ZWQgVENQDQo+IGNvbm5lY3Rpb25zLiBUaGUg
+ZGVmYXVsdCBwYWNpbmcgc2hpZnQgb2YgMTAgY29ycmVzcG9uZHMgdG8gfjFtcyBvZg0KPiBxdWV1
+ZWQgcGFja2V0IGRhdGEuIEFkanVzdGluZyB0aGlzIHRvIGEgc2hpZnQgb2YgOCAoaS5lLiB+NG1z
+KSBpbXByb3Zlcw0KPiAxLWhvcCB0aHJvdWdocHV0IGZvciBhdGg5ayBieSBhIGZhY3RvciBvZiAz
+LCB3aGVyZWFzIGluY3JlYXNpbmcgaXQgbW9yZQ0KPiBoYXMgZGltaW5pc2hpbmcgcmV0dXJucy4N
+Cj4NCj4gQWNoaWV2ZWQgdGhyb3VnaHB1dCBmb3IgZGlmZmVyZW50IHZhbHVlcyBvZiBza19wYWNp
+bmdfc2hpZnQgKGF2ZXJhZ2Ugb2YNCj4gNSBpdGVyYXRpb25zIG9mIDEwLXNlYyBuZXRwZXJmIHJ1
+bnMgdG8gYSBob3N0IG9uIHRoZSBvdGhlciBzaWRlIG9mIHRoZQ0KPiBXaUZpIGhvcCk6DQo+DQo+
+IHNrX3BhY2luZ19zaGlmdCAxMDogIDQzLjIxIE1icHMgKHByZS1wYXRjaCkNCj4gc2tfcGFjaW5n
+X3NoaWZ0ICA5OiAgNzguMTcgTWJwcw0KPiBza19wYWNpbmdfc2hpZnQgIDg6IDEyMy45NCBNYnBz
+DQo+IHNrX3BhY2luZ19zaGlmdCAgNzogMTI4LjMxIE1icHMNCj4NCj4gTGF0ZW5jeSBmb3IgY29t
+cGV0aW5nIGZsb3dzIGluY3JlYXNlcyBmcm9tIH4zIG1zIHRvIH4xMCBtcyB3aXRoIHRoaXMNCj4g
+Y2hhbmdlLiBUaGlzIGlzIGFib3V0IHRoZSBzYW1lIG1hZ25pdHVkZSBvZiBxdWV1ZWluZyBsYXRl
+bmN5IGluZHVjZWQgYnkNCj4gZmxvd3MgdGhhdCBhcmUgbm90IG9yaWdpbmF0ZWQgb24gdGhlIFdp
+RmkgZGV2aWNlIGl0c2VsZiAoYW5kIHNvIGFyZSBub3QNCj4gbGltaXRlZCBieSBUU1EpLg0KPg0K
+PiBTaWduZWQtb2ZmLWJ5OiBUb2tlIEjDuGlsYW5kLUrDuHJnZW5zZW4gPHRva2VAdG9rZS5kaz4N
+Cj4gLS0tDQo+ICBuZXQvbWFjODAyMTEvdHguYyB8IDggKysrKysrKysNCj4gIDEgZmlsZSBjaGFu
+Z2VkLCA4IGluc2VydGlvbnMoKykNCj4NCj4gZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS90eC5j
+IGIvbmV0L21hYzgwMjExL3R4LmMNCj4gaW5kZXggMjU5MDRhZjM4ODM5Li42OTcyMjUwNGUzZTEg
+MTAwNjQ0DQo+IC0tLSBhL25ldC9tYWM4MDIxMS90eC5jDQo+ICsrKyBiL25ldC9tYWM4MDIxMS90
+eC5jDQo+IEBAIC0zNTc0LDYgKzM1NzQsMTQgQEAgdm9pZCBfX2llZWU4MDIxMV9zdWJpZl9zdGFy
+dF94bWl0KHN0cnVjdCBza19idWZmICpza2IsDQo+ICAJaWYgKCFJU19FUlJfT1JfTlVMTChzdGEp
+KSB7DQo+ICAJCXN0cnVjdCBpZWVlODAyMTFfZmFzdF90eCAqZmFzdF90eDsNCj4gIA0KPiArCQkv
+KiBXZSBuZWVkIGEgYml0IG9mIGRhdGEgcXVldWVkIHRvIGJ1aWxkIGFnZ3JlZ2F0ZXMgcHJvcGVy
+bHksIHNvDQo+ICsJCSAqIGluc3RydWN0IHRoZSBUQ1Agc3RhY2sgdG8gYWxsb3cgbW9yZSB0aGFu
+IGEgc2luZ2xlIG1zIG9mIGRhdGENCj4gKwkJICogdG8gYmUgcXVldWVkIGluIHRoZSBzdGFjay4g
+VGhlIHZhbHVlIGlzIGEgYml0LXNoaWZ0IG9mIDENCj4gKwkJICogc2Vjb25kLCBzbyA4IGlzIH40
+bXMgb2YgcXVldWVkIGRhdGEuIE9ubHkgYWZmZWN0cyBsb2NhbCBUQ1ANCj4gKwkJICogc29ja2V0
+cy4NCj4gKwkJICovDQo+ICsJCXNrX3BhY2luZ19zaGlmdF91cGRhdGUoc2tiLT5zaywgOCk7DQo+
+ICsNCj4gIAkJZmFzdF90eCA9IHJjdV9kZXJlZmVyZW5jZShzdGEtPmZhc3RfdHgpOw0KPiAgDQo+
+ICAJCWlmIChmYXN0X3R4ICYmDQoNCkkga25ldyBpbmNyZWFzaW5nIHRoZSB2YWx1ZSBkb2Vzbid0
+IGhlbHAgbXVjaCBhZnRlciA4IGZvciBhdGg5aywgYnV0IEkgcmFuIGENCnRlc3Rpbmcgb24gYXRo
+MTBrIHRoYXQgNiBvciA3IGlzIGhhdmluZyBvcHRpbWFsIG51bWJlci4NClNpbmNlIGF0aDEway8x
+MWFjIGRldmljZSBoYXMgaGlnaGVyIGJhbmR3aWR0aCB0aGFuIGF0aDlrLzExbiwgY2FuIHdlIGNv
+bnNpZGVyDQp0byB1c2UgdG8gNiBvciA3IHRvIGFjY29tbW9kYXRlIHRoYXQgZWZmZWN0Pw0KDQog
+ICB0eCAobWJwcykgY3B1IHVzYWdlICglKQ0KNSAgICA0MDQgICAgICAgMjguNQ0KNiAgICAzOTgg
+ICAgICAgMTMuOA0KNyAgICA0MDEgICAgICAgIDgNCjggICAgMzc4ICAgICAgICA1DQo5ICAgIDIz
+MCAgICAgICAgNC41DQoxMCAgIDc5LjYgICAgICAgMg0KDQpJIGhhdmUgYSBxdWFkIGNvcmUgbWFj
+aGluZS4NCg0KJCBjYXQgL3Byb2MvY3B1aW5mbyANCnByb2Nlc3Nvcgk6IDANCnZlbmRvcl9pZAk6
+IEdlbnVpbmVJbnRlbA0KY3B1IGZhbWlseQk6IDYNCm1vZGVsCQk6IDU4DQptb2RlbCBuYW1lCTog
+SW50ZWwoUikgQ29yZShUTSkgaTUtMzM4ME0gQ1BVIEAgMi45MEdIeg0KDQotLSANClJ5YW4gSHN1
+DQo=
