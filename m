@@ -1,58 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr40133.outbound.protection.outlook.com ([40.107.4.133]:44725
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1031118AbeBNOr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Feb 2018 09:47:27 -0500
-From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
-Subject: [PATCH] ath9k: mark RSSI as invalid if frame received during channel
- setup
-Date: Wed, 14 Feb 2018 14:47:23 +0000
-Message-ID: <AM4PR0101MB2305369CE7574F25AA0AB680E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180214_154744_474772_4383A9FB)
-Content-Type: text/plain; charset="utf-8"
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:26099 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031174AbeBNPPG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Feb 2018 10:15:06 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 5/6] staging: wilc1000: fix line over 80 characters in wilc_spi_read_int()
+Date: Wed, 14 Feb 2018 16:40:14 +0530
+Message-ID: <1518606615-14404-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180214_161510_116451_DAD8940B)
+In-Reply-To: <1518606615-14404-1-git-send-email-ajay.kathat@microchip.com>
+References: <1518606615-14404-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YXRoOWsgcmV0dXJucyBhIHdyb25nIFJTU0kgdmFsdWUgZm9yIGZyYW1lcyByZWNlaXZlZCBpbiBh
-IDMwbXMgdGltZSB3aW5kb3cgYWZ0ZXINCmEgY2hhbm5lbCBjaGFuZ2UuIFRoZSBjb3JyZWN0IHZh
-bHVlIGlzIHR5cGljYWxseSAxMGRCIGJlbG93IHRoZSByZXR1cm5lZCB2YWx1ZS4NCg0KVGhpcyB3
-YXMgZm91bmQgd2l0aCBhIEF0aGVyb3MgQVI5MzAwIFJldjozIGNoaXAgKFdMRTM1ME5YIC8gSldY
-NjA4MyBjYXJkcyksDQpkdXJpbmcgb2ZmY2hhbm5lbCBzY2Fucy4NCg0KTWFyayB0aGUgc2lnbmFs
-IHZhbHVlIGFzIGludmFsaWQgaW4gdGhpcyBjYXNlLg0KDQpTaWduZWQtb2ZmLWJ5OiBKZWFuIFBp
-ZXJyZSBUT1NPTkkgPGpwLnRvc29uaUBhY2tzeXMuZnI+DQotLS0NCiAuLi4vYTk5NS1iLWFja3N5
-cy1hdGg5ay13YWl0LWNoYW5uZWwtY2hhbmdlLnBhdGNoICB8ICAgMzkgKysrKysrKysrKysrKysr
-KysrKysNCiAxIGZpbGVzIGNoYW5nZWQsIDM5IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0p
-DQogY3JlYXRlIG1vZGUgMTAwNjQ0IHBhY2thZ2Uva2VybmVsL21hYzgwMjExL3BhdGNoZXMvYTk5
-NS1iLWFja3N5cy1hdGg5ay13YWl0LWNoYW5uZWwtY2hhbmdlLnBhdGNoDQoNCmRpZmYgLS1naXQg
-YS9wYWNrYWdlL2tlcm5lbC9tYWM4MDIxMS9wYXRjaGVzL2E5OTUtYi1hY2tzeXMtYXRoOWstd2Fp
-dC1jaGFubmVsLWNoYW5nZS5wYXRjaCBiL3BhY2thZ2Uva2VybmVsL21hYzgwMjExL3BhdGNoZXMv
-YTk5NS1iLWFja3N5cy1hdGg5ay13YWl0LWNoYW5uZWwtY2hhbmdlLnBhdGNoDQpuZXcgZmlsZSBt
-b2RlIDEwMDY0NA0KaW5kZXggMDAwMDAwMC4uZDFlMTE0Ng0KLS0tIC9kZXYvbnVsbA0KKysrIGIv
-cGFja2FnZS9rZXJuZWwvbWFjODAyMTEvcGF0Y2hlcy9hOTk1LWItYWNrc3lzLWF0aDlrLXdhaXQt
-Y2hhbm5lbC1jaGFuZ2UucGF0Y2gNCkBAIC0wLDAgKzEsMzkgQEANCistLS0gYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9hdGgvYXRoOWsvYW5pLmMNCisrKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9h
-dGgvYXRoOWsvYW5pLmMNCitAQCAtMzMzLDYgKzMzMyw3IEBAIHZvaWQgYXRoOWtfYW5pX3Jlc2V0
-KHN0cnVjdCBhdGhfaHcgKmFoLA0KKyAJCXJldHVybjsNCisgDQorIAlCVUdfT04oYW5pU3RhdGUg
-PT0gTlVMTCk7DQorKwlhaC0+Y2hhbl9zdGFibGVfdGltZSA9IGppZmZpZXMgKyAoMzAqSFopLzEw
-MDA7IC8qIDMwbXMgKi8NCisgCWFoLT5zdGF0cy5hc3RfYW5pX3Jlc2V0Kys7DQorIA0KKyAJb2Zk
-bV9uaWwgPSBtYXhfdChpbnQsIEFUSDlLX0FOSV9PRkRNX0RFRl9MRVZFTCwNCistLS0gYS9kcml2
-ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvY29tbW9uLmMNCisrKysgYi9kcml2ZXJzL25ldC93
-aXJlbGVzcy9hdGgvYXRoOWsvY29tbW9uLmMNCitAQCAtMjIwLDYgKzIyMCwxNiBAQCB2b2lkIGF0
-aDlrX2Ntbl9wcm9jZXNzX3Jzc2koc3RydWN0IGF0aF9jDQorIAlpbnQgaSwgajsNCisgDQorIAkv
-Kg0KKysJICogUlNTSSBpcyBub3QgYXZhaWxhYmxlIGJlZm9yZSAzMG1zIGFmdGVyIHJlc2V0IG9u
-IGF0aDlrLg0KKysJICovDQorKwlpZiAodGltZV9iZWZvcmUoamlmZmllcywgYWgtPmNoYW5fc3Rh
-YmxlX3RpbWUpKSB7DQorKwkJYXRoX2RiZyhjb21tb24sIEFOWSwgImVhcmx5IGZyYW1lIHJzc2k9
-JWRcbiIscnhfc3RhdHMtPnJzX3Jzc2kpOw0KKysJCXJ4cy0+ZmxhZyB8PSBSWF9GTEFHX05PX1NJ
-R05BTF9WQUw7DQorKwkJcmV0dXJuOw0KKysJfQ0KKysJYWgtPmNoYW5fc3RhYmxlX3RpbWUgPSBq
-aWZmaWVzOyAvKiBhZHZhbmNlIHN0YWJsZSB0aW1lIHRvIGNvcCB3aXRoIGppZmZpZXMgd3JhcGFy
-b3VuZCAqLw0KKysNCisrCS8qDQorIAkgKiBSU1NJIGlzIG5vdCBhdmFpbGFibGUgZm9yIHN1YmZy
-YW1lcyBpbiBhbiBBLU1QRFUuDQorIAkgKi8NCisgCWlmIChyeF9zdGF0cy0+cnNfbW9yZWFnZ3Ip
-IHsNCistLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvaHcuaA0KKysrKyBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9ody5oDQorQEAgLTgxNiw2ICs4MTYsNyBAQCBz
-dHJ1Y3QgYXRoX2h3IHsNCisgDQorIAlib29sIHJlc2V0X3Bvd2VyX29uOw0KKyAJYm9vbCBodGNf
-cmVzZXRfaW5pdDsNCisrCXVuc2lnbmVkIGxvbmcgY2hhbl9zdGFibGVfdGltZTsNCisgDQorIAll
-bnVtIG5sODAyMTFfaWZ0eXBlIG9wbW9kZTsNCisgCWVudW0gYXRoOWtfcG93ZXJfbW9kZSBwb3dl
-cl9tb2RlOw0KLS0gDQoxLjcuMi41DQoNCg==
+Refactor wilc_spi_read_int() to fix the line over 80 char issues reported
+by checkpatch.pl script.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_spi.c | 57 +++++++++++++++++++------------------
+ 1 file changed, 29 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index fddc0db..7c58beb8 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -939,45 +939,46 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+ 	int happened, j;
+ 	u32 unknown_mask;
+ 	u32 irq_flags;
++	int k = IRG_FLAGS_OFFSET + 5;
+ 
+ 	if (g_spi.has_thrpt_enh) {
+ 		ret = spi_internal_read(wilc, 0xe840 - WILC_SPI_REG_BASE,
+ 					int_status);
+-	} else {
+-		ret = wilc_spi_read_reg(wilc, WILC_VMM_TO_HOST_SIZE,
+-					&byte_cnt);
+-		if (!ret) {
+-			dev_err(&spi->dev,
+-				"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
+-			goto _fail_;
+-		}
+-		tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
++		return ret;
++	}
++	ret = wilc_spi_read_reg(wilc, WILC_VMM_TO_HOST_SIZE, &byte_cnt);
++	if (!ret) {
++		dev_err(&spi->dev,
++			"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
++		goto _fail_;
++	}
++	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
+ 
+-		j = 0;
+-		do {
+-			happened = 0;
++	j = 0;
++	do {
++		happened = 0;
+ 
+-			wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
+-			tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
++		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
++		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
+ 
+-			if (g_spi.nint > 5) {
+-				wilc_spi_read_reg(wilc, 0x1a94,
+-						  &irq_flags);
+-				tmp |= (((irq_flags >> 0) & 0x7) << (IRG_FLAGS_OFFSET + 5));
+-			}
++		if (g_spi.nint > 5) {
++			wilc_spi_read_reg(wilc, 0x1a94, &irq_flags);
++			tmp |= (((irq_flags >> 0) & 0x7) << k);
++		}
+ 
+-			unknown_mask = ~((1ul << g_spi.nint) - 1);
++		unknown_mask = ~((1ul << g_spi.nint) - 1);
+ 
+-			if ((tmp >> IRG_FLAGS_OFFSET) & unknown_mask) {
+-				dev_err(&spi->dev, "Unexpected interrupt (2): j=%d, tmp=%x, mask=%x\n", j, tmp, unknown_mask);
+-					happened = 1;
+-			}
++		if ((tmp >> IRG_FLAGS_OFFSET) & unknown_mask) {
++			dev_err(&spi->dev,
++				"Unexpected interrupt(2):j=%d,tmp=%x,mask=%x\n",
++				j, tmp, unknown_mask);
++				happened = 1;
++		}
+ 
+-			j++;
+-		} while (happened);
++		j++;
++	} while (happened);
+ 
+-		*int_status = tmp;
+-	}
++	*int_status = tmp;
+ 
+ _fail_:
+ 	return ret;
+-- 
+2.7.4
