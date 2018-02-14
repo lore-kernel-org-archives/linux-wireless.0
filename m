@@ -1,184 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:41423 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751346AbeBTNq2 (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:51773 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031527AbeBNWiM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 08:46:28 -0500
-Received: by mail-wr0-f195.google.com with SMTP id f14so10100085wre.8
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Feb 2018 05:46:27 -0800 (PST)
-From: Carlo Caione <carlo@caione.org>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        frederic.danis.oss@gmail.com, sebastian.reichel@collabora.co.uk,
-        rafael.j.wysocki@intel.com, hdegoede@redhat.com, linux@endlessm.com
-Cc: Carlo Caione <carlo@endlessm.com>
-Subject: [RFC PATCH 2/2] net: rfkill: gpio: Convert driver to SerDev
-Date: Tue, 20 Feb 2018 13:46:18 +0000
-Message-Id: <20180220134618.12972-3-carlo@caione.org> (sfid-20180220_144651_265659_32E62165)
-In-Reply-To: <20180220134618.12972-1-carlo@caione.org>
-References: <20180220134618.12972-1-carlo@caione.org>
+        Wed, 14 Feb 2018 17:38:12 -0500
+Received: by mail-wm0-f44.google.com with SMTP id r71so25638921wmd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Feb 2018 14:38:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4f048d04-5f25-caa1-51b3-dcb14baf36da@sieb.net>
+References: <HE1PR0501MB23969FCE58F1EE7634D412F0F6F50@HE1PR0501MB2396.eurprd05.prod.outlook.com>
+ <1518607856.21268.3.camel@sipsolutions.net> <4f048d04-5f25-caa1-51b3-dcb14baf36da@sieb.net>
+From: Steve deRosier <derosier@gmail.com>
+Date: Wed, 14 Feb 2018 14:38:10 -0800
+Message-ID: <CALLGbRLL-tnptVDuFt5E3QoTZ8Wn4K=2wLp3TCNvDJemkGVyKg@mail.gmail.com> (sfid-20180214_233815_694815_41F628DD)
+Subject: Re: Max clients on wifi access point with 7265
+To: Samuel Sieb <samuel@sieb.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Carlo Caione <carlo@endlessm.com>
+On Wed, Feb 14, 2018 at 2:04 PM, Samuel Sieb <samuel@sieb.net> wrote:
+> On 02/14/2018 03:30 AM, Johannes Berg wrote:
+>>
+>> On Wed, 2018-02-14 at 10:55 +0000, Micka=C3=ABl PANNEQUIN wrote:
+>>
+>>>
+>>> Do you know the limit of the number of users connected at the same
+>>> time on the wifi? Works fine with 14 connected devices but not more.
+>>>
+>>> How to increase it?
+>>
+>>
+>> You can't.
+>>
+>>> This limit is hardware?
+>>
+>>
+>> More or less, yes. The HW/FW can support 16 STAs, but needs two for
+>> other bookkeeping.
+>
+>
+> As a general question, is there a standard way to determine this limit fo=
+r
+> any particular hardware?
 
-With commit e361d1f85855 ("ACPI / scan: Fix enumeration for special UART
-devices") UART devices are now expected to be enumerated by
-SerDev subsystem. This is breaking the enumeration of platform devices
-connected to the UART without a proper SerDev support, like in the
-rfkill-gpio case.
 
-Fix this moving the driver from a platform driver to a serdev device
-driver.
+Yes, but there's no easy way. Put it in AP mode and connect clients to
+it until it starts rejecting new clients or dropping the old ones.
+Usually while watching it with a sniffer. That's how I've always had
+to do it.
 
-Signed-off-by: Carlo Caione <carlo@endlessm.com>
----
- net/rfkill/Kconfig       |  1 +
- net/rfkill/rfkill-gpio.c | 46 ++++++++++++++++++++++++----------------------
- 2 files changed, 25 insertions(+), 22 deletions(-)
+Different chips will have different limits, and there's no reliable
+way to determine the limit across all chips other than trial and
+error. It seems a common desire of people to try to use client chips
+as poor-man APs. While it will work for very limited number of
+clients, they're not intended as AP chips. If you want something to
+work as an AP, I recommend you choose an AP chip.
 
-diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
-index 060600b03fad..14ee289328d7 100644
---- a/net/rfkill/Kconfig
-+++ b/net/rfkill/Kconfig
-@@ -27,6 +27,7 @@ config RFKILL_GPIO
- 	tristate "GPIO RFKILL driver"
- 	depends on RFKILL
- 	depends on GPIOLIB || COMPILE_TEST
-+	depends on SERIAL_DEV_CTRL_TTYPORT
- 	default n
- 	help
- 	  If you say yes here you get support of a generic gpio RFKILL
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 659d2edae972..d7553f3c3ae7 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -23,11 +23,13 @@
- #include <linux/rfkill.h>
- #include <linux/platform_device.h>
- #include <linux/clk.h>
-+#include <linux/serdev.h>
- #include <linux/slab.h>
- #include <linux/acpi.h>
- #include <linux/gpio/consumer.h>
- 
- struct rfkill_gpio_data {
-+	struct device		*dev;
- 	const char		*name;
- 	enum rfkill_type	type;
- 	struct gpio_desc	*reset_gpio;
-@@ -84,40 +86,42 @@ static int rfkill_gpio_acpi_probe(struct device *dev,
- 	return devm_acpi_dev_add_driver_gpios(dev, acpi_rfkill_default_gpios);
- }
- 
--static int rfkill_gpio_probe(struct platform_device *pdev)
-+static int rfkill_gpio_serdev_probe(struct serdev_device *serdev)
- {
- 	struct rfkill_gpio_data *rfkill;
- 	struct gpio_desc *gpio;
- 	const char *type_name = NULL;
- 	int ret;
- 
--	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
-+	rfkill = devm_kzalloc(&serdev->dev, sizeof(*rfkill), GFP_KERNEL);
- 	if (!rfkill)
- 		return -ENOMEM;
- 
--	device_property_read_string(&pdev->dev, "name", &rfkill->name);
--	device_property_read_string(&pdev->dev, "type", &type_name);
-+	rfkill->dev = &serdev->dev;
-+
-+	device_property_read_string(rfkill->dev, "name", &rfkill->name);
-+	device_property_read_string(rfkill->dev, "type", &type_name);
- 
- 	if (!rfkill->name)
--		rfkill->name = dev_name(&pdev->dev);
-+		rfkill->name = dev_name(rfkill->dev);
- 
- 	rfkill->type = rfkill_find_type(type_name);
- 
--	if (ACPI_HANDLE(&pdev->dev)) {
--		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
-+	if (ACPI_HANDLE(rfkill->dev)) {
-+		ret = rfkill_gpio_acpi_probe(rfkill->dev, rfkill);
- 		if (ret)
- 			return ret;
- 	}
- 
--	rfkill->clk = devm_clk_get(&pdev->dev, NULL);
-+	rfkill->clk = devm_clk_get(rfkill->dev, NULL);
- 
--	gpio = devm_gpiod_get_optional(&pdev->dev, "reset", GPIOD_OUT_LOW);
-+	gpio = devm_gpiod_get_optional(rfkill->dev, "reset", GPIOD_OUT_LOW);
- 	if (IS_ERR(gpio))
- 		return PTR_ERR(gpio);
- 
- 	rfkill->reset_gpio = gpio;
- 
--	gpio = devm_gpiod_get_optional(&pdev->dev, "shutdown", GPIOD_OUT_LOW);
-+	gpio = devm_gpiod_get_optional(rfkill->dev, "shutdown", GPIOD_OUT_LOW);
- 	if (IS_ERR(gpio))
- 		return PTR_ERR(gpio);
- 
-@@ -125,11 +129,11 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 
- 	/* Make sure at-least one GPIO is defined for this instance */
- 	if (!rfkill->reset_gpio && !rfkill->shutdown_gpio) {
--		dev_err(&pdev->dev, "invalid platform data\n");
-+		dev_err(rfkill->dev, "invalid platform data\n");
- 		return -EINVAL;
- 	}
- 
--	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
-+	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, rfkill->dev,
- 					  rfkill->type, &rfkill_gpio_ops,
- 					  rfkill);
- 	if (!rfkill->rfkill_dev)
-@@ -139,21 +143,19 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 	if (ret < 0)
- 		return ret;
- 
--	platform_set_drvdata(pdev, rfkill);
-+	serdev_device_set_drvdata(serdev, rfkill);
- 
--	dev_info(&pdev->dev, "%s device registered.\n", rfkill->name);
-+	dev_info(rfkill->dev, "%s device registered.\n", rfkill->name);
- 
- 	return 0;
- }
- 
--static int rfkill_gpio_remove(struct platform_device *pdev)
-+static void rfkill_gpio_serdev_remove(struct serdev_device *serdev)
- {
--	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
-+	struct rfkill_gpio_data *rfkill = serdev_device_get_drvdata(serdev);
- 
- 	rfkill_unregister(rfkill->rfkill_dev);
- 	rfkill_destroy(rfkill->rfkill_dev);
--
--	return 0;
- }
- 
- #ifdef CONFIG_ACPI
-@@ -165,16 +167,16 @@ static const struct acpi_device_id rfkill_acpi_match[] = {
- MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
- #endif
- 
--static struct platform_driver rfkill_gpio_driver = {
--	.probe = rfkill_gpio_probe,
--	.remove = rfkill_gpio_remove,
-+static struct serdev_device_driver rfkill_gpio_serdev_driver = {
-+	.probe = rfkill_gpio_serdev_probe,
-+	.remove = rfkill_gpio_serdev_remove,
- 	.driver = {
- 		.name = "rfkill_gpio",
- 		.acpi_match_table = ACPI_PTR(rfkill_acpi_match),
- 	},
- };
- 
--module_platform_driver(rfkill_gpio_driver);
-+module_serdev_device_driver(rfkill_gpio_serdev_driver);
- 
- MODULE_DESCRIPTION("gpio rfkill");
- MODULE_AUTHOR("NVIDIA");
--- 
-2.14.1
+- Steve
+
+--
+Steve deRosier
+Cal-Sierra Consulting LLC
+https://www.cal-sierra.com/
