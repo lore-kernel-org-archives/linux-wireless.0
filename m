@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:52452 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751656AbeB1DHj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:48638 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967114AbeBNKq3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 22:07:39 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/15] rtlwifi: remove redundant statement found by static checker
-Date: Wed, 28 Feb 2018 11:07:05 +0800
-Message-ID: <20180228030718.19510-3-pkshih@realtek.com> (sfid-20180228_040744_412953_EF7AF014)
-In-Reply-To: <20180228030718.19510-1-pkshih@realtek.com>
-References: <20180228030718.19510-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 14 Feb 2018 05:46:29 -0500
+Message-ID: <1518605187.21268.1.camel@sipsolutions.net> (sfid-20180214_114633_271058_255671A9)
+Subject: Re: mac80211 scan results, signal value not reliable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jean Pierre TOSONI <jp.tosoni@acksys.fr>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 14 Feb 2018 11:46:27 +0100
+In-Reply-To: <AM4PR0101MB2305974B5EC0ABE4A24204DAE4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+References: <AM4PR0101MB23058FC2795B1FAF71CBF4F2E4F30@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+         (sfid-20180208_104936_856405_3756BBC7) <1518296953.2029.6.camel@sipsolutions.net>
+         <AM4PR0101MB2305974B5EC0ABE4A24204DAE4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Wed, 2018-02-14 at 10:10 +0000, Jean Pierre TOSONI wrote:
+> > 
+> > However, it looks like you're right and ieee80211_bss_info_update()
+> > doesn't take the flag into account. Bit strange that we even have
+> > the flag I guess, since we treat 0 as an invalid value in various
+> > places, being too high power to realistically receive anyway.
+> 
+> The problem is that 0 is invalid as a SIGNAL_DBM value but this is
+> dubious for a SIGNAL_UNSPEC value which appears to be still in use
+> in a couple of drivers.
 
-smatch reports "rtl_is_special_data() warn: inconsistent indenting", but
-it is an obvious redundant statement so remove it.
+Huh, good point, that's ancient history to me and I forget :-)
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 1 -
- 1 file changed, 1 deletion(-)
+> > Want to send a patch? There seem to be a few more places as well,
+> 
+> I am working on a 3.18 kernel; so I can either make the patch from
+> an old compat-wireless, or make the patch from your last tree but
+> I cannot test it; are you interested anyways?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 6db3389e2ced..762a29cdf7ad 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -1549,7 +1549,6 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
- 		/* EAPOL is seens as in-4way */
- 		rtlpriv->btcoexist.btc_info.in_4way = true;
- 		rtlpriv->btcoexist.btc_info.in_4way_ts = jiffies;
--	rtlpriv->btcoexist.btc_info.in_4way_ts = jiffies;
- 
- 		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
- 			 "802.1X %s EAPOL pkt!!\n", (is_tx) ? "Tx" : "Rx");
--- 
-2.15.1
+The only useful patch would be on the last tree. :-)
+
+> > e.g.
+> > in rx.c for cfg80211_report_obss_beacon() and cfg80211_rx_mgmt().
+> 
+> There is also mlme.c, the ifmgd->ave_beacon_signal should not be updated
+> with an invalid signal;
+> and in the last tree, the ibss join passes an uninitialized signal
+> value to cfg80211_inform_bss_frame_data().
+
+Good catch!
+
+johannes
