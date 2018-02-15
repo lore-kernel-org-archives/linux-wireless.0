@@ -1,69 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0069.outbound.protection.outlook.com ([104.47.36.69]:44244
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753202AbeBEPFq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Feb 2018 10:05:46 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 4/6] qtnfmac: fix rmmod for missing firmware
-Date: Mon,  5 Feb 2018 18:05:14 +0300
-Message-Id: <20180205150516.16030-5-sergey.matyukevich.os@quantenna.com> (sfid-20180205_160632_202758_0C38C9AB)
-In-Reply-To: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
-References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.codeaurora.org ([198.145.29.96]:58624 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755206AbeBOItT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Feb 2018 03:49:19 -0500
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 07/13] ath10k: Add hif tx methods for wcn3990
+Date: Thu, 15 Feb 2018 14:19:13 +0530
+Message-Id: <1518684553-5663-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_094925_809176_CE26A7E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check that firmware exists prior to starting firmware download.
+Add hif tx/tx-complete methods for wcn3990
+target.
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/net/wireless/ath/ath10k/snoc.c | 123 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 120 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-index c0d1c5d94ef0..86368e345276 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-@@ -1104,6 +1104,20 @@ static void qtnf_firmware_load(const struct firmware *fw, void *context)
- 	complete(&bus->request_firmware_complete);
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 9d402e4..899f0a3 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -42,6 +42,9 @@
+ 	"WLAN_CE_11",
+ };
+ 
++static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_snoc_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
++
+ static const struct ath10k_snoc_drv_priv drv_priv = {
+ 	.hw_rev = ATH10K_HW_WCN3990,
+ 	.dma_mask = DMA_BIT_MASK(37),
+@@ -54,7 +57,7 @@
+ 		.src_nentries = 16,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 0,
+-		.send_cb = NULL,
++		.send_cb = ath10k_snoc_htc_tx_cb,
+ 	},
+ 
+ 	/* CE1: target->host HTT + HTC control */
+@@ -81,7 +84,7 @@
+ 		.src_nentries = 32,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 0,
+-		.send_cb = NULL,
++		.send_cb = ath10k_snoc_htc_tx_cb,
+ 	},
+ 
+ 	/* CE4: host->target HTT */
+@@ -90,7 +93,7 @@
+ 		.src_nentries = 256,
+ 		.src_sz_max = 256,
+ 		.dest_nentries = 0,
+-		.send_cb = NULL,
++		.send_cb = ath10k_snoc_htt_tx_cb,
+ 	},
+ 
+ 	/* CE5: target->host HTT (ipa_uc->target ) */
+@@ -359,6 +362,117 @@ static void ath10k_snoc_rx_post(struct ath10k *ar)
+ 		ath10k_snoc_rx_post_pipe(&ar_snoc->pipe_info[i]);
  }
  
-+static int qtnf_fw_exists(struct qtnf_bus *bus)
++static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state)
 +{
-+	struct qtnf_pcie_bus_priv *priv = (void *)get_bus_priv(bus);
-+	struct pci_dev *pdev = priv->pdev;
-+	const struct firmware *fw;
-+	int ret;
++	struct ath10k *ar = ce_state->ar;
++	struct sk_buff_head list;
++	struct sk_buff *skb;
 +
-+	ret = request_firmware(&fw, bus->fwname, &pdev->dev);
-+	if (!ret)
-+		release_firmware(fw);
++	__skb_queue_head_init(&list);
++	while (ath10k_ce_completed_send_next(ce_state, (void **)&skb) == 0) {
++		if (!skb)
++			continue;
 +
-+	return !ret;
-+}
-+
- static int qtnf_bringup_fw(struct qtnf_bus *bus)
- {
- 	struct qtnf_pcie_bus_priv *priv = (void *)get_bus_priv(bus);
-@@ -1358,6 +1372,12 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	netif_napi_add(&bus->mux_dev, &bus->mux_napi,
- 		       qtnf_rx_poll, 10);
- 
-+	if (!flashboot && !qtnf_fw_exists(bus)) {
-+		pr_err("failed to get firmware %s\n", bus->fwname);
-+		ret = -ENOENT;
-+		goto err_fw;
++		__skb_queue_tail(&list, skb);
 +	}
 +
- 	ret = qtnf_bringup_fw(bus);
- 	if (ret < 0)
- 		goto err_fw;
++	while ((skb = __skb_dequeue(&list)))
++		ath10k_htc_tx_completion_handler(ar, skb);
++}
++
++static void ath10k_snoc_htt_tx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	struct ath10k *ar = ce_state->ar;
++	struct sk_buff *skb;
++
++	while (ath10k_ce_completed_send_next(ce_state, (void **)&skb) == 0) {
++		if (!skb)
++			continue;
++
++		dma_unmap_single(ar->dev, ATH10K_SKB_CB(skb)->paddr,
++				 skb->len, DMA_TO_DEVICE);
++		ath10k_htt_hif_tx_complete(ar, skb);
++	}
++}
++
++static int ath10k_snoc_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
++				 struct ath10k_hif_sg_item *items, int n_items)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	struct ath10k_ce *ce = ath10k_ce_priv(ar);
++	struct ath10k_snoc_pipe *snoc_pipe;
++	struct ath10k_ce_pipe *ce_pipe;
++	int err, i = 0;
++
++	snoc_pipe = &ar_snoc->pipe_info[pipe_id];
++	ce_pipe = snoc_pipe->ce_hdl;
++	spin_lock_bh(&ce->ce_lock);
++
++	for (i = 0; i < n_items - 1; i++) {
++		ath10k_dbg(ar, ATH10K_DBG_SNOC,
++			   "snoc tx item %d paddr %pad len %d n_items %d\n",
++			   i, &items[i].paddr, items[i].len, n_items);
++
++		err = ath10k_ce_send_nolock(ce_pipe,
++					    items[i].transfer_context,
++					    items[i].paddr,
++					    items[i].len,
++					    items[i].transfer_id,
++					    CE_SEND_FLAG_GATHER);
++		if (err)
++			goto err;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_SNOC,
++		   "snoc tx item %d paddr %pad len %d n_items %d\n",
++		   i, &items[i].paddr, items[i].len, n_items);
++
++	err = ath10k_ce_send_nolock(ce_pipe,
++				    items[i].transfer_context,
++				    items[i].paddr,
++				    items[i].len,
++				    items[i].transfer_id,
++				    0);
++	if (err)
++		goto err;
++
++	spin_unlock_bh(&ce->ce_lock);
++
++	return 0;
++
++err:
++	for (; i > 0; i--)
++		__ath10k_ce_send_revert(ce_pipe);
++
++	spin_unlock_bh(&ce->ce_lock);
++	return err;
++}
++
++static u16 ath10k_snoc_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++
++	ath10k_dbg(ar, ATH10K_DBG_SNOC, "hif get free queue number\n");
++
++	return ath10k_ce_num_free_src_entries(ar_snoc->pipe_info[pipe].ce_hdl);
++}
++
++static void ath10k_snoc_hif_send_complete_check(struct ath10k *ar, u8 pipe,
++						int force)
++{
++	int resources;
++
++	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc hif send complete check\n");
++
++	if (!force) {
++		resources = ath10k_snoc_hif_get_free_queue_number(ar, pipe);
++
++		if (resources > (host_ce_config_wlan[pipe].src_nentries >> 1))
++			return;
++	}
++	ath10k_ce_per_engine_service(ar, pipe);
++}
++
+ static int ath10k_snoc_hif_map_service_to_pipe(struct ath10k *ar,
+ 					       u16 service_id,
+ 					       u8 *ul_pipe, u8 *dl_pipe)
+@@ -587,6 +701,9 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
+ 	.get_default_pipe	= ath10k_snoc_hif_get_default_pipe,
+ 	.power_up		= ath10k_snoc_hif_power_up,
+ 	.power_down		= ath10k_snoc_hif_power_down,
++	.tx_sg			= ath10k_snoc_hif_tx_sg,
++	.send_complete_check	= ath10k_snoc_hif_send_complete_check,
++	.get_free_queue_number	= ath10k_snoc_hif_get_free_queue_number,
+ };
+ 
+ static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
 -- 
-2.11.0
+1.9.1
