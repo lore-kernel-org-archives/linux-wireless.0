@@ -1,80 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:44352 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752720AbeBUI4k (ORCPT
+Received: from mail-qt0-f169.google.com ([209.85.216.169]:36184 "EHLO
+        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030334AbeBOMqe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 03:56:40 -0500
-Received: by mail-qk0-f195.google.com with SMTP id v124so1011299qkh.11
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2018 00:56:40 -0800 (PST)
-Subject: Re: [PATCH 0/3] Export TXQ parameters and statistics via nl80211
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-References: <20180219170224.14816-1-toke@toke.dk>
+        Thu, 15 Feb 2018 07:46:34 -0500
+Received: by mail-qt0-f169.google.com with SMTP id q18so11704323qtl.3
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2018 04:46:34 -0800 (PST)
+Subject: Re: Make brcmfmac repeat authentication requests
+To: Daniel Drake <drake@endlessm.com>
+References: <CAD8Lp47D5sGCpxSiFYQviu0a62W4aj-5Sgs6sjE7E2cZWwsUwg@mail.gmail.com>
+ <5A82B4F8.2090209@broadcom.com>
+ <CAD8Lp46ta_mQriB1eOJxnTmgoy5n5T9_AyNpVKuL2C4uuLrf3g@mail.gmail.com>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Linux Upstreaming Team <linux@endlessm.com>
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A8D3445.3040300@broadcom.com> (sfid-20180221_095653_630631_05B6E2D5)
-Date: Wed, 21 Feb 2018 09:56:37 +0100
+Message-ID: <5A858127.1030904@broadcom.com> (sfid-20180215_134653_502937_F2405024)
+Date: Thu, 15 Feb 2018 13:46:31 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180219170224.14816-1-toke@toke.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAD8Lp46ta_mQriB1eOJxnTmgoy5n5T9_AyNpVKuL2C4uuLrf3g@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/19/2018 6:02 PM, Toke Høiland-Jørgensen wrote:
-> This series adds TXQ parameters and statistics that were previously only
-> available through debugfs to the nl80211 userspace interface and the
-> cfg80211 kernel interface. Patches for iw to print the statistics and
-> change the settings are included.
+On 2/14/2018 2:03 PM, Daniel Drake wrote:
+> Hi,
+>
+> Thanks for the fast response.
+>
+> On Tue, Feb 13, 2018 at 12:50 PM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> I tried to find info about that access point equipment, but not getting any
+>> hits apart from a olivetti laser printer, but I doubt it is that. Can you
+>> provide more details.
+>
+> The device itself is basically unbranded (just says "4G LTE"). It's an
+> access point and mifi bridge (so insert a sim card and it shares your
+> mobile data connection on the LAN). It comes as part of a solar home
+> solutions package.
+>
+> MF928 is listed as the product name behind the battery. In the web UI
+> it says it is from the EV910 product family, hardware version
+> LR521_V1.0. I can't find info online about it.
 
-So what is your motivation for having this exposed through nl80211. For 
-the average end-user the stats and parameters are fairly fuzzy. So can 
-we expect some manual in which is described what parameter should be 
-tweaked based on the retrieved statistics.
+Probably it is from ZTE although I could not find the MF928 specifically.
 
-Also do you intend to remove the debugfs method? Seems a bit redundant 
-to have two mostly identical interfaces in place.
+>> User-space (wpa_supplicant) would retry the connect attempt so I guess you
+>> are saying that the timing between the two auth requests is important?
+>
+> Yes, the error goes up to userspace which then retries. However around
+> 15 seconds pass before the authentication request is sent again, and
+> also as part of the retry it redoes the probe requests etc. Windows
+> does the same but there is only a 3 second delay. I haven't checked if
+> this device needs the authentication request resent in less than 3
+> seconds, or if the problem is that it needs to be sent twice in
+> consecutive frames (i.e. without another probe request in the middle).
+>
+>> Is firmware not repeating at all or is the time between the two auth
+>> requests too long?
+>
+> Firmware is not repeating at all.
+>
+>> Checking firmware there is a 300ms timeout and it does a retry if the limit
+>> is not reached. However, that limit is initialized to zero :-p
+>>
+>> Could you try the patch below?
+>
+> Thanks for looking into the firmware! Unfortunately the change does
+> not appear to make any difference. As before, the auth request is
+> ACKed by the AP but then the conversation halts until userspace steps
+> in on timeout a few seconds later.
 
-> Wasn't sure whether to include the updates to nl80211.h in the iw
-> patchset, so I didn't :)
-
-Updating the nl80211.h in iw should be done with a copy from the kernel 
-so it has to wait for the kernel patch to be applied (which tree I am 
-unsure).
+Ok. Could you create a log with driver debugging enabled, ie. build 
+driver CONFIG_BRCMDBG=y and load with module param 'debug=0x1416'. The 
+problem is probably when the firmware is configured.
 
 Regards,
 Arend
 
-> -Toke
+> Daniel
 >
 >
-> Kernel patch:
->
-> Toke Høiland-Jørgensen (1):
->    cfg80211: Expose TXQ stats and parameters to userspace
->
->   include/net/cfg80211.h       |  52 +++++++++++++++++++
->   include/uapi/linux/nl80211.h |  57 +++++++++++++++++++++
->   net/mac80211/cfg.c           |  95 +++++++++++++++++++++++++++++++++++
->   net/mac80211/ieee80211_i.h   |   3 ++
->   net/mac80211/main.c          |   3 ++
->   net/mac80211/sta_info.c      |  12 +++++
->   net/mac80211/tx.c            |  20 ++++++++
->   net/wireless/nl80211.c       | 115 +++++++++++++++++++++++++++++++++++++++++++
->   net/wireless/rdev-ops.h      |  12 +++++
->   net/wireless/trace.h         |  14 ++++++
->   10 files changed, 383 insertions(+)
->
->
-> iw patches (updated nl80211.h not included):
->
-> Toke Høiland-Jørgensen (2):
->    iw: Print TXQ statistics for stations and interfaces
->    iw: Add getting and setting of TXQ params for phy
->
->   info.c      |   3 ++
->   interface.c |   6 ++++
->   iw.h        |   2 ++
->   phy.c       | 116 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->   station.c   |  91 ++++++++++++++++++++++++++++++++++++++++++++++-
->   5 files changed, 217 insertions(+), 1 deletion(-)
->
+>> Regards,
+>> Arend
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> b/drivers
+>> index 19686ef..af1ab00 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> @@ -384,6 +384,9 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+>>                  goto done;
+>>          }
+>>
+>> +       /* allow join retry by firmware */
+>> +       (void)brcmf_fil_iovar_int_set(ifp, "assoc_retry_max", 1);
+>> +
+>>          /* Enable tx beamforming, errors can be ignored (not supported) */
+>>          (void)brcmf_fil_iovar_int_set(ifp, "txbf", 1);
+>>
