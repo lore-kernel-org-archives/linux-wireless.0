@@ -1,31 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:55646 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751366AbeBWL3n (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 06:29:43 -0500
-Message-ID: <1519385379.2231.10.camel@sipsolutions.net> (sfid-20180223_122947_383387_256D20AD)
-Subject: Re: pull-request: mac80211-next 2018-02-22
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Fri, 23 Feb 2018 12:29:39 +0100
-In-Reply-To: <20180222.151902.347947675667607885.davem@davemloft.net>
-References: <20180222201619.30037-1-johannes@sipsolutions.net>
-         <20180222.151902.347947675667607885.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx3.wp.pl ([212.77.101.9]:31260 "EHLO mx3.wp.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1164330AbeBOXOx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Feb 2018 18:14:53 -0500
+Date: Thu, 15 Feb 2018 15:14:45 -0800
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt7601u: make write with mask access atomic
+Message-ID: <20180215151445.52e08b03@cakuba.netronome.com> (sfid-20180216_001457_230184_E926C095)
+In-Reply-To: <5bb3bb069bdd4663b69b60b782432c2faddc1efc.1518734856.git.lorenzo.bianconi@redhat.com>
+References: <cover.1518734856.git.lorenzo.bianconi@redhat.com>
+        <5bb3bb069bdd4663b69b60b782432c2faddc1efc.1518734856.git.lorenzo.bianconi@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-02-22 at 15:19 -0500, David Miller wrote:
+On Thu, 15 Feb 2018 23:59:24 +0100, Lorenzo Bianconi wrote:
+> Introduce __mt7601u_rr and __mt7601u_vendor_single_wr routines in order
+> to make mt7601u_rmw and mt7601u_rmc atomic since it is possible that
+> read and write accesses of mt7601u_rmw/mt7601u_rmc can be interleaved
+> with a different write operation on the same register.
+> Moreover move write trace point in __mt7601u_vendor_single_wr
 > 
-> Pulled, thank you!
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Thanks. I just realized that I have a patch pending for -next that
-depends another commit in net/mac80211 (or would otherwise conflict
-badly while applying, and again while merging later), could I ask you
-to pull net into net-next at some point now?
-
-Thanks,
-johannes
+Could you provide an example of which accesses make it problematic?
+Is this fixing an actual bug?
