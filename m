@@ -1,39 +1,356 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50924 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:58834 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750997AbeB0QOt (ORCPT
+        with ESMTP id S1755142AbeBOItn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:14:49 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ssb: return boolean instead of integer in
- ssb_dma_translation_special_bit
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180118235428.GA25892@embeddedor.com>
-References: <20180118235428.GA25892@embeddedor.com>
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Cc: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Message-Id: <20180227161448.CD2C860849@smtp.codeaurora.org> (sfid-20180227_171504_603632_43A261B6)
-Date: Tue, 27 Feb 2018 16:14:48 +0000 (UTC)
+        Thu, 15 Feb 2018 03:49:43 -0500
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 08/13] ath10k: Add hif rx methods for wcn3990
+Date: Thu, 15 Feb 2018 14:19:33 +0530
+Message-Id: <1518684573-5714-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_094947_011186_C135A98A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gustavo A. R. Silva" <garsilva@embeddedor.com> wrote:
+Add hif rx methods in rx path for wcn3990
+target.
 
-> Return statements in functions returning bool should use
-> true/false instead of 1/0.
-> 
-> This issue was detected with the help of Coccinelle.
-> 
-> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 171 +++++++++++++++++++++++++++++----
+ 1 file changed, 153 insertions(+), 18 deletions(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-bd42cd022e44 ssb: return boolean instead of integer in ssb_dma_translation_special_bit
-
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 899f0a3..6d9ccce 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -26,6 +26,7 @@
+ #include <linux/platform_device.h>
+ #define  WCN3990_CE_ATTR_FLAGS 0
+ #define ATH10K_SNOC_RX_POST_RETRY_MS 50
++#define CE_POLL_PIPE 4
+ 
+ static char *const ce_name[] = {
+ 	"WLAN_CE_0",
+@@ -44,6 +45,9 @@
+ 
+ static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_snoc_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_snoc_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_snoc_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_snoc_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ 
+ static const struct ath10k_snoc_drv_priv drv_priv = {
+ 	.hw_rev = ATH10K_HW_WCN3990,
+@@ -53,7 +57,7 @@
+ static struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control streams */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 16,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 0,
+@@ -62,25 +66,25 @@
+ 
+ 	/* CE1: target->host HTT + HTC control */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_htc_rx_cb,
+ 	},
+ 
+ 	/* CE2: target->host WMI */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 64,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htc_rx_cb,
+ 	},
+ 
+ 	/* CE3: host->target WMI */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 32,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 0,
+@@ -89,7 +93,7 @@
+ 
+ 	/* CE4: host->target HTT */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
++		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
+ 		.src_nentries = 256,
+ 		.src_sz_max = 256,
+ 		.dest_nentries = 0,
+@@ -98,16 +102,16 @@
+ 
+ 	/* CE5: target->host HTT (ipa_uc->target ) */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 512,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_rx_cb,
+ 	},
+ 
+ 	/* CE6: target autonomous hif_memcpy */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 0,
+ 		.dest_nentries = 0,
+@@ -115,7 +119,7 @@
+ 
+ 	/* CE7: ce_diag, the Diagnostic Window */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 2,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 2,
+@@ -123,7 +127,7 @@
+ 
+ 	/* CE8: Target to uMC */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 128,
+@@ -131,29 +135,29 @@
+ 
+ 	/* CE9 target->host HTT */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_htc_rx_cb,
+ 	},
+ 
+ 	/* CE10: target->host HTT */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_htc_rx_cb,
+ 	},
+ 
+ 	/* CE11: target -> host PKTLOG */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_htc_rx_cb,
+ 	},
+ };
+ 
+@@ -362,6 +366,82 @@ static void ath10k_snoc_rx_post(struct ath10k *ar)
+ 		ath10k_snoc_rx_post_pipe(&ar_snoc->pipe_info[i]);
+ }
+ 
++static void ath10k_snoc_process_rx_cb(struct ath10k_ce_pipe *ce_state,
++				      void (*callback)(struct ath10k *ar,
++						       struct sk_buff *skb))
++{
++	struct ath10k *ar = ce_state->ar;
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	struct ath10k_snoc_pipe *pipe_info =  &ar_snoc->pipe_info[ce_state->id];
++	struct sk_buff *skb;
++	struct sk_buff_head list;
++	void *transfer_context;
++	unsigned int nbytes, max_nbytes;
++
++	__skb_queue_head_init(&list);
++	while (ath10k_ce_completed_recv_next(ce_state, &transfer_context,
++					     &nbytes) == 0) {
++		skb = transfer_context;
++		max_nbytes = skb->len + skb_tailroom(skb);
++		dma_unmap_single(ar->dev, ATH10K_SKB_RXCB(skb)->paddr,
++				 max_nbytes, DMA_FROM_DEVICE);
++
++		if (unlikely(max_nbytes < nbytes)) {
++			ath10k_warn(ar, "rxed more than expected (nbytes %d, max %d)",
++				    nbytes, max_nbytes);
++			dev_kfree_skb_any(skb);
++			continue;
++		}
++
++		skb_put(skb, nbytes);
++		__skb_queue_tail(&list, skb);
++	}
++
++	while ((skb = __skb_dequeue(&list))) {
++		ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc rx ce pipe %d len %d\n",
++			   ce_state->id, skb->len);
++
++		callback(ar, skb);
++	}
++
++	ath10k_snoc_rx_post_pipe(pipe_info);
++}
++
++static void ath10k_snoc_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	ath10k_snoc_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
++}
++
++static void ath10k_snoc_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	/* CE4 polling needs to be done whenever CE pipe which transports
++	 * HTT Rx (target->host) is processed.
++	 */
++	ath10k_ce_per_engine_service(ce_state->ar, CE_POLL_PIPE);
++
++	ath10k_snoc_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
++}
++
++static void ath10k_snoc_htt_rx_deliver(struct ath10k *ar, struct sk_buff *skb)
++{
++	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
++	ath10k_htt_t2h_msg_handler(ar, skb);
++}
++
++static void ath10k_snoc_htt_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	ath10k_ce_per_engine_service(ce_state->ar, CE_POLL_PIPE);
++	ath10k_snoc_process_rx_cb(ce_state, ath10k_snoc_htt_rx_deliver);
++}
++
++static void ath10k_snoc_rx_replenish_retry(struct timer_list *t)
++{
++	struct ath10k_pci *ar_snoc = from_timer(ar_snoc, t, rx_post_retry);
++	struct ath10k *ar = ar_snoc->ar;
++
++	ath10k_snoc_rx_post(ar);
++}
++
+ static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state)
+ {
+ 	struct ath10k *ar = ce_state->ar;
+@@ -620,6 +700,8 @@ static void ath10k_snoc_hif_stop(struct ath10k *ar)
+ {
+ 	ath10k_snoc_irq_disable(ar);
+ 	ath10k_snoc_buffer_cleanup(ar);
++	napi_synchronize(&ar->napi);
++	napi_disable(&ar->napi);
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif stop\n");
+ }
+ 
+@@ -684,6 +766,7 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
+ 		goto err_wlan_enable;
+ 	}
+ 
++	napi_enable(&ar->napi);
+ 	return 0;
+ 
+ err_wlan_enable:
+@@ -711,11 +794,60 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
+ 	.write32	= ath10k_snoc_write32,
+ };
+ 
++int ath10k_snoc_get_ce_id_from_irq(struct ath10k *ar, int irq)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	int i;
++
++	for (i = 0; i < CE_COUNT_MAX; i++) {
++		if (ar_snoc->ce_irqs[i].irq_line == irq)
++			return i;
++	}
++	ath10k_err(ar, "No matching CE id for irq %d\n", irq);
++
++	return -EINVAL;
++}
++
+ static irqreturn_t ath10k_snoc_per_engine_handler(int irq, void *arg)
+ {
++	struct ath10k *ar = arg;
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	int ce_id = ath10k_snoc_get_ce_id_from_irq(ar, irq);
++
++	if (ce_id < 0 || ce_id >= ARRAY_SIZE(ar_snoc->pipe_info)) {
++		ath10k_warn(ar, "unexpected/invalid irq %d ce_id %d\n", irq,
++			    ce_id);
++		return IRQ_HANDLED;
++	}
++
++	ath10k_snoc_irq_disable(ar);
++	napi_schedule(&ar->napi);
++
+ 	return IRQ_HANDLED;
+ }
+ 
++static int ath10k_snoc_napi_poll(struct napi_struct *ctx, int budget)
++{
++	struct ath10k *ar = container_of(ctx, struct ath10k, napi);
++	int done = 0;
++
++	ath10k_ce_per_engine_service_any(ar);
++	done = ath10k_htt_txrx_compl_task(ar, budget);
++
++	if (done < budget) {
++		napi_complete(ctx);
++		ath10k_snoc_irq_enable(ar);
++	}
++
++	return done;
++}
++
++void ath10k_snoc_init_napi(struct ath10k *ar)
++{
++	netif_napi_add(&ar->napi_dev, &ar->napi, ath10k_snoc_napi_poll,
++		       ATH10K_NAPI_BUDGET);
++}
++
+ static int ath10k_snoc_request_irq(struct ath10k *ar)
+ {
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+@@ -796,6 +928,7 @@ static int ath10k_snoc_setup_resource(struct ath10k *ar)
+ 	struct ath10k_snoc_pipe *pipe;
+ 	int i, ret;
+ 
++	timer_setup(&ar_snoc->rx_post_retry, ath10k_snoc_rx_replenish_retry, 0);
+ 	spin_lock_init(&ce->ce_lock);
+ 	for (i = 0; i < CE_COUNT; i++) {
+ 		pipe = &ar_snoc->pipe_info[i];
+@@ -812,6 +945,7 @@ static int ath10k_snoc_setup_resource(struct ath10k *ar)
+ 
+ 		pipe->buf_sz = host_ce_config_wlan[i].src_sz_max;
+ 	}
++	ath10k_snoc_init_napi(ar);
+ 
+ 	return 0;
+ }
+@@ -820,6 +954,7 @@ static void ath10k_snoc_release_resource(struct ath10k *ar)
+ {
+ 	int i;
+ 
++	netif_napi_del(&ar->napi);
+ 	for (i = 0; i < CE_COUNT; i++)
+ 		ath10k_ce_free_pipe(ar, i);
+ }
 -- 
-https://patchwork.kernel.org/patch/10174387/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
