@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:46374 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbeBVUWI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58124 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755154AbeBOIsX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 15:22:08 -0500
-Message-ID: <1519330924.2637.18.camel@sipsolutions.net> (sfid-20180222_212212_368183_475B09B2)
-Subject: Re: pull-request: mac80211-next 2018-02-22
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Thu, 22 Feb 2018 21:22:04 +0100
-In-Reply-To: <20180222.151902.347947675667607885.davem@davemloft.net>
-References: <20180222201619.30037-1-johannes@sipsolutions.net>
-         <20180222.151902.347947675667607885.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 15 Feb 2018 03:48:23 -0500
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 04/13] ath10k: Add HTC services for WCN3990
+Date: Thu, 15 Feb 2018 14:18:17 +0530
+Message-Id: <1518684497-5495-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_094826_680284_CBC8C057)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-02-22 at 15:19 -0500, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Thu, 22 Feb 2018 21:16:18 +0100
-> 
-> > Wireless is slow ... but we're preparing for HE (802.11ax),
-> > so I guess soon we'll have a big chunk of work coming :-)
-> 
-> I wondered where you guys have been hiding :-)
+WCN3990 target uses 3 Copy engine(CE1/CE9/CE10) in RX path
+and CE 11 for pktlog.
+Add data path HTC ep services and PKTLOG services for WCN3990.
 
-Yeah, I don't like this development model much, but the spec isn't
-finished yet and every time I look at an area I end up changing it
-*again* which isn't fun to do upstream :-)
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 6 ++++++
+ drivers/net/wireless/ath/ath10k/htc.h | 4 ++++
+ 2 files changed, 10 insertions(+)
 
-(Was just doing the HE sniffer stuff in radiotap these days ... uh,
-yeah, I've more or less rewritten it twice already - hopefully no more)
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 492dc5b..8902720 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -542,8 +542,14 @@ static const char *htc_service_name(enum ath10k_htc_svc_id id)
+ 		return "NMI Data";
+ 	case ATH10K_HTC_SVC_ID_HTT_DATA_MSG:
+ 		return "HTT Data";
++	case ATH10K_HTC_SVC_ID_HTT_DATA2_MSG:
++		return "HTT Data";
++	case ATH10K_HTC_SVC_ID_HTT_DATA3_MSG:
++		return "HTT Data";
+ 	case ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS:
+ 		return "RAW";
++	case ATH10K_HTC_SVC_ID_HTT_LOG_MSG:
++		return "PKTLOG";
+ 	}
+ 
+ 	return "Unknown";
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index a2f8814..3487759 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -248,6 +248,7 @@ enum ath10k_htc_svc_gid {
+ 	ATH10K_HTC_SVC_GRP_WMI = 1,
+ 	ATH10K_HTC_SVC_GRP_NMI = 2,
+ 	ATH10K_HTC_SVC_GRP_HTT = 3,
++	ATH10K_LOG_SERVICE_GROUP = 6,
+ 
+ 	ATH10K_HTC_SVC_GRP_TEST = 254,
+ 	ATH10K_HTC_SVC_GRP_LAST = 255,
+@@ -273,6 +274,9 @@ enum ath10k_htc_svc_id {
+ 
+ 	ATH10K_HTC_SVC_ID_HTT_DATA_MSG	= SVC(ATH10K_HTC_SVC_GRP_HTT, 0),
+ 
++	ATH10K_HTC_SVC_ID_HTT_DATA2_MSG = SVC(ATH10K_HTC_SVC_GRP_HTT, 1),
++	ATH10K_HTC_SVC_ID_HTT_DATA3_MSG = SVC(ATH10K_HTC_SVC_GRP_HTT, 2),
++	ATH10K_HTC_SVC_ID_HTT_LOG_MSG = SVC(ATH10K_LOG_SERVICE_GROUP, 0),
+ 	/* raw stream service (i.e. flash, tcmd, calibration apps) */
+ 	ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS = SVC(ATH10K_HTC_SVC_GRP_TEST, 0),
+ };
+-- 
+1.9.1
