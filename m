@@ -1,35 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:33618 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751455AbeBWP26 (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:37653 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032283AbeBOOFz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 10:28:58 -0500
-Date: Fri, 23 Feb 2018 10:28:55 -0500 (EST)
-Message-Id: <20180223.102855.480775675752406143.davem@davemloft.net> (sfid-20180223_162905_579672_152CFA8A)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2018-02-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1519385379.2231.10.camel@sipsolutions.net>
-References: <20180222201619.30037-1-johannes@sipsolutions.net>
-        <20180222.151902.347947675667607885.davem@davemloft.net>
-        <1519385379.2231.10.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Thu, 15 Feb 2018 09:05:55 -0500
+MIME-Version: 1.0
+In-Reply-To: <1518684977-14607-1-git-send-email-govinds@codeaurora.org>
+References: <1518684977-14607-1-git-send-email-govinds@codeaurora.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 16 Feb 2018 01:05:33 +1100
+Message-ID: <CAGRGNgVtOuPwejDi-1Bux+1mGTTup0Mcf4ED-OBcn3z8=atpNQ@mail.gmail.com> (sfid-20180215_150559_495594_5E211C75)
+Subject: Re: [PATCH 13/13] dt: bindings: add bindings for wcn3990 wifi block
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        devicetree <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 23 Feb 2018 12:29:39 +0100
+Hi Govind,
 
-> On Thu, 2018-02-22 at 15:19 -0500, David Miller wrote:
->> 
->> Pulled, thank you!
-> 
-> Thanks. I just realized that I have a patch pending for -next that
-> depends another commit in net/mac80211 (or would otherwise conflict
-> badly while applying, and again while merging later), could I ask you
-> to pull net into net-next at some point now?
+On Thu, Feb 15, 2018 at 7:56 PM, Govind Singh <govinds@codeaurora.org> wrote:
+> Add device tree binding documentation details for wcn3990
+> wifi block present in Qualcomm SDM845/APQ8098 SoC into
+> "qcom,ath10k.txt".
+>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  .../bindings/net/wireless/qcom,ath10k.txt          | 35 ++++++++++++++++++++++
+>  1 file changed, 35 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> index 3d2a031..07b0f13 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> @@ -4,6 +4,7 @@ Required properties:
+>  - compatible: Should be one of the following:
+>         * "qcom,ath10k"
+>         * "qcom,ipq4019-wifi"
+> +       * "qcom,wcn3990-wifi"
+>
+>  PCI based devices uses compatible string "qcom,ath10k" and takes calibration
+>  data along with board specific data via "qcom,ath10k-calibration-data".
+> @@ -18,8 +19,11 @@ In general, entry "qcom,ath10k-pre-calibration-data" and
+>  "qcom,ath10k-calibration-data" conflict with each other and only one
+>  can be provided per device.
+>
+> +SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-wifi".
+> +
+>  Optional properties:
+>  - reg: Address and length of the register set for the device.
+> +- reg-names: Names of the memory regions defined in reg entry.
+>  - resets: Must contain an entry for each entry in reset-names.
+>            See ../reset/reseti.txt for details.
+>  - reset-names: Must include the list of following reset names,
+> @@ -49,6 +53,12 @@ Optional properties:
+>                                  hw versions.
+>  - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
+>                                      the length can vary between hw versions.
+> +- qcom,<supply-name>-supply: handle to the regulator device tree node
+> +                          optional "supply-name" is "vdd-0.8-cx-mx".
+> +- qcom,<supply>-config: Specifies voltage levels for supply. Should be
+> +                         specified in pairs (min, max), units uV.  There can
+> +                          be optional load in uA and Regulator settle delay in
+> +                          uS.
+>
+>  Example (to supply the calibration data alone):
+>
+> @@ -119,3 +129,28 @@ wifi0: wifi@a000000 {
+>         qcom,msi_base = <0x40>;
+>         qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
+>  };
+> +
+> +Example (to supply wcn3990 SoC wifi block details):
+> +
+> +qcom,msm_ath10k@18000000 {
+> +               compatible = "qcom,wcn3990-wifi";
+> +               reg = <0x18800000 0x800000>;
+> +               reg-names = "membase";
+> +               clocks = <&clock_gcc clk_aggre2_noc_clk>;
+> +               clock-names = "smmu_aggre2_noc_clk"
+> +               interrupts =
+> +                          <0 130 0 /* CE0 */ >,
+> +                          <0 131 0 /* CE1 */ >,
+> +                          <0 132 0 /* CE2 */ >,
+> +                          <0 133 0 /* CE3 */ >,
+> +                          <0 134 0 /* CE4 */ >,
+> +                          <0 135 0 /* CE5 */ >,
+> +                          <0 136 0 /* CE6 */ >,
+> +                          <0 137 0 /* CE7 */ >,
+> +                          <0 138 0 /* CE8 */ >,
+> +                          <0 139 0 /* CE9 */ >,
+> +                          <0 140 0 /* CE10 */ >,
+> +                          <0 141 0 /* CE11 */ >;
+> +               vdd-0.8-cx-mx-supply = <&pm8998_l5>;
 
-I'll get that to happen in the next day or two.  Pablo asked for this
-as well.
+You've omitted the "qcom," you specify above.
+
+> +               qcom,vdd-0.8-cx-mx-config = <800000 800000 2400 1000>;
+> +};
+> --
+> 1.9.1
+>
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
