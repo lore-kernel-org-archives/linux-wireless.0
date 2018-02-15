@@ -1,278 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0069.outbound.protection.outlook.com ([104.47.36.69]:44244
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-eopbgr20093.outbound.protection.outlook.com ([40.107.2.93]:45086
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753202AbeBEPGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Feb 2018 10:06:07 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: [PATCH 6/6] qtnfmac: enable networked standby mode on device inactivity
-Date: Mon,  5 Feb 2018 18:05:16 +0300
-Message-Id: <20180205150516.16030-7-sergey.matyukevich.os@quantenna.com> (sfid-20180205_160633_450597_8D1DF27D)
-In-Reply-To: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
-References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
+        id S1424181AbeBOQ3e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Feb 2018 11:29:34 -0500
+From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
+To: Felix Fietkau <nbd@nbd.name>, Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
+Subject: RE: [PATCH v2] ath9k: mark RSSI as invalid if frame received during
+ channel setup
+Date: Thu, 15 Feb 2018 16:29:30 +0000
+Message-ID: <AM4PR0101MB2305EDDB062F2F8F027330B7E4F40@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180215_173018_209933_3589D5E0)
+References: <AM4PR0101MB230538DEEFCFFC0E0F4437A2E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+ <ab149f51-bd2e-871c-b429-2772dfa1b48c@nbd.name>
+In-Reply-To: <ab149f51-bd2e-871c-b429-2772dfa1b48c@nbd.name>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sergei Maksimenko <smaksimenko@quantenna.com>
-
-Enable support of networked standby mode (NSM) on qsr10g devices.
-Networked standby is a power saving mode when the device keeps
-all existing network connections and returns to full power mode
-on a network activity. When enabled, device enters standby mode
-after 15 min of inactivity (no associated stations or no trattic).
-This period can be changed by setting sysfs attribute standby_timeout
-(0 disables NSM support). A module parameter auto_standby
-(defaults to 1) controls enabling NSM support on module loading.
-
-Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/bus.h      |  1 +
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 33 ++++++++++
- drivers/net/wireless/quantenna/qtnfmac/commands.h |  1 +
- drivers/net/wireless/quantenna/qtnfmac/core.c     | 77 +++++++++++++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/core.h     |  2 +
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 30 +++++++++
- 6 files changed, 144 insertions(+)
-
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/bus.h b/drivers/net/wireless/quantenna/qtnfmac/bus.h
-index 0a1604683bab..7a27ffc6c7a7 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/bus.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/bus.h
-@@ -65,6 +65,7 @@ struct qtnf_bus {
- 	struct work_struct event_work;
- 	struct mutex bus_lock; /* lock during command/event processing */
- 	struct dentry *dbg_dir;
-+	u32 standby_timeout;
- 	/* bus private data */
- 	char bus_priv[0] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index deca0060eb27..1e730c9fa371 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2753,3 +2753,36 @@ int qtnf_cmd_set_mac_acl(const struct qtnf_vif *vif,
- 
- 	return ret;
- }
-+
-+int qtnf_cmd_send_pm_set(struct qtnf_bus *bus, u8 pm_mode, u32 timeout)
-+{
-+	struct sk_buff *cmd_skb;
-+	u16 res_code = QLINK_CMD_RESULT_OK;
-+	struct qlink_cmd_pm_set *cmd;
-+	int ret = 0;
-+
-+	cmd_skb = qtnf_cmd_alloc_new_cmdskb(QLINK_MACID_RSVD, QLINK_VIFID_RSVD,
-+					    QLINK_CMD_PM_SET, sizeof(*cmd));
-+	if (!cmd_skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct qlink_cmd_pm_set *)cmd_skb->data;
-+	cmd->pm_mode = pm_mode;
-+	cmd->pm_standby_timer = cpu_to_le32(timeout);
-+
-+	qtnf_bus_lock(bus);
-+
-+	ret = qtnf_cmd_send(bus, cmd_skb, &res_code);
-+
-+	if (unlikely(ret))
-+		goto out;
-+
-+	if (unlikely(res_code != QLINK_CMD_RESULT_OK)) {
-+		pr_err("cmd exec failed: 0x%.4X\n", res_code);
-+		ret = -EFAULT;
-+	}
-+
-+out:
-+	qtnf_bus_unlock(bus);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-index 69a7d56f7e58..a06e6a96c35d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -81,5 +81,6 @@ int qtnf_cmd_start_cac(const struct qtnf_vif *vif,
- 		       u32 cac_time_ms);
- int qtnf_cmd_set_mac_acl(const struct qtnf_vif *vif,
- 			 const struct cfg80211_acl_data *params);
-+int qtnf_cmd_send_pm_set(struct qtnf_bus *bus, u8 pm_mode, u32 timeout);
- 
- #endif /* QLINK_COMMANDS_H_ */
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index cf26c15a84f8..10c4e3ea2404 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -26,6 +26,10 @@
- #include "event.h"
- #include "util.h"
- 
-+static bool auto_standby = true;
-+module_param(auto_standby, bool, 0644);
-+MODULE_PARM_DESC(auto_standby, "set to 0 to disable auto standby mode");
-+
- #define QTNF_DMP_MAX_LEN 48
- #define QTNF_PRIMARY_VIF_IDX	0
- 
-@@ -552,6 +556,53 @@ static int qtnf_core_mac_attach(struct qtnf_bus *bus, unsigned int macid)
- 	return ret;
- }
- 
-+static ssize_t qtnf_pm_standby_timeout_show(struct device *dev,
-+					    struct device_attribute *attr,
-+					    char *buf)
-+{
-+	struct qtnf_bus *bus = dev_get_drvdata(dev);
-+
-+	sprintf(buf, "%u\n", bus->standby_timeout);
-+	return strlen(buf);
-+}
-+
-+static ssize_t qtnf_pm_standby_timeout_store(struct device *dev,
-+					     struct device_attribute *attr,
-+					     const char *buf, size_t count)
-+{
-+	struct qtnf_bus *bus = dev_get_drvdata(dev);
-+	int timeout;
-+
-+	if (count < 1)
-+		goto out;
-+
-+	if (kstrtoint(buf, 0, &timeout))
-+		goto out;
-+
-+	if (timeout < 0)
-+		timeout = 0;
-+	else if (timeout > S32_MAX)
-+		timeout = S32_MAX;
-+
-+	if (timeout == bus->standby_timeout)
-+		goto out;
-+
-+	if (timeout) {
-+		if (!qtnf_cmd_send_pm_set(bus, QLINK_PM_AUTO_STANDBY,
-+					  timeout))
-+			bus->standby_timeout = timeout;
-+	} else {
-+		if (!qtnf_cmd_send_pm_set(bus, QLINK_PM_OFF, 0))
-+			bus->standby_timeout = 0;
-+	}
-+
-+out:
-+	return (ssize_t)count;
-+}
-+
-+static DEVICE_ATTR(standby_timeout, 0644, qtnf_pm_standby_timeout_show,
-+		   qtnf_pm_standby_timeout_store);
-+
- int qtnf_core_attach(struct qtnf_bus *bus)
- {
- 	unsigned int i;
-@@ -608,6 +659,25 @@ int qtnf_core_attach(struct qtnf_bus *bus)
- 		}
- 	}
- 
-+	if (auto_standby) {
-+		bus->standby_timeout = QTNF_DEFAULT_STANDBY_TIMER;
-+		ret = qtnf_cmd_send_pm_set(bus, QLINK_PM_AUTO_STANDBY,
-+					   bus->standby_timeout);
-+		if (ret)
-+			bus->standby_timeout = 0;
-+	} else {
-+		bus->standby_timeout = 0;
-+		ret = qtnf_cmd_send_pm_set(bus, QLINK_PM_OFF, 0);
-+	}
-+
-+	if (ret) {
-+		pr_err("failed to init PM auto standby: %d\n", ret);
-+		/* Do not cancel init when PM mode not configured */
-+	}
-+
-+	if (device_create_file(bus->dev, &dev_attr_standby_timeout))
-+		pr_err("failed to init sysfs standby control file: %d\n", ret);
-+
- 	return 0;
- 
- error:
-@@ -620,6 +690,13 @@ EXPORT_SYMBOL_GPL(qtnf_core_attach);
- void qtnf_core_detach(struct qtnf_bus *bus)
- {
- 	unsigned int macid;
-+	int ret;
-+
-+	device_remove_file(bus->dev, &dev_attr_standby_timeout);
-+
-+	ret = qtnf_cmd_send_pm_set(bus, QLINK_PM_OFF, 0);
-+	if (ret)
-+		pr_err("failed to deinit NSM: %d\n", ret);
- 
- 	qtnf_bus_data_rx_stop(bus);
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wireless/quantenna/qtnfmac/core.h
-index 3b884c80b6ab..9386f09e1fab 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
-@@ -52,6 +52,8 @@
- #define QTNF_DEF_WDOG_TIMEOUT		5
- #define QTNF_TX_TIMEOUT_TRSHLD		100
- 
-+#define QTNF_DEFAULT_STANDBY_TIMER	(15 * 60)
-+
- extern const struct net_device_ops qtnf_netdev_ops;
- 
- struct qtnf_bus;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 9bf3ae4d1b3b..ee3c65ca7148 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -251,6 +251,7 @@ enum qlink_cmd_type {
- 	QLINK_CMD_CHAN_STATS		= 0x0054,
- 	QLINK_CMD_CONNECT		= 0x0060,
- 	QLINK_CMD_DISCONNECT		= 0x0061,
-+	QLINK_CMD_PM_SET		= 0x0062,
- };
- 
- /**
-@@ -663,6 +664,35 @@ struct qlink_acl_data {
- 	struct qlink_mac_address mac_addrs[0];
- } __packed;
- 
-+/**
-+ * enum qlink_pm_mode - Power Management mode
-+ *
-+ * @QLINK_PM_OFF: normal mode, no power saving enabled
-+ * @QLINK_PM_AUTO_STANDBY: Automatic Network Standby Mode - when there is no
-+ *	traffic for the certain period, device enters power saving mode without
-+ *	disconnecting peers. Device will wake up automatically on a new
-+ *	association or data frames to TX/RX. Standby mode is activated on each
-+ *	radio interface individually, based on traffic on it. When all the
-+ *	radios enter standby mode, device informs RC via MSI.
-+ */
-+enum qlink_pm_mode {
-+	QLINK_PM_OFF		= 0,
-+	QLINK_PM_AUTO_STANDBY	= 1,
-+};
-+
-+/**
-+ * struct qlink_cmd_pm_set - data for QLINK_CMD_PM_SET command
-+ *
-+ * @pm_standby timer: period of network inactivity in seconds before
-+ *	putting a radio in standby mode
-+ * @pm_mode: power management mode
-+ */
-+struct qlink_cmd_pm_set {
-+	struct qlink_cmd chdr;
-+	__le32 pm_standby_timer;
-+	u8 pm_mode;
-+} __packed;
-+
- /* QLINK Command Responses messages related definitions
-  */
- 
--- 
-2.11.0
+PiAtLS0tLU1lc3NhZ2UgZCdvcmlnaW5lLS0tLS0NCj4gRGXCoDogRmVsaXggRmlldGthdSBbbWFp
+bHRvOm5iZEBuYmQubmFtZV0NCj4gRW52b3nDqcKgOiBqZXVkaSAxNSBmw6l2cmllciAyMDE4IDE1
+OjQ2DQo+IMOAwqA6IEplYW4gUGllcnJlIFRPU09OSTsgS2FsbGUgVmFsbw0KPiBDY8KgOiBsaW51
+eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGF0aDlrLWRldmVsQHFjYS5xdWFsY29tbS5jb20N
+Cj4gT2JqZXTCoDogUmU6IFtQQVRDSCB2Ml0gYXRoOWs6IG1hcmsgUlNTSSBhcyBpbnZhbGlkIGlm
+IGZyYW1lIHJlY2VpdmVkDQo+IGR1cmluZyBjaGFubmVsIHNldHVwDQo+IA0KPiBPbiAyMDE4LTAy
+LTE0IDE3OjI2LCBKZWFuIFBpZXJyZSBUT1NPTkkgd3JvdGU6DQo+ID4gYXRoOWsgcmV0dXJucyBh
+IHdyb25nIFJTU0kgdmFsdWUgZm9yIGZyYW1lcyByZWNlaXZlZCBpbiBhIDMwbXMNCj4gdGltZQ0K
+PiA+IHdpbmRvdyBhZnRlciBhIGNoYW5uZWwgY2hhbmdlLiBUaGUgY29ycmVjdCB2YWx1ZSBpcyB0
+eXBpY2FsbHkgMTBkQg0KPiA+IGJlbG93IHRoZSByZXR1cm5lZCB2YWx1ZS4NCj4gPg0KPiA+IFRo
+aXMgd2FzIGZvdW5kIHdpdGggYSBBdGhlcm9zIEFSOTMwMCBSZXY6MyBjaGlwIChXTEUzNTBOWCAv
+DQo+IEpXWDYwODMNCj4gPiBjYXJkcyksIGR1cmluZyBvZmZjaGFubmVsIHNjYW5zLg0KPiA+DQo+
+ID4gTWFyayB0aGUgc2lnbmFsIHZhbHVlIGFzIGludmFsaWQgaW4gdGhpcyBjYXNlLg0KPiA+DQo+
+ID4gU2lnbmVkLW9mZi1ieTogSmVhbiBQaWVycmUgVE9TT05JIDxqcC50b3NvbmlAYWNrc3lzLmZy
+Pg0KPiBJdCBzZWVtcyB0aGF0IHRoaXMgd2lsbCBwb3RlbnRpYWxseSBjYXVzZSBhIGxvdCBvZiBz
+Y2FuIHJlc3VsdHMgd2l0aA0KPiBSU1NJIGluZm9ybWF0aW9uIG1pc3NpbmcsIHdoaWNoIEkgdGhp
+bmsgbWF5IGJlIHdvcnNlIHRoYW4gYSAxMCBkYg0KPiBmbHVjdHVhdGlvbi4NCg0KSG1tbS4uLiBN
+eSBjbGllbnQgaXMgbW92aW5nIGxpbmVhcmx5IGZyb20gQVAgdG8gQVAgYW5kIGlmIGl0IGZpbmRz
+DQogdGhhdCB0aGUgcHJldmlvdXMgQVAgaXMgImJldHRlciIgdGhhbiB0aGUgY3VycmVudCBvciBu
+ZXh0IG9uZSwNCiBoYXZvYyB3aWxsIG9jY3VyIG9uIHRocm91Z2hwdXQhIEluIHRoaXMgY2FzZSBJ
+IHByZWZlciB0byB3YWl0IGZvcg0KIHRoZSBuZXh0IHNjYW4gcm91bmQgdGhhbiB1c2UgYSB3cm9u
+ZyB2YWx1ZS4NCg0KQWxzbywgbm90ZSB0aGF0IG15IHBhdGNoIHNldHMgdGhlIGludmFsaWQgZmxh
+ZyBidXQgaXQgaXMgY3VycmVudGx5DQogSWdub3JlZCBieSBtYWM4MDIxMSAoSSBzdWJtaXR0ZWQg
+YW5vdGhlciBwYXRjaCBhYm91dCB0aGF0KS4NCg0KQWN0dWFsbHkgdGhlIHByb2JsZW0gc2hvd3Mg
+dXAgb25seSBvbiBwYXNzaXZlIGNoYW5uZWxzLCBiZWNhdXNlDQooMSkgb24gYWN0aXZlIGNoYW5u
+ZWxzIHRoZSB3cm9uZyBiZWFjb24gcmVwb3J0IHdpbGwgYmUgc29vbg0KICAgIG92ZXJ3cml0dGVu
+IGJ5IHRoZSBwcm9iZSByZXNwb25zZSByZXBvcnQNCigyKSBtYWM4MDIxMSB3YWl0cyBvbmx5IGZv
+ciAxMDhtcyBvbiBwYXNzaXZlIGNoYW5uZWxzLCBpZiBpdCB3YWl0ZWQNCiAgICBmb3IgMTMzbXMg
+d2Ugd291bGQgaGF2ZSB0aGUgb3Bwb3J0dW5pdHkgdG8gb2J0YWluIGEgMm5kIGNvcnJlY3QNCiAg
+ICBiZWFjb24gcmVwb3J0ICh3ZWxsLCBkZXBlbmRpbmcgb24gdGhlIGJlYWNvbiBpbnRlcnZhbCBv
+ZiBjb3Vyc2UpDQoNCj4gQWN0dWFsbHksIGl0IGNvdWxkIGFsc28gYmUgdGhhdCB0aGUgaGFyZHdh
+cmUgaXMgcmVwb3J0aW5nIGFjY3VyYXRlDQo+IFJTU0kgdmFsdWVzICh0aGV5J3JlIHJlcG9ydGVk
+IGFzIFNOUiByZWxhdGl2ZSB0byB0aGUgbm9pc2UgZmxvb3IpDQo+IGFuZCB0aGlzIGlzIGp1c3Qg
+YSBibGlwIGNhdXNlZCBieSB0aGUgZmFjdCB0aGF0IHRoZSBodyBpcyB1cGRhdGluZw0KPiBpdHMg
+aW50ZXJuYWwgbm9pc2UgZmxvb3IgdmFsdWUgYmFzZWQgb24gcnVubmluZyBtZWFzdXJlbWVudHMu
+DQo+IA0KPiBEb2VzIHRoZSBzYW1lIGZsdWN0dWF0aW9uIGFsc28gaGFwcGVuIGlmIHlvdSBzZXQg
+dXBkYXRlID0gZmFsc2UgZm9yDQo+IGNhbGxzIHRvIGF0aDlrX2h3X3N0YXJ0X25mY2FsPw0KDQpU
+aGFua3MgZm9yIHRoZSBoaW50LCBJIHdpbGwgaGF2ZSBhIGxvb2sgYXQgdGhhdCANCg0KPiANCj4g
+LSBGZWxpeA0K
