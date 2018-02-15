@@ -1,60 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:59160
-        "EHLO stuffed.shaftnet.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1033208AbeBOUDJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58330 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755154AbeBOIsz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 15:03:09 -0500
-Date: Thu, 15 Feb 2018 14:05:41 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Iago Abal <iago.abal@gmail.com>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: Potential deadlock BUG in drivers/net/wireless/st/cw1200/sta.c
- (Linux 4.9)
-Message-ID: <20180215190541.GA27044@shaftnet.org> (sfid-20180215_210333_375097_E103C549)
-References: <CAGbDTvrA85Qao_y0FxCFR_cE26WejoLLrA=PA1qhTButiDp3xg@mail.gmail.com>
- <CAGbDTvrfrm5kuWL3SqeDGxyBXYbCyAV0ukah-CNsGqW0ueia3w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="bg08WKrSYDhXBjb5"
-In-Reply-To: <CAGbDTvrfrm5kuWL3SqeDGxyBXYbCyAV0ukah-CNsGqW0ueia3w@mail.gmail.com>
+        Thu, 15 Feb 2018 03:48:55 -0500
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 05/13] ath10k: Map HTC services to tx/rx pipes for wcn3990
+Date: Thu, 15 Feb 2018 14:18:49 +0530
+Message-Id: <1518684529-5565-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_094858_455259_F570B328)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add mapping of HTC endpoint services supported
+by wcn3990 target to tx/rx pipe.
 
---bg08WKrSYDhXBjb5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 168 +++++++++++++++++++++++++++++++++
+ 1 file changed, 168 insertions(+)
 
-On Tue, Feb 06, 2018 at 09:04:29PM +0100, Iago Abal wrote:
-> This still looks like a deadlock bug to me, could someone take a look
-> as well and confirm? I will help preparing a patch if needed.
-
-The short answer:  yes, it deadlocks.
-
-I'll be glad to review patches (this code is pretty tricky, but I=20
-believe the deadlock got introduced/exposed by different code changes)
-but unfortunately my last move killed the hardware capable of=20
-accepting my SDIO CW1200 dongles.
-
-Hmm, might be worth trolling ebay or something.
-
- - Solomon
---=20
-Solomon Peachy			       pizza at shaftnet dot org
-Coconut Creek, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum videtur.
-
---bg08WKrSYDhXBjb5
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF0EABECAB0WIQR2UQuVfi4HbxEN7SQ+4uCKLbvn0AUCWoXaBAAKCRA+4uCKLbvn
-0GnOAKDm3jlaBNkVyhwF/Sv2jaRhUFky8wCfTKBIRJXFSpNNbn0O8yY2DSXYK98=
-=3HKl
------END PGP SIGNATURE-----
-
---bg08WKrSYDhXBjb5--
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index dcd8bb7..a39eee7 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -154,6 +154,116 @@
+ 	},
+ };
+ 
++static struct service_to_pipe target_service_to_ce_map_wlan[] = {
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BK),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BK),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BE),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BE),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VI),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VI),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_CONTROL),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_CONTROL),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_RSVD_CTRL),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(0),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_RSVD_CTRL),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{ /* not used */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(0),
++	},
++	{ /* not used */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA_MSG),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(4),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA_MSG),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(1),
++	},
++	{ /* not used */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS),
++		__cpu_to_le32(PIPEDIR_OUT),
++		__cpu_to_le32(5),
++	},
++	{ /* in = DL = target -> host */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA2_MSG),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(9),
++	},
++	{ /* in = DL = target -> host */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA3_MSG),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(10),
++	},
++	{ /* in = DL = target -> host pktlog */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_LOG_MSG),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(11),
++	},
++	/* (Additions here) */
++
++	{ /* must be last */
++		__cpu_to_le32(0),
++		__cpu_to_le32(0),
++		__cpu_to_le32(0),
++	},
++};
++
+ void ath10k_snoc_write32(struct ath10k *ar, u32 offset, u32 value)
+ {
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+@@ -249,6 +359,62 @@ static void ath10k_snoc_rx_post(struct ath10k *ar)
+ 		ath10k_snoc_rx_post_pipe(&ar_snoc->pipe_info[i]);
+ }
+ 
++static int ath10k_snoc_hif_map_service_to_pipe(struct ath10k *ar,
++					       u16 service_id,
++					       u8 *ul_pipe, u8 *dl_pipe)
++{
++	const struct service_to_pipe *entry;
++	bool ul_set = false, dl_set = false;
++	int i;
++
++	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc hif map service\n");
++
++	for (i = 0; i < ARRAY_SIZE(target_service_to_ce_map_wlan); i++) {
++		entry = &target_service_to_ce_map_wlan[i];
++
++		if (__le32_to_cpu(entry->service_id) != service_id)
++			continue;
++
++		switch (__le32_to_cpu(entry->pipedir)) {
++		case PIPEDIR_NONE:
++			break;
++		case PIPEDIR_IN:
++			WARN_ON(dl_set);
++			*dl_pipe = __le32_to_cpu(entry->pipenum);
++			dl_set = true;
++			break;
++		case PIPEDIR_OUT:
++			WARN_ON(ul_set);
++			*ul_pipe = __le32_to_cpu(entry->pipenum);
++			ul_set = true;
++			break;
++		case PIPEDIR_INOUT:
++			WARN_ON(dl_set);
++			WARN_ON(ul_set);
++			*dl_pipe = __le32_to_cpu(entry->pipenum);
++			*ul_pipe = __le32_to_cpu(entry->pipenum);
++			dl_set = true;
++			ul_set = true;
++			break;
++		}
++	}
++
++	if (WARN_ON(!ul_set || !dl_set))
++		return -ENOENT;
++
++	return 0;
++}
++
++static void ath10k_snoc_hif_get_default_pipe(struct ath10k *ar,
++					     u8 *ul_pipe, u8 *dl_pipe)
++{
++	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc hif get default pipe\n");
++
++	(void)ath10k_snoc_hif_map_service_to_pipe(ar,
++						 ATH10K_HTC_SVC_ID_RSVD_CTRL,
++						 ul_pipe, dl_pipe);
++}
++
+ static inline void ath10k_snoc_irq_disable(struct ath10k *ar)
+ {
+ 	ath10k_ce_disable_interrupts(ar);
+@@ -358,6 +524,8 @@ static int ath10k_snoc_hif_start(struct ath10k *ar)
+ 	.write32	= ath10k_snoc_write32,
+ 	.start		= ath10k_snoc_hif_start,
+ 	.stop		= ath10k_snoc_hif_stop,
++	.map_service_to_pipe	= ath10k_snoc_hif_map_service_to_pipe,
++	.get_default_pipe	= ath10k_snoc_hif_get_default_pipe,
+ };
+ 
+ static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
+-- 
+1.9.1
