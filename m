@@ -1,80 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39388 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750832AbeBJKcX (ORCPT
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:38320 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033529AbeBOOtD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Feb 2018 05:32:23 -0500
-Date: Sat, 10 Feb 2018 12:32:17 +0200
-From: Jouni Malinen <jouni@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Srinivas Dasari <dasaris@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ieee80211: Increase the PMK maximum length to 64 bytes
-Message-ID: <20180210103217.GA12147@jouni.qca.qualcomm.com> (sfid-20180210_113228_902461_AD331EE5)
-References: <1518020451-8743-1-git-send-email-dasaris@codeaurora.org>
- <5A7B54E9.8070805@broadcom.com>
- <1518034894.3124.9.camel@sipsolutions.net>
+        Thu, 15 Feb 2018 09:49:03 -0500
+Received: by mail-qt0-f195.google.com with SMTP id k13so12159169qtg.5
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2018 06:49:02 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: Re: [PATCH 1/1] ath10k: add LED and GPIO controlling support for various chipsets
+Date: Thu, 15 Feb 2018 15:48:58 +0100
+Message-ID: <189869316.iC7P1rB6Jj@bentobox> (sfid-20180215_154922_503178_B8831DD6)
+In-Reply-To: <ea35ce69-a016-2475-6c17-eba396827147@dd-wrt.com>
+References: <1518684977-14607-1-git-send-email-govinds@codeaurora.org> <ea35ce69-a016-2475-6c17-eba396827147@dd-wrt.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1518034894.3124.9.camel@sipsolutions.net>
+Content-Type: multipart/signed; boundary="nextPart2077822.vL5tvGmtBe"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 07, 2018 at 09:21:34PM +0100, Johannes Berg wrote:
-> On Wed, 2018-02-07 at 20:35 +0100, Arend van Spriel wrote:
-> > On 2/7/2018 5:20 PM, Srinivas Dasari wrote:
-> > > This is needed to cover the case of DPP with the NIST P-521 and
-> > > brainpoolP512r1 curves which derive a PMK that is longer than the
-> > > previously used limit.
-> > 
-> > So how are driver supposed to deal with this longer PMK. Maybe if you 
-> > could elaborate on what DPP stands for in this context it would become 
-> > more clear. 
+--nextPart2077822.vL5tvGmtBe
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+
+On Donnerstag, 15. Februar 2018 15:31:04 CET Sebastian Gottschall wrote:
+> Adds LED and GPIO Control support for 988x, 9887, 9888, 99x0, 9984 and 
+> ipq4019 based chipsets with on chipset connected led's
+> using WMI Firmware API.
+> The LED device will get available named as "ath10k-phyX" at sysfs and 
+> can be controlled with various triggers.
+> adds also debugfs interface for gpio control.
 > 
-> device provisioning protocol, I guess? But longer curves and longer PMK
-> is kinda obvious, whichever way that ends up getting used.
-
-Yes, that's what DPP stands for here. With those two curves, the PMK
-will be 64 octets.
-
-> > Can we stick with PMK_MAX_LEN or does it need to be more 
-> > fine-grained per use-case? If existing drivers only support 48 bytes PMK 
-> > and trust nl80211 code to check that limit it may screw them up. Not?
+> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 > 
-> Yeah I'm concerned about this too - and regardless of that issue, we
-> probably need those drivers that do support it to advertise support for
-> the new curves, and then allow the longer PMK length only for those that do?
+>   drivers/net/wireless/ath/ath10k/core.c    | 168 
+> +++++++++++++++++++++++++++++-
+>   drivers/net/wireless/ath/ath10k/core.h    |  15 +++
+>   drivers/net/wireless/ath/ath10k/debug.c   | 140 +++++++++++++++++++++++++
+>   drivers/net/wireless/ath/ath10k/hw.h      |   1 +
+>   drivers/net/wireless/ath/ath10k/wmi-ops.h |  36 ++++++-
+>   drivers/net/wireless/ath/ath10k/wmi.c     |  43 ++++++++
+>   drivers/net/wireless/ath/ath10k/wmi.h     |  36 +++++++
+>   7 files changed, 436 insertions(+), 3 deletions(-)
 
-Please note that some drivers may not support even the current
-PMK_MAX_LEN (48) value. In fact, most of the cfg80211 cases using
-NL80211_ATTR_PMK are separately enforcing shorter lengths (32 or that
-48), so this change in PMK_MAX_LEN definition does not actually have any
-impact for many of the existing cases. The only place where it does make
-a difference is NL80211_CMD_SET_PMKSA and NL80211_ATTR_PMK was added for
-that command with FILS authentication in mind in the first place (and
-that would not get a 64 octet value from wpa_supplicant at least).
+Looks like your mail program has eaten the patch [1]. It is also not clear why 
+it was posted as reply to the "dt: bindings: add bindings for wcn3990 wifi 
+block" patch. :)
 
-It turns out that there are no known use of PMK with DPP authentication
-at the moment in any driver, so for now, I think I'll just make
-wpa_supplicant skip addition of the NL80211_ATTR_PMK if the PMK is
-longer than 48 octets. This should take care of the most immediate need,
-but it would be good to prepare for the possibility of there being a
-driver/firmware that would like to offload roaming and 4-way handshake
-with DPP APs and do that using this PMK value from DPP network
-introduction rather than offloading network introduction. For that to
-work, PMK_MAX_LEN needs to be increased.
+Kind regards,
+	Sven
 
-So DPP works just fine with most drivers even with the 64 octet PMK (as
-long as that wpa_supplicant change goes in) when there is no requirement
-of offloading 4-way handshake.
+[1] https://www.kernel.org/doc/html/v4.15/process/email-clients.html
 
-As far as driver support for various PMK lengths is concerned, how
-should that be advertised? The limits can be different for each
-particular use of NL80211_ATTR_PMK (NL80211_CMD_CONNECT,
-NL80211_CMD_ASSOCIATE, NL80211_START_AP, NL80211_CMD_SET_PMKSA (for
-FILS), NL80211_CMD_SET_PMKSA (for DPP), NL80211_CMD_SET_PMKSA (for
-something else), NL80211_CMD_SET_PMK).
+--nextPart2077822.vL5tvGmtBe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlqFndsACgkQXYcKB8Em
+e0Ya2xAAg3lTZtlofKBD56cgDJR4aCXa2+zeFZb0NVpVswJqgKvHOeM6Rvn56JIN
+Usyft2WyeDjO1x+plAqmD8EZhcE7cK7vp1nHvPcf7UshaBxNRCLCKgq9OLbwaG68
++xFEO3ntT0484Y6B3iORCi5HTID4e5/1D35i2yf1G+hMYM7DVzDhmX4PxkfvSHz6
+8y7jYxI242Vukl/t9QjaTzgsoDgMqkWvLZVAFDDhJm2PX5njLbtt/gu9+5yBd0Hl
+/nLOCxXp9bSvNfM/4DRNGekI9Wsl7CU6A1QlTpMzUbkIVk3RWkqmXyBrse67eVNU
+qk2EmbPg4rKS4KGLSd7Cw3mzUlTtjpuWrFjrV+zkKzyRUtxw3U8815vQ9CWQBlqF
+kwvSZCpO41Oh8eWlsPfXYPGCTmwIlUB7HQ8I7shLtnF8tgEYo4p5Ci/uVS1nRUZ3
+9XMikjfm40JTqQy0wNQ+a/ZAWMDfF/+mojHZpUKVz9JZDREpTSqkoH0iFhBPf/Ud
+fRs8UJ5Qd3D9qV3mkNXoYfMIc1YNuPnFJklwAEcAldR+K2Eyt3/Xb645Je8zBF0e
+PewvJXW54Ipy8fwc56yYtFEoAsEDJX26SI/Vt5a+MPNEWcoSBUx5agBjOp5CJCP0
+MVKL3ys1GDu1ROplSPWlysZwDlNsCQpR+NEmcahwN3DjOgH3dgE=
+=M8uX
+-----END PGP SIGNATURE-----
+
+--nextPart2077822.vL5tvGmtBe--
