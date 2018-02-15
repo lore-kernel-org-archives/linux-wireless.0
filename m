@@ -1,90 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:50005 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752764AbeBVIjK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36016 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754823AbeBOI4v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 03:39:10 -0500
-Date: Thu, 22 Feb 2018 14:09:01 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <venkateswara.kaja@microchip.com>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
-        <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 1/4] staging: wilc1000: remove use of 'happened'
- variable in wilc_spi_read_int()
-Message-ID: <20180222140901.1a2b6ca8@ajaysk-VirtualBox> (sfid-20180222_093914_778574_5621128D)
-In-Reply-To: <20180222072058.g6wyrsmg5lr6vnef@mwanda>
-References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
-        <1519229532-11265-2-git-send-email-ajay.kathat@microchip.com>
-        <20180222072058.g6wyrsmg5lr6vnef@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+        Thu, 15 Feb 2018 03:56:51 -0500
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 13/13] dt: bindings: add bindings for wcn3990 wifi block
+Date: Thu, 15 Feb 2018 14:26:17 +0530
+Message-Id: <1518684977-14607-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_095655_476540_20C3438C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Add device tree binding documentation details for wcn3990
+wifi block present in Qualcomm SDM845/APQ8098 SoC into
+"qcom,ath10k.txt".
 
-On Thu, 22 Feb 2018 10:20:58 +0300
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ .../bindings/net/wireless/qcom,ath10k.txt          | 35 ++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
-> On Wed, Feb 21, 2018 at 09:42:09PM +0530, Ajay Singh wrote:
-> > Modified wilc_spi_read_int() by removing unnecessary use of "happened"
-> > variable.
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/wilc_spi.c | 8 +++-----
-> >  1 file changed, 3 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-> > index 6b392c9..131d2b7 100644
-> > --- a/drivers/staging/wilc1000/wilc_spi.c
-> > +++ b/drivers/staging/wilc1000/wilc_spi.c
-> > @@ -936,7 +936,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
-> >  	int ret;
-> >  	u32 tmp;
-> >  	u32 byte_cnt;
-> > -	int happened, j;
-> > +	int j;
-> >  	u32 unknown_mask;
-> >  	u32 irq_flags;
-> >  	int k = IRG_FLAGS_OFFSET + 5;
-> > @@ -956,8 +956,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
-> >  
-> >  	j = 0;
-> >  	do {
-> > -		happened = 0;
-> > -
-> >  		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
-> >  		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
-> >  
-> > @@ -972,11 +970,11 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
-> >  			dev_err(&spi->dev,
-> >  				"Unexpected interrupt(2):j=%d,tmp=%x,mask=%x\n",
-> >  				j, tmp, unknown_mask);
-> > -				happened = 1;
-> > +				break;  
-> 
-> This is flipped around.  happened means don't break, but you've changed
-> it to be the opposite.
-
-You are right. Thanks for pointing it out. It's was a mistake. I will
-change 'break' to 'continue' and while(1) to while(0) and resubmit the
-patch.
-
-
-Regards,
-Ajay
-
-> 
-> regards,
-> dan carpenter
-> 
-> >  		}
-> >  
-> >  		j++;
-> > -	} while (happened);
-> > +	} while (1);
-> >    
-> 
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 3d2a031..07b0f13 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -4,6 +4,7 @@ Required properties:
+ - compatible: Should be one of the following:
+ 	* "qcom,ath10k"
+ 	* "qcom,ipq4019-wifi"
++	* "qcom,wcn3990-wifi"
+ 
+ PCI based devices uses compatible string "qcom,ath10k" and takes calibration
+ data along with board specific data via "qcom,ath10k-calibration-data".
+@@ -18,8 +19,11 @@ In general, entry "qcom,ath10k-pre-calibration-data" and
+ "qcom,ath10k-calibration-data" conflict with each other and only one
+ can be provided per device.
+ 
++SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-wifi".
++
+ Optional properties:
+ - reg: Address and length of the register set for the device.
++- reg-names: Names of the memory regions defined in reg entry.
+ - resets: Must contain an entry for each entry in reset-names.
+           See ../reset/reseti.txt for details.
+ - reset-names: Must include the list of following reset names,
+@@ -49,6 +53,12 @@ Optional properties:
+ 				 hw versions.
+ - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
+ 				     the length can vary between hw versions.
++- qcom,<supply-name>-supply: handle to the regulator device tree node
++			   optional "supply-name" is "vdd-0.8-cx-mx".
++- qcom,<supply>-config: Specifies voltage levels for supply. Should be
++			  specified in pairs (min, max), units uV.  There can
++			   be optional load in uA and Regulator settle delay in
++			   uS.
+ 
+ Example (to supply the calibration data alone):
+ 
+@@ -119,3 +129,28 @@ wifi0: wifi@a000000 {
+ 	qcom,msi_base = <0x40>;
+ 	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
+ };
++
++Example (to supply wcn3990 SoC wifi block details):
++
++qcom,msm_ath10k@18000000 {
++		compatible = "qcom,wcn3990-wifi";
++		reg = <0x18800000 0x800000>;
++		reg-names = "membase";
++		clocks = <&clock_gcc clk_aggre2_noc_clk>;
++		clock-names = "smmu_aggre2_noc_clk"
++		interrupts =
++			   <0 130 0 /* CE0 */ >,
++			   <0 131 0 /* CE1 */ >,
++			   <0 132 0 /* CE2 */ >,
++			   <0 133 0 /* CE3 */ >,
++			   <0 134 0 /* CE4 */ >,
++			   <0 135 0 /* CE5 */ >,
++			   <0 136 0 /* CE6 */ >,
++			   <0 137 0 /* CE7 */ >,
++			   <0 138 0 /* CE8 */ >,
++			   <0 139 0 /* CE9 */ >,
++			   <0 140 0 /* CE10 */ >,
++			   <0 141 0 /* CE11 */ >;
++		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
++		qcom,vdd-0.8-cx-mx-config = <800000 800000 2400 1000>;
++};
+-- 
+1.9.1
