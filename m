@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53116 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751768AbeBZRGh (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59126 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756813AbeBPQNQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 12:06:37 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 26 Feb 2018 22:36:35 +0530
-From: periyasa@codeaurora.org
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Revert "ath10k: send (re)assoc peer command when NSS
- changed"
-In-Reply-To: <aedd8281-ee1b-e5ae-2521-fd3a7a221dd6@candelatech.com>
-References: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org>
- <aedd8281-ee1b-e5ae-2521-fd3a7a221dd6@candelatech.com>
-Message-ID: <dd7bb2acd1be43346315d7bb349b45b2@codeaurora.org> (sfid-20180226_180710_526197_5ED77C16)
+        Fri, 16 Feb 2018 11:13:16 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 16 Feb 2018 18:12:57 +0200
+Message-Id: <20180216161301.29339-10-luca@coelho.fi> (sfid-20180216_171328_312639_3396EE23)
+In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
+References: <20180216161301.29339-1-luca@coelho.fi>
+Subject: [PATCH 09/13] mac80211: Fix sending ADDBA response for an ongoing session
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Ilan Peer <ilan.peer@intel.com>
 
+In case an ADDBA request is received while there is already
+an ongoing BA sessions with the same parameters, i.e., update
+flow, an ADBBA response with decline status was sent twice. Fix it.
 
-> Can you share exactly which resource the firmware ran out of?  It would 
-> seem to
-> be a FW bug if it is leaking, so maybe it can be fixed as well...
-> 
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/agg-rx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Firmware have total user_id = 528 (512 clients + 16 VAPs). Each user_id 
-is allocated to peer when Firmware receive the WMI_PEER_ASSOC_CMDID 
-request from host driver. Firmware free the user_id in peer delete 
-operation.
-
-Regards,
-Karthikeyan P.
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index a8b1616cec41..1f3188d03840 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -8,6 +8,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2010, Intel Corporation
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
++ * Copyright (C) 2018        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -304,9 +305,6 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 			 * driver so reject the timeout update.
+ 			 */
+ 			status = WLAN_STATUS_REQUEST_DECLINED;
+-			ieee80211_send_addba_resp(sta->sdata, sta->sta.addr,
+-						  tid, dialog_token, status,
+-						  1, buf_size, timeout);
+ 			goto end;
+ 		}
+ 
+-- 
+2.15.1
