@@ -1,107 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59678 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752486AbeBSLSb (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:44272 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754385AbeBPPMD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 06:18:31 -0500
-Message-ID: <1519039105.7832.94.camel@coelho.fi> (sfid-20180219_121835_508963_9F1C8681)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Steve deRosier <derosier@gmail.com>
-Cc: Samuel Sieb <samuel@sieb.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Feb 2018 13:18:25 +0200
-In-Reply-To: <1519032404.7832.84.camel@coelho.fi>
-References: <HE1PR0501MB23969FCE58F1EE7634D412F0F6F50@HE1PR0501MB2396.eurprd05.prod.outlook.com>
-         <1518607856.21268.3.camel@sipsolutions.net>
-         <4f048d04-5f25-caa1-51b3-dcb14baf36da@sieb.net>
-         <CALLGbRLL-tnptVDuFt5E3QoTZ8Wn4K=2wLp3TCNvDJemkGVyKg@mail.gmail.com>
-         <87h8qdldfq.fsf@purkki.adurom.net> <1519032404.7832.84.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Max clients on wifi access point with 7265
+        Fri, 16 Feb 2018 10:12:03 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 02/12] staging: wilc1000: fix too many leading tabs warning in sdio_clear_int_ext()
+Date: Fri, 16 Feb 2018 20:41:39 +0530
+Message-ID: <1518793909-15573-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180216_161209_660456_38F05795)
+In-Reply-To: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-02-19 at 11:26 +0200, Luca Coelho wrote:
-> On Mon, 2018-02-19 at 08:07 +0200, Kalle Valo wrote:
-> > Steve deRosier <derosier@gmail.com> writes:
-> > 
-> > > On Wed, Feb 14, 2018 at 2:04 PM, Samuel Sieb <samuel@sieb.net>
-> > > wrote:
-> > > > On 02/14/2018 03:30 AM, Johannes Berg wrote:
-> > > > > 
-> > > > > On Wed, 2018-02-14 at 10:55 +0000, Mickaël PANNEQUIN wrote:
-> > > > > 
-> > > > > > 
-> > > > > > Do you know the limit of the number of users connected at
-> > > > > > the
-> > > > > > same
-> > > > > > time on the wifi? Works fine with 14 connected devices but
-> > > > > > not more.
-> > > > > > 
-> > > > > > How to increase it?
-> > > > > 
-> > > > > 
-> > > > > You can't.
-> > > > > 
-> > > > > > This limit is hardware?
-> > > > > 
-> > > > > 
-> > > > > More or less, yes. The HW/FW can support 16 STAs, but needs
-> > > > > two
-> > > > > for
-> > > > > other bookkeeping.
-> > > > 
-> > > > 
-> > > > As a general question, is there a standard way to determine
-> > > > this
-> > > > limit for
-> > > > any particular hardware?
-> > > 
-> > > 
-> > > Yes, but there's no easy way. Put it in AP mode and connect
-> > > clients
-> > > to
-> > > it until it starts rejecting new clients or dropping the old
-> > > ones.
-> > > Usually while watching it with a sniffer. That's how I've always
-> > > had
-> > > to do it.
-> > > 
-> > > Different chips will have different limits, and there's no
-> > > reliable
-> > > way to determine the limit across all chips other than trial and
-> > > error. It seems a common desire of people to try to use client
-> > > chips
-> > > as poor-man APs. While it will work for very limited number of
-> > > clients, they're not intended as AP chips. If you want something
-> > > to
-> > > work as an AP, I recommend you choose an AP chip.
-> > 
-> > We do have wiphy::max_ap_assoc_sta, but I see only ath10k, qtnfmac
-> > and
-> > rsi_91x setting it. I wish all drivers would use that.
-> > 
-> >  * @max_ap_assoc_sta: maximum number of associated stations
-> > supported in AP mode
-> >  * (including P2P GO) or 0 to indicate no such limit is advertised.
-> > The
-> >  * driver is allowed to advertise a theoretical limit that it can
-> > reach in
-> >  * some cases, but may not always reach.
-> 
-> Cool, I hadn't noticed this before.  I'll add a patch to iwlwifi to
-> add it.
+Refactor sdio_clear_int_ext() function to remove "Too many leading tabs"
+warning reported by checkpatch.pl script.
 
-Actually this is not so straightforward, because every time we add a
-p2p vif, we lose one more station.  So the max_ap_assoc_sta value must
-be dynamic (or we can state the theoretical lowest number to start
-with, which would not be very nice).
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 134 +++++++++++++++++------------------
+ 1 file changed, 65 insertions(+), 69 deletions(-)
 
-I don't think this feature is worth the trouble, so I'll skip it for
-now.
-
---
-Cheers,
-Luca.
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 6ce9c94..27ec90e 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -871,6 +871,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+ 	int ret;
++	int vmm_ctl;
+ 
+ 	if (g_sdio.has_thrpt_enh3) {
+ 		u32 reg;
+@@ -909,84 +910,79 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 				goto _fail_;
+ 			}
+ 		}
+-	} else {
+-		if (g_sdio.irq_gpio) {
+-			/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
+-			/* Cannot clear multiple interrupts. Must clear each interrupt individually */
+-			u32 flags;
+-
+-			flags = val & (BIT(MAX_NUM_INT) - 1);
+-			if (flags) {
+-				int i;
+-
+-				ret = 1;
+-				for (i = 0; i < g_sdio.nint; i++) {
+-					if (flags & 1) {
+-						struct sdio_cmd52 cmd;
+-
+-						cmd.read_write = 1;
+-						cmd.function = 0;
+-						cmd.raw = 0;
+-						cmd.address = 0xf8;
+-						cmd.data = BIT(i);
+-
+-						ret = wilc_sdio_cmd52(wilc, &cmd);
+-						if (ret) {
+-							dev_err(&func->dev,
+-								"Failed cmd52, set 0xf8 data (%d) ...\n",
+-								__LINE__);
+-							goto _fail_;
+-						}
++		return 1;
++	}
++	if (g_sdio.irq_gpio) {
++		/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
++		/* Cannot clear multiple interrupts. Must clear each interrupt individually */
++		u32 flags;
++
++		flags = val & (BIT(MAX_NUM_INT) - 1);
++		if (flags) {
++			int i;
++
++			ret = 1;
++			for (i = 0; i < g_sdio.nint; i++) {
++				if (flags & 1) {
++					struct sdio_cmd52 cmd;
++
++					cmd.read_write = 1;
++					cmd.function = 0;
++					cmd.raw = 0;
++					cmd.address = 0xf8;
++					cmd.data = BIT(i);
++
++					ret = wilc_sdio_cmd52(wilc, &cmd);
++					if (ret) {
++						dev_err(&func->dev,
++							"Failed cmd52, set 0xf8 data (%d) ...\n",
++							__LINE__);
++						goto _fail_;
+ 					}
+-					if (!ret)
+-						break;
+-					flags >>= 1;
+ 				}
+ 				if (!ret)
+-					goto _fail_;
+-				for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
+-					if (flags & 1)
+-						dev_err(&func->dev,
+-							"Unexpected interrupt cleared %d...\n",
+-							i);
+-					flags >>= 1;
+-				}
++					break;
++				flags >>= 1;
+ 			}
+-		}
+-
+-		{
+-			u32 vmm_ctl;
+-
+-			vmm_ctl = 0;
+-			/* select VMM table 0 */
+-			if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
+-				vmm_ctl |= BIT(0);
+-			/* select VMM table 1 */
+-			if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
+-				vmm_ctl |= BIT(1);
+-			/* enable VMM */
+-			if ((val & EN_VMM) == EN_VMM)
+-				vmm_ctl |= BIT(2);
+-
+-			if (vmm_ctl) {
+-				struct sdio_cmd52 cmd;
+-
+-				cmd.read_write = 1;
+-				cmd.function = 0;
+-				cmd.raw = 0;
+-				cmd.address = 0xf6;
+-				cmd.data = vmm_ctl;
+-				ret = wilc_sdio_cmd52(wilc, &cmd);
+-				if (ret) {
++			if (!ret)
++				goto _fail_;
++			for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
++				if (flags & 1)
+ 					dev_err(&func->dev,
+-						"Failed cmd52, set 0xf6 data (%d) ...\n",
+-						__LINE__);
+-					goto _fail_;
+-				}
++						"Unexpected interrupt cleared %d...\n",
++						i);
++				flags >>= 1;
+ 			}
+ 		}
+ 	}
+ 
++	vmm_ctl = 0;
++	/* select VMM table 0 */
++	if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
++		vmm_ctl |= BIT(0);
++	/* select VMM table 1 */
++	if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
++		vmm_ctl |= BIT(1);
++	/* enable VMM */
++	if ((val & EN_VMM) == EN_VMM)
++		vmm_ctl |= BIT(2);
++
++	if (vmm_ctl) {
++		struct sdio_cmd52 cmd;
++
++		cmd.read_write = 1;
++		cmd.function = 0;
++		cmd.raw = 0;
++		cmd.address = 0xf6;
++		cmd.data = vmm_ctl;
++		ret = wilc_sdio_cmd52(wilc, &cmd);
++		if (ret) {
++			dev_err(&func->dev,
++				"Failed cmd52, set 0xf6 data (%d) ...\n",
++				__LINE__);
++			goto _fail_;
++		}
++	}
+ 	return 1;
+ _fail_:
+ 	return 0;
+-- 
+2.7.4
