@@ -1,49 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:47784 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751976AbeBAWrI (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:51466 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031559AbeBPQaq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Feb 2018 17:47:08 -0500
-Message-ID: <1517525226.28814.15.camel@sipsolutions.net> (sfid-20180201_234712_674970_7776BD7E)
-Subject: Re: lockdep warning in mac80211/tx.c, 4.13.16+ kernel, ath9k related
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 01 Feb 2018 23:47:06 +0100
-In-Reply-To: <1517524837.28814.14.camel@sipsolutions.net> (sfid-20180201_234043_361624_199087E3)
-References: <d4632910-7dd9-b066-0c10-b21dd7cbfc61@candelatech.com>
-         <1517523817.28814.10.camel@sipsolutions.net>
-         <e8f8b910-ffa8-fbc7-3152-58ccf70b1ace@candelatech.com>
-         <1517524837.28814.14.camel@sipsolutions.net>
-         (sfid-20180201_234043_361624_199087E3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 16 Feb 2018 11:30:46 -0500
+Date: Fri, 16 Feb 2018 17:30:46 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, ganesh.krishna@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH 00/12] fix to remove line over 80 chars and few other
+Message-ID: <20180216163046.GA28916@kroah.com> (sfid-20180216_173049_693548_E72BCCCB)
+References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-02-01 at 23:40 +0100, Johannes Berg wrote:
-> 
-> The code does a plain rcu_dereference(), no locking other than
-> rcu_read_lock() involved.
-> 
-> On second thought though, I'm not convinced that your modifications
-> caused the problem.
-> 
-> Given your call stack, we'd expect rcu_read_lock() somewhere around
-> ath_tid_dequeue (or its caller(s)), since ieee80211_tx_dequeue clearly
-> requires it.
-> 
-> Normally, ieee80211_tx_dequeue() is called from various places that
-> probably come from mac80211 and already hold the rcu_read_lock(), e.g.
-> the wake_tx_queue op.
-> 
-> In this case, you're coming from drv_sta_state, so not sure why the
-> driver thinks it's OK to call the dequeue there.
+On Fri, Feb 16, 2018 at 08:41:37PM +0530, Ajay Singh wrote:
+> This patch series contains changes to fix line over 80 characters,
+> too many leading tabs and few other issues reported by checkpatch.pl
+> script.
 
-Just to clarify - it could just be that in the "normal" case, when a
-station dies, there's nothing on the queues - so the dequeue just
-doesn't do anything and never goes into the code path where the
-rcu_dereference() is, hence it might be a bug in mainline that just
-never triggers in ordinary scenarios.
+Please put the proper prefix on your 00/XX patches, that are with your
+other patches.  Otherwise it can get lost in my patch queues...
 
-johannes
+thanks,
+
+greg k-h
