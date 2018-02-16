@@ -1,113 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53072 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753829AbeBMGK3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59184 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1030663AbeBPQSZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 01:10:29 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] mwifiex: set different mac address for interfaces with same bss type
-Date: Tue, 13 Feb 2018 14:10:15 +0800
-Message-ID: <1518502215-18820-1-git-send-email-huxm@marvell.com> (sfid-20180213_071033_702113_B52F07B5)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 16 Feb 2018 11:18:25 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 16 Feb 2018 18:13:01 +0200
+Message-Id: <20180216161301.29339-14-luca@coelho.fi> (sfid-20180216_171829_830218_2B13DE66)
+In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
+References: <20180216161301.29339-1-luca@coelho.fi>
+Subject: [PATCH 13/13] cfg80211: Add API to allow querying regdb for wmm_rule
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Multiple interfaces with same bss type could affect each other if
-they are sharing the same mac address. In this patch, different
-mac address is assigned to new interface which have same bss type
-with exist interfaces.
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
+In general regulatory self managed devices maintain their own
+regulatory profiles thus it doesn't have to query the regulatory database
+on country change.
+
+ETSI has recently introduced a new channel access mechanism for 5GHz
+that all wlan devices need to comply with.
+These values are stored in the regulatory database.
+There are self managed devices which can't maintain these
+values on their own. Add API to allow self managed regulatory devices
+to query the regulatory database for high band wmm rule.
+
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/main.c | 24 +++++++++++++++++++-----
- drivers/net/wireless/marvell/mwifiex/main.h | 13 +++++++++++++
- 2 files changed, 32 insertions(+), 5 deletions(-)
+ include/net/cfg80211.h | 28 ++++++++++++++++++++++++++
+ net/wireless/reg.c     | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 82 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 3dd8584..20737f5 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -960,13 +960,26 @@ int mwifiex_set_mac_address(struct mwifiex_private *priv,
- 			    struct net_device *dev)
- {
- 	int ret;
--	u64 mac_addr;
-+	u64 mac_addr, old_mac_addr;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7d49cd0cf92d..647cb33e738a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -6,6 +6,7 @@
+  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014 Intel Mobile Communications GmbH
+  * Copyright 2015-2017	Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -4653,6 +4654,33 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+  */
+ const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
  
--	if (priv->bss_type != MWIFIEX_BSS_TYPE_P2P)
--		goto done;
-+	if (priv->bss_type == MWIFIEX_BSS_TYPE_ANY)
-+		return -ENOTSUPP;
- 
- 	mac_addr = ether_addr_to_u64(priv->curr_addr);
--	mac_addr |= BIT_ULL(MWIFIEX_MAC_LOCAL_ADMIN_BIT);
-+	old_mac_addr = mac_addr;
-+
-+	if (priv->bss_type == MWIFIEX_BSS_TYPE_P2P)
-+		mac_addr |= BIT_ULL(MWIFIEX_MAC_LOCAL_ADMIN_BIT);
-+
-+	if (mwifiex_get_intf_num(priv->adapter, priv->bss_type) > 1) {
-+		/* Set mac address based on bss_type/bss_num */
-+		mac_addr ^= BIT_ULL(priv->bss_type + 8);
-+		mac_addr += priv->bss_num;
-+	}
-+
-+	if (mac_addr == old_mac_addr)
-+		goto done;
-+
- 	u64_to_ether_addr(mac_addr, priv->curr_addr);
- 
- 	/* Send request to firmware */
-@@ -974,13 +987,14 @@ int mwifiex_set_mac_address(struct mwifiex_private *priv,
- 			       HostCmd_ACT_GEN_SET, 0, NULL, true);
- 
- 	if (ret) {
-+		u64_to_ether_addr(old_mac_addr, priv->curr_addr);
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "set mac address failed: ret=%d\n", ret);
- 		return ret;
- 	}
- 
- done:
--	memcpy(dev->dev_addr, priv->curr_addr, ETH_ALEN);
-+	ether_addr_copy(dev->dev_addr, priv->curr_addr);
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index c4c6918..f607d0b 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1276,6 +1276,19 @@ int mwifiex_cmd_802_11_bg_scan_config(struct mwifiex_private *priv,
- 	return pos;
- }
- 
-+/* This function return interface number with the same bss_type.
++/**
++ * DOC: Internal regulatory db functions
++ *
 + */
-+static inline u8
-+mwifiex_get_intf_num(struct mwifiex_adapter *adapter, u8 bss_type)
-+{
-+	u8 i, num = 0;
 +
-+	for (i = 0; i < adapter->priv_num; i++)
-+		if (adapter->priv[i] && adapter->priv[i]->bss_type == bss_type)
-+			num++;
-+	return num;
-+}
++/**
++ * reg_query_regdb_wmm -  Query internal regulatory db for wmm rule
++ * Regulatory self-managed driver can use it to proactively
++ *
++ * @alpha2: the ISO/IEC 3166 alpha2 wmm rule to be queried.
++ * @freq: the freqency(in MHz) to be queried.
++ * @dbptr: pointer where the regdb wmm data is to be stored (or %NULL if
++ *	irrelevant). This can be used later for deduplication.
++ * @rule: pointer to store the wmm rule from the regulatory db.
++ *
++ * Self-managed wireless drivers can use this function to  query
++ * the internal regulatory database to check whether the given
++ * ISO/IEC 3166 alpha2 country and freq have wmm rule limitations.
++ *
++ * Drivers should check the return value, its possible you can get
++ * an -ENODATA.
++ *
++ * Return: 0 on success. -ENODATA.
++ */
++int reg_query_regdb_wmm(char *alpha2, int freq, u32 *ptr,
++			struct ieee80211_wmm_rule *rule);
 +
  /*
-  * This function returns the correct private structure pointer based
-  * upon the BSS type and BSS number.
+  * callbacks for asynchronous cfg80211 methods, notification
+  * functions and BSS handling helpers
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 7c7c0e0f8d9d..1896394c6e7f 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -878,6 +878,60 @@ static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
+ 	}
+ }
+ 
++static int __regdb_query_wmm(const struct fwdb_header *db,
++			     const struct fwdb_country *country, int freq,
++			     u32 *dbptr, struct ieee80211_wmm_rule *rule)
++{
++	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
++	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
++	int i;
++
++	for (i = 0; i < coll->n_rules; i++) {
++		__be16 *rules_ptr = (void *)((u8 *)coll + ALIGN(coll->len, 2));
++		unsigned int rule_ptr = be16_to_cpu(rules_ptr[i]) << 2;
++		struct fwdb_rule *rrule = (void *)((u8 *)db + rule_ptr);
++		struct fwdb_wmm_rule *wmm;
++		unsigned int wmm_ptr;
++
++		if (rrule->len < offsetofend(struct fwdb_rule, wmm_ptr))
++			continue;
++
++		if (freq >= KHZ_TO_MHZ(be32_to_cpu(rrule->start)) &&
++		    freq <= KHZ_TO_MHZ(be32_to_cpu(rrule->end))) {
++			wmm_ptr = be16_to_cpu(rrule->wmm_ptr) << 2;
++			wmm = (void *)((u8 *)db + wmm_ptr);
++			set_wmm_rule(rule, wmm);
++			if (dbptr)
++				*dbptr = wmm_ptr;
++			return 0;
++		}
++	}
++
++	return -ENODATA;
++}
++
++int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
++			struct ieee80211_wmm_rule *rule)
++{
++	const struct fwdb_header *hdr = regdb;
++	const struct fwdb_country *country;
++
++	if (IS_ERR(regdb))
++		return PTR_ERR(regdb);
++
++	country = &hdr->country[0];
++	while (country->coll_ptr) {
++		if (alpha2_equal(alpha2, country->alpha2))
++			return __regdb_query_wmm(regdb, country, freq, dbptr,
++						 rule);
++
++		country++;
++	}
++
++	return -ENODATA;
++}
++EXPORT_SYMBOL(reg_query_regdb_wmm);
++
+ struct wmm_ptrs {
+ 	struct ieee80211_wmm_rule *rule;
+ 	u32 ptr;
 -- 
-1.9.1
+2.15.1
