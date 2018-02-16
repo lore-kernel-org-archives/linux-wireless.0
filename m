@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57888 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933729AbeBLM4A (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:49963 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753977AbeBPINb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 07:56:00 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pkshih <pkshih@realtek.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v2 00/10] rtlwifi: add more materials for 8822be
-References: <20180129032641.17841-1-pkshih@realtek.com>
-        <1518183733.2023.3.camel@realtek.com>
-Date: Mon, 12 Feb 2018 14:55:55 +0200
-In-Reply-To: <1518183733.2023.3.camel@realtek.com> (pkshih@realtek.com's
-        message of "Fri, 9 Feb 2018 13:42:14 +0000")
-Message-ID: <87wozi8izo.fsf@kamboji.qca.qualcomm.com> (sfid-20180212_135611_566906_744196B7)
+        Fri, 16 Feb 2018 03:13:31 -0500
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH 0/8] wil6210 patches
+Date: Fri, 16 Feb 2018 10:04:35 +0200
+Message-Id: <1518768283-2318-1-git-send-email-merez@codeaurora.org> (sfid-20180216_091407_540459_9966A8BB)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pkshih <pkshih@realtek.com> writes:
+Support for multiple virtual interfaces (MultiVIF)
 
-> On Mon, 2018-01-29 at 11:26 +0800, pkshih@realtek.com wrote:
->> From: Ping-Ke Shih <pkshih@realtek.com>
->>=20
->> I continue to submit more materials needed by 8822be. A special patch is
->> "PATCH 10/10" that add new files to support 8822be btcoex in case wifi
->> only. In my plan, 8822be btcoex for combo card will be sumitted in next
->> patchset.
->>=20
->> v2: Add 'Acked-by: Larry Finger' if the commits are acked
->> =C2=A0=C2=A0=C2=A0=C2=A0Use 'switch...case' to replace verbose 'if...els=
-e if...else if...else'
->> =C2=A0=C2=A0=C2=A0=C2=A0Use extern declaration to quiet sparse warnings
->>=20
->> Ping-Ke Shih (10):
->> =C2=A0 rtlwifi: enable mac80211 fast-tx support
->> =C2=A0 rtlwifi: Add Support VHT to spec_ver
->> =C2=A0 rtlwifi: Use 6 bits as sequence number of TX report
->> =C2=A0 rtlwifi: Extend tx_power_by_rate_offset size for newer IC
->> =C2=A0 rtlwifi: Add rate section and its related definition and comment
->> =C2=A0 rtlwifi: Fix VHT NSS in RC
->> =C2=A0 rtlwifi: add definition radio_mask for RF and maximum bandwidth
->> =C2=A0 rtlwifi: add efuse ops for other components
->> =C2=A0 rtlwifi: btcoex: add routine to set default port id
->> =C2=A0 rtlwifi: btcoex: Add 8822be btcoex supported files for wifi only
+This series of patches add MultiVIF support to the wil6210 driver.
+It makes it possible to start multiple interfaces where each interface
+is an independent WIFI entity such as station, AP and so on.
 
-[...]
+Each virtual interface (VIF) is mapped so a separate network interface
+(such as wlan0, wlan1, …) so it can also be treated separately for
+routing and other network operations.
 
-> Do you have any comment with this patchset that is pending for 2 weeks?
+MultiVIF requires support in the FW. The FW will report whether it
+supports MultiVIF and the allowed concurrency combinations. The driver
+will export this information to user space and enforce it so it will
+only be possible to start a combination of VIFs supported by the FW.
 
-Normally I don't review or apply patches during when the merge window is
-open, only exception being important fixes going to wireless-drivers
-tree.
+Initially our FW only supports multiple access points (APs) so it is
+possible for example to have a secure and guest network. The code was
+only validated with this scenario and we will improve the support for
+other concurrency combinations with future patches, as it becomes
+available in the FW.
 
-Also read this: https://wireless.wiki.kernel.org/en/developers/documentatio=
-n/submittingpatches#checking_state_of_patches_from_patchwork
+Lior David (8):
+  wil6210: add wil6210_vif structure for per-VIF data
+  wil6210: support concurrency record in FW file
+  wil6210: infrastructure for multiple virtual interfaces
+  wil6210: add support for adding and removing virtual interfaces
+  wil6210: multiple VIFs support for start/stop AP
+  wil6210: rename p2p_wdev_mutex to vif_mutex
+  wil6210: multiple VIFs support for connections and data path
+  wil6210: add debugfs 'mids' file
 
---=20
-Kalle Valo
+ drivers/net/wireless/ath/wil6210/cfg80211.c   | 741 ++++++++++++++++++--------
+ drivers/net/wireless/ath/wil6210/debug.c      |   9 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c    | 117 +++-
+ drivers/net/wireless/ath/wil6210/ethtool.c    |   4 +-
+ drivers/net/wireless/ath/wil6210/fw.h         |  38 +-
+ drivers/net/wireless/ath/wil6210/fw_inc.c     |  52 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c  |   8 +-
+ drivers/net/wireless/ath/wil6210/main.c       | 331 +++++++-----
+ drivers/net/wireless/ath/wil6210/netdev.c     | 382 ++++++++++---
+ drivers/net/wireless/ath/wil6210/p2p.c        | 175 +++---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c   |  57 +-
+ drivers/net/wireless/ath/wil6210/pm.c         | 132 +++--
+ drivers/net/wireless/ath/wil6210/pmc.c        |   8 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |  45 +-
+ drivers/net/wireless/ath/wil6210/txrx.c       | 177 +++---
+ drivers/net/wireless/ath/wil6210/txrx.h       |  22 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h    | 217 +++++---
+ drivers/net/wireless/ath/wil6210/wmi.c        | 460 +++++++++++-----
+ 18 files changed, 2081 insertions(+), 894 deletions(-)
+
+-- 
+1.9.1
