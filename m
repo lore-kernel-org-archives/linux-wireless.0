@@ -1,87 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp86.iad3a.emailsrvr.com ([173.203.187.86]:57956 "EHLO
-        smtp86.iad3a.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752726AbeBBRBq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55766 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753977AbeBPIOa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Feb 2018 12:01:46 -0500
-Date: Fri, 2 Feb 2018 11:55:16 -0500 (EST)
-Subject: RE: [Make-wifi-fast] [PATCH] mac80211: Adjust TSQ pacing shift
-From: "dpreed@deepplum.com" <dpreed@deepplum.com>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
+        Fri, 16 Feb 2018 03:14:30 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;charset=UTF-8
-In-Reply-To: <20180202151105.30043-1-toke@toke.dk>
-References: <20180202151105.30043-1-toke@toke.dk>
-Message-ID: <1517590516.742814797@apps.rackspace.com> (sfid-20180202_202430_841945_EABC02FB)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 16 Feb 2018 10:14:28 +0200
+From: merez@codeaurora.org
+To: Colin King <colin.king@canonical.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH][next] wil6210: fix spelling mistake: "preperation"->
+ "preparation"
+In-Reply-To: <20180130192737.8986-1-colin.king@canonical.com>
+References: <20180130192737.8986-1-colin.king@canonical.com>
+Message-ID: <aae1b606d85950d0b2887499c9265370@codeaurora.org> (sfid-20180216_091449_852233_67A24BD6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm curious about the "WiFi Aware" initiative by the WiFi Alliance.
+On 2018-01-30 21:27, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Trivial fix to spelling mistake in debug error message text.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/net/wireless/ath/wil6210/main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/wil6210/main.c
+> b/drivers/net/wireless/ath/wil6210/main.c
+> index 0c61a6c13991..04c8651274d9 100644
+> --- a/drivers/net/wireless/ath/wil6210/main.c
+> +++ b/drivers/net/wireless/ath/wil6210/main.c
+> @@ -715,7 +715,7 @@ static void wil_bl_prepare_halt(struct wil6210_priv 
+> *wil)
+>  		    offsetof(struct bl_dedicated_registers_v0,
+>  			     boot_loader_struct_version));
+>  	if (!tmp) {
+> -		wil_dbg_misc(wil, "old BL, skipping halt preperation\n");
+> +		wil_dbg_misc(wil, "old BL, skipping halt preparation\n");
+>  		return;
+>  	}
 
-Does LEDE and/or Linux support this protocol? I know gSupplicant is potentially the way such things are supposed to work, at least according to its supporters.
+Reviewed-by: Maya Erez <merez@codeaurora.org>
 
-The general NAN (Neighborhood-Aware-Networking) concept makes a lot of sense at one level, but as an Internet guy, it troubles me that they decided to split from the Internet and go a balkanized direction. To me, the neighborhood is interesting only as part of a larger Internet.
-
-It also troubles me that WiFi Aware is a "certification program" rather than a real standard.
-
------Original Message-----
-From: "Toke Høiland-Jørgensen" <toke@toke.dk>
-Sent: Friday, February 2, 2018 10:11am
-To: make-wifi-fast@lists.bufferbloat.net, linux-wireless@vger.kernel.org
-Cc: "Toke Høiland-Jørgensen" <toke@toke.dk>
-Subject: [Make-wifi-fast] [PATCH] mac80211: Adjust TSQ pacing shift
-
-Since we now have the convenient helper to do so, actually adjust the
-TSQ pacing shift for packets going out over a WiFi interface. This
-significantly improves throughput for locally-originated TCP
-connections. The default pacing shift of 10 corresponds to ~1ms of
-queued packet data. Adjusting this to a shift of 8 (i.e. ~4ms) improves
-1-hop throughput for ath9k by a factor of 3, whereas increasing it more
-has diminishing returns.
-
-Achieved throughput for different values of sk_pacing_shift (average of
-5 iterations of 10-sec netperf runs to a host on the other side of the
-WiFi hop):
-
-sk_pacing_shift 10:  43.21 Mbps (pre-patch)
-sk_pacing_shift  9:  78.17 Mbps
-sk_pacing_shift  8: 123.94 Mbps
-sk_pacing_shift  7: 128.31 Mbps
-
-Latency for competing flows increases from ~3 ms to ~10 ms with this
-change. This is about the same magnitude of queueing latency induced by
-flows that are not originated on the WiFi device itself (and so are not
-limited by TSQ).
-
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- net/mac80211/tx.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 25904af38839..69722504e3e1 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3574,6 +3574,14 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	if (!IS_ERR_OR_NULL(sta)) {
- 		struct ieee80211_fast_tx *fast_tx;
- 
-+		/* We need a bit of data queued to build aggregates properly, so
-+		 * instruct the TCP stack to allow more than a single ms of data
-+		 * to be queued in the stack. The value is a bit-shift of 1
-+		 * second, so 8 is ~4ms of queued data. Only affects local TCP
-+		 * sockets.
-+		 */
-+		sk_pacing_shift_update(skb->sk, 8);
-+
- 		fast_tx = rcu_dereference(sta->fast_tx);
- 
- 		if (fast_tx &&
 -- 
-2.16.0
-
-_______________________________________________
-Make-wifi-fast mailing list
-Make-wifi-fast@lists.bufferbloat.net
-https://lists.bufferbloat.net/listinfo/make-wifi-fast
+Maya Erez
+Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
