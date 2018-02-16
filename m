@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37870 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754412AbeBGPjV (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:3135 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752396AbeBPPL4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Feb 2018 10:39:21 -0500
-Subject: Re: [PATCH] ath9k: break out of irq handler after 5 jiffies
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-References: <1517958324-13536-1-git-send-email-greearb@candelatech.com>
- <2129dcdd-5963-c4da-600e-83f8c394d05c@nbd.name>
- <1518000956.3124.7.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <2086dc09-485c-2b7f-de74-35ab2e0dfc4c@candelatech.com> (sfid-20180207_163925_630451_41E7F62D)
-Date: Wed, 7 Feb 2018 07:39:13 -0800
+        Fri, 16 Feb 2018 10:11:56 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 00/12] fix to remove line over 80 chars and few other
+Date: Fri, 16 Feb 2018 20:41:37 +0530
+Message-ID: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180216_161203_820005_C08DF79E)
 MIME-Version: 1.0
-In-Reply-To: <1518000956.3124.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch series contains changes to fix line over 80 characters,
+too many leading tabs and few other issues reported by checkpatch.pl
+script.
 
+Ajay Singh (12):
+  staging: wilc1000: remove unnecessary comments to avoid line over 80
+    char issue
+  staging: wilc1000: fix too many leading tabs warning in
+    sdio_clear_int_ext()
+  staging: wilc1000: fix line over 80 characters in sdio_clear_int_ext()
+  staging: wilc1000: fix open parenthesis alignment mismatch in
+    wilc_parse_network_info()
+  staging: wilc1000: fix line over 80 char in wilc_wlan_cfg_set_str()
+  staging: wilc1000: remove blank line before close brace in
+    wilc_wlan_cfg_get_wid_value()
+  staging: wilc1000: fix line over 80 chars in
+    wilc_wlan_cfg_indicate_rxi()
+  staging: wilc1000: fix line over 80 chars in
+    wilc_wlan_cfg_get_wid_value()
+  staging: wilc1000: fix line over 80 chars in add_tcp_pending_ack()
+  staging: wilc1000: fix line over 80 characters in tcp_process()
+  staging: wilc1000: fix line over 80 chars in
+    wilc_wlan_txq_filter_dup_tcp_ack()
+  staging: wilc1000: fix line over 80 chars in wilc_wlan_handle_txq()
 
-On 02/07/2018 02:55 AM, Johannes Berg wrote:
-> On Wed, 2018-02-07 at 10:16 +0100, Felix Fietkau wrote:
->> On 2018-02-07 00:05, greearb@candelatech.com wrote:
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> In case where the system is sluggish, we should probably break out
->>> early.  Maybe this will fix issues where the OS thinks the IRQ handler
->>> is not responding and disables the IRQ because 'nobody cared'
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>
->> 5 jiffies as a hardcoded value is a bad idea, since it produces
->> different behavior based on CONFIG_HZ.
-
-I figured that was a benefit since it would run shorter duration on systems with
-a faster HZ clock.
-
->
-> Also, err, NAPI? Or is something else is going on here?
-
-I don't really know, but part of my test was running traffic while creating
-1200 stations, so likely there were lots of higher-level lock contention that
-slowed down sending pkts up the stack.
-
-I got a bunch of errors about IRQs being ignored because nobody cared.  I noticed
-that the ath9k loop could handle up to 500 or so frames, and that seemed like too
-many for my particular test case.
-
-Once I put in this patch, I did not see the 'nobody cared' error again.
-
-There could easily be a better fix.  If you all want me to use a fixed time instead
-of HZ, then please suggest a value.  I was testing with HZ of 1000, btw.
-
-Thanks,
-Ben
-
->
-> johannes
->
+ drivers/staging/wilc1000/coreconfigurator.c |   4 +-
+ drivers/staging/wilc1000/wilc_sdio.c        | 145 ++++++++++++++--------------
+ drivers/staging/wilc1000/wilc_wlan.c        |  70 +++++++++-----
+ drivers/staging/wilc1000/wilc_wlan_cfg.c    |  21 ++--
+ 4 files changed, 134 insertions(+), 106 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
