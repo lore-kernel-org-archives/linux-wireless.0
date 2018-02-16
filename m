@@ -1,111 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:26099 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031174AbeBNPPG (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59176 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754380AbeBPQQp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Feb 2018 10:15:06 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 5/6] staging: wilc1000: fix line over 80 characters in wilc_spi_read_int()
-Date: Wed, 14 Feb 2018 16:40:14 +0530
-Message-ID: <1518606615-14404-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180214_161510_116451_DAD8940B)
-In-Reply-To: <1518606615-14404-1-git-send-email-ajay.kathat@microchip.com>
-References: <1518606615-14404-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 16 Feb 2018 11:16:45 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 16 Feb 2018 18:12:58 +0200
+Message-Id: <20180216161301.29339-11-luca@coelho.fi> (sfid-20180216_171648_834521_B0E07E99)
+In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
+References: <20180216161301.29339-1-luca@coelho.fi>
+Subject: [PATCH 10/13] mac80211: agg-rx: Accept ADDBA request update if timeout did not change
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor wilc_spi_read_int() to fix the line over 80 char issues reported
-by checkpatch.pl script.
+From: Ilan Peer <ilan.peer@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+As there is no support for updating an existing ADDBA session with
+a peer, we decline the request (while keeping the session active).
+However, in case that the timeout did not change, there is no need
+to decline the request, so modify the code to reply with status success
+in such a case (this is useful for interoperability with APs that send an
+ADDBA request update without changing the timeout value).
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/wilc_spi.c | 57 +++++++++++++++++++------------------
- 1 file changed, 29 insertions(+), 28 deletions(-)
+ net/mac80211/agg-rx.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index fddc0db..7c58beb8 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -939,45 +939,46 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
- 	int happened, j;
- 	u32 unknown_mask;
- 	u32 irq_flags;
-+	int k = IRG_FLAGS_OFFSET + 5;
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 1f3188d03840..420710894d6d 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -302,9 +302,14 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 					   "updated AddBA Req from %pM on tid %u\n",
+ 					   sta->sta.addr, tid);
+ 			/* We have no API to update the timeout value in the
+-			 * driver so reject the timeout update.
++			 * driver so reject the timeout update if the timeout
++			 * changed. If if did not change, i.e., no real update,
++			 * just reply with success.
+ 			 */
+-			status = WLAN_STATUS_REQUEST_DECLINED;
++			if (sta->ampdu_mlme.tid_rx[tid]->timeout == timeout)
++				status = WLAN_STATUS_SUCCESS;
++			else
++				status = WLAN_STATUS_REQUEST_DECLINED;
+ 			goto end;
+ 		}
  
- 	if (g_spi.has_thrpt_enh) {
- 		ret = spi_internal_read(wilc, 0xe840 - WILC_SPI_REG_BASE,
- 					int_status);
--	} else {
--		ret = wilc_spi_read_reg(wilc, WILC_VMM_TO_HOST_SIZE,
--					&byte_cnt);
--		if (!ret) {
--			dev_err(&spi->dev,
--				"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
--			goto _fail_;
--		}
--		tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
-+		return ret;
-+	}
-+	ret = wilc_spi_read_reg(wilc, WILC_VMM_TO_HOST_SIZE, &byte_cnt);
-+	if (!ret) {
-+		dev_err(&spi->dev,
-+			"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
-+		goto _fail_;
-+	}
-+	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
- 
--		j = 0;
--		do {
--			happened = 0;
-+	j = 0;
-+	do {
-+		happened = 0;
- 
--			wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
--			tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
-+		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
-+		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
- 
--			if (g_spi.nint > 5) {
--				wilc_spi_read_reg(wilc, 0x1a94,
--						  &irq_flags);
--				tmp |= (((irq_flags >> 0) & 0x7) << (IRG_FLAGS_OFFSET + 5));
--			}
-+		if (g_spi.nint > 5) {
-+			wilc_spi_read_reg(wilc, 0x1a94, &irq_flags);
-+			tmp |= (((irq_flags >> 0) & 0x7) << k);
-+		}
- 
--			unknown_mask = ~((1ul << g_spi.nint) - 1);
-+		unknown_mask = ~((1ul << g_spi.nint) - 1);
- 
--			if ((tmp >> IRG_FLAGS_OFFSET) & unknown_mask) {
--				dev_err(&spi->dev, "Unexpected interrupt (2): j=%d, tmp=%x, mask=%x\n", j, tmp, unknown_mask);
--					happened = 1;
--			}
-+		if ((tmp >> IRG_FLAGS_OFFSET) & unknown_mask) {
-+			dev_err(&spi->dev,
-+				"Unexpected interrupt(2):j=%d,tmp=%x,mask=%x\n",
-+				j, tmp, unknown_mask);
-+				happened = 1;
-+		}
- 
--			j++;
--		} while (happened);
-+		j++;
-+	} while (happened);
- 
--		*int_status = tmp;
--	}
-+	*int_status = tmp;
- 
- _fail_:
- 	return ret;
 -- 
-2.7.4
+2.15.1
