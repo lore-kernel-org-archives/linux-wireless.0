@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40094 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751399AbeBAIgU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Feb 2018 03:36:20 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: Re: [v5 7/8] rsi: add module parameter operating mode
-References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
-        <1513168977-2121-8-git-send-email-amitkarwar@gmail.com>
-        <87a7wtmbf0.fsf@purkki.adurom.net>
-        <6E3DC959-D3C0-4638-A94B-5F800A3A89DC@holtmann.org>
-Date: Thu, 01 Feb 2018 10:36:15 +0200
-In-Reply-To: <6E3DC959-D3C0-4638-A94B-5F800A3A89DC@holtmann.org> (Marcel
-        Holtmann's message of "Thu, 1 Feb 2018 09:20:39 +0100")
-Message-ID: <87efm5m7i8.fsf@kamboji.qca.qualcomm.com> (sfid-20180201_093625_530830_3C0DBA36)
+Received: from mx3.wp.pl ([212.77.101.9]:53547 "EHLO mx3.wp.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752984AbeBPAfl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Feb 2018 19:35:41 -0500
+Date: Thu, 15 Feb 2018 16:35:33 -0800
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt7601u: make write with mask access atomic
+Message-ID: <20180215163533.3c3a6ebb@cakuba.netronome.com> (sfid-20180216_013552_543169_C012ACEF)
+In-Reply-To: <CAJ0CqmVG4rNO=MSxaNF6s9vS3QueBVv0aFddETPaMpPQsYJh4Q@mail.gmail.com>
+References: <cover.1518734856.git.lorenzo.bianconi@redhat.com>
+        <5bb3bb069bdd4663b69b60b782432c2faddc1efc.1518734856.git.lorenzo.bianconi@redhat.com>
+        <20180215151445.52e08b03@cakuba.netronome.com>
+        <CAJ0CqmVG4rNO=MSxaNF6s9vS3QueBVv0aFddETPaMpPQsYJh4Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcel Holtmann <marcel@holtmann.org> writes:
+On Fri, 16 Feb 2018 01:02:31 +0100, Lorenzo Bianconi wrote:
+> > On Thu, 15 Feb 2018 23:59:24 +0100, Lorenzo Bianconi wrote:  
+> >> Introduce __mt7601u_rr and __mt7601u_vendor_single_wr routines in order
+> >> to make mt7601u_rmw and mt7601u_rmc atomic since it is possible that
+> >> read and write accesses of mt7601u_rmw/mt7601u_rmc can be interleaved
+> >> with a different write operation on the same register.
+> >> Moreover move write trace point in __mt7601u_vendor_single_wr
+> >>
+> >> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>  
+> >
+> > Could you provide an example of which accesses make it problematic?
+> > Is this fixing an actual bug?  
+> 
+> Hi Jakub,
+> 
+> it is not an issue I had experimented, I noticed a theoretical race
+> reviewing the code.
+> AFAIU, based on the current implementation it is possible that mt7601u_rmw
+> (with mt7601u_rr) loads data from given register but its store access
+> (mt7601u_wr) is
+> preceded by another mt7601u_wr on the same register. In this case the
+> value configured by
+> the first mt7601u_wr executed is overwritten by the second one (the
+> store from mt7601u_rmw)
+> even if the first write is setting a different subfield respect to
+> mt7601u_rmw.
 
-> Hi Kalle,
->
->>> Operating mode determines the support for other protocols.
->>> This is made as module parameter for better usage.
->>> 
->>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
->>> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
->> 
->> [...]
->> 
->>> +/* Default operating mode is wlan STA + BT */
->>> +static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
->>> +module_param(dev_oper_mode, ushort, 0444);
->>> +MODULE_PARM_DESC(dev_oper_mode,
->>> +		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
->>> +		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
->>> +		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
->> 
->> I really wish that we have nl80211 interface for configuring btcoex. We
->> have been talking about that for years but nobody has implemented it :(
->
-> the Bluetooth subsystem and Wireless subsystem can handle that
-> perfectly between themselves. Involving userspace is utterly
-> pointless. First step should be that the Wireless subsystem has an
-> option to inform its actively used frequencies to the Bluetooth
-> subsystem. It then could adjust AFP channel mapping.
+Hm.. There should be no path in the driver where that could cause
+problems AFAIR.  We have reg_atomic_mutex and hw_atomic_mutex to
+protect from concurrent access to the HW where they are possible.
+RMW operations are non-atomic by definition, it's supposed to work 
+like PCIe register accesses would - 32bit reads/writes are atomic, 
+but RMW is not.
 
-Yeah, that would be much better.
-
--- 
-Kalle Valo
+So I'm not sure what to do with this patch.  Doesn't seem necessary...
