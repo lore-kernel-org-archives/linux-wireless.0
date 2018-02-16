@@ -1,78 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59116 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758530AbeBPQNQ (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:60547 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754546AbeBPPMR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 11:13:16 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 16 Feb 2018 18:12:56 +0200
-Message-Id: <20180216161301.29339-9-luca@coelho.fi> (sfid-20180216_171327_068115_BF879509)
-In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
-References: <20180216161301.29339-1-luca@coelho.fi>
-Subject: [PATCH 08/13] mac80211: Do not disconnect on invalid operating class
+        Fri, 16 Feb 2018 10:12:17 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 06/12] staging: wilc1000: remove blank line before close brace in wilc_wlan_cfg_get_wid_value()
+Date: Fri, 16 Feb 2018 20:41:43 +0530
+Message-ID: <1518793909-15573-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180216_161223_411151_66273AA1)
+In-Reply-To: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+Cleanup patch to remove "Blank lines aren't necessary before a close
+brace '}'" issue reported by checkpatch.pl script.
 
-Some APs include a non global operating class in their extended channel
-switch information element. In such a case, as the operating class is not
-known, mac80211 would decide to disconnect.
-
-However the specification states that the operating class needs to be
-taken from Annex E, but it does not specify from which table it should be
-taken, so it is valid for an AP to use a non global operating class.
-
-To avoid possibly unneeded disconnection, in such a case ignore the
-operating class and assume that the current band is used, and if the
-resulting channel and band configuration is invalid disconnect.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- net/mac80211/spectmgmt.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index ee0181778a42..029334835747 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -8,6 +8,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2007-2008, Intel Corporation
-  * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright (C) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -27,7 +28,7 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 				 u32 sta_flags, u8 *bssid,
- 				 struct ieee80211_csa_ie *csa_ie)
- {
--	enum nl80211_band new_band;
-+	enum nl80211_band new_band = current_band;
- 	int new_freq;
- 	u8 new_chan_no;
- 	struct ieee80211_channel *new_chan;
-@@ -55,15 +56,13 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 				elems->ext_chansw_ie->new_operating_class,
- 				&new_band)) {
- 			sdata_info(sdata,
--				   "cannot understand ECSA IE operating class %d, disconnecting\n",
-+				   "cannot understand ECSA IE operating class, %d, ignoring\n",
- 				   elems->ext_chansw_ie->new_operating_class);
--			return -EINVAL;
- 		}
- 		new_chan_no = elems->ext_chansw_ie->new_ch_num;
- 		csa_ie->count = elems->ext_chansw_ie->count;
- 		csa_ie->mode = elems->ext_chansw_ie->mode;
- 	} else if (elems->ch_switch_ie) {
--		new_band = current_band;
- 		new_chan_no = elems->ch_switch_ie->new_ch_num;
- 		csa_ie->count = elems->ch_switch_ie->count;
- 		csa_ie->mode = elems->ch_switch_ie->mode;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index c4b3d8d..752b292 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -497,7 +497,6 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
+ 
+ 						i += toggle;
+ 						toggle ^= 1;
+-
+ 					}
+ 					memcpy(buffer,  &g_cfg_str[i].str[2],
+ 					       size);
 -- 
-2.15.1
+2.7.4
