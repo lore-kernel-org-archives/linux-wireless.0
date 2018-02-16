@@ -1,166 +1,410 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:35904 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753524AbeB0Oh4 (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:33616 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162889AbeBPSPd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 09:37:56 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v9 2/8] rsi: add bluetooth rx endpoint
-Date: Tue, 27 Feb 2018 19:56:12 +0530
-Message-Id: <1519741578-12640-3-git-send-email-amitkarwar@gmail.com> (sfid-20180227_153802_101629_0ABF471D)
-In-Reply-To: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
-References: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
+        Fri, 16 Feb 2018 13:15:33 -0500
+Subject: Re: [PATCH 1/6] staging: wilc1000: modified code comments as per
+ linux coding style
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>
+References: <1518606615-14404-1-git-send-email-ajay.kathat@microchip.com>
+ <1518606615-14404-2-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <7fa649ac-89b2-2267-099f-9f3f67bda93b@microchip.com> (sfid-20180216_191542_000484_34D73FAE)
+Date: Fri, 16 Feb 2018 20:15:30 +0200
+MIME-Version: 1.0
+In-Reply-To: <1518606615-14404-2-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Hi Ajay,
 
-USB endpoint 1 is used for WLAN which is presently in use.
-USB endpoint 2 is introduced for BT Rx traffic. Enumeration
-of Rx BT endpoint and submitting Rx BT URB are added.
+Even I cannot locate something in Documentation/CodingStyle related to single
+line comment, I prefer to use:
+/* comment */
 
->From /sys/kernel/debug/usb/devices,
-Ad=81(I) is for WLAN EP IN and Ad=01(O) is for Wlan EP OUT.
-Ad=82(I) is for BT EP IN and Ad=02(O) is for BT EP OUT.
+instead of:
+/*
+ * comment
+ */
 
-T:  Bus=01 Lev=01 Prnt=01 Port=09 Cnt=03 Dev#=  4 Spd=480  MxCh= 0
-D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
-P:  Vendor=1618 ProdID=9113 Rev= 0.02
-S:  Manufacturer=Redpine Signals, Inc.
-S:  Product=Wireless USB Network Module
-S:  SerialNumber=000000000001
-C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
-I:* If#= 0 Alt= 0 #EPs= 6 Cls=00(>ifc ) Sub=00 Prot=00 Driver=(none)
-E:  Ad=81(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=01(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=82(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=02(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
-E:  Ad=03(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+Do as you wish!
 
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
-v9: No change since v2
-v2: Included '/sys/kernel/debug/usb/devices' info in patch description(Marcel)
----
- drivers/net/wireless/rsi/rsi_91x_usb.c | 37 ++++++++++++++++++++--------------
- drivers/net/wireless/rsi/rsi_usb.h     |  6 +++---
- 2 files changed, 25 insertions(+), 18 deletions(-)
+Thank you,
+Claudiu
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index bbce809..9ab86fb 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -103,41 +103,42 @@ static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
- 	struct usb_host_interface *iface_desc;
- 	struct usb_endpoint_descriptor *endpoint;
- 	__le16 buffer_size;
--	int ii, bep_found = 0;
-+	int ii, bin_found = 0, bout_found = 0;
- 
- 	iface_desc = &(interface->altsetting[0]);
- 
- 	for (ii = 0; ii < iface_desc->desc.bNumEndpoints; ++ii) {
- 		endpoint = &(iface_desc->endpoint[ii].desc);
- 
--		if ((!(dev->bulkin_endpoint_addr)) &&
-+		if (!dev->bulkin_endpoint_addr[bin_found] &&
- 		    (endpoint->bEndpointAddress & USB_DIR_IN) &&
--		    ((endpoint->bmAttributes &
--		    USB_ENDPOINT_XFERTYPE_MASK) ==
-+		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
- 		    USB_ENDPOINT_XFER_BULK)) {
- 			buffer_size = endpoint->wMaxPacketSize;
--			dev->bulkin_size = buffer_size;
--			dev->bulkin_endpoint_addr =
-+			dev->bulkin_size[bin_found] = buffer_size;
-+			dev->bulkin_endpoint_addr[bin_found] =
- 				endpoint->bEndpointAddress;
-+			bin_found++;
- 		}
- 
--		if (!dev->bulkout_endpoint_addr[bep_found] &&
-+		if (!dev->bulkout_endpoint_addr[bout_found] &&
- 		    !(endpoint->bEndpointAddress & USB_DIR_IN) &&
- 		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
--		      USB_ENDPOINT_XFER_BULK)) {
--			dev->bulkout_endpoint_addr[bep_found] =
-+		    USB_ENDPOINT_XFER_BULK)) {
-+			buffer_size = endpoint->wMaxPacketSize;
-+			dev->bulkout_endpoint_addr[bout_found] =
- 				endpoint->bEndpointAddress;
- 			buffer_size = endpoint->wMaxPacketSize;
--			dev->bulkout_size[bep_found] = buffer_size;
--			bep_found++;
-+			dev->bulkout_size[bout_found] = buffer_size;
-+			bout_found++;
- 		}
- 
--		if (bep_found >= MAX_BULK_EP)
-+		if (bin_found >= MAX_BULK_EP || bout_found >= MAX_BULK_EP)
- 			break;
- 	}
- 
--	if (!(dev->bulkin_endpoint_addr) &&
--	    (dev->bulkout_endpoint_addr[0]))
-+	if (!(dev->bulkin_endpoint_addr[0]) &&
-+	    dev->bulkout_endpoint_addr[0])
- 		return -EINVAL;
- 
- 	return 0;
-@@ -273,7 +274,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
- 	usb_fill_bulk_urb(urb,
- 			  dev->usbdev,
- 			  usb_rcvbulkpipe(dev->usbdev,
--				dev->bulkin_endpoint_addr),
-+			  dev->bulkin_endpoint_addr[ep_num - 1]),
- 			  urb->transfer_buffer,
- 			  3000,
- 			  rsi_rx_done_handler,
-@@ -745,6 +746,12 @@ static int rsi_probe(struct usb_interface *pfunction,
- 	if (status)
- 		goto err1;
- 
-+	if (adapter->priv->coex_mode > 1) {
-+		status = rsi_rx_urb_submit(adapter, BT_EP);
-+		if (status)
-+			goto err1;
-+	}
-+
- 	return 0;
- err1:
- 	rsi_deinit_usb_interface(adapter);
-diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
-index 7e781d5..0fda14c 100644
---- a/drivers/net/wireless/rsi/rsi_usb.h
-+++ b/drivers/net/wireless/rsi/rsi_usb.h
-@@ -31,7 +31,7 @@
- #define USB_VENDOR_REGISTER_WRITE    0x16
- #define RSI_USB_TX_HEAD_ROOM         128
- 
--#define MAX_RX_URBS                  1
-+#define MAX_RX_URBS                  2
- #define MAX_BULK_EP                  8
- #define WLAN_EP                      1
- #define BT_EP                        2
-@@ -54,8 +54,8 @@ struct rsi_91x_usbdev {
- 	struct usb_interface *pfunction;
- 	struct rx_usb_ctrl_block rx_cb[MAX_RX_URBS];
- 	u8 *tx_buffer;
--	__le16 bulkin_size;
--	u8 bulkin_endpoint_addr;
-+	__le16 bulkin_size[MAX_BULK_EP];
-+	u8 bulkin_endpoint_addr[MAX_BULK_EP];
- 	__le16 bulkout_size[MAX_BULK_EP];
- 	u8 bulkout_endpoint_addr[MAX_BULK_EP];
- 	u32 tx_blk_size;
--- 
-2.7.4
+On 14.02.2018 13:10, Ajay Singh wrote:
+> diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+> index 8f71a60..5d0de4e 100644
+> --- a/drivers/staging/wilc1000/wilc_spi.c
+> +++ b/drivers/staging/wilc1000/wilc_spi.c
+> @@ -422,9 +422,9 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+>  		return N_FAIL;
+>  	}
+>  
+> -	/**
+> +	/*
+>  	 * Command/Control response
+> -	 **/
+> +	 */
+>  	if (cmd == CMD_RESET ||
+>  	    cmd == CMD_TERMINATE ||
+>  	    cmd == CMD_REPEAT) {
+> @@ -443,9 +443,9 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+>  		return N_FAIL;
+>  	}
+>  
+> -	/**
+> +	/*
+>  	 * State response
+> -	 **/
+> +	 */
+>  	rsp = rb[rix++];
+>  	if (rsp != 0x00) {
+>  		dev_err(&spi->dev, "Failed cmd state response state (%02x)\n",
+> @@ -458,12 +458,15 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+>  		int retry;
+>  		/* u16 crc1, crc2; */
+>  		u8 crc[2];
+> -		/**
+> +		/*
+>  		 * Data Respnose header
+> -		 **/
+> +		 */
+>  		retry = 100;
+>  		do {
+> -			/* ensure there is room in buffer later to read data and crc */
+> +			/*
+> +			 * ensure there is room in buffer later
+> +			 * to read data and crc
+> +			 */
+>  			if (rix < len2) {
+>  				rsp = rb[rix++];
+>  			} else {
+> @@ -481,9 +484,9 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+>  		}
+>  
+>  		if (cmd == CMD_INTERNAL_READ || cmd == CMD_SINGLE_READ) {
+> -			/**
+> +			/*
+>  			 * Read bytes
+> -			 **/
+> +			 */
+>  			if ((rix + 3) < len2) {
+>  				b[0] = rb[rix++];
+>  				b[1] = rb[rix++];
+> @@ -496,9 +499,9 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+>  			}
+>  
+>  			if (!g_spi.crc_off) {
+> -				/**
+> +				/*
+>  				 * Read Crc
+> -				 **/
+> +				 */
+>  				if ((rix + 1) < len2) {
+>  					crc[0] = rb[rix++];
+>  					crc[1] = rb[rix++];
+> @@ -524,18 +527,18 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+>  				else
+>  					nbytes = DATA_PKT_SZ - ix;
+>  
+> -				/**
+> +				/*
+>  				 * Read bytes
+> -				 **/
+> +				 */
+>  				if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
+>  					dev_err(&spi->dev, "Failed data block read, bus error...\n");
+>  					result = N_FAIL;
+>  					goto _error_;
+>  				}
+>  
+> -				/**
+> +				/*
+>  				 * Read Crc
+> -				 **/
+> +				 */
+>  				if (!g_spi.crc_off) {
+>  					if (wilc_spi_rx(wilc, crc, 2)) {
+>  						dev_err(&spi->dev, "Failed data block crc read, bus error...\n");
+> @@ -548,7 +551,10 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+>  				sz -= nbytes;
+>  			}
+>  
+> -			/*  if any data in left unread, then read the rest using normal DMA code.*/
+> +			/*
+> +			 * if any data in left unread,
+> +			 * then read the rest using normal DMA code.
+> +			 */
+>  			while (sz > 0) {
+>  				int nbytes;
+>  
+> @@ -557,14 +563,14 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+>  				else
+>  					nbytes = DATA_PKT_SZ;
+>  
+> -				/**
+> +				/*
+>  				 * read data response only on the next DMA cycles not
+>  				 * the first DMA since data response header is already
+>  				 * handled above for the first DMA.
+> -				 **/
+> -				/**
+> +				 */
+> +				/*
+>  				 * Data Respnose header
+> -				 **/
+> +				 */
+>  				retry = 10;
+>  				do {
+>  					if (wilc_spi_rx(wilc, &rsp, 1)) {
+> @@ -579,18 +585,18 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+>  				if (result == N_FAIL)
+>  					break;
+>  
+> -				/**
+> +				/*
+>  				 * Read bytes
+> -				 **/
+> +				 */
+>  				if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
+>  					dev_err(&spi->dev, "Failed data block read, bus error...\n");
+>  					result = N_FAIL;
+>  					break;
+>  				}
+>  
+> -				/**
+> +				/*
+>  				 * Read Crc
+> -				 **/
+> +				 */
+>  				if (!g_spi.crc_off) {
+>  					if (wilc_spi_rx(wilc, crc, 2)) {
+>  						dev_err(&spi->dev, "Failed data block crc read, bus error...\n");
+> @@ -616,9 +622,9 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+>  	u8 cmd, order, crc[2] = {0};
+>  	/* u8 rsp; */
+>  
+> -	/**
+> -	 *      Data
+> -	 **/
+> +	/*
+> +	 * Data
+> +	 */
+>  	ix = 0;
+>  	do {
+>  		if (sz <= DATA_PKT_SZ)
+> @@ -626,9 +632,9 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+>  		else
+>  			nbytes = DATA_PKT_SZ;
+>  
+> -		/**
+> -		 *      Write command
+> -		 **/
+> +		/*
+> +		 * Write command
+> +		 */
+>  		cmd = 0xf0;
+>  		if (ix == 0) {
+>  			if (sz <= DATA_PKT_SZ)
+> @@ -650,9 +656,9 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+>  			break;
+>  		}
+>  
+> -		/**
+> -		 *      Write data
+> -		 **/
+> +		/*
+> +		 * Write data
+> +		 */
+>  		if (wilc_spi_tx(wilc, &b[ix], nbytes)) {
+>  			dev_err(&spi->dev,
+>  				"Failed data block write, bus error...\n");
+> @@ -660,9 +666,9 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+>  			break;
+>  		}
+>  
+> -		/**
+> -		 *      Write Crc
+> -		 **/
+> +		/*
+> +		 * Write Crc
+> +		 */
+>  		if (!g_spi.crc_off) {
+>  			if (wilc_spi_tx(wilc, crc, 2)) {
+>  				dev_err(&spi->dev, "Failed data block crc write, bus error...\n");
+> @@ -671,9 +677,9 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+>  			}
+>  		}
+>  
+> -		/**
+> -		 *      No need to wait for response
+> -		 **/
+> +		/*
+> +		 * No need to wait for response
+> +		 */
+>  		ix += nbytes;
+>  		sz -= nbytes;
+>  	} while (sz);
+> @@ -733,7 +739,7 @@ static int wilc_spi_write_reg(struct wilc *wilc, u32 addr, u32 data)
+>  
+>  	data = cpu_to_le32(data);
+>  	if (addr < 0x30) {
+> -		/* Clockless register*/
+> +		/* Clockless register */
+>  		cmd = CMD_INTERNAL_WRITE;
+>  		clockless = 1;
+>  	}
+> @@ -751,9 +757,9 @@ static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+>  	int result;
+>  	u8 cmd = CMD_DMA_EXT_WRITE;
+>  
+> -	/**
+> -	 *      has to be greated than 4
+> -	 **/
+> +	/*
+> +	 * has to be greated than 4
+> +	 */
+>  	if (size <= 4)
+>  		return 0;
+>  
+> @@ -764,9 +770,9 @@ static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+>  		return 0;
+>  	}
+>  
+> -	/**
+> -	 *      Data
+> -	 **/
+> +	/*
+> +	 * Data
+> +	 */
+>  	result = spi_data_write(wilc, buf, size);
+>  	if (result != N_OK)
+>  		dev_err(&spi->dev, "Failed block data write...\n");
+> @@ -783,7 +789,7 @@ static int wilc_spi_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+>  
+>  	if (addr < 0x30) {
+>  		/* dev_err(&spi->dev, "***** read addr %d\n\n", addr); */
+> -		/* Clockless register*/
+> +		/* Clockless register */
+>  		cmd = CMD_INTERNAL_READ;
+>  		clockless = 1;
+>  	}
+> @@ -825,9 +831,9 @@ static int wilc_spi_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+>  
+>  static int _wilc_spi_deinit(struct wilc *wilc)
+>  {
+> -	/**
+> -	 *      TODO:
+> -	 **/
+> +	/*
+> +	 * TODO:
+> +	 */
+>  	return 1;
+>  }
+>  
+> @@ -849,15 +855,19 @@ static int wilc_spi_init(struct wilc *wilc, bool resume)
+>  
+>  	memset(&g_spi, 0, sizeof(struct wilc_spi));
+>  
+> -	/**
+> -	 *      configure protocol
+> -	 **/
+> +	/*
+> +	 * configure protocol
+> +	 */
+>  	g_spi.crc_off = 0;
+>  
+> -	/* TODO: We can remove the CRC trials if there is a definite way to reset */
+> +	/*
+> +	 * TODO: We can remove the CRC trials if there is a definite
+> +	 * way to reset
+> +	 */
+>  	/* the SPI to it's initial value. */
+>  	if (!spi_internal_read(wilc, WILC_SPI_PROTOCOL_OFFSET, &reg)) {
+> -		/* Read failed. Try with CRC off. This might happen when module
+> +		/*
+> +		 * Read failed. Try with CRC off. This might happen when module
+>  		 * is removed but chip isn't reset
+>  		 */
+>  		g_spi.crc_off = 1;
+> @@ -870,7 +880,7 @@ static int wilc_spi_init(struct wilc *wilc, bool resume)
+>  		}
+>  	}
+>  	if (g_spi.crc_off == 0)	{
+> -		reg &= ~0xc;    /* disable crc checking */
+> +		reg &= ~0xc; /* disable crc checking */
+>  		reg &= ~0x70;
+>  		reg |= (0x5 << 4);
+>  		if (!spi_internal_write(wilc, WILC_SPI_PROTOCOL_OFFSET, reg)) {
+> @@ -880,9 +890,9 @@ static int wilc_spi_init(struct wilc *wilc, bool resume)
+>  		g_spi.crc_off = 1;
+>  	}
+>  
+> -	/**
+> -	 *      make sure can read back chip id correctly
+> -	 **/
+> +	/*
+> +	 * make sure can read back chip id correctly
+> +	 */
+>  	if (!wilc_spi_read_reg(wilc, 0x1000, &chipid)) {
+>  		dev_err(&spi->dev, "Fail cmd read chip id...\n");
+>  		return 0;
+> @@ -994,7 +1004,10 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+>  
+>  			ret = 1;
+>  			for (i = 0; i < g_spi.nint; i++) {
+> -				/* No matter what you write 1 or 0, it will clear interrupt. */
+> +				/*
+> +				 * No matter what you write 1 or 0,
+> +				 * it will clear interrupt.
+> +				 */
+>  				if (flags & 1)
+>  					ret = wilc_spi_write_reg(wilc, 0x10c8 + i * 4, 1);
+>  				if (!ret)
+> @@ -1036,9 +1049,9 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+>  			}
+>  
+>  			if ((val & EN_VMM) == EN_VMM) {
+> -				/**
+> -				 *      enable vmm transfer.
+> -				 **/
+> +				/*
+> +				 * enable vmm transfer.
+> +				 */
+>  				ret = wilc_spi_write_reg(wilc,
+>  							 WILC_VMM_CORE_CTL, 1);
+>  				if (!ret) {
+> @@ -1065,9 +1078,9 @@ static int wilc_spi_sync_ext(struct wilc *wilc, int nint)
+>  
+>  	g_spi.nint = nint;
+>  
+> -	/**
+> -	 *      interrupt pin mux select
+> -	 **/
+> +	/*
+> +	 * interrupt pin mux select
+> +	 */
+>  	ret = wilc_spi_read_reg(wilc, WILC_PIN_MUX_0, &reg);
+>  	if (!ret) {
+>  		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
+> @@ -1082,9 +1095,9 @@ static int wilc_spi_sync_ext(struct wilc *wilc, int nint)
+>  		return 0;
+>  	}
+>  
+> -	/**
+> -	 *      interrupt enable
+> -	 **/
+> +	/*
+> +	 * interrupt enable
+> +	 */
+>  	ret = wilc_spi_read_reg(wilc, WILC_INTR_ENABLE, &reg);
+>  	if (!ret) {
+>  		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
+> -- 2.7.4
