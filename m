@@ -1,110 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44572 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751581AbeBZRmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 12:42:07 -0500
-Message-ID: <1519666924.30355.30.camel@redhat.com> (sfid-20180226_184211_211593_B1395C6D)
-Subject: Re: [PATCH] ath9k: introduce endian_check module parameter
-From: Dan Williams <dcbw@redhat.com>
-To: Bas Vermeulen <bvermeul@blackstar.nl>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Date: Mon, 26 Feb 2018 11:42:04 -0600
-In-Reply-To: <c6519a95-40b1-1ca8-469a-418f6e62a2d0@blackstar.nl>
-References: <20180226090917.7iabysywbv6h4rqr@alienware17>
-         <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com>
-         <7d6af051-2724-5dfc-cf69-376c0b501626@blackstar.nl>
-         <51632c24-c10c-0446-25e7-743a6a016ea7@lwfinger.net>
-         <c6519a95-40b1-1ca8-469a-418f6e62a2d0@blackstar.nl>
+Received: from paleale.coelho.fi ([176.9.41.70]:59008 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755642AbeBPPDQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Feb 2018 10:03:16 -0500
+Message-ID: <1518793392.7832.56.camel@coelho.fi> (sfid-20180216_160320_734955_C5027C77)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Fri, 16 Feb 2018 17:03:12 +0200
+In-Reply-To: <1518788935.7832.46.camel@coelho.fi>
+References: <1518788935.7832.46.camel@coelho.fi>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: pull-request: iwlwifi 2018-02-16
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-02-26 at 17:44 +0100, Bas Vermeulen wrote:
-> On 26-02-18 17:32, Larry Finger wrote:
-> > On 02/26/2018 04:07 AM, Bas Vermeulen wrote:
-> > > On 26-02-18 10:54, Kalle Valo wrote:
-> > > > Bas Vermeulen <bvermeul@blackstar.nl> writes:
-> > > > 
-> > > > > A random (little endian eeprom'd) ar9278 card didn't work on
-> > > > > my
-> > > > > PowerMac G5 without allowing the driver to byte-swap the
-> > > > > eeprom.
-> > > > > 
-> > > > > Introduce a module parameter endian_check to allow this to
-> > > > > happen,
-> > > > > and the PCIe card to function correctly on BE powerpc.
-> > > > > 
-> > > > > Signed-off-by: Bas Vermeulen <bvermeul@blackstar.nl>
-> > > > > ---
-> > > > >   drivers/net/wireless/ath/ath9k/init.c | 6 +++++-
-> > > > >   1 file changed, 5 insertions(+), 1 deletion(-)
-> > > > > 
-> > > > > diff --git a/drivers/net/wireless/ath/ath9k/init.c 
-> > > > > b/drivers/net/wireless/ath/ath9k/init.c
-> > > > > index fa58a32227f5..421039dc060a 100644
-> > > > > --- a/drivers/net/wireless/ath/ath9k/init.c
-> > > > > +++ b/drivers/net/wireless/ath/ath9k/init.c
-> > > > > @@ -67,6 +67,9 @@ static int ath9k_ps_enable;
-> > > > >   module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
-> > > > >   MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
-> > > > > +static int ath9k_endian_check;
-> > > > > +module_param_named(endian_check, ath9k_endian_check, int,
-> > > > > 0444);
-> > > > > +MODULE_PARM_DESC(endian_check, "Check EEPROM for endianness 
-> > > > > compatibility");
-> > > > >   #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
-> > > > >   int ath9k_use_chanctx;
-> > > > > @@ -587,7 +590,8 @@ static int ath9k_of_init(struct ath_softc
-> > > > > *sc)
-> > > > >           ether_addr_copy(common->macaddr, mac);
-> > > > >       ah->ah_flags &= ~AH_USE_EEPROM;
-> > > > > -    ah->ah_flags |= AH_NO_EEP_SWAP;
-> > > > > +    if (!ath9k_endian_check)
-> > > > > +        ah->ah_flags |= AH_NO_EEP_SWAP;
-> > > > 
-> > > > A bit annoying to have a module parameter, isn't there any
-> > > > automatic 
-> > > > way
-> > > > to detect/try this? But on the other hand I guess this isn't a
-> > > > common
-> > > > problem as nobody has reported this before?
-> > > 
-> > > There is an automatic way to detect this, but that is disabled by
-> > > the 
-> > > AH_NO_EEP_SWAP flag.
-> > > The platform initialisation does not set this flag if the 
-> > > endian_check member of pdata is set
-> > > to true, but there is no way to not set this when using a device 
-> > > tree. I used a module
-> > > parameter instead of a device tree variable because I don't know
-> > > of a 
-> > > way to modify the
-> > > device tree my PowerMac boots with.
-> > 
-> > Shouldn't you be able to set ath9k_endian_check inside #ifdef 
-> > __BIG_ENDIAN ... #endif in the initialization? I think that would 
-> > achieve the same functionality without requiring the user to set a 
-> > module parameter.
+Ooops, please hold on.  Now kbuildbot reported a compilation error. 
+And now that I checked, it seems that it didn't run for some reason
+when I pushed my patches out last week.
+
+Anyway, I'll send a second pull request in a bit, so please ignore this
+one.
+
+--
+Cheers,
+Luca.
+
+
+On Fri, 2018-02-16 at 15:48 +0200, Luca Coelho wrote:
+> Hi Kalle,
 > 
-> I could have done that, but didn't want to change the default
-> behaviour. 
-> This patch keeps the
-> current behaviour on all platforms if the module parameter is not
-> set. I 
-> don't have the means
-> to test mips and other platforms this could be used on. I don't mind 
-> having to set a module
-> parameter, I mind not being able to change the behaviour
-
-Still, module parameters are an awful user experience because you need
-to know that they exist, what they do, and whether you need it or not. 
-It doesn't just work.
-
-Is there no way to autodetect the endian-ness of the firmware itself,
-and if the known machine endian-ness isn't the same then swap?  This
-seems like a solvable problem.
-
-Dan
+> Here is my first set of fixes for 4.16.  More details in the tag
+> description.
+> 
+> I have sent this out before and kbuildbot didn't find any issues. 
+> Please let me know if there are any issues.
+> 
+> Cheers,
+> Luca.
+> 
+> 
+> The following changes since commit
+> 7ac8ff95f48cbfa609a060fd6a1e361dd62feeb3:
+> 
+>   mvpp2: fix multicast address filter (2018-02-11 22:37:04 -0500)
+> 
+> are available in the Git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-
+> fixes.git tags/iwlwifi-for-kalle-2018-02-16
+> 
+> for you to fetch changes up to
+> e1233ae4095b77a966af457ed7ebc3053c5821c8:
+> 
+>   iwlwifi: mvm: always init rs with 20mhz bandwidth rates (2018-02-16 
+> 15:34:33 +0200)
+> 
+> ----------------------------------------------------------------
+> First batch of iwlwifi fixes intended for 4.16:
+> 
+> * A couple of bugzilla fixes
+>   - Fix a bogus warning when freeing a TFD;
+>   - Fix severe throughput problem with 9000 series;
+> * Fix for a bug that caused queue hangs in certain situations;
+> * Fix for an issue with IBSS;
+> * Fix an issue with rate-scalingin AP-mode.
+> 
+> ----------------------------------------------------------------
+> Emmanuel Grumbach (1):
+>       iwlwifi: pcie: don't warn if we use all the transmit pointers
+> 
+> Naftali Goldstein (1):
+>       iwlwifi: mvm: always init rs with 20mhz bandwidth rates
+> 
+> Sara Sharon (2):
+>       iwlwifi: mvm: fix security bug in PN checking
+>       iwlwifi: mvm: fix IBSS for devices that support station type
+> API
+> 
+> Shaul Triebitz (1):
+>       iwlwifi: align timestamp cancel with timestamp start
+> 
+>  drivers/net/wireless/intel/iwlwifi/fw/init.c      |  6 ------
+>  drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  3 ++-
+>  drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 ++++
+>  drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  1 +
+>  drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  2 --
+>  drivers/net/wireless/intel/iwlwifi/mvm/rs.c       | 28
+> ++++++++++++++++++++--------
+>  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 39
+> ++++++++++++++++++++-------------------
+>  drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 24 ++++++++++++-
+> -----------
+>  drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  2 +-
+>  drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  2 +-
+>  10 files changed, 61 insertions(+), 50 deletions(-)
