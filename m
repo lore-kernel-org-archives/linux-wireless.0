@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59696 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:59052 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752685AbeBSMs4 (ORCPT
+        with ESMTP id S1756813AbeBPQNJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:48:56 -0500
+        Fri, 16 Feb 2018 11:13:09 -0500
 From: Luca Coelho <luca@coelho.fi>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Feb 2018 14:48:34 +0200
-Message-Id: <20180219124847.27169-1-luca@coelho.fi> (sfid-20180219_134903_805502_F9407F4D)
-Subject: [PATCH v2 00/13] cfg80211/mac80211 patches from our internal tree 2018-02-16
+Date: Fri, 16 Feb 2018 18:12:48 +0200
+Message-Id: <20180216161301.29339-1-luca@coelho.fi> (sfid-20180216_171341_221565_F897EB1A)
+Subject: [PATCH 00/13] cfg80211/mac80211 patches from our internal tree 2018-02-16
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -18,14 +18,11 @@ From: Luca Coelho <luciano.coelho@intel.com>
 
 Hi,
 
-This is v2 of this serites.  We have made the following changes in
-this version:
+Some patches with mac80211 and cfg80211 changes from our internal
+tree.
 
-* Fixed a sparse warning about rcu access on 10/13 [kbuildbot];
-* Fixed an rcu access bug in 12/13 found internally;
-* Reworded the commit message in 12/13 [Kalle];
-
-Please review.
+Please review, though you have already reviewed most if not all of
+them ;)
 
 Cheers,
 Luca.
@@ -60,7 +57,7 @@ Sara Sharon (4):
  include/net/ieee80211_radiotap.h   |   2 +
  include/net/mac80211.h             |  18 ++++
  include/net/regulatory.h           |  28 ++++++
- net/mac80211/agg-rx.c              |  18 +++-
+ net/mac80211/agg-rx.c              |  13 ++-
  net/mac80211/cfg.c                 |   3 +
  net/mac80211/debugfs.c             |   1 +
  net/mac80211/ibss.c                |  54 +---------
@@ -73,11 +70,11 @@ Sara Sharon (4):
  net/mac80211/spectmgmt.c           |   7 +-
  net/mac80211/sta_info.c            |   3 +-
  net/mac80211/tx.c                  |   9 +-
- net/mac80211/util.c                |  42 ++++++++
+ net/mac80211/util.c                |  40 ++++++++
  net/mac80211/wpa.c                 |   8 +-
  net/wireless/reg.c                 | 200 +++++++++++++++++++++++++++++++++++--
  net/wireless/sme.c                 |   2 +
- 22 files changed, 387 insertions(+), 91 deletions(-)
+ 22 files changed, 380 insertions(+), 91 deletions(-)
 
 -- 
 2.15.1
