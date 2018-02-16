@@ -1,269 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:52469 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751689AbeB1DHr (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:39900 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750734AbeBPWaM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 22:07:47 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 15/15] rtlwifi: btcoex: Add 8822b routine to btc interfaces
-Date: Wed, 28 Feb 2018 11:07:18 +0800
-Message-ID: <20180228030718.19510-16-pkshih@realtek.com> (sfid-20180228_040752_943173_0C8C84CD)
-In-Reply-To: <20180228030718.19510-1-pkshih@realtek.com>
-References: <20180228030718.19510-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 16 Feb 2018 17:30:12 -0500
+Received: by mail-wm0-f66.google.com with SMTP id b21so5570991wme.4
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2018 14:30:11 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: kubakici@wp.pl
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mt7601u: make write with mask access atomic
+Date: Fri, 16 Feb 2018 23:30:01 +0100
+Message-Id: <4a8ec536fda4741ef88618493d0641fbd497314c.1518819577.git.lorenzo.bianconi@redhat.com> (sfid-20180216_233016_845008_3580A353)
+In-Reply-To: <cover.1518819577.git.lorenzo.bianconi@redhat.com>
+References: <cover.1518819577.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Introduce __mt7601u_rr and __mt7601u_vendor_single_wr routines in order
+to make mt7601u_rmw and mt7601u_rmc atomic. This patch does not fix a
+reported issue but makes the usb access more robust to concurrent
+operations on the same register since it is theoretically possible that
+read and write accesses of mt7601u_rmw/mt7601u_rmc can be interleaved with
+a different write operation on the same register.
+Moreover using __mt7601u_rr and __mt7601u_vendor_single_wr in
+mt7601u_rmw/mt7601u_rmc allows to grab vendor_req_mutex mutex once
+instead of twice
 
-Add 8822b routines to run btcoex algorithm
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 100 +++++++++++++++++++++
- 1 file changed, 100 insertions(+)
+Changes since v1:
+- improve commit log
+---
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  3 +-
+ drivers/net/wireless/mediatek/mt7601u/usb.c     | 52 ++++++++++++++++++-------
+ 2 files changed, 39 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 8b6b07a936f5..e0f9985582f9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -1441,6 +1441,11 @@ void exhalbtc_power_on_setting(struct btc_coexist *btcoexist)
- 			ex_btc8723b2ant_power_on_setting(btcoexist);
- 		else if (btcoexist->board_info.btdm_ant_num == 1)
- 			ex_btc8723b1ant_power_on_setting(btcoexist);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_power_on_setting(btcoexist);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_power_on_setting(btcoexist);
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
+index c7ec40475a5f..9233744451a9 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
++++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
+@@ -147,7 +147,8 @@ enum {
+  * @rx_lock:		protects @rx_q.
+  * @con_mon_lock:	protects @ap_bssid, @bcn_*, @avg_rssi.
+  * @mutex:		ensures exclusive access from mac80211 callbacks.
+- * @vendor_req_mutex:	protects @vend_buf, ensures atomicity of split writes.
++ * @vendor_req_mutex:	protects @vend_buf, ensures atomicity of read/write
++ *			accesses
+  * @reg_atomic_mutex:	ensures atomicity of indirect register accesses
+  *			(accesses to RF and BBP).
+  * @hw_atomic_mutex:	ensures exclusive access to HW during critical
+diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
+index b9e4f6793138..d8b7863f7926 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/usb.c
++++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
+@@ -129,15 +129,14 @@ void mt7601u_vendor_reset(struct mt7601u_dev *dev)
+ 			       MT_VEND_DEV_MODE_RESET, 0, NULL, 0);
  }
  
-@@ -1454,6 +1459,11 @@ void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist)
- 	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8723b2ant_pre_load_firmware(btcoexist);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_pre_load_firmware(btcoexist);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_pre_load_firmware(btcoexist);
- 	}
+-u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset)
++/* should be called with vendor_req_mutex held */
++static u32 __mt7601u_rr(struct mt7601u_dev *dev, u32 offset)
+ {
+ 	int ret;
+ 	u32 val = ~0;
+ 
+ 	WARN_ONCE(offset > USHRT_MAX, "read high off:%08x", offset);
+ 
+-	mutex_lock(&dev->vendor_req_mutex);
+-
+ 	ret = mt7601u_vendor_request(dev, MT_VEND_MULTI_READ, USB_DIR_IN,
+ 				     0, offset, dev->vend_buf, MT_VEND_BUF);
+ 	if (ret == MT_VEND_BUF)
+@@ -146,25 +145,41 @@ u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset)
+ 		dev_err(dev->dev, "Error: wrong size read:%d off:%08x\n",
+ 			ret, offset);
+ 
+-	mutex_unlock(&dev->vendor_req_mutex);
+-
+ 	trace_reg_read(dev, offset, val);
+ 	return val;
  }
  
-@@ -1479,11 +1489,21 @@ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only)
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_init_hwconfig(btcoexist);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_init_hw_config(btcoexist, wifi_only);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_init_hw_config(btcoexist, wifi_only);
+-int mt7601u_vendor_single_wr(struct mt7601u_dev *dev, const u8 req,
+-			     const u16 offset, const u32 val)
++u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset)
+ {
+-	int ret;
++	u32 ret;
+ 
+ 	mutex_lock(&dev->vendor_req_mutex);
++	ret = __mt7601u_rr(dev, offset);
++	mutex_unlock(&dev->vendor_req_mutex);
+ 
+-	ret = mt7601u_vendor_request(dev, req, USB_DIR_OUT,
+-				     val & 0xffff, offset, NULL, 0);
++	return ret;
++}
 +
-+		halbtc_set_default_port_id_cmd(btcoexist);
-+		halbtc_send_wifi_port_id_cmd(btcoexist);
- 	}
- }
- 
- void exhalbtc_init_hw_config_wifi_only(struct wifi_only_cfg *wifionly_cfg)
- {
-+	if (IS_HARDWARE_TYPE_8822B(wifionly_cfg->adapter))
-+		ex_hal8822b_wifi_only_hw_config(wifionly_cfg);
- }
- 
- void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist)
-@@ -1506,6 +1526,11 @@ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist)
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_init_coex_dm(btcoexist);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_init_coex_dm(btcoexist);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_init_coex_dm(btcoexist);
- 	}
- 
- 	btcoexist->initilized = true;
-@@ -1541,6 +1566,11 @@ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type)
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_ips_notify(btcoexist, ips_type);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_ips_notify(btcoexist, ips_type);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_ips_notify(btcoexist, ips_type);
- 	}
- 
- 	halbtc_normal_low_power(btcoexist);
-@@ -1574,6 +1604,11 @@ void exhalbtc_lps_notify(struct btc_coexist *btcoexist, u8 type)
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_lps_notify(btcoexist, lps_type);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_lps_notify(btcoexist, lps_type);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_lps_notify(btcoexist, lps_type);
- 	}
- }
- 
-@@ -1607,6 +1642,11 @@ void exhalbtc_scan_notify(struct btc_coexist *btcoexist, u8 type)
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_scan_notify(btcoexist, scan_type);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_scan_notify(btcoexist, scan_type);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_scan_notify(btcoexist, scan_type);
- 	}
- 
- 	halbtc_normal_low_power(btcoexist);
-@@ -1615,6 +1655,8 @@ void exhalbtc_scan_notify(struct btc_coexist *btcoexist, u8 type)
- void exhalbtc_scan_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
- 				    u8 is_5g)
- {
-+	if (IS_HARDWARE_TYPE_8822B(wifionly_cfg->adapter))
-+		ex_hal8822b_wifi_only_scannotify(wifionly_cfg, is_5g);
- }
- 
- void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action)
-@@ -1655,6 +1697,11 @@ void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action)
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_connect_notify(btcoexist, asso_type);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_connect_notify(btcoexist, asso_type_v2);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_connect_notify(btcoexist, asso_type_v2);
- 	}
- 
- 	halbtc_normal_low_power(btcoexist);
-@@ -1691,6 +1738,11 @@ void exhalbtc_mediastatus_notify(struct btc_coexist *btcoexist,
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_media_status_notify(btcoexist, status);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_media_status_notify(btcoexist, status);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_media_status_notify(btcoexist, status);
- 	}
- 
- 	halbtc_normal_low_power(btcoexist);
-@@ -1737,6 +1789,13 @@ void exhalbtc_special_packet_notify(struct btc_coexist *btcoexist, u8 pkt_type)
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_special_packet_notify(btcoexist,
- 							      packet_type);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_specific_packet_notify(btcoexist,
-+							       packet_type);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_specific_packet_notify(btcoexist,
-+							       packet_type);
- 	}
- 
- 	halbtc_normal_low_power(btcoexist);
-@@ -1769,6 +1828,13 @@ void exhalbtc_bt_info_notify(struct btc_coexist *btcoexist,
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_bt_info_notify(btcoexist, tmp_buf,
- 						       length);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_bt_info_notify(btcoexist, tmp_buf,
-+						       length);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_bt_info_notify(btcoexist, tmp_buf,
-+						       length);
- 	}
- 
- 	halbtc_normal_low_power(btcoexist);
-@@ -1784,6 +1850,11 @@ void exhalbtc_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
- 		if (btcoexist->board_info.btdm_ant_num == 1)
- 			ex_btc8723b1ant_rf_status_notify(btcoexist, type);
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_rf_status_notify(btcoexist, type);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_rf_status_notify(btcoexist, type);
- 	}
- }
- 
-@@ -1829,6 +1900,11 @@ void exhalbtc_halt_notify(struct btc_coexist *btcoexist)
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_halt_notify(btcoexist);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_halt_notify(btcoexist);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_halt_notify(btcoexist);
- 	}
- 
- 	btcoexist->binded = false;
-@@ -1855,6 +1931,11 @@ void exhalbtc_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
- 		else if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8821a2ant_pnp_notify(btcoexist, pnp_state);
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_pnp_notify(btcoexist, pnp_state);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_pnp_notify(btcoexist, pnp_state);
- 	}
- }
- 
-@@ -1905,6 +1986,11 @@ void exhalbtc_periodical(struct btc_coexist *btcoexist)
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_periodical(btcoexist);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_periodical(btcoexist);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_periodical(btcoexist);
- 	}
- 
- 	halbtc_normal_low_power(btcoexist);
-@@ -2038,6 +2124,11 @@ void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist,
- 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
- 		if (btcoexist->board_info.btdm_ant_num == 2)
- 			ex_btc8192e2ant_display_coex_info(btcoexist, m);
-+	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_display_coex_info(btcoexist, m);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_display_coex_info(btcoexist, m);
- 	}
- 
- 	halbtc_normal_low_power(btcoexist);
-@@ -2053,10 +2144,19 @@ void exhalbtc_switch_band_notify(struct btc_coexist *btcoexist, u8 type)
- 
- 	halbtc_leave_low_power(btcoexist);
- 
-+	if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
-+		if (btcoexist->board_info.btdm_ant_num == 1)
-+			ex_btc8822b1ant_switchband_notify(btcoexist, type);
-+		else if (btcoexist->board_info.btdm_ant_num == 2)
-+			ex_btc8822b2ant_switchband_notify(btcoexist, type);
-+	}
++/* should be called with vendor_req_mutex held */
++static int __mt7601u_vendor_single_wr(struct mt7601u_dev *dev, const u8 req,
++				      const u16 offset, const u32 val)
++{
++	int ret = mt7601u_vendor_request(dev, req, USB_DIR_OUT,
++					 val & 0xffff, offset, NULL, 0);
+ 	if (!ret)
+ 		ret = mt7601u_vendor_request(dev, req, USB_DIR_OUT,
+ 					     val >> 16, offset + 2, NULL, 0);
++	trace_reg_write(dev, offset, val);
++	return ret;
++}
 +
- 	halbtc_normal_low_power(btcoexist);
++int mt7601u_vendor_single_wr(struct mt7601u_dev *dev, const u8 req,
++			     const u16 offset, const u32 val)
++{
++	int ret;
+ 
++	mutex_lock(&dev->vendor_req_mutex);
++	ret = __mt7601u_vendor_single_wr(dev, req, offset, val);
+ 	mutex_unlock(&dev->vendor_req_mutex);
+ 
+ 	return ret;
+@@ -175,23 +190,30 @@ void mt7601u_wr(struct mt7601u_dev *dev, u32 offset, u32 val)
+ 	WARN_ONCE(offset > USHRT_MAX, "write high off:%08x", offset);
+ 
+ 	mt7601u_vendor_single_wr(dev, MT_VEND_WRITE, offset, val);
+-	trace_reg_write(dev, offset, val);
  }
  
- void exhalbtc_switch_band_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
- 					   u8 is_5g)
+ u32 mt7601u_rmw(struct mt7601u_dev *dev, u32 offset, u32 mask, u32 val)
  {
-+	if (IS_HARDWARE_TYPE_8822B(wifionly_cfg->adapter))
-+		ex_hal8822b_wifi_only_switchbandnotify(wifionly_cfg, is_5g);
+-	val |= mt7601u_rr(dev, offset) & ~mask;
+-	mt7601u_wr(dev, offset, val);
++	mutex_lock(&dev->vendor_req_mutex);
++	val |= __mt7601u_rr(dev, offset) & ~mask;
++	__mt7601u_vendor_single_wr(dev, MT_VEND_WRITE, offset, val);
++	mutex_unlock(&dev->vendor_req_mutex);
++
+ 	return val;
  }
+ 
+ u32 mt7601u_rmc(struct mt7601u_dev *dev, u32 offset, u32 mask, u32 val)
+ {
+-	u32 reg = mt7601u_rr(dev, offset);
++	u32 reg;
+ 
++	mutex_lock(&dev->vendor_req_mutex);
++	reg = __mt7601u_rr(dev, offset);
+ 	val |= reg & ~mask;
+ 	if (reg != val)
+-		mt7601u_wr(dev, offset, val);
++		__mt7601u_vendor_single_wr(dev, MT_VEND_WRITE,
++					   offset, val);
++	mutex_unlock(&dev->vendor_req_mutex);
++
+ 	return val;
+ }
+ 
 -- 
-2.15.1
+2.14.3
