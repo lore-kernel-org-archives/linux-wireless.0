@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:46952 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751641AbeB0WTR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59090 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758530AbeBPQNN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 17:19:17 -0500
-Received: from mail-it0-f72.google.com ([209.85.214.72])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1eqnae-0001df-7W
-        for linux-wireless@vger.kernel.org; Tue, 27 Feb 2018 22:19:16 +0000
-Received: by mail-it0-f72.google.com with SMTP id a79so806877itc.3
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 14:19:16 -0800 (PST)
-Date: Tue, 27 Feb 2018 16:19:13 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH v2 11/13] cfg80211: read wmm rules from regulatory
- database
-Message-ID: <20180227221913.GD4617@ubuntu-xps13> (sfid-20180227_231921_524485_B19A73D1)
-References: <20180219124847.27169-1-luca@coelho.fi>
- <20180219124847.27169-12-luca@coelho.fi>
- <1519047033.16723.14.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519047033.16723.14.camel@sipsolutions.net>
+        Fri, 16 Feb 2018 11:13:13 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Fri, 16 Feb 2018 18:12:53 +0200
+Message-Id: <20180216161301.29339-6-luca@coelho.fi> (sfid-20180216_171317_265472_A6CABA4C)
+In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
+References: <20180216161301.29339-1-luca@coelho.fi>
+Subject: [PATCH 05/13] mac80211: support reporting A-MPDU EOF bit value/known
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 19, 2018 at 02:30:33PM +0100, Johannes Berg wrote:
-> On Mon, 2018-02-19 at 14:48 +0200, Luca Coelho wrote:
-> > From: Haim Dreyfuss <haim.dreyfuss@intel.com>
-> > 
-> > ETSI EN 301 893 v211 (2017-05) standard defines a new channel access
-> > mechanism that all devices (WLAN and LAA) need to comply with.
-> > The regulatory database can now be loaded into the kernel and also
-> > has the option to load optional data.
-> > In order to be able to comply with ETSI standard, we add wmm_rule into
-> > regulatory rule and add the option to read its value from the regulatory
-> > database.
-> 
-> Seth, this is going to come with an update to the regdb as well. I'd
-> appreciate if you could take a look.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I think it looks okay, but I guess there will be new patches so I will
-take another look then. Is there an example of the db.txt updates for
-the WMM rules?
+Support getting the EOF bit value reported from hardware
+and writing it out to radiotap.
 
-Seth
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/ieee80211_radiotap.h | 2 ++
+ include/net/mac80211.h           | 5 +++++
+ net/mac80211/rx.c                | 4 ++++
+ 3 files changed, 11 insertions(+)
+
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index d91f9e7f4d71..960236fb1681 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -149,6 +149,8 @@ enum ieee80211_radiotap_ampdu_flags {
+ 	IEEE80211_RADIOTAP_AMPDU_IS_LAST = 0x0008,
+ 	IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_ERR = 0x0010,
+ 	IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_KNOWN = 0x0020,
++	IEEE80211_RADIOTAP_AMPDU_EOF = 0x0040,
++	IEEE80211_RADIOTAP_AMPDU_EOF_KNOWN = 0x0080,
+ };
+ 
+ /* for IEEE80211_RADIOTAP_VHT */
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 906e90223066..7efac7f98e45 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1098,6 +1098,9 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	the first subframe.
+  * @RX_FLAG_ICV_STRIPPED: The ICV is stripped from this frame. CRC checking must
+  *	be done in the hardware.
++ * @RX_FLAG_AMPDU_EOF_BIT: Value of the EOF bit in the A-MPDU delimiter for this
++ *	frame
++ * @RX_FLAG_AMPDU_EOF_BIT_KNOWN: The EOF value is known
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -1124,6 +1127,8 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_MIC_STRIPPED		= BIT(21),
+ 	RX_FLAG_ALLOW_SAME_PN		= BIT(22),
+ 	RX_FLAG_ICV_STRIPPED		= BIT(23),
++	RX_FLAG_AMPDU_EOF_BIT		= BIT(24),
++	RX_FLAG_AMPDU_EOF_BIT_KNOWN	= BIT(25),
+ };
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index e755f93ad735..478a9c735edb 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -439,6 +439,10 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 			flags |= IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_ERR;
+ 		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_KNOWN)
+ 			flags |= IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_KNOWN;
++		if (status->flag & RX_FLAG_AMPDU_EOF_BIT_KNOWN)
++			flags |= IEEE80211_RADIOTAP_AMPDU_EOF_KNOWN;
++		if (status->flag & RX_FLAG_AMPDU_EOF_BIT)
++			flags |= IEEE80211_RADIOTAP_AMPDU_EOF;
+ 		put_unaligned_le16(flags, pos);
+ 		pos += 2;
+ 		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_KNOWN)
+-- 
+2.15.1
