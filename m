@@ -1,69 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58124 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755154AbeBOIsX (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:58984 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1032341AbeBPNtG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 03:48:23 -0500
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 04/13] ath10k: Add HTC services for WCN3990
-Date: Thu, 15 Feb 2018 14:18:17 +0530
-Message-Id: <1518684497-5495-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_094826_680284_CBC8C057)
+        Fri, 16 Feb 2018 08:49:06 -0500
+Message-ID: <1518788935.7832.46.camel@coelho.fi> (sfid-20180216_145111_113829_EADC3DA9)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Fri, 16 Feb 2018 15:48:55 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-7oVXh7CH1axH8fsle6YE"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi 2018-02-16
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3990 target uses 3 Copy engine(CE1/CE9/CE10) in RX path
-and CE 11 for pktlog.
-Add data path HTC ep services and PKTLOG services for WCN3990.
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/htc.c | 6 ++++++
- drivers/net/wireless/ath/ath10k/htc.h | 4 ++++
- 2 files changed, 10 insertions(+)
+--=-7oVXh7CH1axH8fsle6YE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 492dc5b..8902720 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -542,8 +542,14 @@ static const char *htc_service_name(enum ath10k_htc_svc_id id)
- 		return "NMI Data";
- 	case ATH10K_HTC_SVC_ID_HTT_DATA_MSG:
- 		return "HTT Data";
-+	case ATH10K_HTC_SVC_ID_HTT_DATA2_MSG:
-+		return "HTT Data";
-+	case ATH10K_HTC_SVC_ID_HTT_DATA3_MSG:
-+		return "HTT Data";
- 	case ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS:
- 		return "RAW";
-+	case ATH10K_HTC_SVC_ID_HTT_LOG_MSG:
-+		return "PKTLOG";
- 	}
- 
- 	return "Unknown";
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index a2f8814..3487759 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -248,6 +248,7 @@ enum ath10k_htc_svc_gid {
- 	ATH10K_HTC_SVC_GRP_WMI = 1,
- 	ATH10K_HTC_SVC_GRP_NMI = 2,
- 	ATH10K_HTC_SVC_GRP_HTT = 3,
-+	ATH10K_LOG_SERVICE_GROUP = 6,
- 
- 	ATH10K_HTC_SVC_GRP_TEST = 254,
- 	ATH10K_HTC_SVC_GRP_LAST = 255,
-@@ -273,6 +274,9 @@ enum ath10k_htc_svc_id {
- 
- 	ATH10K_HTC_SVC_ID_HTT_DATA_MSG	= SVC(ATH10K_HTC_SVC_GRP_HTT, 0),
- 
-+	ATH10K_HTC_SVC_ID_HTT_DATA2_MSG = SVC(ATH10K_HTC_SVC_GRP_HTT, 1),
-+	ATH10K_HTC_SVC_ID_HTT_DATA3_MSG = SVC(ATH10K_HTC_SVC_GRP_HTT, 2),
-+	ATH10K_HTC_SVC_ID_HTT_LOG_MSG = SVC(ATH10K_LOG_SERVICE_GROUP, 0),
- 	/* raw stream service (i.e. flash, tcmd, calibration apps) */
- 	ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS = SVC(ATH10K_HTC_SVC_GRP_TEST, 0),
- };
--- 
-1.9.1
+Hi Kalle,
+
+Here is my first set of fixes for 4.16.  More details in the tag
+description.
+
+I have sent this out before and kbuildbot didn't find any issues.=20
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit 7ac8ff95f48cbfa609a060fd6a1e361dd62feeb3=
+:
+
+  mvpp2: fix multicast address filter (2018-02-11 22:37:04 -0500)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
+ags/iwlwifi-for-kalle-2018-02-16
+
+for you to fetch changes up to e1233ae4095b77a966af457ed7ebc3053c5821c8:
+
+  iwlwifi: mvm: always init rs with 20mhz bandwidth rates (2018-02-16 15:34=
+:33 +0200)
+
+----------------------------------------------------------------
+First batch of iwlwifi fixes intended for 4.16:
+
+* A couple of bugzilla fixes
+  - Fix a bogus warning when freeing a TFD;
+  - Fix severe throughput problem with 9000 series;
+* Fix for a bug that caused queue hangs in certain situations;
+* Fix for an issue with IBSS;
+* Fix an issue with rate-scalingin AP-mode.
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: pcie: don't warn if we use all the transmit pointers
+
+Naftali Goldstein (1):
+      iwlwifi: mvm: always init rs with 20mhz bandwidth rates
+
+Sara Sharon (2):
+      iwlwifi: mvm: fix security bug in PN checking
+      iwlwifi: mvm: fix IBSS for devices that support station type API
+
+Shaul Triebitz (1):
+      iwlwifi: align timestamp cancel with timestamp start
+
+ drivers/net/wireless/intel/iwlwifi/fw/init.c      |  6 ------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  2 --
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c       | 28 +++++++++++++++++++=
++--------
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 39 +++++++++++++++++++=
++-------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 24 ++++++++++++-------=
+-----
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  2 +-
+ 10 files changed, 61 insertions(+), 50 deletions(-)
+--=-7oVXh7CH1axH8fsle6YE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlqG4UcACgkQoUecoho8
+xfrEqQ/8C95+NH5p1TeFDzKE4gNU/6alhMEleP//aNSxaoRXHArulgLW8Ut3JfNH
+mSn5VVAI4Gw+CdHAzqKZn1TYtit76tQ84+h5udpZDAKXGgp2uXwlzCJ47VOxtETt
+7+gtMhBaCfHCoqBFiwBxx5JbwFP/PTft3jt73BpBd8hlZ2FPdMSdgSsEnTSKqZB2
+aWE4erq1rQHTI9pYf7tgQ7mt+ivAxPGTUMirrrgNs/dzzqTwHIhEuCQ+sCKpATcu
+dLjm9d1jnO/p5XT4fmu+S4vDvA8BSiVcz17weyE08ZpZrKVEtFKar08DjXKZbs9U
+sxCn7/idAbaUN8ltC2GlHjbdGlZzwdVEdkfZtoeEcfT1+4C5XkUicpLpF6HDhXUz
+HW814RjHYnpzDM3bxngan1cLfRkVSDkz29mEH2D3ELEFmTKuzuQjCneOhmktJggy
+Eg/WBZ/M5icpsx0hEty9lj3G3FvBo+yZRy/zNfXbd3Nc5Z+thUCuPRL97F47l65+
+nHA3ElRcW/5CBCwF2Urs/m64hKOXH26dJG8nrDbwt5ScwBKwlJG22o+XJ4Zj4VwG
+3DQKo2g2wuf5MuKnUvZ3RR5yc7SVXvyq75HeAHfwvpK7mqgrAeEZtfz1SP3sfZ9L
+HO95dxa04BbJNpCJg9kfmN0shBG83XlDOyCnLjXQizM3CaiH9fQ=
+=5wwg
+-----END PGP SIGNATURE-----
+
+--=-7oVXh7CH1axH8fsle6YE--
