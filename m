@@ -1,45 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:50162 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752716AbeBSMfS (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59066 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756855AbeBPQNK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:35:18 -0500
-Message-ID: <1519043716.16723.1.camel@sipsolutions.net> (sfid-20180219_133522_210273_53B3A800)
-Subject: Re: [PATCH] mac80211: inform wireless layer when frame RSSI is
- invalid
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jean Pierre TOSONI <jp.tosoni@acksys.fr>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Feb 2018 13:35:16 +0100
-In-Reply-To: <AM4PR0101MB2305288C51F159AE69BD78CCE4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
-References: <AM4PR0101MB2305288C51F159AE69BD78CCE4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 16 Feb 2018 11:13:10 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 16 Feb 2018 18:12:50 +0200
+Message-Id: <20180216161301.29339-3-luca@coelho.fi> (sfid-20180216_171337_496628_324B3825)
+In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
+References: <20180216161301.29339-1-luca@coelho.fi>
+Subject: [PATCH 02/13] mac80211: ibss: send a probe request instead of allocating station
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-02-14 at 13:51 +0000, Jean Pierre TOSONI wrote:
-> When the low-level driver returns an invalid RSSI indication,
-> set the signal value to 0 as an indication to the upper layer.
-> 
-> Also, skip average level computation if signal is invalid.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Thanks for the patch!
+When we hear frames from IBSS that we don't have a station
+for, we allocate the station in the RX path with incomplete
+data.
 
->  	/* Track average RSSI from the Beacon frames of the current AP */
-> +	if (rx_status->flag & RX_FLAG_NO_SIGNAL_VAL)
-> +		goto skip_signal_processing;
->  	if (ifmgd->flags & IEEE80211_STA_RESET_SIGNAL_AVE) {
->  		ifmgd->flags &= ~IEEE80211_STA_RESET_SIGNAL_AVE;
->  		ewma_beacon_signal_init(&ifmgd->ave_beacon_signal);
-> @@ -3454,6 +3456,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
->  				sig, GFP_KERNEL);
->  		}
->  	}
-> +skip_signal_processing:
+Instead, send a probe request to the station.
 
-Can't say I like this - how about we pull out the actual processing
-into a helper function, and then abort that function early if the
-NO_SIGNAL_VAL flag is set.
+This helps to solve an issue with iwlwifi, which cannot allocate
+stations in atomic paths, and has the added values of having full
+data of the station and getting rid from some code.
 
-johannes
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/ibss.c        | 54 +++++-----------------------------------------
+ net/mac80211/ieee80211_i.h |  3 ---
+ 2 files changed, 5 insertions(+), 52 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index db07e0de9a03..a89384904c94 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -691,7 +691,6 @@ static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct cfg80211_bss *cbss;
+ 	struct beacon_data *presp;
+-	struct sta_info *sta;
+ 
+ 	if (!is_zero_ether_addr(ifibss->bssid)) {
+ 		cbss = cfg80211_get_bss(local->hw.wiphy, ifibss->chandef.chan,
+@@ -710,18 +709,6 @@ static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
+ 
+ 	sta_info_flush(sdata);
+ 
+-	spin_lock_bh(&ifibss->incomplete_lock);
+-	while (!list_empty(&ifibss->incomplete_stations)) {
+-		sta = list_first_entry(&ifibss->incomplete_stations,
+-				       struct sta_info, list);
+-		list_del(&sta->list);
+-		spin_unlock_bh(&ifibss->incomplete_lock);
+-
+-		sta_info_free(local, sta);
+-		spin_lock_bh(&ifibss->incomplete_lock);
+-	}
+-	spin_unlock_bh(&ifibss->incomplete_lock);
+-
+ 	netif_carrier_off(sdata->dev);
+ 
+ 	sdata->vif.bss_conf.ibss_joined = false;
+@@ -1204,11 +1191,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct sta_info *sta;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_supported_band *sband;
+-	enum nl80211_bss_scan_width scan_width;
+-	int band;
+ 
+ 	/*
+ 	 * XXX: Consider removing the least recently used entry and
+@@ -1232,23 +1215,12 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ 		rcu_read_unlock();
+ 		return;
+ 	}
+-	band = chanctx_conf->def.chan->band;
+-	scan_width = cfg80211_chandef_to_scan_width(&chanctx_conf->def);
+-	rcu_read_unlock();
+-
+-	sta = sta_info_alloc(sdata, addr, GFP_ATOMIC);
+-	if (!sta)
+-		return;
+ 
+-	/* make sure mandatory rates are always added */
+-	sband = local->hw.wiphy->bands[band];
+-	sta->sta.supp_rates[band] = supp_rates |
+-			ieee80211_mandatory_rates(sband, scan_width);
+-
+-	spin_lock(&ifibss->incomplete_lock);
+-	list_add(&sta->list, &ifibss->incomplete_stations);
+-	spin_unlock(&ifibss->incomplete_lock);
+-	ieee80211_queue_work(&local->hw, &sdata->work);
++	ieee80211_send_probe_req(sdata, sdata->vif.addr, addr,
++				 sdata->u.ibss.ssid, sdata->u.ibss.ssid_len,
++				 NULL, 0, (u32)-1, true, 0,
++				 chanctx_conf->def.chan, false);
++	rcu_read_unlock();
+ }
+ 
+ static void ieee80211_ibss_sta_expire(struct ieee80211_sub_if_data *sdata)
+@@ -1670,7 +1642,6 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct sta_info *sta;
+ 
+ 	sdata_lock(sdata);
+ 
+@@ -1682,19 +1653,6 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+ 	if (!ifibss->ssid_len)
+ 		goto out;
+ 
+-	spin_lock_bh(&ifibss->incomplete_lock);
+-	while (!list_empty(&ifibss->incomplete_stations)) {
+-		sta = list_first_entry(&ifibss->incomplete_stations,
+-				       struct sta_info, list);
+-		list_del(&sta->list);
+-		spin_unlock_bh(&ifibss->incomplete_lock);
+-
+-		ieee80211_ibss_finish_sta(sta);
+-		rcu_read_unlock();
+-		spin_lock_bh(&ifibss->incomplete_lock);
+-	}
+-	spin_unlock_bh(&ifibss->incomplete_lock);
+-
+ 	switch (ifibss->state) {
+ 	case IEEE80211_IBSS_MLME_SEARCH:
+ 		ieee80211_sta_find_ibss(sdata);
+@@ -1724,8 +1682,6 @@ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+ 	timer_setup(&ifibss->timer, ieee80211_ibss_timer, 0);
+-	INIT_LIST_HEAD(&ifibss->incomplete_stations);
+-	spin_lock_init(&ifibss->incomplete_lock);
+ 	INIT_WORK(&ifibss->csa_connection_drop_work,
+ 		  ieee80211_csa_connection_drop_work);
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 26900025de2f..536f04d14592 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -581,9 +581,6 @@ struct ieee80211_if_ibss {
+ 	struct ieee80211_ht_cap ht_capa; /* configured ht-cap over-rides */
+ 	struct ieee80211_ht_cap ht_capa_mask; /* Valid parts of ht_capa */
+ 
+-	spinlock_t incomplete_lock;
+-	struct list_head incomplete_stations;
+-
+ 	enum {
+ 		IEEE80211_IBSS_MLME_SEARCH,
+ 		IEEE80211_IBSS_MLME_JOINED,
+-- 
+2.15.1
