@@ -1,163 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59066 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756855AbeBPQNK (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:59454 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753987AbeBPINg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 11:13:10 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 16 Feb 2018 18:12:50 +0200
-Message-Id: <20180216161301.29339-3-luca@coelho.fi> (sfid-20180216_171337_496628_324B3825)
-In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
-References: <20180216161301.29339-1-luca@coelho.fi>
-Subject: [PATCH 02/13] mac80211: ibss: send a probe request instead of allocating station
+        Fri, 16 Feb 2018 03:13:36 -0500
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 5/8] wil6210: multiple VIFs support for start/stop AP
+Date: Fri, 16 Feb 2018 10:04:40 +0200
+Message-Id: <1518768283-2318-6-git-send-email-merez@codeaurora.org> (sfid-20180216_091347_552235_E0C0123D)
+In-Reply-To: <1518768283-2318-1-git-send-email-merez@codeaurora.org>
+References: <1518768283-2318-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Lior David <liord@codeaurora.org>
 
-When we hear frames from IBSS that we don't have a station
-for, we allocate the station in the RX path with incomplete
-data.
+Add support for multiple VIFs in the cfg80211 operations start_ap,
+stop_ap and change_beacon. This change allows starting multiple APs
+using virtual interfaces.
+The data path and most other operations are still working only
+on the main interface.
 
-Instead, send a probe request to the station.
-
-This helps to solve an issue with iwlwifi, which cannot allocate
-stations in atomic paths, and has the added values of having full
-data of the station and getting rid from some code.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- net/mac80211/ibss.c        | 54 +++++-----------------------------------------
- net/mac80211/ieee80211_i.h |  3 ---
- 2 files changed, 5 insertions(+), 52 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 49 +++++++++++++++++++----------
+ drivers/net/wireless/ath/wil6210/main.c     | 14 ++++++++-
+ drivers/net/wireless/ath/wil6210/netdev.c   | 22 +++++++------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |  2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  9 +++---
+ drivers/net/wireless/ath/wil6210/wmi.c      |  8 +++++
+ 6 files changed, 71 insertions(+), 33 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index db07e0de9a03..a89384904c94 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -691,7 +691,6 @@ static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_local *local = sdata->local;
- 	struct cfg80211_bss *cbss;
- 	struct beacon_data *presp;
--	struct sta_info *sta;
- 
- 	if (!is_zero_ether_addr(ifibss->bssid)) {
- 		cbss = cfg80211_get_bss(local->hw.wiphy, ifibss->chandef.chan,
-@@ -710,18 +709,6 @@ static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
- 
- 	sta_info_flush(sdata);
- 
--	spin_lock_bh(&ifibss->incomplete_lock);
--	while (!list_empty(&ifibss->incomplete_stations)) {
--		sta = list_first_entry(&ifibss->incomplete_stations,
--				       struct sta_info, list);
--		list_del(&sta->list);
--		spin_unlock_bh(&ifibss->incomplete_lock);
--
--		sta_info_free(local, sta);
--		spin_lock_bh(&ifibss->incomplete_lock);
--	}
--	spin_unlock_bh(&ifibss->incomplete_lock);
--
- 	netif_carrier_off(sdata->dev);
- 
- 	sdata->vif.bss_conf.ibss_joined = false;
-@@ -1204,11 +1191,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
--	struct ieee80211_supported_band *sband;
--	enum nl80211_bss_scan_width scan_width;
--	int band;
- 
- 	/*
- 	 * XXX: Consider removing the least recently used entry and
-@@ -1232,23 +1215,12 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
- 		rcu_read_unlock();
- 		return;
- 	}
--	band = chanctx_conf->def.chan->band;
--	scan_width = cfg80211_chandef_to_scan_width(&chanctx_conf->def);
--	rcu_read_unlock();
--
--	sta = sta_info_alloc(sdata, addr, GFP_ATOMIC);
--	if (!sta)
--		return;
- 
--	/* make sure mandatory rates are always added */
--	sband = local->hw.wiphy->bands[band];
--	sta->sta.supp_rates[band] = supp_rates |
--			ieee80211_mandatory_rates(sband, scan_width);
--
--	spin_lock(&ifibss->incomplete_lock);
--	list_add(&sta->list, &ifibss->incomplete_stations);
--	spin_unlock(&ifibss->incomplete_lock);
--	ieee80211_queue_work(&local->hw, &sdata->work);
-+	ieee80211_send_probe_req(sdata, sdata->vif.addr, addr,
-+				 sdata->u.ibss.ssid, sdata->u.ibss.ssid_len,
-+				 NULL, 0, (u32)-1, true, 0,
-+				 chanctx_conf->def.chan, false);
-+	rcu_read_unlock();
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index b9103bd..88d15d0 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -544,8 +544,9 @@ static int wil_cfg80211_validate_change_iface(struct wil6210_priv *wil,
+ 	return ERR_PTR(rc);
  }
  
- static void ieee80211_ibss_sta_expire(struct ieee80211_sub_if_data *sdata)
-@@ -1670,7 +1642,6 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+-int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif)
++int wil_vif_prepare_stop(struct wil6210_vif *vif)
  {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--	struct sta_info *sta;
++	struct wil6210_priv *wil = vif_to_wil(vif);
+ 	struct wireless_dev *wdev = vif_to_wdev(vif);
+ 	struct net_device *ndev;
+ 	int rc;
+@@ -561,6 +562,7 @@ int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif)
+ 				 rc);
+ 			/* continue */
+ 		}
++		wil_bcast_fini(vif);
+ 		netif_carrier_off(ndev);
+ 	}
  
- 	sdata_lock(sdata);
+@@ -593,7 +595,7 @@ static int wil_cfg80211_del_iface(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
  
-@@ -1682,19 +1653,6 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
- 	if (!ifibss->ssid_len)
+-	rc = wil_vif_prepare_stop(wil, vif);
++	rc = wil_vif_prepare_stop(vif);
+ 	if (rc)
  		goto out;
  
--	spin_lock_bh(&ifibss->incomplete_lock);
--	while (!list_empty(&ifibss->incomplete_stations)) {
--		sta = list_first_entry(&ifibss->incomplete_stations,
--				       struct sta_info, list);
--		list_del(&sta->list);
--		spin_unlock_bh(&ifibss->incomplete_lock);
--
--		ieee80211_ibss_finish_sta(sta);
--		rcu_read_unlock();
--		spin_lock_bh(&ifibss->incomplete_lock);
--	}
--	spin_unlock_bh(&ifibss->incomplete_lock);
--
- 	switch (ifibss->state) {
- 	case IEEE80211_IBSS_MLME_SEARCH:
- 		ieee80211_sta_find_ibss(sdata);
-@@ -1724,8 +1682,6 @@ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+@@ -614,6 +616,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 	struct wil6210_vif *vif = ndev_to_vif(ndev);
+ 	struct wireless_dev *wdev = vif_to_wdev(vif);
+ 	int rc;
++	bool fw_reset = false;
  
- 	timer_setup(&ifibss->timer, ieee80211_ibss_timer, 0);
--	INIT_LIST_HEAD(&ifibss->incomplete_stations);
--	spin_lock_init(&ifibss->incomplete_lock);
- 	INIT_WORK(&ifibss->csa_connection_drop_work,
- 		  ieee80211_csa_connection_drop_work);
+ 	wil_dbg_misc(wil, "change_iface: type=%d\n", type);
+ 
+@@ -628,7 +631,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 	/* do not reset FW when there are active VIFs,
+ 	 * because it can cause significant disruption
+ 	 */
+-	if (!wil_has_other_up_ifaces(wil, ndev) &&
++	if (!wil_has_other_active_ifaces(wil, ndev, true, false) &&
+ 	    netif_running(ndev) && !wil_is_recovery_blocked(wil)) {
+ 		wil_dbg_misc(wil, "interface is up. resetting...\n");
+ 		mutex_lock(&wil->mutex);
+@@ -638,6 +641,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 
+ 		if (rc)
+ 			return rc;
++		fw_reset = true;
+ 	}
+ 
+ 	switch (type) {
+@@ -654,8 +658,9 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	if (vif->mid != 0 && wil_has_up_ifaces(wil)) {
+-		wil_vif_prepare_stop(wil, vif);
++	if (vif->mid != 0 && wil_has_active_ifaces(wil, true, false)) {
++		if (!fw_reset)
++			wil_vif_prepare_stop(vif);
+ 		rc = wmi_port_delete(wil, vif->mid);
+ 		if (rc)
+ 			return rc;
+@@ -1530,10 +1535,12 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 
+ 	mutex_lock(&wil->mutex);
+ 
+-	__wil_down(wil);
+-	rc = __wil_up(wil);
+-	if (rc)
+-		goto out;
++	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
++		__wil_down(wil);
++		rc = __wil_up(wil);
++		if (rc)
++			goto out;
++	}
+ 
+ 	rc = wmi_set_ssid(vif, ssid_len, ssid);
+ 	if (rc)
+@@ -1549,7 +1556,8 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	vif->pbss = pbss;
+ 
+ 	netif_carrier_on(ndev);
+-	wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
++	if (!wil_has_other_active_ifaces(wil, ndev, false, true))
++		wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
+ 
+ 	rc = wmi_pcp_start(vif, bi, wmi_nettype, chan, hidden_ssid, is_go);
+ 	if (rc)
+@@ -1565,7 +1573,8 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	wmi_pcp_stop(vif);
+ err_pcp_start:
+ 	netif_carrier_off(ndev);
+-	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
++	if (!wil_has_other_active_ifaces(wil, ndev, false, true))
++		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+ out:
+ 	mutex_unlock(&wil->mutex);
+ 	return rc;
+@@ -1670,20 +1679,26 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+ 	struct wil6210_vif *vif = ndev_to_vif(ndev);
++	bool last;
+ 
+-	wil_dbg_misc(wil, "stop_ap\n");
++	wil_dbg_misc(wil, "stop_ap, mid=%d\n", vif->mid);
+ 
+ 	netif_carrier_off(ndev);
+-	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+-	wil_set_recovery_state(wil, fw_recovery_idle);
+-
+-	set_bit(wil_status_resetting, wil->status);
++	last = !wil_has_other_active_ifaces(wil, ndev, false, true);
++	if (last) {
++		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
++		wil_set_recovery_state(wil, fw_recovery_idle);
++		set_bit(wil_status_resetting, wil->status);
++	}
+ 
+ 	mutex_lock(&wil->mutex);
+ 
+ 	wmi_pcp_stop(vif);
+ 
+-	__wil_down(wil);
++	if (last)
++		__wil_down(wil);
++	else
++		wil_bcast_fini(vif);
+ 
+ 	mutex_unlock(&wil->mutex);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 32319b7..d000688 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -508,6 +508,18 @@ void wil_bcast_fini(struct wil6210_vif *vif)
+ 	wil_vring_fini_tx(wil, ri);
  }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 26900025de2f..536f04d14592 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -581,9 +581,6 @@ struct ieee80211_if_ibss {
- 	struct ieee80211_ht_cap ht_capa; /* configured ht-cap over-rides */
- 	struct ieee80211_ht_cap ht_capa_mask; /* Valid parts of ht_capa */
  
--	spinlock_t incomplete_lock;
--	struct list_head incomplete_stations;
--
- 	enum {
- 		IEEE80211_IBSS_MLME_SEARCH,
- 		IEEE80211_IBSS_MLME_JOINED,
++void wil_bcast_fini_all(struct wil6210_priv *wil)
++{
++	int i;
++	struct wil6210_vif *vif;
++
++	for (i = 0; i < wil->max_vifs; i++) {
++		vif = wil->vifs[i];
++		if (vif)
++			wil_bcast_fini(vif);
++	}
++}
++
+ int wil_priv_init(struct wil6210_priv *wil)
+ {
+ 	uint i;
+@@ -1204,7 +1216,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 
+ 	cancel_work_sync(&vif->disconnect_worker);
+ 	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+-	wil_bcast_fini(vif);
++	wil_bcast_fini_all(wil);
+ 
+ 	/* Disable device led before reset*/
+ 	wmi_led_cfg(wil, false);
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index e23a80c..87956c0 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -20,8 +20,8 @@
+ #include "wil6210.h"
+ #include "txrx.h"
+ 
+-bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
+-			     struct net_device *ndev)
++bool wil_has_other_active_ifaces(struct wil6210_priv *wil,
++				 struct net_device *ndev, bool up, bool ok)
+ {
+ 	int i;
+ 	struct wil6210_vif *vif;
+@@ -31,17 +31,19 @@ bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
+ 		vif = wil->vifs[i];
+ 		if (vif) {
+ 			ndev_i = vif_to_ndev(vif);
+-			if (ndev_i != ndev && ndev_i->flags & IFF_UP)
+-				return true;
++			if (ndev_i != ndev)
++				if ((up && (ndev_i->flags & IFF_UP)) ||
++				    (ok && netif_carrier_ok(ndev_i)))
++					return true;
+ 		}
+ 	}
+ 
+ 	return false;
+ }
+ 
+-bool wil_has_up_ifaces(struct wil6210_priv *wil)
++bool wil_has_active_ifaces(struct wil6210_priv *wil, bool up, bool ok)
+ {
+-	return wil_has_other_up_ifaces(wil, NULL);
++	return wil_has_other_active_ifaces(wil, NULL, up, ok);
+ }
+ 
+ static int wil_open(struct net_device *ndev)
+@@ -57,7 +59,7 @@ static int wil_open(struct net_device *ndev)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (!wil_has_other_up_ifaces(wil, ndev)) {
++	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
+ 		wil_dbg_misc(wil, "open, first iface\n");
+ 		rc = wil_pm_runtime_get(wil);
+ 		if (rc < 0)
+@@ -78,7 +80,7 @@ static int wil_stop(struct net_device *ndev)
+ 
+ 	wil_dbg_misc(wil, "stop\n");
+ 
+-	if (!wil_has_other_up_ifaces(wil, ndev)) {
++	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
+ 		wil_dbg_misc(wil, "stop, last iface\n");
+ 		rc = wil_down(wil);
+ 		if (!rc)
+@@ -359,7 +361,7 @@ int wil_vif_add(struct wil6210_priv *wil, struct wil6210_vif *vif)
+ {
+ 	struct net_device *ndev = vif_to_ndev(vif);
+ 	struct wireless_dev *wdev = vif_to_wdev(vif);
+-	bool any_active = wil_has_up_ifaces(wil);
++	bool any_active = wil_has_active_ifaces(wil, true, false);
+ 	int rc;
+ 
+ 	ASSERT_RTNL();
+@@ -428,7 +430,7 @@ void wil_vif_remove(struct wil6210_priv *wil, u8 mid)
+ {
+ 	struct wil6210_vif *vif;
+ 	struct net_device *ndev;
+-	bool any_active = wil_has_up_ifaces(wil);
++	bool any_active = wil_has_active_ifaces(wil, true, false);
+ 
+ 	ASSERT_RTNL();
+ 	if (mid >= wil->max_vifs) {
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 1fd7614..7d3ff3f 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -145,7 +145,7 @@ static void wil_remove_all_additional_vifs(struct wil6210_priv *wil)
+ 	for (i = 1; i < wil->max_vifs; i++) {
+ 		vif = wil->vifs[i];
+ 		if (vif) {
+-			wil_vif_prepare_stop(wil, vif);
++			wil_vif_prepare_stop(vif);
+ 			wil_vif_remove(wil, vif->mid);
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 8ab4b5a..6e46a23 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -944,9 +944,9 @@ struct wil6210_vif *
+ 	      unsigned char name_assign_type, enum nl80211_iftype iftype);
+ void wil_vif_free(struct wil6210_vif *vif);
+ void *wil_if_alloc(struct device *dev);
+-bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
+-			     struct net_device *ndev);
+-bool wil_has_up_ifaces(struct wil6210_priv *wil);
++bool wil_has_other_active_ifaces(struct wil6210_priv *wil,
++				 struct net_device *ndev, bool up, bool ok);
++bool wil_has_active_ifaces(struct wil6210_priv *wil, bool up, bool ok);
+ void wil_if_free(struct wil6210_priv *wil);
+ int wil_vif_add(struct wil6210_priv *wil, struct wil6210_vif *vif);
+ int wil_if_add(struct wil6210_priv *wil);
+@@ -1053,7 +1053,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ int wil_cfg80211_iface_combinations_from_fw(
+ 	struct wil6210_priv *wil,
+ 	const struct wil_fw_record_concurrency *conc);
+-int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif);
++int wil_vif_prepare_stop(struct wil6210_vif *vif);
+ 
+ #if defined(CONFIG_WIL6210_DEBUGFS)
+ int wil6210_debugfs_init(struct wil6210_priv *wil);
+@@ -1095,6 +1095,7 @@ int wil_vring_init_tx(struct wil6210_vif *vif, int id, int size,
+ int wil_vring_init_bcast(struct wil6210_vif *vif, int id, int size);
+ int wil_bcast_init(struct wil6210_vif *vif);
+ void wil_bcast_fini(struct wil6210_vif *vif);
++void wil_bcast_fini_all(struct wil6210_priv *wil);
+ 
+ void wil_update_net_queues(struct wil6210_priv *wil, struct vring *vring,
+ 			   bool should_stop);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 23c28bf..762ade3 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -341,6 +341,10 @@ static const char *cmdid2name(u16 cmdid)
+ 		return "WMI_GET_PCP_CHANNEL_CMD";
+ 	case WMI_P2P_CFG_CMDID:
+ 		return "WMI_P2P_CFG_CMD";
++	case WMI_PORT_ALLOCATE_CMDID:
++		return "WMI_PORT_ALLOCATE_CMD";
++	case WMI_PORT_DELETE_CMDID:
++		return "WMI_PORT_DELETE_CMD";
+ 	case WMI_START_LISTEN_CMDID:
+ 		return "WMI_START_LISTEN_CMD";
+ 	case WMI_START_SEARCH_CMDID:
+@@ -479,6 +483,10 @@ static const char *eventid2name(u16 eventid)
+ 		return "WMI_GET_PCP_CHANNEL_EVENT";
+ 	case WMI_P2P_CFG_DONE_EVENTID:
+ 		return "WMI_P2P_CFG_DONE_EVENT";
++	case WMI_PORT_ALLOCATED_EVENTID:
++		return "WMI_PORT_ALLOCATED_EVENT";
++	case WMI_PORT_DELETED_EVENTID:
++		return "WMI_PORT_DELETED_EVENT";
+ 	case WMI_LISTEN_STARTED_EVENTID:
+ 		return "WMI_LISTEN_STARTED_EVENT";
+ 	case WMI_SEARCH_STARTED_EVENTID:
 -- 
-2.15.1
+1.9.1
