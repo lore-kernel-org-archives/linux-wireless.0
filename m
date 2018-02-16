@@ -1,49 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53926 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751735AbeB0Qwv (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:58992 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1032862AbeBPOE0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:52:51 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,1/8] wil6210: add wil6210_vif structure for per-VIF data
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1519668738-16912-2-git-send-email-merez@codeaurora.org>
-References: <1519668738-16912-2-git-send-email-merez@codeaurora.org>
-To: Maya Erez <merez@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Message-Id: <20180227165250.DADBB607E5@smtp.codeaurora.org> (sfid-20180227_175254_914636_9EFC399F)
-Date: Tue, 27 Feb 2018 16:52:50 +0000 (UTC)
+        Fri, 16 Feb 2018 09:04:26 -0500
+Message-ID: <1518789861.7832.54.camel@coelho.fi> (sfid-20180216_150432_783400_E2E019C5)
+From: Luca Coelho <luca@coelho.fi>
+To: Steve deRosier <derosier@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 16 Feb 2018 16:04:21 +0200
+In-Reply-To: <CALupW3BbupwudkZw2=C8RvU0PYkk8=+TtV4SxcYH+uxh6WmZew@mail.gmail.com>
+References: <CALupW3BbupwudkZw2=C8RvU0PYkk8=+TtV4SxcYH+uxh6WmZew@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Presentation at ELC on debugging wifi modules
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <merez@codeaurora.org> wrote:
+On Mon, 2018-02-12 at 22:09 -0800, Steve deRosier wrote:
+> Hi Linux Wireless driver maintainers,
 
-> For supporting multiple virtual interfaces in the future,
-> introduce a wil6210_vif structure which will hold per-VIF
-> data. Change the module initialization so wil6210_vif will
-> be part of net_device structure, and wireless_dev will be
-> embedded inside the wil6210_vif structure. This will allow
-> us to find the appropriate wil6210_vif structure when we
-> only have access to wireless_dev or net_device.
+Hi Steve,
+
+
+> I'm giving a talk at ELC NA next month in Portland and I'd like a
+> little help from our other driver maintainers. The talk is titled:
+> "Reliable Linux Wireless - Techniques for Debugging Wireless Module
+> Integrations". While I'm familiar with a fairly wide variety of WiFi
+> chips and adapters and drivers, I don't know them all. I will speak
+> from my experience and I'm sure I won't have time to get into the
+> detailed ins-and-outs of every driver, but I'd love to include value
+> for everyone no matter which wifi chip vendor the audience member is
+> using.
+
+That's a very nice initiative!
+
 > 
-> Signed-off-by: Lior David <liord@codeaurora.org>
-> Signed-off-by: Maya Erez <merez@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> So, if you have any specific tips or tricks you'd like to share with
+> me so I can include them in the materials for my talk I would
+> appreciate it.  I'm looking for those harder to find things: the
+> little known debugfs knobs, module parameters, device tree bindings,
+> and so on. Or, those things that are are common tripping up points.
+> Anything you find useful or think others might.
+> 
+> Also, part of my talk will be about how to reach out to those of us
+> on
+> the list for help. We all know the calls for help come to us in
+> varying quality and I'd like to explain all the stuff to do first and
+> all the information to gather and send to us as they reach out. So
+> please send me any thoughts on what you'd like to see in the emails
+> when people ask for help.
 
-8 patches applied to ath-next branch of ath.git, thanks.
+We have this wiki:
 
-9f38f2862455 wil6210: add wil6210_vif structure for per-VIF data
-7bfe9e22e487 wil6210: support concurrency record in FW file
-e00243fab84b wil6210: infrastructure for multiple virtual interfaces
-4aebd3bdbd8a wil6210: add support for adding and removing virtual interfaces
-3ada9314b4ea wil6210: multiple VIFs support for start/stop AP
-404bbb3cca3c wil6210: rename p2p_wdev_mutex to vif_mutex
-5bd609825210 wil6210: multiple VIFs support for connections and data path
-3a3b745f1eae wil6210: add debugfs 'mids' file
+https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
 
--- 
-https://patchwork.kernel.org/patch/10242993/
+I don't think this qualifies as "hard to find", but it's where we point
+people to whenever they come asking for help with iwlwifi.  If those
+instructions are followed, we can get pretty much all the information
+we need to start debugging, though in some cases we may need to provide
+a modified firmware that enables a bit more data in the logs.  But this
+usually is only needed after a few rounds of debugging and must be done
+on a case-by-case basis.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
+> You're welcome to do it on-list if you desire to elicit discussion,
+> but in order to keep the noise down feel free to reply to me directly
+> off-list.
+
+I reckoned that replying to the list is better because people who are
+not able to attend your talk may also benefit. :)
+
+If you have any suggestions on how to improve our wiki or if you find
+out that something is missing, please let us know. ;)
+
+
+--
+Cheers,
+Luca.
