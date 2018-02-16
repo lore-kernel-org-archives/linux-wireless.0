@@ -1,75 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53008 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753796AbeBGOQe (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:44272 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754363AbeBPPMA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Feb 2018 09:16:34 -0500
-Content-Type: text/plain; charset="utf-8"
+        Fri, 16 Feb 2018 10:12:00 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 01/12] staging: wilc1000: remove unnecessary comments to avoid line over 80 char issue
+Date: Fri, 16 Feb 2018 20:41:38 +0530
+Message-ID: <1518793909-15573-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180216_161204_415872_124F0AA1)
+In-Reply-To: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Subject: Re: ath10k: fix kernel panic issue during pci probe
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1517212801-7523-2-git-send-email-yyuwang@codeaurora.org>
-References: <1517212801-7523-2-git-send-email-yyuwang@codeaurora.org>
-To: Yu Wang <yyuwang@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Message-Id: <20180207141633.DFE2D6079C@smtp.codeaurora.org> (sfid-20180207_151638_264792_D5CA3496)
-Date: Wed,  7 Feb 2018 14:16:33 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yu Wang <yyuwang@codeaurora.org> wrote:
+Fix "line over 80 characters" issue reported by checkpatch.pl script by
+removing unnecessary comments.
 
-> If device gone during chip reset, ar->normal_mode_fw.board is not
-> initialized, but ath10k_debug_print_hwfw_info() will try to access its
-> member, which will cause 'kernel NULL pointer' issue. This was found
-> using a faulty device (pci link went down sometimes) in a random
-> insmod/rmmod/other-op test.
-> To fix it, check ar->normal_mode_fw.board before accessing the member.
-> 
-> pci 0000:02:00.0: BAR 0: assigned [mem 0xf7400000-0xf75fffff 64bit]
-> ath10k_pci 0000:02:00.0: enabling device (0000 -> 0002)
-> ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
-> ath10k_pci 0000:02:00.0: failed to read device register, device is gone
-> ath10k_pci 0000:02:00.0: failed to wait for target init: -5
-> ath10k_pci 0000:02:00.0: failed to warm reset: -5
-> ath10k_pci 0000:02:00.0: firmware crashed during chip reset
-> ath10k_pci 0000:02:00.0: firmware crashed! (uuid 5d018951-b8e1-404a-8fde-923078b4423a)
-> ath10k_pci 0000:02:00.0: (null) target 0x00000000 chip_id 0x00340aff sub 0000:0000
-> ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 1 testmode 1
-> ath10k_pci 0000:02:00.0: firmware ver  api 0 features  crc32 00000000
-> ...
-> BUG: unable to handle kernel NULL pointer dereference at 00000004
-> ...
-> Call Trace:
->  [<fb4e7882>] ath10k_print_driver_info+0x12/0x20 [ath10k_core]
->  [<fb62b7dd>] ath10k_pci_fw_crashed_dump+0x6d/0x4d0 [ath10k_pci]
->  [<fb629f07>] ? ath10k_pci_sleep.part.19+0x57/0xc0 [ath10k_pci]
->  [<fb62c8ee>] ath10k_pci_hif_power_up+0x14e/0x1b0 [ath10k_pci]
->  [<c10477fb>] ? do_page_fault+0xb/0x10
->  [<fb4eb934>] ath10k_core_register_work+0x24/0x840 [ath10k_core]
->  [<c18a00d8>] ? netlbl_unlhsh_remove+0x178/0x410
->  [<c10477f0>] ? __do_page_fault+0x480/0x480
->  [<c1068e44>] process_one_work+0x114/0x3e0
->  [<c1069d07>] worker_thread+0x37/0x4a0
->  [<c106e294>] kthread+0xa4/0xc0
->  [<c1069cd0>] ? create_worker+0x180/0x180
->  [<c106e1f0>] ? kthread_park+0x50/0x50
->  [<c18ab4f7>] ret_from_fork+0x1b/0x28
->  Code: 78 80 b8 50 09 00 00 00 75 5d 8d 75 94 c7 44 24 08 aa d7 52 fb c7 44 24 04 64 00 00 00
->  89 34 24 e8 82 52 e2 c5 8b 83 dc 08 00 00 <8b> 50 04 8b 08 31 c0 e8 20 57 e3 c5 89 44 24 10 8b 83 58 09 00
->  EIP: [<fb4e7754>]-
->  ath10k_debug_print_board_info+0x34/0xb0 [ath10k_core]
->  SS:ESP 0068:f4921d90
->  CR2: 0000000000000004
-> 
-> Signed-off-by: Yu Wang <yyuwang@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Patch applied to ath-current branch of ath.git, thanks.
-
-50e79e25250b ath10k: fix kernel panic issue during pci probe
-
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index bb65b37..6ce9c94 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -405,7 +405,7 @@ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ 		cmd.increment = 1;
+ 		cmd.count = 4;
+ 		cmd.buffer = (u8 *)&data;
+-		cmd.block_size = g_sdio.block_size; /* johnny : prevent it from setting unexpected value */
++		cmd.block_size = g_sdio.block_size;
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+@@ -489,7 +489,7 @@ static int sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ 		cmd.count = nleft;
+ 		cmd.buffer = buf;
+ 
+-		cmd.block_size = block_size; /* johnny : prevent it from setting unexpected value */
++		cmd.block_size = block_size;
+ 
+ 		if (addr > 0) {
+ 			if (!sdio_set_func0_csa_address(wilc, addr))
+@@ -543,7 +543,7 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ 		cmd.count = 4;
+ 		cmd.buffer = (u8 *)data;
+ 
+-		cmd.block_size = g_sdio.block_size; /* johnny : prevent it from setting unexpected value */
++		cmd.block_size = g_sdio.block_size;
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+@@ -629,7 +629,7 @@ static int sdio_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ 		cmd.count = nleft;
+ 		cmd.buffer = buf;
+ 
+-		cmd.block_size = block_size; /* johnny : prevent it from setting unexpected value */
++		cmd.block_size = block_size;
+ 
+ 		if (addr > 0) {
+ 			if (!sdio_set_func0_csa_address(wilc, addr))
 -- 
-https://patchwork.kernel.org/patch/10189375/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
