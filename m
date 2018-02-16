@@ -1,306 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:36569 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750827AbeBWOHA (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:40238 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751090AbeBPQdp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 09:07:00 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v8 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
-Date: Fri, 23 Feb 2018 19:24:55 +0530
-Message-Id: <1519394098-24220-6-git-send-email-amitkarwar@gmail.com> (sfid-20180223_150705_004996_FD95E5EF)
-In-Reply-To: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
-References: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
+        Fri, 16 Feb 2018 11:33:45 -0500
+Received: by mail-wr0-f195.google.com with SMTP id o76so3476237wrb.7
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2018 08:33:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20180216103020.5009-1-s.gottschall@dd-wrt.com>
+References: <20180216103020.5009-1-s.gottschall@dd-wrt.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Fri, 16 Feb 2018 08:33:43 -0800
+Message-ID: <CALLGbRKVpXwZ12BbntX__OGhS3VLBNvRYRnuDGwTKMzu_eiK5Q@mail.gmail.com> (sfid-20180216_173349_437283_FAA2E1C2)
+Subject: Re: [PATCH] v2 ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: s.gottschall@dd-wrt.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On Fri, Feb 16, 2018 at 2:30 AM,  <s.gottschall@dd-wrt.com> wrote:
+> From: Sebastian Gottschall <s.gottschall@newmedia-net.de>
+>
+> Adds LED and GPIO Control support for 988x, 9887, 9888, 99x0, 9984 and ipq4019 based chipsets with on chipset connected led's
+> using WMI Firmware API.
+> The LED device will get available named as "ath10k-phyX" at sysfs and can be controlled with various triggers.
+> adds also debugfs interface for gpio control.
+>
 
-Redpine bluetooth driver is a thin driver which depends on
-'rsi_91x' driver for transmitting and receiving packets
-to/from device. It creates hci interface when attach() is
-called from 'rsi_91x' module.
+Hi Sebastian,
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
-Reviewed-by: Marcel Holtmann <marcel@holtmann.org>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
-v8: Resolve 'kbuild test robot' reported error. Used asm/unaligned.h
-    header file instead of linux/unaligned/le_byteshift.h 
-v7: Same as v6
-v6: Renamed CONFIG_BT_RSI to CONFIG_BT_HCIRSI (Marcel)
-v5: Addressed review comments from Marcel.
-    Removed reduntant switch case code from rsi_hci_recv_pkt()
-    Changed bt_cb(skb)->pkt_type to hci_skb_pkt_type(skb)
-    Removed reduntant '\n' from BT_ERR and redundant BT_INFO messages
-    Changed u8 *pkt to const u8 *pkt in rsi_hci_recv_pkt()
-v4: Removed rsi_hci.h file. Made the functions static(Marcel)
-v3: Made BT_RSI module by default off(Marcel)
-    Removed redundant exported function rsi_get_hci_ops()(Marcel)
-v2: Addressed review comments from Marcel
-    Removed unnecessary 'depends on BT && BT_RFOMM' line in Kconfig
-    Removed redundant BT_INFO messages
-    h_adapter initialization and declaration in a single line.
-    Removed unnecessary error checks for HCI_RUNNING and fsm_state
-    Allocated new skb with skb_realloc_headroom() API if headroom is not sufficient
-    Used get_unaligned_le16 helpers
-    Moved a structure and union from header file to btrsi.c file
----
- drivers/bluetooth/Kconfig  |  12 +++
- drivers/bluetooth/Makefile |   2 +
- drivers/bluetooth/btrsi.c  | 188 +++++++++++++++++++++++++++++++++++++++++++++
- include/net/rsi_91x.h      |   4 +-
- 4 files changed, 205 insertions(+), 1 deletion(-)
- create mode 100644 drivers/bluetooth/btrsi.c
+First off, let me say I love this and the effort to make the gpios
+hanging off the wifi chip as proper system gpios. Years ago I had to
+do a hack to make some wifi-chip provided pins available to a customer
+who needed more GPIOs on our SoM. It would have been nice if provided
+hardware functionality had already been properly supported by the
+driver.
 
-diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
-index 07e55cd..d8bbd66 100644
---- a/drivers/bluetooth/Kconfig
-+++ b/drivers/bluetooth/Kconfig
-@@ -392,4 +392,16 @@ config BT_QCOMSMD
- 	  Say Y here to compile support for HCI over Qualcomm SMD into the
- 	  kernel or say M to compile as a module.
- 
-+config BT_HCIRSI
-+	tristate "Redpine HCI support"
-+	default n
-+	select RSI_COEX
-+	help
-+	  Redpine BT driver.
-+	  This driver handles BT traffic from upper layers and pass
-+	  to the RSI_91x coex module for further scheduling to device
-+
-+	  Say Y here to compile support for HCI over Redpine into the
-+	  kernel or say M to compile as a module.
-+
- endmenu
-diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
-index 4e4e44d..03cfc1b 100644
---- a/drivers/bluetooth/Makefile
-+++ b/drivers/bluetooth/Makefile
-@@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
- 
- obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
- 
-+obj-$(CONFIG_BT_HCIRSI)		+= btrsi.o
-+
- btmrvl-y			:= btmrvl_main.o
- btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
- 
-diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
-new file mode 100644
-index 0000000..5034325
---- /dev/null
-+++ b/drivers/bluetooth/btrsi.c
-@@ -0,0 +1,188 @@
-+/**
-+ * Copyright (c) 2017 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#include <linux/version.h>
-+#include <linux/module.h>
-+#include <linux/kernel.h>
-+#include <net/bluetooth/bluetooth.h>
-+#include <net/bluetooth/hci_core.h>
-+#include <asm/unaligned.h>
-+#include <net/rsi_91x.h>
-+#include <net/genetlink.h>
-+
-+#define RSI_HEADROOM_FOR_BT_HAL	16
-+#define RSI_FRAME_DESC_SIZE	16
-+
-+struct rsi_hci_adapter {
-+	void *priv;
-+	struct rsi_proto_ops *proto_ops;
-+	struct hci_dev *hdev;
-+};
-+
-+static int rsi_hci_open(struct hci_dev *hdev)
-+{
-+	return 0;
-+}
-+
-+static int rsi_hci_close(struct hci_dev *hdev)
-+{
-+	return 0;
-+}
-+
-+static int rsi_hci_flush(struct hci_dev *hdev)
-+{
-+	return 0;
-+}
-+
-+static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
-+{
-+	struct rsi_hci_adapter *h_adapter = hci_get_drvdata(hdev);
-+	struct sk_buff *new_skb = NULL;
-+
-+	switch (hci_skb_pkt_type(skb)) {
-+	case HCI_COMMAND_PKT:
-+		hdev->stat.cmd_tx++;
-+		break;
-+	case HCI_ACLDATA_PKT:
-+		hdev->stat.acl_tx++;
-+		break;
-+	case HCI_SCODATA_PKT:
-+		hdev->stat.sco_tx++;
-+		break;
-+	}
-+
-+	if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
-+		/* Insufficient skb headroom - allocate a new skb */
-+		new_skb = skb_realloc_headroom(skb, RSI_HEADROOM_FOR_BT_HAL);
-+		if (unlikely(!new_skb))
-+			return -ENOMEM;
-+		bt_cb(new_skb)->pkt_type = hci_skb_pkt_type(skb);
-+		kfree_skb(skb);
-+		skb = new_skb;
-+	}
-+
-+	return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
-+						   RSI_BT_Q);
-+}
-+
-+static int rsi_hci_recv_pkt(void *priv, const u8 *pkt)
-+{
-+	struct rsi_hci_adapter *h_adapter = priv;
-+	struct hci_dev *hdev = h_adapter->hdev;
-+	struct sk_buff *skb;
-+	int pkt_len = get_unaligned_le16(pkt) & 0x0fff;
-+
-+	skb = dev_alloc_skb(pkt_len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
-+	skb_put(skb, pkt_len);
-+	h_adapter->hdev->stat.byte_rx += skb->len;
-+
-+	hci_skb_pkt_type(skb) = pkt[14];
-+
-+	return hci_recv_frame(hdev, skb);
-+}
-+
-+static int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
-+{
-+	struct rsi_hci_adapter *h_adapter = NULL;
-+	struct hci_dev *hdev;
-+	int err = 0;
-+
-+	h_adapter = kzalloc(sizeof(*h_adapter), GFP_KERNEL);
-+	if (!h_adapter)
-+		return -ENOMEM;
-+
-+	h_adapter->priv = priv;
-+	ops->set_bt_context(priv, h_adapter);
-+	h_adapter->proto_ops = ops;
-+
-+	hdev = hci_alloc_dev();
-+	if (!hdev) {
-+		BT_ERR("Failed to alloc HCI device");
-+		goto err;
-+	}
-+
-+	h_adapter->hdev = hdev;
-+
-+	if (ops->get_host_intf(priv) == RSI_HOST_INTF_SDIO)
-+		hdev->bus = HCI_SDIO;
-+	else
-+		hdev->bus = HCI_USB;
-+
-+	hci_set_drvdata(hdev, h_adapter);
-+	hdev->dev_type = HCI_PRIMARY;
-+	hdev->open = rsi_hci_open;
-+	hdev->close = rsi_hci_close;
-+	hdev->flush = rsi_hci_flush;
-+	hdev->send = rsi_hci_send_pkt;
-+
-+	err = hci_register_dev(hdev);
-+	if (err < 0) {
-+		BT_ERR("HCI registration failed with errcode %d", err);
-+		hci_free_dev(hdev);
-+		goto err;
-+	}
-+
-+	return 0;
-+err:
-+	h_adapter->hdev = NULL;
-+	kfree(h_adapter);
-+	return -EINVAL;
-+}
-+
-+static void rsi_hci_detach(void *priv)
-+{
-+	struct rsi_hci_adapter *h_adapter = priv;
-+	struct hci_dev *hdev;
-+
-+	if (!h_adapter)
-+		return;
-+
-+	hdev = h_adapter->hdev;
-+	if (hdev) {
-+		hci_unregister_dev(hdev);
-+		hci_free_dev(hdev);
-+		h_adapter->hdev = NULL;
-+	}
-+
-+	kfree(h_adapter);
-+}
-+
-+const struct rsi_mod_ops rsi_bt_ops = {
-+	.attach	= rsi_hci_attach,
-+	.detach	= rsi_hci_detach,
-+	.recv_pkt = rsi_hci_recv_pkt,
-+};
-+EXPORT_SYMBOL(rsi_bt_ops);
-+
-+static int rsi_91x_bt_module_init(void)
-+{
-+	return 0;
-+}
-+
-+static void rsi_91x_bt_module_exit(void)
-+{
-+	return;
-+}
-+
-+module_init(rsi_91x_bt_module_init);
-+module_exit(rsi_91x_bt_module_exit);
-+MODULE_AUTHOR("Redpine Signals Inc");
-+MODULE_DESCRIPTION("RSI BT driver");
-+MODULE_SUPPORTED_DEVICE("RSI-BT");
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
-index 737ab4e..040f07b 100644
---- a/include/net/rsi_91x.h
-+++ b/include/net/rsi_91x.h
-@@ -49,6 +49,8 @@ struct rsi_proto_ops {
- struct rsi_mod_ops {
- 	int (*attach)(void *priv, struct rsi_proto_ops *ops);
- 	void (*detach)(void *priv);
--	int (*recv_pkt)(void *priv, u8 *msg);
-+	int (*recv_pkt)(void *priv, const u8 *msg);
- };
-+
-+extern const struct rsi_mod_ops rsi_bt_ops;
- #endif
--- 
-2.7.4
+In looking through, it looks like you're hooking into the standard
+gpio-chip driver interface. Which is great. So, why are you providing
+a separate out-of-band debugfs access interface for gpio control?
+Seems to me to be a duplicate of the interface in sysfs that provides
+gpio access (`/sys/class/gpio`). My preference is we don't duplicate
+functionality and that we use the standard provided features. That way
+we don't possibly confuse users, and we also reduce our maintenance
+effort.
+
+Additionally, what happens when the relevant GPIO configuration
+options aren't enabled? Do we have a compilation issue? I'm more
+familiar with being a _consumer_ of gpiolib in my drivers and I know
+if CONFIG_GPIOLIB isn't checked I end up with problems. I'm unsure
+what happens when you're presenting a gpio-chip interface without the
+relevant CONFIG_ being enabled. Note that I didn't test this, I'm just
+asking the question to be sure we don't forget anything.
+
+- Steve
