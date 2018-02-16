@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:40774 "EHLO mga01.intel.com"
+Received: from mx4.wp.pl ([212.77.101.12]:11343 "EHLO mx4.wp.pl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752439AbeBVG2q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 01:28:46 -0500
-Date: Thu, 22 Feb 2018 14:28:29 +0800
-From: kbuild test robot <lkp@intel.com>
-To: mkenna@codeaurora.org
-Cc: kbuild-all@01.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Subject: Re: [PATCH] ath10k: debugfs support to get final TPC stats for 10.4
- variants
-Message-ID: <201802221335.IYmLJSh2%fengguang.wu@intel.com> (sfid-20180222_072850_675644_D3B4AF02)
-References: <1519220139-10423-1-git-send-email-mkenna@codeaurora.org>
+        id S1750797AbeBPWiS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Feb 2018 17:38:18 -0500
+Date: Fri, 16 Feb 2018 14:38:08 -0800
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mt7601u: make write with mask access atomic
+Message-ID: <20180216143808.7d95b9c0@cakuba.netronome.com> (sfid-20180216_233821_994410_DD329715)
+In-Reply-To: <4a8ec536fda4741ef88618493d0641fbd497314c.1518819577.git.lorenzo.bianconi@redhat.com>
+References: <cover.1518819577.git.lorenzo.bianconi@redhat.com>
+        <4a8ec536fda4741ef88618493d0641fbd497314c.1518819577.git.lorenzo.bianconi@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519220139-10423-1-git-send-email-mkenna@codeaurora.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Maharaja,
+On Fri, 16 Feb 2018 23:30:01 +0100, Lorenzo Bianconi wrote:
+> Introduce __mt7601u_rr and __mt7601u_vendor_single_wr routines in order
+> to make mt7601u_rmw and mt7601u_rmc atomic. This patch does not fix a
+> reported issue but makes the usb access more robust to concurrent
+> operations on the same register since it is theoretically possible that
+> read and write accesses of mt7601u_rmw/mt7601u_rmc can be interleaved with
+> a different write operation on the same register.
+> Moreover using __mt7601u_rr and __mt7601u_vendor_single_wr in
+> mt7601u_rmw/mt7601u_rmc allows to grab vendor_req_mutex mutex once
+> instead of twice
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Thank you for the patch! Perhaps something to improve:
+Acked-by: Jakub Kicinski <kubakici@wp.pl>
 
-[auto build test WARNING on ath6kl/ath-next]
-[also build test WARNING on v4.16-rc2 next-20180221]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/mkenna-codeaurora-org/ath10k-debugfs-support-to-get-final-TPC-stats-for-10-4-variants/20180222-110854
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git ath-next
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
->> drivers/net/wireless/ath/ath10k/wmi.c:4322:6: sparse: symbol 'ath10k_wmi_tpc_config_get_rate_code' was not declared. Should it be
->> drivers/net/wireless/ath/ath10k/wmi.c:4660:6: sparse: symbol 'ath10k_wmi_event_tpc_final_table' was not declared. Should it be
-   drivers/net/wireless/ath/ath10k/wmi.c:738:10: sparse: Initializer entry defined twice
-   drivers/net/wireless/ath/ath10k/wmi.c:744:10: also defined here
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Thanks!
