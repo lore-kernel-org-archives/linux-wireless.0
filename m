@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:36337 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751623AbeBWI0p (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:59573 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754607AbeBPPMb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 03:26:45 -0500
-Received: by mail-wr0-f193.google.com with SMTP id v111so964028wrb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Feb 2018 00:26:44 -0800 (PST)
+        Fri, 16 Feb 2018 10:12:31 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/12] staging: wilc1000: fix line over 80 characters in tcp_process()
+Date: Fri, 16 Feb 2018 20:41:47 +0530
+Message-ID: <1518793909-15573-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180216_161236_113086_CC5163B9)
+In-Reply-To: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
-References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
- <5A8D36B7.1010201@broadcom.com> <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
-From: Daniel Drake <drake@endlessm.com>
-Date: Fri, 23 Feb 2018 11:26:42 +0300
-Message-ID: <CAD8Lp44Y-sNqm8_5=1pvBy-3zvVVQSCQ+Qye-2xP8vGmkvrjng@mail.gmail.com> (sfid-20180223_092656_103301_D53D8072)
-Subject: Re: brcmfmac signal/interference issues
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Fix "line over 80 characters" issue found by checkpatch.pl script.
 
-On Wed, Feb 21, 2018 at 12:39 PM, Daniel Drake <drake@endlessm.com> wrote:
-> Thanks for looking into this. Here is the brcmfmac43455-sdio.txt file
-> we are using:
-> https://gist.github.com/dsd/d7ee3caa6dfd77f0bcd16cf272b20298
-> This is identical to the 4345r6nvram.txt file from windows.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-I checked Windows again and it seems to be using a firmware file
-4345r6rtecdc.bin alongside this nvram data.
-This firmware is different from the one in linux-firmware. I've
-uploaded it here:
-https://drive.google.com/open?id=1MUsiaoozslJb8SCYOR-FNbJFuD-h4PY_
-
-I was hoping to try this on Linux to see if it makes any difference to
-the issue seen here.
-However, with thisi firmware in place, I can't connect to the network
-at all. It associates, wpa_supplicant never sees the first WPA2 key
-message sent from the AP - even though wireshark on a separate monitor
-shows that the key message was sent, and that the STA acked it.
-
-I turned off WPA2 to make it an open network instead, and now I am
-unable to complete the DHCP conversation. According to the monitor
-station, the STA succesfully transmits DHCPDISCOVER and the AP
-responds with DHCPOFFER. The offer is acked, but dhclient never sees
-it, and eventually times out.
-
-Any ideas why this firmware may not be working at all on linux?
-
-Thanks,
-Daniel
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index aedf84d..391ecd5 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -232,8 +232,10 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 					 (u32)tcp_hdr_ptr[11];
+ 
+ 				for (i = 0; i < tcp_session; i++) {
++					u32 j = ack_session_info[i].seq_num;
++
+ 					if (i < 2 * MAX_TCP_SESSION &&
+-					    ack_session_info[i].seq_num == seq_no) {
++					    j == seq_no) {
+ 						update_tcp_session(i, ack_no);
+ 						break;
+ 					}
+-- 
+2.7.4
