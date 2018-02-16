@@ -1,59 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41960 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751203AbeBAG4T (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59116 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758530AbeBPQNQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Feb 2018 01:56:19 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: Re: [v5 4/8] rsi: add coex support
-References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
-        <1513168977-2121-5-git-send-email-amitkarwar@gmail.com>
-Date: Thu, 01 Feb 2018 08:56:14 +0200
-In-Reply-To: <1513168977-2121-5-git-send-email-amitkarwar@gmail.com>
-        (Amitkumar Karwar's message of "Wed, 13 Dec 2017 18:12:53 +0530")
-Message-ID: <87r2q5mc4x.fsf@purkki.adurom.net> (sfid-20180201_075623_549808_64420D2D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 16 Feb 2018 11:13:16 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 16 Feb 2018 18:12:56 +0200
+Message-Id: <20180216161301.29339-9-luca@coelho.fi> (sfid-20180216_171327_068115_BF879509)
+In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
+References: <20180216161301.29339-1-luca@coelho.fi>
+Subject: [PATCH 08/13] mac80211: Do not disconnect on invalid operating class
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+From: Ilan Peer <ilan.peer@intel.com>
 
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->
-> With BT support, driver has to handle two streams of data
-> (i.e. wlan and BT). Actual coex implementation is in firmware.
-> Coex module just schedule the packets to firmware by taking them
-> from the corresponding paths.
->
-> Structures for module and protocol operations are introduced for
-> this purpose. Protocol operations structure is global structure
-> which can be shared among different modules. Initialization of
-> coex and operating mode values is moved to rsi_91x_init().
->
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Some APs include a non global operating class in their extended channel
+switch information element. In such a case, as the operating class is not
+known, mac80211 would decide to disconnect.
 
-[...]
+However the specification states that the operating class needs to be
+taken from Annex E, but it does not specify from which table it should be
+taken, so it is valid for an AP to use a non global operating class.
 
-> @@ -270,6 +271,7 @@ struct rsi_common {
->  	u8 obm_ant_sel_val;
->  	int tx_power;
->  	u8 ant_in_use;
-> +	struct semaphore tx_bus_lock;
+To avoid possibly unneeded disconnection, in such a case ignore the
+operating class and assume that the current band is used, and if the
+resulting channel and band configuration is invalid disconnect.
 
-Do you really need to use semaphore? I think nowadays the preference is
-to use something other than semaphores.
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/spectmgmt.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Also calling it tx_bus_lock is IMHO misleading, tx_bus_sema would be
-nicer.
-
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index ee0181778a42..029334835747 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -8,6 +8,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2008, Intel Corporation
+  * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
++ * Copyright (C) 2018        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -27,7 +28,7 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 				 u32 sta_flags, u8 *bssid,
+ 				 struct ieee80211_csa_ie *csa_ie)
+ {
+-	enum nl80211_band new_band;
++	enum nl80211_band new_band = current_band;
+ 	int new_freq;
+ 	u8 new_chan_no;
+ 	struct ieee80211_channel *new_chan;
+@@ -55,15 +56,13 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 				elems->ext_chansw_ie->new_operating_class,
+ 				&new_band)) {
+ 			sdata_info(sdata,
+-				   "cannot understand ECSA IE operating class %d, disconnecting\n",
++				   "cannot understand ECSA IE operating class, %d, ignoring\n",
+ 				   elems->ext_chansw_ie->new_operating_class);
+-			return -EINVAL;
+ 		}
+ 		new_chan_no = elems->ext_chansw_ie->new_ch_num;
+ 		csa_ie->count = elems->ext_chansw_ie->count;
+ 		csa_ie->mode = elems->ext_chansw_ie->mode;
+ 	} else if (elems->ch_switch_ie) {
+-		new_band = current_band;
+ 		new_chan_no = elems->ch_switch_ie->new_ch_num;
+ 		csa_ie->count = elems->ch_switch_ie->count;
+ 		csa_ie->mode = elems->ch_switch_ie->mode;
 -- 
-Kalle Valo
+2.15.1
