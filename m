@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.9]:20776 "EHLO mx3.wp.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751544AbeBHXHt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Feb 2018 18:07:49 -0500
-Date: Thu, 8 Feb 2018 15:01:01 -0800
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mt7601u: set device mac address in
- mt7601u_add_interface()
-Message-ID: <20180208150101.0e069f65@cakuba.netronome.com> (sfid-20180209_000756_353651_C3D6DE79)
-In-Reply-To: <c2fe73b04dac0827adf135e669ed441f9ed1d13c.1518126991.git.lorenzo.bianconi@redhat.com>
-References: <cover.1518126991.git.lorenzo.bianconi@redhat.com>
-        <c2fe73b04dac0827adf135e669ed441f9ed1d13c.1518126991.git.lorenzo.bianconi@redhat.com>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:44482 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753680AbeBPHgr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Feb 2018 02:36:47 -0500
+Received: by mail-oi0-f66.google.com with SMTP id b3so1671075oib.11
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2018 23:36:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <5A858127.1030904@broadcom.com>
+References: <CAD8Lp47D5sGCpxSiFYQviu0a62W4aj-5Sgs6sjE7E2cZWwsUwg@mail.gmail.com>
+ <5A82B4F8.2090209@broadcom.com> <CAD8Lp46ta_mQriB1eOJxnTmgoy5n5T9_AyNpVKuL2C4uuLrf3g@mail.gmail.com>
+ <5A858127.1030904@broadcom.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Fri, 16 Feb 2018 10:36:45 +0300
+Message-ID: <CAD8Lp45nhUwkjo4rCG9mYpvNe5U4V12cmh9ZPRuLyas8gYLiqw@mail.gmail.com> (sfid-20180216_083658_384675_A7BEDE4A)
+Subject: Re: Make brcmfmac repeat authentication requests
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu,  8 Feb 2018 23:08:09 +0100, Lorenzo Bianconi wrote:
-> If mac80211 adds a vif with a different mac address respect to
-> the eeprom one, the device will not be able to connect to the ap
-> since the hw address has not been updated.
-> Fix the issue updating hw mac address in mt7601u_add_interface routine
-> 
-> BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1516935
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt7601u/main.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt7601u/main.c b/drivers/net/wireless/mediatek/mt7601u/main.c
-> index 43ebd460ba86..3c9ea40d9584 100644
-> --- a/drivers/net/wireless/mediatek/mt7601u/main.c
-> +++ b/drivers/net/wireless/mediatek/mt7601u/main.c
-> @@ -64,6 +64,9 @@ static int mt7601u_add_interface(struct ieee80211_hw *hw,
->  	 */
->  	mvif->idx = idx;
->  
-> +	if (!ether_addr_equal(dev->macaddr, vif->addr))
-> +		mt7601u_set_macaddr(dev, vif->addr);
-> +
->  	if (dev->wcid_mask[wcid / BITS_PER_LONG] & BIT(wcid % BITS_PER_LONG))
->  		return -ENOSPC;
->  	dev->wcid_mask[wcid / BITS_PER_LONG] |= BIT(wcid % BITS_PER_LONG);
+On Thu, Feb 15, 2018 at 3:46 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> Ok. Could you create a log with driver debugging enabled, ie. build driver CONFIG_BRCMDBG=y and load with module param 'debug=0x1416'. The problem is probably when the firmware is configured.
 
-Sorry, my recollection of mac80211 code is waning, but can't we have
-more than one vif as long as they are on the same channel?
+Logs from driver load at boot:
+https://gist.github.com/dsd/7f9a7e8b0f8e20794aaed6298b2cb96a
+
+Logs from interface up:
+https://gist.github.com/dsd/13909ed821f7429e6be6a97ed91a61af
+
+Logs from connection attempt:
+https://gist.github.com/dsd/ae4a664c45e3d379d765231d96ae20d7
+
+By the way, I noticed that the new parameter is called assoc_retry_max.
+However here the problem is at the authentication stage. We do not
+reach association.
+Does assoc_retry_max also affect the authentication codepath, or is
+there an equivalent parameter for retrying auth?
+
+Thanks
+Daniel
