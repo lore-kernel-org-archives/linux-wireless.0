@@ -1,329 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59168 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:59146 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754380AbeBPQPE (ORCPT
+        with ESMTP id S1758548AbeBPQNY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 11:15:04 -0500
+        Fri, 16 Feb 2018 11:13:24 -0500
 From: Luca Coelho <luca@coelho.fi>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
         Haim Dreyfuss <haim.dreyfuss@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 16 Feb 2018 18:12:59 +0200
-Message-Id: <20180216161301.29339-12-luca@coelho.fi> (sfid-20180216_171509_295970_3CDDE84C)
+Date: Fri, 16 Feb 2018 18:13:00 +0200
+Message-Id: <20180216161301.29339-13-luca@coelho.fi> (sfid-20180216_171328_919669_C636A0DA)
 In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
 References: <20180216161301.29339-1-luca@coelho.fi>
-Subject: [PATCH 11/13] cfg80211: read wmm rules from regulatory database
+Subject: [PATCH 12/13] mac80211: limit wmm params to comply with ETSI requirements
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-ETSI EN 301 893 v211 (2017-05) standard defines a new channel access
-mechanism that all devices (WLAN and LAA) need to comply with.
-The regulatory database can now be loaded into the kernel and also
-has the option to load optional data.
-In order to be able to comply with ETSI standard, we add wmm_rule into
-regulatory rule and add the option to read its value from the regulatory
-database.
+ETSI has recently restricted the WMM parameters values for
+5GHz frequencies. There are two scenarios which may cause
+to violate ETSI requirements.
+1. Using mac80211 default values.
+2. Userspace entity tries to configure its own values
+2. Associating to AP which advertises WWM IE.
+
+In the latter case, the client configures the data from the  WMM IE as
+it's WMM parameters. The AP might not comply with ETSI requirements.
+Thus we should limit wmm parameters, when the current regulatory rule
+implies that, to make sure we comply with ETSI requirements.
 
 Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/regulatory.h |  28 +++++++++
- net/wireless/reg.c       | 146 ++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 167 insertions(+), 7 deletions(-)
+ net/mac80211/cfg.c         |  3 +++
+ net/mac80211/ieee80211_i.h |  4 ++++
+ net/mac80211/mlme.c        |  1 +
+ net/mac80211/util.c        | 40 ++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 48 insertions(+)
 
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index ebc5a2ed8631..355b23ad146c 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 46028e12e216..bb22e05075f4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
 @@ -4,6 +4,7 @@
-  * regulatory support structures
-  *
-  * Copyright 2008-2009	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2015  Intel Mobile Communications GmbH
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
 + * Copyright (C) 2018 Intel Corporation
   *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -188,9 +189,35 @@ struct ieee80211_power_rule {
- 	u32 max_eirp;
- };
+  * This file is GPLv2 as found in COPYING.
+  */
+@@ -2156,6 +2157,8 @@ static int ieee80211_set_txq_params(struct wiphy *wiphy,
+ 	 */
+ 	p.uapsd = false;
  
-+/**
-+ * struct ieee80211_wmm_ac - used to store per ac wmm regulatory limitation
-+ *
-+ * The information provided in this structure is required for QoS
-+ * transmit queue configuration. Cf. IEEE 802.11 7.3.2.29.
-+ *
-+ * @cw_min: minimum contention window [a value of the form
-+ *      2^n-1 in the range 1..32767]
-+ * @cw_max: maximum contention window [like @cw_min]
-+ * @cot: maximum burst time in units of 32 usecs, 0 meaning disabled
-+ * @aifsn: arbitration interframe space [0..255]
-+ *
-+ */
-+struct ieee80211_wmm_ac {
-+	u16 cw_min;
-+	u16 cw_max;
-+	u16 cot;
-+	u8 aifsn;
-+};
++	ieee80211_regulatory_limit_wmm_params(sdata, &p, params->ac);
 +
-+struct ieee80211_wmm_rule {
-+	struct ieee80211_wmm_ac client[IEEE80211_NUM_ACS];
-+	struct ieee80211_wmm_ac ap[IEEE80211_NUM_ACS];
-+};
-+
- struct ieee80211_reg_rule {
- 	struct ieee80211_freq_range freq_range;
- 	struct ieee80211_power_rule power_rule;
-+	struct ieee80211_wmm_rule *wmm_rule;
- 	u32 flags;
- 	u32 dfs_cac_ms;
- };
-@@ -198,6 +225,7 @@ struct ieee80211_reg_rule {
- struct ieee80211_regdomain {
- 	struct rcu_head rcu_head;
- 	u32 n_reg_rules;
-+	u32 n_wmm_rules;
- 	char alpha2[3];
- 	enum nl80211_dfs_regions dfs_region;
- 	struct ieee80211_reg_rule reg_rules[];
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7b42f0bacfd8..7c7c0e0f8d9d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -5,6 +5,7 @@
-  * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright      2017  Intel Deutschland GmbH
+ 	sdata->tx_conf[params->ac] = p;
+ 	if (drv_conf_tx(local, sdata, params->ac, &p)) {
+ 		wiphy_debug(local->hw.wiphy,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 536f04d14592..a58e8433fb5e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -4,6 +4,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2015  Intel Mobile Communications GmbH
 + * Copyright (C) 2018 Intel Corporation
   *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -424,23 +425,36 @@ static const struct ieee80211_regdomain *
- reg_copy_regd(const struct ieee80211_regdomain *src_regd)
- {
- 	struct ieee80211_regdomain *regd;
--	int size_of_regd;
-+	int size_of_regd, size_of_wmms;
- 	unsigned int i;
-+	struct ieee80211_wmm_rule *d_wmm, *s_wmm;
- 
- 	size_of_regd =
- 		sizeof(struct ieee80211_regdomain) +
- 		src_regd->n_reg_rules * sizeof(struct ieee80211_reg_rule);
-+	size_of_wmms = src_regd->n_wmm_rules *
-+		sizeof(struct ieee80211_wmm_rule);
- 
--	regd = kzalloc(size_of_regd, GFP_KERNEL);
-+	regd = kzalloc(size_of_regd + size_of_wmms, GFP_KERNEL);
- 	if (!regd)
- 		return ERR_PTR(-ENOMEM);
- 
- 	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
- 
--	for (i = 0; i < src_regd->n_reg_rules; i++)
-+	d_wmm = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
-+	s_wmm = (struct ieee80211_wmm_rule *)((u8 *)src_regd + size_of_regd);
-+	memcpy(d_wmm, s_wmm, size_of_wmms);
-+
-+	for (i = 0; i < src_regd->n_reg_rules; i++) {
- 		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
- 		       sizeof(struct ieee80211_reg_rule));
-+		if (!src_regd->reg_rules[i].wmm_rule)
-+			continue;
- 
-+		regd->reg_rules[i].wmm_rule = d_wmm +
-+			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
-+			sizeof(struct ieee80211_wmm_rule);
-+	}
- 	return regd;
- }
- 
-@@ -595,6 +609,17 @@ enum fwdb_flags {
- 	FWDB_FLAG_AUTO_BW	= BIT(4),
- };
- 
-+struct fwdb_wmm_ac {
-+	u8 ecw;
-+	u8 aifsn;
-+	__be16 cot;
-+} __packed;
-+
-+struct fwdb_wmm_rule {
-+	struct fwdb_wmm_ac client[IEEE80211_NUM_ACS];
-+	struct fwdb_wmm_ac ap[IEEE80211_NUM_ACS];
-+} __packed;
-+
- struct fwdb_rule {
- 	u8 len;
- 	u8 flags;
-@@ -602,6 +627,7 @@ struct fwdb_rule {
- 	__be32 start, end, max_bw;
- 	/* start of optional data */
- 	__be16 cac_timeout;
-+	__be16 wmm_ptr;
- } __packed __aligned(4);
- 
- #define FWDB_MAGIC 0x52474442
-@@ -613,6 +639,31 @@ struct fwdb_header {
- 	struct fwdb_country country[];
- } __packed __aligned(4);
- 
-+static int ecw2cw(int ecw)
-+{
-+	return (1 << ecw) - 1;
-+}
-+
-+static bool valid_wmm(struct fwdb_wmm_rule *rule)
-+{
-+	struct fwdb_wmm_ac *ac = (struct fwdb_wmm_ac *)rule;
-+	int i;
-+
-+	for (i = 0; i < IEEE80211_NUM_ACS * 2; i++) {
-+		u16 cw_min = ecw2cw((ac[i].ecw & 0xf0) >> 4);
-+		u16 cw_max = ecw2cw(ac[i].ecw & 0x0f);
-+		u8 aifsn = ac[i].aifsn;
-+
-+		if (cw_min >= cw_max)
-+			return false;
-+
-+		if (aifsn < 1)
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
- static bool valid_rule(const u8 *data, unsigned int size, u16 rule_ptr)
- {
- 	struct fwdb_rule *rule = (void *)(data + (rule_ptr << 2));
-@@ -623,7 +674,18 @@ static bool valid_rule(const u8 *data, unsigned int size, u16 rule_ptr)
- 	/* mandatory fields */
- 	if (rule->len < offsetofend(struct fwdb_rule, max_bw))
- 		return false;
-+	if (rule->len >= offsetofend(struct fwdb_rule, wmm_ptr)) {
-+		u32 wmm_ptr = be16_to_cpu(rule->wmm_ptr) << 2;
-+		struct fwdb_wmm_rule *wmm;
- 
-+		if (wmm_ptr + sizeof(struct fwdb_wmm_rule) > size)
-+			return false;
-+
-+		wmm = (void *)(data + wmm_ptr);
-+
-+		if (!valid_wmm(wmm))
-+			return false;
-+	}
- 	return true;
- }
- 
-@@ -798,23 +860,62 @@ static bool valid_regdb(const u8 *data, unsigned int size)
- 	return true;
- }
- 
-+static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
-+			 struct fwdb_wmm_rule *wmm)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+		rule->client[i].cw_min =
-+			ecw2cw((wmm->client[i].ecw & 0xf0) >> 4);
-+		rule->client[i].cw_max = ecw2cw(wmm->client[i].ecw & 0x0f);
-+		rule->client[i].aifsn =  wmm->client[i].aifsn;
-+		rule->client[i].cot = 1000 * be16_to_cpu(wmm->client[i].cot);
-+		rule->ap[i].cw_min = ecw2cw((wmm->ap[i].ecw & 0xf0) >> 4);
-+		rule->ap[i].cw_max = ecw2cw(wmm->ap[i].ecw & 0x0f);
-+		rule->ap[i].aifsn = wmm->ap[i].aifsn;
-+		rule->ap[i].cot = 1000 * be16_to_cpu(wmm->ap[i].cot);
-+	}
-+}
-+
-+struct wmm_ptrs {
-+	struct ieee80211_wmm_rule *rule;
-+	u32 ptr;
-+};
-+
-+static struct ieee80211_wmm_rule *find_wmm_ptr(struct wmm_ptrs *wmm_ptrs,
-+					       u32 wmm_ptr, int n_wmms)
-+{
-+	int i;
-+
-+	for (i = 0; i < n_wmms; i++) {
-+		if (wmm_ptrs[i].ptr == wmm_ptr)
-+			return wmm_ptrs[i].rule;
-+	}
-+	return NULL;
-+}
-+
- static int regdb_query_country(const struct fwdb_header *db,
- 			       const struct fwdb_country *country)
- {
- 	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
- 	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
- 	struct ieee80211_regdomain *regdom;
--	unsigned int size_of_regd;
--	unsigned int i;
-+	struct ieee80211_regdomain *tmp_rd;
-+	unsigned int size_of_regd, i, n_wmms = 0;
-+	struct wmm_ptrs *wmm_ptrs;
- 
--	size_of_regd =
--		sizeof(struct ieee80211_regdomain) +
-+	size_of_regd = sizeof(struct ieee80211_regdomain) +
- 		coll->n_rules * sizeof(struct ieee80211_reg_rule);
- 
- 	regdom = kzalloc(size_of_regd, GFP_KERNEL);
- 	if (!regdom)
- 		return -ENOMEM;
- 
-+	wmm_ptrs = kcalloc(coll->n_rules, sizeof(*wmm_ptrs), GFP_KERNEL);
-+	if (!wmm_ptrs)
-+		return -ENOMEM;
-+
- 	regdom->n_reg_rules = coll->n_rules;
- 	regdom->alpha2[0] = country->alpha2[0];
- 	regdom->alpha2[1] = country->alpha2[1];
-@@ -851,7 +952,38 @@ static int regdb_query_country(const struct fwdb_header *db,
- 		if (rule->len >= offsetofend(struct fwdb_rule, cac_timeout))
- 			rrule->dfs_cac_ms =
- 				1000 * be16_to_cpu(rule->cac_timeout);
-+		if (rule->len >= offsetofend(struct fwdb_rule, wmm_ptr)) {
-+			u32 wmm_ptr = be16_to_cpu(rule->wmm_ptr) << 2;
-+			struct ieee80211_wmm_rule *wmm_pos =
-+				find_wmm_ptr(wmm_ptrs, wmm_ptr, n_wmms);
-+			struct fwdb_wmm_rule *wmm;
-+			struct ieee80211_wmm_rule *wmm_rule;
-+
-+			if (wmm_pos) {
-+				rrule->wmm_rule = wmm_pos;
-+				continue;
-+			}
-+			wmm = (void *)((u8 *)db + wmm_ptr);
-+			tmp_rd = krealloc(regdom, size_of_regd + (n_wmms + 1) *
-+					  sizeof(struct ieee80211_wmm_rule),
-+					  GFP_KERNEL);
-+
-+			if (!tmp_rd) {
-+				kfree(regdom);
-+				return -ENOMEM;
-+			}
-+			regdom = tmp_rd;
-+
-+			wmm_rule = (struct ieee80211_wmm_rule *)
-+				((u8 *)regdom + size_of_regd + n_wmms *
-+				sizeof(struct ieee80211_wmm_rule));
-+
-+			set_wmm_rule(wmm_rule, wmm);
-+			wmm_ptrs[n_wmms].ptr = wmm_ptr;
-+			wmm_ptrs[n_wmms++].rule = wmm_rule;
-+		}
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -1862,6 +1863,9 @@ extern const void *const mac80211_wiphy_privid; /* for wiphy privid */
+ int ieee80211_frame_duration(enum nl80211_band band, size_t len,
+ 			     int rate, int erp, int short_preamble,
+ 			     int shift);
++void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
++					   struct ieee80211_tx_queue_params *qparam,
++					   int ac);
+ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+ 			       bool bss_notify, bool enable_qos);
+ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0024eff9bb84..23b66c611727 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1792,6 +1792,7 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 				   params[ac].cw_min, params[ac].cw_max, aci);
+ 			return false;
+ 		}
++		ieee80211_regulatory_limit_wmm_params(sdata, &params[ac], ac);
  	}
-+	kfree(wmm_ptrs);
  
- 	return reg_schedule_apply(regdom);
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 1f82191ce601..b5b0c943411e 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -5,6 +5,7 @@
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright (C) 2015-2017	Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -1113,6 +1114,44 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 	return crc;
  }
+ 
++void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
++					   struct ieee80211_tx_queue_params
++					   *qparam, int ac)
++{
++	struct ieee80211_chanctx_conf *chanctx_conf;
++	const struct ieee80211_reg_rule *rrule;
++	struct ieee80211_wmm_ac *wmm_ac;
++	u16 center_freq = 0;
++
++	if (sdata->vif.type != NL80211_IFTYPE_AP &&
++	    sdata->vif.type != NL80211_IFTYPE_STATION)
++		return;
++
++	rcu_read_lock();
++	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
++	if (chanctx_conf)
++		center_freq = chanctx_conf->def.chan->center_freq;
++	rcu_read_unlock();
++
++	if (!center_freq)
++		return;
++
++	rrule = freq_reg_info(sdata->wdev.wiphy, MHZ_TO_KHZ(center_freq));
++
++	if (IS_ERR_OR_NULL(rrule) || !rrule->wmm_rule)
++		return;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		wmm_ac = &rrule->wmm_rule->ap[ac];
++	else
++		wmm_ac = &rrule->wmm_rule->client[ac];
++	qparam->cw_min = max_t(u16, qparam->cw_min, wmm_ac->cw_min);
++	qparam->cw_max = max_t(u16, qparam->cw_max, wmm_ac->cw_max);
++	qparam->aifs = max_t(u8, qparam->aifs, wmm_ac->aifsn);
++	qparam->txop = !qparam->txop ? wmm_ac->cot / 32 :
++		min_t(u16, qparam->txop, wmm_ac->cot / 32);
++}
++
+ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+ 			       bool bss_notify, bool enable_qos)
+ {
+@@ -1206,6 +1245,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+ 				break;
+ 			}
+ 		}
++		ieee80211_regulatory_limit_wmm_params(sdata, &qparam, ac);
+ 
+ 		qparam.uapsd = false;
+ 
 -- 
 2.15.1
