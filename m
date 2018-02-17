@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48057 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753214AbeBASD3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59312 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751110AbeBQIeJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Feb 2018 13:03:29 -0500
-From: Colin King <colin.king@canonical.com>
-To: Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        "Luis R . Rodriguez" <mcgrof@do-not-panic.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath5k: remove duplicated re-assignment to pointer 'tq'
-Date: Thu,  1 Feb 2018 18:03:27 +0000
-Message-Id: <20180201180327.23435-1-colin.king@canonical.com> (sfid-20180201_190449_271905_7714A7C5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Sat, 17 Feb 2018 03:34:09 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Ulf Magnusson <ulfalizer@gmail.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 17 Feb 2018 10:33:54 +0200
+Message-Id: <20180217083354.31160-10-luca@coelho.fi> (sfid-20180217_093421_337580_FE78E639)
+In-Reply-To: <20180217083354.31160-1-luca@coelho.fi>
+References: <20180217083354.31160-1-luca@coelho.fi>
+Subject: [PATCH 9/9] iwlwifi: fix malformed CONFIG_IWLWIFI_PCIE_RTPM default
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Ulf Magnusson <ulfalizer@gmail.com>
 
-Pointer tq is initialized with &ah->ah_txq[queue] and then a few
-lines later is re-assigned the same value, hence this duplicate
-assignment is redundant and can be removed.
+'default false' should be 'default n', though they happen to have the
+same effect here, due to undefined symbols ('false' in this case)
+evaluating to n in a tristate sense.
 
-Cleans up clang warning:
-drivers/net/wireless/ath/ath5k/qcu.c:326:25: warning: Value stored
-to 'tq' during its initialization is never read
+Remove the default instead of changing it. bool and tristate symbols
+implicitly default to n.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Discovered with the
+https://github.com/ulfalizer/Kconfiglib/blob/master/examples/list_undefined.py
+script.
+
+Signed-off-by: Ulf Magnusson <ulfalizer@gmail.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/qcu.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index beda11ce34a7..147947f632f7 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -327,8 +327,6 @@ ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 
- 	AR5K_ASSERT_ENTRY(queue, ah->ah_capabilities.cap_queues.q_tx_num);
- 
--	tq = &ah->ah_txq[queue];
--
- 	/* Skip if queue inactive or if we are on AR5210
- 	 * that doesn't have QCU/DCU */
- 	if ((ah->ah_version == AR5K_AR5210) ||
+diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
+index c5f2ddf9b0fe..e5a2fc738ac3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Kconfig
++++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
+@@ -91,7 +91,6 @@ config IWLWIFI_BCAST_FILTERING
+ config IWLWIFI_PCIE_RTPM
+        bool "Enable runtime power management mode for PCIe devices"
+        depends on IWLMVM && PM && EXPERT
+-       default false
+        help
+          Say Y here to enable runtime power management for PCIe
+          devices.  If enabled, the device will go into low power mode
 -- 
 2.15.1
