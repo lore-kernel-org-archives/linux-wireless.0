@@ -1,102 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.11]:6440 "EHLO mx4.wp.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751726AbeB0C3J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 21:29:09 -0500
-Date: Mon, 26 Feb 2018 18:28:59 -0800
-From: Jakub Kicinski <kubakici@wp.pl>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: cantabile <cantabile.desu@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt7601u: Fix system freeze after resuming from
- hibernation
-Message-ID: <20180226182859.03184215@cakuba.netronome.com> (sfid-20180227_032933_642522_75194411)
-In-Reply-To: <20180225175425.GL14069@wotan.suse.de>
-References: <d9ca2742-7f85-afe3-2de6-6637eb56d9b3@gmail.com>
-        <20180214164549.72ee26c3@cakuba.netronome.com>
-        <f542e9c6-5106-c79c-6e38-7a2f50e6be2d@gmail.com>
-        <20180215134738.722654a9@cakuba.netronome.com>
-        <7cebda93-4b7a-e8b3-271f-0144c5e94248@gmail.com>
-        <20180218215520.65c1e9fd@cakuba.netronome.com>
-        <6783d9b9-3523-761f-a8b4-b87732006b3c@gmail.com>
-        <20180225175425.GL14069@wotan.suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from paleale.coelho.fi ([176.9.41.70]:59272 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751077AbeBQIeF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Feb 2018 03:34:05 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 17 Feb 2018 10:33:49 +0200
+Message-Id: <20180217083354.31160-5-luca@coelho.fi> (sfid-20180217_093419_256568_9E522DF5)
+In-Reply-To: <20180217083354.31160-1-luca@coelho.fi>
+References: <20180217083354.31160-1-luca@coelho.fi>
+Subject: [PATCH 4/9] iwlwifi: mvm: fix assert 0x2B00 on older FWs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 25 Feb 2018 17:54:25 +0000, Luis R. Rodriguez wrote:
-> On Mon, Feb 19, 2018 at 05:01:27PM +0200, cantabile wrote:
-> > On 19/02/18 07:55, Jakub Kicinski wrote:  
-> > > On Sat, 17 Feb 2018 13:23:29 +0200, cantabile wrote:  
-> > > > > Thanks for the info.  Would it be cleaner to EXPORT fw_add_devm_name()
-> > > > > and just call that in case driver sees FW is already loaded?  That
-> > > > > should inform the fw subsystem that we want the image around in case of
-> > > > > hibernation, but there is no need to load it immediately?  
-> > > > 
-> > > > No, I don't believe it's cleaner to expose a private function that you
-> > > > don't even really need. Remember that calling request_firmware every
-> > > > time your driver's probe and resume functions are called is normal. It's
-> > > > the expected behaviour.  
-> > > 
-> > > I'm asking you the extend functionality of a subsystem to be able to
-> > > cleanly communicate the intent.  Not export internal functions.
-> > > 
-> > > Requesting firmware you don't need and risking failing probe even if FW
-> > > is already pre-loaded is not correct.  Reordering you suggest is
-> > > brittle and makes little logical sense unless someone guesses your use
-> > > case.
-> > > 
-> > > Please at least try to do as advised.  Otherwise:
-> > > 
-> > > Nacked-by: Jakub Kicinski <kubakici@wp.pl>
-> > >   
-> > 
-> > You're right about the reordering not making sense to someone unfamiliar
-> > with the problem. I can fix that with a comment.
-> > 
-> > I can change the patch so that request_firmware will only make the probe
-> > function fail if the firmware is not already running.  
-> 
-> Note that using request_firmware() on probe typically is also not an
-> outstanding idea given it delays boot. Not because looking for the firmware
-> takes time, but instead because processing firmware typically does on
-> the device. For instance cxgb4 is an example device where processing
-> firmware takes a long time.
-> 
-> Delays on probe may mean the "feel good" immediate desktop coming up is delyed.
-> 
-> Specially if its networking... I see no reason why to process firmware on probe.
-> 
-> If one can use a workqueue to process verifying if it needs firmware and loading
-> later, that's more advisable.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Quite true, more advanced the FW the longer FW load takes :(  Although
-I would be cautious not to cause issues for network/NFS boot...  Perhaps
-it can wait for such workqueue to finish?
+We should add the multicast station before adding the
+broadcast station.
 
-> Now, that's all a side topic.
-> 
-> I will for now agree that it seems pointless to request for firmware always
-> even if you don't need to, and all you want is to just cache the firmware
-> on suspend. So I welcome a patch but the justification for it really needs to
-> be documented very well, and the documentation extended as such. In fact
-> maybe rename the function to something more sensible.
-> 
-> Another use case for the firmware cache (which we need to add the documentation)
-> is that for hibernation we suspend all devices first, get a snapshot, and then
-> resume devices so we can then write the snapshot to disk. On that resume step
-> I don't think devices have access to the hard drive for firmware, so cache is
-> all we have. This may need some confirmation but I suspect this is the case.
-> Drivers needing firmware on resume for hibernation may need to cache their
-> firmware.
-> 
-> I want to understand the case where the firmware is *not* available on resume?
-> Why did that happen? I seem to have read that on a fresh reboot the firmware
-> was not needed, and so on probe request_firmware() was not called? Why would
-> firmware not be required on a reboot?
+However, in older FW, the firmware will start beaconing
+when we add the multicast station, and since the broadcast
+station is not added at this point so the transmission
+of the beacon will fail on assert 0x2b00.
 
-Yes, that is a good question..  John, do you have a theory?  My initial
-thought was that the UEFI/BIOS loads it during pre-boot, but this is a
-USB card, so it's a bit unlikely that UEFI will have a driver for it...
-Does this happen when rebooting maybe?
+This is fixed in later firmware, so make the order
+of addition depend on the TLV.
+
+Fixes: 26d6c16bed53 ("iwlwifi: mvm: add multicast station")
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 45 ++++++++++++++++++-----
+ 1 file changed, 35 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 08de822c3ef0..ebf511150f4d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -2106,15 +2107,40 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 	if (ret)
+ 		goto out_remove;
+ 
+-	ret = iwl_mvm_add_mcast_sta(mvm, vif);
+-	if (ret)
+-		goto out_unbind;
+-
+-	/* Send the bcast station. At this stage the TBTT and DTIM time events
+-	 * are added and applied to the scheduler */
+-	ret = iwl_mvm_send_add_bcast_sta(mvm, vif);
+-	if (ret)
+-		goto out_rm_mcast;
++	/*
++	 * This is not very nice, but the simplest:
++	 * For older FWs adding the mcast sta before the bcast station may
++	 * cause assert 0x2b00.
++	 * This is fixed in later FW so make the order of removal depend on
++	 * the TLV
++	 */
++	if (fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_STA_TYPE)) {
++		ret = iwl_mvm_add_mcast_sta(mvm, vif);
++		if (ret)
++			goto out_unbind;
++		/*
++		 * Send the bcast station. At this stage the TBTT and DTIM time
++		 * events are added and applied to the scheduler
++		 */
++		ret = iwl_mvm_send_add_bcast_sta(mvm, vif);
++		if (ret) {
++			iwl_mvm_rm_mcast_sta(mvm, vif);
++			goto out_unbind;
++		}
++	} else {
++		/*
++		 * Send the bcast station. At this stage the TBTT and DTIM time
++		 * events are added and applied to the scheduler
++		 */
++		iwl_mvm_send_add_bcast_sta(mvm, vif);
++		if (ret)
++			goto out_unbind;
++		iwl_mvm_add_mcast_sta(mvm, vif);
++		if (ret) {
++			iwl_mvm_send_rm_bcast_sta(mvm, vif);
++			goto out_unbind;
++		}
++	}
+ 
+ 	/* must be set before quota calculations */
+ 	mvmvif->ap_ibss_active = true;
+@@ -2144,7 +2170,6 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 	iwl_mvm_power_update_mac(mvm);
+ 	mvmvif->ap_ibss_active = false;
+ 	iwl_mvm_send_rm_bcast_sta(mvm, vif);
+-out_rm_mcast:
+ 	iwl_mvm_rm_mcast_sta(mvm, vif);
+ out_unbind:
+ 	iwl_mvm_binding_remove_vif(mvm, vif);
+-- 
+2.15.1
