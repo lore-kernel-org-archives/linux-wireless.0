@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:51561 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753213AbeBSRCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 12:02:54 -0500
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH 0/3] Export TXQ parameters and statistics via nl80211
-Date: Mon, 19 Feb 2018 18:02:21 +0100
-Message-Id: <20180219170224.14816-1-toke@toke.dk> (sfid-20180219_180302_465294_DE26996D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from paleale.coelho.fi ([176.9.41.70]:59294 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751077AbeBQIeI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Feb 2018 03:34:08 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 17 Feb 2018 10:33:52 +0200
+Message-Id: <20180217083354.31160-8-luca@coelho.fi> (sfid-20180217_093419_915016_6DE17098)
+In-Reply-To: <20180217083354.31160-1-luca@coelho.fi>
+References: <20180217083354.31160-1-luca@coelho.fi>
+Subject: [PATCH 7/9] iwlwifi: mvm: Direct multicast frames to the correct station
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds TXQ parameters and statistics that were previously only
-available through debugfs to the nl80211 userspace interface and the
-cfg80211 kernel interface. Patches for iw to print the statistics and
-change the settings are included.
+From: Ilan Peer <ilan.peer@intel.com>
 
-Wasn't sure whether to include the updates to nl80211.h in the iw
-patchset, so I didn't :)
+Multicast frames for NL80211_IFTYPE_AP and NL80211_IFTYPE_ADHOC were
+directed to the broadcast station, however, as the broadcast station
+did not have keys configured, these frames were sent unencrypted.
 
--Toke
+Fix this by using the multicast station which is the station for which
+encryption keys are configured.
 
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Kernel patch:
-
-Toke Høiland-Jørgensen (1):
-  cfg80211: Expose TXQ stats and parameters to userspace
-
- include/net/cfg80211.h       |  52 +++++++++++++++++++
- include/uapi/linux/nl80211.h |  57 +++++++++++++++++++++
- net/mac80211/cfg.c           |  95 +++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h   |   3 ++
- net/mac80211/main.c          |   3 ++
- net/mac80211/sta_info.c      |  12 +++++
- net/mac80211/tx.c            |  20 ++++++++
- net/wireless/nl80211.c       | 115 +++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      |  12 +++++
- net/wireless/trace.h         |  14 ++++++
- 10 files changed, 383 insertions(+)
-
-
-iw patches (updated nl80211.h not included):
-
-Toke Høiland-Jørgensen (2):
-  iw: Print TXQ statistics for stations and interfaces
-  iw: Add getting and setting of TXQ params for phy
-
- info.c      |   3 ++
- interface.c |   6 ++++
- iw.h        |   2 ++
- phy.c       | 116 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- station.c   |  91 ++++++++++++++++++++++++++++++++++++++++++++++-
- 5 files changed, 217 insertions(+), 1 deletion(-)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 57ad6019ffad..af6dfceab6b8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -648,7 +648,11 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 		if (info.control.vif->type == NL80211_IFTYPE_P2P_DEVICE ||
+ 		    info.control.vif->type == NL80211_IFTYPE_AP ||
+ 		    info.control.vif->type == NL80211_IFTYPE_ADHOC) {
+-			sta_id = mvmvif->bcast_sta.sta_id;
++			if (info.control.vif->type == NL80211_IFTYPE_P2P_DEVICE)
++				sta_id = mvmvif->bcast_sta.sta_id;
++			else
++				sta_id = mvmvif->mcast_sta.sta_id;
++
+ 			queue = iwl_mvm_get_ctrl_vif_queue(mvm, &info,
+ 							   hdr->frame_control);
+ 			if (queue < 0)
+-- 
+2.15.1
