@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:46680 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751866AbeBSI4Q (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:57218 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751259AbeBRQkH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 03:56:16 -0500
-Date: Mon, 19 Feb 2018 11:56:02 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, aditya.shankar@microchip.com
-Subject: Re: [PATCH 04/12] staging: wilc1000: fix open parenthesis alignment
- mismatch in wilc_parse_network_info()
-Message-ID: <20180219085602.i3gxyofwraimiptw@mwanda> (sfid-20180219_095620_336296_397DCC7D)
-References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
- <1518793909-15573-5-git-send-email-ajay.kathat@microchip.com>
+        Sun, 18 Feb 2018 11:40:07 -0500
+Subject: Re: [PATCH] v5 ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: Bo YU <tsu.yubo@gmail.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+References: <20180218120300.5997-1-s.gottschall@dd-wrt.com>
+ <20180218143351.GA30308@yubo-2>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <8f49257f-b40b-2e97-5f45-04fc1e6e544a@dd-wrt.com> (sfid-20180218_174012_253996_53E63929)
+Date: Sun, 18 Feb 2018 17:40:01 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1518793909-15573-5-git-send-email-ajay.kathat@microchip.com>
+In-Reply-To: <20180218143351.GA30308@yubo-2>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 16, 2018 at 08:41:41PM +0530, Ajay Singh wrote:
-> Fix "Alignment should match open parenthesis" issue found by
-> checkpatch.pl script.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index e98fc8e..2e2187b 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -320,8 +320,8 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
->  		get_ssid(msa, network_info->ssid, &network_info->ssid_len);
->  		get_BSSID(msa, network_info->bssid);
->  
-> -		network_info->ch = get_current_channel_802_11n(msa,
-> -							rx_len + FCS_LEN);
-> +		network_info->ch = get_current_channel_802_11n(msa, rx_len
-> +							       + FCS_LEN);
+Am 18.02.2018 um 15:33 schrieb Bo YU:
+> Hi,
+> I am just wondering about something.I am a newbies.
+>
+> On Sun, Feb 18, 2018 at 01:03:00PM +0100, s.gottschall@dd-wrt.com wrote:
+>>
+>>
+>> +#ifdef CONFIG_GPIOLIB
+>> +
+>> +static int ath10k_gpio_pin_cfg_input(struct gpio_chip *chip, 
+>> unsigned offset)
+>> +{
+>> +    struct ath10k_gpiocontrol *gpio = container_of(chip, struct 
+>> ath10k_gpiocontrol, gchip);
+>> +    ath10k_wmi_gpio_config(gpio->ar, offset, 1, WMI_GPIO_PULL_NONE, 
+>> WMI_GPIO_INTTYPE_DISABLE); // configure to input
+> If i remember right,comment style in kernel code would better to use
+> /* .. */. Same the below comment.
+true
+> + +/* register GPIO chip */
+>> +static int ath10k_register_gpio_chip(struct ath10k *ar)
+>> +{
+>> +    struct ath10k_gpiocontrol *gpio;
+>> +    gpio = kzalloc(sizeof(struct ath10k_gpiocontrol), GFP_KERNEL);
+>> +    if (!gpio) {
+>> +        return -1;
+> There is rare value returned after allocing memory from kernel.Maybe
+> "return -ENOMEM"?
+not really relevant since the return check just checks for value present 
+and not for value type
+but i applied it for next patch version
 
-Greg has already applied this which is fine, but I probably would have
-left this as is.  Normally a rule is that the '+' character should be on
-the first line, and also it's slightly easier to read when the argument
-is one one line instead of split across two.
+-- 
+Mit freundlichen Grüssen / Regards
 
-But it doesn't matter much either way.  We'll probably end up
-re-writing great swaths of this code.
+Sebastian Gottschall / CTO
 
-regards,
-dan carpenter
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
