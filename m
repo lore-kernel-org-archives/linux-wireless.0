@@ -1,51 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45060 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751119AbeBAHLv (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47996 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932338AbeBSXOe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Feb 2018 02:11:51 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: Re: [v5 7/8] rsi: add module parameter operating mode
-References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
-        <1513168977-2121-8-git-send-email-amitkarwar@gmail.com>
-Date: Thu, 01 Feb 2018 09:11:47 +0200
-In-Reply-To: <1513168977-2121-8-git-send-email-amitkarwar@gmail.com>
-        (Amitkumar Karwar's message of "Wed, 13 Dec 2017 18:12:56 +0530")
-Message-ID: <87a7wtmbf0.fsf@purkki.adurom.net> (sfid-20180201_081155_120109_7923D0F9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 19 Feb 2018 18:14:34 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 2/8] brcmfmac: move allocation of control rx buffer to brcmf_sdio_bus_preinit()
+Date: Tue, 20 Feb 2018 00:14:19 +0100
+Message-Id: <1519082065-10128-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180220_001442_412941_3D9E35A1)
+In-Reply-To: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+Allocate the control rx buffer needed for firmware control interface
+during brcmf_sdio_bus_preinit(). This relies on common layer setting
+struct brcmf_bus::maxctl during brcmf_attach(). By moving the allocation
+we can move brcmf_attach() in subsequent change.
 
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->
-> Operating mode determines the support for other protocols.
-> This is made as module parameter for better usage.
->
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 26 ++++++++++------------
+ 1 file changed, 12 insertions(+), 14 deletions(-)
 
-[...]
-
-> +/* Default operating mode is wlan STA + BT */
-> +static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
-> +module_param(dev_oper_mode, ushort, 0444);
-> +MODULE_PARM_DESC(dev_oper_mode,
-> +		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
-> +		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
-> +		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
-
-I really wish that we have nl80211 interface for configuring btcoex. We
-have been talking about that for years but nobody has implemented it :(
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 0868614..9ea525e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -1707,7 +1707,6 @@ static int brcmf_sdio_dcmd_resp_wake(struct brcmf_sdio *bus)
+ 	int sdret;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+-
+ 	if (bus->rxblen)
+ 		buf = vzalloc(bus->rxblen);
+ 	if (!buf)
+@@ -3411,6 +3410,18 @@ static int brcmf_sdio_bus_preinit(struct device *dev)
+ 	u32 value;
+ 	int err;
+ 
++	/* maxctl provided by common layer */
++	if (WARN_ON(!bus_if->maxctl))
++		return -EINVAL;
++
++	/* Allocate control receive buffer */
++	bus_if->maxctl += bus->roundup;
++	value = roundup((bus_if->maxctl + SDPCM_HDRLEN), ALIGNMENT);
++	value += bus->head_align;
++	bus->rxbuf = kmalloc(value, GFP_ATOMIC);
++	if (bus->rxbuf)
++		bus->rxblen = value;
++
+ 	/* the commands below use the terms tx and rx from
+ 	 * a device perspective, ie. bus:txglom affects the
+ 	 * bus transfers from device to host.
+@@ -4208,19 +4219,6 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	bus->blocksize = bus->sdiodev->func2->cur_blksize;
+ 	bus->roundup = min(max_roundup, bus->blocksize);
+ 
+-	/* Allocate buffers */
+-	if (bus->sdiodev->bus_if->maxctl) {
+-		bus->sdiodev->bus_if->maxctl += bus->roundup;
+-		bus->rxblen =
+-		    roundup((bus->sdiodev->bus_if->maxctl + SDPCM_HDRLEN),
+-			    ALIGNMENT) + bus->head_align;
+-		bus->rxbuf = kmalloc(bus->rxblen, GFP_ATOMIC);
+-		if (!(bus->rxbuf)) {
+-			brcmf_err("rxbuf allocation failed\n");
+-			goto fail;
+-		}
+-	}
+-
+ 	sdio_claim_host(bus->sdiodev->func1);
+ 
+ 	/* Disable F2 to clear any intermediate frame state on the dongle */
 -- 
-Kalle Valo
+1.9.1
