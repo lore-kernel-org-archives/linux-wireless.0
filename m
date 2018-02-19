@@ -1,161 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:39900 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750734AbeBPWaM (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47985 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932191AbeBSXOd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 17:30:12 -0500
-Received: by mail-wm0-f66.google.com with SMTP id b21so5570991wme.4
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2018 14:30:11 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: kubakici@wp.pl
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] mt7601u: make write with mask access atomic
-Date: Fri, 16 Feb 2018 23:30:01 +0100
-Message-Id: <4a8ec536fda4741ef88618493d0641fbd497314c.1518819577.git.lorenzo.bianconi@redhat.com> (sfid-20180216_233016_845008_3580A353)
-In-Reply-To: <cover.1518819577.git.lorenzo.bianconi@redhat.com>
-References: <cover.1518819577.git.lorenzo.bianconi@redhat.com>
+        Mon, 19 Feb 2018 18:14:33 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 8/8] brcmfmac: remove duplicate pointer variable from brcmf_sdio_firmware_callback()
+Date: Tue, 20 Feb 2018 00:14:25 +0100
+Message-Id: <1519082065-10128-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180220_001449_230973_FB59D796)
+In-Reply-To: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce __mt7601u_rr and __mt7601u_vendor_single_wr routines in order
-to make mt7601u_rmw and mt7601u_rmc atomic. This patch does not fix a
-reported issue but makes the usb access more robust to concurrent
-operations on the same register since it is theoretically possible that
-read and write accesses of mt7601u_rmw/mt7601u_rmc can be interleaved with
-a different write operation on the same register.
-Moreover using __mt7601u_rr and __mt7601u_vendor_single_wr in
-mt7601u_rmw/mt7601u_rmc allows to grab vendor_req_mutex mutex once
-instead of twice
+In brcmf_sdio_firmware_callback() two pointer variables were used
+pointing to the same construct. Get rid of sdiodev variable.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
-Changes since v1:
-- improve commit log
----
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  3 +-
- drivers/net/wireless/mediatek/mt7601u/usb.c     | 52 ++++++++++++++++++-------
- 2 files changed, 39 insertions(+), 16 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 37 +++++++++++-----------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-index c7ec40475a5f..9233744451a9 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-@@ -147,7 +147,8 @@ enum {
-  * @rx_lock:		protects @rx_q.
-  * @con_mon_lock:	protects @ap_bssid, @bcn_*, @avg_rssi.
-  * @mutex:		ensures exclusive access from mac80211 callbacks.
-- * @vendor_req_mutex:	protects @vend_buf, ensures atomicity of split writes.
-+ * @vendor_req_mutex:	protects @vend_buf, ensures atomicity of read/write
-+ *			accesses
-  * @reg_atomic_mutex:	ensures atomicity of indirect register accesses
-  *			(accesses to RF and BBP).
-  * @hw_atomic_mutex:	ensures exclusive access to HW during critical
-diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
-index b9e4f6793138..d8b7863f7926 100644
---- a/drivers/net/wireless/mediatek/mt7601u/usb.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
-@@ -129,15 +129,14 @@ void mt7601u_vendor_reset(struct mt7601u_dev *dev)
- 			       MT_VEND_DEV_MODE_RESET, 0, NULL, 0);
- }
- 
--u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset)
-+/* should be called with vendor_req_mutex held */
-+static u32 __mt7601u_rr(struct mt7601u_dev *dev, u32 offset)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index b94ef3c..4a6459a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4039,9 +4039,8 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 					 void *nvram, u32 nvram_len)
  {
- 	int ret;
- 	u32 val = ~0;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+-	struct brcmf_sdio *bus = sdiodev->bus;
+-	struct brcmf_sdio_dev *sdiod = bus->sdiodev;
++	struct brcmf_sdio_dev *sdiod = bus_if->bus_priv.sdio;
++	struct brcmf_sdio *bus = sdiod->bus;
+ 	struct brcmf_core *core = bus->sdio_core;
+ 	u8 saveclk;
  
- 	WARN_ONCE(offset > USHRT_MAX, "read high off:%08x", offset);
+@@ -4061,7 +4060,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	bus->sdcnt.tickcnt = 0;
+ 	brcmf_sdio_wd_timer(bus, true);
  
--	mutex_lock(&dev->vendor_req_mutex);
--
- 	ret = mt7601u_vendor_request(dev, MT_VEND_MULTI_READ, USB_DIR_IN,
- 				     0, offset, dev->vend_buf, MT_VEND_BUF);
- 	if (ret == MT_VEND_BUF)
-@@ -146,25 +145,41 @@ u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset)
- 		dev_err(dev->dev, "Error: wrong size read:%d off:%08x\n",
- 			ret, offset);
+-	sdio_claim_host(sdiodev->func1);
++	sdio_claim_host(sdiod->func1);
  
--	mutex_unlock(&dev->vendor_req_mutex);
--
- 	trace_reg_read(dev, offset, val);
- 	return val;
- }
+ 	/* Make sure backplane clock is on, needed to generate F2 interrupt */
+ 	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+@@ -4069,9 +4068,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 		goto release;
  
--int mt7601u_vendor_single_wr(struct mt7601u_dev *dev, const u8 req,
--			     const u16 offset, const u32 val)
-+u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset)
- {
--	int ret;
-+	u32 ret;
+ 	/* Force clocks on backplane to be sure F2 interrupt propagates */
+-	saveclk = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR, &err);
++	saveclk = brcmf_sdiod_readb(sdiod, SBSDIO_FUNC1_CHIPCLKCSR, &err);
+ 	if (!err) {
+-		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++		brcmf_sdiod_writeb(sdiod, SBSDIO_FUNC1_CHIPCLKCSR,
+ 				   (saveclk | SBSDIO_FORCE_HT), &err);
+ 	}
+ 	if (err) {
+@@ -4083,7 +4082,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	brcmf_sdiod_writel(sdiod, core->base + SD_REG(tosbmailboxdata),
+ 			   SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT, NULL);
  
- 	mutex_lock(&dev->vendor_req_mutex);
-+	ret = __mt7601u_rr(dev, offset);
-+	mutex_unlock(&dev->vendor_req_mutex);
+-	err = sdio_enable_func(sdiodev->func2);
++	err = sdio_enable_func(sdiod->func2);
  
--	ret = mt7601u_vendor_request(dev, req, USB_DIR_OUT,
--				     val & 0xffff, offset, NULL, 0);
-+	return ret;
-+}
-+
-+/* should be called with vendor_req_mutex held */
-+static int __mt7601u_vendor_single_wr(struct mt7601u_dev *dev, const u8 req,
-+				      const u16 offset, const u32 val)
-+{
-+	int ret = mt7601u_vendor_request(dev, req, USB_DIR_OUT,
-+					 val & 0xffff, offset, NULL, 0);
- 	if (!ret)
- 		ret = mt7601u_vendor_request(dev, req, USB_DIR_OUT,
- 					     val >> 16, offset + 2, NULL, 0);
-+	trace_reg_write(dev, offset, val);
-+	return ret;
-+}
-+
-+int mt7601u_vendor_single_wr(struct mt7601u_dev *dev, const u8 req,
-+			     const u16 offset, const u32 val)
-+{
-+	int ret;
+ 	brcmf_dbg(INFO, "enable F2: err=%d\n", err);
  
-+	mutex_lock(&dev->vendor_req_mutex);
-+	ret = __mt7601u_vendor_single_wr(dev, req, offset, val);
- 	mutex_unlock(&dev->vendor_req_mutex);
+@@ -4095,10 +4094,10 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 				   bus->hostintmask, NULL);
  
- 	return ret;
-@@ -175,23 +190,30 @@ void mt7601u_wr(struct mt7601u_dev *dev, u32 offset, u32 val)
- 	WARN_ONCE(offset > USHRT_MAX, "write high off:%08x", offset);
  
- 	mt7601u_vendor_single_wr(dev, MT_VEND_WRITE, offset, val);
--	trace_reg_write(dev, offset, val);
- }
+-		brcmf_sdiod_writeb(sdiodev, SBSDIO_WATERMARK, 8, &err);
++		brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK, 8, &err);
+ 	} else {
+ 		/* Disable F2 again */
+-		sdio_disable_func(sdiodev->func2);
++		sdio_disable_func(sdiod->func2);
+ 		goto release;
+ 	}
  
- u32 mt7601u_rmw(struct mt7601u_dev *dev, u32 offset, u32 mask, u32 val)
- {
--	val |= mt7601u_rr(dev, offset) & ~mask;
--	mt7601u_wr(dev, offset, val);
-+	mutex_lock(&dev->vendor_req_mutex);
-+	val |= __mt7601u_rr(dev, offset) & ~mask;
-+	__mt7601u_vendor_single_wr(dev, MT_VEND_WRITE, offset, val);
-+	mutex_unlock(&dev->vendor_req_mutex);
-+
- 	return val;
- }
+@@ -4106,7 +4105,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 		brcmf_sdio_sr_init(bus);
+ 	} else {
+ 		/* Restore previous clock setting */
+-		brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
++		brcmf_sdiod_writeb(sdiod, SBSDIO_FUNC1_CHIPCLKCSR,
+ 				   saveclk, &err);
+ 	}
  
- u32 mt7601u_rmc(struct mt7601u_dev *dev, u32 offset, u32 mask, u32 val)
- {
--	u32 reg = mt7601u_rr(dev, offset);
-+	u32 reg;
+@@ -4114,7 +4113,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 		/* Allow full data communication using DPC from now on. */
+ 		brcmf_sdiod_change_state(bus->sdiodev, BRCMF_SDIOD_DATA);
  
-+	mutex_lock(&dev->vendor_req_mutex);
-+	reg = __mt7601u_rr(dev, offset);
- 	val |= reg & ~mask;
- 	if (reg != val)
--		mt7601u_wr(dev, offset, val);
-+		__mt7601u_vendor_single_wr(dev, MT_VEND_WRITE,
-+					   offset, val);
-+	mutex_unlock(&dev->vendor_req_mutex);
-+
- 	return val;
+-		err = brcmf_sdiod_intr_register(sdiodev);
++		err = brcmf_sdiod_intr_register(sdiod);
+ 		if (err != 0)
+ 			brcmf_err("intr register failed:%d\n", err);
+ 	}
+@@ -4123,16 +4122,16 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	if (err != 0)
+ 		brcmf_sdio_clkctl(bus, CLK_NONE, false);
+ 
+-	sdio_release_host(sdiodev->func1);
++	sdio_release_host(sdiod->func1);
+ 
+ 	/* Assign bus interface call back */
+-	sdiodev->bus_if->dev = sdiodev->dev;
+-	sdiodev->bus_if->ops = &brcmf_sdio_bus_ops;
+-	sdiodev->bus_if->chip = bus->ci->chip;
+-	sdiodev->bus_if->chiprev = bus->ci->chiprev;
++	sdiod->bus_if->dev = sdiod->dev;
++	sdiod->bus_if->ops = &brcmf_sdio_bus_ops;
++	sdiod->bus_if->chip = bus->ci->chip;
++	sdiod->bus_if->chiprev = bus->ci->chiprev;
+ 
+ 	/* Attach to the common layer, reserve hdr space */
+-	err = brcmf_attach(sdiodev->dev, sdiodev->settings);
++	err = brcmf_attach(sdiod->dev, sdiod->settings);
+ 	if (err != 0) {
+ 		brcmf_err("brcmf_attach failed\n");
+ 		goto fail;
+@@ -4142,10 +4141,10 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	return;
+ 
+ release:
+-	sdio_release_host(sdiodev->func1);
++	sdio_release_host(sdiod->func1);
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s, err=%d\n", dev_name(dev), err);
+-	device_release_driver(&sdiodev->func2->dev);
++	device_release_driver(&sdiod->func2->dev);
+ 	device_release_driver(dev);
  }
  
 -- 
-2.14.3
+1.9.1
