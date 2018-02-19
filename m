@@ -1,130 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:58220 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750997AbeBINMm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Feb 2018 08:12:42 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  9 Feb 2018 15:12:30 +0200
-Message-Id: <20180209131234.8504-2-luca@coelho.fi> (sfid-20180209_141246_931462_5225EB4D)
-In-Reply-To: <20180209131234.8504-1-luca@coelho.fi>
-References: <20180209131234.8504-1-luca@coelho.fi>
-Subject: [PATCH 1/5] iwlwifi: mvm: fix security bug in PN checking
+Received: from mail.toke.dk ([52.28.52.200]:40035 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753208AbeBSRCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Feb 2018 12:02:54 -0500
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Subject: [PATCH 3/3] iw: Add getting and setting of TXQ params for phy
+Date: Mon, 19 Feb 2018 18:02:24 +0100
+Message-Id: <20180219170224.14816-4-toke@toke.dk> (sfid-20180219_180258_678021_884022C3)
+In-Reply-To: <20180219170224.14816-1-toke@toke.dk>
+References: <20180219170224.14816-1-toke@toke.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+This adds commands to get and set the per-phy TXQ parameters for drivers
+that use the intermediate TXQs. These are the settings and statistics that
+are also available through /sys/kernel/debug/ieee80211/phyX/aqm.
 
-A previous patch allowed the same PN for packets originating from the
-same AMSDU by copying PN only for the last packet in the series.
+Sample output:
 
-This however is bogus since we cannot assume the last frame will be
-received on the same queue, and if it is received on a different ueue
-we will end up not incrementing the PN and possibly let the next
-packet to have the same PN and pass through.
+$ iw phy phy0 get txq
+Packet limit:		8192 pkts
+Memory limit:		4194304 bytes
+Quantum:		300 bytes
+Number of queues:	4096
+Backlog:		12 pkts
+Memory usage:		52224 bytes
+Packet limit overflows:	0
+Memory limit overflows:	0
+Hash collisions:	1
 
-Change the logic instead to driver explicitly indicate for the second
-sub frame and on to be allowed to have the same PN as the first
-subframe. Indicate it to mac80211 as well for the fallback queue.
+# iw phy phy0 set txq limit 1024
+# iw phy phy0 set txq memory_limit 1024000
+# iw phy phy0 set txq quantum 1000
 
-Fixes: f1ae02b186d9 ("iwlwifi: mvm: allow same PN for de-aggregated AMSDU")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 39 ++++++++++++++-------------
- 1 file changed, 20 insertions(+), 19 deletions(-)
+ info.c |   3 ++
+ phy.c  | 116 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 119 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index a3f7c1bf3cc8..580de5851fc7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -71,6 +71,7 @@ static inline int iwl_mvm_check_pn(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_rx_status *stats = IEEE80211_SKB_RXCB(skb);
- 	struct iwl_mvm_key_pn *ptk_pn;
-+	int res;
- 	u8 tid, keyidx;
- 	u8 pn[IEEE80211_CCMP_PN_LEN];
- 	u8 *extiv;
-@@ -127,12 +128,13 @@ static inline int iwl_mvm_check_pn(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	pn[4] = extiv[1];
- 	pn[5] = extiv[0];
+diff --git a/info.c b/info.c
+index 1eba5c9..291cf24 100644
+--- a/info.c
++++ b/info.c
+@@ -609,6 +609,9 @@ broken_combination:
+ 		if (ext_feature_isset(nla_data(tb), nla_len(tb),
+ 				      NL80211_EXT_FEATURE_VHT_IBSS))
+ 			printf("\tDevice supports VHT-IBSS.\n");
++		if (ext_feature_isset(nla_data(tb), nla_len(tb),
++				      NL80211_EXT_FEATURE_TXQS))
++			printf("\tDriver supports FQ-CoDel-enabled intermediate TXQs.\n");
+ 	}
  
--	if (memcmp(pn, ptk_pn->q[queue].pn[tid],
--		   IEEE80211_CCMP_PN_LEN) <= 0)
-+	res = memcmp(pn, ptk_pn->q[queue].pn[tid], IEEE80211_CCMP_PN_LEN);
-+	if (res < 0)
-+		return -1;
-+	if (!res && !(stats->flag & RX_FLAG_ALLOW_SAME_PN))
- 		return -1;
- 
--	if (!(stats->flag & RX_FLAG_AMSDU_MORE))
--		memcpy(ptk_pn->q[queue].pn[tid], pn, IEEE80211_CCMP_PN_LEN);
-+	memcpy(ptk_pn->q[queue].pn[tid], pn, IEEE80211_CCMP_PN_LEN);
- 	stats->flag |= RX_FLAG_PN_VALIDATED;
- 
- 	return 0;
-@@ -314,28 +316,21 @@ static void iwl_mvm_rx_csum(struct ieee80211_sta *sta,
- }
- 
- /*
-- * returns true if a packet outside BA session is a duplicate and
-- * should be dropped
-+ * returns true if a packet is a duplicate and should be dropped.
-+ * Updates AMSDU PN tracking info
-  */
--static bool iwl_mvm_is_nonagg_dup(struct ieee80211_sta *sta, int queue,
--				  struct ieee80211_rx_status *rx_status,
--				  struct ieee80211_hdr *hdr,
--				  struct iwl_rx_mpdu_desc *desc)
-+static bool iwl_mvm_is_dup(struct ieee80211_sta *sta, int queue,
-+			   struct ieee80211_rx_status *rx_status,
-+			   struct ieee80211_hdr *hdr,
-+			   struct iwl_rx_mpdu_desc *desc)
- {
- 	struct iwl_mvm_sta *mvm_sta;
- 	struct iwl_mvm_rxq_dup_data *dup_data;
--	u8 baid, tid, sub_frame_idx;
-+	u8 tid, sub_frame_idx;
- 
- 	if (WARN_ON(IS_ERR_OR_NULL(sta)))
- 		return false;
- 
--	baid = (le32_to_cpu(desc->reorder_data) &
--		IWL_RX_MPDU_REORDER_BAID_MASK) >>
--		IWL_RX_MPDU_REORDER_BAID_SHIFT;
--
--	if (baid != IWL_RX_REORDER_DATA_INVALID_BAID)
--		return false;
--
- 	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
- 	dup_data = &mvm_sta->dup_data[queue];
- 
-@@ -365,6 +360,12 @@ static bool iwl_mvm_is_nonagg_dup(struct ieee80211_sta *sta, int queue,
- 		     dup_data->last_sub_frame[tid] >= sub_frame_idx))
- 		return true;
- 
-+	/* Allow same PN as the first subframe for following sub frames */
-+	if (dup_data->last_seq[tid] == hdr->seq_ctrl &&
-+	    sub_frame_idx > dup_data->last_sub_frame[tid] &&
-+	    desc->mac_flags2 & IWL_RX_MPDU_MFLG2_AMSDU)
-+		rx_status->flag |= RX_FLAG_ALLOW_SAME_PN;
+ 	if (tb_msg[NL80211_ATTR_TDLS_SUPPORT])
+diff --git a/phy.c b/phy.c
+index be31820..77df7a7 100644
+--- a/phy.c
++++ b/phy.c
+@@ -727,3 +727,119 @@ COMMAND(set, antenna, "<bitmap> | all | <tx bitmap> <rx bitmap>",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_antenna,
+ 	"Set a bitmap of allowed antennas to use for TX and RX.\n"
+ 	"The driver may reject antenna configurations it cannot support.");
 +
- 	dup_data->last_seq[tid] = hdr->seq_ctrl;
- 	dup_data->last_sub_frame[tid] = sub_frame_idx;
- 
-@@ -971,7 +972,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		if (ieee80211_is_data(hdr->frame_control))
- 			iwl_mvm_rx_csum(sta, skb, desc);
- 
--		if (iwl_mvm_is_nonagg_dup(sta, queue, rx_status, hdr, desc)) {
-+		if (iwl_mvm_is_dup(sta, queue, rx_status, hdr, desc)) {
- 			kfree_skb(skb);
- 			goto out;
- 		}
++static int handle_set_txq(struct nl80211_state *state,
++			  struct nl_msg *msg,
++			  int argc, char **argv,
++			  enum id_input id)
++{
++	unsigned int argval;
++	char *end;
++
++	if (argc != 2)
++		return 1;
++
++	if (!*argv[0] || !*argv[1])
++		return 1;
++
++	argval = strtoul(argv[1], &end, 10);
++
++	if (*end)
++		return 1;
++
++	if (!argval)
++		return 1;
++
++	if (strcmp("limit", argv[0]) == 0)
++		NLA_PUT_U32(msg, NL80211_ATTR_TXQ_LIMIT, argval);
++	else if (strcmp("memory_limit", argv[0]) == 0)
++		NLA_PUT_U32(msg, NL80211_ATTR_TXQ_MEMORY_LIMIT, argval);
++	else if (strcmp("quantum", argv[0]) == 0)
++		NLA_PUT_U32(msg, NL80211_ATTR_TXQ_QUANTUM, argval);
++	else
++		return -1;
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, txq, "limit <packets> | memory_limit <bytes> | quantum <bytes>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_set_txq,
++	"Set TXQ parameters. The limit and memory_limit are global queue limits\n"
++	"for the whole phy. The quantum is the DRR scheduler quantum setting.\n"
++	"Valid values: 1 - 2**32");
++
++static int print_txq_handler(struct nl_msg *msg, void *arg)
++{
++	struct nlattr *attrs[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	struct nlattr *txqstats_info[NL80211_TXQ_STATS_MAX + 1], *txqinfo;
++	static struct nla_policy txqstats_policy[NL80211_TXQ_STATS_MAX + 1] = {
++		[NL80211_TXQ_STATS_BACKLOG_PACKETS] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_BACKLOG_BYTES] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_OVERLIMIT] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_OVERMEMORY] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_COLLISIONS] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_MAX_FLOWS] = { .type = NLA_U32 },
++	};
++
++	nla_parse(attrs, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
++
++
++	if (attrs[NL80211_ATTR_TXQ_LIMIT])
++		printf("Packet limit:\t\t%u pkts\n",
++			nla_get_u32(attrs[NL80211_ATTR_TXQ_LIMIT]));
++	if (attrs[NL80211_ATTR_TXQ_MEMORY_LIMIT])
++		printf("Memory limit:\t\t%u bytes\n",
++			nla_get_u32(attrs[NL80211_ATTR_TXQ_MEMORY_LIMIT]));
++	if (attrs[NL80211_ATTR_TXQ_QUANTUM])
++		printf("Quantum:\t\t%u bytes\n",
++			nla_get_u32(attrs[NL80211_ATTR_TXQ_QUANTUM]));
++
++	if (attrs[NL80211_ATTR_TXQ_STATS]) {
++		if (nla_parse_nested(txqstats_info, NL80211_TXQ_STATS_MAX,
++				     attrs[NL80211_ATTR_TXQ_STATS],
++				     txqstats_policy)) {
++			printf("failed to parse nested TXQ stats attributes!");
++			return 0;
++		}
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_MAX_FLOWS];
++		if (txqinfo)
++			printf("Number of queues:\t%u\n", nla_get_u32(txqinfo));
++
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_BACKLOG_PACKETS];
++		if (txqinfo)
++			printf("Backlog:\t\t%u pkts\n", nla_get_u32(txqinfo));
++
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_BACKLOG_BYTES];
++		if (txqinfo)
++			printf("Memory usage:\t\t%u bytes\n", nla_get_u32(txqinfo));
++
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_OVERLIMIT];
++		if (txqinfo)
++			printf("Packet limit overflows:\t%u\n", nla_get_u32(txqinfo));
++
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_OVERMEMORY];
++		if (txqinfo)
++			printf("Memory limit overflows:\t%u\n", nla_get_u32(txqinfo));
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_COLLISIONS];
++		if (txqinfo)
++			printf("Hash collisions:\t%u\n", nla_get_u32(txqinfo));
++	}
++	return NL_SKIP;
++}
++
++static int handle_get_txq(struct nl80211_state *state,
++			  struct nl_msg *msg,
++			  int argc, char **argv,
++			  enum id_input id)
++{
++	nla_put_flag(msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
++	nlmsg_hdr(msg)->nlmsg_flags |= NLM_F_DUMP;
++	register_handler(print_txq_handler, NULL);
++	return 0;
++}
++COMMAND(get, txq, "",
++	NL80211_CMD_GET_WIPHY, 0, CIB_PHY, handle_get_txq,
++	"Get TXQ parameters.");
 -- 
-2.15.1
+2.16.1
