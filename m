@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:35832 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751797AbeBDUDx (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50004 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752655AbeBSMas (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Feb 2018 15:03:53 -0500
-Received: by mail-ot0-f195.google.com with SMTP id a2so13729883otf.2
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Feb 2018 12:03:52 -0800 (PST)
-Subject: Re: Fw: Regression: bcm4312 lp-phy device not recognized in 4.15
- kernel
-To: Chris Vine <vine35792468@gmail.com>, b43-dev@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-References: <20180204185855.74e6ade5@bother.homenet>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <935a4987-c481-f4e4-16d7-f5f56adcfee0@gmail.com> (sfid-20180204_210357_290006_36F8803E)
-Date: Sun, 4 Feb 2018 12:03:49 -0800
-MIME-Version: 1.0
-In-Reply-To: <20180204185855.74e6ade5@bother.homenet>
-Content-Type: text/plain; charset=windows-1252
+        Mon, 19 Feb 2018 07:30:48 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: arend.vanspriel@broadcom.com,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] brcmfmac: reject too long PSK
+Date: Mon, 19 Feb 2018 13:30:45 +0100
+Message-Id: <20180219123045.8818-1-johannes@sipsolutions.net> (sfid-20180219_133052_280431_60CC11DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/04/2018 10:58 AM, Chris Vine wrote:
-> I probably should have copied this to the relevant kernel wireless
-> mailing lists.  Anyway, here it is.
-> 
-> As a further datum point, the b43 driver works fine with the 4.15.0-rc3
-> kernel.  So something seems to have changed between that and 4.15.0.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Does this patch help?
+nl80211 already allows specifying 48 bytes, but brcmfmac
+only supports 32. Reject keys that are too long.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=a9e6d44ddeccd3522670e641f1ed9b068e746ff7
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-> 
-> Chris
-> 
-> Begin forwarded message:
-> 
-> Date: Mon, 29 Jan 2018 23:37:49 +0000
-> From: Chris Vine <vine35792468@gmail.com>
-> To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-> Subject: Regression: bcm4312 lp-phy device not recognized in 4.15 kernel
-> 
-> 
-> I have an old netbook with a Broadcom bcm4312 802.11b/g lp-phy
-> [14e4:4315] (rev 01) wifi device.  It is no longer recognized in kernel
-> 4.15: it works fine with the 4.14 kernel and earlier, with the b43 and
-> ssb kernel modules.
-> 
-> I cannot give any further information as there are no error messages
-> logged. The b43 firmware (wl-5.100.138) is not loaded for it, nor are
-> the ssb/b43/bcma/ mmc_core/mac80211/cfg80211 modules.  The modules can
-> be loaded by hand without error, but nothing happens and no network
-> interface is presented.
-> 
-> This is a pretty slow and rubbish netbook but is useful when travelling
-> to a country which might impound your laptop (no names) and you don't
-> mind too much losing it.  It would be nice to continue to be able to
-> use it for that.
-> 
-> Chris
-> 
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 15fa00d79fc6..74a83020c073 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5124,6 +5124,9 @@ static int brcmf_cfg80211_set_pmk(struct wiphy *wiphy, struct net_device *dev,
+ 	if (WARN_ON(ifp->vif->profile.use_fwsup != BRCMF_PROFILE_FWSUP_1X))
+ 		return -EINVAL;
+ 
++	if (conf->pmk_len > BRCMF_WSEC_MAX_PSK_LEN)
++		return -ERANGE;
++
+ 	return brcmf_set_pmk(ifp, conf->pmk, conf->pmk_len);
+ }
+ 
 -- 
-Florian
+2.15.1
