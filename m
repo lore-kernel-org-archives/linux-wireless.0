@@ -1,53 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:37398 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751066AbeBHLqx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Feb 2018 06:46:53 -0500
-From: Timothy Redaelli <tredaelli@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: [PATCH] ath9k: fix DFS detector synchronization
-Date: Thu,  8 Feb 2018 12:46:47 +0100
-Message-Id: <c967cb589b7d71a17afc29f3c634f961ef6820dd.1518090407.git.tredaelli@redhat.com> (sfid-20180208_124657_564101_67AB3A68)
+Received: from paleale.coelho.fi ([176.9.41.70]:59696 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752685AbeBSMs4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Feb 2018 07:48:56 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Feb 2018 14:48:34 +0200
+Message-Id: <20180219124847.27169-1-luca@coelho.fi> (sfid-20180219_134903_805502_F9407F4D)
+Subject: [PATCH v2 00/13] cfg80211/mac80211 patches from our internal tree 2018-02-16
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code currently syncronize the DFS region only if curchan != 0, but hostapd
-launch DFS before the channel is set and so set_dfs_domain is never executed.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-CC: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Timothy Redaelli <tredaelli@redhat.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e479fae5aab9..b71b16715f6a 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -257,6 +257,11 @@ static void ath9k_reg_notifier(struct wiphy *wiphy,
- 
- 	ath_reg_notifier_apply(wiphy, request, reg);
- 
-+	/* synchronize DFS detector if regulatory domain changed */
-+	if (sc->dfs_detector != NULL)
-+		sc->dfs_detector->set_dfs_domain(sc->dfs_detector,
-+						 request->dfs_region);
-+
- 	/* Set tx power */
- 	if (!ah->curchan)
- 		return;
-@@ -267,10 +272,6 @@ static void ath9k_reg_notifier(struct wiphy *wiphy,
- 	ath9k_cmn_update_txpow(ah, sc->cur_chan->cur_txpower,
- 			       sc->cur_chan->txpower,
- 			       &sc->cur_chan->cur_txpower);
--	/* synchronize DFS detector if regulatory domain changed */
--	if (sc->dfs_detector != NULL)
--		sc->dfs_detector->set_dfs_domain(sc->dfs_detector,
--						 request->dfs_region);
- 	ath9k_ps_restore(sc);
- }
- 
+This is v2 of this serites.  We have made the following changes in
+this version:
+
+* Fixed a sparse warning about rcu access on 10/13 [kbuildbot];
+* Fixed an rcu access bug in 12/13 found internally;
+* Reworded the commit message in 12/13 [Kalle];
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Avraham Stern (1):
+  cfg80211: clear wep keys after disconnection
+
+Haim Dreyfuss (3):
+  cfg80211: read wmm rules from regulatory database
+  mac80211: limit wmm params to comply with ETSI requirements
+  cfg80211: Add API to allow querying regdb for wmm_rule
+
+Ilan Peer (4):
+  mac80211: Call mgd_prep_tx before transmitting deauthentication
+  mac80211: Do not disconnect on invalid operating class
+  mac80211: Fix sending ADDBA response for an ongoing session
+  mac80211: agg-rx: Accept ADDBA request update if timeout did not
+    change
+
+Johannes Berg (1):
+  mac80211: support reporting A-MPDU EOF bit value/known
+
+Sara Sharon (4):
+  mac80211: fix a possible leak of station stats
+  mac80211: ibss: send a probe request instead of allocating station
+  mac80211: fix calling sleeping function in atomic context
+  mac80211: add get TID helper
+
+ include/linux/ieee80211.h          |  12 +++
+ include/net/cfg80211.h             |  28 ++++++
+ include/net/ieee80211_radiotap.h   |   2 +
+ include/net/mac80211.h             |  18 ++++
+ include/net/regulatory.h           |  28 ++++++
+ net/mac80211/agg-rx.c              |  18 +++-
+ net/mac80211/cfg.c                 |   3 +
+ net/mac80211/debugfs.c             |   1 +
+ net/mac80211/ibss.c                |  54 +---------
+ net/mac80211/ieee80211_i.h         |   7 +-
+ net/mac80211/iface.c               |   3 +-
+ net/mac80211/michael.c             |   2 +-
+ net/mac80211/mlme.c                |  19 +++-
+ net/mac80211/rc80211_minstrel_ht.c |   2 +-
+ net/mac80211/rx.c                  |  10 +-
+ net/mac80211/spectmgmt.c           |   7 +-
+ net/mac80211/sta_info.c            |   3 +-
+ net/mac80211/tx.c                  |   9 +-
+ net/mac80211/util.c                |  42 ++++++++
+ net/mac80211/wpa.c                 |   8 +-
+ net/wireless/reg.c                 | 200 +++++++++++++++++++++++++++++++++++--
+ net/wireless/sme.c                 |   2 +
+ 22 files changed, 387 insertions(+), 91 deletions(-)
+
 -- 
-2.14.3
+2.15.1
