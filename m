@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50438 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750997AbeB0QMx (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753167AbeBSPam (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:12:53 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: Re: [PATCH v2 4/4] qtnfmac: enable networked standby mode on device inactivity
-References: <20180210140420.17013-1-sergey.matyukevich.os@quantenna.com>
-        <20180210140420.17013-5-sergey.matyukevich.os@quantenna.com>
-        <87inaifqpt.fsf@purkki.adurom.net>
-        <20180227151339.xlvxqb7d36s4og6k@bars>
-Date: Tue, 27 Feb 2018 18:12:48 +0200
-In-Reply-To: <20180227151339.xlvxqb7d36s4og6k@bars> (Sergey Matyukevich's
-        message of "Tue, 27 Feb 2018 18:13:39 +0300")
-Message-ID: <87k1uys96n.fsf@kamboji.qca.qualcomm.com> (sfid-20180227_171256_231281_C1080EFD)
+        Mon, 19 Feb 2018 10:30:42 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/14] staging: wilc1000: rename functions starting with TimerCB_ to avoid camelCase
+Date: Mon, 19 Feb 2018 20:59:40 +0530
+Message-ID: <1519054184-14301-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163048_522274_E7B2FB51)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Fix "Avoid camelCase" issues found by checkpatch.pl script.
 
->> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
->> 
->> > From: Sergei Maksimenko <smaksimenko@quantenna.com>
->> >
->> > Enable support of networked standby mode (NSM) on qsr10g devices.
->> > Networked standby is a power saving mode when the device keeps
->> > all existing network connections and returns to full power mode
->> > on a network activity. When enabled, device enters standby mode
->> > after 15 min of inactivity (no associated stations or no trattic).
->> > This period can be changed by setting sysfs attribute standby_timeout
->> > (0 disables NSM support). A module parameter auto_standby
->> > (defaults to 1) controls enabling NSM support on module loading.
->> >
->> > Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
->> 
->> Adding a new sysfs file for a wireless driver is usually a bad idea, I
->> don't even remember when we had a case where it was ok to do that. In
->> principle we want everything to go through cfg80211 using nl80211.
->> 
->> Also I'm not really fond of the module parameter just to disable a
->> feature. And there isn't even any justification why it's needed.
->
-> Ok, noted. Then we will take a break and look for better ways to integrate
-> this feature. Meanwhile, if you have no concerns regarding the first three
-> patches in the series, is it possible to apply them ? Or I better send v3 ?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Yeah, patches 1-3 are on my queue and I should apply them soon.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b861c95..6e39766 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2647,7 +2647,7 @@ static void host_if_work(struct work_struct *work)
+ 	complete(&hif_thread_comp);
+ }
+ 
+-static void TimerCB_Scan(struct timer_list *t)
++static void timer_scan_cb(struct timer_list *t)
+ {
+ 	struct host_if_drv *hif_drv = from_timer(hif_drv, t, scan_timer);
+ 	struct wilc_vif *vif = hif_drv->scan_timer_vif;
+@@ -2660,7 +2660,7 @@ static void TimerCB_Scan(struct timer_list *t)
+ 	wilc_enqueue_cmd(&msg);
+ }
+ 
+-static void TimerCB_Connect(struct timer_list *t)
++static void timer_connect_cb(struct timer_list *t)
+ {
+ 	struct host_if_drv *hif_drv = from_timer(hif_drv, t,
+ 						      connect_timer);
+@@ -3385,8 +3385,8 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ 	}
+ 
+-	timer_setup(&hif_drv->scan_timer, TimerCB_Scan, 0);
+-	timer_setup(&hif_drv->connect_timer, TimerCB_Connect, 0);
++	timer_setup(&hif_drv->scan_timer, timer_scan_cb, 0);
++	timer_setup(&hif_drv->connect_timer, timer_connect_cb, 0);
+ 	timer_setup(&hif_drv->remain_on_ch_timer, ListenTimerCB, 0);
+ 
+ 	mutex_init(&hif_drv->cfg_values_lock);
 -- 
-Kalle Valo
+2.7.4
