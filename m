@@ -1,77 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:45594 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932713AbeBLWke (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753167AbeBSPaw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 17:40:34 -0500
-Subject: Re: [PATCH] headers: untangle kmemleak.h from mm.h
-To: Michael Ellerman <mpe@ellerman.id.au>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Cc: linux-s390 <linux-s390@vger.kernel.org>,
-        John Johansen <john.johansen@canonical.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        X86 ML <x86@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        virtualization@lists.linux-foundation.org,
-        iommu@lists.linux-foundation.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        sparclinux@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-References: <a4629db7-194d-3c7c-c8fd-24f61b220a70@infradead.org>
- <87zi4ev1d2.fsf@concordia.ellerman.id.au>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <2b44ef68-126a-b20a-a50f-48c337fa6d0b@infradead.org> (sfid-20180212_234109_800927_7FF56F35)
-Date: Mon, 12 Feb 2018 13:16:10 -0800
+        Mon, 19 Feb 2018 10:30:52 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 13/14] staging: wilc1000: rename wilc_remove_key() parameters to avoid camelCase
+Date: Mon, 19 Feb 2018 20:59:43 +0530
+Message-ID: <1519054184-14301-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163057_139801_E523D4B7)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <87zi4ev1d2.fsf@concordia.ellerman.id.au>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/12/2018 04:28 AM, Michael Ellerman wrote:
-> Randy Dunlap <rdunlap@infradead.org> writes:
-> 
->> From: Randy Dunlap <rdunlap@infradead.org>
->>
->> Currently <linux/slab.h> #includes <linux/kmemleak.h> for no obvious
->> reason. It looks like it's only a convenience, so remove kmemleak.h
->> from slab.h and add <linux/kmemleak.h> to any users of kmemleak_*
->> that don't already #include it.
->> Also remove <linux/kmemleak.h> from source files that do not use it.
->>
->> This is tested on i386 allmodconfig and x86_64 allmodconfig. It
->> would be good to run it through the 0day bot for other $ARCHes.
->> I have neither the horsepower nor the storage space for the other
->> $ARCHes.
->>
->> [slab.h is the second most used header file after module.h; kernel.h
->> is right there with slab.h. There could be some minor error in the
->> counting due to some #includes having comments after them and I
->> didn't combine all of those.]
->>
->> This is Lingchi patch #1 (death by a thousand cuts, applied to kernel
->> header files).
->>
->> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> 
-> I threw it at a random selection of configs and so far the only failures
-> I'm seeing are:
-> 
->   lib/test_firmware.c:134:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]                                                                                                          
->   lib/test_firmware.c:620:25: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
->   lib/test_firmware.c:620:2: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
->   security/integrity/digsig.c:146:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]
-> 
-> Full results trickling in here, not all the failures there are caused by
-> this patch, ie. some configs are broken in mainline:
-> 
->   http://kisskb.ellerman.id.au/kisskb/head/13396/
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-That's very useful, thanks.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-I'll send a few patches for those.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4cbfe3b..7ddd20d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2674,13 +2674,13 @@ static void timer_connect_cb(struct timer_list *t)
+ 	wilc_enqueue_cmd(&msg);
+ }
+ 
+-s32 wilc_remove_key(struct host_if_drv *hif_drv, const u8 *pu8StaAddress)
++s32 wilc_remove_key(struct host_if_drv *hif_drv, const u8 *sta_addr)
+ {
+ 	struct wid wid;
+ 
+ 	wid.id = (u16)WID_REMOVE_KEY;
+ 	wid.type = WID_STR;
+-	wid.val = (s8 *)pu8StaAddress;
++	wid.val = (s8 *)sta_addr;
+ 	wid.size = 6;
+ 
+ 	return 0;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index aa914d6..4b60b18 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -304,7 +304,7 @@ struct add_sta_param {
+ };
+ 
+ struct wilc_vif;
+-s32 wilc_remove_key(struct host_if_drv *hWFIDrv, const u8 *pu8StaAddress);
++s32 wilc_remove_key(struct host_if_drv *hif_drv, const u8 *sta_addr);
+ int wilc_remove_wep_key(struct wilc_vif *vif, u8 index);
+ int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index);
+ int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8 len,
 -- 
-~Randy
+2.7.4
