@@ -1,101 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40474 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754121AbeBWSlN (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59724 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752897AbeBSMs7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 13:41:13 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Christian Lamparter <chunkeey@gmail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        linux-wireless@vger.kernel.org, torvalds@linux-foundation.org,
-        "David S. Miller" <davem@davemloft.net>, alan@linux.intel.com,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Jack Wang <jinpu.wang@profitbricks.com>
-Subject: [PATCH 4.4 180/193] nl80211: Sanitize array index in parse_txq_params
-Date: Fri, 23 Feb 2018 19:26:53 +0100
-Message-Id: <20180223170354.369164387@linuxfoundation.org> (sfid-20180223_211412_223030_ADBC0994)
-In-Reply-To: <20180223170325.997716448@linuxfoundation.org>
-References: <20180223170325.997716448@linuxfoundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Mon, 19 Feb 2018 07:48:59 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Feb 2018 14:48:38 +0200
+Message-Id: <20180219124847.27169-5-luca@coelho.fi> (sfid-20180219_134904_427772_D1F20C7C)
+In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
+References: <20180219124847.27169-1-luca@coelho.fi>
+Subject: [PATCH v2 04/13] cfg80211: clear wep keys after disconnection
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-4.4-stable review patch.  If anyone has any objections, please let me know.
+From: Avraham Stern <avraham.stern@intel.com>
 
-------------------
+When a low level driver calls cfg80211_disconnected(), wep keys are
+not cleared. As a result, following connection requests will fail
+since cfg80211 internal state shows a connection is still in progress.
 
-From: Dan Williams <dan.j.williams@intel.com>
+Fix this by clearing the wep keys when disconnecting.
 
-(cherry picked from commit 259d8c1e984318497c84eef547bbb6b1d9f4eb05)
-
-Wireless drivers rely on parse_txq_params to validate that txq_params->ac
-is less than NL80211_NUM_ACS by the time the low-level driver's ->conf_tx()
-handler is called. Use a new helper, array_index_nospec(), to sanitize
-txq_params->ac with respect to speculation. I.e. ensure that any
-speculation into ->conf_tx() handlers is done with a value of
-txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
-
-Reported-by: Christian Lamparter <chunkeey@gmail.com>
-Reported-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-arch@vger.kernel.org
-Cc: kernel-hardening@lists.openwall.com
-Cc: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Cc: torvalds@linux-foundation.org
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: alan@linux.intel.com
-Link: https://lkml.kernel.org/r/151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
-[jwang: cherry pick to 4.4]
-Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/nl80211.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ net/wireless/sme.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -16,6 +16,7 @@
- #include <linux/nl80211.h>
- #include <linux/rtnetlink.h>
- #include <linux/netlink.h>
-+#include <linux/nospec.h>
- #include <linux/etherdevice.h>
- #include <net/net_namespace.h>
- #include <net/genetlink.h>
-@@ -1879,20 +1880,22 @@ static const struct nla_policy txq_param
- static int parse_txq_params(struct nlattr *tb[],
- 			    struct ieee80211_txq_params *txq_params)
- {
-+	u8 ac;
-+
- 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
- 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
- 	    !tb[NL80211_TXQ_ATTR_AIFS])
- 		return -EINVAL;
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index fdb3646274a5..701cfd7acc1b 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -1032,6 +1032,8 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ 	wdev->current_bss = NULL;
+ 	wdev->ssid_len = 0;
+ 	wdev->conn_owner_nlportid = 0;
++	kzfree(wdev->connect_keys);
++	wdev->connect_keys = NULL;
  
--	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
-+	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
- 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
- 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
- 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
- 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 	nl80211_send_disconnected(rdev, dev, reason, ie, ie_len, from_ap);
  
--	if (txq_params->ac >= NL80211_NUM_ACS)
-+	if (ac >= NL80211_NUM_ACS)
- 		return -EINVAL;
--
-+	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
- 	return 0;
- }
- 
+-- 
+2.15.1
