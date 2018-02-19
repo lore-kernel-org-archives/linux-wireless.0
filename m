@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44336 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753307AbeB0Nvs (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50812 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752666AbeBSNaf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 08:51:48 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,1/6] wl1251: Update wl->nvs_len after wl->nvs is valid
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1510270708-14377-2-git-send-email-pali.rohar@gmail.com>
-References: <1510270708-14377-2-git-send-email-pali.rohar@gmail.com>
-To: =?utf-8?q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Message-Id: <20180227135148.07B0E60F6D@smtp.codeaurora.org> (sfid-20180227_145318_216645_4D1FD199)
-Date: Tue, 27 Feb 2018 13:51:47 +0000 (UTC)
+        Mon, 19 Feb 2018 08:30:35 -0500
+Message-ID: <1519047033.16723.14.camel@sipsolutions.net> (sfid-20180219_143039_562560_FC9985B4)
+Subject: Re: [PATCH v2 11/13] cfg80211: read wmm rules from regulatory
+ database
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>,
+        Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Feb 2018 14:30:33 +0100
+In-Reply-To: <20180219124847.27169-12-luca@coelho.fi>
+References: <20180219124847.27169-1-luca@coelho.fi>
+         <20180219124847.27169-12-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pali Rohár wrote:
-
-> If kmemdup fails, then wl->nvs_len will contain invalid non-zero size.
+On Mon, 2018-02-19 at 14:48 +0200, Luca Coelho wrote:
+> From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 > 
-> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-> Acked-by: Pavel Machek <pavel@ucw.cz>
+> ETSI EN 301 893 v211 (2017-05) standard defines a new channel access
+> mechanism that all devices (WLAN and LAA) need to comply with.
+> The regulatory database can now be loaded into the kernel and also
+> has the option to load optional data.
+> In order to be able to comply with ETSI standard, we add wmm_rule into
+> regulatory rule and add the option to read its value from the regulatory
+> database.
 
-4 patches applied to wireless-drivers-next.git, thanks.
+Seth, this is going to come with an update to the regdb as well. I'd
+appreciate if you could take a look.
 
-f63b4c971f5f wl1251: Update wl->nvs_len after wl->nvs is valid
-562da3a39cb7 wl1251: Generate random MAC address only if driver does not have valid
-4f507d588d08 wl1251: Parse and use MAC address from supplied NVS data
-3142467fc15b wl1251: Set generated MAC address back to NVS data
-
--- 
-https://patchwork.kernel.org/patch/10052101/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks,
+johannes
