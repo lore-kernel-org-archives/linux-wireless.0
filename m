@@ -1,77 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:38320 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1033529AbeBOOtD (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:35854 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752890AbeBSNb3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 09:49:03 -0500
-Received: by mail-qt0-f195.google.com with SMTP id k13so12159169qtg.5
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2018 06:49:02 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: Re: [PATCH 1/1] ath10k: add LED and GPIO controlling support for various chipsets
-Date: Thu, 15 Feb 2018 15:48:58 +0100
-Message-ID: <189869316.iC7P1rB6Jj@bentobox> (sfid-20180215_154922_503178_B8831DD6)
-In-Reply-To: <ea35ce69-a016-2475-6c17-eba396827147@dd-wrt.com>
-References: <1518684977-14607-1-git-send-email-govinds@codeaurora.org> <ea35ce69-a016-2475-6c17-eba396827147@dd-wrt.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2077822.vL5tvGmtBe"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+        Mon, 19 Feb 2018 08:31:29 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v7 7/8] rsi: add module parameter operating mode
+Date: Mon, 19 Feb 2018 18:49:38 +0530
+Message-Id: <1519046379-10068-8-git-send-email-amitkarwar@gmail.com> (sfid-20180219_143134_822226_E3B66250)
+In-Reply-To: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
+References: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2077822.vL5tvGmtBe
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-On Donnerstag, 15. Februar 2018 15:31:04 CET Sebastian Gottschall wrote:
-> Adds LED and GPIO Control support for 988x, 9887, 9888, 99x0, 9984 and 
-> ipq4019 based chipsets with on chipset connected led's
-> using WMI Firmware API.
-> The LED device will get available named as "ath10k-phyX" at sysfs and 
-> can be controlled with various triggers.
-> adds also debugfs interface for gpio control.
-> 
-> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-> 
->   drivers/net/wireless/ath/ath10k/core.c    | 168 
-> +++++++++++++++++++++++++++++-
->   drivers/net/wireless/ath/ath10k/core.h    |  15 +++
->   drivers/net/wireless/ath/ath10k/debug.c   | 140 +++++++++++++++++++++++++
->   drivers/net/wireless/ath/ath10k/hw.h      |   1 +
->   drivers/net/wireless/ath/ath10k/wmi-ops.h |  36 ++++++-
->   drivers/net/wireless/ath/ath10k/wmi.c     |  43 ++++++++
->   drivers/net/wireless/ath/ath10k/wmi.h     |  36 +++++++
->   7 files changed, 436 insertions(+), 3 deletions(-)
+Operating mode determines the support for other protocols.
+This is made as module parameter for better usage.
 
-Looks like your mail program has eaten the patch [1]. It is also not clear why 
-it was posted as reply to the "dt: bindings: add bindings for wcn3990 wifi 
-block" patch. :)
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_main.c | 48 ++++++++++++++++++++++++++++++---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 10 ++++++-
+ drivers/net/wireless/rsi/rsi_91x_usb.c  | 10 ++++++-
+ drivers/net/wireless/rsi/rsi_common.h   |  2 +-
+ drivers/net/wireless/rsi/rsi_hal.h      | 11 ++++++++
+ 5 files changed, 74 insertions(+), 7 deletions(-)
 
-Kind regards,
-	Sven
-
-[1] https://www.kernel.org/doc/html/v4.15/process/email-clients.html
-
---nextPart2077822.vL5tvGmtBe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlqFndsACgkQXYcKB8Em
-e0Ya2xAAg3lTZtlofKBD56cgDJR4aCXa2+zeFZb0NVpVswJqgKvHOeM6Rvn56JIN
-Usyft2WyeDjO1x+plAqmD8EZhcE7cK7vp1nHvPcf7UshaBxNRCLCKgq9OLbwaG68
-+xFEO3ntT0484Y6B3iORCi5HTID4e5/1D35i2yf1G+hMYM7DVzDhmX4PxkfvSHz6
-8y7jYxI242Vukl/t9QjaTzgsoDgMqkWvLZVAFDDhJm2PX5njLbtt/gu9+5yBd0Hl
-/nLOCxXp9bSvNfM/4DRNGekI9Wsl7CU6A1QlTpMzUbkIVk3RWkqmXyBrse67eVNU
-qk2EmbPg4rKS4KGLSd7Cw3mzUlTtjpuWrFjrV+zkKzyRUtxw3U8815vQ9CWQBlqF
-kwvSZCpO41Oh8eWlsPfXYPGCTmwIlUB7HQ8I7shLtnF8tgEYo4p5Ci/uVS1nRUZ3
-9XMikjfm40JTqQy0wNQ+a/ZAWMDfF/+mojHZpUKVz9JZDREpTSqkoH0iFhBPf/Ud
-fRs8UJ5Qd3D9qV3mkNXoYfMIc1YNuPnFJklwAEcAldR+K2Eyt3/Xb645Je8zBF0e
-PewvJXW54Ipy8fwc56yYtFEoAsEDJX26SI/Vt5a+MPNEWcoSBUx5agBjOp5CJCP0
-MVKL3ys1GDu1ROplSPWlysZwDlNsCQpR+NEmcahwN3DjOgH3dgE=
-=M8uX
------END PGP SIGNATURE-----
-
---nextPart2077822.vL5tvGmtBe--
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index b3e7d75..1485a0c 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -70,8 +70,24 @@ EXPORT_SYMBOL_GPL(rsi_dbg);
+ static char *opmode_str(int oper_mode)
+ {
+ 	switch (oper_mode) {
+-	case RSI_DEV_OPMODE_WIFI_ALONE:
++	case DEV_OPMODE_WIFI_ALONE:
+ 		return "Wi-Fi alone";
++	case DEV_OPMODE_BT_ALONE:
++		return "BT EDR alone";
++	case DEV_OPMODE_BT_LE_ALONE:
++		return "BT LE alone";
++	case DEV_OPMODE_BT_DUAL:
++		return "BT Dual";
++	case DEV_OPMODE_STA_BT:
++		return "Wi-Fi STA + BT EDR";
++	case DEV_OPMODE_STA_BT_LE:
++		return "Wi-Fi STA + BT LE";
++	case DEV_OPMODE_STA_BT_DUAL:
++		return "Wi-Fi STA + BT DUAL";
++	case DEV_OPMODE_AP_BT:
++		return "Wi-Fi AP + BT EDR";
++	case DEV_OPMODE_AP_BT_DUAL:
++		return "Wi-Fi AP + BT DUAL";
+ 	}
+ 
+ 	return "Unknown";
+@@ -278,7 +294,7 @@ void rsi_set_bt_context(void *priv, void *bt_context)
+  *
+  * Return: Pointer to the adapter structure on success, NULL on failure .
+  */
+-struct rsi_hw *rsi_91x_init(void)
++struct rsi_hw *rsi_91x_init(u16 oper_mode)
+ {
+ 	struct rsi_hw *adapter = NULL;
+ 	struct rsi_common *common = NULL;
+@@ -321,9 +337,33 @@ struct rsi_hw *rsi_91x_init(void)
+ 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
+ 	init_completion(&common->wlan_init_completion);
+ 	common->init_done = true;
++	adapter->device_model = RSI_DEV_9113;
++	common->oper_mode = oper_mode;
++
++	/* Determine coex mode */
++	switch (common->oper_mode) {
++	case DEV_OPMODE_STA_BT_DUAL:
++	case DEV_OPMODE_STA_BT:
++	case DEV_OPMODE_STA_BT_LE:
++	case DEV_OPMODE_BT_ALONE:
++	case DEV_OPMODE_BT_LE_ALONE:
++	case DEV_OPMODE_BT_DUAL:
++		common->coex_mode = 2;
++		break;
++	case DEV_OPMODE_AP_BT_DUAL:
++	case DEV_OPMODE_AP_BT:
++		common->coex_mode = 4;
++		break;
++	case DEV_OPMODE_WIFI_ALONE:
++		common->coex_mode = 1;
++		break;
++	default:
++		common->oper_mode = 1;
++		common->coex_mode = 1;
++	}
++	rsi_dbg(INFO_ZONE, "%s: oper_mode = %d, coex_mode = %d\n",
++		__func__, common->oper_mode, common->coex_mode);
+ 
+-	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
+-	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
+ 	adapter->device_model = RSI_DEV_9113;
+ #ifdef CONFIG_RSI_COEX
+ 	if (common->coex_mode > 1) {
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index ba38c6d..5722736 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -21,6 +21,14 @@
+ #include "rsi_coex.h"
+ #include "rsi_hal.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
+  * @rw: Read/write
+@@ -926,7 +934,7 @@ static int rsi_probe(struct sdio_func *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index b33a05f..0a50cff 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -21,6 +21,14 @@
+ #include "rsi_hal.h"
+ #include "rsi_coex.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_usb_card_write() - This function writes to the USB Card.
+  * @adapter: Pointer to the adapter structure.
+@@ -708,7 +716,7 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index 4616585..d9ff3b8 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -81,7 +81,7 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
+ 
+ void rsi_mac80211_detach(struct rsi_hw *hw);
+ u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
+-struct rsi_hw *rsi_91x_init(void);
++struct rsi_hw *rsi_91x_init(u16 oper_mode);
+ void rsi_91x_deinit(struct rsi_hw *adapter);
+ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
+ #ifdef CONFIG_PM
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index e712223..a7d3011 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -17,6 +17,17 @@
+ #ifndef __RSI_HAL_H__
+ #define __RSI_HAL_H__
+ 
++/* Device Operating modes */
++#define DEV_OPMODE_WIFI_ALONE		1
++#define DEV_OPMODE_BT_ALONE		4
++#define DEV_OPMODE_BT_LE_ALONE		8
++#define DEV_OPMODE_BT_DUAL		12
++#define DEV_OPMODE_STA_BT		5
++#define DEV_OPMODE_STA_BT_LE		9
++#define DEV_OPMODE_STA_BT_DUAL		13
++#define DEV_OPMODE_AP_BT		6
++#define DEV_OPMODE_AP_BT_DUAL		14
++
+ #define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
+ #define FLASH_SECTOR_SIZE		(4 * 1024)
+ 
+-- 
+2.7.4
