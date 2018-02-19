@@ -1,113 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:37653 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032283AbeBOOFz (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59756 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752923AbeBSMtD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 09:05:55 -0500
-MIME-Version: 1.0
-In-Reply-To: <1518684977-14607-1-git-send-email-govinds@codeaurora.org>
-References: <1518684977-14607-1-git-send-email-govinds@codeaurora.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 16 Feb 2018 01:05:33 +1100
-Message-ID: <CAGRGNgVtOuPwejDi-1Bux+1mGTTup0Mcf4ED-OBcn3z8=atpNQ@mail.gmail.com> (sfid-20180215_150559_495594_5E211C75)
-Subject: Re: [PATCH 13/13] dt: bindings: add bindings for wcn3990 wifi block
-To: Govind Singh <govinds@codeaurora.org>
-Cc: ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        devicetree <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 19 Feb 2018 07:49:03 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Feb 2018 14:48:42 +0200
+Message-Id: <20180219124847.27169-9-luca@coelho.fi> (sfid-20180219_134910_816851_F2C4FE1B)
+In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
+References: <20180219124847.27169-1-luca@coelho.fi>
+Subject: [PATCH v2 08/13] mac80211: Do not disconnect on invalid operating class
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Govind,
+From: Ilan Peer <ilan.peer@intel.com>
 
-On Thu, Feb 15, 2018 at 7:56 PM, Govind Singh <govinds@codeaurora.org> wrote:
-> Add device tree binding documentation details for wcn3990
-> wifi block present in Qualcomm SDM845/APQ8098 SoC into
-> "qcom,ath10k.txt".
->
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  .../bindings/net/wireless/qcom,ath10k.txt          | 35 ++++++++++++++++++++++
->  1 file changed, 35 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> index 3d2a031..07b0f13 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> @@ -4,6 +4,7 @@ Required properties:
->  - compatible: Should be one of the following:
->         * "qcom,ath10k"
->         * "qcom,ipq4019-wifi"
-> +       * "qcom,wcn3990-wifi"
->
->  PCI based devices uses compatible string "qcom,ath10k" and takes calibration
->  data along with board specific data via "qcom,ath10k-calibration-data".
-> @@ -18,8 +19,11 @@ In general, entry "qcom,ath10k-pre-calibration-data" and
->  "qcom,ath10k-calibration-data" conflict with each other and only one
->  can be provided per device.
->
-> +SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-wifi".
-> +
->  Optional properties:
->  - reg: Address and length of the register set for the device.
-> +- reg-names: Names of the memory regions defined in reg entry.
->  - resets: Must contain an entry for each entry in reset-names.
->            See ../reset/reseti.txt for details.
->  - reset-names: Must include the list of following reset names,
-> @@ -49,6 +53,12 @@ Optional properties:
->                                  hw versions.
->  - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
->                                      the length can vary between hw versions.
-> +- qcom,<supply-name>-supply: handle to the regulator device tree node
-> +                          optional "supply-name" is "vdd-0.8-cx-mx".
-> +- qcom,<supply>-config: Specifies voltage levels for supply. Should be
-> +                         specified in pairs (min, max), units uV.  There can
-> +                          be optional load in uA and Regulator settle delay in
-> +                          uS.
->
->  Example (to supply the calibration data alone):
->
-> @@ -119,3 +129,28 @@ wifi0: wifi@a000000 {
->         qcom,msi_base = <0x40>;
->         qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
->  };
-> +
-> +Example (to supply wcn3990 SoC wifi block details):
-> +
-> +qcom,msm_ath10k@18000000 {
-> +               compatible = "qcom,wcn3990-wifi";
-> +               reg = <0x18800000 0x800000>;
-> +               reg-names = "membase";
-> +               clocks = <&clock_gcc clk_aggre2_noc_clk>;
-> +               clock-names = "smmu_aggre2_noc_clk"
-> +               interrupts =
-> +                          <0 130 0 /* CE0 */ >,
-> +                          <0 131 0 /* CE1 */ >,
-> +                          <0 132 0 /* CE2 */ >,
-> +                          <0 133 0 /* CE3 */ >,
-> +                          <0 134 0 /* CE4 */ >,
-> +                          <0 135 0 /* CE5 */ >,
-> +                          <0 136 0 /* CE6 */ >,
-> +                          <0 137 0 /* CE7 */ >,
-> +                          <0 138 0 /* CE8 */ >,
-> +                          <0 139 0 /* CE9 */ >,
-> +                          <0 140 0 /* CE10 */ >,
-> +                          <0 141 0 /* CE11 */ >;
-> +               vdd-0.8-cx-mx-supply = <&pm8998_l5>;
+Some APs include a non global operating class in their extended channel
+switch information element. In such a case, as the operating class is not
+known, mac80211 would decide to disconnect.
 
-You've omitted the "qcom," you specify above.
+However the specification states that the operating class needs to be
+taken from Annex E, but it does not specify from which table it should be
+taken, so it is valid for an AP to use a non global operating class.
 
-> +               qcom,vdd-0.8-cx-mx-config = <800000 800000 2400 1000>;
-> +};
-> --
-> 1.9.1
->
+To avoid possibly unneeded disconnection, in such a case ignore the
+operating class and assume that the current band is used, and if the
+resulting channel and band configuration is invalid disconnect.
 
-Thanks,
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/spectmgmt.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index ee0181778a42..029334835747 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -8,6 +8,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2008, Intel Corporation
+  * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
++ * Copyright (C) 2018        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -27,7 +28,7 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 				 u32 sta_flags, u8 *bssid,
+ 				 struct ieee80211_csa_ie *csa_ie)
+ {
+-	enum nl80211_band new_band;
++	enum nl80211_band new_band = current_band;
+ 	int new_freq;
+ 	u8 new_chan_no;
+ 	struct ieee80211_channel *new_chan;
+@@ -55,15 +56,13 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 				elems->ext_chansw_ie->new_operating_class,
+ 				&new_band)) {
+ 			sdata_info(sdata,
+-				   "cannot understand ECSA IE operating class %d, disconnecting\n",
++				   "cannot understand ECSA IE operating class, %d, ignoring\n",
+ 				   elems->ext_chansw_ie->new_operating_class);
+-			return -EINVAL;
+ 		}
+ 		new_chan_no = elems->ext_chansw_ie->new_ch_num;
+ 		csa_ie->count = elems->ext_chansw_ie->count;
+ 		csa_ie->mode = elems->ext_chansw_ie->mode;
+ 	} else if (elems->ch_switch_ie) {
+-		new_band = current_band;
+ 		new_chan_no = elems->ch_switch_ie->new_ch_num;
+ 		csa_ie->count = elems->ch_switch_ie->count;
+ 		csa_ie->mode = elems->ch_switch_ie->mode;
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+2.15.1
