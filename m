@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f47.google.com ([74.125.83.47]:43281 "EHLO
-        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935174AbeBMN0F (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 08:26:05 -0500
-Received: by mail-pg0-f47.google.com with SMTP id f6so9856197pgs.10
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Feb 2018 05:26:05 -0800 (PST)
+Received: from mail.toke.dk ([52.28.52.200]:36143 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751357AbeBSORK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Feb 2018 09:17:10 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        kbuild test robot <fengguang.wu@intel.com>
+Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org
+Subject: Re: [mac80211:master 6/11] net/mac80211/tx.c:3581:3: error: implicit declaration of function 'sk_pacing_shift_update'; did you mean 'sk_incoming_cpu_update'?
+In-Reply-To: <1519049086.16723.21.camel@sipsolutions.net>
+References: <201802192131.ck2stMs0%fengguang.wu@intel.com> <1519049086.16723.21.camel@sipsolutions.net>
+Date: Mon, 19 Feb 2018 15:17:09 +0100
+Message-ID: <87d1115aje.fsf@toke.dk> (sfid-20180219_151714_694666_0F9F8071)
 MIME-Version: 1.0
-In-Reply-To: <8037020.pGPiyahZAU@bentobox>
-References: <769da6f9-bca3-48bd-32e6-009dd82f3c96@mailservices.uwaterloo.ca>
- <4674890.5ipQsmKAE1@bentobox> <00665215-8a85-365d-dcfa-aa9b1aeedd1c@mailservices.uwaterloo.ca>
- <8037020.pGPiyahZAU@bentobox>
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Date: Tue, 13 Feb 2018 14:26:03 +0100
-Message-ID: <CAA2SeNLFMKHx4R3RzesFssXz38jeOwtCBfjmxXdEtReO6JJrUQ@mail.gmail.com> (sfid-20180213_142609_217308_77EEE4B0)
-Subject: Re: 802.11ac devices that use Minstrel_HT
-To: Sven Eckelmann <sven@narfation.org>
-Cc: Ali Abedi <a2abedi@uwaterloo.ca>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Dienstag, 13. Februar 2018 07:56:29 CET Ali Abedi wrote:
->> > So I would currently bet on hwsim (only useful when you only want to have some
->> > simulations) or mt76. Afaik mt76 was also the one which was used to test the
->> > VHT rate injection code for monitor interfaces and is therefore quite
->> > flexible.
-> [...]
->> Thank you Sven. I was actually wondering what hardware was used to test
->> the code.
+Johannes Berg <johannes@sipsolutions.net> writes:
+
+> On Mon, 2018-02-19 at 21:51 +0800, kbuild test robot wrote:
+>> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git master
+>> head:   49241828e8ed0b0a3dc73466d5bc562ae90acfd6
+>> commit: 96bd4b9e4a44c6c1da93fd3e48bd8eb1b332584a [6/11] mac80211: Adjust TSQ pacing shift
+>> config: x86_64-randconfig-x011-201807 (attached as .config)
+>> compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
+>> reproduce:
+>>         git checkout 96bd4b9e4a44c6c1da93fd3e48bd8eb1b332584a
+>>         # save the attached .config to linux build tree
+>>         make ARCH=x86_64 
+>> 
+>> All errors (new ones prefixed by >>):
+>> 
+>>    net/mac80211/tx.c: In function '__ieee80211_subif_start_xmit':
+>> > > net/mac80211/tx.c:3581:3: error: implicit declaration of function 'sk_pacing_shift_update'; did you mean 'sk_incoming_cpu_update'? [-Werror=implicit-function-declaration]
+>> 
+>>       sk_pacing_shift_update(skb->sk, 8);
+>>       ^~~~~~~~~~~~~~~~~~~~~~
 >
-> It seems Lorenzo Bianconi used an D-Link DIR-860L rev B1 [1]
->
+> Yeah, umm, I accidentally applied this on the wrong tree - already
+> fixed.
 
-Yes, I used it for a while; at the moment to work on mt76 code I am
-using Buffalo wsr1166
-Regards,
+Aha, gotcha. Was scratching my head there for a while ;)
 
-Lorenzo
-
-> Kind regards,
->         Sven
->
-> [1] https://patchwork.kernel.org/patch/8393091/
-
--- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+-Toke
