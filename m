@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f195.google.com ([209.85.217.195]:41686 "EHLO
-        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751669AbeBTOg3 (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753167AbeBSPat (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 09:36:29 -0500
-Received: by mail-ua0-f195.google.com with SMTP id u99so7189498uau.8
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Feb 2018 06:36:28 -0800 (PST)
+        Mon, 19 Feb 2018 10:30:49 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 12/14] staging: wilc1000: rename GetPeriodicRSSI to avoid camelCase
+Date: Mon, 19 Feb 2018 20:59:42 +0530
+Message-ID: <1519054184-14301-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163054_222350_8069879B)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <31f0157f-4778-2f9c-977f-8bdbba6f52a4@redhat.com>
-References: <20180220134618.12972-1-carlo@caione.org> <31f0157f-4778-2f9c-977f-8bdbba6f52a4@redhat.com>
-From: Carlo Caione <carlo@endlessm.com>
-Date: Tue, 20 Feb 2018 14:36:27 +0000
-Message-ID: <CAL9uMOEFm4apUrDxs6GkZqV2S=mepd2Ytcna+SCaLnCcwtcfeg@mail.gmail.com> (sfid-20180220_153633_109741_99795939)
-Subject: Re: [RFC PATCH 0/2] net: rfkill: gpio: Fix and support SerDev
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Carlo Caione <carlo@caione.org>, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org, frederic.danis.oss@gmail.com,
-        sebastian.reichel@collabora.co.uk,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        Jeremy Cline <jcline@redhat.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 20, 2018 at 2:01 PM, Hans de Goede <hdegoede@redhat.com> wrote:
-> Hi Carlo,
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-Hi Hans,
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> Is this for devices with a RTL8723BS chip? If so then they
-> still will not work after this since there also no longer is
-> a /dev/ttyS4 created for the UART for the bluetooth, instead
-> you probably want:
->
-> https://github.com/jwrdegoede/linux-sunxi/commit/c383dac5ea00738ac01d704d820aa548494fcd41
->
-> Which also puts the /dev/ttyS4 back in place.
-
-Yeah, this problem came up while working on the RTL8723BS chip but the
-driver is also broken for the other two GPS devices supported by this
-driver.
-Thank you for the patch BTW.
-
-> Regards,
->
-> Hans
->
-> p.s.
->
-> My college Jeremy Cline in the Cc is looking into getting proper
-> bluetooth support in place for the rtl8723bs using serdev binding
-> and having everything in the kernel, as we now already do for bcm
-> uart bluetooth modules.
-
-Wasn't also Martin (+CC) working on this? See
-https://www.spinics.net/lists/linux-bluetooth/msg73594.html
-
-Cheers,
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6dd1061..4cbfe3b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3316,7 +3316,7 @@ int wilc_hif_set_cfg(struct wilc_vif *vif,
+ 	return wilc_enqueue_cmd(&msg);
+ }
+ 
+-static void GetPeriodicRSSI(struct timer_list *unused)
++static void get_periodic_rssi(struct timer_list *unused)
+ {
+ 	struct wilc_vif *vif = periodic_rssi_vif;
+ 
+@@ -3381,7 +3381,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		}
+ 
+ 		periodic_rssi_vif = vif;
+-		timer_setup(&periodic_rssi, GetPeriodicRSSI, 0);
++		timer_setup(&periodic_rssi, get_periodic_rssi, 0);
+ 		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ 	}
+ 
 -- 
-Carlo Caione  |  +44.7384.69.16.04  |  Endless
+2.7.4
