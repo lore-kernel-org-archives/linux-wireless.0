@@ -1,220 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59742 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752915AbeBSMtB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35490 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751158AbeBSGH5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:49:01 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Feb 2018 14:48:40 +0200
-Message-Id: <20180219124847.27169-7-luca@coelho.fi> (sfid-20180219_134904_987059_4D49918A)
-In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-Subject: [PATCH v2 06/13] mac80211: add get TID helper
+        Mon, 19 Feb 2018 01:07:57 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Steve deRosier <derosier@gmail.com>
+Cc: Samuel Sieb <samuel@sieb.net>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Max clients on wifi access point with 7265
+References: <HE1PR0501MB23969FCE58F1EE7634D412F0F6F50@HE1PR0501MB2396.eurprd05.prod.outlook.com>
+        <1518607856.21268.3.camel@sipsolutions.net>
+        <4f048d04-5f25-caa1-51b3-dcb14baf36da@sieb.net>
+        <CALLGbRLL-tnptVDuFt5E3QoTZ8Wn4K=2wLp3TCNvDJemkGVyKg@mail.gmail.com>
+Date: Mon, 19 Feb 2018 08:07:53 +0200
+In-Reply-To: <CALLGbRLL-tnptVDuFt5E3QoTZ8Wn4K=2wLp3TCNvDJemkGVyKg@mail.gmail.com>
+        (Steve deRosier's message of "Wed, 14 Feb 2018 14:38:10 -0800")
+Message-ID: <87h8qdldfq.fsf@purkki.adurom.net> (sfid-20180219_070802_067475_2726E533)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Steve deRosier <derosier@gmail.com> writes:
 
-Extracting the TID from the QOS header is common enough
-to justify helper.
+> On Wed, Feb 14, 2018 at 2:04 PM, Samuel Sieb <samuel@sieb.net> wrote:
+>> On 02/14/2018 03:30 AM, Johannes Berg wrote:
+>>>
+>>> On Wed, 2018-02-14 at 10:55 +0000, Micka=C3=ABl PANNEQUIN wrote:
+>>>
+>>>>
+>>>> Do you know the limit of the number of users connected at the same
+>>>> time on the wifi? Works fine with 14 connected devices but not more.
+>>>>
+>>>> How to increase it?
+>>>
+>>>
+>>> You can't.
+>>>
+>>>> This limit is hardware?
+>>>
+>>>
+>>> More or less, yes. The HW/FW can support 16 STAs, but needs two for
+>>> other bookkeeping.
+>>
+>>
+>> As a general question, is there a standard way to determine this limit f=
+or
+>> any particular hardware?
+>
+>
+> Yes, but there's no easy way. Put it in AP mode and connect clients to
+> it until it starts rejecting new clients or dropping the old ones.
+> Usually while watching it with a sniffer. That's how I've always had
+> to do it.
+>
+> Different chips will have different limits, and there's no reliable
+> way to determine the limit across all chips other than trial and
+> error. It seems a common desire of people to try to use client chips
+> as poor-man APs. While it will work for very limited number of
+> clients, they're not intended as AP chips. If you want something to
+> work as an AP, I recommend you choose an AP chip.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/linux/ieee80211.h          | 12 ++++++++++++
- net/mac80211/iface.c               |  3 +--
- net/mac80211/michael.c             |  2 +-
- net/mac80211/mlme.c                |  2 +-
- net/mac80211/rc80211_minstrel_ht.c |  2 +-
- net/mac80211/rx.c                  |  6 ++----
- net/mac80211/tx.c                  |  9 ++-------
- net/mac80211/wpa.c                 |  8 +++-----
- 8 files changed, 23 insertions(+), 21 deletions(-)
+We do have wiphy::max_ap_assoc_sta, but I see only ath10k, qtnfmac and
+rsi_91x setting it. I wish all drivers would use that.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index ee6657a0ed69..b35736c6e85c 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -8,6 +8,7 @@
-  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-  * Copyright (c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright (c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright (c) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -2501,6 +2502,17 @@ static inline u8 *ieee80211_get_qos_ctl(struct ieee80211_hdr *hdr)
- 		return (u8 *)hdr + 24;
- }
- 
-+/**
-+ * ieee80211_get_tid - get qos TID
-+ * @hdr: the frame
-+ */
-+static inline u8 ieee80211_get_tid(struct ieee80211_hdr *hdr)
-+{
-+	u8 *qc = ieee80211_get_qos_ctl(hdr);
-+
-+	return qc[0] & IEEE80211_QOS_CTL_TID_MASK;
-+}
-+
- /**
-  * ieee80211_get_SA - get pointer to SA
-  * @hdr: the frame
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 5fe01f82df12..d13ba064951f 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1324,8 +1324,7 @@ static void ieee80211_iface_work(struct work_struct *work)
- 			mutex_lock(&local->sta_mtx);
- 			sta = sta_info_get_bss(sdata, mgmt->sa);
- 			if (sta) {
--				u16 tid = *ieee80211_get_qos_ctl(hdr) &
--						IEEE80211_QOS_CTL_TID_MASK;
-+				u16 tid = ieee80211_get_tid(hdr);
- 
- 				__ieee80211_stop_rx_ba_session(
- 					sta, tid, WLAN_BACK_RECIPIENT,
-diff --git a/net/mac80211/michael.c b/net/mac80211/michael.c
-index 408649bd4702..37e172701a63 100644
---- a/net/mac80211/michael.c
-+++ b/net/mac80211/michael.c
-@@ -35,7 +35,7 @@ static void michael_mic_hdr(struct michael_mic_ctx *mctx, const u8 *key,
- 	da = ieee80211_get_DA(hdr);
- 	sa = ieee80211_get_SA(hdr);
- 	if (ieee80211_is_data_qos(hdr->frame_control))
--		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
-+		tid = ieee80211_get_tid(hdr);
- 	else
- 		tid = 0;
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 39b660b9a908..010b127a3937 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2151,7 +2151,7 @@ static void ieee80211_sta_tx_wmm_ac_notify(struct ieee80211_sub_if_data *sdata,
- 					   u16 tx_time)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--	u16 tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
-+	u16 tid = ieee80211_get_tid(hdr);
- 	int ac = ieee80211_ac_from_tid(tid);
- 	struct ieee80211_sta_tx_tspec *tx_tspec = &ifmgd->tx_tspec[ac];
- 	unsigned long now = jiffies;
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 4a5bdad9f303..fb586b6e5d49 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -669,7 +669,7 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
- 	if (unlikely(skb->protocol == cpu_to_be16(ETH_P_PAE)))
- 		return;
- 
--	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
-+	tid = ieee80211_get_tid(hdr);
- 	if (likely(sta->ampdu_mlme.tid_tx[tid]))
- 		return;
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 478a9c735edb..3dc162ddc3a6 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1189,7 +1189,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
- 
- 	ack_policy = *ieee80211_get_qos_ctl(hdr) &
- 		     IEEE80211_QOS_CTL_ACK_POLICY_MASK;
--	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
-+	tid = ieee80211_get_tid(hdr);
- 
- 	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
- 	if (!tid_agg_rx) {
-@@ -1528,9 +1528,7 @@ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
- 		   ieee80211_has_pm(hdr->frame_control) &&
- 		   (ieee80211_is_data_qos(hdr->frame_control) ||
- 		    ieee80211_is_qos_nullfunc(hdr->frame_control))) {
--		u8 tid;
--
--		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
-+		u8 tid = ieee80211_get_tid(hdr);
- 
- 		ieee80211_sta_uapsd_trigger(&rx->sta->sta, tid);
- 	}
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 25904af38839..c3c66c673428 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -797,7 +797,6 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
--	u8 *qc;
- 	int tid;
- 
- 	/*
-@@ -844,9 +843,7 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
- 		return TX_CONTINUE;
- 
- 	/* include per-STA, per-TID sequence counter */
--
--	qc = ieee80211_get_qos_ctl(hdr);
--	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
-+	tid = ieee80211_get_tid(hdr);
- 	tx->sta->tx_stats.msdu[tid]++;
- 
- 	hdr->seq_ctrl = ieee80211_tx_next_seq(tx->sta, tid);
-@@ -1158,7 +1155,6 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int tid;
--	u8 *qc;
- 
- 	memset(tx, 0, sizeof(*tx));
- 	tx->skb = skb;
-@@ -1198,8 +1194,7 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
- 	    !ieee80211_hw_check(&local->hw, TX_AMPDU_SETUP_IN_HW)) {
- 		struct tid_ampdu_tx *tid_tx;
- 
--		qc = ieee80211_get_qos_ctl(hdr);
--		tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
-+		tid = ieee80211_get_tid(hdr);
- 
- 		tid_tx = rcu_dereference(tx->sta->ampdu_mlme.tid_tx[tid]);
- 		if (tid_tx) {
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 785056cb76f6..58d0b258b684 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -340,7 +340,7 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
- 	a4_included = ieee80211_has_a4(hdr->frame_control);
- 
- 	if (ieee80211_is_data_qos(hdr->frame_control))
--		qos_tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
-+		qos_tid = ieee80211_get_tid(hdr);
- 	else
- 		qos_tid = 0;
- 
-@@ -601,8 +601,7 @@ static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
- 	aad[23] = 0;
- 
- 	if (ieee80211_is_data_qos(hdr->frame_control))
--		qos_tid = *ieee80211_get_qos_ctl(hdr) &
--			IEEE80211_QOS_CTL_TID_MASK;
-+		qos_tid = ieee80211_get_tid(hdr);
- 	else
- 		qos_tid = 0;
- 
-@@ -867,8 +866,7 @@ ieee80211_crypto_cs_decrypt(struct ieee80211_rx_data *rx)
- 		return RX_DROP_UNUSABLE;
- 
- 	if (ieee80211_is_data_qos(hdr->frame_control))
--		qos_tid = *ieee80211_get_qos_ctl(hdr) &
--				IEEE80211_QOS_CTL_TID_MASK;
-+		qos_tid = ieee80211_get_tid(hdr);
- 	else
- 		qos_tid = 0;
- 
--- 
-2.15.1
+ * @max_ap_assoc_sta: maximum number of associated stations supported in AP=
+ mode
+ * (including P2P GO) or 0 to indicate no such limit is advertised. The
+ * driver is allowed to advertise a theoretical limit that it can reach in
+ * some cases, but may not always reach.
+
+--=20
+Kalle Valo
