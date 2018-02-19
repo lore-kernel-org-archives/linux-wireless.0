@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50214 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752052AbeB0QLb (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50162 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752716AbeBSMfS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:11:31 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: Re: [PATCH 0/6] qtnfmac: qsr10g pcie backend updates
-References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
-        <87muzufqw9.fsf@purkki.adurom.net>
-        <20180227143753.ee44w6p7qil32xif@bars>
-Date: Tue, 27 Feb 2018 18:11:26 +0200
-In-Reply-To: <20180227143753.ee44w6p7qil32xif@bars> (Sergey Matyukevich's
-        message of "Tue, 27 Feb 2018 17:37:54 +0300")
-Message-ID: <87o9kas98x.fsf@kamboji.qca.qualcomm.com> (sfid-20180227_171136_768382_6DEC7587)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 19 Feb 2018 07:35:18 -0500
+Message-ID: <1519043716.16723.1.camel@sipsolutions.net> (sfid-20180219_133522_210273_53B3A800)
+Subject: Re: [PATCH] mac80211: inform wireless layer when frame RSSI is
+ invalid
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jean Pierre TOSONI <jp.tosoni@acksys.fr>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 19 Feb 2018 13:35:16 +0100
+In-Reply-To: <AM4PR0101MB2305288C51F159AE69BD78CCE4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+References: <AM4PR0101MB2305288C51F159AE69BD78CCE4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+On Wed, 2018-02-14 at 13:51 +0000, Jean Pierre TOSONI wrote:
+> When the low-level driver returns an invalid RSSI indication,
+> set the signal value to 0 as an indication to the upper layer.
+> 
+> Also, skip average level computation if signal is invalid.
 
-> Hello Kalle,
->
->> BTW, I don't see this patchset on patchwork.kernel.org[1], strangely I
->> only see v2. I don't know if it's because of problems on patchwork or
->> the submitter deleted the patches, but in case someone did delete these
->> please do not that. I want to see the old versions from patchwork to
->> check the old discussions etc.
->> 
->> [1] https://patchwork.kernel.org/project/linux-wireless/list/?state=*&q=qtnfmac
->
-> I guess that was me. After the first review round we reworked the patch set.
-> So I posted v2 and marked v1 as 'Superseded' in Patchwork.
+Thanks for the patch!
 
-Odd, then I should still see them in patchwork but I don't. Oh well,
-patchwork is still rough on edges so I'm not surprised. Anyway, I prefer
-the patch submitters don't change the status themselves and let me do
-that instead. That way it's easier for me track progress etc.
+>  	/* Track average RSSI from the Beacon frames of the current AP */
+> +	if (rx_status->flag & RX_FLAG_NO_SIGNAL_VAL)
+> +		goto skip_signal_processing;
+>  	if (ifmgd->flags & IEEE80211_STA_RESET_SIGNAL_AVE) {
+>  		ifmgd->flags &= ~IEEE80211_STA_RESET_SIGNAL_AVE;
+>  		ewma_beacon_signal_init(&ifmgd->ave_beacon_signal);
+> @@ -3454,6 +3456,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+>  				sig, GFP_KERNEL);
+>  		}
+>  	}
+> +skip_signal_processing:
 
--- 
-Kalle Valo
+Can't say I like this - how about we pull out the actual processing
+into a helper function, and then abort that function early if the
+NO_SIGNAL_VAL flag is set.
+
+johannes
