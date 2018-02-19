@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blackstar.xs4all.nl ([83.163.96.30]:35637 "EHLO
-        blackstar.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933390AbeBVR2p (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:38840 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751252AbeBSGht (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 12:28:45 -0500
-Received: from [192.168.3.91] (unknown [192.168.3.91])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        by blackstar.xs4all.nl (Postfix) with ESMTP id 9163634056C
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Feb 2018 18:10:01 +0100 (CET)
-To: linux-wireless@vger.kernel.org
-From: Bas Vermeulen <bvermeul@blackstar.nl>
-Subject: ath9k: AR9287 device with little endian eeprom doesn't work on
- powerpc
-Message-ID: <20a6ba1b-20be-0973-eea6-5d715544e685@blackstar.nl> (sfid-20180222_182850_167233_EC02495D)
-Date: Thu, 22 Feb 2018 18:10:01 +0100
+        Mon, 19 Feb 2018 01:37:49 -0500
+Date: Mon, 19 Feb 2018 12:07:41 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>, <ganesh.krishna@microchip.com>,
+        <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 4/6] staging: wilc1000: fix line over 80 characters in
+ wilc_spi_init()
+Message-ID: <20180219120741.19232d40@ajaysk-VirtualBox> (sfid-20180219_073754_353158_513F538C)
+In-Reply-To: <20180216143022.GA20682@kroah.com>
+References: <1518606615-14404-1-git-send-email-ajay.kathat@microchip.com>
+        <1518606615-14404-5-git-send-email-ajay.kathat@microchip.com>
+        <20180216143022.GA20682@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Fri, 16 Feb 2018 15:30:22 +0100
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-I have slotted a 300 Mbps Wireless N PCI Express Adapter into my 
-PowerMac G5, and it failed
-to initialize the driver with an error complaining about the EEPROM.
+> > diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+> > index 30a9a61..fddc0db 100644
+> > --- a/drivers/staging/wilc1000/wilc_spi.c
+> > +++ b/drivers/staging/wilc1000/wilc_spi.c
+> > @@ -835,7 +835,6 @@ static int wilc_spi_init(struct wilc *wilc, bool resume)
+> >  	struct spi_device *spi = to_spi_device(wilc->dev);
+> >  	u32 reg;
+> >  	u32 chipid;
+> > -
+> >  	static int isinit;  
+> 
+> You also deleted this line :(
 
-I disabled the line reading ah->ah_flags |= AH_NO_EEP_SWAP; in 
-ath9k_of_init(), and this made my card show up and start working correctly.
-
-Is there a better way of doing this? If not, what would be the best way 
-to allow byte-swapping the eeprom on big endian machines?
-
-Bas Vermeulen
-
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+The blank line was not necessary between the variable's declaration. I
+should have done these changes in separate patch.
+I will take care to have these type of changes either in a separate patch
+or include the change details in description.
