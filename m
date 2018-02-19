@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:34879 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752172AbeBIBYD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50320 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752657AbeBSMpA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Feb 2018 20:24:03 -0500
-Received: by mail-io0-f193.google.com with SMTP id m11so7933829iob.2
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Feb 2018 17:24:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20180209005712.29353-1-mka@chromium.org>
-References: <20180209005712.29353-1-mka@chromium.org>
-From: Guenter Roeck <groeck@google.com>
-Date: Thu, 8 Feb 2018 17:24:01 -0800
-Message-ID: <CABXOdTcMKkiPDTgg_8tzMDMb0=jRbuQq_Y_qEWiobWhDp0mD-g@mail.gmail.com> (sfid-20180209_022426_055580_D323ABC4)
-Subject: Re: [PATCH v2] rtlwifi: rtl8192cu: Remove variable self-assignment in rf.c
-To: Matthias Kaehlcke <mka@chromium.org>
-Cc: Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Guenter Roeck <groeck@chromium.org>,
-        Justin TerAvest <teravest@chromium.org>,
-        Craig Bergstrom <craigb@chromium.org>
+        Mon, 19 Feb 2018 07:45:00 -0500
+Message-ID: <1519044297.16723.4.camel@sipsolutions.net> (sfid-20180219_134503_595027_E0C71C36)
+Subject: Re: [RFC v4 3/6] nl80211: Implement TX of control port frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Mon, 19 Feb 2018 13:44:57 +0100
+In-Reply-To: <20180201010420.6102-4-denkenz@gmail.com> (sfid-20180201_020437_479619_BE4C79BC)
+References: <20180201010420.6102-1-denkenz@gmail.com>
+         <20180201010420.6102-4-denkenz@gmail.com>
+         (sfid-20180201_020437_479619_BE4C79BC)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 8, 2018 at 4:57 PM, Matthias Kaehlcke <mka@chromium.org> wrote:
-> In _rtl92c_get_txpower_writeval_by_regulatory() the variable writeVal
-> is assigned to itself in an if ... else statement, apparently only to
-> document that the branch condition is handled and that a previously read
-> value should be returned unmodified. The self-assignment causes clang to
-> raise the following warning:
->
-> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c:304:13:
->   error: explicitly assigning value of variable of type 'u32'
->     (aka 'unsigned int') to itself [-Werror,-Wself-assign]
->   writeVal = writeVal;
->
-> Delete the branch with the self-assignment.
->
-> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+On Wed, 2018-01-31 at 19:04 -0600, Denis Kenzior wrote:
+> 
+> +	switch (wdev->iftype) {
+> +	case NL80211_IFTYPE_STATION:
+> +		if (wdev->current_bss)
+> +			break;
+> +		err = -ENOTCONN;
+> +		goto out;
+> +	default:
+> +		err = -EOPNOTSUPP;
+> +		goto out;
+> +	}
+> 
+Why restrict this to client mode? At the very least, P2P_CLIENT really
+should be listed there, but I'm not sure why not also support it in
+IBSS, and AP/P2P_GO/AP_VLAN modes?
 
-Reviewed-by: Guenter Roeck <groeck@chromium.org>
+We could do this in a separate patch, but then we have to define
+different flags for the modes which seems somewhat pointless.
 
-> ---
-> Changes in v2:
-> - Delete the 'else if' branch entirely
->
->  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c | 3 ---
->  1 file changed, 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-> index 9cff6bc4049c..cf551785eb08 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-> @@ -299,9 +299,6 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
->                         writeVal = 0x00000000;
->                 if (rtlpriv->dm.dynamic_txhighpower_lvl == TXHIGHPWRLEVEL_BT1)
->                         writeVal = writeVal - 0x06060606;
-> -               else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
-> -                        TXHIGHPWRLEVEL_BT2)
-> -                       writeVal = writeVal;
->                 *(p_outwriteval + rf) = writeVal;
->         }
->  }
-> --
-> 2.16.0.rc1.238.g530d649a79-goog
->
+johannes
