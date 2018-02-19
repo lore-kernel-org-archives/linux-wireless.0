@@ -1,358 +1,304 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:21782 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751485AbeBZSNG (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:35838 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752875AbeBSNbT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 13:13:06 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v2 5/8] wil6210: multiple VIFs support for start/stop AP
-Date: Mon, 26 Feb 2018 20:12:15 +0200
-Message-Id: <1519668738-16912-6-git-send-email-merez@codeaurora.org> (sfid-20180226_191317_932335_47BB73EF)
-In-Reply-To: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
-References: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
+        Mon, 19 Feb 2018 08:31:19 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v7 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
+Date: Mon, 19 Feb 2018 18:49:36 +0530
+Message-Id: <1519046379-10068-6-git-send-email-amitkarwar@gmail.com> (sfid-20180219_143126_265308_C139E457)
+In-Reply-To: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
+References: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <liord@codeaurora.org>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Add support for multiple VIFs in the cfg80211 operations start_ap,
-stop_ap and change_beacon. This change allows starting multiple APs
-using virtual interfaces.
-The data path and most other operations are still working only
-on the main interface.
+Redpine bluetooth driver is a thin driver which depends on
+'rsi_91x' driver for transmitting and receiving packets
+to/from device. It creates hci interface when attach() is
+called from 'rsi_91x' module.
 
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+Reviewed-by: Marcel Holtmann <marcel@holtmann.org>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 49 +++++++++++++++++++----------
- drivers/net/wireless/ath/wil6210/main.c     | 14 ++++++++-
- drivers/net/wireless/ath/wil6210/netdev.c   | 22 +++++++------
- drivers/net/wireless/ath/wil6210/pcie_bus.c |  2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h  |  9 +++---
- drivers/net/wireless/ath/wil6210/wmi.c      |  8 +++++
- 6 files changed, 71 insertions(+), 33 deletions(-)
+v7: Same as v6
+v6: Renamed CONFIG_BT_RSI to CONFIG_BT_HCIRSI (Marcel)
+v5: Addressed review comments from Marcel.
+    Removed reduntant switch case code from rsi_hci_recv_pkt()
+    Changed bt_cb(skb)->pkt_type to hci_skb_pkt_type(skb)
+    Removed reduntant '\n' from BT_ERR and redundant BT_INFO messages
+    Changed u8 *pkt to const u8 *pkt in rsi_hci_recv_pkt()
+v4: Removed rsi_hci.h file. Made the functions static(Marcel)
+v3: Made BT_RSI module by default off(Marcel)
+    Removed redundant exported function rsi_get_hci_ops()(Marcel)
+v2: Addressed review comments from Marcel
+    Removed unnecessary 'depends on BT && BT_RFOMM' line in Kconfig
+    Removed redundant BT_INFO messages
+    h_adapter initialization and declaration in a single line.
+    Removed unnecessary error checks for HCI_RUNNING and fsm_state
+    Allocated new skb with skb_realloc_headroom() API if headroom is not sufficient
+    Used get_unaligned_le16 helpers
+    Moved a structure and union from header file to btrsi.c file
+---
+ drivers/bluetooth/Kconfig  |  12 +++
+ drivers/bluetooth/Makefile |   2 +
+ drivers/bluetooth/btrsi.c  | 188 +++++++++++++++++++++++++++++++++++++++++++++
+ include/net/rsi_91x.h      |   4 +-
+ 4 files changed, 205 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/bluetooth/btrsi.c
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index ce20ee4..a3ad3f4 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -544,8 +544,9 @@ static int wil_cfg80211_validate_change_iface(struct wil6210_priv *wil,
- 	return ERR_PTR(rc);
- }
+diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
+index 07e55cd..d8bbd66 100644
+--- a/drivers/bluetooth/Kconfig
++++ b/drivers/bluetooth/Kconfig
+@@ -392,4 +392,16 @@ config BT_QCOMSMD
+ 	  Say Y here to compile support for HCI over Qualcomm SMD into the
+ 	  kernel or say M to compile as a module.
  
--int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif)
-+int wil_vif_prepare_stop(struct wil6210_vif *vif)
- {
-+	struct wil6210_priv *wil = vif_to_wil(vif);
- 	struct wireless_dev *wdev = vif_to_wdev(vif);
- 	struct net_device *ndev;
- 	int rc;
-@@ -561,6 +562,7 @@ int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif)
- 				 rc);
- 			/* continue */
- 		}
-+		wil_bcast_fini(vif);
- 		netif_carrier_off(ndev);
- 	}
- 
-@@ -593,7 +595,7 @@ static int wil_cfg80211_del_iface(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
- 
--	rc = wil_vif_prepare_stop(wil, vif);
-+	rc = wil_vif_prepare_stop(vif);
- 	if (rc)
- 		goto out;
- 
-@@ -614,6 +616,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
- 	struct wil6210_vif *vif = ndev_to_vif(ndev);
- 	struct wireless_dev *wdev = vif_to_wdev(vif);
- 	int rc;
-+	bool fw_reset = false;
- 
- 	wil_dbg_misc(wil, "change_iface: type=%d\n", type);
- 
-@@ -628,7 +631,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
- 	/* do not reset FW when there are active VIFs,
- 	 * because it can cause significant disruption
- 	 */
--	if (!wil_has_other_up_ifaces(wil, ndev) &&
-+	if (!wil_has_other_active_ifaces(wil, ndev, true, false) &&
- 	    netif_running(ndev) && !wil_is_recovery_blocked(wil)) {
- 		wil_dbg_misc(wil, "interface is up. resetting...\n");
- 		mutex_lock(&wil->mutex);
-@@ -638,6 +641,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
- 
- 		if (rc)
- 			return rc;
-+		fw_reset = true;
- 	}
- 
- 	switch (type) {
-@@ -654,8 +658,9 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
- 		return -EOPNOTSUPP;
- 	}
- 
--	if (vif->mid != 0 && wil_has_up_ifaces(wil)) {
--		wil_vif_prepare_stop(wil, vif);
-+	if (vif->mid != 0 && wil_has_active_ifaces(wil, true, false)) {
-+		if (!fw_reset)
-+			wil_vif_prepare_stop(vif);
- 		rc = wmi_port_delete(wil, vif->mid);
- 		if (rc)
- 			return rc;
-@@ -1530,10 +1535,12 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 
- 	mutex_lock(&wil->mutex);
- 
--	__wil_down(wil);
--	rc = __wil_up(wil);
--	if (rc)
--		goto out;
-+	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
-+		__wil_down(wil);
-+		rc = __wil_up(wil);
-+		if (rc)
-+			goto out;
-+	}
- 
- 	rc = wmi_set_ssid(vif, ssid_len, ssid);
- 	if (rc)
-@@ -1549,7 +1556,8 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	vif->pbss = pbss;
- 
- 	netif_carrier_on(ndev);
--	wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
-+	if (!wil_has_other_active_ifaces(wil, ndev, false, true))
-+		wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
- 
- 	rc = wmi_pcp_start(vif, bi, wmi_nettype, chan, hidden_ssid, is_go);
- 	if (rc)
-@@ -1565,7 +1573,8 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	wmi_pcp_stop(vif);
- err_pcp_start:
- 	netif_carrier_off(ndev);
--	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
-+	if (!wil_has_other_active_ifaces(wil, ndev, false, true))
-+		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
- out:
- 	mutex_unlock(&wil->mutex);
- 	return rc;
-@@ -1670,20 +1679,26 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 	struct wil6210_vif *vif = ndev_to_vif(ndev);
-+	bool last;
- 
--	wil_dbg_misc(wil, "stop_ap\n");
-+	wil_dbg_misc(wil, "stop_ap, mid=%d\n", vif->mid);
- 
- 	netif_carrier_off(ndev);
--	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
--	wil_set_recovery_state(wil, fw_recovery_idle);
--
--	set_bit(wil_status_resetting, wil->status);
-+	last = !wil_has_other_active_ifaces(wil, ndev, false, true);
-+	if (last) {
-+		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
-+		wil_set_recovery_state(wil, fw_recovery_idle);
-+		set_bit(wil_status_resetting, wil->status);
-+	}
- 
- 	mutex_lock(&wil->mutex);
- 
- 	wmi_pcp_stop(vif);
- 
--	__wil_down(wil);
-+	if (last)
-+		__wil_down(wil);
-+	else
-+		wil_bcast_fini(vif);
- 
- 	mutex_unlock(&wil->mutex);
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 2926bd1..5aeaf9b 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -508,6 +508,18 @@ void wil_bcast_fini(struct wil6210_vif *vif)
- 	wil_vring_fini_tx(wil, ri);
- }
- 
-+void wil_bcast_fini_all(struct wil6210_priv *wil)
-+{
-+	int i;
-+	struct wil6210_vif *vif;
++config BT_HCIRSI
++	tristate "Redpine HCI support"
++	default n
++	select RSI_COEX
++	help
++	  Redpine BT driver.
++	  This driver handles BT traffic from upper layers and pass
++	  to the RSI_91x coex module for further scheduling to device
 +
-+	for (i = 0; i < wil->max_vifs; i++) {
-+		vif = wil->vifs[i];
-+		if (vif)
-+			wil_bcast_fini(vif);
-+	}
++	  Say Y here to compile support for HCI over Redpine into the
++	  kernel or say M to compile as a module.
++
+ endmenu
+diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
+index 4e4e44d..03cfc1b 100644
+--- a/drivers/bluetooth/Makefile
++++ b/drivers/bluetooth/Makefile
+@@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
+ 
+ obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
+ 
++obj-$(CONFIG_BT_HCIRSI)		+= btrsi.o
++
+ btmrvl-y			:= btmrvl_main.o
+ btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
+ 
+diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
+new file mode 100644
+index 0000000..803e045
+--- /dev/null
++++ b/drivers/bluetooth/btrsi.c
+@@ -0,0 +1,188 @@
++/**
++ * Copyright (c) 2017 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#include <linux/version.h>
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <net/bluetooth/bluetooth.h>
++#include <net/bluetooth/hci_core.h>
++#include <linux/unaligned/le_byteshift.h>
++#include <net/rsi_91x.h>
++#include <net/genetlink.h>
++
++#define RSI_HEADROOM_FOR_BT_HAL	16
++#define RSI_FRAME_DESC_SIZE	16
++
++struct rsi_hci_adapter {
++	void *priv;
++	struct rsi_proto_ops *proto_ops;
++	struct hci_dev *hdev;
++};
++
++static int rsi_hci_open(struct hci_dev *hdev)
++{
++	return 0;
 +}
 +
- int wil_priv_init(struct wil6210_priv *wil)
- {
- 	uint i;
-@@ -1204,7 +1216,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 
- 	cancel_work_sync(&vif->disconnect_worker);
- 	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
--	wil_bcast_fini(vif);
-+	wil_bcast_fini_all(wil);
- 
- 	/* Disable device led before reset*/
- 	wmi_led_cfg(wil, false);
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index e23a80c..87956c0 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -20,8 +20,8 @@
- #include "wil6210.h"
- #include "txrx.h"
- 
--bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
--			     struct net_device *ndev)
-+bool wil_has_other_active_ifaces(struct wil6210_priv *wil,
-+				 struct net_device *ndev, bool up, bool ok)
- {
- 	int i;
- 	struct wil6210_vif *vif;
-@@ -31,17 +31,19 @@ bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
- 		vif = wil->vifs[i];
- 		if (vif) {
- 			ndev_i = vif_to_ndev(vif);
--			if (ndev_i != ndev && ndev_i->flags & IFF_UP)
--				return true;
-+			if (ndev_i != ndev)
-+				if ((up && (ndev_i->flags & IFF_UP)) ||
-+				    (ok && netif_carrier_ok(ndev_i)))
-+					return true;
- 		}
- 	}
- 
- 	return false;
- }
- 
--bool wil_has_up_ifaces(struct wil6210_priv *wil)
-+bool wil_has_active_ifaces(struct wil6210_priv *wil, bool up, bool ok)
- {
--	return wil_has_other_up_ifaces(wil, NULL);
-+	return wil_has_other_active_ifaces(wil, NULL, up, ok);
- }
- 
- static int wil_open(struct net_device *ndev)
-@@ -57,7 +59,7 @@ static int wil_open(struct net_device *ndev)
- 		return -EINVAL;
- 	}
- 
--	if (!wil_has_other_up_ifaces(wil, ndev)) {
-+	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
- 		wil_dbg_misc(wil, "open, first iface\n");
- 		rc = wil_pm_runtime_get(wil);
- 		if (rc < 0)
-@@ -78,7 +80,7 @@ static int wil_stop(struct net_device *ndev)
- 
- 	wil_dbg_misc(wil, "stop\n");
- 
--	if (!wil_has_other_up_ifaces(wil, ndev)) {
-+	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
- 		wil_dbg_misc(wil, "stop, last iface\n");
- 		rc = wil_down(wil);
- 		if (!rc)
-@@ -359,7 +361,7 @@ int wil_vif_add(struct wil6210_priv *wil, struct wil6210_vif *vif)
- {
- 	struct net_device *ndev = vif_to_ndev(vif);
- 	struct wireless_dev *wdev = vif_to_wdev(vif);
--	bool any_active = wil_has_up_ifaces(wil);
-+	bool any_active = wil_has_active_ifaces(wil, true, false);
- 	int rc;
- 
- 	ASSERT_RTNL();
-@@ -428,7 +430,7 @@ void wil_vif_remove(struct wil6210_priv *wil, u8 mid)
- {
- 	struct wil6210_vif *vif;
- 	struct net_device *ndev;
--	bool any_active = wil_has_up_ifaces(wil);
-+	bool any_active = wil_has_active_ifaces(wil, true, false);
- 
- 	ASSERT_RTNL();
- 	if (mid >= wil->max_vifs) {
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 1fd7614..7d3ff3f 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -145,7 +145,7 @@ static void wil_remove_all_additional_vifs(struct wil6210_priv *wil)
- 	for (i = 1; i < wil->max_vifs; i++) {
- 		vif = wil->vifs[i];
- 		if (vif) {
--			wil_vif_prepare_stop(wil, vif);
-+			wil_vif_prepare_stop(vif);
- 			wil_vif_remove(wil, vif->mid);
- 		}
- 	}
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 8ab4b5a..6e46a23 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -944,9 +944,9 @@ struct wil6210_vif *
- 	      unsigned char name_assign_type, enum nl80211_iftype iftype);
- void wil_vif_free(struct wil6210_vif *vif);
- void *wil_if_alloc(struct device *dev);
--bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
--			     struct net_device *ndev);
--bool wil_has_up_ifaces(struct wil6210_priv *wil);
-+bool wil_has_other_active_ifaces(struct wil6210_priv *wil,
-+				 struct net_device *ndev, bool up, bool ok);
-+bool wil_has_active_ifaces(struct wil6210_priv *wil, bool up, bool ok);
- void wil_if_free(struct wil6210_priv *wil);
- int wil_vif_add(struct wil6210_priv *wil, struct wil6210_vif *vif);
- int wil_if_add(struct wil6210_priv *wil);
-@@ -1053,7 +1053,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- int wil_cfg80211_iface_combinations_from_fw(
- 	struct wil6210_priv *wil,
- 	const struct wil_fw_record_concurrency *conc);
--int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif);
-+int wil_vif_prepare_stop(struct wil6210_vif *vif);
- 
- #if defined(CONFIG_WIL6210_DEBUGFS)
- int wil6210_debugfs_init(struct wil6210_priv *wil);
-@@ -1095,6 +1095,7 @@ int wil_vring_init_tx(struct wil6210_vif *vif, int id, int size,
- int wil_vring_init_bcast(struct wil6210_vif *vif, int id, int size);
- int wil_bcast_init(struct wil6210_vif *vif);
- void wil_bcast_fini(struct wil6210_vif *vif);
-+void wil_bcast_fini_all(struct wil6210_priv *wil);
- 
- void wil_update_net_queues(struct wil6210_priv *wil, struct vring *vring,
- 			   bool should_stop);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 23c28bf..762ade3 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -341,6 +341,10 @@ static const char *cmdid2name(u16 cmdid)
- 		return "WMI_GET_PCP_CHANNEL_CMD";
- 	case WMI_P2P_CFG_CMDID:
- 		return "WMI_P2P_CFG_CMD";
-+	case WMI_PORT_ALLOCATE_CMDID:
-+		return "WMI_PORT_ALLOCATE_CMD";
-+	case WMI_PORT_DELETE_CMDID:
-+		return "WMI_PORT_DELETE_CMD";
- 	case WMI_START_LISTEN_CMDID:
- 		return "WMI_START_LISTEN_CMD";
- 	case WMI_START_SEARCH_CMDID:
-@@ -479,6 +483,10 @@ static const char *eventid2name(u16 eventid)
- 		return "WMI_GET_PCP_CHANNEL_EVENT";
- 	case WMI_P2P_CFG_DONE_EVENTID:
- 		return "WMI_P2P_CFG_DONE_EVENT";
-+	case WMI_PORT_ALLOCATED_EVENTID:
-+		return "WMI_PORT_ALLOCATED_EVENT";
-+	case WMI_PORT_DELETED_EVENTID:
-+		return "WMI_PORT_DELETED_EVENT";
- 	case WMI_LISTEN_STARTED_EVENTID:
- 		return "WMI_LISTEN_STARTED_EVENT";
- 	case WMI_SEARCH_STARTED_EVENTID:
++static int rsi_hci_close(struct hci_dev *hdev)
++{
++	return 0;
++}
++
++static int rsi_hci_flush(struct hci_dev *hdev)
++{
++	return 0;
++}
++
++static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
++{
++	struct rsi_hci_adapter *h_adapter = hci_get_drvdata(hdev);
++	struct sk_buff *new_skb = NULL;
++
++	switch (hci_skb_pkt_type(skb)) {
++	case HCI_COMMAND_PKT:
++		hdev->stat.cmd_tx++;
++		break;
++	case HCI_ACLDATA_PKT:
++		hdev->stat.acl_tx++;
++		break;
++	case HCI_SCODATA_PKT:
++		hdev->stat.sco_tx++;
++		break;
++	}
++
++	if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
++		/* Insufficient skb headroom - allocate a new skb */
++		new_skb = skb_realloc_headroom(skb, RSI_HEADROOM_FOR_BT_HAL);
++		if (unlikely(!new_skb))
++			return -ENOMEM;
++		bt_cb(new_skb)->pkt_type = hci_skb_pkt_type(skb);
++		kfree_skb(skb);
++		skb = new_skb;
++	}
++
++	return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
++						   RSI_BT_Q);
++}
++
++static int rsi_hci_recv_pkt(void *priv, const u8 *pkt)
++{
++	struct rsi_hci_adapter *h_adapter = priv;
++	struct hci_dev *hdev = h_adapter->hdev;
++	struct sk_buff *skb;
++	int pkt_len = get_unaligned_le16(pkt) & 0x0fff;
++
++	skb = dev_alloc_skb(pkt_len);
++	if (!skb)
++		return -ENOMEM;
++
++	memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
++	skb_put(skb, pkt_len);
++	h_adapter->hdev->stat.byte_rx += skb->len;
++
++	hci_skb_pkt_type(skb) = pkt[14];
++
++	return hci_recv_frame(hdev, skb);
++}
++
++static int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
++{
++	struct rsi_hci_adapter *h_adapter = NULL;
++	struct hci_dev *hdev;
++	int err = 0;
++
++	h_adapter = kzalloc(sizeof(*h_adapter), GFP_KERNEL);
++	if (!h_adapter)
++		return -ENOMEM;
++
++	h_adapter->priv = priv;
++	ops->set_bt_context(priv, h_adapter);
++	h_adapter->proto_ops = ops;
++
++	hdev = hci_alloc_dev();
++	if (!hdev) {
++		BT_ERR("Failed to alloc HCI device");
++		goto err;
++	}
++
++	h_adapter->hdev = hdev;
++
++	if (ops->get_host_intf(priv) == RSI_HOST_INTF_SDIO)
++		hdev->bus = HCI_SDIO;
++	else
++		hdev->bus = HCI_USB;
++
++	hci_set_drvdata(hdev, h_adapter);
++	hdev->dev_type = HCI_PRIMARY;
++	hdev->open = rsi_hci_open;
++	hdev->close = rsi_hci_close;
++	hdev->flush = rsi_hci_flush;
++	hdev->send = rsi_hci_send_pkt;
++
++	err = hci_register_dev(hdev);
++	if (err < 0) {
++		BT_ERR("HCI registration failed with errcode %d", err);
++		hci_free_dev(hdev);
++		goto err;
++	}
++
++	return 0;
++err:
++	h_adapter->hdev = NULL;
++	kfree(h_adapter);
++	return -EINVAL;
++}
++
++static void rsi_hci_detach(void *priv)
++{
++	struct rsi_hci_adapter *h_adapter = priv;
++	struct hci_dev *hdev;
++
++	if (!h_adapter)
++		return;
++
++	hdev = h_adapter->hdev;
++	if (hdev) {
++		hci_unregister_dev(hdev);
++		hci_free_dev(hdev);
++		h_adapter->hdev = NULL;
++	}
++
++	kfree(h_adapter);
++}
++
++const struct rsi_mod_ops rsi_bt_ops = {
++	.attach	= rsi_hci_attach,
++	.detach	= rsi_hci_detach,
++	.recv_pkt = rsi_hci_recv_pkt,
++};
++EXPORT_SYMBOL(rsi_bt_ops);
++
++static int rsi_91x_bt_module_init(void)
++{
++	return 0;
++}
++
++static void rsi_91x_bt_module_exit(void)
++{
++	return;
++}
++
++module_init(rsi_91x_bt_module_init);
++module_exit(rsi_91x_bt_module_exit);
++MODULE_AUTHOR("Redpine Signals Inc");
++MODULE_DESCRIPTION("RSI BT driver");
++MODULE_SUPPORTED_DEVICE("RSI-BT");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
+index 737ab4e..040f07b 100644
+--- a/include/net/rsi_91x.h
++++ b/include/net/rsi_91x.h
+@@ -49,6 +49,8 @@ struct rsi_proto_ops {
+ struct rsi_mod_ops {
+ 	int (*attach)(void *priv, struct rsi_proto_ops *ops);
+ 	void (*detach)(void *priv);
+-	int (*recv_pkt)(void *priv, u8 *msg);
++	int (*recv_pkt)(void *priv, const u8 *msg);
+ };
++
++extern const struct rsi_mod_ops rsi_bt_ops;
+ #endif
 -- 
-1.9.1
+2.7.4
