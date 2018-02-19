@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db5eur01on0112.outbound.protection.outlook.com ([104.47.2.112]:17728
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966972AbeBNKKv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Feb 2018 05:10:51 -0500
-From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: mac80211 scan results, signal value not reliable
-Date: Wed, 14 Feb 2018 10:10:49 +0000
-Message-ID: <AM4PR0101MB2305974B5EC0ABE4A24204DAE4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180214_111057_344885_ABAAA541)
-References: <AM4PR0101MB23058FC2795B1FAF71CBF4F2E4F30@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
-         (sfid-20180208_104936_856405_3756BBC7)
- <1518296953.2029.6.camel@sipsolutions.net>
-In-Reply-To: <1518296953.2029.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752997AbeBSPa4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Feb 2018 10:30:56 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 14/14] staging: wilc1000: remove Unnecessary parentheses around 'hif_set_mc->cnt'
+Date: Mon, 19 Feb 2018 20:59:44 +0530
+Message-ID: <1519054184-14301-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163101_316764_46DCCC5E)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQo+IC0tLS0tTWVzc2FnZSBkJ29yaWdpbmUtLS0tLQ0KPiBEZcKgOiBKb2hhbm5lcyBCZXJnIFtt
-YWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gRW52b3nDqcKgOiBzYW1lZGkgMTAg
-ZsOpdnJpZXIgMjAxOCAyMjowOQ0KPiDDgMKgOiBKZWFuIFBpZXJyZSBUT1NPTkk7IGxpbnV4LXdp
-cmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiBPYmpldMKgOiBSZTogbWFjODAyMTEgc2NhbiByZXN1
-bHRzLCBzaWduYWwgdmFsdWUgbm90IHJlbGlhYmxlDQo+IA0KPiBPbiBUaHUsIDIwMTgtMDItMDgg
-YXQgMDk6NDkgKzAwMDAsIEplYW4gUGllcnJlIFRPU09OSSB3cm90ZToNCj4gDQo+ID4gSW4gbmV0
-L21hYzgwMjExL3NjYW4uYywgZnVuY3Rpb24gaWVlZTgwMjExX2Jzc19pbmZvX3VwZGF0ZSgpDQo+
-IHBhc3Nlcw0KPiA+IGluY29taW5nIHNjYW4gcmVzdWx0cyB0byB0aGUgZ2VuZXJpYyB3aXJlbGVz
-cyBsYXllciwgd2l0aA0KPiBpbmRpY2F0aW9uDQo+ID4gb2YgdGhlIHJlY2VpdmVkIHNpZ25hbCBs
-ZXZlbCwgYnV0IG5vIGluZGljYXRpb24gb2Ygc2lnbmFsDQo+IHZhbGlkaXR5Lg0KPiANCj4gV2Vs
-bCwgdGhlcmUgaXMgYW4gaW5kaWNhdGlvbiBvZiB2YWxpZGl0eSwgaWYgdGhlIHZhbHVlIGlzIDAg
-dGhlbg0KPiBpdCdzIGludmFsaWQuDQo+IA0KPiA+IEJlZm9yZSBpZWVlODAyMTFfYnNzX2luZm9f
-dXBkYXRlKCkgaXMgY2FsbGVkLCByeF9zdGF0dXMtPmZsYWcgY2FuDQo+IGJlDQo+ID4gc2V0IHRv
-IFJYX0ZMQUdfTk9fU0lHTkFMX1ZBTCBieSB0aGUgYXRoOWsgZHJpdmVyIGFuZCBpdCB3b24ndCBi
-ZQ0KPiB0YWtlbg0KPiA+IGludG8gYWNjb3VudCBpbiB0aGUgd2lyZWxlc3MgbGF5ZXIuDQo+ID4g
-RXZlbiBsYXRlciBpbiBpZWVlODAyMTFfYnNzX2luZm9fdXBkYXRlKCksIHJ4X3N0YXR1cy0+Zmxh
-ZyBjYW4NCj4gYWxzbyBiZQ0KPiA+IHNldCB0byBSWF9GTEFHX05PX1NJR05BTF9WQUwsIGFuZCB0
-aGUgd2lyZWxlc3MgbGF5ZXIgd29uJ3QgYmUNCj4gYXdhcmUgb2YgdGhpcy4NCj4gDQo+IEhvd2V2
-ZXIsIGl0IGxvb2tzIGxpa2UgeW91J3JlIHJpZ2h0IGFuZCBpZWVlODAyMTFfYnNzX2luZm9fdXBk
-YXRlKCkNCj4gZG9lc24ndCB0YWtlIHRoZSBmbGFnIGludG8gYWNjb3VudC4gQml0IHN0cmFuZ2Ug
-dGhhdCB3ZSBldmVuIGhhdmUNCj4gdGhlIGZsYWcgSSBndWVzcywgc2luY2Ugd2UgdHJlYXQgMCBh
-cyBhbiBpbnZhbGlkIHZhbHVlIGluIHZhcmlvdXMNCj4gcGxhY2VzLCBiZWluZyB0b28gaGlnaCBw
-b3dlciB0byByZWFsaXN0aWNhbGx5IHJlY2VpdmUgYW55d2F5Lg0KDQpUaGUgcHJvYmxlbSBpcyB0
-aGF0IDAgaXMgaW52YWxpZCBhcyBhIFNJR05BTF9EQk0gdmFsdWUgYnV0IHRoaXMgaXMNCmR1Ymlv
-dXMgZm9yIGEgU0lHTkFMX1VOU1BFQyB2YWx1ZSB3aGljaCBhcHBlYXJzIHRvIGJlIHN0aWxsIGlu
-IHVzZQ0KaW4gYSBjb3VwbGUgb2YgZHJpdmVycy4NCg0KU3VyZSB0aGF0IHVzaW5nIDAgd2lsbCBz
-b2x2ZSBteSBvd24gcHJvYmxlbS4NCg0KPiANCj4gPiBJIHN0dW1ibGVkIG9uIHRoaXMgYmVjYXVz
-ZSwgd2hlbiB1c2luZyBhdGg5ayAoV0xFMzUwTlgpIHRvIGRvIGENCj4gPiBwYXNzaXZlIHNjYW4g
-b2ZmLWNoYW5uZWwsIHRoZSBiZWFjb25zIHJlY2VpdmVkIGluIGEgMzBtcyB3aW5kb3cNCj4gYWZ0
-ZXINCj4gPiBjaGFubmVsIGNoYW5nZSBzaG93IGEgc2lnbmFsIGxldmVsICsxMGRCIGFib3ZlIHRo
-ZSByZWFsIHZhbHVlLiBTbw0KPiBJDQo+ID4gd2FzIGxvb2tpbmcgZm9yIGEgd2F5IHRvIHRlbGwg
-dGhlIGFib3ZlIGxheWVycyB0aGF0IHRoZSBzaWduYWwgaXMNCj4gPiBpbnZhbGlkLiBSWF9GTEFH
-X05PX1NJR05BTF9WQUwgc2VlbXMgdG8gZml0LCBidXQgaXMgbm90IGNvbnZleWVkDQo+IHVwIHRv
-IGl3IG9yIHdwYV9zdXBwbGljYW50Lg0KPiA+DQo+ID4gSW4gZmFjdCBJIGRpZCBub3QgZmluZCBh
-bnkgc3VjaCB0aGluZyBpbiBuZXQvd2lyZWxlc3Mvbmw4MDIxMS5jLA0KPiA+IGZ1bmN0aW9uIG5s
-ODAyMTFfc2VuZF9ic3MoKS4NCj4gPg0KPiA+IEFueSBzdWdnZXN0aW9uPyBEaWQgSSBtaXNzIHNv
-bWV0aGluZz8NCj4gDQo+IFdhbnQgdG8gc2VuZCBhIHBhdGNoPyBUaGVyZSBzZWVtIHRvIGJlIGEg
-ZmV3IG1vcmUgcGxhY2VzIGFzIHdlbGwsDQoNCkkgYW0gd29ya2luZyBvbiBhIDMuMTgga2VybmVs
-OyBzbyBJIGNhbiBlaXRoZXIgbWFrZSB0aGUgcGF0Y2ggZnJvbQ0KYW4gb2xkIGNvbXBhdC13aXJl
-bGVzcywgb3IgbWFrZSB0aGUgcGF0Y2ggZnJvbSB5b3VyIGxhc3QgdHJlZSBidXQNCkkgY2Fubm90
-IHRlc3QgaXQ7IGFyZSB5b3UgaW50ZXJlc3RlZCBhbnl3YXlzPw0KDQo+IGUuZy4NCj4gaW4gcngu
-YyBmb3IgY2ZnODAyMTFfcmVwb3J0X29ic3NfYmVhY29uKCkgYW5kIGNmZzgwMjExX3J4X21nbXQo
-KS4NCg0KVGhlcmUgaXMgYWxzbyBtbG1lLmMsIHRoZSBpZm1nZC0+YXZlX2JlYWNvbl9zaWduYWwg
-c2hvdWxkIG5vdCBiZSB1cGRhdGVkDQp3aXRoIGFuIGludmFsaWQgc2lnbmFsOw0KYW5kIGluIHRo
-ZSBsYXN0IHRyZWUsIHRoZSBpYnNzIGpvaW4gcGFzc2VzIGFuIHVuaW5pdGlhbGl6ZWQgc2lnbmFs
-DQp2YWx1ZSB0byBjZmc4MDIxMV9pbmZvcm1fYnNzX2ZyYW1lX2RhdGEoKS4NCg0KPiANCj4gam9o
-YW5uZXMNCg==
+Fix "Unnecessary parentheses around 'hif_set_mc->cnt'" issue found by
+checkpatch.pl script.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 7ddd20d..6f93966 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2430,7 +2430,7 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 	*cur_byte++ = ((hif_set_mc->cnt >> 16) & 0xFF);
+ 	*cur_byte++ = ((hif_set_mc->cnt >> 24) & 0xFF);
+ 
+-	if ((hif_set_mc->cnt) > 0)
++	if (hif_set_mc->cnt > 0)
+ 		memcpy(cur_byte, wilc_multicast_mac_addr_list,
+ 		       ((hif_set_mc->cnt) * ETH_ALEN));
+ 
+-- 
+2.7.4
