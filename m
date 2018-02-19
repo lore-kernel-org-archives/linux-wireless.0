@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59804 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752997AbeBSMtw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:49:52 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Feb 2018 14:48:44 +0200
-Message-Id: <20180219124847.27169-11-luca@coelho.fi> (sfid-20180219_135005_557077_929210CD)
-In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-Subject: [PATCH v2 10/13] mac80211: agg-rx: Accept ADDBA request update if timeout did not change
+Received: from mga05.intel.com ([192.55.52.43]:38131 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750988AbeBSGf4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Feb 2018 01:35:56 -0500
+Message-ID: <1519022152.7832.71.camel@intel.com> (sfid-20180219_073606_248646_AEA1DB39)
+Subject: Re: [PATCH 12/13] mac80211: limit wmm params to comply with ETSI
+ requirements
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Kalle Valo <kvalo@codeaurora.org>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>
+Date: Mon, 19 Feb 2018 08:35:52 +0200
+In-Reply-To: <87lgfple1q.fsf@purkki.adurom.net>
+References: <20180216161301.29339-1-luca@coelho.fi>
+         <20180216161301.29339-13-luca@coelho.fi> <87lgfple1q.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+On Mon, 2018-02-19 at 07:54 +0200, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> 
+> > From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+> > 
+> > ETSI has recently restricted the WMM parameters values for
+> > 5GHz frequencies. There are two scenarios which may cause
+> > to violate ETSI requirements.
+> > 1. Using mac80211 default values.
+> > 2. Userspace entity tries to configure its own values
+> > 2. Associating to AP which advertises WWM IE.
+> 
+> Only two? Also the numbering is interesting :)
+> 
+> > In the latter case
+> 
+> In the last case?
 
-As there is no support for updating an existing ADDBA session with
-a peer, we decline the request (while keeping the session active).
-However, in case that the timeout did not change, there is no need
-to decline the request, so modify the code to reply with status success
-in such a case (this is useful for interoperability with APs that send an
-ADDBA request update without changing the timeout value).
+Huh, how did I miss this stuff? Johannes, do you want me to resend or
+will you fix it when you take this?
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/agg-rx.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 1f3188d03840..e83c19d4c292 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -298,13 +298,23 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 
- 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
- 		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
-+			struct tid_ampdu_rx *tid_rx;
-+
- 			ht_dbg_ratelimited(sta->sdata,
- 					   "updated AddBA Req from %pM on tid %u\n",
- 					   sta->sta.addr, tid);
- 			/* We have no API to update the timeout value in the
--			 * driver so reject the timeout update.
-+			 * driver so reject the timeout update if the timeout
-+			 * changed. If if did not change, i.e., no real update,
-+			 * just reply with success.
- 			 */
--			status = WLAN_STATUS_REQUEST_DECLINED;
-+			rcu_read_lock();
-+			tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
-+			if (tid_rx && tid_rx->timeout == timeout)
-+				status = WLAN_STATUS_SUCCESS;
-+			else
-+				status = WLAN_STATUS_REQUEST_DECLINED;
-+			rcu_read_unlock();
- 			goto end;
- 		}
- 
--- 
-2.15.1
+--
+Cheers,
+Luca.
