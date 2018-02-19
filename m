@@ -1,75 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53532 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752133AbeB0XVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 18:21:09 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: cantabile.desu@gmail.com
-Cc: kubakici@wp.pl, gregkh@linuxfoundation.org,
-        akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        stephen.boyd@linaro.org, broonie@kernel.org,
-        dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [RFT 2/7] firmware: fix checking for return values for fw_add_devm_name()
-Date: Tue, 27 Feb 2018 15:20:56 -0800
-Message-Id: <20180227232101.20786-3-mcgrof@kernel.org> (sfid-20180228_002330_834432_5E530817)
-In-Reply-To: <20180227232101.20786-1-mcgrof@kernel.org>
-References: <20180227232101.20786-1-mcgrof@kernel.org>
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753121AbeBSPaY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Feb 2018 10:30:24 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 05/14] staging: wilc1000: rename pstrHostIfRegisterFrame to avoid camelCase
+Date: Mon, 19 Feb 2018 20:59:35 +0530
+Message-ID: <1519054184-14301-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163029_394070_E1C1D95C)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fw_add_devm_name() adds device's name onto the devres for the
-device so that prior to suspend we cache the firmware onto memory,
-so that on resume the firmware is reliably available. We never
-were checking for success for this call though, meaning in some
-really rare cases we my have never setup the firmware cache for
-a device, which could in turn make resume fail.
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-This is all theoretical, no known issues have been reported.
-This small issue has been present way since the addition of the
-devres firmware cache names on v3.7.
-
-Fixes: f531f05ae9437 ("firmware loader: store firmware name into devres list")
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/base/firmware_loader.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
-index 21dd31ef08ae..48932581c70c 100644
---- a/drivers/base/firmware_loader.c
-+++ b/drivers/base/firmware_loader.c
-@@ -431,6 +431,7 @@ int assign_fw(struct firmware *fw, struct device *device,
- 	      unsigned int opt_flags)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 11e4737..eda395d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2290,7 +2290,7 @@ static int Handle_RemainOnChan(struct wilc_vif *vif,
+ }
+ 
+ static int Handle_RegisterFrame(struct wilc_vif *vif,
+-				struct reg_frame *pstrHostIfRegisterFrame)
++				struct reg_frame *hif_reg_frame)
  {
- 	struct fw_priv *fw_priv = fw->priv;
-+	int ret;
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2304,9 +2304,9 @@ static int Handle_RegisterFrame(struct wilc_vif *vif,
  
- 	mutex_lock(&fw_lock);
- 	if (!fw_priv->size || fw_state_is_aborted(fw_priv)) {
-@@ -447,8 +448,13 @@ int assign_fw(struct firmware *fw, struct device *device,
- 	 */
- 	/* don't cache firmware handled without uevent */
- 	if (device && (opt_flags & FW_OPT_UEVENT) &&
--	    !(opt_flags & FW_OPT_NOCACHE))
--		fw_add_devm_name(device, fw_priv->fw_name);
-+	    !(opt_flags & FW_OPT_NOCACHE)) {
-+		ret = fw_add_devm_name(device, fw_priv->fw_name);
-+		if (ret && ret != 1) {
-+			mutex_unlock(&fw_lock);
-+			return ret;
-+		}
-+	}
+ 	cur_byte = wid.val;
  
- 	/*
- 	 * After caching firmware image is started, let it piggyback
+-	*cur_byte++ = pstrHostIfRegisterFrame->reg;
+-	*cur_byte++ = pstrHostIfRegisterFrame->reg_id;
+-	memcpy(cur_byte, &pstrHostIfRegisterFrame->frame_type, sizeof(u16));
++	*cur_byte++ = hif_reg_frame->reg;
++	*cur_byte++ = hif_reg_frame->reg_id;
++	memcpy(cur_byte, &hif_reg_frame->frame_type, sizeof(u16));
+ 
+ 	wid.size = sizeof(u16) + 2;
+ 
 -- 
-2.16.2
+2.7.4
