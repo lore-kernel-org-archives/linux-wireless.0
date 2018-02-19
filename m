@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:36854 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751117AbeB0LPN (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:23550 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751609AbeBSHto (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 06:15:13 -0500
-Received: by mail-wm0-f50.google.com with SMTP id 188so22421151wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 03:15:12 -0800 (PST)
-Subject: Re: Support on vendor id and device id
-To: Harsha Rao <harshrao464@gmail.com>, linux-wireless@vger.kernel.org
-References: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A953DBE.9070805@broadcom.com> (sfid-20180227_121517_058086_C8B9E990)
-Date: Tue, 27 Feb 2018 12:15:10 +0100
+        Mon, 19 Feb 2018 02:49:44 -0500
+Date: Mon, 19 Feb 2018 13:19:36 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
+        <Adham.Abozaeid@microchip.com>
+Subject: Re: [PATCH 6/6] staging: wilc1000: fix line over 80 chars in
+ wilc_spi_clear_int_ext()
+Message-ID: <20180219131936.3e1cbfc2@ajaysk-VirtualBox> (sfid-20180219_084948_739645_9EE54A3F)
+In-Reply-To: <63adcc58-bdd1-9fe7-6774-3ea1d626858b@microchip.com>
+References: <1518606615-14404-1-git-send-email-ajay.kathat@microchip.com>
+        <1518606615-14404-7-git-send-email-ajay.kathat@microchip.com>
+        <63adcc58-bdd1-9fe7-6774-3ea1d626858b@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/27/2018 11:16 AM, Harsha Rao wrote:
-> Hi folks,
-> I am developing a new wifi driver for our sdio based wifi device.
->
-> I see that SDIO_VENDOR_ID and SDIO_DEVICE_ID for our device (We had
-> bought the SDIO IP from 3rd party)  is already  been used by some
-> other vendor and its already into staging .
->
-> Please suggest me how can I move forward to submit the driver for staging.
+On Fri, 16 Feb 2018 20:16:02 +0200
+Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
 
-Can you be more specific about the conflicting vendor id and device id?
+> Or you could use:
+> 	unsigned long expected_irqs, unexpected_irqs;
+> 
+> 	expected_irqs = val & GENMASK(g_spi.int - 1, 0);
+> 	unexpected_irq = val & GENMASK(MAX_NUM_INT - 1, g_spi.int);
+> 
+> 	for (i = 0; i < g_spi.nint && expected_irqs; i++) {
+> 		if (expected_irqs & BIT(i)) {
+> 			ret = wilc_spi_write_reg(wilc, 0x10c8 + i * 4, 1);
+> 			if (ret) {
+> 				dev_err(...);
+> 				goto _fail_;
+> 			}
+> 		}
+> 	}
+> 
+> 	for (i = g_spi.nint; i < MAX_NUM_INT && unexpected_irq; i++) {
+> 		if (unexpected_irqs & BIT(i))
+> 			dev_err(...);
+> 
 
-> Is there a way to reconfigure the values in the SDIO host for
-> different value or does Linux allow two drivers with same values to
-> survive mutual exclusively
-
-First come first serve. When a device is detected, the driver core looks 
-for drivers supporting it based on device table and the first that 
-successfully returns from the .probe() callback is bound to the device.
-
-Regards,
-Arend
+Thanks for suggestion.
+I will take this input and make use of GENMASK macro to modify the
+function. In a separate patch will submit these changes. As there are
+other functions,where same macro can be used so will include them
+together in separate patch.
