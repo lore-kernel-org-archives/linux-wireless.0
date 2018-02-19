@@ -1,71 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:55552 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751379AbeBLRrn (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47986 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932263AbeBSXOd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 12:47:43 -0500
-Date: Mon, 12 Feb 2018 12:47:38 -0500 (EST)
-Message-Id: <20180212.124738.870301786818646917.davem@davemloft.net> (sfid-20180212_184811_092509_B3EA58FA)
-To: dvlasenk@redhat.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org
-Subject: Re: [PATCH] net: make getname() functions return length rather
- than use int* parameter
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180212141518.3354-1-dvlasenk@redhat.com>
-References: <20180212141518.3354-1-dvlasenk@redhat.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
+        Mon, 19 Feb 2018 18:14:33 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 7/8] brcmfmac: change log level for some low-level sdio functions
+Date: Tue, 20 Feb 2018 00:14:24 +0100
+Message-Id: <1519082065-10128-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180220_001451_005772_63C47B01)
+In-Reply-To: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogRGVueXMgVmxhc2Vua28gPGR2bGFzZW5rQHJlZGhhdC5jb20+DQpEYXRlOiBNb24sIDEy
-IEZlYiAyMDE4IDE1OjE1OjE4ICswMTAwDQoNCj4gQmVmb3JlOg0KPiBBbGwgdGhlc2UgZnVuY3Rp
-b25zIGVpdGhlciByZXR1cm4gYSBuZWdhdGl2ZSBlcnJvciBpbmRpY2F0b3IsDQo+IG9yIHN0b3Jl
-IGxlbmd0aCBvZiBzb2NrYWRkciBpbnRvICJpbnQgKnNvY2tsZW4iIHBhcmFtZXRlcg0KPiBhbmQg
-cmV0dXJuIHplcm8gb24gc3VjY2Vzcy4NCj4gDQo+ICJpbnQgKnNvY2tsZW4iIHBhcmFtZXRlciBp
-cyBhd2t3YXJkLiBGb3IgZXhhbXBsZSwgaWYgY2FsbGVyIGRvZXMgbm90DQo+IGNhcmUsIGl0IHN0
-aWxsIG5lZWRzIHRvIHByb3ZpZGUgb24tc3RhY2sgc3RvcmFnZSBmb3IgdGhlIHZhbHVlDQo+IGl0
-IGRvZXMgbm90IG5lZWQuDQo+IA0KPiBOb25lIG9mIHRoZSBtYW55IEZPT19nZXRuYW1lKCkgZnVu
-Y3Rpb25zIG9mIHZhcmlvdXMgcHJvdG9jb2xzDQo+IGV2ZXIgdXNlZCBvbGQgdmFsdWUgb2YgKnNv
-Y2tsZW4uIFRoZXkgYWx3YXlzIGp1c3Qgb3ZlcndyaXRlIGl0Lg0KPiANCj4gVGhpcyBjaGFuZ2Ug
-ZHJvcHMgdGhpcyBwYXJhbWV0ZXIsIGFuZCBtYWtlcyBhbGwgdGhlc2UgZnVuY3Rpb25zLCBvbiBz
-dWNjZXNzLA0KPiByZXR1cm4gbGVuZ3RoIG9mIHNvY2thZGRyLiBJdCdzIGFsd2F5cyA+PSAwIGFu
-ZCBjYW4gYmUgZGlmZmVyZW50aWF0ZWQNCj4gZnJvbSBhbiBlcnJvci4NCj4gDQo+IFRlc3RzIGlu
-IGNhbGxlcnMgYXJlIGNoYW5nZWQgZnJvbSAiaWYgKGVycikiIHRvICJpZiAoZXJyIDwgMCkiLCB3
-aGVyZSBuZWVkZWQuDQo+IA0KPiBycGNfc29ja25hbWUoKSBsb3N0ICJpbnQgYnVmbGVuIiBwYXJh
-bWV0ZXIsIHNpbmNlIGl0cyBvbmx5IHVzZSB3YXMNCj4gdG8gYmUgcGFzc2VkIHRvIGtlcm5lbF9n
-ZXRzb2NrbmFtZSgpIGFzICZidWZsZW4gYW5kIHN1YnNlcXVlbnRseQ0KPiBub3QgdXNlZCBpbiBh
-bnkgd2F5Lg0KPiANCj4gVXNlcnNwYWNlIEFQSSBpcyBub3QgY2hhbmdlZC4NCj4gDQo+ICAgICB0
-ZXh0ICAgIGRhdGEgICAgIGJzcyAgICAgIGRlYyAgICAgaGV4IGZpbGVuYW1lDQo+IDMwMTA4NDMw
-IDI2MzM2MjQgIDg3MzY3MiAzMzYxNTcyNiAyMDBlZjZlIHZtbGludXguYmVmb3JlLm8NCj4gMzAx
-MDgxMDkgMjYzMzYxMiAgODczNjcyIDMzNjE1MzkzIDIwMGVlMjEgdm1saW51eC5vDQo+IA0KPiBT
-aWduZWQtb2ZmLWJ5OiBEZW55cyBWbGFzZW5rbyA8ZHZsYXNlbmtAcmVkaGF0LmNvbT4NCg0KUGxl
-YXNlIGRvIGFuIGFsbG1vZGNvbmZpZyBidWlsZCwgdGhlcmUgYXJlIHN0aWxsIHNvbWUgY29udmVy
-c2lvbnMgeW91DQptaXNzZWQ6DQoNCnNlY3VyaXR5L3RvbW95by9uZXR3b3JrLmM6IEluIGZ1bmN0
-aW9uIKF0b21veW9fc29ja2V0X2xpc3Rlbl9wZXJtaXNzaW9uojoNCnNlY3VyaXR5L3RvbW95by9u
-ZXR3b3JrLmM6NjU4OjE5OiB3YXJuaW5nOiBwYXNzaW5nIGFyZ3VtZW50IDMgb2YgoXNvY2stPm9w
-cy0+Z2V0bmFtZaIgbWFrZXMgaW50ZWdlciBmcm9tIHBvaW50ZXIgd2l0aG91dCBhIGNhc3QgWy1X
-aW50LWNvbnZlcnNpb25dDQogICAgICAgICAgICAmYWRkciwgJmFkZHJfbGVuLCAwKTsNCiAgICAg
-ICAgICAgICAgICAgICBeDQpzZWN1cml0eS90b21veW8vbmV0d29yay5jOjY1ODoxOTogbm90ZTog
-ZXhwZWN0ZWQgoWludKIgYnV0IGFyZ3VtZW50IGlzIG9mIHR5cGUgoWludCAqog0Kc2VjdXJpdHkv
-dG9tb3lvL25ldHdvcmsuYzo2NTc6MjE6IGVycm9yOiB0b28gbWFueSBhcmd1bWVudHMgdG8gZnVu
-Y3Rpb24goXNvY2stPm9wcy0+Z2V0bmFtZaINCiAgIGNvbnN0IGludCBlcnJvciA9IHNvY2stPm9w
-cy0+Z2V0bmFtZShzb2NrLCAoc3RydWN0IHNvY2thZGRyICopDQogICAgICAgICAgICAgICAgICAg
-ICBefn5+DQpmcy9kbG0vbG93Y29tbXMuYzogSW4gZnVuY3Rpb24goWxvd2NvbW1zX2Vycm9yX3Jl
-cG9ydKI6DQpmcy9kbG0vbG93Y29tbXMuYzo0OTU6NjogZXJyb3I6IHRvbyBtYW55IGFyZ3VtZW50
-cyB0byBmdW5jdGlvbiCha2VybmVsX2dldHBlZXJuYW1log0KICAgICAga2VybmVsX2dldHBlZXJu
-YW1lKGNvbi0+c29jaywgKHN0cnVjdCBzb2NrYWRkciAqKSZzYWRkciwgJmJ1ZmxlbikpIHsNCiAg
-ICAgIF5+fn5+fn5+fn5+fn5+fn5+fg0KZnMvZGxtL2xvd2NvbW1zLmM6IEluIGZ1bmN0aW9uIKF0
-Y3BfYWNjZXB0X2Zyb21fc29ja6I6DQpmcy9kbG0vbG93Y29tbXMuYzo3NjE6Nzogd2FybmluZzog
-cGFzc2luZyBhcmd1bWVudCAzIG9mIKFuZXdzb2NrLT5vcHMtPmdldG5hbWWiIG1ha2VzIGludGVn
-ZXIgZnJvbSBwb2ludGVyIHdpdGhvdXQgYSBjYXN0IFstV2ludC1jb252ZXJzaW9uXQ0KICAgICAg
-ICZsZW4sIDIpKSB7DQogICAgICAgXg0KZnMvZGxtL2xvd2NvbW1zLmM6NzYxOjc6IG5vdGU6IGV4
-cGVjdGVkIKFpbnSiIGJ1dCBhcmd1bWVudCBpcyBvZiB0eXBlIKFpbnQgKqINCmZzL2RsbS9sb3dj
-b21tcy5jOjc2MDo2OiBlcnJvcjogdG9vIG1hbnkgYXJndW1lbnRzIHRvIGZ1bmN0aW9uIKFuZXdz
-b2NrLT5vcHMtPmdldG5hbWWiDQogIGlmIChuZXdzb2NrLT5vcHMtPmdldG5hbWUobmV3c29jaywg
-KHN0cnVjdCBzb2NrYWRkciAqKSZwZWVyYWRkciwNCiAgICAgIF5+fn5+fn4NCg==
+Reducing the number of trace level messages in sdio code giving
+them sdio log level instead.
+
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index aa82336..b94ef3c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -1706,7 +1706,7 @@ static int brcmf_sdio_dcmd_resp_wake(struct brcmf_sdio *bus)
+ 	u8 *buf = NULL, *rbuf;
+ 	int sdret;
+ 
+-	brcmf_dbg(TRACE, "Enter\n");
++	brcmf_dbg(SDIO, "Enter\n");
+ 	if (bus->rxblen)
+ 		buf = vzalloc(bus->rxblen);
+ 	if (!buf)
+@@ -1809,7 +1809,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 	struct brcmf_sdio_hdrinfo *rd = &bus->cur_read, rd_new;
+ 	u8 head_read = 0;
+ 
+-	brcmf_dbg(TRACE, "Enter\n");
++	brcmf_dbg(SDIO, "Enter\n");
+ 
+ 	/* Not finished unless we encounter no more frames indication */
+ 	bus->rxpending = true;
+@@ -2344,7 +2344,7 @@ static int brcmf_sdio_tx_ctrlframe(struct brcmf_sdio *bus, u8 *frame, u16 len)
+ 	struct brcmf_sdio_hdrinfo hd_info = {0};
+ 	int ret;
+ 
+-	brcmf_dbg(TRACE, "Enter\n");
++	brcmf_dbg(SDIO, "Enter\n");
+ 
+ 	/* Back the pointer to make room for bus header */
+ 	frame -= bus->tx_hdrlen;
+@@ -2520,7 +2520,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 	uint framecnt;			/* Temporary counter of tx/rx frames */
+ 	int err = 0;
+ 
+-	brcmf_dbg(TRACE, "Enter\n");
++	brcmf_dbg(SDIO, "Enter\n");
+ 
+ 	sdio_claim_host(bus->sdiodev->func1);
+ 
+@@ -2605,7 +2605,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 
+ 	/* Would be active due to wake-wlan in gSPI */
+ 	if (intstatus & I_CHIPACTIVE) {
+-		brcmf_dbg(INFO, "Dongle reports CHIPACTIVE\n");
++		brcmf_dbg(SDIO, "Dongle reports CHIPACTIVE\n");
+ 		intstatus &= ~I_CHIPACTIVE;
+ 	}
+ 
+-- 
+1.9.1
