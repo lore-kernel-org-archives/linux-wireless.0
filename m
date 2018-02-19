@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:38662 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751276AbeBWNtR (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:36651 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753217AbeBSRr7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 08:49:17 -0500
-Received: by mail-wr0-f180.google.com with SMTP id n7so14187081wrn.5
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Feb 2018 05:49:17 -0800 (PST)
+        Mon, 19 Feb 2018 12:47:59 -0500
+Received: by mail-wm0-f47.google.com with SMTP id f3so16616802wmc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Feb 2018 09:47:58 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <5A8FE4D9.80608@broadcom.com>
-References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
- <5A8D36B7.1010201@broadcom.com> <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
- <CAD8Lp44Y-sNqm8_5=1pvBy-3zvVVQSCQ+Qye-2xP8vGmkvrjng@mail.gmail.com> <5A8FE4D9.80608@broadcom.com>
-From: Daniel Drake <drake@endlessm.com>
-Date: Fri, 23 Feb 2018 16:49:15 +0300
-Message-ID: <CAD8Lp44Q0=jS0gqnt1mMfjRe6sTx3Z7n9=iGvk3VFGK2549V7g@mail.gmail.com> (sfid-20180223_144921_770431_4F1A383B)
-Subject: Re: brcmfmac signal/interference issues
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Linux Upstreaming Team <linux@endlessm.com>
+In-Reply-To: <CAPWex-AFApTucOo4DGk2n30X7Y0N2NrNv2u+8ubqTL4SkhxgwA@mail.gmail.com>
+References: <CAPWex-AFApTucOo4DGk2n30X7Y0N2NrNv2u+8ubqTL4SkhxgwA@mail.gmail.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Mon, 19 Feb 2018 09:47:57 -0800
+Message-ID: <CALLGbR+taP7GU4ftX5wFPvxD0BUsCiBDxjGXWeOJi9_nYLhEww@mail.gmail.com> (sfid-20180219_184803_193361_88272DAB)
+Subject: Re: testing tool for packet delay
+To: sdnlabs Janakaraj <wsuprabhu@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 23, 2018 at 12:54 PM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> Yup. Windows firmware talks NDIS. If you run 'strings 4345r6rtecdc.bin |
-> tail -1' you can see the firmware build target and it likely has 'ndis' in
-> it.
+On Mon, Feb 19, 2018 at 9:19 AM, sdnlabs Janakaraj <wsuprabhu@gmail.com> wrote:
+>
+> Hello All,
+>
+> I am working on delay analysis of packets in wireless stacks. I am
+> able to see lots of papers talk about therotical analysis. But I am
+> more interested in practical evaluation.
+>
+> I am reaching out to developers community to learn how they actually
+> evaluate the performance of the stack. In particular, I am looking for
+> ideas to evaluate the delay experienced by packets within the
+> mac802.11 stack.
+>
 
-43455c0-roml/sdio-ag-ndis-vista-pktfilter-d0c-pno-aoe-p2p-dhdoid-ndoe-gtkoe-mfp-proptxstatus-dmatxrc-keepalive-ap-ampduretry-pclose-txbf
+Hi Prabhu,
 
-Yes, ndis. So no easy way to run the same firmware on the 2 OSes.
+Sounds like an interesting project. More often my instrumentation
+focuses on aggregate performance and iperf throughput numbers suffices
+for most of that. Occasionally I utilize internal performance measures
+and/or data provided me by ftrace and related tools.
 
-> Now are you using BT as well on this device? Another suggestion I got is to
-> disable transmit beamforming which brcmfmac enables by default. Not sure if
-> this device supports it, but could you try the patch below.
+If you're unfamiliar with it, I suggest you look at the Bufferbloat
+and Make-wifi-fast projects. I suspect that their data and techniques
+and tools might be of interest to you:
 
-Thanks for the ideas. I had already tried with the bluetooth disabled
-- no change there.
-Also reproduced the problem after applying your patch.
+https://www.bufferbloat.net/projects/make-wifi-fast/
 
-Daniel
+Also (shameless plug), I'll be discussing WiFi integration debugging
+techniques and tools at the ELC-NA conference in March. Some of it
+might be relevant. If you're going, please stop by and say hi.
+
+http://sched.co/DXn3
+
+I hope that helps.
+
+- Steve
+
+--
+Steve deRosier
+Cal-Sierra Consulting LLC
+https://www.cal-sierra.com/
