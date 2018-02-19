@@ -1,57 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50054 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751089AbeBWMyw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 07:54:52 -0500
-Subject: Re: [PATCH 4/4] mac80211: support station 4-addr mode fast-rx
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20180223090606.55726-1-nbd@nbd.name>
- <20180223090606.55726-4-nbd@nbd.name>
- <1519385092.2231.6.camel@sipsolutions.net>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <17978383-8eec-e407-c0b8-168f8181b524@nbd.name> (sfid-20180223_135456_928059_3CFDEFD7)
-Date: Fri, 23 Feb 2018 13:54:50 +0100
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753114AbeBSPaV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Feb 2018 10:30:21 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 04/14] staging: wilc1000: rename pstrHostIfRemainOnChan to avoid camelCase
+Date: Mon, 19 Feb 2018 20:59:34 +0530
+Message-ID: <1519054184-14301-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163028_775906_D832A0FB)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <1519385092.2231.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-02-23 12:24, Johannes Berg wrote:
-> On Fri, 2018-02-23 at 10:06 +0100, Felix Fietkau wrote:
->> Signed-off-by: Felix Fietkau <nbd@nbd.name>
->> ---
->>  net/mac80211/cfg.c |  2 --
->>  net/mac80211/rx.c  | 11 +++++++----
->>  2 files changed, 7 insertions(+), 6 deletions(-)
->> 
->> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
->> index 6f9d5beec73e..72b5a2ec4e94 100644
->> --- a/net/mac80211/cfg.c
->> +++ b/net/mac80211/cfg.c
->> @@ -160,7 +160,6 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
->>  	if (type == NL80211_IFTYPE_AP_VLAN &&
->>  	    params && params->use_4addr == 0) {
->>  		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
->> -		ieee80211_check_fast_rx_iface(sdata);
->>  	} else if (type == NL80211_IFTYPE_STATION &&
->>  		   params && params->use_4addr >= 0) {
->>  		sdata->u.mgd.use_4addr = params->use_4addr;
->> @@ -1575,7 +1574,6 @@ static int ieee80211_change_station(struct wiphy *wiphy,
->>  			}
->>  
->>  			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
->> -			__ieee80211_check_fast_rx_iface(vlansdata);
->>  		}
->>  
->>  		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-> 
-> I'm not convinced this is right - don't you have to recheck to modify
-> the station data? Otherwise you'd just drop all the frames to the
-> slowpath again due to the first patch in the series, no?You're right and I forgot to take those out before sending. Will
-resubmit this one.
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-Thanks,
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-- Felix
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ec98ccd..11e4737 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2221,7 +2221,7 @@ static void Handle_EditStation(struct wilc_vif *vif,
+ }
+ 
+ static int Handle_RemainOnChan(struct wilc_vif *vif,
+-			       struct remain_ch *pstrHostIfRemainOnChan)
++			       struct remain_ch *hif_remain_ch)
+ {
+ 	s32 result = 0;
+ 	u8 u8remain_on_chan_flag;
+@@ -2229,13 +2229,13 @@ static int Handle_RemainOnChan(struct wilc_vif *vif,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv->remain_on_ch_pending) {
+-		hif_drv->remain_on_ch.arg = pstrHostIfRemainOnChan->arg;
+-		hif_drv->remain_on_ch.expired = pstrHostIfRemainOnChan->expired;
+-		hif_drv->remain_on_ch.ready = pstrHostIfRemainOnChan->ready;
+-		hif_drv->remain_on_ch.ch = pstrHostIfRemainOnChan->ch;
+-		hif_drv->remain_on_ch.id = pstrHostIfRemainOnChan->id;
++		hif_drv->remain_on_ch.arg = hif_remain_ch->arg;
++		hif_drv->remain_on_ch.expired = hif_remain_ch->expired;
++		hif_drv->remain_on_ch.ready = hif_remain_ch->ready;
++		hif_drv->remain_on_ch.ch = hif_remain_ch->ch;
++		hif_drv->remain_on_ch.id = hif_remain_ch->id;
+ 	} else {
+-		pstrHostIfRemainOnChan->ch = hif_drv->remain_on_ch.ch;
++		hif_remain_ch->ch = hif_drv->remain_on_ch.ch;
+ 	}
+ 
+ 	if (hif_drv->usr_scan_req.scan_result) {
+@@ -2264,7 +2264,7 @@ static int Handle_RemainOnChan(struct wilc_vif *vif,
+ 	}
+ 
+ 	wid.val[0] = u8remain_on_chan_flag;
+-	wid.val[1] = (s8)pstrHostIfRemainOnChan->ch;
++	wid.val[1] = (s8)hif_remain_ch->ch;
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+@@ -2277,7 +2277,7 @@ static int Handle_RemainOnChan(struct wilc_vif *vif,
+ 		hif_drv->remain_on_ch_timer_vif = vif;
+ 		mod_timer(&hif_drv->remain_on_ch_timer,
+ 			  jiffies +
+-			  msecs_to_jiffies(pstrHostIfRemainOnChan->duration));
++			  msecs_to_jiffies(hif_remain_ch->duration));
+ 
+ 		if (hif_drv->remain_on_ch.ready)
+ 			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.arg);
+@@ -2321,7 +2321,7 @@ static int Handle_RegisterFrame(struct wilc_vif *vif,
+ }
+ 
+ static u32 Handle_ListenStateExpired(struct wilc_vif *vif,
+-				     struct remain_ch *pstrHostIfRemainOnChan)
++				     struct remain_ch *hif_remain_ch)
+ {
+ 	u8 u8remain_on_chan_flag;
+ 	struct wid wid;
+@@ -2350,7 +2350,7 @@ static u32 Handle_ListenStateExpired(struct wilc_vif *vif,
+ 
+ 		if (hif_drv->remain_on_ch.expired) {
+ 			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
+-						      pstrHostIfRemainOnChan->id);
++						      hif_remain_ch->id);
+ 		}
+ 		P2P_LISTEN_STATE = 0;
+ 	} else {
+-- 
+2.7.4
