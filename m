@@ -1,257 +1,318 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f172.google.com ([209.85.216.172]:43308 "EHLO
-        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752777AbeBZLgY (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753167AbeBSPai (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 06:36:24 -0500
-Received: by mail-qt0-f172.google.com with SMTP id d26so18345298qtk.10
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2018 03:36:23 -0800 (PST)
-Subject: Re: [PATCH resend] brcmfmac: p2p and normal ap access are not always
- possible at the same time
-To: Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170526105747.16874-1-hdegoede@redhat.com>
- <20170526105747.16874-2-hdegoede@redhat.com>
- <8a61e3ad-3949-68dc-bed9-09f61ab6b647@redhat.com>
- <5A93DFF1.2030208@broadcom.com>
- <e204e0a3-4001-0d55-86ef-fb1afc1c6d4b@redhat.com>
- <5A93E8FC.10606@broadcom.com>
- <5ee4884b-5278-472b-8da1-6bef8b9c61a9@redhat.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A93F134.4000302@broadcom.com> (sfid-20180226_123726_008244_FD851A7D)
-Date: Mon, 26 Feb 2018 12:36:20 +0100
+        Mon, 19 Feb 2018 10:30:38 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 09/14] staging: wilc1000: rename functions starting with Handle_ to avoid camelCase
+Date: Mon, 19 Feb 2018 20:59:39 +0530
+Message-ID: <1519054184-14301-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163047_903035_FE058633)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <5ee4884b-5278-472b-8da1-6bef8b9c61a9@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/26/2018 12:22 PM, Hans de Goede wrote:
-> Hi,
->
-> On 26-02-18 12:01, Arend van Spriel wrote:
->> On 2/26/2018 11:29 AM, Hans de Goede wrote:
->>> Hi,
->>>
->>> On 26-02-18 11:22, Arend van Spriel wrote:
->>>> On 2/25/2018 3:52 PM, Hans de Goede wrote:
->>>>> Hi,
->>>>>
->>>>> On 26-05-17 12:57, Hans de Goede wrote:
->>>>>> The firmware responding with -EBUSY when trying to add an extra
->>>>>> virtual-if
->>>>>> is a normal thing, do not print an error for this.
->>>>>>
->>>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>>>>
->>>>> I'm now seeing this on another device too, but this time the error
->>>>> thrown is -EBADE, this seems to be new with recent kernels:
->>>>
->>>> Yup. Before we were passing firmware errors up to user-space, which
->>>> was confusing and potentially be misinterpreted. However, looking at
->>>> the output below it would have been good to log the firmware error as
->>>> well. And staring at it some more I suddenly realize I broke the
->>>> feature detection module with this change. Actually only the GSCAN
->>>> feature detection.
->>>>
->>>>> [root@localhost ~]# dmesg | grep brcmfmac
->>>>> [   34.265950] usbcore: registered new interface driver brcmfmac
->>>>> [   34.266059] brcmfmac 0000:01:00.0: enabling device (0000 -> 0002)
->>>>> [   34.376468] brcmfmac: brcmf_fw_map_chip_to_name: using
->>>>> brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
->>>>> [   34.855143] brcmfmac 0000:01:00.0: Direct firmware load for
->>>>> brcm/brcmfmac4356-pcie.clm_blob failed with error -2
->>>>> [   34.855147] brcmfmac: brcmf_c_process_clm_blob: no clm_blob
->>>>> available(err=-2), device may have limited channels available
->>>>> [   34.857029] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
->>>>> wl0:
->>>>> Jun  4 2017 16:50:07 version 7.35.101.6 (r702795) FWID 01-5e8eb735
->>>>> [   34.938854] brcmfmac 0000:01:00.0 wlp1s0: renamed from wlan0
->>>>> [   37.086420] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
->>>>> [   37.086431] brcmfmac: brcmf_cfg80211_add_iface: add iface
->>>>> p2p-dev-wlp1s0 type 10 failed: err=-52
->>>>>
->>>>> [root@localhost ~]# strings /lib/firmware/brcm/brcmfmac4356-pcie.bin |
->>>>> tail -n 1
->>>>> 4356a2-roml/pcie-ag-msgbuf-splitrx-p2p-pno-aoe-pktfilter-keepalive-sr-mchan-pktctx-proptxstatus-ampduhostreorder-lpc-pwropt-txbf-wl11u-mfp-tdls-amsdutx-sarctrl-proxd-hs20sta-rcc-wepso-ndoe-linkstat-gscan-hchk-logtrace-roamexp-rmon
->>>>>
->>>>>
->>>>> Version: 7.35.101.6 (r702795) CRC: 4f3f65c5 Date: Sun 2017-06-04
->>>>> 16:51:38 PDT Ucode Ver: 963.316 FWID: 01-5e8eb735
->>>>>
->>>>> It would be good if we can silence these errors, or maybe at a
->>>>> minimum lower their log-level from error to warning?
->>>>
->>>> I had a look at it and it seems to be a difference in firmware api
->>>> that we need to support in the driver. Need to do a bit more digging,
->>>> but it seems an actual issue. You could silence it for now, but I
->>>> prefer to wait for the fix.
->>>
->>> Ok, what is the ETA of a fix for this?
->>
->> Actually went back to an old log you sent and noticed:
->>
->> [   15.714569] brcmfmac: brcmf_attach Enter
->> [   15.714756] brcmfmac: brcmf_fweh_register event handler registered
->> for PSM_WATCHDOG
->> [   15.714757] brcmfmac: brcmf_proto_attach Enter
->> [   15.716598] brcmfmac: brcmf_bus_started
->> [   15.716603] brcmfmac: brcmf_add_if Enter, bsscfgidx=0, ifidx=0
->> [   15.716604] brcmfmac: brcmf_add_if allocate netdev interface
->> [   15.716622] brcmfmac: brcmf_add_if  ==== pid:2a, if:wlan%d
->> (00:00:00:00:00:00) created ===
->> [   15.716624] brcmfmac: brcmf_bus_change_state 0 -> 1
->> [   15.717841] brcmfmac: brcmf_fil_iovar_data_get ifidx=0,
->> name=cur_etheraddr, len=6
->> [   15.717843] brcmutil: data
->> [   15.717847] 00000000: 44 2c 05 9e c9 02   D,....
->>
->> So mac address of the device is 44:2c:05:9e:c9. However, further down
->> I see:
->>
->> [   17.819113] brcmfmac: brcmf_netdev_set_mac_address Enter, bsscfgidx=0
->> [   17.819122] brcmfmac: brcmf_fil_iovar_data_set ifidx=0,
->> name=cur_etheraddr, len=6
->> [   17.819127] brcmutil: data
->> [   17.819135] 00000000: aa 3e 81 77 bc 40   .>.w.@
->> [   17.819864] brcmfmac: brcmf_netdev_set_mac_address updated to
->> aa:3e:81:77:bc:40
->>
->> So the mac address in a local admin variant.
->
-> Right, this is likely NetworkManager randomizing the mac for privacy
-> reasons.
->
->> Now our firmware has a requirement for the p2p-dev interface that it
->> should be different from the mac address of the primary interface, ie.
->> wlp1s0 in this log. In brcmfmac we try to do that by setting the local
->> admin bit, but... as it is already set we end up using the same mac
->> address hence the -EBUSY.
->
-> Ah, that is good to know, so how can we fix this? Can userspace specify a
-> different mac-address when it asks for the p2p-dev intf to be created? Or
-> should we do something about this in the kernel?
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-The nl80211 api allows user-space to provide a mac address for the newly 
-created interface since kernel 3.something. So for legacy user-space we 
-use the behavior above as fallback. I am testing a patch right now.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 98 +++++++++++++++----------------
+ 1 file changed, 49 insertions(+), 49 deletions(-)
 
-Regards,
-Arend
-
-> Regards,
->
-> Hans
->
->
->> [   17.947704] brcmfmac: brcmf_cfg80211_add_iface enter:
->> p2p-dev-wlp1s0 type 10
->> [   17.947714] brcmfmac: brcmf_p2p_add_vif adding vif "p2p-dev-wlp1s0"
->> (type=10, addr=00:00:00:00:00:00)
->> [   17.947716] brcmfmac: brcmf_alloc_vif allocating virtual interface
->> (size=3920)
->> [   17.947720] brcmfmac: brcmf_fil_cmd_int_set ifidx=0, cmd=3, value=1
->> [   17.948749] brcmfmac: brcmf_fil_iovar_data_set ifidx=0, name=apsta,
->> len=4
->> [   17.948752] brcmutil: data
->> [   17.948756] 00000000: 01 00 00 00   ....
->> [   17.949620] brcmfmac: brcmf_fil_cmd_int_set ifidx=0, cmd=2, value=1
->> [   17.984420] brcmfmac: brcmf_fweh_event_worker event IF (54) ifidx 0
->> bsscfg 0 addr aa:3e:81:77:bc:40
->> [   17.984424] brcmfmac: brcmf_fweh_event_worker   version 2 flags 0
->> status 0 reason 0
->> [   17.984427] brcmutil: event payload, len=5
->> [   17.984430] 00000000: 00 01 00 00 00   .....
->> [   17.984433] brcmfmac: brcmf_fweh_handle_if_event action: 1 ifidx: 0
->> bsscfgidx: 0 flags: 0 role: 0
->> [   17.984435] brcmfmac: brcmf_fweh_handle_if_event adding wl0
->> (aa:3e:81:77:bc:40)
->> [   17.984437] brcmfmac: brcmf_add_if Enter, bsscfgidx=0, ifidx=0
->> [   17.984439] brcmfmac: brcmf_add_if netdev:wlp1s0 ignore IF event
->> [   17.984646] brcmfmac: brcmf_fil_iovar_data_set ifidx=0,
->> name=p2p_disc, len=4
->> [   17.984657] brcmutil: data
->> [   17.984669] 00000000: 00 00 00 00   ....
->> [   17.985123] brcmfmac: brcmf_fil_iovar_data_set ifidx=0,
->> name=p2p_da_override, len=6
->> [   17.985131] brcmutil: data
->> [   17.985140] 00000000: aa 3e 81 77 bc 40   .>.w.@
->> [   17.985580] brcmfmac: brcmf_fil_iovar_data_set ifidx=0,
->> name=p2p_disc, len=4
->> [   17.985588] brcmutil: data
->> [   17.985598] 00000000: 01 00 00 00   ....
->> [   17.985975] brcmfmac: brcmf_fil_cmd_data Failed: BCME_BUSY (-16)
->> [   17.985985] brcmfmac: brcmf_p2p_create_p2pdev set p2p_disc error
->> [   17.985999] brcmfmac: brcmf_cfg80211_add_iface add iface
->> p2p-dev-wlp1s0 type 10 failed: err=-16
->>
->> Sorry that I missed that earlier :-(
->>
->> Regards,
->> Arend
->>
->>> Regards,
->>>
->>> Hans
->>>
->>>
->>>
->>>
->>>>>> ---
->>>>>>   .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14
->>>>>> ++++++++++----
->>>>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     |  5
->>>>>> ++++-
->>>>>>   2 files changed, 14 insertions(+), 5 deletions(-)
->>>>>>
->>>>>> diff --git
->>>>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>>>>> index cd1d6730eab7..dae88f3d041d 100644
->>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>>>>> @@ -684,11 +684,17 @@ static struct wireless_dev
->>>>>> *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
->>>>>>           return ERR_PTR(-EINVAL);
->>>>>>       }
->>>>>> -    if (IS_ERR(wdev))
->>>>>> -        brcmf_err("add iface %s type %d failed: err=%d\n",
->>>>>> -              name, type, (int)PTR_ERR(wdev));
->>>>>> -    else
->>>>>> +    if (IS_ERR(wdev)) {
->>>>>> +        err = PTR_ERR(wdev);
->>>>>> +        if (err != -EBUSY)
->>>>>> +            brcmf_err("add iface %s type %d failed: err=%d\n",
->>>>>> +                  name, type, err);
->>>>>> +        else
->>>>>> +            brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
->>>>>> +                  name, type, err);
->>>>>> +    } else {
->>>>>>           brcmf_cfg80211_update_proto_addr_mode(wdev);
->>>>>> +    }
->>>>>>       return wdev;
->>>>>>   }
->>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>>>> index aa299c47bfa2..1bb296ffb46f 100644
->>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>>>>> @@ -2090,7 +2090,10 @@ static struct wireless_dev
->>>>>> *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
->>>>>>       /* Initialize P2P Discovery in the firmware */
->>>>>>       err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
->>>>>>       if (err < 0) {
->>>>>> -        brcmf_err("set p2p_disc error\n");
->>>>>> +        if (err != -EBUSY)
->>>>>> +            brcmf_err("set p2p_disc error\n");
->>>>>> +        else
->>>>>> +            brcmf_dbg(INFO, "set p2p_disc error\n");
->>>>>>           brcmf_fweh_p2pdev_setup(pri_ifp, false);
->>>>>>           brcmf_cfg80211_arm_vif_event(p2p->cfg, NULL);
->>>>>>           goto fail;
->>>>>>
->>>>
->>
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 24c9a36..b861c95 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -902,7 +902,7 @@ static s32 handle_scan_done(struct wilc_vif *vif,
+ }
+ 
+ u8 wilc_connected_ssid[6] = {0};
+-static s32 Handle_Connect(struct wilc_vif *vif,
++static s32 handle_connect(struct wilc_vif *vif,
+ 			  struct connect_attr *pstrHostIFconnectAttr)
+ {
+ 	s32 result = 0;
+@@ -1244,8 +1244,8 @@ static s32 handle_connect_timeout(struct wilc_vif *vif)
+ 	return result;
+ }
+ 
+-static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
+-				struct rcvd_net_info *rcvd_info)
++static s32 handle_rcvd_ntwrk_info(struct wilc_vif *vif,
++				  struct rcvd_net_info *rcvd_info)
+ {
+ 	u32 i;
+ 	bool bNewNtwrkFound;
+@@ -1318,8 +1318,8 @@ static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
+ 				       u32 max_assoc_resp_info_len,
+ 				       u32 *rcvd_assoc_resp_info_len);
+ 
+-static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+-				    struct rcvd_async_info *rcvd_info)
++static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
++				       struct rcvd_async_info *rcvd_info)
+ {
+ 	s32 result = 0;
+ 	u8 u8MsgType = 0;
+@@ -1777,7 +1777,7 @@ static int handle_key(struct wilc_vif *vif,
+ 	return result;
+ }
+ 
+-static void Handle_Disconnect(struct wilc_vif *vif)
++static void handle_disconnect(struct wilc_vif *vif)
+ {
+ 	struct wid wid;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+@@ -1869,7 +1869,7 @@ void wilc_resolve_disconnect_aberration(struct wilc_vif *vif)
+ 		wilc_disconnect(vif, 1);
+ }
+ 
+-static void Handle_GetRssi(struct wilc_vif *vif)
++static void handle_get_rssi(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -1889,8 +1889,8 @@ static void Handle_GetRssi(struct wilc_vif *vif)
+ 	complete(&vif->hif_drv->comp_get_rssi);
+ }
+ 
+-static s32 Handle_GetStatistics(struct wilc_vif *vif,
+-				struct rf_info *pstrStatistics)
++static s32 handle_get_statistics(struct wilc_vif *vif,
++				 struct rf_info *pstrStatistics)
+ {
+ 	struct wid wid_list[5];
+ 	u32 wid_cnt = 0, result = 0;
+@@ -1943,8 +1943,8 @@ static s32 Handle_GetStatistics(struct wilc_vif *vif,
+ 	return 0;
+ }
+ 
+-static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+-				   struct sta_inactive_t *hif_sta_inactive)
++static s32 handle_get_inactive_time(struct wilc_vif *vif,
++				    struct sta_inactive_t *hif_sta_inactive)
+ {
+ 	s32 result = 0;
+ 	u8 *stamac;
+@@ -1987,8 +1987,8 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 	return result;
+ }
+ 
+-static void Handle_AddBeacon(struct wilc_vif *vif,
+-			     struct beacon_attr *pstrSetBeaconParam)
++static void handle_add_beacon(struct wilc_vif *vif,
++			      struct beacon_attr *pstrSetBeaconParam)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2040,7 +2040,7 @@ static void Handle_AddBeacon(struct wilc_vif *vif,
+ 	kfree(pstrSetBeaconParam->tail);
+ }
+ 
+-static void Handle_DelBeacon(struct wilc_vif *vif)
++static void handle_del_beacon(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2095,8 +2095,8 @@ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+ 	return cur_byte - pu8Buffer;
+ }
+ 
+-static void Handle_AddStation(struct wilc_vif *vif,
+-			      struct add_sta_param *pstrStationParam)
++static void handle_add_station(struct wilc_vif *vif,
++			       struct add_sta_param *pstrStationParam)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2164,8 +2164,8 @@ static void handle_del_all_sta(struct wilc_vif *vif,
+ 	complete(&hif_wait_response);
+ }
+ 
+-static void Handle_DelStation(struct wilc_vif *vif,
+-			      struct del_sta *pstrDelStaParam)
++static void handle_del_station(struct wilc_vif *vif,
++			       struct del_sta *pstrDelStaParam)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2192,8 +2192,8 @@ static void Handle_DelStation(struct wilc_vif *vif,
+ 	kfree(wid.val);
+ }
+ 
+-static void Handle_EditStation(struct wilc_vif *vif,
+-			       struct add_sta_param *pstrStationParam)
++static void handle_edit_station(struct wilc_vif *vif,
++				struct add_sta_param *pstrStationParam)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2220,8 +2220,8 @@ static void Handle_EditStation(struct wilc_vif *vif,
+ 	kfree(wid.val);
+ }
+ 
+-static int Handle_RemainOnChan(struct wilc_vif *vif,
+-			       struct remain_ch *hif_remain_ch)
++static int handle_remain_on_chan(struct wilc_vif *vif,
++				 struct remain_ch *hif_remain_ch)
+ {
+ 	s32 result = 0;
+ 	u8 u8remain_on_chan_flag;
+@@ -2289,8 +2289,8 @@ static int Handle_RemainOnChan(struct wilc_vif *vif,
+ 	return result;
+ }
+ 
+-static int Handle_RegisterFrame(struct wilc_vif *vif,
+-				struct reg_frame *hif_reg_frame)
++static int handle_register_frame(struct wilc_vif *vif,
++				 struct reg_frame *hif_reg_frame)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2320,8 +2320,8 @@ static int Handle_RegisterFrame(struct wilc_vif *vif,
+ 	return result;
+ }
+ 
+-static u32 Handle_ListenStateExpired(struct wilc_vif *vif,
+-				     struct remain_ch *hif_remain_ch)
++static u32 handle_listen_state_expired(struct wilc_vif *vif,
++				       struct remain_ch *hif_remain_ch)
+ {
+ 	u8 u8remain_on_chan_flag;
+ 	struct wid wid;
+@@ -2382,8 +2382,8 @@ static void ListenTimerCB(struct timer_list *t)
+ 		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ }
+ 
+-static void Handle_PowerManagement(struct wilc_vif *vif,
+-				   struct power_mgmt_param *pm_param)
++static void handle_power_management(struct wilc_vif *vif,
++				    struct power_mgmt_param *pm_param)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2498,16 +2498,16 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_CONNECT:
+-		Handle_Connect(msg->vif, &msg->body.con_info);
++		handle_connect(msg->vif, &msg->body.con_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_RCVD_NTWRK_INFO:
+-		Handle_RcvdNtwrkInfo(msg->vif, &msg->body.net_info);
++		handle_rcvd_ntwrk_info(msg->vif, &msg->body.net_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO:
+-		Handle_RcvdGnrlAsyncInfo(msg->vif,
+-					 &msg->body.async_info);
++		handle_rcvd_gnrl_async_info(msg->vif,
++					    &msg->body.async_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_KEY:
+@@ -2523,7 +2523,7 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_DISCONNECT:
+-		Handle_Disconnect(msg->vif);
++		handle_disconnect(msg->vif);
+ 		break;
+ 
+ 	case HOST_IF_MSG_RCVD_SCAN_COMPLETE:
+@@ -2535,42 +2535,42 @@ static void host_if_work(struct work_struct *work)
+ 		handle_scan_done(msg->vif, SCAN_EVENT_DONE);
+ 
+ 		if (msg->vif->hif_drv->remain_on_ch_pending)
+-			Handle_RemainOnChan(msg->vif,
+-					    &msg->body.remain_on_ch);
++			handle_remain_on_chan(msg->vif,
++					      &msg->body.remain_on_ch);
+ 
+ 		break;
+ 
+ 	case HOST_IF_MSG_GET_RSSI:
+-		Handle_GetRssi(msg->vif);
++		handle_get_rssi(msg->vif);
+ 		break;
+ 
+ 	case HOST_IF_MSG_GET_STATISTICS:
+-		Handle_GetStatistics(msg->vif,
+-				     (struct rf_info *)msg->body.data);
++		handle_get_statistics(msg->vif,
++				      (struct rf_info *)msg->body.data);
+ 		break;
+ 
+ 	case HOST_IF_MSG_ADD_BEACON:
+-		Handle_AddBeacon(msg->vif, &msg->body.beacon_info);
++		handle_add_beacon(msg->vif, &msg->body.beacon_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_DEL_BEACON:
+-		Handle_DelBeacon(msg->vif);
++		handle_del_beacon(msg->vif);
+ 		break;
+ 
+ 	case HOST_IF_MSG_ADD_STATION:
+-		Handle_AddStation(msg->vif, &msg->body.add_sta_info);
++		handle_add_station(msg->vif, &msg->body.add_sta_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_DEL_STATION:
+-		Handle_DelStation(msg->vif, &msg->body.del_sta_info);
++		handle_del_station(msg->vif, &msg->body.del_sta_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_EDIT_STATION:
+-		Handle_EditStation(msg->vif, &msg->body.edit_sta_info);
++		handle_edit_station(msg->vif, &msg->body.edit_sta_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_GET_INACTIVETIME:
+-		Handle_Get_InActiveTime(msg->vif, &msg->body.mac_info);
++		handle_get_inactive_time(msg->vif, &msg->body.mac_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_SCAN_TIMER_FIRED:
+@@ -2582,8 +2582,8 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_POWER_MGMT:
+-		Handle_PowerManagement(msg->vif,
+-				       &msg->body.pwr_mgmt_info);
++		handle_power_management(msg->vif,
++					&msg->body.pwr_mgmt_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_SET_WFIDRV_HANDLER:
+@@ -2610,15 +2610,15 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_REMAIN_ON_CHAN:
+-		Handle_RemainOnChan(msg->vif, &msg->body.remain_on_ch);
++		handle_remain_on_chan(msg->vif, &msg->body.remain_on_ch);
+ 		break;
+ 
+ 	case HOST_IF_MSG_REGISTER_FRAME:
+-		Handle_RegisterFrame(msg->vif, &msg->body.reg_frame);
++		handle_register_frame(msg->vif, &msg->body.reg_frame);
+ 		break;
+ 
+ 	case HOST_IF_MSG_LISTEN_TIMER_FIRED:
+-		Handle_ListenStateExpired(msg->vif, &msg->body.remain_on_ch);
++		handle_listen_state_expired(msg->vif, &msg->body.remain_on_ch);
+ 		break;
+ 
+ 	case HOST_IF_MSG_SET_MULTICAST_FILTER:
+-- 
+2.7.4
