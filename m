@@ -1,43 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36514 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754328AbeBGQVQ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59742 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752915AbeBSMtB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Feb 2018 11:21:16 -0500
-From: Srinivas Dasari <dasaris@codeaurora.org>
+        Mon, 19 Feb 2018 07:49:01 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, jouni@codeaurora.org,
-        Srinivas Dasari <dasaris@codeaurora.org>
-Subject: [PATCH v2] ieee80211: Increase the PMK maximum length to 64 bytes
-Date: Wed,  7 Feb 2018 21:50:51 +0530
-Message-Id: <1518020451-8743-1-git-send-email-dasaris@codeaurora.org> (sfid-20180207_172119_934276_7A14D3DE)
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Feb 2018 14:48:40 +0200
+Message-Id: <20180219124847.27169-7-luca@coelho.fi> (sfid-20180219_134904_987059_4D49918A)
+In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
+References: <20180219124847.27169-1-luca@coelho.fi>
+Subject: [PATCH v2 06/13] mac80211: add get TID helper
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed to cover the case of DPP with the NIST P-521 and
-brainpoolP512r1 curves which derive a PMK that is longer than the
-previously used limit.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Srinivas Dasari <dasaris@codeaurora.org>
+Extracting the TID from the QOS header is common enough
+to justify helper.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/linux/ieee80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-v2:
--Modified the commit text and resending it to right recipients
+ include/linux/ieee80211.h          | 12 ++++++++++++
+ net/mac80211/iface.c               |  3 +--
+ net/mac80211/michael.c             |  2 +-
+ net/mac80211/mlme.c                |  2 +-
+ net/mac80211/rc80211_minstrel_ht.c |  2 +-
+ net/mac80211/rx.c                  |  6 ++----
+ net/mac80211/tx.c                  |  9 ++-------
+ net/mac80211/wpa.c                 |  8 +++-----
+ 8 files changed, 23 insertions(+), 21 deletions(-)
 
 diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index ee6657a..e4cba33 100644
+index ee6657a0ed69..b35736c6e85c 100644
 --- a/include/linux/ieee80211.h
 +++ b/include/linux/ieee80211.h
-@@ -2111,7 +2111,7 @@ enum ieee80211_key_len {
- #define FILS_ERP_MAX_REALM_LEN		253
- #define FILS_ERP_MAX_RRK_LEN		64
+@@ -8,6 +8,7 @@
+  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
+  * Copyright (c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright (c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright (c) 2018        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -2501,6 +2502,17 @@ static inline u8 *ieee80211_get_qos_ctl(struct ieee80211_hdr *hdr)
+ 		return (u8 *)hdr + 24;
+ }
  
--#define PMK_MAX_LEN			48
-+#define PMK_MAX_LEN			64
++/**
++ * ieee80211_get_tid - get qos TID
++ * @hdr: the frame
++ */
++static inline u8 ieee80211_get_tid(struct ieee80211_hdr *hdr)
++{
++	u8 *qc = ieee80211_get_qos_ctl(hdr);
++
++	return qc[0] & IEEE80211_QOS_CTL_TID_MASK;
++}
++
+ /**
+  * ieee80211_get_SA - get pointer to SA
+  * @hdr: the frame
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 5fe01f82df12..d13ba064951f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1324,8 +1324,7 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 			mutex_lock(&local->sta_mtx);
+ 			sta = sta_info_get_bss(sdata, mgmt->sa);
+ 			if (sta) {
+-				u16 tid = *ieee80211_get_qos_ctl(hdr) &
+-						IEEE80211_QOS_CTL_TID_MASK;
++				u16 tid = ieee80211_get_tid(hdr);
  
- /* Public action codes (IEEE Std 802.11-2016, 9.6.8.1, Table 9-307) */
- enum ieee80211_pub_actioncode {
+ 				__ieee80211_stop_rx_ba_session(
+ 					sta, tid, WLAN_BACK_RECIPIENT,
+diff --git a/net/mac80211/michael.c b/net/mac80211/michael.c
+index 408649bd4702..37e172701a63 100644
+--- a/net/mac80211/michael.c
++++ b/net/mac80211/michael.c
+@@ -35,7 +35,7 @@ static void michael_mic_hdr(struct michael_mic_ctx *mctx, const u8 *key,
+ 	da = ieee80211_get_DA(hdr);
+ 	sa = ieee80211_get_SA(hdr);
+ 	if (ieee80211_is_data_qos(hdr->frame_control))
+-		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++		tid = ieee80211_get_tid(hdr);
+ 	else
+ 		tid = 0;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 39b660b9a908..010b127a3937 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2151,7 +2151,7 @@ static void ieee80211_sta_tx_wmm_ac_notify(struct ieee80211_sub_if_data *sdata,
+ 					   u16 tx_time)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	u16 tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++	u16 tid = ieee80211_get_tid(hdr);
+ 	int ac = ieee80211_ac_from_tid(tid);
+ 	struct ieee80211_sta_tx_tspec *tx_tspec = &ifmgd->tx_tspec[ac];
+ 	unsigned long now = jiffies;
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 4a5bdad9f303..fb586b6e5d49 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -669,7 +669,7 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
+ 	if (unlikely(skb->protocol == cpu_to_be16(ETH_P_PAE)))
+ 		return;
+ 
+-	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++	tid = ieee80211_get_tid(hdr);
+ 	if (likely(sta->ampdu_mlme.tid_tx[tid]))
+ 		return;
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 478a9c735edb..3dc162ddc3a6 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1189,7 +1189,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
+ 
+ 	ack_policy = *ieee80211_get_qos_ctl(hdr) &
+ 		     IEEE80211_QOS_CTL_ACK_POLICY_MASK;
+-	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++	tid = ieee80211_get_tid(hdr);
+ 
+ 	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
+ 	if (!tid_agg_rx) {
+@@ -1528,9 +1528,7 @@ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
+ 		   ieee80211_has_pm(hdr->frame_control) &&
+ 		   (ieee80211_is_data_qos(hdr->frame_control) ||
+ 		    ieee80211_is_qos_nullfunc(hdr->frame_control))) {
+-		u8 tid;
+-
+-		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++		u8 tid = ieee80211_get_tid(hdr);
+ 
+ 		ieee80211_sta_uapsd_trigger(&rx->sta->sta, tid);
+ 	}
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 25904af38839..c3c66c673428 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -797,7 +797,6 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+-	u8 *qc;
+ 	int tid;
+ 
+ 	/*
+@@ -844,9 +843,7 @@ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
+ 		return TX_CONTINUE;
+ 
+ 	/* include per-STA, per-TID sequence counter */
+-
+-	qc = ieee80211_get_qos_ctl(hdr);
+-	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
++	tid = ieee80211_get_tid(hdr);
+ 	tx->sta->tx_stats.msdu[tid]++;
+ 
+ 	hdr->seq_ctrl = ieee80211_tx_next_seq(tx->sta, tid);
+@@ -1158,7 +1155,6 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	int tid;
+-	u8 *qc;
+ 
+ 	memset(tx, 0, sizeof(*tx));
+ 	tx->skb = skb;
+@@ -1198,8 +1194,7 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	    !ieee80211_hw_check(&local->hw, TX_AMPDU_SETUP_IN_HW)) {
+ 		struct tid_ampdu_tx *tid_tx;
+ 
+-		qc = ieee80211_get_qos_ctl(hdr);
+-		tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
++		tid = ieee80211_get_tid(hdr);
+ 
+ 		tid_tx = rcu_dereference(tx->sta->ampdu_mlme.tid_tx[tid]);
+ 		if (tid_tx) {
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 785056cb76f6..58d0b258b684 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -340,7 +340,7 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad)
+ 	a4_included = ieee80211_has_a4(hdr->frame_control);
+ 
+ 	if (ieee80211_is_data_qos(hdr->frame_control))
+-		qos_tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++		qos_tid = ieee80211_get_tid(hdr);
+ 	else
+ 		qos_tid = 0;
+ 
+@@ -601,8 +601,7 @@ static void gcmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *j_0, u8 *aad)
+ 	aad[23] = 0;
+ 
+ 	if (ieee80211_is_data_qos(hdr->frame_control))
+-		qos_tid = *ieee80211_get_qos_ctl(hdr) &
+-			IEEE80211_QOS_CTL_TID_MASK;
++		qos_tid = ieee80211_get_tid(hdr);
+ 	else
+ 		qos_tid = 0;
+ 
+@@ -867,8 +866,7 @@ ieee80211_crypto_cs_decrypt(struct ieee80211_rx_data *rx)
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	if (ieee80211_is_data_qos(hdr->frame_control))
+-		qos_tid = *ieee80211_get_qos_ctl(hdr) &
+-				IEEE80211_QOS_CTL_TID_MASK;
++		qos_tid = ieee80211_get_tid(hdr);
+ 	else
+ 		qos_tid = 0;
+ 
 -- 
-1.9.1
+2.15.1
