@@ -1,162 +1,338 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:43837 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751332AbeBWDUF (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35426 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752737AbeBSNa7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 22:20:05 -0500
-Received: by mail-wr0-f194.google.com with SMTP id u49so12621830wrc.10
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Feb 2018 19:20:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <8e2dae09-e8fa-b995-bd62-0f2e1533894d@dd-wrt.com>
-References: <20180222111534.31047-1-s.gottschall@dd-wrt.com>
- <CALLGbRKimHh39DhnJP+mxB3=fkOzPDkXzbGrdJenLOgZUYCcCg@mail.gmail.com> <8e2dae09-e8fa-b995-bd62-0f2e1533894d@dd-wrt.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Thu, 22 Feb 2018 19:20:03 -0800
-Message-ID: <CALLGbRL2FRE6QYhKo=spoWM2SHDvwCgyGf=mZ=JHbt8an84Jaw@mail.gmail.com> (sfid-20180223_042036_355847_6EF63567)
-Subject: Re: [PATCH v9] ath10k: add LED and GPIO controlling support for
- various chipsets
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 19 Feb 2018 08:30:59 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [v7 1/8] rsi: add rx control block to handle rx packets in USB
+Date: Mon, 19 Feb 2018 18:49:32 +0530
+Message-Id: <1519046379-10068-2-git-send-email-amitkarwar@gmail.com> (sfid-20180219_143112_847596_A01522BF)
+In-Reply-To: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
+References: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sebastian,
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-On Thu, Feb 22, 2018 at 6:09 PM, Sebastian Gottschall
-<s.gottschall@dd-wrt.com> wrote:
-> Am 22.02.2018 um 23:17 schrieb Steve deRosier:
->>
->> On Thu, Feb 22, 2018 at 3:15 AM,  <s.gottschall@dd-wrt.com> wrote:
->>>
->>> From: Sebastian Gottschall <s.gottschall@newmedia-net.de>
->>>
->>> Adds LED and GPIO Control support for 988x, 9887, 9888, 99x0, 9984 based
->>> chipsets with on chipset connected led's
->>> using WMI Firmware API.
->>> The LED device will get available named as "ath10k-phyX" at sysfs and can
->>> be controlled with various triggers.
->>> adds also debugfs interface for gpio control.
->>>
->>> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->>>
->>> v2  add correct gpio count per chipset and remove IPQ4019 support since
->>> this chipset does not make use of specific gpios)
->>> v5  fix compiling without LED_CLASS and GPIOLIB support, fix also error
->>> by kbuild test robot which does not occur in standard builds. curious
->>> v6  correct return values and fix comment style
->>> v7  fix ath10k_unregister_led for compiling without LED_CLASS
->>> v8  fix various code design issues reported by reviewers
->>> v9  move led and led code to separate sourcefile (gpio.c)
->>> ---
->>>   drivers/net/wireless/ath/ath10k/Kconfig   |   3 +
->>>   drivers/net/wireless/ath/ath10k/Makefile  |   1 +
->>>   drivers/net/wireless/ath/ath10k/core.c    |  28 ++++-
->>>   drivers/net/wireless/ath/ath10k/core.h    |  33 ++++-
->>>   drivers/net/wireless/ath/ath10k/debug.c   | 142 ++++++++++++++++++++++
->>>   drivers/net/wireless/ath/ath10k/gpio.c    | 196
->>> ++++++++++++++++++++++++++++++
->>>   drivers/net/wireless/ath/ath10k/hw.h      |   2 +
->>>   drivers/net/wireless/ath/ath10k/mac.c     |   5 +
->>>   drivers/net/wireless/ath/ath10k/wmi-ops.h |  36 +++++-
->>>   drivers/net/wireless/ath/ath10k/wmi-tlv.c |  65 ++++++++++
->>>   drivers/net/wireless/ath/ath10k/wmi.c     |  46 +++++++
->>>   drivers/net/wireless/ath/ath10k/wmi.h     |  36 ++++++
->>>   12 files changed, 590 insertions(+), 3 deletions(-)
->>>   create mode 100644 drivers/net/wireless/ath/ath10k/gpio.c
->>>
->>> diff --git a/drivers/net/wireless/ath/ath10k/Kconfig
->>> b/drivers/net/wireless/ath/ath10k/Kconfig
->>> index deb5ae21a559..c46b7658a820 100644
->>> --- a/drivers/net/wireless/ath/ath10k/Kconfig
->>> +++ b/drivers/net/wireless/ath/ath10k/Kconfig
->>> @@ -2,6 +2,9 @@ config ATH10K
->>>           tristate "Atheros 802.11ac wireless cards support"
->>>           depends on MAC80211 && HAS_DMA
->>>          select ATH_COMMON
->>> +        select MAC80211_LEDS
->>> +        select LEDS_CLASS
->>> +        select NEW_LEDS
->>>          select CRC32
->>>          select WANT_DEV_COREDUMP
->>>           ---help---
->>
->> Pure question: do we require LEDS, or is this an option? I assumed all
->> along it was an optional thing - ie if GPIOs and/or LEDs were
->> configured, we added this code. And if not optional, then what happens
->> if we are on a platform that can't support LEDS_CLASS or NEW_LEDS,
->> assuming there is such a thing?
->
-> i took this behaviour from ath9k/ath5k, both driver auto select
-> MAC80211_LEDS and LEDS_CLASS (by the way MAC80211_LEDS auto selects
-> LEDS_CLASS too).  only chipsets which are known to have preconfigured leds
-> are used
-> and led will only turn on if you enable it in sysfs by assigning a trigger
-> to the led.
-> for sure this can be removed from the Kconfig. it will compile without it as
-> well. so this is optional. i just added it since all other drivers behave in
-> the same way.
-> in addition. LEDS_CLASS  / NEW_LEDS is a kernel api, not a driver. so all
-> platforms to support LEDS_CLASS. just enabling LEDS_CLASS will not cause any
-> platform specific dependency.
->>
->>
->>
->>> diff --git a/drivers/net/wireless/ath/ath10k/Makefile
->>> b/drivers/net/wireless/ath/ath10k/Makefile
->>> index 6739ac26fd29..bcb234f0b940 100644
->>> --- a/drivers/net/wireless/ath/ath10k/Makefile
->>> +++ b/drivers/net/wireless/ath/ath10k/Makefile
->>> @@ -20,6 +20,7 @@ ath10k_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
->>>   ath10k_core-$(CONFIG_ATH10K_TRACING) += trace.o
->>>   ath10k_core-$(CONFIG_THERMAL) += thermal.o
->>>   ath10k_core-$(CONFIG_MAC80211_DEBUGFS) += debugfs_sta.o
->>> +ath10k_core-y += gpio.o
->>>   ath10k_core-$(CONFIG_PM) += wow.o
->>>   ath10k_core-$(CONFIG_DEV_COREDUMP) += coredump.o
->>>
->> I'd expect it would be something like `ath10k_core-$(CONFIG_GPIO) +=
->> gpoi.o`.  Maybe I'm mistaken.
->
-> gpio.c contains the MAC80211_LEDS code and has a guard for GPIOLIB inside.
-> it can be compiled even if GPIOLIB is disabled in system. (which is indeed
-> platform specific)
-> and leds are still supported without gpio support since it does contain a
-> led only driver and a separate gpio driver.
-> i suggest more somelike like
->
-> ath10k_core-$(ATH10K_LEDS) += gpio.o
->
-> if you want it totally optional which requires some other small changes as
-> well (mainly renaming some ifdefs)
->
->> (Note, I didn't look up the actual config option name, I'm guessing.
->> Assume I wrote something reasonable for my example.)
->>
->> I only ask the above two questions, not because I think it's wrong,
->> but because I don't quite know the intention and it makes me wonder.
->>
->> Other than those questions, which are optional as the code looks
->> correct to me, the rest of it looks fine to me.
->
-> i fully understand your concerns, i just followed other drivers behaviour.
-> for sure its more sane to make it optional and to compile it out of not
-> required.
-> but then i suggest todo the same in ath5k and ath9k
->
+Rx bluetooth endpoint shall be added in further patches. Rx control
+block is introduced here to handle Rx packets properly. Separate
+function is written to initialize the RX control blocks.
 
-Your explanation is fine with me. Consistency with other drivers makes
-perfect sense. And I happen to agree with your thought, that it should
-be fixed in the other drivers. But that doesn't seem like it should
-have to be done right now. Thanks for explaining.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v7: Same as v6
+v6: Removed unnecessary GFP_DMA flag for kzalloc(Kalle)
+v5: Same as earlier version
+---
+ drivers/net/wireless/rsi/rsi_91x_main.c     |  4 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  2 +-
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 75 +++++++++++++++++++++++------
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 35 +++++++++-----
+ drivers/net/wireless/rsi/rsi_common.h       |  2 +-
+ drivers/net/wireless/rsi/rsi_main.h         |  2 +-
+ drivers/net/wireless/rsi/rsi_usb.h          | 10 +++-
+ 7 files changed, 96 insertions(+), 34 deletions(-)
 
-I think this is good to go as long as no one else has issues with it.
-
->>
->> Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
->>
-
-Thanks,
-- Steve
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 0cb8e68..0413af8 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -137,7 +137,7 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
+  *
+  * Return: 0 on success, -1 on failure.
+  */
+-int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
++int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
+ {
+ 	u8 *frame_desc = NULL, extended_desc = 0;
+ 	u32 index, length = 0, queueno = 0;
+@@ -146,7 +146,7 @@ int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
+ 
+ 	index = 0;
+ 	do {
+-		frame_desc = &common->rx_data_pkt[index];
++		frame_desc = &rx_pkt[index];
+ 		actual_length = *(u16 *)&frame_desc[0];
+ 		offset = *(u16 *)&frame_desc[2];
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 8e2a95c..9fbc0ef 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -118,7 +118,7 @@ static int rsi_process_pkt(struct rsi_common *common)
+ 		goto fail;
+ 	}
+ 
+-	status = rsi_read_pkt(common, rcv_pkt_len);
++	status = rsi_read_pkt(common, common->rx_data_pkt, rcv_pkt_len);
+ 
+ fail:
+ 	kfree(common->rx_data_pkt);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 8f84438..bbce809 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -247,12 +247,13 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
+  */
+ static void rsi_rx_done_handler(struct urb *urb)
+ {
+-	struct rsi_hw *adapter = urb->context;
+-	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	struct rx_usb_ctrl_block *rx_cb = urb->context;
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)rx_cb->data;
+ 
+ 	if (urb->status)
+ 		return;
+ 
++	rx_cb->pend = 1;
+ 	rsi_set_event(&dev->rx_thread.event);
+ }
+ 
+@@ -262,10 +263,11 @@ static void rsi_rx_done_handler(struct urb *urb)
+  *
+  * Return: 0 on success, a negative error code on failure.
+  */
+-static int rsi_rx_urb_submit(struct rsi_hw *adapter)
++static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
+ {
+ 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+-	struct urb *urb = dev->rx_usb_urb[0];
++	struct rx_usb_ctrl_block *rx_cb = &dev->rx_cb[ep_num - 1];
++	struct urb *urb = rx_cb->rx_urb;
+ 	int status;
+ 
+ 	usb_fill_bulk_urb(urb,
+@@ -275,7 +277,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter)
+ 			  urb->transfer_buffer,
+ 			  3000,
+ 			  rsi_rx_done_handler,
+-			  adapter);
++			  rx_cb);
+ 
+ 	status = usb_submit_urb(urb, GFP_KERNEL);
+ 	if (status)
+@@ -484,14 +486,54 @@ static struct rsi_host_intf_ops usb_host_intf_ops = {
+  */
+ static void rsi_deinit_usb_interface(struct rsi_hw *adapter)
+ {
++	u8 idx;
++
+ 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+ 
+ 	rsi_kill_thread(&dev->rx_thread);
+-	usb_free_urb(dev->rx_usb_urb[0]);
++
++	for (idx = 0; idx < MAX_RX_URBS; idx++) {
++		usb_free_urb(dev->rx_cb[idx].rx_urb);
++		kfree(dev->rx_cb[idx].rx_buffer);
++	}
++
+ 	kfree(adapter->priv->rx_data_pkt);
+ 	kfree(dev->tx_buffer);
+ }
+ 
++static int rsi_usb_init_rx(struct rsi_hw *adapter)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	struct rx_usb_ctrl_block *rx_cb;
++	u8 idx;
++
++	for (idx = 0; idx < MAX_RX_URBS; idx++) {
++		rx_cb = &dev->rx_cb[idx];
++
++		rx_cb->rx_buffer = kzalloc(RSI_USB_BUF_SIZE * 2,
++					   GFP_KERNEL);
++		if (!rx_cb->rx_buffer)
++			goto err;
++
++		rx_cb->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
++		if (!rx_cb->rx_urb) {
++			rsi_dbg(ERR_ZONE, "Failed alloc rx urb[%d]\n", idx);
++			goto err;
++		}
++		rx_cb->rx_urb->transfer_buffer = rx_cb->rx_buffer;
++		rx_cb->ep_num = idx + 1;
++		rx_cb->data = (void *)dev;
++	}
++	return 0;
++
++err:
++	for (idx = 0; idx < MAX_RX_URBS; idx++) {
++		kfree(dev->rx_cb[idx].rx_buffer);
++		kfree(dev->rx_cb[idx].rx_urb);
++	}
++	return -1;
++}
++
+ /**
+  * rsi_init_usb_interface() - This function initializes the usb interface.
+  * @adapter: Pointer to the adapter structure.
+@@ -504,7 +546,7 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ {
+ 	struct rsi_91x_usbdev *rsi_dev;
+ 	struct rsi_common *common = adapter->priv;
+-	int status;
++	int status, i;
+ 
+ 	rsi_dev = kzalloc(sizeof(*rsi_dev), GFP_KERNEL);
+ 	if (!rsi_dev)
+@@ -531,12 +573,12 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 		status = -ENOMEM;
+ 		goto fail_tx;
+ 	}
+-	rsi_dev->rx_usb_urb[0] = usb_alloc_urb(0, GFP_KERNEL);
+-	if (!rsi_dev->rx_usb_urb[0]) {
+-		status = -ENOMEM;
+-		goto fail_rx;
++
++	if (rsi_usb_init_rx(adapter)) {
++		rsi_dbg(ERR_ZONE, "Failed to init RX handle\n");
++		return -ENOMEM;
+ 	}
+-	rsi_dev->rx_usb_urb[0]->transfer_buffer = adapter->priv->rx_data_pkt;
++
+ 	rsi_dev->tx_blk_size = 252;
+ 	adapter->block_size = rsi_dev->tx_blk_size;
+ 
+@@ -564,9 +606,10 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 	return 0;
+ 
+ fail_thread:
+-	usb_free_urb(rsi_dev->rx_usb_urb[0]);
+-fail_rx:
+-	kfree(rsi_dev->tx_buffer);
++	for (i = 0; i < MAX_RX_URBS; i++) {
++		kfree(rsi_dev->rx_cb[i].rx_buffer);
++		kfree(rsi_dev->rx_cb[i].rx_urb);
++	}
+ fail_tx:
+ 	kfree(common->rx_data_pkt);
+ 	return status;
+@@ -698,7 +741,7 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 		rsi_dbg(INIT_ZONE, "%s: Device Init Done\n", __func__);
+ 	}
+ 
+-	status = rsi_rx_urb_submit(adapter);
++	status = rsi_rx_urb_submit(adapter, WLAN_EP);
+ 	if (status)
+ 		goto err1;
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+index 465692b..d0650ea 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+@@ -29,7 +29,8 @@ void rsi_usb_rx_thread(struct rsi_common *common)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+-	int status;
++	struct rx_usb_ctrl_block *rx_cb;
++	int status, idx;
+ 
+ 	do {
+ 		rsi_wait_event(&dev->rx_thread.event, EVENT_WAIT_FOREVER);
+@@ -37,20 +38,30 @@ void rsi_usb_rx_thread(struct rsi_common *common)
+ 		if (atomic_read(&dev->rx_thread.thread_done))
+ 			goto out;
+ 
+-		mutex_lock(&common->rx_lock);
+-		status = rsi_read_pkt(common, 0);
+-		if (status) {
+-			rsi_dbg(ERR_ZONE, "%s: Failed To read data", __func__);
++		for (idx = 0; idx < MAX_RX_URBS; idx++) {
++			rx_cb = &dev->rx_cb[idx];
++			if (!rx_cb->pend)
++				continue;
++
++			mutex_lock(&common->rx_lock);
++			status = rsi_read_pkt(common, rx_cb->rx_buffer, 0);
++			if (status) {
++				rsi_dbg(ERR_ZONE, "%s: Failed To read data",
++					__func__);
++				mutex_unlock(&common->rx_lock);
++				break;
++			}
++			rx_cb->pend = 0;
+ 			mutex_unlock(&common->rx_lock);
+-			return;
++
++			if (adapter->rx_urb_submit(adapter, rx_cb->ep_num)) {
++				rsi_dbg(ERR_ZONE,
++					"%s: Failed in urb submission",
++					__func__);
++				return;
++			}
+ 		}
+-		mutex_unlock(&common->rx_lock);
+ 		rsi_reset_event(&dev->rx_thread.event);
+-		if (adapter->rx_urb_submit(adapter)) {
+-			rsi_dbg(ERR_ZONE,
+-				"%s: Failed in urb submission", __func__);
+-			return;
+-		}
+ 	} while (1);
+ 
+ out:
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index d07dbba..1d8af41 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -82,7 +82,7 @@ void rsi_mac80211_detach(struct rsi_hw *hw);
+ u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
+ struct rsi_hw *rsi_91x_init(void);
+ void rsi_91x_deinit(struct rsi_hw *adapter);
+-int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len);
++int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
+ #ifdef CONFIG_PM
+ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan);
+ #endif
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 8cab630..ee469dc 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -343,7 +343,7 @@ struct rsi_hw {
+ 	void *rsi_dev;
+ 	struct rsi_host_intf_ops *host_intf_ops;
+ 	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
+-	int (*rx_urb_submit)(struct rsi_hw *adapter);
++	int (*rx_urb_submit)(struct rsi_hw *adapter, u8 ep_num);
+ 	int (*determine_event_timeout)(struct rsi_hw *adapter);
+ };
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 891daea..7e781d5 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -39,12 +39,20 @@
+ #define RSI_USB_BUF_SIZE	     4096
+ #define RSI_USB_CTRL_BUF_SIZE	     0x04
+ 
++struct rx_usb_ctrl_block {
++	u8 *data;
++	struct urb *rx_urb;
++	u8 *rx_buffer;
++	u8 ep_num;
++	u8 pend;
++};
++
+ struct rsi_91x_usbdev {
+ 	struct rsi_thread rx_thread;
+ 	u8 endpoint;
+ 	struct usb_device *usbdev;
+ 	struct usb_interface *pfunction;
+-	struct urb *rx_usb_urb[MAX_RX_URBS];
++	struct rx_usb_ctrl_block rx_cb[MAX_RX_URBS];
+ 	u8 *tx_buffer;
+ 	__le16 bulkin_size;
+ 	u8 bulkin_endpoint_addr;
+-- 
+2.7.4
