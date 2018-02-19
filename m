@@ -1,43 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54526 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:34984 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750997AbeB0QTk (ORCPT
+        with ESMTP id S1751628AbeBSI16 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:19:40 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,1/4] qtnfmac: fix releasing Tx/Rx data buffers
+        Mon, 19 Feb 2018 03:27:58 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180210140420.17013-2-sergey.matyukevich.os@quantenna.com>
-References: <20180210140420.17013-2-sergey.matyukevich.os@quantenna.com>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Message-Id: <20180227161940.4271460849@smtp.codeaurora.org> (sfid-20180227_171944_267940_32621788)
-Date: Tue, 27 Feb 2018 16:19:40 +0000 (UTC)
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH v2 0/6] wl1251: Fix MAC address for Nokia N900
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+        <1510270708-14377-1-git-send-email-pali.rohar@gmail.com>
+        <20180102192345.dnywuv4sapltrfrl@pali>
+        <20180105014510.GB22430@wotan.suse.de>
+        <20180127141459.lym2mhd5md22co4q@pali>
+Date: Mon, 19 Feb 2018 10:27:50 +0200
+In-Reply-To: <20180127141459.lym2mhd5md22co4q@pali> ("Pali \=\?utf-8\?Q\?Roh\?\=
+ \=\?utf-8\?Q\?\=C3\=A1r\=22's\?\= message of
+        "Sat, 27 Jan 2018 15:14:59 +0100")
+Message-ID: <87tvud2xkp.fsf@kamboji.qca.qualcomm.com> (sfid-20180219_092819_593940_02BE263B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
 
-> Add missing PCI unmap for Tx buffers and release all buffers explicitly.
-> Managed release using devm_add_action is not suitable for qtnfmac Tx/Rx
-> data buffers. The reason is in ordering and dependencies: buffers
-> should be released after transmission is stopped but before PCI
-> device resources and DMA allocations are released.
-> 
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> On Friday 05 January 2018 02:45:10 Luis R. Rodriguez wrote:
+>> On Tue, Jan 02, 2018 at 08:23:45PM +0100, Pali Roh=C3=A1r wrote:
+>> > On Friday 10 November 2017 00:38:22 Pali Roh=C3=A1r wrote:
+>> > > This patch series fix processing MAC address for wl1251 chip found i=
+n Nokia N900.
+>> > >=20
+>> > > Changes since v1:
+>> > > * Added Acked-by for Pavel Machek
+>> > > * Fixed grammar
+>> > > * Magic numbers for NVS offsets are replaced by defines
+>> > > * Check for validity of mac address NVS data is moved into function
+>> > > * Changed order of patches as Pavel requested
+>> > >=20
+>> > > Pali Roh=C3=A1r (6):
+>> > >   wl1251: Update wl->nvs_len after wl->nvs is valid
+>> > >   wl1251: Generate random MAC address only if driver does not have
+>> > >     valid
+>> > >   wl1251: Parse and use MAC address from supplied NVS data
+>> > >   wl1251: Set generated MAC address back to NVS data
+>> > >   firmware: Add request_firmware_prefer_user() function
+>> > >   wl1251: Use request_firmware_prefer_user() for loading NVS
+>> > >     calibration data
+>> > >=20
+>> > >  drivers/base/firmware_class.c          |   45 +++++++++++++-
+>> > >  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+>> > >  drivers/net/wireless/ti/wl1251/main.c  |  104 +++++++++++++++++++++=
++++++------
+>> > >  include/linux/firmware.h               |    9 +++
+>> > >  4 files changed, 138 insertions(+), 21 deletions(-)
+>> >=20
+>> > Hi! Are there any comments for first 4 patches? If not, could they be
+>> > accepted and merged?
+>>=20
+>> Since the first 4 patches do not touch the firmware API they seem fine t=
+o me so
+>> long as the maintainer accepts them. Maybe resend and clarify you have d=
+ropped
+>> the other ones and amend with the new tags.
+>
+> According to get_maintainer.pl, Kalle Valo is maintainer.
+>
+> Kalle Valo, if you do not have any other comments, can you accept first
+> 4 patches? Or do you really need to resent first 4 patches again?
 
-3 patches applied to wireless-drivers-next.git, thanks.
+The first 4 patches are now in my queue, I should get to them in the
+next few days.
 
-1d5e3b90ab01 qtnfmac: fix releasing Tx/Rx data buffers
-a34d7bcb73f5 qtnfmac: enable reloading of qtnfmac kernel modules
-c3b2f7ca4186 qtnfmac: implement asynchronous firmware loading
-
--- 
-https://patchwork.kernel.org/patch/10210499/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+Kalle Valo
