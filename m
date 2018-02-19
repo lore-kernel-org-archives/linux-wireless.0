@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr20093.outbound.protection.outlook.com ([40.107.2.93]:45086
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1424181AbeBOQ3e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 11:29:34 -0500
-From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
-To: Felix Fietkau <nbd@nbd.name>, Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
-Subject: RE: [PATCH v2] ath9k: mark RSSI as invalid if frame received during
- channel setup
-Date: Thu, 15 Feb 2018 16:29:30 +0000
-Message-ID: <AM4PR0101MB2305EDDB062F2F8F027330B7E4F40@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180215_173018_209933_3589D5E0)
-References: <AM4PR0101MB230538DEEFCFFC0E0F4437A2E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
- <ab149f51-bd2e-871c-b429-2772dfa1b48c@nbd.name>
-In-Reply-To: <ab149f51-bd2e-871c-b429-2772dfa1b48c@nbd.name>
-Content-Type: text/plain; charset="utf-8"
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753070AbeBSPaK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Feb 2018 10:30:10 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 01/14] staging: wilc1000: rename s8PowerMode & strPowerMgmtParam to avoid camelCase
+Date: Mon, 19 Feb 2018 20:59:31 +0530
+Message-ID: <1519054184-14301-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163016_451361_413A3CCF)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU1lc3NhZ2UgZCdvcmlnaW5lLS0tLS0NCj4gRGXCoDogRmVsaXggRmlldGthdSBbbWFp
-bHRvOm5iZEBuYmQubmFtZV0NCj4gRW52b3nDqcKgOiBqZXVkaSAxNSBmw6l2cmllciAyMDE4IDE1
-OjQ2DQo+IMOAwqA6IEplYW4gUGllcnJlIFRPU09OSTsgS2FsbGUgVmFsbw0KPiBDY8KgOiBsaW51
-eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGF0aDlrLWRldmVsQHFjYS5xdWFsY29tbS5jb20N
-Cj4gT2JqZXTCoDogUmU6IFtQQVRDSCB2Ml0gYXRoOWs6IG1hcmsgUlNTSSBhcyBpbnZhbGlkIGlm
-IGZyYW1lIHJlY2VpdmVkDQo+IGR1cmluZyBjaGFubmVsIHNldHVwDQo+IA0KPiBPbiAyMDE4LTAy
-LTE0IDE3OjI2LCBKZWFuIFBpZXJyZSBUT1NPTkkgd3JvdGU6DQo+ID4gYXRoOWsgcmV0dXJucyBh
-IHdyb25nIFJTU0kgdmFsdWUgZm9yIGZyYW1lcyByZWNlaXZlZCBpbiBhIDMwbXMNCj4gdGltZQ0K
-PiA+IHdpbmRvdyBhZnRlciBhIGNoYW5uZWwgY2hhbmdlLiBUaGUgY29ycmVjdCB2YWx1ZSBpcyB0
-eXBpY2FsbHkgMTBkQg0KPiA+IGJlbG93IHRoZSByZXR1cm5lZCB2YWx1ZS4NCj4gPg0KPiA+IFRo
-aXMgd2FzIGZvdW5kIHdpdGggYSBBdGhlcm9zIEFSOTMwMCBSZXY6MyBjaGlwIChXTEUzNTBOWCAv
-DQo+IEpXWDYwODMNCj4gPiBjYXJkcyksIGR1cmluZyBvZmZjaGFubmVsIHNjYW5zLg0KPiA+DQo+
-ID4gTWFyayB0aGUgc2lnbmFsIHZhbHVlIGFzIGludmFsaWQgaW4gdGhpcyBjYXNlLg0KPiA+DQo+
-ID4gU2lnbmVkLW9mZi1ieTogSmVhbiBQaWVycmUgVE9TT05JIDxqcC50b3NvbmlAYWNrc3lzLmZy
-Pg0KPiBJdCBzZWVtcyB0aGF0IHRoaXMgd2lsbCBwb3RlbnRpYWxseSBjYXVzZSBhIGxvdCBvZiBz
-Y2FuIHJlc3VsdHMgd2l0aA0KPiBSU1NJIGluZm9ybWF0aW9uIG1pc3NpbmcsIHdoaWNoIEkgdGhp
-bmsgbWF5IGJlIHdvcnNlIHRoYW4gYSAxMCBkYg0KPiBmbHVjdHVhdGlvbi4NCg0KSG1tbS4uLiBN
-eSBjbGllbnQgaXMgbW92aW5nIGxpbmVhcmx5IGZyb20gQVAgdG8gQVAgYW5kIGlmIGl0IGZpbmRz
-DQogdGhhdCB0aGUgcHJldmlvdXMgQVAgaXMgImJldHRlciIgdGhhbiB0aGUgY3VycmVudCBvciBu
-ZXh0IG9uZSwNCiBoYXZvYyB3aWxsIG9jY3VyIG9uIHRocm91Z2hwdXQhIEluIHRoaXMgY2FzZSBJ
-IHByZWZlciB0byB3YWl0IGZvcg0KIHRoZSBuZXh0IHNjYW4gcm91bmQgdGhhbiB1c2UgYSB3cm9u
-ZyB2YWx1ZS4NCg0KQWxzbywgbm90ZSB0aGF0IG15IHBhdGNoIHNldHMgdGhlIGludmFsaWQgZmxh
-ZyBidXQgaXQgaXMgY3VycmVudGx5DQogSWdub3JlZCBieSBtYWM4MDIxMSAoSSBzdWJtaXR0ZWQg
-YW5vdGhlciBwYXRjaCBhYm91dCB0aGF0KS4NCg0KQWN0dWFsbHkgdGhlIHByb2JsZW0gc2hvd3Mg
-dXAgb25seSBvbiBwYXNzaXZlIGNoYW5uZWxzLCBiZWNhdXNlDQooMSkgb24gYWN0aXZlIGNoYW5u
-ZWxzIHRoZSB3cm9uZyBiZWFjb24gcmVwb3J0IHdpbGwgYmUgc29vbg0KICAgIG92ZXJ3cml0dGVu
-IGJ5IHRoZSBwcm9iZSByZXNwb25zZSByZXBvcnQNCigyKSBtYWM4MDIxMSB3YWl0cyBvbmx5IGZv
-ciAxMDhtcyBvbiBwYXNzaXZlIGNoYW5uZWxzLCBpZiBpdCB3YWl0ZWQNCiAgICBmb3IgMTMzbXMg
-d2Ugd291bGQgaGF2ZSB0aGUgb3Bwb3J0dW5pdHkgdG8gb2J0YWluIGEgMm5kIGNvcnJlY3QNCiAg
-ICBiZWFjb24gcmVwb3J0ICh3ZWxsLCBkZXBlbmRpbmcgb24gdGhlIGJlYWNvbiBpbnRlcnZhbCBv
-ZiBjb3Vyc2UpDQoNCj4gQWN0dWFsbHksIGl0IGNvdWxkIGFsc28gYmUgdGhhdCB0aGUgaGFyZHdh
-cmUgaXMgcmVwb3J0aW5nIGFjY3VyYXRlDQo+IFJTU0kgdmFsdWVzICh0aGV5J3JlIHJlcG9ydGVk
-IGFzIFNOUiByZWxhdGl2ZSB0byB0aGUgbm9pc2UgZmxvb3IpDQo+IGFuZCB0aGlzIGlzIGp1c3Qg
-YSBibGlwIGNhdXNlZCBieSB0aGUgZmFjdCB0aGF0IHRoZSBodyBpcyB1cGRhdGluZw0KPiBpdHMg
-aW50ZXJuYWwgbm9pc2UgZmxvb3IgdmFsdWUgYmFzZWQgb24gcnVubmluZyBtZWFzdXJlbWVudHMu
-DQo+IA0KPiBEb2VzIHRoZSBzYW1lIGZsdWN0dWF0aW9uIGFsc28gaGFwcGVuIGlmIHlvdSBzZXQg
-dXBkYXRlID0gZmFsc2UgZm9yDQo+IGNhbGxzIHRvIGF0aDlrX2h3X3N0YXJ0X25mY2FsPw0KDQpU
-aGFua3MgZm9yIHRoZSBoaW50LCBJIHdpbGwgaGF2ZSBhIGxvb2sgYXQgdGhhdCANCg0KPiANCj4g
-LSBGZWxpeA0K
+Fix "Avoid camelCase" issues found by checkpatch.pl script.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5e01f6e..3dc3d2e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2383,20 +2383,20 @@ static void ListenTimerCB(struct timer_list *t)
+ }
+ 
+ static void Handle_PowerManagement(struct wilc_vif *vif,
+-				   struct power_mgmt_param *strPowerMgmtParam)
++				   struct power_mgmt_param *pm_param)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	s8 s8PowerMode;
++	s8 power_mode;
+ 
+ 	wid.id = (u16)WID_POWER_MANAGEMENT;
+ 
+-	if (strPowerMgmtParam->enabled)
+-		s8PowerMode = MIN_FAST_PS;
++	if (pm_param->enabled)
++		power_mode = MIN_FAST_PS;
+ 	else
+-		s8PowerMode = NO_POWERSAVE;
++		power_mode = NO_POWERSAVE;
+ 
+-	wid.val = &s8PowerMode;
++	wid.val = &power_mode;
+ 	wid.size = sizeof(char);
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+-- 
+2.7.4
