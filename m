@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:46041 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751221AbeBBPLO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Feb 2018 10:11:14 -0500
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH] mac80211: Adjust TSQ pacing shift
-Date: Fri,  2 Feb 2018 16:11:05 +0100
-Message-Id: <20180202151105.30043-1-toke@toke.dk> (sfid-20180202_161118_455742_0963E55B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from paleale.coelho.fi ([176.9.41.70]:59840 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752657AbeBSM4g (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Feb 2018 07:56:36 -0500
+Message-ID: <1519044993.7832.105.camel@coelho.fi> (sfid-20180219_135639_529202_C17E42C6)
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
+Date: Mon, 19 Feb 2018 14:56:33 +0200
+In-Reply-To: <20180219124847.27169-3-luca@coelho.fi>
+References: <20180219124847.27169-1-luca@coelho.fi>
+         <20180219124847.27169-3-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2 02/13] mac80211: ibss: send a probe request instead
+ of allocating station
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we now have the convenient helper to do so, actually adjust the
-TSQ pacing shift for packets going out over a WiFi interface. This
-significantly improves throughput for locally-originated TCP
-connections. The default pacing shift of 10 corresponds to ~1ms of
-queued packet data. Adjusting this to a shift of 8 (i.e. ~4ms) improves
-1-hop throughput for ath9k by a factor of 3, whereas increasing it more
-has diminishing returns.
+On Mon, 2018-02-19 at 14:48 +0200, Luca Coelho wrote:
+> From: Sara Sharon <sara.sharon@intel.com>
+> 
+> When we hear frames from IBSS that we don't have a station
+> for, we allocate the station in the RX path with incomplete
+> data.
+> 
+> Instead, send a probe request to the station.
+> 
+> This helps to solve an issue with iwlwifi, which cannot allocate
+> stations in atomic paths, and has the added values of having full
+> data of the station and getting rid from some code.
+> 
+> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
 
-Achieved throughput for different values of sk_pacing_shift (average of
-5 iterations of 10-sec netperf runs to a host on the other side of the
-WiFi hop):
+I forgot Nicolas' comment about this patch when I sent v2.  So please
+don't take this yet (as we agreed) and I'll ask Sari to look into the
+issue.
 
-sk_pacing_shift 10:  43.21 Mbps (pre-patch)
-sk_pacing_shift  9:  78.17 Mbps
-sk_pacing_shift  8: 123.94 Mbps
-sk_pacing_shift  7: 128.31 Mbps
+Just for the record.
 
-Latency for competing flows increases from ~3 ms to ~10 ms with this
-change. This is about the same magnitude of queueing latency induced by
-flows that are not originated on the WiFi device itself (and so are not
-limited by TSQ).
-
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- net/mac80211/tx.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 25904af38839..69722504e3e1 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3574,6 +3574,14 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	if (!IS_ERR_OR_NULL(sta)) {
- 		struct ieee80211_fast_tx *fast_tx;
- 
-+		/* We need a bit of data queued to build aggregates properly, so
-+		 * instruct the TCP stack to allow more than a single ms of data
-+		 * to be queued in the stack. The value is a bit-shift of 1
-+		 * second, so 8 is ~4ms of queued data. Only affects local TCP
-+		 * sockets.
-+		 */
-+		sk_pacing_shift_update(skb->sk, 8);
-+
- 		fast_tx = rcu_dereference(sta->fast_tx);
- 
- 		if (fast_tx &&
--- 
-2.16.0
+--
+Cheers,
+Luca.
