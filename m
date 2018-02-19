@@ -1,139 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34638 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933494AbeBMJWN (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752962AbeBSPaO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 04:22:13 -0500
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv2 3/3] mac80211: implement cqm rssi check using rx data signal
-Date: Tue, 13 Feb 2018 14:53:35 +0530
-Message-Id: <1518513815-22417-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180213_102220_929540_E33E07F3)
+        Mon, 19 Feb 2018 10:30:14 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 02/14] staging: wilc1000: rename strHostIfSetMulti to avoid camelCase
+Date: Mon, 19 Feb 2018 20:59:32 +0530
+Message-ID: <1519054184-14301-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163018_665586_81EB1452)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <tamizhr@codeaurora.org>
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-Triggers cfg80211_ap_sta_cqm_rssi_notify with the corresponding event
-when station signal goes lower than the configured rssi threshold. And
-notify back to user space once the station signal becomes greater than
-the configured value. It uses rx data signal and compare with rssi value
-given by user. This rssi threshold is bss specific and it is common for
-all the stations.
-
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- include/net/mac80211.h  |    7 +++++++
- net/mac80211/rx.c       |   46 +++++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/sta_info.h |    3 +++
- 3 files changed, 55 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 906e902..8fbf633 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -799,6 +799,13 @@ enum mac80211_rate_control_flags {
- };
- 
- 
-+/*
-+ * How many frames need to have been used in average station's
-+ * signal strength before checking against the threshold
-+ */
-+#define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
-+
-+
- /* there are 40 bytes if you don't need the rateset to be kept */
- #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index e755f93..0a385a1 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1534,6 +1534,47 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
- 	return RX_CONTINUE;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3dc3d2e..edd35b7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2406,7 +2406,7 @@ static void Handle_PowerManagement(struct wilc_vif *vif,
  }
  
-+static void ieee80211_sta_rx_signal_thold_check(struct ieee80211_rx_data *rx)
-+{
-+	struct sta_info *sta = rx->sta;
-+	struct ieee80211_bss_conf *bss_conf =
-+		&rx->sdata->vif.bss_conf;
-+	int sig, last_event, thold;
-+
-+	if (!wiphy_ext_feature_isset(rx->local->hw.wiphy,
-+				NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG))
-+		return;
-+
-+	sta->count_rx_signal++;
-+	if (sta->count_rx_signal < IEEE80211_STA_SIGNAL_AVE_MIN_COUNT)
-+		return;
-+
-+	if (!bss_conf->cqm_rssi_thold || !bss_conf->enable_beacon) {
-+		sta->count_rx_signal = 0;
-+		return;
-+	}
-+
-+	sig = -ewma_signal_read(&sta->rx_stats_avg.signal);
-+	last_event = sta->last_cqm_event_signal;
-+	thold = bss_conf->cqm_rssi_thold;
-+
-+	if (sig < thold && last_event == 0) {
-+		sta->last_cqm_event_signal = sig;
-+		cfg80211_ap_sta_cqm_rssi_notify(
-+				rx->sdata->dev, sta->addr,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-+				sig, GFP_ATOMIC);
-+		sta->count_rx_signal = 0;
-+	} else if (last_event && sig > thold) {
-+		sta->last_cqm_event_signal = 0;
-+		cfg80211_ap_sta_cqm_rssi_notify(
-+				rx->sdata->dev, sta->addr,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+				sig, GFP_ATOMIC);
-+		sta->count_rx_signal = 0;
-+	}
-+}
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+-				      struct set_multicast *strHostIfSetMulti)
++				      struct set_multicast *hif_set_mc)
  {
-@@ -1589,6 +1630,7 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
- 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
- 		sta->rx_stats.last_signal = status->signal;
- 		ewma_signal_add(&sta->rx_stats_avg.signal, -status->signal);
-+		ieee80211_sta_rx_signal_thold_check(rx);
- 	}
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2414,25 +2414,25 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
  
- 	if (status->chains) {
-@@ -3981,9 +4023,11 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
+ 	wid.id = (u16)WID_SETUP_MULTICAST_FILTER;
+ 	wid.type = WID_BIN;
+-	wid.size = sizeof(struct set_multicast) + (strHostIfSetMulti->cnt * ETH_ALEN);
++	wid.size = sizeof(struct set_multicast) + (hif_set_mc->cnt * ETH_ALEN);
+ 	wid.val = kmalloc(wid.size, GFP_KERNEL);
+ 	if (!wid.val)
+ 		goto ERRORHANDLER;
  
- 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
- 		stats->last_signal = status->signal;
--		if (!fast_rx->uses_rss)
-+		if (!fast_rx->uses_rss) {
- 			ewma_signal_add(&sta->rx_stats_avg.signal,
- 					-status->signal);
-+			ieee80211_sta_rx_signal_thold_check(rx);
-+		}
- 	}
+ 	cur_byte = wid.val;
+-	*cur_byte++ = (strHostIfSetMulti->enabled & 0xFF);
++	*cur_byte++ = (hif_set_mc->enabled & 0xFF);
+ 	*cur_byte++ = 0;
+ 	*cur_byte++ = 0;
+ 	*cur_byte++ = 0;
  
- 	if (status->chains) {
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index cd53619..76e8877 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -579,6 +579,9 @@ struct sta_info {
+-	*cur_byte++ = (strHostIfSetMulti->cnt & 0xFF);
+-	*cur_byte++ = ((strHostIfSetMulti->cnt >> 8) & 0xFF);
+-	*cur_byte++ = ((strHostIfSetMulti->cnt >> 16) & 0xFF);
+-	*cur_byte++ = ((strHostIfSetMulti->cnt >> 24) & 0xFF);
++	*cur_byte++ = (hif_set_mc->cnt & 0xFF);
++	*cur_byte++ = ((hif_set_mc->cnt >> 8) & 0xFF);
++	*cur_byte++ = ((hif_set_mc->cnt >> 16) & 0xFF);
++	*cur_byte++ = ((hif_set_mc->cnt >> 24) & 0xFF);
  
- 	struct cfg80211_chan_def tdls_chandef;
+-	if ((strHostIfSetMulti->cnt) > 0)
++	if ((hif_set_mc->cnt) > 0)
+ 		memcpy(cur_byte, wilc_multicast_mac_addr_list,
+-		       ((strHostIfSetMulti->cnt) * ETH_ALEN));
++		       ((hif_set_mc->cnt) * ETH_ALEN));
  
-+	int last_cqm_event_signal;
-+	unsigned int count_rx_signal;
-+
- 	/* keep last! */
- 	struct ieee80211_sta sta;
- };
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
 -- 
-1.7.9.5
+2.7.4
