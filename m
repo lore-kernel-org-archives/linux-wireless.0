@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f52.google.com ([209.85.160.52]:46734 "EHLO
-        mail-pl0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753187AbeBTQwz (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753134AbeBSPa2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 11:52:55 -0500
-Received: by mail-pl0-f52.google.com with SMTP id x19so7716581plr.13
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Feb 2018 08:52:55 -0800 (PST)
-Subject: Re: [RFC v4 3/6] nl80211: Implement TX of control port frames
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20180201010420.6102-1-denkenz@gmail.com>
- <20180201010420.6102-4-denkenz@gmail.com>
- <1519044297.16723.4.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <da21b7e8-dd53-4bf3-ca9a-b933cddb3212@gmail.com> (sfid-20180220_175303_677218_F90ADA8A)
-Date: Tue, 20 Feb 2018 10:52:52 -0600
+        Mon, 19 Feb 2018 10:30:28 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <Adham.Abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 06/14] staging: wilc1000: rename strHostIfStaInactiveT to avoid camelCase
+Date: Mon, 19 Feb 2018 20:59:36 +0530
+Message-ID: <1519054184-14301-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163104_864875_9FB655D4)
+In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <1519044297.16723.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-On 02/19/2018 06:44 AM, Johannes Berg wrote:
-> On Wed, 2018-01-31 at 19:04 -0600, Denis Kenzior wrote:
->>
->> +	switch (wdev->iftype) {
->> +	case NL80211_IFTYPE_STATION:
->> +		if (wdev->current_bss)
->> +			break;
->> +		err = -ENOTCONN;
->> +		goto out;
->> +	default:
->> +		err = -EOPNOTSUPP;
->> +		goto out;
->> +	}
->>
-> Why restrict this to client mode? At the very least, P2P_CLIENT really
-> should be listed there, but I'm not sure why not also support it in
-> IBSS, and AP/P2P_GO/AP_VLAN modes?
-> 
-> We could do this in a separate patch, but then we have to define
-> different flags for the modes which seems somewhat pointless.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I've no means of testing the other modes at this time.  So I'm not sure 
-what to tell you.  I can respin with IFTYPE_P2P_CLIENT in the 
-switch/case (or you can amend and do so).
-
-Regards,
--Denis
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index eda395d..f685da2 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1944,7 +1944,7 @@ static s32 Handle_GetStatistics(struct wilc_vif *vif,
+ }
+ 
+ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+-				   struct sta_inactive_t *strHostIfStaInactiveT)
++				   struct sta_inactive_t *hif_sta_inactive)
+ {
+ 	s32 result = 0;
+ 	u8 *stamac;
+@@ -1959,7 +1959,7 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 		return -ENOMEM;
+ 
+ 	stamac = wid.val;
+-	ether_addr_copy(stamac, strHostIfStaInactiveT->mac);
++	ether_addr_copy(stamac, hif_sta_inactive->mac);
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+-- 
+2.7.4
