@@ -1,85 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57678 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752805AbeB0NcT (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:11610 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752741AbeBSNdN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 08:32:19 -0500
-From: Ramon Fried <rfried@codeaurora.org>
-To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH v2] wcn36xx: reduce verbosity of drivers messages
-Date: Tue, 27 Feb 2018 15:31:49 +0200
-Message-Id: <20180227133149.26805-1-rfried@codeaurora.org> (sfid-20180227_143231_397006_700180C5)
+        Mon, 19 Feb 2018 08:33:13 -0500
+Subject: Re: [PATCH 02/12] staging: wilc1000: fix too many leading tabs
+ warning in sdio_clear_int_ext()
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>
+References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+ <1518793909-15573-3-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <7576dfcf-caab-3b2d-c4bb-e1ea29db2fce@microchip.com> (sfid-20180219_143317_341337_C43A8C42)
+Date: Mon, 19 Feb 2018 15:33:09 +0200
+MIME-Version: 1.0
+In-Reply-To: <1518793909-15573-3-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever the WLAN interface is started the FW
-version and caps are printed.
-The caps now will be displayed only in debug mode.
-Firmware version will be displayed only once on first
-startup of the interface.
+Hi Ajay,
 
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
----
-v2: print the firwmare version as info but only
-	onetime.
+On 16.02.2018 17:11, Ajay Singh wrote:
+> Refactor sdio_clear_int_ext() function to remove "Too many leading tabs"
+> warning reported by checkpatch.pl script.
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/wilc_sdio.c | 134 +++++++++++++++++------------------
+>  1 file changed, 65 insertions(+), 69 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+> index 6ce9c94..27ec90e 100644
+> --- a/drivers/staging/wilc1000/wilc_sdio.c
+> +++ b/drivers/staging/wilc1000/wilc_sdio.c
+> @@ -871,6 +871,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+>  {
+>  	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+>  	int ret;
+> +	int vmm_ctl;
+>  
+>  	if (g_sdio.has_thrpt_enh3) {
+>  		u32 reg;
+> @@ -909,84 +910,79 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+>  				goto _fail_;
+>  			}
+>  		}
+> -	} else {
+> -		if (g_sdio.irq_gpio) {
+> -			/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
+> -			/* Cannot clear multiple interrupts. Must clear each interrupt individually */
+> -			u32 flags;
+> -
+> -			flags = val & (BIT(MAX_NUM_INT) - 1);
+> -			if (flags) {
+> -				int i;
+> -
+> -				ret = 1;
+> -				for (i = 0; i < g_sdio.nint; i++) {
+> -					if (flags & 1) {
+> -						struct sdio_cmd52 cmd;
+> -
+> -						cmd.read_write = 1;
+> -						cmd.function = 0;
+> -						cmd.raw = 0;
+> -						cmd.address = 0xf8;
+> -						cmd.data = BIT(i);
+> -
+> -						ret = wilc_sdio_cmd52(wilc, &cmd);
+> -						if (ret) {
+> -							dev_err(&func->dev,
+> -								"Failed cmd52, set 0xf8 data (%d) ...\n",
+> -								__LINE__);
+> -							goto _fail_;
+> -						}
+> +		return 1;
+> +	}> +	if (g_sdio.irq_gpio) {
 
- drivers/net/wireless/ath/wcn36xx/main.c |  2 +-
- drivers/net/wireless/ath/wcn36xx/smd.c  | 19 +++++++++++--------
- 2 files changed, 12 insertions(+), 9 deletions(-)
+Since you re-factor this, as I suggested in patch:
+"[PATCH 6/6] staging: wilc1000: fix line over 80 chars in
+wilc_spi_clear_int_ext()" form your previous series:
+"fix line over 80 char & coding style in wilc_spi.c",
+for code starting here:
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index ab5be6d2c691..8c2654075eb8 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -261,7 +261,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
- 
- 	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
- 		if (get_feat_caps(wcn->fw_feat_caps, i))
--			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
-+			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 2a4871ca9c72..3048722f0484 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -385,6 +385,7 @@ out:	return ret;
- 
- static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
- {
-+	static bool first = true;
- 	struct wcn36xx_hal_mac_start_rsp_msg *rsp;
- 
- 	if (len < sizeof(*rsp))
-@@ -409,15 +410,17 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
- 	wcn->fw_minor = rsp->start_rsp_params.version.minor;
- 	wcn->fw_major = rsp->start_rsp_params.version.major;
- 
--	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
--		     wcn->wlan_version, wcn->crm_version);
--
--	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
--		     wcn->fw_major, wcn->fw_minor,
--		     wcn->fw_version, wcn->fw_revision,
--		     rsp->start_rsp_params.stations,
--		     rsp->start_rsp_params.bssids);
-+	if (first) {
-+		first = false;
-+		wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
-+			     wcn->wlan_version, wcn->crm_version);
- 
-+		wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
-+			     wcn->fw_major, wcn->fw_minor,
-+			     wcn->fw_version, wcn->fw_revision,
-+			     rsp->start_rsp_params.stations,
-+			     rsp->start_rsp_params.bssids);
-+	}
- 	return 0;
- }
- 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+> +		/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
+> +		/* Cannot clear multiple interrupts. Must clear each interrupt individually */
+> +		u32 flags;
+> +
+> +		flags = val & (BIT(MAX_NUM_INT) - 1);
+> +		if (flags) {
+> +			int i;
+> +
+> +			ret = 1;
+> +			for (i = 0; i < g_sdio.nint; i++) {
+> +				if (flags & 1) {
+> +					struct sdio_cmd52 cmd;
+> +
+> +					cmd.read_write = 1;
+> +					cmd.function = 0;
+> +					cmd.raw = 0;
+> +					cmd.address = 0xf8;
+> +					cmd.data = BIT(i);
+> +
+> +					ret = wilc_sdio_cmd52(wilc, &cmd);
+> +					if (ret) {
+> +						dev_err(&func->dev,
+> +							"Failed cmd52, set 0xf8 data (%d) ...\n",
+> +							__LINE__);
+> +						goto _fail_;
+>  					}
+> -					if (!ret)
+> -						break;
+> -					flags >>= 1;
+>  				}
+>  				if (!ret)
+> -					goto _fail_;
+> -				for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
+> -					if (flags & 1)
+> -						dev_err(&func->dev,
+> -							"Unexpected interrupt cleared %d...\n",
+> -							i);
+> -					flags >>= 1;
+> -				}
+> +					break;
+> +				flags >>= 1;
+>  			}
+and ending here, further improvements could be done. Since the current series
+was accepted, maybe add these to a todo list and review them later?
+
+> -		}
+> -
+> -		{
+> -			u32 vmm_ctl;
+> -
+> -			vmm_ctl = 0;
+> -			/* select VMM table 0 */
+> -			if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
+> -				vmm_ctl |= BIT(0);
+> -			/* select VMM table 1 */
+> -			if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
+> -				vmm_ctl |= BIT(1);
+> -			/* enable VMM */
+> -			if ((val & EN_VMM) == EN_VMM)
+> -				vmm_ctl |= BIT(2);
+> -
+> -			if (vmm_ctl) {
+> -				struct sdio_cmd52 cmd;
+> -
+> -				cmd.read_write = 1;
+> -				cmd.function = 0;
+> -				cmd.raw = 0;
+> -				cmd.address = 0xf6;
+> -				cmd.data = vmm_ctl;
+> -				ret = wilc_sdio_cmd52(wilc, &cmd);
+> -				if (ret) {
+> +			if (!ret)
+> +				goto _fail_;
+> +			for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
+> +				if (flags & 1)
+>  					dev_err(&func->dev,
+> -						"Failed cmd52, set 0xf6 data (%d) ...\n",
+> -						__LINE__);
+> -					goto _fail_;
+> -				}
+> +						"Unexpected interrupt cleared %d...\n",
+> +						i);
+> +				flags >>= 1;
+>  			}
+>  		}
+>  	}
+>  
+> +	vmm_ctl = 0;
+> +	/* select VMM table 0 */
+> +	if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
+> +		vmm_ctl |= BIT(0);
+> +	/* select VMM table 1 */
+> +	if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
+> +		vmm_ctl |= BIT(1);
+> +	/* enable VMM */
+> +	if ((val & EN_VMM) == EN_VMM)
+> +		vmm_ctl |= BIT(2);
+> +
+> +	if (vmm_ctl) {
+> +		struct sdio_cmd52 cmd;
+> +
+> +		cmd.read_write = 1;
+> +		cmd.function = 0;
+> +		cmd.raw = 0;
+> +		cmd.address = 0xf6;
+> +		cmd.data = vmm_ctl;
+> +		ret = wilc_sdio_cmd52(wilc, &cmd);
+> +		if (ret) {
+> +			dev_err(&func->dev,
+> +				"Failed cmd52, set 0xf6 data (%d) ...\n",
+> +				__LINE__);
+> +			goto _fail_;
+> +		}
+> +	}
+>  	return 1;
+>  _fail_:
+>  	return 0;
+> 
