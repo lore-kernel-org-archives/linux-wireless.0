@@ -1,62 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47987 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932269AbeBSXOd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 18:14:33 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 1/8] brcmfmac: move brcmf_bus_preinit() call just after changing bus state
-Date: Tue, 20 Feb 2018 00:14:18 +0100
-Message-Id: <1519082065-10128-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180220_001447_436567_DCAF4F28)
-In-Reply-To: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mail.toke.dk ([52.28.52.200]:60595 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751509AbeBTLNd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Feb 2018 06:13:33 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Steve deRosier <derosier@gmail.com>,
+        sdnlabs Janakaraj <wsuprabhu@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: testing tool for packet delay
+In-Reply-To: <CALLGbR+taP7GU4ftX5wFPvxD0BUsCiBDxjGXWeOJi9_nYLhEww@mail.gmail.com>
+References: <CAPWex-AFApTucOo4DGk2n30X7Y0N2NrNv2u+8ubqTL4SkhxgwA@mail.gmail.com> <CALLGbR+taP7GU4ftX5wFPvxD0BUsCiBDxjGXWeOJi9_nYLhEww@mail.gmail.com>
+Date: Tue, 20 Feb 2018 12:13:31 +0100
+Message-ID: <87tvubdick.fsf@toke.dk> (sfid-20180220_121337_512196_17F7D459)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moving the brcmf_bus_preinit() call allows the bus code to do some
-required initialization before handling firmware control messages.
+Steve deRosier <derosier@gmail.com> writes:
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 3 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c   | 5 +++++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+> On Mon, Feb 19, 2018 at 9:19 AM, sdnlabs Janakaraj <wsuprabhu@gmail.com> wrote:
+>>
+>> Hello All,
+>>
+>> I am working on delay analysis of packets in wireless stacks. I am
+>> able to see lots of papers talk about therotical analysis. But I am
+>> more interested in practical evaluation.
+>>
+>> I am reaching out to developers community to learn how they actually
+>> evaluate the performance of the stack. In particular, I am looking for
+>> ideas to evaluate the delay experienced by packets within the
+>> mac802.11 stack.
+>>
+>
+> Hi Prabhu,
+>
+> Sounds like an interesting project. More often my instrumentation
+> focuses on aggregate performance and iperf throughput numbers suffices
+> for most of that. Occasionally I utilize internal performance measures
+> and/or data provided me by ftrace and related tools.
+>
+> If you're unfamiliar with it, I suggest you look at the Bufferbloat
+> and Make-wifi-fast projects. I suspect that their data and techniques
+> and tools might be of interest to you:
+>
+> https://www.bufferbloat.net/projects/make-wifi-fast/
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 9be0b05..70ef983 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -365,9 +365,6 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 
- 	/* Enable tx beamforming, errors can be ignored (not supported) */
- 	(void)brcmf_fil_iovar_int_set(ifp, "txbf", 1);
--
--	/* do bus specific preinit here */
--	err = brcmf_bus_preinit(ifp->drvr->bus_if);
- done:
- 	return err;
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 930e423..6dd6da7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1013,6 +1013,11 @@ int brcmf_bus_started(struct device *dev)
- 	/* signal bus ready */
- 	brcmf_bus_change_state(bus_if, BRCMF_BUS_UP);
- 
-+	/* do bus specific preinit here */
-+	ret = brcmf_bus_preinit(ifp->drvr->bus_if);
-+	if (ret < 0)
-+		goto fail;
-+
- 	/* Bus is ready, do any initialization */
- 	ret = brcmf_c_preinit_dcmds(ifp);
- 	if (ret < 0)
--- 
-1.9.1
+Bufferbloat/make-wifi-fast community member checking in ;)
+
+Basically, what we've been doing to analyse (and reduce) the latency of
+the queueing system in the WiFi stack, is to put it under load and
+measure how it behaves. This is not so much through the use of tracing
+tools as it is an end-to-end black-box measurement approach.
+
+The go-to mechanism for this is to run a latency measurement (either a
+simple ICMP ping, or a UDP measurement flow using a tool such as
+irtt[1]), then load the connection with one or more TCP flows and see
+how it impacts latency. You can of course vary the number of flows,
+diffserv markings, etc. to get different insights.
+
+I'm the author of a test tool that automates a lot of this and which can
+also collect a lot of statistics from the stack while doing so. The tool
+is called Flent[2] and is open source. Feel free to try it out and ask
+any questions that come up :)
+
+-Toke
+
+[1] https://github.com/peteheist/irtt/
+[2] https://flent.org
