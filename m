@@ -1,124 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:38791 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751653AbeBYMkB (ORCPT
+Received: from mail-ua0-f193.google.com ([209.85.217.193]:34520 "EHLO
+        mail-ua0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750710AbeBTVev (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Feb 2018 07:40:01 -0500
-Received: by mail-wm0-f67.google.com with SMTP id z9so12270544wmb.3
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Feb 2018 04:40:01 -0800 (PST)
-From: Romain Naour <romain.naour@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Romain Naour <romain.naour@gmail.com>
-Subject: [PATCH] cfg80211: add missing dependency to CFG80211 suboptions
-Date: Sun, 25 Feb 2018 13:39:56 +0100
-Message-Id: <20180225123956.32161-1-romain.naour@gmail.com> (sfid-20180225_134006_287675_0AB904E8)
+        Tue, 20 Feb 2018 16:34:51 -0500
+Received: by mail-ua0-f193.google.com with SMTP id m43so9356033uah.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Feb 2018 13:34:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <9c385301-dae6-9d7c-a510-2b210eaf05bc@redhat.com>
+References: <20180220134618.12972-1-carlo@caione.org> <31f0157f-4778-2f9c-977f-8bdbba6f52a4@redhat.com>
+ <CAL9uMOEFm4apUrDxs6GkZqV2S=mepd2Ytcna+SCaLnCcwtcfeg@mail.gmail.com>
+ <c1f7d6a5-7b31-e3e2-870c-ccc0dd2fca20@redhat.com> <CAFBinCCc6yAWgVm85gTeGr_=y0B=H0j1et1r=V10ycX4pKCZVg@mail.gmail.com>
+ <9c385301-dae6-9d7c-a510-2b210eaf05bc@redhat.com>
+From: Carlo Caione <carlo@endlessm.com>
+Date: Tue, 20 Feb 2018 21:34:50 +0000
+Message-ID: <CAL9uMOHfcUOJOOVp6snnvy2bNDZA_T9Hyi2NCLCEayR2DGCkCg@mail.gmail.com> (sfid-20180220_223455_446219_B6B4C577)
+Subject: Re: [RFC PATCH 0/2] net: rfkill: gpio: Fix and support SerDev
+To: Jeremy Cline <jcline@redhat.com>
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Carlo Caione <carlo@caione.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        =?UTF-8?B?RnLDqWTDqXJpYyBEYW5pcw==?= <frederic.danis.oss@gmail.com>,
+        Sebastian Reichel <sebastian.reichel@collabora.co.uk>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New options introduced by [1] are still enabled even if
-CFG80211 is disabled.
+On Tue, Feb 20, 2018 at 9:18 PM, Jeremy Cline <jcline@redhat.com> wrote:
 
-.config:
-    # CONFIG_CFG80211 is not set
-    CONFIG_CFG80211_REQUIRE_SIGNED_REGDB=y
-    CONFIG_CFG80211_USE_KERNEL_REGDB_KEYS=y
-    # CONFIG_LIB80211 is not set
+> Great, thanks for all the info! I'll definitely keep you CC'ed on my
+> progress. I'm still very new to kernel development so I expect it'll
+> take me quite a while, but I do have a fair bit of time to devote to
+> this.
 
-When CFG80211_REQUIRE_SIGNED_REGDB is enabled, it select
-SYSTEM_DATA_VERIFICATION which select SYSTEM_TRUSTED_KEYRING
-that need extract-cert tool. extract-cert needs some openssl
-headers to be installed on the build machine.
+Welcome to this crazy world ;)
+Keep me on CC also, I have quite a bit of hw I can test the patches
+on. Fell free also to reach me in private.
+I was actually going to work on this myself but now I guess there are
+too many people.
 
-Instead of adding missing "depends on CFG80211", it
-easier to use a 'if' block around all options related
-to CFG80211.
+Cheers,
 
-[1] 90a53e4432b12288316efaa5f308adafb8d304b0
-
-Signed-off-by: Romain Naour <romain.naour@gmail.com>
----
- net/wireless/Kconfig | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 1abcc4fc4df1..41722046b937 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -34,9 +34,10 @@ config CFG80211
- 
- 	  When built as a module it will be called cfg80211.
- 
-+if CFG80211
-+
- config NL80211_TESTMODE
- 	bool "nl80211 testmode command"
--	depends on CFG80211
- 	help
- 	  The nl80211 testmode command helps implementing things like
- 	  factory calibration or validation tools for wireless chips.
-@@ -51,7 +52,6 @@ config NL80211_TESTMODE
- 
- config CFG80211_DEVELOPER_WARNINGS
- 	bool "enable developer warnings"
--	depends on CFG80211
- 	default n
- 	help
- 	  This option enables some additional warnings that help
-@@ -68,7 +68,7 @@ config CFG80211_DEVELOPER_WARNINGS
- 
- config CFG80211_CERTIFICATION_ONUS
- 	bool "cfg80211 certification onus"
--	depends on CFG80211 && EXPERT
-+	depends on EXPERT
- 	default n
- 	---help---
- 	  You should disable this option unless you are both capable
-@@ -159,7 +159,6 @@ config CFG80211_REG_RELAX_NO_IR
- 
- config CFG80211_DEFAULT_PS
- 	bool "enable powersave by default"
--	depends on CFG80211
- 	default y
- 	help
- 	  This option enables powersave mode by default.
-@@ -170,7 +169,6 @@ config CFG80211_DEFAULT_PS
- 
- config CFG80211_DEBUGFS
- 	bool "cfg80211 DebugFS entries"
--	depends on CFG80211
- 	depends on DEBUG_FS
- 	---help---
- 	  You can enable this if you want debugfs entries for cfg80211.
-@@ -180,7 +178,6 @@ config CFG80211_DEBUGFS
- config CFG80211_CRDA_SUPPORT
- 	bool "support CRDA" if EXPERT
- 	default y
--	depends on CFG80211
- 	help
- 	  You should enable this option unless you know for sure you have no
- 	  need for it, for example when using internal regdb (above) or the
-@@ -190,7 +187,6 @@ config CFG80211_CRDA_SUPPORT
- 
- config CFG80211_WEXT
- 	bool "cfg80211 wireless extensions compatibility" if !CFG80211_WEXT_EXPORT
--	depends on CFG80211
- 	select WEXT_CORE
- 	default y if CFG80211_WEXT_EXPORT
- 	help
-@@ -199,11 +195,12 @@ config CFG80211_WEXT
- 
- config CFG80211_WEXT_EXPORT
- 	bool
--	depends on CFG80211
- 	help
- 	  Drivers should select this option if they require cfg80211's
- 	  wext compatibility symbols to be exported.
- 
-+endif # CFG80211
-+
- config LIB80211
- 	tristate
- 	default n
 -- 
-2.14.3
+Carlo Caione  |  +44.7384.69.16.04  |  Endless
