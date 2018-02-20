@@ -1,41 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52296 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754108AbeBGOOx (ORCPT
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:33859 "EHLO
+        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750829AbeBTOk5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Feb 2018 09:14:53 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 20 Feb 2018 09:40:57 -0500
+Received: by mail-vk0-f65.google.com with SMTP id z190so5726961vkg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Feb 2018 06:40:57 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: ath9k: Fix get channel default noise floor
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1516976454-8883-1-git-send-email-Wojciech.Dubowik@neratec.com>
-References: <1516976454-8883-1-git-send-email-Wojciech.Dubowik@neratec.com>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Message-Id: <20180207141453.7ED2A60767@smtp.codeaurora.org> (sfid-20180207_151504_921600_9E35BB4C)
-Date: Wed,  7 Feb 2018 14:14:53 +0000 (UTC)
+In-Reply-To: <44721384-4057-445D-841B-CA9A21E6A6E1@holtmann.org>
+References: <20180220134618.12972-1-carlo@caione.org> <20180220134618.12972-3-carlo@caione.org>
+ <44721384-4057-445D-841B-CA9A21E6A6E1@holtmann.org>
+From: Carlo Caione <carlo@endlessm.com>
+Date: Tue, 20 Feb 2018 14:40:55 +0000
+Message-ID: <CAL9uMOFw7TgT00NWcQ9=jW8kGhG-Gbi_+5j-jJYgd6wH4HQeEQ@mail.gmail.com> (sfid-20180220_154100_813787_2352D758)
+Subject: Re: [RFC PATCH 2/2] net: rfkill: gpio: Convert driver to SerDev
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Carlo Caione <carlo@caione.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        =?UTF-8?B?RnLDqWTDqXJpYyBEYW5pcw==?= <frederic.danis.oss@gmail.com>,
+        Sebastian Reichel <sebastian.reichel@collabora.co.uk>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wojciech Dubowik <Wojciech.Dubowik@neratec.com> wrote:
+On Tue, Feb 20, 2018 at 2:04 PM, Marcel Holtmann <marcel@holtmann.org> wrot=
+e:
+> Hi Carlo,
 
-> Commit 8da58553cc63 ("ath9k: Use calibrated noise floor value
-> when available") introduced regression in ath9k_hw_getchan_noise
-> where per chain nominal noise floor has been taken instead default
-> for channel.
-> Revert to original default channel noise floor.
-> 
-> Fixes: 8da58553cc63 ("ath9k: Use calibrated noise floor value when available")
-> Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Hi Marcel,
 
-Patch applied to ath-current branch of ath.git, thanks.
+>> With commit e361d1f85855 ("ACPI / scan: Fix enumeration for special UART
+>> devices") UART devices are now expected to be enumerated by
+>> SerDev subsystem. This is breaking the enumeration of platform devices
+>> connected to the UART without a proper SerDev support, like in the
+>> rfkill-gpio case.
+>>
+>> Fix this moving the driver from a platform driver to a serdev device
+>> driver.
+>
+> I do not like keeping this a RFKILL switch for the two GPS devices and th=
+at is really all what is left for this driver.
+>
+> static const struct acpi_device_id rfkill_acpi_match[] =3D {
+>         { "BCM4752", RFKILL_TYPE_GPS },
+>         { "LNV4752", RFKILL_TYPE_GPS },
+>         { },
+> };
+>
+> Frankly what this needs is a serdev GPS driver. Even if it also exposes t=
+he data path via character device or a new TTY. Trying to hook this into RF=
+KILL for powering on the GPS chip is not what we should do anymore. What yo=
+u really want is that if the GPS daemon or application open the node for th=
+e GPS device that it gets powered on and when closed powered back down. Fid=
+dling with RFKILL to do that is not what a RFKILL switch is for. If you wan=
+t to have an additional RFKILL switch for killing power, then this has to b=
+e done the same as WiFi and Bluetooth do it.
+>
+> So this patch is just a bad hack and we better have a proper serdev GPS d=
+river.
 
-b9607de6cf22 ath9k: Fix get channel default noise floor
+Yeah, I know (that's also why I preferred to send this as RFC).
+At least this patch could be useful to have things working until we
+have something better in place, but I definitely agree that's a bad
+hack.
 
--- 
-https://patchwork.kernel.org/patch/10186025/
+Cheers,
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+Carlo Caione  |  +44.7384.69.16.04  |  Endless
