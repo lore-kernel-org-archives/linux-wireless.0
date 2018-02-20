@@ -1,55 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:55261 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751470AbeBBPcL (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752209AbeBTO6h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Feb 2018 10:32:11 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: Martin Sebor <msebor@gcc.gnu.org>, Arnd Bergmann <arnd@arndb.de>,
-        stable@vger.kernel.org, Luca Coelho <luciano.coelho@intel.com>,
-        =?UTF-8?q?Peter=20Gro=C3=9Fe?= <pegro@friiks.de>,
-        Simon Wunderlich <sw@simonwunderlich.de>,
-        Benjamin Berg <benjamin@sipsolutions.net>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] cfg80211: fix cfg80211_beacon_dup
-Date: Fri,  2 Feb 2018 16:31:23 +0100
-Message-Id: <20180202153142.1142229-1-arnd@arndb.de> (sfid-20180202_163240_065420_972E2EE8)
+        Tue, 20 Feb 2018 09:58:37 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 08/12] staging: wilc1000: rename strDisconnectNotifInfo to avoid camelCase
+Date: Tue, 20 Feb 2018 20:27:57 +0530
+Message-ID: <1519138681-1982-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155845_092410_46A29D7E)
+In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc-8 warns about some obviously incorrect code:
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-net/mac80211/cfg.c: In function 'cfg80211_beacon_dup':
-net/mac80211/cfg.c:2896:3: error: 'memcpy' source argument is the same as destination [-Werror=restrict]
-
->From the context, I conclude that we want to copy from beacon into
-new_beacon, as we do in the rest of the function.
-
-Cc: stable@vger.kernel.org
-Fixes: 73da7d5bab79 ("mac80211: add channel switch command and beacon callbacks")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- net/mac80211/cfg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 46028e12e216..f4195a0f0279 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2892,7 +2892,7 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
- 	}
- 	if (beacon->probe_resp_len) {
- 		new_beacon->probe_resp_len = beacon->probe_resp_len;
--		beacon->probe_resp = pos;
-+		new_beacon->probe_resp = pos;
- 		memcpy(pos, beacon->probe_resp, beacon->probe_resp_len);
- 		pos += beacon->probe_resp_len;
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 593f7f1..64a2060 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1330,7 +1330,7 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 	u8 u8MacStatusReasonCode;
+ 	u8 u8MacStatusAdditionalInfo;
+ 	struct connect_info strConnectInfo;
+-	struct disconnect_info strDisconnectNotifInfo;
++	struct disconnect_info disconn_info;
+ 	s32 s32Err = 0;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+@@ -1462,16 +1462,16 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 			hif_drv->usr_conn_req.ies = NULL;
+ 		} else if ((u8MacStatus == MAC_DISCONNECTED) &&
+ 			   (hif_drv->hif_state == HOST_IF_CONNECTED)) {
+-			memset(&strDisconnectNotifInfo, 0, sizeof(struct disconnect_info));
++			memset(&disconn_info, 0, sizeof(struct disconnect_info));
+ 
+ 			if (hif_drv->usr_scan_req.scan_result) {
+ 				del_timer(&hif_drv->scan_timer);
+ 				handle_scan_done(vif, SCAN_EVENT_ABORTED);
+ 			}
+ 
+-			strDisconnectNotifInfo.reason = 0;
+-			strDisconnectNotifInfo.ie = NULL;
+-			strDisconnectNotifInfo.ie_len = 0;
++			disconn_info.reason = 0;
++			disconn_info.ie = NULL;
++			disconn_info.ie_len = 0;
+ 
+ 			if (hif_drv->usr_conn_req.conn_result) {
+ 				wilc_optaining_ip = false;
+@@ -1480,7 +1480,7 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 				hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
+ 								  NULL,
+ 								  0,
+-								  &strDisconnectNotifInfo,
++								  &disconn_info,
+ 								  hif_drv->usr_conn_req.arg);
+ 			} else {
+ 				netdev_err(vif->ndev, "Connect result NULL\n");
+@@ -1800,13 +1800,13 @@ static void handle_disconnect(struct wilc_vif *vif)
+ 	if (result) {
+ 		netdev_err(vif->ndev, "Failed to send dissconect\n");
+ 	} else {
+-		struct disconnect_info strDisconnectNotifInfo;
++		struct disconnect_info disconn_info;
+ 
+-		memset(&strDisconnectNotifInfo, 0, sizeof(struct disconnect_info));
++		memset(&disconn_info, 0, sizeof(struct disconnect_info));
+ 
+-		strDisconnectNotifInfo.reason = 0;
+-		strDisconnectNotifInfo.ie = NULL;
+-		strDisconnectNotifInfo.ie_len = 0;
++		disconn_info.reason = 0;
++		disconn_info.ie = NULL;
++		disconn_info.ie_len = 0;
+ 
+ 		if (hif_drv->usr_scan_req.scan_result) {
+ 			del_timer(&hif_drv->scan_timer);
+@@ -1824,7 +1824,7 @@ static void handle_disconnect(struct wilc_vif *vif)
+ 			hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
+ 							  NULL,
+ 							  0,
+-							  &strDisconnectNotifInfo,
++							  &disconn_info,
+ 							  hif_drv->usr_conn_req.arg);
+ 		} else {
+ 			netdev_err(vif->ndev, "conn_result = NULL\n");
 -- 
-2.9.0
+2.7.4
