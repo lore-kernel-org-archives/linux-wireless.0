@@ -1,278 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39514 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752331AbeB0MDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 07:03:09 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2] mac80211: support A-MSDU in fast-rx
-Date: Tue, 27 Feb 2018 13:03:07 +0100
-Message-Id: <20180227120307.18371-1-nbd@nbd.name> (sfid-20180227_130314_579002_F384ABA2)
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751476AbeBTO6a (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Feb 2018 09:58:30 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 06/12] staging: wilc1000: rename pstrSetBeaconParam to avoid camelCase
+Date: Tue, 20 Feb 2018 20:27:55 +0530
+Message-ID: <1519138681-1982-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155833_151858_C0EFE1EC)
+In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only works if the IV was stripped from packets. Create a smaller
-variant of ieee80211_rx_h_amsdu, which bypasses checks already done
-within the fast-rx context.
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- include/net/cfg80211.h |   6 ++-
- net/mac80211/rx.c      | 124 +++++++++++++++++++++++++++++--------------------
- net/wireless/util.c    |   5 +-
- 3 files changed, 80 insertions(+), 55 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 51 +++++++++++++++----------------
+ 1 file changed, 25 insertions(+), 26 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 56e905cd4b07..fc40843baed3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4410,10 +4410,12 @@ unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr);
-  *	of it being pushed into the SKB
-  * @addr: the device MAC address
-  * @iftype: the virtual interface type
-+ * @data_offset: offset of payload after the 802.11 header
-  * Return: 0 on success. Non-zero on error.
-  */
- int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
--				  const u8 *addr, enum nl80211_iftype iftype);
-+				  const u8 *addr, enum nl80211_iftype iftype,
-+				  u8 data_offset);
- 
- /**
-  * ieee80211_data_to_8023 - convert an 802.11 data frame to 802.3
-@@ -4425,7 +4427,7 @@ int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
- static inline int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
- 					 enum nl80211_iftype iftype)
- {
--	return ieee80211_data_to_8023_exthdr(skb, NULL, addr, iftype);
-+	return ieee80211_data_to_8023_exthdr(skb, NULL, addr, iftype, 0);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 57f0201..9eb808e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1986,8 +1986,7 @@ static s32 handle_get_inactive_time(struct wilc_vif *vif,
+ 	return result;
  }
  
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5be957af4b0e..d01743234cf6 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2353,39 +2353,17 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+-static void handle_add_beacon(struct wilc_vif *vif,
+-			      struct beacon_attr *pstrSetBeaconParam)
++static void handle_add_beacon(struct wilc_vif *vif, struct beacon_attr *param)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -1995,38 +1994,38 @@ static void handle_add_beacon(struct wilc_vif *vif,
+ 
+ 	wid.id = (u16)WID_ADD_BEACON;
+ 	wid.type = WID_BIN;
+-	wid.size = pstrSetBeaconParam->head_len + pstrSetBeaconParam->tail_len + 16;
++	wid.size = param->head_len + param->tail_len + 16;
+ 	wid.val = kmalloc(wid.size, GFP_KERNEL);
+ 	if (!wid.val)
+ 		goto ERRORHANDLER;
+ 
+ 	cur_byte = wid.val;
+-	*cur_byte++ = (pstrSetBeaconParam->interval & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->interval >> 8) & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->interval >> 16) & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->interval >> 24) & 0xFF);
++	*cur_byte++ = (param->interval & 0xFF);
++	*cur_byte++ = ((param->interval >> 8) & 0xFF);
++	*cur_byte++ = ((param->interval >> 16) & 0xFF);
++	*cur_byte++ = ((param->interval >> 24) & 0xFF);
+ 
+-	*cur_byte++ = (pstrSetBeaconParam->dtim_period & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->dtim_period >> 8) & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->dtim_period >> 16) & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->dtim_period >> 24) & 0xFF);
++	*cur_byte++ = (param->dtim_period & 0xFF);
++	*cur_byte++ = ((param->dtim_period >> 8) & 0xFF);
++	*cur_byte++ = ((param->dtim_period >> 16) & 0xFF);
++	*cur_byte++ = ((param->dtim_period >> 24) & 0xFF);
+ 
+-	*cur_byte++ = (pstrSetBeaconParam->head_len & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->head_len >> 8) & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->head_len >> 16) & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->head_len >> 24) & 0xFF);
++	*cur_byte++ = (param->head_len & 0xFF);
++	*cur_byte++ = ((param->head_len >> 8) & 0xFF);
++	*cur_byte++ = ((param->head_len >> 16) & 0xFF);
++	*cur_byte++ = ((param->head_len >> 24) & 0xFF);
+ 
+-	memcpy(cur_byte, pstrSetBeaconParam->head, pstrSetBeaconParam->head_len);
+-	cur_byte += pstrSetBeaconParam->head_len;
++	memcpy(cur_byte, param->head, param->head_len);
++	cur_byte += param->head_len;
+ 
+-	*cur_byte++ = (pstrSetBeaconParam->tail_len & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->tail_len >> 8) & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->tail_len >> 16) & 0xFF);
+-	*cur_byte++ = ((pstrSetBeaconParam->tail_len >> 24) & 0xFF);
++	*cur_byte++ = (param->tail_len & 0xFF);
++	*cur_byte++ = ((param->tail_len >> 8) & 0xFF);
++	*cur_byte++ = ((param->tail_len >> 16) & 0xFF);
++	*cur_byte++ = ((param->tail_len >> 24) & 0xFF);
+ 
+-	if (pstrSetBeaconParam->tail)
+-		memcpy(cur_byte, pstrSetBeaconParam->tail, pstrSetBeaconParam->tail_len);
+-	cur_byte += pstrSetBeaconParam->tail_len;
++	if (param->tail)
++		memcpy(cur_byte, param->tail, param->tail_len);
++	cur_byte += param->tail_len;
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+@@ -2035,8 +2034,8 @@ static void handle_add_beacon(struct wilc_vif *vif,
+ 
+ ERRORHANDLER:
+ 	kfree(wid.val);
+-	kfree(pstrSetBeaconParam->head);
+-	kfree(pstrSetBeaconParam->tail);
++	kfree(param->head);
++	kfree(param->tail);
  }
  
- static ieee80211_rx_result debug_noinline
--ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
-+__ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx, u8 data_offset)
- {
- 	struct net_device *dev = rx->sdata->dev;
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	__le16 fc = hdr->frame_control;
- 	struct sk_buff_head frame_list;
--	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
- 	struct ethhdr ethhdr;
- 	const u8 *check_da = ethhdr.h_dest, *check_sa = ethhdr.h_source;
- 
--	if (unlikely(!ieee80211_is_data(fc)))
--		return RX_CONTINUE;
--
--	if (unlikely(!ieee80211_is_data_present(fc)))
--		return RX_DROP_MONITOR;
--
--	if (!(status->rx_flags & IEEE80211_RX_AMSDU))
--		return RX_CONTINUE;
--
- 	if (unlikely(ieee80211_has_a4(hdr->frame_control))) {
--		switch (rx->sdata->vif.type) {
--		case NL80211_IFTYPE_AP_VLAN:
--			if (!rx->sdata->u.vlan.sta)
--				return RX_DROP_UNUSABLE;
--			break;
--		case NL80211_IFTYPE_STATION:
--			if (!rx->sdata->u.mgd.use_4addr)
--				return RX_DROP_UNUSABLE;
--			break;
--		default:
--			return RX_DROP_UNUSABLE;
--		}
- 		check_da = NULL;
- 		check_sa = NULL;
- 	} else switch (rx->sdata->vif.type) {
-@@ -2405,15 +2383,13 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
- 			break;
- 	}
- 
--	if (is_multicast_ether_addr(hdr->addr1))
--		return RX_DROP_UNUSABLE;
--
- 	skb->dev = dev;
- 	__skb_queue_head_init(&frame_list);
- 
- 	if (ieee80211_data_to_8023_exthdr(skb, &ethhdr,
- 					  rx->sdata->vif.addr,
--					  rx->sdata->vif.type))
-+					  rx->sdata->vif.type,
-+					  data_offset))
- 		return RX_DROP_UNUSABLE;
- 
- 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
-@@ -2435,6 +2411,44 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
- 	return RX_QUEUED;
- }
- 
-+static ieee80211_rx_result debug_noinline
-+ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
-+{
-+	struct sk_buff *skb = rx->skb;
-+	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	__le16 fc = hdr->frame_control;
-+
-+	if (!(status->rx_flags & IEEE80211_RX_AMSDU))
-+		return RX_CONTINUE;
-+
-+	if (unlikely(!ieee80211_is_data(fc)))
-+		return RX_CONTINUE;
-+
-+	if (unlikely(!ieee80211_is_data_present(fc)))
-+		return RX_DROP_MONITOR;
-+
-+	if (unlikely(ieee80211_has_a4(hdr->frame_control))) {
-+		switch (rx->sdata->vif.type) {
-+		case NL80211_IFTYPE_AP_VLAN:
-+			if (!rx->sdata->u.vlan.sta)
-+				return RX_DROP_UNUSABLE;
-+			break;
-+		case NL80211_IFTYPE_STATION:
-+			if (!rx->sdata->u.mgd.use_4addr)
-+				return RX_DROP_UNUSABLE;
-+			break;
-+		default:
-+			return RX_DROP_UNUSABLE;
-+		}
-+	}
-+
-+	if (is_multicast_ether_addr(hdr->addr1))
-+		return RX_DROP_UNUSABLE;
-+
-+	return __ieee80211_rx_h_amsdu(rx, 0);
-+}
-+
- #ifdef CONFIG_MAC80211_MESH
- static ieee80211_rx_result
- ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
-@@ -3898,7 +3912,8 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct sta_info *sta = rx->sta;
- 	int orig_len = skb->len;
--	int snap_offs = ieee80211_hdrlen(hdr->frame_control);
-+	int hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	int snap_offs = hdrlen;
- 	struct {
- 		u8 snap[sizeof(rfc1042_header)];
- 		__be16 proto;
-@@ -3929,10 +3944,6 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 	    (status->flag & FAST_RX_CRYPT_FLAGS) != FAST_RX_CRYPT_FLAGS)
- 		return false;
- 
--	/* we don't deal with A-MSDU deaggregation here */
--	if (status->rx_flags & IEEE80211_RX_AMSDU)
--		return false;
--
- 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
- 		return false;
- 
-@@ -3964,21 +3975,24 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 		snap_offs += IEEE80211_CCMP_HDR_LEN;
- 	}
- 
--	if (!pskb_may_pull(skb, snap_offs + sizeof(*payload)))
--		goto drop;
--	payload = (void *)(skb->data + snap_offs);
-+	if (!(status->rx_flags & IEEE80211_RX_AMSDU)) {
-+		if (!pskb_may_pull(skb, snap_offs + sizeof(*payload)))
-+			goto drop;
- 
--	if (!ether_addr_equal(payload->snap, fast_rx->rfc1042_hdr))
--		return false;
-+		payload = (void *)(skb->data + snap_offs);
- 
--	/* Don't handle these here since they require special code.
--	 * Accept AARP and IPX even though they should come with a
--	 * bridge-tunnel header - but if we get them this way then
--	 * there's little point in discarding them.
--	 */
--	if (unlikely(payload->proto == cpu_to_be16(ETH_P_TDLS) ||
--		     payload->proto == fast_rx->control_port_protocol))
--		return false;
-+		if (!ether_addr_equal(payload->snap, fast_rx->rfc1042_hdr))
-+			return false;
-+
-+		/* Don't handle these here since they require special code.
-+		 * Accept AARP and IPX even though they should come with a
-+		 * bridge-tunnel header - but if we get them this way then
-+		 * there's little point in discarding them.
-+		 */
-+		if (unlikely(payload->proto == cpu_to_be16(ETH_P_TDLS) ||
-+			     payload->proto == fast_rx->control_port_protocol))
-+			return false;
-+	}
- 
- 	/* after this point, don't punt to the slowpath! */
- 
-@@ -3992,12 +4006,6 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 	}
- 
- 	/* statistics part of ieee80211_rx_h_sta_process() */
--	stats->last_rx = jiffies;
--	stats->last_rate = sta_stats_encode_rate(status);
--
--	stats->fragments++;
--	stats->packets++;
--
- 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
- 		stats->last_signal = status->signal;
- 		if (!fast_rx->uses_rss)
-@@ -4026,6 +4034,20 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 	if (rx->key && !ieee80211_has_protected(hdr->frame_control))
- 		goto drop;
- 
-+	if (status->rx_flags & IEEE80211_RX_AMSDU) {
-+		if (__ieee80211_rx_h_amsdu(rx, snap_offs - hdrlen) !=
-+		    RX_QUEUED)
-+			goto drop;
-+
-+		return true;
-+	}
-+
-+	stats->last_rx = jiffies;
-+	stats->last_rate = sta_stats_encode_rate(status);
-+
-+	stats->fragments++;
-+	stats->packets++;
-+
- 	/* do the header conversion - first grab the addresses */
- 	ether_addr_copy(addrs.da, skb->data + fast_rx->da_offs);
- 	ether_addr_copy(addrs.sa, skb->data + fast_rx->sa_offs);
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index c69160694b6c..d112e9a89364 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -420,7 +420,8 @@ unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
- EXPORT_SYMBOL(ieee80211_get_mesh_hdrlen);
- 
- int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
--				  const u8 *addr, enum nl80211_iftype iftype)
-+				  const u8 *addr, enum nl80211_iftype iftype,
-+				  u8 data_offset)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct {
-@@ -434,7 +435,7 @@ int ieee80211_data_to_8023_exthdr(struct sk_buff *skb, struct ethhdr *ehdr,
- 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
- 		return -1;
- 
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control) + data_offset;
- 	if (skb->len < hdrlen + 8)
- 		return -1;
- 
+ static void handle_del_beacon(struct wilc_vif *vif)
 -- 
-2.14.2
+2.7.4
