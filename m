@@ -1,68 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39496 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751900AbeB0IdW (ORCPT
+Received: from mail-wr0-f171.google.com ([209.85.128.171]:35359 "EHLO
+        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751039AbeBTWGu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 03:33:22 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Steve deRosier <derosier@gmail.com>, Samuel Sieb <samuel@sieb.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Max clients on wifi access point with 7265
-References: <HE1PR0501MB23969FCE58F1EE7634D412F0F6F50@HE1PR0501MB2396.eurprd05.prod.outlook.com>
-        <1518607856.21268.3.camel@sipsolutions.net>
-        <4f048d04-5f25-caa1-51b3-dcb14baf36da@sieb.net>
-        <CALLGbRLL-tnptVDuFt5E3QoTZ8Wn4K=2wLp3TCNvDJemkGVyKg@mail.gmail.com>
-        <87h8qdldfq.fsf@purkki.adurom.net>
-        <1519032404.7832.84.camel@coelho.fi>
-        <1519039105.7832.94.camel@coelho.fi>
-Date: Tue, 27 Feb 2018 10:33:17 +0200
-In-Reply-To: <1519039105.7832.94.camel@coelho.fi> (Luca Coelho's message of
-        "Mon, 19 Feb 2018 13:18:25 +0200")
-Message-ID: <87vaeihlwy.fsf@codeaurora.org> (sfid-20180227_093332_145258_AC5562CA)
+        Tue, 20 Feb 2018 17:06:50 -0500
+Received: by mail-wr0-f171.google.com with SMTP id l43so18680736wrc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Feb 2018 14:06:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87tvubdick.fsf@toke.dk>
+References: <CAPWex-AFApTucOo4DGk2n30X7Y0N2NrNv2u+8ubqTL4SkhxgwA@mail.gmail.com>
+ <CALLGbR+taP7GU4ftX5wFPvxD0BUsCiBDxjGXWeOJi9_nYLhEww@mail.gmail.com> <87tvubdick.fsf@toke.dk>
+From: sdnlabs Janakaraj <wsuprabhu@gmail.com>
+Date: Tue, 20 Feb 2018 17:06:29 -0500
+Message-ID: <CAPWex-A6smsFq0_sbGwThJF0_6168sbXY8gcLattYNgNYoRe3g@mail.gmail.com> (sfid-20180220_230655_549354_8D4064AC)
+Subject: Re: testing tool for packet delay
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: Steve deRosier <derosier@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Hello Toke,
+Thanks for sharing this information.
 
->> > We do have wiphy::max_ap_assoc_sta, but I see only ath10k, qtnfmac
->> > and
->> > rsi_91x setting it. I wish all drivers would use that.
->> > 
->> >  * @max_ap_assoc_sta: maximum number of associated stations
->> > supported in AP mode
->> >  * (including P2P GO) or 0 to indicate no such limit is advertised.
->> > The
->> >  * driver is allowed to advertise a theoretical limit that it can
->> > reach in
->> >  * some cases, but may not always reach.
->> 
->> Cool, I hadn't noticed this before.  I'll add a patch to iwlwifi to
->> add it.
+I took a look at Flent yesterday and planning to test it by the
+weekend due to something things I have to catch up with.
+
+
+
+On Tue, Feb 20, 2018 at 6:13 AM, Toke H=C3=B8iland-J=C3=B8rgensen <toke@tok=
+e.dk> wrote:
+> Steve deRosier <derosier@gmail.com> writes:
 >
-> Actually this is not so straightforward, because every time we add a
-> p2p vif, we lose one more station.  So the max_ap_assoc_sta value must
-> be dynamic (or we can state the theoretical lowest number to start
-> with, which would not be very nice).
+>> On Mon, Feb 19, 2018 at 9:19 AM, sdnlabs Janakaraj <wsuprabhu@gmail.com>=
+ wrote:
+>>>
+>>> Hello All,
+>>>
+>>> I am working on delay analysis of packets in wireless stacks. I am
+>>> able to see lots of papers talk about therotical analysis. But I am
+>>> more interested in practical evaluation.
+>>>
+>>> I am reaching out to developers community to learn how they actually
+>>> evaluate the performance of the stack. In particular, I am looking for
+>>> ideas to evaluate the delay experienced by packets within the
+>>> mac802.11 stack.
+>>>
+>>
+>> Hi Prabhu,
+>>
+>> Sounds like an interesting project. More often my instrumentation
+>> focuses on aggregate performance and iperf throughput numbers suffices
+>> for most of that. Occasionally I utilize internal performance measures
+>> and/or data provided me by ftrace and related tools.
+>>
+>> If you're unfamiliar with it, I suggest you look at the Bufferbloat
+>> and Make-wifi-fast projects. I suspect that their data and techniques
+>> and tools might be of interest to you:
+>>
+>> https://www.bufferbloat.net/projects/make-wifi-fast/
 >
-> I don't think this feature is worth the trouble, so I'll skip it for
-> now.
-
-I think the documentation answers that part pretty well:
-
-  "The driver is allowed to advertise a theoretical limit that it can
-   reach in some cases, but may not always reach."
-
-So I still thank having the drivers to advertise the theoretical maximum
-numbers of client is useful, even if it would not be always 100%
-correct. For example, an average user most likely will not have any clue
-if the limit is 10, 50 or 100 clients. And besides, very few people use
-P2P anyway ;)
-
-But of course this is just nice-to-have category cand we have far more
-important things to fix first.
-
--- 
-Kalle Valo
+> Bufferbloat/make-wifi-fast community member checking in ;)
+>
+> Basically, what we've been doing to analyse (and reduce) the latency of
+> the queueing system in the WiFi stack, is to put it under load and
+> measure how it behaves. This is not so much through the use of tracing
+> tools as it is an end-to-end black-box measurement approach.
+>
+> The go-to mechanism for this is to run a latency measurement (either a
+> simple ICMP ping, or a UDP measurement flow using a tool such as
+> irtt[1]), then load the connection with one or more TCP flows and see
+> how it impacts latency. You can of course vary the number of flows,
+> diffserv markings, etc. to get different insights.
+>
+> I'm the author of a test tool that automates a lot of this and which can
+> also collect a lot of statistics from the stack while doing so. The tool
+> is called Flent[2] and is open source. Feel free to try it out and ask
+> any questions that come up :)
+>
+> -Toke
+>
+> [1] https://github.com/peteheist/irtt/
+> [2] https://flent.org
