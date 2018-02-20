@@ -1,152 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59810 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752828AbeBSMvd (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751763AbeBTO6M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 07:51:33 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Feb 2018 14:48:47 +0200
-Message-Id: <20180219124847.27169-14-luca@coelho.fi> (sfid-20180219_135145_167948_C65B00B3)
-In-Reply-To: <20180219124847.27169-1-luca@coelho.fi>
-References: <20180219124847.27169-1-luca@coelho.fi>
-Subject: [PATCH v2 13/13] cfg80211: Add API to allow querying regdb for wmm_rule
+        Tue, 20 Feb 2018 09:58:12 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 01/12] staging: wilc1000: rename pu8HdnNtwrksWidVal to avoid camelCase
+Date: Tue, 20 Feb 2018 20:27:50 +0530
+Message-ID: <1519138681-1982-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155815_444383_B8E4E587)
+In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-In general regulatory self managed devices maintain their own
-regulatory profiles thus it doesn't have to query the regulatory database
-on country change.
-
-ETSI has recently introduced a new channel access mechanism for 5GHz
-that all wlan devices need to comply with.
-These values are stored in the regulatory database.
-There are self managed devices which can't maintain these
-values on their own. Add API to allow self managed regulatory devices
-to query the regulatory database for high band wmm rule.
-
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- include/net/cfg80211.h | 28 ++++++++++++++++++++++++++
- net/wireless/reg.c     | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 82 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7d49cd0cf92d..647cb33e738a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -6,6 +6,7 @@
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014 Intel Mobile Communications GmbH
-  * Copyright 2015-2017	Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -4653,6 +4654,33 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
-  */
- const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6f93966..f3a56e5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -754,7 +754,7 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 	u32 i;
+ 	u8 *buffer;
+ 	u8 valuesize = 0;
+-	u8 *pu8HdnNtwrksWidVal = NULL;
++	u8 *hdn_ntwk_wid_val = NULL;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
  
-+/**
-+ * DOC: Internal regulatory db functions
-+ *
-+ */
-+
-+/**
-+ * reg_query_regdb_wmm -  Query internal regulatory db for wmm rule
-+ * Regulatory self-managed driver can use it to proactively
-+ *
-+ * @alpha2: the ISO/IEC 3166 alpha2 wmm rule to be queried.
-+ * @freq: the freqency(in MHz) to be queried.
-+ * @dbptr: pointer where the regdb wmm data is to be stored (or %NULL if
-+ *	irrelevant). This can be used later for deduplication.
-+ * @rule: pointer to store the wmm rule from the regulatory db.
-+ *
-+ * Self-managed wireless drivers can use this function to  query
-+ * the internal regulatory database to check whether the given
-+ * ISO/IEC 3166 alpha2 country and freq have wmm rule limitations.
-+ *
-+ * Drivers should check the return value, its possible you can get
-+ * an -ENODATA.
-+ *
-+ * Return: 0 on success. -ENODATA.
-+ */
-+int reg_query_regdb_wmm(char *alpha2, int freq, u32 *ptr,
-+			struct ieee80211_wmm_rule *rule);
-+
- /*
-  * callbacks for asynchronous cfg80211 methods, notification
-  * functions and BSS handling helpers
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7c7c0e0f8d9d..1896394c6e7f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -878,6 +878,60 @@ static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
- 	}
+ 	hif_drv->usr_scan_req.scan_result = scan_info->result;
+@@ -780,8 +780,8 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 
+ 	for (i = 0; i < scan_info->hidden_network.n_ssids; i++)
+ 		valuesize += ((scan_info->hidden_network.net_info[i].ssid_len) + 1);
+-	pu8HdnNtwrksWidVal = kmalloc(valuesize + 1, GFP_KERNEL);
+-	wid_list[index].val = pu8HdnNtwrksWidVal;
++	hdn_ntwk_wid_val = kmalloc(valuesize + 1, GFP_KERNEL);
++	wid_list[index].val = hdn_ntwk_wid_val;
+ 	if (wid_list[index].val) {
+ 		buffer = wid_list[index].val;
+ 
+@@ -858,7 +858,7 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 	kfree(scan_info->hidden_network.net_info);
+ 	scan_info->hidden_network.net_info = NULL;
+ 
+-	kfree(pu8HdnNtwrksWidVal);
++	kfree(hdn_ntwk_wid_val);
+ 
+ 	return result;
  }
- 
-+static int __regdb_query_wmm(const struct fwdb_header *db,
-+			     const struct fwdb_country *country, int freq,
-+			     u32 *dbptr, struct ieee80211_wmm_rule *rule)
-+{
-+	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
-+	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
-+	int i;
-+
-+	for (i = 0; i < coll->n_rules; i++) {
-+		__be16 *rules_ptr = (void *)((u8 *)coll + ALIGN(coll->len, 2));
-+		unsigned int rule_ptr = be16_to_cpu(rules_ptr[i]) << 2;
-+		struct fwdb_rule *rrule = (void *)((u8 *)db + rule_ptr);
-+		struct fwdb_wmm_rule *wmm;
-+		unsigned int wmm_ptr;
-+
-+		if (rrule->len < offsetofend(struct fwdb_rule, wmm_ptr))
-+			continue;
-+
-+		if (freq >= KHZ_TO_MHZ(be32_to_cpu(rrule->start)) &&
-+		    freq <= KHZ_TO_MHZ(be32_to_cpu(rrule->end))) {
-+			wmm_ptr = be16_to_cpu(rrule->wmm_ptr) << 2;
-+			wmm = (void *)((u8 *)db + wmm_ptr);
-+			set_wmm_rule(rule, wmm);
-+			if (dbptr)
-+				*dbptr = wmm_ptr;
-+			return 0;
-+		}
-+	}
-+
-+	return -ENODATA;
-+}
-+
-+int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
-+			struct ieee80211_wmm_rule *rule)
-+{
-+	const struct fwdb_header *hdr = regdb;
-+	const struct fwdb_country *country;
-+
-+	if (IS_ERR(regdb))
-+		return PTR_ERR(regdb);
-+
-+	country = &hdr->country[0];
-+	while (country->coll_ptr) {
-+		if (alpha2_equal(alpha2, country->alpha2))
-+			return __regdb_query_wmm(regdb, country, freq, dbptr,
-+						 rule);
-+
-+		country++;
-+	}
-+
-+	return -ENODATA;
-+}
-+EXPORT_SYMBOL(reg_query_regdb_wmm);
-+
- struct wmm_ptrs {
- 	struct ieee80211_wmm_rule *rule;
- 	u32 ptr;
 -- 
-2.15.1
+2.7.4
