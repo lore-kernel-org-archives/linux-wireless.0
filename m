@@ -1,190 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:5313 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032592AbeBPSQG (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55048 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751833AbeBTNOU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 13:16:06 -0500
-Subject: Re: [PATCH 6/6] staging: wilc1000: fix line over 80 chars in
- wilc_spi_clear_int_ext()
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>
-References: <1518606615-14404-1-git-send-email-ajay.kathat@microchip.com>
- <1518606615-14404-7-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <63adcc58-bdd1-9fe7-6774-3ea1d626858b@microchip.com> (sfid-20180216_191611_098755_0A8C7A5A)
-Date: Fri, 16 Feb 2018 20:16:02 +0200
+        Tue, 20 Feb 2018 08:14:20 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-bluetooth@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>
+Subject: Re: [v7 3/8] rsi: add header file rsi_91x
+References: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
+        <1519046379-10068-4-git-send-email-amitkarwar@gmail.com>
+Date: Tue, 20 Feb 2018 15:14:14 +0200
+In-Reply-To: <1519046379-10068-4-git-send-email-amitkarwar@gmail.com>
+        (Amitkumar Karwar's message of "Mon, 19 Feb 2018 18:49:34 +0530")
+Message-ID: <87o9kjiz15.fsf@codeaurora.org> (sfid-20180220_141425_175693_2DE752B1)
 MIME-Version: 1.0
-In-Reply-To: <1518606615-14404-7-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dave and Johannes,
 
+a question to both of you below:
 
-On 14.02.2018 13:10, Ajay Singh wrote:
-> Refactor wilc_spi_clear_int_ext() to fix the "line over 80 char" issue
-> reported by checkpatch.pl script.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
+
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>
+> The common parameters used by wlan and bt modules are add
+> to a new header file "rsi_91x.h" defined in 'include/net'
+>
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 > ---
->  drivers/staging/wilc1000/wilc_spi.c | 113 +++++++++++++++++-------------------
->  1 file changed, 54 insertions(+), 59 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-> index 7c58beb8..6b392c9 100644
-> --- a/drivers/staging/wilc1000/wilc_spi.c
-> +++ b/drivers/staging/wilc1000/wilc_spi.c
-> @@ -988,74 +988,69 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
->  {
->  	struct spi_device *spi = to_spi_device(wilc->dev);
->  	int ret;
-> +	u32 flags;
-> +	u32 tbl_ctl;
->  
->  	if (g_spi.has_thrpt_enh) {
->  		ret = spi_internal_write(wilc, 0xe844 - WILC_SPI_REG_BASE,
->  					 val);
-> -	} else {
-> -		u32 flags;
-> -
-> -		flags = val & (BIT(MAX_NUM_INT) - 1);> -		if (flags) {
-> -			int i;
-> -
-> -			ret = 1;
-> -			for (i = 0; i < g_spi.nint; i++) {
-> -				/*
-> -				 * No matter what you write 1 or 0,
-> -				 * it will clear interrupt.
-> -				 */
-> -				if (flags & 1)
-> -					ret = wilc_spi_write_reg(wilc, 0x10c8 + i * 4, 1);
-> -				if (!ret)
-> -					break;
-> -				flags >>= 1;
-> -			}
-> -			if (!ret) {
-> +		return ret;
-> +	}
+> v7: Same as v6
+> v6: Renamed rsi_header.h to rsi_91x.h and moved to include/net
+>     from include/linux(Kalle)
+> v5: Same as earlier versions
+
+[...]
+
+> --- /dev/null
+> +++ b/include/net/rsi_91x.h
+> @@ -0,0 +1,34 @@
+> +/**
+> + * Copyright (c) 2017 Redpine Signals Inc.
+> + *
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> + */
 > +
-> +	flags = val & (BIT(MAX_NUM_INT) - 1);
-
-Or you could use:
-	unsigned long expected_irqs, unexpected_irqs;
-
-	expected_irqs = val & GENMASK(g_spi.int - 1, 0);
-	unexpected_irq = val & GENMASK(MAX_NUM_INT - 1, g_spi.int);
-
-	for (i = 0; i < g_spi.nint && expected_irqs; i++) {
-		if (expected_irqs & BIT(i)) {
-			ret = wilc_spi_write_reg(wilc, 0x10c8 + i * 4, 1);
-			if (ret) {
-				dev_err(...);
-				goto _fail_;
-			}
-		}
-	}
-
-	for (i = g_spi.nint; i < MAX_NUM_INT && unexpected_irq; i++) {
-		if (unexpected_irqs & BIT(i))
-			dev_err(...);
-
-Instead of this:
-> +	if (flags) {
-> +		int i;
+> +#ifndef __RSI_HEADER_H__
+> +#define __RSI_HEADER_H__
 > +
-> +		ret = 1;
-> +		for (i = 0; i < g_spi.nint; i++) {
-> +			/*
-> +			 * No matter what you write 1 or 0,
-> +			 * it will clear interrupt.
-> +			 */> +			if (flags & 1)
-> +				ret = wilc_spi_write_reg(wilc,
-> +							 0x10c8 + i * 4, 1);
-> +			if (!ret)
-> +				break;
-> +			flags >>= 1;
-> +		}
-> +		if (!ret) {
-> +			dev_err(&spi->dev,
-> +				"Failed wilc_spi_write_reg, set reg %x ...\n",
-> +				0x10c8 + i * 4);
-> +			goto _fail_;
-> +		}
-> +		for (i = g_spi.nint; i < MAX_NUM_INT; i++) {
-> +			if (flags & 1)
->  				dev_err(&spi->dev,
-> -					"Failed wilc_spi_write_reg, set reg %x ...\n",
-> -					0x10c8 + i * 4);
-> -				goto _fail_;
-> -			}
-> -			for (i = g_spi.nint; i < MAX_NUM_INT; i++) {
-> -				if (flags & 1)
-> -					dev_err(&spi->dev,
-> -						"Unexpected interrupt cleared %d...\n",
-> -						i);
-> -				flags >>= 1;
-> -			}
-> +					"Unexpected interrupt cleared %d...\n",
-> +					i);
-> +			flags >>= 1;
->  		}
-> +	}
->  
-until here.
+> +/* HAL queue information */
+> +#define RSI_COEX_Q			0x0
+> +#define RSI_BT_Q			0x2
+> +#define RSI_WLAN_Q                      0x3
+> +#define RSI_WIFI_MGMT_Q                 0x4
+> +#define RSI_WIFI_DATA_Q                 0x5
+> +#define RSI_BT_MGMT_Q			0x6
+> +#define RSI_BT_DATA_Q			0x7
+> +
+> +enum rsi_host_intf {
+> +	RSI_HOST_INTF_SDIO = 0,
+> +	RSI_HOST_INTF_USB
+> +};
+> +
+> +#endif
 
-> -		{
-> -			u32 tbl_ctl;
-> -
-> -			tbl_ctl = 0;
-> -			/* select VMM table 0 */
-> -			if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
-> -				tbl_ctl |= BIT(0);
-> -			/* select VMM table 1 */
-> -			if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
-> -				tbl_ctl |= BIT(1);
-> +	tbl_ctl = 0;
-> +	/* select VMM table 0 */
-> +	if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
-> +		tbl_ctl |= BIT(0);
-> +	/* select VMM table 1 */
-> +	if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
-> +		tbl_ctl |= BIT(1);
->  
-> -			ret = wilc_spi_write_reg(wilc, WILC_VMM_TBL_CTL,
-> -						 tbl_ctl);
-> -			if (!ret) {
-> -				dev_err(&spi->dev,
-> -					"fail write reg vmm_tbl_ctl...\n");
-> -				goto _fail_;
-> -			}
-> +	ret = wilc_spi_write_reg(wilc, WILC_VMM_TBL_CTL, tbl_ctl);
-> +	if (!ret) {
-> +		dev_err(&spi->dev, "fail write reg vmm_tbl_ctl...\n");
-> +		goto _fail_;
-> +	}
->  
-> -			if ((val & EN_VMM) == EN_VMM) {
-> -				/*
-> -				 * enable vmm transfer.
-> -				 */
-> -				ret = wilc_spi_write_reg(wilc,
-> -							 WILC_VMM_CORE_CTL, 1);
-> -				if (!ret) {
-> -					dev_err(&spi->dev, "fail write reg vmm_core_ctl...\n");
-> -					goto _fail_;
-> -				}
-> -			}
-> +	if ((val & EN_VMM) == EN_VMM) {
-> +		/*
-> +		 * enable vmm transfer.
-> +		 */> +		ret = wilc_spi_write_reg(wilc, WILC_VMM_CORE_CTL, 1);
-> +		if (!ret) {
-> +			dev_err(&spi->dev, "fail write reg vmm_core_ctl...\n");
-> +			goto _fail_;
->  		}
->  	}
->  _fail_:
-> 
+Are you guys ok to have this header file shared by rsi wireless and
+bluetooth driver in include/net?
+
+-- 
+Kalle Valo
