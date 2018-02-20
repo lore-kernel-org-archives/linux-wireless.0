@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0058.outbound.protection.outlook.com ([104.47.36.58]:37842
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752937AbeBEPFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Feb 2018 10:05:32 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: [PATCH 0/6] qtnfmac: qsr10g pcie backend updates
-Date: Mon,  5 Feb 2018 18:05:10 +0300
-Message-Id: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com> (sfid-20180205_160629_556864_1DDA2524)
+Received: from mail-ua0-f195.google.com ([209.85.217.195]:41686 "EHLO
+        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751669AbeBTOg3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Feb 2018 09:36:29 -0500
+Received: by mail-ua0-f195.google.com with SMTP id u99so7189498uau.8
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Feb 2018 06:36:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <31f0157f-4778-2f9c-977f-8bdbba6f52a4@redhat.com>
+References: <20180220134618.12972-1-carlo@caione.org> <31f0157f-4778-2f9c-977f-8bdbba6f52a4@redhat.com>
+From: Carlo Caione <carlo@endlessm.com>
+Date: Tue, 20 Feb 2018 14:36:27 +0000
+Message-ID: <CAL9uMOEFm4apUrDxs6GkZqV2S=mepd2Ytcna+SCaLnCcwtcfeg@mail.gmail.com> (sfid-20180220_153633_109741_99795939)
+Subject: Re: [RFC PATCH 0/2] net: rfkill: gpio: Fix and support SerDev
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Carlo Caione <carlo@caione.org>, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, frederic.danis.oss@gmail.com,
+        sebastian.reichel@collabora.co.uk,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        Jeremy Cline <jcline@redhat.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle and all,
+On Tue, Feb 20, 2018 at 2:01 PM, Hans de Goede <hdegoede@redhat.com> wrote:
+> Hi Carlo,
 
-Here is a patch set with various fixes and enhacements for qsr10g
-PCIe backend driver. The major changes include the following two
-items:
-- make rmmod/insmod work properly for qtnfmac_pcie driver
-- provide configuration knobs to control NSM (networked standby mode)
+Hi Hans,
 
-NSM (networked standby mode) is not related to WiFi standard. This is
-a term that has been introduced by European Commission in regulation
-No. 1275/2008. Simplifying things a bit, that regulation specifies
-ecodesing requirements for various operating modes. In that document
-‘networked standby’ is defined as a condition in which the equipment
-is able to resume a function by way of a remotely initiated trigger
-from a network connection.
+> Is this for devices with a RTL8723BS chip? If so then they
+> still will not work after this since there also no longer is
+> a /dev/ttyS4 created for the UART for the bluetooth, instead
+> you probably want:
+>
+> https://github.com/jwrdegoede/linux-sunxi/commit/c383dac5ea00738ac01d704d820aa548494fcd41
+>
+> Which also puts the /dev/ttyS4 back in place.
 
-Regards,
-Sergey
+Yeah, this problem came up while working on the RTL8723BS chip but the
+driver is also broken for the other two GPS devices supported by this
+driver.
+Thank you for the patch BTW.
 
-Sergei Maksimenko (3)
-  qtnfmac: implement asynchronous firmware loading
-  qtnfmac: enable reloading of qtnfmac kernel modules
-  qtnfmac: enable networked standby mode on device
+> Regards,
+>
+> Hans
+>
+> p.s.
+>
+> My college Jeremy Cline in the Cc is looking into getting proper
+> bluetooth support in place for the rtl8723bs using serdev binding
+> and having everything in the kernel, as we now already do for bcm
+> uart bluetooth modules.
 
-Sergey Matyukevich (3)
-  qtnfmac: fix releasing Tx/Rx data buffers
-  qtnfmac: fix rmmod for firmware version mismatch
-  qtnfmac: fix rmmod for missing firmware
+Wasn't also Martin (+CC) working on this? See
+https://www.spinics.net/lists/linux-bluetooth/msg73594.html
 
+Cheers,
 
- bus.h                   |    4 
- commands.c              |   33 +++
- commands.h              |    1 
- core.c                  |   77 +++++++++
- core.h                  |    2 
- pearl/pcie.c            |  407 +++++++++++++++++++++++++-----------------------
- pearl/pcie_ipc.h        |    1 
- pearl/pcie_regs_pearl.h |    1 
- qlink.h                 |   30 +++
- 9 files changed, 363 insertions(+), 193 deletions(-)
+-- 
+Carlo Caione  |  +44.7384.69.16.04  |  Endless
