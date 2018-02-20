@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:34097 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750866AbeBTOKQ (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752244AbeBTO6s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 09:10:16 -0500
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Subject: Re: [RFC PATCH 0/2] net: rfkill: gpio: Fix and support SerDev
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <31f0157f-4778-2f9c-977f-8bdbba6f52a4@redhat.com>
-Date: Tue, 20 Feb 2018 15:10:13 +0100
-Cc: Carlo Caione <carlo@caione.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, frederic.danis.oss@gmail.com,
-        sebastian.reichel@collabora.co.uk, rafael.j.wysocki@intel.com,
-        linux@endlessm.com, Carlo Caione <carlo@endlessm.com>,
-        Jeremy Cline <jcline@redhat.com>
-Message-Id: <660C7ECE-213D-4547-BF47-239669EB707D@holtmann.org> (sfid-20180220_151019_781509_3526F275)
-References: <20180220134618.12972-1-carlo@caione.org>
- <31f0157f-4778-2f9c-977f-8bdbba6f52a4@redhat.com>
-To: Hans de Goede <hdegoede@redhat.com>
+        Tue, 20 Feb 2018 09:58:48 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 11/12] staging: wilc1000: rename _WPAPtk_end_case_ label to avoid camelCase
+Date: Tue, 20 Feb 2018 20:28:00 +0530
+Message-ID: <1519138681-1982-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155851_960131_8A426451)
+In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hans,
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-> Is this for devices with a RTL8723BS chip? If so then they
-> still will not work after this since there also no longer is
-> a /dev/ttyS4 created for the UART for the bluetooth, instead
-> you probably want:
-> 
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-it is not for that hardware, it is for some GPS devices.
-
-static const struct acpi_device_id rfkill_acpi_match[] = {
-        { "BCM4752", RFKILL_TYPE_GPS },
-        { "LNV4752", RFKILL_TYPE_GPS },
-        { },
-};
-
-> https://github.com/jwrdegoede/linux-sunxi/commit/c383dac5ea00738ac01d704d820aa548494fcd41
-> 
-> Which also puts the /dev/ttyS4 back in place.
-> 
-> Regards,
-> 
-> Hans
-> 
-> p.s.
-> 
-> My college Jeremy Cline in the Cc is looking into getting proper
-> bluetooth support in place for the rtl8723bs using serdev binding
-> and having everything in the kernel, as we now already do for bcm
-> uart bluetooth modules.
-
-Actually this should be done quickly since the Realtek hciattach / btattach hacks are not even upstream either since that is unmergable code. Even a basic hci_rtl.c driver would be better than nothing.
-
-Regards
-
-Marcel
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 8528ff8..0cfb79d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1690,7 +1690,7 @@ static int handle_key(struct wilc_vif *vif,
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+ 				ret = -ENOMEM;
+-				goto _WPAPtk_end_case_;
++				goto out_wpa_ptk;
+ 			}
+ 
+ 			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
+@@ -1719,7 +1719,7 @@ static int handle_key(struct wilc_vif *vif,
+ 			if (!pu8keybuf) {
+ 				netdev_err(vif->ndev, "No buffer send PTK\n");
+ 				ret = -ENOMEM;
+-				goto _WPAPtk_end_case_;
++				goto out_wpa_ptk;
+ 			}
+ 
+ 			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
+@@ -1739,7 +1739,7 @@ static int handle_key(struct wilc_vif *vif,
+ 			complete(&hif_drv->comp_test_key_block);
+ 		}
+ 
+-_WPAPtk_end_case_:
++out_wpa_ptk:
+ 		kfree(pstrHostIFkeyAttr->attr.wpa.key);
+ 		if (ret)
+ 			return ret;
+-- 
+2.7.4
