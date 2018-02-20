@@ -1,83 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:54082 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934329AbeB1UP1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 15:15:27 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH for-4.16 V3 2/2] brcmfmac: fix P2P_DEVICE ethernet address generation
-Date: Wed, 28 Feb 2018 21:15:20 +0100
-Message-Id: <1519848920-18000-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180228_211553_955531_8C93931C)
-In-Reply-To: <1519848920-18000-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1519848920-18000-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mail.neratec.com ([46.140.151.2]:1151 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750829AbeBTOmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Feb 2018 09:42:07 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH 2/2] ath9k: Fix ack SIFS time for quarter/half channels
+Date: Tue, 20 Feb 2018 15:42:00 +0100
+Message-Id: <1519137720-9129-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20180220_154210_984633_C51C4B19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware has a requirement that the P2P_DEVICE address should
-be different from the address of the primary interface. When not
-specified by user-space, the driver generates the MAC address for
-the P2P_DEVICE interface using the MAC address of the primary
-interface and setting the locally administered bit. However, the MAC
-address of the primary interface may already have that bit set causing
-the creation of the P2P_DEVICE interface to fail with -EBUSY. Fix this
-by using a random address instead to determine the P2P_DEVICE address.
+Ack timing generation has to be adapted for 5/10 MHz channels.
+Do it by properly initializing ack shift field in TXSIFS
+register. Ack shift assumes channel width of 2.5 Hhz so
+value zero means 2.5 MHz, 1 is 5 MHz and so on.
 
-Cc: stable@vger.kernel.org # 3.10.y
-Reported-by: Hans de Goede <hdegoede@redhat.com>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 ---
- V3:
-  - use eth_random_addr() suggested by Hans.
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 24 ++++++++++------------
- 1 file changed, 11 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 2ee5413..82064e9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -462,25 +462,23 @@ static int brcmf_p2p_set_firmware(struct brcmf_if *ifp, u8 *p2p_mac)
-  * @dev_addr: optional device address.
-  *
-  * P2P needs mac addresses for P2P device and interface. If no device
-- * address it specified, these are derived from the primary net device, ie.
-- * the permanent ethernet address of the device.
-+ * address it specified, these are derived from a random ethernet
-+ * address.
-  */
- static void brcmf_p2p_generate_bss_mac(struct brcmf_p2p_info *p2p, u8 *dev_addr)
- {
--	struct brcmf_if *pri_ifp = p2p->bss_idx[P2PAPI_BSSCFG_PRIMARY].vif->ifp;
--	bool local_admin = false;
-+	bool random_addr = false;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 3017078..6b37036 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1038,7 +1038,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	int acktimeout, ctstimeout, ack_offset = 0;
+ 	int slottime;
+ 	int sifstime;
+-	int rx_lat = 0, tx_lat = 0, eifs = 0;
++	int rx_lat = 0, tx_lat = 0, eifs = 0, ack_shift = 0;
+ 	u32 reg;
  
--	if (!dev_addr || is_zero_ether_addr(dev_addr)) {
--		dev_addr = pri_ifp->mac_addr;
--		local_admin = true;
--	}
-+	if (!dev_addr || is_zero_ether_addr(dev_addr))
-+		random_addr = true;
+ 	ath_dbg(ath9k_hw_common(ah), RESET, "ah->misc_mode 0x%x\n",
+@@ -1070,6 +1070,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
  
--	/* Generate the P2P Device Address.  This consists of the device's
--	 * primary MAC address with the locally administered bit set.
-+	/* Generate the P2P Device Address obtaining a random ethernet
-+	 * address with the locally administered bit set.
- 	 */
--	memcpy(p2p->dev_addr, dev_addr, ETH_ALEN);
--	if (local_admin)
--		p2p->dev_addr[0] |= 0x02;
-+	if (random_addr)
-+		eth_random_addr(p2p->dev_addr);
-+	else
-+		memcpy(p2p->dev_addr, dev_addr, ETH_ALEN);
+ 		sifstime = 32;
+ 		ack_offset = 16;
++		ack_shift = 3;
+ 		slottime = 13;
+ 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
+ 		eifs = 340;
+@@ -1080,6 +1081,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
  
- 	/* Generate the P2P Interface Address.  If the discovery and connection
- 	 * BSSCFGs need to simultaneously co-exist, then this address must be
+ 		sifstime = 64;
+ 		ack_offset = 32;
++		ack_shift = 1;
+ 		slottime = 21;
+ 	} else {
+ 		if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah)) {
+@@ -1136,6 +1138,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		SM(tx_lat, AR_USEC_TX_LAT),
+ 		AR_USEC_TX_LAT | AR_USEC_RX_LAT | AR_USEC_USEC);
+ 
++	if (IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan))
++		REG_RMW(ah, AR_TXSIFS,
++			sifstime | SM(ack_shift, AR_TXSIFS_ACK_SHIFT),
++			(AR_TXSIFS_TIME | AR_TXSIFS_ACK_SHIFT));
+ }
+ EXPORT_SYMBOL(ath9k_hw_init_global_settings);
+ 
 -- 
-1.9.1
+2.7.4
