@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:57670 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750709AbeBCHZm (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751763AbeBTO60 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Feb 2018 02:25:42 -0500
-Message-ID: <1517640716.6175.13.camel@coelho.fi> (sfid-20180203_082545_865078_6DBEAF0F)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sat, 03 Feb 2018 08:51:56 +0200
-In-Reply-To: <87y3l07n38.fsf@codeaurora.org>
-References: <20171223092200.30270-1-luca@coelho.fi>
-         <871sivs48k.fsf@kamboji.qca.qualcomm.com>
-         <1515914548.7436.1.camel@intel.com> <87y3l07n38.fsf@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 0/5] iwlwifi: updates intended for v4.16 2017-12-23
+        Tue, 20 Feb 2018 09:58:26 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 05/12] staging: wilc1000: rename Handle_SetMulticastFilter to avoid camelCase
+Date: Tue, 20 Feb 2018 20:27:54 +0530
+Message-ID: <1519138681-1982-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155830_223284_29F32177)
+In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-On Sun, 2018-01-14 at 12:26 +0200, Kalle Valo wrote:
-> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
-> 
-> > On Fri, 2018-01-12 at 13:31 +0200, Kalle Valo wrote:
-> > > From: Luca Coelho <luciano.coelho@intel.com>
-> > > 
-> > > > Luca Coelho (1):
-> > > >   iwlwifi: mvm: check if mac80211_queue is valid in
-> > > > iwl_mvm_disable_txq
-> > > > 
-> > > > Mordechay Goodstein (1):
-> > > >   iwlwifi: set default timstamp marker cmd
-> > > > 
-> > > > Sara Sharon (3):
-> > > >   iwlwifi: mvm: flip AMSDU addresses only for 9000 family
-> > > >   iwlwifi: mvm: take RCU lock before dereferencing
-> > > >   iwlwifi: mvm: move TSO segment to a separate function
-> > > 
-> > > Most likely the merge window starts in 9 days so I need to start
-> > > getting patches ready. As Luca is away should I apply these
-> > > patches
-> > > directly to wireless-drivers-next?
-> > > 
-> > 
-> > First let me thank you for tracking this. I don't see anything that
-> > we
-> > really need in 4.16 here. Besides Luca's UBSAN warning, all the
-> > rest
-> > is for a new device family which won't be supported in 4.16 anyway.
-> > 
-> > So I opt to wait for Luca here.
-> 
-> Ok, I'll wait for him then.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Sorry for coming back to this just now, but yeah, Emmanuel is right
-because of the holidays and my vacations, this got delayed, so it can
-go to 4.17.  I'll include this as part of my next -next pull request.
-
---
-Cheers,
-Luca.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index fd21765..57f0201 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2404,8 +2404,8 @@ static void handle_power_management(struct wilc_vif *vif,
+ 		netdev_err(vif->ndev, "Failed to send power management\n");
+ }
+ 
+-static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+-				      struct set_multicast *hif_set_mc)
++static void handle_set_mcast_filter(struct wilc_vif *vif,
++				    struct set_multicast *hif_set_mc)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -2621,7 +2621,7 @@ static void host_if_work(struct work_struct *work)
+ 		break;
+ 
+ 	case HOST_IF_MSG_SET_MULTICAST_FILTER:
+-		Handle_SetMulticastFilter(msg->vif, &msg->body.multicast_info);
++		handle_set_mcast_filter(msg->vif, &msg->body.multicast_info);
+ 		break;
+ 
+ 	case HOST_IF_MSG_DEL_ALL_STA:
+-- 
+2.7.4
