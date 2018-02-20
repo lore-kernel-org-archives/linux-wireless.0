@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44390 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750962AbeBWJGI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 04:06:08 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 4/4] mac80211: support station 4-addr mode fast-rx
-Date: Fri, 23 Feb 2018 10:06:06 +0100
-Message-Id: <20180223090606.55726-4-nbd@nbd.name> (sfid-20180223_100615_018108_CDD8E98F)
-In-Reply-To: <20180223090606.55726-1-nbd@nbd.name>
-References: <20180223090606.55726-1-nbd@nbd.name>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:39354 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751270AbeBTOBT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Feb 2018 09:01:19 -0500
+Received: by mail-wr0-f193.google.com with SMTP id w77so14666982wrc.6
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Feb 2018 06:01:18 -0800 (PST)
+Subject: Re: [RFC PATCH 0/2] net: rfkill: gpio: Fix and support SerDev
+To: Carlo Caione <carlo@caione.org>, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, frederic.danis.oss@gmail.com,
+        sebastian.reichel@collabora.co.uk, rafael.j.wysocki@intel.com,
+        linux@endlessm.com
+Cc: Carlo Caione <carlo@endlessm.com>, Jeremy Cline <jcline@redhat.com>
+References: <20180220134618.12972-1-carlo@caione.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <31f0157f-4778-2f9c-977f-8bdbba6f52a4@redhat.com> (sfid-20180220_150123_451284_6AFDBCE1)
+Date: Tue, 20 Feb 2018 15:01:15 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180220134618.12972-1-carlo@caione.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/cfg.c |  2 --
- net/mac80211/rx.c  | 11 +++++++----
- 2 files changed, 7 insertions(+), 6 deletions(-)
+Hi Carlo,
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 6f9d5beec73e..72b5a2ec4e94 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -160,7 +160,6 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 	if (type == NL80211_IFTYPE_AP_VLAN &&
- 	    params && params->use_4addr == 0) {
- 		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
--		ieee80211_check_fast_rx_iface(sdata);
- 	} else if (type == NL80211_IFTYPE_STATION &&
- 		   params && params->use_4addr >= 0) {
- 		sdata->u.mgd.use_4addr = params->use_4addr;
-@@ -1575,7 +1574,6 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 			}
- 
- 			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
--			__ieee80211_check_fast_rx_iface(vlansdata);
- 		}
- 
- 		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6e2506a84586..6944705c5258 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3747,10 +3747,6 @@ void ieee80211_check_fast_rx(struct sta_info *sta)
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
--		/* 4-addr is harder to deal with, later maybe */
--		if (sdata->u.mgd.use_4addr)
--			goto clear;
--
- 		if (sta->sta.tdls) {
- 			fastrx.da_offs = offsetof(struct ieee80211_hdr, addr1);
- 			fastrx.sa_offs = offsetof(struct ieee80211_hdr, addr2);
-@@ -3763,6 +3759,13 @@ void ieee80211_check_fast_rx(struct sta_info *sta)
- 				cpu_to_le16(IEEE80211_FCTL_FROMDS);
- 		}
- 
-+		if (sdata->u.mgd.use_4addr && !sta->sta.tdls) {
-+			fastrx.expected_ds_bits |=
-+				cpu_to_le16(IEEE80211_FCTL_TODS);
-+			fastrx.da_offs = offsetof(struct ieee80211_hdr, addr3);
-+			fastrx.sa_offs = offsetof(struct ieee80211_hdr, addr4);
-+		}
-+
- 		if (!sdata->u.mgd.powersave)
- 		    break;
- 
--- 
-2.14.2
+Is this for devices with a RTL8723BS chip? If so then they
+still will not work after this since there also no longer is
+a /dev/ttyS4 created for the UART for the bluetooth, instead
+you probably want:
+
+https://github.com/jwrdegoede/linux-sunxi/commit/c383dac5ea00738ac01d704d820aa548494fcd41
+
+Which also puts the /dev/ttyS4 back in place.
+
+Regards,
+
+Hans
+
+p.s.
+
+My college Jeremy Cline in the Cc is looking into getting proper
+bluetooth support in place for the rtl8723bs using serdev binding
+and having everything in the kernel, as we now already do for bcm
+uart bluetooth modules.
+
+On 20-02-18 14:46, Carlo Caione wrote:
+> From: Carlo Caione <carlo@endlessm.com>
+> 
+> Hi,
+> this patch came after investigating why the rfkill-gpio driver was failing on
+> the latest kernel on a machine I have. Sending this out as RFC because I'm
+> still not sure if this is the right way to approach this problem. I was
+> honestly expecting not to see the platform devices failing as consequences of
+> the latest work on SerDev.
+> 
+> Carlo Caione (2):
+>    net: rfkill: gpio: Fix NULL pointer deference
+>    net: rfkill: gpio: Convert driver to SerDev
+> 
+>   net/rfkill/Kconfig       |  1 +
+>   net/rfkill/rfkill-gpio.c | 48 +++++++++++++++++++++++++-----------------------
+>   2 files changed, 26 insertions(+), 23 deletions(-)
+> 
