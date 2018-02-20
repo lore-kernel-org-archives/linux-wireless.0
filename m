@@ -1,85 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48542 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752532AbeBLR7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 12:59:09 -0500
-Subject: Re: [PATCH] net: make getname() functions return length rather than
- use int* parameter
-To: David Miller <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org
-References: <20180212141518.3354-1-dvlasenk@redhat.com>
- <20180212.124738.870301786818646917.davem@davemloft.net>
-From: Denys Vlasenko <dvlasenk@redhat.com>
-Message-ID: <4f0c5a1d-f75d-4c54-8cdd-5660b2233252@redhat.com> (sfid-20180212_185932_048398_88C90BB2)
-Date: Mon, 12 Feb 2018 18:59:06 +0100
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751763AbeBTO6Q (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Feb 2018 09:58:16 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 02/12] staging: wilc1000: rename ptstrJoinBssParam to avoid camelCase
+Date: Tue, 20 Feb 2018 20:27:51 +0530
+Message-ID: <1519138681-1982-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155818_916393_C7E1B9EA)
+In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180212.124738.870301786818646917.davem@davemloft.net>
-Content-Type: text/plain; charset=iso-8859-7; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/12/2018 06:47 PM, David Miller wrote:
-> From: Denys Vlasenko <dvlasenk@redhat.com>
-> Date: Mon, 12 Feb 2018 15:15:18 +0100
-> 
->> Before:
->> All these functions either return a negative error indicator,
->> or store length of sockaddr into "int *socklen" parameter
->> and return zero on success.
->>
->> "int *socklen" parameter is awkward. For example, if caller does not
->> care, it still needs to provide on-stack storage for the value
->> it does not need.
->>
->> None of the many FOO_getname() functions of various protocols
->> ever used old value of *socklen. They always just overwrite it.
->>
->> This change drops this parameter, and makes all these functions, on success,
->> return length of sockaddr. It's always >= 0 and can be differentiated
->> from an error.
->>
->> Tests in callers are changed from "if (err)" to "if (err < 0)", where needed.
->>
->> rpc_sockname() lost "int buflen" parameter, since its only use was
->> to be passed to kernel_getsockname() as &buflen and subsequently
->> not used in any way.
->>
->> Userspace API is not changed.
->>
->>      text    data     bss      dec     hex filename
->> 30108430 2633624  873672 33615726 200ef6e vmlinux.before.o
->> 30108109 2633612  873672 33615393 200ee21 vmlinux.o
->>
->> Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
-> 
-> Please do an allmodconfig build, there are still some conversions you
-> missed:
-> 
-> security/tomoyo/network.c: In function ¡tomoyo_socket_listen_permission¢:
-> security/tomoyo/network.c:658:19: warning: passing argument 3 of ¡sock->ops->getname¢ makes integer from pointer without a cast [-Wint-conversion]
->              &addr, &addr_len, 0);
->                     ^
-> security/tomoyo/network.c:658:19: note: expected ¡int¢ but argument is of type ¡int *¢
-> security/tomoyo/network.c:657:21: error: too many arguments to function ¡sock->ops->getname¢
->     const int error = sock->ops->getname(sock, (struct sockaddr *)
->                       ^~~~
-> fs/dlm/lowcomms.c: In function ¡lowcomms_error_report¢:
-> fs/dlm/lowcomms.c:495:6: error: too many arguments to function ¡kernel_getpeername¢
->        kernel_getpeername(con->sock, (struct sockaddr *)&saddr, &buflen)) {
->        ^~~~~~~~~~~~~~~~~~
-> fs/dlm/lowcomms.c: In function ¡tcp_accept_from_sock¢:
-> fs/dlm/lowcomms.c:761:7: warning: passing argument 3 of ¡newsock->ops->getname¢ makes integer from pointer without a cast [-Wint-conversion]
->         &len, 2)) {
->         ^
-> fs/dlm/lowcomms.c:761:7: note: expected ¡int¢ but argument is of type ¡int *¢
-> fs/dlm/lowcomms.c:760:6: error: too many arguments to function ¡newsock->ops->getname¢
->    if (newsock->ops->getname(newsock, (struct sockaddr *)&peeraddr,
->        ^~~~~~~
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-Sorry. Will send updated patch.
-  
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 78 +++++++++++++++----------------
+ 1 file changed, 39 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f3a56e5..0f1eb17 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -909,7 +909,7 @@ static s32 handle_connect(struct wilc_vif *vif,
+ 	struct wid wid_list[8];
+ 	u32 wid_cnt = 0, dummyval = 0;
+ 	u8 *cur_byte = NULL;
+-	struct join_bss_param *ptstrJoinBssParam;
++	struct join_bss_param *bss_param;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (memcmp(pstrHostIFconnectAttr->bssid, wilc_connected_ssid, ETH_ALEN) == 0) {
+@@ -918,8 +918,8 @@ static s32 handle_connect(struct wilc_vif *vif,
+ 		return result;
+ 	}
+ 
+-	ptstrJoinBssParam = pstrHostIFconnectAttr->params;
+-	if (!ptstrJoinBssParam) {
++	bss_param = pstrHostIFconnectAttr->params;
++	if (!bss_param) {
+ 		netdev_err(vif->ndev, "Required BSSID not found\n");
+ 		result = -ENOENT;
+ 		goto ERRORHANDLER;
+@@ -1031,8 +1031,8 @@ static s32 handle_connect(struct wilc_vif *vif,
+ 		netdev_err(vif->ndev, "Channel out of range\n");
+ 		*(cur_byte++) = 0xFF;
+ 	}
+-	*(cur_byte++)  = (ptstrJoinBssParam->cap_info) & 0xFF;
+-	*(cur_byte++)  = ((ptstrJoinBssParam->cap_info) >> 8) & 0xFF;
++	*(cur_byte++)  = (bss_param->cap_info) & 0xFF;
++	*(cur_byte++)  = ((bss_param->cap_info) >> 8) & 0xFF;
+ 
+ 	if (pstrHostIFconnectAttr->bssid)
+ 		memcpy(cur_byte, pstrHostIFconnectAttr->bssid, 6);
+@@ -1042,57 +1042,57 @@ static s32 handle_connect(struct wilc_vif *vif,
+ 		memcpy(cur_byte, pstrHostIFconnectAttr->bssid, 6);
+ 	cur_byte += 6;
+ 
+-	*(cur_byte++)  = (ptstrJoinBssParam->beacon_period) & 0xFF;
+-	*(cur_byte++)  = ((ptstrJoinBssParam->beacon_period) >> 8) & 0xFF;
+-	*(cur_byte++)  =  ptstrJoinBssParam->dtim_period;
++	*(cur_byte++)  = (bss_param->beacon_period) & 0xFF;
++	*(cur_byte++)  = ((bss_param->beacon_period) >> 8) & 0xFF;
++	*(cur_byte++)  =  bss_param->dtim_period;
+ 
+-	memcpy(cur_byte, ptstrJoinBssParam->supp_rates, MAX_RATES_SUPPORTED + 1);
++	memcpy(cur_byte, bss_param->supp_rates, MAX_RATES_SUPPORTED + 1);
+ 	cur_byte += (MAX_RATES_SUPPORTED + 1);
+ 
+-	*(cur_byte++)  =  ptstrJoinBssParam->wmm_cap;
+-	*(cur_byte++)  = ptstrJoinBssParam->uapsd_cap;
++	*(cur_byte++)  =  bss_param->wmm_cap;
++	*(cur_byte++)  = bss_param->uapsd_cap;
+ 
+-	*(cur_byte++)  = ptstrJoinBssParam->ht_capable;
+-	hif_drv->usr_conn_req.ht_capable = ptstrJoinBssParam->ht_capable;
++	*(cur_byte++)  = bss_param->ht_capable;
++	hif_drv->usr_conn_req.ht_capable = bss_param->ht_capable;
+ 
+-	*(cur_byte++)  =  ptstrJoinBssParam->rsn_found;
+-	*(cur_byte++)  =  ptstrJoinBssParam->rsn_grp_policy;
+-	*(cur_byte++) =  ptstrJoinBssParam->mode_802_11i;
++	*(cur_byte++)  =  bss_param->rsn_found;
++	*(cur_byte++)  =  bss_param->rsn_grp_policy;
++	*(cur_byte++) =  bss_param->mode_802_11i;
+ 
+-	memcpy(cur_byte, ptstrJoinBssParam->rsn_pcip_policy, sizeof(ptstrJoinBssParam->rsn_pcip_policy));
+-	cur_byte += sizeof(ptstrJoinBssParam->rsn_pcip_policy);
++	memcpy(cur_byte, bss_param->rsn_pcip_policy, sizeof(bss_param->rsn_pcip_policy));
++	cur_byte += sizeof(bss_param->rsn_pcip_policy);
+ 
+-	memcpy(cur_byte, ptstrJoinBssParam->rsn_auth_policy, sizeof(ptstrJoinBssParam->rsn_auth_policy));
+-	cur_byte += sizeof(ptstrJoinBssParam->rsn_auth_policy);
++	memcpy(cur_byte, bss_param->rsn_auth_policy, sizeof(bss_param->rsn_auth_policy));
++	cur_byte += sizeof(bss_param->rsn_auth_policy);
+ 
+-	memcpy(cur_byte, ptstrJoinBssParam->rsn_cap, sizeof(ptstrJoinBssParam->rsn_cap));
+-	cur_byte += sizeof(ptstrJoinBssParam->rsn_cap);
++	memcpy(cur_byte, bss_param->rsn_cap, sizeof(bss_param->rsn_cap));
++	cur_byte += sizeof(bss_param->rsn_cap);
+ 
+ 	*(cur_byte++) = REAL_JOIN_REQ;
+-	*(cur_byte++) = ptstrJoinBssParam->noa_enabled;
++	*(cur_byte++) = bss_param->noa_enabled;
+ 
+-	if (ptstrJoinBssParam->noa_enabled) {
+-		*(cur_byte++) = (ptstrJoinBssParam->tsf) & 0xFF;
+-		*(cur_byte++) = ((ptstrJoinBssParam->tsf) >> 8) & 0xFF;
+-		*(cur_byte++) = ((ptstrJoinBssParam->tsf) >> 16) & 0xFF;
+-		*(cur_byte++) = ((ptstrJoinBssParam->tsf) >> 24) & 0xFF;
++	if (bss_param->noa_enabled) {
++		*(cur_byte++) = (bss_param->tsf) & 0xFF;
++		*(cur_byte++) = ((bss_param->tsf) >> 8) & 0xFF;
++		*(cur_byte++) = ((bss_param->tsf) >> 16) & 0xFF;
++		*(cur_byte++) = ((bss_param->tsf) >> 24) & 0xFF;
+ 
+-		*(cur_byte++) = ptstrJoinBssParam->opp_enabled;
+-		*(cur_byte++) = ptstrJoinBssParam->idx;
++		*(cur_byte++) = bss_param->opp_enabled;
++		*(cur_byte++) = bss_param->idx;
+ 
+-		if (ptstrJoinBssParam->opp_enabled)
+-			*(cur_byte++) = ptstrJoinBssParam->ct_window;
++		if (bss_param->opp_enabled)
++			*(cur_byte++) = bss_param->ct_window;
+ 
+-		*(cur_byte++) = ptstrJoinBssParam->cnt;
++		*(cur_byte++) = bss_param->cnt;
+ 
+-		memcpy(cur_byte, ptstrJoinBssParam->duration, sizeof(ptstrJoinBssParam->duration));
+-		cur_byte += sizeof(ptstrJoinBssParam->duration);
++		memcpy(cur_byte, bss_param->duration, sizeof(bss_param->duration));
++		cur_byte += sizeof(bss_param->duration);
+ 
+-		memcpy(cur_byte, ptstrJoinBssParam->interval, sizeof(ptstrJoinBssParam->interval));
+-		cur_byte += sizeof(ptstrJoinBssParam->interval);
++		memcpy(cur_byte, bss_param->interval, sizeof(bss_param->interval));
++		cur_byte += sizeof(bss_param->interval);
+ 
+-		memcpy(cur_byte, ptstrJoinBssParam->start_time, sizeof(ptstrJoinBssParam->start_time));
+-		cur_byte += sizeof(ptstrJoinBssParam->start_time);
++		memcpy(cur_byte, bss_param->start_time, sizeof(bss_param->start_time));
++		cur_byte += sizeof(bss_param->start_time);
+ 	}
+ 
+ 	cur_byte = wid_list[wid_cnt].val;
+-- 
+2.7.4
