@@ -1,101 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from civicrm.laptop.org ([18.85.44.157]:54757 "EHLO swan.laptop.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967843AbeBOL54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 06:57:56 -0500
-Date: Thu, 15 Feb 2018 22:57:48 +1100
-From: James Cameron <quozl@laptop.org>
-To: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath9k: mark RSSI as invalid if frame received during
- channel setup
-Message-ID: <20180215115748.GL17837@us.netrek.org> (sfid-20180215_125802_793900_0BB9CC88)
-References: <AM4PR0101MB230538DEEFCFFC0E0F4437A2E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
- <20180214213025.GB17837@us.netrek.org>
- <87mv0a6brz.fsf@kamboji.qca.qualcomm.com>
- <20180215072118.GG17837@us.netrek.org>
- <AM4PR0101MB2305806FCA1CC031A49C5B7DE4F40@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+Received: from mout.kundenserver.de ([217.72.192.74]:45065 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751578AbeBTL7q (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Feb 2018 06:59:46 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: stable@vger.kernel.org
+Cc: Greg KH <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [4.4-stable 17/22] cw1200: fix bogus maybe-uninitialized warning
+Date: Tue, 20 Feb 2018 12:55:04 +0100
+Message-Id: <20180220115527.1806578-18-arnd@arndb.de> (sfid-20180220_130423_012136_6DB0A4F9)
+In-Reply-To: <20180220115527.1806578-1-arnd@arndb.de>
+References: <20180220115527.1806578-1-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AM4PR0101MB2305806FCA1CC031A49C5B7DE4F40@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 15, 2018 at 08:52:53AM +0000, Jean Pierre TOSONI wrote:
-> > -----Message d'origine-----
-> > De : quozl@laptop.org [mailto:quozl@laptop.org]
-> > Envoyé : jeudi 15 février 2018 08:21
-> > À : Kalle Valo
-> > Cc : Jean Pierre TOSONI; linux-wireless@vger.kernel.org; ath9k-
-> > devel@qca.qualcomm.com
-> > Objet : Re: [PATCH v2] ath9k: mark RSSI as invalid if frame received
-> > during channel setup
-> > 
-> > On Thu, Feb 15, 2018 at 07:51:28AM +0200, Kalle Valo wrote:
-> > > James Cameron <quozl@laptop.org> writes:
-> > >
-> > >> On Wed, Feb 14, 2018 at 04:26:42PM +0000, Jean Pierre TOSONI
-> > wrote:
-> > >>> ath9k returns a wrong RSSI value for frames received
-> > >>> in a 30ms time window after a channel change. The
-> > >>> correct value is typically 10dB below the returned value.
-> > >>
-> > >> How was your correct value determined?
-> > >>
-> 
-> 1) test setup:
-> Connecting the AP through coax and attenuators, then making 500 passive scans off-channel, then drawing an histogram of the beacon signals found by the chip. The off-channel period is 108 ms. The probability of being in the 30 ms window is 28%. The histogram shows 2 spikes, one large with the expected value, one small at around +10dB above.
-> 
-> 2) value determination
-> Adjust the delay (CONFIG_HZ=250) by trial and error. 25ms was not enough to completely absorb the +10dB spike in the histogram, while 30ms was enough.
-> 
-> Do you think of a better approach?
+commit 7fc1503c906f0fac62d3506a6e993e49fb996248 upstream.
 
-No, I think your approach is fine.  I was curious.  Thanks for explaining.
+On x86, the cw1200 driver produces a rather silly warning about the
+possible use of the 'ret' variable without an initialization
+presumably after being confused by the architecture specific definition
+of WARN_ON:
 
-> Maybe the guys at Qualcomm know the correct value?
+drivers/net/wireless/st/cw1200/wsm.c: In function â€˜wsm_handle_rxâ€™:
+drivers/net/wireless/st/cw1200/wsm.c:1457:9: error: â€˜retâ€™ may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-Yes, that seems likely.
+We have already checked that 'count' is larger than 0 here, so
+we know that 'ret' is initialized. Changing the 'for' loop
+into do/while also makes this clear to the compiler.
 
-> > >>> This was found with a Atheros AR9300 Rev:3 chip (WLE350NX /
-> > >>> JWX6083 cards), during offchannel scans.
-> > >>>
-> > >>> Mark the signal value as invalid in this case.
-> > >>
-> > >> Why not adjust by 10dB?
-> 
-> I considered that also. But, 
-> 1) during how much time should I do this adjustment? Around 30 ms after channel switch?
+Suggested-by: David Laight <David.Laight@ACULAB.COM>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+[arnd: rebased to 4.4]
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/cw1200/wsm.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Yes.  If RSSI is so critical for your application, you'll do what you
-can to get a real RSSI rather than drop it.
-
-> 2) The histogram shows a scattering of the measures in a +/- 3dB range around the mean value.
-
-Perhaps a sampling error by the device.
-
-> So I could not decide for sure if it needed -9dB, -10dB or -11dB?
-> 
-> > >>
-> > >> Speculating: in a typical card, RSSI is calculated by firmware
-> > from
-> > >> readings of ADCs attached to the receiver.  Firmware may average
-> > >> several readings.  Firmware may apply other offsets or
-> > calibrations,
-> > >> based on frequency and temperature.  This sounds like a firmware
-> > >> problem.
-> > >
-> > > ath9k does not have firmware, only ath9k_htc has it.
-> > 
-> > Heh.  s/firmware/silicon implementation/g
-> 
-> Oh well, if it's silicon problem, then it's a hardware problem, and
-> I am right to correct it that way, since there is no other way :-)
-
-Yes, if it can be reproduced by every ath9k.
-
+diff --git a/drivers/net/wireless/cw1200/wsm.c b/drivers/net/wireless/cw1200/wsm.c
+index 9e0ca3048657..3dd46c78c1cc 100644
+--- a/drivers/net/wireless/cw1200/wsm.c
++++ b/drivers/net/wireless/cw1200/wsm.c
+@@ -379,7 +379,6 @@ static int wsm_multi_tx_confirm(struct cw1200_common *priv,
+ {
+ 	int ret;
+ 	int count;
+-	int i;
+ 
+ 	count = WSM_GET32(buf);
+ 	if (WARN_ON(count <= 0))
+@@ -395,11 +394,10 @@ static int wsm_multi_tx_confirm(struct cw1200_common *priv,
+ 	}
+ 
+ 	cw1200_debug_txed_multi(priv, count);
+-	for (i = 0; i < count; ++i) {
++	do {
+ 		ret = wsm_tx_confirm(priv, buf, link_id);
+-		if (ret)
+-			return ret;
+-	}
++	} while (!ret && --count);
++
+ 	return ret;
+ 
+ underflow:
 -- 
-James Cameron
-http://quozl.netrek.org/
+2.9.0
