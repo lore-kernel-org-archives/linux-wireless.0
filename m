@@ -1,34 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50284 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933775AbeBMJGY (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752245AbeBTO6v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 04:06:24 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Venkateswara Naralasetty <vnaralas@codeaurora.org>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 3/3] ath: change in cfg80211_probe_status API
-References: <1518500128-10837-1-git-send-email-vnaralas@codeaurora.org>
-Date: Tue, 13 Feb 2018 11:06:20 +0200
-In-Reply-To: <1518500128-10837-1-git-send-email-vnaralas@codeaurora.org>
-        (Venkateswara Naralasetty's message of "Tue, 13 Feb 2018 11:05:28
-        +0530")
-Message-ID: <87inb1p8c3.fsf@purkki.adurom.net> (sfid-20180213_100634_731425_9E2B381C)
+        Tue, 20 Feb 2018 09:58:51 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 12/12] staging: wilc1000: rename _WPARxGtk_end_case_ label to avoid camelCase
+Date: Tue, 20 Feb 2018 20:28:01 +0530
+Message-ID: <1519138681-1982-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155854_767296_75F7AE5B)
+In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Venkateswara Naralasetty <vnaralas@codeaurora.org> writes:
+Fix "Avoid camelCase" issue found by checkpatch.pl script.
 
-> This patch changes cfg80211_probe_status API.
->
-> Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/wil6210/cfg80211.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-The title prefix should be "wil6210:", not "ath:".
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0cfb79d..253225c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1620,7 +1620,7 @@ static int handle_key(struct wilc_vif *vif,
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+ 				ret = -ENOMEM;
+-				goto _WPARxGtk_end_case_;
++				goto out_wpa_rx_gtk;
+ 			}
+ 
+ 			if (pstrHostIFkeyAttr->attr.wpa.seq)
+@@ -1651,7 +1651,7 @@ static int handle_key(struct wilc_vif *vif,
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+ 				ret = -ENOMEM;
+-				goto _WPARxGtk_end_case_;
++				goto out_wpa_rx_gtk;
+ 			}
+ 
+ 			if (hif_drv->hif_state == HOST_IF_CONNECTED)
+@@ -1677,7 +1677,7 @@ static int handle_key(struct wilc_vif *vif,
+ 			kfree(pu8keybuf);
+ 			complete(&hif_drv->comp_test_key_block);
+ 		}
+-_WPARxGtk_end_case_:
++out_wpa_rx_gtk:
+ 		kfree(pstrHostIFkeyAttr->attr.wpa.key);
+ 		kfree(pstrHostIFkeyAttr->attr.wpa.seq);
+ 		if (ret)
 -- 
-Kalle Valo
+2.7.4
