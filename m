@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:39607 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966305AbeBUQMb (ORCPT
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:45058 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751017AbeBUTxd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 11:12:31 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 2/4] staging: wilc1000: modified wilc_spi_read_int() by using GENMASK macro
-Date: Wed, 21 Feb 2018 21:42:10 +0530
-Message-ID: <1519229532-11265-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180221_171240_389912_1C5E5FAE)
-In-Reply-To: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 21 Feb 2018 14:53:33 -0500
+Received: by mail-wr0-f181.google.com with SMTP id p104so7803998wrc.12
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2018 11:53:33 -0800 (PST)
+Subject: Re: [PATCH 0/3] Export TXQ parameters and statistics via nl80211
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+References: <20180219170224.14816-1-toke@toke.dk>
+ <5A8D3445.3040300@broadcom.com> <87bmgiboan.fsf@toke.dk>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A8DCE3B.3000607@broadcom.com> (sfid-20180221_205341_859526_CE5172A7)
+Date: Wed, 21 Feb 2018 20:53:31 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87bmgiboan.fsf@toke.dk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use existing macro GENMASK to get the bitmask value. Moved the code to
-get the bitmask value outside the loop, as its only required one time.
+On 2/21/2018 12:00 PM, Toke Høiland-Jørgensen wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>
+>> On 2/19/2018 6:02 PM, Toke Høiland-Jørgensen wrote:
+>>> This series adds TXQ parameters and statistics that were previously only
+>>> available through debugfs to the nl80211 userspace interface and the
+>>> cfg80211 kernel interface. Patches for iw to print the statistics and
+>>> change the settings are included.
+>>
+>> So what is your motivation for having this exposed through nl80211.
+>> For the average end-user the stats and parameters are fairly fuzzy.
+>
+> Two reasons, basically:
+>
+> 1. Visibility and statistics; this is basically the same information
+>     that is available at the qdisc layer (with `tc -s qdisc`), but which
+>     has been missing on WiFi interfaces ever sine we switched to the TXQ
+>     structure. Having this available has been quite valuable for
+>     debugging qdisc setups on wired links, and it's not always feasible
+>     to ask users to recompile their kernels with debugfs enabled.
+>
+> 2. Having visibility into the queues from userspace makes it possible to
+>     make decisions based upon (e.g.) which stations are currently
+>     backlogged. I'm working on a "policy mode" for the airtime fairness
+>     scheduler which will use this capability.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_spi.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+I see. Was just wondering whether there were concrete user-space 
+applications planned to use the information. Cool.
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 131d2b7..c63f534 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -955,6 +955,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
- 	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
- 
- 	j = 0;
-+	unknown_mask = GENMASK(g_spi.nint - 1, 0);
- 	do {
- 		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
- 		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
-@@ -964,8 +965,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
- 			tmp |= (((irq_flags >> 0) & 0x7) << k);
- 		}
- 
--		unknown_mask = ~((1ul << g_spi.nint) - 1);
--
- 		if ((tmp >> IRG_FLAGS_OFFSET) & unknown_mask) {
- 			dev_err(&spi->dev,
- 				"Unexpected interrupt(2):j=%d,tmp=%x,mask=%x\n",
--- 
-2.7.4
+>> So can we expect some manual in which is described what parameter
+>> should be tweaked based on the retrieved statistics.
+>
+> Heh, not sure I'll promise a whole manual, but I am happy to write a
+> blog post (or wiki page if that's better) explaining what these values
+> mean and what insight one might gain from them.
+
+My preference would be to have something on wireless.wiki.kernel.org. 
+Another option might be to add kerneldoc section for this.
+
+Regards,
+Arend
