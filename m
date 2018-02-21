@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43810 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751657AbeBVH5I (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:41032 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750811AbeBUW7I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 02:57:08 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
+        Wed, 21 Feb 2018 17:59:08 -0500
+Received: by mail-pl0-f67.google.com with SMTP id k8so1785647pli.8
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2018 14:59:08 -0800 (PST)
+Date: Wed, 21 Feb 2018 14:59:05 -0800
+From: Brian Norris <briannorris@chromium.org>
 To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH] cfg80211/nl80211: add DFS offload flag
-References: <20180221105635.5824-1-sergey.matyukevich.os@quantenna.com>
-        <5A8D521C.2030502@broadcom.com>
-        <0e3d5af0-bc6b-d98f-02f2-cc4d585e6cd1@quantenna.com>
-        <5A8DCF9E.90505@broadcom.com>
-Date: Thu, 22 Feb 2018 09:57:03 +0200
-In-Reply-To: <5A8DCF9E.90505@broadcom.com> (Arend van Spriel's message of
-        "Wed, 21 Feb 2018 20:59:26 +0100")
-Message-ID: <87k1v5ihio.fsf@purkki.adurom.net> (sfid-20180222_085712_583680_74B5F22B)
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 2/3] mwifiex: support sysfs initiated device coredump
+Message-ID: <20180221225903.GA42395@rodete-desktop-imager.corp.google.com> (sfid-20180221_235925_530958_429415D3)
+References: <1519210220-22437-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+On Wed, Feb 21, 2018 at 11:50:19AM +0100, Arend van Spriel wrote:
+> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+> it is possible to initiate a device coredump from user-space. This
+> patch adds support for it adding the .coredump() driver callback.
+> As there is no longer a need to initiate it through debugfs remove
+> that code.
+> 
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/debugfs.c | 31 +-------------------------
+>  drivers/net/wireless/marvell/mwifiex/pcie.c    | 19 ++++++++++++++--
+>  drivers/net/wireless/marvell/mwifiex/sdio.c    | 13 +++++++++++
+>  drivers/net/wireless/marvell/mwifiex/usb.c     | 14 ++++++++++++
+>  4 files changed, 45 insertions(+), 32 deletions(-)
 
-> Friendly advice: you may want to avoid using this footer in emails on
-> the kernel.org mailing lists.
+The documentation doesn't really say [1], but is the coredump supposed
+to happen synchronously? Because the mwifiex implementation is
+asynchronous, whereas it looks like the brcmfmac one is synchronous.
 
-Indeed. Most of the time I don't even reply to mails with such
-disclaimers and patches containing that will be automatically dropped.
+Brian
 
--- 
-Kalle Valo
+[1] In fact, the ABI documentation really just describes kernel
+internals, rather than documenting any user-facing details, from what I
+can tell.
