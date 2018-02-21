@@ -1,67 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59054 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966351AbeBNAnu (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:19954 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966305AbeBUQM3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 19:43:50 -0500
-From: Ryan Hsu <ryanhsu@qti.qualcomm.com>
-To: =?utf-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        "make-wifi-fast@lists.bufferbloat.net"
-        <make-wifi-fast@lists.bufferbloat.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Adjust TSQ pacing shift
-Date: Wed, 14 Feb 2018 00:43:25 +0000
-Message-ID: <40f644f6-ecfa-c31b-ce98-3491c954d6b1@qti.qualcomm.com> (sfid-20180214_014406_090263_1E468916)
-References: <20180202151105.30043-1-toke@toke.dk>
-In-Reply-To: <20180202151105.30043-1-toke@toke.dk>
-Content-Type: text/plain; charset="utf-8"
+        Wed, 21 Feb 2018 11:12:29 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 3/4] staging: wilc1000: refactor wilc_spi_clear_int_ext() by using GENMASK macro
+Date: Wed, 21 Feb 2018 21:42:11 +0530
+Message-ID: <1519229532-11265-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180221_171239_738037_2B46043A)
+In-Reply-To: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gMDIvMDIvMjAxOCAwNzoxMSBBTSwgVG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2VuIHdyb3RlOg0K
-DQo+IFNpbmNlIHdlIG5vdyBoYXZlIHRoZSBjb252ZW5pZW50IGhlbHBlciB0byBkbyBzbywgYWN0
-dWFsbHkgYWRqdXN0IHRoZQ0KPiBUU1EgcGFjaW5nIHNoaWZ0IGZvciBwYWNrZXRzIGdvaW5nIG91
-dCBvdmVyIGEgV2lGaSBpbnRlcmZhY2UuIFRoaXMNCj4gc2lnbmlmaWNhbnRseSBpbXByb3ZlcyB0
-aHJvdWdocHV0IGZvciBsb2NhbGx5LW9yaWdpbmF0ZWQgVENQDQo+IGNvbm5lY3Rpb25zLiBUaGUg
-ZGVmYXVsdCBwYWNpbmcgc2hpZnQgb2YgMTAgY29ycmVzcG9uZHMgdG8gfjFtcyBvZg0KPiBxdWV1
-ZWQgcGFja2V0IGRhdGEuIEFkanVzdGluZyB0aGlzIHRvIGEgc2hpZnQgb2YgOCAoaS5lLiB+NG1z
-KSBpbXByb3Zlcw0KPiAxLWhvcCB0aHJvdWdocHV0IGZvciBhdGg5ayBieSBhIGZhY3RvciBvZiAz
-LCB3aGVyZWFzIGluY3JlYXNpbmcgaXQgbW9yZQ0KPiBoYXMgZGltaW5pc2hpbmcgcmV0dXJucy4N
-Cj4NCj4gQWNoaWV2ZWQgdGhyb3VnaHB1dCBmb3IgZGlmZmVyZW50IHZhbHVlcyBvZiBza19wYWNp
-bmdfc2hpZnQgKGF2ZXJhZ2Ugb2YNCj4gNSBpdGVyYXRpb25zIG9mIDEwLXNlYyBuZXRwZXJmIHJ1
-bnMgdG8gYSBob3N0IG9uIHRoZSBvdGhlciBzaWRlIG9mIHRoZQ0KPiBXaUZpIGhvcCk6DQo+DQo+
-IHNrX3BhY2luZ19zaGlmdCAxMDogIDQzLjIxIE1icHMgKHByZS1wYXRjaCkNCj4gc2tfcGFjaW5n
-X3NoaWZ0ICA5OiAgNzguMTcgTWJwcw0KPiBza19wYWNpbmdfc2hpZnQgIDg6IDEyMy45NCBNYnBz
-DQo+IHNrX3BhY2luZ19zaGlmdCAgNzogMTI4LjMxIE1icHMNCj4NCj4gTGF0ZW5jeSBmb3IgY29t
-cGV0aW5nIGZsb3dzIGluY3JlYXNlcyBmcm9tIH4zIG1zIHRvIH4xMCBtcyB3aXRoIHRoaXMNCj4g
-Y2hhbmdlLiBUaGlzIGlzIGFib3V0IHRoZSBzYW1lIG1hZ25pdHVkZSBvZiBxdWV1ZWluZyBsYXRl
-bmN5IGluZHVjZWQgYnkNCj4gZmxvd3MgdGhhdCBhcmUgbm90IG9yaWdpbmF0ZWQgb24gdGhlIFdp
-RmkgZGV2aWNlIGl0c2VsZiAoYW5kIHNvIGFyZSBub3QNCj4gbGltaXRlZCBieSBUU1EpLg0KPg0K
-PiBTaWduZWQtb2ZmLWJ5OiBUb2tlIEjDuGlsYW5kLUrDuHJnZW5zZW4gPHRva2VAdG9rZS5kaz4N
-Cj4gLS0tDQo+ICBuZXQvbWFjODAyMTEvdHguYyB8IDggKysrKysrKysNCj4gIDEgZmlsZSBjaGFu
-Z2VkLCA4IGluc2VydGlvbnMoKykNCj4NCj4gZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS90eC5j
-IGIvbmV0L21hYzgwMjExL3R4LmMNCj4gaW5kZXggMjU5MDRhZjM4ODM5Li42OTcyMjUwNGUzZTEg
-MTAwNjQ0DQo+IC0tLSBhL25ldC9tYWM4MDIxMS90eC5jDQo+ICsrKyBiL25ldC9tYWM4MDIxMS90
-eC5jDQo+IEBAIC0zNTc0LDYgKzM1NzQsMTQgQEAgdm9pZCBfX2llZWU4MDIxMV9zdWJpZl9zdGFy
-dF94bWl0KHN0cnVjdCBza19idWZmICpza2IsDQo+ICAJaWYgKCFJU19FUlJfT1JfTlVMTChzdGEp
-KSB7DQo+ICAJCXN0cnVjdCBpZWVlODAyMTFfZmFzdF90eCAqZmFzdF90eDsNCj4gIA0KPiArCQkv
-KiBXZSBuZWVkIGEgYml0IG9mIGRhdGEgcXVldWVkIHRvIGJ1aWxkIGFnZ3JlZ2F0ZXMgcHJvcGVy
-bHksIHNvDQo+ICsJCSAqIGluc3RydWN0IHRoZSBUQ1Agc3RhY2sgdG8gYWxsb3cgbW9yZSB0aGFu
-IGEgc2luZ2xlIG1zIG9mIGRhdGENCj4gKwkJICogdG8gYmUgcXVldWVkIGluIHRoZSBzdGFjay4g
-VGhlIHZhbHVlIGlzIGEgYml0LXNoaWZ0IG9mIDENCj4gKwkJICogc2Vjb25kLCBzbyA4IGlzIH40
-bXMgb2YgcXVldWVkIGRhdGEuIE9ubHkgYWZmZWN0cyBsb2NhbCBUQ1ANCj4gKwkJICogc29ja2V0
-cy4NCj4gKwkJICovDQo+ICsJCXNrX3BhY2luZ19zaGlmdF91cGRhdGUoc2tiLT5zaywgOCk7DQo+
-ICsNCj4gIAkJZmFzdF90eCA9IHJjdV9kZXJlZmVyZW5jZShzdGEtPmZhc3RfdHgpOw0KPiAgDQo+
-ICAJCWlmIChmYXN0X3R4ICYmDQoNCkkga25ldyBpbmNyZWFzaW5nIHRoZSB2YWx1ZSBkb2Vzbid0
-IGhlbHAgbXVjaCBhZnRlciA4IGZvciBhdGg5aywgYnV0IEkgcmFuIGENCnRlc3Rpbmcgb24gYXRo
-MTBrIHRoYXQgNiBvciA3IGlzIGhhdmluZyBvcHRpbWFsIG51bWJlci4NClNpbmNlIGF0aDEway8x
-MWFjIGRldmljZSBoYXMgaGlnaGVyIGJhbmR3aWR0aCB0aGFuIGF0aDlrLzExbiwgY2FuIHdlIGNv
-bnNpZGVyDQp0byB1c2UgdG8gNiBvciA3IHRvIGFjY29tbW9kYXRlIHRoYXQgZWZmZWN0Pw0KDQog
-ICB0eCAobWJwcykgY3B1IHVzYWdlICglKQ0KNSAgICA0MDQgICAgICAgMjguNQ0KNiAgICAzOTgg
-ICAgICAgMTMuOA0KNyAgICA0MDEgICAgICAgIDgNCjggICAgMzc4ICAgICAgICA1DQo5ICAgIDIz
-MCAgICAgICAgNC41DQoxMCAgIDc5LjYgICAgICAgMg0KDQpJIGhhdmUgYSBxdWFkIGNvcmUgbWFj
-aGluZS4NCg0KJCBjYXQgL3Byb2MvY3B1aW5mbyANCnByb2Nlc3Nvcgk6IDANCnZlbmRvcl9pZAk6
-IEdlbnVpbmVJbnRlbA0KY3B1IGZhbWlseQk6IDYNCm1vZGVsCQk6IDU4DQptb2RlbCBuYW1lCTog
-SW50ZWwoUikgQ29yZShUTSkgaTUtMzM4ME0gQ1BVIEAgMi45MEdIeg0KDQotLSANClJ5YW4gSHN1
-DQo=
+Use available macro GENMASK to get the bitmask value of specific value.
+Simplified the logic by adding expected_irqs & unexpected_irqs to check
+the interrupt bits.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_spi.c | 46 +++++++++++++++----------------------
+ 1 file changed, 18 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index c63f534..12827c2 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -985,8 +985,9 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	int ret;
+-	u32 flags;
+ 	u32 tbl_ctl;
++	u32 expected_irqs, unexpected_irqs;
++	int i;
+ 
+ 	if (g_spi.has_thrpt_enh) {
+ 		ret = spi_internal_write(wilc, 0xe844 - WILC_SPI_REG_BASE,
+@@ -994,37 +995,26 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+ 		return ret;
+ 	}
+ 
+-	flags = val & (BIT(MAX_NUM_INT) - 1);
+-	if (flags) {
+-		int i;
++	expected_irqs = val & GENMASK(g_spi.nint - 1, 0);
++	unexpected_irqs = val & GENMASK(MAX_NUM_INT - 1, g_spi.nint);
+ 
+-		ret = 1;
+-		for (i = 0; i < g_spi.nint; i++) {
+-			/*
+-			 * No matter what you write 1 or 0,
+-			 * it will clear interrupt.
+-			 */
+-			if (flags & 1)
+-				ret = wilc_spi_write_reg(wilc,
+-							 0x10c8 + i * 4, 1);
+-			if (!ret)
+-				break;
+-			flags >>= 1;
+-		}
+-		if (!ret) {
+-			dev_err(&spi->dev,
+-				"Failed wilc_spi_write_reg, set reg %x ...\n",
+-				0x10c8 + i * 4);
+-			goto _fail_;
+-		}
+-		for (i = g_spi.nint; i < MAX_NUM_INT; i++) {
+-			if (flags & 1)
++	for (i = 0; i < g_spi.nint && expected_irqs; i++) {
++		/* No matter what you write 1 or 0, it will clear interrupt. */
++		if (expected_irqs & BIT(i)) {
++			ret = wilc_spi_write_reg(wilc, 0x10c8 + i * 4, 1);
++			if (!ret) {
+ 				dev_err(&spi->dev,
+-					"Unexpected interrupt cleared %d...\n",
+-					i);
+-			flags >>= 1;
++					"Failed wilc_spi_write_reg, set reg %x ...\n",
++					0x10c8 + i * 4);
++				goto _fail_;
++			}
+ 		}
+ 	}
++	for (i = g_spi.nint; i < MAX_NUM_INT && unexpected_irqs; i++) {
++		if (unexpected_irqs & BIT(i))
++			dev_err(&spi->dev,
++				"Unexpected interrupt cleared %d...\n", i);
++	}
+ 
+ 	tbl_ctl = 0;
+ 	/* select VMM table 0 */
+-- 
+2.7.4
