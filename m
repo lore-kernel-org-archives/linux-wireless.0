@@ -1,46 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:36143 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751357AbeBSORK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 09:17:10 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        kbuild test robot <fengguang.wu@intel.com>
-Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org
-Subject: Re: [mac80211:master 6/11] net/mac80211/tx.c:3581:3: error: implicit declaration of function 'sk_pacing_shift_update'; did you mean 'sk_incoming_cpu_update'?
-In-Reply-To: <1519049086.16723.21.camel@sipsolutions.net>
-References: <201802192131.ck2stMs0%fengguang.wu@intel.com> <1519049086.16723.21.camel@sipsolutions.net>
-Date: Mon, 19 Feb 2018 15:17:09 +0100
-Message-ID: <87d1115aje.fsf@toke.dk> (sfid-20180219_151714_694666_0F9F8071)
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:54155 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752701AbeBUQMz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Feb 2018 11:12:55 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 4/4] staging: wilc1000: refactor sdio_clear_int_ext() by using GENMASK macro
+Date: Wed, 21 Feb 2018 21:42:12 +0530
+Message-ID: <1519229532-11265-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180221_171258_602254_FD0C65C4)
+In-Reply-To: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Use GENMASK macro in sdio_clear_int_ext function to get the required
+bitmask value. Simplified the logic by making use of GENMASK
+macro.
 
-> On Mon, 2018-02-19 at 21:51 +0800, kbuild test robot wrote:
->> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git master
->> head:   49241828e8ed0b0a3dc73466d5bc562ae90acfd6
->> commit: 96bd4b9e4a44c6c1da93fd3e48bd8eb1b332584a [6/11] mac80211: Adjust TSQ pacing shift
->> config: x86_64-randconfig-x011-201807 (attached as .config)
->> compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
->> reproduce:
->>         git checkout 96bd4b9e4a44c6c1da93fd3e48bd8eb1b332584a
->>         # save the attached .config to linux build tree
->>         make ARCH=x86_64 
->> 
->> All errors (new ones prefixed by >>):
->> 
->>    net/mac80211/tx.c: In function '__ieee80211_subif_start_xmit':
->> > > net/mac80211/tx.c:3581:3: error: implicit declaration of function 'sk_pacing_shift_update'; did you mean 'sk_incoming_cpu_update'? [-Werror=implicit-function-declaration]
->> 
->>       sk_pacing_shift_update(skb->sk, 8);
->>       ^~~~~~~~~~~~~~~~~~~~~~
->
-> Yeah, umm, I accidentally applied this on the wrong tree - already
-> fixed.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 74 +++++++++++++++---------------------
+ 1 file changed, 31 insertions(+), 43 deletions(-)
 
-Aha, gotcha. Was scratching my head there for a while ;)
-
--Toke
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index a088999..8218085 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -876,14 +876,9 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 	if (g_sdio.has_thrpt_enh3) {
+ 		u32 reg;
+ 
+-		if (g_sdio.irq_gpio) {
+-			u32 flags;
++		reg = g_sdio.irq_gpio ?
++			(val & GENMASK(MAX_NUN_INT_THRPT_ENH2 - 1, 0)) : 0;
+ 
+-			flags = val & (BIT(MAX_NUN_INT_THRPT_ENH2) - 1);
+-			reg = flags;
+-		} else {
+-			reg = 0;
+-		}
+ 		/* select VMM table 0 */
+ 		if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
+ 			reg |= BIT(5);
+@@ -918,45 +913,38 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 		 * Cannot clear multiple interrupts.
+ 		 * Must clear each interrupt individually.
+ 		 */
+-		u32 flags;
+-
+-		flags = val & (BIT(MAX_NUM_INT) - 1);
+-		if (flags) {
+-			int i;
+-
+-			ret = 1;
+-			for (i = 0; i < g_sdio.nint; i++) {
+-				if (flags & 1) {
+-					struct sdio_cmd52 cmd;
+-
+-					cmd.read_write = 1;
+-					cmd.function = 0;
+-					cmd.raw = 0;
+-					cmd.address = 0xf8;
+-					cmd.data = BIT(i);
+-
+-					ret = wilc_sdio_cmd52(wilc, &cmd);
+-					if (ret) {
+-						dev_err(&func->dev,
+-							"Failed cmd52, set 0xf8 data (%d) ...\n",
+-							__LINE__);
+-						goto _fail_;
+-					}
+-				}
+-				if (!ret)
+-					break;
+-				flags >>= 1;
+-			}
+-			if (!ret)
+-				goto _fail_;
+-			for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
+-				if (flags & 1)
++		int i;
++		u32 expected_irqs, unexpected_irqs;
++
++		expected_irqs = val & GENMASK(g_sdio.nint - 1, 0);
++		unexpected_irqs = val & GENMASK(MAX_NUM_INT - 1, g_sdio.nint);
++
++		for (i = 0; i < g_sdio.nint && expected_irqs; i++) {
++			if (expected_irqs & BIT(i)) {
++				struct sdio_cmd52 cmd;
++
++				cmd.read_write = 1;
++				cmd.function = 0;
++				cmd.raw = 0;
++				cmd.address = 0xf8;
++				cmd.data = BIT(i);
++
++				ret = wilc_sdio_cmd52(wilc, &cmd);
++				if (ret) {
+ 					dev_err(&func->dev,
+-						"Unexpected interrupt cleared %d...\n",
+-						i);
+-				flags >>= 1;
++						"Failed cmd52, set 0xf8 data (%d) ...\n",
++						__LINE__);
++					goto _fail_;
++				}
+ 			}
+ 		}
++
++		for (i = g_sdio.nint; i < MAX_NUM_INT && unexpected_irqs; i++) {
++			if (unexpected_irqs & BIT(i))
++				dev_err(&func->dev,
++					"Unexpected interrupt cleared %d...\n",
++					i);
++		}
+ 	}
+ 
+ 	vmm_ctl = 0;
+-- 
+2.7.4
