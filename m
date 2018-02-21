@@ -1,111 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59272 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751077AbeBQIeF (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:13299 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932851AbeBUQdX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Feb 2018 03:34:05 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 17 Feb 2018 10:33:49 +0200
-Message-Id: <20180217083354.31160-5-luca@coelho.fi> (sfid-20180217_093419_256568_9E522DF5)
-In-Reply-To: <20180217083354.31160-1-luca@coelho.fi>
-References: <20180217083354.31160-1-luca@coelho.fi>
-Subject: [PATCH 4/9] iwlwifi: mvm: fix assert 0x2B00 on older FWs
+        Wed, 21 Feb 2018 11:33:23 -0500
+Subject: Re: [PATCH 02/12] staging: wilc1000: fix too many leading tabs
+ warning in sdio_clear_int_ext()
+To: Ajay Singh <ajay.kathat@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>
+References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
+ <1518793909-15573-3-git-send-email-ajay.kathat@microchip.com>
+ <7576dfcf-caab-3b2d-c4bb-e1ea29db2fce@microchip.com>
+ <20180221215554.4f38c3e5@ajaysk-VirtualBox>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <b1d1596a-c320-d85f-18db-619a255c1a47@microchip.com> (sfid-20180221_173326_976469_3BBB3FBE)
+Date: Wed, 21 Feb 2018 18:33:19 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180221215554.4f38c3e5@ajaysk-VirtualBox>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi Ajay,
 
-We should add the multicast station before adding the
-broadcast station.
+Sure, I will take a look.
 
-However, in older FW, the firmware will start beaconing
-when we add the multicast station, and since the broadcast
-station is not added at this point so the transmission
-of the beacon will fail on assert 0x2b00.
+Thank you,
+Claudiu
 
-This is fixed in later firmware, so make the order
-of addition depend on the TLV.
-
-Fixes: 26d6c16bed53 ("iwlwifi: mvm: add multicast station")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 45 ++++++++++++++++++-----
- 1 file changed, 35 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 08de822c3ef0..ebf511150f4d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -2106,15 +2107,40 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto out_remove;
- 
--	ret = iwl_mvm_add_mcast_sta(mvm, vif);
--	if (ret)
--		goto out_unbind;
--
--	/* Send the bcast station. At this stage the TBTT and DTIM time events
--	 * are added and applied to the scheduler */
--	ret = iwl_mvm_send_add_bcast_sta(mvm, vif);
--	if (ret)
--		goto out_rm_mcast;
-+	/*
-+	 * This is not very nice, but the simplest:
-+	 * For older FWs adding the mcast sta before the bcast station may
-+	 * cause assert 0x2b00.
-+	 * This is fixed in later FW so make the order of removal depend on
-+	 * the TLV
-+	 */
-+	if (fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_STA_TYPE)) {
-+		ret = iwl_mvm_add_mcast_sta(mvm, vif);
-+		if (ret)
-+			goto out_unbind;
-+		/*
-+		 * Send the bcast station. At this stage the TBTT and DTIM time
-+		 * events are added and applied to the scheduler
-+		 */
-+		ret = iwl_mvm_send_add_bcast_sta(mvm, vif);
-+		if (ret) {
-+			iwl_mvm_rm_mcast_sta(mvm, vif);
-+			goto out_unbind;
-+		}
-+	} else {
-+		/*
-+		 * Send the bcast station. At this stage the TBTT and DTIM time
-+		 * events are added and applied to the scheduler
-+		 */
-+		iwl_mvm_send_add_bcast_sta(mvm, vif);
-+		if (ret)
-+			goto out_unbind;
-+		iwl_mvm_add_mcast_sta(mvm, vif);
-+		if (ret) {
-+			iwl_mvm_send_rm_bcast_sta(mvm, vif);
-+			goto out_unbind;
-+		}
-+	}
- 
- 	/* must be set before quota calculations */
- 	mvmvif->ap_ibss_active = true;
-@@ -2144,7 +2170,6 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
- 	iwl_mvm_power_update_mac(mvm);
- 	mvmvif->ap_ibss_active = false;
- 	iwl_mvm_send_rm_bcast_sta(mvm, vif);
--out_rm_mcast:
- 	iwl_mvm_rm_mcast_sta(mvm, vif);
- out_unbind:
- 	iwl_mvm_binding_remove_vif(mvm, vif);
--- 
-2.15.1
+On 21.02.2018 18:25, Ajay Singh wrote:
+> Hi Claudiu,
+> 
+> On Mon, 19 Feb 2018 15:33:09 +0200
+> Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+> 
+>> Since you re-factor this, as I suggested in patch:
+>> "[PATCH 6/6] staging: wilc1000: fix line over 80 chars in
+>> wilc_spi_clear_int_ext()" form your previous series:
+>> "fix line over 80 char & coding style in wilc_spi.c",
+>> for code starting here:
+> 
+> 
+> Submitted a new patch "[PATCH 3/4] staging: wilc1000: refactor
+> wilc_spi_clear_int_ext() by using GENMASK macro" 
+> &
+> "[PATCH 4/4] staging: wilc1000: refactor sdio_clear_int_ext() 
+> by using GENMASK macro" which contain changes as suggested.
+> 
+>>
+>> and ending here, further improvements could be done. Since the current series
+>> was accepted, maybe add these to a todo list and review them later?
+> 
+> For both SPI and SDIO the changes are done. Please review and let me know
+> if you any inputs.
+> 
+> 
+> regards,
+> ajay
+> 
