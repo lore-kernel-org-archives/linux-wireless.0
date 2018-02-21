@@ -1,45 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.11]:32803 "EHLO mx4.wp.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751158AbeBSFz2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 00:55:28 -0500
-Date: Sun, 18 Feb 2018 21:55:20 -0800
-From: Jakub Kicinski <kubakici@wp.pl>
-To: cantabile <cantabile.desu@gmail.com>
-Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt7601u: Fix system freeze after resuming from
- hibernation
-Message-ID: <20180218215520.65c1e9fd@cakuba.netronome.com> (sfid-20180219_065626_302048_32653BF8)
-In-Reply-To: <7cebda93-4b7a-e8b3-271f-0144c5e94248@gmail.com>
-References: <d9ca2742-7f85-afe3-2de6-6637eb56d9b3@gmail.com>
-        <20180214164549.72ee26c3@cakuba.netronome.com>
-        <f542e9c6-5106-c79c-6e38-7a2f50e6be2d@gmail.com>
-        <20180215134738.722654a9@cakuba.netronome.com>
-        <7cebda93-4b7a-e8b3-271f-0144c5e94248@gmail.com>
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:40549 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751554AbeBULEv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Feb 2018 06:04:51 -0500
+Received: by mail-qt0-f176.google.com with SMTP id c19so1359109qtm.7
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2018 03:04:50 -0800 (PST)
+Subject: Re: brcmfmac signal/interference issues
+To: Daniel Drake <drake@endlessm.com>
+References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
+ <5A8D36B7.1010201@broadcom.com>
+ <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Linux Upstreaming Team <linux@endlessm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A8D524F.3070709@broadcom.com> (sfid-20180221_120455_066456_36BC1522)
+Date: Wed, 21 Feb 2018 12:04:47 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 17 Feb 2018 13:23:29 +0200, cantabile wrote:
-> > Thanks for the info.  Would it be cleaner to EXPORT fw_add_devm_name()
-> > and just call that in case driver sees FW is already loaded?  That
-> > should inform the fw subsystem that we want the image around in case of
-> > hibernation, but there is no need to load it immediately?
-> 
-> No, I don't believe it's cleaner to expose a private function that you 
-> don't even really need. Remember that calling request_firmware every 
-> time your driver's probe and resume functions are called is normal. It's 
-> the expected behaviour.
+On 2/21/2018 10:39 AM, Daniel Drake wrote:
+> Hi Arend,
+>
+> On Wed, Feb 21, 2018 at 12:07 PM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>>
+>> On 2/21/2018 9:14 AM, Daniel Drake wrote:
+>>>
+>>> Hi,
+>>>
+>>> We're working with the Weibu F3C MiniPC which includes BCM43455 SDIO
+>>> wifi chip 0x004345(17221) rev 0x000006 (AP6255 module).
+>>>
+>>> We are seeing a strange issue where usually within an hour of usage,
+>>> the wifi connection becomes so unstable and lossy that it is unusable.
+>>> While investigating this my standard test is to send ICMP pings to the
+>>> IP address of the local access point. Normally the latency is 5-10ms,
+>>> but when this problem is seen it will go to 500ms and then increase up
+>>> towards 20s before completely timing out.
+>>>
+>>> Sometimes it is possible to induce the problem on-demand by stressing
+>>> some combination of CPU, disk and/or USB. At this point, ping reply
+>>> latency increases from ~5ms to 500ms+ before increasing even further.
+>>> Killing the stress test, the pings immediately return to normal. This
+>>> is not concrete though - I also seem to have a lot of luck hitting the
+>>> problem in the morning when booting up the computer from stone cold
+>>> state, while it is idle.
+>>>
+>>> When the problem is being reproduced (ping times are high or get no
+>>> response), touching the exposed metal on the antenna connector with my
+>>> finger makes ping times return to normal. Touching it with a piece of
+>>> plastic does not have the same effect - so it is some effect of body
+>>> capacitance or similar. Also, disconnecting the antenna makes ping
+>>> times return to normal, although outside of the simple pings,
+>>> bandwidth is much reduced.
+>>>
+>>> Additionally, when the problem is being reproduced, if I move the
+>>> antenna outside of the case, ping times return to normal. When I move
+>>> the antenna back into the miniPC case vicinity, it goes slow and lossy
+>>> again.
+>>>
+>>> I have used a separate monitoring station with wireshark to look at
+>>> the 802.11 traffic while this is happening. When the problem is
+>>> reproduced, the miniPC is mostly unable to TX anything, and the AP
+>>> sends frames and retries them but with no ACK visible from the miniPC.
+>>> Immediately when I touch the antenna connector with my finger, tx
+>>> frames from the miniPC appear and the conversation comes back to life.
+>>>
+>>> Running Linux 4.15 but we believe all versions are affected.
+>>>
+>>> This very much sounds like a hardware issue, but here is where things
+>>> get interesting: Windows 10 on the same unit has no such problem.
+>>>
+>>> I set up 2 units side by side - one running Windows 10 and the other
+>>> running Linux, connected to the same AP. The top part of the MiniPC
+>>> case has been removed so I can see the motherboard. I free up the
+>>> antennas from the MiniPC casing and they are on a relatively long
+>>> cable, so they can be freely moved around in this test, allowing me to
+>>> dangle the antenna into the vicinity of the neighbouring unit miniPC
+>>> case.
+>>>
+>>> If I place both antenna terminals inside the Linux MiniPC case, the
+>>> Linux pings are bad but the Windows pings are fine.
+>>>
+>>> If I place both antenna terminals inside the Windows MiniPC case, it
+>>> is the same: Linux pings are bad, but the Windows pings are fine.
+>>>
+>>> And when the Linux antenna is placed outside of both cases, the Linux
+>>> pings are fine. I've repeated these tests a handful of times in quick
+>>> succession to make sure that I'm not going crazy and that this is not
+>>> a case of the problem intermittency causing misleading results. These
+>>> findings appear very solid.
+>>>
+>>> This suggests that regardless of the running OS, the MiniPC produces
+>>> some kind of interference that intermittently has an extremely
+>>> detrimental effect on wifi signal when you are running Linux. However,
+>>> Windows is somehow immune to this.
+>>>
+>>> Any ideas for how to continue debugging this? How can we make the
+>>> Linux driver immune to this interference like the windows one is?
+>>
+>>
+>> Hi Daniel,
+>>
+>> Thanks. I forwarded your detailed report. My first hunch would be the nvram file used. Are you using the same nvram file on Linux as the one on Windows? If not can you compare them or better just sent them.
+>
+>
+> Thanks for looking into this. Here is the brcmfmac43455-sdio.txt file
+> we are using:
+> https://gist.github.com/dsd/d7ee3caa6dfd77f0bcd16cf272b20298
+> This is identical to the 4345r6nvram.txt file from windows.
 
-I'm asking you the extend functionality of a subsystem to be able to
-cleanly communicate the intent.  Not export internal functions.
+Ok. There goes my hunch :-( Will see if my colleagues who are more into 
+RF details come up with a good idea.
 
-Requesting firmware you don't need and risking failing probe even if FW
-is already pre-loaded is not correct.  Reordering you suggest is
-brittle and makes little logical sense unless someone guesses your use
-case.
-
-Please at least try to do as advised.  Otherwise:
-
-Nacked-by: Jakub Kicinski <kubakici@wp.pl>
+Regards,
+Arend
