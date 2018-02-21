@@ -1,87 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:44048 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753956AbeBESiR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Feb 2018 13:38:17 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: rtl8821ae: Fix connection lost problem correctly
-Date: Mon,  5 Feb 2018 12:38:11 -0600
-Message-Id: <20180205183811.19526-1-Larry.Finger@lwfinger.net> (sfid-20180205_193857_022788_64AA1A61)
+Received: from mail-by2nam01on0042.outbound.protection.outlook.com ([104.47.34.42]:28016
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752892AbeBULZc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Feb 2018 06:25:32 -0500
+Subject: Re: [PATCH] cfg80211/nl80211: add DFS offload flag
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+References: <20180221105635.5824-1-sergey.matyukevich.os@quantenna.com>
+ <5A8D521C.2030502@broadcom.com>
+From: Dmitrii Lebed <dlebed@quantenna.com>
+Message-ID: <0e3d5af0-bc6b-d98f-02f2-cc4d585e6cd1@quantenna.com> (sfid-20180221_122537_796118_77EECC76)
+Date: Wed, 21 Feb 2018 14:25:18 +0300
+MIME-Version: 1.0
+In-Reply-To: <5A8D521C.2030502@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There has been a coding error in rtl8821ae since it was first introduced,
-namely that an 8-bit register was read using a 16-bit read in
-_rtl8821ae_dbi_read(). This error was fixed with commit 40b368af4b75
-("rtlwifi: Fix alignment issues"); however, this change led to
-instability in the connection. To restore stability, this change
-was reverted in commit b8b8b16352cd ("rtlwifi: rtl8821ae: Fix connection
-lost problem").
 
-Unfortunately, the unaligned access causes machine checks in ARM
-architecture, and we were finally forced to find the actual cause of the
-problem on x86 platforms. Following a suggestion from Pkshih
-<pkshih@realtek.com>, it was found that increasing the ASPM L1
-latency from 0 to 7 fixed the instability. This parameter was varied to
-see if a smaller value would work; however, it appears that 7 is the
-safest value. A new symbol is defined for this quantity, thus it can be
-easily changed if necessary.
+On 21.02.2018 14:03, Arend van Spriel wrote:
+> On 2/21/2018 11:56 AM, Sergey Matyukevich wrote:
+>> From: Dmitry Lebed <dlebed@quantenna.com>
+>>
+>> Add wiphy flag to indicate that HW does all DFS actions by itself.
+>> User-space functionality already implemented in hostapd using
+>> vendor-specific (QCA) OUI to advertise HW support.
+>> Need to introduce generic flag to inform about DFS offload support.
+>> For deivces with DFS_OFFLOAD flag set user-space will no longer
+>> need to issue CAC or do any actions in response to
+>> "radar detected" events. HW will do everything by itself and send
+>> events to user-space to idicate that CAC was started/finished, etc.
+>>
+>> Signed-off-by: Dmitrii Lebed <dlebed@quantenna.com>
+>> ---
+>>   include/net/cfg80211.h       | 7 ++++++-
+>>   include/uapi/linux/nl80211.h | 9 +++++++++
+>>   net/wireless/nl80211.c       | 7 +++++++
+>>   3 files changed, 22 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+>> index ed3a28105d6c..b2d17993ae4d 100644
+>> --- a/include/net/cfg80211.h
+>> +++ b/include/net/cfg80211.h
+>> @@ -3241,6 +3241,11 @@ struct cfg80211_ops {
+>>    * @WIPHY_FLAG_IBSS_RSN: The device supports IBSS RSN.
+>>    * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication
+>> by routing
+>>    *  auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
+>> + * @WIPHY_FLAG_DFS_OFFLOAD: Device will do all DFS-related actions
+>> by itself,
+>> + *   informing user-space about CAC progress, radar detection event,
+>> + *   channel change triggered by radar detection event.
+>> + *   No need to start CAC from user-space, no need to react to
+>> + *   "radar detected" event.
+>
+> wiphy flags are kinda deprecated. At least no new flags should be added.
+> Instead use EXT_FEATURE flag.
+>
+> Regards,
+> Arend
+Thanks for clarification, Arend. I'll change it to use new EXT_FEATURE flag=
+.
+BTW, are there any concerns regarding adding generic DFS_OFFLOAD driver
+capability?
+I want to add DFS_OFFLOAD support to qtnfmac driver and fix hostapd to
+support
+generic EXT_FEATURE flag as well as vendor-specific capabilities.
 
-Fixes: b8b8b16352cd ("rtlwifi: rtl8821ae: Fix connection lost problem")
-Cc: Stable <stable@vger.kernel.org> # 4.14+
-Fix-suggested-by: Pkshih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Thanks,
+Dmitrii
+>
+>>    * @WIPHY_FLAG_SUPPORTS_FW_ROAM: The device supports roaming
+>> feature in the
+>>    *  firmware.
+>>    * @WIPHY_FLAG_AP_UAPSD: The device supports uapsd on AP.
+>
 
-Kalle,
 
-This patch should be submitted to 4.16.
-
-Larry
----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 5 +++--
- drivers/net/wireless/realtek/rtlwifi/wifi.h         | 1 +
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index f20e77b4bb65..317c1b3101da 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -1123,7 +1123,7 @@ static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
- 	}
- 	if (0 == tmp) {
- 		read_addr = REG_DBI_RDATA + addr % 4;
--		ret = rtl_read_word(rtlpriv, read_addr);
-+		ret = rtl_read_byte(rtlpriv, read_addr);
- 	}
- 	return ret;
- }
-@@ -1165,7 +1165,8 @@ static void _rtl8821ae_enable_aspm_back_door(struct ieee80211_hw *hw)
- 	}
- 
- 	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x70f);
--	_rtl8821ae_dbi_write(rtlpriv, 0x70f, tmp | BIT(7));
-+	_rtl8821ae_dbi_write(rtlpriv, 0x70f, tmp | BIT(7) |
-+			     ASPM_L1_LATENCY << 3);
- 
- 	tmp = _rtl8821ae_dbi_read(rtlpriv, 0x719);
- 	_rtl8821ae_dbi_write(rtlpriv, 0x719, tmp | BIT(3) | BIT(4));
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 1c9ed28b42da..4f48b934ec01 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -99,6 +99,7 @@
- #define RTL_USB_MAX_RX_COUNT			100
- #define QBSS_LOAD_SIZE				5
- #define MAX_WMMELE_LENGTH			64
-+#define ASPM_L1_LATENCY				7
- 
- #define TOTAL_CAM_ENTRY				32
- 
--- 
-2.16.1
+This email, including its contents and any attachment(s), may contain confi=
+dential information of Quantenna Communications, Inc. and is solely for the=
+ intended recipient(s). If you may have received this in error, please cont=
+act the sender and permanently delete this email, its contents and any atta=
+chment(s).
