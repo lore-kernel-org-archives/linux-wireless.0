@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:40535 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751314AbeBWOgz (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:39607 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966305AbeBUQMb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 09:36:55 -0500
-Subject: Re: [PATCH] rtlwifi: rtl8723be: Fix loss of signal
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>
-References: <20180222202859.16679-1-Larry.Finger@lwfinger.net>
- <87lgfkxdwn.fsf@kamboji.qca.qualcomm.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <e33e8482-25e1-9e03-f114-08e487c4907c@lwfinger.net> (sfid-20180223_153658_504425_622BE04F)
-Date: Fri, 23 Feb 2018 08:36:52 -0600
+        Wed, 21 Feb 2018 11:12:31 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 2/4] staging: wilc1000: modified wilc_spi_read_int() by using GENMASK macro
+Date: Wed, 21 Feb 2018 21:42:10 +0530
+Message-ID: <1519229532-11265-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180221_171240_389912_1C5E5FAE)
+In-Reply-To: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <87lgfkxdwn.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/23/2018 03:18 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
-> 
->> In commit c713fb071edc ("rtlwifi: rtl8821ae: Fix connection lost problem
->> correctly") a problem in rtl8821ae that caused loss of signal was fixed.
->> That same problem has now been reported for rtl8723be. Accordingly,
->> the ASPM L1 latency has been increased from 0 to 7 to fix the instability.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@vger.kernel.org>
->> ---
->> Kalle,
->>
->> This patch should be sent to 4.16.
-> 
-> Ok, I'll queue this for 4.16.
+Use existing macro GENMASK to get the bitmask value. Moved the code to
+get the bitmask value outside the loop, as its only required one time.
 
-Thanks,
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_spi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Larry
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 131d2b7..c63f534 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -955,6 +955,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+ 	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
+ 
+ 	j = 0;
++	unknown_mask = GENMASK(g_spi.nint - 1, 0);
+ 	do {
+ 		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
+ 		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
+@@ -964,8 +965,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+ 			tmp |= (((irq_flags >> 0) & 0x7) << k);
+ 		}
+ 
+-		unknown_mask = ~((1ul << g_spi.nint) - 1);
+-
+ 		if ((tmp >> IRG_FLAGS_OFFSET) & unknown_mask) {
+ 			dev_err(&spi->dev,
+ 				"Unexpected interrupt(2):j=%d,tmp=%x,mask=%x\n",
+-- 
+2.7.4
