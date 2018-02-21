@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:60970 "EHLO
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:60961 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753740AbeBUKuj (ORCPT
+        by vger.kernel.org with ESMTP id S1753735AbeBUKui (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 05:50:39 -0500
+        Wed, 21 Feb 2018 05:50:38 -0500
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
 To: Kalle Valo <kvalo@codeaurora.org>,
         Marcel Holtmann <marcel@holtmann.org>
@@ -11,84 +11,65 @@ Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 1/3] brcmfmac: add support for sysfs initiated coredump
-Date: Wed, 21 Feb 2018 11:50:18 +0100
-Message-Id: <1519210220-22437-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180221_115206_329047_40DC7FBC)
-In-Reply-To: <1519210220-22437-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1519210220-22437-1-git-send-email-arend.vanspriel@broadcom.com>
+Subject: [PATCH 0/3] drivers: support for sysfs initiated coredump
+Date: Wed, 21 Feb 2018 11:50:17 +0100
+Message-Id: <1519210220-22437-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180221_115102_377311_93BE38D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver already supports device coredump initiated by firmware
-event. Since commit 3c47d19ff4dc ("drivers: base: add coredump driver
-ops") it is also possible to initiate it from user-space through
-sysfs. This patch adds support for SDIO and PCIe devices.
+This series is intended for 4.17 adding support for sysfs initiated
+coredump. This uses new functionality that was added in drivers base.
+Device drivers can now implement a .coredump() callback upon which a
+sysfs entry is created when the device is bound to the driver. From
+user-space a device coredump can be initiated. The easiest way is by
+going the drivers entry and enter into the bound device folder like
+this:
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h    | 2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c   | 7 +++++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c   | 1 +
- 4 files changed, 11 insertions(+)
+  # cd /sys/bus/pci/drivers/brcmfmac/0000:02:00.0
+  # echo 1 > coredump
+  # ls /sys/class/devcoredump/
+  devcd1	disabled
+  # ls -l /sys/class/devcoredump/devcd1/
+  total 0
+  -rw------- 1 root root    0 Feb 19 23:49 data
+  lrwxrwxrwx 1 root root    0 Feb 19 23:49 failing_device ->
+  	../../../pci0000:00/0000:00:1c.0/0000:02:00.0
+  drwxr-xr-x 2 root root    0 Feb 19 23:49 power
+  lrwxrwxrwx 1 root root    0 Feb 19 23:49 subsystem ->
+  	../../../../class/devcoredump
+  -rw-r--r-- 1 root root 4096 Feb 19 23:49 uevent
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 0b68240..3220b69 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -1164,6 +1164,7 @@ static int brcmf_ops_sdio_resume(struct device *dev)
- #ifdef CONFIG_PM_SLEEP
- 		.pm = &brcmf_sdio_pm_ops,
- #endif	/* CONFIG_PM_SLEEP */
-+		.coredump = brcmf_dev_coredump,
- 	},
- };
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index 0b76a61..77d1f34 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -249,6 +249,8 @@ int brcmf_bus_get_fwname(struct brcmf_bus *bus, uint chip, uint chiprev,
- void brcmf_detach(struct device *dev);
- /* Indication from bus module that dongle should be reset */
- void brcmf_dev_reset(struct device *dev);
-+/* Request from bus module to initiate a coredump */
-+int brcmf_dev_coredump(struct device *dev);
- 
- /* Configure the "global" bus state used by upper layers */
- void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 930e423..d06ffe0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1110,6 +1110,13 @@ void brcmf_dev_reset(struct device *dev)
- 		brcmf_fil_cmd_int_set(drvr->iflist[0], BRCMF_C_TERMINATED, 1);
- }
- 
-+int brcmf_dev_coredump(struct device *dev)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+
-+	return brcmf_debug_create_memdump(bus_if, NULL, 0);
-+}
-+
- void brcmf_detach(struct device *dev)
- {
- 	s32 i;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 8752707..502dd7b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -2005,6 +2005,7 @@ static int brcmf_pcie_pm_leave_D3(struct device *dev)
- #ifdef CONFIG_PM
- 	.driver.pm = &brcmf_pciedrvr_pm,
- #endif
-+	.driver.coredump = brcmf_dev_coredump,
- };
- 
- 
+The device driver can implement the .coredump() callback as they like.
+The use of the dev_coredump api is not enforced although the sysfs entry
+is only created when CONFIG_DEV_COREDUMP is selected.
+
+Apart from brcmfmac, the other drivers used dev_coredump api and had a
+mechanism in place through debugfs, which is removed in these patches.
+With these patches initiating the coredump can be done without selecting
+CONFIG_DEBUGFS. No attempt was made to look for drivers providing some sore
+of coredump functionality by other means than the dev_coredump api.
+
+The first 2 patches apply to the master branch of the wireless-drivers-next
+repository. The last patch applies to the master branch of the bluetooth-next.
+
+Arend van Spriel (3):
+  brcmfmac: add support for sysfs initiated coredump
+  mwifiex: support sysfs initiated device coredump
+  btmrvl: support sysfs initiated firmware coredump
+
+ drivers/bluetooth/btmrvl_debugfs.c                 | 31 ----------------------
+ drivers/bluetooth/btmrvl_drv.h                     |  2 --
+ drivers/bluetooth/btmrvl_main.c                    |  6 -----
+ drivers/bluetooth/btmrvl_sdio.c                    | 18 ++++++++-----
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |  1 +
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  2 ++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  7 +++++
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  1 +
+ drivers/net/wireless/marvell/mwifiex/debugfs.c     | 31 +---------------------
+ drivers/net/wireless/marvell/mwifiex/pcie.c        | 19 +++++++++++--
+ drivers/net/wireless/marvell/mwifiex/sdio.c        | 13 +++++++++
+ drivers/net/wireless/marvell/mwifiex/usb.c         | 14 ++++++++++
+ 12 files changed, 68 insertions(+), 77 deletions(-)
+
 -- 
 1.9.1
