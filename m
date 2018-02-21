@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:52463 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751723AbeB1DHl (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:43281 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965023AbeBUPfQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 22:07:41 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/15] rtlwifi: btcoex: new definitions introduced by 8822be
-Date: Wed, 28 Feb 2018 11:07:13 +0800
-Message-ID: <20180228030718.19510-11-pkshih@realtek.com> (sfid-20180228_040755_409497_C1384471)
-In-Reply-To: <20180228030718.19510-1-pkshih@realtek.com>
-References: <20180228030718.19510-1-pkshih@realtek.com>
+        Wed, 21 Feb 2018 10:35:16 -0500
+Received: by mail-qk0-f194.google.com with SMTP id i184so2430756qkf.10
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2018 07:35:15 -0800 (PST)
+Subject: Re: [RFC PATCH 0/2] net: rfkill: gpio: Fix and support SerDev
+To: Carlo Caione <carlo@endlessm.com>
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Carlo Caione <carlo@caione.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        =?UTF-8?Q?Fr=c3=a9d=c3=a9ric_Danis?= <frederic.danis.oss@gmail.com>,
+        Sebastian Reichel <sebastian.reichel@collabora.co.uk>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Linux Upstreaming Team <linux@endlessm.com>
+References: <20180220134618.12972-1-carlo@caione.org>
+ <31f0157f-4778-2f9c-977f-8bdbba6f52a4@redhat.com>
+ <CAL9uMOEFm4apUrDxs6GkZqV2S=mepd2Ytcna+SCaLnCcwtcfeg@mail.gmail.com>
+ <c1f7d6a5-7b31-e3e2-870c-ccc0dd2fca20@redhat.com>
+ <CAFBinCCc6yAWgVm85gTeGr_=y0B=H0j1et1r=V10ycX4pKCZVg@mail.gmail.com>
+ <9c385301-dae6-9d7c-a510-2b210eaf05bc@redhat.com>
+ <CAL9uMOHfcUOJOOVp6snnvy2bNDZA_T9Hyi2NCLCEayR2DGCkCg@mail.gmail.com>
+From: Jeremy Cline <jcline@redhat.com>
+Message-ID: <22de70c0-0a7c-c6a9-0d1b-3fa1f7519222@redhat.com> (sfid-20180221_163523_312601_B08060F1)
+Date: Wed, 21 Feb 2018 10:35:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAL9uMOHfcUOJOOVp6snnvy2bNDZA_T9Hyi2NCLCEayR2DGCkCg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 02/20/2018 04:34 PM, Carlo Caione wrote:
+> On Tue, Feb 20, 2018 at 9:18 PM, Jeremy Cline <jcline@redhat.com> wrote:
+> 
+>> Great, thanks for all the info! I'll definitely keep you CC'ed on my
+>> progress. I'm still very new to kernel development so I expect it'll
+>> take me quite a while, but I do have a fair bit of time to devote to
+>> this.
+> 
+> Welcome to this crazy world ;)
 
-New constant and variables definitions are used by btcoex of 8822b, so
-this commit add them.
+Thanks!
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+> Keep me on CC also, I have quite a bit of hw I can test the patches
+> on. Fell free also to reach me in private.
+> I was actually going to work on this myself but now I guess there are
+> too many people.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 0a7b09305bc3..049e92a8afbe 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -62,6 +62,8 @@
- #define		BTC_ANT_PATH_WIFI			0
- #define		BTC_ANT_PATH_BT				1
- #define		BTC_ANT_PATH_PTA			2
-+#define		BTC_ANT_PATH_WIFI5G			3
-+#define		BTC_ANT_PATH_AUTO			4
- /* dual Antenna definition */
- #define		BTC_ANT_WIFI_AT_MAIN			0
- #define		BTC_ANT_WIFI_AT_AUX			1
-@@ -205,6 +207,7 @@ enum btc_wifi_traffic_dir {
- enum btc_wifi_pnp {
- 	BTC_WIFI_PNP_WAKE_UP = 0x0,
- 	BTC_WIFI_PNP_SLEEP = 0x1,
-+	BTC_WIFI_PNP_SLEEP_KEEP_ANT = 0x2,
- 	BTC_WIFI_PNP_MAX
- };
- 
-@@ -387,6 +390,7 @@ enum btc_notify_type_lps {
- enum btc_notify_type_scan {
- 	BTC_SCAN_FINISH = 0x0,
- 	BTC_SCAN_START = 0x1,
-+	BTC_SCAN_START_2G = 0x2,
- 	BTC_SCAN_MAX
- };
- 
-@@ -561,6 +565,7 @@ struct btc_bt_info {
- 	u16 bt_hci_ver;
- 	u16 bt_real_fw_ver;
- 	u8 bt_fw_ver;
-+	u32 bt_get_fw_ver;
- 
- 	bool bt_disable_low_pwr;
- 
-@@ -632,6 +637,7 @@ struct btc_bt_link_info {
- 	bool pan_exist;
- 	bool pan_only;
- 	bool slave_role;
-+	bool acl_busy;
- };
- 
- enum btc_antenna_pos {
--- 
-2.15.1
+Will do. As for too many people, that's a pretty good problem to have!
+It sounds like Martin is pretty busy, though, and I would welcome your
+help. I was going to start by rebasing the current RFC and then looking
+at adding ACPI support since that sounds pretty straight-forward and I
+have the hardware.
+
+Figuring out the mysteries of the config blob and creating an H5
+"library" sound fairly independent to me so if you're interested maybe
+we could both take one on.
+
+Regards,
+Jeremy
