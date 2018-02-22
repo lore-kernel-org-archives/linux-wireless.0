@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:28895 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754383AbeBPPMG (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:46112 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751296AbeBVT6K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 10:12:06 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 03/12] staging: wilc1000: fix line over 80 characters in sdio_clear_int_ext()
-Date: Fri, 16 Feb 2018 20:41:40 +0530
-Message-ID: <1518793909-15573-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180216_161210_328165_E43FE9E4)
-In-Reply-To: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
-References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 22 Feb 2018 14:58:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Kees Cook <keescook@google.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] regulatory: add NUL to request alpha2
+Date: Thu, 22 Feb 2018 20:58:07 +0100
+Message-Id: <20180222195807.23458-1-johannes@sipsolutions.net> (sfid-20180222_205813_765024_F9480099)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "line over 80 characters" issue found by checkpatch.pl script by
-modifying the comment description.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Similar to the ancient commit a5fe8e7695dc ("regulatory: add NUL
+to alpha2"), add another byte to alpha2 in the request struct so
+that when we use nla_put_string(), we don't overrun anything.
+
+Fixes: 73d54c9e74c4 ("cfg80211: add regulatory netlink multicast group")
+Reported-by: Kees Cook <keescook@google.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/wilc_sdio.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ include/net/regulatory.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 27ec90e..a088999 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -913,8 +913,11 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
- 		return 1;
- 	}
- 	if (g_sdio.irq_gpio) {
--		/* see below. has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
--		/* Cannot clear multiple interrupts. Must clear each interrupt individually */
-+		/* has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
-+		/*
-+		 * Cannot clear multiple interrupts.
-+		 * Must clear each interrupt individually.
-+		 */
- 		u32 flags;
- 
- 		flags = val & (BIT(MAX_NUM_INT) - 1);
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index ebc5a2ed8631..f83cacce3308 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -78,7 +78,7 @@ struct regulatory_request {
+ 	int wiphy_idx;
+ 	enum nl80211_reg_initiator initiator;
+ 	enum nl80211_user_reg_hint_type user_reg_hint_type;
+-	char alpha2[2];
++	char alpha2[3];
+ 	enum nl80211_dfs_regions dfs_region;
+ 	bool intersect;
+ 	bool processed;
 -- 
-2.7.4
+2.15.1
