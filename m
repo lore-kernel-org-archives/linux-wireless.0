@@ -1,41 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:56130 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753835AbeBSUlF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36282 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752561AbeBVHme (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 15:41:05 -0500
-Message-ID: <1519072860.16723.22.camel@sipsolutions.net> (sfid-20180219_214124_451574_E10FA16D)
-Subject: Re: WARNING in check_flush_dependency
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: syzbot <syzbot+41cdaf4232c50e658934@syzkaller.appspotmail.com>,
-        David Miller <davem@davemloft.net>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        syzkaller-bugs@googlegroups.com
-Date: Mon, 19 Feb 2018 21:41:00 +0100
-In-Reply-To: <CACT4Y+bziyU+32umG=VD7wCbxpsKoGkbAypDwQS=PivfGSzypA@mail.gmail.com> (sfid-20180219_195836_294501_B226CD07)
-References: <001a1143c56ef80bb405636ca341@google.com>
-         <1516779566.2508.41.camel@sipsolutions.net>
-         <CACT4Y+bziyU+32umG=VD7wCbxpsKoGkbAypDwQS=PivfGSzypA@mail.gmail.com>
-         (sfid-20180219_195836_294501_B226CD07)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 22 Feb 2018 02:42:34 -0500
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCHv3 3/3] mac80211: implement cqm rssi check using rx data signal
+Date: Thu, 22 Feb 2018 13:12:20 +0530
+Message-Id: <1519285340-5463-4-git-send-email-tamizhr@codeaurora.org> (sfid-20180222_084239_427038_0F6E2F56)
+In-Reply-To: <1519285340-5463-1-git-send-email-tamizhr@codeaurora.org>
+References: <1519285340-5463-1-git-send-email-tamizhr@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-02-19 at 19:58 +0100, Dmitry Vyukov wrote:
-> 
-> > Yeah, we clearly shouldn't have WQ_RECLAIM set on this workqueue...
-> 
-> Hi Johannes,
-> 
-> Do you mind to send a patch to fix this?
+From: Tamizh chelvam <tamizhr@codeaurora.org>
 
-Yeah, sorry, I've been behind on patches a bit. I just applied it
-today, and once I've let it sit for a day for build bot etc. I'll send
-it up.
+Triggers cfg80211_ap_sta_cqm_rssi_notify with the corresponding event
+when station signal goes lower than the configured rssi threshold. And
+notify back to user space once the station signal becomes greater than
+the configured value. It uses rx data signal and compare with rssi value
+given by user. This rssi threshold is bss specific and it is common for
+all the stations.
 
-Let me double-check I've added the syzbot annotation to it though ...
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+---
+ include/net/mac80211.h  |    7 +++++++
+ net/mac80211/rx.c       |   46 +++++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/sta_info.h |    3 +++
+ 3 files changed, 55 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dc3e9d9..e973bcd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -800,6 +800,13 @@ enum mac80211_rate_control_flags {
+ };
+ 
+ 
++/*
++ * How many frames need to have been used in average station's
++ * signal strength before checking against the threshold
++ */
++#define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
++
++
+ /* there are 40 bytes if you don't need the rateset to be kept */
+ #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3fa15b0..7b60008 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1536,6 +1536,47 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
+ 	return RX_CONTINUE;
+ }
+ 
++static void ieee80211_sta_rx_signal_thold_check(struct ieee80211_rx_data *rx)
++{
++	struct sta_info *sta = rx->sta;
++	struct ieee80211_bss_conf *bss_conf =
++		&rx->sdata->vif.bss_conf;
++	int sig, last_event, thold;
++
++	if (!wiphy_ext_feature_isset(rx->local->hw.wiphy,
++				NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG))
++		return;
++
++	sta->count_rx_signal++;
++	if (sta->count_rx_signal < IEEE80211_STA_SIGNAL_AVE_MIN_COUNT)
++		return;
++
++	if (!bss_conf->cqm_rssi_thold || !bss_conf->enable_beacon) {
++		sta->count_rx_signal = 0;
++		return;
++	}
++
++	sig = -ewma_signal_read(&sta->rx_stats_avg.signal);
++	last_event = sta->last_cqm_event_signal;
++	thold = bss_conf->cqm_rssi_thold;
++
++	if (sig < thold && last_event == 0) {
++		sta->last_cqm_event_signal = sig;
++		cfg80211_ap_sta_cqm_rssi_notify(
++				rx->sdata->dev, sta->addr,
++				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
++				sig, GFP_ATOMIC);
++		sta->count_rx_signal = 0;
++	} else if (last_event && sig > thold) {
++		sta->last_cqm_event_signal = 0;
++		cfg80211_ap_sta_cqm_rssi_notify(
++				rx->sdata->dev, sta->addr,
++				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
++				sig, GFP_ATOMIC);
++		sta->count_rx_signal = 0;
++	}
++}
++
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ {
+@@ -1591,6 +1632,7 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
+ 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
+ 		sta->rx_stats.last_signal = status->signal;
+ 		ewma_signal_add(&sta->rx_stats_avg.signal, -status->signal);
++		ieee80211_sta_rx_signal_thold_check(rx);
+ 	}
+ 
+ 	if (status->chains) {
+@@ -3985,9 +4027,11 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
+ 
+ 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
+ 		stats->last_signal = status->signal;
+-		if (!fast_rx->uses_rss)
++		if (!fast_rx->uses_rss) {
+ 			ewma_signal_add(&sta->rx_stats_avg.signal,
+ 					-status->signal);
++			ieee80211_sta_rx_signal_thold_check(rx);
++		}
+ 	}
+ 
+ 	if (status->chains) {
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index f64eb86..6aa1071 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -581,6 +581,9 @@ struct sta_info {
+ 
+ 	struct cfg80211_chan_def tdls_chandef;
+ 
++	int last_cqm_event_signal;
++	unsigned int count_rx_signal;
++
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
+ };
+-- 
+1.7.9.5
