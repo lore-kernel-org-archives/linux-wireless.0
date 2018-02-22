@@ -1,141 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36282 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752561AbeBVHme (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 02:42:34 -0500
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv3 3/3] mac80211: implement cqm rssi check using rx data signal
-Date: Thu, 22 Feb 2018 13:12:20 +0530
-Message-Id: <1519285340-5463-4-git-send-email-tamizhr@codeaurora.org> (sfid-20180222_084239_427038_0F6E2F56)
-In-Reply-To: <1519285340-5463-1-git-send-email-tamizhr@codeaurora.org>
-References: <1519285340-5463-1-git-send-email-tamizhr@codeaurora.org>
+Received: from mail.toke.dk ([52.28.52.200]:47413 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753070AbeBVKLz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Feb 2018 05:11:55 -0500
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/3] Export TXQ parameters and statistics via nl80211
+In-Reply-To: <5A8DCE3B.3000607@broadcom.com>
+References: <20180219170224.14816-1-toke@toke.dk> <5A8D3445.3040300@broadcom.com> <87bmgiboan.fsf@toke.dk> <5A8DCE3B.3000607@broadcom.com>
+Date: Thu, 22 Feb 2018 11:11:53 +0100
+Message-ID: <87o9kh9vva.fsf@toke.dk> (sfid-20180222_111208_670124_DE304746)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <tamizhr@codeaurora.org>
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Triggers cfg80211_ap_sta_cqm_rssi_notify with the corresponding event
-when station signal goes lower than the configured rssi threshold. And
-notify back to user space once the station signal becomes greater than
-the configured value. It uses rx data signal and compare with rssi value
-given by user. This rssi threshold is bss specific and it is common for
-all the stations.
+>>> So can we expect some manual in which is described what parameter
+>>> should be tweaked based on the retrieved statistics.
+>>
+>> Heh, not sure I'll promise a whole manual, but I am happy to write a
+>> blog post (or wiki page if that's better) explaining what these values
+>> mean and what insight one might gain from them.
+>
+> My preference would be to have something on wireless.wiki.kernel.org. 
+> Another option might be to add kerneldoc section for this.
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- include/net/mac80211.h  |    7 +++++++
- net/mac80211/rx.c       |   46 +++++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/sta_info.h |    3 +++
- 3 files changed, 55 insertions(+), 1 deletion(-)
+Sure, I can add a page on the wiki about TXQs :)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index dc3e9d9..e973bcd 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -800,6 +800,13 @@ enum mac80211_rate_control_flags {
- };
- 
- 
-+/*
-+ * How many frames need to have been used in average station's
-+ * signal strength before checking against the threshold
-+ */
-+#define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
-+
-+
- /* there are 40 bytes if you don't need the rateset to be kept */
- #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 3fa15b0..7b60008 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1536,6 +1536,47 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
- 	return RX_CONTINUE;
- }
- 
-+static void ieee80211_sta_rx_signal_thold_check(struct ieee80211_rx_data *rx)
-+{
-+	struct sta_info *sta = rx->sta;
-+	struct ieee80211_bss_conf *bss_conf =
-+		&rx->sdata->vif.bss_conf;
-+	int sig, last_event, thold;
-+
-+	if (!wiphy_ext_feature_isset(rx->local->hw.wiphy,
-+				NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG))
-+		return;
-+
-+	sta->count_rx_signal++;
-+	if (sta->count_rx_signal < IEEE80211_STA_SIGNAL_AVE_MIN_COUNT)
-+		return;
-+
-+	if (!bss_conf->cqm_rssi_thold || !bss_conf->enable_beacon) {
-+		sta->count_rx_signal = 0;
-+		return;
-+	}
-+
-+	sig = -ewma_signal_read(&sta->rx_stats_avg.signal);
-+	last_event = sta->last_cqm_event_signal;
-+	thold = bss_conf->cqm_rssi_thold;
-+
-+	if (sig < thold && last_event == 0) {
-+		sta->last_cqm_event_signal = sig;
-+		cfg80211_ap_sta_cqm_rssi_notify(
-+				rx->sdata->dev, sta->addr,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-+				sig, GFP_ATOMIC);
-+		sta->count_rx_signal = 0;
-+	} else if (last_event && sig > thold) {
-+		sta->last_cqm_event_signal = 0;
-+		cfg80211_ap_sta_cqm_rssi_notify(
-+				rx->sdata->dev, sta->addr,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+				sig, GFP_ATOMIC);
-+		sta->count_rx_signal = 0;
-+	}
-+}
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- {
-@@ -1591,6 +1632,7 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
- 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
- 		sta->rx_stats.last_signal = status->signal;
- 		ewma_signal_add(&sta->rx_stats_avg.signal, -status->signal);
-+		ieee80211_sta_rx_signal_thold_check(rx);
- 	}
- 
- 	if (status->chains) {
-@@ -3985,9 +4027,11 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 
- 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
- 		stats->last_signal = status->signal;
--		if (!fast_rx->uses_rss)
-+		if (!fast_rx->uses_rss) {
- 			ewma_signal_add(&sta->rx_stats_avg.signal,
- 					-status->signal);
-+			ieee80211_sta_rx_signal_thold_check(rx);
-+		}
- 	}
- 
- 	if (status->chains) {
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index f64eb86..6aa1071 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -581,6 +581,9 @@ struct sta_info {
- 
- 	struct cfg80211_chan_def tdls_chandef;
- 
-+	int last_cqm_event_signal;
-+	unsigned int count_rx_signal;
-+
- 	/* keep last! */
- 	struct ieee80211_sta sta;
- };
--- 
-1.7.9.5
+-Toke
