@@ -1,287 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:50298 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750937AbeBLHU7 (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:42360 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751669AbeBVHhq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 02:20:59 -0500
-To: LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Fengguang Wu <fengguang.wu@intel.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] headers: untangle kmemleak.h from mm.h
-Cc: iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        sparclinux@vger.kernel.org, X86 ML <x86@kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        virtualization@lists.linux-foundation.org,
-        John Johansen <john.johansen@canonical.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Message-ID: <a4629db7-194d-3c7c-c8fd-24f61b220a70@infradead.org> (sfid-20180212_082121_583929_1C1B4E06)
-Date: Sun, 11 Feb 2018 23:20:48 -0800
+        Thu, 22 Feb 2018 02:37:46 -0500
+Date: Thu, 22 Feb 2018 10:37:31 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH 2/4] staging: wilc1000: modified wilc_spi_read_int() by
+ using GENMASK macro
+Message-ID: <20180222073731.ambug44zxpmwm76w@mwanda> (sfid-20180222_083750_127210_4E86ADD3)
+References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
+ <1519229532-11265-3-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519229532-11265-3-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+On Wed, Feb 21, 2018 at 09:42:10PM +0530, Ajay Singh wrote:
+> Use existing macro GENMASK to get the bitmask value. Moved the code to
+> get the bitmask value outside the loop, as its only required one time.
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/wilc_spi.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+> index 131d2b7..c63f534 100644
+> --- a/drivers/staging/wilc1000/wilc_spi.c
+> +++ b/drivers/staging/wilc1000/wilc_spi.c
+> @@ -955,6 +955,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+>  	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
+>  
+>  	j = 0;
+> +	unknown_mask = GENMASK(g_spi.nint - 1, 0);
+>  	do {
+>  		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
+>  		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
+> @@ -964,8 +965,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+>  			tmp |= (((irq_flags >> 0) & 0x7) << k);
+>  		}
+>  
+> -		unknown_mask = ~((1ul << g_spi.nint) - 1);
+> -
 
-Currently <linux/slab.h> #includes <linux/kmemleak.h> for no obvious
-reason. It looks like it's only a convenience, so remove kmemleak.h
-from slab.h and add <linux/kmemleak.h> to any users of kmemleak_*
-that don't already #include it.
-Also remove <linux/kmemleak.h> from source files that do not use it.
+This isn't right at all...  Say g_spi.nint is zero, then we're doing
+GENMASK(-1, 0) which seems like it should be undefined.  If g_spi.nint
+is 1 then "GENMASK(1 - 1, 0)" is 0x1 but "~((1 < 1) - 1)" is ~0x1.
 
-This is tested on i386 allmodconfig and x86_64 allmodconfig. It
-would be good to run it through the 0day bot for other $ARCHes.
-I have neither the horsepower nor the storage space for the other
-$ARCHes.
+I'm done reviewing this patch series...  You need to be more careful.
+Create a small test program to test your patches.  As a reviewer,
+creating test programs is how I review your patches.
 
-[slab.h is the second most used header file after module.h; kernel.h
-is right there with slab.h. There could be some minor error in the
-counting due to some #includes having comments after them and I
-didn't combine all of those.]
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <string.h>
+#include "/home/dcarpenter/progs/smatch/devel/check_debug.h"
+#include "kernel.h"
+#include <assert.h>
+#include <fcntl.h>
+#include <sys/time.h>
+#include <sys/ioctl.h>
+#include <linux/blktrace_api.h>
+#include <linux/fs.h>
 
-This is Lingchi patch #1 (death by a thousand cuts, applied to kernel
-header files).
+#define BITS_PER_LONG 64
+#define GENMASK(h, l) \
+        (((~0UL) - (1UL << (l)) + 1) & (~0UL >> (BITS_PER_LONG - 1 - (h))))
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
----
+int main(void)
+{
+        int i;
+        u32 mask1, mask2;
 
-Fengguang, can you have this patch run thru 0day builds, please?
+        for (i = 0; i < 32; i++) {
+                mask1 = ~((1ul << i) - 1);
+                mask2 = GENMASK(i - 1, 0);
+                if (mask1 == mask2)
+                        continue;
+                printf("ONE 0x%x %d\n", mask1, i);
+                printf("TWO 0x%x\n", mask2);
+        }
+        return 0;
+}
 
- arch/powerpc/sysdev/dart_iommu.c                          |    1 +
- arch/powerpc/sysdev/msi_bitmap.c                          |    1 +
- arch/s390/kernel/nmi.c                                    |    2 +-
- arch/s390/kernel/smp.c                                    |    1 -
- arch/sparc/kernel/irq_64.c                                |    1 -
- arch/x86/kernel/pci-dma.c                                 |    1 -
- drivers/iommu/exynos-iommu.c                              |    1 +
- drivers/iommu/mtk_iommu_v1.c                              |    1 -
- drivers/net/ethernet/ti/cpsw.c                            |    1 +
- drivers/net/wireless/realtek/rtlwifi/pci.c                |    1 -
- drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c |    1 -
- drivers/staging/rtl8188eu/hal/fw.c                        |    2 +-
- drivers/staging/rtlwifi/pci.c                             |    1 -
- drivers/virtio/virtio_ring.c                              |    1 -
- include/linux/slab.h                                      |    1 -
- kernel/ucount.c                                           |    1 +
- mm/cma.c                                                  |    1 +
- mm/memblock.c                                             |    1 +
- net/core/sysctl_net_core.c                                |    1 -
- net/ipv4/route.c                                          |    1 -
- security/apparmor/lsm.c                                   |    1 -
- 21 files changed, 9 insertions(+), 14 deletions(-)
-
---- lnx-416-rc1.orig/include/linux/slab.h
-+++ lnx-416-rc1/include/linux/slab.h
-@@ -125,7 +125,6 @@
- #define ZERO_OR_NULL_PTR(x) ((unsigned long)(x) <= \
- 				(unsigned long)ZERO_SIZE_PTR)
- 
--#include <linux/kmemleak.h>
- #include <linux/kasan.h>
- 
- struct mem_cgroup;
---- lnx-416-rc1.orig/kernel/ucount.c
-+++ lnx-416-rc1/kernel/ucount.c
-@@ -10,6 +10,7 @@
- #include <linux/slab.h>
- #include <linux/cred.h>
- #include <linux/hash.h>
-+#include <linux/kmemleak.h>
- #include <linux/user_namespace.h>
- 
- #define UCOUNTS_HASHTABLE_BITS 10
---- lnx-416-rc1.orig/mm/memblock.c
-+++ lnx-416-rc1/mm/memblock.c
-@@ -17,6 +17,7 @@
- #include <linux/poison.h>
- #include <linux/pfn.h>
- #include <linux/debugfs.h>
-+#include <linux/kmemleak.h>
- #include <linux/seq_file.h>
- #include <linux/memblock.h>
- 
---- lnx-416-rc1.orig/mm/cma.c
-+++ lnx-416-rc1/mm/cma.c
-@@ -35,6 +35,7 @@
- #include <linux/cma.h>
- #include <linux/highmem.h>
- #include <linux/io.h>
-+#include <linux/kmemleak.h>
- #include <trace/events/cma.h>
- 
- #include "cma.h"
---- lnx-416-rc1.orig/drivers/staging/rtl8188eu/hal/fw.c
-+++ lnx-416-rc1/drivers/staging/rtl8188eu/hal/fw.c
-@@ -30,7 +30,7 @@
- #include "rtl8188e_hal.h"
- 
- #include <linux/firmware.h>
--#include <linux/kmemleak.h>
-+#include <linux/slab.h>
- 
- static void _rtl88e_enable_fw_download(struct adapter *adapt, bool enable)
- {
---- lnx-416-rc1.orig/drivers/iommu/exynos-iommu.c
-+++ lnx-416-rc1/drivers/iommu/exynos-iommu.c
-@@ -17,6 +17,7 @@
- #include <linux/io.h>
- #include <linux/iommu.h>
- #include <linux/interrupt.h>
-+#include <linux/kmemleak.h>
- #include <linux/list.h>
- #include <linux/of.h>
- #include <linux/of_iommu.h>
---- lnx-416-rc1.orig/arch/s390/kernel/nmi.c
-+++ lnx-416-rc1/arch/s390/kernel/nmi.c
-@@ -15,7 +15,7 @@
- #include <linux/hardirq.h>
- #include <linux/log2.h>
- #include <linux/kprobes.h>
--#include <linux/slab.h>
-+#include <linux/kmemleak.h>
- #include <linux/time.h>
- #include <linux/module.h>
- #include <linux/sched/signal.h>
---- lnx-416-rc1.orig/arch/powerpc/sysdev/dart_iommu.c
-+++ lnx-416-rc1/arch/powerpc/sysdev/dart_iommu.c
-@@ -38,6 +38,7 @@
- #include <linux/suspend.h>
- #include <linux/memblock.h>
- #include <linux/gfp.h>
-+#include <linux/kmemleak.h>
- #include <asm/io.h>
- #include <asm/prom.h>
- #include <asm/iommu.h>
---- lnx-416-rc1.orig/arch/powerpc/sysdev/msi_bitmap.c
-+++ lnx-416-rc1/arch/powerpc/sysdev/msi_bitmap.c
-@@ -10,6 +10,7 @@
- 
- #include <linux/slab.h>
- #include <linux/kernel.h>
-+#include <linux/kmemleak.h>
- #include <linux/bitmap.h>
- #include <linux/bootmem.h>
- #include <asm/msi_bitmap.h>
---- lnx-416-rc1.orig/drivers/net/ethernet/ti/cpsw.c
-+++ lnx-416-rc1/drivers/net/ethernet/ti/cpsw.c
-@@ -35,6 +35,7 @@
- #include <linux/of_net.h>
- #include <linux/of_device.h>
- #include <linux/if_vlan.h>
-+#include <linux/kmemleak.h>
- 
- #include <linux/pinctrl/consumer.h>
- 
---- lnx-416-rc1.orig/drivers/virtio/virtio_ring.c
-+++ lnx-416-rc1/drivers/virtio/virtio_ring.c
-@@ -23,7 +23,6 @@
- #include <linux/slab.h>
- #include <linux/module.h>
- #include <linux/hrtimer.h>
--#include <linux/kmemleak.h>
- #include <linux/dma-mapping.h>
- #include <xen/xen.h>
- 
---- lnx-416-rc1.orig/security/apparmor/lsm.c
-+++ lnx-416-rc1/security/apparmor/lsm.c
-@@ -23,7 +23,6 @@
- #include <linux/sysctl.h>
- #include <linux/audit.h>
- #include <linux/user_namespace.h>
--#include <linux/kmemleak.h>
- #include <net/sock.h>
- 
- #include "include/apparmor.h"
---- lnx-416-rc1.orig/drivers/iommu/mtk_iommu_v1.c
-+++ lnx-416-rc1/drivers/iommu/mtk_iommu_v1.c
-@@ -25,7 +25,6 @@
- #include <linux/io.h>
- #include <linux/iommu.h>
- #include <linux/iopoll.h>
--#include <linux/kmemleak.h>
- #include <linux/list.h>
- #include <linux/of_address.h>
- #include <linux/of_iommu.h>
---- lnx-416-rc1.orig/drivers/staging/rtlwifi/pci.c
-+++ lnx-416-rc1/drivers/staging/rtlwifi/pci.c
-@@ -31,7 +31,6 @@
- #include "efuse.h"
- #include <linux/interrupt.h>
- #include <linux/export.h>
--#include <linux/kmemleak.h>
- #include <linux/module.h>
- 
- MODULE_AUTHOR("lizhaoming	<chaoming_li@realsil.com.cn>");
---- lnx-416-rc1.orig/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ lnx-416-rc1/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -31,7 +31,6 @@
- #include "efuse.h"
- #include <linux/interrupt.h>
- #include <linux/export.h>
--#include <linux/kmemleak.h>
- #include <linux/module.h>
- 
- MODULE_AUTHOR("lizhaoming	<chaoming_li@realsil.com.cn>");
---- lnx-416-rc1.orig/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-+++ lnx-416-rc1/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-@@ -32,7 +32,6 @@
- #include "../rtl8192ce/def.h"
- #include "fw_common.h"
- #include <linux/export.h>
--#include <linux/kmemleak.h>
- 
- static void _rtl92c_enable_fw_download(struct ieee80211_hw *hw, bool enable)
- {
---- lnx-416-rc1.orig/arch/s390/kernel/smp.c
-+++ lnx-416-rc1/arch/s390/kernel/smp.c
-@@ -27,7 +27,6 @@
- #include <linux/err.h>
- #include <linux/spinlock.h>
- #include <linux/kernel_stat.h>
--#include <linux/kmemleak.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/irqflags.h>
---- lnx-416-rc1.orig/arch/sparc/kernel/irq_64.c
-+++ lnx-416-rc1/arch/sparc/kernel/irq_64.c
-@@ -22,7 +22,6 @@
- #include <linux/seq_file.h>
- #include <linux/ftrace.h>
- #include <linux/irq.h>
--#include <linux/kmemleak.h>
- 
- #include <asm/ptrace.h>
- #include <asm/processor.h>
---- lnx-416-rc1.orig/arch/x86/kernel/pci-dma.c
-+++ lnx-416-rc1/arch/x86/kernel/pci-dma.c
-@@ -6,7 +6,6 @@
- #include <linux/bootmem.h>
- #include <linux/gfp.h>
- #include <linux/pci.h>
--#include <linux/kmemleak.h>
- 
- #include <asm/proto.h>
- #include <asm/dma.h>
---- lnx-416-rc1.orig/net/core/sysctl_net_core.c
-+++ lnx-416-rc1/net/core/sysctl_net_core.c
-@@ -15,7 +15,6 @@
- #include <linux/vmalloc.h>
- #include <linux/init.h>
- #include <linux/slab.h>
--#include <linux/kmemleak.h>
- 
- #include <net/ip.h>
- #include <net/sock.h>
---- lnx-416-rc1.orig/net/ipv4/route.c
-+++ lnx-416-rc1/net/ipv4/route.c
-@@ -108,7 +108,6 @@
- #include <net/rtnetlink.h>
- #ifdef CONFIG_SYSCTL
- #include <linux/sysctl.h>
--#include <linux/kmemleak.h>
- #endif
- #include <net/secure_seq.h>
- #include <net/ip_tunnels.h>
+regards,
+dan carpenter
