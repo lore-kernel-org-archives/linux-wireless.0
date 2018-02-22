@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56532 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752436AbeB1O7B (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 09:59:01 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mga01.intel.com ([192.55.52.88]:40774 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752439AbeBVG2q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Feb 2018 01:28:46 -0500
+Date: Thu, 22 Feb 2018 14:28:29 +0800
+From: kbuild test robot <lkp@intel.com>
+To: mkenna@codeaurora.org
+Cc: kbuild-all@01.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Subject: Re: [PATCH] ath10k: debugfs support to get final TPC stats for 10.4
+ variants
+Message-ID: <201802221335.IYmLJSh2%fengguang.wu@intel.com> (sfid-20180222_072850_675644_D3B4AF02)
+References: <1519220139-10423-1-git-send-email-mkenna@codeaurora.org>
 MIME-Version: 1.0
-Subject: Re: [v2] mt7601u: make write with mask access atomic
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <4a8ec536fda4741ef88618493d0641fbd497314c.1518819577.git.lorenzo.bianconi@redhat.com>
-References: <4a8ec536fda4741ef88618493d0641fbd497314c.1518819577.git.lorenzo.bianconi@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: kubakici@wp.pl, linux-wireless@vger.kernel.org
-Message-Id: <20180228145900.EDFC1607B9@smtp.codeaurora.org> (sfid-20180228_155904_584721_7466E5ED)
-Date: Wed, 28 Feb 2018 14:59:00 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519220139-10423-1-git-send-email-mkenna@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+Hi Maharaja,
 
-> Introduce __mt7601u_rr and __mt7601u_vendor_single_wr routines in order
-> to make mt7601u_rmw and mt7601u_rmc atomic. This patch does not fix a
-> reported issue but makes the usb access more robust to concurrent
-> operations on the same register since it is theoretically possible that
-> read and write accesses of mt7601u_rmw/mt7601u_rmc can be interleaved with
-> a different write operation on the same register.
-> Moreover using __mt7601u_rr and __mt7601u_vendor_single_wr in
-> mt7601u_rmw/mt7601u_rmc allows to grab vendor_req_mutex mutex once
-> instead of twice
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> Acked-by: Jakub Kicinski <kubakici@wp.pl>
+Thank you for the patch! Perhaps something to improve:
 
-Patch applied to wireless-drivers-next.git, thanks.
+[auto build test WARNING on ath6kl/ath-next]
+[also build test WARNING on v4.16-rc2 next-20180221]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-fee05843801c mt7601u: make write with mask access atomic
+url:    https://github.com/0day-ci/linux/commits/mkenna-codeaurora-org/ath10k-debugfs-support-to-get-final-TPC-stats-for-10-4-variants/20180222-110854
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git ath-next
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
--- 
-https://patchwork.kernel.org/patch/10225849/
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+sparse warnings: (new ones prefixed by >>)
+
+>> drivers/net/wireless/ath/ath10k/wmi.c:4322:6: sparse: symbol 'ath10k_wmi_tpc_config_get_rate_code' was not declared. Should it be
+>> drivers/net/wireless/ath/ath10k/wmi.c:4660:6: sparse: symbol 'ath10k_wmi_event_tpc_final_table' was not declared. Should it be
+   drivers/net/wireless/ath/ath10k/wmi.c:738:10: sparse: Initializer entry defined twice
+   drivers/net/wireless/ath/ath10k/wmi.c:744:10: also defined here
+
+Please review and possibly fold the followup patch.
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
