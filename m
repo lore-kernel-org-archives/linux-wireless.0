@@ -1,69 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34988 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751098AbeB0I0j (ORCPT
+Received: from userp2120.oracle.com ([156.151.31.85]:51712 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751687AbeBVHVN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 03:26:39 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ramon Fried <rfried@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wcn36xx: reduce verbosity of drivers messages
-References: <20180217202510.13707-1-rfried@codeaurora.org>
-Date: Tue, 27 Feb 2018 10:26:33 +0200
-In-Reply-To: <20180217202510.13707-1-rfried@codeaurora.org> (Ramon Fried's
-        message of "Sat, 17 Feb 2018 22:25:10 +0200")
-Message-ID: <87zi3uhm86.fsf@codeaurora.org> (sfid-20180227_092643_090515_C4AA7415)
+        Thu, 22 Feb 2018 02:21:13 -0500
+Date: Thu, 22 Feb 2018 10:20:58 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH 1/4] staging: wilc1000: remove use of 'happened' variable
+ in wilc_spi_read_int()
+Message-ID: <20180222072058.g6wyrsmg5lr6vnef@mwanda> (sfid-20180222_082116_969037_A1DB8A39)
+References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
+ <1519229532-11265-2-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519229532-11265-2-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ramon Fried <rfried@codeaurora.org> writes:
-
-> Whenever the WLAN interface is started the FW
-> version and caps are printed, this info should appear as
-> debug info.
->
-> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+On Wed, Feb 21, 2018 at 09:42:09PM +0530, Ajay Singh wrote:
+> Modified wilc_spi_read_int() by removing unnecessary use of "happened"
+> variable.
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 > ---
->  drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
->  drivers/net/wireless/ath/wcn36xx/smd.c  | 4 ++--
->  2 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-> index ab5be6d2c691..8c2654075eb8 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/main.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-> @@ -261,7 +261,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
+>  drivers/staging/wilc1000/wilc_spi.c | 8 +++-----
+>  1 file changed, 3 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+> index 6b392c9..131d2b7 100644
+> --- a/drivers/staging/wilc1000/wilc_spi.c
+> +++ b/drivers/staging/wilc1000/wilc_spi.c
+> @@ -936,7 +936,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+>  	int ret;
+>  	u32 tmp;
+>  	u32 byte_cnt;
+> -	int happened, j;
+> +	int j;
+>  	u32 unknown_mask;
+>  	u32 irq_flags;
+>  	int k = IRG_FLAGS_OFFSET + 5;
+> @@ -956,8 +956,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
 >  
->  	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
->  		if (get_feat_caps(wcn->fw_feat_caps, i))
-> -			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
-> +			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
->  	}
->  }
+>  	j = 0;
+>  	do {
+> -		happened = 0;
+> -
+>  		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
+>  		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
 >  
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index 2a4871ca9c72..7c4d19b041bc 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> @@ -409,10 +409,10 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
->  	wcn->fw_minor = rsp->start_rsp_params.version.minor;
->  	wcn->fw_major = rsp->start_rsp_params.version.major;
->  
-> -	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
-> +	wcn36xx_dbg(WCN36XX_DBG_HAL, "firmware WLAN version '%s' and CRM version '%s'\n",
->  		     wcn->wlan_version, wcn->crm_version);
->  
-> -	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
-> +	wcn36xx_dbg(WCN36XX_DBG_HAL, "firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
->  		     wcn->fw_major, wcn->fw_minor,
->  		     wcn->fw_version, wcn->fw_revision,
->  		     rsp->start_rsp_params.stations,
+> @@ -972,11 +970,11 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+>  			dev_err(&spi->dev,
+>  				"Unexpected interrupt(2):j=%d,tmp=%x,mask=%x\n",
+>  				j, tmp, unknown_mask);
+> -				happened = 1;
+> +				break;
 
-I think that printing this information, especially the firmware version,
-is useful. Isn't there a better way to solve this, like print this only
-once during the driver is loaded or during the first start() call?
+This is flipped around.  happened means don't break, but you've changed
+it to be the opposite.
 
--- 
-Kalle Valo
+regards,
+dan carpenter
+
+>  		}
+>  
+>  		j++;
+> -	} while (happened);
+> +	} while (1);
+>  
