@@ -1,190 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37374 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755101AbeBOJEO (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:37043 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750927AbeBVTfw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 04:04:14 -0500
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH] ath10k: Enable IOMMU support for WCN3990 target
-Date: Thu, 15 Feb 2018 14:34:08 +0530
-Message-Id: <1518685448-15317-1-git-send-email-govinds@codeaurora.org> (sfid-20180215_100424_214589_D6D60522)
+        Thu, 22 Feb 2018 14:35:52 -0500
+Received: by mail-pf0-f194.google.com with SMTP id s24so2491525pfm.4
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Feb 2018 11:35:52 -0800 (PST)
+Date: Thu, 22 Feb 2018 11:35:49 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 2/3] mwifiex: support sysfs initiated device coredump
+Message-ID: <20180222193547.GA78462@rodete-desktop-imager.corp.google.com> (sfid-20180222_203611_338475_C6A16466)
+References: <1519210220-22437-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
+ <20180221225903.GA42395@rodete-desktop-imager.corp.google.com>
+ <5A8EB4F4.2030103@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5A8EB4F4.2030103@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When an IOMMU device is available on the platform bus, allocate
-an IOMMU domain and attach the wlan target to it.
-WCN3990 target can then attach an DMA I/O virtual address
-space to scan out of bound transactions.
+Hi Arend,
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/snoc.c | 100 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/snoc.h |   3 +
- 2 files changed, 101 insertions(+), 2 deletions(-)
+On Thu, Feb 22, 2018 at 01:17:56PM +0100, Arend van Spriel wrote:
+> On 2/21/2018 11:59 PM, Brian Norris wrote:
+> > On Wed, Feb 21, 2018 at 11:50:19AM +0100, Arend van Spriel wrote:
+> > > Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+> > > it is possible to initiate a device coredump from user-space. This
+> > > patch adds support for it adding the .coredump() driver callback.
+> > > As there is no longer a need to initiate it through debugfs remove
+> > > that code.
+> > > 
+> > > Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> > > ---
+> > >   drivers/net/wireless/marvell/mwifiex/debugfs.c | 31 +-------------------------
+> > >   drivers/net/wireless/marvell/mwifiex/pcie.c    | 19 ++++++++++++++--
+> > >   drivers/net/wireless/marvell/mwifiex/sdio.c    | 13 +++++++++++
+> > >   drivers/net/wireless/marvell/mwifiex/usb.c     | 14 ++++++++++++
+> > >   4 files changed, 45 insertions(+), 32 deletions(-)
+> > 
+> > The documentation doesn't really say [1], but is the coredump supposed
+> > to happen synchronously? Because the mwifiex implementation is
+> > asynchronous, whereas it looks like the brcmfmac one is synchronous.
+> 
+> Well, that depends on the eye of the beholder I guess. From user-space
+> perspective it is asynchronous regardless. A write access to the coredump
+> sysfs file eventually results in a uevent when the devcoredump entry is
+> created, ie. after driver has made a dev_coredump API call. Whether the
+> driver does that synchronously or asynchronously is irrelevant as far as
+> user-space is concerned.
 
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index cd21b25..502263d 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -26,6 +26,10 @@
- #include <linux/platform_device.h>
- #include <linux/regulator/consumer.h>
- #include <linux/clk.h>
-+#include <asm/dma-iommu.h>
-+#include <linux/iommu.h>
-+#include <linux/dma-mapping.h>
-+
- #define  WCN3990_CE_ATTR_FLAGS 0
- #define ATH10K_SNOC_RX_POST_RETRY_MS 50
- #define CE_POLL_PIPE 4
-@@ -1292,6 +1296,88 @@ static int ath10k_hw_power_off(struct ath10k *ar)
- 	return ret;
- }
- 
-+static int ath10k_smmu_attach(struct ath10k *ar)
-+{
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-+	struct dma_iommu_mapping *mapping;
-+	struct platform_device *pdev;
-+	int ret = 0;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "Initializing SMMU\n");
-+
-+	pdev = ar_snoc->dev;
-+	mapping = arm_iommu_create_mapping(&platform_bus_type,
-+					   ar_snoc->smmu_iova_start,
-+					   ar_snoc->smmu_iova_len);
-+	if (IS_ERR(mapping)) {
-+		ath10k_err(ar, "create mapping failed, err = %d\n", ret);
-+		ret = PTR_ERR(mapping);
-+		goto map_fail;
-+	}
-+
-+	ret = arm_iommu_attach_device(&pdev->dev, mapping);
-+	if (ret < 0 && ret != -EEXIST) {
-+		ath10k_err(ar, "iommu attach device failed, err = %d\n", ret);
-+		goto attach_fail;
-+	} else if (ret == -EEXIST) {
-+		ret = 0;
-+	}
-+
-+	ar_snoc->smmu_mapping = mapping;
-+
-+	return ret;
-+
-+attach_fail:
-+	arm_iommu_release_mapping(mapping);
-+map_fail:
-+	return ret;
-+}
-+
-+static void ath10k_smmu_deinit(struct ath10k *ar)
-+{
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-+	struct platform_device *pdev;
-+
-+	pdev = ar_snoc->dev;
-+
-+	if (!ar_snoc->smmu_mapping)
-+		return;
-+
-+	arm_iommu_detach_device(&pdev->dev);
-+	arm_iommu_release_mapping(ar_snoc->smmu_mapping);
-+
-+	ar_snoc->smmu_mapping = NULL;
-+}
-+
-+static int ath10k_smmu_init(struct ath10k *ar)
-+{
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-+	struct platform_device *pdev;
-+	struct resource *res;
-+	int ret = 0;
-+
-+	pdev = ar_snoc->dev;
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+					   "smmu_iova_base");
-+	if (!res) {
-+		ath10k_err(ar, "SMMU iova base not found\n");
-+	} else {
-+		ar_snoc->smmu_iova_start = res->start;
-+		ar_snoc->smmu_iova_len = resource_size(res);
-+		ath10k_dbg(ar, ATH10K_DBG_SNOC, "SMMU iova start: %pa, len: %zu\n",
-+			   &ar_snoc->smmu_iova_start, ar_snoc->smmu_iova_len);
-+
-+		ret = ath10k_smmu_attach(ar);
-+		if (ret < 0) {
-+			ath10k_err(ar, "SMMU init failed, err = %d, start: %pad, len: %zx\n",
-+				   ret, &ar_snoc->smmu_iova_start,
-+				   ar_snoc->smmu_iova_len);
-+		}
-+	}
-+
-+	return ret;
-+}
-+
- static const struct of_device_id ath10k_snoc_dt_match[] = {
- 	{ .compatible = "qcom,wcn3990-wifi",
- 	 .data = &drv_priv,
-@@ -1339,16 +1425,22 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
- 	ar_snoc->ce.bus_ops = &ath10k_snoc_bus_ops;
- 	ar->ce_priv = &ar_snoc->ce;
- 
-+	ret = ath10k_smmu_init(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to int SMMU: %d\n", ret);
-+		goto err_core_destroy;
-+	}
-+
- 	ath10k_snoc_resource_init(ar);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to initialize resource: %d\n", ret);
--		goto err_core_destroy;
-+		goto err_smmu_deinit;
- 	}
- 
- 	ath10k_snoc_setup_resource(ar);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to setup resource: %d\n", ret);
--		goto err_core_destroy;
-+		goto err_smmu_deinit;
- 	}
- 	ret = ath10k_snoc_request_irq(ar);
- 	if (ret) {
-@@ -1396,6 +1488,9 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
- err_release_resource:
- 	ath10k_snoc_release_resource(ar);
- 
-+err_smmu_deinit:
-+	ath10k_smmu_deinit(ar);
-+
- err_core_destroy:
- 	ath10k_core_destroy(ar);
- 
-@@ -1409,6 +1504,7 @@ static int ath10k_snoc_remove(struct platform_device *pdev)
- 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc remove\n");
- 	ath10k_core_unregister(ar);
- 	ath10k_hw_power_off(ar);
-+	ath10k_smmu_deinit(ar);
- 	ath10k_snoc_free_irq(ar);
- 	ath10k_snoc_release_resource(ar);
- 	ath10k_core_destroy(ar);
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.h b/drivers/net/wireless/ath/ath10k/snoc.h
-index 05dc98f..a9bca2e 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.h
-+++ b/drivers/net/wireless/ath/ath10k/snoc.h
-@@ -82,6 +82,9 @@ struct ath10k_snoc {
- 	struct timer_list rx_post_retry;
- 	struct ath10k_wcn3990_vreg_info *vreg;
- 	struct ath10k_wcn3990_clk_info *clk;
-+	struct dma_iommu_mapping *smmu_mapping;
-+	dma_addr_t smmu_iova_start;
-+	size_t smmu_iova_len;
- };
- 
- static inline struct ath10k_snoc *ath10k_snoc_priv(struct ath10k *ar)
--- 
-1.9.1
+Is it really? The driver infrastructure seems to guarantee that the
+entirety of a driver's ->coredump() will complete before returning from
+the write. So it might be reasonable for some user to assume (based on
+implementation details, e.g., of brcmfmac) that the devcoredump will be
+ready by the time the write() syscall returns, absent documentation that
+says otherwise. But then, that's not how mwifiex works right now, so
+they might be surprised if they switch drivers.
+
+Anyway, *I'm* already personally used to these dumps being asynchronous,
+and writing tooling to listen for the uevent instead. But that doesn't
+mean everyone will be.
+
+Also, due to the differences in async/sync, mwifiex doesn't really
+provide you much chance for error handling, because most errors would be
+asynchronous. So brcmfmac's "coredump" has more chance for user programs
+to error-check than mwifiex's (due to the asynchronous nature) [1].
+
+BTW, I push on this mostly because this is migrating from a debugfs
+feature (that is easy to hand-wave off as not really providing a
+consistent/stable API, etc., etc.) to a documented sysfs feature. If it
+were left to rot in debugfs, I probably wouldn't be as bothered ;)
+
+> > Brian
+> > 
+> > [1] In fact, the ABI documentation really just describes kernel
+> > internals, rather than documenting any user-facing details, from what I
+> > can tell.
+> 
+> You are right. Clearly I did not reach the end my learning curve here. I
+> assumed referring to the existing dev_coredump facility was sufficient, but
+> maybe it is worth a patch to be more explicit and mention the uevent
+> behavior. Also dev_coredump facility may be disabled upon which the trigger
+> will have no effect in sysfs. In the kernel the data passed by the driver is
+> simply freed by dev_coredump facility.
+
+Is there any other documentation for the coredump feature? I don't
+really see much.
+
+Brian
+
+[1] Oh wait, but I see that while ->coredump() has an integer return
+code...the caller ignores it:
+
+static ssize_t coredump_store(struct device *dev, struct device_attribute *attr,
+			    const char *buf, size_t count)
+{
+	device_lock(dev);
+	if (dev->driver->coredump)
+		dev->driver->coredump(dev);
+	device_unlock(dev);
+
+	return count;
+}
+static DEVICE_ATTR_WO(coredump);
+
+Is that a bug or a feature?
