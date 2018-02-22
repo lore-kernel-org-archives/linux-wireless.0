@@ -1,59 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52662 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751246AbeBQUZQ (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:19889 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752991AbeBVJXH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Feb 2018 15:25:16 -0500
-From: Ramon Fried <rfried@codeaurora.org>
-To: kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Cc: Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH] wcn36xx: reduce verbosity of drivers messages
-Date: Sat, 17 Feb 2018 22:25:10 +0200
-Message-Id: <20180217202510.13707-1-rfried@codeaurora.org> (sfid-20180217_212526_443416_EE427FDA)
+        Thu, 22 Feb 2018 04:23:07 -0500
+Subject: Re: [PATCH 2/4] staging: wilc1000: modified wilc_spi_read_int() by
+ using GENMASK macro
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
+        <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
+        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
+        <aditya.shankar@microchip.com>
+References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
+ <1519229532-11265-3-git-send-email-ajay.kathat@microchip.com>
+ <20180222073731.ambug44zxpmwm76w@mwanda>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <8a20dcf4-8cfd-93bd-539e-e30e01f2a3b1@microchip.com> (sfid-20180222_102310_872354_896D2FB8)
+Date: Thu, 22 Feb 2018 11:23:03 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180222073731.ambug44zxpmwm76w@mwanda>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever the WLAN interface is started the FW
-version and caps are printed, this info should appear as
-debug info.
+Hi Dan,
 
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
- drivers/net/wireless/ath/wcn36xx/smd.c  | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On 22.02.2018 09:37, Dan Carpenter wrote:
+> On Wed, Feb 21, 2018 at 09:42:10PM +0530, Ajay Singh wrote:
+>> Use existing macro GENMASK to get the bitmask value. Moved the code to
+>> get the bitmask value outside the loop, as its only required one time.
+>>
+>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+>> ---
+>>  drivers/staging/wilc1000/wilc_spi.c | 3 +--
+>>  1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+>> index 131d2b7..c63f534 100644
+>> --- a/drivers/staging/wilc1000/wilc_spi.c
+>> +++ b/drivers/staging/wilc1000/wilc_spi.c
+>> @@ -955,6 +955,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+>>  	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
+>>  
+>>  	j = 0;
+>> +	unknown_mask = GENMASK(g_spi.nint - 1, 0);
+>>  	do {
+>>  		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
+>>  		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
+>> @@ -964,8 +965,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+>>  			tmp |= (((irq_flags >> 0) & 0x7) << k);
+>>  		}
+>>  
+>> -		unknown_mask = ~((1ul << g_spi.nint) - 1);
+>> -
+> 
+> This isn't right at all...  Say g_spi.nint is zero, then we're doing
+> GENMASK(-1, 0) which seems like it should be undefined.  If g_spi.nint
+> is 1 then "GENMASK(1 - 1, 0)" is 0x1 but "~((1 < 1) - 1)" is ~0x1.
+> 
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index ab5be6d2c691..8c2654075eb8 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -261,7 +261,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
- 
- 	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
- 		if (get_feat_caps(wcn->fw_feat_caps, i))
--			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
-+			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 2a4871ca9c72..7c4d19b041bc 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -409,10 +409,10 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
- 	wcn->fw_minor = rsp->start_rsp_params.version.minor;
- 	wcn->fw_major = rsp->start_rsp_params.version.major;
- 
--	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "firmware WLAN version '%s' and CRM version '%s'\n",
- 		     wcn->wlan_version, wcn->crm_version);
- 
--	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
- 		     wcn->fw_major, wcn->fw_minor,
- 		     wcn->fw_version, wcn->fw_revision,
- 		     rsp->start_rsp_params.stations,
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Even in this driver g_spi.nint is always constant and equal with NUM_INT_EXT
+(which is 3), it seems that enabling interrupts before initializing g_spi.nint
+may lead to the state where g_spi.nint = 0, as Dan pointed.
+
+int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
+{
+		// ...
+                if (wl->gpio >= 0 && init_irq(dev)) {
+                        ret = -EIO;
+                        goto _fail_locks_;
+                }
+
+		// ...
+                ret = linux_wlan_start_firmware(dev); -> calls
+linux_wlan_start_firmware which in turn calls wilc->hif_func->hif_sync_ext(wilc,
+NUM_INT_EXT);
+
+	
+}
+
+Thank you,
+Claudiu Beznea
+
+> I'm done reviewing this patch series...  You need to be more careful.
+> Create a small test program to test your patches.  As a reviewer,
+> creating test programs is how I review your patches.
+> 
+> #include <sys/types.h>
+> #include <sys/stat.h>
+> #include <fcntl.h>
+> #include <stdio.h>
+> #include <stdlib.h>
+> #include <limits.h>
+> #include <string.h>
+> #include "/home/dcarpenter/progs/smatch/devel/check_debug.h"
+> #include "kernel.h"
+> #include <assert.h>
+> #include <fcntl.h>
+> #include <sys/time.h>
+> #include <sys/ioctl.h>
+> #include <linux/blktrace_api.h>
+> #include <linux/fs.h>
+> 
+> #define BITS_PER_LONG 64
+> #define GENMASK(h, l) \
+>         (((~0UL) - (1UL << (l)) + 1) & (~0UL >> (BITS_PER_LONG - 1 - (h))))
+> 
+> int main(void)
+> {
+>         int i;
+>         u32 mask1, mask2;
+> 
+>         for (i = 0; i < 32; i++) {
+>                 mask1 = ~((1ul << i) - 1);
+>                 mask2 = GENMASK(i - 1, 0);
+>                 if (mask1 == mask2)
+>                         continue;
+>                 printf("ONE 0x%x %d\n", mask1, i);
+>                 printf("TWO 0x%x\n", mask2);
+>         }
+>         return 0;
+> }
+> 
+> regards,
+> dan carpenter
+> 
+> 
+> 
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
+> 
