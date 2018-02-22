@@ -1,92 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55048 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751833AbeBTNOU (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:54883 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753411AbeBVK7G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 08:14:20 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>
-Subject: Re: [v7 3/8] rsi: add header file rsi_91x
-References: <1519046379-10068-1-git-send-email-amitkarwar@gmail.com>
-        <1519046379-10068-4-git-send-email-amitkarwar@gmail.com>
-Date: Tue, 20 Feb 2018 15:14:14 +0200
-In-Reply-To: <1519046379-10068-4-git-send-email-amitkarwar@gmail.com>
-        (Amitkumar Karwar's message of "Mon, 19 Feb 2018 18:49:34 +0530")
-Message-ID: <87o9kjiz15.fsf@codeaurora.org> (sfid-20180220_141425_175693_2DE752B1)
+        Thu, 22 Feb 2018 05:59:06 -0500
+Subject: Re: [PULL] ath10k firmware 20180219
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <87y3jlxq0k.fsf@kamboji.qca.qualcomm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <0e9db63d-41e9-eeb3-00d1-73b20df4bb3f@dd-wrt.com> (sfid-20180222_115910_111796_5F228259)
+Date: Thu, 22 Feb 2018 11:59:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87y3jlxq0k.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave and Johannes,
+on 9984 i see these messages with this firmware from time to time
 
-a question to both of you below:
+[272972.950788] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+[272982.868922] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+[335550.123780] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+[335550.156332] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+[335550.158813] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+[335550.193144] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+[365157.869540] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+[365157.902452] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+according to the WMI header this maybe a critical internal error
+
+Am 22.02.2018 um 11:44 schrieb Kalle Valo:
+> Hi linux-firmware maintainers,
 >
-> The common parameters used by wlan and bt modules are add
-> to a new header file "rsi_91x.h" defined in 'include/net'
+> here's a pull request for updating ath10k firmwares. Earlier I have been
+> submitting these as patches but as the patches got pretty big I decided
+> to try using pull requests instead.
 >
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-> ---
-> v7: Same as v6
-> v6: Renamed rsi_header.h to rsi_91x.h and moved to include/net
->     from include/linux(Kalle)
-> v5: Same as earlier versions
+> Please let me know if there are any problems.
+>
+> Kalle
+>
+> The following changes since commit 6d5131107f2ba67a13f469ac770a55f101ba654d:
+>
+>    rtl_bt: Add firmware and configuration files for the Bluetooth parts of RTL8821C and RTL8723D (2018-02-13 13:09:19 -0500)
+>
+> are available in the git repository at:
+>
+>    git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/linux-firmware.git ath10k-20180219
+>
+> for you to fetch changes up to 9b3d016886a8e365f9493a724bf2945b97bcfe43:
+>
+>    ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.5.3-00053 (2018-02-19 12:03:36 +0200)
+>
+> ----------------------------------------------------------------
+> Kalle Valo (9):
+>        ath10k: QCA4019 hw1.0: update firmware-5.bin to 10.4-3.5.3-00053
+>        ath10k: QCA4019 hw1.0: update board-2.bin
+>        ath10k: QCA6174 hw3.0: update firmware-6.bin to WLAN.RM.4.4.1-00079-QCARMSWPZ-1
+>        ath10k: QCA6174 hw3.0: update board-2.bin
+>        ath10k: QCA9377 hw1.0: update firmware-5.bin to WLAN.TF.1.0-00002-QCATFSWPZ-5
+>        ath10k: QCA9887 hw1.0: update firmware-5.bin to 10.2.4-1.0-00037
+>        ath10k: QCA9888 hw2.0: update firmware-5.bin to 10.4-3.5.3-00053
+>        ath10k: QCA988X hw2.0: update firmware-5.bin to 10.2.4-1.0-00037
+>        ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.5.3-00053
+>
+>   WHENCE                                            |  14 ++++++------
+>   ath10k/QCA4019/hw1.0/board-2.bin                  | Bin 109172 -> 133452 bytes
+>   ath10k/QCA4019/hw1.0/firmware-5.bin               | Bin 535412 -> 568636 bytes
+>   ath10k/QCA6174/hw3.0/board-2.bin                  | Bin 501748 -> 551128 bytes
+>   ath10k/QCA6174/hw3.0/firmware-6.bin               | Bin 727776 -> 730788 bytes
+>   ath10k/QCA9377/hw1.0/firmware-5.bin               | Bin 605908 -> 783336 bytes
+>   ath10k/QCA9377/hw1.0/notice_ath10k_firmware-5.txt |   4 ++--
+>   ath10k/QCA9887/hw1.0/firmware-5.bin               | Bin 235880 -> 237584 bytes
+>   ath10k/QCA9888/hw2.0/firmware-5.bin               | Bin 647460 -> 659708 bytes
+>   ath10k/QCA988X/hw2.0/firmware-5.bin               | Bin 248188 -> 248108 bytes
+>   ath10k/QCA988X/hw2.0/notice_ath10k_firmware-5.txt |  25 ++++++++++------------
+>   ath10k/QCA9984/hw1.0/firmware-5.bin               | Bin 622060 -> 647380 bytes
+>   12 files changed, 20 insertions(+), 23 deletions(-)
 
-[...]
-
-> --- /dev/null
-> +++ b/include/net/rsi_91x.h
-> @@ -0,0 +1,34 @@
-> +/**
-> + * Copyright (c) 2017 Redpine Signals Inc.
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +
-> +#ifndef __RSI_HEADER_H__
-> +#define __RSI_HEADER_H__
-> +
-> +/* HAL queue information */
-> +#define RSI_COEX_Q			0x0
-> +#define RSI_BT_Q			0x2
-> +#define RSI_WLAN_Q                      0x3
-> +#define RSI_WIFI_MGMT_Q                 0x4
-> +#define RSI_WIFI_DATA_Q                 0x5
-> +#define RSI_BT_MGMT_Q			0x6
-> +#define RSI_BT_DATA_Q			0x7
-> +
-> +enum rsi_host_intf {
-> +	RSI_HOST_INTF_SDIO = 0,
-> +	RSI_HOST_INTF_USB
-> +};
-> +
-> +#endif
-
-Are you guys ok to have this header file shared by rsi wireless and
-bluetooth driver in include/net?
 
 -- 
-Kalle Valo
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
