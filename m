@@ -1,75 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:45065 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751578AbeBTL7q (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:35122 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932276AbeBVMR7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 06:59:46 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: stable@vger.kernel.org
-Cc: Greg KH <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [4.4-stable 17/22] cw1200: fix bogus maybe-uninitialized warning
-Date: Tue, 20 Feb 2018 12:55:04 +0100
-Message-Id: <20180220115527.1806578-18-arnd@arndb.de> (sfid-20180220_130423_012136_6DB0A4F9)
-In-Reply-To: <20180220115527.1806578-1-arnd@arndb.de>
-References: <20180220115527.1806578-1-arnd@arndb.de>
+        Thu, 22 Feb 2018 07:17:59 -0500
+Received: by mail-qk0-f194.google.com with SMTP id s188so6141117qkb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Feb 2018 04:17:59 -0800 (PST)
+Subject: Re: [PATCH 2/3] mwifiex: support sysfs initiated device coredump
+To: Brian Norris <briannorris@chromium.org>
+References: <1519210220-22437-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
+ <20180221225903.GA42395@rodete-desktop-imager.corp.google.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A8EB4F4.2030103@broadcom.com> (sfid-20180222_131815_189394_D87B430B)
+Date: Thu, 22 Feb 2018 13:17:56 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20180221225903.GA42395@rodete-desktop-imager.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 7fc1503c906f0fac62d3506a6e993e49fb996248 upstream.
+On 2/21/2018 11:59 PM, Brian Norris wrote:
+> On Wed, Feb 21, 2018 at 11:50:19AM +0100, Arend van Spriel wrote:
+>> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+>> it is possible to initiate a device coredump from user-space. This
+>> patch adds support for it adding the .coredump() driver callback.
+>> As there is no longer a need to initiate it through debugfs remove
+>> that code.
+>>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> ---
+>>   drivers/net/wireless/marvell/mwifiex/debugfs.c | 31 +-------------------------
+>>   drivers/net/wireless/marvell/mwifiex/pcie.c    | 19 ++++++++++++++--
+>>   drivers/net/wireless/marvell/mwifiex/sdio.c    | 13 +++++++++++
+>>   drivers/net/wireless/marvell/mwifiex/usb.c     | 14 ++++++++++++
+>>   4 files changed, 45 insertions(+), 32 deletions(-)
+>
+> The documentation doesn't really say [1], but is the coredump supposed
+> to happen synchronously? Because the mwifiex implementation is
+> asynchronous, whereas it looks like the brcmfmac one is synchronous.
 
-On x86, the cw1200 driver produces a rather silly warning about the
-possible use of the 'ret' variable without an initialization
-presumably after being confused by the architecture specific definition
-of WARN_ON:
+Well, that depends on the eye of the beholder I guess. From user-space 
+perspective it is asynchronous regardless. A write access to the 
+coredump sysfs file eventually results in a uevent when the devcoredump 
+entry is created, ie. after driver has made a dev_coredump API call. 
+Whether the driver does that synchronously or asynchronously is 
+irrelevant as far as user-space is concerned.
 
-drivers/net/wireless/st/cw1200/wsm.c: In function ‘wsm_handle_rx’:
-drivers/net/wireless/st/cw1200/wsm.c:1457:9: error: ‘ret’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> Brian
+>
+> [1] In fact, the ABI documentation really just describes kernel
+> internals, rather than documenting any user-facing details, from what I
+> can tell.
 
-We have already checked that 'count' is larger than 0 here, so
-we know that 'ret' is initialized. Changing the 'for' loop
-into do/while also makes this clear to the compiler.
+You are right. Clearly I did not reach the end my learning curve here. I 
+assumed referring to the existing dev_coredump facility was sufficient, 
+but maybe it is worth a patch to be more explicit and mention the uevent 
+behavior. Also dev_coredump facility may be disabled upon which the 
+trigger will have no effect in sysfs. In the kernel the data passed by 
+the driver is simply freed by dev_coredump facility.
 
-Suggested-by: David Laight <David.Laight@ACULAB.COM>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-[arnd: rebased to 4.4]
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/cw1200/wsm.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/cw1200/wsm.c b/drivers/net/wireless/cw1200/wsm.c
-index 9e0ca3048657..3dd46c78c1cc 100644
---- a/drivers/net/wireless/cw1200/wsm.c
-+++ b/drivers/net/wireless/cw1200/wsm.c
-@@ -379,7 +379,6 @@ static int wsm_multi_tx_confirm(struct cw1200_common *priv,
- {
- 	int ret;
- 	int count;
--	int i;
- 
- 	count = WSM_GET32(buf);
- 	if (WARN_ON(count <= 0))
-@@ -395,11 +394,10 @@ static int wsm_multi_tx_confirm(struct cw1200_common *priv,
- 	}
- 
- 	cw1200_debug_txed_multi(priv, count);
--	for (i = 0; i < count; ++i) {
-+	do {
- 		ret = wsm_tx_confirm(priv, buf, link_id);
--		if (ret)
--			return ret;
--	}
-+	} while (!ret && --count);
-+
- 	return ret;
- 
- underflow:
--- 
-2.9.0
+Regards,
+Arend
