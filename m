@@ -1,80 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59052 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756813AbeBPQNJ (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35634 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751559AbeBWOHN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 11:13:09 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
+        Fri, 23 Feb 2018 09:07:13 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
 Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 16 Feb 2018 18:12:48 +0200
-Message-Id: <20180216161301.29339-1-luca@coelho.fi> (sfid-20180216_171341_221565_F897EB1A)
-Subject: [PATCH 00/13] cfg80211/mac80211 patches from our internal tree 2018-02-16
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-bluetooth@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v8 8/8] rsi: sdio changes to support BT
+Date: Fri, 23 Feb 2018 19:24:58 +0530
+Message-Id: <1519394098-24220-9-git-send-email-amitkarwar@gmail.com> (sfid-20180223_150717_685212_ED140A7B)
+In-Reply-To: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
+References: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Hi,
+Queue number is correctly updated for BT traffic. Also, kzalloc
+instead of kmalloc is used for Rx packet allocation.
 
-Some patches with mac80211 and cfg80211 changes from our internal
-tree.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 2 ++
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-Please review, though you have already reviewed most if not all of
-them ;)
-
-Cheers,
-Luca.
-
-
-Avraham Stern (1):
-  cfg80211: clear wep keys after disconnection
-
-Haim Dreyfuss (3):
-  cfg80211: read wmm rules from regulatory database
-  mac80211: limit wmm params to comply with ETSI requirements
-  cfg80211: Add API to allow querying regdb for wmm_rule
-
-Ilan Peer (4):
-  mac80211: Call mgd_prep_tx before transmitting deauthentication
-  mac80211: Do not disconnect on invalid operating class
-  mac80211: Fix sending ADDBA response for an ongoing session
-  mac80211: agg-rx: Accept ADDBA request update if timeout did not
-    change
-
-Johannes Berg (1):
-  mac80211: support reporting A-MPDU EOF bit value/known
-
-Sara Sharon (4):
-  mac80211: fix a possible leak of station stats
-  mac80211: ibss: send a probe request instead of allocating station
-  mac80211: fix calling sleeping function in atomic context
-  mac80211: add get TID helper
-
- include/linux/ieee80211.h          |  12 +++
- include/net/cfg80211.h             |  28 ++++++
- include/net/ieee80211_radiotap.h   |   2 +
- include/net/mac80211.h             |  18 ++++
- include/net/regulatory.h           |  28 ++++++
- net/mac80211/agg-rx.c              |  13 ++-
- net/mac80211/cfg.c                 |   3 +
- net/mac80211/debugfs.c             |   1 +
- net/mac80211/ibss.c                |  54 +---------
- net/mac80211/ieee80211_i.h         |   7 +-
- net/mac80211/iface.c               |   3 +-
- net/mac80211/michael.c             |   2 +-
- net/mac80211/mlme.c                |  19 +++-
- net/mac80211/rc80211_minstrel_ht.c |   2 +-
- net/mac80211/rx.c                  |  10 +-
- net/mac80211/spectmgmt.c           |   7 +-
- net/mac80211/sta_info.c            |   3 +-
- net/mac80211/tx.c                  |   9 +-
- net/mac80211/util.c                |  40 ++++++++
- net/mac80211/wpa.c                 |   8 +-
- net/wireless/reg.c                 | 200 +++++++++++++++++++++++++++++++++++--
- net/wireless/sme.c                 |   2 +
- 22 files changed, 380 insertions(+), 91 deletions(-)
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 5722736..beb18d0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -763,6 +763,8 @@ static int rsi_sdio_host_intf_write_pkt(struct rsi_hw *adapter,
+ 	int status;
+ 
+ 	queueno = ((pkt[1] >> 4) & 0xf);
++	if (queueno == RSI_BT_MGMT_Q || queueno == RSI_BT_DATA_Q)
++		queueno = RSI_BT_Q;
+ 
+ 	num_blocks = len / block_size;
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 169c981..6e74261 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -103,7 +103,7 @@ static int rsi_process_pkt(struct rsi_common *common)
+ 
+ 	rcv_pkt_len = (num_blks * 256);
+ 
+-	common->rx_data_pkt = kmalloc(rcv_pkt_len, GFP_KERNEL);
++	common->rx_data_pkt = kzalloc(rcv_pkt_len, GFP_KERNEL);
+ 	if (!common->rx_data_pkt) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed in memory allocation\n",
+ 			__func__);
 -- 
-2.15.1
+2.7.4
