@@ -1,36 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39426 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751756AbeB0Qnn (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33604 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750827AbeBWOGq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:43:43 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Fix log message for hif power on failure
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1517803894-4250-1-git-send-email-govinds@codeaurora.org>
-References: <1517803894-4250-1-git-send-email-govinds@codeaurora.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Message-Id: <20180227164342.AF79760285@smtp.codeaurora.org> (sfid-20180227_174401_684085_F9317F8E)
-Date: Tue, 27 Feb 2018 16:43:42 +0000 (UTC)
+        Fri, 23 Feb 2018 09:06:46 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-bluetooth@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v8 2/8] rsi: add bluetooth rx endpoint
+Date: Fri, 23 Feb 2018 19:24:52 +0530
+Message-Id: <1519394098-24220-3-git-send-email-amitkarwar@gmail.com> (sfid-20180223_150651_265079_329B9093)
+In-Reply-To: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
+References: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Govind Singh <govinds@codeaurora.org> wrote:
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-> HIF power-on failure is applicable to each underlying
-> bus type. Fix log message for hif power on failure.
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+USB endpoint 1 is used for WLAN which is presently in use.
+USB endpoint 2 is introduced for BT Rx traffic. Enumeration
+of Rx BT endpoint and submitting Rx BT URB are added.
 
-Patch applied to ath-next branch of ath.git, thanks.
+>From /sys/kernel/debug/usb/devices,
+Ad=81(I) is for WLAN EP IN and Ad=01(O) is for Wlan EP OUT.
+Ad=82(I) is for BT EP IN and Ad=02(O) is for BT EP OUT.
 
-cf0d37aecc06 ath10k: fix log message for hif power on failure
+T:  Bus=01 Lev=01 Prnt=01 Port=09 Cnt=03 Dev#=  4 Spd=480  MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=1618 ProdID=9113 Rev= 0.02
+S:  Manufacturer=Redpine Signals, Inc.
+S:  Product=Wireless USB Network Module
+S:  SerialNumber=000000000001
+C:* #Ifs= 1 Cfg#= 1 Atr=c0 MxPwr=  2mA
+I:* If#= 0 Alt= 0 #EPs= 6 Cls=00(>ifc ) Sub=00 Prot=00 Driver=(none)
+E:  Ad=81(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=01(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=82(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=02(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=03(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
 
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v8: Same as previos revisions
+v2: Included '/sys/kernel/debug/usb/devices' info in patch description(Marcel)
+---
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 37 ++++++++++++++++++++--------------
+ drivers/net/wireless/rsi/rsi_usb.h     |  6 +++---
+ 2 files changed, 25 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index bbce809..9ab86fb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -103,41 +103,42 @@ static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
+ 	struct usb_host_interface *iface_desc;
+ 	struct usb_endpoint_descriptor *endpoint;
+ 	__le16 buffer_size;
+-	int ii, bep_found = 0;
++	int ii, bin_found = 0, bout_found = 0;
+ 
+ 	iface_desc = &(interface->altsetting[0]);
+ 
+ 	for (ii = 0; ii < iface_desc->desc.bNumEndpoints; ++ii) {
+ 		endpoint = &(iface_desc->endpoint[ii].desc);
+ 
+-		if ((!(dev->bulkin_endpoint_addr)) &&
++		if (!dev->bulkin_endpoint_addr[bin_found] &&
+ 		    (endpoint->bEndpointAddress & USB_DIR_IN) &&
+-		    ((endpoint->bmAttributes &
+-		    USB_ENDPOINT_XFERTYPE_MASK) ==
++		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
+ 		    USB_ENDPOINT_XFER_BULK)) {
+ 			buffer_size = endpoint->wMaxPacketSize;
+-			dev->bulkin_size = buffer_size;
+-			dev->bulkin_endpoint_addr =
++			dev->bulkin_size[bin_found] = buffer_size;
++			dev->bulkin_endpoint_addr[bin_found] =
+ 				endpoint->bEndpointAddress;
++			bin_found++;
+ 		}
+ 
+-		if (!dev->bulkout_endpoint_addr[bep_found] &&
++		if (!dev->bulkout_endpoint_addr[bout_found] &&
+ 		    !(endpoint->bEndpointAddress & USB_DIR_IN) &&
+ 		    ((endpoint->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) ==
+-		      USB_ENDPOINT_XFER_BULK)) {
+-			dev->bulkout_endpoint_addr[bep_found] =
++		    USB_ENDPOINT_XFER_BULK)) {
++			buffer_size = endpoint->wMaxPacketSize;
++			dev->bulkout_endpoint_addr[bout_found] =
+ 				endpoint->bEndpointAddress;
+ 			buffer_size = endpoint->wMaxPacketSize;
+-			dev->bulkout_size[bep_found] = buffer_size;
+-			bep_found++;
++			dev->bulkout_size[bout_found] = buffer_size;
++			bout_found++;
+ 		}
+ 
+-		if (bep_found >= MAX_BULK_EP)
++		if (bin_found >= MAX_BULK_EP || bout_found >= MAX_BULK_EP)
+ 			break;
+ 	}
+ 
+-	if (!(dev->bulkin_endpoint_addr) &&
+-	    (dev->bulkout_endpoint_addr[0]))
++	if (!(dev->bulkin_endpoint_addr[0]) &&
++	    dev->bulkout_endpoint_addr[0])
+ 		return -EINVAL;
+ 
+ 	return 0;
+@@ -273,7 +274,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
+ 	usb_fill_bulk_urb(urb,
+ 			  dev->usbdev,
+ 			  usb_rcvbulkpipe(dev->usbdev,
+-				dev->bulkin_endpoint_addr),
++			  dev->bulkin_endpoint_addr[ep_num - 1]),
+ 			  urb->transfer_buffer,
+ 			  3000,
+ 			  rsi_rx_done_handler,
+@@ -745,6 +746,12 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 	if (status)
+ 		goto err1;
+ 
++	if (adapter->priv->coex_mode > 1) {
++		status = rsi_rx_urb_submit(adapter, BT_EP);
++		if (status)
++			goto err1;
++	}
++
+ 	return 0;
+ err1:
+ 	rsi_deinit_usb_interface(adapter);
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 7e781d5..0fda14c 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -31,7 +31,7 @@
+ #define USB_VENDOR_REGISTER_WRITE    0x16
+ #define RSI_USB_TX_HEAD_ROOM         128
+ 
+-#define MAX_RX_URBS                  1
++#define MAX_RX_URBS                  2
+ #define MAX_BULK_EP                  8
+ #define WLAN_EP                      1
+ #define BT_EP                        2
+@@ -54,8 +54,8 @@ struct rsi_91x_usbdev {
+ 	struct usb_interface *pfunction;
+ 	struct rx_usb_ctrl_block rx_cb[MAX_RX_URBS];
+ 	u8 *tx_buffer;
+-	__le16 bulkin_size;
+-	u8 bulkin_endpoint_addr;
++	__le16 bulkin_size[MAX_BULK_EP];
++	u8 bulkin_endpoint_addr[MAX_BULK_EP];
+ 	__le16 bulkout_size[MAX_BULK_EP];
+ 	u8 bulkout_endpoint_addr[MAX_BULK_EP];
+ 	u32 tx_blk_size;
 -- 
-https://patchwork.kernel.org/patch/10199829/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
