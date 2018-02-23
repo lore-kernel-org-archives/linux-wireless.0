@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:1411 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751131AbeBXO7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Feb 2018 09:59:13 -0500
-Date: Sat, 24 Feb 2018 22:58:42 +0800
-From: kbuild test robot <lkp@intel.com>
-To: s.gottschall@dd-wrt.com
-Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
-        kvalo@codeaurora.org, ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: Re: [PATCH v9] ath10k: add LED and GPIO controlling support for
- various chipsets
-Message-ID: <201802242215.SCy6eWvP%fengguang.wu@intel.com> (sfid-20180224_155918_123024_C45D17A3)
-References: <20180222111534.31047-1-s.gottschall@dd-wrt.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180222111534.31047-1-s.gottschall@dd-wrt.com>
+Received: from shards.monkeyblade.net ([184.105.139.130]:33618 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751455AbeBWP26 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Feb 2018 10:28:58 -0500
+Date: Fri, 23 Feb 2018 10:28:55 -0500 (EST)
+Message-Id: <20180223.102855.480775675752406143.davem@davemloft.net> (sfid-20180223_162905_579672_152CFA8A)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2018-02-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1519385379.2231.10.camel@sipsolutions.net>
+References: <20180222201619.30037-1-johannes@sipsolutions.net>
+        <20180222.151902.347947675667607885.davem@davemloft.net>
+        <1519385379.2231.10.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sebastian,
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 23 Feb 2018 12:29:39 +0100
 
-Thank you for the patch! Perhaps something to improve:
+> On Thu, 2018-02-22 at 15:19 -0500, David Miller wrote:
+>> 
+>> Pulled, thank you!
+> 
+> Thanks. I just realized that I have a patch pending for -next that
+> depends another commit in net/mac80211 (or would otherwise conflict
+> badly while applying, and again while merging later), could I ask you
+> to pull net into net-next at some point now?
 
-[auto build test WARNING on wireless-drivers-next/master]
-[also build test WARNING on v4.16-rc2 next-20180223]
-[cannot apply to ath6kl/ath-next]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/s-gottschall-dd-wrt-com/ath10k-add-LED-and-GPIO-controlling-support-for-various-chipsets/20180224-185406
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
->> drivers/net/wireless/ath/ath10k/gpio.c:84:5: sparse: symbol 'ath10k_register_gpio_chip' was not declared. Should it be
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+I'll get that to happen in the next day or two.  Pablo asked for this
+as well.
