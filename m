@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42738 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752441AbeB1Ogt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 09:36:49 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:50054 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751089AbeBWMyw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Feb 2018 07:54:52 -0500
+Subject: Re: [PATCH 4/4] mac80211: support station 4-addr mode fast-rx
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20180223090606.55726-1-nbd@nbd.name>
+ <20180223090606.55726-4-nbd@nbd.name>
+ <1519385092.2231.6.camel@sipsolutions.net>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <17978383-8eec-e407-c0b8-168f8181b524@nbd.name> (sfid-20180223_135456_928059_3CFDEFD7)
+Date: Fri, 23 Feb 2018 13:54:50 +0100
 MIME-Version: 1.0
-Subject: Re: bcma: Prevent build of PCI host features in module
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1515767119-17117-1-git-send-email-matt.redfearn@mips.com>
-References: <1515767119-17117-1-git-send-email-matt.redfearn@mips.com>
-To: Matt Redfearn <matt.redfearn@mips.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        <linux-wireless@vger.kernel.org>,
-        Matt Redfearn <matt.redfearn@mips.com>,
-        <linux-kernel@vger.kernel.org>
-Message-Id: <20180228143648.BD42B60390@smtp.codeaurora.org> (sfid-20180228_153704_408764_16C508DC)
-Date: Wed, 28 Feb 2018 14:36:48 +0000 (UTC)
+In-Reply-To: <1519385092.2231.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matt Redfearn <matt.redfearn@mips.com> wrote:
-
-> Attempting to build bcma.ko with BCMA_DRIVER_PCI_HOSTMODE=y results in
-> a build error due to use of symbols not exported from vmlinux:
+On 2018-02-23 12:24, Johannes Berg wrote:
+> On Fri, 2018-02-23 at 10:06 +0100, Felix Fietkau wrote:
+>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+>> ---
+>>  net/mac80211/cfg.c |  2 --
+>>  net/mac80211/rx.c  | 11 +++++++----
+>>  2 files changed, 7 insertions(+), 6 deletions(-)
+>> 
+>> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+>> index 6f9d5beec73e..72b5a2ec4e94 100644
+>> --- a/net/mac80211/cfg.c
+>> +++ b/net/mac80211/cfg.c
+>> @@ -160,7 +160,6 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+>>  	if (type == NL80211_IFTYPE_AP_VLAN &&
+>>  	    params && params->use_4addr == 0) {
+>>  		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
+>> -		ieee80211_check_fast_rx_iface(sdata);
+>>  	} else if (type == NL80211_IFTYPE_STATION &&
+>>  		   params && params->use_4addr >= 0) {
+>>  		sdata->u.mgd.use_4addr = params->use_4addr;
+>> @@ -1575,7 +1574,6 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+>>  			}
+>>  
+>>  			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
+>> -			__ieee80211_check_fast_rx_iface(vlansdata);
+>>  		}
+>>  
+>>  		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
 > 
-> ERROR: "pcibios_enable_device" [drivers/bcma/bcma.ko] undefined!
-> ERROR: "register_pci_controller" [drivers/bcma/bcma.ko] undefined!
-> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
-> 
-> To prevent this, don't allow the host mode feature to be built if
-> CONFIG_BCMA=m
-> 
-> Signed-off-by: Matt Redfearn <matt.redfearn@mips.com>
+> I'm not convinced this is right - don't you have to recheck to modify
+> the station data? Otherwise you'd just drop all the frames to the
+> slowpath again due to the first patch in the series, no?You're right and I forgot to take those out before sending. Will
+resubmit this one.
 
-This does not apply to wireless-drivers-next anymore. Also please CC:
+Thanks,
 
-linux-mips@linux-mips.org
-James Hogan <jhogan@kernel.org>
-
-Recorded preimage for 'drivers/bcma/Kconfig'
-error: Failed to merge in the changes.
-Applying: bcma: Prevent build of PCI host features in module
-Using index info to reconstruct a base tree...
-M	drivers/bcma/Kconfig
-Falling back to patching base and 3-way merge...
-Auto-merging drivers/bcma/Kconfig
-CONFLICT (content): Merge conflict in drivers/bcma/Kconfig
-Patch failed at 0001 bcma: Prevent build of PCI host features in module
-The copy of the patch that failed is found in: .git/rebase-apply/patch
-
-Patch set to Changes Requested.
-
--- 
-https://patchwork.kernel.org/patch/10161087/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+- Felix
