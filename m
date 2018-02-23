@@ -1,72 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:52450 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751646AbeB1DHj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:55646 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751366AbeBWL3n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 22:07:39 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/15] rtlwifi: btcoex: Get status of multichannel concurrence
-Date: Wed, 28 Feb 2018 11:07:08 +0800
-Message-ID: <20180228030718.19510-6-pkshih@realtek.com> (sfid-20180228_040756_221926_1AA13437)
-In-Reply-To: <20180228030718.19510-1-pkshih@realtek.com>
-References: <20180228030718.19510-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 23 Feb 2018 06:29:43 -0500
+Message-ID: <1519385379.2231.10.camel@sipsolutions.net> (sfid-20180223_122947_383387_256D20AD)
+Subject: Re: pull-request: mac80211-next 2018-02-22
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Fri, 23 Feb 2018 12:29:39 +0100
+In-Reply-To: <20180222.151902.347947675667607885.davem@davemloft.net>
+References: <20180222201619.30037-1-johannes@sipsolutions.net>
+         <20180222.151902.347947675667607885.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Thu, 2018-02-22 at 15:19 -0500, David Miller wrote:
+> 
+> Pulled, thank you!
 
-btcoex does different decision according to MCC or SCC status, but
-driver is still SCC currently.
+Thanks. I just realized that I have a patch pending for -next that
+depends another commit in net/mac80211 (or would otherwise conflict
+badly while applying, and again while merging later), could I ask you
+to pull net into net-next at some point now?
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 8 ++++++++
- 2 files changed, 11 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 823694cb4fdb..1a24aed34094 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -577,6 +577,9 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 			tmp = true;
- 		*bool_tmp = tmp;
- 		break;
-+	case BTC_GET_BL_WIFI_DUAL_BAND_CONNECTED:
-+		*u8_tmp = BTC_MULTIPORT_SCC;
-+		break;
- 	case BTC_GET_BL_WIFI_BUSY:
- 		if (halbtc_is_wifi_busy(rtlpriv))
- 			*bool_tmp = true;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 3c6a1e8851ec..fe793b787716 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -251,6 +251,7 @@ enum btc_get_type {
- 	BTC_GET_BL_HS_OPERATION,
- 	BTC_GET_BL_HS_CONNECTING,
- 	BTC_GET_BL_WIFI_CONNECTED,
-+	BTC_GET_BL_WIFI_DUAL_BAND_CONNECTED,
- 	BTC_GET_BL_WIFI_BUSY,
- 	BTC_GET_BL_WIFI_SCAN,
- 	BTC_GET_BL_WIFI_LINK,
-@@ -436,6 +437,13 @@ enum btc_notify_type_stack_operation {
- 	BTC_STACK_OP_MAX
- };
- 
-+enum {
-+	BTC_MULTIPORT_SCC,
-+	BTC_MULTIPORT_MCC_2CHANNEL,
-+	BTC_MULTIPORT_MCC_2BAND,
-+	BTC_MULTIPORT_MAX
-+};
-+
- struct btc_bt_info {
- 	bool bt_disabled;
- 	u8 rssi_adjust_for_agc_table_on;
--- 
-2.15.1
+Thanks,
+johannes
