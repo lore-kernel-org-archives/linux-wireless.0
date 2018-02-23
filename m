@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:24176 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932318AbeBUQ0C (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:36337 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751623AbeBWI0p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 11:26:02 -0500
-Date: Wed, 21 Feb 2018 21:55:54 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 02/12] staging: wilc1000: fix too many leading tabs
- warning in sdio_clear_int_ext()
-Message-ID: <20180221215554.4f38c3e5@ajaysk-VirtualBox> (sfid-20180221_172606_346575_3AF85A56)
-In-Reply-To: <7576dfcf-caab-3b2d-c4bb-e1ea29db2fce@microchip.com>
-References: <1518793909-15573-1-git-send-email-ajay.kathat@microchip.com>
-        <1518793909-15573-3-git-send-email-ajay.kathat@microchip.com>
-        <7576dfcf-caab-3b2d-c4bb-e1ea29db2fce@microchip.com>
+        Fri, 23 Feb 2018 03:26:45 -0500
+Received: by mail-wr0-f193.google.com with SMTP id v111so964028wrb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Feb 2018 00:26:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
+References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
+ <5A8D36B7.1010201@broadcom.com> <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Fri, 23 Feb 2018 11:26:42 +0300
+Message-ID: <CAD8Lp44Y-sNqm8_5=1pvBy-3zvVVQSCQ+Qye-2xP8vGmkvrjng@mail.gmail.com> (sfid-20180223_092656_103301_D53D8072)
+Subject: Re: brcmfmac signal/interference issues
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Claudiu,
+Hi,
 
-On Mon, 19 Feb 2018 15:33:09 +0200
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+On Wed, Feb 21, 2018 at 12:39 PM, Daniel Drake <drake@endlessm.com> wrote:
+> Thanks for looking into this. Here is the brcmfmac43455-sdio.txt file
+> we are using:
+> https://gist.github.com/dsd/d7ee3caa6dfd77f0bcd16cf272b20298
+> This is identical to the 4345r6nvram.txt file from windows.
 
-> Since you re-factor this, as I suggested in patch:
-> "[PATCH 6/6] staging: wilc1000: fix line over 80 chars in
-> wilc_spi_clear_int_ext()" form your previous series:
-> "fix line over 80 char & coding style in wilc_spi.c",
-> for code starting here:
+I checked Windows again and it seems to be using a firmware file
+4345r6rtecdc.bin alongside this nvram data.
+This firmware is different from the one in linux-firmware. I've
+uploaded it here:
+https://drive.google.com/open?id=1MUsiaoozslJb8SCYOR-FNbJFuD-h4PY_
 
+I was hoping to try this on Linux to see if it makes any difference to
+the issue seen here.
+However, with thisi firmware in place, I can't connect to the network
+at all. It associates, wpa_supplicant never sees the first WPA2 key
+message sent from the AP - even though wireshark on a separate monitor
+shows that the key message was sent, and that the STA acked it.
 
-Submitted a new patch "[PATCH 3/4] staging: wilc1000: refactor
-wilc_spi_clear_int_ext() by using GENMASK macro" 
-&
-"[PATCH 4/4] staging: wilc1000: refactor sdio_clear_int_ext() 
-by using GENMASK macro" which contain changes as suggested.
+I turned off WPA2 to make it an open network instead, and now I am
+unable to complete the DHCP conversation. According to the monitor
+station, the STA succesfully transmits DHCPDISCOVER and the AP
+responds with DHCPOFFER. The offer is acked, but dhclient never sees
+it, and eventually times out.
 
-> 
-> and ending here, further improvements could be done. Since the current series
-> was accepted, maybe add these to a todo list and review them later?
+Any ideas why this firmware may not be working at all on linux?
 
-For both SPI and SDIO the changes are done. Please review and let me know
-if you any inputs.
-
-
-regards,
-ajay
+Thanks,
+Daniel
