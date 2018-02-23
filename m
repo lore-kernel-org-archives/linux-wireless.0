@@ -1,32 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from psyche.uwaterloo.ca ([129.97.128.244]:46140 "EHLO
-        psyche.uwaterloo.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752469AbeBLTKo (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:43862 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751470AbeBWKml (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 14:10:44 -0500
-Received: from [129.97.168.8] (scspc527.cs.uwaterloo.ca [129.97.168.8])
-        (authenticated bits=0)
-        by psyche.uwaterloo.ca (8.14.4/8.14.4) with ESMTP id w1CJ5aBF027816
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2018 14:05:36 -0500
-To: linux-wireless@vger.kernel.org
-From: Ali Abedi <a2abedi@uwaterloo.ca>
-Subject: 802.11ac devices that use Minstrel_HT
-Message-ID: <769da6f9-bca3-48bd-32e6-009dd82f3c96@mailservices.uwaterloo.ca> (sfid-20180212_201047_605760_87658E85)
-Date: Mon, 12 Feb 2018 14:05:36 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 23 Feb 2018 05:42:41 -0500
+Received: by mail-wr0-f194.google.com with SMTP id u49so13587566wrc.10
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Feb 2018 02:42:41 -0800 (PST)
+From: Jack Wang <jinpu.wang@profitbricks.com>
+To: gregkh@linuxfoundation.org, stable@vger.kernel.org
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        linux-wireless@vger.kernel.org, torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>, alan@linux.intel.com,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Jack Wang <jinpu.wang@profitbricks.com>
+Subject: [stable 4.4 17/29] nl80211: Sanitize array index in parse_txq_params
+Date: Fri, 23 Feb 2018 11:42:06 +0100
+Message-Id: <1519382538-15143-18-git-send-email-jinpu.wangl@profitbricks.com> (sfid-20180223_114255_721959_04A6F993)
+In-Reply-To: <1519382538-15143-1-git-send-email-jinpu.wangl@profitbricks.com>
+References: <1519382538-15143-1-git-send-email-jinpu.wangl@profitbricks.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Dan Williams <dan.j.williams@intel.com>
 
-It seems that Minstrel_ht rate adaptation algorithm supports 802.11ac 
-VHT rates.
-Can you refer me to some 802.11ac devices that use this rate adaptation 
-algorithm?
-I need to modify the rate adaptation algorithm however all 802.11ac 
-devices that I know have moved this functionality to (closed) firmware.
+(cherry picked from commit 259d8c1e984318497c84eef547bbb6b1d9f4eb05)
 
-Best,
-Ali
+Wireless drivers rely on parse_txq_params to validate that txq_params->ac
+is less than NL80211_NUM_ACS by the time the low-level driver's ->conf_tx()
+handler is called. Use a new helper, array_index_nospec(), to sanitize
+txq_params->ac with respect to speculation. I.e. ensure that any
+speculation into ->conf_tx() handlers is done with a value of
+txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
+
+Reported-by: Christian Lamparter <chunkeey@gmail.com>
+Reported-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-arch@vger.kernel.org
+Cc: kernel-hardening@lists.openwall.com
+Cc: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Cc: torvalds@linux-foundation.org
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: alan@linux.intel.com
+Link: https://lkml.kernel.org/r/151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+[jwang: cherry pick to 4.4]
+Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+---
+ net/wireless/nl80211.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7950506..b0b58d1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -16,6 +16,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/netlink.h>
++#include <linux/nospec.h>
+ #include <linux/etherdevice.h>
+ #include <net/net_namespace.h>
+ #include <net/genetlink.h>
+@@ -1879,20 +1880,22 @@ static const struct nla_policy txq_params_policy[NL80211_TXQ_ATTR_MAX + 1] = {
+ static int parse_txq_params(struct nlattr *tb[],
+ 			    struct ieee80211_txq_params *txq_params)
+ {
++	u8 ac;
++
+ 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
+ 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
+ 	    !tb[NL80211_TXQ_ATTR_AIFS])
+ 		return -EINVAL;
+ 
+-	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
++	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
+ 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
+ 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
+ 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
+ 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 
+-	if (txq_params->ac >= NL80211_NUM_ACS)
++	if (ac >= NL80211_NUM_ACS)
+ 		return -EINVAL;
+-
++	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
+ 	return 0;
+ }
+ 
+-- 
+2.7.4
