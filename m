@@ -1,49 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0059.outbound.protection.outlook.com ([104.47.34.59]:20000
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750876AbeBHJGS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Feb 2018 04:06:18 -0500
-Date: Thu, 8 Feb 2018 12:06:03 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:43927 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750827AbeBWOGf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Feb 2018 09:06:35 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
 Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: Re: [PATCH 4/6] qtnfmac: fix rmmod for missing firmware
-Message-ID: <20180208090601.ornrxzwqy3rtt2ge@bars> (sfid-20180208_100626_754466_ABAB04AA)
-References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
- <20180205150516.16030-5-sergey.matyukevich.os@quantenna.com>
- <5A798F15.4050703@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5A798F15.4050703@broadcom.com>
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-bluetooth@vger.kernel.org
+Subject: [v8 0/8] rsi: add bluetooth and coex support
+Date: Fri, 23 Feb 2018 19:24:50 +0530
+Message-Id: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com> (sfid-20180223_150639_063820_AEBBD648)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Arend,
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Thanks for review.
+This patch series adds new bluetooth driver and coex enhancments
+in existing wlan driver for RSI chipsets.
+As per our architecture, both wlan and bluetooth drivers talk
+over same SDIO interface to device. Separate endpoint will be
+used in case of USB interface.
 
-> > Check that firmware exists prior to starting firmware download.
-> 
-> Why would you do that? It seems expensive given that you obtain the
-> firmware and discard it immediately just to check it exists. Especially,
-> given that such a call can take 60 seconds to complete depending on
-> kernel config.
-> 
-> Apart from that see minor comment below although I would seriously
-> reconsider this patch altogether.
+Change in v8: 4/8, 5/8 are modified
+Change in v7: 4/8 is modified
+Changes in v6: 1/8, 3/8, 4/8, 5/8, 6/8 are modified
+Changes in v5: 5/8 is modified
+Changes in v4: 5/8 is modified
+Changes in v3: 4/8, 5/8 and 6/8 patches are modified
+Changes in v2: 2/8, 5/8 and 6/8 patches are modified
 
-The idea behind this approach is simple: to quit early and to avoid starting
-asynchronous card boot if no firmware file exists. However I didn't realize that
-such a long delay may occur. What makes me worried is that the worst case
-scenario may happen if firmware actually exists: we make two calls of
-request_firmware, each of them taking long time.
+Prameela Rani Garnepudi (6):
+  rsi: add rx control block to handle rx packets in USB
+  rsi: add header file rsi_91x
+  rsi: add coex support
+  Bluetooth: btrsi: add new rsi bluetooth driver
+  rsi: add module parameter operating mode
+  rsi: sdio changes to support BT
 
-I agree that it makes a lot of sense to reimplement this approach requesting
-firmware only once. Will do for v2.
+Siva Rebbagondla (2):
+  rsi: add bluetooth rx endpoint
+  rsi: handle BT traffic in driver
 
-Regards,
-Sergey
+ drivers/bluetooth/Kconfig                   |  12 ++
+ drivers/bluetooth/Makefile                  |   2 +
+ drivers/bluetooth/btrsi.c                   | 188 ++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/Kconfig            |   9 ++
+ drivers/net/wireless/rsi/Makefile           |   1 +
+ drivers/net/wireless/rsi/rsi_91x_coex.c     | 179 ++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_core.c     |  20 ++-
+ drivers/net/wireless/rsi/rsi_91x_hal.c      |  56 +++++++--
+ drivers/net/wireless/rsi/rsi_91x_main.c     | 129 ++++++++++++++++++-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   2 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     |  13 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |   5 +-
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 124 +++++++++++++-----
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  35 ++++--
+ drivers/net/wireless/rsi/rsi_coex.h         |  37 ++++++
+ drivers/net/wireless/rsi/rsi_common.h       |   5 +-
+ drivers/net/wireless/rsi/rsi_hal.h          |  21 ++++
+ drivers/net/wireless/rsi/rsi_main.h         |  21 ++--
+ drivers/net/wireless/rsi/rsi_mgmt.h         |   3 +
+ drivers/net/wireless/rsi/rsi_usb.h          |  16 ++-
+ include/net/rsi_91x.h                       |  56 +++++++++
+ 21 files changed, 852 insertions(+), 82 deletions(-)
+ create mode 100644 drivers/bluetooth/btrsi.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
+ create mode 100644 include/net/rsi_91x.h
+
+-- 
+2.7.4
