@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34314 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:34392 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751139AbeBIJlf (ORCPT
+        with ESMTP id S1751557AbeBWJSV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Feb 2018 04:41:35 -0500
+        Fri, 23 Feb 2018 04:18:21 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: ryanhsu@codeaurora.org
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: update the IRAM banks number for QCA9377
-References: <1518135631-29796-1-git-send-email-ryanhsu@codeaurora.org>
-Date: Fri, 09 Feb 2018 11:41:30 +0200
-In-Reply-To: <1518135631-29796-1-git-send-email-ryanhsu@codeaurora.org>
-        (ryanhsu@codeaurora.org's message of "Thu, 8 Feb 2018 16:20:31 -0800")
-Message-ID: <874lmqcxf9.fsf@kamboji.qca.qualcomm.com> (sfid-20180209_104230_591503_8D031901)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: rtl8723be: Fix loss of signal
+References: <20180222202859.16679-1-Larry.Finger@lwfinger.net>
+Date: Fri, 23 Feb 2018 11:18:16 +0200
+In-Reply-To: <20180222202859.16679-1-Larry.Finger@lwfinger.net> (Larry
+        Finger's message of "Thu, 22 Feb 2018 14:28:59 -0600")
+Message-ID: <87lgfkxdwn.fsf@kamboji.qca.qualcomm.com> (sfid-20180223_101831_754996_7C125584)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ryanhsu@codeaurora.org writes:
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> From: Ryan Hsu <ryanhsu@codeaurora.org>
+> In commit c713fb071edc ("rtlwifi: rtl8821ae: Fix connection lost problem
+> correctly") a problem in rtl8821ae that caused loss of signal was fixed.
+> That same problem has now been reported for rtl8723be. Accordingly,
+> the ASPM L1 latency has been increased from 0 to 7 to fix the instability.
 >
-> QCA9377 firmware update the IRAM banks from 4 to 9.
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
+> ---
+> Kalle,
 >
-> Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+> This patch should be sent to 4.16.
 
-As we discussed offline, I'll update the commit log to this:
-
-ath10k: update the IRAM bank number for QCA9377
-
-Prepared for new QCA9377 firmware support. With the new
-firmware update, it required more IRAM banks, hence updated it.
-
-The IRAM banks promotion won't break any backward compatibility,
-as those IRAM banks were not getting used in previous firmware.
+Ok, I'll queue this for 4.16.
 
 -- 
 Kalle Valo
