@@ -1,221 +1,583 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54144 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751629AbeBYHuE (ORCPT
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:36559 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750827AbeBWOGz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Feb 2018 02:50:04 -0500
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
+        Fri, 23 Feb 2018 09:06:55 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
 Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv4 1/3] cfg80211: enable setting cqm rssi config for AP mode
-Date: Sun, 25 Feb 2018 13:19:56 +0530
-Message-Id: <1519544998-2621-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180225_085010_994165_1F9FF330)
-In-Reply-To: <1519544998-2621-1-git-send-email-tamizhr@codeaurora.org>
-References: <1519544998-2621-1-git-send-email-tamizhr@codeaurora.org>
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-bluetooth@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v8 4/8] rsi: add coex support
+Date: Fri, 23 Feb 2018 19:24:54 +0530
+Message-Id: <1519394098-24220-5-git-send-email-amitkarwar@gmail.com> (sfid-20180223_150704_390471_4DFD1AAD)
+In-Reply-To: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
+References: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <tamizhr@codeaurora.org>
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-This patch extend cqm rssi config and notifier feature to AP mode
-by introducing NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG ext
-feature bit. And this patch introduces NL80211_MCGRP_AP_STA_CQM
-for notifying station's low/high rssi event to userspace application.
+With BT support, driver has to handle two streams of data
+(i.e. wlan and BT). Actual coex implementation is in firmware.
+Coex module just schedule the packets to firmware by taking them
+from the corresponding paths.
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Structures for module and protocol operations are introduced for
+this purpose. Protocol operations structure is global structure
+which can be shared among different modules. Move initialization
+of coex and operating mode values to rsi_91x_init().
+
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- include/net/cfg80211.h       |   15 +++++++++
- include/uapi/linux/nl80211.h |    6 ++++
- net/wireless/nl80211.c       |   71 ++++++++++++++++++++++++++++++++++++------
- 3 files changed, 82 insertions(+), 10 deletions(-)
+v8: Resolve error reported by 'kbuild test robot' by moving header
+    file code under CONFIG_RSI_COEX flag
+v7: Use mutex instead of semaphore (Kalle)
+v6: Rename semaphore tx_bus_lock to tx_bus_sema. Modified coex
+    scheduling loop to avoid while(1) (Kalle)
+v5: Same as earlier versions
+---
+ drivers/net/wireless/rsi/Kconfig        |   9 ++
+ drivers/net/wireless/rsi/Makefile       |   1 +
+ drivers/net/wireless/rsi/rsi_91x_coex.c | 177 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_hal.c  |  17 +--
+ drivers/net/wireless/rsi/rsi_91x_main.c |  30 +++++-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c |   2 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio.c |   1 +
+ drivers/net/wireless/rsi/rsi_91x_usb.c  |   2 +
+ drivers/net/wireless/rsi/rsi_coex.h     |  37 +++++++
+ drivers/net/wireless/rsi/rsi_main.h     |   6 ++
+ drivers/net/wireless/rsi/rsi_mgmt.h     |   3 +
+ include/net/rsi_91x.h                   |  20 ++++
+ 12 files changed, 295 insertions(+), 10 deletions(-)
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 56e905c..d19fd5c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5706,6 +5706,21 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 			      s32 rssi_level, gfp_t gfp);
+diff --git a/drivers/net/wireless/rsi/Kconfig b/drivers/net/wireless/rsi/Kconfig
+index 7c5e4ca..e6135ee 100644
+--- a/drivers/net/wireless/rsi/Kconfig
++++ b/drivers/net/wireless/rsi/Kconfig
+@@ -42,4 +42,13 @@ config RSI_USB
+ 	  This option enables the USB bus support in rsi drivers.
+ 	  Select M (recommended), if you have a RSI 1x1 wireless module.
  
- /**
-+ * cfg80211_ap_sta_cqm_rssi_notify - CQM rssi event for connected stations
-+ * @dev: network device
-+ * @mac: peer's MAC address
-+ * @rssi_event: the triggered RSSI event
-+ * @rssi_level: new RSSI level value or 0 if not available
-+ * @gfp: context flags
-+ *
-+ * This function is called when a configured connection quality monitoring
-+ * rssi threshold reached event occurs for a station.
-+ */
-+void cfg80211_ap_sta_cqm_rssi_notify(struct net_device *dev, const u8 *mac,
-+		enum nl80211_cqm_rssi_threshold_event rssi_event,
-+		s32 rssi_level, gfp_t gfp);
++config RSI_COEX
++	bool "Redpine Signals WLAN BT Coexistence support"
++	depends on BT_HCIRSI && RSI_91X
++	default y
++	---help---
++	  This option enables the WLAN BT coex support in rsi drivers.
++	  Select M (recommended), if you have want to use this feature
++	  and you have RS9113 module.
 +
+ endif # WLAN_VENDOR_RSI
+diff --git a/drivers/net/wireless/rsi/Makefile b/drivers/net/wireless/rsi/Makefile
+index 47c4590..ff87121a 100644
+--- a/drivers/net/wireless/rsi/Makefile
++++ b/drivers/net/wireless/rsi/Makefile
+@@ -5,6 +5,7 @@ rsi_91x-y			+= rsi_91x_mac80211.o
+ rsi_91x-y			+= rsi_91x_mgmt.o
+ rsi_91x-y			+= rsi_91x_hal.o
+ rsi_91x-y			+= rsi_91x_ps.o
++rsi_91x-$(CONFIG_RSI_COEX)	+= rsi_91x_coex.o
+ rsi_91x-$(CONFIG_RSI_DEBUGFS)	+= rsi_91x_debugfs.o
+ 
+ rsi_usb-y			+= rsi_91x_usb.o rsi_91x_usb_ops.o
+diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
+new file mode 100644
+index 0000000..c07e839
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
+@@ -0,0 +1,177 @@
 +/**
-  * cfg80211_cqm_pktloss_notify - notify userspace about packetloss to peer
-  * @dev: network device
-  * @peer: peer's MAC address
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c13c843..81a60dc 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -49,6 +49,7 @@
- #define NL80211_MULTICAST_GROUP_MLME		"mlme"
- #define NL80211_MULTICAST_GROUP_VENDOR		"vendor"
- #define NL80211_MULTICAST_GROUP_NAN		"nan"
-+#define NL80211_MULTICAST_GROUP_AP_STA_CQM	"apstacqm"
- #define NL80211_MULTICAST_GROUP_TESTMODE	"testmode"
++ * Copyright (c) 2018 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "rsi_main.h"
++#include "rsi_coex.h"
++#include "rsi_mgmt.h"
++#include "rsi_hal.h"
++
++static enum rsi_coex_queues rsi_coex_determine_coex_q
++			(struct rsi_coex_ctrl_block *coex_cb)
++{
++	enum rsi_coex_queues q_num = RSI_COEX_Q_INVALID;
++
++	if (skb_queue_len(&coex_cb->coex_tx_qs[RSI_COEX_Q_COMMON]) > 0)
++		q_num = RSI_COEX_Q_COMMON;
++	if (skb_queue_len(&coex_cb->coex_tx_qs[RSI_COEX_Q_BT]) > 0)
++		q_num = RSI_COEX_Q_BT;
++	if (skb_queue_len(&coex_cb->coex_tx_qs[RSI_COEX_Q_WLAN]) > 0)
++		q_num = RSI_COEX_Q_WLAN;
++
++	return q_num;
++}
++
++static void rsi_coex_sched_tx_pkts(struct rsi_coex_ctrl_block *coex_cb)
++{
++	enum rsi_coex_queues coex_q = RSI_COEX_Q_INVALID;
++	struct sk_buff *skb;
++
++	do {
++		coex_q = rsi_coex_determine_coex_q(coex_cb);
++		rsi_dbg(INFO_ZONE, "queue = %d\n", coex_q);
++
++		if (coex_q == RSI_COEX_Q_BT)
++			skb = skb_dequeue(&coex_cb->coex_tx_qs[RSI_COEX_Q_BT]);
++	} while (coex_q != RSI_COEX_Q_INVALID);
++}
++
++static void rsi_coex_scheduler_thread(struct rsi_common *common)
++{
++	struct rsi_coex_ctrl_block *coex_cb =
++		(struct rsi_coex_ctrl_block *)common->coex_cb;
++	u32 timeout = EVENT_WAIT_FOREVER;
++
++	do {
++		rsi_wait_event(&coex_cb->coex_tx_thread.event, timeout);
++		rsi_reset_event(&coex_cb->coex_tx_thread.event);
++
++		rsi_coex_sched_tx_pkts(coex_cb);
++	} while (atomic_read(&coex_cb->coex_tx_thread.thread_done) == 0);
++
++	complete_and_exit(&coex_cb->coex_tx_thread.completion, 0);
++}
++
++int rsi_coex_recv_pkt(struct rsi_common *common, u8 *msg)
++{
++	u8 msg_type = msg[RSI_RX_DESC_MSG_TYPE_OFFSET];
++
++	switch (msg_type) {
++	case COMMON_CARD_READY_IND:
++		rsi_dbg(INFO_ZONE, "common card ready received\n");
++		rsi_handle_card_ready(common, msg);
++		break;
++	case SLEEP_NOTIFY_IND:
++		rsi_dbg(INFO_ZONE, "sleep notify received\n");
++		rsi_mgmt_pkt_recv(common, msg);
++		break;
++	}
++
++	return 0;
++}
++
++static inline int rsi_map_coex_q(u8 hal_queue)
++{
++	switch (hal_queue) {
++	case RSI_COEX_Q:
++		return RSI_COEX_Q_COMMON;
++	case RSI_WLAN_Q:
++		return RSI_COEX_Q_WLAN;
++	case RSI_BT_Q:
++		return RSI_COEX_Q_BT;
++	}
++	return RSI_COEX_Q_INVALID;
++}
++
++int rsi_coex_send_pkt(void *priv, struct sk_buff *skb, u8 hal_queue)
++{
++	struct rsi_common *common = (struct rsi_common *)priv;
++	struct rsi_coex_ctrl_block *coex_cb =
++		(struct rsi_coex_ctrl_block *)common->coex_cb;
++	struct skb_info *tx_params = NULL;
++	enum rsi_coex_queues coex_q;
++	int status;
++
++	coex_q = rsi_map_coex_q(hal_queue);
++	if (coex_q == RSI_COEX_Q_INVALID) {
++		rsi_dbg(ERR_ZONE, "Invalid coex queue\n");
++		return -EINVAL;
++	}
++	if (coex_q != RSI_COEX_Q_COMMON &&
++	    coex_q != RSI_COEX_Q_WLAN) {
++		skb_queue_tail(&coex_cb->coex_tx_qs[coex_q], skb);
++		rsi_set_event(&coex_cb->coex_tx_thread.event);
++		return 0;
++	}
++	if (common->iface_down) {
++		tx_params =
++			(struct skb_info *)&IEEE80211_SKB_CB(skb)->driver_data;
++
++		if (!(tx_params->flags & INTERNAL_MGMT_PKT)) {
++			rsi_indicate_tx_status(common->priv, skb, -EINVAL);
++			return 0;
++		}
++	}
++
++	/* Send packet to hal */
++	if (skb->priority == MGMT_SOFT_Q)
++		status = rsi_send_mgmt_pkt(common, skb);
++	else
++		status = rsi_send_data_pkt(common, skb);
++
++	return status;
++}
++
++int rsi_coex_attach(struct rsi_common *common)
++{
++	struct rsi_coex_ctrl_block *coex_cb;
++	int cnt;
++
++	coex_cb = kzalloc(sizeof(*coex_cb), GFP_KERNEL);
++	if (!coex_cb)
++		return -ENOMEM;
++
++	common->coex_cb = (void *)coex_cb;
++	coex_cb->priv = common;
++
++	/* Initialize co-ex queues */
++	for (cnt = 0; cnt < NUM_COEX_TX_QUEUES; cnt++)
++		skb_queue_head_init(&coex_cb->coex_tx_qs[cnt]);
++	rsi_init_event(&coex_cb->coex_tx_thread.event);
++
++	/* Initialize co-ex thread */
++	if (rsi_create_kthread(common,
++			       &coex_cb->coex_tx_thread,
++			       rsi_coex_scheduler_thread,
++			       "Coex-Tx-Thread")) {
++		rsi_dbg(ERR_ZONE, "%s: Unable to init tx thrd\n", __func__);
++		return -EINVAL;
++	}
++	return 0;
++}
++
++void rsi_coex_detach(struct rsi_common *common)
++{
++	struct rsi_coex_ctrl_block *coex_cb =
++		(struct rsi_coex_ctrl_block *)common->coex_cb;
++	int cnt;
++
++	rsi_kill_thread(&coex_cb->coex_tx_thread);
++
++	for (cnt = 0; cnt < NUM_COEX_TX_QUEUES; cnt++)
++		skb_queue_purge(&coex_cb->coex_tx_qs[cnt]);
++
++	kfree(coex_cb);
++}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 1176de6..151d228 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -31,8 +31,15 @@ int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb)
+ 	struct rsi_hw *adapter = common->priv;
+ 	int status;
+ 
++	if (common->coex_mode > 1)
++		mutex_lock(&common->tx_bus_mutex);
++
+ 	status = adapter->host_intf_ops->write_pkt(common->priv,
+ 						   skb->data, skb->len);
++
++	if (common->coex_mode > 1)
++		mutex_unlock(&common->tx_bus_mutex);
++
+ 	return status;
+ }
+ 
+@@ -296,8 +303,7 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	if (status)
+ 		goto err;
+ 
+-	status = adapter->host_intf_ops->write_pkt(common->priv, skb->data,
+-						   skb->len);
++	status = rsi_send_pkt_to_bus(common, skb);
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n", __func__);
+ 
+@@ -342,8 +348,7 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 		goto err;
+ 
+ 	rsi_prepare_mgmt_desc(common, skb);
+-	status = adapter->host_intf_ops->write_pkt(common->priv,
+-						   (u8 *)skb->data, skb->len);
++	status = rsi_send_pkt_to_bus(common, skb);
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n", __func__);
+ 
+@@ -926,10 +931,6 @@ int rsi_hal_device_init(struct rsi_hw *adapter)
+ {
+ 	struct rsi_common *common = adapter->priv;
+ 
+-	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
+-	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
+-	adapter->device_model = RSI_DEV_9113;
+-
+ 	switch (adapter->device_model) {
+ 	case RSI_DEV_9113:
+ 		if (rsi_load_firmware(adapter)) {
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 0413af8..fe08ebc 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -20,6 +20,7 @@
+ #include <linux/firmware.h>
+ #include "rsi_mgmt.h"
+ #include "rsi_common.h"
++#include "rsi_coex.h"
+ #include "rsi_hal.h"
+ 
+ u32 rsi_zone_enabled = /* INFO_ZONE |
+@@ -160,8 +161,13 @@ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
+ 
+ 		switch (queueno) {
+ 		case RSI_COEX_Q:
+-			rsi_mgmt_pkt_recv(common, (frame_desc + offset));
++			if (common->coex_mode > 1)
++				rsi_coex_recv_pkt(common, frame_desc + offset);
++			else
++				rsi_mgmt_pkt_recv(common,
++						  (frame_desc + offset));
+ 			break;
++
+ 		case RSI_WIFI_DATA_Q:
+ 			skb = rsi_prepare_skb(common,
+ 					      (frame_desc + offset),
+@@ -217,6 +223,13 @@ static void rsi_tx_scheduler_thread(struct rsi_common *common)
+ 	complete_and_exit(&common->tx_thread.completion, 0);
+ }
+ 
++enum rsi_host_intf rsi_get_host_intf(void *priv)
++{
++	struct rsi_common *common = (struct rsi_common *)priv;
++
++	return common->priv->rsi_host_intf;
++}
++
+ /**
+  * rsi_91x_init() - This function initializes os interface operations.
+  * @void: Void.
+@@ -251,6 +264,7 @@ struct rsi_hw *rsi_91x_init(void)
+ 	mutex_init(&common->mutex);
+ 	mutex_init(&common->tx_lock);
+ 	mutex_init(&common->rx_lock);
++	mutex_init(&common->tx_bus_mutex);
+ 
+ 	if (rsi_create_kthread(common,
+ 			       &common->tx_thread,
+@@ -265,6 +279,17 @@ struct rsi_hw *rsi_91x_init(void)
+ 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
+ 	init_completion(&common->wlan_init_completion);
+ 	common->init_done = true;
++
++	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
++	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
++	adapter->device_model = RSI_DEV_9113;
++	if (common->coex_mode > 1) {
++		if (rsi_coex_attach(common)) {
++			rsi_dbg(ERR_ZONE, "Failed to init coex module\n");
++			goto err;
++		}
++	}
++
+ 	return adapter;
+ 
+ err:
+@@ -294,6 +319,9 @@ void rsi_91x_deinit(struct rsi_hw *adapter)
+ 
+ 	common->init_done = false;
+ 
++	if (common->coex_mode > 1)
++		rsi_coex_detach(common);
++
+ 	kfree(common);
+ 	kfree(adapter->rsi_dev);
+ 	kfree(adapter);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 46c9d54..c21fca7 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1791,7 +1791,7 @@ static int rsi_handle_ta_confirm_type(struct rsi_common *common,
+ 	return -EINVAL;
+ }
+ 
+-static int rsi_handle_card_ready(struct rsi_common *common, u8 *msg)
++int rsi_handle_card_ready(struct rsi_common *common, u8 *msg)
+ {
+ 	switch (common->fsm_state) {
+ 	case FSM_CARD_NOT_READY:
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index b0cf411..ba38c6d 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include "rsi_sdio.h"
+ #include "rsi_common.h"
++#include "rsi_coex.h"
+ #include "rsi_hal.h"
  
  /**
-@@ -4999,6 +5000,10 @@ enum nl80211_feature_flags {
-  * @NL80211_EXT_FEATURE_LOW_SPAN_SCAN: Driver supports low span scan.
-  * @NL80211_EXT_FEATURE_LOW_POWER_SCAN: Driver supports low power scan.
-  * @NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN: Driver supports high accuracy scan.
-+ * @NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG: With this driver will accept
-+ *	%NL80211_ATTR_CQM_RSSI_THOLD and %NL80211_ATTR_CQM_RSSI_HYST attributes
-+ *	for AP/AP_VLAN/P2P_GO interface to monitor rssi values of connected
-+ *	client.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -5029,6 +5034,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_LOW_SPAN_SCAN,
- 	NL80211_EXT_FEATURE_LOW_POWER_SCAN,
- 	NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
-+	NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG,
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 9ab86fb..b33a05f 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -16,8 +16,10 @@
+  */
  
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a910150..0ece819 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -44,6 +44,7 @@ enum nl80211_multicast_groups {
- 	NL80211_MCGRP_MLME,
- 	NL80211_MCGRP_VENDOR,
- 	NL80211_MCGRP_NAN,
-+	NL80211_MCGRP_AP_STA_CQM,
- 	NL80211_MCGRP_TESTMODE /* keep last - ifdef! */
+ #include <linux/module.h>
++#include <net/rsi_91x.h>
+ #include "rsi_usb.h"
+ #include "rsi_hal.h"
++#include "rsi_coex.h"
+ 
+ /**
+  * rsi_usb_card_write() - This function writes to the USB Card.
+diff --git a/drivers/net/wireless/rsi/rsi_coex.h b/drivers/net/wireless/rsi/rsi_coex.h
+new file mode 100644
+index 0000000..0fdc67f
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_coex.h
+@@ -0,0 +1,37 @@
++/**
++ * Copyright (c) 2018 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __RSI_COEX_H__
++#define __RSI_COEX_H__
++
++#include "rsi_common.h"
++
++#ifdef CONFIG_RSI_COEX
++#define COMMON_CARD_READY_IND           0
++#define NUM_COEX_TX_QUEUES              5
++
++struct rsi_coex_ctrl_block {
++	struct rsi_common *priv;
++	struct sk_buff_head coex_tx_qs[NUM_COEX_TX_QUEUES];
++	struct rsi_thread coex_tx_thread;
++};
++
++int rsi_coex_attach(struct rsi_common *common);
++void rsi_coex_detach(struct rsi_common *common);
++int rsi_coex_send_pkt(void *priv, struct sk_buff *skb, u8 proto_type);
++int rsi_coex_recv_pkt(struct rsi_common *common, u8 *msg);
++#endif
++#endif
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index b0f4e2c..99a00a3 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -206,6 +206,7 @@ struct rsi_common {
+ 	struct rsi_hw *priv;
+ 	struct vif_priv vif_info[RSI_MAX_VIFS];
+ 
++	void *coex_cb;
+ 	bool mgmt_q_block;
+ 	struct version_info lmac_ver;
+ 
+@@ -270,6 +271,8 @@ struct rsi_common {
+ 	u8 obm_ant_sel_val;
+ 	int tx_power;
+ 	u8 ant_in_use;
++	/* Mutex used for writing packet to bus */
++	struct mutex tx_bus_mutex;
+ 	bool hibernate_resume;
+ 	bool reinit_hw;
+ 	u8 wow_flags;
+@@ -359,4 +362,7 @@ struct rsi_host_intf_ops {
+ 				      u8 *fw);
+ 	int (*reinit_device)(struct rsi_hw *adapter);
+ };
++
++enum rsi_host_intf rsi_get_host_intf(void *priv);
++
+ #endif
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 389094a..cf6567a 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -57,12 +57,14 @@
+ #define WOW_PATTERN_SIZE 256
+ 
+ /* Receive Frame Types */
++#define RSI_RX_DESC_MSG_TYPE_OFFSET	2
+ #define TA_CONFIRM_TYPE                 0x01
+ #define RX_DOT11_MGMT                   0x02
+ #define TX_STATUS_IND                   0x04
+ #define BEACON_EVENT_IND		0x08
+ #define PROBEREQ_CONFIRM                2
+ #define CARD_READY_IND                  0x00
++#define SLEEP_NOTIFY_IND                0x06
+ 
+ #define RSI_DELETE_PEER                 0x0
+ #define RSI_ADD_PEER                    0x1
+@@ -638,6 +640,7 @@ static inline void rsi_set_len_qno(__le16 *addr, u16 len, u8 qno)
+ 	*addr = cpu_to_le16(len | ((qno & 7) << 12));
+ }
+ 
++int rsi_handle_card_ready(struct rsi_common *common, u8 *msg);
+ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg);
+ int rsi_set_vap_capabilities(struct rsi_common *common, enum opmode mode,
+ 			     u8 *mac_addr, u8 vap_id, u8 vap_status);
+diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
+index 16a447b..737ab4e 100644
+--- a/include/net/rsi_91x.h
++++ b/include/net/rsi_91x.h
+@@ -17,6 +17,8 @@
+ #ifndef __RSI_HEADER_H__
+ #define __RSI_HEADER_H__
+ 
++#include <linux/skbuff.h>
++
+ /* HAL queue information */
+ #define RSI_COEX_Q			0x0
+ #define RSI_BT_Q			0x2
+@@ -26,9 +28,27 @@
+ #define RSI_BT_MGMT_Q			0x6
+ #define RSI_BT_DATA_Q			0x7
+ 
++enum rsi_coex_queues {
++	RSI_COEX_Q_INVALID = -1,
++	RSI_COEX_Q_COMMON = 0,
++	RSI_COEX_Q_BT,
++	RSI_COEX_Q_WLAN
++};
++
+ enum rsi_host_intf {
+ 	RSI_HOST_INTF_SDIO = 0,
+ 	RSI_HOST_INTF_USB
  };
  
-@@ -54,6 +55,8 @@ enum nl80211_multicast_groups {
- 	[NL80211_MCGRP_MLME] = { .name = NL80211_MULTICAST_GROUP_MLME },
- 	[NL80211_MCGRP_VENDOR] = { .name = NL80211_MULTICAST_GROUP_VENDOR },
- 	[NL80211_MCGRP_NAN] = { .name = NL80211_MULTICAST_GROUP_NAN },
-+	[NL80211_MCGRP_AP_STA_CQM] = {
-+				.name = NL80211_MULTICAST_GROUP_AP_STA_CQM },
- #ifdef CONFIG_NL80211_TESTMODE
- 	[NL80211_MCGRP_TESTMODE] = { .name = NL80211_MULTICAST_GROUP_TESTMODE }
++struct rsi_proto_ops {
++	int (*coex_send_pkt)(void *priv, struct sk_buff *skb, u8 hal_queue);
++	enum rsi_host_intf (*get_host_intf)(void *priv);
++	void (*set_bt_context)(void *priv, void *context);
++};
++
++struct rsi_mod_ops {
++	int (*attach)(void *priv, struct rsi_proto_ops *ops);
++	void (*detach)(void *priv);
++	int (*recv_pkt)(void *priv, u8 *msg);
++};
  #endif
-@@ -9905,8 +9908,13 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 		prev = thresholds[i];
- 	}
- 
--	if (wdev->iftype != NL80211_IFTYPE_STATION &&
--	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-+	if ((wdev->iftype != NL80211_IFTYPE_STATION &&
-+	     wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) &&
-+	    ((wdev->iftype == NL80211_IFTYPE_AP ||
-+	      wdev->iftype == NL80211_IFTYPE_AP_VLAN ||
-+	      wdev->iftype == NL80211_IFTYPE_P2P_GO) &&
-+	     !wiphy_ext_feature_isset(&rdev->wiphy,
-+				NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG)))
- 		return -EOPNOTSUPP;
- 
- 	wdev_lock(wdev);
-@@ -14587,9 +14595,24 @@ static void cfg80211_send_cqm(struct sk_buff *msg, gfp_t gfp)
- 				NL80211_MCGRP_MLME, gfp);
- }
- 
--void cfg80211_cqm_rssi_notify(struct net_device *dev,
--			      enum nl80211_cqm_rssi_threshold_event rssi_event,
--			      s32 rssi_level, gfp_t gfp)
-+static void cfg80211_send_ap_sta_cqm(struct sk_buff *msg, gfp_t gfp)
-+{
-+	void **cb = (void **)msg->cb;
-+	struct cfg80211_registered_device *rdev = cb[2];
-+
-+	nla_nest_end(msg, cb[1]);
-+	genlmsg_end(msg, cb[0]);
-+
-+	memset(msg->cb, 0, sizeof(msg->cb));
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+				NL80211_MCGRP_AP_STA_CQM, gfp);
-+}
-+
-+static struct sk_buff *cfg80211_cqm_rssi_prepare(struct net_device *dev,
-+			const u8 *mac,
-+			enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			s32 rssi_level, gfp_t gfp)
- {
- 	struct sk_buff *msg;
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-@@ -14599,7 +14622,7 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 
- 	if (WARN_ON(rssi_event != NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW &&
- 		    rssi_event != NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH))
--		return;
-+		return NULL;
- 
- 	if (wdev->cqm_config) {
- 		wdev->cqm_config->last_rssi_event_value = rssi_level;
-@@ -14612,7 +14635,7 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 
- 	msg = cfg80211_prepare_cqm(dev, NULL, gfp);
- 	if (!msg)
--		return;
-+		return NULL;
- 
- 	if (nla_put_u32(msg, NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT,
- 			rssi_event))
-@@ -14622,15 +14645,43 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 				      rssi_level))
- 		goto nla_put_failure;
- 
--	cfg80211_send_cqm(msg, gfp);
--
--	return;
-+	return msg;
- 
-  nla_put_failure:
- 	nlmsg_free(msg);
-+	return NULL;
-+}
-+
-+void cfg80211_cqm_rssi_notify(struct net_device *dev,
-+			      enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			      s32 rssi_level, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+
-+	msg = cfg80211_cqm_rssi_prepare(dev, NULL, rssi_event, rssi_level,
-+					gfp);
-+	if (!msg)
-+		return;
-+	cfg80211_send_cqm(msg, gfp);
-+
-+	return;
- }
- EXPORT_SYMBOL(cfg80211_cqm_rssi_notify);
- 
-+void cfg80211_ap_sta_cqm_rssi_notify(struct net_device *dev, const u8 *mac,
-+			  enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			  s32 rssi_level, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+
-+	msg = cfg80211_cqm_rssi_prepare(dev, mac, rssi_event, rssi_level,
-+					gfp);
-+	if (!msg)
-+		return;
-+	cfg80211_send_ap_sta_cqm(msg, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_ap_sta_cqm_rssi_notify);
-+
- void cfg80211_cqm_txe_notify(struct net_device *dev,
- 			     const u8 *peer, u32 num_packets,
- 			     u32 rate, u32 intvl, gfp_t gfp)
 -- 
-1.7.9.5
+2.7.4
