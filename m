@@ -1,80 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35349 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752498AbeBEK05 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:40474 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754121AbeBWSlN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Feb 2018 05:26:57 -0500
-Received: by mail-wm0-f67.google.com with SMTP id r78so24825583wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Feb 2018 02:26:56 -0800 (PST)
-Date: Mon, 5 Feb 2018 10:26:54 +0000
-From: Chris Vine <vine.chris@gmail.com>
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Regression: bcm4312 lp-phy device not recognized in 4.15 kernel
-Message-ID: <20180205102654.14394e68@bother.homenet> (sfid-20180205_112703_696915_2D35986F)
-In-Reply-To: <20180204220032.3c339324@bother.homenet>
-References: <20180204185855.74e6ade5@bother.homenet>
-        <935a4987-c481-f4e4-16d7-f5f56adcfee0@gmail.com>
-        <20180204220032.3c339324@bother.homenet>
+        Fri, 23 Feb 2018 13:41:13 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Christian Lamparter <chunkeey@gmail.com>,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
+        linux-wireless@vger.kernel.org, torvalds@linux-foundation.org,
+        "David S. Miller" <davem@davemloft.net>, alan@linux.intel.com,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Jack Wang <jinpu.wang@profitbricks.com>
+Subject: [PATCH 4.4 180/193] nl80211: Sanitize array index in parse_txq_params
+Date: Fri, 23 Feb 2018 19:26:53 +0100
+Message-Id: <20180223170354.369164387@linuxfoundation.org> (sfid-20180223_211412_223030_ADBC0994)
+In-Reply-To: <20180223170325.997716448@linuxfoundation.org>
+References: <20180223170325.997716448@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 4 Feb 2018 22:00:32 +0000
-Chris Vine <vine35792468@gmail.com> wrote:
-> On Sun, 4 Feb 2018 12:03:49 -0800
-> Florian Fainelli <f.fainelli@gmail.com> wrote:
-> > On 02/04/2018 10:58 AM, Chris Vine wrote:  
-> > > I probably should have copied this to the relevant kernel wireless
-> > > mailing lists.  Anyway, here it is.
-> > > 
-> > > As a further datum point, the b43 driver works fine with the
-> > > 4.15.0-rc3 kernel.  So something seems to have changed between
-> > > that and 4.15.0.  
-> > 
-> > Does this patch help?
-> > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=a9e6d44ddeccd3522670e641f1ed9b068e746ff7  
-> 
-> Yes, I have wireless working again.
-> 
-> I'll recompile tomorrow from a fresh kernel tree and apply the patch
-> again and make sure it still works.  I will let you know.
+4.4-stable review patch.  If anyone has any objections, please let me know.
 
-I can confirm that when the kernel is built with that configuration
-patch my bcm4312 device works OK again.
+------------------
 
-Chris
+From: Dan Williams <dan.j.williams@intel.com>
 
-> -----------------------------------------
-> > > 
-> > > Begin forwarded message:
-> > > 
-> > > Date: Mon, 29 Jan 2018 23:37:49 +0000
-> > > From: Chris Vine <vine35792468@gmail.com>
-> > > To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-> > > Subject: Regression: bcm4312 lp-phy device not recognized in 4.15
-> > > kernel
-> > > 
-> > > 
-> > > I have an old netbook with a Broadcom bcm4312 802.11b/g lp-phy
-> > > [14e4:4315] (rev 01) wifi device.  It is no longer recognized in
-> > > kernel 4.15: it works fine with the 4.14 kernel and earlier, with
-> > > the b43 and ssb kernel modules.
-> > > 
-> > > I cannot give any further information as there are no error
-> > > messages logged. The b43 firmware (wl-5.100.138) is not loaded
-> > > for it, nor are the ssb/b43/bcma/ mmc_core/mac80211/cfg80211
-> > > modules.  The modules can be loaded by hand without error, but
-> > > nothing happens and no network interface is presented.
-> > > 
-> > > This is a pretty slow and rubbish netbook but is useful when
-> > > travelling to a country which might impound your laptop (no names)
-> > > and you don't mind too much losing it.  It would be nice to
-> > > continue to be able to use it for that.
-> > > 
-> > > Chris
-> > >   
-> 
-> 
+(cherry picked from commit 259d8c1e984318497c84eef547bbb6b1d9f4eb05)
+
+Wireless drivers rely on parse_txq_params to validate that txq_params->ac
+is less than NL80211_NUM_ACS by the time the low-level driver's ->conf_tx()
+handler is called. Use a new helper, array_index_nospec(), to sanitize
+txq_params->ac with respect to speculation. I.e. ensure that any
+speculation into ->conf_tx() handlers is done with a value of
+txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
+
+Reported-by: Christian Lamparter <chunkeey@gmail.com>
+Reported-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-arch@vger.kernel.org
+Cc: kernel-hardening@lists.openwall.com
+Cc: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Cc: torvalds@linux-foundation.org
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: alan@linux.intel.com
+Link: https://lkml.kernel.org/r/151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+[jwang: cherry pick to 4.4]
+Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ net/wireless/nl80211.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -16,6 +16,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/netlink.h>
++#include <linux/nospec.h>
+ #include <linux/etherdevice.h>
+ #include <net/net_namespace.h>
+ #include <net/genetlink.h>
+@@ -1879,20 +1880,22 @@ static const struct nla_policy txq_param
+ static int parse_txq_params(struct nlattr *tb[],
+ 			    struct ieee80211_txq_params *txq_params)
+ {
++	u8 ac;
++
+ 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
+ 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
+ 	    !tb[NL80211_TXQ_ATTR_AIFS])
+ 		return -EINVAL;
+ 
+-	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
++	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
+ 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
+ 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
+ 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
+ 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 
+-	if (txq_params->ac >= NL80211_NUM_ACS)
++	if (ac >= NL80211_NUM_ACS)
+ 		return -EINVAL;
+-
++	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
+ 	return 0;
+ }
+ 
