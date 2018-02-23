@@ -1,66 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44074 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752336AbeBZKlj (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:53382 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751383AbeBWJyg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 05:41:39 -0500
+        Fri, 23 Feb 2018 04:54:36 -0500
+Received: by mail-wm0-f53.google.com with SMTP id t74so3542773wme.3
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Feb 2018 01:54:35 -0800 (PST)
+Subject: Re: brcmfmac signal/interference issues
+To: Daniel Drake <drake@endlessm.com>
+References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
+ <5A8D36B7.1010201@broadcom.com>
+ <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
+ <CAD8Lp44Y-sNqm8_5=1pvBy-3zvVVQSCQ+Qye-2xP8vGmkvrjng@mail.gmail.com>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Linux Upstreaming Team <linux@endlessm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A8FE4D9.80608@broadcom.com> (sfid-20180223_105440_440076_A2B016DB)
+Date: Fri, 23 Feb 2018 10:54:33 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 26 Feb 2018 16:11:38 +0530
-From: periyasa@codeaurora.org
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        adrian.chadd@gmail.com
-Subject: Re: [PATCH] Revert "ath10k: send (re)assoc peer command when NSS
- changed"
-In-Reply-To: <CAJ-Vmo=xxG_Jp=uC-Cx96R0YzO8O0tOVe2G6Nyx8ceWopiwvXQ@mail.gmail.com>
-References: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org>
- <CAJ-Vmo=xxG_Jp=uC-Cx96R0YzO8O0tOVe2G6Nyx8ceWopiwvXQ@mail.gmail.com>
-Message-ID: <559965cc9735f6616957f9ee84a17e52@codeaurora.org> (sfid-20180226_114147_449152_1CCF7F6F)
+In-Reply-To: <CAD8Lp44Y-sNqm8_5=1pvBy-3zvVVQSCQ+Qye-2xP8vGmkvrjng@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-02-26 14:15, Adrian Chadd wrote:
-> hi!
-> 
-> On 25 February 2018 at 22:16, Karthikeyan Periyasamy
-> <periyasa@codeaurora.org> wrote:
->> This reverts commit 55884c045d31a29cf69db8332d1064a1b61dd159.
->> 
->> When Ath10k is in AP mode and an unassociated STA sends a VHT action 
->> frame
->> (Operating Mode Notification for the NSS change) periodically to AP 
->> this causes
->> ath10k to call ath10k_station_assoc() which sends WMI_PEER_ASSOC_CMDID 
->> during
->> NSS update. Over the time (with a certain client it can happen within 
->> 15 mins
->> when there are over 500 of these VHT action frames) continuous calls 
->> of
->> WMI_PEER_ASSOC_CMDID cause firmware to assert due to resource exhaust.
->> 
->> To my knowledge setting WMI_PEER_NSS peer param itself enough to 
->> handle NSS
->> updates and no need to call ath10k_station_assoc(). So revert the 
->> original
->> commit from 2014 as it's unclear why the change was really needed.
->> Now the firmware assert doesn't happen anymore.
->> 
->> Issue observed in QCA9984 platform with firmware 
->> version:10.4-3.5.3-00053.
->> This Change tested in QCA9984 with firmware version: 10.4-3.5.3-00053 
->> and
->> QCA988x platform with firmware version: 10.2.4-1.0-00036.
-> 
-> Did you test this on any of the other major firmware variants? I
-> wonder if it snuck in because of some firmware quirk in something way
-> before dakota/cascade and 10.4 were a thing.
-> 
-> Eg, Peregrine? Rome? Maybe even earlier Beeliner, just to double check?
-> 
-Yes. I tested this on peregrine, Beeliner, Dakota and Cascade. This code 
-was introduced before Rome.
+On 2/23/2018 9:26 AM, Daniel Drake wrote:
+> Hi,
+>
+> On Wed, Feb 21, 2018 at 12:39 PM, Daniel Drake <drake@endlessm.com> wrote:
+>> Thanks for looking into this. Here is the brcmfmac43455-sdio.txt file
+>> we are using:
+>> https://gist.github.com/dsd/d7ee3caa6dfd77f0bcd16cf272b20298
+>> This is identical to the 4345r6nvram.txt file from windows.
+>
+> I checked Windows again and it seems to be using a firmware file
+> 4345r6rtecdc.bin alongside this nvram data.
+> This firmware is different from the one in linux-firmware. I've
+> uploaded it here:
+> https://drive.google.com/open?id=1MUsiaoozslJb8SCYOR-FNbJFuD-h4PY_
+>
+> I was hoping to try this on Linux to see if it makes any difference to
+> the issue seen here.
+> However, with thisi firmware in place, I can't connect to the network
+> at all. It associates, wpa_supplicant never sees the first WPA2 key
+> message sent from the AP - even though wireshark on a separate monitor
+> shows that the key message was sent, and that the STA acked it.
+>
+> I turned off WPA2 to make it an open network instead, and now I am
+> unable to complete the DHCP conversation. According to the monitor
+> station, the STA succesfully transmits DHCPDISCOVER and the AP
+> responds with DHCPOFFER. The offer is acked, but dhclient never sees
+> it, and eventually times out.
+>
+> Any ideas why this firmware may not be working at all on linux?
 
-Thanks,
-Karthikeyan.
+Yup. Windows firmware talks NDIS. If you run 'strings 4345r6rtecdc.bin | 
+tail -1' you can see the firmware build target and it likely has 'ndis' 
+in it.
+
+Now are you using BT as well on this device? Another suggestion I got is 
+to disable transmit beamforming which brcmfmac enables by default. Not 
+sure if this device supports it, but could you try the patch below.
+
+Regards,
+Arend
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c 
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 9be0b05..512ea57 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -363,9 +363,6 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+                 goto done;
+         }
+
+-       /* Enable tx beamforming, errors can be ignored (not supported) */
+-       (void)brcmf_fil_iovar_int_set(ifp, "txbf", 1);
+-
+         /* do bus specific preinit here */
+         err = brcmf_bus_preinit(ifp->drvr->bus_if);
+  done:
