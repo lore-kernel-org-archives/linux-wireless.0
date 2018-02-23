@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39630 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753218AbeB0Nnu (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:50771 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751469AbeBWNg0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 08:43:50 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ramon Fried <rfried@codeaurora.org>
-Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wcn36xx: reduce verbosity of drivers messages
-References: <20180227133149.26805-1-rfried@codeaurora.org>
-Date: Tue, 27 Feb 2018 15:43:45 +0200
-In-Reply-To: <20180227133149.26805-1-rfried@codeaurora.org> (Ramon Fried's
-        message of "Tue, 27 Feb 2018 15:31:49 +0200")
-Message-ID: <87sh9msg32.fsf@kamboji.qca.qualcomm.com> (sfid-20180227_144405_706752_0B3E801B)
+        Fri, 23 Feb 2018 08:36:26 -0500
+From: Colin King <colin.king@canonical.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] brcm80211: remove duplicated bit-wise or of IEEE80211_CHAN_NO_IR
+Date: Fri, 23 Feb 2018 13:36:22 +0000
+Message-Id: <20180223133622.25700-1-colin.king@canonical.com> (sfid-20180223_143650_238006_0F8D9B71)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ramon Fried <rfried@codeaurora.org> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
-> Whenever the WLAN interface is started the FW
-> version and caps are printed.
-> The caps now will be displayed only in debug mode.
-> Firmware version will be displayed only once on first
-> startup of the interface.
->
-> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
-> ---
-> v2: print the firwmare version as info but only
-> 	onetime.
+Bit pattern IEEE80211_CHAN_NO_IR is being bit-wise or'd twice;
+remove the redundant 2nd IEEE80211_CHAN_NO_IR
 
-[...]
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/channel.c | 1 -
+ 1 file changed, 1 deletion(-)
 
->  static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
->  {
-> +	static bool first = true;
->  	struct wcn36xx_hal_mac_start_rsp_msg *rsp;
->  
->  	if (len < sizeof(*rsp))
-> @@ -409,15 +410,17 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
->  	wcn->fw_minor = rsp->start_rsp_params.version.minor;
->  	wcn->fw_major = rsp->start_rsp_params.version.major;
->  
-> -	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
-> -		     wcn->wlan_version, wcn->crm_version);
-> -
-> -	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
-> -		     wcn->fw_major, wcn->fw_minor,
-> -		     wcn->fw_version, wcn->fw_revision,
-> -		     rsp->start_rsp_params.stations,
-> -		     rsp->start_rsp_params.bssids);
-> +	if (first) {
-> +		first = false;
-
-static variables are evil if you have more than one device on the same
-host. Sure, I guess all current hardware only have one wcn36xx device
-per hardware but still we should not endorse this bad practise. A much
-better approach is to add a new field to struct wcn36xx.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/channel.c
+index 3a03287fa912..db783e94f929 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/channel.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/channel.c
+@@ -652,7 +652,6 @@ static void brcms_reg_apply_radar_flags(struct wiphy *wiphy)
+ 		 */
+ 		if (!(ch->flags & IEEE80211_CHAN_DISABLED))
+ 			ch->flags |= IEEE80211_CHAN_RADAR |
+-				     IEEE80211_CHAN_NO_IR |
+ 				     IEEE80211_CHAN_NO_IR;
+ 	}
+ }
 -- 
-Kalle Valo
+2.15.1
