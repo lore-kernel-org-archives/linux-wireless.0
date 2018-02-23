@@ -1,303 +1,338 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:56224 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935036AbeBMMNW (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34355 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750827AbeBWOGk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 07:13:22 -0500
+        Fri, 23 Feb 2018 09:06:40 -0500
 From: Amitkumar Karwar <amitkarwar@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
 Cc: linux-wireless@vger.kernel.org,
         Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
         linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [v6 5/8] Bluetooth: btrsi: add new rsi bluetooth driver
-Date: Tue, 13 Feb 2018 17:31:41 +0530
-Message-Id: <1518523304-3424-6-git-send-email-amitkarwar@gmail.com> (sfid-20180213_131326_119549_DD38A857)
-In-Reply-To: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
-References: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v8 1/8] rsi: add rx control block to handle rx packets in USB
+Date: Fri, 23 Feb 2018 19:24:51 +0530
+Message-Id: <1519394098-24220-2-git-send-email-amitkarwar@gmail.com> (sfid-20180223_150644_187615_D93AE23F)
+In-Reply-To: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
+References: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Redpine bluetooth driver is a thin driver which depends on
-'rsi_91x' driver for transmitting and receiving packets
-to/from device. It creates hci interface when attach() is
-called from 'rsi_91x' module.
+Rx bluetooth endpoint shall be added in further patches. Rx control
+block is introduced here to handle Rx packets properly. Separate
+function is written to initialize the RX control blocks.
 
 Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
-Reviewed-by: Marcel Holtmann <marcel@holtmann.org>
 Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
-v6: Renamed CONFIG_BT_RSI to CONFIG_BT_HCIRSI (Marcel)
-v5: Addressed review comments from Marcel.
-    Removed reduntant switch case code from rsi_hci_recv_pkt()
-    Changed bt_cb(skb)->pkt_type to hci_skb_pkt_type(skb)
-    Removed reduntant '\n' from BT_ERR and redundant BT_INFO messages
-    Changed u8 *pkt to const u8 *pkt in rsi_hci_recv_pkt()
-v4: Removed rsi_hci.h file. Made the functions static(Marcel)
-v3: Made BT_RSI module by default off(Marcel)
-    Removed redundant exported function rsi_get_hci_ops()(Marcel)
-v2: Addressed review comments from Marcel
-    Removed unnecessary 'depends on BT && BT_RFOMM' line in Kconfig
-    Removed redundant BT_INFO messages
-    h_adapter initialization and declaration in a single line.
-    Removed unnecessary error checks for HCI_RUNNING and fsm_state
-    Allocated new skb with skb_realloc_headroom() API if headroom is not sufficient
-    Used get_unaligned_le16 helpers
-    Moved a structure and union from header file to btrsi.c file
+v8: Same as v6, v7
+v6: Removed unnecessary GFP_DMA flag for kzalloc(Kalle)
+v5: Same as earlier version
 ---
- drivers/bluetooth/Kconfig  |  12 +++
- drivers/bluetooth/Makefile |   2 +
- drivers/bluetooth/btrsi.c  | 188 +++++++++++++++++++++++++++++++++++++++++++++
- include/net/rsi_91x.h      |   4 +-
- 4 files changed, 205 insertions(+), 1 deletion(-)
- create mode 100644 drivers/bluetooth/btrsi.c
+ drivers/net/wireless/rsi/rsi_91x_main.c     |  4 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  2 +-
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 75 +++++++++++++++++++++++------
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 35 +++++++++-----
+ drivers/net/wireless/rsi/rsi_common.h       |  2 +-
+ drivers/net/wireless/rsi/rsi_main.h         |  2 +-
+ drivers/net/wireless/rsi/rsi_usb.h          | 10 +++-
+ 7 files changed, 96 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
-index 07e55cd..d8bbd66 100644
---- a/drivers/bluetooth/Kconfig
-+++ b/drivers/bluetooth/Kconfig
-@@ -392,4 +392,16 @@ config BT_QCOMSMD
- 	  Say Y here to compile support for HCI over Qualcomm SMD into the
- 	  kernel or say M to compile as a module.
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 0cb8e68..0413af8 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -137,7 +137,7 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
+  *
+  * Return: 0 on success, -1 on failure.
+  */
+-int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
++int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
+ {
+ 	u8 *frame_desc = NULL, extended_desc = 0;
+ 	u32 index, length = 0, queueno = 0;
+@@ -146,7 +146,7 @@ int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
  
-+config BT_HCIRSI
-+	tristate "Redpine HCI support"
-+	default n
-+	select RSI_COEX
-+	help
-+	  Redpine BT driver.
-+	  This driver handles BT traffic from upper layers and pass
-+	  to the RSI_91x coex module for further scheduling to device
-+
-+	  Say Y here to compile support for HCI over Redpine into the
-+	  kernel or say M to compile as a module.
-+
- endmenu
-diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
-index 4e4e44d..03cfc1b 100644
---- a/drivers/bluetooth/Makefile
-+++ b/drivers/bluetooth/Makefile
-@@ -28,6 +28,8 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
+ 	index = 0;
+ 	do {
+-		frame_desc = &common->rx_data_pkt[index];
++		frame_desc = &rx_pkt[index];
+ 		actual_length = *(u16 *)&frame_desc[0];
+ 		offset = *(u16 *)&frame_desc[2];
  
- obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 8e2a95c..9fbc0ef 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -118,7 +118,7 @@ static int rsi_process_pkt(struct rsi_common *common)
+ 		goto fail;
+ 	}
  
-+obj-$(CONFIG_BT_HCIRSI)		+= btrsi.o
-+
- btmrvl-y			:= btmrvl_main.o
- btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
+-	status = rsi_read_pkt(common, rcv_pkt_len);
++	status = rsi_read_pkt(common, common->rx_data_pkt, rcv_pkt_len);
  
-diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
-new file mode 100644
-index 0000000..803e045
---- /dev/null
-+++ b/drivers/bluetooth/btrsi.c
-@@ -0,0 +1,188 @@
-+/**
-+ * Copyright (c) 2017 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#include <linux/version.h>
-+#include <linux/module.h>
-+#include <linux/kernel.h>
-+#include <net/bluetooth/bluetooth.h>
-+#include <net/bluetooth/hci_core.h>
-+#include <linux/unaligned/le_byteshift.h>
-+#include <net/rsi_91x.h>
-+#include <net/genetlink.h>
+ fail:
+ 	kfree(common->rx_data_pkt);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index 8f84438..bbce809 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -247,12 +247,13 @@ static int rsi_usb_reg_write(struct usb_device *usbdev,
+  */
+ static void rsi_rx_done_handler(struct urb *urb)
+ {
+-	struct rsi_hw *adapter = urb->context;
+-	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	struct rx_usb_ctrl_block *rx_cb = urb->context;
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)rx_cb->data;
+ 
+ 	if (urb->status)
+ 		return;
+ 
++	rx_cb->pend = 1;
+ 	rsi_set_event(&dev->rx_thread.event);
+ }
+ 
+@@ -262,10 +263,11 @@ static void rsi_rx_done_handler(struct urb *urb)
+  *
+  * Return: 0 on success, a negative error code on failure.
+  */
+-static int rsi_rx_urb_submit(struct rsi_hw *adapter)
++static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
+ {
+ 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+-	struct urb *urb = dev->rx_usb_urb[0];
++	struct rx_usb_ctrl_block *rx_cb = &dev->rx_cb[ep_num - 1];
++	struct urb *urb = rx_cb->rx_urb;
+ 	int status;
+ 
+ 	usb_fill_bulk_urb(urb,
+@@ -275,7 +277,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter)
+ 			  urb->transfer_buffer,
+ 			  3000,
+ 			  rsi_rx_done_handler,
+-			  adapter);
++			  rx_cb);
+ 
+ 	status = usb_submit_urb(urb, GFP_KERNEL);
+ 	if (status)
+@@ -484,14 +486,54 @@ static struct rsi_host_intf_ops usb_host_intf_ops = {
+  */
+ static void rsi_deinit_usb_interface(struct rsi_hw *adapter)
+ {
++	u8 idx;
 +
-+#define RSI_HEADROOM_FOR_BT_HAL	16
-+#define RSI_FRAME_DESC_SIZE	16
+ 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+ 
+ 	rsi_kill_thread(&dev->rx_thread);
+-	usb_free_urb(dev->rx_usb_urb[0]);
 +
-+struct rsi_hci_adapter {
-+	void *priv;
-+	struct rsi_proto_ops *proto_ops;
-+	struct hci_dev *hdev;
-+};
-+
-+static int rsi_hci_open(struct hci_dev *hdev)
-+{
-+	return 0;
-+}
-+
-+static int rsi_hci_close(struct hci_dev *hdev)
-+{
-+	return 0;
-+}
-+
-+static int rsi_hci_flush(struct hci_dev *hdev)
-+{
-+	return 0;
-+}
-+
-+static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
-+{
-+	struct rsi_hci_adapter *h_adapter = hci_get_drvdata(hdev);
-+	struct sk_buff *new_skb = NULL;
-+
-+	switch (hci_skb_pkt_type(skb)) {
-+	case HCI_COMMAND_PKT:
-+		hdev->stat.cmd_tx++;
-+		break;
-+	case HCI_ACLDATA_PKT:
-+		hdev->stat.acl_tx++;
-+		break;
-+	case HCI_SCODATA_PKT:
-+		hdev->stat.sco_tx++;
-+		break;
++	for (idx = 0; idx < MAX_RX_URBS; idx++) {
++		usb_free_urb(dev->rx_cb[idx].rx_urb);
++		kfree(dev->rx_cb[idx].rx_buffer);
 +	}
 +
-+	if (skb_headroom(skb) < RSI_HEADROOM_FOR_BT_HAL) {
-+		/* Insufficient skb headroom - allocate a new skb */
-+		new_skb = skb_realloc_headroom(skb, RSI_HEADROOM_FOR_BT_HAL);
-+		if (unlikely(!new_skb))
-+			return -ENOMEM;
-+		bt_cb(new_skb)->pkt_type = hci_skb_pkt_type(skb);
-+		kfree_skb(skb);
-+		skb = new_skb;
-+	}
-+
-+	return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
-+						   RSI_BT_Q);
-+}
-+
-+static int rsi_hci_recv_pkt(void *priv, const u8 *pkt)
+ 	kfree(adapter->priv->rx_data_pkt);
+ 	kfree(dev->tx_buffer);
+ }
+ 
++static int rsi_usb_init_rx(struct rsi_hw *adapter)
 +{
-+	struct rsi_hci_adapter *h_adapter = priv;
-+	struct hci_dev *hdev = h_adapter->hdev;
-+	struct sk_buff *skb;
-+	int pkt_len = get_unaligned_le16(pkt) & 0x0fff;
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	struct rx_usb_ctrl_block *rx_cb;
++	u8 idx;
 +
-+	skb = dev_alloc_skb(pkt_len);
-+	if (!skb)
-+		return -ENOMEM;
++	for (idx = 0; idx < MAX_RX_URBS; idx++) {
++		rx_cb = &dev->rx_cb[idx];
 +
-+	memcpy(skb->data, pkt + RSI_FRAME_DESC_SIZE, pkt_len);
-+	skb_put(skb, pkt_len);
-+	h_adapter->hdev->stat.byte_rx += skb->len;
++		rx_cb->rx_buffer = kzalloc(RSI_USB_BUF_SIZE * 2,
++					   GFP_KERNEL);
++		if (!rx_cb->rx_buffer)
++			goto err;
 +
-+	hci_skb_pkt_type(skb) = pkt[14];
-+
-+	return hci_recv_frame(hdev, skb);
-+}
-+
-+static int rsi_hci_attach(void *priv, struct rsi_proto_ops *ops)
-+{
-+	struct rsi_hci_adapter *h_adapter = NULL;
-+	struct hci_dev *hdev;
-+	int err = 0;
-+
-+	h_adapter = kzalloc(sizeof(*h_adapter), GFP_KERNEL);
-+	if (!h_adapter)
-+		return -ENOMEM;
-+
-+	h_adapter->priv = priv;
-+	ops->set_bt_context(priv, h_adapter);
-+	h_adapter->proto_ops = ops;
-+
-+	hdev = hci_alloc_dev();
-+	if (!hdev) {
-+		BT_ERR("Failed to alloc HCI device");
-+		goto err;
++		rx_cb->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
++		if (!rx_cb->rx_urb) {
++			rsi_dbg(ERR_ZONE, "Failed alloc rx urb[%d]\n", idx);
++			goto err;
++		}
++		rx_cb->rx_urb->transfer_buffer = rx_cb->rx_buffer;
++		rx_cb->ep_num = idx + 1;
++		rx_cb->data = (void *)dev;
 +	}
-+
-+	h_adapter->hdev = hdev;
-+
-+	if (ops->get_host_intf(priv) == RSI_HOST_INTF_SDIO)
-+		hdev->bus = HCI_SDIO;
-+	else
-+		hdev->bus = HCI_USB;
-+
-+	hci_set_drvdata(hdev, h_adapter);
-+	hdev->dev_type = HCI_PRIMARY;
-+	hdev->open = rsi_hci_open;
-+	hdev->close = rsi_hci_close;
-+	hdev->flush = rsi_hci_flush;
-+	hdev->send = rsi_hci_send_pkt;
-+
-+	err = hci_register_dev(hdev);
-+	if (err < 0) {
-+		BT_ERR("HCI registration failed with errcode %d", err);
-+		hci_free_dev(hdev);
-+		goto err;
-+	}
-+
 +	return 0;
++
 +err:
-+	h_adapter->hdev = NULL;
-+	kfree(h_adapter);
-+	return -EINVAL;
-+}
-+
-+static void rsi_hci_detach(void *priv)
-+{
-+	struct rsi_hci_adapter *h_adapter = priv;
-+	struct hci_dev *hdev;
-+
-+	if (!h_adapter)
-+		return;
-+
-+	hdev = h_adapter->hdev;
-+	if (hdev) {
-+		hci_unregister_dev(hdev);
-+		hci_free_dev(hdev);
-+		h_adapter->hdev = NULL;
++	for (idx = 0; idx < MAX_RX_URBS; idx++) {
++		kfree(dev->rx_cb[idx].rx_buffer);
++		kfree(dev->rx_cb[idx].rx_urb);
 +	}
-+
-+	kfree(h_adapter);
++	return -1;
 +}
 +
-+const struct rsi_mod_ops rsi_bt_ops = {
-+	.attach	= rsi_hci_attach,
-+	.detach	= rsi_hci_detach,
-+	.recv_pkt = rsi_hci_recv_pkt,
-+};
-+EXPORT_SYMBOL(rsi_bt_ops);
+ /**
+  * rsi_init_usb_interface() - This function initializes the usb interface.
+  * @adapter: Pointer to the adapter structure.
+@@ -504,7 +546,7 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ {
+ 	struct rsi_91x_usbdev *rsi_dev;
+ 	struct rsi_common *common = adapter->priv;
+-	int status;
++	int status, i;
+ 
+ 	rsi_dev = kzalloc(sizeof(*rsi_dev), GFP_KERNEL);
+ 	if (!rsi_dev)
+@@ -531,12 +573,12 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 		status = -ENOMEM;
+ 		goto fail_tx;
+ 	}
+-	rsi_dev->rx_usb_urb[0] = usb_alloc_urb(0, GFP_KERNEL);
+-	if (!rsi_dev->rx_usb_urb[0]) {
+-		status = -ENOMEM;
+-		goto fail_rx;
 +
-+static int rsi_91x_bt_module_init(void)
-+{
-+	return 0;
-+}
++	if (rsi_usb_init_rx(adapter)) {
++		rsi_dbg(ERR_ZONE, "Failed to init RX handle\n");
++		return -ENOMEM;
+ 	}
+-	rsi_dev->rx_usb_urb[0]->transfer_buffer = adapter->priv->rx_data_pkt;
 +
-+static void rsi_91x_bt_module_exit(void)
-+{
-+	return;
-+}
+ 	rsi_dev->tx_blk_size = 252;
+ 	adapter->block_size = rsi_dev->tx_blk_size;
+ 
+@@ -564,9 +606,10 @@ static int rsi_init_usb_interface(struct rsi_hw *adapter,
+ 	return 0;
+ 
+ fail_thread:
+-	usb_free_urb(rsi_dev->rx_usb_urb[0]);
+-fail_rx:
+-	kfree(rsi_dev->tx_buffer);
++	for (i = 0; i < MAX_RX_URBS; i++) {
++		kfree(rsi_dev->rx_cb[i].rx_buffer);
++		kfree(rsi_dev->rx_cb[i].rx_urb);
++	}
+ fail_tx:
+ 	kfree(common->rx_data_pkt);
+ 	return status;
+@@ -698,7 +741,7 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 		rsi_dbg(INIT_ZONE, "%s: Device Init Done\n", __func__);
+ 	}
+ 
+-	status = rsi_rx_urb_submit(adapter);
++	status = rsi_rx_urb_submit(adapter, WLAN_EP);
+ 	if (status)
+ 		goto err1;
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+index 465692b..d0650ea 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+@@ -29,7 +29,8 @@ void rsi_usb_rx_thread(struct rsi_common *common)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
+-	int status;
++	struct rx_usb_ctrl_block *rx_cb;
++	int status, idx;
+ 
+ 	do {
+ 		rsi_wait_event(&dev->rx_thread.event, EVENT_WAIT_FOREVER);
+@@ -37,20 +38,30 @@ void rsi_usb_rx_thread(struct rsi_common *common)
+ 		if (atomic_read(&dev->rx_thread.thread_done))
+ 			goto out;
+ 
+-		mutex_lock(&common->rx_lock);
+-		status = rsi_read_pkt(common, 0);
+-		if (status) {
+-			rsi_dbg(ERR_ZONE, "%s: Failed To read data", __func__);
++		for (idx = 0; idx < MAX_RX_URBS; idx++) {
++			rx_cb = &dev->rx_cb[idx];
++			if (!rx_cb->pend)
++				continue;
 +
-+module_init(rsi_91x_bt_module_init);
-+module_exit(rsi_91x_bt_module_exit);
-+MODULE_AUTHOR("Redpine Signals Inc");
-+MODULE_DESCRIPTION("RSI BT driver");
-+MODULE_SUPPORTED_DEVICE("RSI-BT");
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
-index 737ab4e..040f07b 100644
---- a/include/net/rsi_91x.h
-+++ b/include/net/rsi_91x.h
-@@ -49,6 +49,8 @@ struct rsi_proto_ops {
- struct rsi_mod_ops {
- 	int (*attach)(void *priv, struct rsi_proto_ops *ops);
- 	void (*detach)(void *priv);
--	int (*recv_pkt)(void *priv, u8 *msg);
-+	int (*recv_pkt)(void *priv, const u8 *msg);
- };
++			mutex_lock(&common->rx_lock);
++			status = rsi_read_pkt(common, rx_cb->rx_buffer, 0);
++			if (status) {
++				rsi_dbg(ERR_ZONE, "%s: Failed To read data",
++					__func__);
++				mutex_unlock(&common->rx_lock);
++				break;
++			}
++			rx_cb->pend = 0;
+ 			mutex_unlock(&common->rx_lock);
+-			return;
 +
-+extern const struct rsi_mod_ops rsi_bt_ops;
++			if (adapter->rx_urb_submit(adapter, rx_cb->ep_num)) {
++				rsi_dbg(ERR_ZONE,
++					"%s: Failed in urb submission",
++					__func__);
++				return;
++			}
+ 		}
+-		mutex_unlock(&common->rx_lock);
+ 		rsi_reset_event(&dev->rx_thread.event);
+-		if (adapter->rx_urb_submit(adapter)) {
+-			rsi_dbg(ERR_ZONE,
+-				"%s: Failed in urb submission", __func__);
+-			return;
+-		}
+ 	} while (1);
+ 
+ out:
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index d07dbba..1d8af41 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -82,7 +82,7 @@ void rsi_mac80211_detach(struct rsi_hw *hw);
+ u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
+ struct rsi_hw *rsi_91x_init(void);
+ void rsi_91x_deinit(struct rsi_hw *adapter);
+-int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len);
++int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
+ #ifdef CONFIG_PM
+ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan);
  #endif
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 8cab630..ee469dc 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -343,7 +343,7 @@ struct rsi_hw {
+ 	void *rsi_dev;
+ 	struct rsi_host_intf_ops *host_intf_ops;
+ 	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
+-	int (*rx_urb_submit)(struct rsi_hw *adapter);
++	int (*rx_urb_submit)(struct rsi_hw *adapter, u8 ep_num);
+ 	int (*determine_event_timeout)(struct rsi_hw *adapter);
+ };
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 891daea..7e781d5 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -39,12 +39,20 @@
+ #define RSI_USB_BUF_SIZE	     4096
+ #define RSI_USB_CTRL_BUF_SIZE	     0x04
+ 
++struct rx_usb_ctrl_block {
++	u8 *data;
++	struct urb *rx_urb;
++	u8 *rx_buffer;
++	u8 ep_num;
++	u8 pend;
++};
++
+ struct rsi_91x_usbdev {
+ 	struct rsi_thread rx_thread;
+ 	u8 endpoint;
+ 	struct usb_device *usbdev;
+ 	struct usb_interface *pfunction;
+-	struct urb *rx_usb_urb[MAX_RX_URBS];
++	struct rx_usb_ctrl_block rx_cb[MAX_RX_URBS];
+ 	u8 *tx_buffer;
+ 	__le16 bulkin_size;
+ 	u8 bulkin_endpoint_addr;
 -- 
 2.7.4
