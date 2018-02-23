@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:36608 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753167AbeBSPap (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 10:30:45 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <Adham.Abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 11/14] staging: wilc1000: rename ListenTimerCB to avoid camelCase
-Date: Mon, 19 Feb 2018 20:59:41 +0530
-Message-ID: <1519054184-14301-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180219_163049_138551_5EBB615F)
-In-Reply-To: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519054184-14301-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:44394 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750903AbeBWJGI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Feb 2018 04:06:08 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 1/4] mac80211: drop frames with unexpected DS bits from fast-rx to slow path
+Date: Fri, 23 Feb 2018 10:06:03 +0100
+Message-Id: <20180223090606.55726-1-nbd@nbd.name> (sfid-20180223_100632_523821_3E981083)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+Fixes rx for 4-addr packets in AP mode
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6e39766..6dd1061 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2362,7 +2362,7 @@ static u32 handle_listen_state_expired(struct wilc_vif *vif,
- 	return result;
- }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3dc162ddc3a6..1c947e005434 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3937,7 +3937,7 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
+ 	if ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FROMDS |
+ 					      IEEE80211_FCTL_TODS)) !=
+ 	    fast_rx->expected_ds_bits)
+-		goto drop;
++		return false;
  
--static void ListenTimerCB(struct timer_list *t)
-+static void listen_timer_cb(struct timer_list *t)
- {
- 	struct host_if_drv *hif_drv = from_timer(hif_drv, t,
- 						      remain_on_ch_timer);
-@@ -3387,7 +3387,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 
- 	timer_setup(&hif_drv->scan_timer, timer_scan_cb, 0);
- 	timer_setup(&hif_drv->connect_timer, timer_connect_cb, 0);
--	timer_setup(&hif_drv->remain_on_ch_timer, ListenTimerCB, 0);
-+	timer_setup(&hif_drv->remain_on_ch_timer, listen_timer_cb, 0);
- 
- 	mutex_init(&hif_drv->cfg_values_lock);
- 	mutex_lock(&hif_drv->cfg_values_lock);
+ 	/* assign the key to drop unencrypted frames (later)
+ 	 * and strip the IV/MIC if necessary
 -- 
-2.7.4
+2.14.2
