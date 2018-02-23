@@ -1,48 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:52722 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1033445AbeBOPIA (ORCPT
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:46359 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751580AbeBWQXg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 10:08:00 -0500
-Subject: Re: [PATCH 1/1] ath10k: add LED and GPIO controlling support for
- various chipsets
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <1518684977-14607-1-git-send-email-govinds@codeaurora.org>
- <ea35ce69-a016-2475-6c17-eba396827147@dd-wrt.com>
- <189869316.iC7P1rB6Jj@bentobox>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <389a3180-dbf7-6965-b425-2d6c89be2faf@dd-wrt.com> (sfid-20180215_160803_838364_029452A0)
-Date: Thu, 15 Feb 2018 16:07:54 +0100
+        Fri, 23 Feb 2018 11:23:36 -0500
+Received: by mail-lf0-f54.google.com with SMTP id r80so13122049lfe.13
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Feb 2018 08:23:35 -0800 (PST)
+Subject: Re: [PATCH v2] cfg80211/nl80211: add DFS offload flag
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Dmitry Lebed <dlebed@quantenna.com>
+References: <20180222091513.25456-1-sergey.matyukevich.os@quantenna.com>
+ <1519385531.2231.12.camel@sipsolutions.net>
+From: Dmitry Lebed <lebed.dmitry@gmail.com>
+Message-ID: <1a3a0b4d-a20b-a53f-1a38-808ba062973e@gmail.com> (sfid-20180223_172340_411508_AD327598)
+Date: Fri, 23 Feb 2018 19:23:32 +0300
 MIME-Version: 1.0
-In-Reply-To: <189869316.iC7P1rB6Jj@bentobox>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1519385531.2231.12.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> Looks like your mail program has eaten the patch [1]. It is also not clear why
-> it was posted as reply to the "dt: bindings: add bindings for wcn3990 wifi
-> block" patch. :)
+23.02.2018 14:32, Johannes Berg wrote:
+> On Thu, 2018-02-22 at 12:15 +0300, Sergey Matyukevich wrote:
+>> + * @NL80211_EXT_FEATURE_DFS_OFFLOAD: HW/driver will offload DFS actions.
+>> + *	Device or driver will do all DFS-related actions by itself,
+>> + *	informing user-space about CAC progress, radar detection event,
+>> + *	channel change triggered by radar detection event.
+>> + *	No need to start CAC from user-space, no need to react to
+>> + *	"radar detected" event.
+> The "channel change" part bothers me a bit - isn't normally hostapd
+> very much in control of the channel? How does it even get notified of
+> the new channel? How can you configure the parameters like how many
+> beacons to include the (E)CSA IE for, and whether to add ECSA or not
+> etc?
 >
-> Kind regards,
-> 	Sven
-> [1] https://www.kernel.org/doc/html/v4.15/process/email-clients.html
+> johannes
 
-trying to fix it right now :-)
-i hate the git commands. takes longer to send a email, than just 
-developing the patch itself :-)
+hostapd will be notified with NL80211_CMD_CH_SWITCH_NOTIFY event
+and it already has a handler for this event and looks like it works as 
+expected.
+In case of radar detection, userspace (hostapd) should receive two 
+events (with DFS offload enabled):
+1. RADAR_DETECT - and in case of DFS_OFFLOAD flag turned on don't do any CSA
+2. CH_SWITCH_NOTIFY - at the moment when HW will switch channel as a 
+reaction
+ Â Â Â  to radar event
 
+Currently, all CSA will be sent with default parameters. If it's crucial 
+to tune e.g. TBTT
+count, then let's add it with a separate commit later, when DFS offload 
+will be
+implemented in the whole SW stack (driver/kernel/userspace).
 
--- 
-Mit freundlichen Grüssen / Regards
+DFS offload should be quite useful and should fix some issues in a 
+repeater configuration.
+There are a number of issues which are hard to fix without DFS offload 
+feature:
+e.g. if repeater has detected a radar and sent radar report frame to 
+master AP,
+master AP will reply with CSA, but hostapd will try to change channel to 
+different channel.
 
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Regards,
+Dmitry
