@@ -1,144 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:52329 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752239AbeBPEf5 (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:45557 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751446AbeBXPy2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 23:35:57 -0500
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: Julian Calaby <julian.calaby@gmail.com>,
-        Govind Singh <govinds@codeaurora.org>
-CC: devicetree <devicetree@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: RE: [PATCH 13/13] dt: bindings: add bindings for wcn3990 wifi block
-Date: Fri, 16 Feb 2018 04:35:26 +0000
-Message-ID: <02165443f67d4e938ae4fdf69edbd1b7@aphydexm01b.ap.qualcomm.com> (sfid-20180216_053607_988730_CE2EE8A2)
-References: <1518684977-14607-1-git-send-email-govinds@codeaurora.org>
- <CAGRGNgVtOuPwejDi-1Bux+1mGTTup0Mcf4ED-OBcn3z8=atpNQ@mail.gmail.com>
-In-Reply-To: <CAGRGNgVtOuPwejDi-1Bux+1mGTTup0Mcf4ED-OBcn3z8=atpNQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Sat, 24 Feb 2018 10:54:28 -0500
+Received: by mail-wr0-f195.google.com with SMTP id p104so16935362wrc.12
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Feb 2018 07:54:28 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] mt76: add mt76_init_stream_cap routine
+Date: Sat, 24 Feb 2018 16:54:13 +0100
+Message-Id: <20180224155414.31063-3-lorenzo.bianconi@redhat.com> (sfid-20180224_165444_105689_21A9C038)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> You've omitted the "qcom," you specify above.
-Thanks, Julian, I will correct this in v2 revision.
+Add mt76_init_stream_cap utility routine to set ht/vht sta capabilities
+related to number of streams currently used by the device
+(it will be used by mac80211 set_antenna callback)
 
-Thanks,
-Govind
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 56 +++++++++++++++++++--------
+ 1 file changed, 39 insertions(+), 17 deletions(-)
 
------Original Message-----
-From: ath10k [mailto:ath10k-bounces@lists.infradead.org] On Behalf Of Julia=
-n Calaby
-Sent: Thursday, February 15, 2018 7:36 PM
-To: Govind Singh <govinds@codeaurora.org>
-Cc: devicetree <devicetree@vger.kernel.org>; linux-wireless <linux-wireless=
-@vger.kernel.org>; ath10k@lists.infradead.org
-Subject: Re: [PATCH 13/13] dt: bindings: add bindings for wcn3990 wifi bloc=
-k
-
-Hi Govind,
-
-On Thu, Feb 15, 2018 at 7:56 PM, Govind Singh <govinds@codeaurora.org> wrot=
-e:
-> Add device tree binding documentation details for wcn3990 wifi block=20
-> present in Qualcomm SDM845/APQ8098 SoC into "qcom,ath10k.txt".
->
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  .../bindings/net/wireless/qcom,ath10k.txt          | 35 ++++++++++++++++=
-++++++
->  1 file changed, 35 insertions(+)
->
-> diff --git=20
-> a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt=20
-> b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> index 3d2a031..07b0f13 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> @@ -4,6 +4,7 @@ Required properties:
->  - compatible: Should be one of the following:
->         * "qcom,ath10k"
->         * "qcom,ipq4019-wifi"
-> +       * "qcom,wcn3990-wifi"
->
->  PCI based devices uses compatible string "qcom,ath10k" and takes=20
-> calibration  data along with board specific data via "qcom,ath10k-calibra=
-tion-data".
-> @@ -18,8 +19,11 @@ In general, entry=20
-> "qcom,ath10k-pre-calibration-data" and  "qcom,ath10k-calibration-data"=20
-> conflict with each other and only one  can be provided per device.
->
-> +SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-w=
-ifi".
-> +
->  Optional properties:
->  - reg: Address and length of the register set for the device.
-> +- reg-names: Names of the memory regions defined in reg entry.
->  - resets: Must contain an entry for each entry in reset-names.
->            See ../reset/reseti.txt for details.
->  - reset-names: Must include the list of following reset names, @@=20
-> -49,6 +53,12 @@ Optional properties:
->                                  hw versions.
->  - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
->                                      the length can vary between hw versi=
-ons.
-> +- qcom,<supply-name>-supply: handle to the regulator device tree node
-> +                          optional "supply-name" is "vdd-0.8-cx-mx".
-> +- qcom,<supply>-config: Specifies voltage levels for supply. Should be
-> +                         specified in pairs (min, max), units uV.  There=
- can
-> +                          be optional load in uA and Regulator settle de=
-lay in
-> +                          uS.
->
->  Example (to supply the calibration data alone):
->
-> @@ -119,3 +129,28 @@ wifi0: wifi@a000000 {
->         qcom,msi_base =3D <0x40>;
->         qcom,ath10k-pre-calibration-data =3D [ 01 02 03 ... ];  };
-> +
-> +Example (to supply wcn3990 SoC wifi block details):
-> +
-> +qcom,msm_ath10k@18000000 {
-> +               compatible =3D "qcom,wcn3990-wifi";
-> +               reg =3D <0x18800000 0x800000>;
-> +               reg-names =3D "membase";
-> +               clocks =3D <&clock_gcc clk_aggre2_noc_clk>;
-> +               clock-names =3D "smmu_aggre2_noc_clk"
-> +               interrupts =3D
-> +                          <0 130 0 /* CE0 */ >,
-> +                          <0 131 0 /* CE1 */ >,
-> +                          <0 132 0 /* CE2 */ >,
-> +                          <0 133 0 /* CE3 */ >,
-> +                          <0 134 0 /* CE4 */ >,
-> +                          <0 135 0 /* CE5 */ >,
-> +                          <0 136 0 /* CE6 */ >,
-> +                          <0 137 0 /* CE7 */ >,
-> +                          <0 138 0 /* CE8 */ >,
-> +                          <0 139 0 /* CE9 */ >,
-> +                          <0 140 0 /* CE10 */ >,
-> +                          <0 141 0 /* CE11 */ >;
-> +               vdd-0.8-cx-mx-supply =3D <&pm8998_l5>;
-
-You've omitted the "qcom," you specify above.
-
-> +               qcom,vdd-0.8-cx-mx-config =3D <800000 800000 2400 1000>;=
-=20
-> +};
-> --
-> 1.9.1
->
-
-Thanks,
-
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-
-_______________________________________________
-ath10k mailing list
-ath10k@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/ath10k
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index ec94b86a37fd..a2a382a13466 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -119,6 +119,43 @@ static int mt76_led_init(struct mt76_dev *dev)
+ 	return devm_led_classdev_register(dev->dev, &dev->led_cdev);
+ }
+ 
++static void mt76_init_stream_cap(struct mt76_dev *dev,
++				 struct ieee80211_supported_band *sband,
++				 bool vht)
++{
++	struct ieee80211_sta_ht_cap *ht_cap = &sband->ht_cap;
++	int i, nstream = __sw_hweight8(dev->antenna_mask);
++	struct ieee80211_sta_vht_cap *vht_cap;
++	u16 mcs_map = 0;
++
++	if (nstream > 1)
++		ht_cap->cap |= IEEE80211_HT_CAP_TX_STBC;
++	else
++		ht_cap->cap &= ~IEEE80211_HT_CAP_TX_STBC;
++
++	for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
++		ht_cap->mcs.rx_mask[i] = i < nstream ? 0xff : 0;
++
++	if (!vht)
++		return;
++
++	vht_cap = &sband->vht_cap;
++	if (nstream > 1)
++		vht_cap->cap |= IEEE80211_VHT_CAP_TXSTBC;
++	else
++		vht_cap->cap &= ~IEEE80211_VHT_CAP_TXSTBC;
++
++	for (i = 0; i < 8; i++) {
++		if (i < nstream)
++			mcs_map |= (IEEE80211_VHT_MCS_SUPPORT_0_9 << (i * 2));
++		else
++			mcs_map |=
++				(IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2));
++	}
++	vht_cap->vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
++	vht_cap->vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
++}
++
+ static int
+ mt76_init_sband(struct mt76_dev *dev, struct mt76_sband *msband,
+ 		const struct ieee80211_channel *chan, int n_chan,
+@@ -128,7 +165,6 @@ mt76_init_sband(struct mt76_dev *dev, struct mt76_sband *msband,
+ 	struct ieee80211_sta_ht_cap *ht_cap;
+ 	struct ieee80211_sta_vht_cap *vht_cap;
+ 	void *chanlist;
+-	u16 mcs_map;
+ 	int size;
+ 
+ 	size = n_chan * sizeof(*chan);
+@@ -153,34 +189,20 @@ mt76_init_sband(struct mt76_dev *dev, struct mt76_sband *msband,
+ 		       IEEE80211_HT_CAP_GRN_FLD |
+ 		       IEEE80211_HT_CAP_SGI_20 |
+ 		       IEEE80211_HT_CAP_SGI_40 |
+-		       IEEE80211_HT_CAP_TX_STBC |
+ 		       (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
+ 
+-	ht_cap->mcs.rx_mask[0] = 0xff;
+-	ht_cap->mcs.rx_mask[1] = 0xff;
+ 	ht_cap->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
+ 	ht_cap->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+ 	ht_cap->ampdu_density = IEEE80211_HT_MPDU_DENSITY_4;
+ 
++	mt76_init_stream_cap(dev, sband, vht);
++
+ 	if (!vht)
+ 		return 0;
+ 
+ 	vht_cap = &sband->vht_cap;
+ 	vht_cap->vht_supported = true;
+-
+-	mcs_map = (IEEE80211_VHT_MCS_SUPPORT_0_9 << (0 * 2)) |
+-		  (IEEE80211_VHT_MCS_SUPPORT_0_9 << (1 * 2)) |
+-		  (IEEE80211_VHT_MCS_NOT_SUPPORTED << (2 * 2)) |
+-		  (IEEE80211_VHT_MCS_NOT_SUPPORTED << (3 * 2)) |
+-		  (IEEE80211_VHT_MCS_NOT_SUPPORTED << (4 * 2)) |
+-		  (IEEE80211_VHT_MCS_NOT_SUPPORTED << (5 * 2)) |
+-		  (IEEE80211_VHT_MCS_NOT_SUPPORTED << (6 * 2)) |
+-		  (IEEE80211_VHT_MCS_NOT_SUPPORTED << (7 * 2));
+-
+-	vht_cap->vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
+-	vht_cap->vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
+ 	vht_cap->cap |= IEEE80211_VHT_CAP_RXLDPC |
+-			IEEE80211_VHT_CAP_TXSTBC |
+ 			IEEE80211_VHT_CAP_RXSTBC_1 |
+ 			IEEE80211_VHT_CAP_SHORT_GI_80;
+ 
+-- 
+2.16.2
