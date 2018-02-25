@@ -1,84 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 9pmail.ess.barracuda.com ([64.235.150.225]:33132 "EHLO
-        9pmail.ess.barracuda.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752281AbeBLP2v (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:38791 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751653AbeBYMkB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 10:28:51 -0500
-Date: Mon, 12 Feb 2018 15:22:32 +0000
-From: James Hogan <james.hogan@mips.com>
-To: <stable@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-CC: Adric Blake <promarbler14@gmail.com>, <m@bues.ch>,
-        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: B43 driver no longer works in Linux 4.15 (bisected)
-Message-ID: <20180212152231.GK11819@jhogan-linux.mipstec.com> (sfid-20180212_162949_631394_F146F9D9)
-References: <CAE1jjefE1qjgcHMik36Na0OYoFON+kCi5cEDSq=y11HdsyPn0Q@mail.gmail.com>
- <20180205183324.GD8479@saruman>
- <87sha68cv9.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="lZZ4ablUVnt2XgAh"
-In-Reply-To: <87sha68cv9.fsf@kamboji.qca.qualcomm.com>
+        Sun, 25 Feb 2018 07:40:01 -0500
+Received: by mail-wm0-f67.google.com with SMTP id z9so12270544wmb.3
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Feb 2018 04:40:01 -0800 (PST)
+From: Romain Naour <romain.naour@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Romain Naour <romain.naour@gmail.com>
+Subject: [PATCH] cfg80211: add missing dependency to CFG80211 suboptions
+Date: Sun, 25 Feb 2018 13:39:56 +0100
+Message-Id: <20180225123956.32161-1-romain.naour@gmail.com> (sfid-20180225_134006_287675_0AB904E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---lZZ4ablUVnt2XgAh
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+New options introduced by [1] are still enabled even if
+CFG80211 is disabled.
 
-On Mon, Feb 12, 2018 at 05:08:10PM +0200, Kalle Valo wrote:
-> James Hogan <jhogan@kernel.org> writes:
-> > On Mon, Feb 05, 2018 at 01:23:31PM -0500, Adric Blake wrote:
-> >> I bisected to this "first bad commit:"
-> >>=20
-> >> commit 58eae1416b804d900014d84feadda7195007cc30
-> >> Author: James Hogan <jhogan@kernel.org>
-> >> Date:   Mon Jan 15 21:17:14 2018 +0000
-> >>=20
-> >>     ssb: Disable PCI host for PCI_DRIVERS_GENERIC
-> >
-> > Yes, really sorry about that and thanks for going to the effort of
-> > bisecting. There is a patch here:
-> > https://patchwork.kernel.org/patch/10185397/
-> >
-> > which is applied to linux-next as commit
-> > a9e6d44ddeccd3522670e641f1ed9b068e746ff7, and is tagged for stable,
-> > though I've just noticed the stable email address is incorrect... I'll
-> > make sure it gets applied to the 4.15 stable branch though as soon as
-> > I notice its merged.
->=20
-> The commit is now in v4.16-rc1.
+.config:
+    # CONFIG_CFG80211 is not set
+    CONFIG_CFG80211_REQUIRE_SIGNED_REGDB=y
+    CONFIG_CFG80211_USE_KERNEL_REGDB_KEYS=y
+    # CONFIG_LIB80211 is not set
 
-Yes, thanks,
+When CFG80211_REQUIRE_SIGNED_REGDB is enabled, it select
+SYSTEM_DATA_VERIFICATION which select SYSTEM_TRUSTED_KEYRING
+that need extract-cert tool. extract-cert needs some openssl
+headers to be installed on the build machine.
 
-Greg: Please can commit a9e6d44ddeccd3522670e641f1ed9b068e746ff7 ("ssb:
-Do not disable PCI host on non-Mips") be applied to 4.15 stable (the
-wrong stable email address was Cc'd in the commit message).
+Instead of adding missing "depends on CFG80211", it
+easier to use a 'if' block around all options related
+to CFG80211.
 
-Thanks
-James
+[1] 90a53e4432b12288316efaa5f308adafb8d304b0
 
---lZZ4ablUVnt2XgAh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Signed-off-by: Romain Naour <romain.naour@gmail.com>
+---
+ net/wireless/Kconfig | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEd80NauSabkiESfLYbAtpk944dnoFAlqBsTEACgkQbAtpk944
-dnoW7g/7BauajOVfRAoPO4fV0Jq9YkV0rKzOVfBHfL8IwQA4O12BHRupdIXNfe8t
-pdni0H560mHlhlX3FIl6kXZGQNMDAQpAyErsW7vFkk2/SJWrP1gEMQImPMgROdKp
-mCVIv2iOtIke106hAdR8YaGyBE4iUefNpjYkuYimnTEI1DvgweDWUrMUuejg/6LO
-fEiKvikaBEG7W/XivabTvPn/BBcRRnle2LtVH4PcXkvecX+6DCDu/wcSVfBceRAQ
-1wdhPB9a2pPcg+seCMgvAOnHWqTYr6eGQOjuRCUIBcHJ+PTi1pNU8jn07PntjZ6D
-YyvFX4ebCPogVfOtUJ/tz3IR2s24LDlpylXPysBhaDWNgkyggpmpiObfO6hlfagL
-1ohbZbCMunS3vmE/dwn3lsiVLu90srvP7i4+8SU1IkI24RPpcyUEjZ0nVyB25+qj
-ivEEe3rhNDaigESKBdkPYSoReVT+NE58lwT/7IIn606A4PkEVIgucxhA+P/gKe9s
-Ef6Es6DHjnQ1tUmitCBUZc2vHSMEty7xx4mtu4If+XlBjbilX/Cz9xOLRdK/irAh
-k//xovujDYCiAKKJZRINhmE3ltTWY1tyaWsGm6fNUCCQ4XsgK8AGHtbdDVkm12Oh
-6zdFpbM7Rw4nWYZycTu4TF9xyFwP92PU3DTSLTXxcLQ9NQq8ZRs=
-=eg0W
------END PGP SIGNATURE-----
-
---lZZ4ablUVnt2XgAh--
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 1abcc4fc4df1..41722046b937 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -34,9 +34,10 @@ config CFG80211
+ 
+ 	  When built as a module it will be called cfg80211.
+ 
++if CFG80211
++
+ config NL80211_TESTMODE
+ 	bool "nl80211 testmode command"
+-	depends on CFG80211
+ 	help
+ 	  The nl80211 testmode command helps implementing things like
+ 	  factory calibration or validation tools for wireless chips.
+@@ -51,7 +52,6 @@ config NL80211_TESTMODE
+ 
+ config CFG80211_DEVELOPER_WARNINGS
+ 	bool "enable developer warnings"
+-	depends on CFG80211
+ 	default n
+ 	help
+ 	  This option enables some additional warnings that help
+@@ -68,7 +68,7 @@ config CFG80211_DEVELOPER_WARNINGS
+ 
+ config CFG80211_CERTIFICATION_ONUS
+ 	bool "cfg80211 certification onus"
+-	depends on CFG80211 && EXPERT
++	depends on EXPERT
+ 	default n
+ 	---help---
+ 	  You should disable this option unless you are both capable
+@@ -159,7 +159,6 @@ config CFG80211_REG_RELAX_NO_IR
+ 
+ config CFG80211_DEFAULT_PS
+ 	bool "enable powersave by default"
+-	depends on CFG80211
+ 	default y
+ 	help
+ 	  This option enables powersave mode by default.
+@@ -170,7 +169,6 @@ config CFG80211_DEFAULT_PS
+ 
+ config CFG80211_DEBUGFS
+ 	bool "cfg80211 DebugFS entries"
+-	depends on CFG80211
+ 	depends on DEBUG_FS
+ 	---help---
+ 	  You can enable this if you want debugfs entries for cfg80211.
+@@ -180,7 +178,6 @@ config CFG80211_DEBUGFS
+ config CFG80211_CRDA_SUPPORT
+ 	bool "support CRDA" if EXPERT
+ 	default y
+-	depends on CFG80211
+ 	help
+ 	  You should enable this option unless you know for sure you have no
+ 	  need for it, for example when using internal regdb (above) or the
+@@ -190,7 +187,6 @@ config CFG80211_CRDA_SUPPORT
+ 
+ config CFG80211_WEXT
+ 	bool "cfg80211 wireless extensions compatibility" if !CFG80211_WEXT_EXPORT
+-	depends on CFG80211
+ 	select WEXT_CORE
+ 	default y if CFG80211_WEXT_EXPORT
+ 	help
+@@ -199,11 +195,12 @@ config CFG80211_WEXT
+ 
+ config CFG80211_WEXT_EXPORT
+ 	bool
+-	depends on CFG80211
+ 	help
+ 	  Drivers should select this option if they require cfg80211's
+ 	  wext compatibility symbols to be exported.
+ 
++endif # CFG80211
++
+ config LIB80211
+ 	tristate
+ 	default n
+-- 
+2.14.3
