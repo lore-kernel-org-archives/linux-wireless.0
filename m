@@ -1,101 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51392 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752130AbeB0OFm (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36568 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751792AbeBYOwh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 09:05:42 -0500
-From: Ramon Fried <rfried@codeaurora.org>
-To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH v3] wcn36xx: reduce verbosity of drivers messages
-Date: Tue, 27 Feb 2018 16:05:35 +0200
-Message-Id: <20180227140535.4794-1-rfried@codeaurora.org> (sfid-20180227_150547_904469_F3F53EC6)
+        Sun, 25 Feb 2018 09:52:37 -0500
+Received: by mail-wm0-f67.google.com with SMTP id 188so12095586wme.1
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Feb 2018 06:52:36 -0800 (PST)
+Subject: Re: [PATCH resend] brcmfmac: p2p and normal ap access are not always
+ possible at the same time
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <20170526105747.16874-1-hdegoede@redhat.com>
+ <20170526105747.16874-2-hdegoede@redhat.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <8a61e3ad-3949-68dc-bed9-09f61ab6b647@redhat.com> (sfid-20180225_155241_597552_B4842BCE)
+Date: Sun, 25 Feb 2018 15:52:34 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170526105747.16874-2-hdegoede@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever the WLAN interface is started the FW
-version and caps are printed.
-The caps now will be displayed only in debug mode.
-Firmware version will be displayed only once on first
-startup of the interface.
+Hi,
 
-Change-Id: I4db6ea7f384fe15eebe4c3ddb1d1ccab00094332
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
----
-v2: print the firwmare version as info but only
-	onetime.
-v3: change the static variable to a struct variable.
+On 26-05-17 12:57, Hans de Goede wrote:
+> The firmware responding with -EBUSY when trying to add an extra virtual-if
+> is a normal thing, do not print an error for this.
+> 
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 
- drivers/net/wireless/ath/wcn36xx/main.c    |  3 ++-
- drivers/net/wireless/ath/wcn36xx/smd.c     | 18 ++++++++++--------
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 ++
- 3 files changed, 14 insertions(+), 9 deletions(-)
+I'm now seeing this on another device too, but this time the error
+thrown is -EBADE, this seems to be new with recent kernels:
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index ab5be6d2c691..bfe9062bfa52 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -261,7 +261,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
- 
- 	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
- 		if (get_feat_caps(wcn->fw_feat_caps, i))
--			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
-+			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
- 	}
- }
- 
-@@ -1283,6 +1283,7 @@ static int wcn36xx_probe(struct platform_device *pdev)
- 	wcn = hw->priv;
- 	wcn->hw = hw;
- 	wcn->dev = &pdev->dev;
-+	wcn->first_boot = true;
- 	mutex_init(&wcn->conf_mutex);
- 	mutex_init(&wcn->hal_mutex);
- 	mutex_init(&wcn->scan_lock);
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 2a4871ca9c72..1a5b4d57c0ac 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -409,15 +409,17 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
- 	wcn->fw_minor = rsp->start_rsp_params.version.minor;
- 	wcn->fw_major = rsp->start_rsp_params.version.major;
- 
--	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
--		     wcn->wlan_version, wcn->crm_version);
--
--	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
--		     wcn->fw_major, wcn->fw_minor,
--		     wcn->fw_version, wcn->fw_revision,
--		     rsp->start_rsp_params.stations,
--		     rsp->start_rsp_params.bssids);
-+	if (wcn->first_boot) {
-+		wcn->first_boot = false;
-+		wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
-+			     wcn->wlan_version, wcn->crm_version);
- 
-+		wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
-+			     wcn->fw_major, wcn->fw_minor,
-+			     wcn->fw_version, wcn->fw_revision,
-+			     rsp->start_rsp_params.stations,
-+			     rsp->start_rsp_params.bssids);
-+	}
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 81017e6703b4..5854adf43f3a 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -192,6 +192,8 @@ struct wcn36xx {
- 	u8			crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
- 	u8			wlan_version[WCN36XX_HAL_VERSION_LENGTH + 1];
- 
-+	bool		first_boot;
-+
- 	/* IRQs */
- 	int			tx_irq;
- 	int			rx_irq;
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+[root@localhost ~]# dmesg | grep brcmfmac
+[   34.265950] usbcore: registered new interface driver brcmfmac
+[   34.266059] brcmfmac 0000:01:00.0: enabling device (0000 -> 0002)
+[   34.376468] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
+[   34.855143] brcmfmac 0000:01:00.0: Direct firmware load for brcm/brcmfmac4356-pcie.clm_blob failed with error -2
+[   34.855147] brcmfmac: brcmf_c_process_clm_blob: no clm_blob available(err=-2), device may have limited channels available
+[   34.857029] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jun  4 2017 16:50:07 version 7.35.101.6 (r702795) FWID 01-5e8eb735
+[   34.938854] brcmfmac 0000:01:00.0 wlp1s0: renamed from wlan0
+[   37.086420] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
+[   37.086431] brcmfmac: brcmf_cfg80211_add_iface: add iface p2p-dev-wlp1s0 type 10 failed: err=-52
+
+[root@localhost ~]# strings /lib/firmware/brcm/brcmfmac4356-pcie.bin | tail -n 1
+4356a2-roml/pcie-ag-msgbuf-splitrx-p2p-pno-aoe-pktfilter-keepalive-sr-mchan-pktctx-proptxstatus-ampduhostreorder-lpc-pwropt-txbf-wl11u-mfp-tdls-amsdutx-sarctrl-proxd-hs20sta-rcc-wepso-ndoe-linkstat-gscan-hchk-logtrace-roamexp-rmon Version: 7.35.101.6 (r702795) CRC: 4f3f65c5 Date: Sun 2017-06-04 16:51:38 PDT Ucode Ver: 963.316 FWID: 01-5e8eb735
+
+It would be good if we can silence these errors, or maybe at a
+minimum lower their log-level from error to warning?
+
+Regards,
+
+Hans
+
+
+> ---
+>   .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14 ++++++++++----
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     |  5 ++++-
+>   2 files changed, 14 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index cd1d6730eab7..dae88f3d041d 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -684,11 +684,17 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+>   		return ERR_PTR(-EINVAL);
+>   	}
+>   
+> -	if (IS_ERR(wdev))
+> -		brcmf_err("add iface %s type %d failed: err=%d\n",
+> -			  name, type, (int)PTR_ERR(wdev));
+> -	else
+> +	if (IS_ERR(wdev)) {
+> +		err = PTR_ERR(wdev);
+> +		if (err != -EBUSY)
+> +			brcmf_err("add iface %s type %d failed: err=%d\n",
+> +				  name, type, err);
+> +		else
+> +			brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
+> +				  name, type, err);
+> +	} else {
+>   		brcmf_cfg80211_update_proto_addr_mode(wdev);
+> +	}
+>   
+>   	return wdev;
+>   }
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> index aa299c47bfa2..1bb296ffb46f 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> @@ -2090,7 +2090,10 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
+>   	/* Initialize P2P Discovery in the firmware */
+>   	err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
+>   	if (err < 0) {
+> -		brcmf_err("set p2p_disc error\n");
+> +		if (err != -EBUSY)
+> +			brcmf_err("set p2p_disc error\n");
+> +		else
+> +			brcmf_dbg(INFO, "set p2p_disc error\n");
+>   		brcmf_fweh_p2pdev_setup(pri_ifp, false);
+>   		brcmf_cfg80211_arm_vif_event(p2p->cfg, NULL);
+>   		goto fail;
+> 
