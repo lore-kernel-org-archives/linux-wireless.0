@@ -1,89 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:21756 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751022AbeBZSNC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53472 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750762AbeBYHpH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 13:13:02 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v2 8/8] wil6210: add debugfs 'mids' file
-Date: Mon, 26 Feb 2018 20:12:18 +0200
-Message-Id: <1519668738-16912-9-git-send-email-merez@codeaurora.org> (sfid-20180226_191306_690089_34505B1C)
-In-Reply-To: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
-References: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
+        Sun, 25 Feb 2018 02:45:07 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi 2018-02-16-2
+References: <1518793739.7832.59.camel@coelho.fi>
+Date: Sun, 25 Feb 2018 09:45:02 +0200
+In-Reply-To: <1518793739.7832.59.camel@coelho.fi> (Luca Coelho's message of
+        "Fri, 16 Feb 2018 17:08:59 +0200")
+Message-ID: <87zi3xv7gh.fsf@kamboji.qca.qualcomm.com> (sfid-20180225_084510_833237_A68E324F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <liord@codeaurora.org>
+Luca Coelho <luca@coelho.fi> writes:
 
-Added a new debugfs file 'mids' to print the list of
-virtual interfaces by MAC ID (MID). Allows mapping
-between the internal MID used by FW and the actual
-network interface used by the VIF. This is needed by
-debugging tools.
+> Hi Kalle,
+>
+> Here is v2 ofmy first set of fixes for 4.16.  More details in the tag
+> description.
+>
+> This fixes a compilation problem that was found by kbuildbot (missing
+> include in in mvm.h on "iwlwifi: align timestamp cancel with timestamp
+> start").
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 7ac8ff95f48cbfa609a060fd6a1e361dd62feeb3:
+>
+>   mvpp2: fix multicast address filter (2018-02-11 22:37:04 -0500)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2018-02-16-2
 
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 37 ++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+Pulled, thanks.
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 93a99a1..8c90b31 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1495,6 +1495,42 @@ static int wil_sta_seq_open(struct inode *inode, struct file *file)
- 	.llseek		= seq_lseek,
- };
- 
-+static int wil_mids_debugfs_show(struct seq_file *s, void *data)
-+{
-+	struct wil6210_priv *wil = s->private;
-+	struct wil6210_vif *vif;
-+	struct net_device *ndev;
-+	int i;
-+
-+	mutex_lock(&wil->vif_mutex);
-+	for (i = 0; i < wil->max_vifs; i++) {
-+		vif = wil->vifs[i];
-+
-+		if (vif) {
-+			ndev = vif_to_ndev(vif);
-+			seq_printf(s, "[%d] %pM %s\n", i, ndev->dev_addr,
-+				   ndev->name);
-+		} else {
-+			seq_printf(s, "[%d] unused\n", i);
-+		}
-+	}
-+	mutex_unlock(&wil->vif_mutex);
-+
-+	return 0;
-+}
-+
-+static int wil_mids_seq_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wil_mids_debugfs_show, inode->i_private);
-+}
-+
-+static const struct file_operations fops_mids = {
-+	.open		= wil_mids_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+};
-+
- static ssize_t wil_read_file_led_cfg(struct file *file, char __user *user_buf,
- 				     size_t count, loff_t *ppos)
- {
-@@ -1749,6 +1785,7 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
- 	{"mbox",	0444,		&fops_mbox},
- 	{"vrings",	0444,		&fops_vring},
- 	{"stations", 0444,		&fops_sta},
-+	{"mids",	0444,		&fops_mids},
- 	{"desc",	0444,		&fops_txdesc},
- 	{"bf",		0444,		&fops_bf},
- 	{"mem_val",	0644,		&fops_memread},
 -- 
-1.9.1
+Kalle Valo
