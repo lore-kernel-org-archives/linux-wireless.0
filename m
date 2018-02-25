@@ -1,127 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56572 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751237AbeBMFdN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 00:33:13 -0500
-From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Venkateswara Naralasetty <vnaralas@codeaurora.org>
-Subject: [PATCHv2 1/3] cfg80211: send ack_signal to user in probe client response
-Date: Tue, 13 Feb 2018 11:03:06 +0530
-Message-Id: <1518499986-10606-1-git-send-email-vnaralas@codeaurora.org> (sfid-20180213_063619_181065_C5757F65)
+Received: from mx2.suse.de ([195.135.220.15]:36532 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751837AbeBYRy1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 25 Feb 2018 12:54:27 -0500
+Date: Sun, 25 Feb 2018 17:54:25 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: cantabile <cantabile.desu@gmail.com>
+Cc: Jakub Kicinski <kubakici@wp.pl>, mcgrof@kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt7601u: Fix system freeze after resuming from
+ hibernation
+Message-ID: <20180225175425.GL14069@wotan.suse.de> (sfid-20180225_185431_606436_CD485A47)
+References: <d9ca2742-7f85-afe3-2de6-6637eb56d9b3@gmail.com>
+ <20180214164549.72ee26c3@cakuba.netronome.com>
+ <f542e9c6-5106-c79c-6e38-7a2f50e6be2d@gmail.com>
+ <20180215134738.722654a9@cakuba.netronome.com>
+ <7cebda93-4b7a-e8b3-271f-0144c5e94248@gmail.com>
+ <20180218215520.65c1e9fd@cakuba.netronome.com>
+ <6783d9b9-3523-761f-a8b4-b87732006b3c@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6783d9b9-3523-761f-a8b4-b87732006b3c@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch provides support to get ack signal in probe client response
-and in station info from user.
+On Mon, Feb 19, 2018 at 05:01:27PM +0200, cantabile wrote:
+> On 19/02/18 07:55, Jakub Kicinski wrote:
+> > On Sat, 17 Feb 2018 13:23:29 +0200, cantabile wrote:
+> > > > Thanks for the info.  Would it be cleaner to EXPORT fw_add_devm_name()
+> > > > and just call that in case driver sees FW is already loaded?  That
+> > > > should inform the fw subsystem that we want the image around in case of
+> > > > hibernation, but there is no need to load it immediately?
+> > > 
+> > > No, I don't believe it's cleaner to expose a private function that you
+> > > don't even really need. Remember that calling request_firmware every
+> > > time your driver's probe and resume functions are called is normal. It's
+> > > the expected behaviour.
+> > 
+> > I'm asking you the extend functionality of a subsystem to be able to
+> > cleanly communicate the intent.  Not export internal functions.
+> > 
+> > Requesting firmware you don't need and risking failing probe even if FW
+> > is already pre-loaded is not correct.  Reordering you suggest is
+> > brittle and makes little logical sense unless someone guesses your use
+> > case.
+> > 
+> > Please at least try to do as advised.  Otherwise:
+> > 
+> > Nacked-by: Jakub Kicinski <kubakici@wp.pl>
+> > 
+> 
+> You're right about the reordering not making sense to someone unfamiliar
+> with the problem. I can fix that with a comment.
+> 
+> I can change the patch so that request_firmware will only make the probe
+> function fail if the firmware is not already running.
 
-Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
----
-v2:
-* addressed Johannes comments
+Note that using request_firmware() on probe typically is also not an
+outstanding idea given it delays boot. Not because looking for the firmware
+takes time, but instead because processing firmware typically does on
+the device. For instance cxgb4 is an example device where processing
+firmware takes a long time.
 
- include/net/cfg80211.h       | 7 ++++++-
- include/uapi/linux/nl80211.h | 3 +++
- net/wireless/nl80211.c       | 8 ++++++--
- 3 files changed, 15 insertions(+), 3 deletions(-)
+Delays on probe may mean the "feel good" immediate desktop coming up is delyed.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7d49cd0..56e905c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1147,6 +1147,7 @@ struct cfg80211_tid_stats {
-  * @rx_duration: aggregate PPDU duration(usecs) for all the frames from a peer
-  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
-  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
-+ * @ack_signal: signal strength (in dBm) of the last ACK frame.
-  */
- struct station_info {
- 	u64 filled;
-@@ -1191,6 +1192,7 @@ struct station_info {
- 	u64 rx_duration;
- 	u8 rx_beacon_signal_avg;
- 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
-+	s8 ack_signal;
- };
- 
- #if IS_ENABLED(CONFIG_CFG80211)
-@@ -5838,10 +5840,13 @@ bool cfg80211_rx_unexpected_4addr_frame(struct net_device *dev,
-  * @addr: the address of the peer
-  * @cookie: the cookie filled in @probe_client previously
-  * @acked: indicates whether probe was acked or not
-+ * @ack_signal: signal strength (in dBm) of the ACK frame.
-+ * @is_valid_ack_signal: indicates the ack_signal is valid or not.
-  * @gfp: allocation flags
-  */
- void cfg80211_probe_status(struct net_device *dev, const u8 *addr,
--			   u64 cookie, bool acked, gfp_t gfp);
-+			   u64 cookie, bool acked, s32 ack_signal,
-+			   bool is_valid_ack_signal, gfp_t gfp);
- 
- /**
-  * cfg80211_report_obss_beacon - report beacon from other APs
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index ca3d5a6..c13c843 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2626,6 +2626,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_EXTERNAL_AUTH_SUPPORT,
- 
- 	NL80211_ATTR_NSS,
-+	NL80211_ATTR_ACK_SIGNAL,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-@@ -2947,6 +2948,7 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_RX_DURATION: aggregate PPDU duration for all frames
-  *	received from the station (u64, usec)
-  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
-+ * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2985,6 +2987,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_TID_STATS,
- 	NL80211_STA_INFO_RX_DURATION,
- 	NL80211_STA_INFO_PAD,
-+	NL80211_STA_INFO_ACK_SIGNAL,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index cc6ec5b..707f4a2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4486,6 +4486,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO_U64(RX_DROP_MISC, rx_dropped_misc);
- 	PUT_SINFO_U64(BEACON_RX, rx_beacon);
- 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
-+	PUT_SINFO(ACK_SIGNAL, ack_signal, u8);
- 
- #undef PUT_SINFO
- #undef PUT_SINFO_U64
-@@ -15006,7 +15007,8 @@ void cfg80211_sta_opmode_change_notify(struct net_device *dev, const u8 *mac,
- EXPORT_SYMBOL(cfg80211_sta_opmode_change_notify);
- 
- void cfg80211_probe_status(struct net_device *dev, const u8 *addr,
--			   u64 cookie, bool acked, gfp_t gfp)
-+			   u64 cookie, bool acked, s32 ack_signal,
-+			   bool is_valid_ack_signal, gfp_t gfp)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-@@ -15031,7 +15033,9 @@ void cfg80211_probe_status(struct net_device *dev, const u8 *addr,
- 	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
- 	    nla_put_u64_64bit(msg, NL80211_ATTR_COOKIE, cookie,
- 			      NL80211_ATTR_PAD) ||
--	    (acked && nla_put_flag(msg, NL80211_ATTR_ACK)))
-+	    (acked && nla_put_flag(msg, NL80211_ATTR_ACK)) ||
-+	    (is_valid_ack_signal && nla_put_s32(msg, NL80211_ATTR_ACK_SIGNAL,
-+						ack_signal)))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
--- 
-2.7.4
+Specially if its networking... I see no reason why to process firmware on probe.
+
+If one can use a workqueue to process verifying if it needs firmware and loading
+later, that's more advisable.
+
+Now, that's all a side topic.
+
+I will for now agree that it seems pointless to request for firmware always
+even if you don't need to, and all you want is to just cache the firmware
+on suspend. So I welcome a patch but the justification for it really needs to
+be documented very well, and the documentation extended as such. In fact
+maybe rename the function to something more sensible.
+
+Another use case for the firmware cache (which we need to add the documentation)
+is that for hibernation we suspend all devices first, get a snapshot, and then
+resume devices so we can then write the snapshot to disk. On that resume step
+I don't think devices have access to the hard drive for firmware, so cache is
+all we have. This may need some confirmation but I suspect this is the case.
+Drivers needing firmware on resume for hibernation may need to cache their
+firmware.
+
+I want to understand the case where the firmware is *not* available on resume?
+Why did that happen? I seem to have read that on a fresh reboot the firmware
+was not needed, and so on probe request_firmware() was not called? Why would
+firmware not be required on a reboot?
+
+ Luis
