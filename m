@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db5eur01on0114.outbound.protection.outlook.com ([104.47.2.114]:48920
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1030221AbeBNNvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Feb 2018 08:51:15 -0500
-From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: inform wireless layer when frame RSSI is invalid
-Date: Wed, 14 Feb 2018 13:51:12 +0000
-Message-ID: <AM4PR0101MB2305288C51F159AE69BD78CCE4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180214_145120_320982_E6EA9A2B)
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:45500 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752565AbeBZJyi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Feb 2018 04:54:38 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Bas Vermeulen <bvermeul@blackstar.nl>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH] ath9k: introduce endian_check module parameter
+References: <20180226090917.7iabysywbv6h4rqr@alienware17>
+Date: Mon, 26 Feb 2018 11:54:30 +0200
+In-Reply-To: <20180226090917.7iabysywbv6h4rqr@alienware17> (Bas Vermeulen's
+        message of "Mon, 26 Feb 2018 10:09:17 +0100")
+Message-ID: <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com> (sfid-20180226_105752_616206_248886AA)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-V2hlbiB0aGUgbG93LWxldmVsIGRyaXZlciByZXR1cm5zIGFuIGludmFsaWQgUlNTSSBpbmRpY2F0
-aW9uLA0Kc2V0IHRoZSBzaWduYWwgdmFsdWUgdG8gMCBhcyBhbiBpbmRpY2F0aW9uIHRvIHRoZSB1
-cHBlciBsYXllci4NCg0KQWxzbywgc2tpcCBhdmVyYWdlIGxldmVsIGNvbXB1dGF0aW9uIGlmIHNp
-Z25hbCBpcyBpbnZhbGlkLg0KDQpTaWduZWQtb2ZmLWJ5OiBKZWFuIFBpZXJyZSBUT1NPTkkgPGpw
-LnRvc29uaUBhY2tzeXMuZnI+DQotLS0NCldBUk5JTkc6DQpUaGlzIHBhdGNoIGFwcGxpZXMgdG8g
-d2lyZWxlc3MtdGVzdGluZyByZXRyaWV2ZWQgb24gRmViIDE0LCAyMDE4IGJ1dCBpdCB3YXMgdGVz
-dGVkIG9uDQphIG11Y2ggb2xkZXIgdmVyc2lvbiAoT3BlbldydCBrZXJuZWwgMy4xOCB3aXRoIGNv
-bXBhdC13aXJlbGVzcy0yMDE1LTA3LTIxKS4NCg0KIG5ldC9tYWM4MDIxMS9tbG1lLmMgfCAgICAz
-ICsrKw0KIG5ldC9tYWM4MDIxMS9yeC5jICAgfCAgICA2ICsrKystLQ0KIG5ldC9tYWM4MDIxMS9z
-Y2FuLmMgfCAgICA0ICsrKy0NCiAzIGZpbGVzIGNoYW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDMg
-ZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9uZXQvbWFjODAyMTEvbWxtZS5jIGIvbmV0L21h
-YzgwMjExL21sbWUuYw0KaW5kZXggMzliNjYwYi4uOTlmZjY3OSAxMDA2NDQNCi0tLSBhL25ldC9t
-YWM4MDIxMS9tbG1lLmMNCisrKyBiL25ldC9tYWM4MDIxMS9tbG1lLmMNCkBAIC0zMzY4LDYgKzMz
-NjgsOCBAQCBzdGF0aWMgdm9pZCBpZWVlODAyMTFfcnhfbWdtdF9iZWFjb24oc3RydWN0IGllZWU4
-MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGEsDQogCWJzc2lkID0gaWZtZ2QtPmFzc29jaWF0ZWQtPmJz
-c2lkOw0KIA0KIAkvKiBUcmFjayBhdmVyYWdlIFJTU0kgZnJvbSB0aGUgQmVhY29uIGZyYW1lcyBv
-ZiB0aGUgY3VycmVudCBBUCAqLw0KKwlpZiAocnhfc3RhdHVzLT5mbGFnICYgUlhfRkxBR19OT19T
-SUdOQUxfVkFMKQ0KKwkJZ290byBza2lwX3NpZ25hbF9wcm9jZXNzaW5nOw0KIAlpZiAoaWZtZ2Qt
-PmZsYWdzICYgSUVFRTgwMjExX1NUQV9SRVNFVF9TSUdOQUxfQVZFKSB7DQogCQlpZm1nZC0+Zmxh
-Z3MgJj0gfklFRUU4MDIxMV9TVEFfUkVTRVRfU0lHTkFMX0FWRTsNCiAJCWV3bWFfYmVhY29uX3Np
-Z25hbF9pbml0KCZpZm1nZC0+YXZlX2JlYWNvbl9zaWduYWwpOw0KQEAgLTM0NTQsNiArMzQ1Niw3
-IEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9yeF9tZ210X2JlYWNvbihzdHJ1Y3QgaWVlZTgwMjEx
-X3N1Yl9pZl9kYXRhICpzZGF0YSwNCiAJCQkJc2lnLCBHRlBfS0VSTkVMKTsNCiAJCX0NCiAJfQ0K
-K3NraXBfc2lnbmFsX3Byb2Nlc3Npbmc6DQogDQogCWlmIChpZm1nZC0+ZmxhZ3MgJiBJRUVFODAy
-MTFfU1RBX0NPTk5FQ1RJT05fUE9MTCkgew0KIAkJbWxtZV9kYmdfcmF0ZWxpbWl0ZWQoc2RhdGEs
-DQpkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL3J4LmMgYi9uZXQvbWFjODAyMTEvcnguYw0KaW5k
-ZXggZTc1NWY5My4uOGQ2M2ExYiAxMDA2NDQNCi0tLSBhL25ldC9tYWM4MDIxMS9yeC5jDQorKysg
-Yi9uZXQvbWFjODAyMTEvcnguYw0KQEAgLTI3OTEsNyArMjc5MSw4IEBAIHN0YXRpYyB2b2lkIGll
-ZWU4MDIxMV9wcm9jZXNzX3NhX3F1ZXJ5X3JlcShzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRh
-ICpzZGF0YSwNCiAJICAgICEocngtPmZsYWdzICYgSUVFRTgwMjExX1JYX0JFQUNPTl9SRVBPUlRF
-RCkpIHsNCiAJCWludCBzaWcgPSAwOw0KIA0KLQkJaWYgKGllZWU4MDIxMV9od19jaGVjaygmcngt
-PmxvY2FsLT5odywgU0lHTkFMX0RCTSkpDQorCQlpZiAoaWVlZTgwMjExX2h3X2NoZWNrKCZyeC0+
-bG9jYWwtPmh3LCBTSUdOQUxfREJNKSAmJg0KKwkJICAgICEoc3RhdHVzLT5mbGFnICYgUlhfRkxB
-R19OT19TSUdOQUxfVkFMKSkNCiAJCQlzaWcgPSBzdGF0dXMtPnNpZ25hbDsNCiANCiAJCWNmZzgw
-MjExX3JlcG9ydF9vYnNzX2JlYWNvbihyeC0+bG9jYWwtPmh3LndpcGh5LA0KQEAgLTMxMzIsNyAr
-MzEzMyw4IEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9wcm9jZXNzX3NhX3F1ZXJ5X3JlcShzdHJ1
-Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwNCiAJICogaXQgdHJhbnNtaXR0ZWQgd2Vy
-ZSBwcm9jZXNzZWQgb3IgcmV0dXJuZWQuDQogCSAqLw0KIA0KLQlpZiAoaWVlZTgwMjExX2h3X2No
-ZWNrKCZyeC0+bG9jYWwtPmh3LCBTSUdOQUxfREJNKSkNCisJaWYgKGllZWU4MDIxMV9od19jaGVj
-aygmcngtPmxvY2FsLT5odywgU0lHTkFMX0RCTSkgJiYNCisJICAgICEoc3RhdHVzLT5mbGFnICYg
-UlhfRkxBR19OT19TSUdOQUxfVkFMKSkNCiAJCXNpZyA9IHN0YXR1cy0+c2lnbmFsOw0KIA0KIAlp
-ZiAoY2ZnODAyMTFfcnhfbWdtdCgmcngtPnNkYXRhLT53ZGV2LCBzdGF0dXMtPmZyZXEsIHNpZywN
-CmRpZmYgLS1naXQgYS9uZXQvbWFjODAyMTEvc2Nhbi5jIGIvbmV0L21hYzgwMjExL3NjYW4uYw0K
-aW5kZXggZWYyYmVjYS4uYTNiMWJjYyAxMDA2NDQNCi0tLSBhL25ldC9tYWM4MDIxMS9zY2FuLmMN
-CisrKyBiL25ldC9tYWM4MDIxMS9zY2FuLmMNCkBAIC03Myw3ICs3Myw5IEBAIHN0cnVjdCBpZWVl
-ODAyMTFfYnNzICoNCiAJYm9vbCBzaWduYWxfdmFsaWQ7DQogCXN0cnVjdCBpZWVlODAyMTFfc3Vi
-X2lmX2RhdGEgKnNjYW5fc2RhdGE7DQogDQotCWlmIChpZWVlODAyMTFfaHdfY2hlY2soJmxvY2Fs
-LT5odywgU0lHTkFMX0RCTSkpDQorCWlmIChyeF9zdGF0dXMtPmZsYWcgJiBSWF9GTEFHX05PX1NJ
-R05BTF9WQUwpDQorCQlic3NfbWV0YS5zaWduYWwgPSAwOyAvKiBpbnZhbGlkIHNpZ25hbCBpbmRp
-Y2F0aW9uICovDQorCWVsc2UgaWYgKGllZWU4MDIxMV9od19jaGVjaygmbG9jYWwtPmh3LCBTSUdO
-QUxfREJNKSkNCiAJCWJzc19tZXRhLnNpZ25hbCA9IHJ4X3N0YXR1cy0+c2lnbmFsICogMTAwOw0K
-IAllbHNlIGlmIChpZWVlODAyMTFfaHdfY2hlY2soJmxvY2FsLT5odywgU0lHTkFMX1VOU1BFQykp
-DQogCQlic3NfbWV0YS5zaWduYWwgPSAocnhfc3RhdHVzLT5zaWduYWwgKiAxMDApIC8gbG9jYWwt
-Pmh3Lm1heF9zaWduYWw7DQotLSANCjEuNy4yLjUNCg0K
+Bas Vermeulen <bvermeul@blackstar.nl> writes:
+
+> A random (little endian eeprom'd) ar9278 card didn't work on my
+> PowerMac G5 without allowing the driver to byte-swap the eeprom.
+>
+> Introduce a module parameter endian_check to allow this to happen,
+> and the PCIe card to function correctly on BE powerpc.
+>
+> Signed-off-by: Bas Vermeulen <bvermeul@blackstar.nl>
+> ---
+>  drivers/net/wireless/ath/ath9k/init.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index fa58a32227f5..421039dc060a 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -67,6 +67,9 @@ static int ath9k_ps_enable;
+>  module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+>  MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+>  
+> +static int ath9k_endian_check;
+> +module_param_named(endian_check, ath9k_endian_check, int, 0444);
+> +MODULE_PARM_DESC(endian_check, "Check EEPROM for endianness compatibility");
+>  #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+>  
+>  int ath9k_use_chanctx;
+> @@ -587,7 +590,8 @@ static int ath9k_of_init(struct ath_softc *sc)
+>  		ether_addr_copy(common->macaddr, mac);
+>  
+>  	ah->ah_flags &= ~AH_USE_EEPROM;
+> -	ah->ah_flags |= AH_NO_EEP_SWAP;
+> +	if (!ath9k_endian_check)
+> +		ah->ah_flags |= AH_NO_EEP_SWAP;
+
+A bit annoying to have a module parameter, isn't there any automatic way
+to detect/try this? But on the other hand I guess this isn't a common
+problem as nobody has reported this before?
+
+-- 
+Kalle Valo
