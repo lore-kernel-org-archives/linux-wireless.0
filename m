@@ -1,56 +1,367 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33041 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754320AbeBGU0z (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:21756 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751340AbeBZSNE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Feb 2018 15:26:55 -0500
-Received: by mail-pf0-f193.google.com with SMTP id u15so822909pfa.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Feb 2018 12:26:55 -0800 (PST)
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Guenter Roeck <groeck@chromium.org>,
-        Justin TerAvest <teravest@chromium.org>,
-        Craig Bergstrom <craigb@chromium.org>,
-        Matthias Kaehlcke <mka@chromium.org>
-Subject: [PATCH] rtlwifi: rtl8192cu: Remove variable self-assignment in rf.c
-Date: Wed,  7 Feb 2018 12:26:34 -0800
-Message-Id: <20180207202634.98937-1-mka@chromium.org> (sfid-20180207_212746_610093_D087C94C)
+        Mon, 26 Feb 2018 13:13:04 -0500
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v2 6/8] wil6210: rename p2p_wdev_mutex to vif_mutex
+Date: Mon, 26 Feb 2018 20:12:16 +0200
+Message-Id: <1519668738-16912-7-git-send-email-merez@codeaurora.org> (sfid-20180226_191309_228438_CE9910D4)
+In-Reply-To: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
+References: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In _rtl92c_get_txpower_writeval_by_regulatory() the variable writeVal
-is assigned to itself in an if ... else statement, apparently only to
-document that the branch condition is handled and that a previously read
-value should be returned unmodified. The self-assignment causes clang to
-raise the following warning:
+From: Lior David <liord@codeaurora.org>
 
-drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c:304:13:
-  error: explicitly assigning value of variable of type 'u32'
-    (aka 'unsigned int') to itself [-Werror,-Wself-assign]
-  writeVal = writeVal;
+As more support is added for multiple VIFs, there is a need
+to protect the wil6210_vif structure from access while it is
+deleted (mainly from del_virtual_intf operation).
+Instead of adding another mutex, use p2p_wdev_mutex and rename
+it to vif_mutex to reflect the added role. Its existing roles
+are similar so it extends nicely (for example it protects the
+scan_request member which is also a member of wil6210_vif).
 
-Replace the self-assignment with a semicolon, which still serves to
-document the 'handling' of the branch condition.
-
-Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 22 +++++++++----------
+ drivers/net/wireless/ath/wil6210/main.c     | 16 +++++++-------
+ drivers/net/wireless/ath/wil6210/p2p.c      | 34 ++++++++++++++---------------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +-
+ drivers/net/wireless/ath/wil6210/wmi.c      |  8 +++----
+ 5 files changed, 41 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-index 9cff6bc4049c..4db92496c122 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-@@ -301,7 +301,7 @@ static void _rtl92c_get_txpower_writeval_by_regulatory(struct ieee80211_hw *hw,
- 			writeVal = writeVal - 0x06060606;
- 		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
- 			 TXHIGHPWRLEVEL_BT2)
--			writeVal = writeVal;
-+			;
- 		*(p_outwriteval + rf) = writeVal;
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index a3ad3f4..4afb38f 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -412,10 +412,10 @@ static void wil_cfg80211_stop_p2p_device(struct wiphy *wiphy,
+ 
+ 	wil_dbg_misc(wil, "stop_p2p_device: entered\n");
+ 	mutex_lock(&wil->mutex);
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	wil_p2p_stop_radio_operations(wil);
+ 	wil->p2p_dev_started = 0;
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 	mutex_unlock(&wil->mutex);
+ }
+ 
+@@ -706,14 +706,14 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 
+ 	mutex_lock(&wil->mutex);
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	if (vif->scan_request || vif->p2p.discovery_started) {
+ 		wil_err(wil, "Already scanning\n");
+-		mutex_unlock(&wil->p2p_wdev_mutex);
++		mutex_unlock(&wil->vif_mutex);
+ 		rc = -EAGAIN;
+ 		goto out;
+ 	}
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 
+ 	if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE) {
+ 		if (!wil->p2p_dev_started) {
+@@ -825,7 +825,7 @@ static void wil_cfg80211_abort_scan(struct wiphy *wiphy,
+ 	wil_dbg_misc(wil, "wdev=0x%p iftype=%d\n", wdev, wdev->iftype);
+ 
+ 	mutex_lock(&wil->mutex);
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 
+ 	if (!vif->scan_request)
+ 		goto out;
+@@ -841,7 +841,7 @@ static void wil_cfg80211_abort_scan(struct wiphy *wiphy,
+ 		wil_abort_scan(vif, true);
+ 
+ out:
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 	mutex_unlock(&wil->mutex);
+ }
+ 
+@@ -1944,10 +1944,10 @@ static int wil_cfg80211_suspend(struct wiphy *wiphy,
+ 	wil_dbg_pm(wil, "suspending\n");
+ 
+ 	mutex_lock(&wil->mutex);
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	wil_p2p_stop_radio_operations(wil);
+ 	wil_abort_scan(ndev_to_vif(wil->main_ndev), true);
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 	mutex_unlock(&wil->mutex);
+ 
+ out:
+@@ -2236,11 +2236,11 @@ void wil_p2p_wdev_free(struct wil6210_priv *wil)
+ 	struct wireless_dev *p2p_wdev;
+ 	struct wil6210_vif *vif;
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	p2p_wdev = wil->p2p_wdev;
+ 	wil->p2p_wdev = NULL;
+ 	wil->radio_wdev = wil->main_ndev->ieee80211_ptr;
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 	if (p2p_wdev) {
+ 		cfg80211_unregister_wdev(p2p_wdev);
+ 		vif = wdev_to_vif(wil, p2p_wdev);
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 5aeaf9b..9a2a866 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -536,8 +536,8 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 		spin_lock_init(&wil->vring_tx_data[i].lock);
+ 
+ 	mutex_init(&wil->mutex);
++	mutex_init(&wil->vif_mutex);
+ 	mutex_init(&wil->wmi_mutex);
+-	mutex_init(&wil->p2p_wdev_mutex);
+ 	mutex_init(&wil->halp.lock);
+ 
+ 	init_completion(&wil->wmi_ready);
+@@ -1066,21 +1066,21 @@ void wil_abort_scan(struct wil6210_vif *vif, bool sync)
+ 		.aborted = true,
+ 	};
+ 
+-	lockdep_assert_held(&wil->p2p_wdev_mutex);
++	lockdep_assert_held(&wil->vif_mutex);
+ 
+ 	if (!vif->scan_request)
+ 		return;
+ 
+ 	wil_dbg_misc(wil, "Abort scan_request 0x%p\n", vif->scan_request);
+ 	del_timer_sync(&vif->scan_timer);
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 	rc = wmi_abort_scan(vif);
+ 	if (!rc && sync)
+ 		wait_event_interruptible_timeout(wil->wq, !vif->scan_request,
+ 						 msecs_to_jiffies(
+ 						 WAIT_FOR_SCAN_ABORT_MS));
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	if (vif->scan_request) {
+ 		cfg80211_scan_done(vif->scan_request, &info);
+ 		vif->scan_request = NULL;
+@@ -1221,9 +1221,9 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	/* Disable device led before reset*/
+ 	wmi_led_cfg(wil, false);
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	wil_abort_scan(vif, false);
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 
+ 	/* prevent NAPI from being scheduled and prevent wmi commands */
+ 	mutex_lock(&wil->wmi_mutex);
+@@ -1444,10 +1444,10 @@ int __wil_down(struct wil6210_priv *wil)
+ 	}
+ 	wil_enable_irq(wil);
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	wil_p2p_stop_radio_operations(wil);
+ 	wil_abort_scan(ndev_to_vif(wil->main_ndev), false);
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 
+ 	return wil_reset(wil, false);
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/p2p.c b/drivers/net/wireless/ath/wil6210/p2p.c
+index 8b34f18..db087ea 100644
+--- a/drivers/net/wireless/ath/wil6210/p2p.c
++++ b/drivers/net/wireless/ath/wil6210/p2p.c
+@@ -158,16 +158,16 @@ int wil_p2p_listen(struct wil6210_priv *wil, struct wireless_dev *wdev,
+ 	*cookie = ++p2p->cookie;
+ 	p2p->listen_duration = duration;
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	if (vif->scan_request) {
+ 		wil_dbg_misc(wil, "Delaying p2p listen until scan done\n");
+ 		p2p->pending_listen_wdev = wdev;
+ 		p2p->discovery_started = 1;
+ 		rc = 0;
+-		mutex_unlock(&wil->p2p_wdev_mutex);
++		mutex_unlock(&wil->vif_mutex);
+ 		goto out;
+ 	}
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 
+ 	rc = wil_p2p_start_listen(vif);
+ 	if (rc)
+@@ -228,14 +228,14 @@ int wil_p2p_cancel_listen(struct wil6210_vif *vif, u64 cookie)
+ 		return -ENOENT;
+ 	}
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	cfg80211_remain_on_channel_expired(vif_to_radio_wdev(wil, vif),
+ 					   p2p->cookie,
+ 					   &p2p->listen_chan,
+ 					   GFP_KERNEL);
+ 	if (vif->mid == 0)
+ 		wil->radio_wdev = wil->main_ndev->ieee80211_ptr;
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 	return 0;
+ }
+ 
+@@ -257,14 +257,14 @@ void wil_p2p_listen_expired(struct work_struct *work)
+ 	if (!started)
+ 		return;
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	cfg80211_remain_on_channel_expired(vif_to_radio_wdev(wil, vif),
+ 					   p2p->cookie,
+ 					   &p2p->listen_chan,
+ 					   GFP_KERNEL);
+ 	if (vif->mid == 0)
+ 		wil->radio_wdev = wil->main_ndev->ieee80211_ptr;
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ }
+ 
+ void wil_p2p_search_expired(struct work_struct *work)
+@@ -287,7 +287,7 @@ void wil_p2p_search_expired(struct work_struct *work)
+ 			.aborted = false,
+ 		};
+ 
+-		mutex_lock(&wil->p2p_wdev_mutex);
++		mutex_lock(&wil->vif_mutex);
+ 		if (vif->scan_request) {
+ 			cfg80211_scan_done(vif->scan_request, &info);
+ 			vif->scan_request = NULL;
+@@ -295,7 +295,7 @@ void wil_p2p_search_expired(struct work_struct *work)
+ 				wil->radio_wdev =
+ 					wil->main_ndev->ieee80211_ptr;
+ 		}
+-		mutex_unlock(&wil->p2p_wdev_mutex);
++		mutex_unlock(&wil->vif_mutex);
  	}
  }
+ 
+@@ -314,17 +314,17 @@ void wil_p2p_delayed_listen_work(struct work_struct *work)
+ 	if (!p2p->discovery_started || !p2p->pending_listen_wdev)
+ 		goto out;
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	if (vif->scan_request) {
+ 		/* another scan started, wait again... */
+-		mutex_unlock(&wil->p2p_wdev_mutex);
++		mutex_unlock(&wil->vif_mutex);
+ 		goto out;
+ 	}
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 
+ 	rc = wil_p2p_start_listen(vif);
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	if (rc) {
+ 		cfg80211_remain_on_channel_expired(p2p->pending_listen_wdev,
+ 						   p2p->cookie,
+@@ -340,7 +340,7 @@ void wil_p2p_delayed_listen_work(struct work_struct *work)
+ 			wil->radio_wdev = p2p->pending_listen_wdev;
+ 	}
+ 	p2p->pending_listen_wdev = NULL;
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 
+ out:
+ 	mutex_unlock(&wil->mutex);
+@@ -355,7 +355,7 @@ void wil_p2p_stop_radio_operations(struct wil6210_priv *wil)
+ 	};
+ 
+ 	lockdep_assert_held(&wil->mutex);
+-	lockdep_assert_held(&wil->p2p_wdev_mutex);
++	lockdep_assert_held(&wil->vif_mutex);
+ 
+ 	if (wil->radio_wdev != wil->p2p_wdev)
+ 		goto out;
+@@ -369,9 +369,9 @@ void wil_p2p_stop_radio_operations(struct wil6210_priv *wil)
+ 	}
+ 
+ 	/* Search or listen on p2p device */
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ 	wil_p2p_stop_discovery(vif);
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 
+ 	if (vif->scan_request) {
+ 		/* search */
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 6e46a23..1da549a 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -725,6 +725,7 @@ struct wil6210_priv {
+ 	wait_queue_head_t wq; /* for all wait_event() use */
+ 	u8 max_vifs; /* maximum number of interfaces, including main */
+ 	struct wil6210_vif *vifs[WIL_MAX_VIFS];
++	struct mutex vif_mutex; /* protects access to VIF entries */
+ 	/* profile */
+ 	struct cfg80211_chan_def monitor_chandef;
+ 	u32 monitor_flags;
+@@ -793,7 +794,6 @@ struct wil6210_priv {
+ 
+ 	/* P2P_DEVICE vif */
+ 	struct wireless_dev *p2p_wdev;
+-	struct mutex p2p_wdev_mutex; /* protect @p2p_wdev and @scan_request */
+ 	struct wireless_dev *radio_wdev;
+ 
+ 	/* High Access Latency Policy voting */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 762ade3..befeeb2 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -766,10 +766,10 @@ static void wmi_evt_rx_mgmt(struct wil6210_vif *vif, int id, void *d, int len)
+ 			wil_err(wil, "cfg80211_inform_bss_frame() failed\n");
+ 		}
+ 	} else {
+-		mutex_lock(&wil->p2p_wdev_mutex);
++		mutex_lock(&wil->vif_mutex);
+ 		cfg80211_rx_mgmt(vif_to_radio_wdev(wil, vif), freq, signal,
+ 				 (void *)rx_mgmt_frame, d_len, 0);
+-		mutex_unlock(&wil->p2p_wdev_mutex);
++		mutex_unlock(&wil->vif_mutex);
+ 	}
+ }
+ 
+@@ -789,7 +789,7 @@ static void wmi_evt_scan_complete(struct wil6210_vif *vif, int id,
+ {
+ 	struct wil6210_priv *wil = vif_to_wil(vif);
+ 
+-	mutex_lock(&wil->p2p_wdev_mutex);
++	mutex_lock(&wil->vif_mutex);
+ 	if (vif->scan_request) {
+ 		struct wmi_scan_complete_event *data = d;
+ 		int status = le32_to_cpu(data->status);
+@@ -814,7 +814,7 @@ static void wmi_evt_scan_complete(struct wil6210_vif *vif, int id,
+ 	} else {
+ 		wil_err(wil, "SCAN_COMPLETE while not scanning\n");
+ 	}
+-	mutex_unlock(&wil->p2p_wdev_mutex);
++	mutex_unlock(&wil->vif_mutex);
+ }
+ 
+ static void wmi_evt_connect(struct wil6210_vif *vif, int id, void *d, int len)
 -- 
-2.16.0.rc1.238.g530d649a79-goog
+1.9.1
