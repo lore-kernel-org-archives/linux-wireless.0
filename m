@@ -1,366 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:21767 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751022AbeBZSNE (ORCPT
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:43308 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752777AbeBZLgY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 13:13:04 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v2 1/8] wil6210: add wil6210_vif structure for per-VIF data
-Date: Mon, 26 Feb 2018 20:12:11 +0200
-Message-Id: <1519668738-16912-2-git-send-email-merez@codeaurora.org> (sfid-20180226_191316_987893_DF074433)
-In-Reply-To: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
-References: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
+        Mon, 26 Feb 2018 06:36:24 -0500
+Received: by mail-qt0-f172.google.com with SMTP id d26so18345298qtk.10
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2018 03:36:23 -0800 (PST)
+Subject: Re: [PATCH resend] brcmfmac: p2p and normal ap access are not always
+ possible at the same time
+To: Hans de Goede <hdegoede@redhat.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170526105747.16874-1-hdegoede@redhat.com>
+ <20170526105747.16874-2-hdegoede@redhat.com>
+ <8a61e3ad-3949-68dc-bed9-09f61ab6b647@redhat.com>
+ <5A93DFF1.2030208@broadcom.com>
+ <e204e0a3-4001-0d55-86ef-fb1afc1c6d4b@redhat.com>
+ <5A93E8FC.10606@broadcom.com>
+ <5ee4884b-5278-472b-8da1-6bef8b9c61a9@redhat.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A93F134.4000302@broadcom.com> (sfid-20180226_123726_008244_FD851A7D)
+Date: Mon, 26 Feb 2018 12:36:20 +0100
+MIME-Version: 1.0
+In-Reply-To: <5ee4884b-5278-472b-8da1-6bef8b9c61a9@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <liord@codeaurora.org>
+On 2/26/2018 12:22 PM, Hans de Goede wrote:
+> Hi,
+>
+> On 26-02-18 12:01, Arend van Spriel wrote:
+>> On 2/26/2018 11:29 AM, Hans de Goede wrote:
+>>> Hi,
+>>>
+>>> On 26-02-18 11:22, Arend van Spriel wrote:
+>>>> On 2/25/2018 3:52 PM, Hans de Goede wrote:
+>>>>> Hi,
+>>>>>
+>>>>> On 26-05-17 12:57, Hans de Goede wrote:
+>>>>>> The firmware responding with -EBUSY when trying to add an extra
+>>>>>> virtual-if
+>>>>>> is a normal thing, do not print an error for this.
+>>>>>>
+>>>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>>>>
+>>>>> I'm now seeing this on another device too, but this time the error
+>>>>> thrown is -EBADE, this seems to be new with recent kernels:
+>>>>
+>>>> Yup. Before we were passing firmware errors up to user-space, which
+>>>> was confusing and potentially be misinterpreted. However, looking at
+>>>> the output below it would have been good to log the firmware error as
+>>>> well. And staring at it some more I suddenly realize I broke the
+>>>> feature detection module with this change. Actually only the GSCAN
+>>>> feature detection.
+>>>>
+>>>>> [root@localhost ~]# dmesg | grep brcmfmac
+>>>>> [   34.265950] usbcore: registered new interface driver brcmfmac
+>>>>> [   34.266059] brcmfmac 0000:01:00.0: enabling device (0000 -> 0002)
+>>>>> [   34.376468] brcmfmac: brcmf_fw_map_chip_to_name: using
+>>>>> brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
+>>>>> [   34.855143] brcmfmac 0000:01:00.0: Direct firmware load for
+>>>>> brcm/brcmfmac4356-pcie.clm_blob failed with error -2
+>>>>> [   34.855147] brcmfmac: brcmf_c_process_clm_blob: no clm_blob
+>>>>> available(err=-2), device may have limited channels available
+>>>>> [   34.857029] brcmfmac: brcmf_c_preinit_dcmds: Firmware version =
+>>>>> wl0:
+>>>>> Jun  4 2017 16:50:07 version 7.35.101.6 (r702795) FWID 01-5e8eb735
+>>>>> [   34.938854] brcmfmac 0000:01:00.0 wlp1s0: renamed from wlan0
+>>>>> [   37.086420] brcmfmac: brcmf_p2p_create_p2pdev: set p2p_disc error
+>>>>> [   37.086431] brcmfmac: brcmf_cfg80211_add_iface: add iface
+>>>>> p2p-dev-wlp1s0 type 10 failed: err=-52
+>>>>>
+>>>>> [root@localhost ~]# strings /lib/firmware/brcm/brcmfmac4356-pcie.bin |
+>>>>> tail -n 1
+>>>>> 4356a2-roml/pcie-ag-msgbuf-splitrx-p2p-pno-aoe-pktfilter-keepalive-sr-mchan-pktctx-proptxstatus-ampduhostreorder-lpc-pwropt-txbf-wl11u-mfp-tdls-amsdutx-sarctrl-proxd-hs20sta-rcc-wepso-ndoe-linkstat-gscan-hchk-logtrace-roamexp-rmon
+>>>>>
+>>>>>
+>>>>> Version: 7.35.101.6 (r702795) CRC: 4f3f65c5 Date: Sun 2017-06-04
+>>>>> 16:51:38 PDT Ucode Ver: 963.316 FWID: 01-5e8eb735
+>>>>>
+>>>>> It would be good if we can silence these errors, or maybe at a
+>>>>> minimum lower their log-level from error to warning?
+>>>>
+>>>> I had a look at it and it seems to be a difference in firmware api
+>>>> that we need to support in the driver. Need to do a bit more digging,
+>>>> but it seems an actual issue. You could silence it for now, but I
+>>>> prefer to wait for the fix.
+>>>
+>>> Ok, what is the ETA of a fix for this?
+>>
+>> Actually went back to an old log you sent and noticed:
+>>
+>> [   15.714569] brcmfmac: brcmf_attach Enter
+>> [   15.714756] brcmfmac: brcmf_fweh_register event handler registered
+>> for PSM_WATCHDOG
+>> [   15.714757] brcmfmac: brcmf_proto_attach Enter
+>> [   15.716598] brcmfmac: brcmf_bus_started
+>> [   15.716603] brcmfmac: brcmf_add_if Enter, bsscfgidx=0, ifidx=0
+>> [   15.716604] brcmfmac: brcmf_add_if allocate netdev interface
+>> [   15.716622] brcmfmac: brcmf_add_if  ==== pid:2a, if:wlan%d
+>> (00:00:00:00:00:00) created ===
+>> [   15.716624] brcmfmac: brcmf_bus_change_state 0 -> 1
+>> [   15.717841] brcmfmac: brcmf_fil_iovar_data_get ifidx=0,
+>> name=cur_etheraddr, len=6
+>> [   15.717843] brcmutil: data
+>> [   15.717847] 00000000: 44 2c 05 9e c9 02   D,....
+>>
+>> So mac address of the device is 44:2c:05:9e:c9. However, further down
+>> I see:
+>>
+>> [   17.819113] brcmfmac: brcmf_netdev_set_mac_address Enter, bsscfgidx=0
+>> [   17.819122] brcmfmac: brcmf_fil_iovar_data_set ifidx=0,
+>> name=cur_etheraddr, len=6
+>> [   17.819127] brcmutil: data
+>> [   17.819135] 00000000: aa 3e 81 77 bc 40   .>.w.@
+>> [   17.819864] brcmfmac: brcmf_netdev_set_mac_address updated to
+>> aa:3e:81:77:bc:40
+>>
+>> So the mac address in a local admin variant.
+>
+> Right, this is likely NetworkManager randomizing the mac for privacy
+> reasons.
+>
+>> Now our firmware has a requirement for the p2p-dev interface that it
+>> should be different from the mac address of the primary interface, ie.
+>> wlp1s0 in this log. In brcmfmac we try to do that by setting the local
+>> admin bit, but... as it is already set we end up using the same mac
+>> address hence the -EBUSY.
+>
+> Ah, that is good to know, so how can we fix this? Can userspace specify a
+> different mac-address when it asks for the p2p-dev intf to be created? Or
+> should we do something about this in the kernel?
 
-For supporting multiple virtual interfaces in the future,
-introduce a wil6210_vif structure which will hold per-VIF
-data. Change the module initialization so wil6210_vif will
-be part of net_device structure, and wireless_dev will be
-embedded inside the wil6210_vif structure. This will allow
-us to find the appropriate wil6210_vif structure when we
-only have access to wireless_dev or net_device.
+The nl80211 api allows user-space to provide a mac address for the newly 
+created interface since kernel 3.something. So for legacy user-space we 
+use the behavior above as fallback. I am testing a patch right now.
 
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 57 ++++++++++--------
- drivers/net/wireless/ath/wil6210/netdev.c   | 93 ++++++++++++++++++-----------
- drivers/net/wireless/ath/wil6210/wil6210.h  | 22 +++++--
- 3 files changed, 107 insertions(+), 65 deletions(-)
+Regards,
+Arend
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index b799a53..eeed85c 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -418,6 +419,7 @@ static void wil_cfg80211_stop_p2p_device(struct wiphy *wiphy,
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 	struct net_device *ndev = wil_to_ndev(wil);
-+	struct wil6210_vif *vif;
- 	struct wireless_dev *p2p_wdev;
- 
- 	wil_dbg_misc(wil, "add_iface\n");
-@@ -432,10 +434,11 @@ static void wil_cfg80211_stop_p2p_device(struct wiphy *wiphy,
- 		return ERR_PTR(-EINVAL);
- 	}
- 
--	p2p_wdev = kzalloc(sizeof(*p2p_wdev), GFP_KERNEL);
--	if (!p2p_wdev)
-+	vif = kzalloc(sizeof(*vif), GFP_KERNEL);
-+	if (!vif)
- 		return ERR_PTR(-ENOMEM);
- 
-+	p2p_wdev = &vif->wdev;
- 	p2p_wdev->iftype = type;
- 	p2p_wdev->wiphy = wiphy;
- 	/* use our primary ethernet address */
-@@ -1893,51 +1896,52 @@ static void wil_wiphy_init(struct wiphy *wiphy)
- #endif
- }
- 
--struct wireless_dev *wil_cfg80211_init(struct device *dev)
-+struct wil6210_priv *wil_cfg80211_init(struct device *dev)
- {
--	int rc = 0;
--	struct wireless_dev *wdev;
-+	struct wiphy *wiphy;
-+	struct wil6210_priv *wil;
-+	struct ieee80211_channel *ch;
- 
- 	dev_dbg(dev, "%s()\n", __func__);
- 
--	wdev = kzalloc(sizeof(*wdev), GFP_KERNEL);
--	if (!wdev)
-+	/* Note: the wireless_dev structure is no longer allocated here.
-+	 * Instead, it is allocated as part of the net_device structure
-+	 * for main interface and each VIF.
-+	 */
-+	wiphy = wiphy_new(&wil_cfg80211_ops, sizeof(struct wil6210_priv));
-+	if (!wiphy)
- 		return ERR_PTR(-ENOMEM);
- 
--	wdev->wiphy = wiphy_new(&wil_cfg80211_ops,
--				sizeof(struct wil6210_priv));
--	if (!wdev->wiphy) {
--		rc = -ENOMEM;
--		goto out;
--	}
--
--	set_wiphy_dev(wdev->wiphy, dev);
--	wil_wiphy_init(wdev->wiphy);
-+	set_wiphy_dev(wiphy, dev);
-+	wil_wiphy_init(wiphy);
- 
--	return wdev;
-+	wil = wiphy_to_wil(wiphy);
-+	wil->wiphy = wiphy;
- 
--out:
--	kfree(wdev);
-+	/* default monitor channel */
-+	ch = wiphy->bands[NL80211_BAND_60GHZ]->channels;
-+	cfg80211_chandef_create(&wil->monitor_chandef, ch, NL80211_CHAN_NO_HT);
- 
--	return ERR_PTR(rc);
-+	return wil;
- }
- 
--void wil_wdev_free(struct wil6210_priv *wil)
-+void wil_cfg80211_deinit(struct wil6210_priv *wil)
- {
--	struct wireless_dev *wdev = wil_to_wdev(wil);
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
- 
- 	dev_dbg(wil_to_dev(wil), "%s()\n", __func__);
- 
--	if (!wdev)
-+	if (!wiphy)
- 		return;
- 
--	wiphy_free(wdev->wiphy);
--	kfree(wdev);
-+	wiphy_free(wiphy);
-+	/* do not access wil6210_priv after returning from here */
- }
- 
- void wil_p2p_wdev_free(struct wil6210_priv *wil)
- {
- 	struct wireless_dev *p2p_wdev;
-+	struct wil6210_vif *vif;
- 
- 	mutex_lock(&wil->p2p_wdev_mutex);
- 	p2p_wdev = wil->p2p_wdev;
-@@ -1946,7 +1950,8 @@ void wil_p2p_wdev_free(struct wil6210_priv *wil)
- 	mutex_unlock(&wil->p2p_wdev_mutex);
- 	if (p2p_wdev) {
- 		cfg80211_unregister_wdev(p2p_wdev);
--		kfree(p2p_wdev);
-+		vif = wdev_to_vif(p2p_wdev);
-+		kfree(vif);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index 7ba4e0a..648f636 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -121,63 +122,85 @@ static void wil_dev_setup(struct net_device *dev)
- 	dev->tx_queue_len = WIL_TX_Q_LEN_DEFAULT;
- }
- 
--void *wil_if_alloc(struct device *dev)
-+struct wil6210_vif *
-+wil_vif_alloc(struct wil6210_priv *wil, const char *name,
-+	      unsigned char name_assign_type, enum nl80211_iftype iftype,
-+	      u8 mid)
- {
- 	struct net_device *ndev;
- 	struct wireless_dev *wdev;
-+	struct wil6210_vif *vif;
-+
-+	ndev = alloc_netdev(sizeof(*vif), name, name_assign_type,
-+			    wil_dev_setup);
-+	if (!ndev) {
-+		dev_err(wil_to_dev(wil), "alloc_netdev failed\n");
-+		return ERR_PTR(-ENOMEM);
-+	}
-+	if (mid == 0)
-+		wil->ndev = ndev;
-+	vif = ndev_to_vif(ndev);
-+	vif->wil = wil;
-+	vif->mid = mid;
-+
-+	wdev = &vif->wdev;
-+	wdev->wiphy = wil->wiphy;
-+	wdev->iftype = iftype;
-+
-+	ndev->netdev_ops = &wil_netdev_ops;
-+	wil_set_ethtoolops(ndev);
-+	ndev->ieee80211_ptr = wdev;
-+	ndev->hw_features = NETIF_F_HW_CSUM | NETIF_F_RXCSUM |
-+			    NETIF_F_SG | NETIF_F_GRO |
-+			    NETIF_F_TSO | NETIF_F_TSO6 |
-+			    NETIF_F_RXHASH;
-+
-+	ndev->features |= ndev->hw_features;
-+	SET_NETDEV_DEV(ndev, wiphy_dev(wdev->wiphy));
-+	wdev->netdev = ndev;
-+	return vif;
-+}
-+
-+void *wil_if_alloc(struct device *dev)
-+{
-+	struct wireless_dev *wdev;
- 	struct wil6210_priv *wil;
--	struct ieee80211_channel *ch;
-+	struct wil6210_vif *vif;
- 	int rc = 0;
- 
--	wdev = wil_cfg80211_init(dev);
--	if (IS_ERR(wdev)) {
-+	wil = wil_cfg80211_init(dev);
-+	if (IS_ERR(wil)) {
- 		dev_err(dev, "wil_cfg80211_init failed\n");
--		return wdev;
-+		return wil;
- 	}
- 
--	wil = wdev_to_wil(wdev);
--	wil->wdev = wdev;
--	wil->radio_wdev = wdev;
--
--	wil_dbg_misc(wil, "if_alloc\n");
--
- 	rc = wil_priv_init(wil);
- 	if (rc) {
- 		dev_err(dev, "wil_priv_init failed\n");
--		goto out_wdev;
-+		goto out_cfg;
- 	}
- 
--	wdev->iftype = NL80211_IFTYPE_STATION; /* TODO */
--	/* default monitor channel */
--	ch = wdev->wiphy->bands[NL80211_BAND_60GHZ]->channels;
--	cfg80211_chandef_create(&wil->monitor_chandef, ch, NL80211_CHAN_NO_HT);
-+	wil_dbg_misc(wil, "if_alloc\n");
- 
--	ndev = alloc_netdev(0, "wlan%d", NET_NAME_UNKNOWN, wil_dev_setup);
--	if (!ndev) {
--		dev_err(dev, "alloc_netdev_mqs failed\n");
-+	vif = wil_vif_alloc(wil, "wlan%d", NET_NAME_UNKNOWN,
-+			    NL80211_IFTYPE_STATION, 0);
-+	if (IS_ERR(vif)) {
-+		dev_err(dev, "wil_vif_alloc failed\n");
- 		rc = -ENOMEM;
- 		goto out_priv;
- 	}
- 
--	ndev->netdev_ops = &wil_netdev_ops;
--	wil_set_ethtoolops(ndev);
--	ndev->ieee80211_ptr = wdev;
--	ndev->hw_features = NETIF_F_HW_CSUM | NETIF_F_RXCSUM |
--			    NETIF_F_SG | NETIF_F_GRO |
--			    NETIF_F_TSO | NETIF_F_TSO6 |
--			    NETIF_F_RXHASH;
--
--	ndev->features |= ndev->hw_features;
--	SET_NETDEV_DEV(ndev, wiphy_dev(wdev->wiphy));
--	wdev->netdev = ndev;
-+	wdev = &vif->wdev;
-+	wil->wdev = wdev;
-+	wil->radio_wdev = wdev;
- 
- 	return wil;
- 
-- out_priv:
-+out_priv:
- 	wil_priv_deinit(wil);
- 
-- out_wdev:
--	wil_wdev_free(wil);
-+out_cfg:
-+	wil_cfg80211_deinit(wil);
- 
- 	return ERR_PTR(rc);
- }
-@@ -196,13 +219,13 @@ void wil_if_free(struct wil6210_priv *wil)
- 	wil_to_ndev(wil) = NULL;
- 	free_netdev(ndev);
- 
--	wil_wdev_free(wil);
-+	wil_cfg80211_deinit(wil);
- }
- 
- int wil_if_add(struct wil6210_priv *wil)
- {
- 	struct wireless_dev *wdev = wil_to_wdev(wil);
--	struct wiphy *wiphy = wdev->wiphy;
-+	struct wiphy *wiphy = wil->wiphy;
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	int rc;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 0df2aad..b33aa7d 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -669,10 +669,18 @@ struct wil_debugfs_data {
- extern u8 led_id;
- extern u8 led_polarity;
- 
-+struct wil6210_vif {
-+	struct wireless_dev wdev;
-+	struct wil6210_priv *wil;
-+	u8 mid;
-+};
-+
- struct wil6210_priv {
- 	struct pci_dev *pdev;
- 	u32 bar_size;
-+	struct wiphy *wiphy;
- 	struct wireless_dev *wdev;
-+	struct net_device *ndev;
- 	void __iomem *csr;
- 	DECLARE_BITMAP(status, wil_status_last);
- 	u8 fw_version[ETHTOOL_FWVERS_LEN];
-@@ -798,13 +806,15 @@ struct wil6210_priv {
- 	u32 iccm_base;
- };
- 
--#define wil_to_wiphy(i) (i->wdev->wiphy)
-+#define wil_to_wiphy(i) (i->wiphy)
- #define wil_to_dev(i) (wiphy_dev(wil_to_wiphy(i)))
- #define wiphy_to_wil(w) (struct wil6210_priv *)(wiphy_priv(w))
- #define wil_to_wdev(i) (i->wdev)
- #define wdev_to_wil(w) (struct wil6210_priv *)(wdev_priv(w))
--#define wil_to_ndev(i) (wil_to_wdev(i)->netdev)
-+#define wil_to_ndev(i) (i->ndev)
- #define ndev_to_wil(n) (wdev_to_wil(n->ieee80211_ptr))
-+#define ndev_to_vif(n) (struct wil6210_vif *)(netdev_priv(n))
-+#define wdev_to_vif(w) (container_of(w, struct wil6210_vif, wdev))
- 
- __printf(2, 3)
- void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
-@@ -900,6 +910,10 @@ void wil_memcpy_fromio_32(void *dst, const volatile void __iomem *src,
- void wil_memcpy_toio_32(volatile void __iomem *dst, const void *src,
- 			size_t count);
- 
-+struct wil6210_vif *
-+wil_vif_alloc(struct wil6210_priv *wil, const char *name,
-+	      unsigned char name_assign_type, enum nl80211_iftype iftype,
-+	      u8 mid);
- void *wil_if_alloc(struct device *dev);
- void wil_if_free(struct wil6210_priv *wil);
- int wil_if_add(struct wil6210_priv *wil);
-@@ -1010,8 +1024,8 @@ static inline void wil6210_debugfs_remove(struct wil6210_priv *wil) {}
- int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
- 		       struct station_info *sinfo);
- 
--struct wireless_dev *wil_cfg80211_init(struct device *dev);
--void wil_wdev_free(struct wil6210_priv *wil);
-+struct wil6210_priv *wil_cfg80211_init(struct device *dev);
-+void wil_cfg80211_deinit(struct wil6210_priv *wil);
- void wil_p2p_wdev_free(struct wil6210_priv *wil);
- 
- int wmi_set_mac_address(struct wil6210_priv *wil, void *addr);
--- 
-1.9.1
+> Regards,
+>
+> Hans
+>
+>
+>> [   17.947704] brcmfmac: brcmf_cfg80211_add_iface enter:
+>> p2p-dev-wlp1s0 type 10
+>> [   17.947714] brcmfmac: brcmf_p2p_add_vif adding vif "p2p-dev-wlp1s0"
+>> (type=10, addr=00:00:00:00:00:00)
+>> [   17.947716] brcmfmac: brcmf_alloc_vif allocating virtual interface
+>> (size=3920)
+>> [   17.947720] brcmfmac: brcmf_fil_cmd_int_set ifidx=0, cmd=3, value=1
+>> [   17.948749] brcmfmac: brcmf_fil_iovar_data_set ifidx=0, name=apsta,
+>> len=4
+>> [   17.948752] brcmutil: data
+>> [   17.948756] 00000000: 01 00 00 00   ....
+>> [   17.949620] brcmfmac: brcmf_fil_cmd_int_set ifidx=0, cmd=2, value=1
+>> [   17.984420] brcmfmac: brcmf_fweh_event_worker event IF (54) ifidx 0
+>> bsscfg 0 addr aa:3e:81:77:bc:40
+>> [   17.984424] brcmfmac: brcmf_fweh_event_worker   version 2 flags 0
+>> status 0 reason 0
+>> [   17.984427] brcmutil: event payload, len=5
+>> [   17.984430] 00000000: 00 01 00 00 00   .....
+>> [   17.984433] brcmfmac: brcmf_fweh_handle_if_event action: 1 ifidx: 0
+>> bsscfgidx: 0 flags: 0 role: 0
+>> [   17.984435] brcmfmac: brcmf_fweh_handle_if_event adding wl0
+>> (aa:3e:81:77:bc:40)
+>> [   17.984437] brcmfmac: brcmf_add_if Enter, bsscfgidx=0, ifidx=0
+>> [   17.984439] brcmfmac: brcmf_add_if netdev:wlp1s0 ignore IF event
+>> [   17.984646] brcmfmac: brcmf_fil_iovar_data_set ifidx=0,
+>> name=p2p_disc, len=4
+>> [   17.984657] brcmutil: data
+>> [   17.984669] 00000000: 00 00 00 00   ....
+>> [   17.985123] brcmfmac: brcmf_fil_iovar_data_set ifidx=0,
+>> name=p2p_da_override, len=6
+>> [   17.985131] brcmutil: data
+>> [   17.985140] 00000000: aa 3e 81 77 bc 40   .>.w.@
+>> [   17.985580] brcmfmac: brcmf_fil_iovar_data_set ifidx=0,
+>> name=p2p_disc, len=4
+>> [   17.985588] brcmutil: data
+>> [   17.985598] 00000000: 01 00 00 00   ....
+>> [   17.985975] brcmfmac: brcmf_fil_cmd_data Failed: BCME_BUSY (-16)
+>> [   17.985985] brcmfmac: brcmf_p2p_create_p2pdev set p2p_disc error
+>> [   17.985999] brcmfmac: brcmf_cfg80211_add_iface add iface
+>> p2p-dev-wlp1s0 type 10 failed: err=-16
+>>
+>> Sorry that I missed that earlier :-(
+>>
+>> Regards,
+>> Arend
+>>
+>>> Regards,
+>>>
+>>> Hans
+>>>
+>>>
+>>>
+>>>
+>>>>>> ---
+>>>>>>   .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14
+>>>>>> ++++++++++----
+>>>>>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     |  5
+>>>>>> ++++-
+>>>>>>   2 files changed, 14 insertions(+), 5 deletions(-)
+>>>>>>
+>>>>>> diff --git
+>>>>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>>>>> index cd1d6730eab7..dae88f3d041d 100644
+>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>>>>> @@ -684,11 +684,17 @@ static struct wireless_dev
+>>>>>> *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+>>>>>>           return ERR_PTR(-EINVAL);
+>>>>>>       }
+>>>>>> -    if (IS_ERR(wdev))
+>>>>>> -        brcmf_err("add iface %s type %d failed: err=%d\n",
+>>>>>> -              name, type, (int)PTR_ERR(wdev));
+>>>>>> -    else
+>>>>>> +    if (IS_ERR(wdev)) {
+>>>>>> +        err = PTR_ERR(wdev);
+>>>>>> +        if (err != -EBUSY)
+>>>>>> +            brcmf_err("add iface %s type %d failed: err=%d\n",
+>>>>>> +                  name, type, err);
+>>>>>> +        else
+>>>>>> +            brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
+>>>>>> +                  name, type, err);
+>>>>>> +    } else {
+>>>>>>           brcmf_cfg80211_update_proto_addr_mode(wdev);
+>>>>>> +    }
+>>>>>>       return wdev;
+>>>>>>   }
+>>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>>>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>>>>> index aa299c47bfa2..1bb296ffb46f 100644
+>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>>>>> @@ -2090,7 +2090,10 @@ static struct wireless_dev
+>>>>>> *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
+>>>>>>       /* Initialize P2P Discovery in the firmware */
+>>>>>>       err = brcmf_fil_iovar_int_set(pri_ifp, "p2p_disc", 1);
+>>>>>>       if (err < 0) {
+>>>>>> -        brcmf_err("set p2p_disc error\n");
+>>>>>> +        if (err != -EBUSY)
+>>>>>> +            brcmf_err("set p2p_disc error\n");
+>>>>>> +        else
+>>>>>> +            brcmf_dbg(INFO, "set p2p_disc error\n");
+>>>>>>           brcmf_fweh_p2pdev_setup(pri_ifp, false);
+>>>>>>           brcmf_cfg80211_arm_vif_event(p2p->cfg, NULL);
+>>>>>>           goto fail;
+>>>>>>
+>>>>
+>>
