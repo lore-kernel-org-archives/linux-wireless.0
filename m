@@ -1,95 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:34019 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751997AbeB1Lbf (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:12716 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751882AbeBZQfx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 06:31:35 -0500
-Received: by mail-qk0-f173.google.com with SMTP id l206so2508398qke.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2018 03:31:35 -0800 (PST)
-Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
- 802.11f in their FullMAC fw
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
- <88d080df-4cce-98d1-6482-0408a3dcb015@gmail.com>
-Cc: Network Development <netdev@vger.kernel.org>,
-        bridge@lists.linux-foundation.org,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list@cypress.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A969313.5050501@broadcom.com> (sfid-20180228_123144_060953_551CD6DA)
-Date: Wed, 28 Feb 2018 12:31:31 +0100
+        Mon, 26 Feb 2018 11:35:53 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 2/8] staging: wilc1000: rename label _end_ in wilc_wlan_handle_txq()
+Date: Mon, 26 Feb 2018 22:01:56 +0530
+Message-ID: <1519662722-15761-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180226_173632_661337_2A7B2511)
+In-Reply-To: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <88d080df-4cce-98d1-6482-0408a3dcb015@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/27/2018 11:14 AM, Rafał Miłecki wrote:
-> Sending with a fixed linux-wireless ML address. Please kindly send your
-> replies using linux-wireless@
->
-> On 02/27/2018 11:08 AM, Rafał Miłecki wrote:
->> I've problem when using OpenWrt/LEDE on a home router with Broadcom's
->> FullMAC WiFi chipset.
->>
->>
->> First of all OpenWrt/LEDE uses bridge interface for LAN network with:
->> 1) IFLA_BRPORT_MCAST_TO_UCAST
->> 2) Clients isolation in hostapd
->> 3) Hairpin mode enabled
->>
->> For more details please see Linus's patch description:
->> https://patchwork.kernel.org/patch/9530669/
->> and maybe hairpin mode patch:
->> https://lwn.net/Articles/347344/
->>
->> Short version: in that setup packets received from a bridged wireless
->> interface can be handled back to it for transmission.
->>
->>
->> Now, Broadcom's firmware for their FullMAC chipsets in AP mode
->> supports an obsoleted 802.11f AKA IAPP standard. It's a roaming
->> standard that was replaced by 802.11r.
->>
->> Whenever a new station associates, firmware generates a packet like:
->> ff ff ff ff  ff ff ec 10  7b 5f ?? ??  00 06 00 01  af 81 01 00
->> (just masked 2 bytes of my MAC)
->>
->> For mode details you can see discussion in my brcmfmac patch thread:
->> https://patchwork.kernel.org/patch/10191451/
->>
->>
->> The problem is that bridge (in setup as above) handles such a packet
->> back to the device.
+Rename label name starting with '_' to follow as per linux coding style.
 
- From reading the referenced links I understand the hairpin mode is 
-causing the packet to be sent back to the device, and the hairpin mode 
-is required for MCAST_TO_UCAST, right?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
->> That makes Broadcom's FullMAC firmware believe that a given station
->> just connected to another AP in a network (which doesn't even exist).
->> As a result firmware immediately disassociates that station. It's
->> simply impossible to connect to the router. Every association is
->> followed by immediate disassociation.
->>
->>
->> Can you see any solution for this problem? Is that an option to stop
->> multicast-to-unicast from touching 802.11f packets? Some other ideas?
->> Obviously I can't modify Broadcom's firmware and drop that obsoleted
->> standard.
-
-As far as I can tell you are correct that the 802.11f amendment was 
-never adopted into the 802.11 standard. I will ask internally if we 
-still have a reason for carrying it in our firmware.
-
-Regards,
-Arend
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 37d6d87..5422359 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -648,7 +648,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 	} while (!wilc->quit);
+ 
+ 	if (!ret)
+-		goto _end_;
++		goto out_release_bus;
+ 
+ 	timeout = 200;
+ 	do {
+@@ -695,11 +695,11 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 	} while (1);
+ 
+ 	if (!ret)
+-		goto _end_;
++		goto out_release_bus;
+ 
+ 	if (entries == 0) {
+ 		ret = WILC_TX_ERR_NO_BUF;
+-		goto _end_;
++		goto out_release_bus;
+ 	}
+ 
+ 	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+@@ -756,11 +756,11 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 
+ 	ret = func->hif_clear_int_ext(wilc, ENABLE_TX_VMM);
+ 	if (!ret)
+-		goto _end_;
++		goto out_release_bus;
+ 
+ 	ret = func->hif_block_tx_ext(wilc, 0, txb, offset);
+ 
+-_end_:
++out_release_bus:
+ 	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ 
+ out:
+-- 
+2.7.4
