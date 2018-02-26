@@ -1,75 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:43927 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750827AbeBWOGf (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12073 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750807AbeBZQf5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 09:06:35 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org
-Subject: [v8 0/8] rsi: add bluetooth and coex support
-Date: Fri, 23 Feb 2018 19:24:50 +0530
-Message-Id: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com> (sfid-20180223_150639_063820_AEBBD648)
+        Mon, 26 Feb 2018 11:35:57 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 3/8] staging: wilc1000: fix line over 80 char in wilc_wlan_handle_txq()
+Date: Mon, 26 Feb 2018 22:01:57 +0530
+Message-ID: <1519662722-15761-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180226_173603_195215_C35BC088)
+In-Reply-To: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Refactor wilc_wlan_handle_txq() to fix 'line over 80 char' issue found
+by checkpatch.pl script.
 
-This patch series adds new bluetooth driver and coex enhancments
-in existing wlan driver for RSI chipsets.
-As per our architecture, both wlan and bluetooth drivers talk
-over same SDIO interface to device. Separate endpoint will be
-used in case of USB interface.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 76 ++++++++++++++++++------------------
+ 1 file changed, 39 insertions(+), 37 deletions(-)
 
-Change in v8: 4/8, 5/8 are modified
-Change in v7: 4/8 is modified
-Changes in v6: 1/8, 3/8, 4/8, 5/8, 6/8 are modified
-Changes in v5: 5/8 is modified
-Changes in v4: 5/8 is modified
-Changes in v3: 4/8, 5/8 and 6/8 patches are modified
-Changes in v2: 2/8, 5/8 and 6/8 patches are modified
-
-Prameela Rani Garnepudi (6):
-  rsi: add rx control block to handle rx packets in USB
-  rsi: add header file rsi_91x
-  rsi: add coex support
-  Bluetooth: btrsi: add new rsi bluetooth driver
-  rsi: add module parameter operating mode
-  rsi: sdio changes to support BT
-
-Siva Rebbagondla (2):
-  rsi: add bluetooth rx endpoint
-  rsi: handle BT traffic in driver
-
- drivers/bluetooth/Kconfig                   |  12 ++
- drivers/bluetooth/Makefile                  |   2 +
- drivers/bluetooth/btrsi.c                   | 188 ++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/Kconfig            |   9 ++
- drivers/net/wireless/rsi/Makefile           |   1 +
- drivers/net/wireless/rsi/rsi_91x_coex.c     | 179 ++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_core.c     |  20 ++-
- drivers/net/wireless/rsi/rsi_91x_hal.c      |  56 +++++++--
- drivers/net/wireless/rsi/rsi_91x_main.c     | 129 ++++++++++++++++++-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   2 +-
- drivers/net/wireless/rsi/rsi_91x_sdio.c     |  13 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |   5 +-
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 124 +++++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  35 ++++--
- drivers/net/wireless/rsi/rsi_coex.h         |  37 ++++++
- drivers/net/wireless/rsi/rsi_common.h       |   5 +-
- drivers/net/wireless/rsi/rsi_hal.h          |  21 ++++
- drivers/net/wireless/rsi/rsi_main.h         |  21 ++--
- drivers/net/wireless/rsi/rsi_mgmt.h         |   3 +
- drivers/net/wireless/rsi/rsi_usb.h          |  16 ++-
- include/net/rsi_91x.h                       |  56 +++++++++
- 21 files changed, 852 insertions(+), 82 deletions(-)
- create mode 100644 drivers/bluetooth/btrsi.c
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
- create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
- create mode 100644 include/net/rsi_91x.h
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 5422359..ee7102d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -707,49 +707,51 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 	offset = 0;
+ 	i = 0;
+ 	do {
++		u32 header, buffer_offset;
++		char *bssid;
++
+ 		tqe = wilc_wlan_txq_remove_from_head(dev);
+-		if (tqe && vmm_table[i] != 0) {
+-			u32 header, buffer_offset;
++		if (!tqe)
++			break;
+ 
+-			vmm_table[i] = cpu_to_le32(vmm_table[i]);
+-			vmm_sz = (vmm_table[i] & 0x3ff);
+-			vmm_sz *= 4;
+-			header = (tqe->type << 31) |
+-				 (tqe->buffer_size << 15) |
+-				 vmm_sz;
+-			if (tqe->type == WILC_MGMT_PKT)
+-				header |= BIT(30);
+-			else
+-				header &= ~BIT(30);
++		if (vmm_table[i] == 0)
++			break;
+ 
+-			header = cpu_to_le32(header);
+-			memcpy(&txb[offset], &header, 4);
+-			if (tqe->type == WILC_CFG_PKT) {
+-				buffer_offset = ETH_CONFIG_PKT_HDR_OFFSET;
+-			} else if (tqe->type == WILC_NET_PKT) {
+-				char *bssid = ((struct tx_complete_data *)(tqe->priv))->bssid;
+-
+-				buffer_offset = ETH_ETHERNET_HDR_OFFSET;
+-				memcpy(&txb[offset + 8], bssid, 6);
+-			} else {
+-				buffer_offset = HOST_HDR_OFFSET;
+-			}
++		vmm_table[i] = cpu_to_le32(vmm_table[i]);
++		vmm_sz = (vmm_table[i] & 0x3ff);
++		vmm_sz *= 4;
++		header = (tqe->type << 31) |
++			 (tqe->buffer_size << 15) |
++			 vmm_sz;
++		if (tqe->type == WILC_MGMT_PKT)
++			header |= BIT(30);
++		else
++			header &= ~BIT(30);
+ 
+-			memcpy(&txb[offset + buffer_offset],
+-			       tqe->buffer, tqe->buffer_size);
+-			offset += vmm_sz;
+-			i++;
+-			tqe->status = 1;
+-			if (tqe->tx_complete_func)
+-				tqe->tx_complete_func(tqe->priv,
+-						      tqe->status);
+-			if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK &&
+-			    tqe->tcp_pending_ack_idx < MAX_PENDING_ACKS)
+-				pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
+-			kfree(tqe);
++		header = cpu_to_le32(header);
++		memcpy(&txb[offset], &header, 4);
++		if (tqe->type == WILC_CFG_PKT) {
++			buffer_offset = ETH_CONFIG_PKT_HDR_OFFSET;
++		} else if (tqe->type == WILC_NET_PKT) {
++			bssid = ((struct tx_complete_data *)(tqe->priv))->bssid;
++
++			buffer_offset = ETH_ETHERNET_HDR_OFFSET;
++			memcpy(&txb[offset + 8], bssid, 6);
+ 		} else {
+-			break;
++			buffer_offset = HOST_HDR_OFFSET;
+ 		}
++
++		memcpy(&txb[offset + buffer_offset],
++		       tqe->buffer, tqe->buffer_size);
++		offset += vmm_sz;
++		i++;
++		tqe->status = 1;
++		if (tqe->tx_complete_func)
++			tqe->tx_complete_func(tqe->priv, tqe->status);
++		if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK &&
++		    tqe->tcp_pending_ack_idx < MAX_PENDING_ACKS)
++			pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
++		kfree(tqe);
+ 	} while (--entries);
+ 
+ 	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
 -- 
 2.7.4
