@@ -1,59 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39782 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752601AbeB1Spd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 13:45:33 -0500
-Date: Wed, 28 Feb 2018 18:45:31 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: cantabile <cantabile.desu@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, kubakici@wp.pl,
-        gregkh@linuxfoundation.org, akpm@linux-foundation.org,
-        linux-wireless@vger.kernel.org, keescook@chromium.org,
-        shuah@kernel.org, mfuzzey@parkeon.com, zohar@linux.vnet.ibm.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com,
-        markivx@codeaurora.org, stephen.boyd@linaro.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [RFT 0/7] firmware: enable caching of firmware for reboot
- optimization
-Message-ID: <20180228184531.GK14069@wotan.suse.de> (sfid-20180228_194551_586552_C6C9F5FE)
-References: <20180227232101.20786-1-mcgrof@kernel.org>
- <49e9d9c3-1352-e204-ff95-5cf10f14bd35@gmail.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:38219 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751351AbeBZWGP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Feb 2018 17:06:15 -0500
+Received: by mail-wm0-f67.google.com with SMTP id z9so20027458wmb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2018 14:06:14 -0800 (PST)
+Received: from mail-wm0-f44.google.com (mail-wm0-f44.google.com. [74.125.82.44])
+        by smtp.gmail.com with ESMTPSA id 93sm5299004edi.15.2018.02.26.14.06.12
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 26 Feb 2018 14:06:13 -0800 (PST)
+Received: by mail-wm0-f44.google.com with SMTP id x7so17760761wmc.0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Feb 2018 14:06:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49e9d9c3-1352-e204-ff95-5cf10f14bd35@gmail.com>
+In-Reply-To: <1519383062.2231.5.camel@sipsolutions.net>
+References: <1519210220-22437-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
+ <20180221225903.GA42395@rodete-desktop-imager.corp.google.com>
+ <5A8EB4F4.2030103@broadcom.com> <20180222193547.GA78462@rodete-desktop-imager.corp.google.com>
+ <5A8FEF68.5080900@broadcom.com> <1519383062.2231.5.camel@sipsolutions.net>
+From: Brian Norris <briannorris@chromium.org>
+Date: Mon, 26 Feb 2018 14:06:11 -0800
+Message-ID: <CA+ASDXNogjhRvB_yGO7t4um5KbkJiMVLeed6TTe7um59aS3vDg@mail.gmail.com> (sfid-20180226_230638_653183_4FBF47F8)
+Subject: Re: [PATCH 2/3] mwifiex: support sysfs initiated device coredump
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless@vger.kernel.org,
+        Linux Bluetooth mailing list
+        <linux-bluetooth@vger.kernel.org>,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 28, 2018 at 08:03:26PM +0200, cantabile wrote:
-> On 28/02/18 01:20, Luis R. Rodriguez wrote:
-> > Cantabile, please give these patches a spin and let me know if it fixes
-> > your reported issue. They depend on other pending patches I have in line
-> > waiting to be merged so the easiest I thing I think is for you to test my
-> > 20180227-firmware-cache branch [0], based on Linus' tree. To get that
-> > tree, cd into your Linus git tree and do:
-> > 
-> > git remote add mcgrof https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git
-> > git checkout -b 20180227-firmware-cache mcgrof/20180227-firmware-cache
-> > 
-> > Please let me know if this resolves your issue and thanks for your report.
-> > 
-> 
-> I confirmed that request_firmware_cache is called, and the firmware is
-> loaded from the cache when resuming from hibernation. The bug is fixed.
+Hi,
 
-Great, thanks for testing.
+On Fri, Feb 23, 2018 at 2:51 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2018-02-23 at 11:39 +0100, Arend van Spriel wrote:
+>
+> > > > Well, that depends on the eye of the beholder I guess. From user-space
+> > > > perspective it is asynchronous regardless. A write access to the coredump
+> > > > sysfs file eventually results in a uevent when the devcoredump entry is
+> > > > created, ie. after driver has made a dev_coredump API call. Whether the
+> > > > driver does that synchronously or asynchronously is irrelevant as far as
+> > > > user-space is concerned.
+> > >
+> > > Is it really? The driver infrastructure seems to guarantee that the
+> > > entirety of a driver's ->coredump() will complete before returning from
+> > > the write. So it might be reasonable for some user to assume (based on
+> > > implementation details, e.g., of brcmfmac) that the devcoredump will be
+> > > ready by the time the write() syscall returns, absent documentation that
+> > > says otherwise. But then, that's not how mwifiex works right now, so
+> > > they might be surprised if they switch drivers.
+>
+> I can see how you might want to have that kind of behaviour, but you'd
+> have to jump through some hoops to see if the coredump you saw is
+> actually the right one - you probably want an asynchronous coredump
+> "collector" and then wait for it to show up (with some reasonable
+> timeout) on the actual filesystem, not on sysfs?
+>
+> Otherwise you have to trawl sysfs for the right coredump I guess, which
+> too is possible.
 
-Curious, is it also called if you suspend to RAM instead of just using hibernation?
+It's not that I want that interface. It's that I want the *lack* of
+such an interface to be guaranteed in the documentation. When the
+questions like "where? when?" are not answered in the doc, users are
+totally allowed to speculate ;) Perhaps the "where" can be deferred to
+other documentation (which should probably exist someday), but the
+"when" should be listed as "eventually; or not at all; listen for a
+uevent."
 
-  Luis
-> Thank you.
-> 
+> > > > You are right. Clearly I did not reach the end my learning curve here. I
+> > > > assumed referring to the existing dev_coredump facility was sufficient, but
+> > > > maybe it is worth a patch to be more explicit and mention the uevent
+> > > > behavior. Also dev_coredump facility may be disabled upon which the trigger
+> > > > will have no effect in sysfs. In the kernel the data passed by the driver is
+> > > > simply freed by dev_coredump facility.
+> > >
+> > > Is there any other documentation for the coredump feature? I don't
+> > > really see much.
+> >
+> > Any other than the code itself you mean? I am not sure. Maybe Johannes
+> > knows.
+>
+> There isn't really, it originally was really simple, but then somebody
+> (Kees perhaps?) requested a way to turn it off forever for security or
+> privacy concerns and it became more complicated.
 
--- 
-Luis Rodriguez, SUSE LINUX GmbH
-Maxfeldstrasse 5; D-90409 Nuernberg
+Then I don't think when adding a new sysfs ABI, we should be deferring
+to "existing dev_coredump facility [documentation]" (which doesn't
+exist). And just a few words about the user-facing interface would be
+nice for the documentation. There previously wasn't any official way
+to trigger a dump from userspace -- only from random debugfs files, I
+think, or from unspecified device failures.
+
+> > > static ssize_t coredump_store(struct device *dev, struct device_attribute *attr,
+> > >                         const char *buf, size_t count)
+> > > {
+> > >     device_lock(dev);
+> > >     if (dev->driver->coredump)
+> > >             dev->driver->coredump(dev);
+> > >     device_unlock(dev);
+> > >
+> > >     return count;
+> > > }
+> > > static DEVICE_ATTR_WO(coredump);
+> > >
+> > > Is that a bug or a feature?
+> >
+> > Yeah. Let's call it a bug. Just not sure what to go for. Return the
+> > error or change coredump callback to void return type.
+>
+> I'm not sure it matters all that much - the underlying devcoredump
+> calls all have no return value (void), and given the above complexities
+> with the ability to turn off devcoredumping entirely you cannot rely on
+> this return value to tell you if a dump was created or not, at least
+> not without much more infrastructure work.
+
+Then perhaps it makes sense to remove the return code before you
+create users of it.
+
+Brian
