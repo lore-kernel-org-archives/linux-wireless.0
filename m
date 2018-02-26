@@ -1,135 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59108 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756864AbeBPQNP (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:52213 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751468AbeBZQgH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 11:13:15 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 16 Feb 2018 18:12:55 +0200
-Message-Id: <20180216161301.29339-8-luca@coelho.fi> (sfid-20180216_171327_677020_0E297397)
-In-Reply-To: <20180216161301.29339-1-luca@coelho.fi>
-References: <20180216161301.29339-1-luca@coelho.fi>
-Subject: [PATCH 07/13] mac80211: Call mgd_prep_tx before transmitting deauthentication
+        Mon, 26 Feb 2018 11:36:07 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 6/8] staging: wilc1000: fix line over 80 char in wilc_wlan_handle_rxq()
+Date: Mon, 26 Feb 2018 22:02:00 +0530
+Message-ID: <1519662722-15761-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180226_173610_779969_A1848F81)
+In-Reply-To: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+Fix 'line over 80 character' issue found by checkpatch.pl script.
+Refactor wilc_wlan_handle_rxq() code to remove the checkpatch.pl
+warnings.
 
-In multi channel scenarios, when disassociating from the AP before a
-beacon was heard from the AP, it is not guaranteed that the virtual
-interface is granted air time for the transmission of the
-deauthentication frame. This in turn can lead to various issues as
-the AP might never get the deauthentication frame.
-
-To mitigate such possible issues, add a HW flag indicating that the
-driver requires mac80211 to call the mgd_prep_tx() driver callback
-to make sure that the virtual interface is granted immediate airtime
-to be able to transmit the frame, in case that no beacon was heard
-from the AP.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- include/net/mac80211.h | 13 +++++++++++++
- net/mac80211/debugfs.c |  1 +
- net/mac80211/mlme.c    | 16 +++++++++++++++-
- 3 files changed, 29 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 46 ++++++++++++++++++++----------------
+ 1 file changed, 25 insertions(+), 21 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 7efac7f98e45..c27c59650da8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6,6 +6,7 @@
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -2068,6 +2069,14 @@ struct ieee80211_txq {
-  * @IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA: Hardware supports buffer STA on
-  *	TDLS links.
-  *
-+ * @IEEE80211_HW_DEAUTH_NEED_MGD_TX_PREP: The driver requires the
-+ *	mgd_prepare_tx() callback to be called before transmission of a
-+ *	deauthentication frame in case the association was completed but no
-+ *	beacon was heard. This is required in multi-channel scenarios, where the
-+ *	virtual interface might not be given air time for the transmission of
-+ *	the frame, as it is not synced with the AP/P2P GO yet, and thus the
-+ *	deauthentication frame might not be transmitted.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -2111,6 +2120,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_REPORTS_LOW_ACK,
- 	IEEE80211_HW_SUPPORTS_TX_FRAG,
- 	IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA,
-+	IEEE80211_HW_DEAUTH_NEED_MGD_TX_PREP,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 74b80ad..223bf8b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -798,6 +798,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 			u32 header;
+ 			u32 pkt_len, pkt_offset, tp_len;
+ 			int is_cfg_packet;
++			int tmp;
  
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-@@ -3355,6 +3365,9 @@ enum ieee80211_reconfig_type {
-  *	management frame prior to having successfully associated to allow the
-  *	driver to give it channel time for the transmission, to get a response
-  *	and to be able to synchronize with the GO.
-+ *	For drivers that set %IEEE80211_HW_DEAUTH_NEED_MGD_TX_PREP, mac80211
-+ *	would also call this function before transmitting a deauthentication
-+ *	frame in case that no beacon was heard from the AP/P2P GO.
-  *	The callback will be called before each transmission and upon return
-  *	mac80211 will transmit the frame right away.
-  *	The callback is optional and can (should!) sleep.
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 1f466d12a6bc..a75653affbf7 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -212,6 +212,7 @@ static const char *hw_flag_names[] = {
- 	FLAG(REPORTS_LOW_ACK),
- 	FLAG(SUPPORTS_TX_FRAG),
- 	FLAG(SUPPORTS_TDLS_BUFFER_STA),
-+	FLAG(DEAUTH_NEED_MGD_TX_PREP),
- #undef FLAG
- };
+ 			memcpy(&header, &buffer[offset], 4);
+ 			header = cpu_to_le32(header);
+@@ -815,28 +816,31 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 						IS_MANAGMEMENT_CALLBACK |
+ 						IS_MGMT_STATUS_SUCCES);
  
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 010b127a3937..0024eff9bb84 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -7,6 +7,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -2008,9 +2009,22 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_flush_queues(local, sdata, true);
- 
- 	/* deauthenticate/disassociate now */
--	if (tx || frame_buf)
-+	if (tx || frame_buf) {
-+		struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-				wilc_wfi_mgmt_rx(wilc, &buffer[offset + HOST_HDR_OFFSET], pkt_len);
++				tmp = offset + HOST_HDR_OFFSET;
++				wilc_wfi_mgmt_rx(wilc, &buffer[tmp], pkt_len);
++			} else if (!is_cfg_packet) {
++				if (pkt_len > 0) {
++					wilc_frmw_to_linux(wilc,
++							   &buffer[offset],
++							   pkt_len,
++							   pkt_offset);
++				}
+ 			} else {
+-				if (!is_cfg_packet) {
+-					if (pkt_len > 0) {
+-						wilc_frmw_to_linux(wilc,
+-								   &buffer[offset],
+-								   pkt_len,
+-								   pkt_offset);
+-					}
+-				} else {
+-					struct wilc_cfg_rsp rsp;
+-
+-					wilc_wlan_cfg_indicate_rx(wilc, &buffer[pkt_offset + offset], pkt_len, &rsp);
+-					if (rsp.type == WILC_CFG_RSP) {
+-						if (wilc->cfg_seq_no == rsp.seq_no)
+-							complete(&wilc->cfg_event);
+-					} else if (rsp.type == WILC_CFG_RSP_STATUS) {
+-						wilc_mac_indicate(wilc, WILC_MAC_INDICATE_STATUS);
+-
+-					} else if (rsp.type == WILC_CFG_RSP_SCAN) {
+-						wilc_mac_indicate(wilc, WILC_MAC_INDICATE_SCAN);
+-					}
++				struct wilc_cfg_rsp rsp;
 +
-+		/*
-+		 * In multi channel scenarios guarantee that the virtual
-+		 * interface is granted immediate airtime to transmit the
-+		 * deauthentication frame by calling mgd_prepare_tx, if the
-+		 * driver requested so.
-+		 */
-+		if (ieee80211_hw_check(&local->hw, DEAUTH_NEED_MGD_TX_PREP) &&
-+		    !ifmgd->have_beacon)
-+			drv_mgd_prepare_tx(sdata->local, sdata);
++				tmp = pkt_offset + offset;
++				wilc_wlan_cfg_indicate_rx(wilc, &buffer[tmp],
++							  pkt_len, &rsp);
++				if (rsp.type == WILC_CFG_RSP) {
++					if (wilc->cfg_seq_no == rsp.seq_no)
++						complete(&wilc->cfg_event);
++				} else if (rsp.type == WILC_CFG_RSP_STATUS) {
++					tmp = WILC_MAC_INDICATE_STATUS;
++					wilc_mac_indicate(wilc, tmp);
 +
- 		ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid, stype,
- 					       reason, tx, frame_buf);
-+	}
- 
- 	/* flush out frame - make sure the deauth was actually sent */
- 	if (tx)
++				} else if (rsp.type == WILC_CFG_RSP_SCAN) {
++					tmp = WILC_MAC_INDICATE_SCAN;
++					wilc_mac_indicate(wilc, tmp);
+ 				}
+ 			}
+ 			offset += tp_len;
 -- 
-2.15.1
+2.7.4
