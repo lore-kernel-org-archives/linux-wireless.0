@@ -1,52 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59312 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751110AbeBQIeJ (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:21782 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751485AbeBZSNG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Feb 2018 03:34:09 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Ulf Magnusson <ulfalizer@gmail.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 17 Feb 2018 10:33:54 +0200
-Message-Id: <20180217083354.31160-10-luca@coelho.fi> (sfid-20180217_093421_337580_FE78E639)
-In-Reply-To: <20180217083354.31160-1-luca@coelho.fi>
-References: <20180217083354.31160-1-luca@coelho.fi>
-Subject: [PATCH 9/9] iwlwifi: fix malformed CONFIG_IWLWIFI_PCIE_RTPM default
+        Mon, 26 Feb 2018 13:13:06 -0500
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v2 5/8] wil6210: multiple VIFs support for start/stop AP
+Date: Mon, 26 Feb 2018 20:12:15 +0200
+Message-Id: <1519668738-16912-6-git-send-email-merez@codeaurora.org> (sfid-20180226_191317_932335_47BB73EF)
+In-Reply-To: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
+References: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ulf Magnusson <ulfalizer@gmail.com>
+From: Lior David <liord@codeaurora.org>
 
-'default false' should be 'default n', though they happen to have the
-same effect here, due to undefined symbols ('false' in this case)
-evaluating to n in a tristate sense.
+Add support for multiple VIFs in the cfg80211 operations start_ap,
+stop_ap and change_beacon. This change allows starting multiple APs
+using virtual interfaces.
+The data path and most other operations are still working only
+on the main interface.
 
-Remove the default instead of changing it. bool and tristate symbols
-implicitly default to n.
-
-Discovered with the
-https://github.com/ulfalizer/Kconfiglib/blob/master/examples/list_undefined.py
-script.
-
-Signed-off-by: Ulf Magnusson <ulfalizer@gmail.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/Kconfig | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 49 +++++++++++++++++++----------
+ drivers/net/wireless/ath/wil6210/main.c     | 14 ++++++++-
+ drivers/net/wireless/ath/wil6210/netdev.c   | 22 +++++++------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |  2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  9 +++---
+ drivers/net/wireless/ath/wil6210/wmi.c      |  8 +++++
+ 6 files changed, 71 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
-index c5f2ddf9b0fe..e5a2fc738ac3 100644
---- a/drivers/net/wireless/intel/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
-@@ -91,7 +91,6 @@ config IWLWIFI_BCAST_FILTERING
- config IWLWIFI_PCIE_RTPM
-        bool "Enable runtime power management mode for PCIe devices"
-        depends on IWLMVM && PM && EXPERT
--       default false
-        help
-          Say Y here to enable runtime power management for PCIe
-          devices.  If enabled, the device will go into low power mode
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index ce20ee4..a3ad3f4 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -544,8 +544,9 @@ static int wil_cfg80211_validate_change_iface(struct wil6210_priv *wil,
+ 	return ERR_PTR(rc);
+ }
+ 
+-int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif)
++int wil_vif_prepare_stop(struct wil6210_vif *vif)
+ {
++	struct wil6210_priv *wil = vif_to_wil(vif);
+ 	struct wireless_dev *wdev = vif_to_wdev(vif);
+ 	struct net_device *ndev;
+ 	int rc;
+@@ -561,6 +562,7 @@ int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif)
+ 				 rc);
+ 			/* continue */
+ 		}
++		wil_bcast_fini(vif);
+ 		netif_carrier_off(ndev);
+ 	}
+ 
+@@ -593,7 +595,7 @@ static int wil_cfg80211_del_iface(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
+ 
+-	rc = wil_vif_prepare_stop(wil, vif);
++	rc = wil_vif_prepare_stop(vif);
+ 	if (rc)
+ 		goto out;
+ 
+@@ -614,6 +616,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 	struct wil6210_vif *vif = ndev_to_vif(ndev);
+ 	struct wireless_dev *wdev = vif_to_wdev(vif);
+ 	int rc;
++	bool fw_reset = false;
+ 
+ 	wil_dbg_misc(wil, "change_iface: type=%d\n", type);
+ 
+@@ -628,7 +631,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 	/* do not reset FW when there are active VIFs,
+ 	 * because it can cause significant disruption
+ 	 */
+-	if (!wil_has_other_up_ifaces(wil, ndev) &&
++	if (!wil_has_other_active_ifaces(wil, ndev, true, false) &&
+ 	    netif_running(ndev) && !wil_is_recovery_blocked(wil)) {
+ 		wil_dbg_misc(wil, "interface is up. resetting...\n");
+ 		mutex_lock(&wil->mutex);
+@@ -638,6 +641,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 
+ 		if (rc)
+ 			return rc;
++		fw_reset = true;
+ 	}
+ 
+ 	switch (type) {
+@@ -654,8 +658,9 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	if (vif->mid != 0 && wil_has_up_ifaces(wil)) {
+-		wil_vif_prepare_stop(wil, vif);
++	if (vif->mid != 0 && wil_has_active_ifaces(wil, true, false)) {
++		if (!fw_reset)
++			wil_vif_prepare_stop(vif);
+ 		rc = wmi_port_delete(wil, vif->mid);
+ 		if (rc)
+ 			return rc;
+@@ -1530,10 +1535,12 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 
+ 	mutex_lock(&wil->mutex);
+ 
+-	__wil_down(wil);
+-	rc = __wil_up(wil);
+-	if (rc)
+-		goto out;
++	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
++		__wil_down(wil);
++		rc = __wil_up(wil);
++		if (rc)
++			goto out;
++	}
+ 
+ 	rc = wmi_set_ssid(vif, ssid_len, ssid);
+ 	if (rc)
+@@ -1549,7 +1556,8 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	vif->pbss = pbss;
+ 
+ 	netif_carrier_on(ndev);
+-	wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
++	if (!wil_has_other_active_ifaces(wil, ndev, false, true))
++		wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
+ 
+ 	rc = wmi_pcp_start(vif, bi, wmi_nettype, chan, hidden_ssid, is_go);
+ 	if (rc)
+@@ -1565,7 +1573,8 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	wmi_pcp_stop(vif);
+ err_pcp_start:
+ 	netif_carrier_off(ndev);
+-	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
++	if (!wil_has_other_active_ifaces(wil, ndev, false, true))
++		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+ out:
+ 	mutex_unlock(&wil->mutex);
+ 	return rc;
+@@ -1670,20 +1679,26 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
+ {
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+ 	struct wil6210_vif *vif = ndev_to_vif(ndev);
++	bool last;
+ 
+-	wil_dbg_misc(wil, "stop_ap\n");
++	wil_dbg_misc(wil, "stop_ap, mid=%d\n", vif->mid);
+ 
+ 	netif_carrier_off(ndev);
+-	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
+-	wil_set_recovery_state(wil, fw_recovery_idle);
+-
+-	set_bit(wil_status_resetting, wil->status);
++	last = !wil_has_other_active_ifaces(wil, ndev, false, true);
++	if (last) {
++		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
++		wil_set_recovery_state(wil, fw_recovery_idle);
++		set_bit(wil_status_resetting, wil->status);
++	}
+ 
+ 	mutex_lock(&wil->mutex);
+ 
+ 	wmi_pcp_stop(vif);
+ 
+-	__wil_down(wil);
++	if (last)
++		__wil_down(wil);
++	else
++		wil_bcast_fini(vif);
+ 
+ 	mutex_unlock(&wil->mutex);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 2926bd1..5aeaf9b 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -508,6 +508,18 @@ void wil_bcast_fini(struct wil6210_vif *vif)
+ 	wil_vring_fini_tx(wil, ri);
+ }
+ 
++void wil_bcast_fini_all(struct wil6210_priv *wil)
++{
++	int i;
++	struct wil6210_vif *vif;
++
++	for (i = 0; i < wil->max_vifs; i++) {
++		vif = wil->vifs[i];
++		if (vif)
++			wil_bcast_fini(vif);
++	}
++}
++
+ int wil_priv_init(struct wil6210_priv *wil)
+ {
+ 	uint i;
+@@ -1204,7 +1216,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 
+ 	cancel_work_sync(&vif->disconnect_worker);
+ 	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+-	wil_bcast_fini(vif);
++	wil_bcast_fini_all(wil);
+ 
+ 	/* Disable device led before reset*/
+ 	wmi_led_cfg(wil, false);
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index e23a80c..87956c0 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -20,8 +20,8 @@
+ #include "wil6210.h"
+ #include "txrx.h"
+ 
+-bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
+-			     struct net_device *ndev)
++bool wil_has_other_active_ifaces(struct wil6210_priv *wil,
++				 struct net_device *ndev, bool up, bool ok)
+ {
+ 	int i;
+ 	struct wil6210_vif *vif;
+@@ -31,17 +31,19 @@ bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
+ 		vif = wil->vifs[i];
+ 		if (vif) {
+ 			ndev_i = vif_to_ndev(vif);
+-			if (ndev_i != ndev && ndev_i->flags & IFF_UP)
+-				return true;
++			if (ndev_i != ndev)
++				if ((up && (ndev_i->flags & IFF_UP)) ||
++				    (ok && netif_carrier_ok(ndev_i)))
++					return true;
+ 		}
+ 	}
+ 
+ 	return false;
+ }
+ 
+-bool wil_has_up_ifaces(struct wil6210_priv *wil)
++bool wil_has_active_ifaces(struct wil6210_priv *wil, bool up, bool ok)
+ {
+-	return wil_has_other_up_ifaces(wil, NULL);
++	return wil_has_other_active_ifaces(wil, NULL, up, ok);
+ }
+ 
+ static int wil_open(struct net_device *ndev)
+@@ -57,7 +59,7 @@ static int wil_open(struct net_device *ndev)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (!wil_has_other_up_ifaces(wil, ndev)) {
++	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
+ 		wil_dbg_misc(wil, "open, first iface\n");
+ 		rc = wil_pm_runtime_get(wil);
+ 		if (rc < 0)
+@@ -78,7 +80,7 @@ static int wil_stop(struct net_device *ndev)
+ 
+ 	wil_dbg_misc(wil, "stop\n");
+ 
+-	if (!wil_has_other_up_ifaces(wil, ndev)) {
++	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
+ 		wil_dbg_misc(wil, "stop, last iface\n");
+ 		rc = wil_down(wil);
+ 		if (!rc)
+@@ -359,7 +361,7 @@ int wil_vif_add(struct wil6210_priv *wil, struct wil6210_vif *vif)
+ {
+ 	struct net_device *ndev = vif_to_ndev(vif);
+ 	struct wireless_dev *wdev = vif_to_wdev(vif);
+-	bool any_active = wil_has_up_ifaces(wil);
++	bool any_active = wil_has_active_ifaces(wil, true, false);
+ 	int rc;
+ 
+ 	ASSERT_RTNL();
+@@ -428,7 +430,7 @@ void wil_vif_remove(struct wil6210_priv *wil, u8 mid)
+ {
+ 	struct wil6210_vif *vif;
+ 	struct net_device *ndev;
+-	bool any_active = wil_has_up_ifaces(wil);
++	bool any_active = wil_has_active_ifaces(wil, true, false);
+ 
+ 	ASSERT_RTNL();
+ 	if (mid >= wil->max_vifs) {
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 1fd7614..7d3ff3f 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -145,7 +145,7 @@ static void wil_remove_all_additional_vifs(struct wil6210_priv *wil)
+ 	for (i = 1; i < wil->max_vifs; i++) {
+ 		vif = wil->vifs[i];
+ 		if (vif) {
+-			wil_vif_prepare_stop(wil, vif);
++			wil_vif_prepare_stop(vif);
+ 			wil_vif_remove(wil, vif->mid);
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 8ab4b5a..6e46a23 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -944,9 +944,9 @@ struct wil6210_vif *
+ 	      unsigned char name_assign_type, enum nl80211_iftype iftype);
+ void wil_vif_free(struct wil6210_vif *vif);
+ void *wil_if_alloc(struct device *dev);
+-bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
+-			     struct net_device *ndev);
+-bool wil_has_up_ifaces(struct wil6210_priv *wil);
++bool wil_has_other_active_ifaces(struct wil6210_priv *wil,
++				 struct net_device *ndev, bool up, bool ok);
++bool wil_has_active_ifaces(struct wil6210_priv *wil, bool up, bool ok);
+ void wil_if_free(struct wil6210_priv *wil);
+ int wil_vif_add(struct wil6210_priv *wil, struct wil6210_vif *vif);
+ int wil_if_add(struct wil6210_priv *wil);
+@@ -1053,7 +1053,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ int wil_cfg80211_iface_combinations_from_fw(
+ 	struct wil6210_priv *wil,
+ 	const struct wil_fw_record_concurrency *conc);
+-int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif);
++int wil_vif_prepare_stop(struct wil6210_vif *vif);
+ 
+ #if defined(CONFIG_WIL6210_DEBUGFS)
+ int wil6210_debugfs_init(struct wil6210_priv *wil);
+@@ -1095,6 +1095,7 @@ int wil_vring_init_tx(struct wil6210_vif *vif, int id, int size,
+ int wil_vring_init_bcast(struct wil6210_vif *vif, int id, int size);
+ int wil_bcast_init(struct wil6210_vif *vif);
+ void wil_bcast_fini(struct wil6210_vif *vif);
++void wil_bcast_fini_all(struct wil6210_priv *wil);
+ 
+ void wil_update_net_queues(struct wil6210_priv *wil, struct vring *vring,
+ 			   bool should_stop);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 23c28bf..762ade3 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -341,6 +341,10 @@ static const char *cmdid2name(u16 cmdid)
+ 		return "WMI_GET_PCP_CHANNEL_CMD";
+ 	case WMI_P2P_CFG_CMDID:
+ 		return "WMI_P2P_CFG_CMD";
++	case WMI_PORT_ALLOCATE_CMDID:
++		return "WMI_PORT_ALLOCATE_CMD";
++	case WMI_PORT_DELETE_CMDID:
++		return "WMI_PORT_DELETE_CMD";
+ 	case WMI_START_LISTEN_CMDID:
+ 		return "WMI_START_LISTEN_CMD";
+ 	case WMI_START_SEARCH_CMDID:
+@@ -479,6 +483,10 @@ static const char *eventid2name(u16 eventid)
+ 		return "WMI_GET_PCP_CHANNEL_EVENT";
+ 	case WMI_P2P_CFG_DONE_EVENTID:
+ 		return "WMI_P2P_CFG_DONE_EVENT";
++	case WMI_PORT_ALLOCATED_EVENTID:
++		return "WMI_PORT_ALLOCATED_EVENT";
++	case WMI_PORT_DELETED_EVENTID:
++		return "WMI_PORT_DELETED_EVENT";
+ 	case WMI_LISTEN_STARTED_EVENTID:
+ 		return "WMI_LISTEN_STARTED_EVENT";
+ 	case WMI_SEARCH_STARTED_EVENTID:
 -- 
-2.15.1
+1.9.1
