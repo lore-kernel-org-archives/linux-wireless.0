@@ -1,54 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33856 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751049AbeBIOdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Feb 2018 09:33:13 -0500
-Date: Fri, 9 Feb 2018 15:33:11 +0100
-From: Timothy Redaelli <tredaelli@redhat.com>
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:21756 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751022AbeBZSNC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Feb 2018 13:13:02 -0500
+From: Maya Erez <merez@codeaurora.org>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: <linux-wireless@vger.kernel.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] ath9k: fix DFS detector synchronization
-Message-ID: <20180209153311.193e08e0@redhat.com> (sfid-20180209_153317_818392_4C863F8D)
-In-Reply-To: <87fu6aegmy.fsf@kamboji.qca.qualcomm.com>
-References: <c967cb589b7d71a17afc29f3c634f961ef6820dd.1518090407.git.tredaelli@redhat.com>
-        <87fu6aegmy.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v2 8/8] wil6210: add debugfs 'mids' file
+Date: Mon, 26 Feb 2018 20:12:18 +0200
+Message-Id: <1519668738-16912-9-git-send-email-merez@codeaurora.org> (sfid-20180226_191306_690089_34505B1C)
+In-Reply-To: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
+References: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 09 Feb 2018 10:01:09 +0200
-Kalle Valo <kvalo@codeaurora.org> wrote:
+From: Lior David <liord@codeaurora.org>
 
-> Timothy Redaelli <tredaelli@redhat.com> writes:
-> 
-> > The code currently syncronize the DFS region only if curchan != 0,
-> > but hostapd launch DFS before the channel is set and so
-> > set_dfs_domain is never executed.
-> >
-> > CC: Felix Fietkau <nbd@nbd.name>
-> > Signed-off-by: Timothy Redaelli <tredaelli@redhat.com>  
-> 
-> What kind of bug does this fix? Please describe the symptoms from
-> user's point of view.
+Added a new debugfs file 'mids' to print the list of
+virtual interfaces by MAC ID (MID). Allows mapping
+between the internal MID used by FW and the actual
+network interface used by the VIF. This is needed by
+debugging tools.
 
-With the current code radar detection (CAC) doesn't work on ath9k
-since "dpd_set_domain" is only called once with NL80211_DFS_UNSET (0) as
-region and so "dpd_add_pulse" always returns true (radar detected)
-without doing a real scan.
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 37 ++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-You can test it easily with a kernel built with
-CONFIG_ATH9K_DFS_CERTIFIED and by using a simple hostapd configuration:
-
-interface=wlp1s0
-hw_mode=a
-channel=acs_survey
-chanlist=100 104 108 112 116 120 124 128 132 136 140
-ieee80211d=1
-ieee80211h=1
-country_code=US
-ieee80211n=1
-wmm_enabled=1
-ssid=testwifi
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 93a99a1..8c90b31 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1495,6 +1495,42 @@ static int wil_sta_seq_open(struct inode *inode, struct file *file)
+ 	.llseek		= seq_lseek,
+ };
+ 
++static int wil_mids_debugfs_show(struct seq_file *s, void *data)
++{
++	struct wil6210_priv *wil = s->private;
++	struct wil6210_vif *vif;
++	struct net_device *ndev;
++	int i;
++
++	mutex_lock(&wil->vif_mutex);
++	for (i = 0; i < wil->max_vifs; i++) {
++		vif = wil->vifs[i];
++
++		if (vif) {
++			ndev = vif_to_ndev(vif);
++			seq_printf(s, "[%d] %pM %s\n", i, ndev->dev_addr,
++				   ndev->name);
++		} else {
++			seq_printf(s, "[%d] unused\n", i);
++		}
++	}
++	mutex_unlock(&wil->vif_mutex);
++
++	return 0;
++}
++
++static int wil_mids_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_mids_debugfs_show, inode->i_private);
++}
++
++static const struct file_operations fops_mids = {
++	.open		= wil_mids_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++};
++
+ static ssize_t wil_read_file_led_cfg(struct file *file, char __user *user_buf,
+ 				     size_t count, loff_t *ppos)
+ {
+@@ -1749,6 +1785,7 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 	{"mbox",	0444,		&fops_mbox},
+ 	{"vrings",	0444,		&fops_vring},
+ 	{"stations", 0444,		&fops_sta},
++	{"mids",	0444,		&fops_mids},
+ 	{"desc",	0444,		&fops_txdesc},
+ 	{"bf",		0444,		&fops_bf},
+ 	{"mem_val",	0644,		&fops_memread},
+-- 
+1.9.1
