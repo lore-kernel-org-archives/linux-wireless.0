@@ -1,84 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:33966 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751182AbeBJU0j (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47990 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750969AbeBZVjJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Feb 2018 15:26:39 -0500
-Message-ID: <1518294396.2029.3.camel@sipsolutions.net> (sfid-20180210_212642_471056_A44C9050)
-Subject: Re: [PATCH v2] ieee80211: Increase the PMK maximum length to 64
- bytes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Srinivas Dasari <dasaris@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Date: Sat, 10 Feb 2018 21:26:36 +0100
-In-Reply-To: <20180210103217.GA12147@jouni.qca.qualcomm.com>
-References: <1518020451-8743-1-git-send-email-dasaris@codeaurora.org>
-         <5A7B54E9.8070805@broadcom.com> <1518034894.3124.9.camel@sipsolutions.net>
-         <20180210103217.GA12147@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 26 Feb 2018 16:39:09 -0500
+Subject: Re: [PATCH] ath9k: break out of irq handler after 5 jiffies
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+References: <1517958324-13536-1-git-send-email-greearb@candelatech.com>
+ <2129dcdd-5963-c4da-600e-83f8c394d05c@nbd.name>
+ <1518000956.3124.7.camel@sipsolutions.net>
+ <2086dc09-485c-2b7f-de74-35ab2e0dfc4c@candelatech.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <d787d749-bce7-1785-c90a-41dd4355a717@candelatech.com> (sfid-20180226_223913_363311_0655DC1F)
+Date: Mon, 26 Feb 2018 13:39:06 -0800
+MIME-Version: 1.0
+In-Reply-To: <2086dc09-485c-2b7f-de74-35ab2e0dfc4c@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2018-02-10 at 12:32 +0200, Jouni Malinen wrote:
-> 
-> > Yeah I'm concerned about this too - and regardless of that issue, we
-> > probably need those drivers that do support it to advertise support for
-> > the new curves, and then allow the longer PMK length only for those that do?
-> 
-> Please note that some drivers may not support even the current
-> PMK_MAX_LEN (48) value. In fact, most of the cfg80211 cases using
-> NL80211_ATTR_PMK are separately enforcing shorter lengths (32 or that
-> 48), so this change in PMK_MAX_LEN definition does not actually have any
-> impact for many of the existing cases. 
+On 02/07/2018 07:39 AM, Ben Greear wrote:
+>
+>
+> On 02/07/2018 02:55 AM, Johannes Berg wrote:
+>> On Wed, 2018-02-07 at 10:16 +0100, Felix Fietkau wrote:
+>>> On 2018-02-07 00:05, greearb@candelatech.com wrote:
+>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>
+>>>> In case where the system is sluggish, we should probably break out
+>>>> early.  Maybe this will fix issues where the OS thinks the IRQ handler
+>>>> is not responding and disables the IRQ because 'nobody cared'
+>>>>
+>>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>>
+>>> 5 jiffies as a hardcoded value is a bad idea, since it produces
+>>> different behavior based on CONFIG_HZ.
+>
+> I figured that was a benefit since it would run shorter duration on systems with
+> a faster HZ clock.
+>
+>>
+>> Also, err, NAPI? Or is something else is going on here?
+>
+> I don't really know, but part of my test was running traffic while creating
+> 1200 stations, so likely there were lots of higher-level lock contention that
+> slowed down sending pkts up the stack.
+>
+> I got a bunch of errors about IRQs being ignored because nobody cared.  I noticed
+> that the ath9k loop could handle up to 500 or so frames, and that seemed like too
+> many for my particular test case.
+>
+> Once I put in this patch, I did not see the 'nobody cared' error again.
+>
+> There could easily be a better fix.  If you all want me to use a fixed time instead
+> of HZ, then please suggest a value.  I was testing with HZ of 1000, btw.
 
-Ok. If the drivers are checking/don't care then we can deal without
-extra feature bits or something, IMHO, at least with respect to this
-specific issue of length checks.
+Hello,
 
-> The only place where it does make
-> a difference is NL80211_CMD_SET_PMKSA and NL80211_ATTR_PMK was added for
-> that command with FILS authentication in mind in the first place (and
-> that would not get a 64 octet value from wpa_supplicant at least).
+I don't mind changing this patch, but I could use some guidance as to what
+values you all want me to use.
 
-Ok.
+Should I use a millisecond based clock instead of jiffies?
 
-> It turns out that there are no known use of PMK with DPP authentication
-> at the moment in any driver, so for now, I think I'll just make
-> wpa_supplicant skip addition of the NL80211_ATTR_PMK if the PMK is
-> longer than 48 octets. This should take care of the most immediate need,
+What time duration do you want if 5 Jiffies (or 5ms) is not desired?
 
-Fair enough.
+Thanks,
+Ben
 
-> but it would be good to prepare for the possibility of there being a
-> driver/firmware that would like to offload roaming and 4-way handshake
-> with DPP APs and do that using this PMK value from DPP network
-> introduction rather than offloading network introduction. For that to
-> work, PMK_MAX_LEN needs to be increased.
 
-So let's do the patch anyway? I mean ... it's one patch or the other,
-so doesn't really make a huge difference?
-
-> So DPP works just fine with most drivers even with the 64 octet PMK (as
-> long as that wpa_supplicant change goes in) when there is no requirement
-> of offloading 4-way handshake.
-
-Right.
-
-> As far as driver support for various PMK lengths is concerned, how
-> should that be advertised? The limits can be different for each
-> particular use of NL80211_ATTR_PMK (NL80211_CMD_CONNECT,
-> NL80211_CMD_ASSOCIATE, NL80211_START_AP, NL80211_CMD_SET_PMKSA (for
-> FILS), NL80211_CMD_SET_PMKSA (for DPP), NL80211_CMD_SET_PMKSA (for
-> something else), NL80211_CMD_SET_PMK).
-
-Yeah, that seems somewhat problematic? Though I'd hope they're kinda
-all the same limits?
-
-Perhaps we rather need something like "DPP supported" vs. "long PMK
-supported" since just "long PMK" doesn't really say anything about the
-supported curves?
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
