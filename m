@@ -1,52 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:34302 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750799AbeBTOEq (ORCPT
+Received: from blackstar.xs4all.nl ([83.163.96.30]:41388 "EHLO
+        blackstar.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751022AbeBZKIP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 09:04:46 -0500
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Subject: Re: [RFC PATCH 2/2] net: rfkill: gpio: Convert driver to SerDev
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20180220134618.12972-3-carlo@caione.org>
-Date: Tue, 20 Feb 2018 15:04:42 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        =?utf-8?Q?Fr=C3=A9d=C3=A9ric_Danis?= <frederic.danis.oss@gmail.com>,
-        Sebastian Reichel <sebastian.reichel@collabora.co.uk>,
-        rafael.j.wysocki@intel.com, Hans de Goede <hdegoede@redhat.com>,
-        linux@endlessm.com, Carlo Caione <carlo@endlessm.com>
-Message-Id: <44721384-4057-445D-841B-CA9A21E6A6E1@holtmann.org> (sfid-20180220_150449_406763_33076F5F)
-References: <20180220134618.12972-1-carlo@caione.org>
- <20180220134618.12972-3-carlo@caione.org>
-To: Carlo Caione <carlo@caione.org>
+        Mon, 26 Feb 2018 05:08:15 -0500
+Subject: Re: [PATCH] ath9k: introduce endian_check module parameter
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+References: <20180226090917.7iabysywbv6h4rqr@alienware17>
+ <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com>
+From: Bas Vermeulen <bvermeul@blackstar.nl>
+Message-ID: <7d6af051-2724-5dfc-cf69-376c0b501626@blackstar.nl> (sfid-20180226_110824_378379_E471AED1)
+Date: Mon, 26 Feb 2018 11:07:27 +0100
+MIME-Version: 1.0
+In-Reply-To: <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Carlo,
+On 26-02-18 10:54, Kalle Valo wrote:
+> Bas Vermeulen <bvermeul@blackstar.nl> writes:
+>
+>> A random (little endian eeprom'd) ar9278 card didn't work on my
+>> PowerMac G5 without allowing the driver to byte-swap the eeprom.
+>>
+>> Introduce a module parameter endian_check to allow this to happen,
+>> and the PCIe card to function correctly on BE powerpc.
+>>
+>> Signed-off-by: Bas Vermeulen <bvermeul@blackstar.nl>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/init.c | 6 +++++-
+>>   1 file changed, 5 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+>> index fa58a32227f5..421039dc060a 100644
+>> --- a/drivers/net/wireless/ath/ath9k/init.c
+>> +++ b/drivers/net/wireless/ath/ath9k/init.c
+>> @@ -67,6 +67,9 @@ static int ath9k_ps_enable;
+>>   module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+>>   MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+>>   
+>> +static int ath9k_endian_check;
+>> +module_param_named(endian_check, ath9k_endian_check, int, 0444);
+>> +MODULE_PARM_DESC(endian_check, "Check EEPROM for endianness compatibility");
+>>   #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+>>   
+>>   int ath9k_use_chanctx;
+>> @@ -587,7 +590,8 @@ static int ath9k_of_init(struct ath_softc *sc)
+>>   		ether_addr_copy(common->macaddr, mac);
+>>   
+>>   	ah->ah_flags &= ~AH_USE_EEPROM;
+>> -	ah->ah_flags |= AH_NO_EEP_SWAP;
+>> +	if (!ath9k_endian_check)
+>> +		ah->ah_flags |= AH_NO_EEP_SWAP;
+> A bit annoying to have a module parameter, isn't there any automatic way
+> to detect/try this? But on the other hand I guess this isn't a common
+> problem as nobody has reported this before?
+There is an automatic way to detect this, but that is disabled by the 
+AH_NO_EEP_SWAP flag.
+The platform initialisation does not set this flag if the endian_check 
+member of pdata is set
+to true, but there is no way to not set this when using a device tree. I 
+used a module
+parameter instead of a device tree variable because I don't know of a 
+way to modify the
+device tree my PowerMac boots with.
 
-> With commit e361d1f85855 ("ACPI / scan: Fix enumeration for special UART
-> devices") UART devices are now expected to be enumerated by
-> SerDev subsystem. This is breaking the enumeration of platform devices
-> connected to the UART without a proper SerDev support, like in the
-> rfkill-gpio case.
-> 
-> Fix this moving the driver from a platform driver to a serdev device
-> driver.
+Bas Vermeulen
 
-I do not like keeping this a RFKILL switch for the two GPS devices and that is really all what is left for this driver.
-
-static const struct acpi_device_id rfkill_acpi_match[] = {
-        { "BCM4752", RFKILL_TYPE_GPS },
-        { "LNV4752", RFKILL_TYPE_GPS },
-        { },
-};
-
-Frankly what this needs is a serdev GPS driver. Even if it also exposes the data path via character device or a new TTY. Trying to hook this into RFKILL for powering on the GPS chip is not what we should do anymore. What you really want is that if the GPS daemon or application open the node for the GPS device that it gets powered on and when closed powered back down. Fiddling with RFKILL to do that is not what a RFKILL switch is for. If you want to have an additional RFKILL switch for killing power, then this has to be done the same as WiFi and Bluetooth do it.
-
-So this patch is just a bad hack and we better have a proper serdev GPS driver.
-
-Regards
-
-Marcel
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
