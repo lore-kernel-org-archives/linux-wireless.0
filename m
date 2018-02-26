@@ -1,79 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:58327 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752466AbeB1KAA (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:21756 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751367AbeBZSND (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 05:00:00 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
+        Mon, 26 Feb 2018 13:13:03 -0500
+From: Maya Erez <merez@codeaurora.org>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH for-4.16 V2 2/2] brcmfmac: fix P2P_DEVICE ethernet address generation
-Date: Wed, 28 Feb 2018 10:59:46 +0100
-Message-Id: <1519811986-25017-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180228_110009_801437_181990A0)
-In-Reply-To: <1519811986-25017-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1519811986-25017-1-git-send-email-arend.vanspriel@broadcom.com>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v2 0/8] wil6210 patches
+Date: Mon, 26 Feb 2018 20:12:10 +0200
+Message-Id: <1519668738-16912-1-git-send-email-merez@codeaurora.org> (sfid-20180226_191323_635193_E7F93AA9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware has a requirement that the P2P_DEVICE address should
-be different from the address of the primary interface. When not
-specified by user-space, the driver generates the MAC address for
-the P2P_DEVICE interface using the MAC address of the primary
-interface and setting the locally administered bit. However, the MAC
-address of the primary interface may already have that bit set causing
-the creation of the P2P_DEVICE interface to fail with -EBUSY. Fix this
-by using the permanent address instead to determing the P2P_DEVICE
-address.
+Changes from v1:
+Rebase patches
 
-Cc: stable@vger.kernel.org # 3.10.y
-Reported-by: Hans de Goede <hdegoede@redhat.com>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Support for multiple virtual interfaces (MultiVIF)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 2ee5413..ddbb386 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -462,8 +462,8 @@ static int brcmf_p2p_set_firmware(struct brcmf_if *ifp, u8 *p2p_mac)
-  * @dev_addr: optional device address.
-  *
-  * P2P needs mac addresses for P2P device and interface. If no device
-- * address it specified, these are derived from the primary net device, ie.
-- * the permanent ethernet address of the device.
-+ * address it specified, these are derived from the permanent ethernet
-+ * address of the device.
-  */
- static void brcmf_p2p_generate_bss_mac(struct brcmf_p2p_info *p2p, u8 *dev_addr)
- {
-@@ -471,12 +471,12 @@ static void brcmf_p2p_generate_bss_mac(struct brcmf_p2p_info *p2p, u8 *dev_addr)
- 	bool local_admin = false;
- 
- 	if (!dev_addr || is_zero_ether_addr(dev_addr)) {
--		dev_addr = pri_ifp->mac_addr;
-+		dev_addr = pri_ifp->drvr->mac;
- 		local_admin = true;
- 	}
- 
- 	/* Generate the P2P Device Address.  This consists of the device's
--	 * primary MAC address with the locally administered bit set.
-+	 * permanent ethernet address with the locally administered bit set.
- 	 */
- 	memcpy(p2p->dev_addr, dev_addr, ETH_ALEN);
- 	if (local_admin)
-@@ -486,7 +486,7 @@ static void brcmf_p2p_generate_bss_mac(struct brcmf_p2p_info *p2p, u8 *dev_addr)
- 	 * BSSCFGs need to simultaneously co-exist, then this address must be
- 	 * different from the P2P Device Address, but also locally administered.
- 	 */
--	memcpy(p2p->int_addr, p2p->dev_addr, ETH_ALEN);
-+	memcpy(p2p->int_addr, dev_addr, ETH_ALEN);
- 	p2p->int_addr[0] |= 0x02;
- 	p2p->int_addr[4] ^= 0x80;
- }
+This series of patches add MultiVIF support to the wil6210 driver.
+It makes it possible to start multiple interfaces where each interface
+is an independent WIFI entity such as station, AP and so on.
+
+Each virtual interface (VIF) is mapped so a separate network interface
+(such as wlan0, wlan1, …) so it can also be treated separately for
+routing and other network operations.
+
+MultiVIF requires support in the FW. The FW will report whether it
+supports MultiVIF and the allowed concurrency combinations. The driver
+will export this information to user space and enforce it so it will
+only be possible to start a combination of VIFs supported by the FW.
+
+Initially our FW only supports multiple access points (APs) so it is
+possible for example to have a secure and guest network. The code was
+only validated with this scenario and we will improve the support for
+other concurrency combinations with future patches, as it becomes
+available in the FW.
+
+Lior David (8):
+  wil6210: add wil6210_vif structure for per-VIF data
+  wil6210: support concurrency record in FW file
+  wil6210: infrastructure for multiple virtual interfaces
+  wil6210: add support for adding and removing virtual interfaces
+  wil6210: multiple VIFs support for start/stop AP
+  wil6210: rename p2p_wdev_mutex to vif_mutex
+  wil6210: multiple VIFs support for connections and data path
+  wil6210: add debugfs 'mids' file
+
+ drivers/net/wireless/ath/wil6210/cfg80211.c   | 741 ++++++++++++++++++--------
+ drivers/net/wireless/ath/wil6210/debug.c      |   9 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c    | 117 +++-
+ drivers/net/wireless/ath/wil6210/ethtool.c    |   4 +-
+ drivers/net/wireless/ath/wil6210/fw.h         |  38 +-
+ drivers/net/wireless/ath/wil6210/fw_inc.c     |  52 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c  |   8 +-
+ drivers/net/wireless/ath/wil6210/main.c       | 331 +++++++-----
+ drivers/net/wireless/ath/wil6210/netdev.c     | 382 ++++++++++---
+ drivers/net/wireless/ath/wil6210/p2p.c        | 175 +++---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c   |  57 +-
+ drivers/net/wireless/ath/wil6210/pm.c         | 132 +++--
+ drivers/net/wireless/ath/wil6210/pmc.c        |   8 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |  45 +-
+ drivers/net/wireless/ath/wil6210/txrx.c       | 177 +++---
+ drivers/net/wireless/ath/wil6210/txrx.h       |  22 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h    | 217 +++++---
+ drivers/net/wireless/ath/wil6210/wmi.c        | 460 +++++++++++-----
+ 18 files changed, 2081 insertions(+), 894 deletions(-)
+
 -- 
 1.9.1
