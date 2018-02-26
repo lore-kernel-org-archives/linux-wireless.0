@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:44871 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751327AbeBTOlX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55894 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753379AbeBZOx5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 09:41:23 -0500
-Subject: Re: [PATCH v7] ath10k: add LED and GPIO controlling support for
- various chipsets
-To: Bo YU <tsu.yubo@gmail.com>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-References: <20180220073259.17254-1-s.gottschall@dd-wrt.com>
- <20180220130725.GA5134@yubo-2>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <92dac486-285f-f4a0-8b25-6f0d30092580@dd-wrt.com> (sfid-20180220_154126_516004_3AEE7B36)
-Date: Tue, 20 Feb 2018 15:41:14 +0100
+        Mon, 26 Feb 2018 09:53:57 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180220130725.GA5134@yubo-2>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [next] wil6210: fix spelling mistake: "preperation"->
+ "preparation"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180130192737.8986-1-colin.king@canonical.com>
+References: <20180130192737.8986-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20180226145353.1DECA60592@smtp.codeaurora.org> (sfid-20180226_155416_463902_518B534D)
+Date: Mon, 26 Feb 2018 14:53:53 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Colin Ian King <colin.king@canonical.com> wrote:
 
->>
->> +struct ath10k_gpiocontrol {
->> +    struct ath10k *ar;
->> +    u32 gpio_set_num, gpio_num, gpio_input, gpio_pull_type, 
->> gpio_intr_mode, gpio_set; /* since we have no gpio read method, these 
->> are the state variables for debugfs.  */
->
-> I think the checkpatch.pl will complain above defintely.
-> Best regards,
-because of the one liner?
+> Trivial fix to spelling mistake in debug error message text.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
+Patch applied to ath-next branch of ath.git, thanks.
 
-Sebastian
-
+77b83829ebf6 wil6210: fix spelling mistake: "preperation"-> "preparation"
 
 -- 
-Mit freundlichen Grüssen / Regards
+https://patchwork.kernel.org/patch/10192357/
 
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
