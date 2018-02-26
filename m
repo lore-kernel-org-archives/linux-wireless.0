@@ -1,97 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:51135 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751788AbeB0UEE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55502 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753805AbeBZOwn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 15:04:04 -0500
-Received: by mail-wm0-f48.google.com with SMTP id w128so913103wmw.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 12:04:04 -0800 (PST)
-Subject: Re: Support on vendor id and device id
-To: Steve deRosier <derosier@gmail.com>,
-        Harsha Rao <harshrao464@gmail.com>
-References: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com>
- <5A953DBE.9070805@broadcom.com>
- <CAPcv9S1fZfrg3AV3GoWG-CaTkonpQyiHY6twvhS_ikXnj00t4g@mail.gmail.com>
- <68f5549d-b8ad-85fb-4e80-50c53cac8108@lwfinger.net>
- <CAPcv9S0TmMhrL0qcxq-8NStd=fYQreXribrA+GQmppLvrB_avg@mail.gmail.com>
- <CALLGbRJxwOUkxnNCyCt2sBuoZacs60AcDnFfWMQQuVdj5YykOw@mail.gmail.com>
- <CALLGbRKrnnmsNtzpkABn+xOTjDaFKZz0jNxGkyJXMT1=XLa_3g@mail.gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A95B9B2.4040403@broadcom.com> (sfid-20180227_210408_673978_DF52DC2D)
-Date: Tue, 27 Feb 2018 21:04:02 +0100
+        Mon, 26 Feb 2018 09:52:43 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CALLGbRKrnnmsNtzpkABn+xOTjDaFKZz0jNxGkyJXMT1=XLa_3g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: ath10k: Make ath10k report discarded packets to mac80211
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <863ed21f-d2fe-f1e1-6f3c-b4061c777f59@aoifes.com>
+References: <863ed21f-d2fe-f1e1-6f3c-b4061c777f59@aoifes.com>
+To: =?utf-8?q?Ignacio_N=C3=BA=C3=B1ez_Hernanz?=
+        <nacho.nunez@aoifes.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        =?UTF-8?Q?Ignacio_N=c3=ba=c3=b1ez_Hernanz?=
+        <nacho.nunez@aoifes.com>
+Message-Id: <20180226145242.E22C560848@smtp.codeaurora.org> (sfid-20180226_155247_384542_62C51D2D)
+Date: Mon, 26 Feb 2018 14:52:42 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/27/2018 6:34 PM, Steve deRosier wrote:
-> Hi Harsha,
->
-> Part 2 - the darn cmd-enter shortcut in gmail got me again. Sorry for
-> the premature send.
->
->>
->> As both Larry and Arend mention, while it's possible to have multiple
->> drivers with the same IDs, for obvious reasons it's not desirable.
->>
->> In theory the vendor IDs shouldn't be duplicated on fundamentally
->> different devices, assuming that the manufacturers are doing things
->> "right". The VID is paid for by buying it from the SD Association.
+Ignacio Núñez Hernanz wrote:
 
-Indeed. And this is fun already. If the sdio.ids file in systemd has any 
-value the vendor id 0x296 is assigned to:
+> Whenever ath10k firmware discards a packet (HTT_TX_COMPL_STATE_DISCARD
+> flag), the skb is freed and mac80211 does not get feedback through
+> ieee80211_tx_status().
+> 
+> Instead, make sure that the IEEE80211_TX_STAT_ACK flag is disabled and
+> let the packet go through, like ath9k does.
+> 
+> Signed-off-by: Ignacio Nunez Hernanz <nacho.nunez@aoifes.com>
+> [kvalo@codeaurora.org: rebase patch manually]
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-0296  GCT Semiconductor, Inc.
-	5347  GDM72xx WiMAX
+Patch applied to ath-next branch of ath.git, thanks.
 
->> My suspicion is that your device, is fundamentally a wilc1000 and that
->> the existing wilc1000 driver will likely largely work for it and all
->> you really need to do is modify the existing driver to handle the
->> quirks of your particular implementation of the wilc1000 chip. And,
->> often WiFi chips will let you change the VID/PID somewhere within
->> whatever non-volatile storage it has (like where it stores the MAC
->> address).
+abb374fe8460 ath10k: make ath10k report discarded packets to mac80211
 
-So it seems the wilc1000 devices from Microchip/Atmel are also using a 
-vendor id they did not buy. Could be that the mentioned 3rd party 
-providing the SDIO IP actually owns that vendor id, but if you are 
-building your wifi chip on that you should better buy you own vendor id 
-from the SD Association. Now if Harsha is actually working for Microchip 
-(unclear to me) there is basically one party that should go shopping.
+-- 
+https://patchwork.kernel.org/patch/9859221/
 
-> What I was going to mention is this is how it's worked for me many
-> times on several chips from QCA, Broadcom and Marvell included. The
-> use-case in this case would be building a custom WiFi module using a
-> vendor's chip. Very common - Silex, Laird and others do this all the
-> time: buy a chip from QCA (or Broadcom or Marvell or...), put it on a
-> board with lna, pa, passives, antennas, etc...  And you package it and
-> sell that often with value-add software.  Sometimes it's fine if it
-> represents like the original chip (for example on the ath6kl chips
-> Laird sells, it just uses the QCA IDs), but sometimes you want it to
-> represent as "my chip" (again, as Laird has to do on the chips they
-> sell to the Windows market to avoid the kind of driver conflicts
-> you're encountering). All of these chips usually have a way to store a
-> MAC address and at least all that I've worked on will also allow you
-> to change the SDIO VID in the same one-time-programable memory.
-> Obviously the method changes depending on the chip.
->
-> However, in nearly every case, the chip is still fundamentally
-> whatever it was and we still use the upstream driver, though often
-> with tweaks and customizations based on our implementation. In the
-> cases where we've added a custom VID, we've also had to add the new
-> VID to the original driver and then key our quirks off that.
->
-> I'm not saying this is definitely applicable in your case, but it is
-> common and maybe it will help.
->
-> Also thanks for bringing this issue up. Something I haven't thought
-> about in a long time but I'm adding it to my talk at ELC on WiFi
-> module interfacing. http://sched.co/DXn3
-
-Hah. Keep plugging that talk and seats may become scarce :-p
-
-Regards,
-Arend
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
