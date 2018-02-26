@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50086 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751283AbeBWMzw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 07:55:52 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2] mac80211: support station 4-addr mode fast-rx
-Date: Fri, 23 Feb 2018 13:55:50 +0100
-Message-Id: <20180223125550.67913-1-nbd@nbd.name> (sfid-20180223_135556_181122_C5292BD8)
+Received: from smtp.codeaurora.org ([198.145.29.96]:57368 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753863AbeBZO6i (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Feb 2018 09:58:38 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: "linux-firmware\@kernel.org" <linux-firmware@kernel.org>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PULL] ath10k firmware 20180219
+References: <87y3jlxq0k.fsf@kamboji.qca.qualcomm.com>
+        <0e9db63d-41e9-eeb3-00d1-73b20df4bb3f@dd-wrt.com>
+Date: Mon, 26 Feb 2018 16:58:33 +0200
+In-Reply-To: <0e9db63d-41e9-eeb3-00d1-73b20df4bb3f@dd-wrt.com> (Sebastian
+        Gottschall's message of "Thu, 22 Feb 2018 11:59:02 +0100")
+Message-ID: <87606ju7ae.fsf@kamboji.qca.qualcomm.com> (sfid-20180226_155842_277334_A64CF11D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/rx.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6e2506a84586..6944705c5258 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3747,10 +3747,6 @@ void ieee80211_check_fast_rx(struct sta_info *sta)
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
--		/* 4-addr is harder to deal with, later maybe */
--		if (sdata->u.mgd.use_4addr)
--			goto clear;
--
- 		if (sta->sta.tdls) {
- 			fastrx.da_offs = offsetof(struct ieee80211_hdr, addr1);
- 			fastrx.sa_offs = offsetof(struct ieee80211_hdr, addr2);
-@@ -3763,6 +3759,13 @@ void ieee80211_check_fast_rx(struct sta_info *sta)
- 				cpu_to_le16(IEEE80211_FCTL_FROMDS);
- 		}
- 
-+		if (sdata->u.mgd.use_4addr && !sta->sta.tdls) {
-+			fastrx.expected_ds_bits |=
-+				cpu_to_le16(IEEE80211_FCTL_TODS);
-+			fastrx.da_offs = offsetof(struct ieee80211_hdr, addr3);
-+			fastrx.sa_offs = offsetof(struct ieee80211_hdr, addr4);
-+		}
-+
- 		if (!sdata->u.mgd.powersave)
- 		    break;
- 
+> on 9984 i see these messages with this firmware from time to time
+>
+> [272972.950788] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+> [272982.868922] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+> [335550.123780] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+> [335550.156332] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+> [335550.158813] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+> [335550.193144] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+> [365157.869540] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+> [365157.902452] ath10k_pci 0000:01:00.0: Unknown eventid: 36925
+>
+>
+> according to the WMI header this maybe a critical internal error
+
+Thanks for the report. We are working on a fix but just ignore the
+warning for now.
+
 -- 
-2.14.2
+Kalle Valo
