@@ -1,57 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35772 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932974AbeB1VSy (ORCPT
+Received: from blackstar.xs4all.nl ([83.163.96.30]:41569 "EHLO
+        blackstar.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751022AbeBZM06 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 16:18:54 -0500
-Subject: Re: [RFT 0/7] firmware: enable caching of firmware for reboot
- optimization
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: kubakici@wp.pl, gregkh@linuxfoundation.org,
-        akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        stephen.boyd@linaro.org, broonie@kernel.org,
-        dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20180227232101.20786-1-mcgrof@kernel.org>
- <49e9d9c3-1352-e204-ff95-5cf10f14bd35@gmail.com>
- <20180228184531.GK14069@wotan.suse.de>
-From: cantabile <cantabile.desu@gmail.com>
-Message-ID: <b2f7e5b2-d937-528e-c4f8-58e275f60733@gmail.com> (sfid-20180228_221915_473235_FC048EB6)
-Date: Wed, 28 Feb 2018 23:18:49 +0200
+        Mon, 26 Feb 2018 07:26:58 -0500
+Subject: Re: [PATCH] ath9k: introduce endian_check module parameter
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+References: <20180226090917.7iabysywbv6h4rqr@alienware17>
+ <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com>
+ <7d6af051-2724-5dfc-cf69-376c0b501626@blackstar.nl>
+ <7c6eef8c-cb7a-5441-6f50-1df3efdafb16@dd-wrt.com>
+From: Bas Vermeulen <bvermeul@blackstar.nl>
+Message-ID: <2a37a358-f6b2-62f8-aef4-fab382e8c3aa@blackstar.nl> (sfid-20180226_132703_103598_610AEDCC)
+Date: Mon, 26 Feb 2018 13:26:10 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180228184531.GK14069@wotan.suse.de>
+In-Reply-To: <7c6eef8c-cb7a-5441-6f50-1df3efdafb16@dd-wrt.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28/02/18 20:45, Luis R. Rodriguez wrote:
-> On Wed, Feb 28, 2018 at 08:03:26PM +0200, cantabile wrote:
->> On 28/02/18 01:20, Luis R. Rodriguez wrote:
->>> Cantabile, please give these patches a spin and let me know if it fixes
->>> your reported issue. They depend on other pending patches I have in line
->>> waiting to be merged so the easiest I thing I think is for you to test my
->>> 20180227-firmware-cache branch [0], based on Linus' tree. To get that
->>> tree, cd into your Linus git tree and do:
+On 26-02-18 12:30, Sebastian Gottschall wrote:
+> Am 26.02.2018 um 11:07 schrieb Bas Vermeulen:
+>> On 26-02-18 10:54, Kalle Valo wrote:
+>>> Bas Vermeulen <bvermeul@blackstar.nl> writes:
 >>>
->>> git remote add mcgrof https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git
->>> git checkout -b 20180227-firmware-cache mcgrof/20180227-firmware-cache
->>>
->>> Please let me know if this resolves your issue and thanks for your report.
->>>
->>
->> I confirmed that request_firmware_cache is called, and the firmware is
->> loaded from the cache when resuming from hibernation. The bug is fixed.
-> 
-> Great, thanks for testing.
-> 
-> Curious, is it also called if you suspend to RAM instead of just using hibernation?
-> 
+>>>> A random (little endian eeprom'd) ar9278 card didn't work on my
+>>>> PowerMac G5 without allowing the driver to byte-swap the eeprom.
+>>>>
+>>>> Introduce a module parameter endian_check to allow this to happen,
+>>>> and the PCIe card to function correctly on BE powerpc.
+>>>>
+>>>> Signed-off-by: Bas Vermeulen <bvermeul@blackstar.nl>
+>>>> ---
+>>>>   drivers/net/wireless/ath/ath9k/init.c | 6 +++++-
+>>>>   1 file changed, 5 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath9k/init.c 
+>>>> b/drivers/net/wireless/ath/ath9k/init.c
+>>>> index fa58a32227f5..421039dc060a 100644
+>>>> --- a/drivers/net/wireless/ath/ath9k/init.c
+>>>> +++ b/drivers/net/wireless/ath/ath9k/init.c
+>>>> @@ -67,6 +67,9 @@ static int ath9k_ps_enable;
+>>>>   module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+>>>>   MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+>>>>   +static int ath9k_endian_check;
+>>>> +module_param_named(endian_check, ath9k_endian_check, int, 0444);
+>>>> +MODULE_PARM_DESC(endian_check, "Check EEPROM for endianness 
+>>>> compatibility");
+>>>>   #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+>>>>     int ath9k_use_chanctx;
+>>>> @@ -587,7 +590,8 @@ static int ath9k_of_init(struct ath_softc *sc)
+>>>>           ether_addr_copy(common->macaddr, mac);
+>>>>         ah->ah_flags &= ~AH_USE_EEPROM;
+>>>> -    ah->ah_flags |= AH_NO_EEP_SWAP;
+>>>> +    if (!ath9k_endian_check)
+>>>> +        ah->ah_flags |= AH_NO_EEP_SWAP;
+>>> A bit annoying to have a module parameter, isn't there any automatic 
+>>> way
+>>> to detect/try this? But on the other hand I guess this isn't a common
+>>> problem as nobody has reported this before?
+>> There is an automatic way to detect this, but that is disabled by the 
+>> AH_NO_EEP_SWAP flag.
+>> The platform initialisation does not set this flag if the 
+>> endian_check member of pdata is set
+>> to true, but there is no way to not set this when using a device 
+>> tree. I used a module
+>> parameter instead of a device tree variable because I don't know of a 
+>> way to modify the
+>> device tree my PowerMac boots with.
+> have you tried to compile it without device tree support? since its 
+> just a pcie card, i dont think that devicetree is required here
+> it should run fine without it.
 
-request_firmware_cache is called when resuming from suspend to RAM.
+The driver will still set AH_NO_EEP_SWAP regardless, and will still not 
+swap the eeprom from
+little endian to big endian on big endian machines. See 
+drivers/net/wireless/ath/ath9k/eeprom.c:188
+and drivers/net/wireless/ath/ath9k/init.c (lines 593 and 645).
+
+The reason I'm talking about device trees here is because I could have 
+used a device tree parameter
+instead of a module parameter.
+
+Bas Vermeulen
+
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
