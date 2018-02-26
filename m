@@ -1,99 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f196.google.com ([209.85.217.196]:46483 "EHLO
-        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751554AbeB0X3z (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:49891 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751499AbeBZQgL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 18:29:55 -0500
-Received: by mail-ua0-f196.google.com with SMTP id n48so367111uae.13
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 15:29:55 -0800 (PST)
+        Mon, 26 Feb 2018 11:36:11 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 7/8] staging: wilc1000: fix line over 80 char in wilc_wlan_cfg_set()
+Date: Mon, 26 Feb 2018 22:02:01 +0530
+Message-ID: <1519662722-15761-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180226_173629_142958_9A0D5F48)
+In-Reply-To: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180227232101.20786-3-mcgrof@kernel.org>
-References: <20180227232101.20786-1-mcgrof@kernel.org> <20180227232101.20786-3-mcgrof@kernel.org>
-From: Kees Cook <keescook@chromium.org>
-Date: Tue, 27 Feb 2018 15:29:53 -0800
-Message-ID: <CAGXu5jLxAPyBfzvM3izKYYjVz6P=7LQRkxNxUz1Cxwky1gPoUA@mail.gmail.com> (sfid-20180228_003014_492767_90B558FF)
-Subject: Re: [RFT 2/7] firmware: fix checking for return values for fw_add_devm_name()
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: cantabile.desu@gmail.com, Jakub Kicinski <kubakici@wp.pl>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Shuah Khan <shuah@kernel.org>,
-        Martin Fuzzey <mfuzzey@parkeon.com>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        David Howells <dhowells@redhat.com>, pali.rohar@gmail.com,
-        Takashi Iwai <tiwai@suse.de>, arend.vanspriel@broadcom.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        nbroeking@me.com, Vikram Mulukutla <markivx@codeaurora.org>,
-        stephen.boyd@linaro.org, Mark Brown <broonie@kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        LKML <linux-kernel@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 27, 2018 at 3:20 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> fw_add_devm_name() adds device's name onto the devres for the
-> device so that prior to suspend we cache the firmware onto memory,
-> so that on resume the firmware is reliably available. We never
-> were checking for success for this call though, meaning in some
-> really rare cases we my have never setup the firmware cache for
-> a device, which could in turn make resume fail.
->
-> This is all theoretical, no known issues have been reported.
-> This small issue has been present way since the addition of the
-> devres firmware cache names on v3.7.
->
-> Fixes: f531f05ae9437 ("firmware loader: store firmware name into devres list")
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  drivers/base/firmware_loader.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
-> index 21dd31ef08ae..48932581c70c 100644
-> --- a/drivers/base/firmware_loader.c
-> +++ b/drivers/base/firmware_loader.c
-> @@ -431,6 +431,7 @@ int assign_fw(struct firmware *fw, struct device *device,
->               unsigned int opt_flags)
->  {
->         struct fw_priv *fw_priv = fw->priv;
-> +       int ret;
->
->         mutex_lock(&fw_lock);
->         if (!fw_priv->size || fw_state_is_aborted(fw_priv)) {
-> @@ -447,8 +448,13 @@ int assign_fw(struct firmware *fw, struct device *device,
->          */
->         /* don't cache firmware handled without uevent */
->         if (device && (opt_flags & FW_OPT_UEVENT) &&
-> -           !(opt_flags & FW_OPT_NOCACHE))
-> -               fw_add_devm_name(device, fw_priv->fw_name);
-> +           !(opt_flags & FW_OPT_NOCACHE)) {
-> +               ret = fw_add_devm_name(device, fw_priv->fw_name);
-> +               if (ret && ret != 1) {
+Fix 'line over 80 character' issue found by checkpatch.pl script.
 
-Why not if (ret < 0) ?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
--Kees
-
-> +                       mutex_unlock(&fw_lock);
-> +                       return ret;
-> +               }
-> +       }
->
->         /*
->          * After caching firmware image is started, let it piggyback
-> --
-> 2.16.2
->
-
-
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 223bf8b..acf7591 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1230,6 +1230,8 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 	wilc->cfg_frame_offset = offset;
+ 
+ 	if (commit) {
++		unsigned long tmp = msecs_to_jiffies(CFG_PKTS_TIMEOUT);
++
+ 		netdev_dbg(vif->ndev,
+ 			   "[WILC]PACKET Commit with sequence number %d\n",
+ 			   wilc->cfg_seq_no);
+@@ -1239,8 +1241,7 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 		if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
+ 			ret_size = 0;
+ 
+-		if (!wait_for_completion_timeout(&wilc->cfg_event,
+-						 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
++		if (!wait_for_completion_timeout(&wilc->cfg_event, tmp)) {
+ 			netdev_dbg(vif->ndev, "Set Timed Out\n");
+ 			ret_size = 0;
+ 		}
 -- 
-Kees Cook
-Pixel Security
+2.7.4
