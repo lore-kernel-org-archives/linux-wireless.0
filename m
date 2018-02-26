@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:40508 "EHLO
-        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752278AbeBFLW4 (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:20319 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751795AbeBZQgO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Feb 2018 06:22:56 -0500
-Received: by mail-qk0-f170.google.com with SMTP id d18so1774723qke.7
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Feb 2018 03:22:56 -0800 (PST)
-Subject: Re: [PATCH 5/6] qtnfmac: implement asynchronous firmware loading
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        linux-wireless@vger.kernel.org
-References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
- <20180205150516.16030-6-sergey.matyukevich.os@quantenna.com>
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A79900D.5080605@broadcom.com> (sfid-20180206_122300_558959_385038C5)
-Date: Tue, 6 Feb 2018 12:22:53 +0100
+        Mon, 26 Feb 2018 11:36:14 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 8/8] staging: wilc1000: fix open parenthesis mismatch issue in wilc_wlan_cfg_set()
+Date: Mon, 26 Feb 2018 22:02:02 +0530
+Message-ID: <1519662722-15761-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180226_173622_457812_D9E5EDCB)
+In-Reply-To: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180205150516.16030-6-sergey.matyukevich.os@quantenna.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/5/2018 4:05 PM, Sergey Matyukevich wrote:
-> From: Sergei Maksimenko <smaksimenko@quantenna.com>
->
-> In pci probe() function start firmware loading, protocol handshake
-> and driver core initialization, and not wait for completion.
+Fix 'Alignment should match open parenthesis' issue found by
+checkpatch.pl script.
 
-The moving of the debugfs stuff makes this a drag to review, but I get 
-the gist. The thing is that the firmware api already provides an 
-asynchronous api, ie. request_firmware_nowait(), so why not use that.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index acf7591..971e61d2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1273,13 +1273,14 @@ int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit,
+ 	wilc->cfg_frame_offset = offset;
+ 
+ 	if (commit) {
++		unsigned long tmp = msecs_to_jiffies(CFG_PKTS_TIMEOUT);
++
+ 		wilc->cfg_frame_in_use = 1;
+ 
+ 		if (wilc_wlan_cfg_commit(vif, WILC_CFG_QUERY, drv_handler))
+ 			ret_size = 0;
+ 
+-		if (!wait_for_completion_timeout(&wilc->cfg_event,
+-					msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
++		if (!wait_for_completion_timeout(&wilc->cfg_event, tmp)) {
+ 			netdev_dbg(vif->ndev, "Get Timed Out\n");
+ 			ret_size = 0;
+ 		}
+-- 
+2.7.4
