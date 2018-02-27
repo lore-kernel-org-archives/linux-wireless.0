@@ -1,300 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:21767 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751464AbeBZSNG (ORCPT
+Received: from mail-ua0-f195.google.com ([209.85.217.195]:41957 "EHLO
+        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751791AbeB0X2X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 13:13:06 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v2 2/8] wil6210: support concurrency record in FW file
-Date: Mon, 26 Feb 2018 20:12:12 +0200
-Message-Id: <1519668738-16912-3-git-send-email-merez@codeaurora.org> (sfid-20180226_191324_446372_22904633)
-In-Reply-To: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
-References: <1519668738-16912-1-git-send-email-merez@codeaurora.org>
+        Tue, 27 Feb 2018 18:28:23 -0500
+Received: by mail-ua0-f195.google.com with SMTP id u99so373370uau.8
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 15:28:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20180227232101.20786-2-mcgrof@kernel.org>
+References: <20180227232101.20786-1-mcgrof@kernel.org> <20180227232101.20786-2-mcgrof@kernel.org>
+From: Kees Cook <keescook@chromium.org>
+Date: Tue, 27 Feb 2018 15:28:21 -0800
+Message-ID: <CAGXu5jJwRU1mMH-erQmHLsrDgu1zmYOMrWiG_A_r3tksufLHDg@mail.gmail.com> (sfid-20180228_002841_797856_F65162E3)
+Subject: Re: [RFT 1/7] rename: _request_firmware_load() fw_load_sysfs_fallback()
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: cantabile.desu@gmail.com, Jakub Kicinski <kubakici@wp.pl>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Shuah Khan <shuah@kernel.org>,
+        Martin Fuzzey <mfuzzey@parkeon.com>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        David Howells <dhowells@redhat.com>, pali.rohar@gmail.com,
+        Takashi Iwai <tiwai@suse.de>, arend.vanspriel@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        nbroeking@me.com, Vikram Mulukutla <markivx@codeaurora.org>,
+        stephen.boyd@linaro.org, Mark Brown <broonie@kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        LKML <linux-kernel@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <liord@codeaurora.org>
+On Tue, Feb 27, 2018 at 3:20 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> This reflects much clearer what is being done.
+>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  Documentation/driver-api/firmware/fallback-mechanisms.rst | 2 +-
+>  drivers/base/firmware_fallback.c                          | 4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/Documentation/driver-api/firmware/fallback-mechanisms.rst b/Documentation/driver-api/firmware/fallback-mechanisms.rst
+> index 4055ac76b288..f353783ae0be 100644
+> --- a/Documentation/driver-api/firmware/fallback-mechanisms.rst
+> +++ b/Documentation/driver-api/firmware/fallback-mechanisms.rst
+> @@ -112,7 +112,7 @@ Since a device is created for the sysfs interface to help load firmware as a
+>  fallback mechanism userspace can be informed of the addition of the device by
+>  relying on kobject uevents. The addition of the device into the device
+>  hierarchy means the fallback mechanism for firmware loading has been initiated.
+> -For details of implementation refer to _request_firmware_load(), in particular
+> +For details of implementation refer to fw_load_sysfs_fallback(), in particular
+>  on the use of dev_set_uevent_suppress() and kobject_uevent().
+>
+>  The kernel's kobject uevent mechanism is implemented in lib/kobject_uevent.c,
+> diff --git a/drivers/base/firmware_fallback.c b/drivers/base/firmware_fallback.c
+> index 13fa5ff2b46c..ce7ccfe82c69 100644
+> --- a/drivers/base/firmware_fallback.c
+> +++ b/drivers/base/firmware_fallback.c
+> @@ -536,7 +536,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
+>  }
+>
+>  /* load a firmware via user helper */
 
-New FW which supports multiple virtual interfaces, reports
-its allowed interface combinations using a special comment
-record in the FW file. The format of the interface combinations
-is similar to the kernel wiphy->iface_combinations.
-When parsing FW file during module initialization, also parse
-and validate the concurrency record, and initialize
-wiphy->n_iface_combinations and wiphy->iface_combinations
-accordingly.
+As long as this is being renamed, maybe add full kern-doc for this function?
 
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 69 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/fw.h       | 38 +++++++++++++++-
- drivers/net/wireless/ath/wil6210/fw_inc.c   | 52 ++++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/wil6210.h  |  4 ++
- 4 files changed, 158 insertions(+), 5 deletions(-)
+-Kees
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index eeed85c..c959f15 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -20,6 +20,7 @@
- #include <net/netlink.h>
- #include "wil6210.h"
- #include "wmi.h"
-+#include "fw.h"
- 
- #define WIL_MAX_ROC_DURATION_MS 5000
- 
-@@ -1896,6 +1897,71 @@ static void wil_wiphy_init(struct wiphy *wiphy)
- #endif
- }
- 
-+int wil_cfg80211_iface_combinations_from_fw(
-+	struct wil6210_priv *wil, const struct wil_fw_record_concurrency *conc)
-+{
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
-+	u32 total_limits = 0;
-+	u16 n_combos;
-+	const struct wil_fw_concurrency_combo *combo;
-+	const struct wil_fw_concurrency_limit *limit;
-+	struct ieee80211_iface_combination *iface_combinations;
-+	struct ieee80211_iface_limit *iface_limit;
-+	int i, j;
-+
-+	if (wiphy->iface_combinations) {
-+		wil_dbg_misc(wil, "iface_combinations already set, skipping\n");
-+		return 0;
-+	}
-+
-+	combo = conc->combos;
-+	n_combos = le16_to_cpu(conc->n_combos);
-+	for (i = 0; i < n_combos; i++) {
-+		total_limits += combo->n_limits;
-+		limit = combo->limits + combo->n_limits;
-+		combo = (struct wil_fw_concurrency_combo *)limit;
-+	}
-+
-+	iface_combinations =
-+		kzalloc(n_combos * sizeof(struct ieee80211_iface_combination) +
-+			total_limits * sizeof(struct ieee80211_iface_limit),
-+			GFP_KERNEL);
-+	if (!iface_combinations)
-+		return -ENOMEM;
-+	iface_limit = (struct ieee80211_iface_limit *)(iface_combinations +
-+						       n_combos);
-+	combo = conc->combos;
-+	for (i = 0; i < n_combos; i++) {
-+		iface_combinations[i].max_interfaces = combo->max_interfaces;
-+		iface_combinations[i].num_different_channels =
-+			combo->n_diff_channels;
-+		iface_combinations[i].beacon_int_infra_match =
-+			combo->same_bi;
-+		iface_combinations[i].n_limits = combo->n_limits;
-+		wil_dbg_misc(wil,
-+			     "iface_combination %d: max_if %d, num_ch %d, bi_match %d\n",
-+			     i, iface_combinations[i].max_interfaces,
-+			     iface_combinations[i].num_different_channels,
-+			     iface_combinations[i].beacon_int_infra_match);
-+		limit = combo->limits;
-+		for (j = 0; j < combo->n_limits; j++) {
-+			iface_limit[j].max = le16_to_cpu(limit[j].max);
-+			iface_limit[j].types = le16_to_cpu(limit[j].types);
-+			wil_dbg_misc(wil,
-+				     "limit %d: max %d types 0x%x\n", j,
-+				     iface_limit[j].max, iface_limit[j].types);
-+		}
-+		iface_combinations[i].limits = iface_limit;
-+		iface_limit += combo->n_limits;
-+		limit += combo->n_limits;
-+		combo = (struct wil_fw_concurrency_combo *)limit;
-+	}
-+
-+	wiphy->n_iface_combinations = n_combos;
-+	wiphy->iface_combinations = iface_combinations;
-+	return 0;
-+}
-+
- struct wil6210_priv *wil_cfg80211_init(struct device *dev)
- {
- 	struct wiphy *wiphy;
-@@ -1934,6 +2000,9 @@ void wil_cfg80211_deinit(struct wil6210_priv *wil)
- 	if (!wiphy)
- 		return;
- 
-+	kfree(wiphy->iface_combinations);
-+	wiphy->iface_combinations = NULL;
-+
- 	wiphy_free(wiphy);
- 	/* do not access wil6210_priv after returning from here */
- }
-diff --git a/drivers/net/wireless/ath/wil6210/fw.h b/drivers/net/wireless/ath/wil6210/fw.h
-index 2c7b24f..3e7a280 100644
---- a/drivers/net/wireless/ath/wil6210/fw.h
-+++ b/drivers/net/wireless/ath/wil6210/fw.h
-@@ -14,6 +14,8 @@
-  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
-+#ifndef __WIL_FW_H__
-+#define __WIL_FW_H__
- 
- #define WIL_FW_SIGNATURE (0x36323130) /* '0126' */
- #define WIL_FW_FMT_VERSION (1) /* format version driver supports */
-@@ -71,7 +73,39 @@ struct wil_fw_record_capabilities { /* type == wil_fw_type_comment */
- 	struct wil_fw_record_comment_hdr hdr;
- 	/* capabilities (variable size), see enum wmi_fw_capability */
- 	u8 capabilities[0];
--};
-+} __packed;
-+
-+/* FW VIF concurrency encoded inside a comment record
-+ * Format is similar to wiphy->iface_combinations
-+ */
-+#define WIL_FW_CONCURRENCY_MAGIC (0xfedccdef)
-+#define WIL_FW_CONCURRENCY_REC_VER	1
-+struct wil_fw_concurrency_limit {
-+	__le16 max; /* maximum number of interfaces of these types */
-+	__le16 types; /* interface types (bit mask of enum nl80211_iftype) */
-+} __packed;
-+
-+struct wil_fw_concurrency_combo {
-+	u8 n_limits; /* number of wil_fw_concurrency_limit entries */
-+	u8 max_interfaces; /* max number of concurrent interfaces allowed */
-+	u8 n_diff_channels; /* total number of different channels allowed */
-+	u8 same_bi; /* for APs, 1 if all APs must have same BI */
-+	/* keep last - concurrency limits, variable size by n_limits */
-+	struct wil_fw_concurrency_limit limits[0];
-+} __packed;
-+
-+struct wil_fw_record_concurrency { /* type == wil_fw_type_comment */
-+	/* identifies concurrency record */
-+	__le32 magic;
-+	/* structure version, currently always 1 */
-+	u8 version;
-+	/* maximum number of supported MIDs _in addition_ to MID 0 */
-+	u8 n_mids;
-+	/* number of concurrency combinations that follow */
-+	__le16 n_combos;
-+	/* keep last - combinations, variable size by n_combos */
-+	struct wil_fw_concurrency_combo combos[0];
-+} __packed;
- 
- /* brd file info encoded inside a comment record */
- #define WIL_BRD_FILE_MAGIC (0xabcddcbb)
-@@ -175,3 +209,5 @@ struct wil_fw_record_gateway_data4 { /* type == wil_fw_type_gateway_data4 */
- 	__le32 command;
- 	struct wil_fw_data_gw4 data[0]; /* total size [data_size], see above */
- } __packed;
-+
-+#endif /* __WIL_FW_H__ */
-diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
-index 914c010..718161b 100644
---- a/drivers/net/wireless/ath/wil6210/fw_inc.c
-+++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
-@@ -136,8 +136,8 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
- 	size_t capa_size;
- 
- 	if (size < sizeof(*rec)) {
--		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
--				data, size, true);
-+		wil_err_fw(wil, "capabilities record too short: %zu\n", size);
-+		/* let the FW load anyway */
- 		return 0;
- 	}
- 
-@@ -158,8 +158,7 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
- 	const struct wil_fw_record_brd_file *rec = data;
- 
- 	if (size < sizeof(*rec)) {
--		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
--				data, size, true);
-+		wil_err_fw(wil, "brd_file record too short: %zu\n", size);
- 		return 0;
- 	}
- 
-@@ -173,6 +172,44 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
- }
- 
- static int
-+fw_handle_concurrency(struct wil6210_priv *wil, const void *data,
-+		      size_t size)
-+{
-+	const struct wil_fw_record_concurrency *rec = data;
-+	const struct wil_fw_concurrency_combo *combo;
-+	const struct wil_fw_concurrency_limit *limit;
-+	size_t remain, lsize;
-+	int i, n_combos;
-+
-+	if (size < sizeof(*rec)) {
-+		wil_err_fw(wil, "concurrency record too short: %zu\n", size);
-+		/* continue, let the FW load anyway */
-+		return 0;
-+	}
-+
-+	n_combos = le16_to_cpu(rec->n_combos);
-+	remain = size - offsetof(struct wil_fw_record_concurrency, combos);
-+	combo = rec->combos;
-+	for (i = 0; i < n_combos; i++) {
-+		if (remain < sizeof(*combo))
-+			goto out_short;
-+		remain -= sizeof(*combo);
-+		limit = combo->limits;
-+		lsize = combo->n_limits * sizeof(*limit);
-+		if (remain < lsize)
-+			goto out_short;
-+		remain -= lsize;
-+		limit += combo->n_limits;
-+		combo = (struct wil_fw_concurrency_combo *)limit;
-+	}
-+
-+	return wil_cfg80211_iface_combinations_from_fw(wil, rec);
-+out_short:
-+	wil_err_fw(wil, "concurrency record truncated\n");
-+	return 0;
-+}
-+
-+static int
- fw_handle_comment(struct wil6210_priv *wil, const void *data,
- 		  size_t size)
- {
-@@ -194,6 +231,13 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
- 		wil_dbg_fw(wil, "magic is WIL_BRD_FILE_MAGIC\n");
- 		rc = fw_handle_brd_file(wil, data, size);
- 		break;
-+	case WIL_FW_CONCURRENCY_MAGIC:
-+		wil_dbg_fw(wil, "magic is WIL_FW_CONCURRENCY_MAGIC\n");
-+		rc = fw_handle_concurrency(wil, data, size);
-+		break;
-+	default:
-+		wil_hex_dump_fw("", DUMP_PREFIX_OFFSET, 16, 1,
-+				data, size, true);
- 	}
- 
- 	return rc;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index b33aa7d..81cb27a 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -26,6 +26,7 @@
- #include <linux/types.h>
- #include "wmi.h"
- #include "wil_platform.h"
-+#include "fw.h"
- 
- extern bool no_fw_recovery;
- extern unsigned int mtu_max;
-@@ -1012,6 +1013,9 @@ int wil_p2p_listen(struct wil6210_priv *wil, struct wireless_dev *wdev,
- int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			 struct cfg80211_mgmt_tx_params *params,
- 			 u64 *cookie);
-+int wil_cfg80211_iface_combinations_from_fw(
-+	struct wil6210_priv *wil,
-+	const struct wil_fw_record_concurrency *conc);
- 
- #if defined(CONFIG_WIL6210_DEBUGFS)
- int wil6210_debugfs_init(struct wil6210_priv *wil);
+> -static int _request_firmware_load(struct fw_sysfs *fw_sysfs,
+> +static int fw_load_sysfs_fallback(struct fw_sysfs *fw_sysfs,
+>                                   unsigned int opt_flags, long timeout)
+>  {
+>         int retval = 0;
+> @@ -621,7 +621,7 @@ static int fw_load_from_user_helper(struct firmware *firmware,
+>         }
+>
+>         fw_sysfs->fw_priv = firmware->priv;
+> -       ret = _request_firmware_load(fw_sysfs, opt_flags, timeout);
+> +       ret = fw_load_sysfs_fallback(fw_sysfs, opt_flags, timeout);
+>
+>         if (!ret)
+>                 ret = assign_fw(firmware, device, opt_flags);
+> --
+> 2.16.2
+>
+
+
+
 -- 
-1.9.1
+Kees Cook
+Pixel Security
