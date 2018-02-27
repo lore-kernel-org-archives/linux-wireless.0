@@ -1,358 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:59454 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753987AbeBPINg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34988 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751098AbeB0I0j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 03:13:36 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 5/8] wil6210: multiple VIFs support for start/stop AP
-Date: Fri, 16 Feb 2018 10:04:40 +0200
-Message-Id: <1518768283-2318-6-git-send-email-merez@codeaurora.org> (sfid-20180216_091347_552235_E0C0123D)
-In-Reply-To: <1518768283-2318-1-git-send-email-merez@codeaurora.org>
-References: <1518768283-2318-1-git-send-email-merez@codeaurora.org>
+        Tue, 27 Feb 2018 03:26:39 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wcn36xx: reduce verbosity of drivers messages
+References: <20180217202510.13707-1-rfried@codeaurora.org>
+Date: Tue, 27 Feb 2018 10:26:33 +0200
+In-Reply-To: <20180217202510.13707-1-rfried@codeaurora.org> (Ramon Fried's
+        message of "Sat, 17 Feb 2018 22:25:10 +0200")
+Message-ID: <87zi3uhm86.fsf@codeaurora.org> (sfid-20180227_092643_090515_C4AA7415)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <liord@codeaurora.org>
+Ramon Fried <rfried@codeaurora.org> writes:
 
-Add support for multiple VIFs in the cfg80211 operations start_ap,
-stop_ap and change_beacon. This change allows starting multiple APs
-using virtual interfaces.
-The data path and most other operations are still working only
-on the main interface.
+> Whenever the WLAN interface is started the FW
+> version and caps are printed, this info should appear as
+> debug info.
+>
+> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
+>  drivers/net/wireless/ath/wcn36xx/smd.c  | 4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+> index ab5be6d2c691..8c2654075eb8 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/main.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
+> @@ -261,7 +261,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
+>  
+>  	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
+>  		if (get_feat_caps(wcn->fw_feat_caps, i))
+> -			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
+> +			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
+>  	}
+>  }
+>  
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index 2a4871ca9c72..7c4d19b041bc 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> @@ -409,10 +409,10 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+>  	wcn->fw_minor = rsp->start_rsp_params.version.minor;
+>  	wcn->fw_major = rsp->start_rsp_params.version.major;
+>  
+> -	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
+> +	wcn36xx_dbg(WCN36XX_DBG_HAL, "firmware WLAN version '%s' and CRM version '%s'\n",
+>  		     wcn->wlan_version, wcn->crm_version);
+>  
+> -	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
+> +	wcn36xx_dbg(WCN36XX_DBG_HAL, "firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
+>  		     wcn->fw_major, wcn->fw_minor,
+>  		     wcn->fw_version, wcn->fw_revision,
+>  		     rsp->start_rsp_params.stations,
 
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 49 +++++++++++++++++++----------
- drivers/net/wireless/ath/wil6210/main.c     | 14 ++++++++-
- drivers/net/wireless/ath/wil6210/netdev.c   | 22 +++++++------
- drivers/net/wireless/ath/wil6210/pcie_bus.c |  2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h  |  9 +++---
- drivers/net/wireless/ath/wil6210/wmi.c      |  8 +++++
- 6 files changed, 71 insertions(+), 33 deletions(-)
+I think that printing this information, especially the firmware version,
+is useful. Isn't there a better way to solve this, like print this only
+once during the driver is loaded or during the first start() call?
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index b9103bd..88d15d0 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -544,8 +544,9 @@ static int wil_cfg80211_validate_change_iface(struct wil6210_priv *wil,
- 	return ERR_PTR(rc);
- }
- 
--int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif)
-+int wil_vif_prepare_stop(struct wil6210_vif *vif)
- {
-+	struct wil6210_priv *wil = vif_to_wil(vif);
- 	struct wireless_dev *wdev = vif_to_wdev(vif);
- 	struct net_device *ndev;
- 	int rc;
-@@ -561,6 +562,7 @@ int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif)
- 				 rc);
- 			/* continue */
- 		}
-+		wil_bcast_fini(vif);
- 		netif_carrier_off(ndev);
- 	}
- 
-@@ -593,7 +595,7 @@ static int wil_cfg80211_del_iface(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
- 
--	rc = wil_vif_prepare_stop(wil, vif);
-+	rc = wil_vif_prepare_stop(vif);
- 	if (rc)
- 		goto out;
- 
-@@ -614,6 +616,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
- 	struct wil6210_vif *vif = ndev_to_vif(ndev);
- 	struct wireless_dev *wdev = vif_to_wdev(vif);
- 	int rc;
-+	bool fw_reset = false;
- 
- 	wil_dbg_misc(wil, "change_iface: type=%d\n", type);
- 
-@@ -628,7 +631,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
- 	/* do not reset FW when there are active VIFs,
- 	 * because it can cause significant disruption
- 	 */
--	if (!wil_has_other_up_ifaces(wil, ndev) &&
-+	if (!wil_has_other_active_ifaces(wil, ndev, true, false) &&
- 	    netif_running(ndev) && !wil_is_recovery_blocked(wil)) {
- 		wil_dbg_misc(wil, "interface is up. resetting...\n");
- 		mutex_lock(&wil->mutex);
-@@ -638,6 +641,7 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
- 
- 		if (rc)
- 			return rc;
-+		fw_reset = true;
- 	}
- 
- 	switch (type) {
-@@ -654,8 +658,9 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
- 		return -EOPNOTSUPP;
- 	}
- 
--	if (vif->mid != 0 && wil_has_up_ifaces(wil)) {
--		wil_vif_prepare_stop(wil, vif);
-+	if (vif->mid != 0 && wil_has_active_ifaces(wil, true, false)) {
-+		if (!fw_reset)
-+			wil_vif_prepare_stop(vif);
- 		rc = wmi_port_delete(wil, vif->mid);
- 		if (rc)
- 			return rc;
-@@ -1530,10 +1535,12 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 
- 	mutex_lock(&wil->mutex);
- 
--	__wil_down(wil);
--	rc = __wil_up(wil);
--	if (rc)
--		goto out;
-+	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
-+		__wil_down(wil);
-+		rc = __wil_up(wil);
-+		if (rc)
-+			goto out;
-+	}
- 
- 	rc = wmi_set_ssid(vif, ssid_len, ssid);
- 	if (rc)
-@@ -1549,7 +1556,8 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	vif->pbss = pbss;
- 
- 	netif_carrier_on(ndev);
--	wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
-+	if (!wil_has_other_active_ifaces(wil, ndev, false, true))
-+		wil6210_bus_request(wil, WIL_MAX_BUS_REQUEST_KBPS);
- 
- 	rc = wmi_pcp_start(vif, bi, wmi_nettype, chan, hidden_ssid, is_go);
- 	if (rc)
-@@ -1565,7 +1573,8 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	wmi_pcp_stop(vif);
- err_pcp_start:
- 	netif_carrier_off(ndev);
--	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
-+	if (!wil_has_other_active_ifaces(wil, ndev, false, true))
-+		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
- out:
- 	mutex_unlock(&wil->mutex);
- 	return rc;
-@@ -1670,20 +1679,26 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 	struct wil6210_vif *vif = ndev_to_vif(ndev);
-+	bool last;
- 
--	wil_dbg_misc(wil, "stop_ap\n");
-+	wil_dbg_misc(wil, "stop_ap, mid=%d\n", vif->mid);
- 
- 	netif_carrier_off(ndev);
--	wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
--	wil_set_recovery_state(wil, fw_recovery_idle);
--
--	set_bit(wil_status_resetting, wil->status);
-+	last = !wil_has_other_active_ifaces(wil, ndev, false, true);
-+	if (last) {
-+		wil6210_bus_request(wil, WIL_DEFAULT_BUS_REQUEST_KBPS);
-+		wil_set_recovery_state(wil, fw_recovery_idle);
-+		set_bit(wil_status_resetting, wil->status);
-+	}
- 
- 	mutex_lock(&wil->mutex);
- 
- 	wmi_pcp_stop(vif);
- 
--	__wil_down(wil);
-+	if (last)
-+		__wil_down(wil);
-+	else
-+		wil_bcast_fini(vif);
- 
- 	mutex_unlock(&wil->mutex);
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 32319b7..d000688 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -508,6 +508,18 @@ void wil_bcast_fini(struct wil6210_vif *vif)
- 	wil_vring_fini_tx(wil, ri);
- }
- 
-+void wil_bcast_fini_all(struct wil6210_priv *wil)
-+{
-+	int i;
-+	struct wil6210_vif *vif;
-+
-+	for (i = 0; i < wil->max_vifs; i++) {
-+		vif = wil->vifs[i];
-+		if (vif)
-+			wil_bcast_fini(vif);
-+	}
-+}
-+
- int wil_priv_init(struct wil6210_priv *wil)
- {
- 	uint i;
-@@ -1204,7 +1216,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 
- 	cancel_work_sync(&vif->disconnect_worker);
- 	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
--	wil_bcast_fini(vif);
-+	wil_bcast_fini_all(wil);
- 
- 	/* Disable device led before reset*/
- 	wmi_led_cfg(wil, false);
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index e23a80c..87956c0 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -20,8 +20,8 @@
- #include "wil6210.h"
- #include "txrx.h"
- 
--bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
--			     struct net_device *ndev)
-+bool wil_has_other_active_ifaces(struct wil6210_priv *wil,
-+				 struct net_device *ndev, bool up, bool ok)
- {
- 	int i;
- 	struct wil6210_vif *vif;
-@@ -31,17 +31,19 @@ bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
- 		vif = wil->vifs[i];
- 		if (vif) {
- 			ndev_i = vif_to_ndev(vif);
--			if (ndev_i != ndev && ndev_i->flags & IFF_UP)
--				return true;
-+			if (ndev_i != ndev)
-+				if ((up && (ndev_i->flags & IFF_UP)) ||
-+				    (ok && netif_carrier_ok(ndev_i)))
-+					return true;
- 		}
- 	}
- 
- 	return false;
- }
- 
--bool wil_has_up_ifaces(struct wil6210_priv *wil)
-+bool wil_has_active_ifaces(struct wil6210_priv *wil, bool up, bool ok)
- {
--	return wil_has_other_up_ifaces(wil, NULL);
-+	return wil_has_other_active_ifaces(wil, NULL, up, ok);
- }
- 
- static int wil_open(struct net_device *ndev)
-@@ -57,7 +59,7 @@ static int wil_open(struct net_device *ndev)
- 		return -EINVAL;
- 	}
- 
--	if (!wil_has_other_up_ifaces(wil, ndev)) {
-+	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
- 		wil_dbg_misc(wil, "open, first iface\n");
- 		rc = wil_pm_runtime_get(wil);
- 		if (rc < 0)
-@@ -78,7 +80,7 @@ static int wil_stop(struct net_device *ndev)
- 
- 	wil_dbg_misc(wil, "stop\n");
- 
--	if (!wil_has_other_up_ifaces(wil, ndev)) {
-+	if (!wil_has_other_active_ifaces(wil, ndev, true, false)) {
- 		wil_dbg_misc(wil, "stop, last iface\n");
- 		rc = wil_down(wil);
- 		if (!rc)
-@@ -359,7 +361,7 @@ int wil_vif_add(struct wil6210_priv *wil, struct wil6210_vif *vif)
- {
- 	struct net_device *ndev = vif_to_ndev(vif);
- 	struct wireless_dev *wdev = vif_to_wdev(vif);
--	bool any_active = wil_has_up_ifaces(wil);
-+	bool any_active = wil_has_active_ifaces(wil, true, false);
- 	int rc;
- 
- 	ASSERT_RTNL();
-@@ -428,7 +430,7 @@ void wil_vif_remove(struct wil6210_priv *wil, u8 mid)
- {
- 	struct wil6210_vif *vif;
- 	struct net_device *ndev;
--	bool any_active = wil_has_up_ifaces(wil);
-+	bool any_active = wil_has_active_ifaces(wil, true, false);
- 
- 	ASSERT_RTNL();
- 	if (mid >= wil->max_vifs) {
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 1fd7614..7d3ff3f 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -145,7 +145,7 @@ static void wil_remove_all_additional_vifs(struct wil6210_priv *wil)
- 	for (i = 1; i < wil->max_vifs; i++) {
- 		vif = wil->vifs[i];
- 		if (vif) {
--			wil_vif_prepare_stop(wil, vif);
-+			wil_vif_prepare_stop(vif);
- 			wil_vif_remove(wil, vif->mid);
- 		}
- 	}
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 8ab4b5a..6e46a23 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -944,9 +944,9 @@ struct wil6210_vif *
- 	      unsigned char name_assign_type, enum nl80211_iftype iftype);
- void wil_vif_free(struct wil6210_vif *vif);
- void *wil_if_alloc(struct device *dev);
--bool wil_has_other_up_ifaces(struct wil6210_priv *wil,
--			     struct net_device *ndev);
--bool wil_has_up_ifaces(struct wil6210_priv *wil);
-+bool wil_has_other_active_ifaces(struct wil6210_priv *wil,
-+				 struct net_device *ndev, bool up, bool ok);
-+bool wil_has_active_ifaces(struct wil6210_priv *wil, bool up, bool ok);
- void wil_if_free(struct wil6210_priv *wil);
- int wil_vif_add(struct wil6210_priv *wil, struct wil6210_vif *vif);
- int wil_if_add(struct wil6210_priv *wil);
-@@ -1053,7 +1053,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- int wil_cfg80211_iface_combinations_from_fw(
- 	struct wil6210_priv *wil,
- 	const struct wil_fw_record_concurrency *conc);
--int wil_vif_prepare_stop(struct wil6210_priv *wil, struct wil6210_vif *vif);
-+int wil_vif_prepare_stop(struct wil6210_vif *vif);
- 
- #if defined(CONFIG_WIL6210_DEBUGFS)
- int wil6210_debugfs_init(struct wil6210_priv *wil);
-@@ -1095,6 +1095,7 @@ int wil_vring_init_tx(struct wil6210_vif *vif, int id, int size,
- int wil_vring_init_bcast(struct wil6210_vif *vif, int id, int size);
- int wil_bcast_init(struct wil6210_vif *vif);
- void wil_bcast_fini(struct wil6210_vif *vif);
-+void wil_bcast_fini_all(struct wil6210_priv *wil);
- 
- void wil_update_net_queues(struct wil6210_priv *wil, struct vring *vring,
- 			   bool should_stop);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 23c28bf..762ade3 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -341,6 +341,10 @@ static const char *cmdid2name(u16 cmdid)
- 		return "WMI_GET_PCP_CHANNEL_CMD";
- 	case WMI_P2P_CFG_CMDID:
- 		return "WMI_P2P_CFG_CMD";
-+	case WMI_PORT_ALLOCATE_CMDID:
-+		return "WMI_PORT_ALLOCATE_CMD";
-+	case WMI_PORT_DELETE_CMDID:
-+		return "WMI_PORT_DELETE_CMD";
- 	case WMI_START_LISTEN_CMDID:
- 		return "WMI_START_LISTEN_CMD";
- 	case WMI_START_SEARCH_CMDID:
-@@ -479,6 +483,10 @@ static const char *eventid2name(u16 eventid)
- 		return "WMI_GET_PCP_CHANNEL_EVENT";
- 	case WMI_P2P_CFG_DONE_EVENTID:
- 		return "WMI_P2P_CFG_DONE_EVENT";
-+	case WMI_PORT_ALLOCATED_EVENTID:
-+		return "WMI_PORT_ALLOCATED_EVENT";
-+	case WMI_PORT_DELETED_EVENTID:
-+		return "WMI_PORT_DELETED_EVENT";
- 	case WMI_LISTEN_STARTED_EVENTID:
- 		return "WMI_LISTEN_STARTED_EVENT";
- 	case WMI_SEARCH_STARTED_EVENTID:
 -- 
-1.9.1
+Kalle Valo
