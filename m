@@ -1,101 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38092 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751669AbeBBBDK (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:46952 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751641AbeB0WTR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Feb 2018 20:03:10 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  Support mgt frame per-chain rssi
-Date: Thu,  1 Feb 2018 17:03:06 -0800
-Message-Id: <1517533386-30766-1-git-send-email-greearb@candelatech.com> (sfid-20180202_020315_799744_6535194E)
+        Tue, 27 Feb 2018 17:19:17 -0500
+Received: from mail-it0-f72.google.com ([209.85.214.72])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1eqnae-0001df-7W
+        for linux-wireless@vger.kernel.org; Tue, 27 Feb 2018 22:19:16 +0000
+Received: by mail-it0-f72.google.com with SMTP id a79so806877itc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 14:19:16 -0800 (PST)
+Date: Tue, 27 Feb 2018 16:19:13 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH v2 11/13] cfg80211: read wmm rules from regulatory
+ database
+Message-ID: <20180227221913.GD4617@ubuntu-xps13> (sfid-20180227_231921_524485_B19A73D1)
+References: <20180219124847.27169-1-luca@coelho.fi>
+ <20180219124847.27169-12-luca@coelho.fi>
+ <1519047033.16723.14.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519047033.16723.14.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Mon, Feb 19, 2018 at 02:30:33PM +0100, Johannes Berg wrote:
+> On Mon, 2018-02-19 at 14:48 +0200, Luca Coelho wrote:
+> > From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+> > 
+> > ETSI EN 301 893 v211 (2017-05) standard defines a new channel access
+> > mechanism that all devices (WLAN and LAA) need to comply with.
+> > The regulatory database can now be loaded into the kernel and also
+> > has the option to load optional data.
+> > In order to be able to comply with ETSI standard, we add wmm_rule into
+> > regulatory rule and add the option to read its value from the regulatory
+> > database.
+> 
+> Seth, this is going to come with an update to the regdb as well. I'd
+> appreciate if you could take a look.
 
-This provides per-chain rssh for management frames received
-over wmi.
+I think it looks okay, but I guess there will be new patches so I will
+take another look then. Is there an example of the db.txt updates for
+the WMM rules?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 21 ++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h |  1 +
- 2 files changed, 21 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 905af93..ff37274 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2287,6 +2287,7 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
- 	u32 msdu_len;
- 	struct wmi_mgmt_rx_ext_info *ext_info;
- 	u32 len;
-+	int i;
- 
- 	ev = (struct wmi_10_4_mgmt_rx_event *)skb->data;
- 	ev_hdr = &ev->hdr;
-@@ -2302,6 +2303,8 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
- 	arg->snr = ev_hdr->snr;
- 	arg->phy_mode = ev_hdr->phy_mode;
- 	arg->rate = ev_hdr->rate;
-+	for (i = 0; i<4; i++)
-+		arg->rssi_ctl[i] = ev_hdr->rssi_ctl[i];
- 
- 	msdu_len = __le32_to_cpu(arg->buf_len);
- 	if (skb->len < msdu_len)
-@@ -2357,6 +2360,13 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	u32 buf_len;
- 	u16 fc;
- 	int ret;
-+	int i;
-+
-+	/* Initialize the rssi to 'ignore-me' value, stock wave-1
-+	 * firmware doesn't support it.
-+	 */
-+	for (i = 0; i<4; i++)
-+		arg.rssi_ctl[i] = 0x80;
- 
- 	ret = ath10k_wmi_pull_mgmt_rx(ar, skb, &arg);
- 	if (ret) {
-@@ -2416,6 +2426,12 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- 	status->freq = ieee80211_channel_to_frequency(channel, status->band);
- 	status->signal = snr + ATH10K_DEFAULT_NOISE_FLOOR;
-+	for (i = 0; i<4; i++) {
-+		if (arg.rssi_ctl[i] != 0x80) {
-+			status->chains |= BIT(i);
-+			status->chain_signal[i] = ATH10K_DEFAULT_NOISE_FLOOR + arg.rssi_ctl[i];
-+		}
-+	}
- 	status->rate_idx = ath10k_mac_bitrate_to_idx(sband, rate / 100);
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
-@@ -2451,8 +2467,11 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 		   fc & IEEE80211_FCTL_FTYPE, fc & IEEE80211_FCTL_STYPE);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_MGMT,
--		   "event mgmt rx freq %d band %d snr %d, rate_idx %d\n",
-+		   "event mgmt rx freq %d band %d snr %d chains: 0x%x(%d %d %d %d), rate_idx %d\n",
- 		   status->freq, status->band, status->signal,
-+		   status->chains,
-+		   status->chain_signal[0], status->chain_signal[1],
-+		   status->chain_signal[2], status->chain_signal[3],
- 		   status->rate_idx);
- 
- 	ieee80211_rx(ar->hw, skb);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index a3ba191..d198772 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6490,6 +6490,7 @@ struct wmi_scan_ev_arg {
- struct wmi_mgmt_rx_ev_arg {
- 	__le32 channel;
- 	__le32 snr;
-+	u8 rssi_ctl[4];
- 	__le32 rate;
- 	__le32 phy_mode;
- 	__le32 buf_len;
--- 
-2.4.11
+Seth
