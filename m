@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:60595 "EHLO mail.toke.dk"
+Received: from mail.kernel.org ([198.145.29.99]:53574 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751509AbeBTLNd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 06:13:33 -0500
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Steve deRosier <derosier@gmail.com>,
-        sdnlabs Janakaraj <wsuprabhu@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: testing tool for packet delay
-In-Reply-To: <CALLGbR+taP7GU4ftX5wFPvxD0BUsCiBDxjGXWeOJi9_nYLhEww@mail.gmail.com>
-References: <CAPWex-AFApTucOo4DGk2n30X7Y0N2NrNv2u+8ubqTL4SkhxgwA@mail.gmail.com> <CALLGbR+taP7GU4ftX5wFPvxD0BUsCiBDxjGXWeOJi9_nYLhEww@mail.gmail.com>
-Date: Tue, 20 Feb 2018 12:13:31 +0100
-Message-ID: <87tvubdick.fsf@toke.dk> (sfid-20180220_121337_512196_17F7D459)
-MIME-Version: 1.0
-Content-Type: text/plain
+        id S1751982AbeB0XVK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Feb 2018 18:21:10 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: cantabile.desu@gmail.com
+Cc: kubakici@wp.pl, gregkh@linuxfoundation.org,
+        akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        stephen.boyd@linaro.org, broonie@kernel.org,
+        dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [RFT 3/7] firmware: make fw_add_devm_name() return 0 if cache present
+Date: Tue, 27 Feb 2018 15:20:57 -0800
+Message-Id: <20180227232101.20786-4-mcgrof@kernel.org> (sfid-20180228_002217_638510_954ACCFE)
+In-Reply-To: <20180227232101.20786-1-mcgrof@kernel.org>
+References: <20180227232101.20786-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Steve deRosier <derosier@gmail.com> writes:
+Currently fw_add_devm_name() returns 1 if the firmware cache
+was already set. This makes it complicated for us to check for
+correctness. It is actually non-fatal if the firmware cache
+is already setup, so just return 0, and simplify the checkers.
 
-> On Mon, Feb 19, 2018 at 9:19 AM, sdnlabs Janakaraj <wsuprabhu@gmail.com> wrote:
->>
->> Hello All,
->>
->> I am working on delay analysis of packets in wireless stacks. I am
->> able to see lots of papers talk about therotical analysis. But I am
->> more interested in practical evaluation.
->>
->> I am reaching out to developers community to learn how they actually
->> evaluate the performance of the stack. In particular, I am looking for
->> ideas to evaluate the delay experienced by packets within the
->> mac802.11 stack.
->>
->
-> Hi Prabhu,
->
-> Sounds like an interesting project. More often my instrumentation
-> focuses on aggregate performance and iperf throughput numbers suffices
-> for most of that. Occasionally I utilize internal performance measures
-> and/or data provided me by ftrace and related tools.
->
-> If you're unfamiliar with it, I suggest you look at the Bufferbloat
-> and Make-wifi-fast projects. I suspect that their data and techniques
-> and tools might be of interest to you:
->
-> https://www.bufferbloat.net/projects/make-wifi-fast/
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ drivers/base/firmware_loader.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Bufferbloat/make-wifi-fast community member checking in ;)
-
-Basically, what we've been doing to analyse (and reduce) the latency of
-the queueing system in the WiFi stack, is to put it under load and
-measure how it behaves. This is not so much through the use of tracing
-tools as it is an end-to-end black-box measurement approach.
-
-The go-to mechanism for this is to run a latency measurement (either a
-simple ICMP ping, or a UDP measurement flow using a tool such as
-irtt[1]), then load the connection with one or more TCP flows and see
-how it impacts latency. You can of course vary the number of flows,
-diffserv markings, etc. to get different insights.
-
-I'm the author of a test tool that automates a lot of this and which can
-also collect a lot of statistics from the stack while doing so. The tool
-is called Flent[2] and is open source. Feel free to try it out and ask
-any questions that come up :)
-
--Toke
-
-[1] https://github.com/peteheist/irtt/
-[2] https://flent.org
+diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
+index 48932581c70c..a385622bf3e1 100644
+--- a/drivers/base/firmware_loader.c
++++ b/drivers/base/firmware_loader.c
+@@ -403,7 +403,7 @@ static int fw_add_devm_name(struct device *dev, const char *name)
+ 
+ 	fwn = fw_find_devm_name(dev, name);
+ 	if (fwn)
+-		return 1;
++		return 0;
+ 
+ 	fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm),
+ 			   GFP_KERNEL);
+@@ -450,7 +450,7 @@ int assign_fw(struct firmware *fw, struct device *device,
+ 	if (device && (opt_flags & FW_OPT_UEVENT) &&
+ 	    !(opt_flags & FW_OPT_NOCACHE)) {
+ 		ret = fw_add_devm_name(device, fw_priv->fw_name);
+-		if (ret && ret != 1) {
++		if (ret) {
+ 			mutex_unlock(&fw_lock);
+ 			return ret;
+ 		}
+-- 
+2.16.2
