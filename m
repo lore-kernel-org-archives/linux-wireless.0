@@ -1,77 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:34659 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753344AbeB0Ohp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52938 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752161AbeB0QRD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 09:37:45 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org
-Subject: [v9 0/8] rsi: add bluetooth and coex support
-Date: Tue, 27 Feb 2018 19:56:10 +0530
-Message-Id: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com> (sfid-20180227_153757_199495_A71F5124)
+        Tue, 27 Feb 2018 11:17:03 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: wireless: zd1211rw: remove redundant assignment of pointer 'q'
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180130182537.5580-1-colin.king@canonical.com>
+References: <20180130182537.5580-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20180227161702.81FE4607E5@smtp.codeaurora.org> (sfid-20180227_171721_572775_7A040634)
+Date: Tue, 27 Feb 2018 16:17:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Colin Ian King <colin.king@canonical.com> wrote:
 
-This patch series adds new bluetooth driver and coex enhancments
-in existing wlan driver for RSI chipsets.
-As per our architecture, both wlan and bluetooth drivers talk
-over same SDIO interface to device. Separate endpoint will be
-used in case of USB interface.
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Pointer q is initialized and then almost immediately afterwards being
+> re-assigned the same value. Remove the second redundant assignment.
+> 
+> Cleans up clang warning:
+> drivers/net/wireless/zydas/zd1211rw/zd_mac.c:503:23: warning: Value
+> stored to 'q' during its initialization is never read
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Change in v9: "#ifdef CONFIG_RSI_COEX" check moved from 6/8 to 4/6
-              to resolve kbuild test robot reported error
-Change in v8: 4/8, 5/8 are modified
-Change in v7: 4/8 is modified
-Changes in v6: 1/8, 3/8, 4/8, 5/8, 6/8 are modified
-Changes in v5: 5/8 is modified
-Changes in v4: 5/8 is modified
-Changes in v3: 4/8, 5/8 and 6/8 patches are modified
-Changes in v2: 2/8, 5/8 and 6/8 patches are modified
+Patch applied to wireless-drivers-next.git, thanks.
 
-Prameela Rani Garnepudi (6):
-  rsi: add rx control block to handle rx packets in USB
-  rsi: add header file rsi_91x
-  rsi: add coex support
-  Bluetooth: btrsi: add new rsi bluetooth driver
-  rsi: add module parameter operating mode
-  rsi: sdio changes to support BT
-
-Siva Rebbagondla (2):
-  rsi: add bluetooth rx endpoint
-  rsi: handle BT traffic in driver
-
- drivers/bluetooth/Kconfig                   |  12 ++
- drivers/bluetooth/Makefile                  |   2 +
- drivers/bluetooth/btrsi.c                   | 188 ++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/Kconfig            |   9 ++
- drivers/net/wireless/rsi/Makefile           |   1 +
- drivers/net/wireless/rsi/rsi_91x_coex.c     | 179 ++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_core.c     |  20 ++-
- drivers/net/wireless/rsi/rsi_91x_hal.c      |  56 +++++++--
- drivers/net/wireless/rsi/rsi_91x_main.c     | 129 ++++++++++++++++++-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   2 +-
- drivers/net/wireless/rsi/rsi_91x_sdio.c     |  13 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |   5 +-
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 124 +++++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  35 ++++--
- drivers/net/wireless/rsi/rsi_coex.h         |  37 ++++++
- drivers/net/wireless/rsi/rsi_common.h       |   5 +-
- drivers/net/wireless/rsi/rsi_hal.h          |  21 ++++
- drivers/net/wireless/rsi/rsi_main.h         |  21 ++--
- drivers/net/wireless/rsi/rsi_mgmt.h         |   3 +
- drivers/net/wireless/rsi/rsi_usb.h          |  16 ++-
- include/net/rsi_91x.h                       |  56 +++++++++
- 21 files changed, 852 insertions(+), 82 deletions(-)
- create mode 100644 drivers/bluetooth/btrsi.c
- create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
- create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
- create mode 100644 include/net/rsi_91x.h
+76d1f95983a0 wireless: zd1211rw: remove redundant assignment of pointer 'q'
 
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10192195/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
