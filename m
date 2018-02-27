@@ -1,106 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:42006 "EHLO
-        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750752AbeBUJHH (ORCPT
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:35923 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753770AbeB0OiX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 04:07:07 -0500
-Received: by mail-qk0-f170.google.com with SMTP id b130so1051706qkg.9
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Feb 2018 01:07:06 -0800 (PST)
-Subject: Re: brcmfmac signal/interference issues
-To: Daniel Drake <drake@endlessm.com>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com
-References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
+        Tue, 27 Feb 2018 09:38:23 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
 Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A8D36B7.1010201@broadcom.com> (sfid-20180221_100714_945964_994053F4)
-Date: Wed, 21 Feb 2018 10:07:03 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-bluetooth@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v9 7/8] rsi: add module parameter operating mode
+Date: Tue, 27 Feb 2018 19:56:17 +0530
+Message-Id: <1519741578-12640-8-git-send-email-amitkarwar@gmail.com> (sfid-20180227_153826_791069_7695BB2D)
+In-Reply-To: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
+References: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/21/2018 9:14 AM, Daniel Drake wrote:
-> Hi,
->
-> We're working with the Weibu F3C MiniPC which includes BCM43455 SDIO
-> wifi chip 0x004345(17221) rev 0x000006 (AP6255 module).
->
-> We are seeing a strange issue where usually within an hour of usage,
-> the wifi connection becomes so unstable and lossy that it is unusable.
-> While investigating this my standard test is to send ICMP pings to the
-> IP address of the local access point. Normally the latency is 5-10ms,
-> but when this problem is seen it will go to 500ms and then increase up
-> towards 20s before completely timing out.
->
-> Sometimes it is possible to induce the problem on-demand by stressing
-> some combination of CPU, disk and/or USB. At this point, ping reply
-> latency increases from ~5ms to 500ms+ before increasing even further.
-> Killing the stress test, the pings immediately return to normal. This
-> is not concrete though - I also seem to have a lot of luck hitting the
-> problem in the morning when booting up the computer from stone cold
-> state, while it is idle.
->
-> When the problem is being reproduced (ping times are high or get no
-> response), touching the exposed metal on the antenna connector with my
-> finger makes ping times return to normal. Touching it with a piece of
-> plastic does not have the same effect - so it is some effect of body
-> capacitance or similar. Also, disconnecting the antenna makes ping
-> times return to normal, although outside of the simple pings,
-> bandwidth is much reduced.
->
-> Additionally, when the problem is being reproduced, if I move the
-> antenna outside of the case, ping times return to normal. When I move
-> the antenna back into the miniPC case vicinity, it goes slow and lossy
-> again.
->
-> I have used a separate monitoring station with wireshark to look at
-> the 802.11 traffic while this is happening. When the problem is
-> reproduced, the miniPC is mostly unable to TX anything, and the AP
-> sends frames and retries them but with no ACK visible from the miniPC.
-> Immediately when I touch the antenna connector with my finger, tx
-> frames from the miniPC appear and the conversation comes back to life.
->
-> Running Linux 4.15 but we believe all versions are affected.
->
-> This very much sounds like a hardware issue, but here is where things
-> get interesting: Windows 10 on the same unit has no such problem.
->
-> I set up 2 units side by side - one running Windows 10 and the other
-> running Linux, connected to the same AP. The top part of the MiniPC
-> case has been removed so I can see the motherboard. I free up the
-> antennas from the MiniPC casing and they are on a relatively long
-> cable, so they can be freely moved around in this test, allowing me to
-> dangle the antenna into the vicinity of the neighbouring unit miniPC
-> case.
->
-> If I place both antenna terminals inside the Linux MiniPC case, the
-> Linux pings are bad but the Windows pings are fine.
->
-> If I place both antenna terminals inside the Windows MiniPC case, it
-> is the same: Linux pings are bad, but the Windows pings are fine.
->
-> And when the Linux antenna is placed outside of both cases, the Linux
-> pings are fine. I've repeated these tests a handful of times in quick
-> succession to make sure that I'm not going crazy and that this is not
-> a case of the problem intermittency causing misleading results. These
-> findings appear very solid.
->
-> This suggests that regardless of the running OS, the MiniPC produces
-> some kind of interference that intermittently has an extremely
-> detrimental effect on wifi signal when you are running Linux. However,
-> Windows is somehow immune to this.
->
-> Any ideas for how to continue debugging this? How can we make the
-> Linux driver immune to this interference like the windows one is?
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Hi Daniel,
+Operating mode determines the support for other protocols.
+This is made as module parameter for better usage.
 
-Thanks. I forwarded your detailed report. My first hunch would be the 
-nvram file used. Are you using the same nvram file on Linux as the one 
-on Windows? If not can you compare them or better just sent them.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_main.c | 48 ++++++++++++++++++++++++++++++---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 10 ++++++-
+ drivers/net/wireless/rsi/rsi_91x_usb.c  | 10 ++++++-
+ drivers/net/wireless/rsi/rsi_common.h   |  2 +-
+ drivers/net/wireless/rsi/rsi_hal.h      | 11 ++++++++
+ 5 files changed, 74 insertions(+), 7 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index b3e7d75..1485a0c 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -70,8 +70,24 @@ EXPORT_SYMBOL_GPL(rsi_dbg);
+ static char *opmode_str(int oper_mode)
+ {
+ 	switch (oper_mode) {
+-	case RSI_DEV_OPMODE_WIFI_ALONE:
++	case DEV_OPMODE_WIFI_ALONE:
+ 		return "Wi-Fi alone";
++	case DEV_OPMODE_BT_ALONE:
++		return "BT EDR alone";
++	case DEV_OPMODE_BT_LE_ALONE:
++		return "BT LE alone";
++	case DEV_OPMODE_BT_DUAL:
++		return "BT Dual";
++	case DEV_OPMODE_STA_BT:
++		return "Wi-Fi STA + BT EDR";
++	case DEV_OPMODE_STA_BT_LE:
++		return "Wi-Fi STA + BT LE";
++	case DEV_OPMODE_STA_BT_DUAL:
++		return "Wi-Fi STA + BT DUAL";
++	case DEV_OPMODE_AP_BT:
++		return "Wi-Fi AP + BT EDR";
++	case DEV_OPMODE_AP_BT_DUAL:
++		return "Wi-Fi AP + BT DUAL";
+ 	}
+ 
+ 	return "Unknown";
+@@ -278,7 +294,7 @@ void rsi_set_bt_context(void *priv, void *bt_context)
+  *
+  * Return: Pointer to the adapter structure on success, NULL on failure .
+  */
+-struct rsi_hw *rsi_91x_init(void)
++struct rsi_hw *rsi_91x_init(u16 oper_mode)
+ {
+ 	struct rsi_hw *adapter = NULL;
+ 	struct rsi_common *common = NULL;
+@@ -321,9 +337,33 @@ struct rsi_hw *rsi_91x_init(void)
+ 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
+ 	init_completion(&common->wlan_init_completion);
+ 	common->init_done = true;
++	adapter->device_model = RSI_DEV_9113;
++	common->oper_mode = oper_mode;
++
++	/* Determine coex mode */
++	switch (common->oper_mode) {
++	case DEV_OPMODE_STA_BT_DUAL:
++	case DEV_OPMODE_STA_BT:
++	case DEV_OPMODE_STA_BT_LE:
++	case DEV_OPMODE_BT_ALONE:
++	case DEV_OPMODE_BT_LE_ALONE:
++	case DEV_OPMODE_BT_DUAL:
++		common->coex_mode = 2;
++		break;
++	case DEV_OPMODE_AP_BT_DUAL:
++	case DEV_OPMODE_AP_BT:
++		common->coex_mode = 4;
++		break;
++	case DEV_OPMODE_WIFI_ALONE:
++		common->coex_mode = 1;
++		break;
++	default:
++		common->oper_mode = 1;
++		common->coex_mode = 1;
++	}
++	rsi_dbg(INFO_ZONE, "%s: oper_mode = %d, coex_mode = %d\n",
++		__func__, common->oper_mode, common->coex_mode);
+ 
+-	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
+-	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
+ 	adapter->device_model = RSI_DEV_9113;
+ #ifdef CONFIG_RSI_COEX
+ 	if (common->coex_mode > 1) {
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index ba38c6d..5722736 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -21,6 +21,14 @@
+ #include "rsi_coex.h"
+ #include "rsi_hal.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
+  * @rw: Read/write
+@@ -926,7 +934,7 @@ static int rsi_probe(struct sdio_func *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index b33a05f..0a50cff 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -21,6 +21,14 @@
+ #include "rsi_hal.h"
+ #include "rsi_coex.h"
+ 
++/* Default operating mode is wlan STA + BT */
++static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
++module_param(dev_oper_mode, ushort, 0444);
++MODULE_PARM_DESC(dev_oper_mode,
++		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
++		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
++		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
++
+ /**
+  * rsi_usb_card_write() - This function writes to the USB Card.
+  * @adapter: Pointer to the adapter structure.
+@@ -708,7 +716,7 @@ static int rsi_probe(struct usb_interface *pfunction,
+ 
+ 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
+ 
+-	adapter = rsi_91x_init();
++	adapter = rsi_91x_init(dev_oper_mode);
+ 	if (!adapter) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
+ 			__func__);
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index 4616585..d9ff3b8 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -81,7 +81,7 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
+ 
+ void rsi_mac80211_detach(struct rsi_hw *hw);
+ u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
+-struct rsi_hw *rsi_91x_init(void);
++struct rsi_hw *rsi_91x_init(u16 oper_mode);
+ void rsi_91x_deinit(struct rsi_hw *adapter);
+ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
+ #ifdef CONFIG_PM
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index e712223..a7d3011 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -17,6 +17,17 @@
+ #ifndef __RSI_HAL_H__
+ #define __RSI_HAL_H__
+ 
++/* Device Operating modes */
++#define DEV_OPMODE_WIFI_ALONE		1
++#define DEV_OPMODE_BT_ALONE		4
++#define DEV_OPMODE_BT_LE_ALONE		8
++#define DEV_OPMODE_BT_DUAL		12
++#define DEV_OPMODE_STA_BT		5
++#define DEV_OPMODE_STA_BT_LE		9
++#define DEV_OPMODE_STA_BT_DUAL		13
++#define DEV_OPMODE_AP_BT		6
++#define DEV_OPMODE_AP_BT_DUAL		14
++
+ #define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
+ #define FLASH_SECTOR_SIZE		(4 * 1024)
+ 
+-- 
+2.7.4
