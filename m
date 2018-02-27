@@ -1,53 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36917 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751010AbeBITKt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50034 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751874AbeB0EAP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Feb 2018 14:10:49 -0500
-Received: by mail-wm0-f65.google.com with SMTP id v71so18170977wmv.2
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Feb 2018 11:10:48 -0800 (PST)
-Subject: Re: [PATCH] mac80211: round IEEE80211_TX_STATUS_HEADROOM up to
- multiple of 4
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-References: <20180209185100.22511-1-nbd@nbd.name>
-Cc: johannes@sipsolutions.net
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A7DF237.9020803@broadcom.com> (sfid-20180209_201053_742425_D77BE3B4)
-Date: Fri, 9 Feb 2018 20:10:47 +0100
+        Mon, 26 Feb 2018 23:00:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180209185100.22511-1-nbd@nbd.name>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 27 Feb 2018 09:30:14 +0530
+From: periyasa@codeaurora.org
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        adrian.chadd@gmail.com
+Subject: Re: [PATCH] Revert "ath10k: send (re)assoc peer command when NSS
+ changed"
+In-Reply-To: <CAJ-VmokdboP37J8csaj=xKOpiXDxXfF7wrv+cdJp+UCYFjtU_g@mail.gmail.com>
+References: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org>
+ <aedd8281-ee1b-e5ae-2521-fd3a7a221dd6@candelatech.com>
+ <dd7bb2acd1be43346315d7bb349b45b2@codeaurora.org>
+ <CAJ-VmokdboP37J8csaj=xKOpiXDxXfF7wrv+cdJp+UCYFjtU_g@mail.gmail.com>
+Message-ID: <83292eb1f9fe6bd2ee9ef82e80693388@codeaurora.org> (sfid-20180227_050019_254318_1225B00C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/9/2018 7:51 PM, Felix Fietkau wrote:
-> This ensures that mac80211 allocated management frames are properly
-> aligned, which makes copying them more efficient.
-> For instance, mt76 uses iowrite32_copy to copy beacon frames to beacon
-> template memory on the chip.
-> Misaligned 32-bit accesses cause CPU exceptions on MIPS and should be
-> avoided.
->
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->   include/net/mac80211.h | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 906e90223066..d999b8c8a44b 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -4149,7 +4149,7 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *sta, u8 tid);
->    * The TX headroom reserved by mac80211 for its own tx_status functions.
->    * This is enough for the radiotap header.
+Hi,
 
-Hi Felix,
-
-Maybe useful to mention the alignment requirement in this comment block.
-
->    */
-> -#define IEEE80211_TX_STATUS_HEADROOM	14
-> +#define IEEE80211_TX_STATUS_HEADROOM	16
+This is not a bug, Firmware treats every WMI_PEER_ASSOC_CMDID as a new 
+peer assoc. so driver should not give WMI_PEER_ASSOC_CMDID for the 
+already associated peer.
+For the NSS update, wmi_peer_set_param is enough to update the new NSS 
+value.
 
 Regards,
-Arend
+Karthikeyan P.
+
+On 2018-02-27 00:51, Adrian Chadd wrote:
+> hi,
+> 
+> so it's going to eventually leak? Can we fix the firmware bug too? :)
+> 
+> 
+> -a
+> 
+> 
+> On 26 February 2018 at 09:06,  <periyasa@codeaurora.org> wrote:
+>> Hi,
+>> 
+>> 
+>>> Can you share exactly which resource the firmware ran out of?  It 
+>>> would
+>>> seem to
+>>> be a FW bug if it is leaking, so maybe it can be fixed as well...
+>>> 
+>> 
+>> Firmware have total user_id = 528 (512 clients + 16 VAPs). Each 
+>> user_id is
+>> allocated to peer when Firmware receive the WMI_PEER_ASSOC_CMDID 
+>> request
+>> from host driver. Firmware free the user_id in peer delete operation.
+>> 
+>> Regards,
+>> Karthikeyan P.
+>> 
+>> _______________________________________________
+>> ath10k mailing list
+>> ath10k@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/ath10k
