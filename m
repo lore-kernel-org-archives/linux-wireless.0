@@ -1,89 +1,343 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f196.google.com ([209.85.217.196]:39420 "EHLO
-        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751062AbeB0XbM (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:46793 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753701AbeB0OiR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 18:31:12 -0500
-Received: by mail-ua0-f196.google.com with SMTP id e25so383327uam.6
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 15:31:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20180227232101.20786-4-mcgrof@kernel.org>
-References: <20180227232101.20786-1-mcgrof@kernel.org> <20180227232101.20786-4-mcgrof@kernel.org>
-From: Kees Cook <keescook@chromium.org>
-Date: Tue, 27 Feb 2018 15:31:11 -0800
-Message-ID: <CAGXu5jL1mrZ6LqV0WKBY=w_kZzzcSrUD6Z5YqToSS2qmNaS4Fw@mail.gmail.com> (sfid-20180228_003118_038839_BB7210D7)
-Subject: Re: [RFT 3/7] firmware: make fw_add_devm_name() return 0 if cache present
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: cantabile.desu@gmail.com, Jakub Kicinski <kubakici@wp.pl>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Shuah Khan <shuah@kernel.org>,
-        Martin Fuzzey <mfuzzey@parkeon.com>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        David Howells <dhowells@redhat.com>, pali.rohar@gmail.com,
-        Takashi Iwai <tiwai@suse.de>, arend.vanspriel@broadcom.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        nbroeking@me.com, Vikram Mulukutla <markivx@codeaurora.org>,
-        Mark Brown <broonie@kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        LKML <linux-kernel@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 27 Feb 2018 09:38:17 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-bluetooth@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v9 6/8] rsi: handle BT traffic in driver
+Date: Tue, 27 Feb 2018 19:56:16 +0530
+Message-Id: <1519741578-12640-7-git-send-email-amitkarwar@gmail.com> (sfid-20180227_153822_177291_76C5C5E8)
+In-Reply-To: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
+References: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 27, 2018 at 3:20 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> Currently fw_add_devm_name() returns 1 if the firmware cache
-> was already set. This makes it complicated for us to check for
-> correctness. It is actually non-fatal if the firmware cache
-> is already setup, so just return 0, and simplify the checkers.
->
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-That'll teach me to read all the patches first. ;)
+BT frames are passed through coex and hal modules to BUS.
+After firmware is loaded, based on the operating mode CARD
+READY frame comes for each protocol. When BT card ready is
+received, BT attach is called.
+Protocol operations are exchanged between the modules
+at initialization time.
+Build flag CONFIG_RSI_COEX is introduced to enable coex support
+if CONFIG_BT_RSIHCI is enabled. Coex operations are valid if
+coex mode is greater than 1 only.
 
-Honestly, I'd just fold this into the prior patch: there's only one
-caller and it's exactly about checking the return value.
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+v8: Same as v6, v7
+v6: Removed CONFIG_BT_HCIRSI flag dependency on RSI_91x. Introduced
+    CONFIG_RSI_COEX for coex code. (Kalle)
+v5: Same as v3, v4
+v3: bt_ops need not be present structure g_proto_ops. It is removed.
+v2: WLAN module depends on BT module. Updated in Kconfig
+---
+ drivers/net/wireless/rsi/rsi_91x_coex.c     |  4 ++-
+ drivers/net/wireless/rsi/rsi_91x_core.c     | 20 +++++++++---
+ drivers/net/wireless/rsi/rsi_91x_hal.c      | 39 +++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_main.c     | 49 +++++++++++++++++++++++++++--
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  1 +
+ drivers/net/wireless/rsi/rsi_common.h       |  1 +
+ drivers/net/wireless/rsi/rsi_hal.h          | 10 ++++++
+ drivers/net/wireless/rsi/rsi_main.h         |  3 ++
+ 8 files changed, 118 insertions(+), 9 deletions(-)
 
--Kees
-
-> ---
->  drivers/base/firmware_loader.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
-> index 48932581c70c..a385622bf3e1 100644
-> --- a/drivers/base/firmware_loader.c
-> +++ b/drivers/base/firmware_loader.c
-> @@ -403,7 +403,7 @@ static int fw_add_devm_name(struct device *dev, const char *name)
->
->         fwn = fw_find_devm_name(dev, name);
->         if (fwn)
-> -               return 1;
-> +               return 0;
->
->         fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm),
->                            GFP_KERNEL);
-> @@ -450,7 +450,7 @@ int assign_fw(struct firmware *fw, struct device *device,
->         if (device && (opt_flags & FW_OPT_UEVENT) &&
->             !(opt_flags & FW_OPT_NOCACHE)) {
->                 ret = fw_add_devm_name(device, fw_priv->fw_name);
-> -               if (ret && ret != 1) {
-> +               if (ret) {
->                         mutex_unlock(&fw_lock);
->                         return ret;
->                 }
-> --
-> 2.16.2
->
-
-
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
+index c07e839..d055099 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_coex.c
++++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
+@@ -43,8 +43,10 @@ static void rsi_coex_sched_tx_pkts(struct rsi_coex_ctrl_block *coex_cb)
+ 		coex_q = rsi_coex_determine_coex_q(coex_cb);
+ 		rsi_dbg(INFO_ZONE, "queue = %d\n", coex_q);
+ 
+-		if (coex_q == RSI_COEX_Q_BT)
++		if (coex_q == RSI_COEX_Q_BT) {
+ 			skb = skb_dequeue(&coex_cb->coex_tx_qs[RSI_COEX_Q_BT]);
++			rsi_send_bt_pkt(coex_cb->priv, skb);
++		}
+ 	} while (coex_q != RSI_COEX_Q_INVALID);
+ }
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index d0d2201..5dafd2e 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -17,6 +17,7 @@
+ #include "rsi_mgmt.h"
+ #include "rsi_common.h"
+ #include "rsi_hal.h"
++#include "rsi_coex.h"
+ 
+ /**
+  * rsi_determine_min_weight_queue() - This function determines the queue with
+@@ -301,14 +302,23 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 			mutex_unlock(&common->tx_lock);
+ 			break;
+ 		}
+-
+-		if (q_num == MGMT_SOFT_Q) {
+-			status = rsi_send_mgmt_pkt(common, skb);
+-		} else if (q_num == MGMT_BEACON_Q) {
++		if (q_num == MGMT_BEACON_Q) {
+ 			status = rsi_send_pkt_to_bus(common, skb);
+ 			dev_kfree_skb(skb);
+ 		} else {
+-			status = rsi_send_data_pkt(common, skb);
++#ifdef CONFIG_RSI_COEX
++			if (common->coex_mode > 1) {
++				status = rsi_coex_send_pkt(common, skb,
++							   RSI_WLAN_Q);
++			} else {
++#endif
++				if (q_num == MGMT_SOFT_Q)
++					status = rsi_send_mgmt_pkt(common, skb);
++				else
++					status = rsi_send_data_pkt(common, skb);
++#ifdef CONFIG_RSI_COEX
++			}
++#endif
+ 		}
+ 
+ 		if (status) {
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 151d228..de608ae 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include <linux/firmware.h>
++#include <net/bluetooth/bluetooth.h>
+ #include "rsi_mgmt.h"
+ #include "rsi_hal.h"
+ #include "rsi_sdio.h"
+@@ -24,6 +25,7 @@
+ static struct ta_metadata metadata_flash_content[] = {
+ 	{"flash_content", 0x00010000},
+ 	{"rsi/rs9113_wlan_qspi.rps", 0x00010000},
++	{"rsi/rs9113_wlan_bt_dual_mode.rps", 0x00010000},
+ };
+ 
+ int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb)
+@@ -357,6 +359,43 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 	return status;
+ }
+ 
++int rsi_send_bt_pkt(struct rsi_common *common, struct sk_buff *skb)
++{
++	int status = -EINVAL;
++	u8 header_size = 0;
++	struct rsi_bt_desc *bt_desc;
++	u8 queueno = ((skb->data[1] >> 4) & 0xf);
++
++	if (queueno == RSI_BT_MGMT_Q) {
++		status = rsi_send_pkt_to_bus(common, skb);
++		if (status)
++			rsi_dbg(ERR_ZONE, "%s: Failed to write bt mgmt pkt\n",
++				__func__);
++		goto out;
++	}
++	header_size = FRAME_DESC_SZ;
++	if (header_size > skb_headroom(skb)) {
++		rsi_dbg(ERR_ZONE, "%s: Not enough headroom\n", __func__);
++		status = -ENOSPC;
++		goto out;
++	}
++	skb_push(skb, header_size);
++	memset(skb->data, 0, header_size);
++	bt_desc = (struct rsi_bt_desc *)skb->data;
++
++	rsi_set_len_qno(&bt_desc->len_qno, (skb->len - FRAME_DESC_SZ),
++			RSI_BT_DATA_Q);
++	bt_desc->bt_pkt_type = cpu_to_le16(bt_cb(skb)->pkt_type);
++
++	status = rsi_send_pkt_to_bus(common, skb);
++	if (status)
++		rsi_dbg(ERR_ZONE, "%s: Failed to write bt pkt\n", __func__);
++
++out:
++	dev_kfree_skb(skb);
++	return status;
++}
++
+ int rsi_prepare_beacon(struct rsi_common *common, struct sk_buff *skb)
+ {
+ 	struct rsi_hw *adapter = (struct rsi_hw *)common->priv;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 641c388..b3e7d75 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -18,6 +18,7 @@
+ 
+ #include <linux/module.h>
+ #include <linux/firmware.h>
++#include <net/rsi_91x.h>
+ #include "rsi_mgmt.h"
+ #include "rsi_common.h"
+ #include "rsi_coex.h"
+@@ -35,6 +36,14 @@ u32 rsi_zone_enabled = /* INFO_ZONE |
+ 			0;
+ EXPORT_SYMBOL_GPL(rsi_zone_enabled);
+ 
++#ifdef CONFIG_RSI_COEX
++static struct rsi_proto_ops g_proto_ops = {
++	.coex_send_pkt = rsi_coex_send_pkt,
++	.get_host_intf = rsi_get_host_intf,
++	.set_bt_context = rsi_set_bt_context,
++};
++#endif
++
+ /**
+  * rsi_dbg() - This function outputs informational messages.
+  * @zone: Zone of interest for output message.
+@@ -144,6 +153,9 @@ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
+ 	u32 index, length = 0, queueno = 0;
+ 	u16 actual_length = 0, offset;
+ 	struct sk_buff *skb = NULL;
++#ifdef CONFIG_RSI_COEX
++	u8 bt_pkt_type;
++#endif
+ 
+ 	index = 0;
+ 	do {
+@@ -185,6 +197,25 @@ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
+ 			rsi_mgmt_pkt_recv(common, (frame_desc + offset));
+ 			break;
+ 
++#ifdef CONFIG_RSI_COEX
++		case RSI_BT_MGMT_Q:
++		case RSI_BT_DATA_Q:
++#define BT_RX_PKT_TYPE_OFST	14
++#define BT_CARD_READY_IND	0x89
++			bt_pkt_type = frame_desc[offset + BT_RX_PKT_TYPE_OFST];
++			if (bt_pkt_type == BT_CARD_READY_IND) {
++				rsi_dbg(INFO_ZONE, "BT Card ready recvd\n");
++				if (rsi_bt_ops.attach(common, &g_proto_ops))
++					rsi_dbg(ERR_ZONE,
++						"Failed to attach BT module\n");
++			} else {
++				if (common->bt_adapter)
++					rsi_bt_ops.recv_pkt(common->bt_adapter,
++							frame_desc + offset);
++			}
++			break;
++#endif
++
+ 		default:
+ 			rsi_dbg(ERR_ZONE, "%s: pkt from invalid queue: %d\n",
+ 				__func__,   queueno);
+@@ -232,6 +263,13 @@ enum rsi_host_intf rsi_get_host_intf(void *priv)
+ 
+ 	return common->priv->rsi_host_intf;
+ }
++
++void rsi_set_bt_context(void *priv, void *bt_context)
++{
++	struct rsi_common *common = (struct rsi_common *)priv;
++
++	common->bt_adapter = bt_context;
++}
+ #endif
+ 
+ /**
+@@ -323,13 +361,18 @@ void rsi_91x_deinit(struct rsi_hw *adapter)
+ 	for (ii = 0; ii < NUM_SOFT_QUEUES; ii++)
+ 		skb_queue_purge(&common->tx_queue[ii]);
+ 
+-	common->init_done = false;
+-
+ #ifdef CONFIG_RSI_COEX
+-	if (common->coex_mode > 1)
++	if (common->coex_mode > 1) {
++		if (common->bt_adapter) {
++			rsi_bt_ops.detach(common->bt_adapter);
++			common->bt_adapter = NULL;
++		}
+ 		rsi_coex_detach(common);
++	}
+ #endif
+ 
++	common->init_done = false;
++
+ 	kfree(common);
+ 	kfree(adapter->rsi_dev);
+ 	kfree(adapter);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 9fbc0ef..169c981 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -16,6 +16,7 @@
+  */
+ 
+ #include <linux/firmware.h>
++#include <net/rsi_91x.h>
+ #include "rsi_sdio.h"
+ #include "rsi_common.h"
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index 1d8af41..4616585 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -62,6 +62,7 @@ static inline int rsi_create_kthread(struct rsi_common *common,
+ 				     u8 *name)
+ {
+ 	init_completion(&thread->completion);
++	atomic_set(&thread->thread_done, 0);
+ 	thread->task = kthread_run(func_ptr, common, "%s", name);
+ 	if (IS_ERR(thread->task))
+ 		return (int)PTR_ERR(thread->task);
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index a09d36b..e712223 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -145,8 +145,18 @@ struct rsi_data_desc {
+ 	u8 sta_id;
+ } __packed;
+ 
++struct rsi_bt_desc {
++	__le16 len_qno;
++	__le16 reserved1;
++	__le32 reserved2;
++	__le32 reserved3;
++	__le16 reserved4;
++	__le16 bt_pkt_type;
++} __packed;
++
+ int rsi_hal_device_init(struct rsi_hw *adapter);
+ int rsi_prepare_beacon(struct rsi_common *common, struct sk_buff *skb);
+ int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb);
++int rsi_send_bt_pkt(struct rsi_common *common, struct sk_buff *skb);
+ 
+ #endif
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 99a00a3..47af0cb 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -291,6 +291,8 @@ struct rsi_common {
+ 	bool p2p_enabled;
+ 	struct timer_list roc_timer;
+ 	struct ieee80211_vif *roc_vif;
++
++	void *bt_adapter;
+ };
+ 
+ struct eepromrw_info {
+@@ -364,5 +366,6 @@ struct rsi_host_intf_ops {
+ };
+ 
+ enum rsi_host_intf rsi_get_host_intf(void *priv);
++void rsi_set_bt_context(void *priv, void *bt_context);
+ 
+ #endif
 -- 
-Kees Cook
-Pixel Security
+2.7.4
