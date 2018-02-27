@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:44926 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755389AbeBOLIc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751735AbeB0Qwv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 06:08:32 -0500
-Received: by mail-wr0-f195.google.com with SMTP id v65so2921938wrc.11
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Feb 2018 03:08:31 -0800 (PST)
-From: Loic Poulain <loic.poulain@linaro.org>
-To: kvalo@codeaurora.org, k.eugene.e@gmail.com
-Cc: linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        bjorn.andersson@linaro.org, nicolas.dechesne@linaro.org,
-        wcn36xx@lists.infradead.org, Loic Poulain <loic.poulain@linaro.org>
-Subject: [PATCH] wcn36xx: Fix warning due to duplicate scan_completed notification
-Date: Thu, 15 Feb 2018 12:08:28 +0100
-Message-Id: <1518692908-29303-1-git-send-email-loic.poulain@linaro.org> (sfid-20180215_120836_808462_2357281B)
+        Tue, 27 Feb 2018 11:52:51 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2,1/8] wil6210: add wil6210_vif structure for per-VIF data
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1519668738-16912-2-git-send-email-merez@codeaurora.org>
+References: <1519668738-16912-2-git-send-email-merez@codeaurora.org>
+To: Maya Erez <merez@codeaurora.org>
+Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Message-Id: <20180227165250.DADBB607E5@smtp.codeaurora.org> (sfid-20180227_175254_914636_9EFC399F)
+Date: Tue, 27 Feb 2018 16:52:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wcn36xx_cancel_hw_scan method stops the hw scan and notify the
-scan completion via ieee80211_scan_completed.
-However, on scan offload cancellation, firmware sends a scan complete
-indication, triggering a new call to ieee80211_scan_completed.
-This leads to kernel warn since the scan has already been completed.
+Maya Erez <merez@codeaurora.org> wrote:
 
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 9 +++------
- drivers/net/wireless/ath/wcn36xx/smd.c  | 2 ++
- 2 files changed, 5 insertions(+), 6 deletions(-)
+> For supporting multiple virtual interfaces in the future,
+> introduce a wil6210_vif structure which will hold per-VIF
+> data. Change the module initialization so wil6210_vif will
+> be part of net_device structure, and wireless_dev will be
+> embedded inside the wil6210_vif structure. This will allow
+> us to find the appropriate wil6210_vif structure when we
+> only have access to wireless_dev or net_device.
+> 
+> Signed-off-by: Lior David <liord@codeaurora.org>
+> Signed-off-by: Maya Erez <merez@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index ab5be6d..fcc98d4 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -666,16 +666,13 @@ static void wcn36xx_cancel_hw_scan(struct ieee80211_hw *hw,
- {
- 	struct wcn36xx *wcn = hw->priv;
- 
--	if (!wcn36xx_smd_stop_hw_scan(wcn)) {
--		struct cfg80211_scan_info scan_info = { .aborted = true };
--
--		ieee80211_scan_completed(wcn->hw, &scan_info);
--	}
--
- 	mutex_lock(&wcn->scan_lock);
- 	wcn->scan_aborted = true;
- 	mutex_unlock(&wcn->scan_lock);
- 
-+	/* ieee80211_scan_completed will be called on FW scan indication */
-+	wcn36xx_smd_stop_hw_scan(wcn);
-+
- 	cancel_work_sync(&wcn->scan_work);
- }
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 2a4871c..7cc2928 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -2138,6 +2138,8 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
- 	case WCN36XX_HAL_SCAN_IND_COMPLETED:
- 		mutex_lock(&wcn->scan_lock);
- 		wcn->scan_req = NULL;
-+		if (wcn->scan_aborted)
-+			scan_info.aborted = true;
- 		mutex_unlock(&wcn->scan_lock);
- 		ieee80211_scan_completed(wcn->hw, &scan_info);
- 		break;
+8 patches applied to ath-next branch of ath.git, thanks.
+
+9f38f2862455 wil6210: add wil6210_vif structure for per-VIF data
+7bfe9e22e487 wil6210: support concurrency record in FW file
+e00243fab84b wil6210: infrastructure for multiple virtual interfaces
+4aebd3bdbd8a wil6210: add support for adding and removing virtual interfaces
+3ada9314b4ea wil6210: multiple VIFs support for start/stop AP
+404bbb3cca3c wil6210: rename p2p_wdev_mutex to vif_mutex
+5bd609825210 wil6210: multiple VIFs support for connections and data path
+3a3b745f1eae wil6210: add debugfs 'mids' file
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10242993/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
