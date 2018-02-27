@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59254 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751049AbeBQIeD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:42360 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751908AbeB0KEw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Feb 2018 03:34:03 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 17 Feb 2018 10:33:47 +0200
-Message-Id: <20180217083354.31160-3-luca@coelho.fi> (sfid-20180217_093418_636127_08D6B8B0)
-In-Reply-To: <20180217083354.31160-1-luca@coelho.fi>
-References: <20180217083354.31160-1-luca@coelho.fi>
-Subject: [PATCH 2/9] iwlwifi: mvm: fix TX of CCMP 256
+        Tue, 27 Feb 2018 05:04:52 -0500
+Message-ID: <1519725888.4086.3.camel@sipsolutions.net> (sfid-20180227_110625_030319_2096EAF3)
+Subject: Re: [PATCH] Revert "mac80211: use QoS NDP for AP probing"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Caradoc-Davies <ben@transient.nz>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Feb 2018 11:04:48 +0100
+In-Reply-To: <20180225211541.29931-1-ben@transient.nz> (sfid-20180225_225013_392018_37030F79)
+References: <20180225211541.29931-1-ben@transient.nz>
+         (sfid-20180225_225013_392018_37030F79)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Mon, 2018-02-26 at 10:15 +1300, Ben Caradoc-Davies wrote:
+> This reverts commit 7b6ddeaf27eca72795ceeae2f0f347db1b5f9a30.
+> 
+> The above commit causes an Atheros AR9271 ath9k_htc USB WiFi adapter
+> connected to an AP with QoS/WME enabled to lose all IP connectivity after
+> something like 10 to 90 minutes. The adapter remains up and associated
+> and "iw dev wlan0 station dump" shows byte and packet counters that keep
+> increasing, but all IP connectivity fails, including ping, DNS, and web.
+> The host cannot be pinged by other hosts on the WLAN. Network can be
+> restored by unloading and reloading the ath9k_htc module, or physically
+> unplugging and replugging the adapter, triggering NetworkManager to
+> reconnect.
+> 
+> The problematic commit is on torvalds/master and linux-stable/linux-4.15.y.
+> On linux-stable/linux-4.14.y: e23090a7d8f05f03cf564148472130286f5ca9bf.
+> 
+> Problem confirmed on Debian linux-image-4.14.0-3-amd64 4.14.17-1 and
+> Debian linux-image-4.15.0-1-amd64 4.15.4-1 and vanilla 4.14.16
+> (git e23090a7d8f0 from linux-stable/linux-4.14.y) and vanilla 4.16.0-rc2
+> (git 3664ce2d9309 from torvalds/master).
+> 
+> Fix tested by reverting the commit on vanilla 4.16.0-rc2 (git 3664ce2d9309
+> from torvalds/master) and applying the patch to Debian
+> linux-image-4.15.0-1-amd64 4.15.4-1. Both tests resulted in stable IP
+> connectivity.
+> 
+> See also Debian Bug#891060:
+> Atheros AR9271 ath9k_htc USB WiFi connected but IP traffic stops
+> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891060
 
-We don't have enough room in the TX command for a CCMP 256
-key, and need to use key from table.
+It seems to be a particular driver problem, so blindly reverting seems
+a bit heavy-handed.
 
-Fixes: 3264bf032bd9 ("[BUGFIX] iwlwifi: mvm: Fix CCMP IV setting")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Using non-QoS NDP also isn't nice to the AP (and I'm not even sure it's
+in spec), since we expect QoS frames from a QoS/WMM-capable station.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index dda77b327c98..57ad6019ffad 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -419,11 +419,11 @@ static void iwl_mvm_set_tx_cmd_crypto(struct iwl_mvm *mvm,
- {
- 	struct ieee80211_key_conf *keyconf = info->control.hw_key;
- 	u8 *crypto_hdr = skb_frag->data + hdrlen;
-+	enum iwl_tx_cmd_sec_ctrl type = TX_CMD_SEC_CCM;
- 	u64 pn;
- 
- 	switch (keyconf->cipher) {
- 	case WLAN_CIPHER_SUITE_CCMP:
--	case WLAN_CIPHER_SUITE_CCMP_256:
- 		iwl_mvm_set_tx_cmd_ccmp(info, tx_cmd);
- 		iwl_mvm_set_tx_cmd_pn(info, crypto_hdr);
- 		break;
-@@ -447,13 +447,16 @@ static void iwl_mvm_set_tx_cmd_crypto(struct iwl_mvm *mvm,
- 		break;
- 	case WLAN_CIPHER_SUITE_GCMP:
- 	case WLAN_CIPHER_SUITE_GCMP_256:
-+		type = TX_CMD_SEC_GCMP;
-+		/* Fall through */
-+	case WLAN_CIPHER_SUITE_CCMP_256:
- 		/* TODO: Taking the key from the table might introduce a race
- 		 * when PTK rekeying is done, having an old packets with a PN
- 		 * based on the old key but the message encrypted with a new
- 		 * one.
- 		 * Need to handle this.
- 		 */
--		tx_cmd->sec_ctl |= TX_CMD_SEC_GCMP | TX_CMD_SEC_KEY_FROM_TABLE;
-+		tx_cmd->sec_ctl |= type | TX_CMD_SEC_KEY_FROM_TABLE;
- 		tx_cmd->key[0] = keyconf->hw_key_idx;
- 		iwl_mvm_set_tx_cmd_pn(info, crypto_hdr);
- 		break;
--- 
-2.15.1
+Perhaps we can set some sort of flag in the driver that says "don't use
+QoS" frames. In fact, ath9k already says it doesn't like QoS frames:
+
+-		skb = ieee80211_nullfunc_get(sc->hw, vif, false);
+
+so which place creates them?
+
+
+Either way, I don't think we should just plain revert, better to
+identify why ath9k is hitting these code paths to start with (since it
+does say "false" there, which means no QoS), and if needed add a
+workaround flag to the driver that also documents that something's
+broken with the driver(/firmware?)/hardware.
+
+johannes
