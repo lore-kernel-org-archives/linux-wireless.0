@@ -1,48 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37622 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752436AbeB1OwA (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:51135 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751788AbeB0UEE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 09:52:00 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: Jakub Kicinski <kubakici@wp.pl>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt7601u: make write with mask access atomic
-References: <cover.1518734856.git.lorenzo.bianconi@redhat.com>
-        <5bb3bb069bdd4663b69b60b782432c2faddc1efc.1518734856.git.lorenzo.bianconi@redhat.com>
-        <20180215151445.52e08b03@cakuba.netronome.com>
-        <CAJ0CqmVG4rNO=MSxaNF6s9vS3QueBVv0aFddETPaMpPQsYJh4Q@mail.gmail.com>
-Date: Wed, 28 Feb 2018 16:51:56 +0200
-In-Reply-To: <CAJ0CqmVG4rNO=MSxaNF6s9vS3QueBVv0aFddETPaMpPQsYJh4Q@mail.gmail.com>
-        (Lorenzo Bianconi's message of "Fri, 16 Feb 2018 01:02:31 +0100")
-Message-ID: <87tvu1dv5f.fsf@purkki.adurom.net> (sfid-20180228_155204_650744_EB7DC134)
+        Tue, 27 Feb 2018 15:04:04 -0500
+Received: by mail-wm0-f48.google.com with SMTP id w128so913103wmw.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 12:04:04 -0800 (PST)
+Subject: Re: Support on vendor id and device id
+To: Steve deRosier <derosier@gmail.com>,
+        Harsha Rao <harshrao464@gmail.com>
+References: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com>
+ <5A953DBE.9070805@broadcom.com>
+ <CAPcv9S1fZfrg3AV3GoWG-CaTkonpQyiHY6twvhS_ikXnj00t4g@mail.gmail.com>
+ <68f5549d-b8ad-85fb-4e80-50c53cac8108@lwfinger.net>
+ <CAPcv9S0TmMhrL0qcxq-8NStd=fYQreXribrA+GQmppLvrB_avg@mail.gmail.com>
+ <CALLGbRJxwOUkxnNCyCt2sBuoZacs60AcDnFfWMQQuVdj5YykOw@mail.gmail.com>
+ <CALLGbRKrnnmsNtzpkABn+xOTjDaFKZz0jNxGkyJXMT1=XLa_3g@mail.gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A95B9B2.4040403@broadcom.com> (sfid-20180227_210408_673978_DF52DC2D)
+Date: Tue, 27 Feb 2018 21:04:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALLGbRKrnnmsNtzpkABn+xOTjDaFKZz0jNxGkyJXMT1=XLa_3g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
-
->> On Thu, 15 Feb 2018 23:59:24 +0100, Lorenzo Bianconi wrote:
->>> Introduce __mt7601u_rr and __mt7601u_vendor_single_wr routines in order
->>> to make mt7601u_rmw and mt7601u_rmc atomic since it is possible that
->>> read and write accesses of mt7601u_rmw/mt7601u_rmc can be interleaved
->>> with a different write operation on the same register.
->>> Moreover move write trace point in __mt7601u_vendor_single_wr
->>>
->>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
->>
->> Could you provide an example of which accesses make it problematic?
->> Is this fixing an actual bug?
+On 2/27/2018 6:34 PM, Steve deRosier wrote:
+> Hi Harsha,
 >
-> it is not an issue I had experimented, I noticed a theoretical race
-> reviewing the code.
+> Part 2 - the darn cmd-enter shortcut in gmail got me again. Sorry for
+> the premature send.
+>
+>>
+>> As both Larry and Arend mention, while it's possible to have multiple
+>> drivers with the same IDs, for obvious reasons it's not desirable.
+>>
+>> In theory the vendor IDs shouldn't be duplicated on fundamentally
+>> different devices, assuming that the manufacturers are doing things
+>> "right". The VID is paid for by buying it from the SD Association.
 
-The commit log should always answer the question "Why?". If you find a
-theoretical issue in the code document that clearly in the commit log.
-That helps to choose correct tree and sending to stable releases etc.
+Indeed. And this is fun already. If the sdio.ids file in systemd has any 
+value the vendor id 0x296 is assigned to:
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_log_does_not_answer_why
+0296  GCT Semiconductor, Inc.
+	5347  GDM72xx WiMAX
 
--- 
-Kalle Valo
+>> My suspicion is that your device, is fundamentally a wilc1000 and that
+>> the existing wilc1000 driver will likely largely work for it and all
+>> you really need to do is modify the existing driver to handle the
+>> quirks of your particular implementation of the wilc1000 chip. And,
+>> often WiFi chips will let you change the VID/PID somewhere within
+>> whatever non-volatile storage it has (like where it stores the MAC
+>> address).
+
+So it seems the wilc1000 devices from Microchip/Atmel are also using a 
+vendor id they did not buy. Could be that the mentioned 3rd party 
+providing the SDIO IP actually owns that vendor id, but if you are 
+building your wifi chip on that you should better buy you own vendor id 
+from the SD Association. Now if Harsha is actually working for Microchip 
+(unclear to me) there is basically one party that should go shopping.
+
+> What I was going to mention is this is how it's worked for me many
+> times on several chips from QCA, Broadcom and Marvell included. The
+> use-case in this case would be building a custom WiFi module using a
+> vendor's chip. Very common - Silex, Laird and others do this all the
+> time: buy a chip from QCA (or Broadcom or Marvell or...), put it on a
+> board with lna, pa, passives, antennas, etc...  And you package it and
+> sell that often with value-add software.  Sometimes it's fine if it
+> represents like the original chip (for example on the ath6kl chips
+> Laird sells, it just uses the QCA IDs), but sometimes you want it to
+> represent as "my chip" (again, as Laird has to do on the chips they
+> sell to the Windows market to avoid the kind of driver conflicts
+> you're encountering). All of these chips usually have a way to store a
+> MAC address and at least all that I've worked on will also allow you
+> to change the SDIO VID in the same one-time-programable memory.
+> Obviously the method changes depending on the chip.
+>
+> However, in nearly every case, the chip is still fundamentally
+> whatever it was and we still use the upstream driver, though often
+> with tweaks and customizations based on our implementation. In the
+> cases where we've added a custom VID, we've also had to add the new
+> VID to the original driver and then key our quirks off that.
+>
+> I'm not saying this is definitely applicable in your case, but it is
+> common and maybe it will help.
+>
+> Also thanks for bringing this issue up. Something I haven't thought
+> about in a long time but I'm adding it to my talk at ELC on WiFi
+> module interfacing. http://sched.co/DXn3
+
+Hah. Keep plugging that talk and seats may become scarce :-p
+
+Regards,
+Arend
