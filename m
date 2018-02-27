@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44894 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752107AbeB0Nwp (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:60119 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751635AbeB0Xma (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 08:52:45 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2] bcma: Replace mdelay with usleep_range in
- bcma_pmu_resources_init
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1516984715-9237-1-git-send-email-baijiaju1990@gmail.com>
-References: <1516984715-9237-1-git-send-email-baijiaju1990@gmail.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: Larry.Finger@lwfinger.net, zajec5@gmail.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-Message-Id: <20180227135244.E5FF1607EF@smtp.codeaurora.org> (sfid-20180227_145318_815741_3C6A1134)
-Date: Tue, 27 Feb 2018 13:52:44 +0000 (UTC)
+        Tue, 27 Feb 2018 18:42:30 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.16 0/2] brcmfmac: small fixes
+Date: Wed, 28 Feb 2018 00:42:18 +0100
+Message-Id: <1519774940-20793-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180228_004235_502171_EF78F160)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jia-Ju Bai <baijiaju1990@gmail.com> wrote:
+Here two small fixes. The first patch fixes a regression introduced in v4.16
+and the second fix is result from this discussion [1].
 
-> After checking all possible call chains to bcma_pmu_resources_init() here,
-> my tool finds that this function is never called in atomic context,
-> namely never in an interrupt handler or holding a spinlock.
-> Thus mdelay can be replaced with usleep_range to avoid busy wait.
-> 
-> This is found by a static analysis tool named DCNS written by myself.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+So these patches are intended 4.16 and apply to the master branch of the
+wireless-drivers repository.
 
-Patch applied to wireless-drivers-next.git, thanks.
+[1] https://www.spinics.net/lists/linux-wireless/thrd12.html#170494
 
-8100091d0248 bcma: Replace mdelay with usleep_range in bcma_pmu_resources_init
+Arend van Spriel (2):
+  brcmfmac: add possibility to obtain firmware error
+  brcmfmac: fix P2P_DEVICE ethernet address generation
+
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c |  2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c    |  1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c     | 10 +++++-----
+ 4 files changed, 9 insertions(+), 6 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/10186561/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
