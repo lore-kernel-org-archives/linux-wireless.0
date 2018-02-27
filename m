@@ -1,60 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:37598 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753439AbeBSS6e (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57678 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752805AbeB0NcT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 13:58:34 -0500
-Received: by mail-pl0-f68.google.com with SMTP id ay8so6097890plb.4
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Feb 2018 10:58:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1516779566.2508.41.camel@sipsolutions.net>
-References: <001a1143c56ef80bb405636ca341@google.com> <1516779566.2508.41.camel@sipsolutions.net>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Mon, 19 Feb 2018 19:58:13 +0100
-Message-ID: <CACT4Y+bziyU+32umG=VD7wCbxpsKoGkbAypDwQS=PivfGSzypA@mail.gmail.com> (sfid-20180219_195857_759910_C9226AB8)
-Subject: Re: WARNING in check_flush_dependency
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: syzbot <syzbot+41cdaf4232c50e658934@syzkaller.appspotmail.com>,
-        David Miller <davem@davemloft.net>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 27 Feb 2018 08:32:19 -0500
+From: Ramon Fried <rfried@codeaurora.org>
+To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Ramon Fried <rfried@codeaurora.org>
+Subject: [PATCH v2] wcn36xx: reduce verbosity of drivers messages
+Date: Tue, 27 Feb 2018 15:31:49 +0200
+Message-Id: <20180227133149.26805-1-rfried@codeaurora.org> (sfid-20180227_143231_397006_700180C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 24, 2018 at 8:39 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2018-01-22 at 23:39 -0800, syzbot wrote:
->> Hello,
->>
->> syzbot hit the following crash on upstream commit
->> 0d665e7b109d512b7cae3ccef6e8654714887844 (Fri Jan 19 12:49:24 2018 +0000)
->> mm, page_vma_mapped: Drop faulty pointer arithmetics in check_pte()
->>
->> So far this crash happened 23 times on net-next, upstream.
->> C reproducer is attached.
->> syzkaller reproducer is attached.
->> Raw console output is attached.
->> compiler: gcc (GCC) 7.1.1 20170620
->> .config is attached.
->> user-space arch: i386
->>
->> IMPORTANT: if you fix the bug, please add the following tag to the commit:
->> Reported-by: syzbot+41cdaf4232c50e658934@syzkaller.appspotmail.com
->> It will help syzbot understand when the bug is fixed. See footer for
->> details.
->> If you forward the report, please keep this part and the footer.
->>
->> ------------[ cut here ]------------
->> workqueue: WQ_MEM_RECLAIM hwsim_wq:destroy_radio is
->> flushing !WQ_MEM_RECLAIM events_highpri:flush_backlog
->> WARNING: CPU: 0 PID: 3706 at kernel/workqueue.c:2439
->> check_flush_dependency+0x239/0x380 kernel/workqueue.c:2435
->> Kernel panic - not syncing: panic_on_warn set ...
->
-> Yeah, we clearly shouldn't have WQ_RECLAIM set on this workqueue...
+Whenever the WLAN interface is started the FW
+version and caps are printed.
+The caps now will be displayed only in debug mode.
+Firmware version will be displayed only once on first
+startup of the interface.
 
-Hi Johannes,
+Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+---
+v2: print the firwmare version as info but only
+	onetime.
 
-Do you mind to send a patch to fix this?
+ drivers/net/wireless/ath/wcn36xx/main.c |  2 +-
+ drivers/net/wireless/ath/wcn36xx/smd.c  | 19 +++++++++++--------
+ 2 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index ab5be6d2c691..8c2654075eb8 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -261,7 +261,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
+ 
+ 	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
+ 		if (get_feat_caps(wcn->fw_feat_caps, i))
+-			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
++			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 2a4871ca9c72..3048722f0484 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -385,6 +385,7 @@ out:	return ret;
+ 
+ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+ {
++	static bool first = true;
+ 	struct wcn36xx_hal_mac_start_rsp_msg *rsp;
+ 
+ 	if (len < sizeof(*rsp))
+@@ -409,15 +410,17 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+ 	wcn->fw_minor = rsp->start_rsp_params.version.minor;
+ 	wcn->fw_major = rsp->start_rsp_params.version.major;
+ 
+-	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
+-		     wcn->wlan_version, wcn->crm_version);
+-
+-	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
+-		     wcn->fw_major, wcn->fw_minor,
+-		     wcn->fw_version, wcn->fw_revision,
+-		     rsp->start_rsp_params.stations,
+-		     rsp->start_rsp_params.bssids);
++	if (first) {
++		first = false;
++		wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
++			     wcn->wlan_version, wcn->crm_version);
+ 
++		wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
++			     wcn->fw_major, wcn->fw_minor,
++			     wcn->fw_version, wcn->fw_revision,
++			     rsp->start_rsp_params.stations,
++			     rsp->start_rsp_params.bssids);
++	}
+ 	return 0;
+ }
+ 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
