@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58842 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60574 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751550AbeBZQYs (ORCPT
+        with ESMTP id S1752573AbeB0O2n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 11:24:48 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/8] wil6210: add wil6210_vif structure for per-VIF data
+        Tue, 27 Feb 2018 09:28:43 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1518768283-2318-2-git-send-email-merez@codeaurora.org>
-References: <1518768283-2318-2-git-send-email-merez@codeaurora.org>
-To: Maya Erez <merez@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Message-Id: <20180226162447.6193E60F72@smtp.codeaurora.org> (sfid-20180226_172454_606403_1EEACF2E)
-Date: Mon, 26 Feb 2018 16:24:45 +0000 (UTC)
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: Re: [PATCH 0/6] qtnfmac: qsr10g pcie backend updates
+References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
+Date: Tue, 27 Feb 2018 16:28:38 +0200
+In-Reply-To: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
+        (Sergey Matyukevich's message of "Mon, 5 Feb 2018 18:05:10 +0300")
+Message-ID: <87muzufqw9.fsf@purkki.adurom.net> (sfid-20180227_152939_014544_2302C4FF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <merez@codeaurora.org> wrote:
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-> From: Lior David <liord@codeaurora.org>
-> 
-> For supporting multiple virtual interfaces in the future,
-> introduce a wil6210_vif structure which will hold per-VIF
-> data. Change the module initialization so wil6210_vif will
-> be part of net_device structure, and wireless_dev will be
-> embedded inside the wil6210_vif structure. This will allow
-> us to find the appropriate wil6210_vif structure when we
-> only have access to wireless_dev or net_device.
-> 
-> Signed-off-by: Lior David <liord@codeaurora.org>
-> Signed-off-by: Maya Erez <merez@codeaurora.org>
+> Hello Kalle and all,
+>
+> Here is a patch set with various fixes and enhacements for qsr10g
+> PCIe backend driver. The major changes include the following two
+> items:
+> - make rmmod/insmod work properly for qtnfmac_pcie driver
+> - provide configuration knobs to control NSM (networked standby mode)
+>
+> NSM (networked standby mode) is not related to WiFi standard. This is
+> a term that has been introduced by European Commission in regulation
+> No. 1275/2008. Simplifying things a bit, that regulation specifies
+> ecodesing requirements for various operating modes. In that document
+> =E2=80=98networked standby=E2=80=99 is defined as a condition in which th=
+e equipment
+> is able to resume a function by way of a remotely initiated trigger
+> from a network connection.
+>
+> Regards,
+> Sergey
+>
+> Sergei Maksimenko (3)
+>   qtnfmac: implement asynchronous firmware loading
+>   qtnfmac: enable reloading of qtnfmac kernel modules
+>   qtnfmac: enable networked standby mode on device
+>
+> Sergey Matyukevich (3)
+>   qtnfmac: fix releasing Tx/Rx data buffers
+>   qtnfmac: fix rmmod for firmware version mismatch
+>   qtnfmac: fix rmmod for missing firmware
 
-Failed to apply:
+BTW, I don't see this patchset on patchwork.kernel.org[1], strangely I
+only see v2. I don't know if it's because of problems on patchwork or
+the submitter deleted the patches, but in case someone did delete these
+please do not that. I want to see the old versions from patchwork to
+check the old discussions etc.
 
-error: patch failed: drivers/net/wireless/ath/wil6210/cfg80211.c:1606
-error: drivers/net/wireless/ath/wil6210/cfg80211.c: patch does not apply
-stg import: Diff does not apply cleanly
+[1] https://patchwork.kernel.org/project/linux-wireless/list/?state=3D*&q=
+=3Dqtnfmac
 
-8 patches set to Changes Requested.
-
-10224163 [1/8] wil6210: add wil6210_vif structure for per-VIF data
-10224157 [2/8] wil6210: support concurrency record in FW file
-10224159 [3/8] wil6210: infrastructure for multiple virtual interfaces
-10224161 [4/8] wil6210: add support for adding and removing virtual interfaces
-10224155 [5/8] wil6210: multiple VIFs support for start/stop AP
-10224151 [6/8] wil6210: rename p2p_wdev_mutex to vif_mutex
-10224153 [7/8] wil6210: multiple VIFs support for connections and data path
-10224149 [8/8] wil6210: add debugfs 'mids' file
-
--- 
-https://patchwork.kernel.org/patch/10224163/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+Kalle Valo
