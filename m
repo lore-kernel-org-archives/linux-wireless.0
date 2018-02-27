@@ -1,153 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752209AbeBTO6o (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:33385 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753156AbeB0Oid (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 09:58:44 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 10/12] staging: wilc1000: rename pstrStationParam to avoid camelCase
-Date: Tue, 20 Feb 2018 20:27:59 +0530
-Message-ID: <1519138681-1982-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155847_409254_7E580B37)
-In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 27 Feb 2018 09:38:33 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-bluetooth@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v9 8/8] rsi: sdio changes to support BT
+Date: Tue, 27 Feb 2018 19:56:18 +0530
+Message-Id: <1519741578-12640-9-git-send-email-amitkarwar@gmail.com> (sfid-20180227_153837_201579_ED3EF038)
+In-Reply-To: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
+References: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Queue number is correctly updated for BT traffic. Also, kzalloc
+instead of kmalloc is used for Rx packet allocation.
+
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 46 +++++++++++++++----------------
- 1 file changed, 22 insertions(+), 24 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     | 2 ++
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8ec33b3..8528ff8 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2061,40 +2061,38 @@ static void handle_del_beacon(struct wilc_vif *vif)
- }
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 5722736..beb18d0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -763,6 +763,8 @@ static int rsi_sdio_host_intf_write_pkt(struct rsi_hw *adapter,
+ 	int status;
  
- static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
--				    struct add_sta_param *pstrStationParam)
-+				    struct add_sta_param *param)
- {
- 	u8 *cur_byte;
+ 	queueno = ((pkt[1] >> 4) & 0xf);
++	if (queueno == RSI_BT_MGMT_Q || queueno == RSI_BT_DATA_Q)
++		queueno = RSI_BT_Q;
  
- 	cur_byte = pu8Buffer;
+ 	num_blocks = len / block_size;
  
--	memcpy(cur_byte, pstrStationParam->bssid, ETH_ALEN);
-+	memcpy(cur_byte, param->bssid, ETH_ALEN);
- 	cur_byte +=  ETH_ALEN;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 169c981..6e74261 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -103,7 +103,7 @@ static int rsi_process_pkt(struct rsi_common *common)
  
--	*cur_byte++ = pstrStationParam->aid & 0xFF;
--	*cur_byte++ = (pstrStationParam->aid >> 8) & 0xFF;
-+	*cur_byte++ = param->aid & 0xFF;
-+	*cur_byte++ = (param->aid >> 8) & 0xFF;
+ 	rcv_pkt_len = (num_blks * 256);
  
--	*cur_byte++ = pstrStationParam->rates_len;
--	if (pstrStationParam->rates_len > 0)
--		memcpy(cur_byte, pstrStationParam->rates,
--		       pstrStationParam->rates_len);
--	cur_byte += pstrStationParam->rates_len;
-+	*cur_byte++ = param->rates_len;
-+	if (param->rates_len > 0)
-+		memcpy(cur_byte, param->rates, param->rates_len);
-+	cur_byte += param->rates_len;
- 
--	*cur_byte++ = pstrStationParam->ht_supported;
--	memcpy(cur_byte, &pstrStationParam->ht_capa,
--	       sizeof(struct ieee80211_ht_cap));
-+	*cur_byte++ = param->ht_supported;
-+	memcpy(cur_byte, &param->ht_capa, sizeof(struct ieee80211_ht_cap));
- 	cur_byte += sizeof(struct ieee80211_ht_cap);
- 
--	*cur_byte++ = pstrStationParam->flags_mask & 0xFF;
--	*cur_byte++ = (pstrStationParam->flags_mask >> 8) & 0xFF;
-+	*cur_byte++ = param->flags_mask & 0xFF;
-+	*cur_byte++ = (param->flags_mask >> 8) & 0xFF;
- 
--	*cur_byte++ = pstrStationParam->flags_set & 0xFF;
--	*cur_byte++ = (pstrStationParam->flags_set >> 8) & 0xFF;
-+	*cur_byte++ = param->flags_set & 0xFF;
-+	*cur_byte++ = (param->flags_set >> 8) & 0xFF;
- 
- 	return cur_byte - pu8Buffer;
- }
- 
- static void handle_add_station(struct wilc_vif *vif,
--			       struct add_sta_param *pstrStationParam)
-+			       struct add_sta_param *param)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -2102,14 +2100,14 @@ static void handle_add_station(struct wilc_vif *vif,
- 
- 	wid.id = (u16)WID_ADD_STA;
- 	wid.type = WID_BIN;
--	wid.size = WILC_ADD_STA_LENGTH + pstrStationParam->rates_len;
-+	wid.size = WILC_ADD_STA_LENGTH + param->rates_len;
- 
- 	wid.val = kmalloc(wid.size, GFP_KERNEL);
- 	if (!wid.val)
- 		goto ERRORHANDLER;
- 
- 	cur_byte = wid.val;
--	cur_byte += WILC_HostIf_PackStaParam(cur_byte, pstrStationParam);
-+	cur_byte += WILC_HostIf_PackStaParam(cur_byte, param);
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
-@@ -2117,7 +2115,7 @@ static void handle_add_station(struct wilc_vif *vif,
- 		netdev_err(vif->ndev, "Failed to send add station\n");
- 
- ERRORHANDLER:
--	kfree(pstrStationParam->rates);
-+	kfree(param->rates);
- 	kfree(wid.val);
- }
- 
-@@ -2190,7 +2188,7 @@ static void handle_del_station(struct wilc_vif *vif, struct del_sta *param)
- }
- 
- static void handle_edit_station(struct wilc_vif *vif,
--				struct add_sta_param *pstrStationParam)
-+				struct add_sta_param *param)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -2198,14 +2196,14 @@ static void handle_edit_station(struct wilc_vif *vif,
- 
- 	wid.id = (u16)WID_EDIT_STA;
- 	wid.type = WID_BIN;
--	wid.size = WILC_ADD_STA_LENGTH + pstrStationParam->rates_len;
-+	wid.size = WILC_ADD_STA_LENGTH + param->rates_len;
- 
- 	wid.val = kmalloc(wid.size, GFP_KERNEL);
- 	if (!wid.val)
- 		goto ERRORHANDLER;
- 
- 	cur_byte = wid.val;
--	cur_byte += WILC_HostIf_PackStaParam(cur_byte, pstrStationParam);
-+	cur_byte += WILC_HostIf_PackStaParam(cur_byte, param);
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
-@@ -2213,7 +2211,7 @@ static void handle_edit_station(struct wilc_vif *vif,
- 		netdev_err(vif->ndev, "Failed to send edit station\n");
- 
- ERRORHANDLER:
--	kfree(pstrStationParam->rates);
-+	kfree(param->rates);
- 	kfree(wid.val);
- }
- 
+-	common->rx_data_pkt = kmalloc(rcv_pkt_len, GFP_KERNEL);
++	common->rx_data_pkt = kzalloc(rcv_pkt_len, GFP_KERNEL);
+ 	if (!common->rx_data_pkt) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed in memory allocation\n",
+ 			__func__);
 -- 
 2.7.4
