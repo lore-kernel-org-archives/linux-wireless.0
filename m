@@ -1,233 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:40771 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753215AbeBSRCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 12:02:54 -0500
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH 2/3] iw: Print TXQ statistics for stations and interfaces
-Date: Mon, 19 Feb 2018 18:02:23 +0100
-Message-Id: <20180219170224.14816-3-toke@toke.dk> (sfid-20180219_180319_201142_47E9DB27)
-In-Reply-To: <20180219170224.14816-1-toke@toke.dk>
-References: <20180219170224.14816-1-toke@toke.dk>
+Received: from mail-io0-f180.google.com ([209.85.223.180]:47022 "EHLO
+        mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751754AbeB0XOt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Feb 2018 18:14:49 -0500
+Received: by mail-io0-f180.google.com with SMTP id p78so1106130iod.13
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 15:14:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <5A95B9B2.4040403@broadcom.com>
+References: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com>
+ <5A953DBE.9070805@broadcom.com> <CAPcv9S1fZfrg3AV3GoWG-CaTkonpQyiHY6twvhS_ikXnj00t4g@mail.gmail.com>
+ <68f5549d-b8ad-85fb-4e80-50c53cac8108@lwfinger.net> <CAPcv9S0TmMhrL0qcxq-8NStd=fYQreXribrA+GQmppLvrB_avg@mail.gmail.com>
+ <CALLGbRJxwOUkxnNCyCt2sBuoZacs60AcDnFfWMQQuVdj5YykOw@mail.gmail.com>
+ <CALLGbRKrnnmsNtzpkABn+xOTjDaFKZz0jNxGkyJXMT1=XLa_3g@mail.gmail.com> <5A95B9B2.4040403@broadcom.com>
+From: Harsha Rao <harshrao464@gmail.com>
+Date: Wed, 28 Feb 2018 04:44:48 +0530
+Message-ID: <CAPcv9S2gwDL6Jikxot2yS4daYaFQN6mEMx3vuY5w+ma_6wHCew@mail.gmail.com> (sfid-20180228_001453_935827_3B39E201)
+Subject: Re: Support on vendor id and device id
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds printing of TXQ statistics for stations and interfaces when
-supplied by the kernel. For stations, another section is added when verbose
-mode is enabled; for interfaces, the multicast queue information is always
-printed when available.
-
-This is the information also available through debugfs in
-/sys/kernel/debug/ieee80211/phyX/netdev:Y/aqm and
-/sys/kernel/debug/ieee80211/phyX/netdev:Y/stations/*/aqm.
-
-Sample output:
-
-$ iw dev wlp2s0 station dump -v
-Station xx:xx:xx:xx:xx:xx (on wlp2s0)
-[...]
-	TXQs:
-		TID	qsz-byt	qsz-pkt	flows	drops	marks	overlmt	hashcol	tx-bytes	tx-packets
-		0	0	0	0	0	0	0	0	0		0
-		1	0	0	0	0	0	0	0	0		0
-		2	0	0	0	0	0	0	0	0		0
-		3	0	0	0	0	0	0	0	0		0
-		4	0	0	0	0	0	0	0	0		0
-		5	0	0	0	0	0	0	0	0		0
-		6	0	0	0	0	0	0	0	0		0
-		7	0	0	0	0	0	0	0	0		0
-		8	0	0	0	0	0	0	0	0		0
-		9	0	0	0	0	0	0	0	0		0
-		10	0	0	0	0	0	0	0	0		0
-		11	0	0	0	0	0	0	0	0		0
-		12	0	0	0	0	0	0	0	0		0
-		13	0	0	0	0	0	0	0	0		0
-		14	0	0	0	0	0	0	0	0		0
-		15	0	0	0	0	0	0	0	0		0
-[...]
-
-
-$ iw dev wlp2s0 info
-Interface wlp2s0
-	ifindex 9
-	wdev 0x1
-	addr xx:xx:xx:xx:xx:xx
-	type AP
-	wiphy 0
-	channel 165 (5825 MHz), width: 20 MHz, center1: 5825 MHz
-	txpower 24.00 dBm
-	Multicast TXQ:
-		qsz-byt	qsz-pkt	flows	drops	marks	overlmt	hashcol	tx-bytes	tx-packets
-		0	0	72	0	0	0	0	7380		72
+On Wed, Feb 28, 2018 at 1:34 AM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 2/27/2018 6:34 PM, Steve deRosier wrote:
+>>
+>> Hi Harsha,
+>>
+>> Part 2 - the darn cmd-enter shortcut in gmail got me again. Sorry for
+>> the premature send.
+>>
+>>>
+>>> As both Larry and Arend mention, while it's possible to have multiple
+>>> drivers with the same IDs, for obvious reasons it's not desirable.
+>>>
+>>> In theory the vendor IDs shouldn't be duplicated on fundamentally
+>>> different devices, assuming that the manufacturers are doing things
+>>> "right". The VID is paid for by buying it from the SD Association.
+>
+>
+> Indeed. And this is fun already. If the sdio.ids file in systemd has any
+> value the vendor id 0x296 is assigned to:
+>
+> 0296  GCT Semiconductor, Inc.
+>         5347  GDM72xx WiMAX
+>
+>>> My suspicion is that your device, is fundamentally a wilc1000 and that
+>>> the existing wilc1000 driver will likely largely work for it and all
+>>> you really need to do is modify the existing driver to handle the
+>>> quirks of your particular implementation of the wilc1000 chip. And,
+>>> often WiFi chips will let you change the VID/PID somewhere within
+>>> whatever non-volatile storage it has (like where it stores the MAC
+>>> address).
+>
+>
+> So it seems the wilc1000 devices from Microchip/Atmel are also using a
+> vendor id they did not buy. Could be that the mentioned 3rd party providing
+> the SDIO IP actually owns that vendor id, but if you are building your wifi
+> chip on that you should better buy you own vendor id from the SD
+> Association. Now if Harsha is actually working for Microchip (unclear to me)
+> there is basically one party that should go shopping.
+>
+I would like to clarify that I am not building anything on top of
+microchip wifi device.
+We have a different HW . Its been just that 3rd party vendor providing
+SDIO IP has given
+same ID to different customers.
 
 
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- interface.c |  6 ++++
- iw.h        |  2 ++
- station.c   | 91 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 98 insertions(+), 1 deletion(-)
+>
+>> What I was going to mention is this is how it's worked for me many
+>> times on several chips from QCA, Broadcom and Marvell included. The
+>> use-case in this case would be building a custom WiFi module using a
+>> vendor's chip. Very common - Silex, Laird and others do this all the
+>> time: buy a chip from QCA (or Broadcom or Marvell or...), put it on a
+>> board with lna, pa, passives, antennas, etc...  And you package it and
+>> sell that often with value-add software.  Sometimes it's fine if it
+>> represents like the original chip (for example on the ath6kl chips
+>> Laird sells, it just uses the QCA IDs), but sometimes you want it to
+>> represent as "my chip" (again, as Laird has to do on the chips they
+>> sell to the Windows market to avoid the kind of driver conflicts
+>> you're encountering). All of these chips usually have a way to store a
+>> MAC address and at least all that I've worked on will also allow you
+>> to change the SDIO VID in the same one-time-programable memory.
+>> Obviously the method changes depending on the chip.
+>>
+>> However, in nearly every case, the chip is still fundamentally
+>> whatever it was and we still use the upstream driver, though often
+>> with tweaks and customizations based on our implementation. In the
+>> cases where we've added a custom VID, we've also had to add the new
+>> VID to the original driver and then key our quirks off that.
+>>
+>> I'm not saying this is definitely applicable in your case, but it is
+>> common and maybe it will help.
+>>
 
-diff --git a/interface.c b/interface.c
-index a19c83f..8a35dd6 100644
---- a/interface.c
-+++ b/interface.c
-@@ -441,6 +441,12 @@ static int print_iface_handler(struct nl_msg *msg, void *arg)
- 		       indent, txp / 100, txp % 100);
- 	}
- 
-+	if (tb_msg[NL80211_ATTR_TXQ_STATS]) {
-+		char buf[150];
-+		parse_txq_stats(buf, sizeof(buf), tb_msg[NL80211_ATTR_TXQ_STATS], 1, -1);
-+		printf("\tMulticast TXQ:%s\n", buf);
-+	}
-+
- 	return NL_SKIP;
- }
- 
-diff --git a/iw.h b/iw.h
-index ee7ca20..1fd227f 100644
---- a/iw.h
-+++ b/iw.h
-@@ -183,6 +183,8 @@ unsigned char *parse_hex(char *hex, size_t *outlen);
- int parse_keys(struct nl_msg *msg, char **argv, int argc);
- int parse_freqchan(struct chandef *chandef, bool chan, int argc, char **argv, int *parsed);
- enum nl80211_chan_width str_to_bw(const char *str);
-+int parse_txq_stats(char *buf, int buflen, struct nlattr *tid_stats_attr, int header,
-+		    int tid);
- int put_chandef(struct nl_msg *msg, struct chandef *chandef);
- 
- void print_ht_mcs(const __u8 *mcs);
-diff --git a/station.c b/station.c
-index f836d0a..ba8c83f 100644
---- a/station.c
-+++ b/station.c
-@@ -43,6 +43,82 @@ static void print_power_mode(struct nlattr *a)
- 	}
- }
- 
-+int parse_txq_stats(char *buf, int buflen, struct nlattr *tid_stats_attr, int header,
-+		    int tid)
-+{
-+	struct nlattr *txqstats_info[NL80211_TXQ_STATS_MAX + 1], *txqinfo;
-+	static struct nla_policy txqstats_policy[NL80211_TXQ_STATS_MAX + 1] = {
-+		[NL80211_TXQ_STATS_BACKLOG_BYTES] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_BACKLOG_PACKETS] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_FLOWS] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_DROPS] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_ECN_MARKS] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_OVERLIMIT] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_COLLISIONS] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_TX_BYTES] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_TX_PACKETS] = { .type = NLA_U32 },
-+	};
-+	char *pos = buf;
-+	if (nla_parse_nested(txqstats_info, NL80211_TXQ_STATS_MAX, tid_stats_attr,
-+			     txqstats_policy)) {
-+		printf("failed to parse nested TXQ stats attributes!");
-+		return 0;
-+	}
-+
-+	if (header && tid >= 0)
-+		pos += snprintf(buf, buflen, "\n\t\tTID\tqsz-byt\t"
-+				"qsz-pkt\tflows\tdrops\tmarks\toverlmt\t"
-+				"hashcol\ttx-bytes\ttx-packets");
-+	else if (header)
-+		pos += snprintf(buf, buflen, "\n\t\tqsz-byt\t"
-+				"qsz-pkt\tflows\tdrops\tmarks\toverlmt\t"
-+				"hashcol\ttx-bytes\ttx-packets");
-+
-+	if (tid >= 0)
-+		pos += snprintf(pos, buflen - (pos - buf), "\n\t\t%d", tid);
-+	else
-+		pos += snprintf(pos, buflen - (pos - buf), "\n\t");
-+
-+	txqinfo = txqstats_info[NL80211_TXQ_STATS_BACKLOG_BYTES];
-+	if (txqinfo)
-+		pos += snprintf(pos, buflen - (pos - buf), "\t%u",
-+				nla_get_u32(txqinfo));
-+	txqinfo = txqstats_info[NL80211_TXQ_STATS_BACKLOG_PACKETS];
-+	if (txqinfo)
-+		pos += snprintf(pos, buflen - (pos - buf), "\t%u",
-+				nla_get_u32(txqinfo));
-+	txqinfo = txqstats_info[NL80211_TXQ_STATS_FLOWS];
-+	if (txqinfo)
-+		pos += snprintf(pos, buflen - (pos - buf), "\t%u",
-+				nla_get_u32(txqinfo));
-+	txqinfo = txqstats_info[NL80211_TXQ_STATS_DROPS];
-+	if (txqinfo)
-+		pos += snprintf(pos, buflen - (pos - buf), "\t%u",
-+				nla_get_u32(txqinfo));
-+	txqinfo = txqstats_info[NL80211_TXQ_STATS_ECN_MARKS];
-+	if (txqinfo)
-+		pos += snprintf(pos, buflen - (pos - buf), "\t%u",
-+				nla_get_u32(txqinfo));
-+	txqinfo = txqstats_info[NL80211_TXQ_STATS_OVERLIMIT];
-+	if (txqinfo)
-+		pos += snprintf(pos, buflen - (pos - buf), "\t%u",
-+				nla_get_u32(txqinfo));
-+	txqinfo = txqstats_info[NL80211_TXQ_STATS_COLLISIONS];
-+	if (txqinfo)
-+		pos += snprintf(pos, buflen - (pos - buf), "\t%u",
-+				nla_get_u32(txqinfo));
-+	txqinfo = txqstats_info[NL80211_TXQ_STATS_TX_BYTES];
-+	if (txqinfo)
-+		pos += snprintf(pos, buflen - (pos - buf), "\t%u",
-+				nla_get_u32(txqinfo));
-+	txqinfo = txqstats_info[NL80211_TXQ_STATS_TX_PACKETS];
-+	if (txqinfo)
-+		pos += snprintf(pos, buflen - (pos - buf), "\t\t%u",
-+				nla_get_u32(txqinfo));
-+
-+	return pos - buf;
-+
-+}
- void parse_tid_stats(struct nlattr *tid_stats_attr)
- {
- 	struct nlattr *stats_info[NL80211_TID_STATS_MAX + 1], *tidattr, *info;
-@@ -51,8 +127,11 @@ void parse_tid_stats(struct nlattr *tid_stats_attr)
- 		[NL80211_TID_STATS_TX_MSDU] = { .type = NLA_U64 },
- 		[NL80211_TID_STATS_TX_MSDU_RETRIES] = { .type = NLA_U64 },
- 		[NL80211_TID_STATS_TX_MSDU_FAILED] = { .type = NLA_U64 },
-+		[NL80211_TID_STATS_TXQ_STATS] = { .type = NLA_NESTED },
- 	};
- 	int rem, i = 0;
-+	char txqbuf[2000] = {}, *pos = txqbuf;
-+	int buflen = sizeof(txqbuf), foundtxq = 0;
- 
- 	printf("\n\tMSDU:\n\t\tTID\trx\ttx\ttx retries\ttx failed");
- 	nla_for_each_nested(tidattr, tid_stats_attr, rem) {
-@@ -61,7 +140,7 @@ void parse_tid_stats(struct nlattr *tid_stats_attr)
- 			printf("failed to parse nested stats attributes!");
- 			return;
- 		}
--		printf("\n\t\t%d", i++);
-+		printf("\n\t\t%d", i);
- 		info = stats_info[NL80211_TID_STATS_RX_MSDU];
- 		if (info)
- 			printf("\t%llu", (unsigned long long)nla_get_u64(info));
-@@ -74,7 +153,17 @@ void parse_tid_stats(struct nlattr *tid_stats_attr)
- 		info = stats_info[NL80211_TID_STATS_TX_MSDU_FAILED];
- 		if (info)
- 			printf("\t\t%llu", (unsigned long long)nla_get_u64(info));
-+		info = stats_info[NL80211_TID_STATS_TXQ_STATS];
-+		if (info) {
-+			pos += parse_txq_stats(pos, buflen - (pos - txqbuf), info, !foundtxq, i);
-+			foundtxq = 1;
-+		}
-+
-+		i++;
- 	}
-+
-+	if (foundtxq)
-+		printf("\n\tTXQs:%s", txqbuf);
- }
- 
- void parse_bss_param(struct nlattr *bss_param_attr)
--- 
-2.16.1
+Definitely I will have a look at it .
+
+>> Also thanks for bringing this issue up. Something I haven't thought
+>> about in a long time but I'm adding it to my talk at ELC on WiFi
+>> module interfacing. http://sched.co/DXn3
+>
+>
+> Hah. Keep plugging that talk and seats may become scarce :-p
+>
+> Regards,
+> Arend
