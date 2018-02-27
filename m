@@ -1,205 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:35923 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753770AbeB0OiX (ORCPT
+Received: from userp2130.oracle.com ([156.151.31.86]:45968 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752090AbeB0JvM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 09:38:23 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v9 7/8] rsi: add module parameter operating mode
-Date: Tue, 27 Feb 2018 19:56:17 +0530
-Message-Id: <1519741578-12640-8-git-send-email-amitkarwar@gmail.com> (sfid-20180227_153826_791069_7695BB2D)
-In-Reply-To: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
-References: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com>
+        Tue, 27 Feb 2018 04:51:12 -0500
+Date: Tue, 27 Feb 2018 12:50:58 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH 7/8] staging: wilc1000: fix line over 80 char in
+ wilc_wlan_cfg_set()
+Message-ID: <20180227095058.gocqor2olavevtdo@mwanda> (sfid-20180227_105129_722607_F132D8BF)
+References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+ <1519662722-15761-8-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519662722-15761-8-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On Mon, Feb 26, 2018 at 10:02:01PM +0530, Ajay Singh wrote:
+> Fix 'line over 80 character' issue found by checkpatch.pl script.
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/wilc_wlan.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+> index 223bf8b..acf7591 100644
+> --- a/drivers/staging/wilc1000/wilc_wlan.c
+> +++ b/drivers/staging/wilc1000/wilc_wlan.c
+> @@ -1230,6 +1230,8 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+>  	wilc->cfg_frame_offset = offset;
+>  
+>  	if (commit) {
+> +		unsigned long tmp = msecs_to_jiffies(CFG_PKTS_TIMEOUT);
+> +
+>  		netdev_dbg(vif->ndev,
+>  			   "[WILC]PACKET Commit with sequence number %d\n",
+>  			   wilc->cfg_seq_no);
+> @@ -1239,8 +1241,7 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+>  		if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
+>  			ret_size = 0;
+>  
+> -		if (!wait_for_completion_timeout(&wilc->cfg_event,
+> -						 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
+> +		if (!wait_for_completion_timeout(&wilc->cfg_event, tmp)) {
 
-Operating mode determines the support for other protocols.
-This is made as module parameter for better usage.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_main.c | 48 ++++++++++++++++++++++++++++++---
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 10 ++++++-
- drivers/net/wireless/rsi/rsi_91x_usb.c  | 10 ++++++-
- drivers/net/wireless/rsi/rsi_common.h   |  2 +-
- drivers/net/wireless/rsi/rsi_hal.h      | 11 ++++++++
- 5 files changed, 74 insertions(+), 7 deletions(-)
+Also, it's not just the variable name I have an issue with.  I like that
+I can see CFG_PKTS_TIMEOUT directly instead of having to look for it a
+few lines back.  Don't add unecessary indirection.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index b3e7d75..1485a0c 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -70,8 +70,24 @@ EXPORT_SYMBOL_GPL(rsi_dbg);
- static char *opmode_str(int oper_mode)
- {
- 	switch (oper_mode) {
--	case RSI_DEV_OPMODE_WIFI_ALONE:
-+	case DEV_OPMODE_WIFI_ALONE:
- 		return "Wi-Fi alone";
-+	case DEV_OPMODE_BT_ALONE:
-+		return "BT EDR alone";
-+	case DEV_OPMODE_BT_LE_ALONE:
-+		return "BT LE alone";
-+	case DEV_OPMODE_BT_DUAL:
-+		return "BT Dual";
-+	case DEV_OPMODE_STA_BT:
-+		return "Wi-Fi STA + BT EDR";
-+	case DEV_OPMODE_STA_BT_LE:
-+		return "Wi-Fi STA + BT LE";
-+	case DEV_OPMODE_STA_BT_DUAL:
-+		return "Wi-Fi STA + BT DUAL";
-+	case DEV_OPMODE_AP_BT:
-+		return "Wi-Fi AP + BT EDR";
-+	case DEV_OPMODE_AP_BT_DUAL:
-+		return "Wi-Fi AP + BT DUAL";
- 	}
- 
- 	return "Unknown";
-@@ -278,7 +294,7 @@ void rsi_set_bt_context(void *priv, void *bt_context)
-  *
-  * Return: Pointer to the adapter structure on success, NULL on failure .
-  */
--struct rsi_hw *rsi_91x_init(void)
-+struct rsi_hw *rsi_91x_init(u16 oper_mode)
- {
- 	struct rsi_hw *adapter = NULL;
- 	struct rsi_common *common = NULL;
-@@ -321,9 +337,33 @@ struct rsi_hw *rsi_91x_init(void)
- 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
- 	init_completion(&common->wlan_init_completion);
- 	common->init_done = true;
-+	adapter->device_model = RSI_DEV_9113;
-+	common->oper_mode = oper_mode;
-+
-+	/* Determine coex mode */
-+	switch (common->oper_mode) {
-+	case DEV_OPMODE_STA_BT_DUAL:
-+	case DEV_OPMODE_STA_BT:
-+	case DEV_OPMODE_STA_BT_LE:
-+	case DEV_OPMODE_BT_ALONE:
-+	case DEV_OPMODE_BT_LE_ALONE:
-+	case DEV_OPMODE_BT_DUAL:
-+		common->coex_mode = 2;
-+		break;
-+	case DEV_OPMODE_AP_BT_DUAL:
-+	case DEV_OPMODE_AP_BT:
-+		common->coex_mode = 4;
-+		break;
-+	case DEV_OPMODE_WIFI_ALONE:
-+		common->coex_mode = 1;
-+		break;
-+	default:
-+		common->oper_mode = 1;
-+		common->coex_mode = 1;
-+	}
-+	rsi_dbg(INFO_ZONE, "%s: oper_mode = %d, coex_mode = %d\n",
-+		__func__, common->oper_mode, common->coex_mode);
- 
--	common->coex_mode = RSI_DEV_COEX_MODE_WIFI_ALONE;
--	common->oper_mode = RSI_DEV_OPMODE_WIFI_ALONE;
- 	adapter->device_model = RSI_DEV_9113;
- #ifdef CONFIG_RSI_COEX
- 	if (common->coex_mode > 1) {
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index ba38c6d..5722736 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -21,6 +21,14 @@
- #include "rsi_coex.h"
- #include "rsi_hal.h"
- 
-+/* Default operating mode is wlan STA + BT */
-+static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
-+module_param(dev_oper_mode, ushort, 0444);
-+MODULE_PARM_DESC(dev_oper_mode,
-+		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
-+		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
-+		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
-+
- /**
-  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
-  * @rw: Read/write
-@@ -926,7 +934,7 @@ static int rsi_probe(struct sdio_func *pfunction,
- 
- 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
- 
--	adapter = rsi_91x_init();
-+	adapter = rsi_91x_init(dev_oper_mode);
- 	if (!adapter) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
- 			__func__);
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index b33a05f..0a50cff 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -21,6 +21,14 @@
- #include "rsi_hal.h"
- #include "rsi_coex.h"
- 
-+/* Default operating mode is wlan STA + BT */
-+static u16 dev_oper_mode = DEV_OPMODE_STA_BT_DUAL;
-+module_param(dev_oper_mode, ushort, 0444);
-+MODULE_PARM_DESC(dev_oper_mode,
-+		 "1[Wi-Fi], 4[BT], 8[BT LE], 5[Wi-Fi STA + BT classic]\n"
-+		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
-+		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
-+
- /**
-  * rsi_usb_card_write() - This function writes to the USB Card.
-  * @adapter: Pointer to the adapter structure.
-@@ -708,7 +716,7 @@ static int rsi_probe(struct usb_interface *pfunction,
- 
- 	rsi_dbg(INIT_ZONE, "%s: Init function called\n", __func__);
- 
--	adapter = rsi_91x_init();
-+	adapter = rsi_91x_init(dev_oper_mode);
- 	if (!adapter) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed to init os intf ops\n",
- 			__func__);
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index 4616585..d9ff3b8 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -81,7 +81,7 @@ static inline int rsi_kill_thread(struct rsi_thread *handle)
- 
- void rsi_mac80211_detach(struct rsi_hw *hw);
- u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
--struct rsi_hw *rsi_91x_init(void);
-+struct rsi_hw *rsi_91x_init(u16 oper_mode);
- void rsi_91x_deinit(struct rsi_hw *adapter);
- int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
- #ifdef CONFIG_PM
-diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
-index e712223..a7d3011 100644
---- a/drivers/net/wireless/rsi/rsi_hal.h
-+++ b/drivers/net/wireless/rsi/rsi_hal.h
-@@ -17,6 +17,17 @@
- #ifndef __RSI_HAL_H__
- #define __RSI_HAL_H__
- 
-+/* Device Operating modes */
-+#define DEV_OPMODE_WIFI_ALONE		1
-+#define DEV_OPMODE_BT_ALONE		4
-+#define DEV_OPMODE_BT_LE_ALONE		8
-+#define DEV_OPMODE_BT_DUAL		12
-+#define DEV_OPMODE_STA_BT		5
-+#define DEV_OPMODE_STA_BT_LE		9
-+#define DEV_OPMODE_STA_BT_DUAL		13
-+#define DEV_OPMODE_AP_BT		6
-+#define DEV_OPMODE_AP_BT_DUAL		14
-+
- #define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
- #define FLASH_SECTOR_SIZE		(4 * 1024)
- 
--- 
-2.7.4
+So just leave this one as-is.  Or flip the "if (commit) " condition
+around and do:
+
+	if (!commit)
+		return ret_size;
+
+regards,
+dan carpenter
