@@ -1,65 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:41790 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751029AbeBIQoV (ORCPT
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:34659 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753344AbeB0Ohp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Feb 2018 11:44:21 -0500
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: remove pointless memcpy
-To: Arnd Bergmann <arnd@arndb.de>, Ping-Ke Shih <pkshih@realtek.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20180209132531.2755482-1-arnd@arndb.de>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <62048535-6455-e4ac-040a-ca2bf60fc0f7@lwfinger.net> (sfid-20180209_174511_426716_1137B0B1)
-Date: Fri, 9 Feb 2018 10:44:19 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180209132531.2755482-1-arnd@arndb.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 27 Feb 2018 09:37:45 -0500
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-bluetooth@vger.kernel.org
+Subject: [v9 0/8] rsi: add bluetooth and coex support
+Date: Tue, 27 Feb 2018 19:56:10 +0530
+Message-Id: <1519741578-12640-1-git-send-email-amitkarwar@gmail.com> (sfid-20180227_153757_199495_A71F5124)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2018 07:24 AM, Arnd Bergmann wrote:
-> gcc-8 points out that source and destination of the memcpy() are
-> always the same pointer, so the effect of memcpy() is undefined
-> here (its arguments must not overlap):
-> 
-> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c: In function '_rtl_rx_process':
-> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c:430:2: error: 'memcpy' source argument is the same as destination [-Werror=restrict]
-> 
-> Most likely this is harmless, but it's easy to just remove the
-> line and get rid of the warning.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->   drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c | 1 -
->   1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-> index ac4a82de40c7..9ab56827124e 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-> @@ -427,7 +427,6 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
->   		 (u32)hdr->addr1[0], (u32)hdr->addr1[1],
->   		 (u32)hdr->addr1[2], (u32)hdr->addr1[3],
->   		 (u32)hdr->addr1[4], (u32)hdr->addr1[5]);
-> -	memcpy(IEEE80211_SKB_RXCB(skb), rx_status, sizeof(*rx_status));
->   	ieee80211_rx(hw, skb);
->   }
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-No, the warning is pointing to the wrong place. The routine in question does the 
-following:
+This patch series adds new bluetooth driver and coex enhancments
+in existing wlan driver for RSI chipsets.
+As per our architecture, both wlan and bluetooth drivers talk
+over same SDIO interface to device. Separate endpoint will be
+used in case of USB interface.
 
-1. Loads the rx_status struct from skb->cb.
-2. Overwrites the contents with 0.
-3. Fills various members of the struct.
-4. Writes the revised struct back into skb->cb.
+Change in v9: "#ifdef CONFIG_RSI_COEX" check moved from 6/8 to 4/6
+              to resolve kbuild test robot reported error
+Change in v8: 4/8, 5/8 are modified
+Change in v7: 4/8 is modified
+Changes in v6: 1/8, 3/8, 4/8, 5/8, 6/8 are modified
+Changes in v5: 5/8 is modified
+Changes in v4: 5/8 is modified
+Changes in v3: 4/8, 5/8 and 6/8 patches are modified
+Changes in v2: 2/8, 5/8 and 6/8 patches are modified
 
-Thus eliminating step 4 negates all the things done in step 3, and is wrong. The 
-correct fix is to change step 1 to create a NULL-filled rx_status struct, and 
-eliminate step 2.
+Prameela Rani Garnepudi (6):
+  rsi: add rx control block to handle rx packets in USB
+  rsi: add header file rsi_91x
+  rsi: add coex support
+  Bluetooth: btrsi: add new rsi bluetooth driver
+  rsi: add module parameter operating mode
+  rsi: sdio changes to support BT
 
-NACK.
+Siva Rebbagondla (2):
+  rsi: add bluetooth rx endpoint
+  rsi: handle BT traffic in driver
 
-Larry
+ drivers/bluetooth/Kconfig                   |  12 ++
+ drivers/bluetooth/Makefile                  |   2 +
+ drivers/bluetooth/btrsi.c                   | 188 ++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/Kconfig            |   9 ++
+ drivers/net/wireless/rsi/Makefile           |   1 +
+ drivers/net/wireless/rsi/rsi_91x_coex.c     | 179 ++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_core.c     |  20 ++-
+ drivers/net/wireless/rsi/rsi_91x_hal.c      |  56 +++++++--
+ drivers/net/wireless/rsi/rsi_91x_main.c     | 129 ++++++++++++++++++-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     |   2 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     |  13 +-
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |   5 +-
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 124 +++++++++++++-----
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  35 ++++--
+ drivers/net/wireless/rsi/rsi_coex.h         |  37 ++++++
+ drivers/net/wireless/rsi/rsi_common.h       |   5 +-
+ drivers/net/wireless/rsi/rsi_hal.h          |  21 ++++
+ drivers/net/wireless/rsi/rsi_main.h         |  21 ++--
+ drivers/net/wireless/rsi/rsi_mgmt.h         |   3 +
+ drivers/net/wireless/rsi/rsi_usb.h          |  16 ++-
+ include/net/rsi_91x.h                       |  56 +++++++++
+ 21 files changed, 852 insertions(+), 82 deletions(-)
+ create mode 100644 drivers/bluetooth/btrsi.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_coex.c
+ create mode 100644 drivers/net/wireless/rsi/rsi_coex.h
+ create mode 100644 include/net/rsi_91x.h
+
+-- 
+2.7.4
