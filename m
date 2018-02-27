@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:35746 "EHLO
-        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751758AbeBMGJc (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:33358 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751448AbeB0B5s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 01:09:32 -0500
-Received: by mail-lf0-f53.google.com with SMTP id a204so23555903lfa.2
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Feb 2018 22:09:31 -0800 (PST)
+        Mon, 26 Feb 2018 20:57:48 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <colin.king@canonical.com>, <Larry.Finger@lwfinger.net>,
+        <yhchuang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] rtlwifi: btcoex: fix argument typo of if-statement found by Coccinelle
+Date: Tue, 27 Feb 2018 09:57:24 +0800
+Message-ID: <20180227015724.4782-1-pkshih@realtek.com> (sfid-20180227_025752_595241_750E5B0F)
 MIME-Version: 1.0
-From: Steve deRosier <derosier@gmail.com>
-Date: Mon, 12 Feb 2018 22:09:30 -0800
-Message-ID: <CALupW3BbupwudkZw2=C8RvU0PYkk8=+TtV4SxcYH+uxh6WmZew@mail.gmail.com> (sfid-20180213_070937_391437_8DD7BB44)
-Subject: Presentation at ELC on debugging wifi modules
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Linux Wireless driver maintainers,
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-I'm giving a talk at ELC NA next month in Portland and I'd like a
-little help from our other driver maintainers. The talk is titled:
-"Reliable Linux Wireless - Techniques for Debugging Wireless Module
-Integrations". While I'm familiar with a fairly wide variety of WiFi
-chips and adapters and drivers, I don't know them all. I will speak
-from my experience and I'm sure I won't have time to get into the
-detailed ins-and-outs of every driver, but I'd love to include value
-for everyone no matter which wifi chip vendor the audience member is
-using.
+This was detected with static analysis using Coccinelle:
 
-So, if you have any specific tips or tricks you'd like to share with
-me so I can include them in the materials for my talk I would
-appreciate it.  I'm looking for those harder to find things: the
-little known debugfs knobs, module parameters, device tree bindings,
-and so on. Or, those things that are are common tripping up points.
-Anything you find useful or think others might.
+./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c:1107:5-18:
+duplicated argument to && or ||
 
-Also, part of my talk will be about how to reach out to those of us on
-the list for help. We all know the calls for help come to us in
-varying quality and I'd like to explain all the stuff to do first and
-all the information to gather and send to us as they reach out. So
-please send me any thoughts on what you'd like to see in the emails
-when people ask for help.
+Reported-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-You're welcome to do it on-list if you desire to elicit discussion,
-but in order to keep the noise down feel free to reply to me directly
-off-list.
-
-For those that are not of the maintainer types that happen to be on
-this list, if you're looking for help or tips and tricks, please
-attend my talk at ELC or otherwise come and find me. All are welcome.
-
-Thanks,
-- Steve
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index fd3b1fb35dff..05beb16f0a0a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1104,7 +1104,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 	}
+ 
+ 	if ((type == 1) || (type == 2) || (type == 9) || (type == 11) ||
+-	    (type == 101) || (type == 102) || (type == 109) || (type == 101)) {
++	    (type == 101) || (type == 102) || (type == 109) || (type == 111)) {
+ 		if (!coex_sta->force_lps_on) {
+ 			/* Native power save TDMA, only for A2DP-only case
+ 			 * 1/2/9/11 while wifi noisy threshold > 30
+-- 
+2.15.1
