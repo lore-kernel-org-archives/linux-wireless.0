@@ -1,66 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:35394 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933865AbeBMKj1 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:60718 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751733AbeB0Qlw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 05:39:27 -0500
+        Tue, 27 Feb 2018 11:41:52 -0500
+Subject: Re: fixed bit rate 9Mbps set as 24Mbps in g mode(legacy)
+To: KAVITA MATHUR <kavitam@cdot.in>, ath10k@lists.infradead.org,
+        backports@vger.kernel.org
+References: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org>
+ <20180227083933.M59708@cdot.in>
+Cc: linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <3047f184-d600-7be7-52bc-2ed4cee37ffe@candelatech.com> (sfid-20180227_174157_003541_EE3F9616)
+Date: Tue, 27 Feb 2018 08:41:50 -0800
 MIME-Version: 1.0
-In-Reply-To: <87r2q5mc4x.fsf@purkki.adurom.net>
-References: <1513168977-2121-1-git-send-email-amitkarwar@gmail.com>
- <1513168977-2121-5-git-send-email-amitkarwar@gmail.com> <87r2q5mc4x.fsf@purkki.adurom.net>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Tue, 13 Feb 2018 16:09:25 +0530
-Message-ID: <CAEhWJF=iF4Gy65O3vUNtBrKcXBMpSnCuZgvpCDvuObkgf4zuaA@mail.gmail.com> (sfid-20180213_113932_624398_44355480)
-Subject: Re: [v5 4/8] rsi: add coex support
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        "open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180227083933.M59708@cdot.in>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 1, 2018 at 12:26 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+On 02/27/2018 12:49 AM, KAVITA MATHUR wrote:
+> Hi,
 >
->> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>
->> With BT support, driver has to handle two streams of data
->> (i.e. wlan and BT). Actual coex implementation is in firmware.
->> Coex module just schedule the packets to firmware by taking them
->> from the corresponding paths.
->>
->> Structures for module and protocol operations are introduced for
->> this purpose. Protocol operations structure is global structure
->> which can be shared among different modules. Initialization of
->> coex and operating mode values is moved to rsi_91x_init().
->>
->> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
->> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> I have configured AP in g mode and tested legacy rates.All basic rates and supported
+> rates(1,2,5.5,11,6,9,12,18,24,36,48,54) are set except 9Mbps.
 >
-> [...]
+> When fixed bit rate 9Mbps is set, it gets set as 24 Mbps. This issue has been observed
+> in backports-4.4.2-1 as well as latest git version of ath10k driver.
 >
->> @@ -270,6 +271,7 @@ struct rsi_common {
->>       u8 obm_ant_sel_val;
->>       int tx_power;
->>       u8 ant_in_use;
->> +     struct semaphore tx_bus_lock;
 >
-> Do you really need to use semaphore? I think nowadays the preference is
-> to use something other than semaphores.
+> Is anybody aware of this issue? How can I fix this rate 9Mbps?
 
-We used semaphore here, as USB/SDIO bus write operations could be
-blocking/waiting. I will check if spinlock suits here in follow up
-patch. It will need some testing.
+You should specify which firmware/chipset you are using, since this might
+easily be a firmware issue.
 
-> Also calling it tx_bus_lock is IMHO misleading, tx_bus_sema would be
-> nicer.
+And, how are you determining that 'it gets set to 24Mbps'.  Is that the encoding
+you see in a wifi sniff, or is the driver being set to 24Mbps improperly when
+you use iw (or whatever) to try configuring the rate?
 
-Sure. I will rename the variable
+Recent upstream mac80211 has broken the ability to set a single tx rate as well,
+last I checked.
 
-Regards,
-Amitkumar
+Thanks,
+Ben
+
+>
+>
+> Thanks & Regards,
+> Kavita
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe backports" in
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
