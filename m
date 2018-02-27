@@ -1,117 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0049.outbound.protection.outlook.com ([104.47.37.49]:63024
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752185AbeBUK4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Feb 2018 05:56:55 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>
-Subject: [PATCH] cfg80211/nl80211: add DFS offload flag
-Date: Wed, 21 Feb 2018 13:56:35 +0300
-Message-Id: <20180221105635.5824-1-sergey.matyukevich.os@quantenna.com> (sfid-20180221_115659_857749_DB8136D5)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.codeaurora.org ([198.145.29.96]:51392 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752130AbeB0OFm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Feb 2018 09:05:42 -0500
+From: Ramon Fried <rfried@codeaurora.org>
+To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Ramon Fried <rfried@codeaurora.org>
+Subject: [PATCH v3] wcn36xx: reduce verbosity of drivers messages
+Date: Tue, 27 Feb 2018 16:05:35 +0200
+Message-Id: <20180227140535.4794-1-rfried@codeaurora.org> (sfid-20180227_150547_904469_F3F53EC6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dmitry Lebed <dlebed@quantenna.com>
+Whenever the WLAN interface is started the FW
+version and caps are printed.
+The caps now will be displayed only in debug mode.
+Firmware version will be displayed only once on first
+startup of the interface.
 
-Add wiphy flag to indicate that HW does all DFS actions by itself.
-User-space functionality already implemented in hostapd using
-vendor-specific (QCA) OUI to advertise HW support.
-Need to introduce generic flag to inform about DFS offload support.
-For deivces with DFS_OFFLOAD flag set user-space will no longer
-need to issue CAC or do any actions in response to
-"radar detected" events. HW will do everything by itself and send
-events to user-space to idicate that CAC was started/finished, etc.
-
-Signed-off-by: Dmitrii Lebed <dlebed@quantenna.com>
+Change-Id: I4db6ea7f384fe15eebe4c3ddb1d1ccab00094332
+Signed-off-by: Ramon Fried <rfried@codeaurora.org>
 ---
- include/net/cfg80211.h       | 7 ++++++-
- include/uapi/linux/nl80211.h | 9 +++++++++
- net/wireless/nl80211.c       | 7 +++++++
- 3 files changed, 22 insertions(+), 1 deletion(-)
+v2: print the firwmare version as info but only
+	onetime.
+v3: change the static variable to a struct variable.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ed3a28105d6c..b2d17993ae4d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3241,6 +3241,11 @@ struct cfg80211_ops {
-  * @WIPHY_FLAG_IBSS_RSN: The device supports IBSS RSN.
-  * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
-  *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
-+ * @WIPHY_FLAG_DFS_OFFLOAD: Device will do all DFS-related actions by itself,
-+ *	informing user-space about CAC progress, radar detection event,
-+ *	channel change triggered by radar detection event.
-+ *	No need to start CAC from user-space, no need to react to
-+ *	"radar detected" event.
-  * @WIPHY_FLAG_SUPPORTS_FW_ROAM: The device supports roaming feature in the
-  *	firmware.
-  * @WIPHY_FLAG_AP_UAPSD: The device supports uapsd on AP.
-@@ -3275,7 +3280,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
- 	WIPHY_FLAG_IBSS_RSN			= BIT(8),
- 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
--	/* use hole at 11 */
-+	WIPHY_FLAG_DFS_OFFLOAD			= BIT(11),
- 	/* use hole at 12 */
- 	WIPHY_FLAG_SUPPORTS_FW_ROAM		= BIT(13),
- 	WIPHY_FLAG_AP_UAPSD			= BIT(14),
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 22cca373161d..c53281397be6 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2156,6 +2156,13 @@ enum nl80211_commands {
-  * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
-  * @NL80211_ATTR_PORT_AUTHORIZED: (reserved)
-  *
-+ * @NL80211_ATTR_DFS_OFFLOAD: Indicates that the HW will offload DFS actions.
-+ *	Device will do all DFS-related actions by itself,
-+ *	informing user-space about CAC progress, radar detection event,
-+ *	channel change triggered by radar detection event.
-+ *	No need to start CAC from user-space, no need to react to
-+ *	"radar detected" event.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2582,6 +2589,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_PMKR0_NAME,
- 	NL80211_ATTR_PORT_AUTHORIZED,
+ drivers/net/wireless/ath/wcn36xx/main.c    |  3 ++-
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 18 ++++++++++--------
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 ++
+ 3 files changed, 14 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index ab5be6d2c691..bfe9062bfa52 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -261,7 +261,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
  
-+	NL80211_ATTR_DFS_OFFLOAD,
+ 	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
+ 		if (get_feat_caps(wcn->fw_feat_caps, i))
+-			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
++			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
+ 	}
+ }
+ 
+@@ -1283,6 +1283,7 @@ static int wcn36xx_probe(struct platform_device *pdev)
+ 	wcn = hw->priv;
+ 	wcn->hw = hw;
+ 	wcn->dev = &pdev->dev;
++	wcn->first_boot = true;
+ 	mutex_init(&wcn->conf_mutex);
+ 	mutex_init(&wcn->hal_mutex);
+ 	mutex_init(&wcn->scan_lock);
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 2a4871ca9c72..1a5b4d57c0ac 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -409,15 +409,17 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+ 	wcn->fw_minor = rsp->start_rsp_params.version.minor;
+ 	wcn->fw_major = rsp->start_rsp_params.version.major;
+ 
+-	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
+-		     wcn->wlan_version, wcn->crm_version);
+-
+-	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
+-		     wcn->fw_major, wcn->fw_minor,
+-		     wcn->fw_version, wcn->fw_revision,
+-		     rsp->start_rsp_params.stations,
+-		     rsp->start_rsp_params.bssids);
++	if (wcn->first_boot) {
++		wcn->first_boot = false;
++		wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
++			     wcn->wlan_version, wcn->crm_version);
+ 
++		wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
++			     wcn->fw_major, wcn->fw_minor,
++			     wcn->fw_version, wcn->fw_revision,
++			     rsp->start_rsp_params.stations,
++			     rsp->start_rsp_params.bssids);
++	}
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 81017e6703b4..5854adf43f3a 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -192,6 +192,8 @@ struct wcn36xx {
+ 	u8			crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
+ 	u8			wlan_version[WCN36XX_HAL_VERSION_LENGTH + 1];
+ 
++	bool		first_boot;
 +
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b5e613d14d6a..635bf4143d03 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1530,6 +1530,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		if ((rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP) &&
- 		    nla_put_flag(msg, NL80211_ATTR_TDLS_EXTERNAL_SETUP))
- 			goto nla_put_failure;
-+		if ((rdev->wiphy.flags & WIPHY_FLAG_DFS_OFFLOAD) &&
-+		    nla_put_flag(msg, NL80211_ATTR_DFS_OFFLOAD))
-+			goto nla_put_failure;
- 		state->split_start++;
- 		if (state->split)
- 			break;
-@@ -7816,6 +7819,10 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (!cfg80211_chandef_dfs_usable(wdev->wiphy, &chandef))
- 		return -EINVAL;
- 
-+	/* CAC start is offloaded to HW and can't be started manually */
-+	if (wdev->wiphy->flags & WIPHY_FLAG_DFS_OFFLOAD)
-+		return -EOPNOTSUPP;
-+
- 	if (!rdev->ops->start_radar_detection)
- 		return -EOPNOTSUPP;
- 
+ 	/* IRQs */
+ 	int			tx_irq;
+ 	int			rx_irq;
 -- 
-2.11.0
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
