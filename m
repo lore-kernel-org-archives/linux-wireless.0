@@ -1,86 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34500 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934253AbeBMJWB (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:48228 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750863AbeB0Rnk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 04:22:01 -0500
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv2 2/3] mac80211: enable setting cqm rssi config for AP mode
-Date: Tue, 13 Feb 2018 14:53:13 +0530
-Message-Id: <1518513793-22363-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180213_102208_898165_3B99D789)
+        Tue, 27 Feb 2018 12:43:40 -0500
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: Steve deRosier <derosier@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+ <CALLGbRL6D7bSrx-AVEoCfrSCg6_C4LfWcC-Yh1e14-DpsX3Ggw@mail.gmail.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <8c7f1a8e-57e8-627a-724a-4aface0a5d8a@dd-wrt.com> (sfid-20180227_184344_143115_CBFC21EA)
+Date: Tue, 27 Feb 2018 18:43:31 +0100
+MIME-Version: 1.0
+In-Reply-To: <CALLGbRL6D7bSrx-AVEoCfrSCg6_C4LfWcC-Yh1e14-DpsX3Ggw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Am 27.02.2018 um 18:03 schrieb Steve deRosier:
+> On Mon, Feb 26, 2018 at 12:44 AM, <s.gottschall@dd-wrt.com> wrote:
+>> From: Sebastian Gottschall <s.gottschall@newmedia-net.de>
+>>
+>> Adds LED and GPIO Control support for 988x, 9887, 9888, 99x0, 9984 based chipsets with on chipset connected led's
+>> using WMI Firmware API.
+>> The LED device will get available named as "ath10k-phyX" at sysfs and can be controlled with various triggers.
+>> adds also debugfs interface for gpio control.
+>>
+>> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>>
+>> v2  add correct gpio count per chipset and remove IPQ4019 support since this chipset does not make use of specific gpios)
+>> v5  fix compiling without LED_CLASS and GPIOLIB support, fix also error by kbuild test robot which does not occur in standard builds. curious
+>> v6  correct return values and fix comment style
+>> v7  fix ath10k_unregister_led for compiling without LED_CLASS
+>> v8  fix various code design issues reported by reviewers
+>> v9  move led and led code to separate sourcefile (gpio.c)
+>> v10 compile fix if gpiolib isnt included
+>> v11 make register_gpio_chip static. advise by krobot
+>> v12 fix warning
+>> ---
+>>   drivers/net/wireless/ath/ath10k/Kconfig   |  10 ++
+>>   drivers/net/wireless/ath/ath10k/Makefile  |   1 +
+>>   drivers/net/wireless/ath/ath10k/core.c    |  28 ++++-
+>>   drivers/net/wireless/ath/ath10k/core.h    |  62 +++++++++-
+>>   drivers/net/wireless/ath/ath10k/debug.c   | 146 ++++++++++++++++++++++
+>>   drivers/net/wireless/ath/ath10k/gpio.c    | 196 ++++++++++++++++++++++++++++++
+>>   drivers/net/wireless/ath/ath10k/hw.h      |   2 +
+>>   drivers/net/wireless/ath/ath10k/mac.c     |   5 +
+>>   drivers/net/wireless/ath/ath10k/wmi-ops.h |  36 +++++-
+>>   drivers/net/wireless/ath/ath10k/wmi-tlv.c |  65 ++++++++++
+>>   drivers/net/wireless/ath/ath10k/wmi.c     |  46 +++++++
+>>   drivers/net/wireless/ath/ath10k/wmi.h     |  36 ++++++
+>>   12 files changed, 630 insertions(+), 3 deletions(-)
+>>   create mode 100644 drivers/net/wireless/ath/ath10k/gpio.c
+>
+> Assuming that kbuild robot doesn't kick back another build-time
+> warning, it looks OK to me.
+:-) seems so
+>
+> Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
+>
+> --
+> Steve deRosier
+> Cal-Sierra Consulting LLC
+> https://www.cal-sierra.com/
+>
 
-Enable connection monitoring for AP mode which makes it possible to
-track signal strength of connected stations.
-
-Co-Developed-by: Tamizh Chelvam <tamizhr@codeaurora.org>
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- net/mac80211/cfg.c |   31 +++++++++++++++++++++----------
- 1 file changed, 21 insertions(+), 10 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 46028e1..ca95733 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2689,6 +2689,25 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
-+static void ieee80211_update_rssi_config(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (!(sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI))
-+		return;
-+
-+	/* tell the driver upon association, unless already associated */
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+	    !sdata->u.mgd.associated)
-+		return;
-+
-+	/* if AP, always tell the driver by checking beacon status */
-+	if (!sdata->vif.bss_conf.enable_beacon ||
-+	    !wiphy_ext_feature_isset(sdata->local->hw.wiphy,
-+				NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG))
-+		return;
-+
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
-+}
-+
- static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
- 					 struct net_device *dev,
- 					 s32 rssi_thold, u32 rssi_hyst)
-@@ -2711,11 +2730,7 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
- 	bss_conf->cqm_rssi_high = 0;
- 	sdata->u.mgd.last_cqm_event_signal = 0;
- 
--	/* tell the driver upon association, unless already associated */
--	if (sdata->u.mgd.associated &&
--	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
--
-+	ieee80211_update_rssi_config(sdata);
- 	return 0;
- }
- 
-@@ -2736,11 +2751,7 @@ static int ieee80211_set_cqm_rssi_range_config(struct wiphy *wiphy,
- 	bss_conf->cqm_rssi_hyst = 0;
- 	sdata->u.mgd.last_cqm_event_signal = 0;
- 
--	/* tell the driver upon association, unless already associated */
--	if (sdata->u.mgd.associated &&
--	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
--
-+	ieee80211_update_rssi_config(sdata);
- 	return 0;
- }
- 
 -- 
-1.7.9.5
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
