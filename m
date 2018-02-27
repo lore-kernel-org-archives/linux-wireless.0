@@ -1,91 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47656 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965574AbeBMUEF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:42954 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752532AbeB0K7C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 15:04:05 -0500
-Subject: Re: [PATCH] headers: untangle kmemleak.h from mm.h
-To: Michael Ellerman <mpe@ellerman.id.au>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Cc: linux-s390 <linux-s390@vger.kernel.org>,
-        John Johansen <john.johansen@canonical.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        X86 ML <x86@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        virtualization@lists.linux-foundation.org,
-        iommu@lists.linux-foundation.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        sparclinux@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        Dmitry Kasatkin <dmitry.kasatkin@intel.com>
-References: <a4629db7-194d-3c7c-c8fd-24f61b220a70@infradead.org>
- <87zi4ev1d2.fsf@concordia.ellerman.id.au>
- <f119a273-2e86-1b7f-346f-7627ad8b51ed@infradead.org>
- <87fu652oce.fsf@concordia.ellerman.id.au>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <1f96a3c7-0bb3-6c06-0b44-ca47e5a5d127@infradead.org> (sfid-20180213_210452_868592_540B25AD)
-Date: Tue, 13 Feb 2018 09:51:09 -0800
-MIME-Version: 1.0
-In-Reply-To: <87fu652oce.fsf@concordia.ellerman.id.au>
-Content-Type: text/plain; charset=utf-8
+        Tue, 27 Feb 2018 05:59:02 -0500
+Message-ID: <1519729139.4086.9.camel@sipsolutions.net> (sfid-20180227_115906_391202_A666006B)
+Subject: Re: [PATCH] mac80211: support A-MSDU in fast-rx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Date: Tue, 27 Feb 2018 11:58:59 +0100
+In-Reply-To: <20180227075219.2049-1-nbd@nbd.name>
+References: <20180227075219.2049-1-nbd@nbd.name>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2018 02:09 AM, Michael Ellerman wrote:
-> Randy Dunlap <rdunlap@infradead.org> writes:
+On Tue, 2018-02-27 at 08:52 +0100, Felix Fietkau wrote:
 > 
->> On 02/12/2018 04:28 AM, Michael Ellerman wrote:
->>> Randy Dunlap <rdunlap@infradead.org> writes:
->>>
->>>> From: Randy Dunlap <rdunlap@infradead.org>
->>>>
->>>> Currently <linux/slab.h> #includes <linux/kmemleak.h> for no obvious
->>>> reason. It looks like it's only a convenience, so remove kmemleak.h
->>>> from slab.h and add <linux/kmemleak.h> to any users of kmemleak_*
->>>> that don't already #include it.
->>>> Also remove <linux/kmemleak.h> from source files that do not use it.
->>>>
->>>> This is tested on i386 allmodconfig and x86_64 allmodconfig. It
->>>> would be good to run it through the 0day bot for other $ARCHes.
->>>> I have neither the horsepower nor the storage space for the other
->>>> $ARCHes.
->>>>
->>>> [slab.h is the second most used header file after module.h; kernel.h
->>>> is right there with slab.h. There could be some minor error in the
->>>> counting due to some #includes having comments after them and I
->>>> didn't combine all of those.]
->>>>
->>>> This is Lingchi patch #1 (death by a thousand cuts, applied to kernel
->>>> header files).
->>>>
->>>> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
->>>
->>> I threw it at a random selection of configs and so far the only failures
->>> I'm seeing are:
->>>
->>>   lib/test_firmware.c:134:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]                                                                                                          
->>>   lib/test_firmware.c:620:25: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
->>>   lib/test_firmware.c:620:2: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
->>>   security/integrity/digsig.c:146:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]
->>
->> Both of those source files need to #include <linux/vmalloc.h>.
-> 
-> Yep, I added those and rebuilt. I don't see any more failures that look
-> related to your patch.
+>  	if (fast_rx->key && !(status->flag & RX_FLAG_IV_STRIPPED)) {
+> +		if (status->rx_flags & IEEE80211_RX_AMSDU)
+> +			return false;
 
-Great, thanks.
+This seemed really odd to me.
 
-I also sent patches for both of those.
+>  		/* GCMP header length is the same */
+>  		snap_offs += IEEE80211_CCMP_HDR_LEN;
 
->   http://kisskb.ellerman.id.au/kisskb/head/13399/
-> 
-> 
-> I haven't gone through the defconfigs I have enabled for a while, so
-> it's possible I have some missing but it's still a reasonable cross
-> section.
+I understand now though - the problem is that snap_offs isn't used in
+__ieee80211_rx_h_amsdu(), and thus we can't do the necessary
+adjustments.
+
+I think though that perhaps it'd be better to teach
+__ieee80211_rx_h_amsdu() about snap_offs, because assuming in the AMSDU
+decap code that snap_offs is more-or-less constant will just make the
+dependencies much harder to understand.
+
+Better teach __ieee80211_rx_h_amsdu() about snap_offs, and make the
+assumption on the constant in ieee80211_rx_h_amsdu()?
 
 
--- 
-~Randy
+> +	if (status->rx_flags & IEEE80211_RX_AMSDU) {
+> +		res = __ieee80211_rx_h_amsdu(rx);
+> +		if (res != RX_QUEUED)
+> +			goto drop;
+> +
+> +		return true;
+> +	}
+
+Btw, you also don't need the "res" variable, much less at function
+scope; this block would do if at all, but also it should probably use
+the right enum type or just be removed.
+
+johannes
