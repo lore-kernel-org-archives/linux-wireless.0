@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:38131 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750988AbeBSGf4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 01:35:56 -0500
-Message-ID: <1519022152.7832.71.camel@intel.com> (sfid-20180219_073606_248646_AEA1DB39)
-Subject: Re: [PATCH 12/13] mac80211: limit wmm params to comply with ETSI
- requirements
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>
-Date: Mon, 19 Feb 2018 08:35:52 +0200
-In-Reply-To: <87lgfple1q.fsf@purkki.adurom.net>
-References: <20180216161301.29339-1-luca@coelho.fi>
-         <20180216161301.29339-13-luca@coelho.fi> <87lgfple1q.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from aserp2130.oracle.com ([141.146.126.79]:38610 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751117AbeB0Jl7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Feb 2018 04:41:59 -0500
+Date: Tue, 27 Feb 2018 12:41:40 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH 8/8] staging: wilc1000: fix open parenthesis mismatch
+ issue in wilc_wlan_cfg_set()
+Message-ID: <20180227094140.tad4smuvfvkzmx6m@mwanda> (sfid-20180227_104205_037200_75CAF8AC)
+References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+ <1519662722-15761-9-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519662722-15761-9-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-02-19 at 07:54 +0200, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > From: Haim Dreyfuss <haim.dreyfuss@intel.com>
-> > 
-> > ETSI has recently restricted the WMM parameters values for
-> > 5GHz frequencies. There are two scenarios which may cause
-> > to violate ETSI requirements.
-> > 1. Using mac80211 default values.
-> > 2. Userspace entity tries to configure its own values
-> > 2. Associating to AP which advertises WWM IE.
-> 
-> Only two? Also the numbering is interesting :)
-> 
-> > In the latter case
-> 
-> In the last case?
+The first 5 patches are good, but the last 3 are not OK.
 
-Huh, how did I miss this stuff? Johannes, do you want me to resend or
-will you fix it when you take this?
+Normally "tmp" is used as an iterator pointer or something along those
+lines.  For example, here is a good use of "tmp".
 
---
-Cheers,
-Luca.
+	tmp = left;
+	left = right;
+	right = tmp;
+
+In this example, you want to store a pointer temporarily, so what else
+are you going to call it besides "tmp"?  The name "tmp" doesn't mean
+"I want a short name and I'm too lazy to think of one".
+
+regards,
+dan carpenter
