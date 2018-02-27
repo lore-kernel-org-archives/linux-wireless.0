@@ -1,130 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:52460 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751521AbeB1DHk (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53618 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932132AbeB0QSS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 22:07:40 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/15] rtlwifi: Add modifier static to functions reported by sparse
-Date: Wed, 28 Feb 2018 11:07:04 +0800
-Message-ID: <20180228030718.19510-2-pkshih@realtek.com> (sfid-20180228_040805_785146_E1D20D74)
-In-Reply-To: <20180228030718.19510-1-pkshih@realtek.com>
-References: <20180228030718.19510-1-pkshih@realtek.com>
+        Tue, 27 Feb 2018 11:18:18 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: rtlwifi: rtl8192cu: remove pointless memcpy
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180209132531.2755482-1-arnd@arndb.de>
+References: <20180209132531.2755482-1-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Ping-Ke Shih <pkshih@realtek.com>, Arnd Bergmann <arnd@arndb.de>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20180227161817.C4BD36070A@smtp.codeaurora.org> (sfid-20180227_171836_767125_EB6A32AF)
+Date: Tue, 27 Feb 2018 16:18:17 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-sparse reports some functions were not declared, so add 'static' as
-modifier. Remove an unused function btc8821a1ant_is_wifi_status_changed()
-exposed due to 'static'.
+> gcc-8 points out that source and destination of the memcpy() are
+> always the same pointer, so the effect of memcpy() is undefined
+> here (its arguments must not overlap):
+> 
+> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c: In function '_rtl_rx_process':
+> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c:430:2: error: 'memcpy' source argument is the same as destination [-Werror=restrict]
+> 
+> Most likely this is harmless, but it's easy to just remove the
+> line and get rid of the warning.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  1 +
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  6 ++--
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 33 ----------------------
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |  4 +--
- 4 files changed, 6 insertions(+), 38 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 05beb16f0a0a..59553db020ef 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1436,6 +1436,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
- 	coex_dm->pre_ps_tdma = coex_dm->cur_ps_tdma;
- }
- 
-+static
- void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 				       u8 wifi_status)
- {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 4907c2ffadfe..73ec31972944 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -833,9 +833,9 @@ static void btc8723b2ant_set_sw_fulltime_dac_swing(struct btc_coexist *btcoex,
- 		btc8723b2ant_set_dac_swing_reg(btcoex, 0x18);
- }
- 
--void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
--			    bool force_exec, bool dac_swing_on,
--			    u32 dac_swing_lvl)
-+static void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
-+				   bool force_exec, bool dac_swing_on,
-+				   u32 dac_swing_lvl)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index 0b26419881c0..202597cf8915 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -426,39 +426,6 @@ static void btc8821a1ant_query_bt_info(struct btc_coexist *btcoexist)
- 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
- }
- 
--bool btc8821a1ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
--{
--	static bool pre_wifi_busy = true;
--	static bool pre_under_4way = true;
--	static bool pre_bt_hs_on = true;
--	bool wifi_busy = false, under_4way = false, bt_hs_on = false;
--	bool wifi_connected = false;
--
--	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
--			   &wifi_connected);
--	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
--	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_OPERATION, &bt_hs_on);
--	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_4_WAY_PROGRESS,
--			   &under_4way);
--
--	if (wifi_connected) {
--		if (wifi_busy != pre_wifi_busy) {
--			pre_wifi_busy = wifi_busy;
--			return true;
--		}
--		if (under_4way != pre_under_4way) {
--			pre_under_4way = under_4way;
--			return true;
--		}
--		if (bt_hs_on != pre_bt_hs_on) {
--			pre_bt_hs_on = bt_hs_on;
--			return true;
--		}
--	}
--
--	return false;
--}
--
- static void btc8821a1ant_update_bt_link_info(struct btc_coexist *btcoexist)
- {
- 	struct btc_bt_link_info	*bt_link_info = &btcoexist->bt_link_info;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index d5f282cb9d24..2202d5e18977 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -359,7 +359,7 @@ static void btc8821a2ant_query_bt_info(struct btc_coexist *btcoexist)
- 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
- }
- 
--bool btc8821a2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
-+static bool btc8821a2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
- {
- 	static bool pre_wifi_busy = true;
- 	static bool pre_under_4way = true;
-@@ -1517,7 +1517,7 @@ static void btc8821a2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
- 	btc8821a2ant_sw_mechanism2(btcoexist, false, false, false, 0x18);
- }
- 
--void btc8821a2ant_action_wifi_link_process(struct btc_coexist *btcoexist)
-+static void btc8821a2ant_action_wifi_link_process(struct btc_coexist *btcoexist)
- {
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
- 	u8 u8tmpa, u8tmpb;
+dcdd54c2bcae rtlwifi: rtl8192cu: remove pointless memcpy
+
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10208979/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
