@@ -1,74 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51712 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751687AbeBVHVN (ORCPT
+Received: from mail-it0-f50.google.com ([209.85.214.50]:40058 "EHLO
+        mail-it0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752260AbeB0NaS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Feb 2018 02:21:13 -0500
-Date: Thu, 22 Feb 2018 10:20:58 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 1/4] staging: wilc1000: remove use of 'happened' variable
- in wilc_spi_read_int()
-Message-ID: <20180222072058.g6wyrsmg5lr6vnef@mwanda> (sfid-20180222_082116_969037_A1DB8A39)
-References: <1519229532-11265-1-git-send-email-ajay.kathat@microchip.com>
- <1519229532-11265-2-git-send-email-ajay.kathat@microchip.com>
+        Tue, 27 Feb 2018 08:30:18 -0500
+Received: by mail-it0-f50.google.com with SMTP id v186so15267665itc.5
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 05:30:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519229532-11265-2-git-send-email-ajay.kathat@microchip.com>
+In-Reply-To: <5A953DBE.9070805@broadcom.com>
+References: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com>
+ <5A953DBE.9070805@broadcom.com>
+From: Harsha Rao <harshrao464@gmail.com>
+Date: Tue, 27 Feb 2018 19:00:17 +0530
+Message-ID: <CAPcv9S1fZfrg3AV3GoWG-CaTkonpQyiHY6twvhS_ikXnj00t4g@mail.gmail.com> (sfid-20180227_143121_329574_0FC76ECF)
+Subject: Re: Support on vendor id and device id
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 21, 2018 at 09:42:09PM +0530, Ajay Singh wrote:
-> Modified wilc_spi_read_int() by removing unnecessary use of "happened"
-> variable.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/wilc_spi.c | 8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-> index 6b392c9..131d2b7 100644
-> --- a/drivers/staging/wilc1000/wilc_spi.c
-> +++ b/drivers/staging/wilc1000/wilc_spi.c
-> @@ -936,7 +936,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
->  	int ret;
->  	u32 tmp;
->  	u32 byte_cnt;
-> -	int happened, j;
-> +	int j;
->  	u32 unknown_mask;
->  	u32 irq_flags;
->  	int k = IRG_FLAGS_OFFSET + 5;
-> @@ -956,8 +956,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
->  
->  	j = 0;
->  	do {
-> -		happened = 0;
-> -
->  		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
->  		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
->  
-> @@ -972,11 +970,11 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
->  			dev_err(&spi->dev,
->  				"Unexpected interrupt(2):j=%d,tmp=%x,mask=%x\n",
->  				j, tmp, unknown_mask);
-> -				happened = 1;
-> +				break;
+On Tue, Feb 27, 2018 at 4:45 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 2/27/2018 11:16 AM, Harsha Rao wrote:
+>>
+>> Hi folks,
+>> I am developing a new wifi driver for our sdio based wifi device.
+>>
+>> I see that SDIO_VENDOR_ID and SDIO_DEVICE_ID for our device (We had
+>> bought the SDIO IP from 3rd party)  is already  been used by some
+>> other vendor and its already into staging .
+>>
+>> Please suggest me how can I move forward to submit the driver for staging.
+>
+>
+> Can you be more specific about the conflicting vendor id and device id?
 
-This is flipped around.  happened means don't break, but you've changed
-it to be the opposite.
+Hi,
+My driver kicks in  with vendor id 0x296 and device id 0x5347.
+But when I grepped the the kernel source I could see an other driver
+wilc1000 using the same vendor ID and device ID
+( We have a different hw than them !)
 
-regards,
-dan carpenter
+>> Is there a way to reconfigure the values in the SDIO host for
+>> different value or does Linux allow two drivers with same values to
+>> survive mutual exclusively
+>
+>
+> First come first serve. When a device is detected, the driver core looks for
+> drivers supporting it based on device table and the first that successfully
+> returns from the .probe() callback is bound to the device.
+>
+> Regards,
+> Arend
 
->  		}
->  
->  		j++;
-> -	} while (happened);
-> +	} while (1);
->  
+Does Linux allow two drivers with conflicting device and vendor IDs to
+stay on in kernel ?
+
+-
+Harsha
