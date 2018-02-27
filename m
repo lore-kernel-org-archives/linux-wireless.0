@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:47999 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932343AbeBSXOe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51300 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752698AbeB0QQS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Feb 2018 18:14:34 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 4/8] brcmfmac: usb: call brcmf_usb_up() during brcmf_bus_preinit()
-Date: Tue, 20 Feb 2018 00:14:21 +0100
-Message-Id: <1519082065-10128-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180220_001455_088383_23DE8BBF)
-In-Reply-To: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1519082065-10128-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 27 Feb 2018 11:16:18 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2,01/10] rtlwifi: enable mac80211 fast-tx support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180129032641.17841-2-pkshih@realtek.com>
+References: <20180129032641.17841-2-pkshih@realtek.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Message-Id: <20180227161618.1E7DB6084A@smtp.codeaurora.org> (sfid-20180227_171632_328643_B9C67E48)
+Date: Tue, 27 Feb 2018 16:16:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By calling brcmf_usb_up() during brcmf_bus_preinit() it does not need
-to be called in brcmf_usb_bus_setup().
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Enable the mac80211 fast-tx feature, since our driver already support
+> hw_flags required by fast-tx and is able to let mac80211 stack to transmit
+> packet through fast-xmit path.
+> 
+> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index b27170c..d22cd166 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1146,8 +1146,9 @@ static int brcmf_usb_get_fwname(struct device *dev, u32 chip, u32 chiprev,
- }
- 
- static const struct brcmf_bus_ops brcmf_usb_bus_ops = {
--	.txdata = brcmf_usb_tx,
-+	.preinit = brcmf_usb_up,
- 	.stop = brcmf_usb_down,
-+	.txdata = brcmf_usb_tx,
- 	.txctl = brcmf_usb_tx_ctlpkt,
- 	.rxctl = brcmf_usb_rx_ctlpkt,
- 	.wowl_config = brcmf_usb_wowl_config,
-@@ -1165,10 +1166,6 @@ static int brcmf_usb_bus_setup(struct brcmf_usbdev_info *devinfo)
- 		return ret;
- 	}
- 
--	ret = brcmf_usb_up(devinfo->dev);
--	if (ret)
--		goto fail;
--
- 	ret = brcmf_bus_started(devinfo->dev);
- 	if (ret)
- 		goto fail;
+10 patches applied to wireless-drivers-next.git, thanks.
+
+6942bdc4bf57 rtlwifi: enable mac80211 fast-tx support
+1ca72c3047aa rtlwifi: Add Support VHT to spec_ver
+5f380ceff5f5 rtlwifi: Use 6 bits as sequence number of TX report
+4a7093b914aa rtlwifi: Extend tx_power_by_rate_offset size for newer IC
+81b813ed2fde rtlwifi: Add rate section and its related definition and comment
+50da5da1562b rtlwifi: Fix VHT NSS in RC
+ed979a1ed46b rtlwifi: add definition radio_mask for RF and maximum bandwidth
+2cdd634e7e36 rtlwifi: add efuse ops for other components
+d7297a86fc86 rtlwifi: btcoex: add routine to set default port id
+94907e8d135b rtlwifi: btcoex: Add 8822be btcoex supported files for wifi only
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/10188949/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
