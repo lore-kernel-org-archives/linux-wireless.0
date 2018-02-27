@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41130 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:54526 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031553AbeBNQEU (ORCPT
+        with ESMTP id S1750997AbeB0QTk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Feb 2018 11:04:20 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath9k-devel\@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH] ath9k: mark RSSI as invalid if frame received during channel setup
-References: <AM4PR0101MB2305369CE7574F25AA0AB680E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
-Date: Wed, 14 Feb 2018 18:04:16 +0200
-In-Reply-To: <AM4PR0101MB2305369CE7574F25AA0AB680E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
-        (Jean Pierre TOSONI's message of "Wed, 14 Feb 2018 14:47:23 +0000")
-Message-ID: <87sha3mubj.fsf@purkki.adurom.net> (sfid-20180214_170424_318812_04191DEB)
+        Tue, 27 Feb 2018 11:19:40 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [v2,1/4] qtnfmac: fix releasing Tx/Rx data buffers
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180210140420.17013-2-sergey.matyukevich.os@quantenna.com>
+References: <20180210140420.17013-2-sergey.matyukevich.os@quantenna.com>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Message-Id: <20180227161940.4271460849@smtp.codeaurora.org> (sfid-20180227_171944_267940_32621788)
+Date: Tue, 27 Feb 2018 16:19:40 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jean Pierre TOSONI <jp.tosoni@acksys.fr> writes:
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
 
-> ath9k returns a wrong RSSI value for frames received in a 30ms time window after
-> a channel change. The correct value is typically 10dB below the returned value.
->
-> This was found with a Atheros AR9300 Rev:3 chip (WLE350NX / JWX6083 cards),
-> during offchannel scans.
->
-> Mark the signal value as invalid in this case.
->
-> Signed-off-by: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
-> ---
->  .../a995-b-acksys-ath9k-wait-channel-change.patch  |   39 ++++++++++++++++++++
->  1 files changed, 39 insertions(+), 0 deletions(-)
->  create mode 100644 package/kernel/mac80211/patches/a995-b-acksys-ath9k-wait-channel-change.patch
+> Add missing PCI unmap for Tx buffers and release all buffers explicitly.
+> Managed release using devm_add_action is not suitable for qtnfmac Tx/Rx
+> data buffers. The reason is in ordering and dependencies: buffers
+> should be released after transmission is stopped but before PCI
+> device resources and DMA allocations are released.
+> 
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-This looks like a patch for LEDE, not for a Linux kernel tree.
+3 patches applied to wireless-drivers-next.git, thanks.
+
+1d5e3b90ab01 qtnfmac: fix releasing Tx/Rx data buffers
+a34d7bcb73f5 qtnfmac: enable reloading of qtnfmac kernel modules
+c3b2f7ca4186 qtnfmac: implement asynchronous firmware loading
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10210499/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
