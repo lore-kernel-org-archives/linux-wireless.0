@@ -1,69 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:59661 "EHLO ozlabs.org"
+Received: from mail.kernel.org ([198.145.29.99]:53658 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751483AbeBLM2N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Feb 2018 07:28:13 -0500
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Randy Dunlap <rdunlap@infradead.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Cc: linux-s390 <linux-s390@vger.kernel.org>,
-        John Johansen <john.johansen@canonical.com>,
-        "netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-        X86 ML <x86@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        virtualization@lists.linux-foundation.org,
-        iommu@lists.linux-foundation.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        sparclinux@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH] headers: untangle kmemleak.h from mm.h
-In-Reply-To: <a4629db7-194d-3c7c-c8fd-24f61b220a70@infradead.org>
-References: <a4629db7-194d-3c7c-c8fd-24f61b220a70@infradead.org>
-Date: Mon, 12 Feb 2018 23:28:09 +1100
-Message-ID: <87zi4ev1d2.fsf@concordia.ellerman.id.au> (sfid-20180212_132834_802331_C59B1E01)
-MIME-Version: 1.0
-Content-Type: text/plain
+        id S1752163AbeB0XVN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Feb 2018 18:21:13 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: cantabile.desu@gmail.com
+Cc: kubakici@wp.pl, gregkh@linuxfoundation.org,
+        akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        stephen.boyd@linaro.org, broonie@kernel.org,
+        dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [RFT 5/7] firmware: ensure the firmware cache is not used on incompatible calls
+Date: Tue, 27 Feb 2018 15:20:59 -0800
+Message-Id: <20180227232101.20786-6-mcgrof@kernel.org> (sfid-20180228_002311_792516_F4D5CEE5)
+In-Reply-To: <20180227232101.20786-1-mcgrof@kernel.org>
+References: <20180227232101.20786-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Randy Dunlap <rdunlap@infradead.org> writes:
+request_firmware_into_buf() explicitly disables the firmware cache,
+meanwhile the firmware cache cannot be used when request_firmware_nowait()
+is used without the uevent. Enforce a sanity check for this to avoid future
+issues undocumented behaviours should misuses of the firmware cache
+happen later.
 
-> From: Randy Dunlap <rdunlap@infradead.org>
->
-> Currently <linux/slab.h> #includes <linux/kmemleak.h> for no obvious
-> reason. It looks like it's only a convenience, so remove kmemleak.h
-> from slab.h and add <linux/kmemleak.h> to any users of kmemleak_*
-> that don't already #include it.
-> Also remove <linux/kmemleak.h> from source files that do not use it.
->
-> This is tested on i386 allmodconfig and x86_64 allmodconfig. It
-> would be good to run it through the 0day bot for other $ARCHes.
-> I have neither the horsepower nor the storage space for the other
-> $ARCHes.
->
-> [slab.h is the second most used header file after module.h; kernel.h
-> is right there with slab.h. There could be some minor error in the
-> counting due to some #includes having comments after them and I
-> didn't combine all of those.]
->
-> This is Lingchi patch #1 (death by a thousand cuts, applied to kernel
-> header files).
->
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ drivers/base/firmware_loader.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-I threw it at a random selection of configs and so far the only failures
-I'm seeing are:
-
-  lib/test_firmware.c:134:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]                                                                                                          
-  lib/test_firmware.c:620:25: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
-  lib/test_firmware.c:620:2: error: implicit declaration of function 'vzalloc' [-Werror=implicit-function-declaration]
-  security/integrity/digsig.c:146:2: error: implicit declaration of function 'vfree' [-Werror=implicit-function-declaration]
-
-Full results trickling in here, not all the failures there are caused by
-this patch, ie. some configs are broken in mainline:
-
-  http://kisskb.ellerman.id.au/kisskb/head/13396/
-
-cheers
+diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
+index 5f3d44d0bfe0..99c540164074 100644
+--- a/drivers/base/firmware_loader.c
++++ b/drivers/base/firmware_loader.c
+@@ -431,6 +431,11 @@ static int fw_add_devm_name(struct device *dev, const char *name)
+ 	return 0;
+ }
+ #else
++static bool fw_cache_is_setup(struct device *dev, const char *name)
++{
++	return false;
++}
++
+ static int fw_add_devm_name(struct device *dev, const char *name)
+ {
+ 	return 0;
+@@ -672,6 +677,9 @@ request_firmware_into_buf(const struct firmware **firmware_p, const char *name,
+ {
+ 	int ret;
+ 
++	if (fw_cache_is_setup(device, name))
++		return -EOPNOTSUPP;
++
+ 	__module_get(THIS_MODULE);
+ 	ret = _request_firmware(firmware_p, name, device, buf, size,
+ 				FW_OPT_UEVENT | FW_OPT_NOCACHE);
+@@ -769,6 +777,9 @@ request_firmware_nowait(
+ 	fw_work->opt_flags = FW_OPT_NOWAIT |
+ 		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
+ 
++	if (!uevent && fw_cache_is_setup(device, name))
++		return -EOPNOTSUPP;
++
+ 	if (!try_module_get(module)) {
+ 		kfree_const(fw_work->name);
+ 		kfree(fw_work);
+-- 
+2.16.2
