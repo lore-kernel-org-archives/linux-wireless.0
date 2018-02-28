@@ -1,51 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42684 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751989AbeB0Ikg (ORCPT
+Received: from sonic301-36.consmr.mail.ir2.yahoo.com ([77.238.176.113]:36880
+        "EHLO sonic301-36.consmr.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932676AbeB1RRy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 03:40:36 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Dmitrii Lebed <dlebed@quantenna.com>,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [PATCH] cfg80211/nl80211: add DFS offload flag
-References: <20180221105635.5824-1-sergey.matyukevich.os@quantenna.com>
-        <5A8D521C.2030502@broadcom.com>
-        <0e3d5af0-bc6b-d98f-02f2-cc4d585e6cd1@quantenna.com>
-        <5A8DCF9E.90505@broadcom.com> <87k1v5ihio.fsf@purkki.adurom.net>
-        <20180222082340.jfogkd4vgtapcyzl@bars>
-Date: Tue, 27 Feb 2018 10:40:31 +0200
-In-Reply-To: <20180222082340.jfogkd4vgtapcyzl@bars> (Sergey Matyukevich's
-        message of "Thu, 22 Feb 2018 11:23:40 +0300")
-Message-ID: <87r2p6hlkw.fsf@codeaurora.org> (sfid-20180227_094040_439536_7380F823)
+        Wed, 28 Feb 2018 12:17:54 -0500
+Date: Wed, 28 Feb 2018 17:17:51 +0000 (UTC)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: Hin-Tak Leung <htl10@users.sourceforge.net>
+To: <herton@canonical.com>, <Larry.Finger@lwfinger.net>,
+        Sudhir Sreedharan <ssreedharan@mvista.com>
+Cc: <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Sudhir Sreedharan <ssreedharan@mvista.com>,
+        <stable@vger.kernel.org>
+Message-ID: <1706696595.11449639.1519838271211@mail.yahoo.com> (sfid-20180228_181837_890492_A77FAD37)
+Subject: Re: [PATCH] rtl8187: Fix NULL pointer dereference in
+ priv->conf_mutex
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+References: <1706696595.11449639.1519838271211.ref@mail.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-> Hello Kalle,
->
->> > Friendly advice: you may want to avoid using this footer in emails on
->> > the kernel.org mailing lists.
->> 
->> Indeed. Most of the time I don't even reply to mails with such
->> disclaimers and patches containing that will be automatically dropped.
->
-> Based on our previous experience we already know that sending patches from
-> our 'normal' emails with disclaimer is being frowned upon. So all the
-> patches are being sent from 'oss' emails. But so far we had impression
-> that participating in further discussion was allowed even from email
-> addresses with disclaimer.
+--------------------------------------------
+On Thu, 15/2/18, Sudhir Sreedharan <ssreedharan@mvista.com> wrote:
 
-I think it's just rude to send emails to public with such disclaimers,
-this is a public list where people voluntarily use their time to reply
-to emails. I guess some people don't mind but there are people who do
-not like it, myself included.
+...
+ 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Sudhir Sreedharan <ssreedharan@mvista.com>
 
--- 
-Kalle Valo
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
