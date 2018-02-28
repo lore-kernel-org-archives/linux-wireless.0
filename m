@@ -1,35 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0060.outbound.protection.outlook.com ([104.47.0.60]:53472
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750941AbeBZTRo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 14:17:44 -0500
-Subject: Re: [PATCH] Revert "ath10k: send (re)assoc peer command when NSS
- changed"
-To: Karthikeyan Periyasamy <periyasa@codeaurora.org>,
-        ath10k@lists.infradead.org
-References: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-From: Peter Oh <peter.oh@bowerswilkins.com>
-Message-ID: <80c73674-7508-9804-fa5b-12afcc296353@bowerswilkins.com> (sfid-20180226_201748_686484_B5D2294A)
-Date: Mon, 26 Feb 2018 11:17:31 -0800
+Received: from rtits2.realtek.com ([211.75.126.72]:52464 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751682AbeB1DHl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Feb 2018 22:07:41 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/15] rtlwifi: btcoex: Add pre- and post- normal LPS function
+Date: Wed, 28 Feb 2018 11:07:11 +0800
+Message-ID: <20180228030718.19510-9-pkshih@realtek.com> (sfid-20180228_040756_839482_3478030C)
+In-Reply-To: <20180228030718.19510-1-pkshih@realtek.com>
+References: <20180228030718.19510-1-pkshih@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <1519625792-12010-1-git-send-email-periyasa@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ping-Ke Shih <pkshih@realtek.com>
 
+Normal LPS is decomposed into pre- and post- parts, so we can issue H2C
+with TDMA parameters in the "critical section" that dirver can't change
+LPS state at the moment.
 
-> This reverts commit 55884c045d31a29cf69db8332d1064a1b61dd159.
->
-> When Ath10k is in AP mode and an unassociated STA sends a VHT action frame
-> (Operating Mode Notification for the NSS change) periodically to AP this causes
-> ath10k to call ath10k_station_assoc() which sends WMI_PEER_ASSOC_CMDID during
-> NSS update. Over the time (with a certain client it can happen within 15 mins
-> when there are over 500 of these VHT action frames) continuous calls of
-> WMI_PEER_ASSOC_CMDID cause firmware to assert due to resource exhaust.
-Can you include the FW assert message in this commit?
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 22 ++++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  2 ++
+ 2 files changed, 24 insertions(+)
 
-Thanks,
-Peter
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index bfb32d476a70..0f664a0490a7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -363,6 +363,22 @@ static void halbtc_normal_lps(struct btc_coexist *btcoexist)
+ 	}
+ }
+ 
++static void halbtc_pre_normal_lps(struct btc_coexist *btcoexist)
++{
++	struct rtl_priv *rtlpriv = btcoexist->adapter;
++
++	if (btcoexist->bt_info.bt_ctrl_lps) {
++		btcoexist->bt_info.bt_lps_on = false;
++		rtl_lps_leave(rtlpriv->mac80211.hw);
++	}
++}
++
++static void halbtc_post_normal_lps(struct btc_coexist *btcoexist)
++{
++	if (btcoexist->bt_info.bt_ctrl_lps)
++		btcoexist->bt_info.bt_ctrl_lps = false;
++}
++
+ static void halbtc_leave_low_power(struct btc_coexist *btcoexist)
+ {
+ }
+@@ -806,6 +822,12 @@ static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
+ 	case BTC_SET_ACT_NORMAL_LPS:
+ 		halbtc_normal_lps(btcoexist);
+ 		break;
++	case BTC_SET_ACT_PRE_NORMAL_LPS:
++		halbtc_pre_normal_lps(btcoexist);
++		break;
++	case BTC_SET_ACT_POST_NORMAL_LPS:
++		halbtc_post_normal_lps(btcoexist);
++		break;
+ 	case BTC_SET_ACT_DISABLE_LOW_POWER:
+ 		halbtc_disable_low_power(btcoexist, *bool_tmp);
+ 		break;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 1f12449363c2..ad80ec05975e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -349,6 +349,8 @@ enum btc_set_type {
+ 	BTC_SET_ACT_LEAVE_LPS,
+ 	BTC_SET_ACT_ENTER_LPS,
+ 	BTC_SET_ACT_NORMAL_LPS,
++	BTC_SET_ACT_PRE_NORMAL_LPS,
++	BTC_SET_ACT_POST_NORMAL_LPS,
+ 	BTC_SET_ACT_INC_FORCE_EXEC_PWR_CMD_CNT,
+ 	BTC_SET_ACT_DISABLE_LOW_POWER,
+ 	BTC_SET_ACT_UPDATE_RAMASK,
+-- 
+2.15.1
