@@ -1,95 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0125.outbound.protection.outlook.com ([104.47.0.125]:42976
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755084AbeBOIw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 03:52:58 -0500
-From: Jean Pierre TOSONI <jp.tosoni@acksys.fr>
-To: "quozl@laptop.org" <quozl@laptop.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
-Subject: RE: [PATCH v2] ath9k: mark RSSI as invalid if frame received during
- channel setup
-Date: Thu, 15 Feb 2018 08:52:53 +0000
-Message-ID: <AM4PR0101MB2305806FCA1CC031A49C5B7DE4F40@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180215_095302_132082_B0C8EB39)
-References: <AM4PR0101MB230538DEEFCFFC0E0F4437A2E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
- <20180214213025.GB17837@us.netrek.org>
- <87mv0a6brz.fsf@kamboji.qca.qualcomm.com>
- <20180215072118.GG17837@us.netrek.org>
-In-Reply-To: <20180215072118.GG17837@us.netrek.org>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from rtits2.realtek.com ([211.75.126.72]:52463 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751723AbeB1DHl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Feb 2018 22:07:41 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/15] rtlwifi: btcoex: new definitions introduced by 8822be
+Date: Wed, 28 Feb 2018 11:07:13 +0800
+Message-ID: <20180228030718.19510-11-pkshih@realtek.com> (sfid-20180228_040755_409497_C1384471)
+In-Reply-To: <20180228030718.19510-1-pkshih@realtek.com>
+References: <20180228030718.19510-1-pkshih@realtek.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Message d'origine-----
-> De=A0: quozl@laptop.org [mailto:quozl@laptop.org]
-> Envoy=E9=A0: jeudi 15 f=E9vrier 2018 08:21
-> =C0=A0: Kalle Valo
-> Cc=A0: Jean Pierre TOSONI; linux-wireless@vger.kernel.org; ath9k-
-> devel@qca.qualcomm.com
-> Objet=A0: Re: [PATCH v2] ath9k: mark RSSI as invalid if frame received
-> during channel setup
->=20
-> On Thu, Feb 15, 2018 at 07:51:28AM +0200, Kalle Valo wrote:
-> > James Cameron <quozl@laptop.org> writes:
-> >
-> >> On Wed, Feb 14, 2018 at 04:26:42PM +0000, Jean Pierre TOSONI
-> wrote:
-> >>> ath9k returns a wrong RSSI value for frames received
-> >>> in a 30ms time window after a channel change. The
-> >>> correct value is typically 10dB below the returned value.
-> >>
-> >> How was your correct value determined?
-> >>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-1) test setup:
-Connecting the AP through coax and attenuators, then making 500 passive sca=
-ns off-channel, then drawing an histogram of the beacon signals found by th=
-e chip. The off-channel period is 108 ms. The probability of being in the 3=
-0 ms window is 28%. The histogram shows 2 spikes, one large with the expect=
-ed value, one small at around +10dB above.
+New constant and variables definitions are used by btcoex of 8822b, so
+this commit add them.
 
-2) value determination
-Adjust the delay (CONFIG_HZ=3D250) by trial and error. 25ms was not enough =
-to completely absorb the +10dB spike in the histogram, while 30ms was enoug=
-h.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Do you think of a better approach? Maybe the guys at Qualcomm know the corr=
-ect value?=20
-
-> >>> This was found with a Atheros AR9300 Rev:3 chip (WLE350NX /
-> >>> JWX6083 cards), during offchannel scans.
-> >>>
-> >>> Mark the signal value as invalid in this case.
-> >>
-> >> Why not adjust by 10dB?
-
-I considered that also. But,=20
-1) during how much time should I do this adjustment? Around 30 ms after cha=
-nnel switch?
-2) The histogram shows a scattering of the measures in a +/- 3dB range arou=
-nd the mean value.
-So I could not decide for sure if it needed -9dB, -10dB or -11dB?
-
-> >>
-> >> Speculating: in a typical card, RSSI is calculated by firmware
-> from
-> >> readings of ADCs attached to the receiver.  Firmware may average
-> >> several readings.  Firmware may apply other offsets or
-> calibrations,
-> >> based on frequency and temperature.  This sounds like a firmware
-> >> problem.
-> >
-> > ath9k does not have firmware, only ath9k_htc has it.
->=20
-> Heh.  s/firmware/silicon implementation/g
-
-Oh well, if it's silicon problem, then it's a hardware problem, and
-I am right to correct it that way, since there is no other way :-)
-
->=20
-> --
-> James Cameron
-> http://quozl.netrek.org/
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 0a7b09305bc3..049e92a8afbe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -62,6 +62,8 @@
+ #define		BTC_ANT_PATH_WIFI			0
+ #define		BTC_ANT_PATH_BT				1
+ #define		BTC_ANT_PATH_PTA			2
++#define		BTC_ANT_PATH_WIFI5G			3
++#define		BTC_ANT_PATH_AUTO			4
+ /* dual Antenna definition */
+ #define		BTC_ANT_WIFI_AT_MAIN			0
+ #define		BTC_ANT_WIFI_AT_AUX			1
+@@ -205,6 +207,7 @@ enum btc_wifi_traffic_dir {
+ enum btc_wifi_pnp {
+ 	BTC_WIFI_PNP_WAKE_UP = 0x0,
+ 	BTC_WIFI_PNP_SLEEP = 0x1,
++	BTC_WIFI_PNP_SLEEP_KEEP_ANT = 0x2,
+ 	BTC_WIFI_PNP_MAX
+ };
+ 
+@@ -387,6 +390,7 @@ enum btc_notify_type_lps {
+ enum btc_notify_type_scan {
+ 	BTC_SCAN_FINISH = 0x0,
+ 	BTC_SCAN_START = 0x1,
++	BTC_SCAN_START_2G = 0x2,
+ 	BTC_SCAN_MAX
+ };
+ 
+@@ -561,6 +565,7 @@ struct btc_bt_info {
+ 	u16 bt_hci_ver;
+ 	u16 bt_real_fw_ver;
+ 	u8 bt_fw_ver;
++	u32 bt_get_fw_ver;
+ 
+ 	bool bt_disable_low_pwr;
+ 
+@@ -632,6 +637,7 @@ struct btc_bt_link_info {
+ 	bool pan_exist;
+ 	bool pan_only;
+ 	bool slave_role;
++	bool acl_busy;
+ };
+ 
+ enum btc_antenna_pos {
+-- 
+2.15.1
