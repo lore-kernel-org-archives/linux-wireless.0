@@ -1,47 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:37248 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751838AbeB0Jgb (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:52460 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751521AbeB1DHk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 04:36:31 -0500
-Date: Tue, 27 Feb 2018 12:36:17 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 7/8] staging: wilc1000: fix line over 80 char in
- wilc_wlan_cfg_set()
-Message-ID: <20180227093617.jrqqh7frjuv4rodp@mwanda> (sfid-20180227_103635_533185_EC82C016)
-References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
- <1519662722-15761-8-git-send-email-ajay.kathat@microchip.com>
+        Tue, 27 Feb 2018 22:07:40 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/15] rtlwifi: Add modifier static to functions reported by sparse
+Date: Wed, 28 Feb 2018 11:07:04 +0800
+Message-ID: <20180228030718.19510-2-pkshih@realtek.com> (sfid-20180228_040805_785146_E1D20D74)
+In-Reply-To: <20180228030718.19510-1-pkshih@realtek.com>
+References: <20180228030718.19510-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519662722-15761-8-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 26, 2018 at 10:02:01PM +0530, Ajay Singh wrote:
-> Fix 'line over 80 character' issue found by checkpatch.pl script.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/wilc_wlan.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> index 223bf8b..acf7591 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -1230,6 +1230,8 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
->  	wilc->cfg_frame_offset = offset;
->  
->  	if (commit) {
-> +		unsigned long tmp = msecs_to_jiffies(CFG_PKTS_TIMEOUT);
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Again.  This "tmp" is a bad name here.  "tmp" can be a good name, and
-I use it all the time, but *here* it is a bad name.
+sparse reports some functions were not declared, so add 'static' as
+modifier. Remove an unused function btc8821a1ant_is_wifi_status_changed()
+exposed due to 'static'.
 
-regards,
-dan carpenter
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  1 +
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  6 ++--
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 33 ----------------------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |  4 +--
+ 4 files changed, 6 insertions(+), 38 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 05beb16f0a0a..59553db020ef 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1436,6 +1436,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 	coex_dm->pre_ps_tdma = coex_dm->cur_ps_tdma;
+ }
+ 
++static
+ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 				       u8 wifi_status)
+ {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 4907c2ffadfe..73ec31972944 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -833,9 +833,9 @@ static void btc8723b2ant_set_sw_fulltime_dac_swing(struct btc_coexist *btcoex,
+ 		btc8723b2ant_set_dac_swing_reg(btcoex, 0x18);
+ }
+ 
+-void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
+-			    bool force_exec, bool dac_swing_on,
+-			    u32 dac_swing_lvl)
++static void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
++				   bool force_exec, bool dac_swing_on,
++				   u32 dac_swing_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 0b26419881c0..202597cf8915 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -426,39 +426,6 @@ static void btc8821a1ant_query_bt_info(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
+ }
+ 
+-bool btc8821a1ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+-{
+-	static bool pre_wifi_busy = true;
+-	static bool pre_under_4way = true;
+-	static bool pre_bt_hs_on = true;
+-	bool wifi_busy = false, under_4way = false, bt_hs_on = false;
+-	bool wifi_connected = false;
+-
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+-			   &wifi_connected);
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_OPERATION, &bt_hs_on);
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_4_WAY_PROGRESS,
+-			   &under_4way);
+-
+-	if (wifi_connected) {
+-		if (wifi_busy != pre_wifi_busy) {
+-			pre_wifi_busy = wifi_busy;
+-			return true;
+-		}
+-		if (under_4way != pre_under_4way) {
+-			pre_under_4way = under_4way;
+-			return true;
+-		}
+-		if (bt_hs_on != pre_bt_hs_on) {
+-			pre_bt_hs_on = bt_hs_on;
+-			return true;
+-		}
+-	}
+-
+-	return false;
+-}
+-
+ static void btc8821a1ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
+ 	struct btc_bt_link_info	*bt_link_info = &btcoexist->bt_link_info;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index d5f282cb9d24..2202d5e18977 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -359,7 +359,7 @@ static void btc8821a2ant_query_bt_info(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
+ }
+ 
+-bool btc8821a2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
++static bool btc8821a2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ {
+ 	static bool pre_wifi_busy = true;
+ 	static bool pre_under_4way = true;
+@@ -1517,7 +1517,7 @@ static void btc8821a2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ 	btc8821a2ant_sw_mechanism2(btcoexist, false, false, false, 0x18);
+ }
+ 
+-void btc8821a2ant_action_wifi_link_process(struct btc_coexist *btcoexist)
++static void btc8821a2ant_action_wifi_link_process(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	u8 u8tmpa, u8tmpb;
+-- 
+2.15.1
