@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53618 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932132AbeB0QSS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:18:18 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mx2.suse.de ([195.135.220.15]:39782 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752601AbeB1Spd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Feb 2018 13:45:33 -0500
+Date: Wed, 28 Feb 2018 18:45:31 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: cantabile <cantabile.desu@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, kubakici@wp.pl,
+        gregkh@linuxfoundation.org, akpm@linux-foundation.org,
+        linux-wireless@vger.kernel.org, keescook@chromium.org,
+        shuah@kernel.org, mfuzzey@parkeon.com, zohar@linux.vnet.ibm.com,
+        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
+        arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com,
+        markivx@codeaurora.org, stephen.boyd@linaro.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [RFT 0/7] firmware: enable caching of firmware for reboot
+ optimization
+Message-ID: <20180228184531.GK14069@wotan.suse.de> (sfid-20180228_194551_586552_C6C9F5FE)
+References: <20180227232101.20786-1-mcgrof@kernel.org>
+ <49e9d9c3-1352-e204-ff95-5cf10f14bd35@gmail.com>
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8192cu: remove pointless memcpy
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180209132531.2755482-1-arnd@arndb.de>
-References: <20180209132531.2755482-1-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Ping-Ke Shih <pkshih@realtek.com>, Arnd Bergmann <arnd@arndb.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20180227161817.C4BD36070A@smtp.codeaurora.org> (sfid-20180227_171836_767125_EB6A32AF)
-Date: Tue, 27 Feb 2018 16:18:17 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49e9d9c3-1352-e204-ff95-5cf10f14bd35@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
-
-> gcc-8 points out that source and destination of the memcpy() are
-> always the same pointer, so the effect of memcpy() is undefined
-> here (its arguments must not overlap):
+On Wed, Feb 28, 2018 at 08:03:26PM +0200, cantabile wrote:
+> On 28/02/18 01:20, Luis R. Rodriguez wrote:
+> > Cantabile, please give these patches a spin and let me know if it fixes
+> > your reported issue. They depend on other pending patches I have in line
+> > waiting to be merged so the easiest I thing I think is for you to test my
+> > 20180227-firmware-cache branch [0], based on Linus' tree. To get that
+> > tree, cd into your Linus git tree and do:
+> > 
+> > git remote add mcgrof https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git
+> > git checkout -b 20180227-firmware-cache mcgrof/20180227-firmware-cache
+> > 
+> > Please let me know if this resolves your issue and thanks for your report.
+> > 
 > 
-> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c: In function '_rtl_rx_process':
-> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c:430:2: error: 'memcpy' source argument is the same as destination [-Werror=restrict]
-> 
-> Most likely this is harmless, but it's easy to just remove the
-> line and get rid of the warning.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> I confirmed that request_firmware_cache is called, and the firmware is
+> loaded from the cache when resuming from hibernation. The bug is fixed.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Great, thanks for testing.
 
-dcdd54c2bcae rtlwifi: rtl8192cu: remove pointless memcpy
+Curious, is it also called if you suspend to RAM instead of just using hibernation?
+
+  Luis
+> Thank you.
+> 
 
 -- 
-https://patchwork.kernel.org/patch/10208979/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Luis Rodriguez, SUSE LINUX GmbH
+Maxfeldstrasse 5; D-90409 Nuernberg
