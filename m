@@ -1,74 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54778 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752436AbeB1O6U (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:38761 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933197AbeB1TSg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Feb 2018 09:58:20 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 28 Feb 2018 14:18:36 -0500
+Received: by mail-wm0-f47.google.com with SMTP id z9so7123699wmb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2018 11:18:36 -0800 (PST)
+Subject: Re: [PATCH] mt7601u: Fix system freeze after resuming from
+ hibernation
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        cantabile <cantabile.desu@gmail.com>
+References: <7cebda93-4b7a-e8b3-271f-0144c5e94248@gmail.com>
+ <20180218215520.65c1e9fd@cakuba.netronome.com>
+ <6783d9b9-3523-761f-a8b4-b87732006b3c@gmail.com>
+ <20180225175425.GL14069@wotan.suse.de>
+ <20180226182859.03184215@cakuba.netronome.com>
+ <3382fa4d-c652-68eb-13c3-12dc84ba0dd5@gmail.com>
+ <20180227165451.GS14069@wotan.suse.de>
+ <20180227102253.04a3a01c@cakuba.netronome.com>
+ <20180227204240.GW14069@wotan.suse.de>
+ <498eb998-0dce-83c6-87c9-76cb83b148ea@gmail.com>
+ <20180228184820.GL14069@wotan.suse.de>
+Cc: Jakub Kicinski <kubakici@wp.pl>, linux-wireless@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A970089.6030805@broadcom.com> (sfid-20180228_202023_673642_EFA28575)
+Date: Wed, 28 Feb 2018 20:18:33 +0100
 MIME-Version: 1.0
-Subject: Re: rtl8187: Fix NULL pointer dereference in priv->conf_mutex
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1518679365-15697-1-git-send-email-ssreedharan@mvista.com>
-References: <1518679365-15697-1-git-send-email-ssreedharan@mvista.com>
-To: Sudhir Sreedharan <ssreedharan@mvista.com>
-Cc: herton@canonical.com, htl10@users.sourceforge.net,
-        Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sudhir Sreedharan <ssreedharan@mvista.com>,
-        stable@vger.kernel.org
-Message-Id: <20180228145820.3D42F60867@smtp.codeaurora.org> (sfid-20180228_155840_472455_0FC69D74)
-Date: Wed, 28 Feb 2018 14:58:19 +0000 (UTC)
+In-Reply-To: <20180228184820.GL14069@wotan.suse.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sudhir Sreedharan <ssreedharan@mvista.com> wrote:
+On 2/28/2018 7:48 PM, Luis R. Rodriguez wrote:
+> On Wed, Feb 28, 2018 at 08:02:59PM +0200, cantabile wrote:
+>> On 27/02/18 22:42, Luis R. Rodriguez wrote:
+>>> I'd be curious if someone who can trigger the situation can test what
+>>> happens if you use:
+>>>
+>>> diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+>>> index 65a8004418ea..04cbffd225a1 100644
+>>> --- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
+>>> +++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+>>> @@ -421,7 +421,7 @@ static int mt7601u_load_firmware(struct mt7601u_dev *dev)
+>>>    					 MT_USB_DMA_CFG_TX_BULK_EN));
+>>>    	if (firmware_running(dev))
+>>> -		return 0;
+>>> +		pr_info("Firmware already loaded but going to reload...");
+>>>    	ret = request_firmware(&fw, MT7601U_FIRMWARE, dev->dev);
+>>>    	if (ret)
+>>>
+>>>
+>>> Curious, will it really fail?
+>>
+>> This change brings no new messages from mt7601u in dmesg (other than this
+>> pr_info), and the device works fine, as far as I can tell.
+>
+> OK so we know that the optimization is optional, not a requirement.
+> That may be worth extending in documentation on the driver.
+>
+>>> Note that I see mt7601u_stop() just calls mt7601u_mac_stop(). The big cleanup
+>>> happens via mt7601u_cleanup(), but I see mt7601u_disconnect() calls it.
+>>>
+>>> Just curious, does that not get called on shutdown?
+>>>
+>>> diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
+>>> index b9e4f6793138..126ef2ba77c2 100644
+>>> --- a/drivers/net/wireless/mediatek/mt7601u/usb.c
+>>> +++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
+>>> @@ -311,6 +311,7 @@ static void mt7601u_disconnect(struct usb_interface *usb_intf)
+>>>    {
+>>>    	struct mt7601u_dev *dev = usb_get_intfdata(usb_intf);
+>>> +	pr_info("Calling mt7601u_disconnect()...");
+>>>    	ieee80211_unregister_hw(dev->hw);
+>>>    	mt7601u_cleanup(dev);
+>>>
+>>> If it does, one option is mt7601u_cleanup() can use some love to really shut down
+>>> the device more... But its not clear to me what else could be done and I'm very
+>>> inclined to believe its not sensible.
+>>>
+>> "Calling mt7601u_disconnect" does not appear in journalctl after a reboot.
+>
+> Oh, I didn't expect it to come up during startup, I was wondering if it did
+> trigger while going down on reboot.
 
-> This can be reproduced by bind/unbind the driver multiple times
-> in AM3517 board.
-> 
-> Analysis revealed that rtl8187_start() was invoked before probe
-> finishes(ie. before the mutex is initialized).
-> 
->  INFO: trying to register non-static key.
->  the code is fine but needs lockdep annotation.
->  turning off the locking correctness validator.
->  CPU: 0 PID: 821 Comm: wpa_supplicant Not tainted 4.9.80-dirty #250
->  Hardware name: Generic AM3517 (Flattened Device Tree)
->  [<c010e0d8>] (unwind_backtrace) from [<c010beac>] (show_stack+0x10/0x14)
->  [<c010beac>] (show_stack) from [<c017401c>] (register_lock_class+0x4f4/0x55c)
->  [<c017401c>] (register_lock_class) from [<c0176fe0>] (__lock_acquire+0x74/0x1938)
->  [<c0176fe0>] (__lock_acquire) from [<c0178cfc>] (lock_acquire+0xfc/0x23c)
->  [<c0178cfc>] (lock_acquire) from [<c08aa2f8>] (mutex_lock_nested+0x50/0x3b0)
->  [<c08aa2f8>] (mutex_lock_nested) from [<c05f5bf8>] (rtl8187_start+0x2c/0xd54)
->  [<c05f5bf8>] (rtl8187_start) from [<c082dea0>] (drv_start+0xa8/0x320)
->  [<c082dea0>] (drv_start) from [<c084d1d4>] (ieee80211_do_open+0x2bc/0x8e4)
->  [<c084d1d4>] (ieee80211_do_open) from [<c069be94>] (__dev_open+0xb8/0x120)
->  [<c069be94>] (__dev_open) from [<c069c11c>] (__dev_change_flags+0x88/0x14c)
->  [<c069c11c>] (__dev_change_flags) from [<c069c1f8>] (dev_change_flags+0x18/0x48)
->  [<c069c1f8>] (dev_change_flags) from [<c0710b08>] (devinet_ioctl+0x738/0x840)
->  [<c0710b08>] (devinet_ioctl) from [<c067925c>] (sock_ioctl+0x164/0x2f4)
->  [<c067925c>] (sock_ioctl) from [<c02883f8>] (do_vfs_ioctl+0x8c/0x9d0)
->  [<c02883f8>] (do_vfs_ioctl) from [<c0288da8>] (SyS_ioctl+0x6c/0x7c)
->  [<c0288da8>] (SyS_ioctl) from [<c0107760>] (ret_fast_syscall+0x0/0x1c)
->  Unable to handle kernel NULL pointer dereference at virtual address 00000000
->  pgd = cd1ec000
->  [00000000] *pgd=8d1de831, *pte=00000000, *ppte=00000000
->  Internal error: Oops: 817 [#1] PREEMPT ARM
->  Modules linked in:
->  CPU: 0 PID: 821 Comm: wpa_supplicant Not tainted 4.9.80-dirty #250
->  Hardware name: Generic AM3517 (Flattened Device Tree)
->  task: ce73eec0 task.stack: cd1ea000
->  PC is at mutex_lock_nested+0xe8/0x3b0
->  LR is at mutex_lock_nested+0xd0/0x3b0
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Sudhir Sreedharan <ssreedharan@mvista.com>
+Hi Luis,
+This driver does not implement a .shutdown() callback so that might be 
+one reason and the usb subsystem does not call the disconnect for 
+whatever reason.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-7972326a26b5 rtl8187: Fix NULL pointer dereference in priv->conf_mutex
-
--- 
-https://patchwork.kernel.org/patch/10220507/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Arend
