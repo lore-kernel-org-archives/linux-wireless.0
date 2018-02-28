@@ -1,93 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36532 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39910 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751837AbeBYRy1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Feb 2018 12:54:27 -0500
-Date: Sun, 25 Feb 2018 17:54:25 +0000
+        id S1752503AbeB1SsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Feb 2018 13:48:21 -0500
+Date: Wed, 28 Feb 2018 18:48:20 +0000
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
 To: cantabile <cantabile.desu@gmail.com>
-Cc: Jakub Kicinski <kubakici@wp.pl>, mcgrof@kernel.org,
-        linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        linux-wireless@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: [PATCH] mt7601u: Fix system freeze after resuming from
  hibernation
-Message-ID: <20180225175425.GL14069@wotan.suse.de> (sfid-20180225_185431_606436_CD485A47)
-References: <d9ca2742-7f85-afe3-2de6-6637eb56d9b3@gmail.com>
- <20180214164549.72ee26c3@cakuba.netronome.com>
- <f542e9c6-5106-c79c-6e38-7a2f50e6be2d@gmail.com>
- <20180215134738.722654a9@cakuba.netronome.com>
- <7cebda93-4b7a-e8b3-271f-0144c5e94248@gmail.com>
+Message-ID: <20180228184820.GL14069@wotan.suse.de> (sfid-20180228_194825_178022_1F9F510B)
+References: <7cebda93-4b7a-e8b3-271f-0144c5e94248@gmail.com>
  <20180218215520.65c1e9fd@cakuba.netronome.com>
  <6783d9b9-3523-761f-a8b4-b87732006b3c@gmail.com>
+ <20180225175425.GL14069@wotan.suse.de>
+ <20180226182859.03184215@cakuba.netronome.com>
+ <3382fa4d-c652-68eb-13c3-12dc84ba0dd5@gmail.com>
+ <20180227165451.GS14069@wotan.suse.de>
+ <20180227102253.04a3a01c@cakuba.netronome.com>
+ <20180227204240.GW14069@wotan.suse.de>
+ <498eb998-0dce-83c6-87c9-76cb83b148ea@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6783d9b9-3523-761f-a8b4-b87732006b3c@gmail.com>
+In-Reply-To: <498eb998-0dce-83c6-87c9-76cb83b148ea@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 19, 2018 at 05:01:27PM +0200, cantabile wrote:
-> On 19/02/18 07:55, Jakub Kicinski wrote:
-> > On Sat, 17 Feb 2018 13:23:29 +0200, cantabile wrote:
-> > > > Thanks for the info.  Would it be cleaner to EXPORT fw_add_devm_name()
-> > > > and just call that in case driver sees FW is already loaded?  That
-> > > > should inform the fw subsystem that we want the image around in case of
-> > > > hibernation, but there is no need to load it immediately?
-> > > 
-> > > No, I don't believe it's cleaner to expose a private function that you
-> > > don't even really need. Remember that calling request_firmware every
-> > > time your driver's probe and resume functions are called is normal. It's
-> > > the expected behaviour.
+On Wed, Feb 28, 2018 at 08:02:59PM +0200, cantabile wrote:
+> On 27/02/18 22:42, Luis R. Rodriguez wrote:
+> > I'd be curious if someone who can trigger the situation can test what
+> > happens if you use:
 > > 
-> > I'm asking you the extend functionality of a subsystem to be able to
-> > cleanly communicate the intent.  Not export internal functions.
+> > diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> > index 65a8004418ea..04cbffd225a1 100644
+> > --- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> > +++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> > @@ -421,7 +421,7 @@ static int mt7601u_load_firmware(struct mt7601u_dev *dev)
+> >   					 MT_USB_DMA_CFG_TX_BULK_EN));
+> >   	if (firmware_running(dev))
+> > -		return 0;
+> > +		pr_info("Firmware already loaded but going to reload...");
+> >   	ret = request_firmware(&fw, MT7601U_FIRMWARE, dev->dev);
+> >   	if (ret)
 > > 
-> > Requesting firmware you don't need and risking failing probe even if FW
-> > is already pre-loaded is not correct.  Reordering you suggest is
-> > brittle and makes little logical sense unless someone guesses your use
-> > case.
 > > 
-> > Please at least try to do as advised.  Otherwise:
-> > 
-> > Nacked-by: Jakub Kicinski <kubakici@wp.pl>
-> > 
+> > Curious, will it really fail?
 > 
-> You're right about the reordering not making sense to someone unfamiliar
-> with the problem. I can fix that with a comment.
-> 
-> I can change the patch so that request_firmware will only make the probe
-> function fail if the firmware is not already running.
+> This change brings no new messages from mt7601u in dmesg (other than this
+> pr_info), and the device works fine, as far as I can tell.
 
-Note that using request_firmware() on probe typically is also not an
-outstanding idea given it delays boot. Not because looking for the firmware
-takes time, but instead because processing firmware typically does on
-the device. For instance cxgb4 is an example device where processing
-firmware takes a long time.
+OK so we know that the optimization is optional, not a requirement.
+That may be worth extending in documentation on the driver.
 
-Delays on probe may mean the "feel good" immediate desktop coming up is delyed.
+> > Note that I see mt7601u_stop() just calls mt7601u_mac_stop(). The big cleanup
+> > happens via mt7601u_cleanup(), but I see mt7601u_disconnect() calls it.
+> > 
+> > Just curious, does that not get called on shutdown?
+> > 
+> > diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
+> > index b9e4f6793138..126ef2ba77c2 100644
+> > --- a/drivers/net/wireless/mediatek/mt7601u/usb.c
+> > +++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
+> > @@ -311,6 +311,7 @@ static void mt7601u_disconnect(struct usb_interface *usb_intf)
+> >   {
+> >   	struct mt7601u_dev *dev = usb_get_intfdata(usb_intf);
+> > +	pr_info("Calling mt7601u_disconnect()...");
+> >   	ieee80211_unregister_hw(dev->hw);
+> >   	mt7601u_cleanup(dev);
+> > 
+> > If it does, one option is mt7601u_cleanup() can use some love to really shut down
+> > the device more... But its not clear to me what else could be done and I'm very
+> > inclined to believe its not sensible.
+> > 
+> "Calling mt7601u_disconnect" does not appear in journalctl after a reboot.
 
-Specially if its networking... I see no reason why to process firmware on probe.
+Oh, I didn't expect it to come up during startup, I was wondering if it did
+trigger while going down on reboot.
 
-If one can use a workqueue to process verifying if it needs firmware and loading
-later, that's more advisable.
-
-Now, that's all a side topic.
-
-I will for now agree that it seems pointless to request for firmware always
-even if you don't need to, and all you want is to just cache the firmware
-on suspend. So I welcome a patch but the justification for it really needs to
-be documented very well, and the documentation extended as such. In fact
-maybe rename the function to something more sensible.
-
-Another use case for the firmware cache (which we need to add the documentation)
-is that for hibernation we suspend all devices first, get a snapshot, and then
-resume devices so we can then write the snapshot to disk. On that resume step
-I don't think devices have access to the hard drive for firmware, so cache is
-all we have. This may need some confirmation but I suspect this is the case.
-Drivers needing firmware on resume for hibernation may need to cache their
-firmware.
-
-I want to understand the case where the firmware is *not* available on resume?
-Why did that happen? I seem to have read that on a fresh reboot the firmware
-was not needed, and so on probe request_firmware() was not called? Why would
-firmware not be required on a reboot?
-
- Luis
+  Luis
