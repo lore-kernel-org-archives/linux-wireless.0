@@ -1,89 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:49963 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753987AbeBPINc (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:33742 "EHLO
+        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752543AbeB1SDb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Feb 2018 03:13:32 -0500
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 8/8] wil6210: add debugfs 'mids' file
-Date: Fri, 16 Feb 2018 10:04:43 +0200
-Message-Id: <1518768283-2318-9-git-send-email-merez@codeaurora.org> (sfid-20180216_091344_797139_10183EF0)
-In-Reply-To: <1518768283-2318-1-git-send-email-merez@codeaurora.org>
-References: <1518768283-2318-1-git-send-email-merez@codeaurora.org>
+        Wed, 28 Feb 2018 13:03:31 -0500
+Subject: Re: [RFT 0/7] firmware: enable caching of firmware for reboot
+ optimization
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: kubakici@wp.pl, gregkh@linuxfoundation.org,
+        akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        stephen.boyd@linaro.org, broonie@kernel.org,
+        dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20180227232101.20786-1-mcgrof@kernel.org>
+From: cantabile <cantabile.desu@gmail.com>
+Message-ID: <49e9d9c3-1352-e204-ff95-5cf10f14bd35@gmail.com> (sfid-20180228_190348_003571_9AC3811E)
+Date: Wed, 28 Feb 2018 20:03:26 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180227232101.20786-1-mcgrof@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <liord@codeaurora.org>
+On 28/02/18 01:20, Luis R. Rodriguez wrote:
+> Cantabile, please give these patches a spin and let me know if it fixes
+> your reported issue. They depend on other pending patches I have in line
+> waiting to be merged so the easiest I thing I think is for you to test my
+> 20180227-firmware-cache branch [0], based on Linus' tree. To get that
+> tree, cd into your Linus git tree and do:
+> 
+> git remote add mcgrof https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git
+> git checkout -b 20180227-firmware-cache mcgrof/20180227-firmware-cache
+> 
+> Please let me know if this resolves your issue and thanks for your report.
+> 
 
-Added a new debugfs file 'mids' to print the list of
-virtual interfaces by MAC ID (MID). Allows mapping
-between the internal MID used by FW and the actual
-network interface used by the VIF. This is needed by
-debugging tools.
-
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 37 ++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 93a99a1..8c90b31 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1495,6 +1495,42 @@ static int wil_sta_seq_open(struct inode *inode, struct file *file)
- 	.llseek		= seq_lseek,
- };
- 
-+static int wil_mids_debugfs_show(struct seq_file *s, void *data)
-+{
-+	struct wil6210_priv *wil = s->private;
-+	struct wil6210_vif *vif;
-+	struct net_device *ndev;
-+	int i;
-+
-+	mutex_lock(&wil->vif_mutex);
-+	for (i = 0; i < wil->max_vifs; i++) {
-+		vif = wil->vifs[i];
-+
-+		if (vif) {
-+			ndev = vif_to_ndev(vif);
-+			seq_printf(s, "[%d] %pM %s\n", i, ndev->dev_addr,
-+				   ndev->name);
-+		} else {
-+			seq_printf(s, "[%d] unused\n", i);
-+		}
-+	}
-+	mutex_unlock(&wil->vif_mutex);
-+
-+	return 0;
-+}
-+
-+static int wil_mids_seq_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wil_mids_debugfs_show, inode->i_private);
-+}
-+
-+static const struct file_operations fops_mids = {
-+	.open		= wil_mids_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+};
-+
- static ssize_t wil_read_file_led_cfg(struct file *file, char __user *user_buf,
- 				     size_t count, loff_t *ppos)
- {
-@@ -1749,6 +1785,7 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
- 	{"mbox",	0444,		&fops_mbox},
- 	{"vrings",	0444,		&fops_vring},
- 	{"stations", 0444,		&fops_sta},
-+	{"mids",	0444,		&fops_mids},
- 	{"desc",	0444,		&fops_txdesc},
- 	{"bf",		0444,		&fops_bf},
- 	{"mem_val",	0644,		&fops_memread},
--- 
-1.9.1
+I confirmed that request_firmware_cache is called, and the firmware is 
+loaded from the cache when resuming from hibernation. The bug is fixed. 
+Thank you.
