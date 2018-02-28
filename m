@@ -1,123 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0069.outbound.protection.outlook.com ([104.47.36.69]:44244
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753170AbeBEPFh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Feb 2018 10:05:37 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 1/6] qtnfmac: fix releasing Tx/Rx data buffers
-Date: Mon,  5 Feb 2018 18:05:11 +0300
-Message-Id: <20180205150516.16030-2-sergey.matyukevich.os@quantenna.com> (sfid-20180205_160630_351222_463CB602)
-In-Reply-To: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
-References: <20180205150516.16030-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.63.242]:38348 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753096AbeB1QB7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Feb 2018 11:01:59 -0500
+Message-ID: <1519833715.2292.2.camel@sipsolutions.net> (sfid-20180228_170441_736213_B9A41BC4)
+Subject: Re: [PATCH] mt7601u: remove a warning in
+ mt7601u_efuse_physical_size_check()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: Jakub Kicinski <kubakici@wp.pl>, linux-wireless@vger.kernel.org
+Date: Wed, 28 Feb 2018 17:01:55 +0100
+In-Reply-To: <CAJ0CqmU5uii64C2MwCgtFRVzfker4c4G9f5=M3Le8nf+Vkx96A@mail.gmail.com> (sfid-20180228_170124_317316_AE956031)
+References: <cover.1519827461.git.lorenzo.bianconi@redhat.com>
+         <2850551da4495924bde846dd237b736e41913d0f.1519827461.git.lorenzo.bianconi@redhat.com>
+         <1519830361.2292.1.camel@sipsolutions.net>
+         <CAJ0CqmU5uii64C2MwCgtFRVzfker4c4G9f5=M3Le8nf+Vkx96A@mail.gmail.com>
+         (sfid-20180228_170124_317316_AE956031)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add missing PCI unmap for Tx buffers and release all buffers explicitly.
-Managed release using devm_add_action is not suitable for qtnfmac Tx/Rx
-data buffers. The reason is in ordering and dependencies: buffers
-should be released after transmission is stopped but before PCI
-device resources and DMA allocations are released.
+On Wed, 2018-02-28 at 17:01 +0100, Lorenzo Bianconi wrote:
+> > On Wed, 2018-02-28 at 15:26 +0100, Lorenzo Bianconi wrote:
+> > > 
+> > >       const int map_reads = DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16);
+> > > -     u8 data[map_reads * 16];
+> > > +     u8 data[round_up(MT_EFUSE_USAGE_MAP_SIZE, 16)];
+> > > 
+> > 
+> > You could turn it upside down and make
+> > 
+> > const int map_reads = ARRAY_SIZE(data);
+> 
+> map_reads is actually 2 since MT_EFUSE_USAGE_MAP_SIZE is 29. Using
+> ARRAY_SIZE(data) map_reads will be set to 32
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- .../net/wireless/quantenna/qtnfmac/pearl/pcie.c    | 30 +++++++++++++---------
- 1 file changed, 18 insertions(+), 12 deletions(-)
+Oh yeah, good point, sorry.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-index 6f6190964320..be5813aa1486 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-@@ -478,10 +478,11 @@ static int alloc_rx_buffers(struct qtnf_pcie_bus_priv *priv)
- }
- 
- /* all rx/tx activity should have ceased before calling this function */
--static void free_xfer_buffers(void *data)
-+static void qtnf_free_xfer_buffers(struct qtnf_pcie_bus_priv *priv)
- {
--	struct qtnf_pcie_bus_priv *priv = (struct qtnf_pcie_bus_priv *)data;
-+	struct qtnf_tx_bd *txbd;
- 	struct qtnf_rx_bd *rxbd;
-+	struct sk_buff *skb;
- 	dma_addr_t paddr;
- 	int i;
- 
-@@ -489,19 +490,26 @@ static void free_xfer_buffers(void *data)
- 	for (i = 0; i < priv->rx_bd_num; i++) {
- 		if (priv->rx_skb && priv->rx_skb[i]) {
- 			rxbd = &priv->rx_bd_vbase[i];
-+			skb = priv->rx_skb[i];
- 			paddr = QTN_HOST_ADDR(le32_to_cpu(rxbd->addr_h),
- 					      le32_to_cpu(rxbd->addr));
- 			pci_unmap_single(priv->pdev, paddr, SKB_BUF_SIZE,
- 					 PCI_DMA_FROMDEVICE);
--
--			dev_kfree_skb_any(priv->rx_skb[i]);
-+			dev_kfree_skb_any(skb);
-+			priv->rx_skb[i] = NULL;
- 		}
- 	}
- 
- 	/* free tx buffers */
- 	for (i = 0; i < priv->tx_bd_num; i++) {
- 		if (priv->tx_skb && priv->tx_skb[i]) {
--			dev_kfree_skb_any(priv->tx_skb[i]);
-+			txbd = &priv->tx_bd_vbase[i];
-+			skb = priv->tx_skb[i];
-+			paddr = QTN_HOST_ADDR(le32_to_cpu(txbd->addr_h),
-+					      le32_to_cpu(txbd->addr));
-+			pci_unmap_single(priv->pdev, paddr, skb->len,
-+					 PCI_DMA_TODEVICE);
-+			dev_kfree_skb_any(skb);
- 			priv->tx_skb[i] = NULL;
- 		}
- 	}
-@@ -1321,12 +1329,6 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto err_base;
- 	}
- 
--	ret = devm_add_action(&pdev->dev, free_xfer_buffers, (void *)pcie_priv);
--	if (ret) {
--		pr_err("custom release callback init failed\n");
--		goto err_base;
--	}
--
- 	ret = qtnf_pcie_init_xfer(pcie_priv);
- 	if (ret) {
- 		pr_err("PCIE xfer init failed\n");
-@@ -1343,7 +1345,7 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 			       "qtnf_pcie_irq", (void *)bus);
- 	if (ret) {
- 		pr_err("failed to request pcie irq %d\n", pdev->irq);
--		goto err_base;
-+		goto err_xfer;
- 	}
- 
- 	tasklet_init(&pcie_priv->reclaim_tq, qtnf_reclaim_tasklet_fn,
-@@ -1387,6 +1389,9 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- err_bringup_fw:
- 	netif_napi_del(&bus->mux_napi);
- 
-+err_xfer:
-+	qtnf_free_xfer_buffers(pcie_priv);
-+
- err_base:
- 	flush_workqueue(pcie_priv->workqueue);
- 	destroy_workqueue(pcie_priv->workqueue);
-@@ -1416,6 +1421,7 @@ static void qtnf_pcie_remove(struct pci_dev *pdev)
- 	destroy_workqueue(priv->workqueue);
- 	tasklet_kill(&priv->reclaim_tq);
- 
-+	qtnf_free_xfer_buffers(priv);
- 	qtnf_debugfs_remove(bus);
- 
- 	qtnf_pcie_free_shm_ipc(priv);
--- 
-2.11.0
+johannes
