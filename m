@@ -1,98 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:51494 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753525AbeBESYU (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:52467 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751893AbeB1DHo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Feb 2018 13:24:20 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Christian Lamparter <chunkeey@gmail.com>,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-arch@vger.kernel.org, kernel-hardening@lists.openwall.com,
-        linux-wireless@vger.kernel.org, torvalds@linux-foundation.org,
-        "David S. Miller" <davem@davemloft.net>, alan@linux.intel.com
-Subject: [PATCH 4.14 46/64] nl80211: Sanitize array index in parse_txq_params
-Date: Mon,  5 Feb 2018 10:23:05 -0800
-Message-Id: <20180205182140.464675558@linuxfoundation.org> (sfid-20180205_200309_998184_58C3FDBD)
-In-Reply-To: <20180205182138.571333346@linuxfoundation.org>
-References: <20180205182138.571333346@linuxfoundation.org>
+        Tue, 27 Feb 2018 22:07:44 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 14/15] rtlwifi: btcoex: Add 8822b to Makefile
+Date: Wed, 28 Feb 2018 11:07:17 +0800
+Message-ID: <20180228030718.19510-15-pkshih@realtek.com> (sfid-20180228_040747_747566_C170846E)
+In-Reply-To: <20180228030718.19510-1-pkshih@realtek.com>
+References: <20180228030718.19510-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-4.14-stable review patch.  If anyone has any objections, please let me know.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-------------------
+Add btcoex of 8822b to Makefile.
 
-From: Dan Williams dan.j.williams@intel.com
-
-commit 259d8c1e984318497c84eef547bbb6b1d9f4eb05
-
-Wireless drivers rely on parse_txq_params to validate that txq_params->ac
-is less than NL80211_NUM_ACS by the time the low-level driver's ->conf_tx()
-handler is called. Use a new helper, array_index_nospec(), to sanitize
-txq_params->ac with respect to speculation. I.e. ensure that any
-speculation into ->conf_tx() handlers is done with a value of
-txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
-
-Reported-by: Christian Lamparter <chunkeey@gmail.com>
-Reported-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-arch@vger.kernel.org
-Cc: kernel-hardening@lists.openwall.com
-Cc: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Cc: torvalds@linux-foundation.org
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: alan@linux.intel.com
-Link: https://lkml.kernel.org/r/151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
-
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- net/wireless/nl80211.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile | 3 +++
+ 1 file changed, 3 insertions(+)
 
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -16,6 +16,7 @@
- #include <linux/nl80211.h>
- #include <linux/rtnetlink.h>
- #include <linux/netlink.h>
-+#include <linux/nospec.h>
- #include <linux/etherdevice.h>
- #include <net/net_namespace.h>
- #include <net/genetlink.h>
-@@ -2056,20 +2057,22 @@ static const struct nla_policy txq_param
- static int parse_txq_params(struct nlattr *tb[],
- 			    struct ieee80211_txq_params *txq_params)
- {
-+	u8 ac;
-+
- 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
- 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
- 	    !tb[NL80211_TXQ_ATTR_AIFS])
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
+index d15c58737388..37108c379bd0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
+@@ -4,6 +4,9 @@ btcoexist-objs :=	halbtc8192e2ant.o	\
+ 			halbtc8723b2ant.o	\
+ 			halbtc8821a1ant.o	\
+ 			halbtc8821a2ant.o	\
++			halbtc8822b1ant.o	\
++			halbtc8822b2ant.o	\
++			halbtc8822bwifionly.o	\
+ 			halbtcoutsrc.o		\
+ 			rtl_btc.o
  
--	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
-+	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
- 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
- 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
- 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
- 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
- 
--	if (txq_params->ac >= NL80211_NUM_ACS)
-+	if (ac >= NL80211_NUM_ACS)
- 		return -EINVAL;
--
-+	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
- 	return 0;
- }
- 
+-- 
+2.15.1
