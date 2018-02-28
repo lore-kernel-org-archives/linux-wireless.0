@@ -1,73 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:49515 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751468AbeBZQgE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37622 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752436AbeB1OwA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Feb 2018 11:36:04 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 5/8] staging: wilc1000: rename WILC_WFI_mgmt_rx() to avoid camelCase
-Date: Mon, 26 Feb 2018 22:01:59 +0530
-Message-ID: <1519662722-15761-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180226_173608_246611_E00618B5)
-In-Reply-To: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519662722-15761-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 28 Feb 2018 09:52:00 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: Jakub Kicinski <kubakici@wp.pl>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt7601u: make write with mask access atomic
+References: <cover.1518734856.git.lorenzo.bianconi@redhat.com>
+        <5bb3bb069bdd4663b69b60b782432c2faddc1efc.1518734856.git.lorenzo.bianconi@redhat.com>
+        <20180215151445.52e08b03@cakuba.netronome.com>
+        <CAJ0CqmVG4rNO=MSxaNF6s9vS3QueBVv0aFddETPaMpPQsYJh4Q@mail.gmail.com>
+Date: Wed, 28 Feb 2018 16:51:56 +0200
+In-Reply-To: <CAJ0CqmVG4rNO=MSxaNF6s9vS3QueBVv0aFddETPaMpPQsYJh4Q@mail.gmail.com>
+        (Lorenzo Bianconi's message of "Fri, 16 Feb 2018 01:02:31 +0100")
+Message-ID: <87tvu1dv5f.fsf@purkki.adurom.net> (sfid-20180228_155204_650744_EB7DC134)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c         | 2 +-
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c          | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+>> On Thu, 15 Feb 2018 23:59:24 +0100, Lorenzo Bianconi wrote:
+>>> Introduce __mt7601u_rr and __mt7601u_vendor_single_wr routines in order
+>>> to make mt7601u_rmw and mt7601u_rmc atomic since it is possible that
+>>> read and write accesses of mt7601u_rmw/mt7601u_rmc can be interleaved
+>>> with a different write operation on the same register.
+>>> Moreover move write trace point in __mt7601u_vendor_single_wr
+>>>
+>>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>>
+>> Could you provide an example of which accesses make it problematic?
+>> Is this fixing an actual bug?
+>
+> it is not an issue I had experimented, I noticed a theoretical race
+> reviewing the code.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index cf746f2..fe19bf3 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1149,7 +1149,7 @@ void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
- 	}
- }
- 
--void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
-+void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
- {
- 	int i = 0;
- 	struct wilc_vif *vif;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 3337fb2..d62c4f1 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -230,7 +230,7 @@ void wilc_netdev_cleanup(struct wilc *wilc);
- int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 		     int gpio, const struct wilc_hif_func *ops);
- void wilc1000_wlan_deinit(struct net_device *dev);
--void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
-+void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
- int wilc_wlan_get_firmware(struct net_device *dev);
- int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode);
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index f762785..74b80ad 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -815,7 +815,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 						IS_MANAGMEMENT_CALLBACK |
- 						IS_MGMT_STATUS_SUCCES);
- 
--				WILC_WFI_mgmt_rx(wilc, &buffer[offset + HOST_HDR_OFFSET], pkt_len);
-+				wilc_wfi_mgmt_rx(wilc, &buffer[offset + HOST_HDR_OFFSET], pkt_len);
- 			} else {
- 				if (!is_cfg_packet) {
- 					if (pkt_len > 0) {
+The commit log should always answer the question "Why?". If you find a
+theoretical issue in the code document that clearly in the commit log.
+That helps to choose correct tree and sending to stable releases etc.
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_log_does_not_answer_why
+
 -- 
-2.7.4
+Kalle Valo
