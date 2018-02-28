@@ -1,80 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:52725 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751314AbeBTTuA (ORCPT
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:42349 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751823AbeB1Jib (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 14:50:00 -0500
-Subject: Re: [PATCH v7] ath10k: add LED and GPIO controlling support for
- various chipsets
-To: Steve deRosier <derosier@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-References: <20180220073259.17254-1-s.gottschall@dd-wrt.com>
- <CALLGbRLwmPLTEXDbnLy8Ba0G0CYXM2HehbgDy2HEz9BdBNx1sQ@mail.gmail.com>
- <a8958e0e-8f54-4869-d69a-2f29eae57f14@dd-wrt.com>
- <CALLGbR+GQHBcuoO=6BVJYLUhwQk=tv2juWBRDpkyrDtFedfn5Q@mail.gmail.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <248047fb-3805-5b49-bb98-6ace37bc31ca@dd-wrt.com> (sfid-20180220_205005_142899_451EB5E1)
-Date: Tue, 20 Feb 2018 20:49:53 +0100
+        Wed, 28 Feb 2018 04:38:31 -0500
+Received: by mail-qk0-f175.google.com with SMTP id b130so2135972qkg.9
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2018 01:38:31 -0800 (PST)
+Subject: Re: Support on vendor id and device id
+To: Harsha Rao <harshrao464@gmail.com>
+References: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com>
+ <5A953DBE.9070805@broadcom.com>
+ <CAPcv9S1fZfrg3AV3GoWG-CaTkonpQyiHY6twvhS_ikXnj00t4g@mail.gmail.com>
+ <68f5549d-b8ad-85fb-4e80-50c53cac8108@lwfinger.net>
+ <CAPcv9S0TmMhrL0qcxq-8NStd=fYQreXribrA+GQmppLvrB_avg@mail.gmail.com>
+ <CALLGbRJxwOUkxnNCyCt2sBuoZacs60AcDnFfWMQQuVdj5YykOw@mail.gmail.com>
+ <CALLGbRKrnnmsNtzpkABn+xOTjDaFKZz0jNxGkyJXMT1=XLa_3g@mail.gmail.com>
+ <5A95B9B2.4040403@broadcom.com>
+ <CAPcv9S2gwDL6Jikxot2yS4daYaFQN6mEMx3vuY5w+ma_6wHCew@mail.gmail.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A967894.9090900@broadcom.com> (sfid-20180228_103835_956650_584389FB)
+Date: Wed, 28 Feb 2018 10:38:28 +0100
 MIME-Version: 1.0
-In-Reply-To: <CALLGbR+GQHBcuoO=6BVJYLUhwQk=tv2juWBRDpkyrDtFedfn5Q@mail.gmail.com>
+In-Reply-To: <CAPcv9S2gwDL6Jikxot2yS4daYaFQN6mEMx3vuY5w+ma_6wHCew@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2/28/2018 12:14 AM, Harsha Rao wrote:
+>>>> My suspicion is that your device, is fundamentally a wilc1000 and that
+>>>> >>>the existing wilc1000 driver will likely largely work for it and all
+>>>> >>>you really need to do is modify the existing driver to handle the
+>>>> >>>quirks of your particular implementation of the wilc1000 chip. And,
+>>>> >>>often WiFi chips will let you change the VID/PID somewhere within
+>>>> >>>whatever non-volatile storage it has (like where it stores the MAC
+>>>> >>>address).
+>> >
+>> >
+>> >So it seems the wilc1000 devices from Microchip/Atmel are also using a
+>> >vendor id they did not buy. Could be that the mentioned 3rd party providing
+>> >the SDIO IP actually owns that vendor id, but if you are building your wifi
+>> >chip on that you should better buy you own vendor id from the SD
+>> >Association. Now if Harsha is actually working for Microchip (unclear to me)
+>> >there is basically one party that should go shopping.
+>> >
+> I would like to clarify that I am not building anything on top of
+> microchip wifi device.
+> We have a different HW . Its been just that 3rd party vendor providing
+> SDIO IP has given
+> same ID to different customers.
 
-> Agreed, I am also not a fan of bloat code. I wasn't suggesting you
-> move it to the .h, just saying that if it were not static, that's how
-> I'd suggest doing it.
->
-> In this case, keep it static, keep it in the .c.  And use the blocking
-> I suggested. You will get the optimizer friendly result you're looking
-> for, but make it more readable and more-inline with the dominant style
-> for these things.
-thats what i did already in my sourcetree
->
->> true, but consider that required structures like gpio_chip (ar->gpio) and
->> led_classdev arent defined in the kernel if these CONFIG options arent
->> configured. so i may move it into a separate function ,but the guards will
->> remain.
->> thats not my fault. thats a fault of the kernel api.
->>
-> Hm. I assumed the names were still valid, even if the functionality
-> that uses it wasn't.  Understood.
->
-> In that case, I suggest moving the code to a separate static function
-> that can be guarded. It keeps the mess out of the main startup
-> function, makes it easier to read as it collapses to a single
-> self-documented function name, and gets rid of the label and jump.
-yes but we have 2 guards. GPIOLIB and LED_CLASS
-so the mess remaines in the same way with no change. the same unreadable 
-code just moved (personally i think its not that unreadable since its small)
+So it is as I said, ie. you are using the 3rd party SDIO IP as is and 
+add your own wifi IP to it? So what does the term "SDIO IP" mean here. 
+Is it a piece of hardware that you hook up to your wifi hardware or is 
+it VHDL/verilog in which the vendor id is defined. If it is VHDL you 
+should really get your own vendor id from the SD Association and fix it. 
+Otherwise, the 3rd party hardware should have means to change it. If 
+not, you better find another party.
 
->
->>> The rest of this looks OK to me.
->> okay. i already changed some code, based on your requests but will wait for
->> reply of you and for other comments until i send out a new version
-> I appreciate the extra work you've put in. I hadn't expected my
-> comments would've generated so much extra work; sorry about that. It's
-> looking good.
-i just want it upstream. i have alot of usefull patches in my backhand 
-and its now getting hard to maintain the code with new ath10k patches.
-and at the end its not that much work as it seems. just a question of 
-some seconds todo that changes. i can live with it.
-
-Sebastian
-
-
--- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Regards,
+Arend
