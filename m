@@ -1,125 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:38508 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934985AbeBMMNC (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:58327 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752466AbeB1KAA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Feb 2018 07:13:02 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
+        Wed, 28 Feb 2018 05:00:00 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-bluetooth@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [v6 3/8] rsi: add header file rsi_91x
-Date: Tue, 13 Feb 2018 17:31:39 +0530
-Message-Id: <1518523304-3424-4-git-send-email-amitkarwar@gmail.com> (sfid-20180213_131308_325033_8759CF3F)
-In-Reply-To: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
-References: <1518523304-3424-1-git-send-email-amitkarwar@gmail.com>
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.16 V2 2/2] brcmfmac: fix P2P_DEVICE ethernet address generation
+Date: Wed, 28 Feb 2018 10:59:46 +0100
+Message-Id: <1519811986-25017-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180228_110009_801437_181990A0)
+In-Reply-To: <1519811986-25017-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1519811986-25017-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+The firmware has a requirement that the P2P_DEVICE address should
+be different from the address of the primary interface. When not
+specified by user-space, the driver generates the MAC address for
+the P2P_DEVICE interface using the MAC address of the primary
+interface and setting the locally administered bit. However, the MAC
+address of the primary interface may already have that bit set causing
+the creation of the P2P_DEVICE interface to fail with -EBUSY. Fix this
+by using the permanent address instead to determing the P2P_DEVICE
+address.
 
-The common parameters used by wlan and bt modules are add
-to a new header file "rsi_91x.h" defined in 'include/net'
-
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Cc: stable@vger.kernel.org # 3.10.y
+Reported-by: Hans de Goede <hdegoede@redhat.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
-v6: Renamed rsi_header.h to rsi_91x.h and moved to include/net
-    from include/linux(Kalle)
-v5: Same as earlier versions
----
- drivers/net/wireless/rsi/rsi_main.h | 12 ++----------
- include/net/rsi_91x.h               | 34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+), 10 deletions(-)
- create mode 100644 include/net/rsi_91x.h
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index ee469dc..b0f4e2c 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -20,6 +20,7 @@
- #include <linux/string.h>
- #include <linux/skbuff.h>
- #include <net/mac80211.h>
-+#include <net/rsi_91x.h>
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 2ee5413..ddbb386 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -462,8 +462,8 @@ static int brcmf_p2p_set_firmware(struct brcmf_if *ifp, u8 *p2p_mac)
+  * @dev_addr: optional device address.
+  *
+  * P2P needs mac addresses for P2P device and interface. If no device
+- * address it specified, these are derived from the primary net device, ie.
+- * the permanent ethernet address of the device.
++ * address it specified, these are derived from the permanent ethernet
++ * address of the device.
+  */
+ static void brcmf_p2p_generate_bss_mac(struct brcmf_p2p_info *p2p, u8 *dev_addr)
+ {
+@@ -471,12 +471,12 @@ static void brcmf_p2p_generate_bss_mac(struct brcmf_p2p_info *p2p, u8 *dev_addr)
+ 	bool local_admin = false;
  
- struct rsi_sta {
- 	struct ieee80211_sta *sta;
-@@ -85,10 +86,6 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
- #define MGMT_HW_Q			10
- #define BEACON_HW_Q			11
+ 	if (!dev_addr || is_zero_ether_addr(dev_addr)) {
+-		dev_addr = pri_ifp->mac_addr;
++		dev_addr = pri_ifp->drvr->mac;
+ 		local_admin = true;
+ 	}
  
--/* Queue information */
--#define RSI_COEX_Q			0x0
--#define RSI_WIFI_MGMT_Q                 0x4
--#define RSI_WIFI_DATA_Q                 0x5
- #define IEEE80211_MGMT_FRAME            0x00
- #define IEEE80211_CTL_FRAME             0x04
- 
-@@ -293,11 +290,6 @@ struct rsi_common {
- 	struct ieee80211_vif *roc_vif;
- };
- 
--enum host_intf {
--	RSI_HOST_INTF_SDIO = 0,
--	RSI_HOST_INTF_USB
--};
--
- struct eepromrw_info {
- 	u32 offset;
- 	u32 length;
-@@ -322,7 +314,7 @@ struct rsi_hw {
- 	struct device *device;
- 	u8 sc_nvifs;
- 
--	enum host_intf rsi_host_intf;
-+	enum rsi_host_intf rsi_host_intf;
- 	u16 block_size;
- 	enum ps_state ps_state;
- 	struct rsi_ps_info ps_info;
-diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
-new file mode 100644
-index 0000000..16a447b
---- /dev/null
-+++ b/include/net/rsi_91x.h
-@@ -0,0 +1,34 @@
-+/**
-+ * Copyright (c) 2017 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef __RSI_HEADER_H__
-+#define __RSI_HEADER_H__
-+
-+/* HAL queue information */
-+#define RSI_COEX_Q			0x0
-+#define RSI_BT_Q			0x2
-+#define RSI_WLAN_Q                      0x3
-+#define RSI_WIFI_MGMT_Q                 0x4
-+#define RSI_WIFI_DATA_Q                 0x5
-+#define RSI_BT_MGMT_Q			0x6
-+#define RSI_BT_DATA_Q			0x7
-+
-+enum rsi_host_intf {
-+	RSI_HOST_INTF_SDIO = 0,
-+	RSI_HOST_INTF_USB
-+};
-+
-+#endif
+ 	/* Generate the P2P Device Address.  This consists of the device's
+-	 * primary MAC address with the locally administered bit set.
++	 * permanent ethernet address with the locally administered bit set.
+ 	 */
+ 	memcpy(p2p->dev_addr, dev_addr, ETH_ALEN);
+ 	if (local_admin)
+@@ -486,7 +486,7 @@ static void brcmf_p2p_generate_bss_mac(struct brcmf_p2p_info *p2p, u8 *dev_addr)
+ 	 * BSSCFGs need to simultaneously co-exist, then this address must be
+ 	 * different from the P2P Device Address, but also locally administered.
+ 	 */
+-	memcpy(p2p->int_addr, p2p->dev_addr, ETH_ALEN);
++	memcpy(p2p->int_addr, dev_addr, ETH_ALEN);
+ 	p2p->int_addr[0] |= 0x02;
+ 	p2p->int_addr[4] ^= 0x80;
+ }
 -- 
-2.7.4
+1.9.1
