@@ -1,126 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:38911 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751449AbeBWOGu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Feb 2018 09:06:50 -0500
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, marcel@holtmann.org
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v8 3/8] rsi: add header file rsi_91x
-Date: Fri, 23 Feb 2018 19:24:53 +0530
-Message-Id: <1519394098-24220-4-git-send-email-amitkarwar@gmail.com> (sfid-20180223_150745_666261_53080F2B)
-In-Reply-To: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
-References: <1519394098-24220-1-git-send-email-amitkarwar@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:48275 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751463AbeB1BTG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Feb 2018 20:19:06 -0500
+Date: Wed, 28 Feb 2018 01:19:01 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, cantabile.desu@gmail.com,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Shuah Khan <shuah@kernel.org>,
+        Martin Fuzzey <mfuzzey@parkeon.com>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        David Howells <dhowells@redhat.com>, pali.rohar@gmail.com,
+        Takashi Iwai <tiwai@suse.de>, arend.vanspriel@broadcom.com,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        nbroeking@me.com, Vikram Mulukutla <markivx@codeaurora.org>,
+        stephen.boyd@linaro.org, Mark Brown <broonie@kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        LKML <linux-kernel@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+Subject: Re: [RFT 2/7] firmware: fix checking for return values for
+ fw_add_devm_name()
+Message-ID: <20180228011900.GD14069@wotan.suse.de> (sfid-20180228_021924_538687_14E1B3F2)
+References: <20180227232101.20786-1-mcgrof@kernel.org>
+ <20180227232101.20786-3-mcgrof@kernel.org>
+ <CAGXu5jLxAPyBfzvM3izKYYjVz6P=7LQRkxNxUz1Cxwky1gPoUA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXu5jLxAPyBfzvM3izKYYjVz6P=7LQRkxNxUz1Cxwky1gPoUA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On Tue, Feb 27, 2018 at 03:29:53PM -0800, Kees Cook wrote:
+> On Tue, Feb 27, 2018 at 3:20 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> > fw_add_devm_name() adds device's name onto the devres for the
+> > device so that prior to suspend we cache the firmware onto memory,
+> > so that on resume the firmware is reliably available. We never
+> > were checking for success for this call though, meaning in some
+> > really rare cases we my have never setup the firmware cache for
+> > a device, which could in turn make resume fail.
+> >
+> > This is all theoretical, no known issues have been reported.
+> > This small issue has been present way since the addition of the
+> > devres firmware cache names on v3.7.
+> >
+> > Fixes: f531f05ae9437 ("firmware loader: store firmware name into devres list")
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > ---
+> >  drivers/base/firmware_loader.c | 10 ++++++++--
+> >  1 file changed, 8 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
+> > index 21dd31ef08ae..48932581c70c 100644
+> > --- a/drivers/base/firmware_loader.c
+> > +++ b/drivers/base/firmware_loader.c
+> > @@ -431,6 +431,7 @@ int assign_fw(struct firmware *fw, struct device *device,
+> >               unsigned int opt_flags)
+> >  {
+> >         struct fw_priv *fw_priv = fw->priv;
+> > +       int ret;
+> >
+> >         mutex_lock(&fw_lock);
+> >         if (!fw_priv->size || fw_state_is_aborted(fw_priv)) {
+> > @@ -447,8 +448,13 @@ int assign_fw(struct firmware *fw, struct device *device,
+> >          */
+> >         /* don't cache firmware handled without uevent */
+> >         if (device && (opt_flags & FW_OPT_UEVENT) &&
+> > -           !(opt_flags & FW_OPT_NOCACHE))
+> > -               fw_add_devm_name(device, fw_priv->fw_name);
+> > +           !(opt_flags & FW_OPT_NOCACHE)) {
+> > +               ret = fw_add_devm_name(device, fw_priv->fw_name);
+> > +               if (ret && ret != 1) {
+> 
+> Why not if (ret < 0) ?
 
-The common parameters used by wlan and bt modules are add
-to a new header file "rsi_91x.h" defined in 'include/net'
+Could be, either way I remove this later for just (ret) after I adjust
+fw_add_devm_name() to not return 1 anymore.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
-v8: Same as v6, v7
-v6: Renamed rsi_header.h to rsi_91x.h and moved to include/net
-    from include/linux(Kalle)
-v5: Same as earlier versions
----
- drivers/net/wireless/rsi/rsi_main.h | 12 ++----------
- include/net/rsi_91x.h               | 34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+), 10 deletions(-)
- create mode 100644 include/net/rsi_91x.h
+So its just a temporal check, I added this patch first so that this can
+be merged into kernels who want the fix.
 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index ee469dc..b0f4e2c 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -20,6 +20,7 @@
- #include <linux/string.h>
- #include <linux/skbuff.h>
- #include <net/mac80211.h>
-+#include <net/rsi_91x.h>
- 
- struct rsi_sta {
- 	struct ieee80211_sta *sta;
-@@ -85,10 +86,6 @@ extern __printf(2, 3) void rsi_dbg(u32 zone, const char *fmt, ...);
- #define MGMT_HW_Q			10
- #define BEACON_HW_Q			11
- 
--/* Queue information */
--#define RSI_COEX_Q			0x0
--#define RSI_WIFI_MGMT_Q                 0x4
--#define RSI_WIFI_DATA_Q                 0x5
- #define IEEE80211_MGMT_FRAME            0x00
- #define IEEE80211_CTL_FRAME             0x04
- 
-@@ -293,11 +290,6 @@ struct rsi_common {
- 	struct ieee80211_vif *roc_vif;
- };
- 
--enum host_intf {
--	RSI_HOST_INTF_SDIO = 0,
--	RSI_HOST_INTF_USB
--};
--
- struct eepromrw_info {
- 	u32 offset;
- 	u32 length;
-@@ -322,7 +314,7 @@ struct rsi_hw {
- 	struct device *device;
- 	u8 sc_nvifs;
- 
--	enum host_intf rsi_host_intf;
-+	enum rsi_host_intf rsi_host_intf;
- 	u16 block_size;
- 	enum ps_state ps_state;
- 	struct rsi_ps_info ps_info;
-diff --git a/include/net/rsi_91x.h b/include/net/rsi_91x.h
-new file mode 100644
-index 0000000..16a447b
---- /dev/null
-+++ b/include/net/rsi_91x.h
-@@ -0,0 +1,34 @@
-+/**
-+ * Copyright (c) 2017 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef __RSI_HEADER_H__
-+#define __RSI_HEADER_H__
-+
-+/* HAL queue information */
-+#define RSI_COEX_Q			0x0
-+#define RSI_BT_Q			0x2
-+#define RSI_WLAN_Q                      0x3
-+#define RSI_WIFI_MGMT_Q                 0x4
-+#define RSI_WIFI_DATA_Q                 0x5
-+#define RSI_BT_MGMT_Q			0x6
-+#define RSI_BT_DATA_Q			0x7
-+
-+enum rsi_host_intf {
-+	RSI_HOST_INTF_SDIO = 0,
-+	RSI_HOST_INTF_USB
-+};
-+
-+#endif
+  Luis
+
+> 
+> -Kees
+> 
+> > +                       mutex_unlock(&fw_lock);
+> > +                       return ret;
+> > +               }
+> > +       }
+> >
+> >         /*
+> >          * After caching firmware image is started, let it piggyback
+> > --
+> > 2.16.2
+> >
+> 
+> 
+> 
+> -- 
+> Kees Cook
+> Pixel Security
+> 
+
 -- 
-2.7.4
+Luis Rodriguez, SUSE LINUX GmbH
+Maxfeldstrasse 5; D-90409 Nuernberg
