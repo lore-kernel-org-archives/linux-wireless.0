@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from civicrm.laptop.org ([18.85.44.157]:55267 "EHLO swan.laptop.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754800AbeBOHVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Feb 2018 02:21:33 -0500
-Date: Thu, 15 Feb 2018 18:21:18 +1100
-From: James Cameron <quozl@laptop.org>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:42888 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751423AbeB1HuO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Feb 2018 02:50:14 -0500
+Received: by mail-pg0-f65.google.com with SMTP id y8so654211pgr.9
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2018 23:50:13 -0800 (PST)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Jean Pierre TOSONI <jp.tosoni@acksys.fr>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath9k: mark RSSI as invalid if frame received during
- channel setup
-Message-ID: <20180215072118.GG17837@us.netrek.org> (sfid-20180215_082136_871250_1789D99A)
-References: <AM4PR0101MB230538DEEFCFFC0E0F4437A2E4F50@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
- <20180214213025.GB17837@us.netrek.org>
- <87mv0a6brz.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87mv0a6brz.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [PATCH 0/3] rsi: RX path improvements 
+Date: Wed, 28 Feb 2018 13:08:25 +0530
+Message-Id: <1519803508-27737-1-git-send-email-amitkarwar@gmail.com> (sfid-20180228_085017_880587_1D418885)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 15, 2018 at 07:51:28AM +0200, Kalle Valo wrote:
-> James Cameron <quozl@laptop.org> writes:
-> 
-> > On Wed, Feb 14, 2018 at 04:26:42PM +0000, Jean Pierre TOSONI wrote:
-> >> ath9k returns a wrong RSSI value for frames received in a 30ms time
-> >> window after a channel change. The correct value is typically 10dB
-> >> below the returned value.
-> >
-> > How was your correct value determined?
-> >
-> >> This was found with a Atheros AR9300 Rev:3 chip (WLE350NX / JWX6083
-> >> cards), during offchannel scans.
-> >> 
-> >> Mark the signal value as invalid in this case.
-> >
-> > Why not adjust by 10dB?
-> >
-> > Speculating: in a typical card, RSSI is calculated by firmware from
-> > readings of ADCs attached to the receiver.  Firmware may average
-> > several readings.  Firmware may apply other offsets or calibrations,
-> > based on frequency and temperature.  This sounds like a firmware
-> > problem.
-> 
-> ath9k does not have firmware, only ath9k_htc has it.
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Heh.  s/firmware/silicon implementation/g
+This patch series adds a thread for Rx handling and other related
+enhancements for better throughput.
+
+Prameela Rani Garnepudi (3):
+  rsi: improve RX handling in SDIO interface
+  rsi: use dynamic RX control blocks instead of MAX_RX_URB
+  rsi: improve RX packet handling in USB interface
+
+ drivers/net/wireless/rsi/rsi_91x_sdio.c     |  45 +++++++---
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  64 ++++++++++++---
+ drivers/net/wireless/rsi/rsi_91x_usb.c      | 122 ++++++++++++++++------------
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  34 +++-----
+ drivers/net/wireless/rsi/rsi_hal.h          |   1 +
+ drivers/net/wireless/rsi/rsi_main.h         |   2 +-
+ drivers/net/wireless/rsi/rsi_sdio.h         |   8 ++
+ drivers/net/wireless/rsi/rsi_usb.h          |   5 +-
+ 8 files changed, 181 insertions(+), 100 deletions(-)
 
 -- 
-James Cameron
-http://quozl.netrek.org/
+2.7.4
