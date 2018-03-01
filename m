@@ -1,110 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:54725 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751024AbeCZMWc (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:36642 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031389AbeCAOV4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 08:22:32 -0400
-Subject: Re: [PATCH] mac80211: Fix wlan freezes under load at rekey
-To: Ben Greear <greearb@candelatech.com>,
-        Alexander Wetzel <alexander.wetzel@web.de>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-References: <20180324102921.9814-1-alexander.wetzel@web.de>
- <7bbb4246-324e-1d6d-245f-2642badb034d@candelatech.com>
- <27aca99e-a521-be4a-9fd4-51c557f9777d@web.de>
- <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <692de5e6-24d8-e1fe-c345-2ba3df91c9da@dd-wrt.com> (sfid-20180326_142236_871173_20C0AC3C)
-Date: Mon, 26 Mar 2018 14:22:32 +0200
-MIME-Version: 1.0
-In-Reply-To: <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Thu, 1 Mar 2018 09:21:56 -0500
+Received: by mail-qk0-f195.google.com with SMTP id d206so7690404qkb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:56 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 35/52] ath: Map Lebanon to APL1_WORLD
+Date: Thu,  1 Mar 2018 15:18:45 +0100
+Message-Id: <20180301141902.24824-36-sven.eckelmann@openmesh.com> (sfid-20180301_152319_677594_4D6AD3D9)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-so far i see no regressions with 9984 with that patch
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
-except that 9984 has a rekeying problem at all. with wds ap -> wds sta 
-mode rekeying will fail and it will reauthenticate at each interval. (it 
-disconnects and reconnects)
-but this is a long term issue qca never fixed for years. 988x doesnt 
-suffer from that issue
+The CTL mappings for this regdomain code were now changed to:
 
-Am 25.03.2018 um 23:59 schrieb Ben Greear:
->
->
-> On 03/25/2018 12:45 PM, Alexander Wetzel wrote:
->>
->>> What will happen to drivers like ath10k that cannot do software
->> encrypt/decrypt?
->>>
->>> ath10k can support multiple key-ids as far as I can tell,
->>> so maybe it would just never hit this code?
->>
->> Still learning how that all fits together, but I'm sure any card using
->> mac80211 will also use ieee80211_key_replace, including ath10k.
->>
->> We are in a race with the remote station there is no chance that we can
->> switch over exactly at the same time. If we can't fall pack to software
->> encryption we'll just have to drop some more packets.
->>
->> I'm pretty sure mac80211 will just encrypt a frame in software and
->> send it to ath10 for processing once we have removed the key from the hw
->> in the same way as for any other card.
->
-> I don't think ath10k can handle sending already-encrypted data packets,
-> but possibly it works with newer upstream firmware/driver.
->
-> Either way, as long as it does not fundamentally break something (like
-> a non-recoverable data stall), then maybe your patch is fine anyway
-> and ath10k may just drop a few extra frames.
->
->> My expectation here would be, that the driver detects and drops the
->> pre-encrypted frames it no longer has a hw key for.
->>
->> Unfortunately this is just an assumption, since I haven't found the code
->> handling this case in ath10k. And even if true this could well cause
->> some undesired warning messages.
->>
->> I guess we should therefore make sure we do not send out any packets in
->> the critical time window.
->>
->> Now stopping and flushing the queues seems to be bad idea which could
->> cause a real performance impact for on a busy AP with many stations and
->> rekeys enabled...
->> Luckily it looks like we can instead just set KEY_FLAG_TAINTED for the
->> old key to make sure we stop sending packets till the rekey is done.
->>
->> That should cause ieee80211_tx_h_select_key to drop all packets without
->> a new per-packet check and also should cover potential undesired side
->> effects, isn't it?
->
-> I get lost in the weeds when trying to understand all of this, and some
-> previous attempts of mine to fix some of this evidently wasn't correct
-> enough to accept upstream:
->
-> https://www.spinics.net/lists/hostap/msg03677.html
->
-> So I really don't know enough to properly review
-> your patch.  Just be aware that ath10k is weird about sw-crypt, maybe 
-> make
-> sure your patch is tested on it to make sure it doesn't out-right 
-> break something.
->
-> Thanks,
-> Ben
->
->
+* 2.4GHz: ETSI
+* 5GHz: NO_CTL -> FCC
 
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index dee9db074d84..1b69849b4727 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -434,7 +434,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_KOREA_ROC3, APL9_MKKC, "K3"},
+ 	{CTRY_KUWAIT, ETSI3_WORLD, "KW"},
+ 	{CTRY_LATVIA, ETSI1_WORLD, "LV"},
+-	{CTRY_LEBANON, NULL1_WORLD, "LB"},
++	{CTRY_LEBANON, APL1_WORLD, "LB"},
+ 	{CTRY_LIECHTENSTEIN, ETSI1_WORLD, "LI"},
+ 	{CTRY_LITHUANIA, ETSI1_WORLD, "LT"},
+ 	{CTRY_LUXEMBOURG, ETSI1_WORLD, "LU"},
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+2.11.0
