@@ -1,141 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33506 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751219AbeC1KCQ (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:39848 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031343AbeCAOVQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 06:02:16 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: s.gottschall@dd-wrt.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] ath9k: fix crash in spectral scan
-References: <20180303041044.26372-1-s.gottschall@dd-wrt.com>
-Date: Wed, 28 Mar 2018 13:02:11 +0300
-In-Reply-To: <20180303041044.26372-1-s.gottschall@dd-wrt.com> (s. gottschall's
-        message of "Sat, 3 Mar 2018 05:10:44 +0100")
-Message-ID: <87vadgo6vw.fsf@purkki.adurom.net> (sfid-20180328_120221_875930_99B5A723)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 1 Mar 2018 09:21:16 -0500
+Received: by mail-qk0-f196.google.com with SMTP id z197so7701242qkb.6
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:15 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 19/52] ath: Add regulatory mapping for ETSI9_WORLD
+Date: Thu,  1 Mar 2018 15:18:29 +0100
+Message-Id: <20180301141902.24824-20-sven.eckelmann@openmesh.com> (sfid-20180301_152121_002926_52B29696)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-s.gottschall@dd-wrt.com writes:
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't available and
+it is still programmed in the EEPROM then it will cause an error and stop
+the initialization with:
 
-> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->
-> fixes crash seen on arm smp systems (gateworks ventana imx6)
->
-> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->
-> v2: fix wrong field and add signed-off-by
-> v3: forgot to include correct latest patch, so just fix that and refresh
->
-> Unable to handle kernel NULL pointer dereference at virtual address 00000014
-> pgd = 80004000
-> [00000014] *pgd=00000000
-> Internal error: Oops - BUG: 17 [#1] PREEMPT SMP ARM
-> Modules linked in: ip6table_filter nf_conntrack_ipv6 ip6_tables nf_log_ipv6 nf_defrag_ipv6 shortcut_fe ipcomp6 xfrm_ipcomp xfrm6_tunnel xfrm6_mode_tunnel xfrm6_mode_transport xfrm6_mode_ro xfrm6_mode_beet ip6_tunnel tunnel6 mip6 ah6 esp6 xfrm_algo sit ip_tunnel tunnel4 ipv6 ath10k_pci ath10k_core ath9k ath mac80211 cfg80211 compat ath_pci ath_hal(P) caamalg authencesn authenc caamrng caamhash caam_jr caam cdc_ncm usbnet usbcore sky2 imx2_wdt
-> CPU: 0 PID: 3 Comm: ksoftirqd/0 Tainted: P                4.9.85 #19
-> Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
-> task: bf064980 task.stack: bf07c000
-> PC is at relay_buf_full+0xc/0x30
-> LR is at _674+0x740/0xf10 [ath9k]
-> pc : [<8018bce0>]    lr : [<7f1aa604>]    psr: 80000013
-> sp : bf07dbf0  ip : bf07dc00  fp : bf07dbfc
-> r10: 0000003f  r9 : bf130e00  r8 : 809044b0
-> r7 : 00000000  r6 : be67a9f0  r5 : 00000000  r4 : 809043e4
-> r3 : c0864c24  r2 : 00000000  r1 : 00000004  r0 : 00000000
-> Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
-> Control: 10c5387d  Table: 4e6a004a  DAC: 00000055
-> Process ksoftirqd/0 (pid: 3, stack limit = 0xbf07c210)
-> Stack: (0xbf07dbf0 to 0xbf07e000)
-> dbe0:                                     bf07dd04 bf07dc00 7f1aa604 8018bce0
-> dc00: 00004014 be59e010 bf07dc34 bf07dc18 7f1a7084 7f19c07c be59c010 be6470a0
-> dc20: 0000096c be648954 bf07dc6c bf07dc38 7f1c286c bf07dd90 bf07dc5c bf07dc48
-> dc40: 8029ea4c 0000003c 00000001 be59c010 00000094 00000000 00000000 00000000
-> dc60: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> dc80: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> dca0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> dcc0: 00000000 00000000 00000000 00000000 00000000 00000000 8010ef24 00000030
-> dce0: be94f5e8 be6485a0 bddf0200 be59c010 be6465a0 be6415a0 bf07ddf4 bf07dd08
-> dd00: 7f1cf800 7f1aa55c 1fc38c4c 00000000 bf07dd58 cccccccd 66666667 be640bc0
-> dd20: bf07dd54 be6415a0 1fc38c4c 00000000 00000000 be59c038 be67a9c0 be59e010
-> dd40: be67a9f0 be647170 8090c904 be59c010 00000000 00000001 1fc38e84 00000000
-> dd60: be640bc0 bddf0200 00000200 00000010 0000003f 00000002 20000013 be59c010
-> dd80: 8092d940 bf7ca2c0 bf07ddb4 bf07dd98 1fc38c4c 2602003f 0100ff1b 80ff1b00
-> dda0: 00808080 00000000 00000000 80808080 80808080 80808080 80808080 00008080
-> ddc0: 00000000 00000000 7f1b62b8 00000002 be6470ec be6470f0 00000000 bf07de98
-> dde0: 8092d940 be6415a0 bf07de94 bf07ddf8 7f1d1ed8 7f1cf1fc 00000000 00000000
-> de00: bf7cc4c0 00000400 be6470f0 bf07de18 8015165c be59c010 8090453c 8090453c
-> de20: bf07dec4 be6465a0 8014f614 80148884 0000619a 00000001 bf07c000 00000100
-> de40: bf07de78 00000001 7f327850 00000002 afb50401 bf064980 bf07de9c bf07de68
-> de60: bf064a00 803cc668 bf064a00 be6470b4 be6470b8 80844180 00000000 bf07de98
-> de80: 8092d940 bf07c000 bf07dec4 bf07de98 80124d18 7f1d1c44 80124c94 00000000
-> dea0: 00000006 80902098 80902080 40000006 00000100 bf07c000 bf07df24 bf07dec8
-> dec0: 8012501c 80124ca0 bf7cc4c0 bf064980 be95e1c0 04208040 80902d00 000061c7
-> dee0: 0000000a 80600b54 8092d940 808441f8 80902080 bf07dec8 bf03b200 bf07c000
-> df00: bf03b200 8090fe54 00000000 00000000 00000000 00000000 bf07df34 bf07df28
-> df20: 80125148 80124f28 bf07df5c bf07df38 8013deb4 8012511c 00000000 bf03b240
-> df40: bf03b200 8013dc90 00000000 00000000 bf07dfac bf07df60 8013ad40 8013dc9c
-> df60: 70448040 00000001 00000000 bf03b200 00000000 00030003 bf07df78 bf07df78
-> df80: 00000000 00000000 bf07df88 bf07df88 bf03b240 8013ac48 00000000 00000000
-> dfa0: 00000000 bf07dfb0 80107760 8013ac54 00000000 00000000 00000000 00000000
-> dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> dfe0: 00000000 00000000 00000000 00000000 00000013 00000000 8c120004 1190ad04
-> Backtrace:
-> [<8018bcd4>] (relay_buf_full) from [<7f1aa604>] (_674+0x740/0xf10 [ath9k])
-> [<7f1aa550>] (_674 [ath9k]) from [<7f1cf800>] (_582+0x14b4/0x3708 [ath9k])
->  r10:be6415a0 r9:be6465a0 r8:be59c010 r7:bddf0200 r6:be6485a0 r5:be94f5e8
->  r4:00000030
-> [<7f1cf1f0>] (_582 [ath9k]) from [<7f1d1ed8>] (_735+0x2a0/0xec4 [ath9k])
->  r10:be6415a0 r9:8092d940 r8:bf07de98 r7:00000000 r6:be6470f0 r5:be6470ec
->  r4:00000002
-> [<7f1d1c38>] (_735 [ath9k]) from [<80124d18>] (tasklet_action+0x84/0xf8)
->  r10:bf07c000 r9:8092d940 r8:bf07de98 r7:00000000 r6:80844180 r5:be6470b8
->  r4:be6470b4
-> [<80124c94>] (tasklet_action) from [<8012501c>] (__do_softirq+0x100/0x1f4)
->  r10:bf07c000 r9:00000100 r8:40000006 r7:80902080 r6:80902098 r5:00000006
->  r4:00000000 r3:80124c94
-> [<80124f1c>] (__do_softirq) from [<80125148>] (run_ksoftirqd+0x38/0x4c)
->  r10:00000000 r9:00000000 r8:00000000 r7:00000000 r6:8090fe54 r5:bf03b200
->  r4:bf07c000
-> [<80125110>] (run_ksoftirqd) from [<8013deb4>] (smpboot_thread_fn+0x224/0x260)
-> [<8013dc90>] (smpboot_thread_fn) from [<8013ad40>] (kthread+0xf8/0x100)
->  r9:00000000 r8:00000000 r7:8013dc90 r6:bf03b200 r5:bf03b240 r4:00000000
-> [<8013ac48>] (kthread) from [<80107760>] (ret_from_fork+0x14/0x34)
->  r7:00000000 r6:00000000 r5:8013ac48 r4:bf03b240
-> Code: e89da800 e1a0c00d e92dd800 e24cb004 (e5901014)
-> ---[ end trace dddf11ac9111b272 ]---
-> Kernel panic - not syncing: Fatal exception in interrupt
-> CPU1: stopping
-> CPU: 1 PID: 0 Comm: swapper/1 Tainted: P      D         4.9.85 #19
-> Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
-> Backtrace:
-> [<8010a708>] (dump_backtrace) from [<8010a99c>] (show_stack+0x18/0x1c)
->  r7:bf093f58 r6:20000193 r5:809168e8 r4:00000000
-> [<8010a984>] (show_stack) from [<802a09c4>] (dump_stack+0x94/0xa8)
-> [<802a0930>] (dump_stack) from [<8010d184>] (handle_IPI+0xe8/0x180)
->  r7:bf093f58 r6:00000000 r5:00000001 r4:808478c4
-> [<8010d09c>] (handle_IPI) from [<801013e8>] (gic_handle_irq+0x78/0x7c)
->  r7:f4000100 r6:bf093f58 r5:f400010c r4:8090467c
-> [<80101370>] (gic_handle_irq) from [<8010b378>] (__irq_svc+0x58/0x8c)
-> Exception stack(0xbf093f58 to 0xbf093fa0)
-> 3f40:                                                       bf7d62a0 00000000
-> 3f60: 0010a5f4 80113460 bf092000 809043e4 00000002 80904434 bf092008 412fc09a
-> 3f80: 00000000 bf093fb4 bf093fb8 bf093fa8 8010804c 80108050 60000013 ffffffff
->  r9:bf092000 r8:bf092008 r7:bf093f8c r6:ffffffff r5:60000013 r4:80108050
-> [<80108014>] (arch_cpu_idle) from [<80553c2c>] (default_idle_call+0x30/0x34)
-> [<80553bfc>] (default_idle_call) from [<80158394>] (cpu_startup_entry+0xc4/0xfc)
-> [<801582d0>] (cpu_startup_entry) from [<8010ce40>] (secondary_start_kernel+0x168/0x174)
->  r7:8092d2f8 r4:80913568
-> [<8010ccd8>] (secondary_start_kernel) from [<10101488>] (0x10101488)
->  r5:00000055 r4:4f07806a
-> Rebooting in 10 seconds..
-> Reboot failed -- System halted
+  Invalid EEPROM contents
 
-Apparently the automatic email was not sent, no idea why. But this was
-applied to ath-next few days ago:
+The current CTL mappings for this regdomain code are:
 
-221b6ec69ed9 ath9k: fix crash in spectral scan
+* 2.4GHz: ETSI
+* 5GHz: ETSI
 
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd_common.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 88913c67fed2..f1735ac67c52 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -45,6 +45,7 @@ enum EnumRd {
+ 	ETSI5_WORLD = 0x39,
+ 	ETSI6_WORLD = 0x34,
+ 	ETSI8_WORLD = 0x3D,
++	ETSI9_WORLD = 0x3E,
+ 	ETSI_RESERVED = 0x33,
+ 
+ 	MKK1_MKKA = 0x40,
+@@ -185,6 +186,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
+ 	{ETSI5_WORLD, CTL_ETSI, CTL_ETSI},
+ 	{ETSI6_WORLD, CTL_ETSI, CTL_ETSI},
+ 	{ETSI8_WORLD, CTL_ETSI, CTL_ETSI},
++	{ETSI9_WORLD, CTL_ETSI, CTL_ETSI},
+ 
+ 	/* XXX: For ETSI3_ETSIA, Was NO_CTL meant for the 2 GHz band ? */
+ 	{ETSI3_ETSIA, CTL_ETSI, CTL_ETSI},
 -- 
-Kalle Valo
+2.11.0
