@@ -1,107 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47910 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752252AbeCTKht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 06:37:49 -0400
-Date: Tue, 20 Mar 2018 11:37:47 +0100
-From: Michal Kubecek <mkubecek@suse.cz>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC] ethtool:  Support ETHTOOL_GSTATS2 command.
-Message-ID: <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz> (sfid-20180320_113759_019814_DC42A255)
-References: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:33658 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031275AbeCAOWD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Mar 2018 09:22:03 -0500
+Received: by mail-qk0-f194.google.com with SMTP id f25so7718846qkm.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:22:03 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 38/52] ath: Map Mexico to FCC1_WORLD
+Date: Thu,  1 Mar 2018 15:18:48 +0100
+Message-Id: <20180301141902.24824-39-sven.eckelmann@openmesh.com> (sfid-20180301_152211_022977_04C5CB07)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 07, 2018 at 11:51:29AM -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> This is similar to ETHTOOL_GSTATS, but it allows you to specify
-> a 'level'.  This level can be used by the driver to decrease the
-> amount of stats refreshed.  In particular, this helps with ath10k
-> since getting the firmware stats can be slow.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> 
-> NOTE:  I know to make it upstream I would need to split the patch and
-> remove the #define for 'backporting' that I added.  But, is the
-> feature in general wanted?  If so, I'll do the patch split and
-> other tweaks that might be suggested.
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
-I'm not familiar enough with the technical background of stats
-collecting to comment on usefulness and desirability of this feature.
-Adding a new command just to add a numeric parameter certainly doesn't
-feel right but it's how the ioctl interface works. I take it as
-a reminder to find some time to get back to the netlink interface.
+The CTL mappings for this regdomain code were now changed to:
 
-> diff --git a/net/core/ethtool.c b/net/core/ethtool.c
-> index 674b6c9..d3b709f 100644
-> --- a/net/core/ethtool.c
-> +++ b/net/core/ethtool.c
-> @@ -1947,6 +1947,54 @@ static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
->  	return ret;
->  }
->  
-> +static int ethtool_get_stats2(struct net_device *dev, void __user *useraddr)
-> +{
-> +	struct ethtool_stats stats;
-> +	const struct ethtool_ops *ops = dev->ethtool_ops;
-> +	u64 *data;
-> +	int ret, n_stats;
-> +	u32 stats_level = 0;
-> +
-> +	if (!ops->get_ethtool_stats2 || !ops->get_sset_count)
-> +		return -EOPNOTSUPP;
-> +
-> +	n_stats = ops->get_sset_count(dev, ETH_SS_STATS);
-> +	if (n_stats < 0)
-> +		return n_stats;
-> +	if (n_stats > S32_MAX / sizeof(u64))
-> +		return -ENOMEM;
-> +	WARN_ON_ONCE(!n_stats);
-> +	if (copy_from_user(&stats, useraddr, sizeof(stats)))
-> +		return -EFAULT;
-> +
-> +	/* User can specify the level of stats to query.  How the
-> +	 * level value is used is up to the driver, but in general,
-> +	 * 0 means 'all', 1 means least, and higher means more.
-> +	 * The idea is that some stats may be expensive to query, so user
-> +	 * space could just ask for the cheap ones...
-> +	 */
-> +	stats_level = stats.n_stats;
-> +
-> +	stats.n_stats = n_stats;
-> +	data = vzalloc(n_stats * sizeof(u64));
-> +	if (n_stats && !data)
-> +		return -ENOMEM;
-> +
-> +	ops->get_ethtool_stats2(dev, &stats, data, stats_level);
-> +
-> +	ret = -EFAULT;
-> +	if (copy_to_user(useraddr, &stats, sizeof(stats)))
-> +		goto out;
-> +	useraddr += sizeof(stats);
-> +	if (n_stats && copy_to_user(useraddr, data, n_stats * sizeof(u64)))
-> +		goto out;
-> +	ret = 0;
-> +
-> + out:
-> +	vfree(data);
-> +	return ret;
-> +}
-> +
->  static int ethtool_get_phy_stats(struct net_device *dev, void __user *useraddr)
->  {
->  	struct ethtool_stats stats;
+* 2.4GHz: FCC-> ETSI
+* 5GHz: FCC
 
-IMHO it would be more practical to set "0 means same as GSTATS" as a
-rule and make ethtool_get_stats() a wrapper for ethtool_get_stats2() to
-avoid code duplication (or perhaps a use fall-through in the switch). It
-would also allow drivers to provide only one of the callbacks.
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Michal Kubecek
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index efc363af5e41..ca1f07e55aec 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -443,7 +443,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_MALAYSIA, FCC1_WORLD, "MY"},
+ 	{CTRY_MALTA, ETSI1_WORLD, "MT"},
+ 	{CTRY_MAURITIUS, ETSI1_WORLD, "MU"},
+-	{CTRY_MEXICO, FCC1_FCCA, "MX"},
++	{CTRY_MEXICO, FCC1_WORLD, "MX"},
+ 	{CTRY_MONACO, ETSI4_WORLD, "MC"},
+ 	{CTRY_MONTENEGRO, ETSI1_WORLD, "ME"},
+ 	{CTRY_MOROCCO, APL4_WORLD, "MA"},
+-- 
+2.11.0
