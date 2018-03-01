@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36958 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753365AbeC1OMJ (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:47094 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031353AbeCAOVa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 10:12:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 17:11:48 +0300
-Message-Id: <20180328141157.5427-6-luca@coelho.fi> (sfid-20180328_161214_452372_72E58D66)
-In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
-References: <20180328141157.5427-1-luca@coelho.fi>
-Subject: [PATCH 05/14] iwlwifi: mvm: check if mac80211_queue is valid in iwl_mvm_disable_txq
+        Thu, 1 Mar 2018 09:21:30 -0500
+Received: by mail-qk0-f193.google.com with SMTP id 130so7655795qkd.13
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:30 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 25/52] ath: Map Bangladesh to APL1_WORLD
+Date: Thu,  1 Mar 2018 15:18:35 +0100
+Message-Id: <20180301141902.24824-26-sven.eckelmann@openmesh.com> (sfid-20180301_152136_110181_B83050C3)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
-Sometimes iwl_mvm_disable_txq() may be called with mac80211_queue ==
-IEEE80211_INVAL_HW_QUEUE, and this would cause us to use BIT(0xFF)
-which is way too large for the u16 we used to store it in
-hw_queue_to_mac820211.  If this happens the following UBSAN warning
-will be generated:
+The CTL mappings for this regdomain code were now changed to:
 
-[  167.185167] UBSAN: Undefined behaviour in drivers/net/wireless/intel/iwlwifi/mvm/utils.c:838:5
-[  167.185171] shift exponent 255 is too large for 64-bit type 'long unsigned int'
+* 2.4GHz: ETSI
+* 5GHz: NO_CTL -> FCC
 
-Fix that by checking that it is not IEEE80211_INVAL_HW_QUEUE and,
-while at it, add a warning if the queue number is larger than
-IEEE80211_MAX_QUEUES.
-
-Fixes: 34e10860ae8d ("iwlwifi: mvm: remove references to queue_info in new TX path")
-Reported-by: Paul Menzel <pmenzel+linux-wireless@molgen.mpg.de>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index d65e1db7c097..70f8b8eb6117 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -800,12 +800,19 @@ int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 		.scd_queue = queue,
- 		.action = SCD_CFG_DISABLE_QUEUE,
- 	};
--	bool remove_mac_queue = true;
-+	bool remove_mac_queue = mac80211_queue != IEEE80211_INVAL_HW_QUEUE;
- 	int ret;
- 
-+	if (WARN_ON(remove_mac_queue && mac80211_queue >= IEEE80211_MAX_QUEUES))
-+		return -EINVAL;
-+
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
- 		spin_lock_bh(&mvm->queue_info_lock);
--		mvm->hw_queue_to_mac80211[queue] &= ~BIT(mac80211_queue);
-+
-+		if (remove_mac_queue)
-+			mvm->hw_queue_to_mac80211[queue] &=
-+				~BIT(mac80211_queue);
-+
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 
- 		iwl_trans_txq_free(mvm->trans, queue);
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 173db6bd1280..a5d528367082 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -314,7 +314,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_AZERBAIJAN, ETSI4_WORLD, "AZ"},
+ 	{CTRY_BAHAMAS, FCC3_WORLD, "BS"},
+ 	{CTRY_BAHRAIN, APL6_WORLD, "BH"},
+-	{CTRY_BANGLADESH, NULL1_WORLD, "BD"},
++	{CTRY_BANGLADESH, APL1_WORLD, "BD"},
+ 	{CTRY_BARBADOS, FCC2_WORLD, "BB"},
+ 	{CTRY_BELARUS, ETSI1_WORLD, "BY"},
+ 	{CTRY_BELGIUM, ETSI1_WORLD, "BE"},
 -- 
-2.16.2
+2.11.0
