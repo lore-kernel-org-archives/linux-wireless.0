@@ -1,27 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:43939 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752394AbeC2SWD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 14:22:03 -0400
-Received: by mail-oi0-f53.google.com with SMTP id u84-v6so5952876oie.10
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 11:22:03 -0700 (PDT)
-To: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: License info
-Message-ID: <00c32ffb-9f20-f1a1-1054-ba57828b4db9@lwfinger.net> (sfid-20180329_202216_721896_59240394)
-Date: Thu, 29 Mar 2018 13:22:00 -0500
+Received: from mail-cys01nam02on0083.outbound.protection.outlook.com ([104.47.37.83]:58674
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S967031AbeCAJjh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Mar 2018 04:39:37 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Dmitry Lebed <dlebed@quantenna.com>,
+        Dmitry Lebed <lebed.dmitry@gmail.com>
+Subject: [PATCH v3 1/2] cfg80211/nl80211: add DFS offload flag
+Date: Thu,  1 Mar 2018 12:39:15 +0300
+Message-Id: <20180301093916.14096-2-sergey.matyukevich.os@quantenna.com> (sfid-20180301_103953_470816_68CF7226)
+In-Reply-To: <20180301093916.14096-1-sergey.matyukevich.os@quantenna.com>
+References: <20180301093916.14096-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle,
+From: Dmitry Lebed <dlebed@quantenna.com>
 
-What is your position regarding license information? Should the standard GPL-V2 
-boiler plate be replaced with "SPDX-License-Identifier: GPL-2.0" in wireless files?
+Add wiphy EXT_FEATURE flag to indicate that HW or driver does
+all DFS actions by itself.
+User-space functionality already implemented in hostapd using
+vendor-specific (QCA) OUI to advertise DFS offload support.
+Need to introduce generic flag to inform about DFS offload support.
+For deivces with DFS_OFFLOAD flag set user-space will no longer
+need to issue CAC or do any actions in response to
+"radar detected" events. HW will do everything by itself and send
+events to user-space to indicate that CAC was started/finished, etc.
 
-Thanks,
+Signed-off-by: Dmitrii Lebed <dlebed@quantenna.com>
+---
+ include/uapi/linux/nl80211.h |  7 +++++++
+ net/wireless/nl80211.c       | 12 ++++++++----
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
-Larry
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 22cca373161d..811928ce4e1c 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4948,6 +4948,12 @@ enum nl80211_feature_flags {
+  *	probe request tx deferral and suppression
+  * @NL80211_EXT_FEATURE_MFP_OPTIONAL: Driver supports the %NL80211_MFP_OPTIONAL
+  *	value in %NL80211_ATTR_USE_MFP.
++ * @NL80211_EXT_FEATURE_DFS_OFFLOAD: HW/driver will offload DFS actions.
++ *	Device or driver will do all DFS-related actions by itself,
++ *	informing user-space about CAC progress, radar detection event,
++ *	channel change triggered by radar detection event.
++ *	No need to start CAC from user-space, no need to react to
++ *	"radar detected" event.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -4975,6 +4981,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE,
+ 	NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION,
+ 	NL80211_EXT_FEATURE_MFP_OPTIONAL,
++	NL80211_EXT_FEATURE_DFS_OFFLOAD,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b5e613d14d6a..d57aba58a418 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7786,12 +7786,13 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_chan_def chandef;
+ 	enum nl80211_dfs_regions dfs_region;
+ 	unsigned int cac_time_ms;
+ 	int err;
+ 
+-	dfs_region = reg_get_dfs_region(wdev->wiphy);
++	dfs_region = reg_get_dfs_region(wiphy);
+ 	if (dfs_region == NL80211_DFS_UNSET)
+ 		return -EINVAL;
+ 
+@@ -7805,17 +7806,20 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (wdev->cac_started)
+ 		return -EBUSY;
+ 
+-	err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef,
+-					    wdev->iftype);
++	err = cfg80211_chandef_dfs_required(wiphy, &chandef, wdev->iftype);
+ 	if (err < 0)
+ 		return err;
+ 
+ 	if (err == 0)
+ 		return -EINVAL;
+ 
+-	if (!cfg80211_chandef_dfs_usable(wdev->wiphy, &chandef))
++	if (!cfg80211_chandef_dfs_usable(wiphy, &chandef))
+ 		return -EINVAL;
+ 
++	/* CAC start is offloaded to HW and can't be started manually */
++	if (wiphy_ext_feature_isset(wiphy, NL80211_EXT_FEATURE_DFS_OFFLOAD))
++		return -EOPNOTSUPP;
++
+ 	if (!rdev->ops->start_radar_detection)
+ 		return -EOPNOTSUPP;
+ 
+-- 
+2.11.0
