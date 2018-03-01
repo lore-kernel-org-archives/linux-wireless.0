@@ -1,299 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36621 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751161AbeC2O1x (ORCPT
+Received: from mx1.uni-rostock.de ([139.30.22.71]:58409 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030398AbeCAMcs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 10:27:53 -0400
-Received: by mail-pf0-f194.google.com with SMTP id g14so3341658pfh.3
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 07:27:53 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 RESEND 4/4] rsi: roaming enhancements
-Date: Thu, 29 Mar 2018 19:44:52 +0530
-Message-Id: <1522332892-5251-5-git-send-email-amitkarwar@gmail.com> (sfid-20180329_162756_965179_548848EB)
-In-Reply-To: <1522332892-5251-1-git-send-email-amitkarwar@gmail.com>
-References: <1522332892-5251-1-git-send-email-amitkarwar@gmail.com>
+        Thu, 1 Mar 2018 07:32:48 -0500
+Subject: Re: KASAN: use-after-free Read in mac80211_hwsim_del_radio
+To: Johannes Berg <johannes@sipsolutions.net>,
+        syzbot <syzbot+70ce058e01259de7bb1d@syzkaller.appspotmail.com>,
+        <kvalo@codeaurora.org>, <linux-kernel@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <syzkaller-bugs@googlegroups.com>
+References: <001a113ecf342db684056655e097@google.com>
+ <1519896638.2292.7.camel@sipsolutions.net>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Message-ID: <dca7b0bb-f29f-006a-5432-e875b9da7ffe@uni-rostock.de> (sfid-20180301_133258_944336_F467E076)
+Date: Thu, 1 Mar 2018 13:32:42 +0100
+MIME-Version: 1.0
+In-Reply-To: <1519896638.2292.7.camel@sipsolutions.net>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+        micalg=sha-256; boundary="------------ms000400090303010802020304"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+--------------ms000400090303010802020304
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Content-Language: de-DE
 
-To support roaming below changes are done:
-* Station notify frame is send to firmware after sending assoc
-  request. This will avoid dropping of first EAPOL frame due to
-  delay in creation of station control block in firmware.
-* Data queues are unblocked after sending station notify in open
-  mode, after configuring key in WEP mode, and after receiving
-  EAPOL4 confirm in WPA mode.
-* Initial EAPOL frames priority is chaged to MGMT, rekey EAPOL
-  frames priority changed to VO.
+Am 01.03.2018 um 10:30 schrieb Johannes Berg:
+> Hi,
+>
+>> syzbot hit the following crash on upstream commit
+>> f3afe530d644488a074291da04a69a296ab63046 (Tue Feb 27 22:02:39 2018 +00=
+00)
+>> Merge branch 'fixes-v4.16-rc4' of =20
+>> git://git.kernel.org/pub/scm/linux/kernel/git/jmorris/linux-security
+>>
+>> So far this crash happened 4 times on upstream.
+>> Unfortunately, I don't have any reproducer for this crash yet.
+>> Raw console output is attached.
+> That's ... a pretty complex scenario.
+>
+> Looks like we have a race between destroying a network namespace, which=
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
-v2: Removed code of dropping data frames with wrong BSSID in driver,
-mac80211 takes care of this (Kalle)
----
- drivers/net/wireless/rsi/rsi_91x_core.c     | 16 +++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_hal.c      | 18 ++++++++++++++++
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 18 +++++++++++++---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 32 +++++++++++++++++------------
- drivers/net/wireless/rsi/rsi_main.h         |  1 +
- drivers/net/wireless/rsi/rsi_mgmt.h         | 10 ++++++++-
- 6 files changed, 78 insertions(+), 17 deletions(-)
+> moves everything back into the init_ns and may have to rename objects
+> asynchronously (cleanup_net), with destroying the radio in hwsim that's=
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index f5d1756..3ca468b9 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -411,6 +411,18 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
- 	if ((ieee80211_is_mgmt(wh->frame_control)) ||
- 	    (ieee80211_is_ctl(wh->frame_control)) ||
- 	    (ieee80211_is_qos_nullfunc(wh->frame_control))) {
-+		if (ieee80211_is_assoc_req(wh->frame_control) ||
-+		    ieee80211_is_reassoc_req(wh->frame_control)) {
-+			struct ieee80211_bss_conf *bss = &vif->bss_conf;
-+
-+			common->eapol4_confirm = false;
-+			rsi_hal_send_sta_notify_frame(common,
-+						      RSI_IFTYPE_STATION,
-+						      STA_CONNECTED, bss->bssid,
-+						      bss->qos, bss->aid, 0,
-+						      vif);
-+		}
-+
- 		q_num = MGMT_SOFT_Q;
- 		skb->priority = q_num;
- 
-@@ -450,6 +462,10 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
- 							      tid, 0);
- 			}
- 		}
-+		if (skb->protocol == cpu_to_be16(ETH_P_PAE)) {
-+			q_num = MGMT_SOFT_Q;
-+			skb->priority = q_num;
-+		}
- 		if (rsi_prepare_data_desc(common, skb)) {
- 			rsi_dbg(ERR_ZONE, "Failed to prepare data desc\n");
- 			goto xmit_fail;
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index 43d7d6c..b7c5403 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -232,6 +232,18 @@ int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 		data_desc->misc_flags |= RSI_FETCH_RETRY_CNT_FRM_HST;
- #define EAPOL_RETRY_CNT 15
- 		xtend_desc->retry_cnt = EAPOL_RETRY_CNT;
-+
-+		if (common->eapol4_confirm)
-+			skb->priority = VO_Q;
-+		else
-+			rsi_set_len_qno(&data_desc->len_qno,
-+					(skb->len - FRAME_DESC_SZ),
-+					RSI_WIFI_MGMT_Q);
-+		if ((skb->len - header_size) == EAPOL4_PACKET_LEN) {
-+			data_desc->misc_flags |=
-+				RSI_DESC_REQUIRE_CFM_TO_HOST;
-+			xtend_desc->confirm_frame_type = EAPOL4_CONFIRM;
-+		}
- 	}
- 
- 	data_desc->mac_flags = cpu_to_le16(seq_num & 0xfff);
-@@ -271,8 +283,11 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 	struct rsi_hw *adapter = common->priv;
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_tx_info *info;
-+	struct skb_info *tx_params;
- 	struct ieee80211_bss_conf *bss;
-+	struct ieee80211_hdr *wh;
- 	int status = -EINVAL;
-+	u8 header_size;
- 
- 	if (!skb)
- 		return 0;
-@@ -284,6 +299,9 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 		goto err;
- 	vif = info->control.vif;
- 	bss = &vif->bss_conf;
-+	tx_params = (struct skb_info *)info->driver_data;
-+	header_size = tx_params->internal_hdr_size;
-+	wh = (struct ieee80211_hdr *)&skb->data[header_size];
- 
- 	if (((vif->type == NL80211_IFTYPE_STATION) ||
- 	     (vif->type == NL80211_IFTYPE_P2P_CLIENT)) &&
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 32f5cb4..5edc3a9 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -737,7 +737,8 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
- 				      bss_conf->bssid,
- 				      bss_conf->qos,
- 				      bss_conf->aid,
--				      NULL, 0, vif);
-+				      NULL, 0,
-+				      bss_conf->assoc_capability, vif);
- 		adapter->ps_info.dtim_interval_duration = bss->dtim_period;
- 		adapter->ps_info.listen_interval = conf->listen_interval;
- 
-@@ -914,6 +915,17 @@ static int rsi_hal_key_config(struct ieee80211_hw *hw,
- 				key->cipher,
- 				sta_id,
- 				vif);
-+	if (status)
-+		return status;
-+
-+	if (vif->type == NL80211_IFTYPE_STATION && key->key &&
-+	    (key->cipher == WLAN_CIPHER_SUITE_WEP104 ||
-+	     key->cipher == WLAN_CIPHER_SUITE_WEP40)) {
-+		if (!rsi_send_block_unblock_frame(adapter->priv, false))
-+			adapter->priv->hw_data_qs_blocked = false;
-+	}
-+
-+	return 0;
- }
- 
- /**
-@@ -1391,7 +1403,7 @@ static int rsi_mac80211_sta_add(struct ieee80211_hw *hw,
- 			rsi_dbg(INFO_ZONE, "Indicate bss status to device\n");
- 			rsi_inform_bss_status(common, RSI_OPMODE_AP, 1,
- 					      sta->addr, sta->wme, sta->aid,
--					      sta, sta_idx, vif);
-+					      sta, sta_idx, 0, vif);
- 
- 			if (common->key) {
- 				struct ieee80211_key_conf *key = common->key;
-@@ -1469,7 +1481,7 @@ static int rsi_mac80211_sta_remove(struct ieee80211_hw *hw,
- 				rsi_inform_bss_status(common, RSI_OPMODE_AP, 0,
- 						      sta->addr, sta->wme,
- 						      sta->aid, sta, sta_idx,
--						      vif);
-+						      0, vif);
- 				rsta->sta = NULL;
- 				rsta->sta_id = -1;
- 				for (cnt = 0; cnt < IEEE80211_NUM_TIDS; cnt++)
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 9207da0..0757adc 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -454,14 +454,10 @@ static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
-  *
-  * Return: status: 0 on success, corresponding negative error code on failure.
-  */
--static int rsi_hal_send_sta_notify_frame(struct rsi_common *common,
--					 enum opmode opmode,
--					 u8 notify_event,
--					 const unsigned char *bssid,
--					 u8 qos_enable,
--					 u16 aid,
--					 u16 sta_id,
--					 struct ieee80211_vif *vif)
-+int rsi_hal_send_sta_notify_frame(struct rsi_common *common, enum opmode opmode,
-+				  u8 notify_event, const unsigned char *bssid,
-+				  u8 qos_enable, u16 aid, u16 sta_id,
-+				  struct ieee80211_vif *vif)
- {
- 	struct sk_buff *skb = NULL;
- 	struct rsi_peer_notify *peer_notify;
-@@ -1328,6 +1324,7 @@ void rsi_inform_bss_status(struct rsi_common *common,
- 			   u16 aid,
- 			   struct ieee80211_sta *sta,
- 			   u16 sta_id,
-+			   u16 assoc_cap,
- 			   struct ieee80211_vif *vif)
- {
- 	if (status) {
-@@ -1342,10 +1339,10 @@ void rsi_inform_bss_status(struct rsi_common *common,
- 					      vif);
- 		if (common->min_rate == 0xffff)
- 			rsi_send_auto_rate_request(common, sta, sta_id, vif);
--		if (opmode == RSI_OPMODE_STA) {
--			if (!rsi_send_block_unblock_frame(common, false))
--				common->hw_data_qs_blocked = false;
--		}
-+		if (opmode == RSI_OPMODE_STA &&
-+		    !(assoc_cap & WLAN_CAPABILITY_PRIVACY) &&
-+		    !rsi_send_block_unblock_frame(common, false))
-+			common->hw_data_qs_blocked = false;
- 	} else {
- 		if (opmode == RSI_OPMODE_STA)
- 			common->hw_data_qs_blocked = true;
-@@ -1850,10 +1847,19 @@ int rsi_mgmt_pkt_recv(struct rsi_common *common, u8 *msg)
- 			__func__);
- 		return rsi_handle_card_ready(common, msg);
- 	case TX_STATUS_IND:
--		if (msg[15] == PROBEREQ_CONFIRM) {
-+		switch (msg[RSI_TX_STATUS_TYPE]) {
-+		case PROBEREQ_CONFIRM:
- 			common->mgmt_q_block = false;
- 			rsi_dbg(FSM_ZONE, "%s: Probe confirm received\n",
- 				__func__);
-+			break;
-+		case EAPOL4_CONFIRM:
-+			if (msg[RSI_TX_STATUS]) {
-+				common->eapol4_confirm = true;
-+				if (!rsi_send_block_unblock_frame(common,
-+								  false))
-+					common->hw_data_qs_blocked = false;
-+			}
- 		}
- 		break;
- 	case BEACON_EVENT_IND:
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index b81cdbf..a084f22 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -287,6 +287,7 @@ struct rsi_common {
- 	struct timer_list roc_timer;
- 	struct ieee80211_vif *roc_vif;
- 
-+	bool eapol4_confirm;
- 	void *bt_adapter;
- };
- 
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 6726e84..5f946f3 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -33,6 +33,7 @@
- #define WMM_SHORT_SLOT_TIME             9
- #define SIFS_DURATION                   16
- 
-+#define EAPOL4_PACKET_LEN		0x85
- #define KEY_TYPE_CLEAR                  0
- #define RSI_PAIRWISE_KEY                1
- #define RSI_GROUP_KEY                   2
-@@ -62,9 +63,12 @@
- #define RX_DOT11_MGMT                   0x02
- #define TX_STATUS_IND                   0x04
- #define BEACON_EVENT_IND		0x08
-+#define EAPOL4_CONFIRM                  1
- #define PROBEREQ_CONFIRM                2
- #define CARD_READY_IND                  0x00
- #define SLEEP_NOTIFY_IND                0x06
-+#define RSI_TX_STATUS_TYPE		15
-+#define RSI_TX_STATUS			12
- 
- #define RSI_DELETE_PEER                 0x0
- #define RSI_ADD_PEER                    0x1
-@@ -660,10 +664,14 @@ int rsi_set_channel(struct rsi_common *common,
- 		    struct ieee80211_channel *channel);
- int rsi_send_vap_dynamic_update(struct rsi_common *common);
- int rsi_send_block_unblock_frame(struct rsi_common *common, bool event);
-+int rsi_hal_send_sta_notify_frame(struct rsi_common *common, enum opmode opmode,
-+				  u8 notify_event, const unsigned char *bssid,
-+				  u8 qos_enable, u16 aid, u16 sta_id,
-+				  struct ieee80211_vif *vif);
- void rsi_inform_bss_status(struct rsi_common *common, enum opmode opmode,
- 			   u8 status, const u8 *addr, u8 qos_enable, u16 aid,
- 			   struct ieee80211_sta *sta, u16 sta_id,
--			   struct ieee80211_vif *vif);
-+			   u16 assoc_cap, struct ieee80211_vif *vif);
- void rsi_indicate_pkt_to_os(struct rsi_common *common, struct sk_buff *skb);
- int rsi_mac80211_attach(struct rsi_common *common);
- void rsi_indicate_tx_status(struct rsi_hw *common, struct sk_buff *skb,
--- 
-2.7.4
+> also asynchronous (destroy_radio).
+>
+> Benjamin, would you be able to take a look at this? I'm preparing for a=
+
+> trip and will leave Saturday for a week so I don't think I'll be able
+> to really dig into this before mid-March.
+>
+> johannes
+>
+Could you give me a link to or forward the original email ? I googled
+"KASAN: use-after-free Read in mac80211_hwsim_del_radio", but only your
+answer (without the logs) appears. I try to have a look then in the next
+few days.
+
+kind regards
+
+Benjamin
+
+--=20
+M.Sc. Benjamin Beichler
+
+Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
+chnik
+Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
+
+University of Rostock, Department of CS and EE
+Institute of Applied Microelectronics and CE
+
+Richard-Wagner-Stra=C3=9Fe 31
+18119 Rostock
+Deutschland/Germany
+
+phone: +49 (0) 381 498 - 7278
+email: Benjamin.Beichler@uni-rostock.de
+www: http://www.imd.uni-rostock.de/
+
+
+
+--------------ms000400090303010802020304
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+81Vs95cUAdtV/Oj7ywXmMkcerQ8egitlHVQh/jwG6EbsFLab9erzbPDs7VHsmusCAwEAAaOC
+Af4wggH6MBIGA1UdEwEB/wQIMAYBAf8CAQEwDgYDVR0PAQH/BAQDAgEGMBEGA1UdIAQKMAgw
+BgYEVR0gADAdBgNVHQ4EFgQUsxX1olePg3vUENNc8o4+U/dvQzcwHwYDVR0jBBgwFoAUSbfG
+z+g9H3/qRHsTKffxCnA+3mQwHAYDVR0RBBUwE4ERY2FAdW5pLXJvc3RvY2suZGUwgYgGA1Ud
+HwSBgDB+MD2gO6A5hjdodHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWNhL3B1
+Yi9jcmwvY2FjcmwuY3JsMD2gO6A5hjdodHRwOi8vY2RwMi5wY2EuZGZuLmRlL2dsb2JhbC1y
+b290LWNhL3B1Yi9jcmwvY2FjcmwuY3JsMIHXBggrBgEFBQcBAQSByjCBxzAzBggrBgEFBQcw
+AYYnaHR0cDovL29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZlci9PQ1NQMEcGCCsGAQUFBzAC
+hjtodHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWNhL3B1Yi9jYWNlcnQvY2Fj
+ZXJ0LmNydDBHBggrBgEFBQcwAoY7aHR0cDovL2NkcDIucGNhLmRmbi5kZS9nbG9iYWwtcm9v
+dC1jYS9wdWIvY2FjZXJ0L2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEBAE8SmQRK1aE9
+dqcmXuU9ZPzSN5dd19HgtQuvNAceB1mhearys7UljqQ9Ua3BAtWTthqLGuiy7vr7ul87frgp
+JRVozeRyIePOY7R0iKYbmPTbHgj4XHRyc9Z2D6h1Nec8pWQgx4BSqs3xALpio+gBK3UHsi3X
+sJx4ZpLTuboRR4+BFTmEwdtsGZf6fPLBapfbS0xls05HvPtrSw6JGWClE1PidPl3M5kiARjd
+Ep4HzDr+/IzTx9823poYGnxfCPL1M3Tb6ECugv7mBZiWE90bPzFfv9yEXkX0Pp5ielz/XkCC
+MOB+gDgVZbttmM/BSvoeuw+GtuCqqV1g6lc1/JZBNtgwggW3MIIEn6ADAgECAgcZvwa8Ukka
+MA0GCSqGSIb3DQEBCwUAMIGFMQswCQYDVQQGEwJERTEdMBsGA1UEChMUVW5pdmVyc2l0YWV0
+IFJvc3RvY2sxFjAUBgNVBAsTDVJlY2hlbnplbnRydW0xHTAbBgNVBAMTFFVuaSBSb3N0b2Nr
+IENBIC0gRzAyMSAwHgYJKoZIhvcNAQkBFhFjYUB1bmktcm9zdG9jay5kZTAeFw0xNTA3MTAw
+ODU4MjFaFw0xODA3MDkwODU4MjFaMFYxCzAJBgNVBAYTAkRFMR0wGwYDVQQKDBRVbml2ZXJz
+aXRhZXQgUm9zdG9jazEMMAoGA1UECwwDSUVGMRowGAYDVQQDDBFCZW5qYW1pbiBCZWljaGxl
+cjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMP+J5bUv7oCrhYz7tz+vKg/sGwQ
+9WHm3j528AX5cEn7Qh92cE/Y31gpimuSVlHN/CyYt/PEQ12Gc83vB8HU3gl0t00PwIElWroW
+yeGUBhMzH5Jfv0jkBz5xb/Byv8weXDVHbYvtTZfvWIv6SjDhgjY5puAHw/Z8XpEeksOoBLa6
+H7LQDR3O530Jwvay5ZDPFcWV9n01rBoglnAcfIh7v9Ua6A8BhqdZ/Yt0wlOXN94sTklsiCYy
+cmyKfhrrJWuJMD8WWAYEa69+mi9QodzHg/b58pzUDTE4QOLUR2jAk27g63yC3Nh/+lZi79gB
+e6JfSBieesen0Y2s4DYJG9T207MCAwEAAaOCAlgwggJUMEAGA1UdIAQ5MDcwEQYPKwYBBAGB
+rSGCLAEBBAMDMBEGDysGAQQBga0hgiwCAQQDATAPBg0rBgEEAYGtIYIsAQEEMAkGA1UdEwQC
+MAAwCwYDVR0PBAQDAgXgMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4E
+FgQUNBPZS5VyYehPYcxCwh0ss/3r2zswHwYDVR0jBBgwFoAUsxX1olePg3vUENNc8o4+U/dv
+QzcwKwYDVR0RBCQwIoEgYmVuamFtaW4uYmVpY2hsZXJAdW5pLXJvc3RvY2suZGUwgY0GA1Ud
+HwSBhTCBgjA/oD2gO4Y5aHR0cDovL2NkcDEucGNhLmRmbi5kZS91bmktcm9zdG9jay1jYS9w
+dWIvY3JsL2dfY2FjcmwuY3JsMD+gPaA7hjlodHRwOi8vY2RwMi5wY2EuZGZuLmRlL3VuaS1y
+b3N0b2NrLWNhL3B1Yi9jcmwvZ19jYWNybC5jcmwwgdsGCCsGAQUFBwEBBIHOMIHLMDMGCCsG
+AQUFBzABhidodHRwOi8vb2NzcC5wY2EuZGZuLmRlL09DU1AtU2VydmVyL09DU1AwSQYIKwYB
+BQUHMAKGPWh0dHA6Ly9jZHAxLnBjYS5kZm4uZGUvdW5pLXJvc3RvY2stY2EvcHViL2NhY2Vy
+dC9nX2NhY2VydC5jcnQwSQYIKwYBBQUHMAKGPWh0dHA6Ly9jZHAyLnBjYS5kZm4uZGUvdW5p
+LXJvc3RvY2stY2EvcHViL2NhY2VydC9nX2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEB
+ADPT0DMfqh3ie0QoV5dpv/ULazwuXoXFAYd3rikdZxxGfhR4/zzrQM9QtH4a1+nR66HnoAJR
+6NH76MDmaVY37LO3Jb+WHSbMQfN4ijv2j5Oxc8OnepTp/FY4Vo4qP0TzmW8dtqgJCwWVAcYj
+GPrZLG6oubw2aL0DYirEQYMpEh3LEAf2nemCKdLkahdmbvx5AMDcz1XODWLI9PDhGtifFHCA
+keel0T9YceFhA1myfawGh3GDD43ltM8i0PZzxaex/mw1ropnQ/wfzs3N6EYOmZNsc6RbRJLi
+HEJcraQTzI2bFSuO2Z856KRXMV+jj8c2cJ8xQuVd4ptYFSt1miDSGmwxggPkMIID4AIBATCB
+kTCBhTELMAkGA1UEBhMCREUxHTAbBgNVBAoTFFVuaXZlcnNpdGFldCBSb3N0b2NrMRYwFAYD
+VQQLEw1SZWNoZW56ZW50cnVtMR0wGwYDVQQDExRVbmkgUm9zdG9jayBDQSAtIEcwMjEgMB4G
+CSqGSIb3DQEJARYRY2FAdW5pLXJvc3RvY2suZGUCBxm/BrxSSRowDQYJYIZIAWUDBAIBBQCg
+ggIjMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE4MDMwMTEy
+MzI0MlowLwYJKoZIhvcNAQkEMSIEIPv7efbdqdit3HKzn74HO8zUQEhPjqM2M3LpdnLgFXfb
+MGwGCSqGSIb3DQEJDzFfMF0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0D
+BzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwIC
+ASgwgaIGCSsGAQQBgjcQBDGBlDCBkTCBhTELMAkGA1UEBhMCREUxHTAbBgNVBAoTFFVuaXZl
+cnNpdGFldCBSb3N0b2NrMRYwFAYDVQQLEw1SZWNoZW56ZW50cnVtMR0wGwYDVQQDExRVbmkg
+Um9zdG9jayBDQSAtIEcwMjEgMB4GCSqGSIb3DQEJARYRY2FAdW5pLXJvc3RvY2suZGUCBxm/
+BrxSSRowgaQGCyqGSIb3DQEJEAILMYGUoIGRMIGFMQswCQYDVQQGEwJERTEdMBsGA1UEChMU
+VW5pdmVyc2l0YWV0IFJvc3RvY2sxFjAUBgNVBAsTDVJlY2hlbnplbnRydW0xHTAbBgNVBAMT
+FFVuaSBSb3N0b2NrIENBIC0gRzAyMSAwHgYJKoZIhvcNAQkBFhFjYUB1bmktcm9zdG9jay5k
+ZQIHGb8GvFJJGjANBgkqhkiG9w0BAQEFAASCAQADXOvMPaZtnzgaaoG/He1CEIZZNrBAcFhb
+Yd6wNDz4UgqIC6Dq88BTnsMV/jAu9/Gi6vT3XAKdUcM9mbnA00K/byK9nxbBo6HngCKTuJ92
+h68rFacZi+x8Y0LGzcMTdqUmP1kVCinGSGL23Z4eqhRTMFkVRPkdhfFPAaoc7muSKDDUjL+j
+p1B9tz8JUQkraVAlk92jvRuMf33zaz85iwOurZMFh2mKx0LHyvDCCiX5WmamSVm2kL9BFKLJ
+ba9UcMlKeE9oUZrX9vq6h0S2HeckqL3jzaOjAWx2x6JTde3VxBPkdB7ZGy2pqKOzIXxS4Eoj
+l3bjMz9tjIjAq4OfgdmuAAAAAAAA
+--------------ms000400090303010802020304--
