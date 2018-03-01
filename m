@@ -1,91 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway20.websitewelcome.com ([192.185.60.19]:26026 "EHLO
-        gateway20.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751189AbeCJXvL (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:44732 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031181AbeCAOVl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 18:51:11 -0500
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway20.websitewelcome.com (Postfix) with ESMTP id 4209E400D0F70
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Mar 2018 17:26:48 -0600 (CST)
-Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
-To: Kees Cook <keescook@chromium.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Andreas Christoforou <andreaschristofo@gmail.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
- <5AA464DE.90100@broadcom.com>
- <CAGXu5jKDA=L5E6Cu_oRe-M=ouuhrccCZHyM+z6_UMAUqe9xnRQ@mail.gmail.com>
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <0475443a-5026-e897-bd52-9198f854919f@embeddedor.com> (sfid-20180311_005115_359401_ED2AC95E)
-Date: Sat, 10 Mar 2018 17:26:46 -0600
-MIME-Version: 1.0
-In-Reply-To: <CAGXu5jKDA=L5E6Cu_oRe-M=ouuhrccCZHyM+z6_UMAUqe9xnRQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 1 Mar 2018 09:21:41 -0500
+Received: by mail-qk0-f194.google.com with SMTP id v124so7675216qkh.11
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:41 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 29/52] ath: Map Czech to ETSI1_WORLD
+Date: Thu,  1 Mar 2018 15:18:39 +0100
+Message-Id: <20180301141902.24824-30-sven.eckelmann@openmesh.com> (sfid-20180301_152146_443516_52FDF27D)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
+This change itself doesn't change the selected CTL of this country and is
+only required to stay in sync with the QCA mappings.
 
-On 03/10/2018 05:12 PM, Kees Cook wrote:
-> On Sat, Mar 10, 2018 at 3:06 PM, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 3/9/2018 1:30 PM, Andreas Christoforou wrote:
->>>
->>> The kernel would like to have all stack VLA usage removed.
->>
->>
->> I think there was a remark made earlier to give more explanation here. It
->> should explain why we want "VLA on stack" removed.
->>
->>> Signed-off-by: Andreas Christoforou <andreaschristofo@gmail.com>
->>> ---
->>>    drivers/net/wireless/ath/ath9k/dfs.c | 3 +--
->>>    1 file changed, 1 insertion(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c
->>> b/drivers/net/wireless/ath/ath9k/dfs.c
->>> index 6fee9a4..cfb0f84 100644
->>> --- a/drivers/net/wireless/ath/ath9k/dfs.c
->>> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
->>> @@ -41,7 +41,6 @@ static const int BIN_DELTA_MAX                = 10;
->>>
->>>    /* we need at least 3 deltas / 4 samples for a reliable chirp detection
->>> */
->>>    #define NUM_DIFFS 3
->>> -static const int FFT_NUM_SAMPLES       = (NUM_DIFFS + 1);
->>>
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-What about this instead?
-
-#define FFT_NUM_SAMPLES	(NUM_DIFFS + 1)
-
->>>    /* Threshold for difference of delta peaks */
->>>    static const int MAX_DIFF             = 2;
->>> @@ -101,7 +100,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc,
->>> u8 *data,
->>>                                   int datalen, bool is_ctl, bool is_ext)
->>>    {
->>>          int i;
->>> -       int max_bin[FFT_NUM_SAMPLES];
->>> +       int max_bin[NUM_DIFFS + 1];
->>
->>
->> Just wondering. Is this actually a VLA. FFT_NUM_SAMPLES was static const so
->> not really going to show a lot of variation. This array will always have the
->> same size on the stack.
-> 
-> The problem is that it's not a "constant expression", so the compiler
-> frontend still yells about it under -Wvla. I would characterize this
-> mainly as a fix for "accidental VLA" or "misdetected VLA" or something
-> like that. AIUI, there really isn't a functional change here.
-> 
-> -Kees
-> 
-
---
-Gustavo
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index c28347fac774..29021bf28b89 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -335,7 +335,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_COSTA_RICA, FCC1_WORLD, "CR"},
+ 	{CTRY_CROATIA, ETSI1_WORLD, "HR"},
+ 	{CTRY_CYPRUS, ETSI1_WORLD, "CY"},
+-	{CTRY_CZECH, ETSI3_WORLD, "CZ"},
++	{CTRY_CZECH, ETSI1_WORLD, "CZ"},
+ 	{CTRY_DENMARK, ETSI1_WORLD, "DK"},
+ 	{CTRY_DOMINICAN_REPUBLIC, FCC1_FCCA, "DO"},
+ 	{CTRY_ECUADOR, FCC1_WORLD, "EC"},
+-- 
+2.11.0
