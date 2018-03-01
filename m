@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34366 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751161AbeC2O1t (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:35118 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031110AbeCAOUd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 10:27:49 -0400
-Received: by mail-pf0-f195.google.com with SMTP id q9so3348551pff.1
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 07:27:49 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 RESEND 3/4] rsi: enable 80MHz clock by default
-Date: Thu, 29 Mar 2018 19:44:51 +0530
-Message-Id: <1522332892-5251-4-git-send-email-amitkarwar@gmail.com> (sfid-20180329_162752_518198_CE1CCB28)
-In-Reply-To: <1522332892-5251-1-git-send-email-amitkarwar@gmail.com>
-References: <1522332892-5251-1-git-send-email-amitkarwar@gmail.com>
+        Thu, 1 Mar 2018 09:20:33 -0500
+Received: by mail-qk0-f193.google.com with SMTP id s188so7703992qkb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:33 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 02/52] ath: Add regulatory mapping for Bermuda
+Date: Thu,  1 Mar 2018 15:18:12 +0100
+Message-Id: <20180301141902.24824-3-sven.eckelmann@openmesh.com> (sfid-20180301_152037_251549_C5227152)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
+and to select the correct conformance test limits (CTL) for a country. If
+the country isn't available and it is still programmed in the EEPROM then
+it will cause an error and stop the initialization with:
 
-80MHz clock for device should be enabled by default in
-TX command frame radio capabilities.
+  Invalid EEPROM contents
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+The current CTL mappings for this country are:
+
+* 2.4GHz: FCC
+* 5GHz: FCC
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/regd.h        | 1 +
+ drivers/net/wireless/ath/regd_common.h | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index c21fca7..9207da0 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -325,8 +325,8 @@ static int rsi_load_radio_caps(struct rsi_common *common)
- 	radio_caps->channel_num = common->channel;
- 	radio_caps->rf_model = RSI_RF_TYPE;
- 
-+	radio_caps->radio_cfg_info = RSI_LMAC_CLOCK_80MHZ;
- 	if (common->channel_width == BW_40MHZ) {
--		radio_caps->radio_cfg_info = RSI_LMAC_CLOCK_80MHZ;
- 		radio_caps->radio_cfg_info |= RSI_ENABLE_40MHZ;
- 
- 		if (common->fsm_state == FSM_MAC_INIT_DONE) {
+diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
+index f296ff838d2a..e7b43901d195 100644
+--- a/drivers/net/wireless/ath/regd.h
++++ b/drivers/net/wireless/ath/regd.h
+@@ -75,6 +75,7 @@ enum CountryCode {
+ 	CTRY_BELARUS = 112,
+ 	CTRY_BELGIUM = 56,
+ 	CTRY_BELIZE = 84,
++	CTRY_BERMUDA = 60,
+ 	CTRY_BOLIVIA = 68,
+ 	CTRY_BOSNIA_HERZ = 70,
+ 	CTRY_BRAZIL = 76,
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index cde0268cbed6..a8c7f306fd7b 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -306,6 +306,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_BELGIUM, ETSI1_WORLD, "BE"},
+ 	{CTRY_BELGIUM2, ETSI4_WORLD, "BL"},
+ 	{CTRY_BELIZE, APL1_ETSIC, "BZ"},
++	{CTRY_BERMUDA, FCC3_FCCA, "BM"},
+ 	{CTRY_BOLIVIA, APL1_ETSIC, "BO"},
+ 	{CTRY_BOSNIA_HERZ, ETSI1_WORLD, "BA"},
+ 	{CTRY_BRAZIL, FCC3_WORLD, "BR"},
 -- 
-2.7.4
+2.11.0
