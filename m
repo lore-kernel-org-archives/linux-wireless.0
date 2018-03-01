@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:45718 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752872AbeCPKLf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59860 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966621AbeCAKqC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 06:11:35 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 01/12] brcmfmac: do not convert linux error to firmware error string
-Date: Fri, 16 Mar 2018 11:11:14 +0100
-Message-Id: <1521195085-439-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111304_018919_338057AE)
-In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 1 Mar 2018 05:46:02 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Matt Redfearn <matt.redfearn@mips.com>
+Cc: <zajec5@gmail.com>, <linux-wireless@vger.kernel.org>,
+        <linux-mips@linux-mips.org>, <jhogan@kernel.org>
+Subject: Re: [PATCH v2] bcma: Prevent build of PCI host features in module
+References: <1519898292-12155-1-git-send-email-matt.redfearn@mips.com>
+Date: Thu, 01 Mar 2018 12:45:57 +0200
+In-Reply-To: <1519898292-12155-1-git-send-email-matt.redfearn@mips.com> (Matt
+        Redfearn's message of "Thu, 1 Mar 2018 09:58:12 +0000")
+Message-ID: <87lgfcnkey.fsf@kamboji.qca.qualcomm.com> (sfid-20180301_114608_394202_566D779C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of a linux error brcmf_fil_cmd_data() blurts an error message
-in which the error code is translated to an error string. However, it
-maps it to a firmware error string which should not happen. Simply
-print only the numeric error code and be done with it.
+Matt Redfearn <matt.redfearn@mips.com> writes:
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> Attempting to build bcma.ko with BCMA_DRIVER_PCI_HOSTMODE=y results in
+> a build error due to use of symbols not exported from vmlinux:
+>
+> ERROR: "pcibios_enable_device" [drivers/bcma/bcma.ko] undefined!
+> ERROR: "register_pci_controller" [drivers/bcma/bcma.ko] undefined!
+> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+>
+> To prevent this, don't allow the host mode feature to be built if
+> CONFIG_BCMA=m
+>
+> Signed-off-by: Matt Redfearn <matt.redfearn@mips.com>
+>
+> ---
+>
+> Changes in v2:
+> Rebase on v4.16-rc1
+>
+>  drivers/bcma/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+> index ba8acca036df..cb0f1aad20b7 100644
+> --- a/drivers/bcma/Kconfig
+> +++ b/drivers/bcma/Kconfig
+> @@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
+>  
+>  config BCMA_DRIVER_PCI_HOSTMODE
+>  	bool "Driver for PCI core working in hostmode"
+> -	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY
+> +	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY && BCMA = y
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
-index f2cfdd3..f527edc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
-@@ -124,8 +124,7 @@ static const char *brcmf_fil_get_errstr(u32 err)
- 					     data, len, &fwerr);
- 
- 	if (err) {
--		brcmf_dbg(FIL, "Failed: %s (%d)\n",
--			  brcmf_fil_get_errstr((u32)(-err)), err);
-+		brcmf_dbg(FIL, "Failed: error=%d\n", err);
- 	} else if (fwerr < 0) {
- 		brcmf_dbg(FIL, "Firmware error: %s (%d)\n",
- 			  brcmf_fil_get_errstr((u32)(-fwerr)), fwerr);
+Due to the recent regression in bcma I would prefer extra careful review
+before I apply this. So does this look ok to everyone?
+
 -- 
-1.9.1
+Kalle Valo
