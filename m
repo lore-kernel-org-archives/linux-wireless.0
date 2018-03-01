@@ -1,56 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:33932 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752035AbeC0GYt (ORCPT
+Received: from mail-it0-f53.google.com ([209.85.214.53]:54761 "EHLO
+        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967488AbeCAKKD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 02:24:49 -0400
-Received: by mail-lf0-f66.google.com with SMTP id c78-v6so26925434lfh.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 23:24:49 -0700 (PDT)
+        Thu, 1 Mar 2018 05:10:03 -0500
+Received: by mail-it0-f53.google.com with SMTP id c11so7043674ith.4
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 02:10:03 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <c3d2bae3da74abf969072eb7ce001a07@codeaurora.org>
-References: <1519634437-6672-1-git-send-email-mkenna@codeaurora.org>
- <CAKmTU=ptKUweW-WgoJiZRPS=6X+8q60XX2nHQwsqf=A1j-18iQ@mail.gmail.com> <c3d2bae3da74abf969072eb7ce001a07@codeaurora.org>
-From: Joshua Zhao <swzhao@gmail.com>
-Date: Mon, 26 Mar 2018 23:24:47 -0700
-Message-ID: <CAKmTU=q2ybEAdu5KsUkAeBHdprQ2WtjP94kYRZb4Nm7JM8mozg@mail.gmail.com> (sfid-20180327_082454_380762_A982780C)
-Subject: Re: [PATCH v2] ath10k: debugfs support to get final TPC stats for
- 10.4 variants
-To: Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <5A967894.9090900@broadcom.com>
+References: <CAPcv9S3wyPd5jD1PZWtDf-mRicmzRmz00qh5Jbov_N_egBAEZg@mail.gmail.com>
+ <5A953DBE.9070805@broadcom.com> <CAPcv9S1fZfrg3AV3GoWG-CaTkonpQyiHY6twvhS_ikXnj00t4g@mail.gmail.com>
+ <68f5549d-b8ad-85fb-4e80-50c53cac8108@lwfinger.net> <CAPcv9S0TmMhrL0qcxq-8NStd=fYQreXribrA+GQmppLvrB_avg@mail.gmail.com>
+ <CALLGbRJxwOUkxnNCyCt2sBuoZacs60AcDnFfWMQQuVdj5YykOw@mail.gmail.com>
+ <CALLGbRKrnnmsNtzpkABn+xOTjDaFKZz0jNxGkyJXMT1=XLa_3g@mail.gmail.com>
+ <5A95B9B2.4040403@broadcom.com> <CAPcv9S2gwDL6Jikxot2yS4daYaFQN6mEMx3vuY5w+ma_6wHCew@mail.gmail.com>
+ <5A967894.9090900@broadcom.com>
+From: Harsha Rao <harshrao464@gmail.com>
+Date: Thu, 1 Mar 2018 15:40:02 +0530
+Message-ID: <CAPcv9S0-riS2mV59GxBxdJXSXKN+V=EuXAwPJb2vz_LGP6bzkQ@mail.gmail.com> (sfid-20180301_111051_577659_68A2DA15)
+Subject: Re: Support on vendor id and device id
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What exactly "control power" means? Can you illustrate or give examples?
-Thanks!
-
-On Mon, Feb 26, 2018 at 9:33 PM, Maharaja Kennadyrajan
-<mkenna@codeaurora.org> wrote:
-> On 2018-02-27 1:19 am, Joshua Zhao wrote:
+On Wed, Feb 28, 2018 at 3:08 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 2/28/2018 12:14 AM, Harsha Rao wrote:
+>>>>>
+>>>>> My suspicion is that your device, is fundamentally a wilc1000 and that
+>>>>> >>>the existing wilc1000 driver will likely largely work for it and all
+>>>>> >>>you really need to do is modify the existing driver to handle the
+>>>>> >>>quirks of your particular implementation of the wilc1000 chip. And,
+>>>>> >>>often WiFi chips will let you change the VID/PID somewhere within
+>>>>> >>>whatever non-volatile storage it has (like where it stores the MAC
+>>>>> >>>address).
+>>>
+>>> >
+>>> >
+>>> >So it seems the wilc1000 devices from Microchip/Atmel are also using a
+>>> >vendor id they did not buy. Could be that the mentioned 3rd party
+>>> > providing
+>>> >the SDIO IP actually owns that vendor id, but if you are building your
+>>> > wifi
+>>> >chip on that you should better buy you own vendor id from the SD
+>>> >Association. Now if Harsha is actually working for Microchip (unclear to
+>>> > me)
+>>> >there is basically one party that should go shopping.
+>>> >
 >>
->> as you said:
->>         The existing tpc_stats debugfs file provides the dump which is
->> minimum of target power and regulatory domain.
->>                         cat
->> /sys/kernel/debug/ieee80211/phyX/ath10k/tpc_stats
->>
->> I=E2=80=99m curious what=E2=80=99s exact difference w/ this new addition=
-:
->>         Export the final Transmit Power Control (TPC) value, which is
->> the minimum of control power and existing TPC value to user space via
->> a new debugfs file "tpc_stats_final" to help with debugging.
->>
->> Can you clarify or give examples on the difference?
->>
->> Thanks!
+>> I would like to clarify that I am not building anything on top of
+>> microchip wifi device.
+>> We have a different HW . Its been just that 3rd party vendor providing
+>> SDIO IP has given
+>> same ID to different customers.
 >
 >
-> The existing tpc_stats is the minimum of "target power and regulatory
-> domain".
-> The new addition is the minimum of "existing tpc_stats and control power"
-> which means minimum of "control power, target power and regulatory domain=
-".
+> So it is as I said, ie. you are using the 3rd party SDIO IP as is and add
+> your own wifi IP to it? So what does the term "SDIO IP" mean here. Is it a
+> piece of hardware that you hook up to your wifi hardware or is it
+> VHDL/verilog in which the vendor id is defined. If it is VHDL you should
+> really get your own vendor id from the SD Association and fix it. Otherwise,
+> the 3rd party hardware should have means to change it. If not, you better
+> find another party.
 >
-> --
 > Regards,
-> Maha
+> Arend
+
+Thank you folks for your comments.
+The SDIO IP is VHDL IP core integrated on our SoC. And we figured out
+a way to update vendor ID at run-time during boot.
+We would get our own vendor ID  from SD association and proceed .
+
+-
+Harsha
