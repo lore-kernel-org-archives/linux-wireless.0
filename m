@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33906 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751731AbeCMTm2 (ORCPT
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:33867 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031424AbeCAOWS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 15:42:28 -0400
-Received: by mail-wm0-f65.google.com with SMTP id a20so15593144wmd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 12:42:28 -0700 (PDT)
-Subject: Re: [2/3] mwifiex: support sysfs initiated device coredump
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
- <20180312094115.2E1C1606DB@smtp.codeaurora.org>
- <5AA67616.2000602@broadcom.com> <87efkoazow.fsf@kamboji.qca.qualcomm.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AA829A1.1090209@broadcom.com> (sfid-20180313_204246_718128_8610AFC9)
-Date: Tue, 13 Mar 2018 20:42:25 +0100
-MIME-Version: 1.0
-In-Reply-To: <87efkoazow.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Thu, 1 Mar 2018 09:22:18 -0500
+Received: by mail-qt0-f195.google.com with SMTP id l25so7717116qtj.1
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:22:18 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 44/52] ath: Map Russia to ETSI8_WORLD
+Date: Thu,  1 Mar 2018 15:18:54 +0100
+Message-Id: <20180301141902.24824-45-sven.eckelmann@openmesh.com> (sfid-20180301_152221_601043_3E36D9A1)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/13/2018 2:10 PM, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->
->> On 3/12/2018 10:41 AM, Kalle Valo wrote:
->>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>>
->>>> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
->>>> it is possible to initiate a device coredump from user-space. This
->>>> patch adds support for it adding the .coredump() driver callback.
->>>> As there is no longer a need to initiate it through debugfs remove
->>>> that code.
->>>>
->>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>
->>> Based on the discussion I assume this is ok to take to w-d-next. If that's not
->>> the case, please let me know ASAP.
->>
->> It is up to the mwifiex maintainers to decide, I guess. The ABI
->> documentation need to be revised and change the callback to void
->> return type. I am not sure what the best approach is. 1) apply this
->> and fix return type later, or 2) fix return type and resubmit this.
->> What is your opinion?
->
-> I guess the callback change will go through Greg's tree? Then I suspect
-> it's easier that you submit the callback change to Greg first and wait
-> for it to trickle down to wireless-drivers-next (after the next merge
-> window) and then I can apply the driver patches. Otherwise there might
-> be a conflict between my and Greg's tree.
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
-That was my assessment, but unfortunately Marcel already applied the 
-btmrvl patch before I could reply. So how do I move from here? Option 1) 
-revert brmrvl and fix callback return type, or 2) apply mwifiex patch 
-and fix callback return type later for both drivers.
+The CTL mappings for this regdomain code were now changed to:
 
-Regards,
-Arend
+* 2.4GHz: ETSI
+* 5GHz: NO_CTL -> ETSI
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 0baa028ce7a2..ba5f112333b8 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -465,7 +465,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_PUERTO_RICO, FCC1_FCCA, "PR"},
+ 	{CTRY_QATAR, APL1_WORLD, "QA"},
+ 	{CTRY_ROMANIA, ETSI1_WORLD, "RO"},
+-	{CTRY_RUSSIA, NULL1_WORLD, "RU"},
++	{CTRY_RUSSIA, ETSI8_WORLD, "RU"},
+ 	{CTRY_RWANDA, APL1_WORLD, "RW"},
+ 	{CTRY_SAUDI_ARABIA, NULL1_WORLD, "SA"},
+ 	{CTRY_SERBIA, ETSI1_WORLD, "RS"},
+-- 
+2.11.0
