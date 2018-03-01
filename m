@@ -1,157 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54904 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751319AbeCVRdC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52994 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966508AbeCAIwP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 13:33:02 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: ath10k@lists.infradead.org
+        Thu, 1 Mar 2018 03:52:15 -0500
+Message-ID: <1519894332.2292.3.camel@sipsolutions.net> (sfid-20180301_095241_357036_7F77ABF7)
+Subject: Re: [PATCH v2] cfg80211/nl80211: add DFS offload flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCHv2] ath10k: fix kernel panic while reading tpc_stats
-Date: Thu, 22 Mar 2018 23:01:44 +0530
-Message-Id: <1521739904-17927-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180322_183306_302486_583DBBB7)
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Dmitry Lebed <dlebed@quantenna.com>,
+        Dmitry Lebed <lebed.dmitry@gmail.com>
+Date: Thu, 01 Mar 2018 09:52:12 +0100
+In-Reply-To: <20180301084619.noxh64db73lrklwp@bars>
+References: <20180222091513.25456-1-sergey.matyukevich.os@quantenna.com>
+         <1519385531.2231.12.camel@sipsolutions.net>
+         <20180301084619.noxh64db73lrklwp@bars>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When attempt to read tpc_stats for the chipsets which support
-more than 3 tx chain will trigger kernel panic(kernel stack is corrupted)
-due to writing values on rate_code array out of range.
-This patch changes the array size depends on the WMI_TPC_TX_N_CHAIN and
-added check to avoid write values on the array if the num tx chain
-get in tpc config event is greater than WMI_TPC_TX_N_CHAIN.
+Hi,
 
-Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00057
+Sorry I haven't answered/applied this. I will eventually, you've
+convinced me with the answer.
 
-Kernel panic log :
+> We are about to send v3 for this feature. Could you please clarify
+> your preferences in terms of patchwork procedure ? Should we mark
+> previous patch versions as superseded for nl80211/cfg80211 patches ?
 
-[  323.510944] Kernel panic - not syncing: stack-protector: Kernel stack is corrupted in: bf90c654
-[  323.510944]
-[  323.524390] CPU: 0 PID: 1908 Comm: cat Not tainted 3.14.77 #31
-[  323.530224] [<c021db48>] (unwind_backtrace) from [<c021ac08>] (show_stack+0x10/0x14)
-[  323.537941] [<c021ac08>] (show_stack) from [<c03c53c0>] (dump_stack+0x80/0xa0)
-[  323.545146] [<c03c53c0>] (dump_stack) from [<c022e4ac>] (panic+0x84/0x1e4)
-[  323.552000] [<c022e4ac>] (panic) from [<c022e61c>] (__stack_chk_fail+0x10/0x14)
-[  323.559350] [<c022e61c>] (__stack_chk_fail) from [<bf90c654>] (ath10k_wmi_event_pdev_tpc_config+0x424/0x438 [ath10k_core])
-[  323.570471] [<bf90c654>] (ath10k_wmi_event_pdev_tpc_config [ath10k_core]) from [<bf90d800>] (ath10k_wmi_10_4_op_rx+0x2f0/0x39c [ath10k_core])
-[  323.583047] [<bf90d800>] (ath10k_wmi_10_4_op_rx [ath10k_core]) from [<bf8fcc18>] (ath10k_htc_rx_completion_handler+0x170/0x1a0 [ath10k_core])
-[  323.595702] [<bf8fcc18>] (ath10k_htc_rx_completion_handler [ath10k_core]) from [<bf961f44>] (ath10k_pci_hif_send_complete_check+0x1f0/0x220 [ath10k_pci])
-[  323.609421] [<bf961f44>] (ath10k_pci_hif_send_complete_check [ath10k_pci]) from [<bf96562c>] (ath10k_ce_per_engine_service+0x74/0xc4 [ath10k_pci])
-[  323.622490] [<bf96562c>] (ath10k_ce_per_engine_service [ath10k_pci]) from [<bf9656f0>] (ath10k_ce_per_engine_service_any+0x74/0x80 [ath10k_pci])
-[  323.635423] [<bf9656f0>] (ath10k_ce_per_engine_service_any [ath10k_pci]) from [<bf96365c>] (ath10k_pci_napi_poll+0x44/0xe8 [ath10k_pci])
-[  323.647665] [<bf96365c>] (ath10k_pci_napi_poll [ath10k_pci]) from [<c0599994>] (net_rx_action+0xac/0x160)
-[  323.657208] [<c0599994>] (net_rx_action) from [<c02324a4>] (__do_softirq+0x104/0x294)
-[  323.665017] [<c02324a4>] (__do_softirq) from [<c0232920>] (irq_exit+0x9c/0x11c)
-[  323.672314] [<c0232920>] (irq_exit) from [<c0217fc0>] (handle_IRQ+0x6c/0x90)
-[  323.679341] [<c0217fc0>] (handle_IRQ) from [<c02084e0>] (gic_handle_irq+0x3c/0x60)
-[  323.686893] [<c02084e0>] (gic_handle_irq) from [<c02095c0>] (__irq_svc+0x40/0x70)
-[  323.694349] Exception stack(0xdd489c58 to 0xdd489ca0)
-[  323.699384] 9c40:                                                       00000000 a0000013
-[  323.707547] 9c60: 00000000 dc4bce40 60000013 ddc1d800 dd488000 00000990 00000000 c085c800
-[  323.715707] 9c80: 00000000 dd489d44 0000092d dd489ca0 c026e664 c026e668 60000013 ffffffff
-[  323.723877] [<c02095c0>] (__irq_svc) from [<c026e668>] (rcu_note_context_switch+0x170/0x184)
-[  323.732298] [<c026e668>] (rcu_note_context_switch) from [<c020e928>] (__schedule+0x50/0x4d4)
-[  323.740716] [<c020e928>] (__schedule) from [<c020e490>] (schedule_timeout+0x148/0x178)
-[  323.748611] [<c020e490>] (schedule_timeout) from [<c020f804>] (wait_for_common+0x114/0x154)
-[  323.756972] [<c020f804>] (wait_for_common) from [<bf8f6ef0>] (ath10k_tpc_stats_open+0xc8/0x340 [ath10k_core])
-[  323.766873] [<bf8f6ef0>] (ath10k_tpc_stats_open [ath10k_core]) from [<c02bb598>] (do_dentry_open+0x1ac/0x274)
-[  323.776741] [<c02bb598>] (do_dentry_open) from [<c02c838c>] (do_last+0x8c0/0xb08)
-[  323.784201] [<c02c838c>] (do_last) from [<c02c87e4>] (path_openat+0x210/0x598)
-[  323.791408] [<c02c87e4>] (path_openat) from [<c02c9d1c>] (do_filp_open+0x2c/0x78)
-[  323.798873] [<c02c9d1c>] (do_filp_open) from [<c02bc85c>] (do_sys_open+0x114/0x1b4)
-[  323.806509] [<c02bc85c>] (do_sys_open) from [<c0208c80>] (ret_fast_syscall+0x0/0x44)
-[  323.814241] CPU1: stopping
-[  323.816927] CPU: 1 PID: 0 Comm: swapper/1 Not tainted 3.14.77 #31
-[  323.823008] [<c021db48>] (unwind_backtrace) from [<c021ac08>] (show_stack+0x10/0x14)
-[  323.830731] [<c021ac08>] (show_stack) from [<c03c53c0>] (dump_stack+0x80/0xa0)
-[  323.837934] [<c03c53c0>] (dump_stack) from [<c021cfac>] (handle_IPI+0xb8/0x140)
-[  323.845224] [<c021cfac>] (handle_IPI) from [<c02084fc>] (gic_handle_irq+0x58/0x60)
-[  323.852774] [<c02084fc>] (gic_handle_irq) from [<c02095c0>] (__irq_svc+0x40/0x70)
-[  323.860233] Exception stack(0xdd499fa0 to 0xdd499fe8)
-[  323.865273] 9fa0: ffffffed 00000000 1d3c9000 00000000 dd498000 dd498030 10c0387d c08b62c8
-[  323.873432] 9fc0: 4220406a 512f04d0 00000000 00000000 00000001 dd499fe8 c021838c c0218390
-[  323.881588] 9fe0: 60000013 ffffffff
-[  323.885070] [<c02095c0>] (__irq_svc) from [<c0218390>] (arch_cpu_idle+0x30/0x50)
-[  323.892454] [<c0218390>] (arch_cpu_idle) from [<c026500c>] (cpu_startup_entry+0xa4/0x108)
-[  323.900690] [<c026500c>] (cpu_startup_entry) from [<422085a4>] (0x422085a4)
+If you do that it saves me the "work", but it doesn't bother me to do
+it myself.
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
-v2:
-  * Removed unnecessary '\n' in the beginning of the format string 
-
- drivers/net/wireless/ath/ath10k/debug.c |  8 +++++++-
- drivers/net/wireless/ath/ath10k/wmi.c   | 10 +++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h   |  2 +-
- 3 files changed, 17 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 554cd78..d816299 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1506,7 +1506,13 @@ static void ath10k_tpc_stats_print(struct ath10k_tpc_stats *tpc_stats,
- 	*len += scnprintf(buf + *len, buf_len - *len,
- 			  "********************************\n");
- 	*len += scnprintf(buf + *len, buf_len - *len,
--			  "No.  Preamble Rate_code tpc_value1 tpc_value2 tpc_value3\n");
-+			  "No.  Preamble Rate_code ");
-+
-+	for (i = 0; i < WMI_TPC_TX_N_CHAIN; i++)
-+		*len += scnprintf(buf + *len, buf_len - *len,
-+				  "tpc_value%d ", i);
-+
-+	*len += scnprintf(buf + *len, buf_len - *len, "\n");
- 
- 	for (i = 0; i < tpc_stats->rate_max; i++) {
- 		*len += scnprintf(buf + *len, buf_len - *len,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 58dc218..ac9f6a5 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4325,7 +4325,7 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
- 
- 	tpc_stats = kzalloc(sizeof(*tpc_stats), GFP_ATOMIC);
- 	if (!tpc_stats)
--		return;
-+		goto exit;
- 
- 	/* Create the rate code table based on the chains supported */
- 	rate_idx = 0;
-@@ -4351,6 +4351,12 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
- 
- 	num_tx_chain = __le32_to_cpu(ev->num_tx_chain);
- 
-+	if (num_tx_chain > WMI_TPC_TX_N_CHAIN) {
-+		ath10k_warn(ar, "number of tx chain is %d greater than TPC configured tx chain %d\n",
-+			    num_tx_chain, WMI_TPC_TX_N_CHAIN);
-+		goto exit;
-+	}
-+
- 	/* Fill HT20 rate code */
- 	for (i = 0; i < num_tx_chain; i++) {
- 		for (j = 0; j < 8; j++) {
-@@ -4455,6 +4461,8 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
- 		   __le32_to_cpu(ev->twice_max_rd_power) / 2,
- 		   __le32_to_cpu(ev->num_tx_chain),
- 		   __le32_to_cpu(ev->rate_max));
-+exit:
-+	complete(&ar->debug.tpc_complete);
- }
- 
- static void
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index c7b30ed..5646ea0 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3992,8 +3992,8 @@ struct wmi_pdev_get_tpc_config_cmd {
- } __packed;
- 
- #define WMI_TPC_CONFIG_PARAM		1
--#define WMI_TPC_RATE_MAX		160
- #define WMI_TPC_TX_N_CHAIN		4
-+#define WMI_TPC_RATE_MAX		(WMI_TPC_TX_N_CHAIN * 65)
- #define WMI_TPC_PREAM_TABLE_MAX		10
- #define WMI_TPC_FLAG			3
- #define WMI_TPC_BUF_SIZE		10
--- 
-1.9.1
+johannes
