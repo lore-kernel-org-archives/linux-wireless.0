@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:9685 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751995AbeC0Mhg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 08:37:36 -0400
-Message-ID: <1522154254.3786.269.camel@intel.com> (sfid-20180327_143741_623506_CD2E7ABE)
-Subject: Re: [PATCH] iwlwifi: add device ID for Rivet Networks Killer
- Wireless-AC 1550
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Izzy Kulbe <kernel@unikorn.me>, Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Mar 2018 15:37:34 +0300
-In-Reply-To: <2c826451177bbcb8fe033631dc7b87eb92f5e42d.camel@unikorn.me>
-References: <1522148065.12122.5.camel@unikorn.me>
-         <87370lrb7y.fsf@kamboji.qca.qualcomm.com>
-         <2c826451177bbcb8fe033631dc7b87eb92f5e42d.camel@unikorn.me>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:33643 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031229AbeCAOWB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Mar 2018 09:22:01 -0500
+Received: by mail-qt0-f194.google.com with SMTP id a23so7718642qtn.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:22:00 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 37/52] ath: Map Malasia to FCC1_WORLD
+Date: Thu,  1 Mar 2018 15:18:47 +0100
+Message-Id: <20180301141902.24824-38-sven.eckelmann@openmesh.com> (sfid-20180301_152207_796355_CCC4A186)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-03-27 at 14:03 +0200, Izzy Kulbe wrote:
-> On Tue, 2018-03-27 at 14:48 +0300, Kalle Valo wrote:
-> > Izzy Kulbe <kernel@unikorn.me> writes:
-> > 
-> > > nvm the last message, attached the wrong file using the 9270
-> > > instead of the 9260 firmware, which obviously wouldn't work.
-> > > Here's the working patch:
-> > > 
-> > > 
-> > > Add support for Rivet Networks Killer Wireless-AC 1550 chipset, 
-> > > which is using the Intel Wireless-AC 9260 chip
-> > > 
-> > > Signed-off-by: Izzy Kulbe <kernel@unikorn.me>
-> > > 
-> > > ---
-> > 
-> > You should put the comment "nvm the last message..." under the "---
-> > "
-> > line so that git-am can ignore it.
-> 
-> Sorry, still new to the whole process. should i just resend 
-> that message with the proper order? 
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
-Wait a bit.  This ID looks strange, someone else reported this already
-and it looked strange, with an incorrect subsystem vendor ID.
+The CTL mappings for this regdomain code were now changed to:
 
-Can you run lspci like this and let us know the results?
+* 2.4GHz: ETSI
+* 5GHz: ETSI -> FCC
 
-lspci -nv -s 3b:00.0
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index f457c9d50bd2..efc363af5e41 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -440,7 +440,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_LUXEMBOURG, ETSI1_WORLD, "LU"},
+ 	{CTRY_MACAU, FCC2_WORLD, "MO"},
+ 	{CTRY_MACEDONIA, ETSI1_WORLD, "MK"},
+-	{CTRY_MALAYSIA, APL8_WORLD, "MY"},
++	{CTRY_MALAYSIA, FCC1_WORLD, "MY"},
+ 	{CTRY_MALTA, ETSI1_WORLD, "MT"},
+ 	{CTRY_MAURITIUS, ETSI1_WORLD, "MU"},
+ 	{CTRY_MEXICO, FCC1_FCCA, "MX"},
+-- 
+2.11.0
