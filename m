@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:32939 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751131AbeCNMpR (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:45630 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031181AbeCAOVv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 08:45:17 -0400
-From: hariprasath.elango@gmail.com
-To: aditya.shankar@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com
-Cc: hariprasath.elango@gmail.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/7] Cleanup patches for wilc1000 driver
-Date: Wed, 14 Mar 2018 18:14:58 +0530
-Message-Id: <cover.1521030891.git.hariprasath.elango@gmail.com> (sfid-20180314_134717_618518_53FFA130)
+        Thu, 1 Mar 2018 09:21:51 -0500
+Received: by mail-qt0-f196.google.com with SMTP id v90so7654763qte.12
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:51 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 33/52] ath: Map Japan to MKK5_MKKA2
+Date: Thu,  1 Mar 2018 15:18:43 +0100
+Message-Id: <20180301141902.24824-34-sven.eckelmann@openmesh.com> (sfid-20180301_152155_305621_394F153C)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: HariPrasath Elango <hariprasath.elango@gmail.com>
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
-This patchset has few cleanup patches related to coding guidelines and few
-trivial changes
+This change itself doesn't change the selected CTL of this country and is
+only required to stay in sync with the QCA mappings.
 
-HariPrasath Elango (7):
-  staging: wilc1000: Fix code block alignment
-  staging: wilc1000: Destroy mutex object in deinitialization
-  staging: wilc1000: use kmemdup instead of kmalloc and memcpy
-  staging: wilc1000: destroy initialized mutex object
-  staging: wilc1000: replace switch statement by simple if condition
-  staging: wilc1000: remove unwanted braces and correct code alignment
-  staging: wilc1000: use kmemdup to replace kmalloc/memcpy
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/staging/wilc1000/host_interface.c         | 27 +++++++++++++----------
- drivers/staging/wilc1000/linux_mon.c              |  3 +--
- drivers/staging/wilc1000/linux_wlan.c             |  7 +++---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  9 ++------
- 4 files changed, 22 insertions(+), 24 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 59145decdb2b..14cb25ab494d 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -364,7 +364,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_ITALY, ETSI1_WORLD, "IT"},
+ 	{CTRY_JAMAICA, FCC3_WORLD, "JM"},
+ 
+-	{CTRY_JAPAN, MKK1_MKKA, "JP"},
++	{CTRY_JAPAN, MKK5_MKKA2, "JP"},
+ 	{CTRY_JAPAN1, MKK1_MKKB, "JP"},
+ 	{CTRY_JAPAN2, MKK1_FCCA, "JP"},
+ 	{CTRY_JAPAN3, MKK2_MKKA, "JP"},
 -- 
-2.10.0.GIT
+2.11.0
