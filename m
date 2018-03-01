@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40746 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751184AbeC0IoL (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:41826 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031437AbeCAOWd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 04:44:11 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Subject: [RFC 0/4] wireless: Per-sta NoAck and offload support
-Date: Tue, 27 Mar 2018 14:12:47 +0530
-Message-Id: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org> (sfid-20180327_104417_473651_4C187515)
+        Thu, 1 Mar 2018 09:22:33 -0500
+Received: by mail-qk0-f196.google.com with SMTP id w142so7689280qkb.8
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:22:33 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 50/52] ath: Map Venezuela to FCC1_WORLD
+Date: Thu,  1 Mar 2018 15:19:00 +0100
+Message-Id: <20180301141902.24824-51-sven.eckelmann@openmesh.com> (sfid-20180301_153349_190070_BD051EA2)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adds infrastructure for driver to offload NoAck functionality, driver
-like ath10k could make use of it. Also extends the current ndev wide
-NoAck policy to per-station, with sta level NoAck policy configuration
-userspace could selectively turn off/on Noack based on various connection
-parameters of the station.
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
-Vasanthakumar Thiagarajan (4):
-  mac80211: Add NoAck policy functionality offload infrastructure
-  nl80211/mac80211: Extend NoAck policy command with peer MAC address
-  mac80211: Apply per-peer NoAck tid bitmap configuration
-  mac80211: Advertise per-peer NoAck policy support
+This change itself doesn't change the selected CTL of this country and is
+only required to stay in sync with the QCA mappings.
 
- include/net/cfg80211.h       |  9 +++++++--
- include/net/mac80211.h       | 18 ++++++++++++++++++
- include/uapi/linux/nl80211.h | 12 +++++++++++-
- net/mac80211/cfg.c           | 45 +++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/debugfs.c       |  1 +
- net/mac80211/driver-ops.h    | 22 ++++++++++++++++++++++
- net/mac80211/iface.c         |  4 ++++
- net/mac80211/main.c          |  8 ++++++++
- net/mac80211/sta_info.h      |  3 +++
- net/mac80211/trace.h         | 28 +++++++++++++++++++++++++++
- net/mac80211/tx.c            |  3 ++-
- net/mac80211/wme.c           | 35 +++++++++++++++++++++++++++++++++-
- net/wireless/nl80211.c       | 12 +++++++++++-
- net/wireless/rdev-ops.h      |  7 ++++---
- net/wireless/trace.h         | 11 +++++++----
- 15 files changed, 202 insertions(+), 16 deletions(-)
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index aba44cffce3d..d22eff3fe75b 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -497,7 +497,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_UNITED_STATES_FCC49, FCC4_FCCA, "PS"},
+ 	{CTRY_URUGUAY, FCC3_WORLD, "UY"},
+ 	{CTRY_UZBEKISTAN, FCC3_FCCA, "UZ"},
+-	{CTRY_VENEZUELA, APL2_ETSIC, "VE"},
++	{CTRY_VENEZUELA, FCC1_WORLD, "VE"},
+ 	{CTRY_VIET_NAM, NULL1_WORLD, "VN"},
+ 	{CTRY_YEMEN, NULL1_WORLD, "YE"},
+ 	{CTRY_ZIMBABWE, NULL1_WORLD, "ZW"},
 -- 
-1.9.1
+2.11.0
