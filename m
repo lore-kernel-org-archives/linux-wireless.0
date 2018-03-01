@@ -1,97 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:38034 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751632AbeCWXBH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 19:01:07 -0400
+Received: from mx2.suse.de ([195.135.220.15]:39466 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161716AbeCAVBk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Mar 2018 16:01:40 -0500
+Date: Thu, 1 Mar 2018 21:01:39 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: cantabile <cantabile.desu@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        linux-wireless@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] mt7601u: Fix system freeze after resuming from
+ hibernation
+Message-ID: <20180301210139.GX14069@wotan.suse.de> (sfid-20180301_220144_709792_9F9EE9CF)
+References: <20180227165451.GS14069@wotan.suse.de>
+ <20180227102253.04a3a01c@cakuba.netronome.com>
+ <20180227204240.GW14069@wotan.suse.de>
+ <498eb998-0dce-83c6-87c9-76cb83b148ea@gmail.com>
+ <20180228184820.GL14069@wotan.suse.de>
+ <ba4c6079-ca45-2048-1e7d-3cb4e1a80cdb@gmail.com>
+ <20180301002813.GQ14069@wotan.suse.de>
+ <9088ab38-5a88-f479-1225-5988f9890aaa@gmail.com>
+ <20180301172920.GV14069@wotan.suse.de>
+ <877eb47d-5750-c3ef-0238-bbfc73476ed2@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180323140919.GB5942@localhost.localdomain>
-References: <20180323094740.GA5942@localhost.localdomain> <CACna6rx-QNQhVNkwFSabwAY9vM1qV_gTcWywsHFuP5B4NH4NXA@mail.gmail.com>
- <20180323140919.GB5942@localhost.localdomain>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Sat, 24 Mar 2018 00:01:05 +0100
-Message-ID: <CACna6rwk04dn2oVYsQMhmzvRTmuDv8_AKPK7+kBwbjB_CLRALg@mail.gmail.com> (sfid-20180324_000127_726660_6CB66F40)
-Subject: Re: [QUESTION] Mainline support for B43_PHY_AC wifi cards
-To: Juri Lelli <juri.lelli@gmail.com>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <877eb47d-5750-c3ef-0238-bbfc73476ed2@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 March 2018 at 15:09, Juri Lelli <juri.lelli@gmail.com> wrote:
-> On 23/03/18 14:43, Rafa=C5=82 Mi=C5=82ecki wrote:
->> Hi,
->>
->> On 23 March 2018 at 10:47, Juri Lelli <juri.lelli@gmail.com> wrote:
->> > I've got a Dell XPS 13 9343/0TM99H (BIOS A15 01/23/2018) mounting a
->> > BCM4352 802.11ac (rev 03) wireless card and so far I've been using it =
-on
->> > Fedora with broadcom-wl package (which I believe installs Broadcom's S=
-TA
->> > driver?). It works good apart from occasional hiccups after suspend.
->> >
->> > I'd like to get rid of that dependency (you can understand that it's
->> > particularly annoying when testing mainline kernels), but I found out
->> > that support for my card is BROKEN in mainline [1]. Just to see what
->> > happens, I forcibly enabled it witnessing that it indeed crashes like
->> > below as Kconfig warns. :)
->> >
->> >  bcma: bus0: Found chip with id 0x4352, rev 0x03 and package 0x00
->> >  bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2B=
-, class 0x0)
->> >  bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2=
-A, class 0x0)
->> >  bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x02, c=
-lass 0x0)
->> >  bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x01,=
- class 0x0)
->> >  bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev =
-0x11, class 0x0)
->> >  bcma: Unsupported SPROM revision: 11
->> >  bcma: bus0: Invalid SPROM read from the PCIe card, trying to use fall=
-back SPROM
->> >  bcma: bus0: Using fallback SPROM failed (err -2)
->> >  bcma: bus0: No SPROM available
->> >  bcma: bus0: Bus registered
->> >  b43-phy0: Broadcom 4352 WLAN found (core revision 42)
->> >  b43-phy0: Found PHY: Analog 12, Type 11 (AC), Revision 1
->> >  b43-phy0: Found Radio: Manuf 0x17F, ID 0x2069, Revision 4, Version 0
->> >  BUG: unable to handle kernel NULL pointer dereference at 000000000000=
-0000
->>
->> This isn't really useful without a full backtrace.
->
-> Sure. I cut it here because I didn't expect people to debug what is
-> already known to be broken (but still it seemed to carry useful
-> information about the hw). :)
+On Thu, Mar 01, 2018 at 10:11:01PM +0200, cantabile wrote:
+> On 01/03/18 19:29, Luis R. Rodriguez wrote:
+> > 
+> > Correct?
+> > 
+> 
+> The above log is from "20180227-firmware-cache" kernel plus your suggested
+> change that makes it always upload the firmware:
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> index 65a8004418ea..04cbffd225a1 100644
+> --- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> +++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> @@ -421,7 +421,7 @@ static int mt7601u_load_firmware(struct mt7601u_dev
+> *dev)
+>  					 MT_USB_DMA_CFG_TX_BULK_EN));
+> 
+>  	if (firmware_running(dev))
+> -		return 0;
+> +		pr_info("Firmware already loaded but going to reload...");
+> 
+>  	ret = request_firmware(&fw, MT7601U_FIRMWARE, dev->dev);
+>  	if (ret)
 
-Please paste the remaining part if you still got it.
+Huh, if you are using 20180227-firmware-cache, then your diff should instead
+be this no?
+
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+index b90456a4b4d7..04cbffd225a1 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
++++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+@@ -421,7 +421,7 @@ static int mt7601u_load_firmware(struct mt7601u_dev *dev)
+ 					 MT_USB_DMA_CFG_TX_BULK_EN));
+ 
+ 	if (firmware_running(dev))
+-		return request_firmware_cache(dev->dev, MT7601U_FIRMWARE);
++		pr_info("Firmware already loaded but going to reload...");
+ 
+ 	ret = request_firmware(&fw, MT7601U_FIRMWARE, dev->dev);
+ 	if (ret)
 
 
->> > So, question: is replacing my card the only way I can get rid of this
->> > downstream dependency? :(
->>
->> It's definitely the cheapest way. Getting AC PHY into anything usable
->> (proper setup that will allow Tx & Rx anything) would probably take
->> weeks or months of development. I'm not even going to estimate cost of
->> adding support for 802.11n and 802.11ac features. I was the last
->> person actively working on b43, right now I spend my free time on
->> other hobby projects. Few people were planning to help but it seems it
->> never worked out for them.
->
-> I see. Just wondering why even if Broadcom's STA solution seems to work
-> fine, it is not mainline. Maybe a maintenance problem? But Fedora ships
-> with very recent kernels, so I'd expect the driver to work with mainline
-> (I tried compiling that against mainline, but I got errors that I didn't
-> spend time figuring out how to fix).
->
-> Do you know what's the deal w.r.t. the STA driver?
+> I recompiled the kernel with CONFIG_DEBUG_INFO=y, but the messages in
+> journalctl look pretty much the same as before. There are still question
+> marks in the call traces, there are no line numbers, and it still says
+> "verbose debug info unavailable". /proc/config.gz contains
+> CONFIG_DEBUG_INFO=y. What else do I need to do?
 
-Driver being closed source and company not willing to open source it
-is usually a big problem getting it mainline...
+Hrm, odd.
 
---=20
-Rafa=C5=82
+CONFIG_FRAME_POINTER=y
+
+Maybe.
+
+> > But if the patches I posted help, I guess we already have a solution, The rest of
+> > these email exchanges are all just hypothetical exercises.
+> > 
+> 
+> Your patches definitely fix the problem I reported in my initial email.
+
+Ah OK :)
+
+  Luis
