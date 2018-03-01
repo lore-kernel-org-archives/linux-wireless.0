@@ -1,179 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:34046 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932217AbeCLIz7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53988 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966089AbeCAF52 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 04:55:59 -0400
-Received: by mail-wm0-f49.google.com with SMTP id a20so12261091wmd.1
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2018 01:55:58 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: Add support for getting nvram contents from EFI
- variables
-To: Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20180311214751.12769-1-hdegoede@redhat.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AA6409E.6050300@broadcom.com> (sfid-20180312_095619_657902_1BA584E3)
-Date: Mon, 12 Mar 2018 09:55:58 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180311214751.12769-1-hdegoede@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Thu, 1 Mar 2018 00:57:28 -0500
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Subject: [PATCHv2] ath10k: Add tx ack signal support for management frames
+Date: Thu,  1 Mar 2018 11:27:21 +0530
+Message-Id: <1519883841-4117-1-git-send-email-vnaralas@codeaurora.org> (sfid-20180301_065734_152154_173B4BB4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/11/2018 10:47 PM, Hans de Goede wrote:
-> Various models Asus laptops with a SDIO attached brcmfmac wifi chip, store
-> the nvram contents in a special EFI variable. This commit adds support for
-> getting nvram directly from this EFI variable, without the user needing to
-> manually copy it.
->
-> This makes Wifi / Bluetooth work out of the box on these devices instead of
-> requiring manual setup.
->
-> Note that at least on the Asus T200TA the nvram from the EFI variable
-> wrongly contains "ccode=ALL" which the firmware does not understand, the
-> code to fetch the nvram from the EFI variable will fix this up to:
-> "ccode=XV" which is the correct way to specify the worldwide broadcast
-> regime.
->
-> This has been tested on the following models: Asus T100CHI, Asus T100HA,
-> Asus T100TA and Asus T200TA
+This patch add support to get RSSI from acknowledgment
+frames for transmitted management frames.
 
-Hi Hans,
+hardware_used: QCA4019, QCA9984.
+firmware version: 10.4-3.5.3-00052.
 
-I like to have this as well, but .... (see below)
+Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+---
+v2:
+ * Added checks to validate ack_rssi
 
-> Tested-by: Hans de Goede <hdegoede@redhat.com>
+ drivers/net/wireless/ath/ath10k/core.h   |  3 +++
+ drivers/net/wireless/ath/ath10k/htt.h    | 10 +++++++++-
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  9 +++++++++
+ drivers/net/wireless/ath/ath10k/txrx.c   |  8 ++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h    | 14 ++++++++++++++
+ 5 files changed, 43 insertions(+), 1 deletion(-)
 
-Duh. I would expect anyone to have tested their patches although you can 
-not cover every system out there obviously :-p
-
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
->   .../broadcom/brcm80211/brcmfmac/firmware.c         | 68 +++++++++++++++++++++-
->   1 file changed, 67 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> index 091b52979e03..cbac407ae132 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-> @@ -14,6 +14,8 @@
->    * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->    */
->
-> +#include <linux/dmi.h>
-> +#include <linux/efi.h>
->   #include <linux/kernel.h>
->   #include <linux/slab.h>
->   #include <linux/device.h>
-> @@ -446,6 +448,67 @@ struct brcmf_fw {
->   		     void *nvram_image, u32 nvram_len);
->   };
->
-> +#ifdef CONFIG_EFI
-> +static u8 *brcmf_fw_nvram_from_efi(size_t *data_len_ret)
-> +{
-> +	const u16 name[] = { 'n', 'v', 'r', 'a', 'm', 0 };
-
-Isn't there some helper function to make this conversion to u16 array? 
-Hmm, maybe it is my itch to scratch later :-)
-
-> +	struct efivar_entry *nvram_efivar;
-> +	unsigned long data_len = 0;
-> +	u8 *data = NULL;
-> +	char *ccode;
-> +	int err;
-> +
-> +	/* So far only Asus devices store the nvram in an EFI var */
-> +	if (!dmi_name_in_vendors("ASUSTeK COMPUTER INC."))
-> +		return NULL;
-
-Actually had a Sony device with nvram in EFI. Why not just drop this 
-optimization.
-
-> +	nvram_efivar = kzalloc(sizeof(*nvram_efivar), GFP_KERNEL);
-> +	if (!nvram_efivar)
-> +		return NULL;
-> +
-> +	memcpy(&nvram_efivar->var.VariableName, name, sizeof(name));
-> +	nvram_efivar->var.VendorGuid = EFI_GUID(0x74b00bd9, 0x805a, 0x4d61,
-> +						0xb5, 0x1f, 0x43, 0x26,
-> +						0x81, 0x23, 0xd1, 0x13);
-> +
-> +	err = efivar_entry_size(nvram_efivar, &data_len);
-> +	if (err)
-> +		goto fail;
-> +
-> +	data = kmalloc(data_len, GFP_KERNEL);
-> +	if (!data)
-> +		goto fail;
-> +
-> +	err = efivar_entry_get(nvram_efivar, NULL, &data_len, data);
-> +	if (err)
-> +		goto fail;
-> +
-> +	/* In some cases the EFI-var stored nvram contains "ccode=ALL" but
-> +	 * the firmware does not understand "ALL" change this to "XV" which
-> +	 * is the correct way to specify the "worldwide" compatible settings.
-> +	 */
-
-This is actually quite bad. The ALL ccode should never end up on the 
-market as it is intended for internal use only during bringup project 
-phase so these seems to be programmed wrong. Also simply selecting XV 
-instead is not correct. There is not just one worldwide domain in the 
-regulatory database of the firmware image.
-
-> +	ccode = strnstr((char *)data, "ccode=ALL", data_len);
-> +	if (ccode) {
-> +		ccode[6] = 'X';
-> +		ccode[7] = 'V';
-> +		ccode[8] = '\n';
-> +	}
-> +
-> +	brcmf_info("Using nvram EFI variable\n");
-> +
-> +	kfree(nvram_efivar);
-> +	*data_len_ret = data_len;
-> +	return data;
-> +
-> +fail:
-> +	kfree(data);
-> +	kfree(nvram_efivar);
-> +	return NULL;
-> +}
-> +#else
-> +static u8 *brcmf_fw_nvram_from_efi(size_t *data_len) { return NULL; }
-> +#endif
-> +
->   static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
->   {
->   	struct brcmf_fw *fwctx = ctx;
-> @@ -462,6 +525,8 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
->   		raw_nvram = false;
->   	} else {
->   		data = bcm47xx_nvram_get_contents(&data_len);
-> +		if (!data)
-> +			data = brcmf_fw_nvram_from_efi(&data_len);
->   		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
->   			goto fail;
->   		raw_nvram = true;
-> @@ -472,7 +537,8 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
->   					     fwctx->domain_nr, fwctx->bus_nr);
->
->   	if (raw_nvram)
-> -		bcm47xx_nvram_release_contents(data);
-> +		kvfree(data); /* vfree for bcm47xx case / kfree for efi case */
-
-While this clearly works I can not say I like this. If you want to do it 
-this way, please submit a patch to remove 
-bcm47xx_nvram_release_contents() as it is no longer needed since we now 
-have kvfree(). From maintainance perspective also drop the postfix 
-comment. We just might end up doing vmalloc in efi case at some point 
-and this would likely be forgotten.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index fe6b303..370aa4d3 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -51,6 +52,8 @@
+ /* Antenna noise floor */
+ #define ATH10K_DEFAULT_NOISE_FLOOR -95
+ 
++#define ATH10K_INVALID_RSSI 128
++
+ #define ATH10K_MAX_NUM_MGMT_PENDING 128
+ 
+ /* number of failed packets (20 packets with 16 sw reties each) */
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 8cc2a8b..e5dbb0b 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -533,12 +534,18 @@ struct htt_ver_resp {
+ 	u8 rsvd0;
+ } __packed;
+ 
++#define HTT_MGMT_TX_CMPL_FLAG_ACK_RSSI BIT(0)
++
++#define HTT_MGMT_TX_CMPL_INFO_ACK_RSSI_MASK	GENMASK(7, 0)
++
+ struct htt_mgmt_tx_completion {
+ 	u8 rsvd0;
+ 	u8 rsvd1;
+-	u8 rsvd2;
++	u8 flags;
+ 	__le32 desc_id;
+ 	__le32 status;
++	__le32 ppdu_id;
++	__le32 info;
+ } __packed;
+ 
+ #define HTT_RX_INDICATION_INFO0_EXT_TID_MASK  (0x1F)
+@@ -1648,6 +1655,7 @@ struct htt_resp {
+ struct htt_tx_done {
+ 	u16 msdu_id;
+ 	u16 status;
++	u8 ack_rssi;
+ };
+ 
+ enum htt_tx_compl_state {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 6d96f95..d754a6f 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -24,6 +25,7 @@
+ #include "mac.h"
+ 
+ #include <linux/log2.h>
++#include <linux/bitfield.h>
+ 
+ /* when under memory pressure rx ring refill may fail and needs a retry */
+ #define HTT_RX_RING_REFILL_RETRY_MS 50
+@@ -2668,6 +2670,13 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		switch (status) {
+ 		case HTT_MGMT_TX_STATUS_OK:
+ 			tx_done.status = HTT_TX_COMPL_STATE_ACK;
++			if (test_bit(WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS,
++			    ar->wmi.svc_map) &&
++			    (resp->mgmt_tx_completion.flags &
++			     HTT_MGMT_TX_CMPL_FLAG_ACK_RSSI)) {
++				tx_done.ack_rssi = FIELD_GET(HTT_MGMT_TX_CMPL_INFO_ACK_RSSI_MASK,
++							     resp->mgmt_tx_completion.info);
++			}
+ 			break;
+ 		case HTT_MGMT_TX_STATUS_RETRY:
+ 			tx_done.status = HTT_TX_COMPL_STATE_NOACK;
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 70e23bb..cda164f 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2016 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -119,6 +120,13 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 			info->flags &= ~IEEE80211_TX_STAT_ACK;
+ 	}
+ 
++	if (tx_done->status == HTT_TX_COMPL_STATE_ACK &&
++	    tx_done->ack_rssi != ATH10K_INVALID_RSSI) {
++		info->status.ack_signal = ATH10K_DEFAULT_NOISE_FLOOR +
++						tx_done->ack_rssi;
++		info->status.is_valid_ack_signal = true;
++	}
++
+ 	ieee80211_tx_status(htt->ar->hw, msdu);
+ 	/* we do not own the msdu anymore */
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index c7b30ed..106c2e1 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -197,6 +198,8 @@ enum wmi_service {
+ 	WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
+ 	WMI_SERVICE_MGMT_TX_WMI,
+ 	WMI_SERVICE_TDLS_WIDER_BANDWIDTH,
++	WMI_SERVICE_RESET_CHIP,
++	WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -234,6 +237,8 @@ enum wmi_10x_service {
+ 	WMI_10X_SERVICE_MESH,
+ 	WMI_10X_SERVICE_EXT_RES_CFG_SUPPORT,
+ 	WMI_10X_SERVICE_PEER_STATS,
++	WMI_10X_SERVICE_RESET_CHIP,
++	WMI_10X_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS,
+ };
+ 
+ enum wmi_main_service {
+@@ -339,6 +344,7 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
+ 	WMI_10_4_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
+ 	WMI_10_4_SERVICE_TDLS_WIDER_BANDWIDTH,
++	WMI_10_4_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS,
+ };
+ 
+ static inline char *wmi_service_name(int service_id)
+@@ -448,6 +454,8 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE);
+ 	SVCSTR(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY);
+ 	SVCSTR(WMI_SERVICE_TDLS_WIDER_BANDWIDTH);
++	SVCSTR(WMI_SERVICE_RESET_CHIP);
++	SVCSTR(WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -538,6 +546,10 @@ static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
+ 	SVCMAP(WMI_10X_SERVICE_PEER_STATS,
+ 	       WMI_SERVICE_PEER_STATS, len);
++	SVCMAP(WMI_10X_SERVICE_RESET_CHIP,
++	       WMI_SERVICE_RESET_CHIP, len);
++	SVCMAP(WMI_10X_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS,
++	       WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS, len);
+ }
+ 
+ static inline void wmi_main_svc_map(const __le32 *in, unsigned long *out,
+@@ -746,6 +758,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY, len);
+ 	SVCMAP(WMI_10_4_SERVICE_TDLS_WIDER_BANDWIDTH,
+ 	       WMI_SERVICE_TDLS_WIDER_BANDWIDTH, len);
++	SVCMAP(WMI_10_4_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS,
++	       WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS, len);
+ }
+ 
+ #undef SVCMAP
+-- 
+2.7.4
