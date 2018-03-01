@@ -1,53 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:45350 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750866AbeC2O1g (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35748 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967748AbeCALw4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 10:27:36 -0400
-Received: by mail-pf0-f196.google.com with SMTP id l27so3333179pfk.12
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 07:27:36 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [v2 RESEND 0/4] rsi driver enhancements
-Date: Thu, 29 Mar 2018 19:44:48 +0530
-Message-Id: <1522332892-5251-1-git-send-email-amitkarwar@gmail.com> (sfid-20180329_162740_039612_5931B2B8)
+        Thu, 1 Mar 2018 06:52:56 -0500
+Received: by mail-oi0-f68.google.com with SMTP id x10so4253822oig.2
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 03:52:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <877etpmomh.fsf@kamboji.qca.qualcomm.com>
+References: <20171101200157.27096-1-chunkeey@gmail.com> <1666282.PC3nhpCf9f@debian64>
+ <87tvxpf9i8.fsf@kamboji.qca.qualcomm.com> <1882220.dvZB77Gu54@debian64> <877etpmomh.fsf@kamboji.qca.qualcomm.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 1 Mar 2018 12:52:55 +0100
+Message-ID: <CACna6ryUYb8ACVaRx3jROgxfUvBV5p4+3UsNEV8FEU1R_2sxdQ@mail.gmail.com> (sfid-20180301_125300_905344_22A9036D)
+Subject: Re: [PATCH] ath10k: fix recent bandwidth conversion bug
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Christian Lamparter <chunkeey@gmail.com>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+On 14 December 2017 at 14:21, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Christian Lamparter <chunkeey@gmail.com> writes:
+>
+>> On Monday, November 20, 2017 11:57:21 AM CET Kalle Valo wrote:
+>>> Christian Lamparter <chunkeey@gmail.com> writes:
+>>>
+>>> > On Wednesday, November 1, 2017 9:37:53 PM CET Sebastian Gottschall wr=
+ote:
+>>> >> a additional array bounds check would be good
+>>> >
+>>> > Ah, about that:
+>>> >
+>>> > the bw variable in ath10k_htt_rx_h_rates() is extracted from info2
+>>> > in the following way [0]:
+>>> > |  bw =3D info2 & 3;
+>>> >
+>>> > the txrate.bw variable in ath10k_update_per_peer_tx_stats() is set by=
+ [1]:
+>>> > |  txrate.bw =3D ATH10K_HW_BW(peer_stats->flags);
+>>> >
+>>> > ATH10K_HW_BW is a macro defined as [2]:
+>>> > |  #define ATH10K_HW_BW(flags)             (((flags) >> 3) & 0x3)
+>>> >
+>>> > In both cases the bandwidth values already are limited to 0-3 by
+>>> > the "and 3" operation.
+>>>
+>>> Until someone changes that part of the code (and the firmware
+>>> interface). IMHO a switch is safer as there we don't have any risk of
+>>> out of bands access.
+>>
+>> The kbuild-bot/CI can catch this too.
+>>
+>> For example, it will look like this:
+>> drivers/net/wireless/ath/ath10k//htt_rx.c:710:52: warning: invalid
+>> access past the end of 'ath10k_bw_to_mac80211' (4 4)
+>
+> Sure, but after reading about all these security vulnerabilities I have
+> become even more cautious and try to avoid all tricky stuff.
+>
+>> BTW:
+>> Have you noticed:
+>>
+>> <https://github.com/lede-project/source/blob/master/package/kernel/mac80=
+211/patches/319-ath10k-fix-recent-bandwidth-conversion-bug.patch>
+>>
+>> Is this really your signed-off-by or not?
+>
+> I suspect that patch is taken from my pending branch.
+>
+>> In any case, you - as the maintainer - can modify the patch as
+>> you see fit. So, please do so.
+>
+> Ok, we'll send v2.
 
-This patch series includes some code rearrangement and roaming related
-improvements.
+Hi Kalle,
 
-Changes in v2:
-v2 1/4 is same as v1 2/10
-v2 2/4 is same as v1 3/10
-v2 3/4 is same as v1 4/10
-v2 4/4 is updated version of v1 5/10
+I'm trying to figure out the fate of that LEDE's patch. I don't think
+you ever sent V2.
 
-Remaining patches in v1 need major improvements. Couple of them
-requires splitting the patch into multiple patches. So they will be
-submitted separately.
+Is that fix still needed? Are you planning to send V2?
 
-Resending as v1->v2 change info was missed in v2 4/4
-
-Prameela Rani Garnepudi (4):
-  rsi: move xtend_desc structure from rsi_main.h to rsi_mgmt.h
-  rsi: move descriptor preparation to core
-  rsi: enable 80MHz clock by default
-  rsi: roaming enhancements
-
- drivers/net/wireless/rsi/rsi_91x_core.c     | 27 +++++++++++
- drivers/net/wireless/rsi/rsi_91x_hal.c      | 73 ++++++++++++++++++-----------
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 18 +++++--
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 34 ++++++++------
- drivers/net/wireless/rsi/rsi_hal.h          |  2 +
- drivers/net/wireless/rsi/rsi_main.h         |  7 +--
- drivers/net/wireless/rsi/rsi_mgmt.h         | 16 ++++++-
- 7 files changed, 126 insertions(+), 51 deletions(-)
-
--- 
-2.7.4
+--=20
+Rafa=C5=82
