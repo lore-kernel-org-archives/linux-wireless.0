@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:37044 "EHLO
-        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932659AbeCSLTh (ORCPT
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:45484 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031277AbeCAOU4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Mar 2018 07:19:37 -0400
-Date: Mon, 19 Mar 2018 13:09:56 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] mac80211_hwsim: add permanent mac address option
- for new radios
-Message-ID: <20180319110956.GA11426@w1.fi> (sfid-20180319_121941_476616_A0A95E82)
-References: <20180122170437.14213-1-benjamin.beichler@uni-rostock.de>
- <20180122170437.14213-2-benjamin.beichler@uni-rostock.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180122170437.14213-2-benjamin.beichler@uni-rostock.de>
+        Thu, 1 Mar 2018 09:20:56 -0500
+Received: by mail-qt0-f194.google.com with SMTP id v90so7650602qte.12
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:56 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 11/52] ath: Add regulatory mapping for Serbia
+Date: Thu,  1 Mar 2018 15:18:21 +0100
+Message-Id: <20180301141902.24824-12-sven.eckelmann@openmesh.com> (sfid-20180301_153349_492413_3FF64967)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 22, 2018 at 06:04:35PM +0100, Benjamin Beichler wrote:
-> If simulation needs predictable permanent mac addresses of hwsim wireless
-> phy, this patch add the ability to create a new radio with a user defined
-> permanent mac address. Allowed mac addresses needs to be locally
-> administrated mac addresses (as also the former fixed 42:* and 02:* were).
-> 
-> To do not break the operation with legacy software using hwsim, the new
-> address is set twice. The problem here is, the netlink call backs use
-> wiphy->addresses[1] as identification of a radio and not the proposed
-> permanent address (wiphy->addresses[0]). This design decision is not
-> documented in the kernel repo, therefore this patch simply reproduces this,
-> but with the same address.
+The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
+and to select the correct conformance test limits (CTL) for a country. If
+the country isn't available and it is still programmed in the EEPROM then
+it will cause an error and stop the initialization with:
 
-But this patch does break operation with legacy software.. Namely, some
-mac80211_hwsim test cases in hostap.git. However, that seems to be due
-to a strange swapping of operations here:
+  Invalid EEPROM contents
 
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -2571,15 +2573,25 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+The current CTL mappings for this country are:
 
-> -	eth_zero_addr(addr);
-> -	addr[0] = 0x02;
-> -	addr[3] = idx >> 8;
-> -	addr[4] = idx;
-> -	memcpy(data->addresses[0].addr, addr, ETH_ALEN);
-> -	memcpy(data->addresses[1].addr, addr, ETH_ALEN);
-> -	data->addresses[1].addr[0] |= 0x40;
-> -	hw->wiphy->n_addresses = 2;
-> -	hw->wiphy->addresses = data->addresses;
-> +	if (!param->perm_addr) {
-> +		eth_zero_addr(addr);
-> +		addr[0] = 0x02;
-> +		addr[3] = idx >> 8;
-> +		addr[4] = idx;
-> +		memcpy(data->addresses[0].addr, addr, ETH_ALEN);
-> +		/* Why need here second address ? */
-> +		data->addresses[1].addr[0] |= 0x40;
-> +		memcpy(data->addresses[1].addr, addr, ETH_ALEN);
-> +		hw->wiphy->n_addresses = 2;
-> +		hw->wiphy->addresses = data->addresses;
+* 2.4GHz: ETSI
+* 5GHz: ETSI
 
-Why did that ORing of 0x40 got moved to be before the memcpy()?
-Effectively, that removes the OR operation completely since the
-following memcpy() overrides the first octets of
-data->addresses[1].addr. Restoring the order of those two lines seems to
-fix the behavior.
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd.h        | 1 +
+ drivers/net/wireless/ath/regd_common.h | 1 +
+ 2 files changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
+index 3021ba5d7ef5..9fe4857baaae 100644
+--- a/drivers/net/wireless/ath/regd.h
++++ b/drivers/net/wireless/ath/regd.h
+@@ -164,6 +164,7 @@ enum CountryCode {
+ 	CTRY_RUSSIA = 643,
+ 	CTRY_RWANDA = 646,
+ 	CTRY_SAUDI_ARABIA = 682,
++	CTRY_SERBIA = 688,
+ 	CTRY_SERBIA_MONTENEGRO = 891,
+ 	CTRY_SINGAPORE = 702,
+ 	CTRY_SLOVAKIA = 703,
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 89a3a9104428..4c41308e39c1 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -456,6 +456,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_RUSSIA, NULL1_WORLD, "RU"},
+ 	{CTRY_RWANDA, APL1_WORLD, "RW"},
+ 	{CTRY_SAUDI_ARABIA, NULL1_WORLD, "SA"},
++	{CTRY_SERBIA, ETSI1_WORLD, "RS"},
+ 	{CTRY_SERBIA_MONTENEGRO, ETSI1_WORLD, "CS"},
+ 	{CTRY_SINGAPORE, APL6_WORLD, "SG"},
+ 	{CTRY_SLOVAKIA, ETSI1_WORLD, "SK"},
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+2.11.0
