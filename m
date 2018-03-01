@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:42933 "EHLO
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:43103 "EHLO
         mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932680AbeCNBjG (ORCPT
+        with ESMTP id S1031181AbeCAOVj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 21:39:06 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAGXu5jKDA=L5E6Cu_oRe-M=ouuhrccCZHyM+z6_UMAUqe9xnRQ@mail.gmail.com>
-References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
- <5AA464DE.90100@broadcom.com> <CAGXu5jKDA=L5E6Cu_oRe-M=ouuhrccCZHyM+z6_UMAUqe9xnRQ@mail.gmail.com>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Wed, 14 Mar 2018 02:38:45 +0100
-Message-ID: <CANiq72=W0=DwZq_SGAHTnbvofPPKUgSOXhJtHDj0CReu5d17hw@mail.gmail.com> (sfid-20180314_023914_314560_7136D8E7)
-Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
-To: Kees Cook <keescook@chromium.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Andreas Christoforou <andreaschristofo@gmail.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 1 Mar 2018 09:21:39 -0500
+Received: by mail-qt0-f193.google.com with SMTP id d26so7678788qtk.10
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:38 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 28/52] ath: Map Colombia to FCC1_FCCA
+Date: Thu,  1 Mar 2018 15:18:38 +0100
+Message-Id: <20180301141902.24824-29-sven.eckelmann@openmesh.com> (sfid-20180301_152143_937241_82DF98D1)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 11, 2018 at 12:12 AM, Kees Cook <keescook@chromium.org> wrote:
->
-> The problem is that it's not a "constant expression", so the compiler
-> frontend still yells about it under -Wvla. I would characterize this
-> mainly as a fix for "accidental VLA" or "misdetected VLA" or something
-> like that. AIUI, there really isn't a functional change here.
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
-C++11's constexpr variables would be nice to have.
+This change itself doesn't change the selected CTL of this country and is
+only required to stay in sync with the QCA mappings.
 
-Cheers,
-Miguel
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 3a7fbd3794bc..c28347fac774 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -331,7 +331,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_CANADA2, FCC6_FCCA, "CA"},
+ 	{CTRY_CHILE, APL6_WORLD, "CL"},
+ 	{CTRY_CHINA, APL1_WORLD, "CN"},
+-	{CTRY_COLOMBIA, FCC1_FCCA, "CO"},
++	{CTRY_COLOMBIA, FCC3_WORLD, "CO"},
+ 	{CTRY_COSTA_RICA, FCC1_WORLD, "CR"},
+ 	{CTRY_CROATIA, ETSI1_WORLD, "HR"},
+ 	{CTRY_CYPRUS, ETSI1_WORLD, "CY"},
+-- 
+2.11.0
