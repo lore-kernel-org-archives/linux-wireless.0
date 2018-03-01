@@ -1,48 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43316 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933028AbeCSQXp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7249 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967338AbeCAKNn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Mar 2018 12:23:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Alexey Roslyakov <alexey.roslyakov@gmail.com>
-Cc: andrew@lunn.ch, robh+dt@kernel.org, mark.rutland@arm.com,
-        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com
-Subject: Re: [PATCH net-next v2 1/2] brcmfmac: add new dt entries for SG SDIO settings
-References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
-        <20180319014032.9394-2-alexey.roslyakov@gmail.com>
-Date: Mon, 19 Mar 2018 18:23:29 +0200
-In-Reply-To: <20180319014032.9394-2-alexey.roslyakov@gmail.com> (Alexey
-        Roslyakov's message of "Mon, 19 Mar 2018 08:40:31 +0700")
-Message-ID: <877eq8yqym.fsf@kamboji.qca.qualcomm.com> (sfid-20180319_172449_918465_51012F39)
+        Thu, 1 Mar 2018 05:13:43 -0500
+From: Govind Singh <govinds@qti.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Govind Singh <govinds@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: RE: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN
+ module
+Date: Thu, 1 Mar 2018 10:13:35 +0000
+Message-ID: <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com> (sfid-20180301_111349_682595_65433EBC)
+References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
+ <87371kqfda.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87371kqfda.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alexey Roslyakov <alexey.roslyakov@gmail.com> writes:
+Hi Kalle,
 
-> There are 3 fields in SDIO settings (quirks) to workaround some of the
-> SG SDIO host particularities, i.e higher align requirements for SG
-> items. All coding is done the long time ago, but there is no way to
-> change the driver behavior without patching the kernel. Add missing
-> devicetree entries.
+I didn't encountered this issue as in my defconfig only CONFIG_ATH10K_SNOC =
+was defined.
+This problem is coming when we define CONFIG_ATH10K_SNOC and CONFIG_ATH10K_=
+PCI simultaneously in defconfig and this is=20
+known issue when multiple modules share objects(in this case ce.o). I saw s=
+imilar reported problem and found https://patchwork.kernel.org/patch/100608=
+25/.
+
+After picking the below change issue is not seen.
+
+BR,
+Govind
+
+-----Original Message-----
+From: ath10k [mailto:ath10k-bounces@lists.infradead.org] On Behalf Of Kalle=
+ Valo
+Sent: Thursday, March 1, 2018 3:37 PM
+To: Govind Singh <govinds@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org; ath10k@lists.infradead.org
+Subject: Re: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN mo=
+dule
+
+Govind Singh <govinds@codeaurora.org> writes:
+
+> WCN3990 is integrated 802.11ac chipset with SNOC bus interface. Add=20
+> snoc layer driver registration and associated ops.
 >
-> Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
+> WCN3990 support is not yet complete as cold-boot handshake is done=20
+> using qmi(Qualcomm-MSM-Interface) and qmi client support will be added=20
+> once qmi framework is available.
+>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
 
-The commit log is not clear for me, what does "all coding is done long
-time ago" exactly mean? What code and where?
+Kbuild bot found an odd problem with this patch:
 
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
+ include/linux/dynamic_debug.h:77:14: error: 'KBUILD_MODNAME'
+ undeclared (first use in this function); did you mean  'KBUILD_BASENAME'?
 
-Why net-next? To me it looks like this should go to
-wireless-drivers-next.
+Full report:
 
--- 
+http://lists.infradead.org/pipermail/ath10k/2018-February/010907.html
+
+Any ideas? Is this is some unrelated issue or what? This patch is not even =
+touching hif.h or ce.c.
+
+--
 Kalle Valo
+
+_______________________________________________
+ath10k mailing list
+ath10k@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/ath10k
