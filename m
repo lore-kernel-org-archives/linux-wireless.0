@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f176.google.com ([209.85.216.176]:45650 "EHLO
-        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933768AbeCGQjd (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:45939 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031301AbeCAOUn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Mar 2018 11:39:33 -0500
-Received: by mail-qt0-f176.google.com with SMTP id v90so3337477qte.12
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2018 08:39:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CADjYELzsP37RWTqJOSoevNy32E38e4=bkjDkY6A4F3exnDYadQ@mail.gmail.com>
-References: <CADsGw2ZBPK1hBY-a+v_1mVUOaFP3Uu5A4euyTc-070E4vSUrBg@mail.gmail.com>
- <CADjYELzsP37RWTqJOSoevNy32E38e4=bkjDkY6A4F3exnDYadQ@mail.gmail.com>
-From: Phani Siriki <yvsg.phanis@gmail.com>
-Date: Wed, 7 Mar 2018 10:39:32 -0600
-Message-ID: <CADsGw2a+u7dW3H3PF7jgJmj0A5oiQ1BbNuASW7v6192CC-U2gA@mail.gmail.com> (sfid-20180307_173936_959750_015E5093)
-Subject: Re: Query on queues in mesh mode
-To: Thomas Pedersen <thomas@eero.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 1 Mar 2018 09:20:43 -0500
+Received: by mail-qk0-f195.google.com with SMTP id g2so7667274qkd.12
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:43 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 06/52] ath: Add regulatory mapping for Mauritius
+Date: Thu,  1 Mar 2018 15:18:16 +0100
+Message-Id: <20180301141902.24824-7-sven.eckelmann@openmesh.com> (sfid-20180301_152046_977922_B5C2BC6F)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Thomas
+The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
+and to select the correct conformance test limits (CTL) for a country. If
+the country isn't available and it is still programmed in the EEPROM then
+it will cause an error and stop the initialization with:
 
-Thank you for your reply.
+  Invalid EEPROM contents
 
-Could you please let me know how can I verify these queues on a mesh
-router? (I am using TPLink router with Ath9k chipset).
+The current CTL mappings for this country are:
 
-Also, the TXQ parameters can only be set if device is in AP or P2P
-mode. Do you have any idea why this restriction is in place?
+* 2.4GHz: ETSI
+* 5GHz: ETSI
 
-https://github.com/torvalds/linux/blob/master/net/wireless/nl80211.c
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd.h        | 1 +
+ drivers/net/wireless/ath/regd_common.h | 1 +
+ 2 files changed, 2 insertions(+)
 
-static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
-{
-
-           if (info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS]) {
-           ....
-                   if (netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
-                       netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-                                 return -EINVAL;
-           ...
-}
-
-Best Regards
-Phani
-
-On Tue, Mar 6, 2018 at 11:59 PM, Thomas Pedersen <thomas@eero.com> wrote:
-> On Thu, Mar 1, 2018 at 7:27 AM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
->> Hi All
->>
->> I am trying to understand the queuing mechanism wireless mesh networks.
->>
->> As per AP mode is concerned, there are four queues (BK, BE, Vi, VO)
->> and traffic is controlled based on CWmin, CWmax, AIFS and TxOP.
->>
->> Does, mesh mode also involve these queues? Does mesh mode have any
->> queue or it is just a single queue?
->
-> mesh mode maps to the different ACs like AP mode. The only additional
-> queue in mesh is the mpath->frame_queue, which may be used if an
-> active mpath for a given RA can't be found.
->
-> --
-> thomas
+diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
+index a615a878ac40..f38e42703060 100644
+--- a/drivers/net/wireless/ath/regd.h
++++ b/drivers/net/wireless/ath/regd.h
+@@ -138,6 +138,7 @@ enum CountryCode {
+ 	CTRY_MACEDONIA = 807,
+ 	CTRY_MALAYSIA = 458,
+ 	CTRY_MALTA = 470,
++	CTRY_MAURITIUS = 480,
+ 	CTRY_MEXICO = 484,
+ 	CTRY_MONACO = 492,
+ 	CTRY_MOROCCO = 504,
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index bdc1ff191264..375f9da6955b 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -430,6 +430,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_MACEDONIA, NULL1_WORLD, "MK"},
+ 	{CTRY_MALAYSIA, APL8_WORLD, "MY"},
+ 	{CTRY_MALTA, ETSI1_WORLD, "MT"},
++	{CTRY_MAURITIUS, ETSI1_WORLD, "MU"},
+ 	{CTRY_MEXICO, FCC1_FCCA, "MX"},
+ 	{CTRY_MONACO, ETSI4_WORLD, "MC"},
+ 	{CTRY_MOROCCO, APL4_WORLD, "MA"},
+-- 
+2.11.0
