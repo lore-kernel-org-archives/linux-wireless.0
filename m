@@ -1,97 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46071 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752476AbeCVIPd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 04:15:33 -0400
-Date: Thu, 22 Mar 2018 09:15:30 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
-        david.brown@linaro.org, dan.j.williams@intel.com,
-        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com
-Subject: Re: [PATCH v2 1/2] dma-mapping: move dma configuration to bus
-        infrastructure
-Message-ID: <20180322081530.GA29444@lst.de> (sfid-20180322_091546_264615_93C66FE2)
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:42347 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031274AbeCAOVD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Mar 2018 09:21:03 -0500
+Received: by mail-qk0-f194.google.com with SMTP id b130so7667732qkg.9
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:03 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 14/52] ath: Add regulatory mapping for United States for AP
+Date: Thu,  1 Mar 2018 15:18:24 +0100
+Message-Id: <20180301141902.24824-15-sven.eckelmann@openmesh.com> (sfid-20180301_152107_529793_F97914DF)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +static int amba_dma_configure(struct device *dev)
-> +{
-> +	return dma_common_configure(dev);
-> +}
+The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
+and to select the correct conformance test limits (CTL) for a country. If
+the country isn't available and it is still programmed in the EEPROM then
+it will cause an error and stop the initialization with:
 
-So it turns out we only end with two callers of dma_common_configure
-after this series.  Based ont hat I'm tempted with the suggestion
-from Robin to just have amba call platform_dma_configure, and move
-the code from dma_common_configure to platform_dma_configure.
+  Invalid EEPROM contents
 
-> +int dma_configure(struct device *dev)
-> +{
-> +	if (dev->bus->dma_configure)
-> +		return dev->bus->dma_configure(dev);
-> +
-> +	return 0;
-> +}
->  void dma_deconfigure(struct device *dev)
+The current CTL mappings for this country are:
 
-As grep pointed out this wants a blank line after the function, and while
-in nitpicking mode I'd suggest to remove the blank line above the return
-statement while at it.
+* 2.4GHz: FCC
+* 5GHz: FCC
 
-> diff --git a/drivers/gpu/host1x/bus.c b/drivers/gpu/host1x/bus.c
-> index 88a3558..fa9896d 100644
-> --- a/drivers/gpu/host1x/bus.c
-> +++ b/drivers/gpu/host1x/bus.c
-> @@ -314,6 +314,14 @@ static int host1x_device_match(struct device *dev, struct device_driver *drv)
->  	return strcmp(dev_name(dev), drv->name) == 0;
->  }
->  
-> +static int host1x_dma_configure(struct device *dev)
-> +{
-> +	if (dev->of_node)
-> +		return of_dma_configure(dev, dev->of_node);
-> +
-> +	return 0;
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd.h        | 1 +
+ drivers/net/wireless/ath/regd_common.h | 1 +
+ 2 files changed, 2 insertions(+)
 
-Same here.
-
-> + */
-> +static int pci_dma_configure(struct device *dev)
-> +{
-> +	struct device *bridge;
-> +	enum dev_dma_attr attr;
-> +	int ret = 0;
-> +
-> +	bridge = pci_get_host_bridge_device(to_pci_dev(dev));
-> +
-> +	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
-> +	    bridge->parent->of_node) {
-> +		ret = of_dma_configure(dev, bridge->parent->of_node);
-> +	} else if (has_acpi_companion(bridge)) {
-> +		attr = acpi_get_dma_attr(to_acpi_device_node(bridge->fwnode));
-> +		if (attr != DEV_DMA_NOT_SUPPORTED)
-> +			ret = acpi_dma_configure(dev, attr);
-> +	}
-
-The attr declaration can be moved into the inner scope here.
-
-> +	pci_put_host_bridge_device(bridge);
-> +
-> +	return ret;
-
-Drop the blank line after the return, please.
+diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
+index 908163948d59..490efdcddf93 100644
+--- a/drivers/net/wireless/ath/regd.h
++++ b/drivers/net/wireless/ath/regd.h
+@@ -186,6 +186,7 @@ enum CountryCode {
+ 	CTRY_UKRAINE = 804,
+ 	CTRY_UNITED_KINGDOM = 826,
+ 	CTRY_UNITED_STATES = 840,
++	CTRY_UNITED_STATES2 = 841,
+ 	CTRY_UNITED_STATES_FCC49 = 842,
+ 	CTRY_URUGUAY = 858,
+ 	CTRY_UZBEKISTAN = 860,
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index a00be9604d21..5cbd76235248 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -478,6 +478,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_UAE, NULL1_WORLD, "AE"},
+ 	{CTRY_UNITED_KINGDOM, ETSI1_WORLD, "GB"},
+ 	{CTRY_UNITED_STATES, FCC3_FCCA, "US"},
++	{CTRY_UNITED_STATES2, FCC6_FCCA, "US"},
+ 	/* This "PS" is for US public safety actually... to support this we
+ 	 * would need to assign new special alpha2 to CRDA db as with the world
+ 	 * regdomain and use another alpha2 */
+-- 
+2.11.0
