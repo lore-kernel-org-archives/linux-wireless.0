@@ -1,538 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52340 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751242AbeCLNdv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 09:33:51 -0400
-From: Ramon Fried <rfried@codeaurora.org>
-To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: Eyal Ilsar <eilsar@codeaurora.org>,
-        Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH v2] wcn36xx: Add support for FTM WLAN
-Date: Mon, 12 Mar 2018 15:33:38 +0200
-Message-Id: <20180312133338.9953-1-rfried@codeaurora.org> (sfid-20180312_143356_521511_FF9DEB5E)
+Received: from mx2.suse.de ([195.135.220.15]:50622 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1033044AbeCAR3X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Mar 2018 12:29:23 -0500
+Date: Thu, 1 Mar 2018 17:29:20 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: cantabile <cantabile.desu@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        linux-wireless@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] mt7601u: Fix system freeze after resuming from
+ hibernation
+Message-ID: <20180301172920.GV14069@wotan.suse.de> (sfid-20180301_182927_037005_FDA967F2)
+References: <20180226182859.03184215@cakuba.netronome.com>
+ <3382fa4d-c652-68eb-13c3-12dc84ba0dd5@gmail.com>
+ <20180227165451.GS14069@wotan.suse.de>
+ <20180227102253.04a3a01c@cakuba.netronome.com>
+ <20180227204240.GW14069@wotan.suse.de>
+ <498eb998-0dce-83c6-87c9-76cb83b148ea@gmail.com>
+ <20180228184820.GL14069@wotan.suse.de>
+ <ba4c6079-ca45-2048-1e7d-3cb4e1a80cdb@gmail.com>
+ <20180301002813.GQ14069@wotan.suse.de>
+ <9088ab38-5a88-f479-1225-5988f9890aaa@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9088ab38-5a88-f479-1225-5988f9890aaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Ilsar <eilsar@codeaurora.org>
+On Thu, Mar 01, 2018 at 04:05:29PM +0200, cantabile wrote:
+> On 01/03/18 02:28, Luis R. Rodriguez wrote:
+> > On Wed, Feb 28, 2018 at 11:18:59PM +0200, cantabile wrote:
+> > 
+> > > Feb 28 22:46:19 home kernel: mt7601u 2-3:1.0: Firmware Version: 0.1.00 Build: 7640 Build time: 201302052146____
+> > > Feb 28 22:46:19 home kernel: ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> > > Feb 28 22:46:19 home kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
+> > > Feb 28 22:46:19 home kernel: ata1.00: ACPI cmd b1/c1:00:00:00:00:a0 (DEVICE CONFIGURATION OVERLAY) filtered out
+> > > Feb 28 22:46:19 home kernel: ata1.00: ACPI cmd c6/00:01:00:00:00:a0 (SET MULTIPLE MODE) succeeded
+> > > Feb 28 22:46:19 home kernel: ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
+> > > Feb 28 22:46:19 home kernel: ata1.00: supports DRM functions and may not be fully accessible
+> > > Feb 28 22:46:19 home kernel: ata1.00: disabling queued TRIM support
+> > > Feb 28 22:46:19 home kernel: ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
+> > > Feb 28 22:46:19 home kernel: ata1.00: ACPI cmd b1/c1:00:00:00:00:a0 (DEVICE CONFIGURATION OVERLAY) filtered out
+> > > Feb 28 22:46:19 home kernel: ata1.00: ACPI cmd c6/00:01:00:00:00:a0 (SET MULTIPLE MODE) succeeded
+> > > Feb 28 22:46:19 home kernel: ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
+> > > Feb 28 22:46:19 home kernel: ata1.00: supports DRM functions and may not be fully accessible
+> > > Feb 28 22:46:19 home kernel: ata1.00: disabling queued TRIM support
+> > > Feb 28 22:46:19 home kernel: ata1.00: configured for UDMA/133
+> > > Feb 28 22:46:19 home kernel: usb 4-2: reset full-speed USB device number 2 using uhci_hcd
+> > > Feb 28 22:46:19 home kernel: mt7601u 2-3:1.0: Error: MCU response pre-completed!
+> > 
+> > An issue immediately. So it should mean the firmware load didn't likely work
+> > correctly.
+> 
+> This particular error message appears pretty often after resuming from
+> hibernation and loading the firmware, but the device works anyway. 
 
-Introduce infrastructure for supporting Factory Test Mode (FTM) of the
-wireless LAN subsystem. In order for the user space to access the
-firmware in test mode the relevant netlink channel needs to be exposed
-from the kernel driver.
+OK.
 
-The above is achieved as follows:
-1) Register wcn36xx driver to testmode callback from netlink
-2) Add testmode callback implementation to handle incoming FTM commands
-3) Add FTM command packet structure
-4) Add handling for GET_BUILD_RELEASE_NUMBER (msgid=0x32A2)
-5) Add generic handling for all PTT_MSG packets
+> To be
+> clear, I'm talking about hibernation attempts from before I made it upload
+> the firmware unconditionally.
 
-Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
----
-v2: * changed commit msg
-	* remove unnecessary whitespace
-	* kept the stop/start as the messages do arrive, but
-	changed the documentation to explain the purpose.
-	
- drivers/net/wireless/ath/wcn36xx/Makefile     |   2 +
- drivers/net/wireless/ath/wcn36xx/hal.h        |  16 +++
- drivers/net/wireless/ath/wcn36xx/main.c       |   3 +
- drivers/net/wireless/ath/wcn36xx/smd.c        |  74 +++++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h        |   4 +
- drivers/net/wireless/ath/wcn36xx/testmode.c   | 173 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/testmode.h   |  46 +++++++
- drivers/net/wireless/ath/wcn36xx/testmode_i.h |  45 +++++++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h    |   2 +
- 9 files changed, 365 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/testmode.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/testmode.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/testmode_i.h
+So you mean to say this happens with the stock kernel (except the debug prints
+you added)?
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/Makefile b/drivers/net/wireless/ath/wcn36xx/Makefile
-index 3b09435104eb..582049f65735 100644
---- a/drivers/net/wireless/ath/wcn36xx/Makefile
-+++ b/drivers/net/wireless/ath/wcn36xx/Makefile
-@@ -6,3 +6,5 @@ wcn36xx-y +=   main.o \
-                smd.o \
-                pmc.o \
-                debug.o
-+
-+wcn36xx-$(CONFIG_NL80211_TESTMODE) += testmode.o
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 182963522941..8491b3cb3206 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -2230,6 +2230,22 @@ struct wcn36xx_hal_switch_channel_rsp_msg {
- 
- } __packed;
- 
-+struct wcn36xx_hal_process_ptt_msg_req_msg {
-+	struct wcn36xx_hal_msg_header header;
-+
-+	/* Actual FTM Command body */
-+	u8 ptt_msg[0];
-+} __packed;
-+
-+struct wcn36xx_hal_process_ptt_msg_rsp_msg {
-+	struct wcn36xx_hal_msg_header header;
-+
-+	/* FTM Command response status */
-+	u32 ptt_msg_resp_status;
-+	/* Actual FTM Command body */
-+	u8 ptt_msg[0];
-+} __packed;
-+
- struct update_edca_params_req_msg {
- 	struct wcn36xx_hal_msg_header header;
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 8c2654075eb8..6b73da6f7fde 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -26,6 +26,7 @@
- #include <linux/soc/qcom/smem_state.h>
- #include <linux/soc/qcom/wcnss_ctrl.h>
- #include "wcn36xx.h"
-+#include "testmode.h"
- 
- unsigned int wcn36xx_dbg_mask;
- module_param_named(debug_mask, wcn36xx_dbg_mask, uint, 0644);
-@@ -1119,6 +1120,8 @@ static const struct ieee80211_ops wcn36xx_ops = {
- 	.sta_add		= wcn36xx_sta_add,
- 	.sta_remove		= wcn36xx_sta_remove,
- 	.ampdu_action		= wcn36xx_ampdu_action,
-+
-+	CFG80211_TESTMODE_CMD(wcn36xx_tm_cmd)
- };
- 
- static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 3048722f0484..c4c2fc6309bf 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -292,12 +292,26 @@ static void init_hal_msg(struct wcn36xx_hal_msg_header *hdr,
- 		msg_body.header.len = sizeof(msg_body);			\
- 	} while (0)							\
- 
-+#define INIT_HAL_PTT_MSG(p_msg_body, ppt_msg_len) \
-+	do { \
-+		memset(p_msg_body, 0, sizeof(*p_msg_body) + ppt_msg_len); \
-+		p_msg_body->header.msg_type = WCN36XX_HAL_PROCESS_PTT_REQ; \
-+		p_msg_body->header.msg_version = WCN36XX_HAL_MSG_VERSION0; \
-+		p_msg_body->header.len = sizeof(*p_msg_body) + ppt_msg_len; \
-+	} while (0)
-+
- #define PREPARE_HAL_BUF(send_buf, msg_body) \
- 	do {							\
- 		memset(send_buf, 0, msg_body.header.len);	\
- 		memcpy(send_buf, &msg_body, sizeof(msg_body));	\
- 	} while (0)						\
- 
-+#define PREPARE_HAL_PTT_MSG_BUF(send_buf, p_msg_body) \
-+	do {							\
-+		memset(send_buf, 0, p_msg_body->header.len); \
-+		memcpy(send_buf, p_msg_body, p_msg_body->header.len); \
-+	} while (0)
-+
- static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
- {
- 	struct wcn36xx_fw_msg_status_rsp *rsp;
-@@ -742,6 +756,64 @@ int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
- 	return ret;
- }
- 
-+static int wcn36xx_smd_process_ptt_msg_rsp(void *buf, size_t len,
-+			void **p_ptt_rsp_msg)
-+{
-+	struct wcn36xx_hal_process_ptt_msg_rsp_msg *rsp;
-+	int ret = 0;
-+
-+	ret = wcn36xx_smd_rsp_status_check(buf, len);
-+	if (ret)
-+		return ret;
-+
-+	rsp = (struct wcn36xx_hal_process_ptt_msg_rsp_msg *)buf;
-+
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "process ptt msg responded with length %d\n",
-+			rsp->header.len);
-+	wcn36xx_dbg_dump(WCN36XX_DBG_HAL_DUMP, "HAL_PTT_MSG_RSP:", rsp->ptt_msg,
-+			rsp->header.len - sizeof(rsp->ptt_msg_resp_status));
-+
-+	if (rsp->header.len > 0) {
-+		*p_ptt_rsp_msg = kmalloc(rsp->header.len, GFP_ATOMIC);
-+		memcpy(*p_ptt_rsp_msg, rsp->ptt_msg, rsp->header.len);
-+	}
-+	return ret;
-+}
-+
-+int wcn36xx_smd_process_ptt_msg(struct wcn36xx *wcn,
-+		struct ieee80211_vif *vif, void *ptt_msg, size_t len,
-+		void **ptt_rsp_msg)
-+{
-+	struct wcn36xx_hal_process_ptt_msg_req_msg *p_msg_body;
-+	int ret = 0;
-+
-+	mutex_lock(&wcn->hal_mutex);
-+	p_msg_body = kmalloc(
-+		sizeof(struct wcn36xx_hal_process_ptt_msg_req_msg) + len,
-+		GFP_ATOMIC);
-+	INIT_HAL_PTT_MSG(p_msg_body, len);
-+
-+	memcpy(&p_msg_body->ptt_msg, ptt_msg, len);
-+
-+	PREPARE_HAL_PTT_MSG_BUF(wcn->hal_buf, p_msg_body);
-+
-+	ret = wcn36xx_smd_send_and_wait(wcn, p_msg_body->header.len);
-+	if (ret) {
-+		wcn36xx_err("Sending hal_process_ptt_msg failed\n");
-+		goto out;
-+	}
-+	ret = wcn36xx_smd_process_ptt_msg_rsp(wcn->hal_buf, wcn->hal_rsp_len,
-+			ptt_rsp_msg);
-+	if (ret) {
-+		wcn36xx_err("process_ptt_msg response failed err=%d\n", ret);
-+		goto out;
-+	}
-+out:
-+	kfree(p_msg_body);
-+	mutex_unlock(&wcn->hal_mutex);
-+	return ret;
-+}
-+
- static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
- {
- 	struct wcn36xx_hal_update_scan_params_resp *rsp;
-@@ -2366,6 +2438,7 @@ int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
- 	case WCN36XX_HAL_JOIN_RSP:
- 	case WCN36XX_HAL_UPDATE_SCAN_PARAM_RSP:
- 	case WCN36XX_HAL_CH_SWITCH_RSP:
-+	case WCN36XX_HAL_PROCESS_PTT_RSP:
- 	case WCN36XX_HAL_FEATURE_CAPS_EXCHANGE_RSP:
- 	case WCN36XX_HAL_8023_MULTICAST_LIST_RSP:
- 	case WCN36XX_HAL_START_SCAN_OFFLOAD_RSP:
-@@ -2406,6 +2479,7 @@ int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
- 
- 	return 0;
- }
-+
- static void wcn36xx_ind_smd_work(struct work_struct *work)
- {
- 	struct wcn36xx *wcn =
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 8076edf40ac8..6d83cc99dc25 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -86,6 +86,10 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			    u16 p2p_off);
- int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
- 			       struct ieee80211_vif *vif, int ch);
-+int wcn36xx_smd_process_ptt_msg(struct wcn36xx *wcn,
-+			    struct ieee80211_vif *vif,
-+				void *ptt_msg, size_t len,
-+				void **ptt_rsp_msg);
- int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn,
- 				      struct ieee80211_vif *vif,
- 				      struct sk_buff *skb);
-diff --git a/drivers/net/wireless/ath/wcn36xx/testmode.c b/drivers/net/wireless/ath/wcn36xx/testmode.c
-new file mode 100644
-index 000000000000..0ffb03c8c498
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/testmode.c
-@@ -0,0 +1,173 @@
-+﻿/*
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <net/netlink.h>
-+#include <linux/firmware.h>
-+#include <net/cfg80211.h>
-+#include "wcn36xx.h"
-+
-+#include "testmode.h"
-+#include "testmode_i.h"
-+#include "hal.h"
-+#include "smd.h"
-+
-+static const struct nla_policy wcn36xx_tm_policy[WCN36XX_TM_ATTR_MAX + 1] = {
-+	[WCN36XX_TM_ATTR_CMD] = { .type = NLA_U16 },
-+	[WCN36XX_TM_ATTR_DATA] = { .type = NLA_BINARY,
-+	.len = WCN36XX_TM_DATA_MAX_LEN },
-+};
-+
-+struct build_release_number {
-+	u16 drv_major;
-+	u16 drv_minor;
-+	u16 drv_patch;
-+	u16 drv_build;
-+	u16 ptt_max;
-+	u16 ptt_min;
-+	u16 fw_ver;
-+} __packed;
-+
-+static int wcn36xx_tm_cmd_ptt(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+				struct nlattr *tb[])
-+{
-+	int ret = 0, buf_len;
-+	void *buf;
-+	struct ftm_rsp_msg *msg = NULL, *rsp = NULL;
-+	struct sk_buff *skb;
-+
-+	if (!tb[WCN36XX_TM_ATTR_DATA]) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	buf = nla_data(tb[WCN36XX_TM_ATTR_DATA]);
-+	buf_len = nla_len(tb[WCN36XX_TM_ATTR_DATA]);
-+	msg = (struct ftm_rsp_msg *)buf;
-+
-+	if (!msg) {
-+		ret = -EBADMSG;
-+		goto out;
-+	}
-+
-+	wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
-+		   "testmode cmd wmi msg_id 0x%04X msg_len %d buf %pK buf_len %d\n",
-+		   msg->msg_id, msg->msg_body_length,
-+		   buf, buf_len);
-+
-+	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "REQ ", buf, buf_len);
-+
-+	switch (msg->msg_id) {
-+	case MSG_GET_BUILD_RELEASE_NUMBER: {
-+		struct build_release_number *body =
-+				(struct build_release_number *)
-+				msg->msg_response;
-+
-+		body->drv_major = wcn->fw_major;
-+		body->drv_minor = wcn->fw_minor;
-+		body->drv_patch = wcn->fw_version;
-+		body->drv_build = wcn->fw_revision;
-+		body->ptt_max = 10;
-+		body->ptt_min = 0;
-+
-+		rsp = msg;
-+		rsp->resp_status = 0;
-+		break;
-+	}
-+	default:
-+		wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
-+				"PPT Request >> HAL size %d\n",
-+				msg->msg_body_length);
-+
-+		msg->resp_status = wcn36xx_smd_process_ptt_msg(wcn, vif, msg,
-+				msg->msg_body_length, (void *)(&rsp));
-+
-+		wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
-+				"Response status = %d\n",
-+				msg->resp_status);
-+		if (rsp)
-+			wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
-+					"PPT Response << HAL size %d\n",
-+					rsp->msg_body_length);
-+		break;
-+	}
-+
-+	if (!rsp) {
-+		rsp = msg;
-+		wcn36xx_warn("No response! Echoing request with response status %d\n",
-+				rsp->resp_status);
-+	}
-+	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "RSP ",
-+			rsp, rsp->msg_body_length);
-+
-+	skb = cfg80211_testmode_alloc_reply_skb(wcn->hw->wiphy,
-+				nla_total_size(msg->msg_body_length));
-+	if (!skb) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	ret = nla_put(skb, WCN36XX_TM_ATTR_DATA, rsp->msg_body_length, rsp);
-+	if (ret) {
-+		kfree_skb(skb);
-+		goto out;
-+	}
-+
-+	ret = cfg80211_testmode_reply(skb);
-+
-+out:
-+	if (rsp != msg)
-+		kfree(rsp);
-+
-+	return ret;
-+}
-+
-+int wcn36xx_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		  void *data, int len)
-+{
-+	struct wcn36xx *wcn = hw->priv;
-+	struct nlattr *tb[WCN36XX_TM_ATTR_MAX + 1];
-+	int ret;
-+	unsigned short attr;
-+
-+	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "Data:", data, len);
-+	ret = nla_parse(tb, WCN36XX_TM_ATTR_MAX, data, len,
-+			wcn36xx_tm_policy, NULL);
-+	if (ret)
-+		return ret;
-+
-+	if (!tb[WCN36XX_TM_ATTR_CMD])
-+		return -EINVAL;
-+
-+	attr = nla_get_u16(tb[WCN36XX_TM_ATTR_CMD]);
-+
-+	switch (attr) {
-+	case WCN36XX_TM_CMD_START:
-+	case WCN36XX_TM_CMD_STOP:
-+		/* N/A to this driver as it does not need to switch state or reload
-+		 * firmware so simply return success in both cases.
-+		 */
-+		ret = 0;
-+		break;
-+	case WCN36XX_TM_CMD_PTT:
-+		ret = wcn36xx_tm_cmd_ptt(wcn, vif, tb);
-+		break;
-+	default:
-+		ret = -EOPNOTSUPP;
-+		break;
-+	}
-+
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/ath/wcn36xx/testmode.h b/drivers/net/wireless/ath/wcn36xx/testmode.h
-new file mode 100644
-index 000000000000..aba014896dfd
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/testmode.h
-@@ -0,0 +1,46 @@
-+/*
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "wcn36xx.h"
-+
-+struct ftm_rsp_msg {
-+	u16 msg_id;
-+	u16 msg_body_length;
-+	u32 resp_status;
-+	u8 msg_response[0];
-+} __packed;
-+
-+/* The request buffer of FTM which contains a byte of command and the request */
-+struct ftm_payload {
-+	u16 ftm_cmd_type;
-+	struct ftm_rsp_msg ftm_cmd_msg;
-+} __packed;
-+
-+#define MSG_GET_BUILD_RELEASE_NUMBER 0x32A2
-+
-+#ifdef CONFIG_NL80211_TESTMODE
-+int wcn36xx_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+					void *data, int len);
-+
-+#else
-+static inline int wcn36xx_tm_cmd(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				void *data, int len)
-+{
-+	return 0;
-+}
-+
-+#endif
-diff --git a/drivers/net/wireless/ath/wcn36xx/testmode_i.h b/drivers/net/wireless/ath/wcn36xx/testmode_i.h
-new file mode 100644
-index 000000000000..ea39541d41d8
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/testmode_i.h
-@@ -0,0 +1,45 @@
-+/*
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#define WCN36XX_TM_DATA_MAX_LEN		5000
-+
-+enum wcn36xx_tm_attr {
-+	__WCN36XX_TM_ATTR_INVALID	= 0,
-+	WCN36XX_TM_ATTR_CMD		= 1,
-+	WCN36XX_TM_ATTR_DATA		= 2,
-+
-+	/* keep last */
-+	__WCN36XX_TM_ATTR_AFTER_LAST,
-+	WCN36XX_TM_ATTR_MAX		= __WCN36XX_TM_ATTR_AFTER_LAST - 1,
-+};
-+
-+/* All wcn36xx testmode interface commands specified in
-+ * WCN36XX_TM_ATTR_CMD
-+ */
-+enum wcn36xx_tm_cmd {
-+	/* For API completeness
-+	 */
-+	WCN36XX_TM_CMD_START = 1,
-+
-+	/* For API completeness
-+	 */
-+	WCN36XX_TM_CMD_STOP = 2,
-+
-+	/* The command used to transmit a PTT command to the firmware.
-+	 * Command payload is provided in WCN36XX_TM_ATTR_DATA.
-+	 */
-+	WCN36XX_TM_CMD_PTT = 3,
-+};
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 81017e6703b4..6a6c49835a13 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -56,6 +56,8 @@ enum wcn36xx_debug_mask {
- 	WCN36XX_DBG_BEACON_DUMP	= 0x00001000,
- 	WCN36XX_DBG_PMC		= 0x00002000,
- 	WCN36XX_DBG_PMC_DUMP	= 0x00004000,
-+	WCN36XX_DBG_TESTMODE		= 0x00008000,
-+	WCN36XX_DBG_TESTMODE_DUMP	= 0x00010000,
- 	WCN36XX_DBG_ANY		= 0xffffffff,
- };
- 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+That is, you didn't force to upload the firmware on the above log.
+
+Also, the above log is not from a kernel with the patches I posted to fix the
+issue and issue a cache request when the device already has a firmware already
+loaded?
+
+Correct?
+
+> > > Feb 28 22:46:19 home systemd[1]: Started Suspend.
+> > 
+> > Oh another suspend? Or is this just noise from systemd?
+> 
+> It's just noise. This whole excerpt from journalctl includes only one
+> suspend/resume.
+
+Ah, so you really are kicking into high gear suspend/resume or hibernation/resume.
+Note that there may be some fun races there with the driver perhaps. Who knows.
+
+> > > Feb 28 22:46:20 home kernel: mt7601u 2-3:1.0: Error: MCU response pre-completed!
+> > 
+> > Either way the 802.11 device is barfing.
+> > 
+> > > Feb 28 22:46:20 home kernel: ------------[ cut here ]------------
+> > > Feb 28 22:46:20 home kernel: Kernel BUG at 000000009312bc4c [verbose debug info unavailable]
+> > 
+> > And since no debug info is available we ca't do much more to look at this
+> > issue. You can recompile with debugging symbols enabled (look online), and
+> > it may help further.
+> > 
+> 
+> If I must... :/
+
+To get clear logs you must.
+
+But if the patches I posted help, I guess we already have a solution, The rest of
+these email exchanges are all just hypothetical exercises.
+
+  Luis
