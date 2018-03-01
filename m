@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:60218 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751066AbeC0Mrx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 08:47:53 -0400
-Message-ID: <1522154870.3050.2.camel@sipsolutions.net> (sfid-20180327_144756_755417_C649AFBC)
-Subject: Re: [RFC 2/4] nl80211/mac80211: Extend NoAck policy command with
- peer MAC address
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Mar 2018 14:47:50 +0200
-In-Reply-To: <1522140171-10926-3-git-send-email-vthiagar@codeaurora.org>
-References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
-         <1522140171-10926-3-git-send-email-vthiagar@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-cys01nam02on0083.outbound.protection.outlook.com ([104.47.37.83]:58674
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S966675AbeCAJjf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Mar 2018 04:39:35 -0500
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Dmitry Lebed <dlebed@quantenna.com>,
+        Dmitry Lebed <lebed.dmitry@gmail.com>
+Subject: [PATCH v3 0/2] cfg80211/nl80211: prepare DFS offload
+Date: Thu,  1 Mar 2018 12:39:14 +0300
+Message-Id: <20180301093916.14096-1-sergey.matyukevich.os@quantenna.com> (sfid-20180301_103944_734039_DF934F06)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-03-27 at 14:12 +0530, Vasanthakumar Thiagarajan wrote:
-> 
-> - * @set_noack_map: Set the NoAck Map for the TIDs.
-> + * @set_noack_map: Set the NoAck Map for the TIDs. When peer is not %NULL NoAck
-> + *	map will be applied for that particular peer. When peer is %NULL NoAck
-> + *	map will be applied for all the connected stations (except the ones
-> + *	which already have per-peer TID map configured) on the netdev.
-> + *	Driver should return -ENOSPC when the it does not have room for
-> + *	additional entries for per-peer NoAck map.
+Hello Johannes and all,
 
-I guess it should also set the default for new stations when the peer is
-not given? At least that's how mac80211 would behave now, afaict.
+Here is a patch set preparing DFS offload feature. The final purpose is
+to enable DFS offload when hardware/driver does all the DFS activities
+on its own without any support from user-space tools, e.g. hostapd.
+In this case user-space will be only informed about results, e.g.
+when CAC started/stopped, radar detected, etc...
 
-The question is how that interacts with having enough space - are you
-sure this is a concern?
+User-space functionality is already available in hostapd in the form
+of  vendor-specific (QCA) OUI advertising DFS offload support. The
+idea is to add missing pieces to kernel and then to convert relevant
+hostapd functionality into a vendor neutral form.
 
->   * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs whether
-> - *      No Acknowledgement Policy should be applied.
-> + *	No Acknowledgement Policy should be applied. %NL80211_ATTR_MAC is used
-> + *	to apply No Acknowledgement policy for a particular connected station.
-> + *	Station specific NoAck policy configuration is valid only for STA's
-> + *	current connection, i.e. the configuration will not be used when the
-> + *	station connects back after disconnection/roaming.
-> + *	When user-space does not include %NL80211_ATTR_MAC, the No
-> + *	Acknowledgement Policy setting should be treated as per-netdev
-> + *	configuration.
+Thanks,
+Sergey
 
-Here you describe different semantics - i.e. you didn't describe the
-"previous per-station settings are kept" part. I'm not sure that part
-makes much sense anyhow?
+Changes v2 -> v3
+- add patch with CAC_STARTED event
 
-johannes
+Dmitrii Lebed (2):
+  cfg80211/nl80211: add DFS offload flag
+  cfg80211/nl80211: add CAC_STARTED event
+
+ include/uapi/linux/nl80211.h |   10 ++++++++++
+ net/wireless/mlme.c          |    7 +++++--
+ net/wireless/nl80211.c       |   12 ++++++++----
+ 3 files changed, 23 insertions(+), 6 deletions(-)
