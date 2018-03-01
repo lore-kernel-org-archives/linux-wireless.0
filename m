@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr40103.outbound.protection.outlook.com ([40.107.4.103]:10112
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S967778AbeCALaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 06:30:06 -0500
-Subject: [PATCH net-next 0/2] Converting pernet_operations (part #3)
- (wireless, mac80211_hwsim)
-From: Kirill Tkhai <ktkhai@virtuozzo.com>
-To: davem@davemloft.net, johannes@sipsolutions.net,
-        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, ktkhai@virtuozzo.com
-Date: Thu, 01 Mar 2018 14:30:00 +0300
-Message-ID: <151990341305.5011.3514278630677194656.stgit@localhost.localdomain> (sfid-20180301_123015_268638_D7F8D085)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:39763 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031353AbeCAOV0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Mar 2018 09:21:26 -0500
+Received: by mail-qt0-f194.google.com with SMTP id f4so7673936qtj.6
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:25 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 23/52] ath: Map Algeria to APL13_WORLD
+Date: Thu,  1 Mar 2018 15:18:33 +0100
+Message-Id: <20180301141902.24824-24-sven.eckelmann@openmesh.com> (sfid-20180301_152134_777781_3B2D6615)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These series fixes ID overflow of hwsim_netgroup [1/2],
-and reviews and makes hwsim_net_ops as async [2/2].
+The regdomain code is used to select the correct the correct conformance
+test limits (CTL) for a country. If the regdomain code isn't correctly
+mapped to the actual CTL entries in EEPROM then it could happen that the
+device violates the regulations. But it can also happen that the device is
+then not able to be used with its full txpower on all rates.
 
-The first pernet_operations requiring changes to make
-the converting safe!
+The CTL mappings for this regdomain code were now changed to:
 
-([1/2] may be need to [net], but better people see it's really need).
+* 2.4GHz: ETSI
+* 5GHz: NO_CTL -> ETSI
 
-Thanks,
-Kirill
-
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 ---
+ drivers/net/wireless/ath/regd_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Kirill Tkhai (2):
-      mac80211_hwsim: Make hwsim_netgroup IDA
-      net: Convert hwsim_net_ops
-
-
- drivers/net/wireless/mac80211_hwsim.c |   15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
-
---
-Signed-off-by: Kirill Tkhai <ktkhai@virtuozzo.com>
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index bdfbdd4e8583..984039073aea 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -304,7 +304,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_DEBUG, NO_ENUMRD, "DB"},
+ 	{CTRY_DEFAULT, FCC1_FCCA, "CO"},
+ 	{CTRY_ALBANIA, ETSI1_WORLD, "AL"},
+-	{CTRY_ALGERIA, NULL1_WORLD, "DZ"},
++	{CTRY_ALGERIA, APL13_WORLD, "DZ"},
+ 	{CTRY_ARGENTINA, FCC3_WORLD, "AR"},
+ 	{CTRY_ARMENIA, ETSI4_WORLD, "AM"},
+ 	{CTRY_ARUBA, ETSI1_WORLD, "AW"},
+-- 
+2.11.0
