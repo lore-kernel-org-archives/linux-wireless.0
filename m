@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47654 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751217AbeCMPBi (ORCPT
+Received: from mx1.uni-rostock.de ([139.30.22.71]:55371 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032915AbeCARWa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 11:01:38 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: Re: [PATCH 1/3] rsi: improve RX handling in SDIO interface
-References: <1519803508-27737-1-git-send-email-amitkarwar@gmail.com>
-        <1519803508-27737-2-git-send-email-amitkarwar@gmail.com>
-Date: Tue, 13 Mar 2018 17:01:33 +0200
-In-Reply-To: <1519803508-27737-2-git-send-email-amitkarwar@gmail.com>
-        (Amitkumar Karwar's message of "Wed, 28 Feb 2018 13:08:26 +0530")
-Message-ID: <87muzc10ky.fsf@purkki.adurom.net> (sfid-20180313_160141_857920_78F38CD2)
+        Thu, 1 Mar 2018 12:22:30 -0500
+Subject: Re: [PATCH net-next 1/2] mac80211_hwsim: Make hwsim_netgroup IDA
+To: Kirill Tkhai <ktkhai@virtuozzo.com>, <davem@davemloft.net>,
+        <johannes@sipsolutions.net>, <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+References: <151990341305.5011.3514278630677194656.stgit@localhost.localdomain>
+ <151990380915.5011.5476607741974762054.stgit@localhost.localdomain>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Message-ID: <9a826ac0-1354-567b-ec4c-ac8511bf89f6@uni-rostock.de> (sfid-20180301_182239_275280_49D7FEA9)
+Date: Thu, 1 Mar 2018 18:22:26 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <151990380915.5011.5476607741974762054.stgit@localhost.localdomain>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+Am 01.03.2018 um 12:30 schrieb Kirill Tkhai:
 
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Out of bounds of this patch, just as a report to wireless subsystem
+> maintainer, destroy_radio() increaments hwsim_radios_generation
+> without hwsim_radio_lock, so this may need one more patch to fix.
 >
-> Currently, RX packets are handled in interrupt context in SDIO
-> interface. To improve the efficiency of processing RX packets,
-> RX thread and RX skb queues are introduced.
-> When the packet is read from device, driver prepares skb, add to
-> RX queue and trigger RX thread event. RX thread processes the
-> packets from RX queue.
->
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+The lock is here implicit, because the value only could change at init
+(where netlink callbacks are deactivated and always happens sequential)
+or in netlink callbacks. The only reader of this variable is the dump
+callback, and the only other writers are also netlink callbacks and
+because they are implicitly not parallel (because the parallel flag is
+not set), there could be no race condition. Maybe this should be
+documented somehow, especially if somebody got the idea to allow
+parallel callbacks :-)
 
-[...]
+--=20
+M.Sc. Benjamin Beichler
 
-> +void rsi_sdio_rx_thread(struct rsi_common *common)
-> +{
-> +	struct rsi_hw *adapter = common->priv;
-> +	struct rsi_91x_sdiodev *sdev = adapter->rsi_dev;
-> +	struct sk_buff *skb;
-> +	int status;
-> +
-> +	do {
-> +		rsi_wait_event(&sdev->rx_thread.event, EVENT_WAIT_FOREVER);
-> +		rsi_reset_event(&sdev->rx_thread.event);
+Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
+chnik
+Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
 
-I started to wonder what these rsi_wait_event() and rsi_reset_event()
-are and indeed, at least to me, they look suspicious (creating own
-kthread and use of atomics etc). Why reinvent the wheel and not use
-standard kernel frameworks, like workqueue? Most of the time trying to
-be too clever ends up just being buggy.
+University of Rostock, Department of CS and EE
+Institute of Applied Microelectronics and CE
 
-No need for any immeadiate action but something to keep in mind and
-hopefully clean up later.
+Richard-Wagner-Stra=C3=9Fe 31
+18119 Rostock
+Deutschland/Germany
 
--- 
-Kalle Valo
+phone: +49 (0) 381 498 - 7278
+email: Benjamin.Beichler@uni-rostock.de
+www: http://www.imd.uni-rostock.de/
