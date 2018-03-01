@@ -1,36 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57738 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750946AbeC2Izo (ORCPT
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:46406 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032055AbeCAP2A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:55:44 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 1 Mar 2018 10:28:00 -0500
+Received: by mail-qt0-f181.google.com with SMTP id m13so7962293qtg.13
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 07:28:00 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [1/2] ath10k: refactor ath10k_pci_dump_memory() in preparation
- for QCA9984 support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1522054714-31492-1-git-send-email-kvalo@codeaurora.org>
-References: <1522054714-31492-1-git-send-email-kvalo@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Message-Id: <20180329085544.26983602BA@smtp.codeaurora.org> (sfid-20180329_105547_602767_94381AB9)
-Date: Thu, 29 Mar 2018 08:55:44 +0000 (UTC)
+From: Phani Siriki <yvsg.phanis@gmail.com>
+Date: Thu, 1 Mar 2018 09:27:59 -0600
+Message-ID: <CADsGw2ZBPK1hBY-a+v_1mVUOaFP3Uu5A4euyTc-070E4vSUrBg@mail.gmail.com> (sfid-20180301_162825_230390_93235854)
+Subject: Query on queues in mesh mode
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+Hi All
 
-> As QCA9984 needs two region types refactor the code to make it easier add the
-> new types. No functional changes.
-> 
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+I am trying to understand the queuing mechanism wireless mesh networks.
 
-2 patches applied to ath-next branch of ath.git, thanks.
+As per AP mode is concerned, there are four queues (BK, BE, Vi, VO)
+and traffic is controlled based on CWmin, CWmax, AIFS and TxOP.
 
-10c228843081 ath10k: refactor ath10k_pci_dump_memory() in preparation for QCA9984 support
-219cc084c670 ath10k: add memory dump support QCA9984
+Does, mesh mode also involve these queues? Does mesh mode have any
+queue or it is just a single queue?
 
--- 
-https://patchwork.kernel.org/patch/10307431/
+Could someone clarify this?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Best Regards
+Phani
