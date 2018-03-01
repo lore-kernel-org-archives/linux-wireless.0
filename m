@@ -1,119 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:47089 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752052AbeCMV75 (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:42314 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031277AbeCAOUx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 17:59:57 -0400
-Received: by mail-pg0-f68.google.com with SMTP id r26so462715pgv.13
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 14:59:57 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
+        Thu, 1 Mar 2018 09:20:53 -0500
+Received: by mail-qk0-f193.google.com with SMTP id b130so7666990qkg.9
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:53 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v5 3/9] nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
-Date: Tue, 13 Mar 2018 16:59:36 -0500
-Message-Id: <20180313215942.29176-4-denkenz@gmail.com> (sfid-20180313_230016_681135_490AC38A)
-In-Reply-To: <20180313215942.29176-1-denkenz@gmail.com>
-References: <20180313215942.29176-1-denkenz@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 10/52] ath: Add regulatory mapping for Rwanda
+Date: Thu,  1 Mar 2018 15:18:20 +0100
+Message-Id: <20180301141902.24824-11-sven.eckelmann@openmesh.com> (sfid-20180301_153349_776380_DD722073)
+In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/net/cfg80211.h       |  3 +++
- include/uapi/linux/nl80211.h | 14 +++++++++++++-
- net/wireless/nl80211.c       | 13 +++++++++++++
- 3 files changed, 29 insertions(+), 1 deletion(-)
+The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
+and to select the correct conformance test limits (CTL) for a country. If
+the country isn't available and it is still programmed in the EEPROM then
+it will cause an error and stop the initialization with:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 76b6783f35f6..2e7f30c66913 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -646,6 +646,8 @@ struct survey_info {
-  *	allowed through even on unauthorized ports
-  * @control_port_no_encrypt: TRUE to prevent encryption of control port
-  *	protocol frames.
-+ * @control_port_over_nl80211: TRUE if userspace expects to exchange control
-+ *	port frames over NL80211 instead of the network interface.
-  * @wep_keys: static WEP keys, if not NULL points to an array of
-  *	CFG80211_MAX_WEP_KEYS WEP keys
-  * @wep_tx_key: key index (0..3) of the default TX static WEP key
-@@ -661,6 +663,7 @@ struct cfg80211_crypto_settings {
- 	bool control_port;
- 	__be16 control_port_ethertype;
- 	bool control_port_no_encrypt;
-+	bool control_port_over_nl80211;
- 	struct key_params *wep_keys;
- 	int wep_tx_key;
- 	const u8 *psk;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 77675ae3e475..1cdac3d732c1 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -542,7 +542,8 @@
-  *	IEs in %NL80211_ATTR_IE, %NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_USE_MFP,
-  *	%NL80211_ATTR_MAC, %NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
-  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
-- *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT, %NL80211_ATTR_MAC_HINT, and
-+ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT,
-+ *	%NL80211_ATTR_CONTROL_PORT_OVER_NL80211, %NL80211_ATTR_MAC_HINT, and
-  *	%NL80211_ATTR_WIPHY_FREQ_HINT.
-  *	If included, %NL80211_ATTR_MAC and %NL80211_ATTR_WIPHY_FREQ are
-  *	restrictions on BSS selection, i.e., they effectively prevent roaming
-@@ -1488,6 +1489,15 @@ enum nl80211_commands {
-  * @NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT: When included along with
-  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE, indicates that the custom
-  *	ethertype frames used for key negotiation must not be encrypted.
-+ * @NL80211_ATTR_CONTROL_PORT_OVER_NL80211: A flag indicating whether control
-+ *	port frames (e.g. of type given in %NL80211_ATTR_CONTROL_PORT_ETHERTYPE)
-+ *	will be sent directly to the network interface or sent via the NL80211
-+ *	socket.  If this attribute is missing, then legacy behavior of sending
-+ *	control port frames directly to the network interface is used.  If the
-+ *	flag is included, then control port frames are sent over NL80211 instead
-+ *	using %CMD_CONTROL_PORT_FRAME.  If control port routing over NL80211 is
-+ *	to be used then userspace must also use the %NL80211_ATTR_SOCKET_OWNER
-+ *	flag.
-  *
-  * @NL80211_ATTR_TESTDATA: Testmode data blob, passed through to the driver.
-  *	We recommend using nested, driver-specific attributes within this.
-@@ -2641,6 +2651,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_NSS,
- 	NL80211_ATTR_ACK_SIGNAL,
- 
-+	NL80211_ATTR_CONTROL_PORT_OVER_NL80211,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 3c4dbfa0ca71..24b1bd940fca 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -287,6 +287,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_CONTROL_PORT] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CONTROL_PORT_ETHERTYPE] = { .type = NLA_U16 },
- 	[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_CONTROL_PORT_OVER_NL80211] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_PRIVACY] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
-@@ -8227,6 +8228,18 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 	} else
- 		settings->control_port_ethertype = cpu_to_be16(ETH_P_PAE);
- 
-+	if (info->attrs[NL80211_ATTR_CONTROL_PORT_OVER_NL80211]) {
-+		if (!info->attrs[NL80211_ATTR_SOCKET_OWNER])
-+			return -EINVAL;
-+
-+		if (!rdev->ops->tx_control_port ||
-+		    !wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211))
-+			return -EOPNOTSUPP;
-+
-+		settings->control_port_over_nl80211 = true;
-+	}
-+
- 	if (info->attrs[NL80211_ATTR_CIPHER_SUITES_PAIRWISE]) {
- 		void *data;
- 		int len, i;
+  Invalid EEPROM contents
+
+The current CTL mappings for this country are:
+
+* 2.4GHz: ETSI
+* 5GHz: FCC
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ drivers/net/wireless/ath/regd.h        | 1 +
+ drivers/net/wireless/ath/regd_common.h | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
+index 8575718425b6..3021ba5d7ef5 100644
+--- a/drivers/net/wireless/ath/regd.h
++++ b/drivers/net/wireless/ath/regd.h
+@@ -162,6 +162,7 @@ enum CountryCode {
+ 	CTRY_QATAR = 634,
+ 	CTRY_ROMANIA = 642,
+ 	CTRY_RUSSIA = 643,
++	CTRY_RWANDA = 646,
+ 	CTRY_SAUDI_ARABIA = 682,
+ 	CTRY_SERBIA_MONTENEGRO = 891,
+ 	CTRY_SINGAPORE = 702,
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 679c6bc9035e..89a3a9104428 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -454,6 +454,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_QATAR, APL1_WORLD, "QA"},
+ 	{CTRY_ROMANIA, NULL1_WORLD, "RO"},
+ 	{CTRY_RUSSIA, NULL1_WORLD, "RU"},
++	{CTRY_RWANDA, APL1_WORLD, "RW"},
+ 	{CTRY_SAUDI_ARABIA, NULL1_WORLD, "SA"},
+ 	{CTRY_SERBIA_MONTENEGRO, ETSI1_WORLD, "CS"},
+ 	{CTRY_SINGAPORE, APL6_WORLD, "SG"},
 -- 
-2.13.5
+2.11.0
