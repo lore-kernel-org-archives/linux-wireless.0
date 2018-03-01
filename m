@@ -1,201 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:37644 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752116AbeCZRQW (ORCPT
+Received: from mx2.uni-rostock.de ([139.30.22.72]:57390 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1033541AbeCARsm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:16:22 -0400
-Received: by mail-ot0-f196.google.com with SMTP id y46-v6so1753185otd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:22 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v6 01/11] nl80211: Add CMD_CONTROL_PORT_FRAME API
-Date: Mon, 26 Mar 2018 12:16:04 -0500
-Message-Id: <20180326171614.20373-2-denkenz@gmail.com> (sfid-20180326_191627_030821_CC4007A7)
-In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
-References: <20180326171614.20373-1-denkenz@gmail.com>
+        Thu, 1 Mar 2018 12:48:42 -0500
+Subject: Re: KASAN: use-after-free Read in mac80211_hwsim_del_radio
+To: Johannes Berg <johannes@sipsolutions.net>,
+        syzbot <syzbot+70ce058e01259de7bb1d@syzkaller.appspotmail.com>,
+        <kvalo@codeaurora.org>, <linux-kernel@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <syzkaller-bugs@googlegroups.com>
+References: <001a113ecf342db684056655e097@google.com>
+ <1519896638.2292.7.camel@sipsolutions.net>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Message-ID: <6a9b1524-9abe-fbfb-3335-a88ed297fdd1@uni-rostock.de> (sfid-20180301_185015_980272_E5F73E3A)
+Date: Thu, 1 Mar 2018 18:48:38 +0100
+MIME-Version: 1.0
+In-Reply-To: <1519896638.2292.7.camel@sipsolutions.net>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+        micalg=sha-256; boundary="------------ms060101030605050307040203"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit also adds cfg80211_rx_control_port function.  This is used
-to generate a CMD_CONTROL_PORT_FRAME event out to userspace.  The
-conn_owner_nlportid is used as the unicast destination.  This means that
-userspace must specify NL80211_ATTR_SOCKET_OWNER flag if control port
-over nl80211 routing is requested in NL80211_CMD_CONNECT,
-NL80211_CMD_ASSOCIATE or NL80211_CMD_START_AP
+--------------ms060101030605050307040203
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/net/cfg80211.h       | 22 +++++++++++++++++
- include/uapi/linux/nl80211.h | 13 ++++++++++
- net/wireless/nl80211.c       | 58 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/trace.h         | 21 ++++++++++++++++
- 4 files changed, 114 insertions(+)
+Am 01.03.2018 um 10:30 schrieb Johannes Berg:
+> Hi,
+>
+>> syzbot hit the following crash on upstream commit
+>> f3afe530d644488a074291da04a69a296ab63046 (Tue Feb 27 22:02:39 2018 +00=
+00)
+>> Merge branch 'fixes-v4.16-rc4' of =20
+>> git://git.kernel.org/pub/scm/linux/kernel/git/jmorris/linux-security
+>>
+>> So far this crash happened 4 times on upstream.
+>> Unfortunately, I don't have any reproducer for this crash yet.
+>> Raw console output is attached.
+> That's ... a pretty complex scenario.
+>
+> Looks like we have a race between destroying a network namespace, which=
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index fc40843baed3..6dee630ee66d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5694,6 +5694,28 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
- 
- 
- /**
-+ * cfg80211_rx_control_port - notification about a received control port frame
-+ * @dev: The device the frame matched to
-+ * @buf: control port frame
-+ * @len: length of the frame data
-+ * @addr: The peer from which the frame was received
-+ * @proto: frame protocol, typically PAE or Pre-authentication
-+ * @unencrypted: Whether the frame was received unencrypted
-+ *
-+ * This function is used to inform userspace about a received control port
-+ * frame.  It should only be used if userspace indicated it wants to receive
-+ * control port frames over NL80211.
-+ *
-+ * The frame is the data portion of the 802.3 or 802.11 data frame with all
-+ * network layer headers removed (e.g. the raw EAPoL frame).
-+ *
-+ * Return: %true if the frame was passed to userspace
-+ */
-+bool cfg80211_rx_control_port(struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *addr, u16 proto, bool unencrypted);
-+
-+/**
-  * cfg80211_cqm_rssi_notify - connection quality monitoring rssi event
-  * @dev: network device
-  * @rssi_event: the triggered RSSI event
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c13c84304be3..1334f810f7b4 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -990,6 +990,17 @@
-  *	&NL80211_CMD_CONNECT or &NL80211_CMD_ROAM. If the 4 way handshake failed
-  *	&NL80211_CMD_DISCONNECT should be indicated instead.
-  *
-+ * @NL80211_CMD_CONTROL_PORT_FRAME: Control Port (e.g. PAE) frame TX request
-+ *	and RX notification.  This command is used both as a request to transmit
-+ *	a control port frame and as a notification that a control port frame
-+ *	has been received. %NL80211_ATTR_FRAME is used to specify the
-+ *	frame contents.  The frame is the raw EAPoL data, without ethernet or
-+ *	802.11 headers.
-+ *	When used as an event indication %NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
-+ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT and %NL80211_ATTR_MAC are added
-+ *	indicating the protocol type of the received frame; whether the frame
-+ *	was received unencrypted and the MAC address of the peer respectively.
-+ *
-  * @NL80211_CMD_RELOAD_REGDB: Request that the regdb firmware file is reloaded.
-  *
-  * @NL80211_CMD_EXTERNAL_AUTH: This interface is exclusively defined for host
-@@ -1228,6 +1239,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_STA_OPMODE_CHANGED,
- 
-+	NL80211_CMD_CONTROL_PORT_FRAME,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a910150f8169..d7dcc2d05025 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -14535,6 +14535,64 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
- }
- EXPORT_SYMBOL(cfg80211_mgmt_tx_status);
- 
-+static int __nl80211_rx_control_port(struct net_device *dev,
-+				     const u8 *buf, size_t len,
-+				     const u8 *addr, u16 proto,
-+				     bool unencrypted, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	struct sk_buff *msg;
-+	void *hdr;
-+	u32 nlportid = READ_ONCE(wdev->conn_owner_nlportid);
-+
-+	if (!nlportid)
-+		return -ENOENT;
-+
-+	msg = nlmsg_new(100 + len, gfp);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CONTROL_PORT_FRAME);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return -ENOMEM;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-+	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
-+			      NL80211_ATTR_PAD) ||
-+	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
-+	    nla_put_u16(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE, proto) ||
-+	    (unencrypted && nla_put_flag(msg,
-+					 NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT)))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
-+
-+ nla_put_failure:
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
-+bool cfg80211_rx_control_port(struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *addr, u16 proto, bool unencrypted)
-+{
-+	int ret;
-+
-+	trace_cfg80211_rx_control_port(dev, buf, len, addr, proto, unencrypted);
-+	ret = __nl80211_rx_control_port(dev, buf, len, addr, proto,
-+					unencrypted, GFP_ATOMIC);
-+	trace_cfg80211_return_bool(ret == 0);
-+	return ret;
-+}
-+EXPORT_SYMBOL(cfg80211_rx_control_port);
-+
- static struct sk_buff *cfg80211_prepare_cqm(struct net_device *dev,
- 					    const char *mac, gfp_t gfp)
- {
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 5152938b358d..24e84dfe54fd 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2600,6 +2600,27 @@ TRACE_EVENT(cfg80211_mgmt_tx_status,
- 		  WDEV_PR_ARG, __entry->cookie, BOOL_TO_STR(__entry->ack))
- );
- 
-+TRACE_EVENT(cfg80211_rx_control_port,
-+	TP_PROTO(struct net_device *netdev, const u8 *buf, size_t len,
-+		 const u8 *addr, u16 proto, bool unencrypted),
-+	TP_ARGS(netdev, buf, len, addr, proto, unencrypted),
-+	TP_STRUCT__entry(
-+		NETDEV_ENTRY
-+		MAC_ENTRY(addr)
-+		__field(u16, proto)
-+		__field(bool, unencrypted)
-+	),
-+	TP_fast_assign(
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(addr, addr);
-+		__entry->proto = proto;
-+		__entry->unencrypted = unencrypted;
-+	),
-+	TP_printk(NETDEV_PR_FMT ", " MAC_PR_FMT " proto: %x, unencrypted: %s",
-+		  NETDEV_PR_ARG, MAC_PR_ARG(addr),
-+		  __entry->proto, BOOL_TO_STR(__entry->unencrypted))
-+);
-+
- TRACE_EVENT(cfg80211_cqm_rssi_notify,
- 	TP_PROTO(struct net_device *netdev,
- 		 enum nl80211_cqm_rssi_threshold_event rssi_event,
--- 
-2.13.5
+> moves everything back into the init_ns and may have to rename objects
+> asynchronously (cleanup_net), with destroying the radio in hwsim that's=
+
+> also asynchronous (destroy_radio).
+>
+> Benjamin, would you be able to take a look at this? I'm preparing for a=
+
+> trip and will leave Saturday for a week so I don't think I'll be able
+> to really dig into this before mid-March.
+>
+> johannes
+>
+After having a look, we can not asynchronously delete the interfaces
+here, because after the callback they need to be already gone. We could
+simply put a workqueue flush after the loop, but since we have no
+unbounded workqueue (which would also not be useful here I think), this
+only will delay things further. Therefore I will create a patch, which
+deletes synchronously here.
+
+--=20
+M.Sc. Benjamin Beichler
+
+Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
+chnik
+Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
+
+University of Rostock, Department of CS and EE
+Institute of Applied Microelectronics and CE
+
+Richard-Wagner-Stra=C3=9Fe 31
+18119 Rostock
+Deutschland/Germany
+
+phone: +49 (0) 381 498 - 7278
+email: Benjamin.Beichler@uni-rostock.de
+www: http://www.imd.uni-rostock.de/
+
+
+
+--------------ms060101030605050307040203
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+81Vs95cUAdtV/Oj7ywXmMkcerQ8egitlHVQh/jwG6EbsFLab9erzbPDs7VHsmusCAwEAAaOC
+Af4wggH6MBIGA1UdEwEB/wQIMAYBAf8CAQEwDgYDVR0PAQH/BAQDAgEGMBEGA1UdIAQKMAgw
+BgYEVR0gADAdBgNVHQ4EFgQUsxX1olePg3vUENNc8o4+U/dvQzcwHwYDVR0jBBgwFoAUSbfG
+z+g9H3/qRHsTKffxCnA+3mQwHAYDVR0RBBUwE4ERY2FAdW5pLXJvc3RvY2suZGUwgYgGA1Ud
+HwSBgDB+MD2gO6A5hjdodHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWNhL3B1
+Yi9jcmwvY2FjcmwuY3JsMD2gO6A5hjdodHRwOi8vY2RwMi5wY2EuZGZuLmRlL2dsb2JhbC1y
+b290LWNhL3B1Yi9jcmwvY2FjcmwuY3JsMIHXBggrBgEFBQcBAQSByjCBxzAzBggrBgEFBQcw
+AYYnaHR0cDovL29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZlci9PQ1NQMEcGCCsGAQUFBzAC
+hjtodHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWNhL3B1Yi9jYWNlcnQvY2Fj
+ZXJ0LmNydDBHBggrBgEFBQcwAoY7aHR0cDovL2NkcDIucGNhLmRmbi5kZS9nbG9iYWwtcm9v
+dC1jYS9wdWIvY2FjZXJ0L2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEBAE8SmQRK1aE9
+dqcmXuU9ZPzSN5dd19HgtQuvNAceB1mhearys7UljqQ9Ua3BAtWTthqLGuiy7vr7ul87frgp
+JRVozeRyIePOY7R0iKYbmPTbHgj4XHRyc9Z2D6h1Nec8pWQgx4BSqs3xALpio+gBK3UHsi3X
+sJx4ZpLTuboRR4+BFTmEwdtsGZf6fPLBapfbS0xls05HvPtrSw6JGWClE1PidPl3M5kiARjd
+Ep4HzDr+/IzTx9823poYGnxfCPL1M3Tb6ECugv7mBZiWE90bPzFfv9yEXkX0Pp5ielz/XkCC
+MOB+gDgVZbttmM/BSvoeuw+GtuCqqV1g6lc1/JZBNtgwggW3MIIEn6ADAgECAgcZvwa8Ukka
+MA0GCSqGSIb3DQEBCwUAMIGFMQswCQYDVQQGEwJERTEdMBsGA1UEChMUVW5pdmVyc2l0YWV0
+IFJvc3RvY2sxFjAUBgNVBAsTDVJlY2hlbnplbnRydW0xHTAbBgNVBAMTFFVuaSBSb3N0b2Nr
+IENBIC0gRzAyMSAwHgYJKoZIhvcNAQkBFhFjYUB1bmktcm9zdG9jay5kZTAeFw0xNTA3MTAw
+ODU4MjFaFw0xODA3MDkwODU4MjFaMFYxCzAJBgNVBAYTAkRFMR0wGwYDVQQKDBRVbml2ZXJz
+aXRhZXQgUm9zdG9jazEMMAoGA1UECwwDSUVGMRowGAYDVQQDDBFCZW5qYW1pbiBCZWljaGxl
+cjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMP+J5bUv7oCrhYz7tz+vKg/sGwQ
+9WHm3j528AX5cEn7Qh92cE/Y31gpimuSVlHN/CyYt/PEQ12Gc83vB8HU3gl0t00PwIElWroW
+yeGUBhMzH5Jfv0jkBz5xb/Byv8weXDVHbYvtTZfvWIv6SjDhgjY5puAHw/Z8XpEeksOoBLa6
+H7LQDR3O530Jwvay5ZDPFcWV9n01rBoglnAcfIh7v9Ua6A8BhqdZ/Yt0wlOXN94sTklsiCYy
+cmyKfhrrJWuJMD8WWAYEa69+mi9QodzHg/b58pzUDTE4QOLUR2jAk27g63yC3Nh/+lZi79gB
+e6JfSBieesen0Y2s4DYJG9T207MCAwEAAaOCAlgwggJUMEAGA1UdIAQ5MDcwEQYPKwYBBAGB
+rSGCLAEBBAMDMBEGDysGAQQBga0hgiwCAQQDATAPBg0rBgEEAYGtIYIsAQEEMAkGA1UdEwQC
+MAAwCwYDVR0PBAQDAgXgMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4E
+FgQUNBPZS5VyYehPYcxCwh0ss/3r2zswHwYDVR0jBBgwFoAUsxX1olePg3vUENNc8o4+U/dv
+QzcwKwYDVR0RBCQwIoEgYmVuamFtaW4uYmVpY2hsZXJAdW5pLXJvc3RvY2suZGUwgY0GA1Ud
+HwSBhTCBgjA/oD2gO4Y5aHR0cDovL2NkcDEucGNhLmRmbi5kZS91bmktcm9zdG9jay1jYS9w
+dWIvY3JsL2dfY2FjcmwuY3JsMD+gPaA7hjlodHRwOi8vY2RwMi5wY2EuZGZuLmRlL3VuaS1y
+b3N0b2NrLWNhL3B1Yi9jcmwvZ19jYWNybC5jcmwwgdsGCCsGAQUFBwEBBIHOMIHLMDMGCCsG
+AQUFBzABhidodHRwOi8vb2NzcC5wY2EuZGZuLmRlL09DU1AtU2VydmVyL09DU1AwSQYIKwYB
+BQUHMAKGPWh0dHA6Ly9jZHAxLnBjYS5kZm4uZGUvdW5pLXJvc3RvY2stY2EvcHViL2NhY2Vy
+dC9nX2NhY2VydC5jcnQwSQYIKwYBBQUHMAKGPWh0dHA6Ly9jZHAyLnBjYS5kZm4uZGUvdW5p
+LXJvc3RvY2stY2EvcHViL2NhY2VydC9nX2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEB
+ADPT0DMfqh3ie0QoV5dpv/ULazwuXoXFAYd3rikdZxxGfhR4/zzrQM9QtH4a1+nR66HnoAJR
+6NH76MDmaVY37LO3Jb+WHSbMQfN4ijv2j5Oxc8OnepTp/FY4Vo4qP0TzmW8dtqgJCwWVAcYj
+GPrZLG6oubw2aL0DYirEQYMpEh3LEAf2nemCKdLkahdmbvx5AMDcz1XODWLI9PDhGtifFHCA
+keel0T9YceFhA1myfawGh3GDD43ltM8i0PZzxaex/mw1ropnQ/wfzs3N6EYOmZNsc6RbRJLi
+HEJcraQTzI2bFSuO2Z856KRXMV+jj8c2cJ8xQuVd4ptYFSt1miDSGmwxggPkMIID4AIBATCB
+kTCBhTELMAkGA1UEBhMCREUxHTAbBgNVBAoTFFVuaXZlcnNpdGFldCBSb3N0b2NrMRYwFAYD
+VQQLEw1SZWNoZW56ZW50cnVtMR0wGwYDVQQDExRVbmkgUm9zdG9jayBDQSAtIEcwMjEgMB4G
+CSqGSIb3DQEJARYRY2FAdW5pLXJvc3RvY2suZGUCBxm/BrxSSRowDQYJYIZIAWUDBAIBBQCg
+ggIjMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE4MDMwMTE3
+NDgzOFowLwYJKoZIhvcNAQkEMSIEIIt4WhX7T2L+xyN4ufVsPHDsE9838yHO6NXyNmFeXEkS
+MGwGCSqGSIb3DQEJDzFfMF0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0D
+BzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwIC
+ASgwgaIGCSsGAQQBgjcQBDGBlDCBkTCBhTELMAkGA1UEBhMCREUxHTAbBgNVBAoTFFVuaXZl
+cnNpdGFldCBSb3N0b2NrMRYwFAYDVQQLEw1SZWNoZW56ZW50cnVtMR0wGwYDVQQDExRVbmkg
+Um9zdG9jayBDQSAtIEcwMjEgMB4GCSqGSIb3DQEJARYRY2FAdW5pLXJvc3RvY2suZGUCBxm/
+BrxSSRowgaQGCyqGSIb3DQEJEAILMYGUoIGRMIGFMQswCQYDVQQGEwJERTEdMBsGA1UEChMU
+VW5pdmVyc2l0YWV0IFJvc3RvY2sxFjAUBgNVBAsTDVJlY2hlbnplbnRydW0xHTAbBgNVBAMT
+FFVuaSBSb3N0b2NrIENBIC0gRzAyMSAwHgYJKoZIhvcNAQkBFhFjYUB1bmktcm9zdG9jay5k
+ZQIHGb8GvFJJGjANBgkqhkiG9w0BAQEFAASCAQCi96rXorE6nZ8zttZVgHfMSvqsmiRz94ou
+BmFpUjsxEQBsc1WS1MO11eNH3YCvkz9sOWPvL+qB5xG9L1DowzlSJjfHGZz+LqDfg3Th8PoE
+dLmk2CvhPL+toY1JWFINfEV7PgIxanB+GFKxFNBfhsJj+d1l+w7NGcJntPb3HoqIVRvEJUfa
+gOj8WRgk70lwjh9UjWLdpJx6XuDf3Ai89wc2Fr0xNn743zYcVkknB5wwKmXC5HGYcEbj2qQQ
+rQq11tbcVwKZNuvFIN5NlzM12Sscv1Qg+g8KTai4uY3LJALcdwnpiiVBknETr5si34vAty8u
+7KR78Xdj5nLqSC6y6mtfAAAAAAAA
+--------------ms060101030605050307040203--
