@@ -1,83 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:4423 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1428552AbeCBORg (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:53619 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1425613AbeCBJWc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:17:36 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 2/3] staging: wilc1000: fix line over 80 char in wilc_wlan_cfg_set()
-Date: Fri, 2 Mar 2018 19:47:19 +0530
-Message-ID: <1520000240-27519-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_151758_545246_00B01B58)
-In-Reply-To: <1520000240-27519-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000240-27519-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 2 Mar 2018 04:22:32 -0500
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: Pavel Machek <pavel@ucw.cz>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+ <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
+ <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
+ <20180302090312.GA30267@amd>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com> (sfid-20180302_102330_855697_C6862217)
+Date: Fri, 2 Mar 2018 10:22:14 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180302090312.GA30267@amd>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 characters' issue found by checkpatch.pl script.
+>> leds-gpio is crap and limited. you can just register one platform data at
+>> kernel runtime since its identified by its object name "led-gpio" but the
+>> kernel forbidds to register 2 platform datas with the same name
+>> consider the ar71xx devices with qca988x wifi chipsets. they all have
+>> already a led platform data registered
+>> at boottime. a second can't be registered anymore so gpio_led is useless at
+>> all for most developers on such platforms. its mainly used for early kernel
+>> platform data initialisation for system leds.
+> If leds-gpio has limitations, please fix those, rather then
+> introducing duplicated code.
+there is no duplicated code introduced and there is no solution for it. 
+consider that all wifi drivers with softled support
+are going that way with registering a own led driver. see ath9k for 
+instance. gpio-led cannot be used for it and there is no way to
+support multiple platform datas with the same name. its a kernel limitation
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 37 ++++++++++++++++++------------------
- 1 file changed, 19 insertions(+), 18 deletions(-)
+Sebastian
+>
+> NAK.
+> 									Pavel
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 7c0d212..8490407 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1225,27 +1225,28 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
- 	offset += ret_size;
- 	wilc->cfg_frame_offset = offset;
- 
--	if (commit) {
--		netdev_dbg(vif->ndev,
--			   "[WILC]PACKET Commit with sequence number %d\n",
--			   wilc->cfg_seq_no);
--		netdev_dbg(vif->ndev, "Processing cfg_set()\n");
--		wilc->cfg_frame_in_use = 1;
--
--		if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
--			ret_size = 0;
--
--		if (!wait_for_completion_timeout(&wilc->cfg_event,
--						 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
--			netdev_dbg(vif->ndev, "Set Timed Out\n");
--			ret_size = 0;
--		}
-+	if (!commit)
-+		return ret_size;
- 
--		wilc->cfg_frame_in_use = 0;
--		wilc->cfg_frame_offset = 0;
--		wilc->cfg_seq_no += 1;
-+	netdev_dbg(vif->ndev,
-+		   "[WILC]PACKET Commit with sequence number %d\n",
-+		   wilc->cfg_seq_no);
-+	netdev_dbg(vif->ndev, "Processing cfg_set()\n");
-+	wilc->cfg_frame_in_use = 1;
-+
-+	if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
-+		ret_size = 0;
-+
-+	if (!wait_for_completion_timeout(&wilc->cfg_event,
-+					 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
-+		netdev_dbg(vif->ndev, "Set Timed Out\n");
-+		ret_size = 0;
- 	}
- 
-+	wilc->cfg_frame_in_use = 0;
-+	wilc->cfg_frame_offset = 0;
-+	wilc->cfg_seq_no += 1;
-+
- 	return ret_size;
- }
- 
+
 -- 
-2.7.4
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
