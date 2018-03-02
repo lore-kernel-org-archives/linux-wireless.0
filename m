@@ -1,194 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36990 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753065AbeC1OZX (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:58347 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1423169AbeCBLb1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 10:25:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        "Zamir, Roee" <roee.zamir@intel.com>,
-        Beni Lev <beni.lev@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 17:25:17 +0300
-Message-Id: <20180328142517.8940-1-luca@coelho.fi> (sfid-20180328_162533_572238_CED946F9)
-In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
-References: <20180328141157.5427-1-luca@coelho.fi>
-Subject: [PATCH 06/14] iwlwifi: mvm: add adaptive dwell support
+        Fri, 2 Mar 2018 06:31:27 -0500
+From: s.gottschall@dd-wrt.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: [PATCH v2] ath9k: fix crash in spectral scan
+Date: Fri,  2 Mar 2018 12:31:09 +0100
+Message-Id: <20180302113109.26466-1-s.gottschall@dd-wrt.com> (sfid-20180302_123216_377978_0A3C41D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Zamir, Roee" <roee.zamir@intel.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-Update the scan command API with support for adaptive dwell
-and add a debugfs entry to configure max budget parameter.
+fixes crash seen on arm smp systems (gateworks ventana imx6)
 
-Signed-off-by: Roee Zamir <roee.zamir@intel.com>
-Signed-off-by: Beni Lev <beni.lev@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+
+v2: fix wrong field and add signed-off-by
+
+Unable to handle kernel NULL pointer dereference at virtual address 00000014
+pgd = 80004000
+[00000014] *pgd=00000000
+Internal error: Oops - BUG: 17 [#1] PREEMPT SMP ARM
+Modules linked in: ip6table_filter nf_conntrack_ipv6 ip6_tables nf_log_ipv6 nf_defrag_ipv6 shortcut_fe ipcomp6 xfrm_ipcomp xfrm6_tunnel xfrm6_mode_tunnel xfrm6_mode_transport xfrm6_mode_ro xfrm6_mode_beet ip6_tunnel tunnel6 mip6 ah6 esp6 xfrm_algo sit ip_tunnel tunnel4 ipv6 ath10k_pci ath10k_core ath9k ath mac80211 cfg80211 compat ath_pci ath_hal(P) caamalg authencesn authenc caamrng caamhash caam_jr caam cdc_ncm usbnet usbcore sky2 imx2_wdt
+CPU: 0 PID: 3 Comm: ksoftirqd/0 Tainted: P                4.9.85 #19
+Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+task: bf064980 task.stack: bf07c000
+PC is at relay_buf_full+0xc/0x30
+LR is at _674+0x740/0xf10 [ath9k]
+pc : [<8018bce0>]    lr : [<7f1aa604>]    psr: 80000013
+sp : bf07dbf0  ip : bf07dc00  fp : bf07dbfc
+r10: 0000003f  r9 : bf130e00  r8 : 809044b0
+r7 : 00000000  r6 : be67a9f0  r5 : 00000000  r4 : 809043e4
+r3 : c0864c24  r2 : 00000000  r1 : 00000004  r0 : 00000000
+Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
+Control: 10c5387d  Table: 4e6a004a  DAC: 00000055
+Process ksoftirqd/0 (pid: 3, stack limit = 0xbf07c210)
+Stack: (0xbf07dbf0 to 0xbf07e000)
+dbe0:                                     bf07dd04 bf07dc00 7f1aa604 8018bce0
+dc00: 00004014 be59e010 bf07dc34 bf07dc18 7f1a7084 7f19c07c be59c010 be6470a0
+dc20: 0000096c be648954 bf07dc6c bf07dc38 7f1c286c bf07dd90 bf07dc5c bf07dc48
+dc40: 8029ea4c 0000003c 00000001 be59c010 00000094 00000000 00000000 00000000
+dc60: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+dc80: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+dca0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+dcc0: 00000000 00000000 00000000 00000000 00000000 00000000 8010ef24 00000030
+dce0: be94f5e8 be6485a0 bddf0200 be59c010 be6465a0 be6415a0 bf07ddf4 bf07dd08
+dd00: 7f1cf800 7f1aa55c 1fc38c4c 00000000 bf07dd58 cccccccd 66666667 be640bc0
+dd20: bf07dd54 be6415a0 1fc38c4c 00000000 00000000 be59c038 be67a9c0 be59e010
+dd40: be67a9f0 be647170 8090c904 be59c010 00000000 00000001 1fc38e84 00000000
+dd60: be640bc0 bddf0200 00000200 00000010 0000003f 00000002 20000013 be59c010
+dd80: 8092d940 bf7ca2c0 bf07ddb4 bf07dd98 1fc38c4c 2602003f 0100ff1b 80ff1b00
+dda0: 00808080 00000000 00000000 80808080 80808080 80808080 80808080 00008080
+ddc0: 00000000 00000000 7f1b62b8 00000002 be6470ec be6470f0 00000000 bf07de98
+dde0: 8092d940 be6415a0 bf07de94 bf07ddf8 7f1d1ed8 7f1cf1fc 00000000 00000000
+de00: bf7cc4c0 00000400 be6470f0 bf07de18 8015165c be59c010 8090453c 8090453c
+de20: bf07dec4 be6465a0 8014f614 80148884 0000619a 00000001 bf07c000 00000100
+de40: bf07de78 00000001 7f327850 00000002 afb50401 bf064980 bf07de9c bf07de68
+de60: bf064a00 803cc668 bf064a00 be6470b4 be6470b8 80844180 00000000 bf07de98
+de80: 8092d940 bf07c000 bf07dec4 bf07de98 80124d18 7f1d1c44 80124c94 00000000
+dea0: 00000006 80902098 80902080 40000006 00000100 bf07c000 bf07df24 bf07dec8
+dec0: 8012501c 80124ca0 bf7cc4c0 bf064980 be95e1c0 04208040 80902d00 000061c7
+dee0: 0000000a 80600b54 8092d940 808441f8 80902080 bf07dec8 bf03b200 bf07c000
+df00: bf03b200 8090fe54 00000000 00000000 00000000 00000000 bf07df34 bf07df28
+df20: 80125148 80124f28 bf07df5c bf07df38 8013deb4 8012511c 00000000 bf03b240
+df40: bf03b200 8013dc90 00000000 00000000 bf07dfac bf07df60 8013ad40 8013dc9c
+df60: 70448040 00000001 00000000 bf03b200 00000000 00030003 bf07df78 bf07df78
+df80: 00000000 00000000 bf07df88 bf07df88 bf03b240 8013ac48 00000000 00000000
+dfa0: 00000000 bf07dfb0 80107760 8013ac54 00000000 00000000 00000000 00000000
+dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+dfe0: 00000000 00000000 00000000 00000000 00000013 00000000 8c120004 1190ad04
+Backtrace:
+[<8018bcd4>] (relay_buf_full) from [<7f1aa604>] (_674+0x740/0xf10 [ath9k])
+[<7f1aa550>] (_674 [ath9k]) from [<7f1cf800>] (_582+0x14b4/0x3708 [ath9k])
+ r10:be6415a0 r9:be6465a0 r8:be59c010 r7:bddf0200 r6:be6485a0 r5:be94f5e8
+ r4:00000030
+[<7f1cf1f0>] (_582 [ath9k]) from [<7f1d1ed8>] (_735+0x2a0/0xec4 [ath9k])
+ r10:be6415a0 r9:8092d940 r8:bf07de98 r7:00000000 r6:be6470f0 r5:be6470ec
+ r4:00000002
+[<7f1d1c38>] (_735 [ath9k]) from [<80124d18>] (tasklet_action+0x84/0xf8)
+ r10:bf07c000 r9:8092d940 r8:bf07de98 r7:00000000 r6:80844180 r5:be6470b8
+ r4:be6470b4
+[<80124c94>] (tasklet_action) from [<8012501c>] (__do_softirq+0x100/0x1f4)
+ r10:bf07c000 r9:00000100 r8:40000006 r7:80902080 r6:80902098 r5:00000006
+ r4:00000000 r3:80124c94
+[<80124f1c>] (__do_softirq) from [<80125148>] (run_ksoftirqd+0x38/0x4c)
+ r10:00000000 r9:00000000 r8:00000000 r7:00000000 r6:8090fe54 r5:bf03b200
+ r4:bf07c000
+[<80125110>] (run_ksoftirqd) from [<8013deb4>] (smpboot_thread_fn+0x224/0x260)
+[<8013dc90>] (smpboot_thread_fn) from [<8013ad40>] (kthread+0xf8/0x100)
+ r9:00000000 r8:00000000 r7:8013dc90 r6:bf03b200 r5:bf03b240 r4:00000000
+[<8013ac48>] (kthread) from [<80107760>] (ret_from_fork+0x14/0x34)
+ r7:00000000 r6:00000000 r5:8013ac48 r4:bf03b240
+Code: e89da800 e1a0c00d e92dd800 e24cb004 (e5901014)
+---[ end trace dddf11ac9111b272 ]---
+Kernel panic - not syncing: Fatal exception in interrupt
+CPU1: stopping
+CPU: 1 PID: 0 Comm: swapper/1 Tainted: P      D         4.9.85 #19
+Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+Backtrace:
+[<8010a708>] (dump_backtrace) from [<8010a99c>] (show_stack+0x18/0x1c)
+ r7:bf093f58 r6:20000193 r5:809168e8 r4:00000000
+[<8010a984>] (show_stack) from [<802a09c4>] (dump_stack+0x94/0xa8)
+[<802a0930>] (dump_stack) from [<8010d184>] (handle_IPI+0xe8/0x180)
+ r7:bf093f58 r6:00000000 r5:00000001 r4:808478c4
+[<8010d09c>] (handle_IPI) from [<801013e8>] (gic_handle_irq+0x78/0x7c)
+ r7:f4000100 r6:bf093f58 r5:f400010c r4:8090467c
+[<80101370>] (gic_handle_irq) from [<8010b378>] (__irq_svc+0x58/0x8c)
+Exception stack(0xbf093f58 to 0xbf093fa0)
+3f40:                                                       bf7d62a0 00000000
+3f60: 0010a5f4 80113460 bf092000 809043e4 00000002 80904434 bf092008 412fc09a
+3f80: 00000000 bf093fb4 bf093fb8 bf093fa8 8010804c 80108050 60000013 ffffffff
+ r9:bf092000 r8:bf092008 r7:bf093f8c r6:ffffffff r5:60000013 r4:80108050
+[<80108014>] (arch_cpu_idle) from [<80553c2c>] (default_idle_call+0x30/0x34)
+[<80553bfc>] (default_idle_call) from [<80158394>] (cpu_startup_entry+0xc4/0xfc)
+[<801582d0>] (cpu_startup_entry) from [<8010ce40>] (secondary_start_kernel+0x168/0x174)
+ r7:8092d2f8 r4:80913568
+[<8010ccd8>] (secondary_start_kernel) from [<10101488>] (0x10101488)
+ r5:00000055 r4:4f07806a
+Rebooting in 10 seconds..
+Reboot failed -- System halted
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/constants.h |  2 +
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 98 ++++++++++++++--------
- 2 files changed, 67 insertions(+), 33 deletions(-)
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-index 976640fed334..96b52a275ee3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-@@ -110,6 +110,8 @@
- #define IWL_MVM_SW_TX_CSUM_OFFLOAD		0
- #define IWL_MVM_HW_CSUM_DISABLE			0
- #define IWL_MVM_PARSE_NVM			0
-+#define IWL_MVM_ADWELL_ENABLE			1
-+#define IWL_MVM_ADWELL_MAX_BUDGET		0
- #define IWL_MVM_RS_NUM_TRY_BEFORE_ANT_TOGGLE    1
- #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE      2
- #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE_TW   1
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 356b16f40e78..f910098e9531 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -86,6 +86,15 @@ enum iwl_mvm_traffic_load {
- #define IWL_SCAN_DWELL_FRAGMENTED	44
- #define IWL_SCAN_DWELL_EXTENDED		90
- 
-+/* adaptive dwell max budget time [TU] for full scan */
-+#define IWL_SCAN_ADWELL_MAX_BUDGET_FULL_SCAN 300
-+/* adaptive dwell max budget time [TU] for directed scan */
-+#define IWL_SCAN_ADWELL_MAX_BUDGET_DIRECTED_SCAN 100
-+/* adaptive dwell default APs number */
-+#define IWL_SCAN_ADWELL_DEFAULT_N_APS 2
-+/* adaptive dwell default APs number in social channels (1, 6, 11) */
-+#define IWL_SCAN_ADWELL_DEFAULT_N_APS_SOCIAL 10
-+
- struct iwl_mvm_scan_timing_params {
- 	u32 suspend_time;
- 	u32 max_out_time;
-@@ -1115,11 +1124,6 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index 5e77fe1f5b0d..f14a94090900 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -479,14 +479,16 @@ ath_cmn_is_fft_buf_full(struct ath_spec_scan_priv *spec_priv)
  {
- 	struct iwl_mvm_scan_timing_params *timing = &scan_timing[params->type];
+ 	int i = 0;
+ 	int ret = 0;
++	struct rchan_buf *buf;
+ 	struct rchan *rc = spec_priv->rfs_chan_spec_scan;
  
--	if (iwl_mvm_is_regular_scan(params))
--		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
--	else
--		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_2);
+-	for_each_online_cpu(i)
+-		ret += relay_buf_full(*per_cpu_ptr(rc->buf, i));
 -
- 	if (iwl_mvm_is_adaptive_dwell_supported(mvm)) {
- 		if (params->measurement_dwell) {
- 			cmd->v7.active_dwell = params->measurement_dwell;
-@@ -1129,6 +1133,21 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
- 			cmd->v7.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
- 		}
- 		cmd->v7.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
-+		cmd->v7.adwell_default_n_aps_social =
-+			IWL_SCAN_ADWELL_DEFAULT_N_APS_SOCIAL;
-+		cmd->v7.adwell_default_n_aps =
-+			IWL_SCAN_ADWELL_DEFAULT_N_APS;
-+
-+		/* if custom max budget was configured with debugfs */
-+		if (IWL_MVM_ADWELL_MAX_BUDGET)
-+			cmd->v7.adwell_max_budget =
-+				cpu_to_le16(IWL_MVM_ADWELL_MAX_BUDGET);
-+		else if (params->ssids && params->ssids[0].ssid_len)
-+			cmd->v7.adwell_max_budget =
-+				cpu_to_le16(IWL_SCAN_ADWELL_MAX_BUDGET_DIRECTED_SCAN);
-+		else
-+			cmd->v7.adwell_max_budget =
-+				cpu_to_le16(IWL_SCAN_ADWELL_MAX_BUDGET_FULL_SCAN);
- 
- 		cmd->v7.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
- 		cmd->v7.max_out_time[SCAN_LB_LMAC_IDX] =
-@@ -1136,43 +1155,47 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
- 		cmd->v7.suspend_time[SCAN_LB_LMAC_IDX] =
- 			cpu_to_le32(timing->suspend_time);
- 		if (iwl_mvm_is_cdb_supported(mvm)) {
--			cmd->v7.max_out_time[SCAN_HB_LMAC_IDX] =
-+			cmd->v6.max_out_time[SCAN_HB_LMAC_IDX] =
- 				cpu_to_le32(timing->max_out_time);
--			cmd->v7.suspend_time[SCAN_HB_LMAC_IDX] =
-+			cmd->v6.suspend_time[SCAN_HB_LMAC_IDX] =
- 				cpu_to_le32(timing->suspend_time);
- 		}
--
--		return;
--	}
--
--	if (params->measurement_dwell) {
--		cmd->v1.active_dwell = params->measurement_dwell;
--		cmd->v1.passive_dwell = params->measurement_dwell;
--		cmd->v1.extended_dwell = params->measurement_dwell;
- 	} else {
--		cmd->v1.active_dwell = IWL_SCAN_DWELL_ACTIVE;
--		cmd->v1.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
--		cmd->v1.extended_dwell = IWL_SCAN_DWELL_EXTENDED;
--	}
--	cmd->v1.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
--
--	if (iwl_mvm_has_new_tx_api(mvm)) {
--		cmd->v6.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
--		cmd->v6.max_out_time[SCAN_LB_LMAC_IDX] =
--			cpu_to_le32(timing->max_out_time);
--		cmd->v6.suspend_time[SCAN_LB_LMAC_IDX] =
--			cpu_to_le32(timing->suspend_time);
-+		if (params->measurement_dwell) {
-+			cmd->v1.active_dwell = params->measurement_dwell;
-+			cmd->v1.passive_dwell = params->measurement_dwell;
-+			cmd->v1.extended_dwell = params->measurement_dwell;
-+		} else {
-+			cmd->v1.active_dwell = IWL_SCAN_DWELL_ACTIVE;
-+			cmd->v1.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
-+			cmd->v1.extended_dwell = IWL_SCAN_DWELL_EXTENDED;
+-	i = num_online_cpus();
++	for_each_possible_cpu(i) {
++		if ((buf = *per_cpu_ptr(chan->buf, i))) {
++			ret += relay_buf_full(buf);
 +		}
-+		cmd->v1.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
- 		if (iwl_mvm_is_cdb_supported(mvm)) {
-+			struct iwl_mvm_scan_timing_params *hb_timing =
-+				&scan_timing[params->type];
-+
- 			cmd->v6.max_out_time[SCAN_HB_LMAC_IDX] =
--				cpu_to_le32(timing->max_out_time);
-+					cpu_to_le32(hb_timing->max_out_time);
- 			cmd->v6.suspend_time[SCAN_HB_LMAC_IDX] =
-+					cpu_to_le32(hb_timing->suspend_time);
-+		}
-+
-+		if (iwl_mvm_has_new_tx_api(mvm)) {
-+			cmd->v6.scan_priority =
-+				cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
-+			cmd->v6.max_out_time[SCAN_LB_LMAC_IDX] =
-+				cpu_to_le32(timing->max_out_time);
-+			cmd->v6.suspend_time[SCAN_LB_LMAC_IDX] =
-+				cpu_to_le32(timing->suspend_time);
-+		} else {
-+			cmd->v1.scan_priority =
-+				cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
-+			cmd->v1.max_out_time =
-+				cpu_to_le32(timing->max_out_time);
-+			cmd->v1.suspend_time =
- 				cpu_to_le32(timing->suspend_time);
- 		}
--	} else {
--		cmd->v1.max_out_time = cpu_to_le32(timing->max_out_time);
--		cmd->v1.suspend_time = cpu_to_le32(timing->suspend_time);
--		cmd->v1.scan_priority =
--			cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
- 	}
- }
++	}
  
-@@ -1234,6 +1257,15 @@ static u16 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
- 	if (mvm->sched_scan_pass_all == SCHED_SCAN_PASS_ALL_ENABLED)
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_ITER_COMPLETE;
- 
-+	if (iwl_mvm_is_adaptive_dwell_supported(mvm) && IWL_MVM_ADWELL_ENABLE &&
-+	    vif->type != NL80211_IFTYPE_P2P_DEVICE)
-+		flags |= IWL_UMAC_SCAN_GEN_FLAGS_ADAPTIVE_DWELL;
-+
-+	/*
-+	 * Extended dwell is relevant only for low band to start with, as it is
-+	 * being used for social channles only (1, 6, 11), so we can check
-+	 * only scan type on low band also for CDB.
-+	 */
- 	if (iwl_mvm_is_regular_scan(params) &&
- 	    vif->type != NL80211_IFTYPE_P2P_DEVICE &&
- 	    params->type != IWL_SCAN_TYPE_FRAGMENTED)
+-	if (ret == i)
++	if (ret)
+ 		return 1;
+ 	else
+ 		return 0;
 -- 
-2.16.2
+2.14.1
