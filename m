@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:46555 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752116AbeCZRQ1 (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:30127 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1425508AbeCBOXs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:16:27 -0400
-Received: by mail-ot0-f193.google.com with SMTP id v64-v6so326260otb.13
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:27 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v6 05/11] nl80211: Add SOCKET_OWNER support to JOIN_IBSS
-Date: Mon, 26 Mar 2018 12:16:08 -0500
-Message-Id: <20180326171614.20373-6-denkenz@gmail.com> (sfid-20180326_191631_356190_772BD5D3)
-In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
-References: <20180326171614.20373-1-denkenz@gmail.com>
+        Fri, 2 Mar 2018 09:23:48 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 08/13] staging: wilc1000: fix line over 80 char in wilc_add_ptk()
+Date: Fri, 2 Mar 2018 19:52:44 +0530
+Message-ID: <1520000569-27738-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_152351_472071_C15F737B)
+In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/uapi/linux/nl80211.h | 2 ++
- net/wireless/ibss.c          | 1 +
- net/wireless/nl80211.c       | 6 ++++++
- 3 files changed, 9 insertions(+)
+Fix 'line over 80 characters' issue found by checkpatch.pl script.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 1cdac3d732c1..877fab2836ec 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1985,6 +1985,8 @@ enum nl80211_commands {
-  *	multicast group.
-  *	If set during %NL80211_CMD_ASSOCIATE or %NL80211_CMD_CONNECT the
-  *	station will deauthenticate when the socket is closed.
-+ *	If set during %NL80211_CMD_JOIN_IBSS the IBSS will be automatically
-+ *	torn down when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index a1d10993d08a..d5d26fc5b853 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -224,6 +224,7 @@ int __cfg80211_leave_ibss(struct cfg80211_registered_device *rdev,
- 	if (err)
- 		return err;
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5ebb0aa..57f90e4 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2858,10 +2858,12 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 		return -ENOMEM;
  
-+	wdev->conn_owner_nlportid = 0;
- 	__cfg80211_clear_ibss(dev, nowext);
+ 	if (rx_mic)
+-		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic, RX_MIC_KEY_LEN);
++		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic,
++		       RX_MIC_KEY_LEN);
  
- 	return 0;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 234f6a41aa03..2f630ee3240b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8704,6 +8704,12 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
- 	if (err)
- 		kzfree(connkeys);
-+	else if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
-+		wdev_lock(dev->ieee80211_ptr);
-+		dev->ieee80211_ptr->conn_owner_nlportid = info->snd_portid;
-+		wdev_unlock(dev->ieee80211_ptr);
-+	}
-+
- 	return err;
- }
+ 	if (tx_mic)
+-		memcpy(msg.body.key_info.attr.wpa.key + 24, tx_mic, TX_MIC_KEY_LEN);
++		memcpy(msg.body.key_info.attr.wpa.key + 24, tx_mic,
++		       TX_MIC_KEY_LEN);
  
+ 	msg.body.key_info.attr.wpa.key_len = key_len;
+ 	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
 -- 
-2.13.5
+2.7.4
