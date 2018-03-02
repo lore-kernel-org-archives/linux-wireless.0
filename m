@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:41787 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751679AbeCEOtD (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:44469 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932246AbeCBWM6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 09:49:03 -0500
-Received: by mail-pl0-f67.google.com with SMTP id d9-v6so2275309plo.8
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2018 06:49:03 -0800 (PST)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 04/10] rsi: enable 80MHz clock by default
-Date: Mon,  5 Mar 2018 20:06:54 +0530
-Message-Id: <1520260620-4694-5-git-send-email-amitkarwar@gmail.com> (sfid-20180305_154912_103369_33132115)
-In-Reply-To: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
-References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+        Fri, 2 Mar 2018 17:12:58 -0500
+Received: by mail-oi0-f65.google.com with SMTP id b8so8124989oib.11
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2018 14:12:57 -0800 (PST)
+Subject: Re: [PATCH 04/15] rtlwifi: btcoex: Add customer_id to do special deal
+ to oem vendor
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180228030718.19510-1-pkshih@realtek.com>
+ <20180228030718.19510-5-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <8bc3c805-7e12-c8d1-9843-f9505926d8de@lwfinger.net> (sfid-20180302_231311_546695_69CDEE80)
+Date: Fri, 2 Mar 2018 16:12:56 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180228030718.19510-5-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On 02/27/2018 09:07 PM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Add customer_id field in structure, and then this is a clue to implement
+> the behavior defined by vendor LENOVO_CHINA.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-80MHz clock for device should be enabled by default in
-TX command frame radio capabilities.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 0bcf841..6f995d5a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -338,8 +338,8 @@ static int rsi_load_radio_caps(struct rsi_common *common)
- 	radio_caps->channel_num = common->channel;
- 	radio_caps->rf_model = RSI_RF_TYPE;
- 
-+	radio_caps->radio_cfg_info = RSI_LMAC_CLOCK_80MHZ;
- 	if (common->channel_width == BW_40MHZ) {
--		radio_caps->radio_cfg_info = RSI_LMAC_CLOCK_80MHZ;
- 		radio_caps->radio_cfg_info |= RSI_ENABLE_40MHZ;
- 
- 		if (common->fsm_state == FSM_MAC_INIT_DONE) {
--- 
-2.7.4
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+>   drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
+>   2 files changed, 2 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> index f5d8159a88eb..3c6a1e8851ec 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> @@ -154,6 +154,7 @@ struct btc_board_info {
+>   
+>   	u8 rfe_type;
+>   	u8 ant_div_cfg;
+> +	u8 customer_id;
+>   };
+>   
+>   enum btc_dbg_opcode {
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> index 438678c2d14a..d27e33960e77 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> @@ -556,6 +556,7 @@ enum rt_oem_id {
+>   	RT_CID_NETGEAR = 36,
+>   	RT_CID_PLANEX = 37,
+>   	RT_CID_CC_C = 38,
+> +	RT_CID_LENOVO_CHINA = 40,
+>   };
+>   
+>   enum hw_descs {
+> 
