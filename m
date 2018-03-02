@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52152 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751906AbeC3DOJ (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:39875 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1425508AbeCBOXc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 23:14:09 -0400
-From: Carl Huang <cjhuang@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/2] ath10k: support MAC address randomization in scan
-Date: Fri, 30 Mar 2018 11:13:58 +0800
-Message-Id: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org> (sfid-20180330_051415_686180_1CB872C4)
+        Fri, 2 Mar 2018 09:23:32 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 04/13] staging: wilc1000: fix line over 80 char in wilc_network_info_received()
+Date: Fri, 2 Mar 2018 19:52:40 +0530
+Message-ID: <1520000569-27738-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_152336_437891_8106A4F1)
+In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The feature MAC address randomization depends on the firmware
-capability, if the firmware indicates WMI_SERVICE_SPOOF_MAC_SUPPORT
-service the host driver will report it to upper layer. The service
-bit is above the 128 bit limit so a new service check macro is needed.
+Fix 'line over 80 character' issue found by checkpatch.pl script.
 
-Carl Huang (2):
-  ath10k: Add WMI_SERVICE_AVAILABLE_EVENT support
-  ath10k: support MAC address randomization in scan
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/ath/ath10k/mac.c     |  17 ++
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  46 ++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  63 ++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h | 357 +++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.c     |  26 ++-
- drivers/net/wireless/ath/ath10k/wmi.h     |  18 +-
- 6 files changed, 520 insertions(+), 7 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index cabee47..a44ddb2 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3482,7 +3482,10 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
+ 	struct host_if_drv *hif_drv = NULL;
+ 	struct wilc_vif *vif;
+ 
+-	id = ((buffer[length - 4]) | (buffer[length - 3] << 8) | (buffer[length - 2] << 16) | (buffer[length - 1] << 24));
++	id = buffer[length - 4];
++	id |= (buffer[length - 3] << 8);
++	id |= (buffer[length - 2] << 16);
++	id |= (buffer[length - 1] << 24);
+ 	vif = wilc_get_vif_from_idx(wilc, id);
+ 	if (!vif)
+ 		return;
 -- 
 2.7.4
