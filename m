@@ -1,48 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0058.outbound.protection.outlook.com ([104.47.32.58]:44249
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751141AbeCZNgu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 09:36:50 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>,
-        Dmitry Lebed <lebed.dmitry@gmail.com>
-Subject: [PATCH 0/3] cfg80211: further work on DFS offload enablement
-Date: Mon, 26 Mar 2018 16:36:30 +0300
-Message-Id: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com> (sfid-20180326_153655_023044_A4789788)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:33392 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1426714AbeCBK6T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Mar 2018 05:58:19 -0500
+Message-ID: <1519988289.6017.11.camel@coelho.fi> (sfid-20180302_115840_802158_894D35D9)
+From: Luca Coelho <luca@coelho.fi>
+To: linux-firmware@kernel.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>,
+        Josh Boyer <jwboyer@kernel.org>,
+        Kyle McMartin <kyle@infradead.org>,
+        Ben Hutchings <ben@decadent.org.uk>
+Date: Fri, 02 Mar 2018 12:58:09 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-zaJneqEOhgMnSqWR3IUN"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi firmwares update 2018-03-02
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes and all,
 
-Here is a patch set with minor cleanups/updates needed to enable
-DFS offload in cfg80211. 
+--=-zaJneqEOhgMnSqWR3IUN
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Note that the third patch enables DFS offload for qtnfmac driver.
-We assume that it should go through wireless-drivers tree after
-all cfg80211/nl80211 changes are reviewed and merged. So it is
-posted here for reference purposes only.
+Hi,
 
-Besides, minimal set of user-space changes for hostapd has been
-already posted to hostapd mailing list.
+I have updated the firmwares for the 9000 series.
 
-Thanks,
-Sergey
+Please pull or let me know if there are any issues.
 
-Dmitrii Lebed (3):
-  cfg80211: fix CAC_STARTED event handling
-  cfg80211: enable use of non-cleared DFS channels for DFS
-  qtnfmac: add DFS offload support
+Cheers,
+Luca.
 
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |    9 +++++++++
- drivers/net/wireless/quantenna/qtnfmac/event.c    |   11 +++++++++++
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    |    7 +++++--
- net/wireless/chan.c                               |    9 +++++++--
- net/wireless/mlme.c                               |    2 +-
- 5 files changed, 33 insertions(+), 5 deletions(-)
+
+The following changes since commit 7344ec9e1df9e27d105ed48d2db99e22370236de=
+:
+
+  Merge branch 'ath10k-20180219' of git://git.kernel.org/pub/scm/linux/kern=
+el/git/kvalo/linux-firmware into ath10k (2018-02-22 06:42:59 -0500)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git =
+tags/iwlwifi-fw-2018-03-02
+
+for you to fetch changes up to e27d4b7e5c2e948dff36ed5c8ac90da94e317067:
+
+  iwlwifi: update firmware version 34 for 9000 series (2018-03-02 12:38:35 =
++0200)
+
+----------------------------------------------------------------
+iwlwifi: update FWs for 9000 series
+
+* Update FW version 34 for 9000 series;
+
+----------------------------------------------------------------
+Luca Coelho (1):
+      iwlwifi: update firmware version 34 for 9000 series
+
+ WHENCE                            |   4 ++--
+ iwlwifi-9000-pu-b0-jf-b0-34.ucode | Bin 2677620 -> 2678284 bytes
+ iwlwifi-9260-th-b0-jf-b0-34.ucode | Bin 2677772 -> 2678092 bytes
+ 3 files changed, 2 insertions(+), 2 deletions(-)
+--=-zaJneqEOhgMnSqWR3IUN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlqZLkEACgkQoUecoho8
+xfoTqA//XlV7zJyLcivqiXsp74KgIvpf2mXcoxnJ23YDxgc64X7TxpvaRhw3uV9X
+YFgwDd4lxz3vsBgoMbW761Tmil4o5Hefy3Y6AG6Y2DYgaJu57WTYVXIMBCYBFJgi
+mgH5Ols+mER09JXEk6DrGHNaOY1OeeySChxh5TtMu/Rs2tWyMllJYD4d4ZxLGyqP
+DV5jvTMRqO8FbkspovxrZf4wMJfBvuXSuZEqQ3AVunQIwTjTj4OyCe6ec2N4gdA9
+VhSTBg2GiF5SVj3Cy+RNE1wS7Zar0ajUUNk8l0vaxelUcWvwZLXZROQKG3seODwd
+dKzgW4QTF/uA2q/H6+oYYhWLDqZZV6BzrraYts5G8WMGwbpFvtmwgTUIwOA4UkDX
+V5shbsZT6nl9DiZ+NRqk2H43ghsOvFiyZwLgz4YCAU4oPATJmAP5F4bdeXss0XYa
+WDKJQL/9jOZZqTuz20qrdwXkWVjj588Op8Pwt7TH227wBV3ykSUEQ+a1WhYIjNJn
+ZqqHybgwJlcYf/AtUyJW2zxPXU4rWlWsazFkQYUnCD2XdUPheqizqr60o7+abNO1
+Z2mbzafoXqA0KPlt/f4cLam/kW80Qr6DoFvbKM763cBZRWlqMXnobFW2Al2/wzan
+fY8+1rgNkYqdO5kyHSMXQ957NQBiAaafnwZ3RsWCdcXtG19GMRI=
+=2g7V
+-----END PGP SIGNATURE-----
+
+--=-zaJneqEOhgMnSqWR3IUN--
