@@ -1,231 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0103.hostedemail.com ([216.40.44.103]:47337 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751677AbeCWWzM (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:44525 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1427120AbeCBLZu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 18:55:12 -0400
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org, linux-can@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        nios2-dev@lists.rocketboards.org, linuxppc-dev@lists.ozlabs.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        linux-hams@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-wpan@vger.kernel.org, linux-ppp@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        wcn36xx@lists.infradead.org, xen-devel@lists.xenproject.org,
-        bridge@lists.linux-foundation.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-afs@lists.infradead.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-x25@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org, oss-drivers@netronome.com,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, linux-bluetooth@vger.kernel.org
-Subject: [PATCH 0/4] net: drivers/net: Use octal permissions
-Date: Fri, 23 Mar 2018 15:54:35 -0700
-Message-Id: <cover.1521845235.git.joe@perches.com> (sfid-20180323_235535_313932_426CF26A)
+        Fri, 2 Mar 2018 06:25:50 -0500
+From: s.gottschall@dd-wrt.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: [PATCH v1] ath9k: fix crash in spectral scan
+Date: Fri,  2 Mar 2018 12:25:35 +0100
+Message-Id: <20180302112535.25918-1-s.gottschall@dd-wrt.com> (sfid-20180302_122622_335512_72E0A8FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using octal and not symbolic permissions is preferred by many as
-more readable.
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-https://lkml.org/lkml/2016/8/2/1945
+fixes crash seen on arm smp systems (gateworks ventana imx6)
 
-Rather than getting these piecemeal, just do them all.
-Done with checkpatch and some typing.
+Unable to handle kernel NULL pointer dereference at virtual address 00000014
+pgd = 80004000
+[00000014] *pgd=00000000
+Internal error: Oops - BUG: 17 [#1] PREEMPT SMP ARM
+Modules linked in: ip6table_filter nf_conntrack_ipv6 ip6_tables nf_log_ipv6 nf_defrag_ipv6 shortcut_fe ipcomp6 xfrm_ipcomp xfrm6_tunnel xfrm6_mode_tunnel xfrm6_mode_transport xfrm6_mode_ro xfrm6_mode_beet ip6_tunnel tunnel6 mip6 ah6 esp6 xfrm_algo sit ip_tunnel tunnel4 ipv6 ath10k_pci ath10k_core ath9k ath mac80211 cfg80211 compat ath_pci ath_hal(P) caamalg authencesn authenc caamrng caamhash caam_jr caam cdc_ncm usbnet usbcore sky2 imx2_wdt
+CPU: 0 PID: 3 Comm: ksoftirqd/0 Tainted: P                4.9.85 #19
+Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+task: bf064980 task.stack: bf07c000
+PC is at relay_buf_full+0xc/0x30
+LR is at _674+0x740/0xf10 [ath9k]
+pc : [<8018bce0>]    lr : [<7f1aa604>]    psr: 80000013
+sp : bf07dbf0  ip : bf07dc00  fp : bf07dbfc
+r10: 0000003f  r9 : bf130e00  r8 : 809044b0
+r7 : 00000000  r6 : be67a9f0  r5 : 00000000  r4 : 809043e4
+r3 : c0864c24  r2 : 00000000  r1 : 00000004  r0 : 00000000
+Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
+Control: 10c5387d  Table: 4e6a004a  DAC: 00000055
+Process ksoftirqd/0 (pid: 3, stack limit = 0xbf07c210)
+Stack: (0xbf07dbf0 to 0xbf07e000)
+dbe0:                                     bf07dd04 bf07dc00 7f1aa604 8018bce0
+dc00: 00004014 be59e010 bf07dc34 bf07dc18 7f1a7084 7f19c07c be59c010 be6470a0
+dc20: 0000096c be648954 bf07dc6c bf07dc38 7f1c286c bf07dd90 bf07dc5c bf07dc48
+dc40: 8029ea4c 0000003c 00000001 be59c010 00000094 00000000 00000000 00000000
+dc60: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+dc80: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+dca0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+dcc0: 00000000 00000000 00000000 00000000 00000000 00000000 8010ef24 00000030
+dce0: be94f5e8 be6485a0 bddf0200 be59c010 be6465a0 be6415a0 bf07ddf4 bf07dd08
+dd00: 7f1cf800 7f1aa55c 1fc38c4c 00000000 bf07dd58 cccccccd 66666667 be640bc0
+dd20: bf07dd54 be6415a0 1fc38c4c 00000000 00000000 be59c038 be67a9c0 be59e010
+dd40: be67a9f0 be647170 8090c904 be59c010 00000000 00000001 1fc38e84 00000000
+dd60: be640bc0 bddf0200 00000200 00000010 0000003f 00000002 20000013 be59c010
+dd80: 8092d940 bf7ca2c0 bf07ddb4 bf07dd98 1fc38c4c 2602003f 0100ff1b 80ff1b00
+dda0: 00808080 00000000 00000000 80808080 80808080 80808080 80808080 00008080
+ddc0: 00000000 00000000 7f1b62b8 00000002 be6470ec be6470f0 00000000 bf07de98
+dde0: 8092d940 be6415a0 bf07de94 bf07ddf8 7f1d1ed8 7f1cf1fc 00000000 00000000
+de00: bf7cc4c0 00000400 be6470f0 bf07de18 8015165c be59c010 8090453c 8090453c
+de20: bf07dec4 be6465a0 8014f614 80148884 0000619a 00000001 bf07c000 00000100
+de40: bf07de78 00000001 7f327850 00000002 afb50401 bf064980 bf07de9c bf07de68
+de60: bf064a00 803cc668 bf064a00 be6470b4 be6470b8 80844180 00000000 bf07de98
+de80: 8092d940 bf07c000 bf07dec4 bf07de98 80124d18 7f1d1c44 80124c94 00000000
+dea0: 00000006 80902098 80902080 40000006 00000100 bf07c000 bf07df24 bf07dec8
+dec0: 8012501c 80124ca0 bf7cc4c0 bf064980 be95e1c0 04208040 80902d00 000061c7
+dee0: 0000000a 80600b54 8092d940 808441f8 80902080 bf07dec8 bf03b200 bf07c000
+df00: bf03b200 8090fe54 00000000 00000000 00000000 00000000 bf07df34 bf07df28
+df20: 80125148 80124f28 bf07df5c bf07df38 8013deb4 8012511c 00000000 bf03b240
+df40: bf03b200 8013dc90 00000000 00000000 bf07dfac bf07df60 8013ad40 8013dc9c
+df60: 70448040 00000001 00000000 bf03b200 00000000 00030003 bf07df78 bf07df78
+df80: 00000000 00000000 bf07df88 bf07df88 bf03b240 8013ac48 00000000 00000000
+dfa0: 00000000 bf07dfb0 80107760 8013ac54 00000000 00000000 00000000 00000000
+dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+dfe0: 00000000 00000000 00000000 00000000 00000013 00000000 8c120004 1190ad04
+Backtrace:
+[<8018bcd4>] (relay_buf_full) from [<7f1aa604>] (_674+0x740/0xf10 [ath9k])
+[<7f1aa550>] (_674 [ath9k]) from [<7f1cf800>] (_582+0x14b4/0x3708 [ath9k])
+ r10:be6415a0 r9:be6465a0 r8:be59c010 r7:bddf0200 r6:be6485a0 r5:be94f5e8
+ r4:00000030
+[<7f1cf1f0>] (_582 [ath9k]) from [<7f1d1ed8>] (_735+0x2a0/0xec4 [ath9k])
+ r10:be6415a0 r9:8092d940 r8:bf07de98 r7:00000000 r6:be6470f0 r5:be6470ec
+ r4:00000002
+[<7f1d1c38>] (_735 [ath9k]) from [<80124d18>] (tasklet_action+0x84/0xf8)
+ r10:bf07c000 r9:8092d940 r8:bf07de98 r7:00000000 r6:80844180 r5:be6470b8
+ r4:be6470b4
+[<80124c94>] (tasklet_action) from [<8012501c>] (__do_softirq+0x100/0x1f4)
+ r10:bf07c000 r9:00000100 r8:40000006 r7:80902080 r6:80902098 r5:00000006
+ r4:00000000 r3:80124c94
+[<80124f1c>] (__do_softirq) from [<80125148>] (run_ksoftirqd+0x38/0x4c)
+ r10:00000000 r9:00000000 r8:00000000 r7:00000000 r6:8090fe54 r5:bf03b200
+ r4:bf07c000
+[<80125110>] (run_ksoftirqd) from [<8013deb4>] (smpboot_thread_fn+0x224/0x260)
+[<8013dc90>] (smpboot_thread_fn) from [<8013ad40>] (kthread+0xf8/0x100)
+ r9:00000000 r8:00000000 r7:8013dc90 r6:bf03b200 r5:bf03b240 r4:00000000
+[<8013ac48>] (kthread) from [<80107760>] (ret_from_fork+0x14/0x34)
+ r7:00000000 r6:00000000 r5:8013ac48 r4:bf03b240
+Code: e89da800 e1a0c00d e92dd800 e24cb004 (e5901014)
+---[ end trace dddf11ac9111b272 ]---
+Kernel panic - not syncing: Fatal exception in interrupt
+CPU1: stopping
+CPU: 1 PID: 0 Comm: swapper/1 Tainted: P      D         4.9.85 #19
+Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+Backtrace:
+[<8010a708>] (dump_backtrace) from [<8010a99c>] (show_stack+0x18/0x1c)
+ r7:bf093f58 r6:20000193 r5:809168e8 r4:00000000
+[<8010a984>] (show_stack) from [<802a09c4>] (dump_stack+0x94/0xa8)
+[<802a0930>] (dump_stack) from [<8010d184>] (handle_IPI+0xe8/0x180)
+ r7:bf093f58 r6:00000000 r5:00000001 r4:808478c4
+[<8010d09c>] (handle_IPI) from [<801013e8>] (gic_handle_irq+0x78/0x7c)
+ r7:f4000100 r6:bf093f58 r5:f400010c r4:8090467c
+[<80101370>] (gic_handle_irq) from [<8010b378>] (__irq_svc+0x58/0x8c)
+Exception stack(0xbf093f58 to 0xbf093fa0)
+3f40:                                                       bf7d62a0 00000000
+3f60: 0010a5f4 80113460 bf092000 809043e4 00000002 80904434 bf092008 412fc09a
+3f80: 00000000 bf093fb4 bf093fb8 bf093fa8 8010804c 80108050 60000013 ffffffff
+ r9:bf092000 r8:bf092008 r7:bf093f8c r6:ffffffff r5:60000013 r4:80108050
+[<80108014>] (arch_cpu_idle) from [<80553c2c>] (default_idle_call+0x30/0x34)
+[<80553bfc>] (default_idle_call) from [<80158394>] (cpu_startup_entry+0xc4/0xfc)
+[<801582d0>] (cpu_startup_entry) from [<8010ce40>] (secondary_start_kernel+0x168/0x174)
+ r7:8092d2f8 r4:80913568
+[<8010ccd8>] (secondary_start_kernel) from [<10101488>] (0x10101488)
+ r5:00000055 r4:4f07806a
+Rebooting in 10 seconds..
+Reboot failed -- System halted
+---
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-Joe Perches (4):
-  ethernet: Use octal not symbolic permissions
-  wireless: Use octal not symbolic permissions
-  net: Use octal not symbolic permissions
-  drivers/net: Use octal not symbolic permissions
-
- drivers/net/bonding/bond_procfs.c                  |   2 +-
- drivers/net/bonding/bond_sysfs.c                   |  73 +++++++-------
- drivers/net/bonding/bond_sysfs_slave.c             |   4 +-
- drivers/net/caif/caif_serial.c                     |  32 +++---
- drivers/net/caif/caif_spi.c                        |  16 +--
- drivers/net/caif/caif_virtio.c                     |  16 +--
- drivers/net/can/at91_can.c                         |   3 +-
- drivers/net/can/cc770/cc770.c                      |   4 +-
- drivers/net/can/cc770/cc770_isa.c                  |  16 +--
- drivers/net/can/grcan.c                            |   4 +-
- drivers/net/can/janz-ican3.c                       |   6 +-
- drivers/net/can/sja1000/sja1000_isa.c              |  14 +--
- drivers/net/can/softing/softing_main.c             |   4 +-
- drivers/net/can/spi/mcp251x.c                      |   2 +-
- drivers/net/can/usb/esd_usb2.c                     |   6 +-
- drivers/net/can/vcan.c                             |   2 +-
- drivers/net/ethernet/8390/apne.c                   |   2 +-
- drivers/net/ethernet/8390/lib8390.c                |   2 +-
- drivers/net/ethernet/8390/ne.c                     |   2 +-
- drivers/net/ethernet/8390/ne2k-pci.c               |   2 +-
- drivers/net/ethernet/8390/smc-ultra.c              |   2 +-
- drivers/net/ethernet/8390/stnic.c                  |   2 +-
- drivers/net/ethernet/8390/wd.c                     |   2 +-
- drivers/net/ethernet/altera/altera_tse_main.c      |   6 +-
- drivers/net/ethernet/amd/xgbe/xgbe-drv.c           |  10 +-
- drivers/net/ethernet/amd/xgbe/xgbe-main.c          |   2 +-
- drivers/net/ethernet/broadcom/bnx2.c               |   2 +-
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c   |  12 +--
- drivers/net/ethernet/broadcom/sb1250-mac.c         |  10 +-
- drivers/net/ethernet/broadcom/tg3.c                |   6 +-
- drivers/net/ethernet/brocade/bna/bnad.c            |   2 +-
- drivers/net/ethernet/brocade/bna/bnad_debugfs.c    |  10 +-
- drivers/net/ethernet/cavium/thunder/nicvf_main.c   |   2 +-
- drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c    |   6 +-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.c | 112 ++++++++++-----------
- .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    |  10 +-
- drivers/net/ethernet/ec_bhf.c                      |   2 +-
- drivers/net/ethernet/emulex/benet/be_main.c        |   6 +-
- drivers/net/ethernet/ibm/ehea/ehea_main.c          |   7 +-
- drivers/net/ethernet/ibm/ibmveth.c                 |   2 +-
- drivers/net/ethernet/intel/igb/igb_hwmon.c         |   2 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_sysfs.c     |   2 +-
- drivers/net/ethernet/marvell/mvneta.c              |   8 +-
- drivers/net/ethernet/marvell/skge.c                |   2 +-
- drivers/net/ethernet/marvell/sky2.c                |   2 +-
- drivers/net/ethernet/mellanox/mlx4/main.c          |  16 +--
- drivers/net/ethernet/mellanox/mlxsw/core_hwmon.c   |  10 +-
- drivers/net/ethernet/myricom/myri10ge/myri10ge.c   |  32 +++---
- .../net/ethernet/netronome/nfp/nfp_net_debugfs.c   |   6 +-
- .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |  14 +--
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_sysfs.c  |  30 +++---
- drivers/net/ethernet/qualcomm/qca_debug.c          |   2 +-
- drivers/net/ethernet/samsung/sxgbe/sxgbe_main.c    |   4 +-
- drivers/net/ethernet/sfc/mcdi_mon.c                |   2 +-
- drivers/net/ethernet/stmicro/stmmac/stmmac_main.c  |  26 ++---
- drivers/net/ethernet/sun/niu.c                     |  10 +-
- drivers/net/hamradio/bpqether.c                    |   3 +-
- drivers/net/hamradio/yam.c                         |   2 +-
- drivers/net/hyperv/netvsc_drv.c                    |   4 +-
- drivers/net/ieee802154/at86rf230.c                 |   2 +-
- drivers/net/phy/spi_ks8995.c                       |   2 +-
- drivers/net/ppp/ppp_generic.c                      |   2 +-
- drivers/net/ppp/pppoe.c                            |   2 +-
- drivers/net/usb/cdc_ncm.c                          |  12 +--
- drivers/net/usb/hso.c                              |   8 +-
- drivers/net/wireless/ath/ath5k/base.c              |   6 +-
- drivers/net/wireless/ath/ath5k/debug.c             |  37 ++-----
- drivers/net/wireless/ath/ath5k/sysfs.c             |   8 +-
- drivers/net/wireless/ath/ath6kl/debug.c            |  43 ++++----
- drivers/net/wireless/ath/ath9k/common-debug.c      |   9 +-
- drivers/net/wireless/ath/ath9k/common-spectral.c   |  10 +-
- drivers/net/wireless/ath/ath9k/debug.c             |  40 ++++----
- drivers/net/wireless/ath/ath9k/debug_sta.c         |   6 +-
- drivers/net/wireless/ath/ath9k/dfs_debug.c         |   4 +-
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c     |  16 +--
- drivers/net/wireless/ath/ath9k/tx99.c              |   4 +-
- drivers/net/wireless/ath/carl9170/debug.c          |   8 +-
- drivers/net/wireless/ath/carl9170/main.c           |   4 +-
- drivers/net/wireless/ath/wcn36xx/debug.c           |   5 +-
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |   6 +-
- .../wireless/broadcom/brcm80211/brcmsmac/debug.c   |   2 +-
- .../broadcom/brcm80211/brcmsmac/mac80211_if.c      |   2 +-
- drivers/net/wireless/cisco/airo.c                  |   6 +-
- drivers/net/wireless/intel/ipw2x00/ipw2100.c       |  29 +++---
- drivers/net/wireless/intel/ipw2x00/ipw2200.c       |  51 ++++------
- drivers/net/wireless/intel/ipw2x00/libipw_module.c |   2 +-
- drivers/net/wireless/intel/iwlegacy/3945-mac.c     |  35 +++----
- drivers/net/wireless/intel/iwlegacy/4965-mac.c     |  19 ++--
- drivers/net/wireless/intel/iwlegacy/4965-rs.c      |   8 +-
- drivers/net/wireless/intel/iwlegacy/common.c       |   4 +-
- drivers/net/wireless/intel/iwlegacy/debug.c        |  58 ++++++-----
- drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c   |  78 +++++++-------
- drivers/net/wireless/intel/iwlwifi/dvm/rs.c        |  16 +--
- drivers/net/wireless/intel/iwlwifi/fw/debugfs.c    |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  43 ++++----
- .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |  40 +++-----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   | 110 ++++++++++----------
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |  12 +--
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  12 +--
- drivers/net/wireless/intersil/p54/main.c           |   2 +-
- drivers/net/wireless/mediatek/mt76/debugfs.c       |  10 +-
- .../net/wireless/mediatek/mt76/mt76x2_debugfs.c    |   8 +-
- drivers/net/wireless/mediatek/mt7601u/debugfs.c    |  16 ++-
- drivers/net/wireless/ralink/rt2x00/rt2500usb.c     |   2 +-
- drivers/net/wireless/ralink/rt2x00/rt2800pci.c     |   2 +-
- drivers/net/wireless/ralink/rt2x00/rt2800soc.c     |   2 +-
- drivers/net/wireless/ralink/rt2x00/rt2800usb.c     |   2 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00debug.c   |  64 ++++++------
- drivers/net/wireless/ralink/rt2x00/rt61pci.c       |   2 +-
- drivers/net/wireless/ralink/rt2x00/rt73usb.c       |   2 +-
- drivers/net/wireless/ray_cs.c                      |   8 +-
- drivers/net/wireless/st/cw1200/debug.c             |   6 +-
- drivers/net/wireless/st/cw1200/main.c              |   2 +-
- drivers/net/wireless/ti/wl18xx/main.c              |  27 +++--
- drivers/net/wireless/ti/wlcore/main.c              |   8 +-
- drivers/net/wireless/ti/wlcore/sdio.c              |   2 +-
- drivers/net/wireless/ti/wlcore/sysfs.c             |   7 +-
- drivers/net/xen-netback/xenbus.c                   |   4 +-
- drivers/net/xen-netfront.c                         |   6 +-
- net/8021q/vlanproc.c                               |   6 +-
- net/appletalk/atalk_proc.c                         |   8 +-
- net/atm/atm_sysfs.c                                |  12 +--
- net/atm/clip.c                                     |   2 +-
- net/atm/lec.c                                      |   2 +-
- net/atm/proc.c                                     |   2 +-
- net/ax25/af_ax25.c                                 |   6 +-
- net/bluetooth/rfcomm/tty.c                         |   4 +-
- net/bridge/br_sysfs_br.c                           |   2 +-
- net/bridge/br_sysfs_if.c                           |  36 +++----
- net/can/af_can.c                                   |   2 +-
- net/can/gw.c                                       |   2 +-
- net/ceph/ceph_common.c                             |   2 +-
- net/core/net-procfs.c                              |   6 +-
- net/core/net-sysfs.c                               |  12 +--
- net/core/sock.c                                    |   2 +-
- net/decnet/af_decnet.c                             |   2 +-
- net/decnet/dn_dev.c                                |   2 +-
- net/decnet/dn_neigh.c                              |   2 +-
- net/decnet/dn_route.c                              |   2 +-
- net/dns_resolver/dns_key.c                         |   2 +-
- net/ipv4/arp.c                                     |   2 +-
- net/ipv4/fib_trie.c                                |   6 +-
- net/ipv4/igmp.c                                    |   4 +-
- net/ipv4/ipconfig.c                                |   2 +-
- net/ipv4/netfilter/ipt_CLUSTERIP.c                 |   2 +-
- net/ipv4/ping.c                                    |   2 +-
- net/ipv4/proc.c                                    |   6 +-
- net/ipv4/raw.c                                     |   2 +-
- net/ipv4/route.c                                   |   4 +-
- net/ipv4/tcp_ipv4.c                                |   2 +-
- net/ipv4/udp.c                                     |   2 +-
- net/ipv6/addrconf.c                                |   2 +-
- net/ipv6/anycast.c                                 |   2 +-
- net/ipv6/ip6_flowlabel.c                           |   2 +-
- net/ipv6/mcast.c                                   |   4 +-
- net/ipv6/proc.c                                    |   6 +-
- net/ipv6/raw.c                                     |   2 +-
- net/ipv6/route.c                                   |   2 +-
- net/kcm/kcmproc.c                                  |   4 +-
- net/l2tp/l2tp_ppp.c                                |   2 +-
- net/llc/llc_proc.c                                 |   4 +-
- net/mac80211/rc80211_minstrel.c                    |   2 +-
- net/mac80211/rc80211_minstrel_debugfs.c            |   8 +-
- net/mac80211/rc80211_minstrel_ht_debugfs.c         |   8 +-
- net/netfilter/nf_conntrack_netbios_ns.c            |   2 +-
- net/netfilter/nf_conntrack_snmp.c                  |   2 +-
- net/netfilter/nf_conntrack_standalone.c            |   2 +-
- net/netfilter/nf_log.c                             |   2 +-
- net/netfilter/nf_synproxy_core.c                   |   2 +-
- net/netfilter/xt_IDLETIMER.c                       |   2 +-
- net/netfilter/xt_recent.c                          |   4 +-
- net/netrom/af_netrom.c                             |   6 +-
- net/rose/af_rose.c                                 |   8 +-
- net/rxrpc/af_rxrpc.c                               |   2 +-
- net/sctp/proc.c                                    |  16 +--
- net/sunrpc/auth_gss/svcauth_gss.c                  |   2 +-
- net/sunrpc/cache.c                                 |  10 +-
- net/sunrpc/debugfs.c                               |   6 +-
- net/sunrpc/rpc_pipe.c                              |  42 ++++----
- net/wireless/wext-proc.c                           |   2 +-
- net/x25/x25_proc.c                                 |  12 +--
- net/xfrm/xfrm_proc.c                               |   2 +-
- 183 files changed, 906 insertions(+), 969 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index 5e77fe1f5b0d..f14a94090900 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -479,14 +479,16 @@ ath_cmn_is_fft_buf_full(struct ath_spec_scan_priv *spec_priv)
+ {
+ 	int i = 0;
+ 	int ret = 0;
++	struct rchan_buf *buf;
+ 	struct rchan *rc = spec_priv->rfs_chan_spec_scan;
+ 
+-	for_each_online_cpu(i)
+-		ret += relay_buf_full(*per_cpu_ptr(rc->buf, i));
+-
+-	i = num_online_cpus();
++	for_each_possible_cpu(i) {
++		if ((buf = *per_cpu_ptr(chan->buf, i))) {
++			ret += relay_buf_full(buf);
++		}
++	}
+ 
+-	if (ret == i)
++	if (ret)
+ 		return 1;
+ 	else
+ 		return 0;
 -- 
-2.15.0
+2.14.1
