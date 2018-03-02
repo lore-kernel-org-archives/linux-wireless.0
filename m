@@ -1,146 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:53261 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751213AbeC2QdN (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33432 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1424003AbeCBMbW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 12:33:13 -0400
-Received: by mail-wm0-f67.google.com with SMTP id p9so11794000wmc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 09:33:12 -0700 (PDT)
-Subject: Re: [PATCH 1/2] NFC: pn533: Use kmalloc-ed memory for USB transfer
- buffers
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
-        Michael Thalmeier <michael.thalmeier@hale.at>,
-        linux-wireless@vger.kernel.org
-References: <20180319164012.31714-1-hdegoede@redhat.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <96f4d7ee-741f-56f7-907d-92167b8ad160@redhat.com> (sfid-20180329_183317_128201_05FB550B)
-Date: Thu, 29 Mar 2018 18:33:09 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180319164012.31714-1-hdegoede@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 2 Mar 2018 07:31:22 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Beni Lev <beni.lev@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Mar 2018 14:31:10 +0200
+Message-Id: <20180302123112.27416-3-luca@coelho.fi> (sfid-20180302_133126_744999_7A9C6117)
+In-Reply-To: <20180302123112.27416-1-luca@coelho.fi>
+References: <20180302123112.27416-1-luca@coelho.fi>
+Subject: [PATCH 2/4] iwlwifi: mvm: Correctly set IGTK for AP
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Samuel,
+From: Beni Lev <beni.lev@intel.com>
 
-Can I get an ack for these please?
+Currently when an IGTK is set for an AP, it is set as a regular key.
+Since the cipher is set to CMAC, the STA_KEY_FLG_EXT flag is added to
+the host command, which causes assert 0x253D on NICs that do not support
+this.
 
-Anything I need to do to get these picked up / merged?
+Fixes: 85aeb58cec1a ("iwlwifi: mvm: Enable security on new TX API")
+Signed-off-by: Beni Lev <beni.lev@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-Regards,
-
-Hans
-
-
-On 19-03-18 17:40, Hans de Goede wrote:
-> Commit 8b55d7581fc5 ("NFC: pn533: use constant off-stack buffer for sending
-> acks"), fixed the ack case of using on stack mem for the transfer_buffer,
-> by making the ack buffer "static const", which is an unusual solution for
-> this and I wonder if this is not a problem wrt buffer alignment. It also
-> misses fixing the same problem for the cmd buffer in the
-> pn533_acr122_poweron_rdr() function.
-> 
-> This commit introduces an out_buf which gets kmalloc-ed on probe and
-> then memcpy-s the ack / cmd buffer into that buffer before submitting
-> the out urb. Fixing the use of on stack memory for the cmd buffer and
-> moving the ack code-path over to more conventional ways.
-> 
-> While at it this commit also changes the kmalloc of the in_buf to
-> devm_kmalloc, to avoid the need to introduce a new goto in the error-
-> handling of the kmalloc of the introduced out_buf.
-> 
-> BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1514134
-> Fixes: 8b55d7581fc5 ("NFC: pn533: use constant off-stack buffer ...")
-> Cc: Michał Mirosław <mirq-linux@rere.qmqm.pl>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
->   drivers/nfc/pn533/usb.c | 22 +++++++++++++++-------
->   1 file changed, 15 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
-> index e153e8b64bb8..c9398712ba31 100644
-> --- a/drivers/nfc/pn533/usb.c
-> +++ b/drivers/nfc/pn533/usb.c
-> @@ -42,6 +42,9 @@
->   #define ACS_VENDOR_ID 0x072f
->   #define ACR122U_PRODUCT_ID 0x2200
->   
-> +/* Large enough to hold an ack or the power-on CCID command */
-> +#define OUT_BUF_LEN 16
-> +
->   static const struct usb_device_id pn533_usb_table[] = {
->   	{ USB_DEVICE(PN533_VENDOR_ID, PN533_PRODUCT_ID),
->   	  .driver_info = PN533_DEVICE_STD },
-> @@ -61,6 +64,7 @@ struct pn533_usb_phy {
->   
->   	struct urb *out_urb;
->   	struct urb *in_urb;
-> +	u8 *out_buf;
->   
->   	struct pn533 *priv;
->   };
-> @@ -152,7 +156,8 @@ static int pn533_usb_send_ack(struct pn533 *dev, gfp_t flags)
->   	/* spec 7.1.1.3:  Preamble, SoPC (2), ACK Code (2), Postamble */
->   	int rc;
->   
-> -	phy->out_urb->transfer_buffer = (u8 *)ack;
-> +	memcpy(phy->out_buf, ack, sizeof(ack));
-> +	phy->out_urb->transfer_buffer = phy->out_buf;
->   	phy->out_urb->transfer_buffer_length = sizeof(ack);
->   	rc = usb_submit_urb(phy->out_urb, flags);
->   
-> @@ -373,8 +378,8 @@ static void pn533_acr122_poweron_rdr_resp(struct urb *urb)
->   static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
->   {
->   	/* Power on th reader (CCID cmd) */
-> -	u8 cmd[10] = {PN533_ACR122_PC_TO_RDR_ICCPOWERON,
-> -		      0, 0, 0, 0, 0, 0, 3, 0, 0};
-> +	static const u8 cmd[10] = { PN533_ACR122_PC_TO_RDR_ICCPOWERON,
-> +				    0, 0, 0, 0, 0, 0, 3, 0, 0 };
->   	int rc;
->   	void *cntx;
->   	struct pn533_acr122_poweron_rdr_arg arg;
-> @@ -387,7 +392,8 @@ static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
->   	phy->in_urb->complete = pn533_acr122_poweron_rdr_resp;
->   	phy->in_urb->context = &arg;
->   
-> -	phy->out_urb->transfer_buffer = cmd;
-> +	memcpy(phy->out_buf, cmd, sizeof(cmd));
-> +	phy->out_urb->transfer_buffer = phy->out_buf;
->   	phy->out_urb->transfer_buffer_length = sizeof(cmd);
->   
->   	print_hex_dump_debug("ACR122 TX: ", DUMP_PREFIX_NONE, 16, 1,
-> @@ -463,10 +469,14 @@ static int pn533_usb_probe(struct usb_interface *interface,
->   	if (!phy)
->   		return -ENOMEM;
->   
-> -	in_buf = kzalloc(in_buf_len, GFP_KERNEL);
-> +	in_buf = devm_kzalloc(&interface->dev, in_buf_len, GFP_KERNEL);
->   	if (!in_buf)
->   		return -ENOMEM;
->   
-> +	phy->out_buf = devm_kzalloc(&interface->dev, OUT_BUF_LEN, GFP_KERNEL);
-> +	if (!phy->out_buf)
-> +		return -ENOMEM;
-> +
->   	phy->udev = usb_get_dev(interface_to_usbdev(interface));
->   	phy->interface = interface;
->   
-> @@ -555,7 +565,6 @@ static int pn533_usb_probe(struct usb_interface *interface,
->   	usb_free_urb(phy->in_urb);
->   	usb_free_urb(phy->out_urb);
->   	usb_put_dev(phy->udev);
-> -	kfree(in_buf);
->   
->   	return rc;
->   }
-> @@ -574,7 +583,6 @@ static void pn533_usb_disconnect(struct usb_interface *interface)
->   	usb_kill_urb(phy->in_urb);
->   	usb_kill_urb(phy->out_urb);
->   
-> -	kfree(phy->in_urb->transfer_buffer);
->   	usb_free_urb(phy->in_urb);
->   	usb_free_urb(phy->out_urb);
->   
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 630e23cb0ffb..5be4bae5b70d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -3233,17 +3233,9 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
+ 		}
+ 		sta_id = mvm_sta->sta_id;
+ 
+-		if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
+-		    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
+-		    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256) {
+-			ret = iwl_mvm_send_sta_igtk(mvm, keyconf, sta_id,
+-						    false);
+-			goto end;
+-		}
+-
+ 		/*
+ 		 * It is possible that the 'sta' parameter is NULL, and thus
+-		 * there is a need to retrieve  the sta from the local station
++		 * there is a need to retrieve the sta from the local station
+ 		 * table.
+ 		 */
+ 		if (!sta) {
+@@ -3258,6 +3250,17 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
+ 
+ 		if (WARN_ON_ONCE(iwl_mvm_sta_from_mac80211(sta)->vif != vif))
+ 			return -EINVAL;
++	} else {
++		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++
++		sta_id = mvmvif->mcast_sta.sta_id;
++	}
++
++	if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
++	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
++	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256) {
++		ret = iwl_mvm_send_sta_igtk(mvm, keyconf, sta_id, false);
++		goto end;
+ 	}
+ 
+ 	/* If the key_offset is not pre-assigned, we need to find a
+-- 
+2.16.1
