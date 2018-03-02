@@ -1,152 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35214 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750749AbeCPLvr (ORCPT
+Received: from alexa-out-tai-01.qualcomm.com ([103.229.16.226]:13829 "EHLO
+        alexa-out-tai-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1422857AbeCBI17 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 07:51:47 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 16 Mar 2018 13:51:32 +0200
-Message-Id: <20180316115136.1234-2-luca@coelho.fi> (sfid-20180316_125159_594599_C336C27C)
-In-Reply-To: <20180316115136.1234-1-luca@coelho.fi>
-References: <20180316115136.1234-1-luca@coelho.fi>
-Subject: [PATCH 1/5] iwlwifi: mvm: Increase session protection time after CS
+        Fri, 2 Mar 2018 03:27:59 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Add sta rx packet stats per tid
+Date: Fri, 2 Mar 2018 08:21:25 +0000
+Message-ID: <b1fcd67d-e149-acc4-ebbb-23da9a06da02@qti.qualcomm.com> (sfid-20180302_092803_302725_3C4546F7)
+References: <1517400072-9204-1-git-send-email-vthiagar@codeaurora.org>
+ <87606hs17h.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87606hs17h.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-
-After switching to a new channel, driver schedules session protection
-time event in order to hear the beacon on the new channel.
-The duration of the protection is two beacon intervals.
-However, since we start to switch slightly before beacon with count 1, in
-case we don't hear (or AP doesn't transmit) the very first beacon on the
-new channel the protection ends without hearing any beacon at all.
-At this stage the switch is not complete, the queues are closed and the
-interface doesn't have quota yet or TBTT events. As the result, we are
-stuck forever waiting for iwl_mvm_post_channel_switch() to be called.
-
-Fix this by increasing the protection time to be 3 beacon intervals and
-in addition drop the connection if the time event ends before we got any
-beacon.
-
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c   |  5 ++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h        |  3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 15 ++++++++-------
- 3 files changed, 15 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index d09afb4acaeb..7152fdc00fb1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3494,6 +3494,7 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 		ret = 0;
- 		goto out;
- 	case NL80211_IFTYPE_STATION:
-+		mvmvif->csa_bcn_pending = false;
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
- 		/* always disable PS when a monitor interface is active */
-@@ -3537,7 +3538,7 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 	}
- 
- 	if (switching_chanctx && vif->type == NL80211_IFTYPE_STATION) {
--		u32 duration = 2 * vif->bss_conf.beacon_int;
-+		u32 duration = 3 * vif->bss_conf.beacon_int;
- 
- 		/* iwl_mvm_protect_session() reads directly from the
- 		 * device (the system time), so make sure it is
-@@ -3550,6 +3551,7 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 		/* Protect the session to make sure we hear the first
- 		 * beacon on the new channel.
- 		 */
-+		mvmvif->csa_bcn_pending = true;
- 		iwl_mvm_protect_session(mvm, vif, duration, duration,
- 					vif->bss_conf.beacon_int / 2,
- 					true);
-@@ -3988,6 +3990,7 @@ static int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
- 	if (vif->type == NL80211_IFTYPE_STATION) {
- 		struct iwl_mvm_sta *mvmsta;
- 
-+		mvmvif->csa_bcn_pending = false;
- 		mvmsta = iwl_mvm_sta_from_staid_protected(mvm,
- 							  mvmvif->ap_sta_id);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 89ff02d7c876..625b238a3f0a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -438,6 +438,9 @@ struct iwl_mvm_vif {
- 	bool csa_failed;
- 	u16 csa_target_freq;
- 
-+	/* Indicates that we are waiting for a beacon on a new channel */
-+	bool csa_bcn_pending;
-+
- 	/* TCP Checksum Offload */
- 	netdev_features_t features;
- };
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index acb217e666db..cd91bc44259c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -18,11 +19,6 @@
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  * General Public License for more details.
-  *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-- *
-  * The full GNU General Public License is included in this distribution
-  * in the file called COPYING.
-  *
-@@ -35,6 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -198,9 +195,13 @@ static bool iwl_mvm_te_check_disconnect(struct iwl_mvm *mvm,
- 					struct ieee80211_vif *vif,
- 					const char *errmsg)
- {
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+
- 	if (vif->type != NL80211_IFTYPE_STATION)
- 		return false;
--	if (vif->bss_conf.assoc && vif->bss_conf.dtim_period)
-+
-+	if (!mvmvif->csa_bcn_pending && vif->bss_conf.assoc &&
-+	    vif->bss_conf.dtim_period)
- 		return false;
- 	if (errmsg)
- 		IWL_ERR(mvm, "%s\n", errmsg);
-@@ -344,7 +345,7 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
- 			 * and know the dtim period.
- 			 */
- 			iwl_mvm_te_check_disconnect(mvm, te_data->vif,
--				"No association and the time event is over already...");
-+				"No beacon heard and the time event is over already...");
- 			break;
- 		default:
- 			break;
--- 
-2.16.2
+T24gV2VkbmVzZGF5IDI4IEZlYnJ1YXJ5IDIwMTggMDY6NDcgUE0sIEthbGxlIFZhbG8gd3JvdGU6
+DQo+IFZhc2FudGhha3VtYXIgVGhpYWdhcmFqYW4gPHZ0aGlhZ2FyQGNvZGVhdXJvcmEub3JnPiB3
+cml0ZXM6DQo+IA0KPj4gQWRkZWQgcGVyIHRpZCBzdGEgY291bnRlcnMgZm9yIHRoZSBmb2xsb3dp
+bmcNCj4+DQo+PiAtIFRvdGFsIG51bWJlciBNU0RVcyByZWNlaXZlZCBmcm9tIGZpcm13YXJlDQo+
+PiAtIE51bWJlciBvZiBNU0RVcyByZWNlaXZlZCB3aXRoIGVycm9ycyBsaWtlIGRlY3J5cHRpb24s
+IGNyYywgbWljICxldGMuDQo+PiAtIE51bWJlciBvZiBNU0RVcyBkcm9wcGVkIGluIHRoZSBkcml2
+ZXINCj4+IC0gQS1NUERVL0EtTVNEVSBzdWJmcmFtZSBzdGF0cw0KPj4gLSBOdW1iZXIgb2YgTVNE
+VVMgcGFzc2VkIHRvIG1hYzgwMjExDQo+Pg0KPj4gQWxsIHN0YXRzIG90aGVyIHRoYW4gQS1NUERV
+IHN0YXRzIGFyZSBvbmx5IGZvciByZWNlaXZlZCBkYXRhIGZyYW1lcy4NCj4+IEEtTVBEVSBzdGF0
+cyBtaWdodCBoYXZlIHN0YXRzIGZvciBtYW5hZ2VtZW50IGZyYW1lcyB3aGVuIG1vbml0b3INCj4+
+IGludGVyZmFjZSBpcyBhY3RpdmUgd2hlcmUgbWFuYWdlbWVudCBmcmFtZXMgYXJlIG5vdGlmaWVk
+IGJvdGggaW4gd21pDQo+PiBhbmQgSFRUIGludGVyZmFjZXMuDQo+Pg0KPj4gVGhlc2UgcGVyIHRp
+ZCBzdGF0cyBjYW4gYmUgZW5hYmxlZCB3aXRoIHRpZCBiaXRtYXNrIHRocm91Z2ggYSBkZWJ1Z2Zz
+DQo+PiBsaWtlIGJlbG93DQo+Pg0KPj4gICBlY2hvIDx0aWRfYml0bWFzaz4gPiAvc3lzL2tlcm5l
+bC9kZWJ1Zy9pZWVlODAyMTEvcGh5WC9hdGgxMGsvc3RhX3RpZF9zdGF0c19tYXNrDQo+Pg0KPj4g
+ICB0aWQgMTYgKHRpZF9iaXRtYXNrIDB4MTAwMDApIGlzIHVzZWQgZm9yIG5vbi1xb3MgZGF0YS9t
+YW5hZ2VtZW50IGZyYW1lcw0KPj4NCj4+IFRoZSBzdGF0cyBhcmUgcmVhZCBmcm9tDQo+PiAvc3lz
+L2tlcm5lbC9kZWJ1Zy9pZWVlODAyMTEvcGh5WC9uZXRkZXZcOndsYW5YL3N0YXRpb25zLzxzdGFf
+bWFjPi9kdW1wX3RpZF9zdGF0cw0KPj4NCj4+IFNhbXBsZSBvdXRwdXQ6DQo+Pg0KPj4gICBUbyBl
+bmFibGUgcnggc3RhdHMgZm9yIHRpZCAwLCA1IGFuZCA2LA0KPj4NCj4+ICAgZWNobyAweDAwMDAw
+MDYxID4gL3N5cy9rZXJuZWwvZGVidWcvaWVlZTgwMjExL3BoeTAvYXRoMTBrL3N0YV90aWRfc3Rh
+dHNfbWFzaw0KPj4NCj4+IGNhdCAvc3lzL2tlcm5lbC9kZWJ1Zy9pZWVlODAyMTEvcGh5MC9uZXRk
+ZXZcOndsYW4xNS9zdGF0aW9ucy84Y1w6ZmRcOmYwXDowYVw6OGVcOmRmL2R1bXBfdGlkX3N0YXRz
+DQo+Pg0KPj4gICAgCQlEcml2ZXIgUnggcGt0IHN0YXRzIHBlciB0aWQsIChbdGlkXSBjb3VudCkN
+Cj4+ICAgICAgICAgICAgICAgICAgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tDQo+PiBNU0RVcyBmcm9tIEZXICAgICAgICAgICAgICAgICAgIFswMF0gMjU2NyAgICAg
+ICAgWzA1XSAzMTc4ICAgICAgICBbMDZdIDEwODkNCj4+IE1TRFVzIHVuY2hhaW5lZCAgICAgICAg
+ICAgICAgICAgWzAwXSAwICAgICAgICAgICBbMDVdIDAgICAgICAgICAgIFswNl0gMA0KPj4gTVNE
+VXMgbG9jYWxseSBkcm9wcGVkOmNoYWluZWQgICBbMDBdIDAgICAgICAgICAgIFswNV0gMCAgICAg
+ICAgICAgWzA2XSAwDQo+PiBNU0RVcyBsb2NhbGx5IGRyb3BwZWQ6ZmlsdGVyZWQgIFswMF0gMCAg
+ICAgICAgICAgWzA1XSAwICAgICAgICAgICBbMDZdIDANCj4+IE1TRFVzIHF1ZXVlZCBmb3IgbWFj
+ODAyMTEgICAgICAgWzAwXSAyNTY3ICAgICAgICBbMDVdIDMxNzggICAgICAgIFswNl0gMTA4OQ0K
+Pj4gTVNEVXMgd2l0aCBlcnJvcjpmY3NfZXJyICAgICAgICBbMDBdIDAgICAgICAgICAgIFswNV0g
+MCAgICAgICAgICAgWzA2XSAyDQo+PiBNU0RVcyB3aXRoIGVycm9yOnRraXBfZXJyICAgICAgIFsw
+MF0gMCAgICAgICAgICAgWzA1XSAwICAgICAgICAgICBbMDZdIDANCj4+IE1TRFVzIHdpdGggZXJy
+b3I6Y3J5cHRfZXJyICAgICAgWzAwXSAwICAgICAgICAgICBbMDVdIDAgICAgICAgICAgIFswNl0g
+MA0KPj4gTVNEVXMgd2l0aCBlcnJvcjpwZWVyX2lkeF9pbnZhbCBbMDBdIDAgICAgICAgICAgIFsw
+NV0gMCAgICAgICAgICAgWzA2XSAwDQo+Pg0KPj4gQS1NUERVIG51bSBzdWJmcmFtZXMgdXB0byAx
+MCAgICBbMDBdIDI1NjcgICAgICAgIFswNV0gMzE3OCAgICAgICAgWzA2XSAxMDg3DQo+PiBBLU1Q
+RFUgbnVtIHN1YmZyYW1lcyAxMS0yMCAgICAgIFswMF0gMCAgICAgICAgICAgWzA1XSAwICAgICAg
+ICAgICBbMDZdIDANCj4+IEEtTVBEVSBudW0gc3ViZnJhbWVzIDIxLTMwICAgICAgWzAwXSAwICAg
+ICAgICAgICBbMDVdIDAgICAgICAgICAgIFswNl0gMA0KPj4gQS1NUERVIG51bSBzdWJmcmFtZXMg
+MzEtNDAgICAgICBbMDBdIDAgICAgICAgICAgIFswNV0gMCAgICAgICAgICAgWzA2XSAwDQo+PiBB
+LU1QRFUgbnVtIHN1YmZyYW1lcyA0MS01MCAgICAgIFswMF0gMCAgICAgICAgICAgWzA1XSAwICAg
+ICAgICAgICBbMDZdIDANCj4+IEEtTVBEVSBudW0gc3ViZnJhbWVzIDUxLTYwICAgICAgWzAwXSAw
+ICAgICAgICAgICBbMDVdIDAgICAgICAgICAgIFswNl0gMA0KPj4gQS1NUERVIG51bSBzdWJmcmFt
+ZXMgPjYwICAgICAgICBbMDBdIDAgICAgICAgICAgIFswNV0gMCAgICAgICAgICAgWzA2XSAwDQo+
+Pg0KPj4gQS1NU0RVIG51bSBzdWJmcmFtZXMgMSAgICAgICAgICBbMDBdIDI1NjcgICAgICAgIFsw
+NV0gMzE3OCAgICAgICAgWzA2XSAxMDg5DQo+PiBBLU1TRFUgbnVtIHN1YmZyYW1lcyAyICAgICAg
+ICAgIFswMF0gMCAgICAgICAgICAgWzA1XSAwICAgICAgICAgICBbMDZdIDANCj4+IEEtTVNEVSBu
+dW0gc3ViZnJhbWVzIDMgICAgICAgICAgWzAwXSAwICAgICAgICAgICBbMDVdIDAgICAgICAgICAg
+IFswNl0gMA0KPj4gQS1NU0RVIG51bSBzdWJmcmFtZXMgNCAgICAgICAgICBbMDBdIDAgICAgICAg
+ICAgIFswNV0gMCAgICAgICAgICAgWzA2XSAwDQo+PiBBLU1TRFUgbnVtIHN1YmZyYW1lcyA+NCAg
+ICAgICAgIFswMF0gMCAgICAgICAgICAgWzA1XSAwICAgICAgICAgICBbMDZdIDANCj4+DQo+PiBT
+aWduZWQtb2ZmLWJ5OiBWYXNhbnRoYWt1bWFyIFRoaWFnYXJhamFuIDx2dGhpYWdhckBjb2RlYXVy
+b3JhLm9yZz4NCj4gDQo+IFRoaXMgYWRkZWQgbmV3IGF0aDEway1jaGVjayB3YXJuaW5ncywgSSBm
+aXhlZCB0aG9zZSBpbiB0aGUgcGVuZGluZw0KPiBicmFuY2g6DQo+IA0KPiBkcml2ZXJzL25ldC93
+aXJlbGVzcy9hdGgvYXRoMTBrL2RlYnVnLmg6MjAzOiBBbGlnbm1lbnQgc2hvdWxkIG1hdGNoIG9w
+ZW4gcGFyZW50aGVzaXMNCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEway9kZWJ1Zy5o
+OjIyNjogQWxpZ25tZW50IHNob3VsZCBtYXRjaCBvcGVuIHBhcmVudGhlc2lzDQo+IGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsvZGVidWdmc19zdGEuYzoyNDogQWxpZ25tZW50IHNob3Vs
+ZCBtYXRjaCBvcGVuIHBhcmVudGhlc2lzDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgx
+MGsvZGVidWdmc19zdGEuYzo0MDogQWxpZ25tZW50IHNob3VsZCBtYXRjaCBvcGVuIHBhcmVudGhl
+c2lzDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsvZGVidWdmc19zdGEuYzo2MDog
+QWxpZ25tZW50IHNob3VsZCBtYXRjaCBvcGVuIHBhcmVudGhlc2lzDQo+IA0KPiBBbHNvIEkgZml4
+ZWQgdGhlIHR5cG8gInJhZ2VzIiBpbiBkZWJ1Zy5oLiBNeSBjaGFuZ2VzOg0KDQpUaGFua3MgZm9y
+IGZpeGluZyBpdC4gSW4gbW9zdCBvZiB0aGUgY2FzZXMsIGZpeGluZyBhYm92ZSB3YXJuaW5ncyB3
+b3VsZCByZXN1bHQgaW4gbGluZXMgPiA4MCBjaGFycy4NCk1heSBiZSB3ZSBuZWVkIG5vdCBiZSB2
+ZXJ5IHN0cmljdCBhYm91dCA+IDgwIGNoYXIgbGltaXQ/DQoNClZhc2FudGg=
