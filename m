@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52564 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753761AbeCUWee (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 18:34:34 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v4 0/3] firmware: add firmware_request_cache()
-Date: Wed, 21 Mar 2018 15:34:27 -0700
-Message-Id: <20180321223430.21388-1-mcgrof@kernel.org> (sfid-20180321_233552_495117_985584FE)
+Received: from mail-qt0-f174.google.com ([209.85.216.174]:35662 "EHLO
+        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1946021AbeCBKiG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Mar 2018 05:38:06 -0500
+Received: by mail-qt0-f174.google.com with SMTP id z14so11305088qti.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2018 02:38:05 -0800 (PST)
+Subject: Re: [PATCH 1/2] cfg80211: Add support to enable or disable btcoex
+To: Marcel Holtmann <marcel@holtmann.org>
+References: <1519927170-11920-1-git-send-email-tamizhr@codeaurora.org>
+ <5A9856CE.8000005@broadcom.com> <87po4ndpos.fsf@purkki.adurom.net>
+ <5A991D2B.60303@broadcom.com>
+ <2FF7A02D-0DBA-4F05-85A3-70D0EDD677F5@holtmann.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Tamizh chelvam <tamizhr@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Bluetooth mailing list
+        <linux-bluetooth@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A99298A.6070407@broadcom.com> (sfid-20180302_113822_782564_5B976539)
+Date: Fri, 2 Mar 2018 11:38:02 +0100
+MIME-Version: 1.0
+In-Reply-To: <2FF7A02D-0DBA-4F05-85A3-70D0EDD677F5@holtmann.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg,
+On 3/2/2018 10:59 AM, Marcel Holtmann wrote:
+> Hi Arend,
+>
+>>>>> This patch introduces NL80211_CMD_SET_BTCOEX command and
+>>>>> NL80211_ATTR_BTCOEX_OP attribute to enable or disable btcoex.
+>>>>
+>>>> What kind of btcoex are we talking about here? Is it signalling
+>>>> between wlan and bt to get access to the shared RF.
+>>>
+>>> Yes, at least that's how I understand this.
+>>>
+>>>> Why would it require user-space interaction? Are there no options for
+>>>> wlan to detect bt is in use, ie. bt hci is setup, and vice versa. Can
+>>>> it be indicated in platform data or device tree. Trying to understand
+>>>> the use-case here.
+>>>
+>>> One use case is being able to disable btcoex in case of problems or to
+>>> test if it's btcoex related. I think during the last five years the need
+>>> for this interface has come every once in a while.
+>>
+>> Well, you would want to disable btcoex *and* bt to verify wlan is working properly on its own. And similarly disable btcoex *and* wlan to verify bt works properly.
+>>
+>> Now I do recall a thread between you and Marcel. Looked it up and it was this thread [1], but did not see a follow-up on it. I suspect it involves more than just an enable/disable state. That may be fine for devices in which BT and WLAN are integrated and coordination of RF use is done on the device. The "btcoex subsystem" thread seems to aim for more like providing the coordination logic so independent BT device and WLAN device can still use the same RF. So before adopting the api in nl80211 it would be good to revive that thread.
+>
+> actually we can solve any number of WiFi devices vs any number of Bluetooth devices on the same host. It goes mainly in the direction of WiFi having a notifier about its currently used channels and Bluetooth subsystem can subscribe to these and issue AFH channel map classification updates as needed.
 
-Here are the last straggler patches to clean up what was left which you
-requested and to add the new firmware_request_cache() call to fix a
-corner case suspend issue.
+I see. From this I would say the notifier functionality would sit nicely 
+in cfg80211.
 
-The extra space character you found in earlier patches no longer needs
-to be fixed as that assignement was replaced with a new line in later
-patches which does not have the extra space in the assignment. The only
-other straggler fix needed which you had pointed out was the debugfs typo.
+> The other way around for the Bluetooth audio cases and a shared antenna, you need a tighter integration. If the antenna is not shared, then it makes no difference anyway since you are not sharing the transceiver. Normally these are just handled by the firmware internally and right priorities for RF scheduling are done. The Bluetooth controller normally then does a bit too much, but nobody wants to implement that in the host cleanly, and so they all hack it into the controller. I think that Realtek has some older chips where it would be really needed in the host. And Intel controllers can also let the host do it, but by default it is magically done by the controller.
 
-The new API call was renamed as suggested to firmware_request_cache(),
-with the API name first. I'll use a separate series to start addressing
-the firmware API rename for the rest of the callers. That will take some
-time as I'm running quite a bit of tests on those changes and I am going
-to wait for 0-day to give me its blesssings.
+Not entirely sure what you mean by "does a bit too much", but this is 
+what I considered as being btcoex. Indeed most do the whole coordination 
+in the device and not on the host. Pretty sure about Broadcom ;-)
 
-Question, feedback, and specially rants are greatly appreciated.
-
-  Luis
-
-Luis R. Rodriguez (3):
-  firmware: fix typo on pr_info_once() when ignore_sysfs_fallback is
-    used
-  firmware: add firmware_request_cache() to help with cache on reboot
-  mt7601u: use firmware_request_cache() to address cache on reboot
-
- .../driver-api/firmware/request_firmware.rst       | 14 +++++++++++++
- drivers/base/firmware_loader/fallback.c            |  2 +-
- drivers/base/firmware_loader/main.c                | 24 ++++++++++++++++++++++
- drivers/net/wireless/mediatek/mt7601u/mcu.c        |  2 +-
- include/linux/firmware.h                           |  3 +++
- 5 files changed, 43 insertions(+), 2 deletions(-)
-
--- 
-2.16.2
+Regards,
+Arend
