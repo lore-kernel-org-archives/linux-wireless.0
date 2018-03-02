@@ -1,80 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59340 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751249AbeCISU2 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33424 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1424069AbeCBMbV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 13:20:28 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 2/3] mwifiex: fix incorrect ht capability problem
-Date: Fri, 9 Mar 2018 23:45:25 +0530
-Message-ID: <1520619326-14888-3-git-send-email-gbhat@marvell.com> (sfid-20180309_192037_417668_91E9A0F8)
-In-Reply-To: <1520619326-14888-1-git-send-email-gbhat@marvell.com>
-References: <1520619326-14888-1-git-send-email-gbhat@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 2 Mar 2018 07:31:21 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Mar 2018 14:31:09 +0200
+Message-Id: <20180302123112.27416-2-luca@coelho.fi> (sfid-20180302_133125_580753_D433CF29)
+In-Reply-To: <20180302123112.27416-1-luca@coelho.fi>
+References: <20180302123112.27416-1-luca@coelho.fi>
+Subject: [PATCH 1/4] iwlwifi: mvm: set the correct tid when we flush the MCAST sta
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE80211_CHAN_NO_HT40PLUS and IEEE80211_CHAN_NO_HT40PLUS channel
-flags tell if HT40 operation is allowed on a channel or not.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This patch ensures ht_capability information is modified
-accordingly so that we don't end up creating a HT40 connection
-when it's not allowed for current regulatory domain.
+The tid being used for the queue (cab_queue) for the MCAST
+station has been changed recently to be 0 (for BE).
+The flush path still flushed only the special tid (15)
+which means that the firmware wasn't flushing the right
+queue and we could get a firmware crash upon remove
+station if we had an MCAST packet on the ring.
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+The current code that flushes queues for a station only
+differentiates between internal stations (stations that
+aren't instantiated in mac80211, like the MCAST station)
+and the non-internal ones.
+Internal stations can be either: BCAST (beacons), MCAST
+(for cab_queue), GENERAL_PURPOSE (p2p dev, and sniffer
+injection). The internal stations can use different tids.
+
+To make the code simpler, just flush all the tids always
+and add the special internal tid (15) for internal
+stations. The firmware will know how to handle this even
+if we hadn't any queue mapped that that tid.
+
+Fixes: e340c1a6ef4b ("iwlwifi: mvm: Correctly set the tid for mcast queue")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/11n.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
-index 8772e39..feebfdc 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n.c
-@@ -341,6 +341,36 @@ int mwifiex_cmd_11n_cfg(struct mwifiex_private *priv,
- 		       le16_to_cpu(ht_cap->header.len));
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index af6dfceab6b8..7dfe4cde55e3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1894,14 +1894,12 @@ int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool internal, u32 flags)
+ 	struct iwl_mvm_int_sta *int_sta = sta;
+ 	struct iwl_mvm_sta *mvm_sta = sta;
  
- 		mwifiex_fill_cap_info(priv, radio_type, &ht_cap->ht_cap);
-+		/* Update HT40 capability from current channel information */
-+		if (bss_desc->bcn_ht_oper) {
-+			u8 ht_param = bss_desc->bcn_ht_oper->ht_param;
-+			u8 radio =
-+			mwifiex_band_to_radio_type(bss_desc->bss_band);
-+			int freq =
-+			ieee80211_channel_to_frequency(bss_desc->channel,
-+						       radio);
-+			struct ieee80211_channel *chan =
-+			ieee80211_get_channel(priv->adapter->wiphy, freq);
-+
-+			switch (ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+				if (chan->flags & IEEE80211_CHAN_NO_HT40PLUS) {
-+					ht_cap->ht_cap.cap_info &=
-+					~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+					ht_cap->ht_cap.cap_info &=
-+					~IEEE80211_HT_CAP_SGI_40;
-+				}
-+				break;
-+			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+				if (chan->flags & IEEE80211_CHAN_NO_HT40MINUS) {
-+					ht_cap->ht_cap.cap_info &=
-+					~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+					ht_cap->ht_cap.cap_info &=
-+					~IEEE80211_HT_CAP_SGI_40;
-+				}
-+				break;
-+			}
-+		}
+-	if (iwl_mvm_has_new_tx_api(mvm)) {
+-		if (internal)
+-			return iwl_mvm_flush_sta_tids(mvm, int_sta->sta_id,
+-						      BIT(IWL_MGMT_TID), flags);
++	BUILD_BUG_ON(offsetof(struct iwl_mvm_int_sta, sta_id) !=
++		     offsetof(struct iwl_mvm_sta, sta_id));
  
- 		*buffer += sizeof(struct mwifiex_ie_types_htcap);
- 		ret_len += sizeof(struct mwifiex_ie_types_htcap);
++	if (iwl_mvm_has_new_tx_api(mvm))
+ 		return iwl_mvm_flush_sta_tids(mvm, mvm_sta->sta_id,
+-					      0xFF, flags);
+-	}
++					      0xff | BIT(IWL_MGMT_TID), flags);
+ 
+ 	if (internal)
+ 		return iwl_mvm_flush_tx_path(mvm, int_sta->tfd_queue_msk,
 -- 
-1.9.1
+2.16.1
