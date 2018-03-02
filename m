@@ -1,573 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:34483 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752678AbeC3HTo (ORCPT
+Received: from mail-wr0-f175.google.com ([209.85.128.175]:44100 "EHLO
+        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1423640AbeCBTN4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Mar 2018 03:19:44 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/17] rtlwifi: halmac: add power sequence to turn on/off wifi card
-Date: Fri, 30 Mar 2018 15:19:08 +0800
-Message-ID: <20180330071916.23360-10-pkshih@realtek.com> (sfid-20180330_091959_204005_A80D8DB6)
-In-Reply-To: <20180330071916.23360-1-pkshih@realtek.com>
-References: <20180330071916.23360-1-pkshih@realtek.com>
+        Fri, 2 Mar 2018 14:13:56 -0500
+Received: by mail-wr0-f175.google.com with SMTP id v65so11137833wrc.11
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2018 11:13:55 -0800 (PST)
+Date: Fri, 2 Mar 2018 20:13:34 +0100 (CET)
+From: Enrico Mioso <mrkiko.rs@gmail.com>
+To: Daniel Golle <daniel@makrotopia.org>
+cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Jamie Stuart <jamie@onebillion.org>
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+In-Reply-To: <20180301153006.GJ1233@makrotopia.org>
+Message-ID: <alpine.LNX.2.21.99.1803022007260.22404@mStation.localdomain> (sfid-20180302_202118_117622_FC982444)
+References: <alpine.LNX.2.21.99.1712201848250.21776@localhost.localdomain> <20171221142558.GB4655@redhat.com> <alpine.LNX.2.21.99.1712241311370.28605@localhost.localdomain> <20180103113540.GA10306@redhat.com> <alpine.LNX.2.21.99.1801031503370.8405@localhost.localdomain>
+ <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com> <alpine.LNX.2.21.99.1801220643400.32225@mStation.localdomain> <20180123132234.GC2520@redhat.com> <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain> <20180124100316.GB3101@redhat.com>
+ <20180301153006.GJ1233@makrotopia.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Hello to all of you.
+I would be very happy if this problem could be sorted out.
+But I should be honest: when the only possibility seemd to run a git bisect on openwrt,I was discouraged.
+too many builds, and some patching would be needed if you consider that this thing worked with 3.9 kernel or something like that, and I might be wrong (i.e.: it could be 3.6 or something).
+That's why I actually didn't start this - sorry to all guys.
+Stanislaw's help has been greatly apreciated, and invaluable.
+The problem seems to verify differently depending on the card: on an MT7620A-based SOC, namely the TP-LINK Archer MR200, the error occurs but seems not to get the card stuck.
+Different story is for the wireless NIC found in the Asus WL-330N3G device.
+The circumnstances on which the problem verifies itself are not clear to me. Still, it would be very importantto get this solved, due to the mainstream presence of the hardware itself.
+I don't have so many wi-fi clients here: the iPhone still has been a good tool to cause some problems.
+I am available for code testing. As some of you will already know, I may be slow on responding and testing overall, and having the problem verify can take some time.
+Still, I am available.
 
-Define power sequence command, and fill the sequences of 8822b.
+Thank you for your work, time and patience.
+On Thu, 1 Mar 2018, Daniel Golle wrote:
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../halmac_8822b/halmac_pwr_seq_8822b.c            | 396 +++++++++++++++++++++
- .../halmac_8822b/halmac_pwr_seq_8822b.h            |  26 ++
- .../realtek/rtlwifi/halmac/halmac_pwr_seq_cmd.h    |  98 +++++
- 3 files changed, 520 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_pwr_seq_cmd.h
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.c b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.c
-new file mode 100644
-index 000000000000..5aab588eb094
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.c
-@@ -0,0 +1,396 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-+ * more details.
-+ *
-+ ******************************************************************************/
-+
-+#include "halmac_pwr_seq_8822b.h"
-+
-+static struct halmac_wlan_pwr_cfg TRANS_CARDDIS_TO_CARDEMU_8822B[] = {
-+	/* { offset, cut_msk, interface_msk, base|cmd, msk, value } */
-+	{0x0086,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_SDIO,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0086,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_SDIO,
-+	 HALMAC_PWR_CMD_POLLING, BIT(1), BIT(1)},
-+	{0x004A,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(3) | BIT(4) | BIT(7), 0},
-+	{0x0300,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_PCI_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x0301,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_PCI_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0},
-+	{0xFFFF,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 0,
-+	 HALMAC_PWR_CMD_END, 0, 0},
-+};
-+
-+static struct halmac_wlan_pwr_cfg TRANS_CARDEMU_TO_ACT_8822B[] = {
-+	/* { offset, cut_msk, interface_msk, base|cmd, msk, value } */
-+	{0x0012,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0012,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0020,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK | HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0001,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK | HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_DELAY, 1, HALMAC_PWR_DELAY_MS},
-+	{0x0000,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK | HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(5), 0},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, (BIT(4) | BIT(3) | BIT(2)), 0},
-+	{0x0075,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_PCI_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0006,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_POLLING, BIT(1), BIT(1)},
-+	{0x0075,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_PCI_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), 0},
-+	{0xFF1A,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x0006,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(7), 0},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, (BIT(4) | BIT(3)), 0},
-+	{0x10C3,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_POLLING, BIT(0), 0},
-+	{0x0020,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(3), BIT(3)},
-+	{0x10A8,
-+	 HALMAC_PWR_CUT_C_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x10A9,
-+	 HALMAC_PWR_CUT_C_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0xef},
-+	{0x10AA,
-+	 HALMAC_PWR_CUT_C_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0x0c},
-+	{0x0068,
-+	 HALMAC_PWR_CUT_C_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(4), BIT(4)},
-+	{0x0029,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0xF9},
-+	{0x0024,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(2), 0},
-+	{0x0074,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_PCI_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(5), BIT(5)},
-+	{0x00AF,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(5), BIT(5)},
-+	{0xFFFF,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 0,
-+	 HALMAC_PWR_CMD_END, 0, 0},
-+};
-+
-+static struct halmac_wlan_pwr_cfg TRANS_ACT_TO_CARDEMU_8822B[] = {
-+	/* { offset, cut_msk, interface_msk, base|cmd, msk, value } */
-+	{0x0003,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(2), 0},
-+	{0x0093,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(3), 0},
-+	{0x001F,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x00EF,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0},
-+	{0xFF1A,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0x30},
-+	{0x0049,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0006,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0002,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x10C3,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(1), BIT(1)},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_POLLING, BIT(1), 0},
-+	{0x0020,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(3), 0},
-+	{0x0000,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK | HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(5), BIT(5)},
-+	{0xFFFF,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 0,
-+	 HALMAC_PWR_CMD_END, 0, 0},
-+};
-+
-+static struct halmac_wlan_pwr_cfg TRANS_CARDEMU_TO_CARDDIS_8822B[] = {
-+	/* { offset, cut_msk, interface_msk, base|cmd, msk, value } */
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(7), BIT(7)},
-+	{0x0007,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK | HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0x20},
-+	{0x0067,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(5), 0},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK | HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(3) | BIT(4), BIT(3)},
-+	{0x0005,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_PCI_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(2), BIT(2)},
-+	{0x004A,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0067,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(5), 0},
-+	{0x0067,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(4), 0},
-+	{0x004F,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), 0},
-+	{0x0067,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0046,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(6), BIT(6)},
-+	{0x0067,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(2), 0},
-+	{0x0046,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(7), BIT(7)},
-+	{0x0062,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(4), BIT(4)},
-+	{0x0081,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(7), 0},
-+	{0x0086,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_SDIO,
-+	 HALMAC_PWR_CMD_WRITE, BIT(0), BIT(0)},
-+	{0x0086,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_SDIO,
-+	 HALMAC_PWR_CMD_POLLING, BIT(1), 0},
-+	{0x0090,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_USB_MSK | HALMAC_PWR_INTF_PCI_MSK,
-+	 HALMAC_PWR_ADDR_MAC,
-+	 HALMAC_PWR_CMD_WRITE, BIT(1), 0},
-+	{0x0044,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_SDIO,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0},
-+	{0x0040,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_SDIO,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0x90},
-+	{0x0041,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_SDIO,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0x00},
-+	{0x0042,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_SDIO_MSK,
-+	 HALMAC_PWR_ADDR_SDIO,
-+	 HALMAC_PWR_CMD_WRITE, 0xFF, 0x04},
-+	{0xFFFF,
-+	 HALMAC_PWR_CUT_ALL_MSK,
-+	 HALMAC_PWR_INTF_ALL_MSK,
-+	 0,
-+	 HALMAC_PWR_CMD_END, 0, 0},
-+};
-+
-+/* Card Enable Array */
-+struct halmac_wlan_pwr_cfg *card_en_flow_8822b[] = {
-+	TRANS_CARDDIS_TO_CARDEMU_8822B,
-+	TRANS_CARDEMU_TO_ACT_8822B,
-+	NULL
-+};
-+
-+/* Card Disable Array */
-+struct halmac_wlan_pwr_cfg *card_dis_flow_8822b[] = {
-+	TRANS_ACT_TO_CARDEMU_8822B,
-+	TRANS_CARDEMU_TO_CARDDIS_8822B,
-+	NULL
-+};
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.h b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.h
-new file mode 100644
-index 000000000000..76d39b944a02
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.h
-@@ -0,0 +1,26 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-+ * more details.
-+ *
-+ ******************************************************************************/
-+
-+#ifndef HALMAC_POWER_SEQUENCE_8822B
-+#define HALMAC_POWER_SEQUENCE_8822B
-+
-+#include "../../halmac_pwr_seq_cmd.h"
-+
-+#define HALMAC_8822B_PWR_SEQ_VER  "V25"
-+
-+extern struct halmac_wlan_pwr_cfg *card_en_flow_8822b[];
-+extern struct halmac_wlan_pwr_cfg *card_dis_flow_8822b[];
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_pwr_seq_cmd.h b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_pwr_seq_cmd.h
-new file mode 100644
-index 000000000000..9b64397dc8cf
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_pwr_seq_cmd.h
-@@ -0,0 +1,98 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-+ * more details.
-+ *
-+ ******************************************************************************/
-+
-+#ifndef HALMAC_POWER_SEQUENCE_CMD
-+#define HALMAC_POWER_SEQUENCE_CMD
-+
-+#include "../wifi.h"
-+
-+#define HALMAC_PWR_POLLING_CNT 20000
-+
-+/* The value of cmd : 4 bits */
-+
-+/* offset : the read register offset
-+ * msk : the mask of the read value
-+ * value : N/A, left by 0
-+ * Note : dirver shall implement this function by read & msk
-+ */
-+#define	HALMAC_PWR_CMD_READ		0x00
-+/* offset: the read register offset
-+ * msk: the mask of the write bits
-+ * value: write value
-+ * Note: driver shall implement this cmd by read & msk after write
-+ */
-+#define	HALMAC_PWR_CMD_WRITE	0x01
-+/* offset: the read register offset
-+ * msk: the mask of the polled value
-+ * value: the value to be polled, masked by the msd field.
-+ * Note: driver shall implement this cmd by
-+ * do{
-+ * if( (Read(offset) & msk) == (value & msk) )
-+ * break;
-+ * } while(not timeout);
-+ */
-+#define	HALMAC_PWR_CMD_POLLING	0x02
-+/* offset: the value to delay
-+ * msk: N/A
-+ * value: the unit of delay, 0: us, 1: ms
-+ */
-+#define	HALMAC_PWR_CMD_DELAY	0x03
-+/* offset: N/A
-+ * msk: N/A
-+ * value: N/A
-+ */
-+#define	HALMAC_PWR_CMD_END	0x04
-+
-+/* The value of base : 4 bits */
-+
-+/* define the base address of each block */
-+#define   HALMAC_PWR_ADDR_MAC	0x00
-+#define   HALMAC_PWR_ADDR_USB	0x01
-+#define   HALMAC_PWR_ADDR_PCIE	0x02
-+#define   HALMAC_PWR_ADDR_SDIO	0x03
-+
-+/* The value of interface_msk : 4 bits */
-+#define	HALMAC_PWR_INTF_SDIO_MSK	BIT(0)
-+#define	HALMAC_PWR_INTF_USB_MSK		BIT(1)
-+#define	HALMAC_PWR_INTF_PCI_MSK		BIT(2)
-+#define	HALMAC_PWR_INTF_ALL_MSK		(BIT(0) | BIT(1) | BIT(2) | BIT(3))
-+
-+/* The value of cut_msk : 8 bits */
-+#define	HALMAC_PWR_CUT_TESTCHIP_MSK		BIT(0)
-+#define	HALMAC_PWR_CUT_A_MSK			BIT(1)
-+#define	HALMAC_PWR_CUT_B_MSK			BIT(2)
-+#define	HALMAC_PWR_CUT_C_MSK			BIT(3)
-+#define	HALMAC_PWR_CUT_D_MSK			BIT(4)
-+#define	HALMAC_PWR_CUT_E_MSK			BIT(5)
-+#define	HALMAC_PWR_CUT_F_MSK			BIT(6)
-+#define	HALMAC_PWR_CUT_G_MSK			BIT(7)
-+#define	HALMAC_PWR_CUT_ALL_MSK			0xFF
-+
-+enum halmac_pwrseq_cmd_delay_unit {
-+	HALMAC_PWR_DELAY_US,
-+	HALMAC_PWR_DELAY_MS,
-+};
-+
-+struct halmac_wlan_pwr_cfg {
-+	u16 offset;
-+	u8 cut_msk;
-+	u8 interface_msk;
-+	u8 base:4;
-+	u8 cmd:4;
-+	u8 msk;
-+	u8 value;
-+};
-+
-+#endif
--- 
-2.15.1
+> Date: Thu, 1 Mar 2018 16:30:10
+> From: Daniel Golle <daniel@makrotopia.org>
+> To: Stanislaw Gruszka <sgruszka@redhat.com>
+> Cc: Enrico Mioso <mrkiko.rs@gmail.com>,
+>     Tom Psyborg <pozega.tomislav@gmail.com>,
+>     linux-wireless <linux-wireless@vger.kernel.org>,
+>     Johannes Berg <johannes.berg@intel.com>, Arnd Bergmann <arnd@arndb.de>,
+>     John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
+>     Jamie Stuart <jamie@onebillion.org>
+> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+>     frame due to full tx queue...?
+> 
+> [forwarding to all other involved players]
+>
+> On Thu, Mar 01, 2018 at 05:50:51PM +0300, Jamie Stuart wrote:
+>> Hi Daniel,
+>> The driver seems much improved after this fix.
+>
+> it's about those two
+> [PATCH 1/2] rt2x00: pause almost full queue early
+> [PATCH 2/2] rt2x00: do not pause queue unconditionally on error path
+>
+>> Under very heavy load (30 clients downloading multi-GB files from SD card on the server concurrently), wifi dies with errors:
+>>
+>> [ 7794.230376] ieee80211 phy0: rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0001, signal=0x010c, type=4
+>>
+>> Thu Mar  1 16:36:47 2018 kern.err kernel: [ 8702.146403] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
+>> Thu Mar  1 16:36:47 2018 kern.err kernel: [ 8702.146403] Please file bug report to http://rt2x00.serialmonkey.com
+>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.288149] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
+>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.288149] Please file bug report to http://rt2x00.serialmonkey.com
+>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.380761] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
+>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.380761] Please file bug report to http://rt2x00.serialmonkey.com
+>>
+>>
+>>> On 20 Dec 2017, at 06:00, Daniel Golle <daniel@makrotopia.org> wrote:
+>>>
+>>> Hi Jamie,
+>>>
+>>> there was another round of discussion regarding the queue management
+>>> problem and Stanislaw Gruszka (the main rt2x00 maintainer) suggested
+>>> two patches which would be a more correct fix for the
+>>> rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue
+>>> message and consecutive problems.
+>>>
+>>> I imported them to my staging tree. Please retest and join the
+>>> discussion on
+>>> https://wireless.wiki.kernel.org/en/developers/mailinglists#linux-wireless_online_archives
+>>> see posts
+>>> https://marc.info/?l=linux-wireless&m=151368325114059&w=2
+>>> https://marc.info/?l=linux-wireless&m=151368325914062&w=2
+>>> and
+>>> https://marc.info/?l=linux-wireless&m=151368992716169&w=2
+>>>
+>>>
+>>> Cheers
+>>>
+>>>
+>>> Daniel
+>>>
+>>>
+>
