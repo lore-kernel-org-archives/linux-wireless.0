@@ -1,133 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:35105 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751408AbeCTSyv (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:1969 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1425214AbeCBOYA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 14:54:51 -0400
-Received: by mail-it0-f65.google.com with SMTP id v194-v6so3722792itb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2018 11:54:50 -0700 (PDT)
-Subject: Re: [PATCH v3 19/20] firmware: add request_firmware_cache() to help
- with cache on reboot
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Julia Lawall <julia.lawall@lip6.fr>,
-        Nicolas Palix <nicolas.palix@imag.fr>,
-        Joe Perches <joe@perches.com>, Takashi Iwai <tiwai@suse.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Jiri Kosina <jikos@kernel.org>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
-        jewalt@lgsinnovations.com, oneukum@suse.com, ast@fb.com,
-        andresx7@gmail.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20180310141501.2214-1-mcgrof@kernel.org>
- <20180310141501.2214-20-mcgrof@kernel.org> <20180320083055.GA21640@kroah.com>
- <20180320173409.GD4449@wotan.suse.de> <20180320173801.GA25040@kroah.com>
- <20180320182409.GF4449@wotan.suse.de>
-From: Konstantin Ryabitsev <konstantin@linuxfoundation.org>
-Message-ID: <5dc49c7f-56f6-28df-38da-bfa998afbdbb@linuxfoundation.org> (sfid-20180320_195504_883233_5963A525)
-Date: Tue, 20 Mar 2018 14:54:44 -0400
+        Fri, 2 Mar 2018 09:24:00 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 11/13] staging: wilc1000: rename handle_connect_timeout() variables to avoid camelCase
+Date: Fri, 2 Mar 2018 19:52:47 +0530
+Message-ID: <1520000569-27738-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_153349_799992_5E98AAAB)
+In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180320182409.GF4449@wotan.suse.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="dZnBsK6zJZIXdswTT4134XOJDdG4uDARv"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---dZnBsK6zJZIXdswTT4134XOJDdG4uDARv
-Content-Type: multipart/mixed; boundary="ky4SFbjlcXhHbJVEhY0MFmRXRqaODFEgR";
- protected-headers="v1"
-From: Konstantin Ryabitsev <konstantin@linuxfoundation.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Greg KH <gregkh@linuxfoundation.org>,
- Linus Torvalds <torvalds@linux-foundation.org>,
- Julia Lawall <julia.lawall@lip6.fr>, Nicolas Palix <nicolas.palix@imag.fr>,
- Joe Perches <joe@perches.com>, Takashi Iwai <tiwai@suse.de>,
- Thomas Gleixner <tglx@linutronix.de>, Jiri Kosina <jikos@kernel.org>,
- Masahiro Yamada <yamada.masahiro@socionext.com>
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com, kubakici@wp.pl,
- linux-wireless@vger.kernel.org, keescook@chromium.org, shuah@kernel.org,
- mfuzzey@parkeon.com, zohar@linux.vnet.ibm.com, dhowells@redhat.com,
- pali.rohar@gmail.com, arend.vanspriel@broadcom.com, zajec5@gmail.com,
- nbroeking@me.com, markivx@codeaurora.org, broonie@kernel.org,
- dmitry.torokhov@gmail.com, dwmw2@infradead.org, Abhay_Salunke@dell.com,
- bjorn.andersson@linaro.org, jewalt@lgsinnovations.com, oneukum@suse.com,
- ast@fb.com, andresx7@gmail.com, linux-kernel@vger.kernel.org,
- linux-fsdevel@vger.kernel.org
-Message-ID: <5dc49c7f-56f6-28df-38da-bfa998afbdbb@linuxfoundation.org>
-Subject: Re: [PATCH v3 19/20] firmware: add request_firmware_cache() to help
- with cache on reboot
-References: <20180310141501.2214-1-mcgrof@kernel.org>
- <20180310141501.2214-20-mcgrof@kernel.org> <20180320083055.GA21640@kroah.com>
- <20180320173409.GD4449@wotan.suse.de> <20180320173801.GA25040@kroah.com>
- <20180320182409.GF4449@wotan.suse.de>
-In-Reply-To: <20180320182409.GF4449@wotan.suse.de>
+Fix 'Avoid camelCase' issue found by checkpatch.pl script.
 
---ky4SFbjlcXhHbJVEhY0MFmRXRqaODFEgR
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-On 03/20/18 14:24, Luis R. Rodriguez wrote:
-> *Iff* this seems sensible, this would only mean kernel.org would have t=
-o start
-> accepting git notes long term, for those who optionally want to push th=
-em or
-> fetch them.
-
-We don't disallow them. You just need to make sure you're fetching and
-pushing them, because they aren't by default. You can set this in your
-kernel.org origin section of .git/config:
-
-[remote origin]
-  ...
-  fetch =3D +refs/notes/*:refs/notes/*
-
-And then push them separately as "git push origin refs/notes/*".
-
-Since frontends clone with --mirror, the notes will be available on all
-git.kernel.org nodes (e.g. see
-https://git.kernel.org/mricon/hook-test/c/a8d310d4c13)
-
-If you do start using notes, I strongly suggest you pick a dedicated
-refspace for it instead of putting things into the default
-refs/notes/commits, e.g.:
-
-git notes --ref crosstree [...]
-
-This will create refs/notes/crosstree that has less of a chance to be
-clobbered by someone else's use of notes.
-
-Best,
---=20
-Konstantin Ryabitsev
-Director, IT Infrastructure Security
-The Linux Foundation
-
-
---ky4SFbjlcXhHbJVEhY0MFmRXRqaODFEgR--
-
---dZnBsK6zJZIXdswTT4134XOJDdG4uDARv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQR2vl2yUnHhSB5njDW2xBzjVmSZbAUCWrFY9AAKCRC2xBzjVmSZ
-bNmiAP9UuzzjLaSnoK7TU9GXgJ0myKjzw2rSZm3czpzrMvVLMAD6AlX9DZNGUl0+
-M0RQvBkxMoekEXswcP5TEcoi3UDAFQo=
-=O/vz
------END PGP SIGNATURE-----
-
---dZnBsK6zJZIXdswTT4134XOJDdG4uDARv--
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ce04622..19c7483 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1182,9 +1182,9 @@ static s32 handle_connect(struct wilc_vif *vif,
+ static s32 handle_connect_timeout(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+-	struct connect_info strConnectInfo;
++	struct connect_info info;
+ 	struct wid wid;
+-	u16 u16DummyReasonCode = 0;
++	u16 dummy_reason_code = 0;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+@@ -1196,37 +1196,37 @@ static s32 handle_connect_timeout(struct wilc_vif *vif)
+ 
+ 	scan_while_connected = false;
+ 
+-	memset(&strConnectInfo, 0, sizeof(struct connect_info));
++	memset(&info, 0, sizeof(struct connect_info));
+ 
+ 	if (hif_drv->usr_conn_req.conn_result) {
+ 		if (hif_drv->usr_conn_req.bssid) {
+-			memcpy(strConnectInfo.bssid,
++			memcpy(info.bssid,
+ 			       hif_drv->usr_conn_req.bssid, 6);
+ 		}
+ 
+ 		if (hif_drv->usr_conn_req.ies) {
+-			strConnectInfo.req_ies_len = hif_drv->usr_conn_req.ies_len;
+-			strConnectInfo.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
+-			memcpy(strConnectInfo.req_ies,
++			info.req_ies_len = hif_drv->usr_conn_req.ies_len;
++			info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
++			memcpy(info.req_ies,
+ 			       hif_drv->usr_conn_req.ies,
+ 			       hif_drv->usr_conn_req.ies_len);
+ 		}
+ 
+ 		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
+-						  &strConnectInfo,
++						  &info,
+ 						  MAC_DISCONNECTED,
+ 						  NULL,
+ 						  hif_drv->usr_conn_req.arg);
+ 
+-		kfree(strConnectInfo.req_ies);
+-		strConnectInfo.req_ies = NULL;
++		kfree(info.req_ies);
++		info.req_ies = NULL;
+ 	} else {
+ 		netdev_err(vif->ndev, "Connect callback is NULL\n");
+ 	}
+ 
+ 	wid.id = (u16)WID_DISCONNECT;
+ 	wid.type = WID_CHAR;
+-	wid.val = (s8 *)&u16DummyReasonCode;
++	wid.val = (s8 *)&dummy_reason_code;
+ 	wid.size = sizeof(char);
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+-- 
+2.7.4
