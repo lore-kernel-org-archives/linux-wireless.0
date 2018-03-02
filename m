@@ -1,83 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0103.hostedemail.com ([216.40.44.103]:46881 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752967AbeCaHF5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:42756 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1424959AbeCBJEw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Mar 2018 03:05:57 -0400
-From: Joe Perches <joe@perches.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 08/12] iwlegacy: Remove EXPORT_SYMBOL(il_bcast_addr) and use ether_broadcast_addr
-Date: Sat, 31 Mar 2018 00:05:23 -0700
-Message-Id: <f73cf3f9dc183157573a13736b6178d5ecbc8d9d.1522479608.git.joe@perches.com> (sfid-20180331_090906_215508_A50680EE)
-In-Reply-To: <cover.1522479607.git.joe@perches.com>
-References: <cover.1522479607.git.joe@perches.com>
+        Fri, 2 Mar 2018 04:04:52 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2018-03-02
+Date: Fri,  2 Mar 2018 10:04:46 +0100
+Message-Id: <20180302090447.31036-1-johannes@sipsolutions.net> (sfid-20180302_101714_768554_715D24D4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the local array and use the new global instead to save some small
-amount of object code.
+Hi Dave,
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/intel/iwlegacy/3945-mac.c | 2 +-
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
- drivers/net/wireless/intel/iwlegacy/common.c   | 3 ---
- drivers/net/wireless/intel/iwlegacy/common.h   | 1 -
- 4 files changed, 2 insertions(+), 6 deletions(-)
+Just a few more patches, but I'll be travelling over the next
+week and probably won't be able to send things to you then.
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 62a9794f952b..770c7aa13434 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -2352,7 +2352,7 @@ il3945_alloc_bcast_station(struct il_priv *il)
- 	u8 sta_id;
- 
- 	spin_lock_irqsave(&il->sta_lock, flags);
--	sta_id = il_prep_station(il, il_bcast_addr, false, NULL);
-+	sta_id = il_prep_station(il, ether_broadcast_addr, false, NULL);
- 	if (sta_id == IL_INVALID_STATION) {
- 		IL_ERR("Unable to prepare broadcast station\n");
- 		spin_unlock_irqrestore(&il->sta_lock, flags);
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 562e94870a9c..5772cbd9291c 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -3536,7 +3536,7 @@ il4965_alloc_bcast_station(struct il_priv *il)
- 	u8 sta_id;
- 
- 	spin_lock_irqsave(&il->sta_lock, flags);
--	sta_id = il_prep_station(il, il_bcast_addr, false, NULL);
-+	sta_id = il_prep_station(il, ether_broadcast_addr, false, NULL);
- 	if (sta_id == IL_INVALID_STATION) {
- 		IL_ERR("Unable to prepare broadcast station\n");
- 		spin_unlock_irqrestore(&il->sta_lock, flags);
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index 063e19ced7c8..5853b1dedea1 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -3378,9 +3378,6 @@ MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
- u32 il_debug_level;
- EXPORT_SYMBOL(il_debug_level);
- 
--const u8 il_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
--EXPORT_SYMBOL(il_bcast_addr);
--
- #define MAX_BIT_RATE_40_MHZ 150	/* Mbps */
- #define MAX_BIT_RATE_20_MHZ 72	/* Mbps */
- static void
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
-index dc6a74a05983..6a6b43c5e4d7 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.h
-+++ b/drivers/net/wireless/intel/iwlegacy/common.h
-@@ -860,7 +860,6 @@ struct il_hw_params {
-  *
-  ****************************************************************************/
- void il4965_update_chain_flags(struct il_priv *il);
--extern const u8 il_bcast_addr[ETH_ALEN];
- int il_queue_space(const struct il_queue *q);
- static inline int
- il_queue_used(const struct il_queue *q, int i)
--- 
-2.15.0
+Please pull and let me know if there's any problem.
+
+Thanks,
+johannes
+
+
+
+The following changes since commit 93c62c45ed5fad1b87e3a45835b251cd68de9c46:
+
+  rxrpc: Fix send in rxrpc_send_data_packet() (2018-02-22 15:37:47 -0500)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-03-02
+
+for you to fetch changes up to a78872363614367c3f37e3a5b4181c7a6b207b37:
+
+  cfg80211: add missing dependency to CFG80211 suboptions (2018-02-27 10:54:12 +0100)
+
+----------------------------------------------------------------
+Three more patches:
+ * fix for a regression in 4-addr mode with fast-RX
+ * fix for a Kconfig problem with the new regdb
+ * fix for the long-standing TCP performance issue in
+   wifi using the new sk_pacing_shift_update()
+
+----------------------------------------------------------------
+Felix Fietkau (1):
+      mac80211: drop frames with unexpected DS bits from fast-rx to slow path
+
+Romain Naour (1):
+      cfg80211: add missing dependency to CFG80211 suboptions
+
+Toke Høiland-Jørgensen (1):
+      mac80211: Adjust TSQ pacing shift
+
+ net/mac80211/rx.c    |  2 +-
+ net/mac80211/tx.c    |  8 ++++++++
+ net/wireless/Kconfig | 13 +++++--------
+ 3 files changed, 14 insertions(+), 9 deletions(-)
