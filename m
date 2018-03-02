@@ -1,112 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55864 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751255AbeCLLkA (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:52238 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1424564AbeCBJ7s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 07:40:00 -0400
-From: Karthikeyan Periyasamy <periyasa@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Karthikeyan Periyasamy <periyasa@codeaurora.org>
-Subject: [PATCH] ath10k: Fix kernel panic while using worker (ath10k_sta_rc_update_wk)
-Date: Mon, 12 Mar 2018 17:09:40 +0530
-Message-Id: <1520854780-11823-1-git-send-email-periyasa@codeaurora.org> (sfid-20180312_124005_244279_F253885D)
+        Fri, 2 Mar 2018 04:59:48 -0500
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Subject: Re: [PATCH 1/2] cfg80211: Add support to enable or disable btcoex
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <5A991D2B.60303@broadcom.com>
+Date: Fri, 2 Mar 2018 10:59:45 +0100
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Tamizh chelvam <tamizhr@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Bluetooth mailing list
+        <linux-bluetooth@vger.kernel.org>
+Message-Id: <2FF7A02D-0DBA-4F05-85A3-70D0EDD677F5@holtmann.org> (sfid-20180302_105957_284311_3915E3C8)
+References: <1519927170-11920-1-git-send-email-tamizhr@codeaurora.org>
+ <5A9856CE.8000005@broadcom.com> <87po4ndpos.fsf@purkki.adurom.net>
+ <5A991D2B.60303@broadcom.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When attempt to run worker (ath10k_sta_rc_update_wk) after the station object
-(ieee80211_sta) delete will trigger the kernel panic.
+Hi Arend,
 
-This problem arise in AP + Mesh configuration, Where the current node AP VAP
-and neighbor node mesh VAP MAC address are same. When the current mesh node
-try to establish the mesh link with neighbor node, driver peer creation for
-the neighbor mesh node fails due to duplication MAC address. Already the AP
-VAP created with same MAC address.
+>>>> This patch introduces NL80211_CMD_SET_BTCOEX command and
+>>>> NL80211_ATTR_BTCOEX_OP attribute to enable or disable btcoex.
+>>> 
+>>> What kind of btcoex are we talking about here? Is it signalling
+>>> between wlan and bt to get access to the shared RF.
+>> 
+>> Yes, at least that's how I understand this.
+>> 
+>>> Why would it require user-space interaction? Are there no options for
+>>> wlan to detect bt is in use, ie. bt hci is setup, and vice versa. Can
+>>> it be indicated in platform data or device tree. Trying to understand
+>>> the use-case here.
+>> 
+>> One use case is being able to disable btcoex in case of problems or to
+>> test if it's btcoex related. I think during the last five years the need
+>> for this interface has come every once in a while.
+> 
+> Well, you would want to disable btcoex *and* bt to verify wlan is working properly on its own. And similarly disable btcoex *and* wlan to verify bt works properly.
+> 
+> Now I do recall a thread between you and Marcel. Looked it up and it was this thread [1], but did not see a follow-up on it. I suspect it involves more than just an enable/disable state. That may be fine for devices in which BT and WLAN are integrated and coordination of RF use is done on the device. The "btcoex subsystem" thread seems to aim for more like providing the coordination logic so independent BT device and WLAN device can still use the same RF. So before adopting the api in nl80211 it would be good to revive that thread.
 
-It is caused by the following scenario steps.
+actually we can solve any number of WiFi devices vs any number of Bluetooth devices on the same host. It goes mainly in the direction of WiFi having a notifier about its currently used channels and Bluetooth subsystem can subscribe to these and issue AFH channel map classification updates as needed.
 
-Steps:
-1. In above condition, ath10k driver sta_state callback (ath10k_sta_state)
-   fails to do the state change for a station from IEEE80211_STA_NOTEXIST
-   to IEEE80211_STA_NONE due to peer creation fails. Sta_state callback is
-   called from ieee80211_add_station() to handle the new station
-   (neighbor mesh node) request from the wpa_supplicant.
-2. Concurrently ath10k receive the sta_rc_update callback notification from
-   the mesh_neighbour_update() to handle the beacon frames of the above
-   neighbor mesh node. since its atomic callback, ath10k driver queue the
-   work (ath10k_sta_rc_update_wk) to handle rc update.
-3. Due to driver sta_state callback fails (step 1), mac80211 free the station
-   object.
-4. When the worker (ath10k_sta_rc_update_wk) scheduled to run, it will access
-   the station object which is already deleted. so it will trigger kernel
-   panic.
+The other way around for the Bluetooth audio cases and a shared antenna, you need a tighter integration. If the antenna is not shared, then it makes no difference anyway since you are not sharing the transceiver. Normally these are just handled by the firmware internally and right priorities for RF scheduling are done. The Bluetooth controller normally then does a bit too much, but nobody wants to implement that in the host cleanly, and so they all hack it into the controller. I think that Realtek has some older chips where it would be really needed in the host. And Intel controllers can also let the host do it, but by default it is magically done by the controller.
 
-Added the peer exist check in sta_rc_update callback before queue the work.
+Regards
 
-Kernel Panic log:
-
-Unable to handle kernel NULL pointer dereference at virtual address 00000000
-pgd = c0204000
-[00000000] *pgd=00000000
-Internal error: Oops: 17 [#1] PREEMPT SMP ARM
-CPU: 1 PID: 1833 Comm: kworker/u4:2 Not tainted 3.14.77 #1
-task: dcef0000 ti: d72b6000 task.ti: d72b6000
-PC is at pwq_activate_delayed_work+0x10/0x40
-LR is at pwq_activate_delayed_work+0xc/0x40
-pc : [<c023f988>]    lr : [<c023f984>]    psr: 40000193
-sp : d72b7f18  ip : 0000007a  fp : d72b6000
-r10: 00000000  r9 : dd404414  r8 : d8c31998
-r7 : d72b6038  r6 : 00000004  r5 : d4907ec8  r4 : dcee1300
-r3 : ffffffe0  r2 : 00000000  r1 : 00000001  r0 : 00000000
-Flags: nZcv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
-Control: 10c5787d  Table: 595bc06a  DAC: 00000015
-...
-Process kworker/u4:2 (pid: 1833, stack limit = 0xd72b6238)
-Stack: (0xd72b7f18 to 0xd72b8000)
-7f00:                                                       00000001 dcee1300
-7f20: 00000001 c02410dc d8c31980 dd404400 dd404400 c0242790 d8c31980 00000089
-7f40: 00000000 d93e1340 00000000 d8c31980 c0242568 00000000 00000000 00000000
-7f60: 00000000 c02474dc 00000000 00000000 000000f8 d8c31980 00000000 00000000
-7f80: d72b7f80 d72b7f80 00000000 00000000 d72b7f90 d72b7f90 d72b7fac d93e1340
-7fa0: c0247404 00000000 00000000 c0208d20 00000000 00000000 00000000 00000000
-7fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-7fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
-[<c023f988>] (pwq_activate_delayed_work) from [<c02410dc>] (pwq_dec_nr_in_flight+0x58/0xc4)
-[<c02410dc>] (pwq_dec_nr_in_flight) from [<c0242790>] (worker_thread+0x228/0x360)
-[<c0242790>] (worker_thread) from [<c02474dc>] (kthread+0xd8/0xec)
-[<c02474dc>] (kthread) from [<c0208d20>] (ret_from_fork+0x14/0x34)
-Code: e92d4038 e1a05000 ebffffbc[69210.619376] SMP: failed to stop secondary CPUs
-Rebooting in 3 seconds..
-
-Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index ebb3f1b..91ee1eb 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7085,10 +7085,20 @@ static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
- {
- 	struct ath10k *ar = hw->priv;
- 	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+	struct ath10k_vif *arvif = (void *)vif->drv_priv;
-+	struct ath10k_peer *peer;
- 	u32 bw, smps;
- 
- 	spin_lock_bh(&ar->data_lock);
- 
-+	peer = ath10k_peer_find(ar, arvif->vdev_id, sta->addr);
-+	if (!peer) {
-+		spin_unlock_bh(&ar->data_lock);
-+		ath10k_warn(ar, "mac sta rc update failed to find peer %pM on vdev %i\n",
-+			    sta->addr, arvif->vdev_id);
-+		return;
-+	}
-+
- 	ath10k_dbg(ar, ATH10K_DBG_MAC,
- 		   "mac sta rc update for %pM changed %08x bw %d nss %d smps %d\n",
- 		   sta->addr, changed, sta->bandwidth, sta->rx_nss,
--- 
-1.9.1
+Marcel
