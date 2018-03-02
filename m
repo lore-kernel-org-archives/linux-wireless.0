@@ -1,60 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52638 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751825AbeCVU2h (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:42786 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1425209AbeCBJG7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 16:28:37 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 11/12] brcmfmac: get rid of brcmf_fw_get_full_name()
-Date: Thu, 22 Mar 2018 21:28:30 +0100
-Message-Id: <1521750511-12345-12-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212904_616365_1A3708DD)
-In-Reply-To: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 2 Mar 2018 04:06:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next 2018-03-02
+Date: Fri,  2 Mar 2018 10:06:54 +0100
+Message-Id: <20180302090655.31669-1-johannes@sipsolutions.net> (sfid-20180302_100847_686091_495D18A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function was pretty minimal and now it is called only from one
-place so just get rid of it.
+Hi Dave,
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c    | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+Like before... Thanks for pulling net into net-next, the Add-BA patch
+below would otherwise not really be possible :-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index c14a02a..9277f4c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -628,13 +628,6 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
- 	return 0;
- }
- 
--static void brcmf_fw_get_full_name(char fw_name[BRCMF_FW_NAME_LEN],
--				   const char *fw_base, const char *extension)
--{
--	strlcat(fw_name, fw_base, BRCMF_FW_NAME_LEN);
--	strlcat(fw_name, extension, BRCMF_FW_NAME_LEN);
--}
--
- struct brcmf_fw_request *
- brcmf_fw_alloc_request(u32 chip, u32 chiprev,
- 		       struct brcmf_firmware_mapping mapping_table[],
-@@ -685,9 +678,10 @@ struct brcmf_fw_request *
- 					BRCMF_FW_NAME_LEN);
- 			}
- 		}
--		brcmf_fw_get_full_name(fwnames[j].path,
--				       mapping_table[i].fw_base,
--				       fwnames[j].extension);
-+		strlcat(fwnames[j].path, mapping_table[i].fw_base,
-+			BRCMF_FW_NAME_LEN);
-+		strlcat(fwnames[j].path, fwnames[j].extension,
-+			BRCMF_FW_NAME_LEN);
- 		fwreq->items[j].path = fwnames[j].path;
- 	}
- 
--- 
-1.9.1
+The only sort of interesting thing is the fast-RX improvements from
+Felix, they help on routers where these things (A-MSDU and 4-addr mode)
+are more important and where fast-RX really helps due to the reduced
+CPU load.
+
+Please pull and let me know if there's any problem.
+
+Thanks,
+johannes
+
+
+
+The following changes since commit f74290fdb363665538743d14c4f00aeacdb68d87:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2018-02-24 00:04:20 -0500)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2018-03-02
+
+for you to fetch changes up to 2e75bb2f8b8928aa01d91219a90df1e6fbc7cdd4:
+
+  net: Convert hwsim_net_ops (2018-03-02 10:01:25 +0100)
+
+----------------------------------------------------------------
+Only a few new things:
+ * hwsim net namespace stuff from Kirill Tkhai
+ * A-MSDU support in fast-RX
+ * 4-addr mode support in fast-RX
+ * support for a spec quirk in Add-BA negotiation
+
+----------------------------------------------------------------
+Felix Fietkau (4):
+      mac80211: support AP 4-addr mode fast-rx
+      mac80211: support fast-rx with incompatible PS capabilities when PS is disabled
+      mac80211: support station 4-addr mode fast-rx
+      mac80211: support A-MSDU in fast-rx
+
+Ilan Peer (1):
+      mac80211: agg-rx: Accept ADDBA request update if timeout did not change
+
+Kirill Tkhai (2):
+      mac80211_hwsim: Make hwsim_netgroup IDA
+      net: Convert hwsim_net_ops
+
+ drivers/net/wireless/mac80211_hwsim.c |  15 ++--
+ include/net/cfg80211.h                |   6 +-
+ net/mac80211/agg-rx.c                 |  14 ++-
+ net/mac80211/cfg.c                    |   1 +
+ net/mac80211/rx.c                     | 159 +++++++++++++++++++++-------------
+ net/wireless/util.c                   |   5 +-
+ 6 files changed, 128 insertions(+), 72 deletions(-)
