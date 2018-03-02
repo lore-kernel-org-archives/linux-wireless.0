@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0136.outbound.protection.outlook.com ([104.47.41.136]:34016
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751966AbeCPOKN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 10:10:13 -0400
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-To: linux-firmware@kernel.org
+Received: from paleale.coelho.fi ([176.9.41.70]:33438 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1427595AbeCBMbX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Mar 2018 07:31:23 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Subject: [PATCH V3 0/5] Update brcm firmware files
-Date: Fri, 16 Mar 2018 09:08:44 -0500
-Message-Id: <1521209329-59441-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180316_151059_530288_00FA9997)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  2 Mar 2018 14:31:11 +0200
+Message-Id: <20180302123112.27416-4-luca@coelho.fi> (sfid-20180302_133133_381361_637C2747)
+In-Reply-To: <20180302123112.27416-1-luca@coelho.fi>
+References: <20180302123112.27416-1-luca@coelho.fi>
+Subject: [PATCH 3/4] iwlwifi: mvm: fix error checking for multi/broadcast sta
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update brcm firmware files and WHENCE accordingly.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Chi-Hsien Lin (5):
-  brcm: update firmware for bcm43430
-  brcm: update firmware for bcm43340
-  brcm: update firmware for bcm43362
-  brcm: update firmware for bcm4354
-  brcm: update firmware for bcm4356 pcie
+The earlier patch called the station add functions but didn't
+assign their return value to the ret variable, so that the
+checks for it were meaningless. Fix that.
 
- WHENCE                      |  10 +++++-----
- brcm/brcmfmac43340-sdio.bin | Bin 402210 -> 400864 bytes
- brcm/brcmfmac43362-sdio.bin | Bin 219557 -> 200801 bytes
- brcm/brcmfmac43430-sdio.bin | Bin 369577 -> 388739 bytes
- brcm/brcmfmac4354-sdio.bin  | Bin 626589 -> 605388 bytes
- brcm/brcmfmac4356-pcie.bin  | Bin 661999 -> 648770 bytes
- 6 files changed, 5 insertions(+), 5 deletions(-)
+Found by smatch:
 
+.../mac80211.c:2560 iwl_mvm_start_ap_ibss() warn: we tested 'ret' before and it was 'false'
+.../mac80211.c:2563 iwl_mvm_start_ap_ibss() warn: we tested 'ret' before and it was 'false'
+
+Fixes: 3a89411cd31c ("iwlwifi: mvm: fix assert 0x2B00 on older FWs")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index ebf511150f4d..d09afb4acaeb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2132,10 +2132,10 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 		 * Send the bcast station. At this stage the TBTT and DTIM time
+ 		 * events are added and applied to the scheduler
+ 		 */
+-		iwl_mvm_send_add_bcast_sta(mvm, vif);
++		ret = iwl_mvm_send_add_bcast_sta(mvm, vif);
+ 		if (ret)
+ 			goto out_unbind;
+-		iwl_mvm_add_mcast_sta(mvm, vif);
++		ret = iwl_mvm_add_mcast_sta(mvm, vif);
+ 		if (ret) {
+ 			iwl_mvm_send_rm_bcast_sta(mvm, vif);
+ 			goto out_unbind;
 -- 
-2.1.0
+2.16.1
