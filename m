@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:39164 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752801AbeCXVXG (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:46838 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1428753AbeCBOvb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Mar 2018 17:23:06 -0400
-Subject: Re: [PATCH 1/3] ieee80211: Replace bit shifts with the BIT() macro
- for WLAN_CAPABILITY_*.
-To: Quytelda Kahja <quytelda@tamalin.org>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180324041027.6498-1-quytelda@tamalin.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <e31eb13b-598b-e7c7-607b-c98664818563@lwfinger.net> (sfid-20180324_222324_502645_AA9620DF)
-Date: Sat, 24 Mar 2018 16:23:02 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180324041027.6498-1-quytelda@tamalin.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 2 Mar 2018 09:51:31 -0500
+Date: Fri, 02 Mar 2018 09:51:30 -0500 (EST)
+Message-Id: <20180302.095130.1497212812516999950.davem@davemloft.net> (sfid-20180302_155138_698288_45923BF6)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2018-03-02
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180302090655.31669-1-johannes@sipsolutions.net>
+References: <20180302090655.31669-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/23/2018 11:10 PM, Quytelda Kahja wrote:
-> It is neater and more consistent with the rest of the document to use the
-> BIT() macro from 'linux/bitops.h' to define the WLAN_CAPABILITY_*
-> bitmasks.  In the case of WLAN_CAPABILITY_DMG_TYPE_{IBSS, PBSS, AP},
-> bitshifting integers by 0 does nothing, so there is no reason to do it in
-> the code; replace these values with plain integers.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri,  2 Mar 2018 10:06:54 +0100
+
+> Like before... Thanks for pulling net into net-next, the Add-BA patch
+> below would otherwise not really be possible :-)
+
+No problem.
+
+> The only sort of interesting thing is the fast-RX improvements from
+> Felix, they help on routers where these things (A-MSDU and 4-addr mode)
+> are more important and where fast-RX really helps due to the reduced
+> CPU load.
 > 
-> Signed-off-by: Quytelda Kahja <quytelda@tamalin.org>
+> Please pull and let me know if there's any problem.
 
-In the commit message for all of these, what is the "document" to which you refer?
-
-I'm not quite sure why you split these changes into 3 parts, but I guess that is OK.
-
-Larry
+Ok, pulled, thanks Johannes.
