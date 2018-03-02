@@ -1,153 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:37196 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751005AbeCNLBk (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:32840 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752726AbeCBWTC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 07:01:40 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        James Hughes <james.hughes@raspberrypi.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>,
-        bridge@lists.linux-foundation.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] brcmfmac: drop Inter-Access Point Protocol packets by default
-Date: Wed, 14 Mar 2018 12:01:19 +0100
-Message-Id: <20180314110119.13631-1-zajec5@gmail.com> (sfid-20180314_120149_942192_786B078C)
+        Fri, 2 Mar 2018 17:19:02 -0500
+Received: by mail-oi0-f67.google.com with SMTP id e9so1502542oii.0
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2018 14:19:02 -0800 (PST)
+Subject: Re: [PATCH 03/15] rtlwifi: btcoex: Add enum DM_INFO for btcoex to
+ query dm's counters
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180228030718.19510-1-pkshih@realtek.com>
+ <20180228030718.19510-4-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <1ee67725-5198-9dae-3f46-331774f8003b@lwfinger.net> (sfid-20180302_231906_781808_CF52CD70)
+Date: Fri, 2 Mar 2018 16:19:00 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20180228030718.19510-4-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On 02/27/2018 09:07 PM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> btcoex uses dm's counters to check the envoriment is nosiy or not. If it
+> is clean, btcoex set more time solts to WiFi so that it can transimt as
+> soon as possible. That will save time, and BT will have more time solts
+> after WiFi traffic is complete.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Testing brcmfmac with more recent firmwares resulted in AP interfaces
-not working in some specific setups. Debugging resulted in discovering
-support for IAPP in Broadcom's firmwares. This is an obsoleted standard
-and its implementation is something that:
-1) Most people don't need / want to use
-2) Can allow local DoS attacks
-3) Breaks AP interfaces in some specific bridge setups
+The commit message needs to have the following typos fixed:
+envoriment should be environment
+nosiy should be noisy
+solts should be slots (2 places)
+transimt should be transmit
 
-To solve issues it can cause this commit modifies brcmfmac to drop IAPP
-packets. If affects:
-1) Rx path: driver won't be sending these unwanted packets up.
-2) Tx path: driver will reject packets that would trigger STA
-   disassociation perfromed by a firmware (possible local DoS attack).
+Yes, I know it is difficult to write in a second language.
 
-It appears there are some Broadcom's clients/users who care about this
-feature despite the drawbacks. They can switch it on by a newly added
-Kconfig option.
+Larry
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/net/wireless/broadcom/brcm80211/Kconfig    | 20 +++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 39 ++++++++++++++++++++++
- 2 files changed, 59 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/Kconfig b/drivers/net/wireless/broadcom/brcm80211/Kconfig
-index 9d99eb42d917..876787ef991a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
-+++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
-@@ -68,6 +68,26 @@ config BRCMFMAC_PCIE
- 	  IEEE802.11ac embedded FullMAC WLAN driver. Say Y if you want to
- 	  use the driver for an PCIE wireless card.
- 
-+config BRCMFMAC_IAPP
-+	bool "Partial support for obsoleted Inter-Access Point Protocol"
-+	depends on BRCMFMAC
-+	---help---
-+	  Most of Broadcom's firmwares can send 802.11f ADD frame every
-+	  time new STA connects to the AP interface. Some recent ones
-+	  can also disassociate STA when they receive such a frame.
-+
-+	  It's important to understand this behavior can lead to a local
-+	  DoS security issue. Attacker may trigger disassociation of any
-+	  STA by sending a proper Ethernet frame to the wireless
-+	  interface.
-+
-+	  Moreover this feature may break AP interfaces in some specific
-+	  setups. This applies e.g. to the bridge with hairpin mode
-+	  enabled and IFLA_BRPORT_MCAST_TO_UCAST set. IAPP packet
-+	  generated by a firmware will get passed back to the wireless
-+	  interface and cause immediate disassociation of just-connected
-+	  STA.
-+
- config BRCM_TRACING
- 	bool "Broadcom device tracing"
- 	depends on BRCMSMAC || BRCMFMAC
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 19048526b4af..db6987015fb1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -230,6 +230,34 @@ static void brcmf_netdev_set_multicast_list(struct net_device *ndev)
- 	schedule_work(&ifp->multicast_work);
- }
- 
-+/**
-+ * brcmf_skb_is_iapp - checks if skb is an IAPP packet
-+ *
-+ * @skb: skb to check
-+ */
-+static bool brcmf_skb_is_iapp(struct sk_buff *skb)
-+{
-+	const u8 iapp_l2_update_packet[6] __aligned(2) = {
-+		0x00, 0x01, 0xaf, 0x81, 0x01, 0x00,
-+	};
-+	unsigned char *eth_data = skb_mac_header(skb) + ETH_HLEN;
-+#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-+	const u16 *a = (const u16 *)eth_data;
-+	const u16 *b = (const u16 *)iapp_l2_update_packet;
-+#endif
-+
-+	if (skb->len - skb->mac_len != 6 ||
-+	    !is_multicast_ether_addr(eth_hdr(skb)->h_dest))
-+		return false;
-+
-+#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-+	return !(((*(const u32 *)eth_data) ^ (*(const u32 *)iapp_l2_update_packet)) |
-+		 ((*(const u16 *)(eth_data + 4)) ^ (*(const u16 *)(iapp_l2_update_packet + 4))));
-+#else
-+	return !((a[0] ^ b[0]) | (a[1] ^ b[1]) | (a[2] ^ b[2]));
-+#endif
-+}
-+
- static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 					   struct net_device *ndev)
- {
-@@ -250,6 +278,12 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 		goto done;
- 	}
- 
-+	if (!IS_ENABLED(CONFIG_BRCMFMAC_IAPP) && brcmf_skb_is_iapp(skb)) {
-+		dev_kfree_skb(skb);
-+		ret = -EINVAL;
-+		goto done;
-+	}
-+
- 	/* Make sure there's enough writeable headroom */
- 	if (skb_headroom(skb) < drvr->hdrlen || skb_header_cloned(skb)) {
- 		head_delta = max_t(int, drvr->hdrlen - skb_headroom(skb), 0);
-@@ -325,6 +359,11 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 
- void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
- {
-+	if (!IS_ENABLED(CONFIG_BRCMFMAC_IAPP) && brcmf_skb_is_iapp(skb)) {
-+		brcmu_pkt_buf_free_skb(skb);
-+		return;
-+	}
-+
- 	if (skb->pkt_type == PACKET_MULTICAST)
- 		ifp->ndev->stats.multicast++;
- 
--- 
-2.11.0
+
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/wifi.h | 32 +++++++++++++++++++++++++++++
+>   1 file changed, 32 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> index 4f48b934ec01..438678c2d14a 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> @@ -977,6 +977,38 @@ enum rtl_spec_ver {
+>   	RTL_SPEC_EXT_C2H = BIT(2),	/* extend FW C2H (e.g. TX REPORT) */
+>   };
+>   
+> +enum dm_info_query {
+> +	DM_INFO_FA_OFDM,
+> +	DM_INFO_FA_CCK,
+> +	DM_INFO_FA_TOTAL,
+> +	DM_INFO_CCA_OFDM,
+> +	DM_INFO_CCA_CCK,
+> +	DM_INFO_CCA_ALL,
+> +	DM_INFO_CRC32_OK_VHT,
+> +	DM_INFO_CRC32_OK_HT,
+> +	DM_INFO_CRC32_OK_LEGACY,
+> +	DM_INFO_CRC32_OK_CCK,
+> +	DM_INFO_CRC32_ERROR_VHT,
+> +	DM_INFO_CRC32_ERROR_HT,
+> +	DM_INFO_CRC32_ERROR_LEGACY,
+> +	DM_INFO_CRC32_ERROR_CCK,
+> +	DM_INFO_EDCCA_FLAG,
+> +	DM_INFO_OFDM_ENABLE,
+> +	DM_INFO_CCK_ENABLE,
+> +	DM_INFO_CRC32_OK_HT_AGG,
+> +	DM_INFO_CRC32_ERROR_HT_AGG,
+> +	DM_INFO_DBG_PORT_0,
+> +	DM_INFO_CURR_IGI,
+> +	DM_INFO_RSSI_MIN,
+> +	DM_INFO_RSSI_MAX,
+> +	DM_INFO_CLM_RATIO,
+> +	DM_INFO_NHM_RATIO,
+> +	DM_INFO_IQK_ALL,
+> +	DM_INFO_IQK_OK,
+> +	DM_INFO_IQK_NG,
+> +	DM_INFO_SIZE,
+> +};
+> +
+>   struct octet_string {
+>   	u8 *octet;
+>   	u16 length;
+> 
