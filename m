@@ -1,96 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:42793 "EHLO
-        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932458AbeCLD3S (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:52433 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1425214AbeCBOYH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Mar 2018 23:29:18 -0400
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 2 Mar 2018 09:24:07 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 13/13] staging: wilc1000: rename u16DummyReasonCode to avoid camelCase
+Date: Fri, 2 Mar 2018 19:52:49 +0530
+Message-ID: <1520000569-27738-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_153349_028647_9EF31436)
+In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-From: Ben Hutchings <ben@decadent.org.uk>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-CC: akpm@linux-foundation.org, kernel-hardening@lists.openwall.com,
-        torvalds@linux-foundation.org,
-        "Elena Reshetova" <elena.reshetova@intel.com>,
-        "Thomas Gleixner" <tglx@linutronix.de>, alan@linux.intel.com,
-        "Dan Williams" <dan.j.williams@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-arch@vger.kernel.org,
-        "Christian Lamparter" <chunkeey@gmail.com>,
-        linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
-        "Johannes Berg" <johannes@sipsolutions.net>
-Date: Mon, 12 Mar 2018 03:06:12 +0000
-Message-ID: <lsq.1520823972.857925406@decadent.org.uk> (sfid-20180312_043130_676878_7F690FC6)
-Subject: [PATCH 3.16 58/76] nl80211: Sanitize array index in parse_txq_params
-In-Reply-To: <lsq.1520823971.5976735@decadent.org.uk>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-3.16.56-rc1 review patch.  If anyone has any objections, please let me know.
+Fix 'Avoid camelCase' issue found by checkpatch.pl script.
 
-------------------
-
-From: Dan Williams <dan.j.williams@intel.com>
-
-commit 259d8c1e984318497c84eef547bbb6b1d9f4eb05 upstream.
-
-Wireless drivers rely on parse_txq_params to validate that txq_params->ac
-is less than NL80211_NUM_ACS by the time the low-level driver's ->conf_tx()
-handler is called. Use a new helper, array_index_nospec(), to sanitize
-txq_params->ac with respect to speculation. I.e. ensure that any
-speculation into ->conf_tx() handlers is done with a value of
-txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
-
-Reported-by: Christian Lamparter <chunkeey@gmail.com>
-Reported-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-arch@vger.kernel.org
-Cc: kernel-hardening@lists.openwall.com
-Cc: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Cc: torvalds@linux-foundation.org
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: alan@linux.intel.com
-Link: https://lkml.kernel.org/r/151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- net/wireless/nl80211.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -14,6 +14,7 @@
- #include <linux/nl80211.h>
- #include <linux/rtnetlink.h>
- #include <linux/netlink.h>
-+#include <linux/nospec.h>
- #include <linux/etherdevice.h>
- #include <net/net_namespace.h>
- #include <net/genetlink.h>
-@@ -1829,20 +1830,22 @@ static const struct nla_policy txq_param
- static int parse_txq_params(struct nlattr *tb[],
- 			    struct ieee80211_txq_params *txq_params)
- {
-+	u8 ac;
-+
- 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
- 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
- 	    !tb[NL80211_TXQ_ATTR_AIFS])
- 		return -EINVAL;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2354666..a4ee175 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1795,11 +1795,11 @@ static void handle_disconnect(struct wilc_vif *vif)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
  
--	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
-+	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
- 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
- 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
- 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
- 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 	s32 result = 0;
+-	u16 u16DummyReasonCode = 0;
++	u16 dummy_reason_code = 0;
  
--	if (txq_params->ac >= NL80211_NUM_ACS)
-+	if (ac >= NL80211_NUM_ACS)
- 		return -EINVAL;
--
-+	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
- 	return 0;
- }
+ 	wid.id = (u16)WID_DISCONNECT;
+ 	wid.type = WID_CHAR;
+-	wid.val = (s8 *)&u16DummyReasonCode;
++	wid.val = (s8 *)&dummy_reason_code;
+ 	wid.size = sizeof(char);
  
+ 	wilc_optaining_ip = false;
+-- 
+2.7.4
