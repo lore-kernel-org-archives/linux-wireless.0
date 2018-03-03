@@ -1,173 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:40959 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161405AbeCATiz (ORCPT
+Received: from mx1.uni-rostock.de ([139.30.22.71]:59943 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751566AbeCCIBs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 14:38:55 -0500
-Received: by mail-wm0-f66.google.com with SMTP id t6so14392252wmt.5
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 11:38:54 -0800 (PST)
-Subject: Re: [PATCH 1/2] cfg80211: Add support to enable or disable btcoex
-To: Tamizh chelvam <tamizhr@codeaurora.org>, johannes@sipsolutions.net
-References: <1519927170-11920-1-git-send-email-tamizhr@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5A9856CE.8000005@broadcom.com> (sfid-20180301_203922_215315_E50129A8)
-Date: Thu, 1 Mar 2018 20:38:54 +0100
+        Sat, 3 Mar 2018 03:01:48 -0500
+Date: Sat, 3 Mar 2018 09:01:42 +0100
+In-Reply-To: <5319c18f-ce39-0d4c-e140-50b48b73803f@virtuozzo.com>
+References: <151990341305.5011.3514278630677194656.stgit@localhost.localdomain> <151990380915.5011.5476607741974762054.stgit@localhost.localdomain> <9a826ac0-1354-567b-ec4c-ac8511bf89f6@uni-rostock.de> <5319c18f-ce39-0d4c-e140-50b48b73803f@virtuozzo.com>
 MIME-Version: 1.0
-In-Reply-To: <1519927170-11920-1-git-send-email-tamizhr@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Subject: Re: [PATCH net-next 1/2] mac80211_hwsim: Make hwsim_netgroup IDA
+To: Kirill Tkhai <ktkhai@virtuozzo.com>, <davem@davemloft.net>,
+        <johannes@sipsolutions.net>, <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Message-ID: <BDC4B82F-94DD-4580-B216-7F75AF189C3A@uni-rostock.de> (sfid-20180303_090405_355168_4562F7CD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/1/2018 6:59 PM, Tamizh chelvam wrote:
-> From: Tamizh chelvam <tamizhr@codeaurora.org>
+
+
+Am 2=2E M=C3=A4rz 2018 12:37:25 MEZ schrieb Kirill Tkhai <ktkhai@virtuozzo=
+=2Ecom>:
+>destroy_radio() may be executed in parallel with everything above you
+>wrote,
+>doesn't it? There may be several network namespaces, and
+>destroy_radio()
+>queued from one net namespace may race with mac80211_hwsim_new_radio()
+>or hwsim_del_radio_nl() for another net namespace=2E I don't see, how
+>netlink
+>locking can act on synchronization with a work=2E This is what I mention=
+=2E
 >
-> This patch introduces NL80211_CMD_SET_BTCOEX command and
-> NL80211_ATTR_BTCOEX_OP attribute to enable or disable btcoex.
+I see, you are right=2E Nonetheless, this value is pretty uncritical, sinc=
+e the user (the netlink dump) only checks whether it changes within a dump =
+and even if there would be race conditions, e=2Eg=2E some generations would=
+ be skipped caused by parallel writing, it would also set the dump interrup=
+ted flag, and the user space program knows, if it needs exact results, it n=
+eeds to dump again=2E I'm unsure about things like caching of this variable=
+=2E Maybe it needs a volatile flag to work always as expected=2E
 
-What kind of btcoex are we talking about here? Is it signalling between 
-wlan and bt to get access to the shared RF. Why would it require 
-user-space interaction? Are there no options for wlan to detect bt is in 
-use, ie. bt hci is setup, and vice versa. Can it be indicated in 
-platform data or device tree. Trying to understand the use-case here.
+Unfortunately, currently the code triggers a dump interrupted also when th=
+e interfaces of the current namespace didn't change, but I think that is ac=
+ceptable=2E Otherwise we need a per namespace generation and I think all th=
+is happens really rare and it's not worth the effort=2E
 
-> Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
-> ---
->   include/net/cfg80211.h       |    4 ++++
->   include/uapi/linux/nl80211.h |   10 ++++++++++
->   net/wireless/nl80211.c       |   28 ++++++++++++++++++++++++++++
->   net/wireless/rdev-ops.h      |   11 +++++++++++
->   net/wireless/trace.h         |   15 +++++++++++++++
->   5 files changed, 68 insertions(+)
->
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index fc40843..b0e8bf6 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -2960,6 +2960,9 @@ struct cfg80211_external_auth_params {
->    *
->    * @external_auth: indicates result of offloaded authentication processing from
->    *     user space
-> + *
-> + * @set_btcoex: This callback used to Enable/disable btcoex
 
-Bit strange to capitalize Enable here.
+>Thanks,
+>Kirill
 
-> + *
->    */
->   struct cfg80211_ops {
->   	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-> @@ -3255,6 +3258,7 @@ struct cfg80211_ops {
->   			   const u8 *aa);
->   	int     (*external_auth)(struct wiphy *wiphy, struct net_device *dev,
->   				 struct cfg80211_external_auth_params *params);
-> +	int     (*set_btcoex)(struct wiphy *wiphy, bool enabled);
->   };
->
->   /*
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index c13c843..3fb45b2 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -1018,6 +1018,8 @@
->    *	&NL80211_ATTR_CHANNEL_WIDTH,&NL80211_ATTR_NSS attributes with its
->    *	address(specified in &NL80211_ATTR_MAC).
->    *
-> + * @NL80211_CMD_SET_BTCOEX: Enable/Disable btcoex using %NL80211_ATTR_BTCOEX_OP.
-> + *
->    * @NL80211_CMD_MAX: highest used command number
->    * @__NL80211_CMD_AFTER_LAST: internal use
->    */
-> @@ -1228,6 +1230,8 @@ enum nl80211_commands {
->
->   	NL80211_CMD_STA_OPMODE_CHANGED,
->
-> +	NL80211_CMD_SET_BTCOEX,
-> +
->   	/* add new commands above here */
->
->   	/* used to define NL80211_CMD_MAX below */
-> @@ -2196,6 +2200,10 @@ enum nl80211_commands {
->    * @NL80211_ATTR_NSS: Station's New/updated  RX_NSS value notified using this
->    *	u8 attribute. This is used with %NL80211_CMD_STA_OPMODE_CHANGED.
->    *
-> + * @NL80211_ATTR_BTCOEX_OP: u8 attribute for driver supporting
+--=20
+M=2ESc=2E Benjamin Beichler
 
-How is user-space supposed to know the driver is supporting btcoex. I do 
-not see any advertisement in this patch. Should probably add ext_feature 
-flag for this.
+Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrotec=
+hnik
+Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
 
-> + *	the btcoex feature. This will be used with %NL80211_CMD_SET_BTCOEX
-> + *	to enable/disable btcoex.
+University of Rostock, Department of CS and EE
+Institute of Applied Microelectronics and CE
 
-What does 'OP' stand for. Why not just call it 'ENABLE'. Also no need to 
-make this u8. A flag attribute type seems sufficient here.
+Richard-Wagner-Stra=C3=9Fe 31
+18119 Rostock
+Deutschland/Germany
 
-> + *
->    * @NUM_NL80211_ATTR: total number of nl80211_attrs available
->    * @NL80211_ATTR_MAX: highest attribute number currently defined
->    * @__NL80211_ATTR_AFTER_LAST: internal use
-> @@ -2628,6 +2636,8 @@ enum nl80211_attrs {
->   	NL80211_ATTR_NSS,
->   	NL80211_ATTR_ACK_SIGNAL,
->
-> +	NL80211_ATTR_BTCOEX_OP,
-> +
->   	/* add attributes here, update the policy in nl80211.c */
->
->   	__NL80211_ATTR_AFTER_LAST,
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index a910150..ebd119b 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -422,6 +422,7 @@ enum nl80211_multicast_groups {
->   	[NL80211_ATTR_PMK] = { .type = NLA_BINARY, .len = PMK_MAX_LEN },
->   	[NL80211_ATTR_SCHED_SCAN_MULTI] = { .type = NLA_FLAG },
->   	[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT] = { .type = NLA_FLAG },
-> +	[NL80211_ATTR_BTCOEX_OP] = { .type = NLA_U8 },
-
-so:	[NL80211_ATTR_BTCOEX_ENABLE] = { .type = NLA_FLAG },
-
->   };
->
->   /* policy for the key attributes */
-> @@ -12517,6 +12518,25 @@ static int nl80211_external_auth(struct sk_buff *skb, struct genl_info *info)
->   	return rdev_external_auth(rdev, dev, &params);
->   }
->
-> +static int nl80211_set_btcoex(struct sk_buff *skb, struct genl_info *info)
-> +{
-> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-> +	u8 val = 0;
-> +
-> +	if (!rdev->ops->set_btcoex)
-> +		return -ENOTSUPP;
-
-For missing callback ops we generally use -EOPNOTSUPP.
-
-> +	if (!info->attrs[NL80211_ATTR_BTCOEX_OP])
-> +		return -EINVAL;
-> +
-> +	val = nla_get_u8(info->attrs[NL80211_ATTR_BTCOEX_OP]);
-> +
-> +	if (val > 1)
-> +		return -EINVAL;
-> +
-> +	return rdev_set_btcoex(rdev, val);
-
-When using NLA_FLAG you can just say:
-
-   +	return rdev_set_btcoex(rdev,
-   +			       info->attrs[NL80211_ATTR_BTCOEX_ENABLE]);
-
-and get rid of the EINVAL checks. Of course, you need to document the 
-attribute needs to be added to enable and omitted to disable btcoex.
-
-> +}
-> +
->   #define NL80211_FLAG_NEED_WIPHY		0x01
->   #define NL80211_FLAG_NEED_NETDEV	0x02
->   #define NL80211_FLAG_NEED_RTNL		0x04
-
-Regards,
-Arend
+phone: +49 (0) 381 498 - 7278
+email: Benjamin=2EBeichler@uni-rostock=2Ede
+www: http://www=2Eimd=2Euni-rostock=2Ede/
