@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:36979 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031438AbeCAOWb (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:58983 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750823AbeCCFMa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:22:31 -0500
-Received: by mail-qt0-f194.google.com with SMTP id r16so7698418qtm.4
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:22:30 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 49/52] ath: Map U.A.E. to ETSI1_WORLD
-Date: Thu,  1 Mar 2018 15:18:59 +0100
-Message-Id: <20180301141902.24824-50-sven.eckelmann@openmesh.com> (sfid-20180301_152235_569007_7F121764)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Sat, 3 Mar 2018 00:12:30 -0500
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 03/15] rtlwifi: btcoex: Add enum DM_INFO for btcoex to query dm's counters
+Date: Sat, 3 Mar 2018 05:12:12 +0000
+Message-ID: <1520053932.1841.2.camel@realtek.com> (sfid-20180303_061323_481176_75CDE070)
+References: <20180228030718.19510-1-pkshih@realtek.com>
+         <20180228030718.19510-4-pkshih@realtek.com>
+         <1ee67725-5198-9dae-3f46-331774f8003b@lwfinger.net>
+In-Reply-To: <1ee67725-5198-9dae-3f46-331774f8003b@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't correctly
-mapped to the actual CTL entries in EEPROM then it could happen that the
-device violates the regulations. But it can also happen that the device is
-then not able to be used with its full txpower on all rates.
-
-The CTL mappings for this regdomain code were now changed to:
-
-* 2.4GHz: ETSI
-* 5GHz: NO_CTL -> ETSI
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd_common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index e41a0ce332a8..aba44cffce3d 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -487,7 +487,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_TURKEY, ETSI3_WORLD, "TR"},
- 	{CTRY_UGANDA, FCC3_WORLD, "UG"},
- 	{CTRY_UKRAINE, ETSI9_WORLD, "UA"},
--	{CTRY_UAE, NULL1_WORLD, "AE"},
-+	{CTRY_UAE, ETSI1_WORLD, "AE"},
- 	{CTRY_UNITED_KINGDOM, ETSI1_WORLD, "GB"},
- 	{CTRY_UNITED_STATES, FCC3_FCCA, "US"},
- 	{CTRY_UNITED_STATES2, FCC6_FCCA, "US"},
--- 
-2.11.0
+T24gRnJpLCAyMDE4LTAzLTAyIGF0IDE2OjE5IC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
+IE9uIDAyLzI3LzIwMTggMDk6MDcgUE0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiBG
+cm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPsKgDQo+ID4gYnRjb2V4
+IHVzZXMgZG0ncyBjb3VudGVycyB0byBjaGVjayB0aGUgZW52b3JpbWVudCBpcyBub3NpeSBvciBu
+b3QuIElmIGl0DQo+ID4gaXMgY2xlYW4sIGJ0Y29leCBzZXQgbW9yZSB0aW1lIHNvbHRzIHRvIFdp
+Rmkgc28gdGhhdCBpdCBjYW4gdHJhbnNpbXQgYXMNCj4gPiBzb29uIGFzIHBvc3NpYmxlLiBUaGF0
+IHdpbGwgc2F2ZSB0aW1lLCBhbmQgQlQgd2lsbCBoYXZlIG1vcmUgdGltZSBzb2x0cw0KPiA+IGFm
+dGVyIFdpRmkgdHJhZmZpYyBpcyBjb21wbGV0ZS4NCj4gPsKgDQo+ID4gU2lnbmVkLW9mZi1ieTog
+UGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQo+IA0KPiBUaGUgY29tbWl0IG1lc3Nh
+Z2UgbmVlZHMgdG8gaGF2ZSB0aGUgZm9sbG93aW5nIHR5cG9zIGZpeGVkOg0KPiBlbnZvcmltZW50
+IHNob3VsZCBiZSBlbnZpcm9ubWVudA0KPiBub3NpeSBzaG91bGQgYmUgbm9pc3kNCj4gc29sdHMg
+c2hvdWxkIGJlIHNsb3RzICgyIHBsYWNlcykNCj4gdHJhbnNpbXQgc2hvdWxkIGJlIHRyYW5zbWl0
+DQo+IA0KSSBtdXN0IGJlIHRpcmVkIGF0IHRoYXQgdGltZSA6LSgNCkknbGwgZml4IHRoZW0gaW4g
+djIuDQoNCj4gWWVzLCBJIGtub3cgaXQgaXMgZGlmZmljdWx0IHRvIHdyaXRlIGluIGEgc2Vjb25k
+IGxhbmd1YWdlLg0KPiANCkluZGVlZC4gSSdsbCBrZWVwIHRvIHByYWN0aWNlLg0KDQpQSw0KDQo=
