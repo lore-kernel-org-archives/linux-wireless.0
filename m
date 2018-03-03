@@ -1,55 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50156 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751200AbeCJOPR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:17 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 03/20] test_firmware: replace syfs fallback check with kconfig_has helper
-Date: Sat, 10 Mar 2018 06:14:44 -0800
-Message-Id: <20180310141501.2214-4-mcgrof@kernel.org> (sfid-20180310_152203_237312_C8D054FC)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from merlin.infradead.org ([205.233.59.134]:41124 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965093AbeCCCDe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Mar 2018 21:03:34 -0500
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] net/wireless: fix spaces and grammar copy/paste in vendor
+ Kconfig help text
+Message-ID: <1627081c-ef0c-1d55-ca2e-898f22b98d72@infradead.org> (sfid-20180303_030346_558564_1FB723D9)
+Date: Fri, 2 Mar 2018 18:03:30 -0800
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that we have a kconfig checker just use that instead of relying
-on testing a sysfs directory being present, since our requirements
-are spelled out.
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Acked-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Lots of the wireless driver vendor Kconfig symol help text says
+"questions about  cards." (2 spaces between "about" and "cards")
+
+Besides dropping one of those spaces, it also needs some other word
+inserted there. Instead of putting each vendor's name there, I chose
+to say "these" cards in all of the Kconfig help text.
+
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 ---
- tools/testing/selftests/firmware/fw_fallback.sh | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/wireless/admtek/Kconfig    |    4 ++--
+ drivers/net/wireless/ath/Kconfig       |    4 ++--
+ drivers/net/wireless/atmel/Kconfig     |    4 ++--
+ drivers/net/wireless/broadcom/Kconfig  |    4 ++--
+ drivers/net/wireless/cisco/Kconfig     |    4 ++--
+ drivers/net/wireless/intel/Kconfig     |    4 ++--
+ drivers/net/wireless/intersil/Kconfig  |    4 ++--
+ drivers/net/wireless/marvell/Kconfig   |    4 ++--
+ drivers/net/wireless/mediatek/Kconfig  |    4 ++--
+ drivers/net/wireless/quantenna/Kconfig |    4 ++--
+ drivers/net/wireless/ralink/Kconfig    |    4 ++--
+ drivers/net/wireless/realtek/Kconfig   |    4 ++--
+ drivers/net/wireless/rsi/Kconfig       |    4 ++--
+ drivers/net/wireless/st/Kconfig        |    4 ++--
+ drivers/net/wireless/ti/Kconfig        |    4 ++--
+ drivers/net/wireless/zydas/Kconfig     |    4 ++--
+ 16 files changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/tools/testing/selftests/firmware/fw_fallback.sh b/tools/testing/selftests/firmware/fw_fallback.sh
-index bf850050e5e9..323c921a2469 100755
---- a/tools/testing/selftests/firmware/fw_fallback.sh
-+++ b/tools/testing/selftests/firmware/fw_fallback.sh
-@@ -11,10 +11,7 @@ source $TEST_DIR/fw_lib.sh
+--- linux-next-20180302.orig/drivers/net/wireless/admtek/Kconfig
++++ linux-next-20180302/drivers/net/wireless/admtek/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_ADMTEK
+ 	  If you have a wireless card belonging to this class, say Y.
  
- check_mods
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
  
--# CONFIG_FW_LOADER_USER_HELPER has a sysfs class under /sys/class/firmware/
--# These days no one enables CONFIG_FW_LOADER_USER_HELPER so check for that
--# as an indicator for CONFIG_FW_LOADER_USER_HELPER.
--HAS_FW_LOADER_USER_HELPER=$(if [ -d /sys/class/firmware/ ]; then echo yes; else echo no; fi)
-+HAS_FW_LOADER_USER_HELPER=$(kconfig_has CONFIG_FW_LOADER_USER_HELPER=y)
- HAS_FW_LOADER_USER_HELPER_FALLBACK=$(kconfig_has CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y)
+ if WLAN_VENDOR_ADMTEK
+--- linux-next-20180302.orig/drivers/net/wireless/ath/Kconfig
++++ linux-next-20180302/drivers/net/wireless/ath/Kconfig
+@@ -8,8 +8,8 @@ config WLAN_VENDOR_ATH
+ 	  If you have a wireless card belonging to this class, say Y.
  
- if [ "$HAS_FW_LOADER_USER_HELPER" = "yes" ]; then
--- 
-2.16.2
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ 	  For more information and documentation on this module you can visit:
+--- linux-next-20180302.orig/drivers/net/wireless/atmel/Kconfig
++++ linux-next-20180302/drivers/net/wireless/atmel/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_ATMEL
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_ATMEL
+--- linux-next-20180302.orig/drivers/net/wireless/broadcom/Kconfig
++++ linux-next-20180302/drivers/net/wireless/broadcom/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_BROADCOM
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_BROADCOM
+--- linux-next-20180302.orig/drivers/net/wireless/cisco/Kconfig
++++ linux-next-20180302/drivers/net/wireless/cisco/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_CISCO
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_CISCO
+--- linux-next-20180302.orig/drivers/net/wireless/intel/Kconfig
++++ linux-next-20180302/drivers/net/wireless/intel/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_INTEL
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_INTEL
+--- linux-next-20180302.orig/drivers/net/wireless/intersil/Kconfig
++++ linux-next-20180302/drivers/net/wireless/intersil/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_INTERSIL
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_INTERSIL
+--- linux-next-20180302.orig/drivers/net/wireless/marvell/Kconfig
++++ linux-next-20180302/drivers/net/wireless/marvell/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_MARVELL
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_MARVELL
+--- linux-next-20180302.orig/drivers/net/wireless/mediatek/Kconfig
++++ linux-next-20180302/drivers/net/wireless/mediatek/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_MEDIATEK
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_MEDIATEK
+--- linux-next-20180302.orig/drivers/net/wireless/quantenna/Kconfig
++++ linux-next-20180302/drivers/net/wireless/quantenna/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_QUANTENNA
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_QUANTENNA
+--- linux-next-20180302.orig/drivers/net/wireless/ralink/Kconfig
++++ linux-next-20180302/drivers/net/wireless/ralink/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_RALINK
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_RALINK
+--- linux-next-20180302.orig/drivers/net/wireless/realtek/Kconfig
++++ linux-next-20180302/drivers/net/wireless/realtek/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_REALTEK
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_REALTEK
+--- linux-next-20180302.orig/drivers/net/wireless/rsi/Kconfig
++++ linux-next-20180302/drivers/net/wireless/rsi/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_RSI
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_RSI
+--- linux-next-20180302.orig/drivers/net/wireless/st/Kconfig
++++ linux-next-20180302/drivers/net/wireless/st/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_ST
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_ST
+--- linux-next-20180302.orig/drivers/net/wireless/ti/Kconfig
++++ linux-next-20180302/drivers/net/wireless/ti/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_TI
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_TI
+--- linux-next-20180302.orig/drivers/net/wireless/zydas/Kconfig
++++ linux-next-20180302/drivers/net/wireless/zydas/Kconfig
+@@ -5,8 +5,8 @@ config WLAN_VENDOR_ZYDAS
+ 	  If you have a wireless card belonging to this class, say Y.
+ 
+ 	  Note that the answer to this question doesn't directly affect the
+-	  kernel: saying N will just cause the configurator to skip all
+-	  the questions about  cards. If you say Y, you will be asked for
++	  kernel: saying N will just cause the configurator to skip all the
++	  questions about these cards. If you say Y, you will be asked for
+ 	  your specific card in the following questions.
+ 
+ if WLAN_VENDOR_ZYDAS
