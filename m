@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56856 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751249AbeCISUZ (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:46329 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751427AbeCDR0f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 13:20:25 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 0/3] Fix issues with connect and get_channel implementation
-Date: Fri, 9 Mar 2018 23:45:23 +0530
-Message-ID: <1520619326-14888-1-git-send-email-gbhat@marvell.com> (sfid-20180309_192029_185559_106523F4)
+        Sun, 4 Mar 2018 12:26:35 -0500
+Date: Sun, 4 Mar 2018 18:26:20 +0100 (CET)
+From: Stefan Wahren <stefan.wahren@i2se.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Message-ID: <56656292.178955.1520184380348@email.1und1.de> (sfid-20180304_183027_935622_3114F197)
+Subject: [Regression] brcmfmac: brcmf_cfg80211_reg_notifier: not an ISO3166
+ code
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First change reverts one of our earlier patch, which did change
-the hardware info stored in driver. Second patch improves the
-first(reverted) patch. Third change adds a new command, which
-fixes an issue with get_channel implementation. Three patches
-needed to make sure the driver association are working as
-expected.
+Hi,
 
-Ganapathi Bhat (3):
-  Revert "mwifiex: fix incorrect ht capability problem"
-  mwifiex: fix incorrect ht capability problem
-  mwifiex: get_channel from firmware
+the commit "regulatory: add NUL to request alpha2" in linux-next-20180302 causes a regression with brcmfmac (Platform: Raspberry Pi 3 B). During driver probe i will get this error:
 
- drivers/net/wireless/marvell/mwifiex/11n.c         | 30 ++++++++++++
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 40 ++++++++++------
- drivers/net/wireless/marvell/mwifiex/decl.h        | 17 +++++++
- drivers/net/wireless/marvell/mwifiex/fw.h          |  7 +++
- drivers/net/wireless/marvell/mwifiex/main.h        | 16 ++++++-
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 22 +++++++++
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 19 ++++++++
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   | 56 +++++-----------------
- 8 files changed, 148 insertions(+), 59 deletions(-)
+brcmfmac: brcmf_cfg80211_reg_notifier: not an ISO3166 code (0x44 0x45)
 
--- 
-1.9.1
+But 0x44 0x45 ( = DE ) is a valid ISO3166 code.
+
+The reason for this behavior is that the function checks the complete array, not just the first 2 elements.
+
+IMO at least the functions brcmf_cfg80211_reg_notifier() and brcmf_translate_country_code() should be fixed.
+
+Regards
+Stefan
