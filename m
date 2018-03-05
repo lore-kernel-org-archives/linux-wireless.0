@@ -1,86 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53934 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752175AbeCWLy4 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36655 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752018AbeCEOs4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 07:54:56 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 23 Mar 2018 17:24:55 +0530
-From: govinds@codeaurora.org
+        Mon, 5 Mar 2018 09:48:56 -0500
+Received: by mail-pg0-f65.google.com with SMTP id i14so6904706pgv.3
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2018 06:48:55 -0800 (PST)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: yamada.masahiro@socionext.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN
- module
-In-Reply-To: <87lgf0cn24.fsf@kamboji.qca.qualcomm.com>
-References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
- <87371kqfda.fsf@kamboji.qca.qualcomm.com>
- <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com>
- <87tvttl6kp.fsf@kamboji.qca.qualcomm.com>
- <fb2c04383f024ab8b2c62dd5a4ad20ac@SOC-EX01V.e01.socionext.com>
- <87lgf0cn24.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <eccd10c7db468515fe255b75f102e301@codeaurora.org> (sfid-20180323_125504_233225_BC6F3908)
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 02/10] rsi: move xtend_desc structure from rsi_main.h to rsi_mgmt.h
+Date: Mon,  5 Mar 2018 20:06:52 +0530
+Message-Id: <1520260620-4694-3-git-send-email-amitkarwar@gmail.com> (sfid-20180305_154908_970766_C454DE05)
+In-Reply-To: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-03-10 14:41, Kalle Valo wrote:
-> <yamada.masahiro@socionext.com> writes:
-> 
->>> >> Kbuild bot found an odd problem with this patch:
->>> >>
->>> >>  include/linux/dynamic_debug.h:77:14: error: 'KBUILD_MODNAME'
->>> >>  undeclared (first use in this function); did you mean
->>> 'KBUILD_BASENAME'?
->>> >>
->>> >> Full report:
->>> >>
->>> >>
->>> http://lists.infradead.org/pipermail/ath10k/2018-February/010907.html
->>> >>
->>> >> Any ideas? Is this is some unrelated issue or what? This patch is not
->>> >> even touching hif.h or ce.c.
->>> >
->>> > I didn't encountered this issue as in my defconfig only
->>> > CONFIG_ATH10K_SNOC was defined. This problem is coming when we define
->>> > CONFIG_ATH10K_SNOC and CONFIG_ATH10K_PCI simultaneously in defconfig
->>> > and this is known issue when multiple modules share objects(in this
->>> > case ce.o). I saw similar reported problem and found
->>> > https://patchwork.kernel.org/patch/10060825/.
->>> >
->>> > After picking the below change issue is not seen.
->>> 
->>> Let's ask the kbuild maintainer. Masahiro, any chances of getting 
->>> this
->>> patch applied anytime soon:
->>> 
->>> kbuild: define KBUILD_MODNAME even if multiple modules share objects
->>> 
->>> https://patchwork.kernel.org/patch/10060825/
->>> 
->>> In ath10k we would need it as otherwise we are not able to link ce.o
->>> both to ath10k_pci.ko and ath10k_snoc.ko. What do you think?
->>> 
->>> Full discussion and the ath10k patch here:
->>> 
->>> https://patchwork.kernel.org/patch/10220657/
->>> 
->> 
->> I plan to submit v2, but even if the undefined KBUILD_MODNAME is 
->> fixed,
->> I expect another problem from this patch.
->> 
->> If both CONFIG_ATH10K_PCI and CONFIG_ATH10_SNOC are 'y'
->> two instances of ce.o would be linked into vmliux,
->> then causes multiple definition error.
-> 
-> Oh, I didn't realise this. Thanks for pointing it out. Govind is 
-> looking
-> at other ways to fix this.
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-https://patchwork.kernel.org/patch/10298659/ is raised to address this 
-problem.
+All descriptor structures are in rsi_mgmt.h except this
+extended descriptor structure. Hence moving it to rsi_mgmt.h
+and also renaming to rsi_xtend_desc.
 
-Thanks,
-Govind
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_hal.c | 12 ++++++------
+ drivers/net/wireless/rsi/rsi_main.h    |  6 ------
+ drivers/net/wireless/rsi/rsi_mgmt.h    |  6 ++++++
+ 3 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 20c2f6b..718f793 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -55,7 +55,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	struct rsi_mgmt_desc *mgmt_desc;
+ 	struct skb_info *tx_params;
+ 	struct ieee80211_bss_conf *bss = NULL;
+-	struct xtended_desc *xtend_desc = NULL;
++	struct rsi_xtended_desc *xtend_desc = NULL;
+ 	u8 header_size;
+ 	u32 dword_align_bytes = 0;
+ 
+@@ -69,7 +69,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	vif = tx_params->vif;
+ 
+ 	/* Update header size */
+-	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
++	header_size = FRAME_DESC_SZ + sizeof(struct rsi_xtended_desc);
+ 	if (header_size > skb_headroom(skb)) {
+ 		rsi_dbg(ERR_ZONE,
+ 			"%s: Failed to add extended descriptor\n",
+@@ -92,7 +92,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
+ 
+ 	mgmt_desc = (struct rsi_mgmt_desc *)skb->data;
+-	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
++	xtend_desc = (struct rsi_xtended_desc *)&skb->data[FRAME_DESC_SZ];
+ 
+ 	rsi_set_len_qno(&mgmt_desc->len_qno, (skb->len - FRAME_DESC_SZ),
+ 			RSI_WIFI_MGMT_Q);
+@@ -161,7 +161,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	struct skb_info *tx_params;
+ 	struct ieee80211_bss_conf *bss;
+ 	struct rsi_data_desc *data_desc;
+-	struct xtended_desc *xtend_desc;
++	struct rsi_xtended_desc *xtend_desc;
+ 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
+ 	u8 header_size;
+ 	u8 vap_id = 0;
+@@ -173,7 +173,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	bss = &vif->bss_conf;
+ 	tx_params = (struct skb_info *)info->driver_data;
+ 
+-	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
++	header_size = FRAME_DESC_SZ + sizeof(struct rsi_xtended_desc);
+ 	if (header_size > skb_headroom(skb)) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
+ 		return -ENOSPC;
+@@ -191,7 +191,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	data_desc = (struct rsi_data_desc *)skb->data;
+ 	memset(data_desc, 0, header_size);
+ 
+-	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
++	xtend_desc = (struct rsi_xtended_desc *)&skb->data[FRAME_DESC_SZ];
+ 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
+ 	seq_num = IEEE80211_SEQ_TO_SN(le16_to_cpu(wh->seq_ctrl));
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 3dd08f5..abc4f29 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -212,12 +212,6 @@ struct cqm_info {
+ 	u32 rssi_hyst;
+ };
+ 
+-struct xtended_desc {
+-	u8 confirm_frame_type;
+-	u8 retry_cnt;
+-	u16 reserved;
+-};
+-
+ enum rsi_dfs_regions {
+ 	RSI_REGION_FCC = 0,
+ 	RSI_REGION_ETSI,
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index b7f63c9..2513fb8 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -307,6 +307,12 @@ struct rsi_mac_frame {
+ #define ENCAP_MGMT_PKT			BIT(7)
+ #define DESC_IMMEDIATE_WAKEUP		BIT(15)
+ 
++struct rsi_xtended_desc {
++	u8 confirm_frame_type;
++	u8 retry_cnt;
++	u16 reserved;
++};
++
+ struct rsi_cmd_desc_dword0 {
+ 	__le16 len_qno;
+ 	u8 frame_type;
+-- 
+2.7.4
