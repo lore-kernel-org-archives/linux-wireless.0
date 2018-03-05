@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58170 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752040AbeC2I4i (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:44901 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751462AbeCETbg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:56:38 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 5 Mar 2018 14:31:36 -0500
+Subject: Re: [PATCH 1/2] ath10k: Add WMI FWTEST command support
+To: Peter Oh <peter.oh@bowerswilkins.com>,
+        Anilkumar Kolli <akolli@codeaurora.org>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Sathishkumar Muruganandam <murugana@codeaurora.org>
+References: <1520233148-26050-1-git-send-email-akolli@codeaurora.org>
+ <1520233148-26050-2-git-send-email-akolli@codeaurora.org>
+ <94f133b3-ee5d-6ed8-d7e8-20dff9aaede2@bowerswilkins.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <fd392368-5535-d10e-b1bb-934e45fd9c43@dd-wrt.com> (sfid-20180305_203139_775167_D2464D24)
+Date: Mon, 5 Mar 2018 20:31:33 +0100
 MIME-Version: 1.0
-Subject: Re: wcn36xx: turn off probe response offloading
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180314122937.14119-1-rfried@codeaurora.org>
-References: <20180314122937.14119-1-rfried@codeaurora.org>
-To: Ramon Fried <rfried@codeaurora.org>
-Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, Ramon Fried <rfried@codeaurora.org>
-Message-Id: <20180329085637.9423760C66@smtp.codeaurora.org> (sfid-20180329_105641_439707_CE6C38CF)
-Date: Thu, 29 Mar 2018 08:56:37 +0000 (UTC)
+In-Reply-To: <94f133b3-ee5d-6ed8-d7e8-20dff9aaede2@bowerswilkins.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ramon Fried <rfried@codeaurora.org> wrote:
+Am 05.03.2018 um 19:48 schrieb Peter Oh:
+> From: Sathishkumar Muruganandam <murugana@codeaurora.org>
+>> This patch adds support for WMI_FWTEST_CMD.
+>> This command is used for setting the wifi parameters.
+>
+> It's too lack of information in commit message.
+> You should add such what values are acceptable for which purpose by 
+> each param_id and param_value to make this changes meaningful to 
+> community.
+i agree. i reviewed the firmware sourcecode to find out what its doing, 
+but also within the firmware is almost undocumented. its a bunch of 
+undocumented
+numeric parameters with undocumented behaviour.
+if qca is willig to document this feature it might be included.
 
-> It appears that the WCN36xx firmware doesn't actually respond to
-> probe requests. Until it's resolved, switch the probe response
-> responsibility to the 802.11 layer to allow creation of
-> hidden SSID AP's.
-> 
-> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Sebastian
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-ee35eecb0822 wcn36xx: turn off probe response offloading
 
 -- 
-https://patchwork.kernel.org/patch/10282035/
+Mit freundlichen Grüssen / Regards
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
