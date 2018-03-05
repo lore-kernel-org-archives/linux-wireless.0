@@ -1,156 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50524 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932171AbeCJOP0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:26 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 10/20] firmware: enable run time change of forcing fallback loader
-Date: Sat, 10 Mar 2018 06:14:51 -0800
-Message-Id: <20180310141501.2214-11-mcgrof@kernel.org> (sfid-20180310_151910_662110_595FCDF3)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37018 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751288AbeCEG6u (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Mar 2018 01:58:50 -0500
+From: Anilkumar Kolli <akolli@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Subject: [PATCH 0/2] FWTEST command support in debugfs
+Date: Mon,  5 Mar 2018 12:29:06 +0530
+Message-Id: <1520233148-26050-1-git-send-email-akolli@codeaurora.org> (sfid-20180305_075854_232880_8FE836B3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently one requires to test four kernel configurations to test the
-firmware API completely:
+Add WMI_FWTEST_CMD support.
+This command is used to configure tx parameters
 
-0)
-  CONFIG_FW_LOADER=y
+Sathishkumar Muruganandam (2):
+  ath10k: Add WMI FWTEST command support
+  ath10k: add debugfs support to configure fwtest parameters
 
-1)
-  o CONFIG_FW_LOADER=y
-  o CONFIG_FW_LOADER_USER_HELPER=y
+ drivers/net/wireless/ath/ath10k/core.h    |    2 +
+ drivers/net/wireless/ath/ath10k/debug.c   |   81 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |   17 ++++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |   23 +++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h     |    6 +++
+ 5 files changed, 128 insertions(+), 1 deletion(-)
 
-2)
-  o CONFIG_FW_LOADER=y
-  o CONFIG_FW_LOADER_USER_HELPER=y
-  o CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y
-
-3) When CONFIG_FW_LOADER=m the built-in stuff is disabled, we have
-   no current tests for this.
-
-We can reduce the requirements to three kernel configurations by making
-fw_config.force_sysfs_fallback a proc knob we flip on off. For kernels that
-disable CONFIG_IKCONFIG_PROC this can also enable one to inspect if
-CONFIG_FW_LOADER_USER_HELPER_FALLBACK was enabled at build time by checking
-the proc value at boot time.
-
-Acked-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/fallback.c       |  1 +
- drivers/base/firmware_loader/fallback.h       |  4 +++-
- drivers/base/firmware_loader/fallback_table.c | 17 +++++++++++++++++
- kernel/sysctl.c                               | 11 +++++++++++
- 4 files changed, 32 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 9b65837256d6..45cc40933a47 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -7,6 +7,7 @@
- #include <linux/security.h>
- #include <linux/highmem.h>
- #include <linux/umh.h>
-+#include <linux/sysctl.h>
- 
- #include "fallback.h"
- #include "firmware.h"
-diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
-index 550498c7fa4c..ca7e69a8417b 100644
---- a/drivers/base/firmware_loader/fallback.h
-+++ b/drivers/base/firmware_loader/fallback.h
-@@ -12,12 +12,14 @@
-  *
-  * @force_sysfs_fallback: force the sysfs fallback mechanism to be used
-  * 	as if one had enabled CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y.
-+ * 	Useful to help debug a CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y
-+ * 	functionality on a kernel where that config entry has been disabled.
-  * @old_timeout: for internal use
-  * @loading_timeout: the timeout to wait for the fallback mechanism before
-  * 	giving up, in seconds.
-  */
- struct firmware_fallback_config {
--	const bool force_sysfs_fallback;
-+	unsigned int force_sysfs_fallback;
- 	int old_timeout;
- 	int loading_timeout;
- };
-diff --git a/drivers/base/firmware_loader/fallback_table.c b/drivers/base/firmware_loader/fallback_table.c
-index 981419044c7e..92365e053e30 100644
---- a/drivers/base/firmware_loader/fallback_table.c
-+++ b/drivers/base/firmware_loader/fallback_table.c
-@@ -19,6 +19,9 @@
- /* Module or buit-in */
- #ifdef CONFIG_FW_LOADER_USER_HELPER
- 
-+static unsigned int zero;
-+static unsigned int one = 1;
-+
- struct firmware_fallback_config fw_fallback_config = {
- 	.force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK),
- 	.loading_timeout = 60,
-@@ -26,4 +29,18 @@ struct firmware_fallback_config fw_fallback_config = {
- };
- EXPORT_SYMBOL_GPL(fw_fallback_config);
- 
-+struct ctl_table firmware_config_table[] = {
-+	{
-+		.procname	= "force_sysfs_fallback",
-+		.data		= &fw_fallback_config.force_sysfs_fallback,
-+		.maxlen         = sizeof(unsigned int),
-+		.mode           = 0644,
-+		.proc_handler   = proc_douintvec_minmax,
-+		.extra1		= &zero,
-+		.extra2		= &one,
-+	},
-+	{ }
-+};
-+EXPORT_SYMBOL_GPL(firmware_config_table);
-+
- #endif
-diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 6c68e771e11d..7a8aa6866764 100644
---- a/kernel/sysctl.c
-+++ b/kernel/sysctl.c
-@@ -253,6 +253,10 @@ extern struct ctl_table random_table[];
- extern struct ctl_table epoll_table[];
- #endif
- 
-+#ifdef CONFIG_FW_LOADER_USER_HELPER
-+extern struct ctl_table firmware_config_table[];
-+#endif
-+
- #ifdef HAVE_ARCH_PICK_MMAP_LAYOUT
- int sysctl_legacy_va_layout;
- #endif
-@@ -748,6 +752,13 @@ static struct ctl_table kern_table[] = {
- 		.mode		= 0555,
- 		.child		= usermodehelper_table,
- 	},
-+#ifdef CONFIG_FW_LOADER_USER_HELPER
-+	{
-+		.procname	= "firmware_config",
-+		.mode		= 0555,
-+		.child		= firmware_config_table,
-+	},
-+#endif
- 	{
- 		.procname	= "overflowuid",
- 		.data		= &overflowuid,
 -- 
-2.16.2
+1.7.9.5
