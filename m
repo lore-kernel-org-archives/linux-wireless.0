@@ -1,71 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40966 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750707AbeC2Igk (ORCPT
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:35207 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932106AbeCEXLw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:36:40 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, janet.morgan@intel.com, joe.konno@intel.com
-Subject: Re: pull-request: iwlwifi-next 2018-03-28
-References: <1522267371.3786.294.camel@coelho.fi>
-Date: Thu, 29 Mar 2018 11:36:35 +0300
-In-Reply-To: <1522267371.3786.294.camel@coelho.fi> (Luca Coelho's message of
-        "Wed, 28 Mar 2018 23:02:51 +0300")
-Message-ID: <87fu4jl1m4.fsf@kamboji.qca.qualcomm.com> (sfid-20180329_103643_208556_FA8A1581)
+        Mon, 5 Mar 2018 18:11:52 -0500
+Received: by mail-pl0-f66.google.com with SMTP id bb3-v6so10692861plb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2018 15:11:52 -0800 (PST)
+Date: Mon, 5 Mar 2018 15:11:49 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Carl Huang <cjhuang@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v2] ath10k: fix use-after-free in
+ ath10k_wmi_cmd_send_nowait
+Message-ID: <20180305231147.GA144261@rodete-desktop-imager.corp.google.com> (sfid-20180306_001207_064258_CEC5444F)
+References: <1520232242-24132-1-git-send-email-cjhuang@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1520232242-24132-1-git-send-email-cjhuang@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
++ Felix, who had feedback on the last version
 
-> This is a batch of patches intended for v4.17.  Nothing major here,
-> just the usual continued development, bugfixes, new FW APIs and some
-> minor features.  More details about the contents in the tag
-> description.
->
-> The commit messages you commented on have been fixed, as you can see in
-> v2 of those patches that I sent to the list.
->
-> I have sent this out before and kbuildbot reported success.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 6b7d5c0745905b71127d0c1ae6eeddc09bbdaad8:
->
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git (2018-03-28 11:57:34 +0300)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2018-03-28
->
-> for you to fetch changes up to 378c8931342f99c5a6fce21e38ef46ac39395464:
->
->   iwlwifi: wrt: add fw force restart via triggers (2018-03-28 22:43:40 +0300)
->
-> ----------------------------------------------------------------
-> iwlwifi patches for 4.14
->
-> * Fix a UBSAN warning;
-> * Improvement in the net-stack/driver log syncing
-> * An RCU lock fix in the new rate-scaling code;
-> * Support for new PCI IDs for the 9000 family;
-> * Support for a new API version;
-> * Initial work for supporting the new ETSI rules;
-> * Support for advanced dwell in scanning;
-> * Support for OCE in scanning;
-> * Some debugging improvements;
-> * Other small improvements and cleanups here and there.
->
-> ----------------------------------------------------------------
+On Mon, Mar 05, 2018 at 02:44:02PM +0800, Carl Huang wrote:
+> The skb may be freed in tx completion context before
+> trace_ath10k_wmi_cmd is called. This can be easily captured when
+> KASAN(Kernel Address Sanitizer) is enabled. The fix is to move
+> trace_ath10k_wmi_cmd before the send operation. As the ret has no
+> meaning in trace_ath10k_wmi_cmd then, so remove this parameter too.
+> 
+> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/trace.h | 12 ++++--------
+>  drivers/net/wireless/ath/ath10k/wmi.c   |  2 +-
+>  2 files changed, 5 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
+> index e40edce..7d2fac3 100644
+> --- a/drivers/net/wireless/ath/ath10k/trace.h
+> +++ b/drivers/net/wireless/ath/ath10k/trace.h
+> @@ -152,10 +152,9 @@ TRACE_EVENT(ath10k_log_dbg_dump,
+>  );
+>  
+>  TRACE_EVENT(ath10k_wmi_cmd,
+> -	TP_PROTO(struct ath10k *ar, int id, const void *buf, size_t buf_len,
+> -		 int ret),
+> +	TP_PROTO(struct ath10k *ar, int id, const void *buf, size_t buf_len),
+>  
+> -	TP_ARGS(ar, id, buf, buf_len, ret),
+> +	TP_ARGS(ar, id, buf, buf_len),
+>  
+>  	TP_STRUCT__entry(
+>  		__string(device, dev_name(ar->dev))
+> @@ -163,7 +162,6 @@ TRACE_EVENT(ath10k_wmi_cmd,
+>  		__field(unsigned int, id)
+>  		__field(size_t, buf_len)
+>  		__dynamic_array(u8, buf, buf_len)
+> -		__field(int, ret)
+>  	),
+>  
+>  	TP_fast_assign(
+> @@ -171,17 +169,15 @@ TRACE_EVENT(ath10k_wmi_cmd,
+>  		__assign_str(driver, dev_driver_string(ar->dev));
+>  		__entry->id = id;
+>  		__entry->buf_len = buf_len;
+> -		__entry->ret = ret;
+>  		memcpy(__get_dynamic_array(buf), buf, buf_len);
+>  	),
+>  
+>  	TP_printk(
+> -		"%s %s id %d len %zu ret %d",
+> +		"%s %s id %d len %zu",
+>  		__get_str(driver),
+>  		__get_str(device),
+>  		__entry->id,
+> -		__entry->buf_len,
+> -		__entry->ret
+> +		__entry->buf_len
+>  	)
+>  );
+>  
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index 58dc218..fc9f50d 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -1742,8 +1742,8 @@ int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
+>  	cmd_hdr->cmd_id = __cpu_to_le32(cmd);
+>  
+>  	memset(skb_cb, 0, sizeof(*skb_cb));
+> +	trace_ath10k_wmi_cmd(ar, cmd_id, skb->data, skb->len);
+>  	ret = ath10k_htc_send(&ar->htc, ar->wmi.eid, skb);
+> -	trace_ath10k_wmi_cmd(ar, cmd_id, skb->data, skb->len, ret);
+>  
+>  	if (ret)
+>  		goto err_pull;
 
-Pulled, thanks.
-
--- 
-Kalle Valo
+Tested-by: Brian Norris <briannorris@chromium.org>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
