@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:60782 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751405AbeCUHxK (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:38497 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752894AbeCFB0M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 03:53:10 -0400
-Message-ID: <1521618788.2645.5.camel@sipsolutions.net> (sfid-20180321_085313_185321_6EA21ABC)
-Subject: Re: [RFC] mac80211: advertise supported interface types for sw
- encryption
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mpubbise@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 21 Mar 2018 08:53:08 +0100
-In-Reply-To: <1520576822-1954-1-git-send-email-mpubbise@codeaurora.org>
-References: <1520576822-1954-1-git-send-email-mpubbise@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 5 Mar 2018 20:26:12 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 08/15] rtlwifi: btcoex: Add pre- and post- normal LPS function
+Date: Tue, 6 Mar 2018 09:25:47 +0800
+Message-ID: <20180306012554.3108-9-pkshih@realtek.com> (sfid-20180306_022633_791704_55BE5F39)
+In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
+References: <20180306012554.3108-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-03-09 at 11:57 +0530, mpubbise@codeaurora.org wrote:
-> From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-> 
-> Extending SW_CRYPTO_CONTROL interface so that drivers can advertise
-> the interface types on which they can support software encryption.
-> Driver's job is not done by advertising the supported vif types alone,
-> they should also return -EOPNOTSUPP from set_key.
-> 
-> Mac80211 will make the fallback decision to sw ecryption based
-> on the return type of set_key callback and the driver's support for
-> software encryption.
-> 
-> This change is done with the sole reason of adding the support of
-> VLANs for drivers which enable SW_CRYPTO_CONTROL(ex:ath10k).
-> 
-> With the current logic, configuring GTKs for specific VLAN groups will
-> always fail with the drivers enabling SW_CRYPTO_CONTROL. I understand
-> that the driver can return 1 from set_key to enable software encryption
-> in mac80211, but GTKs for VLANs are never passed down to the driver.
-> Since the return value is initialized to -EOPNOTSUPP, with this approach,
-> we get away with the failure.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Is there much value in having this control to start with, rather than
-saying it's *always* allowed for AP_VLAN interfaces?
+Normal LPS is decomposed into pre- and post- parts, so we can issue H2C
+with TDMA parameters in the "critical section" that dirver can't change
+LPS state at the moment.
 
-I mean - if the driver wants to support (encryption on) AP_VLAN
-interfaces with SW_CRYPTO_CONTROL it basically has to set this to allow
-it, which is kinda pointless - it's hard to imagine a driver that wants
-to support AP_VLAN only for unencrypted, so if it doesn't support this
-it might as well just disable AP_VLAN support entirely.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 22 ++++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  2 ++
+ 2 files changed, 24 insertions(+)
 
-So IMHO - just get rid of the bitmap and hard-code AP_VLAN.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index bfb32d476a70..0f664a0490a7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -363,6 +363,22 @@ static void halbtc_normal_lps(struct btc_coexist *btcoexist)
+ 	}
+ }
+ 
++static void halbtc_pre_normal_lps(struct btc_coexist *btcoexist)
++{
++	struct rtl_priv *rtlpriv = btcoexist->adapter;
++
++	if (btcoexist->bt_info.bt_ctrl_lps) {
++		btcoexist->bt_info.bt_lps_on = false;
++		rtl_lps_leave(rtlpriv->mac80211.hw);
++	}
++}
++
++static void halbtc_post_normal_lps(struct btc_coexist *btcoexist)
++{
++	if (btcoexist->bt_info.bt_ctrl_lps)
++		btcoexist->bt_info.bt_ctrl_lps = false;
++}
++
+ static void halbtc_leave_low_power(struct btc_coexist *btcoexist)
+ {
+ }
+@@ -806,6 +822,12 @@ static bool halbtc_set(void *void_btcoexist, u8 set_type, void *in_buf)
+ 	case BTC_SET_ACT_NORMAL_LPS:
+ 		halbtc_normal_lps(btcoexist);
+ 		break;
++	case BTC_SET_ACT_PRE_NORMAL_LPS:
++		halbtc_pre_normal_lps(btcoexist);
++		break;
++	case BTC_SET_ACT_POST_NORMAL_LPS:
++		halbtc_post_normal_lps(btcoexist);
++		break;
+ 	case BTC_SET_ACT_DISABLE_LOW_POWER:
+ 		halbtc_disable_low_power(btcoexist, *bool_tmp);
+ 		break;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 1f12449363c2..ad80ec05975e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -349,6 +349,8 @@ enum btc_set_type {
+ 	BTC_SET_ACT_LEAVE_LPS,
+ 	BTC_SET_ACT_ENTER_LPS,
+ 	BTC_SET_ACT_NORMAL_LPS,
++	BTC_SET_ACT_PRE_NORMAL_LPS,
++	BTC_SET_ACT_POST_NORMAL_LPS,
+ 	BTC_SET_ACT_INC_FORCE_EXEC_PWR_CMD_CNT,
+ 	BTC_SET_ACT_DISABLE_LOW_POWER,
+ 	BTC_SET_ACT_UPDATE_RAMASK,
+-- 
+2.15.1
