@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:27940 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752368AbeCUOEd (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:38503 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752162AbeCFB0Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 10:04:33 -0400
-Subject: Re: [PATCH 00/11] staging: wilc1000: fix for checkpatch and handled
- malloc memory properly
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <venkateswara.kaja@microchip.com>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
-        <aditya.shankar@microchip.com>
-References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
- <20180321075116.bm6x3c53bahw3c2i@mwanda>
- <20180321145021.044f4536@ajaysk-VirtualBox>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <53a25901-754c-bfe9-169e-d2ed4cb34583@microchip.com> (sfid-20180321_150446_045488_C2EDB9B4)
-Date: Wed, 21 Mar 2018 16:04:28 +0200
+        Mon, 5 Mar 2018 20:26:16 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 14/15] rtlwifi: btcoex: Add 8822b to Makefile
+Date: Tue, 6 Mar 2018 09:25:53 +0800
+Message-ID: <20180306012554.3108-15-pkshih@realtek.com> (sfid-20180306_022619_518172_FB9E404D)
+In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
+References: <20180306012554.3108-1-pkshih@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <20180321145021.044f4536@ajaysk-VirtualBox>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch 6 may be reworked a bit. Other than this:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Add btcoex of 8822b to Makefile.
 
-On 21.03.2018 11:20, Ajay Singh wrote:
-> Hi Dan,
-> 
-> On Wed, 21 Mar 2018 10:51:16 +0300
-> Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> 
->> These look good.  I've reviewed them all.
->>
->> Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> Thanks for reviewing all the patches.
-> 
->>
->> I had some small process complaints but it doesn't make life easier for
->> me if you resend them and I have to review everything twice.... :P
->>
-> 
-> In future patches, I will take care as per your suggestions. Instead of
-> resubmitting this patch series, I will include the additional changes
-> required for [PATCH 01/11] in separate patch series.
-> 
-> 
-> Regards,
-> Ajay
-> 
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
+index d15c58737388..37108c379bd0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
+@@ -4,6 +4,9 @@ btcoexist-objs :=	halbtc8192e2ant.o	\
+ 			halbtc8723b2ant.o	\
+ 			halbtc8821a1ant.o	\
+ 			halbtc8821a2ant.o	\
++			halbtc8822b1ant.o	\
++			halbtc8822b2ant.o	\
++			halbtc8822bwifionly.o	\
+ 			halbtcoutsrc.o		\
+ 			rtl_btc.o
+ 
+-- 
+2.15.1
