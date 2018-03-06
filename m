@@ -1,57 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:37284 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752066AbeCWJro (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:38501 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752932AbeCFB0N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 05:47:44 -0400
-Date: Fri, 23 Mar 2018 10:47:40 +0100
-From: Juri Lelli <juri.lelli@gmail.com>
-To: b43-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [QUESTION] Mainline support for B43_PHY_AC wifi cards
-Message-ID: <20180323094740.GA5942@localhost.localdomain> (sfid-20180323_104803_638724_A6E67129)
+        Mon, 5 Mar 2018 20:26:13 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 11/15] rtlwifi: btcoex: Add new but dummy definitions introduced by 8822b
+Date: Tue, 6 Mar 2018 09:25:50 +0800
+Message-ID: <20180306012554.3108-12-pkshih@realtek.com> (sfid-20180306_022618_832521_609B299B)
+In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
+References: <20180306012554.3108-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-I've got a Dell XPS 13 9343/0TM99H (BIOS A15 01/23/2018) mounting a
-BCM4352 802.11ac (rev 03) wireless card and so far I've been using it on
-Fedora with broadcom-wl package (which I believe installs Broadcom's STA
-driver?). It works good apart from occasional hiccups after suspend.
+btcoex support multiple platforms, but this drivers doesn't support full
+functions yet, so this commit adds dummy definitions.
 
-I'd like to get rid of that dependency (you can understand that it's
-particularly annoying when testing mainline kernels), but I found out
-that support for my card is BROKEN in mainline [1]. Just to see what
-happens, I forcibly enabled it witnessing that it indeed crashes like
-below as Kconfig warns. :)
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 9 +++++++++
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 3 +++
+ 2 files changed, 12 insertions(+)
 
- bcma: bus0: Found chip with id 0x4352, rev 0x03 and package 0x00
- bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2B, class 0x0)
- bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2A, class 0x0)
- bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x02, class 0x0)
- bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x01, class 0x0)
- bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev 0x11, class 0x0)
- bcma: Unsupported SPROM revision: 11
- bcma: bus0: Invalid SPROM read from the PCIe card, trying to use fallback SPROM
- bcma: bus0: Using fallback SPROM failed (err -2)
- bcma: bus0: No SPROM available
- bcma: bus0: Bus registered
- b43-phy0: Broadcom 4352 WLAN found (core revision 42)
- b43-phy0: Found PHY: Analog 12, Type 11 (AC), Revision 1
- b43-phy0: Found Radio: Manuf 0x17F, ID 0x2069, Revision 4, Version 0
- BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
-
-So, question: is replacing my card the only way I can get rid of this
-downstream dependency? :(
-
-Thanks a lot.
-
-Best,
-
-- Juri
-
-[1] https://elixir.bootlin.com/linux/v4.16-rc6/source/drivers/net/wireless/broadcom/b43/Kconfig#L151
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 05300b466d34..8b6b07a936f5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -656,6 +656,9 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 	case BTC_GET_BL_IS_ASUS_8723B:
+ 		*bool_tmp = false;
+ 		break;
++	case BTC_GET_BL_RF4CE_CONNECTED:
++		*bool_tmp = false;
++		break;
+ 	case BTC_GET_S4_WIFI_RSSI:
+ 		*s32_tmp = halbtc_get_wifi_rssi(rtlpriv);
+ 		break;
+@@ -1141,6 +1144,11 @@ static void halbtc_display_dbg_msg(void *bt_context, u8 disp_type,
+ 	}
+ }
+ 
++static u32 halbtc_get_bt_reg(void *btc_context, u8 reg_type, u32 offset)
++{
++	return 0;
++}
++
+ static bool halbtc_under_ips(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+@@ -1291,6 +1299,7 @@ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv)
+ 	btcoexist->btc_get = halbtc_get;
+ 	btcoexist->btc_set = halbtc_set;
+ 	btcoexist->btc_set_bt_reg = halbtc_set_bt_reg;
++	btcoexist->btc_get_bt_reg = halbtc_get_bt_reg;
+ 
+ 	btcoexist->bt_info.bt_ctrl_buf_size = false;
+ 	btcoexist->bt_info.agg_buf_size = 5;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 049e92a8afbe..9eae87d19120 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -338,6 +338,7 @@ enum btc_set_type {
+ 	BTC_SET_ACT_GET_BT_RSSI,
+ 	BTC_SET_ACT_AGGREGATE_CTRL,
+ 	BTC_SET_ACT_ANTPOSREGRISTRY_CTRL,
++	BTC_SET_MIMO_PS_MODE,
+ 
+ 	/********* for 1Ant **********/
+ 	/* type bool */
+@@ -356,6 +357,7 @@ enum btc_set_type {
+ 	BTC_SET_ACT_POST_NORMAL_LPS,
+ 	BTC_SET_ACT_INC_FORCE_EXEC_PWR_CMD_CNT,
+ 	BTC_SET_ACT_DISABLE_LOW_POWER,
++	BTC_SET_BL_BT_LNA_CONSTRAIN_LEVEL,
+ 	BTC_SET_ACT_UPDATE_RAMASK,
+ 	BTC_SET_ACT_SEND_MIMO_PS,
+ 	/* BT Coex related */
+@@ -738,6 +740,7 @@ struct btc_coexist {
+ 
+ 	void (*btc_set_bt_reg)(void *btc_context, u8 reg_type, u32 offset,
+ 			       u32 value);
++	u32 (*btc_get_bt_reg)(void *btc_context, u8 reg_type, u32 offset);
+ 	u32 (*btc_get_bt_coex_supported_feature)(void *btcoexist);
+ 	u32 (*btc_get_bt_coex_supported_version)(void *btcoexist);
+ 	u32 (*btc_get_bt_phydm_version)(void *btcoexist);
+-- 
+2.15.1
