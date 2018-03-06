@@ -1,48 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:29393 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750923AbeCZIkr (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:38498 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752900AbeCFB0M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 04:40:47 -0400
-Subject: Re: [PATCH 0/9] staging: wilc1000: fix memory leaks and checkpatch
- reported issues
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <873a109f-d738-b59a-85af-1d11e9a86f3a@microchip.com> (sfid-20180326_104051_329068_CAC3F929)
-Date: Mon, 26 Mar 2018 11:40:43 +0300
+        Mon, 5 Mar 2018 20:26:12 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 07/15] rtlwifi: btcoex: Add interaction with phydm
+Date: Tue, 6 Mar 2018 09:25:46 +0800
+Message-ID: <20180306012554.3108-8-pkshih@realtek.com> (sfid-20180306_022631_165435_6015387D)
+In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
+References: <20180306012554.3108-1-pkshih@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-On 23.03.2018 17:08, Ajay Singh wrote:
-> This patch series contains changes to fix memory leaks, avoid NULL pointer
-> exceptions and checkpatch reported issue fixes.
-> 
-> Ajay Singh (9):
->   staging: wilc1000: remove unused global variables related to p2p
->   staging: wilc1000: avoid 'NULL' pointer access in
->     wilc_network_info_received()
->   staging: wilc1000: free allocated memory in edit and add station
->     functions
->   staging: wilc1000: free memory allocated in add wep key functions
->   staging: wilc1000: free allocated memory after processing
->     wilc_send_config_pkt()
->   staging: wilc1000: fix to free allocated memory in wilc_add_ptk()
->   staging: wilc1000: free allocated memory in wilc_add_rx_gtk()
->   staging: wilc1000: split handle_rcvd_gnrl_async_info() to avoid
->     leading tabs
->   staging: wilc1000: free memory allocated for general info message from
->     firmware
-> 
->  drivers/staging/wilc1000/host_interface.c | 421 +++++++++++++++---------------
->  1 file changed, 204 insertions(+), 217 deletions(-)
-> 
+Get phydm's counter and version from the module phydm that is not
+submitted so we implement dummy functions.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 38 ++++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  6 ++++
+ 2 files changed, 44 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 1a24aed34094..bfb32d476a70 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -680,6 +680,21 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
+ 	case BTC_GET_U4_BT_FORBIDDEN_SLOT_VAL:
+ 		*u32_tmp = halbtc_get_bt_forbidden_slot_val(btcoexist);
+ 		break;
++	case BTC_GET_U4_WIFI_IQK_TOTAL:
++		*u32_tmp =
++			btcoexist->btc_phydm_query_phy_counter(btcoexist,
++							       DM_INFO_IQK_ALL);
++		break;
++	case BTC_GET_U4_WIFI_IQK_OK:
++		*u32_tmp =
++			btcoexist->btc_phydm_query_phy_counter(btcoexist,
++							       DM_INFO_IQK_OK);
++		break;
++	case BTC_GET_U4_WIFI_IQK_FAIL:
++		*u32_tmp =
++			btcoexist->btc_phydm_query_phy_counter(btcoexist,
++							       DM_INFO_IQK_NG);
++		break;
+ 	case BTC_GET_U1_WIFI_DOT11_CHNL:
+ 		*u8_tmp = rtlphy->current_channel;
+ 		break;
+@@ -1122,6 +1137,25 @@ static bool halbtc_under_ips(struct btc_coexist *btcoexist)
+ 	return false;
+ }
+ 
++static
++u32 halbtc_get_phydm_version(void *btc_context)
++{
++	return 0;
++}
++
++static
++void halbtc_phydm_modify_ra_pcr_threshold(void *btc_context,
++					  u8 ra_offset_direction,
++					  u8 ra_threshold_offset)
++{
++}
++
++static
++u32 halbtc_phydm_query_phy_counter(void *btc_context, enum dm_info_query dm_id)
++{
++	return 0;
++}
++
+ static u8 halbtc_get_ant_det_val_from_bt(void *btc_context)
+ {
+ 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
+@@ -1245,6 +1279,10 @@ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv)
+ 					halbtc_get_bt_coex_supported_feature;
+ 	btcoexist->btc_get_bt_coex_supported_version =
+ 					halbtc_get_bt_coex_supported_version;
++	btcoexist->btc_get_bt_phydm_version = halbtc_get_phydm_version;
++	btcoexist->btc_phydm_modify_ra_pcr_threshold =
++					halbtc_phydm_modify_ra_pcr_threshold;
++	btcoexist->btc_phydm_query_phy_counter = halbtc_phydm_query_phy_counter;
+ 	btcoexist->btc_get_ant_det_val_from_bt = halbtc_get_ant_det_val_from_bt;
+ 	btcoexist->btc_get_ble_scan_type_from_bt =
+ 					halbtc_get_ble_scan_type_from_bt;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index bc2388f3f953..1f12449363c2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -730,6 +730,12 @@ struct btc_coexist {
+ 			       u32 value);
+ 	u32 (*btc_get_bt_coex_supported_feature)(void *btcoexist);
+ 	u32 (*btc_get_bt_coex_supported_version)(void *btcoexist);
++	u32 (*btc_get_bt_phydm_version)(void *btcoexist);
++	void (*btc_phydm_modify_ra_pcr_threshold)(void *btcoexist,
++						  u8 ra_offset_direction,
++						  u8 ra_threshold_offset);
++	u32 (*btc_phydm_query_phy_counter)(void *btcoexist,
++					   enum dm_info_query dm_id);
+ 	u8 (*btc_get_ant_det_val_from_bt)(void *btcoexist);
+ 	u8 (*btc_get_ble_scan_type_from_bt)(void *btcoexist);
+ 	u32 (*btc_get_ble_scan_para_from_bt)(void *btcoexist, u8 scan_type);
+-- 
+2.15.1
