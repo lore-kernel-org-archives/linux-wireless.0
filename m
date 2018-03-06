@@ -1,86 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52726 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752730AbeC0Nrz (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:38490 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752654AbeCFB0L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 09:47:55 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 2/3] mac80211: Use proper smps_mode enum in sta opmode event
-Date: Tue, 27 Mar 2018 19:16:16 +0530
-Message-Id: <1522158377-3566-3-git-send-email-tamizhr@codeaurora.org> (sfid-20180327_154808_403728_5F6F3589)
-In-Reply-To: <1522158377-3566-1-git-send-email-tamizhr@codeaurora.org>
-References: <1522158377-3566-1-git-send-email-tamizhr@codeaurora.org>
+        Mon, 5 Mar 2018 20:26:11 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 00/15] rtlwifi: Add 8822b 1ant/2ant btcoex files
+Date: Tue, 6 Mar 2018 09:25:39 +0800
+Message-ID: <20180306012554.3108-1-pkshih@realtek.com> (sfid-20180306_022639_013343_896A42B9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SMPS_MODE change value notified via nl80211 contains mac80211
-specific value(ieee80211_smps_mode) and user space application
-will not know those values. This patch add support to map
-the mac80211 enum value to nl80211_smps_mode which will be
-understood by the userspace application.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- net/mac80211/ht.c          | 15 +++++++++++++++
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/rx.c          |  3 ++-
- 3 files changed, 19 insertions(+), 1 deletion(-)
+This patchset mainly contains 8822b 1ant/2ant btcoex files and related
+materials, and patch 1/15 and 2/15 fix the issues reported by static checker.
+After this patchset, I will start to submit the new component halmac that
+contains many new files, so the patch will be little big.
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index d752353..c78036a 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -466,6 +466,21 @@ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
- 		__ieee80211_stop_tx_ba_session(sta, tid, AGG_STOP_PEER_REQUEST);
- }
- 
-+enum nl80211_smps_mode
-+ieee80211_smps_mode_to_smps_mode(enum ieee80211_smps_mode smps)
-+{
-+	switch (smps) {
-+	case IEEE80211_SMPS_OFF:
-+		return NL80211_SMPS_OFF;
-+	case IEEE80211_SMPS_STATIC:
-+		return NL80211_SMPS_STATIC;
-+	case IEEE80211_SMPS_DYNAMIC:
-+		return NL80211_SMPS_DYNAMIC;
-+	default:
-+		return NL80211_SMPS_OFF;
-+	}
-+}
-+
- int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
- 			       enum ieee80211_smps_mode smps, const u8 *da,
- 			       const u8 *bssid)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ae9c33c..9237ffb 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1788,6 +1788,8 @@ void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
- void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid);
- 
- u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs);
-+enum nl80211_smps_mode
-+ieee80211_smps_mode_to_smps_mode(enum ieee80211_smps_mode smps);
- 
- /* VHT */
- void
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 27bb1f0..f8c69ac 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2883,7 +2883,8 @@ static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
- 			if (rx->sta->sta.smps_mode == smps_mode)
- 				goto handled;
- 			rx->sta->sta.smps_mode = smps_mode;
--			sta_opmode.smps_mode = smps_mode;
-+			sta_opmode.smps_mode =
-+				ieee80211_smps_mode_to_smps_mode(smps_mode);
- 			sta_opmode.changed = STA_OPMODE_SMPS_MODE_CHANGED;
- 
- 			sband = rx->local->hw.wiphy->bands[status->band];
+v2: Don't change content of patch, but only comment log.
+    - fix typo in patch 3/15.
+    - Add Acked-by to patches 1/15, 2/15, 4/15
+
+Ping-Ke Shih (15):
+  rtlwifi: Add modifier static to functions reported by sparse
+  rtlwifi: remove redundant statement found by static checker
+  rtlwifi: btcoex: Add enum DM_INFO for btcoex to query dm's counters
+  rtlwifi: btcoex: Add customer_id to do special deal to oem vendor
+  rtlwifi: btcoex: Get status of multichannel concurrence
+  rtlwifi: btcoex: Add rate table for the use of btcoex
+  rtlwifi: btcoex: Add interaction with phydm
+  rtlwifi: btcoex: Add pre- and post- normal LPS function
+  rtlwifi: btcoex: add assoc type v2 to connection notify
+  rtlwifi: btcoex: new definitions introduced by 8822be
+  rtlwifi: btcoex: Add new but dummy definitions introduced by 8822b
+  rtlwifi: btcoex: Add 8822b 1ant/2ant coex files
+  rtlwifi: btcoex: Add 8822b header files to precomp.h
+  rtlwifi: btcoex: Add 8822b to Makefile
+  rtlwifi: btcoex: Add 8822b routine to btc interfaces
+
+ drivers/net/wireless/realtek/rtlwifi/base.c        |    1 -
+ .../wireless/realtek/rtlwifi/btcoexist/Makefile    |    3 +
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |    3 +
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |    1 +
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |    6 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |   33 -
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |    4 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.c    | 5327 +++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.h    |  413 ++
+ .../realtek/rtlwifi/btcoexist/halbtc8822b2ant.c    | 5370 ++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8822b2ant.h    |  434 ++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |  186 +-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  122 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |   33 +
+ 14 files changed, 11894 insertions(+), 42 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.h
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.c
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.h
+
 -- 
-1.9.1
+2.15.1
