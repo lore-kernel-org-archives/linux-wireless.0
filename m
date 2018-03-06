@@ -1,155 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:54920 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751983AbeCNIoB (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:38491 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752543AbeCFB0L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 04:44:01 -0400
-Received: by mail-wm0-f45.google.com with SMTP id h76so2386323wme.4
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2018 01:44:00 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: Add support for getting nvram contents from EFI
- variables
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <20180311214751.12769-1-hdegoede@redhat.com>
- <5AA6409E.6050300@broadcom.com>
- <e98afbfb-35d0-8ae7-1377-d5e31a76dc4c@redhat.com>
- <5AA8324C.4030505@broadcom.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <999c82a3-f886-acdd-32d1-205c1503ceb2@redhat.com> (sfid-20180314_094406_169039_5829990B)
-Date: Wed, 14 Mar 2018 09:43:58 +0100
+        Mon, 5 Mar 2018 20:26:11 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 01/15] rtlwifi: Add modifier static to functions reported by sparse
+Date: Tue, 6 Mar 2018 09:25:40 +0800
+Message-ID: <20180306012554.3108-2-pkshih@realtek.com> (sfid-20180306_022639_587250_9A840906)
+In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
+References: <20180306012554.3108-1-pkshih@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <5AA8324C.4030505@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-On 13-03-18 21:19, Arend van Spriel wrote:
-> On 3/12/2018 10:45 AM, Hans de Goede wrote:
+sparse reports some functions were not declared, so add 'static' as
+modifier. Remove an unused function btc8821a1ant_is_wifi_status_changed()
+exposed due to 'static'.
 
-<snip>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |  1 +
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  6 ++--
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 33 ----------------------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |  4 +--
+ 4 files changed, 6 insertions(+), 38 deletions(-)
 
->>> Actually had a Sony device with nvram in EFI. Why not just drop this
->>> optimization.
->>
->> Ok, do you know if that variable had the same name and guid though ?
->> Because
->> if it doesn't then this code is not going to work for the Sony case.
-> 
-> If I am not mistaken the name and guid are defined by Broadcom/Microsoft.
-> 
->> Anyways the overhead is small and this only runs once, so I will drop the
->> check for v2.
-> 
-> Due to XV issue we may want to keep the check for now.
-
-If we're going to do ccode=ALL replacement based on a dmi-model
-table then there is no need to keep the check just for the XV stuff.
-
-<snip>
-
->>> Also simply selecting XV instead is not correct. There is not just one
->>> worldwide domain in the regulatory database of the firmware image.
->>
->> Right, I've read elsewhere that "X2" is the right magic value to use and
->> I've tested that on some other devices and that does seem to work.
->>
->> I've also seen "XY" but the other Asus devices all use "XV" and that
->> works (makes channel 13 work) so it seemed like a good value.
->>
->> Can you help me understand this problem a bit better? Is the problem with
->> "XV" that it may not work with all firmware versions, so on some firmware
->> versions it will be as bad as using ALL which the firmware also does not
->> understand? Or do all firmwares understand XV / XY / X2 but are there
->> subtle differences?
-> 
-> The firmware has a per-device recipe of what should be in the regulatory database and per release branch it can differ. So for the same device customer A could get XV and XY in the firmware regdb and customer B could get XY and X2.
-
-Hmm, so whether XV, XY and/or X2 works depends on the firmware used,
-not on the model of the laptop? That means that:
-
->> So how do you suggest we deal with this?
->>
->> One solution I see is:
->>
->> 1) check for ccode=ALL
->> 2) if found use DMI strings to match the specific model and set a different
->> ccode based on the model (so for now use XV for the T200TA only)
->> 3) if found and the model is not known, warn about this and do nothing
->>
->> Would that work for you ?
-> 
-> I think so.
-
-This is no good, because the model of the laptop and which firmware build
-gets used are not really coupled. I think instead it would make more sense
-to assume the firmware builds from linux-firmware and have a table of
-which ccode=ALL override to use based on wifi-chip model, so in the
-case of the T200TA, map brcmfmac43340-sdio to a ccode=XV override
-(if ccode=ALL is present).
-
-So basically what I'm suggesting is:
-
-static const char * const ccode_all_map[][2] = {
-        { "brcm/brcmfmac43241b4-sdio.txt", "XV\n" }, /* Tested on Asus T100TA, T100CHI */
-        { "brcm/brcmfmac43340-sdio.txt", "XV\n" },   /* Tested on Asus T200TA */
-};
-
-...
-
-	ccode = strnstr((char *)data, "ccode=ALL", data_len);
-	if (ccode) {
-		/* lookup fwctx->nvram_name in ccode_all_map */
-		/* if found patch in override string */
-		/* else brcmf_info("EFI nvram contains ccode=ALL and %s is missing from ccode-map, please report\n", fwctx->nvram_name) */
-	}
-
-So we actually decide what to replace all with based on the
-firmware name, rather then on the laptop model, does that make
-sense?
-
-> I hope to get some more clarification from our regulatory team about the use of ALL and XV. Could you tell me what happens with T200TA when you leave ccode=ALL in place. What output do you get from "iw list"? Only channels 1 to 11 and no 5G? Or does it only have 2G.
-
-With ccode=ALL in place, I do see channel 13, but not 14 and channel 13 does
-not work (the machine does not associate with my AP which is configured at chan 13)
-if I change it to "XV" then channel 13 does work, and shortly after associating
-channel 14 also shows up in the "iwlist wlan0 freq" output.
-
-As for 5GHz on the T200TA that is really a different topic, I can access 5GHz wifi
-under Windows but not under Linux, the channels are there in "iwlist wlan0 freq"
-but "wlist wlan0 scan" only shows 2.4 GHz APs. I've tried replacing the nvram
-with the file from the Windows partition referenced by the .inf file there,
-but that does not help. I'm not sure yet if this is a firmware / nvram / driver
-problem, so as said this really is a different topic.
-
->>>>       if (raw_nvram)
->>>> -        bcm47xx_nvram_release_contents(data);
->>>> +        kvfree(data); /* vfree for bcm47xx case / kfree for efi case */
->>>
->>> While this clearly works I can not say I like this. If you want to do
->>> it this way, please submit a patch to remove
->>> bcm47xx_nvram_release_contents() as it is no longer needed since we
->>> now have kvfree(). From maintainance perspective also drop the postfix
->>> comment. We just might end up doing vmalloc in efi case at some point
->>> and this would likely be forgotten.
->>
->> It might be better if I replace the raw_nvram variable which is poorly
->> named with
->> a "bool free_bcm47xx_nvram = false;" and add a "bool kfree_nvram = false;"
->>
->> Would that work for you ?
-> 
-> Sure.
-
-Ok, I will do that for v2 then as soon as we've figured out how to deal with
-the ccode=ALL issue.
-
-Regards,
-
-Hans
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 05beb16f0a0a..59553db020ef 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -1436,6 +1436,7 @@ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 	coex_dm->pre_ps_tdma = coex_dm->cur_ps_tdma;
+ }
+ 
++static
+ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 				       u8 wifi_status)
+ {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 4907c2ffadfe..73ec31972944 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -833,9 +833,9 @@ static void btc8723b2ant_set_sw_fulltime_dac_swing(struct btc_coexist *btcoex,
+ 		btc8723b2ant_set_dac_swing_reg(btcoex, 0x18);
+ }
+ 
+-void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
+-			    bool force_exec, bool dac_swing_on,
+-			    u32 dac_swing_lvl)
++static void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
++				   bool force_exec, bool dac_swing_on,
++				   u32 dac_swing_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 0b26419881c0..202597cf8915 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -426,39 +426,6 @@ static void btc8821a1ant_query_bt_info(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
+ }
+ 
+-bool btc8821a1ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+-{
+-	static bool pre_wifi_busy = true;
+-	static bool pre_under_4way = true;
+-	static bool pre_bt_hs_on = true;
+-	bool wifi_busy = false, under_4way = false, bt_hs_on = false;
+-	bool wifi_connected = false;
+-
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+-			   &wifi_connected);
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_HS_OPERATION, &bt_hs_on);
+-	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_4_WAY_PROGRESS,
+-			   &under_4way);
+-
+-	if (wifi_connected) {
+-		if (wifi_busy != pre_wifi_busy) {
+-			pre_wifi_busy = wifi_busy;
+-			return true;
+-		}
+-		if (under_4way != pre_under_4way) {
+-			pre_under_4way = under_4way;
+-			return true;
+-		}
+-		if (bt_hs_on != pre_bt_hs_on) {
+-			pre_bt_hs_on = bt_hs_on;
+-			return true;
+-		}
+-	}
+-
+-	return false;
+-}
+-
+ static void btc8821a1ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
+ 	struct btc_bt_link_info	*bt_link_info = &btcoexist->bt_link_info;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index d5f282cb9d24..2202d5e18977 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -359,7 +359,7 @@ static void btc8821a2ant_query_bt_info(struct btc_coexist *btcoexist)
+ 	btcoexist->btc_fill_h2c(btcoexist, 0x61, 1, h2c_parameter);
+ }
+ 
+-bool btc8821a2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
++static bool btc8821a2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ {
+ 	static bool pre_wifi_busy = true;
+ 	static bool pre_under_4way = true;
+@@ -1517,7 +1517,7 @@ static void btc8821a2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ 	btc8821a2ant_sw_mechanism2(btcoexist, false, false, false, 0x18);
+ }
+ 
+-void btc8821a2ant_action_wifi_link_process(struct btc_coexist *btcoexist)
++static void btc8821a2ant_action_wifi_link_process(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
+ 	u8 u8tmpa, u8tmpb;
+-- 
+2.15.1
