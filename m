@@ -1,63 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:46491 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751976AbeC1WH3 (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:38500 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752857AbeCFB0N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 18:07:29 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>,
-        Anilkumar Kolli <akolli@codeaurora.org>,
-        Carl Huang <cjhuang@codeaurora.org>,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath10k: avoid possible string overflow
-Date: Thu, 29 Mar 2018 00:06:10 +0200
-Message-Id: <20180328220635.3704458-1-arnd@arndb.de> (sfid-20180329_000749_531903_F7D97EFD)
+        Mon, 5 Mar 2018 20:26:13 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 10/15] rtlwifi: btcoex: new definitions introduced by 8822be
+Date: Tue, 6 Mar 2018 09:25:49 +0800
+Message-ID: <20180306012554.3108-11-pkshih@realtek.com> (sfid-20180306_022622_556508_E3EBE4F3)
+In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
+References: <20180306012554.3108-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The way that 'strncat' is used here raised a warning in gcc-8:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-drivers/net/wireless/ath/ath10k/wmi.c: In function 'ath10k_wmi_tpc_stats_final_disp_tables':
-drivers/net/wireless/ath/ath10k/wmi.c:4649:4: error: 'strncat' output truncated before terminating nul copying as many bytes from a string as its length [-Werror=stringop-truncation]
+New constant and variables definitions are used by btcoex of 8822b, so
+this commit add them.
 
-Effectively, this is simply a strcat() but the use of strncat() suggests
-some form of overflow check. Regardless of whether this might actually
-overflow, using strlcat() instead of strncat() avoids the warning and
-makes the code more robust.
-
-Fixes: bc64d05220f3 ("ath10k: debugfs support to get final TPC stats for 10.4 variants")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 9649bb752bbd..42522ed115f3 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4309,7 +4309,7 @@ static void ath10k_tpc_config_disp_tables(struct ath10k *ar,
- 							    rate_code[i],
- 							    type);
- 			snprintf(buff, sizeof(buff), "%8d ", tpc[j]);
--			strncat(tpc_value, buff, strlen(buff));
-+			strlcat(tpc_value, buff, sizeof(tpc_value));
- 		}
- 		tpc_stats->tpc_table[type].pream_idx[i] = pream_idx;
- 		tpc_stats->tpc_table[type].rate_code[i] = rate_code[i];
-@@ -4646,7 +4646,7 @@ ath10k_wmi_tpc_stats_final_disp_tables(struct ath10k *ar,
- 							       rate_code[i],
- 							       type, pream_idx);
- 			snprintf(buff, sizeof(buff), "%8d ", tpc[j]);
--			strncat(tpc_value, buff, strlen(buff));
-+			strlcat(tpc_value, buff, sizeof(tpc_value));
- 		}
- 		tpc_stats->tpc_table_final[type].pream_idx[i] = pream_idx;
- 		tpc_stats->tpc_table_final[type].rate_code[i] = rate_code[i];
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 0a7b09305bc3..049e92a8afbe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -62,6 +62,8 @@
+ #define		BTC_ANT_PATH_WIFI			0
+ #define		BTC_ANT_PATH_BT				1
+ #define		BTC_ANT_PATH_PTA			2
++#define		BTC_ANT_PATH_WIFI5G			3
++#define		BTC_ANT_PATH_AUTO			4
+ /* dual Antenna definition */
+ #define		BTC_ANT_WIFI_AT_MAIN			0
+ #define		BTC_ANT_WIFI_AT_AUX			1
+@@ -205,6 +207,7 @@ enum btc_wifi_traffic_dir {
+ enum btc_wifi_pnp {
+ 	BTC_WIFI_PNP_WAKE_UP = 0x0,
+ 	BTC_WIFI_PNP_SLEEP = 0x1,
++	BTC_WIFI_PNP_SLEEP_KEEP_ANT = 0x2,
+ 	BTC_WIFI_PNP_MAX
+ };
+ 
+@@ -387,6 +390,7 @@ enum btc_notify_type_lps {
+ enum btc_notify_type_scan {
+ 	BTC_SCAN_FINISH = 0x0,
+ 	BTC_SCAN_START = 0x1,
++	BTC_SCAN_START_2G = 0x2,
+ 	BTC_SCAN_MAX
+ };
+ 
+@@ -561,6 +565,7 @@ struct btc_bt_info {
+ 	u16 bt_hci_ver;
+ 	u16 bt_real_fw_ver;
+ 	u8 bt_fw_ver;
++	u32 bt_get_fw_ver;
+ 
+ 	bool bt_disable_low_pwr;
+ 
+@@ -632,6 +637,7 @@ struct btc_bt_link_info {
+ 	bool pan_exist;
+ 	bool pan_only;
+ 	bool slave_role;
++	bool acl_busy;
+ };
+ 
+ enum btc_antenna_pos {
 -- 
-2.9.0
+2.15.1
