@@ -1,174 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50474 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932372AbeCJOPZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:25 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 09/20] firmware: move firmware loader into its own directory
-Date: Sat, 10 Mar 2018 06:14:50 -0800
-Message-Id: <20180310141501.2214-10-mcgrof@kernel.org> (sfid-20180310_151836_133182_4B545971)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from rtits2.realtek.com ([211.75.126.72]:38504 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753002AbeCFB0Q (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Mar 2018 20:26:16 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 15/15] rtlwifi: btcoex: Add 8822b routine to btc interfaces
+Date: Tue, 6 Mar 2018 09:25:54 +0800
+Message-ID: <20180306012554.3108-16-pkshih@realtek.com> (sfid-20180306_022626_847739_40C9D436)
+In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
+References: <20180306012554.3108-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will make it much easier to manage as we manage to
-keep trimming componnents down into their own files to more
-easily manage and maintain this codebase.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Suggested-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Add 8822b routines to run btcoex algorithm
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- MAINTAINERS                                                       | 2 +-
- drivers/base/Makefile                                             | 7 ++-----
- drivers/base/firmware_loader/Makefile                             | 7 +++++++
- drivers/base/{firmware_fallback.c => firmware_loader/fallback.c}  | 4 ++--
- drivers/base/{firmware_fallback.h => firmware_loader/fallback.h}  | 0
- .../fallback_table.c}                                             | 4 ++--
- drivers/base/{firmware_loader.h => firmware_loader/firmware.h}    | 0
- drivers/base/{firmware_loader.c => firmware_loader/main.c}        | 8 ++++----
- 8 files changed, 18 insertions(+), 14 deletions(-)
- create mode 100644 drivers/base/firmware_loader/Makefile
- rename drivers/base/{firmware_fallback.c => firmware_loader/fallback.c} (99%)
- rename drivers/base/{firmware_fallback.h => firmware_loader/fallback.h} (100%)
- rename drivers/base/{firmware_fallback_table.c => firmware_loader/fallback_table.c} (90%)
- rename drivers/base/{firmware_loader.h => firmware_loader/firmware.h} (100%)
- rename drivers/base/{firmware_loader.c => firmware_loader/main.c} (99%)
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 100 +++++++++++++++++++++
+ 1 file changed, 100 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e03a130902cd..6ddd6f4aaffa 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5589,7 +5589,7 @@ M:	Luis R. Rodriguez <mcgrof@kernel.org>
- L:	linux-kernel@vger.kernel.org
- S:	Maintained
- F:	Documentation/firmware_class/
--F:	drivers/base/firmware*.c
-+F:	drivers/base/firmware_loader/
- F:	include/linux/firmware.h
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index 8b6b07a936f5..e0f9985582f9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -1441,6 +1441,11 @@ void exhalbtc_power_on_setting(struct btc_coexist *btcoexist)
+ 			ex_btc8723b2ant_power_on_setting(btcoexist);
+ 		else if (btcoexist->board_info.btdm_ant_num == 1)
+ 			ex_btc8723b1ant_power_on_setting(btcoexist);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_power_on_setting(btcoexist);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_power_on_setting(btcoexist);
+ 	}
+ }
  
- FLASH ADAPTER DRIVER (IBM Flash Adapter 900GB Full Height PCI Flash Card)
-diff --git a/drivers/base/Makefile b/drivers/base/Makefile
-index b946a408256d..b9539abec675 100644
---- a/drivers/base/Makefile
-+++ b/drivers/base/Makefile
-@@ -5,17 +5,14 @@ obj-y			:= component.o core.o bus.o dd.o syscore.o \
- 			   driver.o class.o platform.o \
- 			   cpu.o firmware.o init.o map.o devres.o \
- 			   attribute_container.o transport_class.o \
--			   topology.o container.o property.o cacheinfo.o \
--			   firmware_fallback_table.o
-+			   topology.o container.o property.o cacheinfo.o
- obj-$(CONFIG_DEVTMPFS)	+= devtmpfs.o
- obj-$(CONFIG_DMA_CMA) += dma-contiguous.o
- obj-y			+= power/
- obj-$(CONFIG_HAS_DMA)	+= dma-mapping.o
- obj-$(CONFIG_HAVE_GENERIC_DMA_COHERENT) += dma-coherent.o
- obj-$(CONFIG_ISA_BUS_API)	+= isa.o
--obj-$(CONFIG_FW_LOADER)	+= firmware_class.o
--firmware_class-objs := firmware_loader.o
--firmware_class-$(CONFIG_FW_LOADER_USER_HELPER) += firmware_fallback.o
-+obj-y				+= firmware_loader/
- obj-$(CONFIG_NUMA)	+= node.o
- obj-$(CONFIG_MEMORY_HOTPLUG_SPARSE) += memory.o
- ifeq ($(CONFIG_SYSFS),y)
-diff --git a/drivers/base/firmware_loader/Makefile b/drivers/base/firmware_loader/Makefile
-new file mode 100644
-index 000000000000..a97eeb0be1d8
---- /dev/null
-+++ b/drivers/base/firmware_loader/Makefile
-@@ -0,0 +1,7 @@
-+# SPDX-License-Identifier: GPL-2.0
-+# Makefile for the Linux firmware loader
+@@ -1454,6 +1459,11 @@ void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist)
+ 	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8723b2ant_pre_load_firmware(btcoexist);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_pre_load_firmware(btcoexist);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_pre_load_firmware(btcoexist);
+ 	}
+ }
+ 
+@@ -1479,11 +1489,21 @@ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only)
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_init_hwconfig(btcoexist);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_init_hw_config(btcoexist, wifi_only);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_init_hw_config(btcoexist, wifi_only);
 +
-+obj-y			:= fallback_table.o
-+obj-$(CONFIG_FW_LOADER)	+= firmware_class.o
-+firmware_class-objs := main.o
-+firmware_class-$(CONFIG_FW_LOADER_USER_HELPER) += fallback.o
-diff --git a/drivers/base/firmware_fallback.c b/drivers/base/firmware_loader/fallback.c
-similarity index 99%
-rename from drivers/base/firmware_fallback.c
-rename to drivers/base/firmware_loader/fallback.c
-index 47690207e0ee..9b65837256d6 100644
---- a/drivers/base/firmware_fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -8,8 +8,8 @@
- #include <linux/highmem.h>
- #include <linux/umh.h>
++		halbtc_set_default_port_id_cmd(btcoexist);
++		halbtc_send_wifi_port_id_cmd(btcoexist);
+ 	}
+ }
  
--#include "firmware_fallback.h"
--#include "firmware_loader.h"
-+#include "fallback.h"
-+#include "firmware.h"
+ void exhalbtc_init_hw_config_wifi_only(struct wifi_only_cfg *wifionly_cfg)
+ {
++	if (IS_HARDWARE_TYPE_8822B(wifionly_cfg->adapter))
++		ex_hal8822b_wifi_only_hw_config(wifionly_cfg);
+ }
  
- /*
-  * firmware fallback mechanism
-diff --git a/drivers/base/firmware_fallback.h b/drivers/base/firmware_loader/fallback.h
-similarity index 100%
-rename from drivers/base/firmware_fallback.h
-rename to drivers/base/firmware_loader/fallback.h
-diff --git a/drivers/base/firmware_fallback_table.c b/drivers/base/firmware_loader/fallback_table.c
-similarity index 90%
-rename from drivers/base/firmware_fallback_table.c
-rename to drivers/base/firmware_loader/fallback_table.c
-index 53cc4e492520..981419044c7e 100644
---- a/drivers/base/firmware_fallback_table.c
-+++ b/drivers/base/firmware_loader/fallback_table.c
-@@ -9,8 +9,8 @@
- #include <linux/umh.h>
- #include <linux/sysctl.h>
+ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist)
+@@ -1506,6 +1526,11 @@ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist)
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_init_coex_dm(btcoexist);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_init_coex_dm(btcoexist);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_init_coex_dm(btcoexist);
+ 	}
  
--#include "firmware_fallback.h"
--#include "firmware_loader.h"
-+#include "fallback.h"
-+#include "firmware.h"
+ 	btcoexist->initilized = true;
+@@ -1541,6 +1566,11 @@ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_ips_notify(btcoexist, ips_type);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_ips_notify(btcoexist, ips_type);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_ips_notify(btcoexist, ips_type);
+ 	}
  
- /*
-  * firmware fallback configuration table
-diff --git a/drivers/base/firmware_loader.h b/drivers/base/firmware_loader/firmware.h
-similarity index 100%
-rename from drivers/base/firmware_loader.h
-rename to drivers/base/firmware_loader/firmware.h
-diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader/main.c
-similarity index 99%
-rename from drivers/base/firmware_loader.c
-rename to drivers/base/firmware_loader/main.c
-index 21dd31ef08ae..c8966c84bd44 100644
---- a/drivers/base/firmware_loader.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0
- /*
-- * firmware_class.c - Multi purpose firmware loading support
-+ * main.c - Multi purpose firmware loading support
-  *
-  * Copyright (c) 2003 Manuel Estrada Sainz
-  *
-@@ -36,9 +36,9 @@
+ 	halbtc_normal_low_power(btcoexist);
+@@ -1574,6 +1604,11 @@ void exhalbtc_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_lps_notify(btcoexist, lps_type);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_lps_notify(btcoexist, lps_type);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_lps_notify(btcoexist, lps_type);
+ 	}
+ }
  
- #include <generated/utsrelease.h>
+@@ -1607,6 +1642,11 @@ void exhalbtc_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_scan_notify(btcoexist, scan_type);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_scan_notify(btcoexist, scan_type);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_scan_notify(btcoexist, scan_type);
+ 	}
  
--#include "base.h"
--#include "firmware_loader.h"
--#include "firmware_fallback.h"
-+#include "../base.h"
-+#include "firmware.h"
-+#include "fallback.h"
+ 	halbtc_normal_low_power(btcoexist);
+@@ -1615,6 +1655,8 @@ void exhalbtc_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ void exhalbtc_scan_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
+ 				    u8 is_5g)
+ {
++	if (IS_HARDWARE_TYPE_8822B(wifionly_cfg->adapter))
++		ex_hal8822b_wifi_only_scannotify(wifionly_cfg, is_5g);
+ }
  
- MODULE_AUTHOR("Manuel Estrada Sainz");
- MODULE_DESCRIPTION("Multi purpose firmware loading support");
+ void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action)
+@@ -1655,6 +1697,11 @@ void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action)
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_connect_notify(btcoexist, asso_type);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_connect_notify(btcoexist, asso_type_v2);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_connect_notify(btcoexist, asso_type_v2);
+ 	}
+ 
+ 	halbtc_normal_low_power(btcoexist);
+@@ -1691,6 +1738,11 @@ void exhalbtc_mediastatus_notify(struct btc_coexist *btcoexist,
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_media_status_notify(btcoexist, status);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_media_status_notify(btcoexist, status);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_media_status_notify(btcoexist, status);
+ 	}
+ 
+ 	halbtc_normal_low_power(btcoexist);
+@@ -1737,6 +1789,13 @@ void exhalbtc_special_packet_notify(struct btc_coexist *btcoexist, u8 pkt_type)
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_special_packet_notify(btcoexist,
+ 							      packet_type);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_specific_packet_notify(btcoexist,
++							       packet_type);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_specific_packet_notify(btcoexist,
++							       packet_type);
+ 	}
+ 
+ 	halbtc_normal_low_power(btcoexist);
+@@ -1769,6 +1828,13 @@ void exhalbtc_bt_info_notify(struct btc_coexist *btcoexist,
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_bt_info_notify(btcoexist, tmp_buf,
+ 						       length);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_bt_info_notify(btcoexist, tmp_buf,
++						       length);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_bt_info_notify(btcoexist, tmp_buf,
++						       length);
+ 	}
+ 
+ 	halbtc_normal_low_power(btcoexist);
+@@ -1784,6 +1850,11 @@ void exhalbtc_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
+ 		if (btcoexist->board_info.btdm_ant_num == 1)
+ 			ex_btc8723b1ant_rf_status_notify(btcoexist, type);
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_rf_status_notify(btcoexist, type);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_rf_status_notify(btcoexist, type);
+ 	}
+ }
+ 
+@@ -1829,6 +1900,11 @@ void exhalbtc_halt_notify(struct btc_coexist *btcoexist)
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_halt_notify(btcoexist);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_halt_notify(btcoexist);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_halt_notify(btcoexist);
+ 	}
+ 
+ 	btcoexist->binded = false;
+@@ -1855,6 +1931,11 @@ void exhalbtc_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ 		else if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8821a2ant_pnp_notify(btcoexist, pnp_state);
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_pnp_notify(btcoexist, pnp_state);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_pnp_notify(btcoexist, pnp_state);
+ 	}
+ }
+ 
+@@ -1905,6 +1986,11 @@ void exhalbtc_periodical(struct btc_coexist *btcoexist)
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_periodical(btcoexist);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_periodical(btcoexist);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_periodical(btcoexist);
+ 	}
+ 
+ 	halbtc_normal_low_power(btcoexist);
+@@ -2038,6 +2124,11 @@ void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist,
+ 	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+ 		if (btcoexist->board_info.btdm_ant_num == 2)
+ 			ex_btc8192e2ant_display_coex_info(btcoexist, m);
++	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_display_coex_info(btcoexist, m);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_display_coex_info(btcoexist, m);
+ 	}
+ 
+ 	halbtc_normal_low_power(btcoexist);
+@@ -2053,10 +2144,19 @@ void exhalbtc_switch_band_notify(struct btc_coexist *btcoexist, u8 type)
+ 
+ 	halbtc_leave_low_power(btcoexist);
+ 
++	if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
++		if (btcoexist->board_info.btdm_ant_num == 1)
++			ex_btc8822b1ant_switchband_notify(btcoexist, type);
++		else if (btcoexist->board_info.btdm_ant_num == 2)
++			ex_btc8822b2ant_switchband_notify(btcoexist, type);
++	}
++
+ 	halbtc_normal_low_power(btcoexist);
+ }
+ 
+ void exhalbtc_switch_band_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
+ 					   u8 is_5g)
+ {
++	if (IS_HARDWARE_TYPE_8822B(wifionly_cfg->adapter))
++		ex_hal8822b_wifi_only_switchbandnotify(wifionly_cfg, is_5g);
+ }
 -- 
-2.16.2
+2.15.1
