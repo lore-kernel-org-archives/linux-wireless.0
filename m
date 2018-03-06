@@ -1,110 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46096 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753150AbeCPKMJ (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:38486 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752460AbeCFB0L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 06:12:09 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 10/12] brcmfmac: get rid of brcmf_fw_map_chip_to_name()
-Date: Fri, 16 Mar 2018 11:11:23 +0100
-Message-Id: <1521195085-439-11-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111218_043403_3D63713C)
-In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 5 Mar 2018 20:26:11 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 04/15] rtlwifi: btcoex: Add customer_id to do special deal to oem vendor
+Date: Tue, 6 Mar 2018 09:25:43 +0800
+Message-ID: <20180306012554.3108-5-pkshih@realtek.com> (sfid-20180306_022618_263357_9A5E5CAF)
+In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
+References: <20180306012554.3108-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function is no longer used so removing it.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Add customer_id field in structure, and then this is a clue to implement
+the behavior defined by vendor LENOVO_CHINA.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- .../broadcom/brcm80211/brcmfmac/firmware.c         | 53 ----------------------
- .../broadcom/brcm80211/brcmfmac/firmware.h         |  4 --
- 2 files changed, 57 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 598cdb1..1ea9451 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -635,59 +635,6 @@ static void brcmf_fw_get_full_name(char fw_name[BRCMF_FW_NAME_LEN],
- 	strlcat(fw_name, extension, BRCMF_FW_NAME_LEN);
- }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index f5d8159a88eb..3c6a1e8851ec 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -154,6 +154,7 @@ struct btc_board_info {
  
--int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
--			      struct brcmf_firmware_mapping mapping_table[],
--			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
--			      char nvram_name[BRCMF_FW_NAME_LEN])
--{
--	char chipname[12];
--	u32 i;
--	char end;
--
--	for (i = 0; i < table_size; i++) {
--		if (mapping_table[i].chipid == chip &&
--		    mapping_table[i].revmask & BIT(chiprev))
--			break;
--	}
--
--	if (i == table_size) {
--		brcmf_err("Unknown chipid %d [%d]\n", chip, chiprev);
--		return -ENODEV;
--	}
--
--	brcmf_chip_name(chip, chiprev, chipname, sizeof(chipname));
--
--	/* check if firmware path is provided by module parameter */
--	if (brcmf_mp_global.firmware_path[0] != '\0') {
--		if (fw_name)
--			strlcpy(fw_name, brcmf_mp_global.firmware_path,
--				BRCMF_FW_NAME_LEN);
--		if (nvram_name)
--			strlcpy(nvram_name, brcmf_mp_global.firmware_path,
--				BRCMF_FW_NAME_LEN);
--
--		end = brcmf_mp_global.firmware_path[
--				strlen(brcmf_mp_global.firmware_path) - 1];
--		if (end != '/') {
--			if (fw_name)
--				strlcat(fw_name, "/", BRCMF_FW_NAME_LEN);
--			if (nvram_name)
--				strlcat(nvram_name, "/", BRCMF_FW_NAME_LEN);
--		}
--	}
--
--	brcmf_info("using %s for chip %s\n",
--		   mapping_table[i].fw_base, chipname);
--	if (fw_name)
--		brcmf_fw_get_full_name(fw_name,
--				       mapping_table[i].fw_base, ".bin");
--	if (nvram_name)
--		brcmf_fw_get_full_name(nvram_name,
--				       mapping_table[i].fw_base, ".txt");
--
--	return 0;
--}
--
- struct brcmf_fw_request *
- brcmf_fw_alloc_request(u32 chip, u32 chiprev,
- 		       struct brcmf_firmware_mapping mapping_table[],
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-index 1416fbb..79a2109 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-@@ -46,10 +46,6 @@ struct brcmf_firmware_mapping {
- #define BRCMF_FW_ENTRY(chipid, mask, name) \
- 	{ chipid, mask, BRCM_ ## name ## _FIRMWARE_BASENAME }
+ 	u8 rfe_type;
+ 	u8 ant_div_cfg;
++	u8 customer_id;
+ };
  
--int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
--			      struct brcmf_firmware_mapping mapping_table[],
--			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
--			      char nvram_name[BRCMF_FW_NAME_LEN]);
- void brcmf_fw_nvram_free(void *nvram);
+ enum btc_dbg_opcode {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 438678c2d14a..d27e33960e77 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -556,6 +556,7 @@ enum rt_oem_id {
+ 	RT_CID_NETGEAR = 36,
+ 	RT_CID_PLANEX = 37,
+ 	RT_CID_CC_C = 38,
++	RT_CID_LENOVO_CHINA = 40,
+ };
  
- enum brcmf_fw_type {
+ enum hw_descs {
 -- 
-1.9.1
+2.15.1
