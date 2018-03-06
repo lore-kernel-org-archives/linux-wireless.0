@@ -1,99 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:34298 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752063AbeCMJSO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40128 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753154AbeCFMlc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 05:18:14 -0400
-Received: by mail-qt0-f173.google.com with SMTP id l25so21932739qtj.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 02:18:14 -0700 (PDT)
-Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
- 802.11f in their FullMAC fw
-To: Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
- <c24304cf-7e0d-137a-94b1-d8f4e61a3b70@nbd.name>
-Cc: Network Development <netdev@vger.kernel.org>,
-        bridge@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list@cypress.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AA79752.8070200@broadcom.com> (sfid-20180313_101822_507879_CB2050A3)
-Date: Tue, 13 Mar 2018 10:18:10 +0100
+        Tue, 6 Mar 2018 07:41:32 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Govind Singh <govinds@codeaurora.org>,
+        yamada.masahiro@socionext.com
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN module
+References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
+        <87371kqfda.fsf@kamboji.qca.qualcomm.com>
+        <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com>
+Date: Tue, 06 Mar 2018 14:41:26 +0200
+In-Reply-To: <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com>
+        (Govind Singh's message of "Thu, 1 Mar 2018 10:13:35 +0000")
+Message-ID: <87tvttl6kp.fsf@kamboji.qca.qualcomm.com> (sfid-20180306_134136_722655_EBC206CC)
 MIME-Version: 1.0
-In-Reply-To: <c24304cf-7e0d-137a-94b1-d8f4e61a3b70@nbd.name>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/13/2018 8:20 AM, Felix Fietkau wrote:
-> [resent with fixed typo in linux-wireless address]
->
-> On 2018-02-27 11:08, Rafał Miłecki wrote:
->> I've problem when using OpenWrt/LEDE on a home router with Broadcom's
->> FullMAC WiFi chipset.
->>
->>
->> First of all OpenWrt/LEDE uses bridge interface for LAN network with:
->> 1) IFLA_BRPORT_MCAST_TO_UCAST
->> 2) Clients isolation in hostapd
->> 3) Hairpin mode enabled
->>
->> For more details please see Linus's patch description:
->> https://patchwork.kernel.org/patch/9530669/
->> and maybe hairpin mode patch:
->> https://lwn.net/Articles/347344/
->>
->> Short version: in that setup packets received from a bridged wireless
->> interface can be handled back to it for transmission.
->>
->>
->> Now, Broadcom's firmware for their FullMAC chipsets in AP mode
->> supports an obsoleted 802.11f AKA IAPP standard. It's a roaming
->> standard that was replaced by 802.11r.
->>
->> Whenever a new station associates, firmware generates a packet like:
->> ff ff ff ff  ff ff ec 10  7b 5f ?? ??  00 06 00 01  af 81 01 00
->> (just masked 2 bytes of my MAC)
->>
->> For mode details you can see discussion in my brcmfmac patch thread:
->> https://patchwork.kernel.org/patch/10191451/
->>
->>
->> The problem is that bridge (in setup as above) handles such a packet
->> back to the device.
->>
->> That makes Broadcom's FullMAC firmware believe that a given station
->> just connected to another AP in a network (which doesn't even exist).
->> As a result firmware immediately disassociates that station. It's
->> simply impossible to connect to the router. Every association is
->> followed by immediate disassociation.
->>
->>
->> Can you see any solution for this problem? Is that an option to stop
->> multicast-to-unicast from touching 802.11f packets? Some other ideas?
->> Obviously I can't modify Broadcom's firmware and drop that obsoleted
->> standard.
-> Let's look at it from a different angle: Since these packets are
-> forwarded as normal packets by the bridge, and the Broadcom firmware
-> reacts to them in this nasty way, that's basically local DoS security
-> issue. In my opinion that matters a lot more than having support for an
-> obsolete feature that almost nobody will ever want to use.
->
-> I think the right approach to deal with this issue is to drop these
-> garbage packets in both the receive and transmit path of brcmfmac.
+(Fixed Govind's top posting and adding Masahiro)
 
-My approach was to get rid of it in firmware as this never made it into 
-the 802.11 spec. So I asked internally whether it was still used. Turns 
-out that we still rely on it for some customers. I am fine with dropping 
-these "garbage" packets, but given that there is still use for it I 
-would like to see that under a Kconfig flag. Dropping it may be the default.
+>>> WCN3990 is integrated 802.11ac chipset with SNOC bus interface. Add 
+>>> snoc layer driver registration and associated ops.
+>>>
+>>> WCN3990 support is not yet complete as cold-boot handshake is done 
+>>> using qmi(Qualcomm-MSM-Interface) and qmi client support will be added 
+>>> once qmi framework is available.
+>>>
+>>> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+>>
+>> Kbuild bot found an odd problem with this patch:
+>>
+>>  include/linux/dynamic_debug.h:77:14: error: 'KBUILD_MODNAME'
+>>  undeclared (first use in this function); did you mean  'KBUILD_BASENAME'?
+>>
+>> Full report:
+>>
+>> http://lists.infradead.org/pipermail/ath10k/2018-February/010907.html
+>>
+>> Any ideas? Is this is some unrelated issue or what? This patch is not
+>> even touching hif.h or ce.c.
+>
+> I didn't encountered this issue as in my defconfig only
+> CONFIG_ATH10K_SNOC was defined. This problem is coming when we define
+> CONFIG_ATH10K_SNOC and CONFIG_ATH10K_PCI simultaneously in defconfig
+> and this is known issue when multiple modules share objects(in this
+> case ce.o). I saw similar reported problem and found
+> https://patchwork.kernel.org/patch/10060825/.
+>
+> After picking the below change issue is not seen.
 
-Regards,
-Arend
+Let's ask the kbuild maintainer. Masahiro, any chances of getting this
+patch applied anytime soon:
+
+kbuild: define KBUILD_MODNAME even if multiple modules share objects
+
+https://patchwork.kernel.org/patch/10060825/
+
+In ath10k we would need it as otherwise we are not able to link ce.o
+both to ath10k_pci.ko and ath10k_snoc.ko. What do you think?
+
+Full discussion and the ath10k patch here:
+
+https://patchwork.kernel.org/patch/10220657/
+
+-- 
+Kalle Valo
