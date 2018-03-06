@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.197]:40121 "EHLO mout.perfora.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750743AbeCXEQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Mar 2018 00:16:47 -0400
-From: Quytelda Kahja <quytelda@tamalin.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Quytelda Kahja <quytelda@tamalin.org>
-Subject: [PATCH 3/3] ieee80211: Replace bit shifts with the BIT() macro for 802.11g ERP IEs.
-Date: Fri, 23 Mar 2018 21:10:27 -0700
-Message-Id: <20180324041027.6498-3-quytelda@tamalin.org> (sfid-20180324_051656_740036_71A0B778)
-In-Reply-To: <20180324041027.6498-1-quytelda@tamalin.org>
-References: <20180324041027.6498-1-quytelda@tamalin.org>
+Received: from rtits2.realtek.com ([211.75.126.72]:38493 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752856AbeCFB0L (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Mar 2018 20:26:11 -0500
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 02/15] rtlwifi: remove redundant statement found by static checker
+Date: Tue, 6 Mar 2018 09:25:41 +0800
+Message-ID: <20180306012554.3108-3-pkshih@realtek.com> (sfid-20180306_022642_327059_640004CE)
+In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
+References: <20180306012554.3108-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is neater and more consistent with the rest of the document to use the
-BIT() macro from 'linux/bitops.h' to define the WLAN_ERP_* bitmasks.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Quytelda Kahja <quytelda@tamalin.org>
+smatch reports "rtl_is_special_data() warn: inconsistent indenting", but
+it is an obvious redundant statement so remove it.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- include/linux/ieee80211.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/base.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index dc361ed2fb7e..bc68d542f082 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1641,9 +1641,9 @@ struct ieee80211_vht_operation {
- #define IEEE80211_SPCT_MSR_RPRT_TYPE_RPI	2
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 6db3389e2ced..762a29cdf7ad 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1549,7 +1549,6 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
+ 		/* EAPOL is seens as in-4way */
+ 		rtlpriv->btcoexist.btc_info.in_4way = true;
+ 		rtlpriv->btcoexist.btc_info.in_4way_ts = jiffies;
+-	rtlpriv->btcoexist.btc_info.in_4way_ts = jiffies;
  
- /* 802.11g ERP information element */
--#define WLAN_ERP_NON_ERP_PRESENT (1<<0)
--#define WLAN_ERP_USE_PROTECTION (1<<1)
--#define WLAN_ERP_BARKER_PREAMBLE (1<<2)
-+#define WLAN_ERP_NON_ERP_PRESENT BIT(0)
-+#define WLAN_ERP_USE_PROTECTION  BIT(1)
-+#define WLAN_ERP_BARKER_PREAMBLE BIT(2)
- 
- /* WLAN_ERP_BARKER_PREAMBLE values */
- enum {
+ 		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
+ 			 "802.1X %s EAPOL pkt!!\n", (is_tx) ? "Tx" : "Rx");
 -- 
-2.16.2
+2.15.1
