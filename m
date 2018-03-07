@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14434 "EHLO
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:56579 "EHLO
         esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751035AbeCZLqR (ORCPT
+        with ESMTP id S934950AbeCHPK7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 07:46:17 -0400
+        Thu, 8 Mar 2018 10:10:59 -0500
 From: Ajay Singh <ajay.kathat@microchip.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
@@ -11,48 +11,61 @@ CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
         <adham.abozaeid@Microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 2/9] staging: wilc1000: avoid 'NULL' pointer access in wilc_network_info_received()
-Date: Mon, 26 Mar 2018 17:15:56 +0530
-Message-ID: <1522064763-11576-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180326_134620_352251_1577B405)
-In-Reply-To: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
-References: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 04/10] staging: wilc1000: rename au8ScanChanList to avoid camelCase
+Date: Wed, 7 Mar 2018 07:02:24 +0530
+Message-ID: <1520386350-31607-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180308_161129_122220_009AD9FE)
+In-Reply-To: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
+References: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added 'NULL' check before accessing the allocated memory. Free up the
-memory incase of failure to enqueue the command. Used kmemdup instead of
-kmalloc & memcpy.
+Fix 'Avoid camelCase' issue found by checkpatch.pl script.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a13998d..70c10bc 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3453,12 +3453,15 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 	msg.vif = vif;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 051ba12..1f6c02a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -581,7 +581,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 	struct wilc_priv *priv;
+ 	u32 i;
+ 	s32 ret = 0;
+-	u8 au8ScanChanList[MAX_NUM_SCANNED_NETWORKS];
++	u8 scan_ch_list[MAX_NUM_SCANNED_NETWORKS];
+ 	struct hidden_network hidden_ntwk;
+ 	struct wilc_vif *vif;
  
- 	msg.body.net_info.len = length;
--	msg.body.net_info.buffer = kmalloc(length, GFP_KERNEL);
--	memcpy(msg.body.net_info.buffer, buffer, length);
-+	msg.body.net_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
-+	if (!msg.body.net_info.buffer)
-+		return;
+@@ -597,7 +597,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 	priv->cfg_scanning = true;
+ 	if (request->n_channels <= MAX_NUM_SCANNED_NETWORKS) {
+ 		for (i = 0; i < request->n_channels; i++)
+-			au8ScanChanList[i] = (u8)ieee80211_frequency_to_channel(request->channels[i]->center_freq);
++			scan_ch_list[i] = (u8)ieee80211_frequency_to_channel(request->channels[i]->center_freq);
  
- 	result = wilc_enqueue_cmd(&msg);
--	if (result)
-+	if (result) {
- 		netdev_err(vif->ndev, "message parameters (%d)\n", result);
-+		kfree(msg.body.net_info.buffer);
-+	}
- }
- 
- void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
+ 		if (request->n_ssids >= 1) {
+ 			hidden_ntwk.net_info =
+@@ -618,14 +618,14 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 				}
+ 			}
+ 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
+-					au8ScanChanList,
++					scan_ch_list,
+ 					request->n_channels,
+ 					(const u8 *)request->ie,
+ 					request->ie_len, cfg_scan_result,
+ 					(void *)priv, &hidden_ntwk);
+ 		} else {
+ 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
+-					au8ScanChanList,
++					scan_ch_list,
+ 					request->n_channels,
+ 					(const u8 *)request->ie,
+ 					request->ie_len, cfg_scan_result,
 -- 
 2.7.4
