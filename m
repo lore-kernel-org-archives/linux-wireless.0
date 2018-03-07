@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50780 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1425025AbeCBOYq (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:50771 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934924AbeCHPLQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:24:46 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>,
-        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Add sta rx packet stats per tid
-References: <1517400072-9204-1-git-send-email-vthiagar@codeaurora.org>
-        <87606hs17h.fsf@kamboji.qca.qualcomm.com>
-        <b1fcd67d-e149-acc4-ebbb-23da9a06da02@qti.qualcomm.com>
-Date: Fri, 02 Mar 2018 16:24:41 +0200
-In-Reply-To: <b1fcd67d-e149-acc4-ebbb-23da9a06da02@qti.qualcomm.com>
-        (Vasanthakumar Thiagarajan's message of "Fri, 2 Mar 2018 08:21:25
-        +0000")
-Message-ID: <87h8pyo8ra.fsf@kamboji.qca.qualcomm.com> (sfid-20180302_152450_781693_8153E236)
+        Thu, 8 Mar 2018 10:11:16 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 09/10] staging: wilc1000: rename pJoinParams to avoid camelCase
+Date: Wed, 7 Mar 2018 07:02:29 +0530
+Message-ID: <1520386350-31607-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180308_161119_433280_45AFFC90)
+In-Reply-To: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
+References: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
+Fix 'Avoid camelCase' issue found by checkpatch.pl script.
 
->> This added new ath10k-check warnings, I fixed those in the pending
->> branch:
->> 
->> drivers/net/wireless/ath/ath10k/debug.h:203: Alignment should match open parenthesis
->> drivers/net/wireless/ath/ath10k/debug.h:226: Alignment should match open parenthesis
->> drivers/net/wireless/ath/ath10k/debugfs_sta.c:24: Alignment should
->> match open parenthesis
->> drivers/net/wireless/ath/ath10k/debugfs_sta.c:40: Alignment should
->> match open parenthesis
->> drivers/net/wireless/ath/ath10k/debugfs_sta.c:60: Alignment should
->> match open parenthesis
->> 
->> Also I fixed the typo "rages" in debug.h. My changes:
->
-> Thanks for fixing it. In most of the cases, fixing above warnings
-> would result in lines > 80 chars.
-> May be we need not be very strict about > 80 char limit?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-In ath10k-check I set the limit to 90 chars, but I guess it could be
-even higher than that. But on the other it shouldn't be too long, not
-everyone like to have one huge window for editor :)
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index a93c550..9da686b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -315,7 +315,7 @@ static int is_network_in_shadow(struct network_info *nw_info, void *user_void)
+ }
+ 
+ static void add_network_to_shadow(struct network_info *nw_info,
+-				  void *user_void, void *pJoinParams)
++				  void *user_void, void *join_params)
+ {
+ 	int ap_found = is_network_in_shadow(nw_info, user_void);
+ 	u32 ap_index = 0;
+@@ -360,7 +360,7 @@ static void add_network_to_shadow(struct network_info *nw_info,
+ 	last_scanned_shadow[ap_index].found = 1;
+ 	if (ap_found != -1)
+ 		kfree(last_scanned_shadow[ap_index].join_params);
+-	last_scanned_shadow[ap_index].join_params = pJoinParams;
++	last_scanned_shadow[ap_index].join_params = join_params;
+ }
+ 
+ static void cfg_scan_result(enum scan_event scan_event,
 -- 
-Kalle Valo
+2.7.4
