@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59464 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752139AbeC0JKT (ORCPT
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:45367 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750951AbeCGF72 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 05:10:19 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 7 Mar 2018 00:59:28 -0500
+Received: by mail-qk0-f174.google.com with SMTP id r140so1292237qke.12
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2018 21:59:28 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: mt76: use mt76_poll_msec routine in mt76pci_load_firmware()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <b2abf42bbd5e5f41082bd17df018dcb203aa2f86.1521128408.git.lorenzo.bianconi@redhat.com>
-References: <b2abf42bbd5e5f41082bd17df018dcb203aa2f86.1521128408.git.lorenzo.bianconi@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
-Message-Id: <20180327091018.EF6A96070A@smtp.codeaurora.org> (sfid-20180327_111035_352653_C47CA1DA)
-Date: Tue, 27 Mar 2018 09:10:18 +0000 (UTC)
+In-Reply-To: <CADsGw2ZBPK1hBY-a+v_1mVUOaFP3Uu5A4euyTc-070E4vSUrBg@mail.gmail.com>
+References: <CADsGw2ZBPK1hBY-a+v_1mVUOaFP3Uu5A4euyTc-070E4vSUrBg@mail.gmail.com>
+From: Thomas Pedersen <thomas@eero.com>
+Date: Tue, 6 Mar 2018 21:59:26 -0800
+Message-ID: <CADjYELzsP37RWTqJOSoevNy32E38e4=bkjDkY6A4F3exnDYadQ@mail.gmail.com> (sfid-20180307_065932_457549_DB3D46B3)
+Subject: Re: Query on queues in mesh mode
+To: Phani Siriki <yvsg.phanis@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+On Thu, Mar 1, 2018 at 7:27 AM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
+> Hi All
+>
+> I am trying to understand the queuing mechanism wireless mesh networks.
+>
+> As per AP mode is concerned, there are four queues (BK, BE, Vi, VO)
+> and traffic is controlled based on CWmin, CWmax, AIFS and TxOP.
+>
+> Does, mesh mode also involve these queues? Does mesh mode have any
+> queue or it is just a single queue?
 
-> Use mt76_poll_msec() in mt76pci_load_firmware to check if the firmware
-> has been started instead of explicitly poll MCU running register
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-
-Patch applied to wireless-drivers-next.git, thanks.
-
-db2ad7c25a9a mt76: use mt76_poll_msec routine in mt76pci_load_firmware()
+mesh mode maps to the different ACs like AP mode. The only additional
+queue in mesh is the mpath->frame_queue, which may be used if an
+active mpath for a given RA can't be found.
 
 -- 
-https://patchwork.kernel.org/patch/10285377/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+thomas
