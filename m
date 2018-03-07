@@ -1,72 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54811 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752637AbeCUTTo (ORCPT
+Received: from mx1.uni-rostock.de ([139.30.22.71]:63850 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933487AbeCGRLu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 15:19:44 -0400
-From: Colin King <colin.king@canonical.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: check for kmalloc allocation failures
-Date: Wed, 21 Mar 2018 19:19:41 +0000
-Message-Id: <20180321191941.4126-1-colin.king@canonical.com> (sfid-20180321_201957_198343_1D6D9C70)
+        Wed, 7 Mar 2018 12:11:50 -0500
+From: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>,
+        <syzbot+70ce058e01259de7bb1d@syzkaller.appspotmail.com>,
+        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <syzkaller-bugs@googlegroups.com>,
+        Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Subject: [PATCH] mac80211_hwsim: fixed use-after-free bug in hwsim_exit_net
+Date: Wed, 7 Mar 2018 18:11:07 +0100
+Message-ID: <20180307171107.2803-1-benjamin.beichler@uni-rostock.de> (sfid-20180307_181212_058077_55DB7FFA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+When destroying a net namespace, all hwsim interfaces, which are not
+created in default namespace are deleted. But the async deletion of the
+interfaces could last longer than the actual destruction of the
+namespace, which results to an use after free bug. Therefore use
+synchronous deletion in this case.
 
-There are three kmalloc allocations that are not null checked which
-potentially could lead to null pointer dereference issues. Fix this
-by adding null pointer return checks.
-
-Detected by CoverityScan, CID#1466025-27 ("Dereference null return")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Fixes: 100cb9ff40e0 ("mac80211_hwsim: Allow managing radios from
+non-initial namespaces")
+Reported-by: syzbot+70ce058e01259de7bb1d@syzkaller.appspotmail.com
+Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
 ---
- drivers/staging/wilc1000/host_interface.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/net/wireless/mac80211_hwsim.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5082ede720f0..9b9b86654958 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -944,6 +944,10 @@ static s32 handle_connect(struct wilc_vif *vif,
- 
- 	if (conn_attr->bssid) {
- 		hif_drv->usr_conn_req.bssid = kmalloc(6, GFP_KERNEL);
-+		if (!hif_drv->usr_conn_req.bssid) {
-+			result = -ENOMEM;
-+			goto error;
-+		}
- 		memcpy(hif_drv->usr_conn_req.bssid, conn_attr->bssid, 6);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 7b6c3640a94f..93a7ae34653e 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3528,8 +3528,12 @@ static void __net_exit hwsim_exit_net(struct net *net)
+ 		list_del(&data->list);
+ 		rhashtable_remove_fast(&hwsim_radios_rht, &data->rht,
+ 				       hwsim_rht_params);
+-		INIT_WORK(&data->destroy_work, destroy_radio);
+-		queue_work(hwsim_wq, &data->destroy_work);
++		hwsim_radios_generation++;
++		spin_unlock_bh(&hwsim_radio_lock);
++		mac80211_hwsim_del_radio(data,
++					 wiphy_name(data->hw->wiphy),
++					 NULL);
++		spin_lock_bh(&hwsim_radio_lock);
  	}
+ 	spin_unlock_bh(&hwsim_radio_lock);
  
-@@ -951,6 +955,10 @@ static s32 handle_connect(struct wilc_vif *vif,
- 	if (conn_attr->ssid) {
- 		hif_drv->usr_conn_req.ssid = kmalloc(conn_attr->ssid_len + 1,
- 						     GFP_KERNEL);
-+		if (!hif_drv->usr_conn_req.ssid) {
-+			result = -ENOMEM;
-+			goto error;
-+		}
- 		memcpy(hif_drv->usr_conn_req.ssid,
- 		       conn_attr->ssid,
- 		       conn_attr->ssid_len);
-@@ -961,6 +969,10 @@ static s32 handle_connect(struct wilc_vif *vif,
- 	if (conn_attr->ies) {
- 		hif_drv->usr_conn_req.ies = kmalloc(conn_attr->ies_len,
- 						    GFP_KERNEL);
-+		if (!hif_drv->usr_conn_req.ies) {
-+			result = -ENOMEM;
-+			goto error;
-+		}
- 		memcpy(hif_drv->usr_conn_req.ies,
- 		       conn_attr->ies,
- 		       conn_attr->ies_len);
 -- 
-2.15.1
+2.16.2
