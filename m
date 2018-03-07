@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:48090 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751817AbeCVIGR (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14571 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754829AbeCHPwC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 04:06:17 -0400
-Message-ID: <1521705975.6713.1.camel@sipsolutions.net> (sfid-20180322_090628_007204_99CC5ACC)
-Subject: Re: [RFC] mac80211: advertise supported interface types for sw
- encryption
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mpubbise@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 22 Mar 2018 09:06:15 +0100
-In-Reply-To: <089d864c1d6bb9218191dad53713f148@codeaurora.org>
-References: <1520576822-1954-1-git-send-email-mpubbise@codeaurora.org>
-         <1521618788.2645.5.camel@sipsolutions.net>
-         <089d864c1d6bb9218191dad53713f148@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 8 Mar 2018 10:52:02 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 00/10] staging: wilc1000: fixes for checkpatch issues & coding style related
+Date: Wed, 7 Mar 2018 07:43:49 +0530
+Message-ID: <1520388839-7048-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180308_165206_531770_7B485D0B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-03-22 at 11:51 +0530, mpubbise@codeaurora.org wrote:
-> 
-> > So IMHO - just get rid of the bitmap and hard-code AP_VLAN.
-> > 
-> 
-> I agree with you only partially.
-> 
-> Today, I do not see any driver advertising SW_CRYPTO_CONTROL other than 
-> ath10k. There could be some driver which would want to advertise 
-> SW_CRYPTO_CONTROL and do not support the software encryption for VLAN 
-> devices. In that case, hard-coding doesn't seem to solve the problem 
-> completely right? No?
+This patch series contains modification to remove the checkpatch warnings
+and changes to follow linux coding style.
 
-Well, my point is that such a hypothetical driver is completely
-irrelevant because it doesn't make any sense to have this behaviour -
-it would mean it cannot support AP_VLAN with encryption, so it might as
-well not support AP_VLAN at all.
+Ajay Singh (10):
+  staging: wilc1000: rename pstrHostIFconnectAttr to avoid camelCase
+    issue
+  staging: wilc1000: rename strConnectInfo to avoid camelCase
+  staging: wilc1000: rename label 'ERRORHANDLER' to avoid uppercase name
+  staging: wilc1000: fix line over 80 char in handle_scan()
+  staging: wilc1000: fix line over 80 char in handle_connect()
+  staging: wilc1000: fix line over 80 character in handle_disconnect()
+  staging: wilc1000: rename variables prefix using datatype 'u8'
+  staging: wilc1000: rename WILC_HostIf_PackStaParam to avoid camelCase
+  staging: wilc1000: rename variables using camelCase in
+    handle_rcvd_gnrl_async_info()
+  staging: wilc1000: fix line over 80 char issue in handle_scan_done()
 
-> Or you meant to say that driver should advertise the support for 
-> AP_VLANs only if it can support encryption on AP_VLAN devices? 
+ drivers/staging/wilc1000/coreconfigurator.c |  28 +-
+ drivers/staging/wilc1000/host_interface.c   | 580 ++++++++++++++--------------
+ 2 files changed, 308 insertions(+), 300 deletions(-)
 
-Right.
-
-> If this 
-> the case, then I could see some code in ieee80211_register_hw which says 
-> this,
-> 
->          /* if low-level driver supports AP, we also support VLAN */
->          if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
->                  hw->wiphy->interface_modes |= 
-> BIT(NL80211_IFTYPE_AP_VLAN);
->                  hw->wiphy->software_iftypes |= 
-> BIT(NL80211_IFTYPE_AP_VLAN);
->          }
-
-Yes, but if such a driver comes along we can change this.
-
-johannes
+-- 
+2.7.4
