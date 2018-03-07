@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:35182 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751106AbeC2I7h (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:24922 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934342AbeCHPwj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:59:37 -0400
-Message-ID: <1522313973.5932.4.camel@sipsolutions.net> (sfid-20180329_105940_522737_9F76BE3D)
-Subject: Re: [PATCH v3 2/3] mac80211: limit wmm params to comply with ETSI
- requirements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Peter Oh <peter.oh@bowerswilkins.com>,
-        Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Mar 2018 10:59:33 +0200
-In-Reply-To: <5ABCA9EB.3060808@broadcom.com> (sfid-20180329_105511_871245_35D32528)
-References: <20180328102411.25677-1-luca@coelho.fi>
-         <20180328102411.25677-3-luca@coelho.fi>
-         <fc2a88ae-b908-028a-9e3b-1457404d2c06@bowerswilkins.com>
-         <1522312501.5932.0.camel@sipsolutions.net> <5ABCA9EB.3060808@broadcom.com>
-         (sfid-20180329_105511_871245_35D32528)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 8 Mar 2018 10:52:39 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/10] staging: wilc1000: fix line over 80 char issue in handle_scan_done()
+Date: Wed, 7 Mar 2018 07:43:59 +0530
+Message-ID: <1520388839-7048-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180308_170349_176834_67AF7EFF)
+In-Reply-To: <1520388839-7048-1-git-send-email-ajay.kathat@microchip.com>
+References: <1520388839-7048-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-03-29 at 10:55 +0200, Arend van Spriel wrote:
-> 
-> > No, the regulations say you have to use a long content window, hence
-> 
-> Guess you mean "contention window" :-p
+Fix 'line over 80 characters' issue found by checkpatch.pl script in
+handle_scan_done().
 
-Heh, yes.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-> > limiting both min and max at the lower end (hence max_t).
-> 
-> Do you have any reference to the new ETSI requirements. I would like to 
-> know their motivation for putting requirements on WMM parameters.
-
-It's for LAA - i.e. LTE on 5 GHz.
-
-http://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.01.01_60/en_301893v020101p.pdf
-
-See Table 7 and Table 8 and references to it.
-
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d822b15..5082ede 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -886,6 +886,7 @@ static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt)
+ 	u8 abort_running_scan;
+ 	struct wid wid;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
++	struct user_scan_req *scan_req;
+ 
+ 	if (evt == SCAN_EVENT_ABORTED) {
+ 		abort_running_scan = 1;
+@@ -908,10 +909,10 @@ static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt)
+ 		return result;
+ 	}
+ 
+-	if (hif_drv->usr_scan_req.scan_result) {
+-		hif_drv->usr_scan_req.scan_result(evt, NULL,
+-						  hif_drv->usr_scan_req.arg, NULL);
+-		hif_drv->usr_scan_req.scan_result = NULL;
++	scan_req = &hif_drv->usr_scan_req;
++	if (scan_req->scan_result) {
++		scan_req->scan_result(evt, NULL, scan_req->arg, NULL);
++		scan_req->scan_result = NULL;
+ 	}
+ 
+ 	return result;
+-- 
+2.7.4
