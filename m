@@ -1,65 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:42347 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031274AbeCAOVD (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:34963 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751220AbeCGRyx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:21:03 -0500
-Received: by mail-qk0-f194.google.com with SMTP id b130so7667732qkg.9
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:03 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 14/52] ath: Add regulatory mapping for United States for AP
-Date: Thu,  1 Mar 2018 15:18:24 +0100
-Message-Id: <20180301141902.24824-15-sven.eckelmann@openmesh.com> (sfid-20180301_152107_529793_F97914DF)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Wed, 7 Mar 2018 12:54:53 -0500
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Pavel Machek <pavel@ucw.cz>,
+        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+ <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
+ <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
+ <20180302090312.GA30267@amd>
+ <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
+ <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com> (sfid-20180307_185459_735501_FD71FF55)
+Date: Wed, 7 Mar 2018 18:54:41 +0100
+MIME-Version: 1.0
+In-Reply-To: <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
-and to select the correct conformance test limits (CTL) for a country. If
-the country isn't available and it is still programmed in the EEPROM then
-it will cause an error and stop the initialization with:
+Am 07.03.2018 um 17:22 schrieb Rafał Miłecki:
+> On 2 March 2018 at 10:22, Sebastian Gottschall <s.gottschall@dd-wrt.com> wrote:
+>>>> leds-gpio is crap and limited. you can just register one platform data at
+>>>> kernel runtime since its identified by its object name "led-gpio" but the
+>>>> kernel forbidds to register 2 platform datas with the same name
+>>>> consider the ar71xx devices with qca988x wifi chipsets. they all have
+>>>> already a led platform data registered
+>>>> at boottime. a second can't be registered anymore so gpio_led is useless
+>>>> at
+>>>> all for most developers on such platforms. its mainly used for early
+>>>> kernel
+>>>> platform data initialisation for system leds.
+>>> If leds-gpio has limitations, please fix those, rather then
+>>> introducing duplicated code.
+>> there is no duplicated code introduced and there is no solution for it.
+>> consider that all wifi drivers with softled support
+>> are going that way with registering a own led driver. see ath9k for
+>> instance. gpio-led cannot be used for it and there is no way to
+>> support multiple platform datas with the same name. its a kernel limitation
+> I just reviewed some mips arch patch adding support for more LEDs for
+> selected devices:
+> [PATCH] MIPS: BCM47XX: Add Luxul XAP1500/XWR1750 WiFi LEDs
+> https://patchwork.linux-mips.org/patch/18681/
+>
+> It seems to be simply adding another call to the
+> gpio_led_register_device(). It seems to me you can call that function
+> multiple times and register multiple structs with LEDs.
+>
+> Isn't all you need something like this?
+>
+> static const struct gpio_led ath10k_leds[] = {
+>          {
+>                  .name = "ath10k:color:function",
+>                  .active_low = 1,
+>                  .default_state = LEDS_GPIO_DEFSTATE_KEEP,
+>          }
+> };
+>
+> static struct gpio_led_platform_data bcm47xx_leds_pdata_extra = {
+>          leds = ath10k_leds;
+>          num_leds = ARRAY_SIZE(ath10k_leds);
+> };
+>
+> ath10k_leds.gpio = ar->hw_params.led_pin;
+> gpio_led_register_device(0, &ath10k_leds);
+the problem are other architectures which have already registered 
+gpio_led at system start like ar71xx
+you cannot register a second one. so a independend led driver is a 
+requirement for direct control
 
-  Invalid EEPROM contents
+Sebastian
+>
 
-The current CTL mappings for this country are:
-
-* 2.4GHz: FCC
-* 5GHz: FCC
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd.h        | 1 +
- drivers/net/wireless/ath/regd_common.h | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index 908163948d59..490efdcddf93 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -186,6 +186,7 @@ enum CountryCode {
- 	CTRY_UKRAINE = 804,
- 	CTRY_UNITED_KINGDOM = 826,
- 	CTRY_UNITED_STATES = 840,
-+	CTRY_UNITED_STATES2 = 841,
- 	CTRY_UNITED_STATES_FCC49 = 842,
- 	CTRY_URUGUAY = 858,
- 	CTRY_UZBEKISTAN = 860,
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index a00be9604d21..5cbd76235248 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -478,6 +478,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_UAE, NULL1_WORLD, "AE"},
- 	{CTRY_UNITED_KINGDOM, ETSI1_WORLD, "GB"},
- 	{CTRY_UNITED_STATES, FCC3_FCCA, "US"},
-+	{CTRY_UNITED_STATES2, FCC6_FCCA, "US"},
- 	/* This "PS" is for US public safety actually... to support this we
- 	 * would need to assign new special alpha2 to CRDA db as with the world
- 	 * regdomain and use another alpha2 */
 -- 
-2.11.0
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
