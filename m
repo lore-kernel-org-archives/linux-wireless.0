@@ -1,75 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36812 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752067AbeC2LQJ (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:43672 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755275AbeCHPKt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 07:16:09 -0400
-Message-ID: <1522322166.5932.13.camel@sipsolutions.net> (sfid-20180329_131613_723858_57BA74F5)
-Subject: Re: [PATCH] nl80211: Update ERP info using
- NL80211_CMD_UPDATE_CONNECT_PARAMS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-        vkanchan@qti.qualcomm.com, amarnath@qti.qualcomm.com,
-        usdutt@qti.qualcomm.com, vamsin@qti.qualcomm.com
-Date: Thu, 29 Mar 2018 13:16:06 +0200
-In-Reply-To: <5ABCCA33.8070501@broadcom.com> (sfid-20180329_131256_170260_82227DE0)
-References: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
-         <1512990779.26976.69.camel@sipsolutions.net>
-         <5ABCCA33.8070501@broadcom.com> (sfid-20180329_131256_170260_82227DE0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 8 Mar 2018 10:10:49 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 01/10] staging: wilc1000: rename strHiddenNetwork to avoid camelCase
+Date: Wed, 7 Mar 2018 07:02:21 +0530
+Message-ID: <1520386350-31607-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180308_161052_459102_989129DF)
+In-Reply-To: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
+References: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Fix 'Avoid camelCase' issue found by checkpatch.pl script.
 
-> Picking up a somewhat old thread as I did not see a follow-up on this 
-> patch. I got queried about it over here by our FILS team. So what is 
-> needed for this patch to pass the bar?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-That's indeed a bit old :-)
-
-> > > + * @UPDATE_FILS_ERP_INFO: Indicates that FILS connection parameters (realm,
-> > > + *	username, erp sequence number and rrk) are updated
-> > > + * @UPDATE_AUTH_TYPE: Indicates that Authentication type is updated
-> > 
-> > These are new here, but you don't know if they were actually supported:
-> > 
-> > > +	if (wiphy_ext_feature_isset(&rdev->wiphy,
-> > > +				    NL80211_EXT_FEATURE_FILS_SK_OFFLOAD) &&
-> > 
-> > here.
-> 
-> The description of the FILS_SK_OFFLOAD currently says:
-> 
->   * @NL80211_EXT_FEATURE_FILS_SK_OFFLOAD: Driver SME supports FILS 
-> shared key
->   *      authentication with %NL80211_CMD_CONNECT.
-> 
-> Are you suggesting a new flag to cover the new update attributes?
-
-[snip]
-
-> > Again, how do you know the driver will actually look at
-> > UPDATE_AUTH_TYPE?
-> 
-> If they don't they are broken, right? And if they are broken, the 
-> connection will drop and regular connect will happen anyway, no?
-> 
-> We could add a new flag to signal driver will handle the extra 
-> parameters in UPDATE_CONNECT_PARAMS, but it is not clear why it would be 
-> needed. Seems to me user-space has all the info needed with the existing 
-> flag(s).
-
-Agree, and we don't even have any drivers that are setting the
-FILS_SK_OFFLOAD flag anyway, so we can still redefine its semantics to
-some extent.
-
-So yeah, I'd argue that what the patch needed was somebody taking a
-critical look at my review ;-)
-
-And perhaps fixing the weird flags thing I pointed out.
-
-johannes
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 205304c..dd7ab51 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -584,7 +584,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 	u32 i;
+ 	s32 ret = 0;
+ 	u8 au8ScanChanList[MAX_NUM_SCANNED_NETWORKS];
+-	struct hidden_network strHiddenNetwork;
++	struct hidden_network hidden_ntwk;
+ 	struct wilc_vif *vif;
+ 
+ 	priv = wiphy_priv(wiphy);
+@@ -602,21 +602,21 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 			au8ScanChanList[i] = (u8)ieee80211_frequency_to_channel(request->channels[i]->center_freq);
+ 
+ 		if (request->n_ssids >= 1) {
+-			strHiddenNetwork.net_info =
++			hidden_ntwk.net_info =
+ 				kmalloc_array(request->n_ssids,
+ 					      sizeof(struct hidden_network),
+ 					      GFP_KERNEL);
+-			if (!strHiddenNetwork.net_info)
++			if (!hidden_ntwk.net_info)
+ 				return -ENOMEM;
+-			strHiddenNetwork.n_ssids = request->n_ssids;
++			hidden_ntwk.n_ssids = request->n_ssids;
+ 
+ 			for (i = 0; i < request->n_ssids; i++) {
+ 				if (request->ssids[i].ssid_len != 0) {
+-					strHiddenNetwork.net_info[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
+-					memcpy(strHiddenNetwork.net_info[i].ssid, request->ssids[i].ssid, request->ssids[i].ssid_len);
+-					strHiddenNetwork.net_info[i].ssid_len = request->ssids[i].ssid_len;
++					hidden_ntwk.net_info[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
++					memcpy(hidden_ntwk.net_info[i].ssid, request->ssids[i].ssid, request->ssids[i].ssid_len);
++					hidden_ntwk.net_info[i].ssid_len = request->ssids[i].ssid_len;
+ 				} else {
+-					strHiddenNetwork.n_ssids -= 1;
++					hidden_ntwk.n_ssids -= 1;
+ 				}
+ 			}
+ 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
+@@ -624,7 +624,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 					request->n_channels,
+ 					(const u8 *)request->ie,
+ 					request->ie_len, CfgScanResult,
+-					(void *)priv, &strHiddenNetwork);
++					(void *)priv, &hidden_ntwk);
+ 		} else {
+ 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
+ 					au8ScanChanList,
+-- 
+2.7.4
