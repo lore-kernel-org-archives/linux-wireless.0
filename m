@@ -1,53 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:40167 "EHLO mout.perfora.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751024AbeCZJS6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 05:18:58 -0400
-From: Quytelda Kahja <quytelda@tamalin.org>
-To: lkp@intel.com, gregkh@linuxfoundation.org
-Cc: kbuild-all@01.org, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Quytelda Kahja <quytelda@tamalin.org>
-Subject: [PATCH] staging: rtl8723bs: Remove duplicate #defines.
-Date: Mon, 26 Mar 2018 02:18:30 -0700
-Message-Id: <20180326091830.30132-1-quytelda@tamalin.org> (sfid-20180326_111913_332377_832DBA6B)
-In-Reply-To: <CAFLvi237jR_tTQMXBNqCO=NQFOEFiJQkDBMxb_AxgBEqQDYQEw@mail.gmail.com>
-References: <CAFLvi237jR_tTQMXBNqCO=NQFOEFiJQkDBMxb_AxgBEqQDYQEw@mail.gmail.com>
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:51075 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934059AbeCGXb3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Mar 2018 18:31:29 -0500
+Received: by mail-wm0-f52.google.com with SMTP id w128so8003296wmw.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2018 15:31:28 -0800 (PST)
+Date: Thu, 8 Mar 2018 00:31:25 +0100 (CET)
+From: Enrico Mioso <mrkiko.rs@gmail.com>
+To: Jamie Stuart <jamie@onebillion.org>
+cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+In-Reply-To: <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
+Message-ID: <alpine.LNX.2.21.99.1803080030390.13982@mStation.localdomain> (sfid-20180308_003133_474535_66761680)
+References: <20171221142558.GB4655@redhat.com> <alpine.LNX.2.21.99.1712241311370.28605@localhost.localdomain> <20180103113540.GA10306@redhat.com> <alpine.LNX.2.21.99.1801031503370.8405@localhost.localdomain> <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com>
+ <alpine.LNX.2.21.99.1801220643400.32225@mStation.localdomain> <20180123132234.GC2520@redhat.com> <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain> <20180124100316.GB3101@redhat.com> <20180301153006.GJ1233@makrotopia.org> <20180307122701.GA10584@redhat.com>
+ <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="8323329-918397886-1520465487=:13982"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The modified file includes 'linux/ieee80211.h', but redefines many
-constants that already exist in the header.  This will create a conflict
-if the values are ever changed in the kernel.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Quytelda Kahja <quytelda@tamalin.org>
----
- drivers/staging/rtl8723bs/include/ieee80211.h | 12 ------------
- 1 file changed, 12 deletions(-)
+--8323329-918397886-1520465487=:13982
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-diff --git a/drivers/staging/rtl8723bs/include/ieee80211.h b/drivers/staging/rtl8723bs/include/ieee80211.h
-index 73ce63770c3c..a2402495f447 100644
---- a/drivers/staging/rtl8723bs/include/ieee80211.h
-+++ b/drivers/staging/rtl8723bs/include/ieee80211.h
-@@ -435,19 +435,7 @@ struct ieee80211_snap_hdr {
- #define WLAN_GET_SEQ_SEQ(seq)  ((seq) & RTW_IEEE80211_SCTL_SEQ)
- 
- /* Authentication algorithms */
--#define WLAN_AUTH_OPEN 0
--#define WLAN_AUTH_SHARED_KEY 1
--
--#define WLAN_AUTH_CHALLENGE_LEN 128
--
- #define WLAN_CAPABILITY_BSS (1<<0)
--#define WLAN_CAPABILITY_IBSS (1<<1)
--#define WLAN_CAPABILITY_CF_POLLABLE (1<<2)
--#define WLAN_CAPABILITY_CF_POLL_REQUEST (1<<3)
--#define WLAN_CAPABILITY_PRIVACY (1<<4)
--#define WLAN_CAPABILITY_SHORT_PREAMBLE (1<<5)
--#define WLAN_CAPABILITY_PBCC (1<<6)
--#define WLAN_CAPABILITY_CHANNEL_AGILITY (1<<7)
- #define WLAN_CAPABILITY_SHORT_SLOT (1<<10)
- 
- /* Status codes */
--- 
-2.16.2
+And BTW, thank you to all of you involved on this, for the testing and the work involved. And all.
+
+BTW - happy woman fest to all of you wimen, and the ones you know.
+
+Enrico
+
+
+On Wed, 7 Mar 2018, Jamie Stuart wrote:
+
+> Date: Wed, 7 Mar 2018 16:47:34
+> From: Jamie Stuart <jamie@onebillion.org>
+> To: Stanislaw Gruszka <sgruszka@redhat.com>
+> Cc: Daniel Golle <daniel@makrotopia.org>, Enrico Mioso <mrkiko.rs@gmail.com>,
+>     Tom Psyborg <pozega.tomislav@gmail.com>,
+>     linux-wireless <linux-wireless@vger.kernel.org>,
+>     Johannes Berg <johannes.berg@intel.com>, Arnd Bergmann <arnd@arndb.de>,
+>     John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
+>     Mathias Kresin <dev@kresin.me>
+> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+>     frame due to full tx queue...?
+> 
+> Hi Stanis,
+>
+> Our environment has the following wireless config (MT7620A):
+>
+> config wifi-device 'radio0'
+> 	option type 'mac80211'
+> 	option channel 'auto'
+> 	option hwmode '11g'
+> 	option path 'platform/10180000.wmac'
+> 	option txpower '20'
+> 	option country 'GB'
+> 	option htmode 'HT40'
+> 	option noscan '1'
+>
+> config wifi-iface 'default_radio0'
+> 	option device 'radio0'
+> 	option network 'lan'
+> 	option mode 'ap'
+> 	option encryption 'psk2+aes'
+> 	option key ‘KEY'
+> 	option maxassoc '96'
+> 	option ssid ’SSID'
+> 	option disassoc_low_ack ‘0'
+>
+>
+> The 30 clients are all Apple iPads (a mixture of iPad mini and mini 2, running iOS 9-11). During this testing period, all clients were simultaneously downloading files from the devices’ sdcard (served via nginx running on the device). Although this is not a typical use-case, it was useful in stress-testing the wireless setup.
+>
+> We’ll try your patches Stanis.
+> Daniel - forgive the stupid question, but how do we apply Stanis’ patches atop your staging tree (or both yours and Stanis’ atop trunk?)
+>
+>
+>
+>> On 7 Mar 2018, at 14:27, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>>
+>> On Thu, Mar 01, 2018 at 04:30:10PM +0100, Daniel Golle wrote:
+>>> [forwarding to all other involved players]
+>>>
+>>> On Thu, Mar 01, 2018 at 05:50:51PM +0300, Jamie Stuart wrote:
+>>>> Hi Daniel,
+>>>> The driver seems much improved after this fix.
+>>>
+>>> it's about those two
+>>> [PATCH 1/2] rt2x00: pause almost full queue early
+>>> [PATCH 2/2] rt2x00: do not pause queue unconditionally on error path
+>>>
+>>>> Under very heavy load (30 clients downloading multi-GB files from SD card on the server concurrently), wifi dies with errors:
+>>
+>> This is some testbed? Could you share how did you setup such
+>> environment and what are client devices ?
+>>
+>>>> [ 7794.230376] ieee80211 phy0: rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0001, signal=0x010c, type=4
+>>
+>> This is indicator that HW/FW has a problem. There could be various
+>> reasons for that. One possible I can also observe in my setup,is strange
+>> mishmash of seq  on frames which were not acked in BlockACK and
+>> had to be resent. This can happen when many frames are wrongly decoded
+>> (i.e. when there is bad radio condition or we have not correct low level
+>> RF/BBP setup for a Ralink device). To mitigate that problem we can
+>> limit length of agreggeted AMPDU frame.
+>>
+>> I attached two patches which do that. One for RX side second for TX side.
+>> Please check if they make a diffrent. You can also hardcode ba_size = 0
+>> for those 30 clients setup.
+>>
+>> Note the patches can cause (possibly small) perfromance degradation on
+>> good setups.
+>>
+>> Mathias, could you check them as well and see if they do not cause
+>> performance regression on your device ? Lastly when I changed ba_size
+>> setting, it was a problem on your setup.
+>>
+>>>> Thu Mar  1 16:36:47 2018 kern.err kernel: [ 8702.146403] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
+>>>> Thu Mar  1 16:36:47 2018 kern.err kernel: [ 8702.146403] Please file bug report to http://rt2x00.serialmonkey.com
+>>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.288149] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
+>>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.288149] Please file bug report to http://rt2x00.serialmonkey.com
+>>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.380761] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
+>>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.380761] Please file bug report to http://rt2x00.serialmonkey.com
+>>
+>> For those errors I recommend to remove
+>>
+>> 600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
+>>
+>> patch. Whould be good if OpenWRT developers could apply this patch only
+>> on target where it is really needed, not for all rt2800 devices.
+>>
+>> Thanks
+>> Stanislaw
+>
+>
+--8323329-918397886-1520465487=:13982--
