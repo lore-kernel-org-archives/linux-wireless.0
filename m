@@ -1,178 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37060 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753791AbeC1O1d (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:22611 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933278AbeCHPwf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 10:27:33 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 17:27:28 +0300
-Message-Id: <20180328142728.9547-1-luca@coelho.fi> (sfid-20180328_162749_656073_ED761A5A)
-In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
-References: <20180328141157.5427-1-luca@coelho.fi>
-Subject: [PATCH 13/14] iwlwifi: mvm: save low latency causes in an enum
+        Thu, 8 Mar 2018 10:52:35 -0500
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 09/10] staging: wilc1000: rename variables using camelCase in handle_rcvd_gnrl_async_info()
+Date: Wed, 7 Mar 2018 07:43:58 +0530
+Message-ID: <1520388839-7048-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180308_165238_331248_CEAD2F4C)
+In-Reply-To: <1520388839-7048-1-git-send-email-ajay.kathat@microchip.com>
+References: <1520388839-7048-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Fix 'Avoid camelCase' issue found by checkpatch.pl script.
 
-Currently we have a boolean variable for each cause.
-
-This costs space, and requires to check each separately
-when determining low latency.
-
-Since we have another cause incoming, convert it to an enum.
-
-While at it, move the retrieval of the prev value and the
-assignment of the new value to be inside iwl_mvm_update_low_latency
-and save the need for each caller to do it separately.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   | 11 +++----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       | 36 +++++++++++++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  8 +++--
- 3 files changed, 38 insertions(+), 17 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 86 +++++++++++++++----------------
+ 1 file changed, 43 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-index 4e9d1792baf3..f7fcf700196b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-@@ -1276,7 +1276,6 @@ static ssize_t iwl_dbgfs_low_latency_write(struct ieee80211_vif *vif, char *buf,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b26ea85..d822b15 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1343,17 +1343,17 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 				       struct rcvd_async_info *rcvd_info)
  {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = mvmvif->mvm;
--	bool prev;
- 	u8 value;
- 	int ret;
+ 	s32 result = 0;
+-	u8 u8MsgType = 0;
+-	u8 u8MsgID = 0;
+-	u16 u16MsgLen = 0;
+-	u16 u16WidID = (u16)WID_NIL;
+-	u8 u8WidLen  = 0;
+-	u8 u8MacStatus;
+-	u8 u8MacStatusReasonCode;
+-	u8 u8MacStatusAdditionalInfo;
++	u8 msg_type = 0;
++	u8 msg_id = 0;
++	u16 msg_len = 0;
++	u16 wid_id = (u16)WID_NIL;
++	u8 wid_len  = 0;
++	u8 mac_status;
++	u8 mac_status_reason_code;
++	u8 mac_status_additional_info;
+ 	struct connect_info conn_info;
+ 	struct disconnect_info disconn_info;
+-	s32 s32Err = 0;
++	s32 err = 0;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
  
-@@ -1287,9 +1286,7 @@ static ssize_t iwl_dbgfs_low_latency_write(struct ieee80211_vif *vif, char *buf,
- 		return -EINVAL;
+ 	if (!hif_drv) {
+@@ -1370,62 +1370,62 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 			return -EINVAL;
+ 		}
  
- 	mutex_lock(&mvm->mutex);
--	prev = iwl_mvm_vif_low_latency(mvmvif);
--	mvmvif->low_latency_dbgfs = value;
--	iwl_mvm_update_low_latency(mvm, vif, prev);
-+	iwl_mvm_update_low_latency(mvm, vif, value, LOW_LATENCY_DEBUGFS);
- 	mutex_unlock(&mvm->mutex);
+-		u8MsgType = rcvd_info->buffer[0];
++		msg_type = rcvd_info->buffer[0];
  
- 	return count;
-@@ -1306,9 +1303,9 @@ static ssize_t iwl_dbgfs_low_latency_read(struct file *file,
+-		if ('I' != u8MsgType) {
++		if ('I' != msg_type) {
+ 			netdev_err(vif->ndev, "Received Message incorrect.\n");
+ 			return -EFAULT;
+ 		}
  
- 	len = scnprintf(buf, sizeof(buf) - 1,
- 			"traffic=%d\ndbgfs=%d\nvcmd=%d\n",
--			mvmvif->low_latency_traffic,
--			mvmvif->low_latency_dbgfs,
--			mvmvif->low_latency_vcmd);
-+			!!(mvmvif->low_latency & LOW_LATENCY_TRAFFIC),
-+			!!(mvmvif->low_latency & LOW_LATENCY_DEBUGFS),
-+			!!(mvmvif->low_latency & LOW_LATENCY_VCMD));
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
+-		u8MsgID = rcvd_info->buffer[1];
+-		u16MsgLen = MAKE_WORD16(rcvd_info->buffer[2], rcvd_info->buffer[3]);
+-		u16WidID = MAKE_WORD16(rcvd_info->buffer[4], rcvd_info->buffer[5]);
+-		u8WidLen = rcvd_info->buffer[6];
+-		u8MacStatus  = rcvd_info->buffer[7];
+-		u8MacStatusReasonCode = rcvd_info->buffer[8];
+-		u8MacStatusAdditionalInfo = rcvd_info->buffer[9];
++		msg_id = rcvd_info->buffer[1];
++		msg_len = MAKE_WORD16(rcvd_info->buffer[2], rcvd_info->buffer[3]);
++		wid_id = MAKE_WORD16(rcvd_info->buffer[4], rcvd_info->buffer[5]);
++		wid_len = rcvd_info->buffer[6];
++		mac_status  = rcvd_info->buffer[7];
++		mac_status_reason_code = rcvd_info->buffer[8];
++		mac_status_additional_info = rcvd_info->buffer[9];
+ 		if (hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP) {
+-			u32 u32RcvdAssocRespInfoLen = 0;
+-			struct connect_resp_info *pstrConnectRespInfo = NULL;
++			u32 rcvd_assoc_resp_info_len = 0;
++			struct connect_resp_info *connect_resp_info = NULL;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 82445e12aacb..d2cf751db68d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -299,6 +299,18 @@ enum iwl_bt_force_ant_mode {
- 	BT_FORCE_ANT_MAX,
- };
+ 			memset(&conn_info, 0, sizeof(struct connect_info));
  
-+/**
-+* struct iwl_mvm_low_latency_cause - low latency set causes
-+* @LOW_LATENCY_TRAFFIC: indicates low latency traffic was detected
-+* @LOW_LATENCY_DEBUGFS: low latency mode set from debugfs
-+* @LOW_LATENCY_VCMD: low latency mode set from vendor command
-+*/
-+enum iwl_mvm_low_latency_cause {
-+	LOW_LATENCY_TRAFFIC = BIT(0),
-+	LOW_LATENCY_DEBUGFS = BIT(1),
-+	LOW_LATENCY_VCMD = BIT(2),
-+};
-+
- /**
- * struct iwl_mvm_vif_bf_data - beacon filtering related data
- * @bf_enabled: indicates if beacon filtering is enabled
-@@ -335,9 +347,8 @@ struct iwl_mvm_vif_bf_data {
-  * @pm_enabled - Indicate if MAC power management is allowed
-  * @monitor_active: indicates that monitor context is configured, and that the
-  *	interface should get quota etc.
-- * @low_latency_traffic: indicates low latency traffic was detected
-- * @low_latency_dbgfs: low latency mode set from debugfs
-- * @low_latency_vcmd: low latency mode set from vendor command
-+ * @low_latency: indicates low latency is set, see
-+ *	enum &iwl_mvm_low_latency_cause for causes.
-  * @ps_disabled: indicates that this interface requires PS to be disabled
-  * @queue_params: QoS params for this MAC
-  * @bcast_sta: station used for broadcast packets. Used by the following
-@@ -367,7 +378,7 @@ struct iwl_mvm_vif {
- 	bool ap_ibss_active;
- 	bool pm_enabled;
- 	bool monitor_active;
--	bool low_latency_traffic, low_latency_dbgfs, low_latency_vcmd;
-+	u8 low_latency;
- 	bool ps_disabled;
- 	struct iwl_mvm_vif_bf_data bf_data;
+-			if (u8MacStatus == MAC_CONNECTED) {
++			if (mac_status == MAC_CONNECTED) {
+ 				memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
  
-@@ -1756,7 +1767,8 @@ bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm);
+ 				host_int_get_assoc_res_info(vif,
+ 							    rcv_assoc_resp,
+ 							    MAX_ASSOC_RESP_FRAME_SIZE,
+-							    &u32RcvdAssocRespInfoLen);
++							    &rcvd_assoc_resp_info_len);
  
- /* Low latency */
- int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
--			       bool value);
-+			      bool low_latency,
-+			      enum iwl_mvm_low_latency_cause cause);
- /* get SystemLowLatencyMode - only needed for beacon threshold? */
- bool iwl_mvm_low_latency(struct iwl_mvm *mvm);
- /* get VMACLowLatencyMode */
-@@ -1772,9 +1784,17 @@ static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
- 	 * binding, so this has no real impact. For now, just return
- 	 * the current desired low-latency state.
- 	 */
--	return mvmvif->low_latency_dbgfs ||
--	       mvmvif->low_latency_traffic ||
--	       mvmvif->low_latency_vcmd;
-+	return mvmvif->low_latency;
-+}
-+
-+static inline
-+void iwl_mvm_vif_set_low_latency(struct iwl_mvm_vif *mvmvif, bool set,
-+				 enum iwl_mvm_low_latency_cause cause)
-+{
-+	if (set)
-+		mvmvif->low_latency |= cause;
-+	else
-+		mvmvif->low_latency &= ~cause;
- }
+-				if (u32RcvdAssocRespInfoLen != 0) {
+-					s32Err = wilc_parse_assoc_resp_info(rcv_assoc_resp, u32RcvdAssocRespInfoLen,
+-									    &pstrConnectRespInfo);
+-					if (s32Err) {
+-						netdev_err(vif->ndev, "wilc_parse_assoc_resp_info() returned error %d\n", s32Err);
++				if (rcvd_assoc_resp_info_len != 0) {
++					err = wilc_parse_assoc_resp_info(rcv_assoc_resp, rcvd_assoc_resp_info_len,
++									 &connect_resp_info);
++					if (err) {
++						netdev_err(vif->ndev, "wilc_parse_assoc_resp_info() returned error %d\n", err);
+ 					} else {
+-						conn_info.status = pstrConnectRespInfo->status;
++						conn_info.status = connect_resp_info->status;
  
- /* hw scheduler queue config */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 70f8b8eb6117..bebcfb44c8c2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -1034,14 +1034,18 @@ bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm)
- }
+-						if (conn_info.status == SUCCESSFUL_STATUSCODE && pstrConnectRespInfo->ies) {
+-							conn_info.resp_ies_len = pstrConnectRespInfo->ies_len;
+-							conn_info.resp_ies = kmalloc(pstrConnectRespInfo->ies_len, GFP_KERNEL);
+-							memcpy(conn_info.resp_ies, pstrConnectRespInfo->ies,
+-							       pstrConnectRespInfo->ies_len);
++						if (conn_info.status == SUCCESSFUL_STATUSCODE && connect_resp_info->ies) {
++							conn_info.resp_ies_len = connect_resp_info->ies_len;
++							conn_info.resp_ies = kmalloc(connect_resp_info->ies_len, GFP_KERNEL);
++							memcpy(conn_info.resp_ies, connect_resp_info->ies,
++							       connect_resp_info->ies_len);
+ 						}
  
- int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
--			       bool prev)
-+			       bool low_latency,
-+			       enum iwl_mvm_low_latency_cause cause)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	int res;
--	bool low_latency;
-+	bool prev;
+-						if (pstrConnectRespInfo) {
+-							kfree(pstrConnectRespInfo->ies);
+-							kfree(pstrConnectRespInfo);
++						if (connect_resp_info) {
++							kfree(connect_resp_info->ies);
++							kfree(connect_resp_info);
+ 						}
+ 					}
+ 				}
+ 			}
  
- 	lockdep_assert_held(&mvm->mutex);
+-			if (u8MacStatus == MAC_CONNECTED &&
++			if (mac_status == MAC_CONNECTED &&
+ 			    conn_info.status != SUCCESSFUL_STATUSCODE)	{
+ 				netdev_err(vif->ndev, "Received MAC status is MAC_CONNECTED while the received status code in Asoc Resp is not SUCCESSFUL_STATUSCODE\n");
+ 				eth_zero_addr(wilc_connected_ssid);
+-			} else if (u8MacStatus == MAC_DISCONNECTED)    {
++			} else if (mac_status == MAC_DISCONNECTED)    {
+ 				netdev_err(vif->ndev, "Received MAC status is MAC_DISCONNECTED\n");
+ 				eth_zero_addr(wilc_connected_ssid);
+ 			}
+@@ -1433,7 +1433,7 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 			if (hif_drv->usr_conn_req.bssid) {
+ 				memcpy(conn_info.bssid, hif_drv->usr_conn_req.bssid, 6);
  
-+	prev = iwl_mvm_vif_low_latency(mvmvif);
-+	iwl_mvm_vif_set_low_latency(mvmvif, low_latency, cause);
-+
- 	low_latency = iwl_mvm_vif_low_latency(mvmvif);
+-				if (u8MacStatus == MAC_CONNECTED &&
++				if (mac_status == MAC_CONNECTED &&
+ 				    conn_info.status == SUCCESSFUL_STATUSCODE)	{
+ 					memcpy(hif_drv->assoc_bssid,
+ 					       hif_drv->usr_conn_req.bssid, ETH_ALEN);
+@@ -1451,11 +1451,11 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 			del_timer(&hif_drv->connect_timer);
+ 			hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
+ 							  &conn_info,
+-							  u8MacStatus,
++							  mac_status,
+ 							  NULL,
+ 							  hif_drv->usr_conn_req.arg);
  
- 	if (low_latency == prev)
+-			if (u8MacStatus == MAC_CONNECTED &&
++			if (mac_status == MAC_CONNECTED &&
+ 			    conn_info.status == SUCCESSFUL_STATUSCODE)	{
+ 				wilc_set_power_mgmt(vif, 0, 0);
+ 
+@@ -1482,7 +1482,7 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 			hif_drv->usr_conn_req.ies_len = 0;
+ 			kfree(hif_drv->usr_conn_req.ies);
+ 			hif_drv->usr_conn_req.ies = NULL;
+-		} else if ((u8MacStatus == MAC_DISCONNECTED) &&
++		} else if ((mac_status == MAC_DISCONNECTED) &&
+ 			   (hif_drv->hif_state == HOST_IF_CONNECTED)) {
+ 			memset(&disconn_info, 0, sizeof(struct disconnect_info));
+ 
+@@ -1532,7 +1532,7 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 			hif_drv->hif_state = HOST_IF_IDLE;
+ 			scan_while_connected = false;
+ 
+-		} else if ((u8MacStatus == MAC_DISCONNECTED) &&
++		} else if ((mac_status == MAC_DISCONNECTED) &&
+ 			   (hif_drv->usr_scan_req.scan_result)) {
+ 			del_timer(&hif_drv->scan_timer);
+ 			if (hif_drv->usr_scan_req.scan_result)
 -- 
-2.16.2
+2.7.4
