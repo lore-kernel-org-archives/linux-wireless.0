@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52720 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53832 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751348AbeCPNB0 (ORCPT
+        with ESMTP id S1751156AbeCGNMV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 09:01:26 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [V2] brcmfmac: drop Inter-Access Point Protocol packets by default
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180315072909.1512-1-zajec5@gmail.com>
-References: <20180315072909.1512-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        James Hughes <james.hughes@raspberrypi.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>,
-        bridge@lists.linux-foundation.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20180316130125.C69D860C4F@smtp.codeaurora.org> (sfid-20180316_140135_627036_D4979556)
-Date: Fri, 16 Mar 2018 13:01:25 +0000 (UTC)
+        Wed, 7 Mar 2018 08:12:21 -0500
+From: Anilkumar Kolli <akolli@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Subject: [PATCH] ath10k: Advertize beacon_int_min_gcd
+Date: Wed,  7 Mar 2018 18:42:36 +0530
+Message-Id: <1520428356-2762-1-git-send-email-akolli@codeaurora.org> (sfid-20180307_141224_833492_F494E4C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
+This patch fixes regression caused by 0c317a02ca98
+("cfg80211: support virtual interfaces with different beacon intervals"),
+with this change cfg80211 expects the driver to advertize
+'beacon_int_min_gcd' to support different beacon intervals in multivap
+scenario. This support is added for, QCA988X/QCA99X0/QCA9984/QCA4019.
 
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> Testing brcmfmac with more recent firmwares resulted in AP interfaces
-> not working in some specific setups. Debugging resulted in discovering
-> support for IAPP in Broadcom's firmwares.
-> 
-> Older firmwares were only generating 802.11f frames. Newer ones like:
-> 1) 10.10 (TOB) (r663589)
-> 2) 10.10.122.20 (r683106)
-> for 4366b1 and 4366c0 respectively seem to also /respect/ 802.11f frames
-> in the Tx path by performing a STA disassociation.
-> 
-> This obsoleted standard and its implementation is something that:
-> 1) Most people don't need / want to use
-> 2) Can allow local DoS attacks
-> 3) Breaks AP interfaces in some specific bridge setups
-> 
-> To solve issues it can cause this commit modifies brcmfmac to drop IAPP
-> packets. If affects:
-> 1) Rx path: driver won't be sending these unwanted packets up.
-> 2) Tx path: driver will reject packets that would trigger STA
->    disassociation perfromed by a firmware (possible local DoS attack).
-> 
-> It appears there are some Broadcom's clients/users who care about this
-> feature despite the drawbacks. They can switch it on using a new module
-> param.
-> 
-> This change results in only two more comparisons (check for module param
-> and check for Ethernet packet length) for 99.9% of packets. Its overhead
-> should be very minimal.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Verifed AP + mesh bring up on QCA9984 with beacon interval 100msec and
+1000msec respectively.
+Frimware: firmware-5.bin_10.4-3.5.3-00053
 
-Patch applied to wireless-drivers.git, thanks.
+Fixes: 0c317a02ca98 ("cfg80211: support virtual interfaces with different beacon intervals")
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-125905517028 brcmfmac: drop Inter-Access Point Protocol packets by default
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ebb3f1b046f3..9486ef7cc06b 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -7874,6 +7875,7 @@ void ath10k_mac_destroy(struct ath10k *ar)
+ 		.max_interfaces = 8,
+ 		.num_different_channels = 1,
+ 		.beacon_int_infra_match = true,
++		.beacon_int_min_gcd = 1,
+ #ifdef CONFIG_ATH10K_DFS_CERTIFIED
+ 		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
+ 					BIT(NL80211_CHAN_WIDTH_20) |
+@@ -7997,6 +7999,7 @@ void ath10k_mac_destroy(struct ath10k *ar)
+ 		.max_interfaces = 16,
+ 		.num_different_channels = 1,
+ 		.beacon_int_infra_match = true,
++		.beacon_int_min_gcd = 1,
+ #ifdef CONFIG_ATH10K_DFS_CERTIFIED
+ 		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
+ 					BIT(NL80211_CHAN_WIDTH_20) |
 -- 
-https://patchwork.kernel.org/patch/10283971/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
