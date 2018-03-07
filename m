@@ -1,33 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:55828 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751018AbeCTWpU (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:45106 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751127AbeCGKCS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 18:45:20 -0400
-Message-ID: <1521585916.19123.3.camel@sipsolutions.net> (sfid-20180320_234523_432290_260E3B0D)
-Subject: Re: [PATCH] mt76: enable MAC80211_LEDS by default
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, arnd@arndb.de
-Date: Tue, 20 Mar 2018 23:45:16 +0100
-In-Reply-To: <a159566d0970fb5c43da7758d8281b594b6ca48e.1521209538.git.lorenzo.bianconi@redhat.com> (sfid-20180316_154622_034123_84A96CF1)
-References: <cover.1521209538.git.lorenzo.bianconi@redhat.com>
-         <a159566d0970fb5c43da7758d8281b594b6ca48e.1521209538.git.lorenzo.bianconi@redhat.com>
-         (sfid-20180316_154622_034123_84A96CF1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 7 Mar 2018 05:02:18 -0500
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: m@bues.ch
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] ssb:: use put_device() if device_register fail
+Date: Wed,  7 Mar 2018 15:31:30 +0530
+Message-Id: <bdd20c00cba68044d82e387072b39f0176448e97.1520416785.git.arvind.yadav.cs@gmail.com> (sfid-20180307_110248_558757_8572846C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-03-16 at 15:45 +0100, Lorenzo Bianconi wrote:
-> --- a/drivers/net/wireless/mediatek/mt76/Kconfig
-> +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-> @@ -1,5 +1,8 @@
->  config MT76_CORE
->  	tristate
-> +	select MAC80211_LEDS
+if device_register() returned an error! Always use put_device()
+to give up the reference initialized.
 
-Should drivers really mess with mac80211's configuration that way? I
-believe this is a user-visible config, no?
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/ssb/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-johannes
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 65420a9..c4449e0 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -521,6 +521,7 @@ static int ssb_devices_register(struct ssb_bus *bus)
+ 			ssb_err("Could not register %s\n", dev_name(dev));
+ 			/* Set dev to NULL to not unregister
+ 			 * dev on error unwinding. */
++			put_device(dev);
+ 			sdev->dev = NULL;
+ 			kfree(devwrap);
+ 			goto error;
+-- 
+1.9.1
