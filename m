@@ -1,171 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward105o.mail.yandex.net ([37.140.190.183]:42548 "EHLO
-        forward105o.mail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1030656AbeCANCu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 08:02:50 -0500
-From: Kirill Tkhai <tkhai@ya.ru>
-To: syzbot <syzbot+70ce058e01259de7bb1d@syzkaller.appspotmail.com>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from nbd.name ([46.4.11.11]:49138 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932085AbeCHPqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Mar 2018 10:46:17 -0500
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: Pavel Machek <pavel@ucw.cz>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "syzkaller-bugs@googlegroups.com" <syzkaller-bugs@googlegroups.com>,
-        ktkhai <ktkhai@virtuozzo.com>
-In-Reply-To: <001a113ecf342db684056655e097@google.com>
-References: <001a113ecf342db684056655e097@google.com>
-Subject: Re: KASAN: use-after-free Read in mac80211_hwsim_del_radio
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+ <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
+ <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
+ <20180302090312.GA30267@amd>
+ <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
+ <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
+ <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
+ <20180308090216.GC17761@amd>
+ <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com> <20180308140515.GA4889@amd>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <1b1f6344-d588-d2f2-4b3d-a0a4043e801f@nbd.name> (sfid-20180308_164621_949287_CE40A981)
+Date: Thu, 8 Mar 2018 16:46:11 +0100
 MIME-Version: 1.0
-Message-Id: <809581519908936@web46j.yandex.ru> (sfid-20180301_140317_217594_C2E2B98A)
-Date: Thu, 01 Mar 2018 15:55:36 +0300
+In-Reply-To: <20180308140515.GA4889@amd>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 2018-03-08 15:05, Pavel Machek wrote:
+> On Thu 2018-03-08 13:33:29, Sebastian Gottschall wrote:
+>> Am 08.03.2018 um 10:02 schrieb Pavel Machek:
+>> >On Wed 2018-03-07 18:54:41, Sebastian Gottschall wrote:
+>> >>Am 07.03.2018 um 17:22 schrieb Rafał Miłecki:
+>> >>>On 2 March 2018 at 10:22, Sebastian Gottschall <s.gottschall@dd-wrt.com> wrote:
+>> >>>>>>leds-gpio is crap and limited. you can just register one platform data at
+>> >>>>>>kernel runtime since its identified by its object name "led-gpio" but the
+>> >>>>>>kernel forbidds to register 2 platform datas with the same name
+>> >>>>>>consider the ar71xx devices with qca988x wifi chipsets. they all have
+>> >>>>>>already a led platform data registered
+>> >>>>>>at boottime. a second can't be registered anymore so gpio_led is useless
+>> >>>>>>at
+>> >>>>>>all for most developers on such platforms. its mainly used for early
+>> >>>>>>kernel
+>> >>>>>>platform data initialisation for system leds.
+>> >>>>>If leds-gpio has limitations, please fix those, rather then
+>> >>>>>introducing duplicated code.
+>> >>>>there is no duplicated code introduced and there is no solution for it.
+>> >>>>consider that all wifi drivers with softled support
+>> >>>>are going that way with registering a own led driver. see ath9k for
+>> >>>>instance. gpio-led cannot be used for it and there is no way to
+>> >>>>support multiple platform datas with the same name. its a kernel limitation
+>> >>>I just reviewed some mips arch patch adding support for more LEDs for
+>> >>>selected devices:
+>> >>>[PATCH] MIPS: BCM47XX: Add Luxul XAP1500/XWR1750 WiFi LEDs
+>> >>>https://patchwork.linux-mips.org/patch/18681/
+>> >>>
+>> >>>It seems to be simply adding another call to the
+>> >>>gpio_led_register_device(). It seems to me you can call that function
+>> >>>multiple times and register multiple structs with LEDs.
+>> >>>
+>> >>>Isn't all you need something like this?
+>> >>>
+>> >>>static const struct gpio_led ath10k_leds[] = {
+>> >>>         {
+>> >>>                 .name = "ath10k:color:function",
+>> >>>                 .active_low = 1,
+>> >>>                 .default_state = LEDS_GPIO_DEFSTATE_KEEP,
+>> >>>         }
+>> >>>};
+>> >>>
+>> >>>static struct gpio_led_platform_data bcm47xx_leds_pdata_extra = {
+>> >>>         leds = ath10k_leds;
+>> >>>         num_leds = ARRAY_SIZE(ath10k_leds);
+>> >>>};
+>> >>>
+>> >>>ath10k_leds.gpio = ar->hw_params.led_pin;
+>> >>>gpio_led_register_device(0, &ath10k_leds);
+>> >>the problem are other architectures which have already registered gpio_led
+>> >>at system start like ar71xx
+>> >>you cannot register a second one. so a independend led driver is a
+>> >>requirement for direct control
+>> >If the limitation indeed exists, please fix the limitation rather than
+>> >working around it in each and every driver.
+>> see ath9k. its exact the same implementation.
+> 
+> Ok, so one more driver to fix.
+> 
+>> in addition my variant does also work without gpiolib support. so it can be
+>> used even if the kernel is configured
+>> without gpio support.
+>> and not to forget, using a own led driver is more ligthweight from the call
+>> path for each led on / off event which is important for
+>> low performance embedded devices
+> 
+> We are not going to copy&paste code because such code works without
+> libraries, and we are not going to copy&paste code because that uses
+> less cache during calls. Sorry.
+> 
+> NAK. Please fix your patch. Since this discussion seems to have taken a rather weird turn, I've
+taken a look at the specific code, and from my point of view the code
+that sets up the LED (including callback) is so trivial that it's simply
+not worth dealing with adding the leds-gpio driver to the mix.
+It adds extra complexity and an extra dependency for no reason at all.
+There's no extra functionality to be gained by using it.
 
-01.03.2018, 11:46, "syzbot" <syzbot+70ce058e01259de7bb1d@syzkaller.appspotmail.com>:
-> Hello,
->
-> syzbot hit the following crash on upstream commit
-> f3afe530d644488a074291da04a69a296ab63046 (Tue Feb 27 22:02:39 2018 +0000)
-> Merge branch 'fixes-v4.16-rc4' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/jmorris/linux-security
->
-> So far this crash happened 4 times on upstream.
-> Unfortunately, I don't have any reproducer for this crash yet.
-> Raw console output is attached.
-> compiler: gcc (GCC) 7.1.1 20170620
-> .config is attached.
->
-> IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> Reported-by: syzbot+70ce058e01259de7bb1d@syzkaller.appspotmail.com
-> It will help syzbot understand when the bug is fixed. See footer for
-> details.
-> If you forward the report, please keep this part and the footer.
->
-> ==================================================================
-> BUG: KASAN: use-after-free in strlen+0x85/0xa0 lib/string.c:482
-> Read of size 1 at addr ffff8801d6c38f40 by task kworker/0:1/23
->
-> CPU: 0 PID: 23 Comm: kworker/0:1 Not tainted 4.16.0-rc3+ #332
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
-> Google 01/01/2011
-> Workqueue: hwsim_wq destroy_radio
-> Call Trace:
->   __dump_stack lib/dump_stack.c:17 [inline]
->   dump_stack+0x194/0x24d lib/dump_stack.c:53
->   print_address_description+0x73/0x250 mm/kasan/report.c:256
->   kasan_report_error mm/kasan/report.c:354 [inline]
->   kasan_report+0x23b/0x360 mm/kasan/report.c:412
->   __asan_report_load1_noabort+0x14/0x20 mm/kasan/report.c:430
->   strlen+0x85/0xa0 lib/string.c:482
->   strlen include/linux/string.h:267 [inline]
->   hwsim_mcast_del_radio drivers/net/wireless/mac80211_hwsim.c:2835 [inline]
->   mac80211_hwsim_del_radio+0x168/0x3b0
-> drivers/net/wireless/mac80211_hwsim.c:2854
->   destroy_radio+0x9d/0x100 drivers/net/wireless/mac80211_hwsim.c:3396
->   process_one_work+0xc47/0x1bb0 kernel/workqueue.c:2113
->   worker_thread+0x223/0x1990 kernel/workqueue.c:2247
->   kthread+0x33c/0x400 kernel/kthread.c:238
->   ret_from_fork+0x3a/0x50 arch/x86/entry/entry_64.S:406
->
-> Allocated by task 6226:
->   save_stack+0x43/0xd0 mm/kasan/kasan.c:447
->   set_track mm/kasan/kasan.c:459 [inline]
->   kasan_kmalloc+0xad/0xe0 mm/kasan/kasan.c:552
->   __do_kmalloc mm/slab.c:3705 [inline]
->   __kmalloc_track_caller+0x15e/0x760 mm/slab.c:3720
->   kvasprintf+0xa9/0x130 lib/kasprintf.c:25
->   kvasprintf_const+0x56/0x160 lib/kasprintf.c:49
->   kobject_set_name_vargs+0x5b/0x140 lib/kobject.c:263
->   dev_set_name+0xb4/0xf0 drivers/base/core.c:1649
->   wiphy_new_nm+0x910/0x21d0 net/wireless/core.c:451
->   ieee80211_alloc_hw_nm+0x4b4/0x2180 net/mac80211/main.c:531
->   mac80211_hwsim_new_radio+0x227/0x2cd0
-> drivers/net/wireless/mac80211_hwsim.c:2537
->   hwsim_new_radio_nl+0x67a/0x8c0 drivers/net/wireless/mac80211_hwsim.c:3213
->   genl_family_rcv_msg+0x7b7/0xfb0 net/netlink/genetlink.c:599
->   genl_rcv_msg+0xb2/0x140 net/netlink/genetlink.c:624
->   netlink_rcv_skb+0x14b/0x380 net/netlink/af_netlink.c:2444
->   genl_rcv+0x28/0x40 net/netlink/genetlink.c:635
->   netlink_unicast_kernel net/netlink/af_netlink.c:1308 [inline]
->   netlink_unicast+0x4c4/0x6b0 net/netlink/af_netlink.c:1334
->   netlink_sendmsg+0xa4a/0xe60 net/netlink/af_netlink.c:1897
->   sock_sendmsg_nosec net/socket.c:630 [inline]
->   sock_sendmsg+0xca/0x110 net/socket.c:640
->   ___sys_sendmsg+0x767/0x8b0 net/socket.c:2046
->   __sys_sendmsg+0xe5/0x210 net/socket.c:2080
->   SYSC_sendmsg net/socket.c:2091 [inline]
->   SyS_sendmsg+0x2d/0x50 net/socket.c:2087
->   do_syscall_64+0x281/0x940 arch/x86/entry/common.c:287
->   entry_SYSCALL_64_after_hwframe+0x42/0xb7
->
-> Freed by task 5:
->   save_stack+0x43/0xd0 mm/kasan/kasan.c:447
->   set_track mm/kasan/kasan.c:459 [inline]
->   __kasan_slab_free+0x11a/0x170 mm/kasan/kasan.c:520
->   kasan_slab_free+0xe/0x10 mm/kasan/kasan.c:527
->   __cache_free mm/slab.c:3485 [inline]
->   kfree+0xd9/0x260 mm/slab.c:3800
->   kfree_const+0x31/0x40 mm/util.c:38
->   kobject_rename+0x1b3/0x2a0 lib/kobject.c:501
->   device_rename+0x147/0x1f0 drivers/base/core.c:2648
->   cfg80211_switch_netns+0x1fa/0x470 net/wireless/core.c:192
->   cfg80211_pernet_exit+0x93/0xc0 net/wireless/core.c:1336
->   ops_exit_list.isra.6+0xae/0x150 net/core/net_namespace.c:142
->   cleanup_net+0x6a1/0xcb0 net/core/net_namespace.c:517
->   process_one_work+0xc47/0x1bb0 kernel/workqueue.c:2113
->   worker_thread+0x223/0x1990 kernel/workqueue.c:2247
->   kthread+0x33c/0x400 kernel/kthread.c:238
->   ret_from_fork+0x3a/0x50 arch/x86/entry/entry_64.S:406
->
-> The buggy address belongs to the object at ffff8801d6c38f40
->   which belongs to the cache kmalloc-32 of size 32
-> The buggy address is located 0 bytes inside of
->   32-byte region [ffff8801d6c38f40, ffff8801d6c38f60)
-> The buggy address belongs to the page:
-> page:ffffea00075b0e00 count:1 mapcount:0 mapping:ffff8801d6c38000
-> index:0xffff8801d6c38fc1
-> flags: 0x2fffc0000000100(slab)
-> raw: 02fffc0000000100 ffff8801d6c38000 ffff8801d6c38fc1 000000010000003f
-> raw: ffffea00075b0c20 ffffea00075b0f20 ffff8801dac001c0 0000000000000000
-> page dumped because: kasan: bad access detected
->
-> Memory state around the buggy address:
->   ffff8801d6c38e00: fb fb fb fb fc fc fc fc fb fb fb fb fc fc fc fc
->   ffff8801d6c38e80: fb fb fb fb fc fc fc fc fb fb fb fb fc fc fc fc
->>  ffff8801d6c38f00: 07 fc fc fc fc fc fc fc fb fb fb fb fc fc fc fc
->
->                                             ^
->   ffff8801d6c38f80: fb fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc
->   ffff8801d6c39000: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-> ==================================================================
->
-> ---
-> This bug is generated by a dumb bot. It may contain errors.
-> See https://goo.gl/tpsmEJ for details.
-> Direct all questions to syzkaller@googlegroups.com.
->
-> syzbot will keep track of this bug report.
-> If you forgot to add the Reported-by tag, once the fix for this bug is
-> merged
-> into any tree, please reply to this email with:
-> #syz fix: exact-commit-title
-> To mark this as a duplicate of another syzbot report, please reply with:
-> #syz dup: exact-subject-of-another-report
-> If it's a one-off invalid bug report, please reply with:
-> #syz invalid
-> Note: if the crash happens again, it will cause creation of a new bug
-> report.
-> Note: all commands must start from beginning of the line in the email body.
-
-JFI: As a coincidence, I'm converting pernet_operation and hwsim_net_ops are the last
-in drivers directory which is not converted. There is also an issue with hwsim_netgroup,
-and I sent a fix today:
-
-https://patchwork.ozlabs.org/patch/879748/
-
-Thanks,
-Kirill
+- Felix
