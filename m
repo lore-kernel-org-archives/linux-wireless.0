@@ -1,36 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53468 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932448AbeCMQs5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 12:48:57 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mx.socionext.com ([202.248.49.38]:16441 "EHLO mx.socionext.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932905AbeCHAZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Mar 2018 19:25:40 -0500
+From: <yamada.masahiro@socionext.com>
+To: <kvalo@codeaurora.org>, <govinds@codeaurora.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: RE: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN
+ module
+Date: Thu, 8 Mar 2018 00:25:36 +0000
+Message-ID: <fb2c04383f024ab8b2c62dd5a4ad20ac@SOC-EX01V.e01.socionext.com> (sfid-20180308_012544_499475_47331CB0)
+References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
+        <87371kqfda.fsf@kamboji.qca.qualcomm.com>
+        <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com>
+ <87tvttl6kp.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87tvttl6kp.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="iso-2022-jp"
 MIME-Version: 1.0
-Subject: Re: [v3] ssb: use put_device() if device_register fail
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1520490204-10411-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1520490204-10411-1-git-send-email-arvind.yadav.cs@gmail.com>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: m@bues.ch, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Message-Id: <20180313164856.C170F600C1@smtp.codeaurora.org> (sfid-20180313_174924_372983_C5DF8222)
-Date: Tue, 13 Mar 2018 16:48:56 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
-
-> Never directly free @dev after calling device_register(), even
-> if it returned an error! Always use put_device() to give up the
-> reference initialized.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-
-Patch applied to wireless-drivers-next.git, thanks.
-
-a24853aab591 ssb: use put_device() if device_register fail
-
--- 
-https://patchwork.kernel.org/patch/10266711/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2FsbGUgVmFsbyBbbWFp
+bHRvOmt2YWxvQGNvZGVhdXJvcmEub3JnXQ0KPiBTZW50OiBUdWVzZGF5LCBNYXJjaCAwNiwgMjAx
+OCA5OjQxIFBNDQo+IFRvOiBHb3ZpbmQgU2luZ2ggPGdvdmluZHNAY29kZWF1cm9yYS5vcmc+OyBZ
+YW1hZGEsIE1hc2FoaXJvLxskQjszRUQbKEIgGyRCPz85MBsoQg0KPiA8eWFtYWRhLm1hc2FoaXJv
+QHNvY2lvbmV4dC5jb20+DQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGF0
+aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDEvMTNdIGF0
+aDEwazogcGxhdGZvcm0gZHJpdmVyIGZvciBXQ04zOTkwIFNOT0MgV0xBTg0KPiBtb2R1bGUNCj4g
+DQo+IChGaXhlZCBHb3ZpbmQncyB0b3AgcG9zdGluZyBhbmQgYWRkaW5nIE1hc2FoaXJvKQ0KPiAN
+Cj4gPj4+IFdDTjM5OTAgaXMgaW50ZWdyYXRlZCA4MDIuMTFhYyBjaGlwc2V0IHdpdGggU05PQyBi
+dXMgaW50ZXJmYWNlLiBBZGQNCj4gPj4+IHNub2MgbGF5ZXIgZHJpdmVyIHJlZ2lzdHJhdGlvbiBh
+bmQgYXNzb2NpYXRlZCBvcHMuDQo+ID4+Pg0KPiA+Pj4gV0NOMzk5MCBzdXBwb3J0IGlzIG5vdCB5
+ZXQgY29tcGxldGUgYXMgY29sZC1ib290IGhhbmRzaGFrZSBpcyBkb25lDQo+ID4+PiB1c2luZyBx
+bWkoUXVhbGNvbW0tTVNNLUludGVyZmFjZSkgYW5kIHFtaSBjbGllbnQgc3VwcG9ydCB3aWxsIGJl
+IGFkZGVkDQo+ID4+PiBvbmNlIHFtaSBmcmFtZXdvcmsgaXMgYXZhaWxhYmxlLg0KPiA+Pj4NCj4g
+Pj4+IFNpZ25lZC1vZmYtYnk6IEdvdmluZCBTaW5naCA8Z292aW5kc0Bjb2RlYXVyb3JhLm9yZz4N
+Cj4gPj4NCj4gPj4gS2J1aWxkIGJvdCBmb3VuZCBhbiBvZGQgcHJvYmxlbSB3aXRoIHRoaXMgcGF0
+Y2g6DQo+ID4+DQo+ID4+ICBpbmNsdWRlL2xpbnV4L2R5bmFtaWNfZGVidWcuaDo3NzoxNDogZXJy
+b3I6ICdLQlVJTERfTU9ETkFNRScNCj4gPj4gIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlz
+IGZ1bmN0aW9uKTsgZGlkIHlvdSBtZWFuDQo+ICdLQlVJTERfQkFTRU5BTUUnPw0KPiA+Pg0KPiA+
+PiBGdWxsIHJlcG9ydDoNCj4gPj4NCj4gPj4NCj4gaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcv
+cGlwZXJtYWlsL2F0aDEway8yMDE4LUZlYnJ1YXJ5LzAxMDkwNy5odG1sDQo+ID4+DQo+ID4+IEFu
+eSBpZGVhcz8gSXMgdGhpcyBpcyBzb21lIHVucmVsYXRlZCBpc3N1ZSBvciB3aGF0PyBUaGlzIHBh
+dGNoIGlzIG5vdA0KPiA+PiBldmVuIHRvdWNoaW5nIGhpZi5oIG9yIGNlLmMuDQo+ID4NCj4gPiBJ
+IGRpZG4ndCBlbmNvdW50ZXJlZCB0aGlzIGlzc3VlIGFzIGluIG15IGRlZmNvbmZpZyBvbmx5DQo+
+ID4gQ09ORklHX0FUSDEwS19TTk9DIHdhcyBkZWZpbmVkLiBUaGlzIHByb2JsZW0gaXMgY29taW5n
+IHdoZW4gd2UgZGVmaW5lDQo+ID4gQ09ORklHX0FUSDEwS19TTk9DIGFuZCBDT05GSUdfQVRIMTBL
+X1BDSSBzaW11bHRhbmVvdXNseSBpbiBkZWZjb25maWcNCj4gPiBhbmQgdGhpcyBpcyBrbm93biBp
+c3N1ZSB3aGVuIG11bHRpcGxlIG1vZHVsZXMgc2hhcmUgb2JqZWN0cyhpbiB0aGlzDQo+ID4gY2Fz
+ZSBjZS5vKS4gSSBzYXcgc2ltaWxhciByZXBvcnRlZCBwcm9ibGVtIGFuZCBmb3VuZA0KPiA+IGh0
+dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMTAwNjA4MjUvLg0KPiA+DQo+ID4gQWZ0
+ZXIgcGlja2luZyB0aGUgYmVsb3cgY2hhbmdlIGlzc3VlIGlzIG5vdCBzZWVuLg0KPiANCj4gTGV0
+J3MgYXNrIHRoZSBrYnVpbGQgbWFpbnRhaW5lci4gTWFzYWhpcm8sIGFueSBjaGFuY2VzIG9mIGdl
+dHRpbmcgdGhpcw0KPiBwYXRjaCBhcHBsaWVkIGFueXRpbWUgc29vbjoNCj4gDQo+IGtidWlsZDog
+ZGVmaW5lIEtCVUlMRF9NT0ROQU1FIGV2ZW4gaWYgbXVsdGlwbGUgbW9kdWxlcyBzaGFyZSBvYmpl
+Y3RzDQo+IA0KPiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzEwMDYwODI1Lw0K
+PiANCj4gSW4gYXRoMTBrIHdlIHdvdWxkIG5lZWQgaXQgYXMgb3RoZXJ3aXNlIHdlIGFyZSBub3Qg
+YWJsZSB0byBsaW5rIGNlLm8NCj4gYm90aCB0byBhdGgxMGtfcGNpLmtvIGFuZCBhdGgxMGtfc25v
+Yy5rby4gV2hhdCBkbyB5b3UgdGhpbms/DQo+IA0KPiBGdWxsIGRpc2N1c3Npb24gYW5kIHRoZSBh
+dGgxMGsgcGF0Y2ggaGVyZToNCj4gDQo+IGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0
+Y2gvMTAyMjA2NTcvDQo+IA0KDQpJIHBsYW4gdG8gc3VibWl0IHYyLCBidXQgZXZlbiBpZiB0aGUg
+dW5kZWZpbmVkIEtCVUlMRF9NT0ROQU1FIGlzIGZpeGVkLA0KSSBleHBlY3QgYW5vdGhlciBwcm9i
+bGVtIGZyb20gdGhpcyBwYXRjaC4NCg0KSWYgYm90aCBDT05GSUdfQVRIMTBLX1BDSSBhbmQgQ09O
+RklHX0FUSDEwX1NOT0MgYXJlICd5Jw0KdHdvIGluc3RhbmNlcyBvZiBjZS5vIHdvdWxkIGJlIGxp
+bmtlZCBpbnRvIHZtbGl1eCwNCnRoZW4gY2F1c2VzIG11bHRpcGxlIGRlZmluaXRpb24gZXJyb3Iu
+DQoNCg==
