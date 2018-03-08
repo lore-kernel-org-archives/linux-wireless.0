@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55842 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751106AbeC2Ixw (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:52423 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966278AbeCHFKj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:53:52 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Suppress "Unknown eventid: 36925" warnings
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1522049641-19521-1-git-send-email-murugana@codeaurora.org>
-References: <1522049641-19521-1-git-send-email-murugana@codeaurora.org>
-To: Sathishkumar Muruganandam <murugana@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sathishkumar Muruganandam <murugana@codeaurora.org>
-Message-Id: <20180329085352.1C183602FC@smtp.codeaurora.org> (sfid-20180329_105356_440809_C717F5CE)
-Date: Thu, 29 Mar 2018 08:53:52 +0000 (UTC)
+        Thu, 8 Mar 2018 00:10:39 -0500
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: m@bues.ch
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2] ssb: use put_device() if device_register fail
+Date: Thu,  8 Mar 2018 10:39:49 +0530
+Message-Id: <1520485789-8550-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20180308_061059_493086_2EB2A19D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sathishkumar Muruganandam <murugana@codeaurora.org> wrote:
+Never directly free @dev after calling device_register(), even
+if it returned an error! Always use put_device() to give up the
+reference initialized.
 
-> FW has Smart Logging feature enabled by default for detecting failures
-> and processing FATAL_CONDITION_EVENTID (36925 - 0x903D) back to host.
-> 
-> Since ath10k doesn't implement the Smart Logging and FATAL CONDITION
-> EVENT processing yet, suppressing the unknown event ID warning by moving
-> this under ATH10K_DBG_WMI.
-> 
-> Simulated the same issue by having associated STA powered off when
-> ping flood was running from AP backbone. This triggerd STA KICKOUT
-> in AP followed by FATAL CONDITION event 36925.
-> 
-> Issue was reproduced and verified in below DUT
-> ------------------------------------------------
-> AP mode of OpenWRT QCA9984 running 6.0.8 with FW ver 10.4-3.5.3-00053
-> 
-> Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+changes in v2:
+             Removed kfree() call for @dev.
 
-Patch applied to ath-next branch of ath.git, thanks.
+ drivers/ssb/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-606204bb863f ath10k: suppress "Unknown eventid: 36925" warnings
-
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 65420a9..a7a062b 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -521,8 +521,8 @@ static int ssb_devices_register(struct ssb_bus *bus)
+ 			ssb_err("Could not register %s\n", dev_name(dev));
+ 			/* Set dev to NULL to not unregister
+ 			 * dev on error unwinding. */
++			put_device(dev);
+ 			sdev->dev = NULL;
+-			kfree(devwrap);
+ 			goto error;
+ 		}
+ 		dev_idx++;
 -- 
-https://patchwork.kernel.org/patch/10307269/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
