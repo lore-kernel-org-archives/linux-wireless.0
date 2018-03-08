@@ -1,65 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:38311 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031280AbeCAOUq (ORCPT
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:33419 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934574AbeCHKrJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:20:46 -0500
-Received: by mail-qt0-f193.google.com with SMTP id n12so7683193qtl.5
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:46 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 07/52] ath: Add regulatory mapping for Montenegro
-Date: Thu,  1 Mar 2018 15:18:17 +0100
-Message-Id: <20180301141902.24824-8-sven.eckelmann@openmesh.com> (sfid-20180301_152049_475213_F02A15AB)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Thu, 8 Mar 2018 05:47:09 -0500
+Received: by mail-qk0-f180.google.com with SMTP id f25so6272311qkm.0
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2018 02:47:08 -0800 (PST)
+Subject: Re: brcmfmac signal/interference issues
+To: Daniel Drake <drake@endlessm.com>
+References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
+ <5A8D36B7.1010201@broadcom.com>
+ <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
+ <CAD8Lp44Y-sNqm8_5=1pvBy-3zvVVQSCQ+Qye-2xP8vGmkvrjng@mail.gmail.com>
+ <5A8FE4D9.80608@broadcom.com>
+ <CAD8Lp44Q0=jS0gqnt1mMfjRe6sTx3Z7n9=iGvk3VFGK2549V7g@mail.gmail.com>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Linux Upstreaming Team <linux@endlessm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AA114A9.8050801@broadcom.com> (sfid-20180308_114714_437626_EBCAC0AE)
+Date: Thu, 8 Mar 2018 11:47:05 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAD8Lp44Q0=jS0gqnt1mMfjRe6sTx3Z7n9=iGvk3VFGK2549V7g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
-and to select the correct conformance test limits (CTL) for a country. If
-the country isn't available and it is still programmed in the EEPROM then
-it will cause an error and stop the initialization with:
+On 2/23/2018 2:49 PM, Daniel Drake wrote:
+> On Fri, Feb 23, 2018 at 12:54 PM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> Yup. Windows firmware talks NDIS. If you run 'strings 4345r6rtecdc.bin |
+>> tail -1' you can see the firmware build target and it likely has 'ndis' in
+>> it.
 
-  Invalid EEPROM contents
+Hi Daniel,
 
-The current CTL mappings for this country are:
+Bit late response. Sorry.
 
-* 2.4GHz: ETSI
-* 5GHz: ETSI
+> 43455c0-roml/sdio-ag-ndis-vista-pktfilter-d0c-pno-aoe-p2p-dhdoid-ndoe-gtkoe-mfp-proptxstatus-dmatxrc-keepalive-ap-ampduretry-pclose-txbf
+>
+> Yes, ndis. So no easy way to run the same firmware on the 2 OSes.
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd.h        | 1 +
- drivers/net/wireless/ath/regd_common.h | 1 +
- 2 files changed, 2 insertions(+)
+Indeed. I could try building nearly same firmware target. Can you 
+provide the firmware version as well.
 
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index f38e42703060..8575718425b6 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -141,6 +141,7 @@ enum CountryCode {
- 	CTRY_MAURITIUS = 480,
- 	CTRY_MEXICO = 484,
- 	CTRY_MONACO = 492,
-+	CTRY_MONTENEGRO = 499,
- 	CTRY_MOROCCO = 504,
- 	CTRY_NEPAL = 524,
- 	CTRY_NETHERLANDS = 528,
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 375f9da6955b..df5db47f2930 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -433,6 +433,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_MAURITIUS, ETSI1_WORLD, "MU"},
- 	{CTRY_MEXICO, FCC1_FCCA, "MX"},
- 	{CTRY_MONACO, ETSI4_WORLD, "MC"},
-+	{CTRY_MONTENEGRO, ETSI1_WORLD, "ME"},
- 	{CTRY_MOROCCO, APL4_WORLD, "MA"},
- 	{CTRY_NEPAL, APL1_WORLD, "NP"},
- 	{CTRY_NETHERLANDS, ETSI1_WORLD, "NL"},
--- 
-2.11.0
+Now reading over your orignal email again:
+
+ > If I place both antenna terminals inside the Linux MiniPC case, the
+ > Linux pings are bad but the Windows pings are fine.
+ >
+ > If I place both antenna terminals inside the Windows MiniPC case, it
+ > is the same: Linux pings are bad, but the Windows pings are fine.
+ >
+ > And when the Linux antenna is placed outside of both cases, the Linux
+ > pings are fine. I've repeated these tests a handful of times in quick
+ > succession to make sure that I'm not going crazy and that this is not
+ > a case of the problem intermittency causing misleading results. These
+ > findings appear very solid.
+
+So it picks up something in the PC. Some sources of interference that I 
+have seen before are USB3 and HDMI. Maybe try to shield those if present 
+and see if that helps. The nvram contains sensitivity parameters, but as 
+you stated you are using the same nvram for windows and linux for now we 
+can rule it out for debugging the issue.
+
+Regards,
+Arend
