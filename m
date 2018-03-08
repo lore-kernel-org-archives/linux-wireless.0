@@ -1,45 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:33844 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751825AbeCUKBq (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:46461 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751822AbeCHJCT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 06:01:46 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] ath9k_htc: use non-QoS NDP for AP probing
-Date: Wed, 21 Mar 2018 11:01:43 +0100
-Message-Id: <20180321100143.28080-1-johannes@sipsolutions.net> (sfid-20180321_110149_938306_F6A004BC)
+        Thu, 8 Mar 2018 04:02:19 -0500
+Date: Thu, 8 Mar 2018 10:02:16 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+Message-ID: <20180308090216.GC17761@amd> (sfid-20180308_100232_346701_AC3DF8F5)
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+ <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
+ <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
+ <20180302090312.GA30267@amd>
+ <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
+ <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
+ <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="B4IIlcmfBL/1gGOG"
+In-Reply-To: <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-When switching mac80211 to use QoS NDP, it turned out that
-ath9k_htc is somehow broken by this, e.g. see
-https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891060.
+--B4IIlcmfBL/1gGOG
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Fix this by using the new mac80211 flag to go back to the
-old, incorrect, behaviour for this driver.
+On Wed 2018-03-07 18:54:41, Sebastian Gottschall wrote:
+> Am 07.03.2018 um 17:22 schrieb Rafa=C5=82 Mi=C5=82ecki:
+> >On 2 March 2018 at 10:22, Sebastian Gottschall <s.gottschall@dd-wrt.com>=
+ wrote:
+> >>>>leds-gpio is crap and limited. you can just register one platform dat=
+a at
+> >>>>kernel runtime since its identified by its object name "led-gpio" but=
+ the
+> >>>>kernel forbidds to register 2 platform datas with the same name
+> >>>>consider the ar71xx devices with qca988x wifi chipsets. they all have
+> >>>>already a led platform data registered
+> >>>>at boottime. a second can't be registered anymore so gpio_led is usel=
+ess
+> >>>>at
+> >>>>all for most developers on such platforms. its mainly used for early
+> >>>>kernel
+> >>>>platform data initialisation for system leds.
+> >>>If leds-gpio has limitations, please fix those, rather then
+> >>>introducing duplicated code.
+> >>there is no duplicated code introduced and there is no solution for it.
+> >>consider that all wifi drivers with softled support
+> >>are going that way with registering a own led driver. see ath9k for
+> >>instance. gpio-led cannot be used for it and there is no way to
+> >>support multiple platform datas with the same name. its a kernel limita=
+tion
+> >I just reviewed some mips arch patch adding support for more LEDs for
+> >selected devices:
+> >[PATCH] MIPS: BCM47XX: Add Luxul XAP1500/XWR1750 WiFi LEDs
+> >https://patchwork.linux-mips.org/patch/18681/
+> >
+> >It seems to be simply adding another call to the
+> >gpio_led_register_device(). It seems to me you can call that function
+> >multiple times and register multiple structs with LEDs.
+> >
+> >Isn't all you need something like this?
+> >
+> >static const struct gpio_led ath10k_leds[] =3D {
+> >         {
+> >                 .name =3D "ath10k:color:function",
+> >                 .active_low =3D 1,
+> >                 .default_state =3D LEDS_GPIO_DEFSTATE_KEEP,
+> >         }
+> >};
+> >
+> >static struct gpio_led_platform_data bcm47xx_leds_pdata_extra =3D {
+> >         leds =3D ath10k_leds;
+> >         num_leds =3D ARRAY_SIZE(ath10k_leds);
+> >};
+> >
+> >ath10k_leds.gpio =3D ar->hw_params.led_pin;
+> >gpio_led_register_device(0, &ath10k_leds);
+> the problem are other architectures which have already registered gpio_led
+> at system start like ar71xx
+> you cannot register a second one. so a independend led driver is a
+> requirement for direct control
 
-Fixes: 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing")
-Reported-by: Ben Caradoc-Davies <ben@transient.nz>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 1 +
- 1 file changed, 1 insertion(+)
+If the limitation indeed exists, please fix the limitation rather than
+working around it in each and every driver.
+									Pavel
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index e89e5ef2c2a4..f246e9ed4a81 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -729,6 +729,7 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 	ieee80211_hw_set(hw, SPECTRUM_MGMT);
- 	ieee80211_hw_set(hw, SIGNAL_DBM);
- 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
-+	ieee80211_hw_set(hw, DOESNT_SUPPORT_QOS_NDP);
- 
- 	if (ath9k_ps_enable)
- 		ieee80211_hw_set(hw, SUPPORTS_PS);
--- 
-2.15.1
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--B4IIlcmfBL/1gGOG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlqg/BgACgkQMOfwapXb+vKFTACfdAlCxTIZdugucfyiKtdULBKM
+hNgAniR8fH5pWZJQ21aAEP3MrAQSszOO
+=A/Xe
+-----END PGP SIGNATURE-----
+
+--B4IIlcmfBL/1gGOG--
