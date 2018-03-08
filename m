@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:35325 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751865AbeC2EeA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41298 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755256AbeCHN7d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 00:34:00 -0400
+        Thu, 8 Mar 2018 08:59:33 -0500
 MIME-Version: 1.0
-From: YIN Wei <yinwei168@gmail.com>
-Date: Thu, 29 Mar 2018 12:33:59 +0800
-Message-ID: <CAFxU49nekm=8riJyqypGjZ2Hj8HfH5Z2aKfDdZm9UQuM6tfahQ@mail.gmail.com> (sfid-20180329_063410_248493_43A24346)
-Subject: how to disable DIFS and Backoff in 802.11 ath9k or ath5k driver
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 08 Mar 2018 19:29:31 +0530
+From: govinds@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Govind Singh <govinds@qti.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: Enable IOMMU support for WCN3990 target
+In-Reply-To: <87k1umhe0w.fsf@kamboji.qca.qualcomm.com>
+References: <1518685448-15317-1-git-send-email-govinds@codeaurora.org>
+ <877eqwqfml.fsf@kamboji.qca.qualcomm.com>
+ <CAK8P3a1KomtVHMidxtmx_gRF+92MWdHmeG0eTbcfUpbAaDPe3g@mail.gmail.com>
+ <588e4d951bd84ea29dfc1a68353505e7@aphydexm01b.ap.qualcomm.com>
+ <CAK8P3a06sDwL8iech_L3Q-zGxio3_RD8c7_-L3HHmFmb=Pq2UQ@mail.gmail.com>
+ <87k1umhe0w.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <7c627e2af862e2cfdd431a499f725000@codeaurora.org> (sfid-20180308_145937_362493_CC4775AA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear All,
+On 2018-03-08 19:20, Kalle Valo wrote:
+> Arnd Bergmann <arnd@arndb.de> writes:
+> 
+>> On Thu, Mar 1, 2018 at 2:18 PM, Govind Singh 
+>> <govinds@qti.qualcomm.com> wrote:
+>>>>> The asm/dma-iommu.h header file exsists only on arm32, no other 
+>>>>> architecture.
+>>>>> I'm not sure about the purpose of the patch to start with:
+>>>>> it's normally up to the platform code to allocate IOMMU domains,
+>>>>> device drivers should only need to manually interact with the
+>>>>> IOMMU layer if they need more than one domain, but this ath10k
+>>>>> patch appears to be using the default domain and should have no
+>>>>> effect as long as the platform code works correctly.
+>>> Thanks Arnd, I have fixed this and migrated to 64bit
+>>> API's(iommu_attach_device/iommu_detach_device/
+>>> iommu_get_domain_for_dev), will share the next revision.
+>>> I tried using the default domain by adding the stream ID and mask in
+>>> dt and no manual interaction, but it is resulting in TZ error and
+>>> unhandled context fault.
+>>> Seems I need to provide explicit mapping range(aperture_start/
+>>> aperture_end) as this is only working combination for me..
+>> 
+>> I don't see why you need to do that at all, can you clarify?
+>> 
+>> The IOMMU should be set up implicitly for you here based on the iommus
+>> property in DT, with no driver changes at all. This should work on all
+>> architectures/
+> 
+> Maybe Govind is using some out-of-tree tree which is buggy in this
+> regard?
 
-I am a researcher on 802.11 network security. I am doing a project
-where the first two stations are communicating and the third station
-tries to inject an forged 802.11 ACK if the last data frame is lost.
-The ACK must be arrived to the data sender before the ACK timer
-expires. Therefore the third station should not wait for a DIFS and a
-random backoff to send out the ACK.
-I am using ath9k driver, I found two functions
-ath9k_hw_set_sifs_time() and ath9k_hw_setslottime() in the Hw.c file
-in the ath9k directory, which set the SIFS and  backoff slot time in
-the registers.. I search all the ath9k files and found no register is
-for setting the DIFS. but the DIFS is can be calculated by DIFS = SIFS
-+ 2 * Slot Time.  Therefore I thought the wireless chips should
-calculate DIFS this way.  I used to believe that I solved the problem
-by just setting the two registers.  However,when I capture the raw
-frames using the airdump-ng ( an aircrack-ng module) and found that it
-takes more than 80 microseconds to appear after the data, which is
-much longer than the ACK timer out. The ACK timeout is usually 30
-microseconds. So  the third station is forced by me to send out a
-forged ACK at around 25 microsecond.
+Actually there is limitations in using the iova address range for wlan 
+IP.
+It can allow certain iova range and i was attaching the iommu to specify 
+the iova range.
+I am exploring if i can use "dma-ranges" in dt to avoid the manual 
+interaction apart from
+stream ID and mask.
 
-Can any one tell me whether I am doing the right way to make the third
-station not follow the 802.11 backoff. any suggestion would be much
-appreciated. Thank you.
-
-Regards,
-Wei
+BR,
+Govind
