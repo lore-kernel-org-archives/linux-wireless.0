@@ -1,68 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35736 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751908AbeCZRxG (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:38661 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754458AbeCHOed (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:53:06 -0400
-Received: by mail-oi0-f65.google.com with SMTP id x20-v6so16586637oie.2
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:53:06 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH v7 08/11] nl80211: Add control_port_over_nl80211 for ibss
-Date: Mon, 26 Mar 2018 12:52:48 -0500
-Message-Id: <20180326175251.20666-9-denkenz@gmail.com> (sfid-20180326_195318_170667_7B798C7E)
-In-Reply-To: <20180326175251.20666-1-denkenz@gmail.com>
-References: <20180326175251.20666-1-denkenz@gmail.com>
+        Thu, 8 Mar 2018 09:34:33 -0500
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: Pavel Machek <pavel@ucw.cz>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+ <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
+ <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
+ <20180302090312.GA30267@amd>
+ <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
+ <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
+ <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
+ <20180308090216.GC17761@amd>
+ <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com> <20180308140515.GA4889@amd>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <c2d75791-5822-ac55-35ad-734947e22d45@dd-wrt.com> (sfid-20180308_153437_068437_C11074CA)
+Date: Thu, 8 Mar 2018 15:34:23 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180308140515.GA4889@amd>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/net/cfg80211.h | 3 +++
- net/wireless/nl80211.c | 9 +++++++++
- 2 files changed, 12 insertions(+)
+Am 08.03.2018 um 15:05 schrieb Pavel Machek:
+> On Thu 2018-03-08 13:33:29, Sebastian Gottschall wrote:
+>> Am 08.03.2018 um 10:02 schrieb Pavel Machek:
+>>> On Wed 2018-03-07 18:54:41, Sebastian Gottschall wrote:
+>>>> Am 07.03.2018 um 17:22 schrieb Rafał Miłecki:
+>>>>> On 2 March 2018 at 10:22, Sebastian Gottschall <s.gottschall@dd-wrt.com> wrote:
+>>>>>>>> leds-gpio is crap and limited. you can just register one platform data at
+>>>>>>>> kernel runtime since its identified by its object name "led-gpio" but the
+>>>>>>>> kernel forbidds to register 2 platform datas with the same name
+>>>>>>>> consider the ar71xx devices with qca988x wifi chipsets. they all have
+>>>>>>>> already a led platform data registered
+>>>>>>>> at boottime. a second can't be registered anymore so gpio_led is useless
+>>>>>>>> at
+>>>>>>>> all for most developers on such platforms. its mainly used for early
+>>>>>>>> kernel
+>>>>>>>> platform data initialisation for system leds.
+>>>>>>> If leds-gpio has limitations, please fix those, rather then
+>>>>>>> introducing duplicated code.
+>>>>>> there is no duplicated code introduced and there is no solution for it.
+>>>>>> consider that all wifi drivers with softled support
+>>>>>> are going that way with registering a own led driver. see ath9k for
+>>>>>> instance. gpio-led cannot be used for it and there is no way to
+>>>>>> support multiple platform datas with the same name. its a kernel limitation
+>>>>> I just reviewed some mips arch patch adding support for more LEDs for
+>>>>> selected devices:
+>>>>> [PATCH] MIPS: BCM47XX: Add Luxul XAP1500/XWR1750 WiFi LEDs
+>>>>> https://patchwork.linux-mips.org/patch/18681/
+>>>>>
+>>>>> It seems to be simply adding another call to the
+>>>>> gpio_led_register_device(). It seems to me you can call that function
+>>>>> multiple times and register multiple structs with LEDs.
+>>>>>
+>>>>> Isn't all you need something like this?
+>>>>>
+>>>>> static const struct gpio_led ath10k_leds[] = {
+>>>>>          {
+>>>>>                  .name = "ath10k:color:function",
+>>>>>                  .active_low = 1,
+>>>>>                  .default_state = LEDS_GPIO_DEFSTATE_KEEP,
+>>>>>          }
+>>>>> };
+>>>>>
+>>>>> static struct gpio_led_platform_data bcm47xx_leds_pdata_extra = {
+>>>>>          leds = ath10k_leds;
+>>>>>          num_leds = ARRAY_SIZE(ath10k_leds);
+>>>>> };
+>>>>>
+>>>>> ath10k_leds.gpio = ar->hw_params.led_pin;
+>>>>> gpio_led_register_device(0, &ath10k_leds);
+>>>> the problem are other architectures which have already registered gpio_led
+>>>> at system start like ar71xx
+>>>> you cannot register a second one. so a independend led driver is a
+>>>> requirement for direct control
+>>> If the limitation indeed exists, please fix the limitation rather than
+>>> working around it in each and every driver.
+>> see ath9k. its exact the same implementation.
+> Ok, so one more driver to fix.
+>
+>> in addition my variant does also work without gpiolib support. so it can be
+>> used even if the kernel is configured
+>> without gpio support.
+>> and not to forget, using a own led driver is more ligthweight from the call
+>> path for each led on / off event which is important for
+>> low performance embedded devices
+> We are not going to copy&paste code because such code works without
+> libraries, and we are not going to copy&paste code because that uses
+> less cache during calls. Sorry.
+>
+> NAK. Please fix your patch.
+show me a proof that its copy & paste. because its not
+>
+> 									Pavel
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2e7f30c66913..2a28f446648e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2033,6 +2033,8 @@ struct cfg80211_disassoc_request {
-  *	sets/clears %NL80211_STA_FLAG_AUTHORIZED. If true, the driver is
-  *	required to assume that the port is unauthorized until authorized by
-  *	user space. Otherwise, port is marked authorized by default.
-+ * @control_port_over_nl80211: TRUE if userspace expects to exchange control
-+ *	port frames over NL80211 instead of the network interface.
-  * @userspace_handles_dfs: whether user space controls DFS operation, i.e.
-  *	changes the channel when a radar is detected. This is required
-  *	to operate on DFS channels.
-@@ -2056,6 +2058,7 @@ struct cfg80211_ibss_params {
- 	bool channel_fixed;
- 	bool privacy;
- 	bool control_port;
-+	bool control_port_over_nl80211;
- 	bool userspace_handles_dfs;
- 	int mcast_rate[NUM_NL80211_BANDS];
- 	struct ieee80211_ht_cap ht_capa;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 34e8435f0c43..774f5d6ba8e4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8702,6 +8702,15 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	ibss.control_port =
- 		nla_get_flag(info->attrs[NL80211_ATTR_CONTROL_PORT]);
- 
-+	if (info->attrs[NL80211_ATTR_CONTROL_PORT_OVER_NL80211]) {
-+		int r = validate_pae_over_nl80211(rdev, info);
-+
-+		if (r < 0)
-+			return r;
-+
-+		ibss.control_port_over_nl80211 = true;
-+	}
-+
- 	ibss.userspace_handles_dfs =
- 		nla_get_flag(info->attrs[NL80211_ATTR_HANDLE_DFS]);
- 
+
 -- 
-2.13.5
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
