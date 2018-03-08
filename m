@@ -1,64 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36552 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751666AbeCUNsT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44658 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965060AbeCHGwj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 09:48:19 -0400
-Message-ID: <1521640094.2645.29.camel@sipsolutions.net> (sfid-20180321_144841_267533_56C31815)
-Subject: Re: [PATCH] mac80211: aes-cmac: remove VLA usage
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 21 Mar 2018 14:48:14 +0100
-In-Reply-To: <20180321134247.GA1275@embeddedgus>
-References: <20180321134247.GA1275@embeddedgus>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 8 Mar 2018 01:52:39 -0500
+From: Balaji Pothunoori <bpothuno@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: bpothuno@qti.qualcomm.com, linux-wireless@vger.kernel.org,
+        Balaji Pothunoori <bpothuno@codeaurora.org>
+Subject: [PATCH] iw: avgerage ack rssi changes for data frames
+Date: Thu,  8 Mar 2018 12:22:32 +0530
+Message-Id: <1520491952-26289-1-git-send-email-bpothuno@codeaurora.org> (sfid-20180308_075249_625686_378AFE85)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-03-21 at 08:42 -0500, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wvla, remove VLAs and replace them
-> with dynamic memory allocation instead.
-> 
-> The use of stack Variable Length Arrays needs to be avoided, as they
-> can be a vector for stack exhaustion, which can be both a runtime bug
-> or a security flaw. Also, in general, as code evolves it is easy to
-> lose track of how big a VLA can get. Thus, we can end up having runtime
-> failures that are hard to debug.
-> 
-> Also, fixed as part of the directive to remove all VLAs from
-> the kernel: https://lkml.org/lkml/2018/3/7/621
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
->  net/mac80211/aes_cmac.c | 36 ++++++++++++++++++++++++------------
->  1 file changed, 24 insertions(+), 12 deletions(-)
-> 
-> diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
-> index 2fb6558..c9444bf 100644
-> --- a/net/mac80211/aes_cmac.c
-> +++ b/net/mac80211/aes_cmac.c
-> @@ -27,30 +27,42 @@ static const u8 zero[CMAC_TLEN_256];
->  void ieee80211_aes_cmac(struct crypto_shash *tfm, const u8 *aad,
->  			const u8 *data, size_t data_len, u8 *mic)
->  {
-> -	SHASH_DESC_ON_STACK(desc, tfm);
-> +	struct shash_desc *shash;
->  	u8 out[AES_BLOCK_SIZE];
->  
-> -	desc->tfm = tfm;
-> +	shash = kmalloc(sizeof(*shash) + crypto_shash_descsize(tfm),
-> +			GFP_KERNEL);
-> +	if (!shash)
-> +		return;
+This patchset changes to display the average ack rssi
+for data frames.
+"avg ack signal" field diplay limited by host based on
+firmware capablities.
 
-Honestly, this seems like a really bad idea - you're now hitting
-kmalloc for every TX/RX frame here.
+Example output:
 
-SHA_DESC_ON_STACK() should just be fixed to not need a VLA, but take
-some sort of maximum, I guess?
+localhost ~ #iw dev wlan-5000mhz station dump
+Station 34:f3:9a:aa:3b:29 (on wlan-5000mhz)
+        inactive time:  5370 ms
+        rx bytes:       85321
+        rx packets:     576
+        tx bytes:       14225
+        tx packets:     71
+        tx retries:     0
+        tx failed:      2
+        beacon loss:    0
+        rx drop misc:   0
+        signal:         -54 dBm
+        signal avg:     -53 dBm
+        tx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
+        rx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
+        avg ack signal: -56 dBm
+        authorized:     yes
+        authenticated:  yes
+        associated:     yes
+        preamble:       short
+        WMM/WME:        yes
+        MFP:            no
+        TDLS peer:      no
+        DTIM period:    2
+        beacon interval:100
+        short preamble: yes
+        short slot time:yes
+        connected time: 203 seconds
 
-johannes
+Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+---
+ nl80211.h | 6 ++++++
+ station.c | 5 +++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/nl80211.h b/nl80211.h
+index 56368e9..6e9614d 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -2655,6 +2655,10 @@ enum nl80211_sta_bss_param {
+  * @NL80211_STA_INFO_RX_DURATION: aggregate PPDU duration for all frames
+  *	received from the station (u64, usec)
+  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
++ *  @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK
++ *     frame(u8, dBm)
++ * @NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL: avg signal strength of data ACK
++ *     frame(u8, dBm)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2693,6 +2697,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_TID_STATS,
+ 	NL80211_STA_INFO_RX_DURATION,
+ 	NL80211_STA_INFO_PAD,
++	NL80211_STA_INFO_ACK_SIGNAL,
++	NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/station.c b/station.c
+index f3e3da8..ec1f7bc 100644
+--- a/station.c
++++ b/station.c
+@@ -237,6 +237,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_TID_STATS] = { .type = NLA_NESTED },
+ 		[NL80211_STA_INFO_BSS_PARAM] = { .type = NLA_NESTED },
+ 		[NL80211_STA_INFO_RX_DURATION] = { .type = NLA_U64 },
++		[NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL] = { .type = NLA_U8 },
+ 	};
+ 	char *chain;
+ 
+@@ -338,6 +339,10 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		printf("\n\trx duration:\t%lld us",
+ 		       (unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_RX_DURATION]));
+ 
++	if (sinfo[NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL])
++		printf("\n\tavg ack signal:\t%d dBm",
++		       (int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL]));
++
+ 	if (sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT]) {
+ 		uint32_t thr;
+ 
+-- 
+2.7.4
