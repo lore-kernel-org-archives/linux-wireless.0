@@ -1,186 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:45928 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751325AbeC2OP3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57896 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751239AbeCHO3l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 10:15:29 -0400
-Received: by mail-pf0-f195.google.com with SMTP id l27so3308862pfk.12
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 07:15:29 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 2/4] rsi: move descriptor preparation to core
-Date: Thu, 29 Mar 2018 19:32:27 +0530
-Message-Id: <1522332149-5100-3-git-send-email-amitkarwar@gmail.com> (sfid-20180329_161536_345967_88475B25)
-In-Reply-To: <1522332149-5100-1-git-send-email-amitkarwar@gmail.com>
-References: <1522332149-5100-1-git-send-email-amitkarwar@gmail.com>
+        Thu, 8 Mar 2018 09:29:41 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        =?utf-8?Q?Rafa=C5=82?= =?utf-8?Q?_Mi=C5=82ecki?=
+        <zajec5@gmail.com>,
+        "open list\:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for various chipsets
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+        <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
+        <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
+        <20180302090312.GA30267@amd>
+        <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
+        <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
+        <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
+        <20180308090216.GC17761@amd>
+        <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com>
+        <20180308140515.GA4889@amd>
+Date: Thu, 08 Mar 2018 16:29:36 +0200
+In-Reply-To: <20180308140515.GA4889@amd> (Pavel Machek's message of "Thu, 8
+        Mar 2018 15:05:16 +0100")
+Message-ID: <87371ahc8f.fsf@kamboji.qca.qualcomm.com> (sfid-20180308_152944_715951_A82FCD19)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Pavel Machek <pavel@ucw.cz> writes:
 
-Descriptors preparation is moved to core instead of HAL to
-avoid synchronization issues in sending TX frames
+>> >>>ath10k_leds.gpio = ar->hw_params.led_pin;
+>> >>>gpio_led_register_device(0, &ath10k_leds);
+>> >>
+>> >>the problem are other architectures which have already registered gpio_led
+>> >>at system start like ar71xx
+>> >>you cannot register a second one. so a independend led driver is a
+>> >>requirement for direct control
+>> >
+>> >If the limitation indeed exists, please fix the limitation rather than
+>> >working around it in each and every driver.
+>> see ath9k. its exact the same implementation.
+>
+> Ok, so one more driver to fix.
+>
+>> in addition my variant does also work without gpiolib support. so it
+>> can be used even if the kernel is configured without gpio support.
+>> and not to forget, using a own led driver is more ligthweight from
+>> the call path for each led on / off event which is important for low
+>> performance embedded devices
+>
+> We are not going to copy&paste code because such code works without
+> libraries, and we are not going to copy&paste code because that uses
+> less cache during calls. Sorry.
+>
+> NAK. Please fix your patch. 
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_core.c | 11 +++++++++
- drivers/net/wireless/rsi/rsi_91x_hal.c  | 43 +++++++++++++++++----------------
- drivers/net/wireless/rsi/rsi_hal.h      |  2 ++
- 3 files changed, 35 insertions(+), 21 deletions(-)
+To me it's not that black and white, sometimes copying code is simpler
+than trying to bring up complicated or restricting frameworks (talking
+in general here).
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
-index 5dafd2e..f5d1756 100644
---- a/drivers/net/wireless/rsi/rsi_91x_core.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_core.c
-@@ -413,6 +413,11 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
- 	    (ieee80211_is_qos_nullfunc(wh->frame_control))) {
- 		q_num = MGMT_SOFT_Q;
- 		skb->priority = q_num;
-+
-+		if (rsi_prepare_mgmt_desc(common, skb)) {
-+			rsi_dbg(ERR_ZONE, "Failed to prepare desc\n");
-+			goto xmit_fail;
-+		}
- 	} else {
- 		if (ieee80211_is_data_qos(wh->frame_control)) {
- 			tid = (skb->data[24] & IEEE80211_QOS_TID);
-@@ -433,6 +438,8 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
- 			if (!rsta)
- 				goto xmit_fail;
- 			tx_params->sta_id = rsta->sta_id;
-+		} else {
-+			tx_params->sta_id = 0;
- 		}
- 
- 		if (rsta) {
-@@ -443,6 +450,10 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
- 							      tid, 0);
- 			}
- 		}
-+		if (rsi_prepare_data_desc(common, skb)) {
-+			rsi_dbg(ERR_ZONE, "Failed to prepare data desc\n");
-+			goto xmit_fail;
-+		}
- 	}
- 
- 	if ((q_num < MGMT_SOFT_Q) &&
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index ce6a86d..43d7d6c 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -45,7 +45,7 @@ int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb)
- 	return status;
- }
- 
--static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
-+int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- {
- 	struct rsi_hw *adapter = common->priv;
- 	struct ieee80211_hdr *wh = NULL;
-@@ -113,17 +113,6 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- 	if (conf_is_ht40(conf))
- 		mgmt_desc->bbp_info = cpu_to_le16(FULL40M_ENABLE);
- 
--	if (ieee80211_is_probe_req(wh->frame_control)) {
--		if (!bss->assoc) {
--			rsi_dbg(INFO_ZONE,
--				"%s: blocking mgmt queue\n", __func__);
--			mgmt_desc->misc_flags = RSI_DESC_REQUIRE_CFM_TO_HOST;
--			xtend_desc->confirm_frame_type = PROBEREQ_CONFIRM;
--			common->mgmt_q_block = true;
--			rsi_dbg(INFO_ZONE, "Mgmt queue blocked\n");
--		}
--	}
--
- 	if (ieee80211_is_probe_resp(wh->frame_control)) {
- 		mgmt_desc->misc_flags |= (RSI_ADD_DELTA_TSF_VAP_ID |
- 					  RSI_FETCH_RETRY_CNT_FRM_HST);
-@@ -149,7 +138,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- }
- 
- /* This function prepares descriptor for given data packet */
--static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
-+int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- {
- 	struct rsi_hw *adapter = common->priv;
- 	struct ieee80211_vif *vif;
-@@ -301,10 +290,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 	    (!bss->assoc))
- 		goto err;
- 
--	status = rsi_prepare_data_desc(common, skb);
--	if (status)
--		goto err;
--
- 	status = rsi_send_pkt_to_bus(common, skb);
- 	if (status)
- 		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n", __func__);
-@@ -327,12 +312,18 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
- 		      struct sk_buff *skb)
- {
- 	struct rsi_hw *adapter = common->priv;
-+	struct ieee80211_bss_conf *bss;
-+	struct ieee80211_hdr *wh;
- 	struct ieee80211_tx_info *info;
- 	struct skb_info *tx_params;
-+	struct rsi_mgmt_desc *mgmt_desc;
-+	struct rsi_xtended_desc *xtend_desc;
- 	int status = -E2BIG;
-+	u8 header_size;
- 
- 	info = IEEE80211_SKB_CB(skb);
- 	tx_params = (struct skb_info *)info->driver_data;
-+	header_size = tx_params->internal_hdr_size;
- 
- 	if (tx_params->flags & INTERNAL_MGMT_PKT) {
- 		status = adapter->host_intf_ops->write_pkt(common->priv,
-@@ -346,15 +337,25 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
- 		return status;
- 	}
- 
--	if (FRAME_DESC_SZ > skb_headroom(skb))
--		goto err;
-+	bss = &info->control.vif->bss_conf;
-+	wh = (struct ieee80211_hdr *)&skb->data[header_size];
-+	mgmt_desc = (struct rsi_mgmt_desc *)skb->data;
-+	xtend_desc = (struct rsi_xtended_desc *)&skb->data[FRAME_DESC_SZ];
-+
-+	/* Indicate to firmware to give cfm for probe */
-+	if (ieee80211_is_probe_req(wh->frame_control) && !bss->assoc) {
-+		rsi_dbg(INFO_ZONE,
-+			"%s: blocking mgmt queue\n", __func__);
-+		mgmt_desc->misc_flags = RSI_DESC_REQUIRE_CFM_TO_HOST;
-+		xtend_desc->confirm_frame_type = PROBEREQ_CONFIRM;
-+		common->mgmt_q_block = true;
-+		rsi_dbg(INFO_ZONE, "Mgmt queue blocked\n");
-+	}
- 
--	rsi_prepare_mgmt_desc(common, skb);
- 	status = rsi_send_pkt_to_bus(common, skb);
- 	if (status)
- 		rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n", __func__);
- 
--err:
- 	rsi_indicate_tx_status(common->priv, skb, status);
- 	return status;
- }
-diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
-index 786dccd..d6c2baa 100644
---- a/drivers/net/wireless/rsi/rsi_hal.h
-+++ b/drivers/net/wireless/rsi/rsi_hal.h
-@@ -167,6 +167,8 @@ struct rsi_bt_desc {
- } __packed;
- 
- int rsi_hal_device_init(struct rsi_hw *adapter);
-+int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb);
-+int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb);
- int rsi_prepare_beacon(struct rsi_common *common, struct sk_buff *skb);
- int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb);
- int rsi_send_bt_pkt(struct rsi_common *common, struct sk_buff *skb);
+I haven't been able to review this patch in detail yet but from a quick
+look most of the code is about standard ath10k infrastructure code. How
+many lines of code would using leds-gpio save?
+
 -- 
-2.7.4
+Kalle Valo
