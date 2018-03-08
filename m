@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway21.websitewelcome.com ([192.185.45.154]:21793 "EHLO
-        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752431AbeC3S6h (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:32854 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754547AbeCHPEd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Mar 2018 14:58:37 -0400
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway21.websitewelcome.com (Postfix) with ESMTP id 98F54400CA1C3
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Mar 2018 13:34:03 -0500 (CDT)
-Date: Fri, 30 Mar 2018 13:34:01 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ath9k: dfs: remove accidental use of stack VLA
-Message-ID: <20180330183401.GA16758@embeddedgus> (sfid-20180330_205841_369934_438630D2)
+        Thu, 8 Mar 2018 10:04:33 -0500
+Date: Thu, 8 Mar 2018 16:04:31 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: Rafa?? Mi??ecki <zajec5@gmail.com>,
+        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+Message-ID: <20180308150431.GA12475@localhost> (sfid-20180308_160436_995342_29C89E0B)
+References: <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
+ <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
+ <20180302090312.GA30267@amd>
+ <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
+ <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
+ <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
+ <20180308090216.GC17761@amd>
+ <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com>
+ <20180308140515.GA4889@amd>
+ <c2d75791-5822-ac55-35ad-734947e22d45@dd-wrt.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c2d75791-5822-ac55-35ad-734947e22d45@dd-wrt.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation to enabling -Wvla, remove accidental use of stack VLA.
+Hi!
 
-This avoids an accidental stack VLA (since the compiler thinks
-the value of FFT_NUM_SAMPLES can change, even when marked
-"const"). This just replaces it with a #define.
+> show me a proof that its copy & paste. because its not
 
-Also, fixed as part of the directive to remove all VLAs from
-the kernel: https://lkml.org/lkml/2018/3/7/621
+I don't have to prove you anything. Sorry.
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/net/wireless/ath/ath9k/dfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+But you said:
 
-diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-index 6fee9a4..c8844f5 100644
---- a/drivers/net/wireless/ath/ath9k/dfs.c
-+++ b/drivers/net/wireless/ath/ath9k/dfs.c
-@@ -41,7 +41,7 @@ static const int BIN_DELTA_MAX		= 10;
+> >>see ath9k. its exact the same implementation.
+
+We don't want to have exact same code multiple times in the tree.
  
- /* we need at least 3 deltas / 4 samples for a reliable chirp detection */
- #define NUM_DIFFS 3
--static const int FFT_NUM_SAMPLES	= (NUM_DIFFS + 1);
-+#define FFT_NUM_SAMPLES		(NUM_DIFFS + 1)
- 
- /* Threshold for difference of delta peaks */
- static const int MAX_DIFF		= 2;
-@@ -114,7 +114,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
- 
- 		ath_dbg(common, DFS, "HT40: datalen=%d, num_fft_packets=%d\n",
- 			datalen, num_fft_packets);
--		if (num_fft_packets < (FFT_NUM_SAMPLES)) {
-+		if (num_fft_packets < FFT_NUM_SAMPLES) {
- 			ath_dbg(common, DFS, "not enough packets for chirp\n");
- 			return false;
- 		}
-@@ -136,7 +136,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
- 			return false;
- 		ath_dbg(common, DFS, "HT20: datalen=%d, num_fft_packets=%d\n",
- 			datalen, num_fft_packets);
--		if (num_fft_packets < (FFT_NUM_SAMPLES)) {
-+		if (num_fft_packets < FFT_NUM_SAMPLES) {
- 			ath_dbg(common, DFS, "not enough packets for chirp\n");
- 			return false;
- 		}
+									Pavel
 -- 
-2.7.4
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
