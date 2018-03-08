@@ -1,49 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:44536 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751515AbeCTQ41 (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:37177 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756023AbeCHPb7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 12:56:27 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 10/11] staging: wilc1000: remove unused 'struct add_key_params'
-Date: Tue, 20 Mar 2018 22:25:43 +0530
-Message-ID: <1521564944-3565-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180320_175631_463161_0D987A42)
-In-Reply-To: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
-References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+        Thu, 8 Mar 2018 10:31:59 -0500
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Rafa?? Mi??ecki <zajec5@gmail.com>,
+        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+References: <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
+ <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
+ <20180302090312.GA30267@amd>
+ <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
+ <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
+ <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
+ <20180308090216.GC17761@amd>
+ <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com> <20180308140515.GA4889@amd>
+ <c2d75791-5822-ac55-35ad-734947e22d45@dd-wrt.com>
+ <20180308150431.GA12475@localhost>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <d7f09cd5-c434-a2bb-c721-68e90c0c72b6@dd-wrt.com> (sfid-20180308_163203_044721_FFD42FD3)
+Date: Thu, 8 Mar 2018 16:31:52 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180308150431.GA12475@localhost>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove unused struct data structure.
+Am 08.03.2018 um 16:04 schrieb Pavel Machek:
+> Hi!
+>
+>> show me a proof that its copy & paste. because its not
+> I don't have to prove you anything. Sorry.
+then i will deny your argument because its false.
+>
+> But you said:
+>
+>>>> see ath9k. its exact the same implementation.
+> We don't want to have exact same code multiple times in the tree.
+it isnt the exact same code, its just the way its done. i mean 
+registering a led driver function happens multiple times in the kernel
+you cannot say that calling led_classdev_register with the required 
+parameters and function implementation is a case of code duplication.
+then i would just say using of "printk" is a case of code duplication.
+registering a led driver is nothing unusual, the implementation of the 
+led driver is different each time. the implementation for led_brightness 
+is very different
+there are many led drivers in the kernel. all are going the same way.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 ------
- 1 file changed, 6 deletions(-)
+i checked the kernel drivers just right now. almost all major wireless 
+drivers are comming with a led driver without using gpiolib
+your way is a case of codebloating since a registering gpio-leds 
+requires a gpio driver for each wireless driver, even if its sometimes 
+just a single register write for a led  and no real gpio.
+a gpio driver is more complex and bigger than just a led driver. i just 
+wrote a optional gpio driver to get access to all gpios available on the 
+card. some vendors are using these in a unusual way
+i have seen that vendors used them for reset button input etc. this is 
+why i made it. so dont take this as a argument for going a impossible 
+way (again. the kernel does not support multiple platform datas with the 
+same name
+THE KERNEL not leds-gpio. so once a leds-gpio platform data is 
+registered, no other driver can register a new one.
+in addition the kernel must have gpiolib support which increases the 
+kernel size. the best way is always the most simple way and the smallest 
+performant way.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index af1b8aa..b9bba86 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -160,12 +160,6 @@ static struct ieee80211_supported_band WILC_WFI_band_2ghz = {
- 	.n_bitrates = ARRAY_SIZE(ieee80211_bitrates),
- };
- 
--struct add_key_params {
--	u8 key_idx;
--	bool pairwise;
--	u8 *mac_addr;
--};
--
- #define AGING_TIME	(9 * 1000)
- #define during_ip_time	15000
- 
+and again. i did not duplicate the code of ath9k, i just used it as 
+documentation to write a own led driver in a simple way
+
+now a list of wireless drivers with a led driver
+intersil
+carl9170
+ath5k
+rt2x00
+b43legacy
+b43
+iwlegacy
+rtl8187
+brcmsmac
+iwlwifi
+
+Sebastian
+
+>   
+> 									Pavel
+
+
 -- 
-2.7.4
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
