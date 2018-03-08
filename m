@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:60740 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752702AbeC0NQO (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53504 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S965957AbeCHFyW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 09:16:14 -0400
-Message-ID: <1522156568.3050.19.camel@sipsolutions.net> (sfid-20180327_152422_879193_717E041C)
-Subject: Re: [PATCH 1/3] ieee80211: Replace bit shifts with the BIT() macro
- for WLAN_CAPABILITY_*.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Quytelda Kahja <quytelda@tamalin.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 27 Mar 2018 15:16:08 +0200
-In-Reply-To: <CAFLvi20sgO4aKTLYutvwUr5aN9TLaqLWVghC9Y9MrKZvcixAYA@mail.gmail.com>
-References: <20180324041027.6498-1-quytelda@tamalin.org>
-         <e31eb13b-598b-e7c7-607b-c98664818563@lwfinger.net>
-         <CAFLvi20sgO4aKTLYutvwUr5aN9TLaqLWVghC9Y9MrKZvcixAYA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 8 Mar 2018 00:54:22 -0500
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH] mwifiex: correct antenna number with high bits reserved
+Date: Thu, 8 Mar 2018 13:54:02 +0800
+Message-ID: <1520488442-10729-1-git-send-email-huxm@marvell.com> (sfid-20180308_065439_716744_4B87FF53)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2018-03-24 at 16:02 -0700, Quytelda Kahja wrote:
-> The "document" refers to the file in which the changes were made
-> ('include/linux/ieee80211.h').
+High bits of antenna number are reserved in hardware spec,
+using low 4 bits represent supported antenna.
 
-You're the first person ever to do that, to my knowledge :)
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Either way, I don't really want to merge this since it would break
-staging, and I don't want to merge a staging fix either... so you'd have
-to get that sorted out first.
-
-johannes
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index dcc529e..78a4a6a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -1526,7 +1526,8 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
+ 
+ 	adapter->fw_release_number = le32_to_cpu(hw_spec->fw_release_number);
+ 	adapter->fw_api_ver = (adapter->fw_release_number >> 16) & 0xff;
+-	adapter->number_of_antenna = le16_to_cpu(hw_spec->number_of_antenna);
++	adapter->number_of_antenna =
++			le16_to_cpu(hw_spec->number_of_antenna) & 0xf;
+ 
+ 	if (le32_to_cpu(hw_spec->dot_11ac_dev_cap)) {
+ 		adapter->is_hw_11ac_capable = true;
+-- 
+1.9.1
