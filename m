@@ -1,65 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:44451 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031274AbeCAOVB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:21:01 -0500
-Received: by mail-qt0-f193.google.com with SMTP id g60so7663306qtd.11
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:01 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 13/52] ath: Add regulatory mapping for Uganda
-Date: Thu,  1 Mar 2018 15:18:23 +0100
-Message-Id: <20180301141902.24824-14-sven.eckelmann@openmesh.com> (sfid-20180301_153349_348192_69FF5602)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44280 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755478AbeCHJjn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Mar 2018 04:39:43 -0500
+Date: Thu, 8 Mar 2018 10:39:39 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jamie Stuart <jamie@onebillion.org>
+Cc: Daniel Golle <daniel@makrotopia.org>,
+        Enrico Mioso <mrkiko.rs@gmail.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20180308093938.GA2266@redhat.com> (sfid-20180308_103948_214911_47964E2A)
+References: <20180103113540.GA10306@redhat.com>
+ <alpine.LNX.2.21.99.1801031503370.8405@localhost.localdomain>
+ <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com>
+ <alpine.LNX.2.21.99.1801220643400.32225@mStation.localdomain>
+ <20180123132234.GC2520@redhat.com>
+ <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain>
+ <20180124100316.GB3101@redhat.com>
+ <20180301153006.GJ1233@makrotopia.org>
+ <20180307122701.GA10584@redhat.com>
+ <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="NzB8fVQJ5HfG6fxh"
+In-Reply-To: <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
-and to select the correct conformance test limits (CTL) for a country. If
-the country isn't available and it is still programmed in the EEPROM then
-it will cause an error and stop the initialization with:
 
-  Invalid EEPROM contents
+--NzB8fVQJ5HfG6fxh
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-The current CTL mappings for this country are:
+Hi
 
-* 2.4GHz: ETSI
-* 5GHz: FCC
+On Wed, Mar 07, 2018 at 05:47:34PM +0200, Jamie Stuart wrote:
+> config wifi-device 'radio0'
+> 	option type 'mac80211'
+> 	option channel 'auto'
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd.h        | 1 +
- drivers/net/wireless/ath/regd_common.h | 1 +
- 2 files changed, 2 insertions(+)
+To make reproducible testing results I would suggest to setup a channel,
+(choose one that is the less used by other wireless networks),
+problem may happen on some channels and not happen on other.
 
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index 191502ff043d..908163948d59 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -182,6 +182,7 @@ enum CountryCode {
- 	CTRY_TUNISIA = 788,
- 	CTRY_TURKEY = 792,
- 	CTRY_UAE = 784,
-+	CTRY_UGANDA = 800,
- 	CTRY_UKRAINE = 804,
- 	CTRY_UNITED_KINGDOM = 826,
- 	CTRY_UNITED_STATES = 840,
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 27b1c76e912c..a00be9604d21 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -473,6 +473,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_TRINIDAD_Y_TOBAGO, FCC3_WORLD, "TT"},
- 	{CTRY_TUNISIA, ETSI3_WORLD, "TN"},
- 	{CTRY_TURKEY, ETSI3_WORLD, "TR"},
-+	{CTRY_UGANDA, FCC3_WORLD, "UG"},
- 	{CTRY_UKRAINE, NULL1_WORLD, "UA"},
- 	{CTRY_UAE, NULL1_WORLD, "AE"},
- 	{CTRY_UNITED_KINGDOM, ETSI1_WORLD, "GB"},
--- 
-2.11.0
+> The 30 clients are all Apple iPads (a mixture of iPad mini and mini 2, running iOS 9-11). During this testing period, all clients were simultaneously downloading files from the devices’ sdcard (served via nginx running on the device). Although this is not a typical use-case, it was useful in stress-testing the wireless setup.
+
+For such scenario I would suggest hardcode ba_size = 0 and see if that
+would help.
+
+I also attach another patch, can be applied on top of two previous.
+This one should give RX hardware more time to provide proper BlockACK
+frame, so hopefully could help with seq mismashes.
+
+Stanislaw
+
+--NzB8fVQJ5HfG6fxh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="rt2800_change_rx_ampdu_density.patch"
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index e68f7f9d48f8..95f20072a219 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -9286,7 +9286,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	spec->ht.cap |= rx_chains << IEEE80211_HT_CAP_RX_STBC_SHIFT;
+ 
+ 	spec->ht.ampdu_factor = 0;
+-	spec->ht.ampdu_density = 4;
++	spec->ht.ampdu_density = 7;
+ 	spec->ht.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
+ 	if (tx_chains != rx_chains) {
+ 		spec->ht.mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
+
+--NzB8fVQJ5HfG6fxh--
