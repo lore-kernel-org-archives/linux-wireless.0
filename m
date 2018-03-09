@@ -1,65 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:37477 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750748AbeCPEu3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:48690 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751285AbeCII7R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 00:50:29 -0400
-Date: Fri, 16 Mar 2018 10:20:16 +0530
-From: afzal mohammed <afzal.mohd.ma@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: David Howells <dhowells@redhat.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        IDE-ML <linux-ide@vger.kernel.org>,
-        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-pwm@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-spi <linux-spi@vger.kernel.org>, linux-usb@vger.kernel.org,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linux-fbdev@vger.kernel.org, linux-watchdog@vger.kernel.org,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Linux-MM <linux-mm@kvack.org>
-Subject: Re: [PATCH 00/16] remove eight obsolete architectures
-Message-ID: <20180316045016.GA7697@afzalpc> (sfid-20180316_055053_256902_43FEE504)
-References: <20180314143529.1456168-1-arnd@arndb.de>
- <2929.1521106970@warthog.procyon.org.uk>
- <CAK8P3a10hBz7QYk5v5MfhVMPOwFnWYTn95WZp1HtHrd7-GQpRg@mail.gmail.com>
+        Fri, 9 Mar 2018 03:59:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK8P3a10hBz7QYk5v5MfhVMPOwFnWYTn95WZp1HtHrd7-GQpRg@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 09 Mar 2018 10:59:15 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: debugfs entries in cfg80211
+In-Reply-To: <5A9D034D.9060203@broadcom.com>
+ (sfid-20180305_094401_329661_B11F6C32)
+References: <5A9D034D.9060203@broadcom.com>
+ (sfid-20180305_094401_329661_B11F6C32)
+Message-ID: <bea697dacbe725c636c5dfdd12d7ab2b@sipsolutions.net> (sfid-20180309_095932_780443_12B890AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Arend,
 
-On Thu, Mar 15, 2018 at 10:56:48AM +0100, Arnd Bergmann wrote:
-> On Thu, Mar 15, 2018 at 10:42 AM, David Howells <dhowells@redhat.com> wrote:
+Sorry for the late reply - just returning from Israel now (in fact I'm 
+on the plane, but it has wifi).
 
-> > Do we have anything left that still implements NOMMU?
+> While reworking brcmfmac I stumbled on debugfs code in cfg80211, which
+> creates the debugfs dir for the wiphy instance. It also creates a
+> couple of entries, ie. rts and fragmentation threshold and retry
+> limits. How useful are these as I suspect it is pretty old cruft and
+> iw can obtain the information as well. Can it be removed.
 
-Please don't kill !MMU.
+No objection from me to removing them!
 
-> Yes, plenty.
-
-> I've made an overview of the remaining architectures for my own reference[1].
-> The remaining NOMMU architectures are:
-> 
-> - arch/arm has ARMv7-M (Cortex-M microcontroller), which is actually
-> gaining traction
-
-ARMv7-R as well, also seems ARM is coming up with more !MMU's - v8-M,
-v8-R. In addition, though only of academic interest, ARM MMU capable
-platform's can run !MMU Linux.
-
-afzal
-
-> - arch/sh has an open-source J2 core that was added not that long ago,
-> it seems to
->   be the only SH compatible core that anyone is working on.
-> - arch/microblaze supports both MMU/NOMMU modes (most use an MMU)
-> - arch/m68k supports several NOMMU targets, both the coldfire SoCs and the
->   classic processors
-> - c6x has no MMU
+johannes
