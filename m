@@ -1,126 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46906 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750827AbeCNOYN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 10:24:13 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        James Hughes <james.hughes@raspberrypi.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>,
-        bridge@lists.linux-foundation.org,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: Re: [PATCH] brcmfmac: drop Inter-Access Point Protocol packets by default
-References: <20180314110119.13631-1-zajec5@gmail.com>
-Date: Wed, 14 Mar 2018 16:24:04 +0200
-In-Reply-To: <20180314110119.13631-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
- =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
-        message of "Wed, 14 Mar 2018 12:01:19 +0100")
-Message-ID: <878tau7n23.fsf@codeaurora.org> (sfid-20180314_152420_420190_FBB32029)
+Received: from mail-ve1eur01on0112.outbound.protection.outlook.com ([104.47.1.112]:11447
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751227AbeCIQ3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Mar 2018 11:29:08 -0500
+From: Deronne Sebastien <S.Deronne@televic.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k: rx trigger issue
+Date: Fri, 9 Mar 2018 16:29:06 +0000
+Message-ID: <AM3PR07MB37011815CBF8E2429415760F5DE0@AM3PR07MB370.eurprd07.prod.outlook.com> (sfid-20180309_172912_342061_8BB69BA8)
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+Hi,
 
-> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->
-> Testing brcmfmac with more recent firmwares resulted in AP interfaces
-> not working in some specific setups. Debugging resulted in discovering
-> support for IAPP in Broadcom's firmwares. This is an obsoleted standard
-> and its implementation is something that:
-> 1) Most people don't need / want to use
-> 2) Can allow local DoS attacks
-> 3) Breaks AP interfaces in some specific bridge setups
->
-> To solve issues it can cause this commit modifies brcmfmac to drop IAPP
-> packets. If affects:
-> 1) Rx path: driver won't be sending these unwanted packets up.
-> 2) Tx path: driver will reject packets that would trigger STA
->    disassociation perfromed by a firmware (possible local DoS attack).
->
-> It appears there are some Broadcom's clients/users who care about this
-> feature despite the drawbacks. They can switch it on by a newly added
-> Kconfig option.
->
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+I am facing an issue with ath9k.
+I noticed that the rx_tasklet is not being triggered right after reception =
+of a packet.
+Instead, it is triggered much later (up to few milliseconds) and forwards u=
+p more than one packets (all packets received during this time interval).
+How can I get a trigger for each received packet instead of a trigger for a=
+ burst of packets?
 
-[...]
-
-> --- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
-> +++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
-> @@ -68,6 +68,26 @@ config BRCMFMAC_PCIE
->  	  IEEE802.11ac embedded FullMAC WLAN driver. Say Y if you want to
->  	  use the driver for an PCIE wireless card.
->=20=20
-> +config BRCMFMAC_IAPP
-> +	bool "Partial support for obsoleted Inter-Access Point Protocol"
-> +	depends on BRCMFMAC
-> +	---help---
-> +	  Most of Broadcom's firmwares can send 802.11f ADD frame every
-> +	  time new STA connects to the AP interface. Some recent ones
-> +	  can also disassociate STA when they receive such a frame.
-> +
-> +	  It's important to understand this behavior can lead to a local
-> +	  DoS security issue. Attacker may trigger disassociation of any
-> +	  STA by sending a proper Ethernet frame to the wireless
-> +	  interface.
-> +
-> +	  Moreover this feature may break AP interfaces in some specific
-> +	  setups. This applies e.g. to the bridge with hairpin mode
-> +	  enabled and IFLA_BRPORT_MCAST_TO_UCAST set. IAPP packet
-> +	  generated by a firmware will get passed back to the wireless
-> +	  interface and cause immediate disassociation of just-connected
-> +	  STA.
-
-Sorry for jumping late, but does it really make sense to have a Kconfig
-option for this? I don't think we should add a Kconfig option for every
-strange feature, there should be stronger reasons (size savings etc)
-before adding a Kconfig option.
-
-And in this case the size savings can't be much. Wouldn't a module
-parameter be simpler for a functionality change like this?
-
-> +/**
-> + * brcmf_skb_is_iapp - checks if skb is an IAPP packet
-> + *
-> + * @skb: skb to check
-> + */
-> +static bool brcmf_skb_is_iapp(struct sk_buff *skb)
-> +{
-> +	const u8 iapp_l2_update_packet[6] __aligned(2) =3D {
-> +		0x00, 0x01, 0xaf, 0x81, 0x01, 0x00,
-> +	};
-
-static?
-
-> +	unsigned char *eth_data =3D skb_mac_header(skb) + ETH_HLEN;
-> +#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-
-#ifndef?
-
-> +	const u16 *a =3D (const u16 *)eth_data;
-> +	const u16 *b =3D (const u16 *)iapp_l2_update_packet;
-> +#endif
-> +
-> +	if (skb->len - skb->mac_len !=3D 6 ||
-> +	    !is_multicast_ether_addr(eth_hdr(skb)->h_dest))
-> +		return false;
-> +
-> +#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-
-#ifdef?
-
---=20
-Kalle Valo
+Kind regards,
+S=E9bastien Deronne.
