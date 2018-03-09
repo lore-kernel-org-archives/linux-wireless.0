@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:4423 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424338AbeCBORd (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56856 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751249AbeCISUZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:17:33 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
+        Fri, 9 Mar 2018 13:20:25 -0500
+From: Ganapathi Bhat <gbhat@marvell.com>
 To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 1/3] staging: wilc1000: fix open parenthesis mismatch in wilc_wlan_cfg_get()
-Date: Fri, 2 Mar 2018 19:47:18 +0530
-Message-ID: <1520000240-27519-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_151740_831836_2A5B72EF)
-In-Reply-To: <1520000240-27519-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000240-27519-1-git-send-email-ajay.kathat@microchip.com>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 0/3] Fix issues with connect and get_channel implementation
+Date: Fri, 9 Mar 2018 23:45:23 +0530
+Message-ID: <1520619326-14888-1-git-send-email-gbhat@marvell.com> (sfid-20180309_192029_185559_106523F4)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'Alignment should match open parenthesis' issue found by
-checkpatch.pl script. Reduce the leading tab, to make space for open
-parenthesis match.
+First change reverts one of our earlier patch, which did change
+the hardware info stored in driver. Second patch improves the
+first(reverted) patch. Third change adds a new command, which
+fixes an issue with get_channel implementation. Three patches
+needed to make sure the driver association are working as
+expected.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
+Ganapathi Bhat (3):
+  Revert "mwifiex: fix incorrect ht capability problem"
+  mwifiex: fix incorrect ht capability problem
+  mwifiex: get_channel from firmware
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 74b80ad..7c0d212 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1267,21 +1267,22 @@ int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit,
- 	offset += ret_size;
- 	wilc->cfg_frame_offset = offset;
- 
--	if (commit) {
--		wilc->cfg_frame_in_use = 1;
-+	if (!commit)
-+		return ret_size;
- 
--		if (wilc_wlan_cfg_commit(vif, WILC_CFG_QUERY, drv_handler))
--			ret_size = 0;
-+	wilc->cfg_frame_in_use = 1;
- 
--		if (!wait_for_completion_timeout(&wilc->cfg_event,
--					msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
--			netdev_dbg(vif->ndev, "Get Timed Out\n");
--			ret_size = 0;
--		}
--		wilc->cfg_frame_in_use = 0;
--		wilc->cfg_frame_offset = 0;
--		wilc->cfg_seq_no += 1;
-+	if (wilc_wlan_cfg_commit(vif, WILC_CFG_QUERY, drv_handler))
-+		ret_size = 0;
-+
-+	if (!wait_for_completion_timeout(&wilc->cfg_event,
-+					 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
-+		netdev_dbg(vif->ndev, "Get Timed Out\n");
-+		ret_size = 0;
- 	}
-+	wilc->cfg_frame_in_use = 0;
-+	wilc->cfg_frame_offset = 0;
-+	wilc->cfg_seq_no += 1;
- 
- 	return ret_size;
- }
+ drivers/net/wireless/marvell/mwifiex/11n.c         | 30 ++++++++++++
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 40 ++++++++++------
+ drivers/net/wireless/marvell/mwifiex/decl.h        | 17 +++++++
+ drivers/net/wireless/marvell/mwifiex/fw.h          |  7 +++
+ drivers/net/wireless/marvell/mwifiex/main.h        | 16 ++++++-
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 22 +++++++++
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 19 ++++++++
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   | 56 +++++-----------------
+ 8 files changed, 148 insertions(+), 59 deletions(-)
+
 -- 
-2.7.4
+1.9.1
