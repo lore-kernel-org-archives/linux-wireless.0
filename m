@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:33230 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752365AbeC3TR0 (ORCPT
+Received: from smtprelay0134.hostedemail.com ([216.40.44.134]:48570 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751106AbeCIN3d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Mar 2018 15:17:26 -0400
-Message-ID: <1522437431.2902.0.camel@sipsolutions.net> (sfid-20180330_211729_724035_3D9E176B)
-Subject: Re: [PATCH 11/17] rtlwifi: halmac: add files to implement halmac ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Date: Fri, 30 Mar 2018 21:17:11 +0200
-In-Reply-To: <20180330071916.23360-12-pkshih@realtek.com> (sfid-20180330_092005_131151_0A8F8A2A)
-References: <20180330071916.23360-1-pkshih@realtek.com>
-         <20180330071916.23360-12-pkshih@realtek.com>
-         (sfid-20180330_092005_131151_0A8F8A2A)
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 9 Mar 2018 08:29:33 -0500
+Message-ID: <1520602169.26370.1.camel@perches.com> (sfid-20180309_143006_016717_A4DDAEE8)
+Subject: Re: [PATCH] drivers: net: wireless: ath: ath9k: dfs: remove VLA
+ usage
+From: Joe Perches <joe@perches.com>
+To: Andreas Christoforou <andreaschristofo@gmail.com>,
+        keescook@chromium.org
+Cc: kernel-hardening@lists.openwall.com,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Fri, 09 Mar 2018 05:29:29 -0800
+In-Reply-To: <1520601833-4952-1-git-send-email-andreaschristofo@gmail.com>
+References: <1520601833-4952-1-git-send-email-andreaschristofo@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-03-30 at 15:19 +0800, pkshih@realtek.com wrote:
-> 
-> +static struct rtl_halmac_ops rtl_halmac_operation = {
+On Fri, 2018-03-09 at 15:23 +0200, Andreas Christoforou wrote:
+> The kernel would like to have all stack VLA usage removed.
+> This is the correct patch.
+[]
+> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
+[]
+> @@ -101,7 +101,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
+>  				 int datalen, bool is_ctl, bool is_ext)
+>  {
+>  	int i;
+> -	int max_bin[FFT_NUM_SAMPLES];
+> +	int max_bin[NUM_DIFFS + 1];
+>  	struct ath_hw *ah = sc->sc_ah;
+>  	struct ath_common *common = ath9k_hw_common(ah);
+>  	int prev_delta;
 
-You should make this const, if at all possible (it looks like it should
-be).
+why not just change FFT_NUM_SAMPLES to a #define
+or get rid if FFT_NUM_SAMPLES altogether?
 
-> +	.halmac_init_adapter = rtl_halmac_init_adapter,
-> +	.halmac_deinit_adapter = rtl_halmac_deinit_adapter,
-> +	.halmac_init_hal = rtl_halmac_init_hal,
-> +	.halmac_deinit_hal = rtl_halmac_deinit_hal,
-> +	.halmac_poweron = rtl_halmac_poweron,
-> +	.halmac_poweroff = rtl_halmac_poweroff,
-> +
-> +	.halmac_phy_power_switch = rtl_halmac_phy_power_switch,
-> +	.halmac_set_mac_address = rtl_halmac_set_mac_address,
-> +	.halmac_set_bssid = rtl_halmac_set_bssid,
-> +
-> +	.halmac_get_physical_efuse_size = rtl_halmac_get_physical_efuse_size,
-> +	.halmac_read_physical_efuse_map = rtl_halmac_read_physical_efuse_map,
-> +	.halmac_get_logical_efuse_size = rtl_halmac_get_logical_efuse_size,
-> +	.halmac_read_logical_efuse_map = rtl_halmac_read_logical_efuse_map,
-> +
-> +	.halmac_set_bandwidth = rtl_halmac_set_bandwidth,
-> +
-> +	.halmac_c2h_handle = rtl_halmac_c2h_handle,
-> +
-> +	.halmac_chk_txdesc = rtl_halmac_chk_txdesc,
-> +	.halmac_iqk = rtl_halmac_iqk,
-> +};
-> +
-> +struct rtl_halmac_ops *rtl_halmac_get_ops_pointer(void)
-> +{
-> +	return &rtl_halmac_operation;
-> +}
-> +EXPORT_SYMBOL(rtl_halmac_get_ops_pointer);
-
-This seems like a rather pointless indirection, you can export the
-variable.
-
-johannes
+$ git grep -w FFT_NUM_SAMPLES
+drivers/net/wireless/ath/ath9k/dfs.c:static const int FFT_NUM_SAMPLES   = (NUM_DIFFS + 1);
+drivers/net/wireless/ath/ath9k/dfs.c:   int max_bin[FFT_NUM_SAMPLES];
+drivers/net/wireless/ath/ath9k/dfs.c:           if (num_fft_packets < (FFT_NUM_SAMPLES)) {
+drivers/net/wireless/ath/ath9k/dfs.c:           for (i = 0; i < FFT_NUM_SAMPLES; i++)
+drivers/net/wireless/ath/ath9k/dfs.c:           if (num_fft_packets < (FFT_NUM_SAMPLES)) {
+drivers/net/wireless/ath/ath9k/dfs.c:           for (i = 0; i < FFT_NUM_SAMPLES; i++)
