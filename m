@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:38596 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031424AbeCAOW0 (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:37920 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750800AbeCIJlw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:22:26 -0500
-Received: by mail-qt0-f194.google.com with SMTP id n12so7690550qtl.5
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:22:25 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 47/52] ath: Map Taiwan to APL7_FCCA
-Date: Thu,  1 Mar 2018 15:18:57 +0100
-Message-Id: <20180301141902.24824-48-sven.eckelmann@openmesh.com> (sfid-20180301_152229_166335_77A91597)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Fri, 9 Mar 2018 04:41:52 -0500
+Received: by mail-wr0-f194.google.com with SMTP id n7so8372277wrn.5
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2018 01:41:52 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: kubakici@wp.pl
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt7601u: let mac80211 validate rx CCMP PN
+Date: Fri,  9 Mar 2018 10:41:41 +0100
+Message-Id: <9ccb187ffdba10f63148402aa38a5db436c52935.1520588242.git.lorenzo.bianconi@redhat.com> (sfid-20180309_104156_948645_1DB3EC31)
+In-Reply-To: <cover.1520588242.git.lorenzo.bianconi@redhat.com>
+References: <cover.1520588242.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't correctly
-mapped to the actual CTL entries in EEPROM then it could happen that the
-device violates the regulations. But it can also happen that the device is
-then not able to be used with its full txpower on all rates.
+Apparently the hardware does not perform CCMP PN validation so
+let mac80211 take care of possible replay attacks in sw.
+Moreover indicate ICV and MIC had been stripped setting corresponding
+bits in ieee80211_rx_status.
+The fix has been validated using 4.2.1 and 4.1.3 tests from the WiFi
+Alliance vulnerability detection tool.
 
-This change itself doesn't change the selected CTL of this country and is
-only required to stay in sync with the QCA mappings.
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Fixes: c869f77d6abb ("add mt7601u driver")
+Acked-by: Jakub Kicinski <kubakici@wp.pl>
+Tested-by: David Park <david.park@hitemengineering.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/ath/regd_common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt7601u/initvals.h |  1 +
+ drivers/net/wireless/mediatek/mt7601u/mac.c      | 10 +++++++++-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index f0b51858b965..a4a55663e58f 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -479,7 +479,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_SWEDEN, ETSI1_WORLD, "SE"},
- 	{CTRY_SWITZERLAND, ETSI1_WORLD, "CH"},
- 	{CTRY_SYRIA, NULL1_WORLD, "SY"},
--	{CTRY_TAIWAN, APL3_FCCA, "TW"},
-+	{CTRY_TAIWAN, APL7_FCCA, "TW"},
- 	{CTRY_TANZANIA, APL1_WORLD, "TZ"},
- 	{CTRY_THAILAND, FCC3_WORLD, "TH"},
- 	{CTRY_TRINIDAD_Y_TOBAGO, FCC3_WORLD, "TT"},
+diff --git a/drivers/net/wireless/mediatek/mt7601u/initvals.h b/drivers/net/wireless/mediatek/mt7601u/initvals.h
+index ec11ff66969d..2dc6b68e7fb9 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/initvals.h
++++ b/drivers/net/wireless/mediatek/mt7601u/initvals.h
+@@ -139,6 +139,7 @@ static const struct mt76_reg_pair mac_common_vals[] = {
+ 	{ MT_TXOP_HLDR_ET,		0x00000002 },
+ 	{ MT_XIFS_TIME_CFG,		0x33a41010 },
+ 	{ MT_PWR_PIN_CFG,		0x00000000 },
++	{ MT_PN_PAD_MODE,		0x00000001 },
+ };
+ 
+ static const struct mt76_reg_pair mac_chip_vals[] = {
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mac.c b/drivers/net/wireless/mediatek/mt7601u/mac.c
+index 4d3077941138..d55d7040a56d 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mac.c
++++ b/drivers/net/wireless/mediatek/mt7601u/mac.c
+@@ -480,8 +480,16 @@ u32 mt76_mac_process_rx(struct mt7601u_dev *dev, struct sk_buff *skb,
+ 
+ 	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_DECRYPT)) {
+ 		status->flag |= RX_FLAG_DECRYPTED;
+-		status->flag |= RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED;
++		status->flag |= RX_FLAG_MMIC_STRIPPED;
++		status->flag |= RX_FLAG_MIC_STRIPPED;
++		status->flag |= RX_FLAG_ICV_STRIPPED;
++		status->flag |= RX_FLAG_IV_STRIPPED;
+ 	}
++	/* let mac80211 take care of PN validation since apparently
++	 * the hardware does not support it
++	 */
++	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_PN_LEN))
++		status->flag &= ~RX_FLAG_IV_STRIPPED;
+ 
+ 	status->chains = BIT(0);
+ 	rssi = mt7601u_phy_get_rssi(dev, rxwi, rate);
 -- 
-2.11.0
+2.14.3
