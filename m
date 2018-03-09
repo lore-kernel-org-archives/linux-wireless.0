@@ -1,111 +1,308 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52402 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751141AbeCZM3f (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59366 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751325AbeCISUg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 08:29:35 -0400
-Subject: Re: [PATCH v3] wcn36xx: reduce verbosity of drivers messages
-To: kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-References: <20180227140535.4794-1-rfried@codeaurora.org>
-From: Ramon Fried <rfried@codeaurora.org>
-Message-ID: <21c7106f-e84a-18fb-e2d1-989073034e2a@codeaurora.org> (sfid-20180326_142938_858293_A98E736B)
-Date: Mon, 26 Mar 2018 15:29:31 +0300
+        Fri, 9 Mar 2018 13:20:36 -0500
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 3/3] mwifiex: get_channel from firmware
+Date: Fri, 9 Mar 2018 23:45:26 +0530
+Message-ID: <1520619326-14888-4-git-send-email-gbhat@marvell.com> (sfid-20180309_192040_818681_54B42804)
+In-Reply-To: <1520619326-14888-1-git-send-email-gbhat@marvell.com>
+References: <1520619326-14888-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20180227140535.4794-1-rfried@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle.
+At present driver gets chan_type by referring to
+IEEE80211_HT_PARAM_CHA_SEC_OFFSET, in ASSOC response. Sometimes
+AP shows IEEE80211_HT_PARAM_CHA_SEC_OFFSET as above/below in
+assoc response, even if the association is done on HT20 channel
+only. So, it will be accurate to get econdary channel offset from
+firmware.
 
-Kind reminder. Is the patch ok ?
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 40 ++++++++++++++--------
+ drivers/net/wireless/marvell/mwifiex/decl.h        | 17 +++++++++
+ drivers/net/wireless/marvell/mwifiex/fw.h          |  7 ++++
+ drivers/net/wireless/marvell/mwifiex/main.h        | 16 ++++++++-
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 22 ++++++++++++
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 19 ++++++++++
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   | 12 +++++++
+ 7 files changed, 117 insertions(+), 16 deletions(-)
 
-Thanks,
-
-Ramon
-
-
-On 2/27/2018 4:05 PM, Ramon Fried wrote:
-> Whenever the WLAN interface is started the FW
-> version and caps are printed.
-> The caps now will be displayed only in debug mode.
-> Firmware version will be displayed only once on first
-> startup of the interface.
->
-> Change-Id: I4db6ea7f384fe15eebe4c3ddb1d1ccab00094332
-> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
-> ---
-> v2: print the firwmare version as info but only
-> 	onetime.
-> v3: change the static variable to a struct variable.
->
->  drivers/net/wireless/ath/wcn36xx/main.c    |  3 ++-
->  drivers/net/wireless/ath/wcn36xx/smd.c     | 18 ++++++++++--------
->  drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 ++
->  3 files changed, 14 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-> index ab5be6d2c691..bfe9062bfa52 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/main.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-> @@ -261,7 +261,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
->  
->  	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
->  		if (get_feat_caps(wcn->fw_feat_caps, i))
-> -			wcn36xx_info("FW Cap %s\n", wcn36xx_get_cap_name(i));
-> +			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
->  	}
->  }
->  
-> @@ -1283,6 +1283,7 @@ static int wcn36xx_probe(struct platform_device *pdev)
->  	wcn = hw->priv;
->  	wcn->hw = hw;
->  	wcn->dev = &pdev->dev;
-> +	wcn->first_boot = true;
->  	mutex_init(&wcn->conf_mutex);
->  	mutex_init(&wcn->hal_mutex);
->  	mutex_init(&wcn->scan_lock);
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index 2a4871ca9c72..1a5b4d57c0ac 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> @@ -409,15 +409,17 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
->  	wcn->fw_minor = rsp->start_rsp_params.version.minor;
->  	wcn->fw_major = rsp->start_rsp_params.version.major;
->  
-> -	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
-> -		     wcn->wlan_version, wcn->crm_version);
-> -
-> -	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
-> -		     wcn->fw_major, wcn->fw_minor,
-> -		     wcn->fw_version, wcn->fw_revision,
-> -		     rsp->start_rsp_params.stations,
-> -		     rsp->start_rsp_params.bssids);
-> +	if (wcn->first_boot) {
-> +		wcn->first_boot = false;
-> +		wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
-> +			     wcn->wlan_version, wcn->crm_version);
->  
-> +		wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
-> +			     wcn->fw_major, wcn->fw_minor,
-> +			     wcn->fw_version, wcn->fw_revision,
-> +			     rsp->start_rsp_params.stations,
-> +			     rsp->start_rsp_params.bssids);
-> +	}
->  	return 0;
->  }
->  
-> diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-> index 81017e6703b4..5854adf43f3a 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-> +++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-> @@ -192,6 +192,8 @@ struct wcn36xx {
->  	u8			crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
->  	u8			wlan_version[WCN36XX_HAL_VERSION_LENGTH + 1];
->  
-> +	bool		first_boot;
-> +
->  	/* IRQs */
->  	int			tx_irq;
->  	int			rx_irq;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index ce4432c..7f7e9de 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -95,18 +95,32 @@ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type)
+ 
+ /* This function maps IEEE HT secondary channel type to NL80211 channel type
+  */
+-u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset)
++u8 mwifiex_get_chan_type(struct mwifiex_private *priv)
+ {
+-	switch (second_chan_offset) {
+-	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
+-		return NL80211_CHAN_HT20;
+-	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+-		return NL80211_CHAN_HT40PLUS;
+-	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+-		return NL80211_CHAN_HT40MINUS;
+-	default:
+-		return NL80211_CHAN_HT20;
++	struct mwifiex_channel_band channel_band;
++	int ret;
++
++	ret = mwifiex_get_chan_info(priv, &channel_band);
++
++	if (!ret) {
++		switch (channel_band.band_config.chan_width) {
++		case CHAN_BW_20MHZ:
++			if (IS_11N_ENABLED(priv))
++				return NL80211_CHAN_HT20;
++			else
++				return NL80211_CHAN_NO_HT;
++		case CHAN_BW_40MHZ:
++			if (channel_band.band_config.chan2_offset ==
++			    SEC_CHAN_ABOVE)
++				return NL80211_CHAN_HT40PLUS;
++			else
++				return NL80211_CHAN_HT40MINUS;
++		default:
++			return NL80211_CHAN_HT20;
++		}
+ 	}
++
++	return NL80211_CHAN_HT20;
+ }
+ 
+ /*
+@@ -3937,7 +3951,6 @@ static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
+ 	struct mwifiex_bssdescriptor *curr_bss;
+ 	struct ieee80211_channel *chan;
+-	u8 second_chan_offset;
+ 	enum nl80211_channel_type chan_type;
+ 	enum nl80211_band band;
+ 	int freq;
+@@ -3954,10 +3967,7 @@ static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
+ 		chan = ieee80211_get_channel(wiphy, freq);
+ 
+ 		if (priv->ht_param_present) {
+-			second_chan_offset = priv->assoc_resp_ht_param &
+-					IEEE80211_HT_PARAM_CHA_SEC_OFFSET;
+-			chan_type = mwifiex_sec_chan_offset_to_chan_type
+-							(second_chan_offset);
++			chan_type = mwifiex_get_chan_type(priv);
+ 			cfg80211_chandef_create(chandef, chan, chan_type);
+ 		} else {
+ 			cfg80211_chandef_create(chandef, chan,
+diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
+index 188e4c3..46696ea 100644
+--- a/drivers/net/wireless/marvell/mwifiex/decl.h
++++ b/drivers/net/wireless/marvell/mwifiex/decl.h
+@@ -294,4 +294,21 @@ enum rdwr_status {
+ 	RDWR_STATUS_DONE = 2
+ };
+ 
++enum mwifiex_chan_width {
++	CHAN_BW_20MHZ = 0,
++	CHAN_BW_10MHZ,
++	CHAN_BW_40MHZ,
++	CHAN_BW_80MHZ,
++	CHAN_BW_8080MHZ,
++	CHAN_BW_160MHZ,
++	CHAN_BW_5MHZ,
++};
++
++enum mwifiex_chan_offset {
++	SEC_CHAN_NONE = 0,
++	SEC_CHAN_ABOVE = 1,
++	SEC_CHAN_5MHZ = 2,
++	SEC_CHAN_BELOW = 3
++};
++
+ #endif /* !_MWIFIEX_DECL_H_ */
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 9c2cdef..c5dc518 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -411,6 +411,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_TDLS_OPER                         0x0122
+ #define HostCmd_CMD_FW_DUMP_EVENT		      0x0125
+ #define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
++#define HostCmd_CMD_STA_CONFIGURE		      0x023f
+ #define HostCmd_CMD_CHAN_REGION_CFG		      0x0242
+ #define HostCmd_CMD_PACKET_AGGR_CTRL		      0x0251
+ 
+@@ -2285,6 +2286,11 @@ struct host_cmd_ds_pkt_aggr_ctrl {
+ 	__le16 tx_aggr_align;
+ } __packed;
+ 
++struct host_cmd_ds_sta_configure {
++	__le16 action;
++	u8 tlv_buffer[0];
++} __packed;
++
+ struct host_cmd_ds_command {
+ 	__le16 command;
+ 	__le16 size;
+@@ -2361,6 +2367,7 @@ struct host_cmd_ds_command {
+ 		struct host_cmd_ds_gtk_rekey_params rekey;
+ 		struct host_cmd_ds_chan_region_cfg reg_cfg;
+ 		struct host_cmd_ds_pkt_aggr_ctrl pkt_aggr_ctrl;
++		struct host_cmd_ds_sta_configure sta_cfg;
+ 	} params;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index f550528..19a23f8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -517,6 +517,18 @@ enum mwifiex_iface_work_flags {
+ 	MWIFIEX_IFACE_WORK_CARD_RESET,
+ };
+ 
++struct mwifiex_band_config {
++	u8 chan_band:2;
++	u8 chan_width:2;
++	u8 chan2_offset:2;
++	u8 scan_mode:2;
++} __packed;
++
++struct mwifiex_channel_band {
++	struct mwifiex_band_config band_config;
++	u8 channel;
++};
++
+ struct mwifiex_private {
+ 	struct mwifiex_adapter *adapter;
+ 	u8 bss_type;
+@@ -1546,7 +1558,7 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
+ 					struct mwifiex_bssdescriptor *bss_desc);
+ 
+ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type);
+-u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset);
++u8 mwifiex_get_chan_type(struct mwifiex_private *priv);
+ 
+ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 					      const char *name,
+@@ -1673,6 +1685,8 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+ int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
+ 			      int cmd_type,
+ 			      struct mwifiex_ds_wakeup_reason *wakeup_reason);
++int mwifiex_get_chan_info(struct mwifiex_private *priv,
++			  struct mwifiex_channel_band *channel_band);
+ int mwifiex_ret_wakeup_reason(struct mwifiex_private *priv,
+ 			      struct host_cmd_ds_command *resp,
+ 			      struct host_cmd_ds_wakeup_reason *wakeup_reason);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 211e47d..4ed10cf 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1898,6 +1898,25 @@ static int mwifiex_cmd_get_wakeup_reason(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++static int mwifiex_cmd_get_chan_info(struct host_cmd_ds_command *cmd,
++				     u16 cmd_action)
++{
++	struct host_cmd_ds_sta_configure *sta_cfg_cmd = &cmd->params.sta_cfg;
++	struct host_cmd_tlv_channel_band *tlv_band_channel =
++	(struct host_cmd_tlv_channel_band *)sta_cfg_cmd->tlv_buffer;
++
++	cmd->command = cpu_to_le16(HostCmd_CMD_STA_CONFIGURE);
++	cmd->size = cpu_to_le16(sizeof(*sta_cfg_cmd) +
++				sizeof(*tlv_band_channel) + S_DS_GEN);
++	sta_cfg_cmd->action = cpu_to_le16(cmd_action);
++	memset(tlv_band_channel, 0, sizeof(*tlv_band_channel));
++	tlv_band_channel->header.type = cpu_to_le16(TLV_TYPE_CHANNELBANDLIST);
++	tlv_band_channel->header.len  = cpu_to_le16(sizeof(*tlv_band_channel) -
++					sizeof(struct mwifiex_ie_types_header));
++
++	return 0;
++}
++
+ /* This function check if the command is supported by firmware */
+ static int mwifiex_is_cmd_supported(struct mwifiex_private *priv, u16 cmd_no)
+ {
+@@ -2210,6 +2229,9 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 		cmd_ptr->command = cpu_to_le16(cmd_no);
+ 		cmd_ptr->size = cpu_to_le16(S_DS_GEN);
+ 		break;
++	case HostCmd_CMD_STA_CONFIGURE:
++		ret = mwifiex_cmd_get_chan_info(cmd_ptr, cmd_action);
++		break;
+ 	default:
+ 		mwifiex_dbg(priv->adapter, ERROR,
+ 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+index 1bd4e13..69e3b62 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -1170,6 +1170,22 @@ static int mwifiex_ret_pkt_aggr_ctrl(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++static int mwifiex_ret_get_chan_info(struct mwifiex_private *priv,
++				     struct host_cmd_ds_command *resp,
++				     struct mwifiex_channel_band *channel_band)
++{
++	struct host_cmd_ds_sta_configure *sta_cfg_cmd = &resp->params.sta_cfg;
++	struct host_cmd_tlv_channel_band *tlv_band_channel;
++
++	tlv_band_channel =
++	(struct host_cmd_tlv_channel_band *)sta_cfg_cmd->tlv_buffer;
++	memcpy(&channel_band->band_config, &tlv_band_channel->band_config,
++	       sizeof(struct mwifiex_band_config));
++	channel_band->channel = tlv_band_channel->channel;
++
++	return 0;
++}
++
+ /*
+  * This function handles the command responses.
+  *
+@@ -1393,6 +1409,9 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 	case HostCmd_CMD_CHAN_REGION_CFG:
+ 		ret = mwifiex_ret_chan_region_cfg(priv, resp);
+ 		break;
++	case HostCmd_CMD_STA_CONFIGURE:
++		ret = mwifiex_ret_get_chan_info(priv, resp, data_buf);
++		break;
+ 	default:
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "CMD_RESP: unknown cmd response %#x\n",
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index ed66f12..5414b75 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -1481,3 +1481,15 @@ int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
+ 
+ 	return status;
+ }
++
++int mwifiex_get_chan_info(struct mwifiex_private *priv,
++			  struct mwifiex_channel_band *channel_band)
++{
++	int status = 0;
++
++	status = mwifiex_send_cmd(priv, HostCmd_CMD_STA_CONFIGURE,
++				  HostCmd_ACT_GEN_GET, 0, channel_band,
++				  MWIFIEX_SYNC_CMD);
++
++	return status;
++}
+-- 
+1.9.1
