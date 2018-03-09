@@ -1,107 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44658 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965060AbeCHGwj (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:46537 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751060AbeCIMvc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 01:52:39 -0500
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: bpothuno@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        Balaji Pothunoori <bpothuno@codeaurora.org>
-Subject: [PATCH] iw: avgerage ack rssi changes for data frames
-Date: Thu,  8 Mar 2018 12:22:32 +0530
-Message-Id: <1520491952-26289-1-git-send-email-bpothuno@codeaurora.org> (sfid-20180308_075249_625686_378AFE85)
+        Fri, 9 Mar 2018 07:51:32 -0500
+Date: Fri, 9 Mar 2018 18:21:24 +0530
+From: Himanshu Jha <morganfreeman6991@gmail.com>
+To: Andreas Christoforou <andreaschristofo@gmail.com>
+Cc: keescook@chromium.org, kernel-hardening@lists.openwall.com,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
+Message-ID: <20180309125124.GA17968@himanshu-Vostro-3559> (sfid-20180309_135148_591326_EFD5126D)
+References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset changes to display the average ack rssi
-for data frames.
-"avg ack signal" field diplay limited by host based on
-firmware capablities.
+On Fri, Mar 09, 2018 at 02:30:12PM +0200, Andreas Christoforou wrote:
+> The kernel would like to have all stack VLA usage removed.
+> 
+> Signed-off-by: Andreas Christoforou <andreaschristofo@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/dfs.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
+> index 6fee9a4..cfb0f84 100644
+> --- a/drivers/net/wireless/ath/ath9k/dfs.c
+> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
+> @@ -41,7 +41,6 @@ static const int BIN_DELTA_MAX		= 10;
+>  
+>  /* we need at least 3 deltas / 4 samples for a reliable chirp detection */
+>  #define NUM_DIFFS 3
+> -static const int FFT_NUM_SAMPLES	= (NUM_DIFFS + 1);
 
-Example output:
+Are you sure it is correct ?
+Look for other users of "FFT_NUM_SAMPLES".
 
-localhost ~ #iw dev wlan-5000mhz station dump
-Station 34:f3:9a:aa:3b:29 (on wlan-5000mhz)
-        inactive time:  5370 ms
-        rx bytes:       85321
-        rx packets:     576
-        tx bytes:       14225
-        tx packets:     71
-        tx retries:     0
-        tx failed:      2
-        beacon loss:    0
-        rx drop misc:   0
-        signal:         -54 dBm
-        signal avg:     -53 dBm
-        tx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
-        rx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
-        avg ack signal: -56 dBm
-        authorized:     yes
-        authenticated:  yes
-        associated:     yes
-        preamble:       short
-        WMM/WME:        yes
-        MFP:            no
-        TDLS peer:      no
-        DTIM period:    2
-        beacon interval:100
-        short preamble: yes
-        short slot time:yes
-        connected time: 203 seconds
+>  /* Threshold for difference of delta peaks */
+>  static const int MAX_DIFF		= 2;
+> @@ -101,7 +100,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
+>  				 int datalen, bool is_ctl, bool is_ext)
+>  {
+>  	int i;
+> -	int max_bin[FFT_NUM_SAMPLES];
+> +	int max_bin[NUM_DIFFS + 1];
+>  	struct ath_hw *ah = sc->sc_ah;
+>  	struct ath_common *common = ath9k_hw_common(ah);
+>  	int prev_delta;
 
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
----
- nl80211.h | 6 ++++++
- station.c | 5 +++++
- 2 files changed, 11 insertions(+)
+Always compile test the driver before sending a patch.
+Also, patch title seems incorrect *ath9k*
 
-diff --git a/nl80211.h b/nl80211.h
-index 56368e9..6e9614d 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -2655,6 +2655,10 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_RX_DURATION: aggregate PPDU duration for all frames
-  *	received from the station (u64, usec)
-  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
-+ *  @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK
-+ *     frame(u8, dBm)
-+ * @NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL: avg signal strength of data ACK
-+ *     frame(u8, dBm)
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2693,6 +2697,8 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_TID_STATS,
- 	NL80211_STA_INFO_RX_DURATION,
- 	NL80211_STA_INFO_PAD,
-+	NL80211_STA_INFO_ACK_SIGNAL,
-+	NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/station.c b/station.c
-index f3e3da8..ec1f7bc 100644
---- a/station.c
-+++ b/station.c
-@@ -237,6 +237,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_TID_STATS] = { .type = NLA_NESTED },
- 		[NL80211_STA_INFO_BSS_PARAM] = { .type = NLA_NESTED },
- 		[NL80211_STA_INFO_RX_DURATION] = { .type = NLA_U64 },
-+		[NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL] = { .type = NLA_U8 },
- 	};
- 	char *chain;
- 
-@@ -338,6 +339,10 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		printf("\n\trx duration:\t%lld us",
- 		       (unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_RX_DURATION]));
- 
-+	if (sinfo[NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL])
-+		printf("\n\tavg ack signal:\t%d dBm",
-+		       (int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_DATA_AVG_ACK_SIGNAL]));
-+
- 	if (sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT]) {
- 		uint32_t thr;
- 
+himanshu@himanshu-Vostro-3559:~/linux-next$ git log --oneline drivers/net/wireless/ath/ath9k/dfs.c
+626ab67 ath9k: dfs: use swap macro in ath9k_check_chirping
+50c8cd4 ath9k: remove cast to void pointer
+8fc2b61 ath9k: DFS - add pulse chirp detection for FCC
+....
+
 -- 
-2.7.4
+Thanks
+Himanshu Jha
