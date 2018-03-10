@@ -1,294 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:38072 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751508AbeCTJfu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 05:35:50 -0400
-MIME-Version: 1.0
-In-Reply-To: <5AB0CE6B.2050109@broadcom.com>
-References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
- <20180319014032.9394-3-alexey.roslyakov@gmail.com> <5AAF838D.2030105@broadcom.com>
- <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com>
- <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com> <5AB044C0.9060701@broadcom.com>
- <CALFoz4aaEshpmyCxzut1t6cqSOSee4YP6vsi5G4Eei9m8hkZ3A@mail.gmail.com> <5AB0CE6B.2050109@broadcom.com>
-From: Alexey Roslyakov <alexey.roslyakov@gmail.com>
-Date: Tue, 20 Mar 2018 16:35:48 +0700
-Message-ID: <CALFoz4bug5h=p_FFFf_Xa=yBibkepY7H6spAUg4+zFLhX9tgUA@mail.gmail.com> (sfid-20180320_103612_651470_AADE7AE6)
-Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for brcmfmac
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Kalle Valo <kvalo@codeaurora.org>, robh+dt@kernel.org,
-        mark.rutland@arm.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.kernel.org ([198.145.29.99]:50774 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933128AbeCJOPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Mar 2018 09:15:32 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 15/20] firmware: fix checking for return values for fw_add_devm_name()
+Date: Sat, 10 Mar 2018 06:14:56 -0800
+Message-Id: <20180310141501.2214-16-mcgrof@kernel.org> (sfid-20180310_151750_455753_EA1F04F6)
+In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
+References: <20180310141501.2214-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend,
+Currently fw_add_devm_name() returns 1 if the firmware cache
+was already set. This makes it complicated for us to check for
+correctness. It is actually non-fatal if the firmware cache
+is already setup, so just return 0, and simplify the checkers.
 
-Agreed. Let's dismiss these patches.
-Now I'm curious if I can get the information about DMA SG limitations
-from MMC layer, I'll try to figure out something.
+fw_add_devm_name() adds device's name onto the devres for the
+device so that prior to suspend we cache the firmware onto memory,
+so that on resume the firmware is reliably available. We never
+were checking for success for this call though, meaning in some
+really rare cases we my have never setup the firmware cache for
+a device, which could in turn make resume fail.
 
-BTW, my specific setup (with default alignments) triggers kernel panic
-(I see brcm_* in backtrace). It's better if I create separate email
-chain for the issue.
+This is all theoretical, no known issues have been reported.
+This small issue has been present way since the addition of the
+devres firmware cache names on v3.7.
 
-Thanks,
-  Alex.
+Fixes: f531f05ae9437 ("firmware loader: store firmware name into devres list")
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ drivers/base/firmware_loader/main.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-On 20 March 2018 at 16:03, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 3/20/2018 8:58 AM, Alexey Roslyakov wrote:
->>
->> Arend,
->>
->>> Also I am not sure if the broken-sg-support is still needed. We added
->>> that for omap_hsmmc, but that has since changed to scatter-gather emulation
->>> so it might not be needed anymore.
->>
->> I can confirm it doesn't impact wifi performance in case of rk3288+ap6335.
->>
->> But I still have to set settings->bus.sdio.sd_head_align = 4 and
->> settings->bus.sdio.sd_sgentry_align = 512, otherwise
->> brcmf_sdiod_sglist_rw fails:
->>
->>    974.888452] net_ratelimit: 8 callbacks suppressed
->> [  974.888457] brcmfmac: brcmf_sdiod_sglist_rw: CMD53 sg block read failed
->> -84
->> [  974.901527] brcmfmac: brcmf_sdio_rxglom: glom read of 6144 bytes
->> failed: -5
->> [  974.910248] brcmfmac: brcmf_sdio_rxfail: abort command, terminate frame
->> [  975.018041] brcmfmac: brcmf_sdiod_sglist_rw: CMD53 sg block read failed
->> -84
->> [  975.025833] brcmfmac: brcmf_sdio_rxglom: glom read of 6144 bytes
->> failed: -5
->> [  975.033634] brcmfmac: brcmf_sdio_rxfail: abort command, terminate frame
->> [  975.033924] dwmmc_rockchip ff0d0000.dwmmc: Unexpected command
->> timeout, state 0
->> [  975.049209] brcmfmac: brcmf_sdio_readframes: RXHEADER FAILED: -84
->> [  975.056034] brcmfmac: brcmf_sdio_rxfail: abort command, terminate
->> frame, send NAK
->> [  975.068367] brcmfmac: brcmf_sdio_hdparse: HW header length too long
->> [  975.075379] brcmfmac: brcmf_sdio_rxfail: terminate frame
->
->
-> Hi Alex,
->
-> Thanks for checking. In your case I think you do not need sd_head_align as
-> it will default to either 4 or 8:
->
-> #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
-> #define ALIGNMENT  8
-> #else
-> #define ALIGNMENT  4
-> #endif
->
-> I am not saying you should not be needing this. When it comes to DT people
-> are often tempted to accommodate a driver solution especially when such a
-> solution is already in place. However, DT is a hardware description and
-> these do not describe the wifi device. They are applicable to the wifi
-> device because it is a limitation of the host controller and as such should
-> be described in the DT binding of the host controller.
->
-> Regards,
-> Arend
->
->
->> Regards,
->>    Alex
->>
->> On 20 March 2018 at 06:16, Arend van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>>
->>> + Uffe
->>>
->>> On 3/19/2018 6:55 PM, Florian Fainelli wrote:
->>>>
->>>>
->>>> On 03/19/2018 07:10 AM, Alexey Roslyakov wrote:
->>>>>
->>>>>
->>>>> Hi Arend,
->>>>> I appreciate your response. In my opinion, it has nothing to do with
->>>>> SDIO host, because it defines "quirks" in the driver itself.
->>>>
->>>>
->>>>
->>>> It is not clear to me from your patch series whether the problem is
->>>> that:
->>>>
->>>> - the SDIO device has a specific alignment requirements, which would be
->>>> either a SDIO device driver limitation/issue or maybe the underlying
->>>> hardware device/firmware requiring that
->>>>
->>>> - the SDIO host controller used is not capable of coping nicely with
->>>> these said limitations
->>>>
->>>> It seems to me like what you are doing here is a) applicable to possibly
->>>> more SDIO devices and host combinations, and b) should likely be done at
->>>> the layer between the host and device, such that it is available to more
->>>> combinations.
->>>
->>>
->>>
->>> Indeed. That was my thought exactly and I can not imagine Uffe would push
->>> back on that reasoning.
->>>
->>>>> If I get it right, you mean something like this:
->>>>>
->>>>> mmc3: mmc@1c12000 {
->>>>> ...
->>>>>           broken-sg-support;
->>>>>           sd-head-align = 4;
->>>>>           sd-sgentry-align = 512;
->>>>>
->>>>>           brcmf: wifi@1 {
->>>>>                   ...
->>>>>           };
->>>>> };
->>>>>
->>>>> Where dt: bindings documentation for these entries should reside?
->>>>> In generic MMC bindings? Well, this is the very special case and
->>>>> mmc-linux maintainer will unlikely to accept these changes.
->>>>> Also, extra kernel code modification might be required. It could make
->>>>> quite trivial change much more complex.
->>>>
->>>>
->>>>
->>>> If the MMC maintainers are not copied on this patch series, it will
->>>> likely be hard for them to identify this patch series and chime in...
->>>
->>>
->>>
->>> The main question is whether this is indeed a "very special case" as
->>> Alexey
->>> claims it to be or that it is likely to be applicable to other device and
->>> host combinations as you are suggesting.
->>>
->>> If these properties are imposed by the host or host controller it would
->>> make
->>> sense to have these in the mmc bindings.
->>>
->>>>>
->>>>>> Also I am not sure if the broken-sg-support is still needed. We added
->>>>>> that for omap_hsmmc, but that has since changed to scatter-gather
->>>>>> emulation
->>>>>> so it might not be needed anymore.
->>>>>
->>>>>
->>>>>
->>>>> I've experienced the problem with rk3288 (dw-mmc host) and sdio
->>>>> settings like above solved it.
->>>>> Frankly, I haven't investigated any deeper which one of the settings
->>>>> helped in my case yet...
->>>>> I will try to get rid of broken-sg-support first and let you know if
->>>>> it does make any difference.
->>>
->>>
->>>
->>> Are you using some chromebook. I have some lying around here so I could
->>> also
->>> look into it. What broadcom chipset do you have?
->>>
->>> Regards,
->>> Arend
->>>
->>>
->>>>> All the best,
->>>>>     Alex.
->>>>>
->>>>> On 19 March 2018 at 16:31, Arend van Spriel
->>>>> <arend.vanspriel@broadcom.com> wrote:
->>>>>>
->>>>>>
->>>>>> On 3/19/2018 2:40 AM, Alexey Roslyakov wrote:
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> In case if the host has higher align requirements for SG items, allow
->>>>>>> setting device-specific aligns for scatterlist items.
->>>>>>>
->>>>>>> Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
->>>>>>> ---
->>>>>>>
->>>>>>> Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>>>> | 5
->>>>>>> +++++
->>>>>>>     1 file changed, 5 insertions(+)
->>>>>>>
->>>>>>> diff --git
->>>>>>>
->>>>>>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>>>>
->>>>>>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>>>> index 86602f264dce..187b8c1b52a7 100644
->>>>>>> ---
->>>>>>>
->>>>>>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>>>> +++
->>>>>>>
->>>>>>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>>>> @@ -17,6 +17,11 @@ Optional properties:
->>>>>>>           When not specified the device will use in-band SDIO
->>>>>>> interrupts.
->>>>>>>      - interrupt-names : name of the out-of-band interrupt, which
->>>>>>> must
->>>>>>> be
->>>>>>> set
->>>>>>>           to "host-wake".
->>>>>>> + - brcm,broken-sg-support : boolean flag to indicate that the SDIO
->>>>>>> host
->>>>>>> +       controller has higher align requirement than 32 bytes for
->>>>>>> each
->>>>>>> +       scatterlist item.
->>>>>>> + - brcm,sd-head-align : alignment requirement for start of data
->>>>>>> buffer.
->>>>>>> + - brcm,sd-sgentry-align : length alignment requirement for each sg
->>>>>>> entry.
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> Hi Alexey,
->>>>>>
->>>>>> Thanks for the patch. However, the problem with these is that they are
->>>>>> characterizing the host controller and not the wireless device. So
->>>>>> from
->>>>>> device tree perspective , which is to describe the hardware, these
->>>>>> properties should be SDIO host controller properties. Also I am not
->>>>>> sure
->>>>>> if
->>>>>> the broken-sg-support is still needed. We added that for omap_hsmmc,
->>>>>> but
->>>>>> that has since changed to scatter-gather emulation so it might not be
->>>>>> needed
->>>>>> anymore.
->>>>>>
->>>>>> Regards,
->>>>>> Arend
->>>>>
->>>>>
->>>>>
->>>>>
->>>>>
->>>>
->>>>
->>>
->>
->>
->>
->
-
-
-
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index c8966c84bd44..f5046887e362 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -403,7 +403,7 @@ static int fw_add_devm_name(struct device *dev, const char *name)
+ 
+ 	fwn = fw_find_devm_name(dev, name);
+ 	if (fwn)
+-		return 1;
++		return 0;
+ 
+ 	fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm),
+ 			   GFP_KERNEL);
+@@ -431,6 +431,7 @@ int assign_fw(struct firmware *fw, struct device *device,
+ 	      unsigned int opt_flags)
+ {
+ 	struct fw_priv *fw_priv = fw->priv;
++	int ret;
+ 
+ 	mutex_lock(&fw_lock);
+ 	if (!fw_priv->size || fw_state_is_aborted(fw_priv)) {
+@@ -447,8 +448,13 @@ int assign_fw(struct firmware *fw, struct device *device,
+ 	 */
+ 	/* don't cache firmware handled without uevent */
+ 	if (device && (opt_flags & FW_OPT_UEVENT) &&
+-	    !(opt_flags & FW_OPT_NOCACHE))
+-		fw_add_devm_name(device, fw_priv->fw_name);
++	    !(opt_flags & FW_OPT_NOCACHE)) {
++		ret = fw_add_devm_name(device, fw_priv->fw_name);
++		if (ret) {
++			mutex_unlock(&fw_lock);
++			return ret;
++		}
++	}
+ 
+ 	/*
+ 	 * After caching firmware image is started, let it piggyback
 -- 
-With best regards,
-  Alexey Roslyakov
-Email: alexey.roslyakov@gmail.com
+2.16.2
