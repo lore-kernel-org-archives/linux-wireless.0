@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:34451 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751470AbeCNMpo (ORCPT
+Received: from mail-io0-f179.google.com ([209.85.223.179]:36820 "EHLO
+        mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750781AbeCJHWI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 08:45:44 -0400
-From: hariprasath.elango@gmail.com
-To: aditya.shankar@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com
-Cc: hariprasath.elango@gmail.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 5/7] staging: wilc1000: replace switch statement by simple if condition
-Date: Wed, 14 Mar 2018 18:15:03 +0530
-Message-Id: <2a46a5cc8ab69c1143c480bbac1f7e921011d982.1521030891.git.hariprasath.elango@gmail.com> (sfid-20180314_134633_911747_C2E22B03)
-In-Reply-To: <cover.1521030891.git.hariprasath.elango@gmail.com>
-References: <cover.1521030891.git.hariprasath.elango@gmail.com>
-In-Reply-To: <cover.1521030891.git.hariprasath.elango@gmail.com>
-References: <cover.1521030891.git.hariprasath.elango@gmail.com>
+        Sat, 10 Mar 2018 02:22:08 -0500
+Received: by mail-io0-f179.google.com with SMTP id e30so6003148ioc.3
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2018 23:22:08 -0800 (PST)
+MIME-Version: 1.0
+From: Arjav Parikh <parikharjav24@gmail.com>
+Date: Sat, 10 Mar 2018 12:52:07 +0530
+Message-ID: <CADoF8+AU991ut3889d0QsxVfKsQ_YXAYQBhQPzLWmxNE1Kn_WA@mail.gmail.com> (sfid-20180310_082810_580968_2B9D1592)
+Subject: Dependency required for wil6210 kernel module
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: HariPrasath Elango <hariprasath.elango@gmail.com>
+Hi,
 
-In this case,there is only a single switch case statement.So replacing
-by a simple if condition.
+Currently I am working to minimize the filesystem for one of my
+project. In my project I only want to add support for USB & Wireless
+(wil6210). To minimize the filesystem I disabled the unwanted things
+like Iptables, VLAN, VPN, Ethernet support etc from .config and
+brought my image size from 22 MB to 8.9 MB.
 
-Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+Now when I did the ifconfig wlan0 up I get below error:
+wil6210 0000:01:00.0 wlan0: wil_open: Failed to register with NSS
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c901108..17bd762 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -772,14 +772,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	if (sme->crypto.n_akm_suites) {
--		switch (sme->crypto.akm_suites[0]) {
--		case WLAN_AKM_SUITE_8021X:
-+		if (sme->crypto.akm_suites[0] == WLAN_AKM_SUITE_8021X)
- 			auth_type = IEEE8021;
--			break;
--
--		default:
--			break;
--		}
- 	}
- 
- 	curr_channel = pstrNetworkInfo->ch;
+In Ideal case when I enter the above command I should get below logs:
+wil6210 0000:01:00.0 wlan0: wil_open: Registered with NSS
+
+I checked the dependency for wil6210.ko module and they are cfg80211 &
+compat and they both are enabled.
+
+Can any one tell me which libraries/modules I have mistakenly disabled
+which is causing this error.
+
+
 -- 
-2.10.0.GIT
+Thanks & Regards,
+Arjav Parikh
